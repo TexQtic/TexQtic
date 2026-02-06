@@ -1,0 +1,105 @@
+{
+  // Editor Settings
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+  "editor.tabSize": 2,
+  "editor.linkedEditing": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+
+  // TypeScript Settings
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // JavaScript Settings
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // File Settings
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/dist": true
+  },
+
+  // Tailwind CSS IntelliSense
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)(?:'|\"|`)"],
+    ["className={([^}]*)", "(?:'|\"|`)([^'\"`]*)(?:'|\"|`)"],
+    ["tw`([^`]*)", "([^`]*)"]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+
+  // CSS Settings
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+
+  // Prettier Settings
+  "prettier.semi": true,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "es5",
+  "prettier.tabWidth": 2,
+
+  // ESLint Settings
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+
+  // Emmet Settings
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "emmet.triggerExpansionOnTab": true,
+
+  // Search Settings
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/build": true
+  },
+
+  // Terminal Settings
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+  // Error Lens Settings
+  "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+
+  // Import Cost Settings
+  "importCost.showCalculatingDecoration": true,
+
+  // Git Settings
+  "git.autofetch": true,
+  "git.confirmSync": false,
+
+  // SonarLint Settings
+  "sonarlint.disableTelemetry": true,
+  "sonarlint.rules": {
+    "plsql:S1192": {
+      "level": "off"
+    }
+  },
+  "sonarlint.connectedMode.connections.sonarqube": [],
+  "sonarlint.connectedMode.connections.sonarcloud": [],
+  "sonarlint.output.showAnalyzerLogs": false,
+  "sonarlint.output.showVerboseLogs": false,
+  // Disable SonarLint for SQL files in this project
+  "sonarlint.pathToNodeExecutable": "",
+  "[sql]": {
+    "editor.defaultFormatter": "mtxr.sqltools"
+  },
+  // Suppress Connected Mode notifications
+  "sonarlint.focusOnNewCode": false
+}

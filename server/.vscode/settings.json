@@ -1,0 +1,10 @@
+{
+  "java.compile.nullAnalysis.mode": "disabled",
+  "sonarlint.disableTelemetry": true,
+  "sonarlint.connectedMode.project": {
+    "projectKey": ""
+  },
+  "files.associations": {
+    "*.sql": "sql"
+  }
+}

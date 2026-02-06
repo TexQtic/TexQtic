@@ -1,0 +1,90 @@
+{
+  "recommendations": [
+    // Essential for React + TypeScript development
+    "dsznajder.es7-react-js-snippets",
+    "ms-vscode.vscode-typescript-next",
+
+    // Tailwind CSS (already installed)
+    "bradlc.vscode-tailwindcss",
+
+    // Code Quality & Formatting (already installed)
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "usernamehw.errorlens",
+    "yoavbls.pretty-ts-errors",
+
+    // Auto tags for HTML/JSX
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag",
+
+    // Path & Import helpers (already installed)
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "wix.vscode-import-cost",
+
+    // Environment variables (already installed)
+    "mikestead.dotenv",
+
+    // Git integration (already installed)
+    "eamodio.gitlens",
+    "donjayamanne.githistory",
+
+    // GitHub Integration (already installed)
+    "github.vscode-pull-request-github",
+    "github.copilot-chat",
+    "github.vscode-github-actions",
+
+    // Vite support
+    "antfu.vite",
+
+    // Better debugging
+    "wallabyjs.console-ninja",
+
+    // Component preview
+    "zenclabs.reactpreview",
+
+    // Code spell checker (already installed)
+    "streetsidesoftware.code-spell-checker",
+
+    // Better comments (already installed)
+    "aaron-bond.better-comments",
+
+    // PostCSS support (already installed)
+    "csstools.postcss",
+
+    // Testing & Quality (already installed)
+    "vitest.explorer",
+    "ms-playwright.playwright",
+    "ms-azure-load-testing.microsoft-testing",
+    "ryanluker.vscode-coverage-gutters",
+    "orta.vscode-jest",
+
+    // Backend & Database (already installed)
+    "prisma.prisma",
+    "supabase.vscode-supabase-extension",
+    "supabase-snippets.supabase-javascript-snippets",
+    "ms-ossdata.vscode-pgsql",
+    "ckolkman.vscode-postgres",
+    "supabase.postgrestools",
+    "mongodb.mongodb-vscode",
+
+    // API Development (already installed)
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+    "graphql.vscode-graphql",
+    "graphql.vscode-graphql-syntax",
+
+    // Docker & DevOps (already installed)
+    "ms-azuretools.vscode-docker",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+
+    // Code Quality & Analysis
+    "sonarsource.sonarlint-vscode",
+    "ms-vscode.vscode-json-languageservice",
+
+    // Utility Extensions
+    "tamasfe.even-better-toml",
+    "redhat.vscode-yaml",
+    "ms-vscode.live-server"
+  ]
+}

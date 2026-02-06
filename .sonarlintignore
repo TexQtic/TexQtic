@@ -1,0 +1,8 @@
+# SonarLint
+
+.sonarlint/
+.scannerwork/
+
+# SonarQube
+
+.sonarqube/
