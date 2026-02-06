@@ -1,0 +1,24 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "TexQtic Tenant API", "version": "0.1.0" },
+  "paths": {
+    "/api/me": {
+      "get": { "summary": "Current user + tenant", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/tenant/memberships": {
+      "get": { "summary": "List memberships", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/ai/insights": {
+      "get": {
+        "summary": "Get AI platform insights (server-proxy)",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/ai/negotiation-advice": {
+      "post": {
+        "summary": "Get negotiation advice (server-proxy)",
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}

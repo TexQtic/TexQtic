@@ -1,0 +1,142 @@
+# TexQtic Governance-First Development
+
+## 🚨 MANDATORY: Read Before ANY Implementation
+
+**THIS FILE MUST BE REVIEWED BEFORE EVERY CODE CHANGE**
+
+See: [Complete Copilot Instructions](.github/copilot-instructions.md)
+
+---
+
+## Pre-Implementation Checklist
+
+Before implementing ANY change, answer these questions:
+
+### 1. Does this change affect the database?
+
+- ✅ YES → Review `/shared/contracts/db-naming-rules.md`
+- ✅ YES → Review `/shared/contracts/schema-budget.md`
+- ✅ YES → Review `/shared/contracts/rls-policy.md`
+- ⚠️ Validate: snake_case DB, camelCase code, Prisma maps, ≤15 tables
+
+### 2. Does this change affect APIs?
+
+- ✅ YES → Review `/shared/contracts/openapi.control-plane.json`
+- ✅ YES → Review `/shared/contracts/openapi.tenant.json`
+- ⚠️ Validate: Correct plane, proper tenant isolation
+
+### 3. Does this change affect events?
+
+- ✅ YES → Review `/shared/contracts/event-names.md`
+- ⚠️ Validate: domain.action format, snake_case, Team A approved
+
+### 4. Does this change affect architecture?
+
+- ✅ YES → Review `/shared/contracts/ARCHITECTURE-GOVERNANCE.md`
+- ⚠️ Validate: Domain owner, plane, lifecycle declared
+
+---
+
+## 🛑 STOP Immediately If:
+
+- ❌ Business-domain tables (invoices, contracts, negotiations)
+- ❌ More than 15 tables total
+- ❌ Tenant ID from client input
+- ❌ CamelCase in database
+- ❌ Direct Google AI calls from frontend
+- ❌ Secrets in code
+
+**Report violation, suggest fix, wait for approval.**
+
+---
+
+## Governance Files Reference
+
+All non-negotiable rules are in `/shared/contracts/`:
+
+1. **db-naming-rules.md** - Database & Prisma naming conventions
+2. **schema-budget.md** - Table limits and constraints
+3. **rls-policy.md** - Multi-tenancy enforcement
+4. **openapi.control-plane.json** - Control Plane API contract
+5. **openapi.tenant.json** - Tenant API contract
+6. **event-names.md** - Event naming conventions
+7. **ARCHITECTURE-GOVERNANCE.md** - Domain ownership & plane separation
+
+---
+
+## Violation Response Template
+
+```
+🚨 GOVERNANCE VIOLATION DETECTED
+
+Violation: [Specific rule violated]
+Location: [File/line]
+Rule: [Reference to governance file]
+
+❌ Implementation STOPPED
+
+Required action:
+1. [Step to fix]
+2. [Next step]
+3. Confirm adjusted approach before proceeding
+
+Suggested fix: [Your recommendation]
+```
+
+---
+
+## Implementation Approval Template
+
+```
+✅ GOVERNANCE PRE-FLIGHT CHECK
+
+Request: [Change description]
+Governance files reviewed:
+- [file.md]: ✅ PASS
+- [file.md]: ✅ PASS
+
+Domain: [control/tenant]
+Plane: [control-plane/tenant-plane]
+
+Proceeding with implementation...
+```
+
+---
+
+## Quick Rules
+
+### Database
+
+- DB = snake_case (plural tables)
+- Code = camelCase
+- Prisma = PascalCase models + `@@map()` + `@map()`
+- Max 15 tables in Phase 2
+- RLS required for tenant-scoped tables
+
+### API
+
+- Control plane: `/api/control/*`
+- Tenant plane: `/api/tenant/*`, `/api/me`, `/api/ai/*`
+- All AI calls server-proxied (no frontend direct calls)
+
+### Events
+
+- Format: `domain.action` (snake_case)
+- Examples: `tenant.created`, `admin.impersonation_started`
+- Team A owns event naming
+
+### Architecture
+
+- Declare: domain owner, plane, lifecycle
+- Phase 2: control + tenant plane only
+- No business domain tables yet
+
+---
+
+## Remember
+
+**No exceptions. No shortcuts. Governance is non-negotiable.**
+
+If rules conflict with requirements → 🔺 Escalate to Team A
+
+Full instructions: [.github/copilot-instructions.md](.github/copilot-instructions.md)

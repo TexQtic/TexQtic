@@ -1,0 +1,21 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "TexQtic Control Plane API", "version": "0.1.0" },
+  "paths": {
+    "/api/control/tenants": {
+      "get": { "summary": "List tenants", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/control/tenants/{id}": {
+      "get": {
+        "summary": "Get tenant details",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/control/audit-logs": {
+      "get": { "summary": "List audit logs", "responses": { "200": { "description": "OK" } } }
+    }
+  }
+}
