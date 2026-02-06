@@ -1,0 +1,31 @@
+# =========================
+# TexQtic CODEOWNERS
+# Team A: DB/API/Schema (Copilot)
+# Team B: UI/UX (Google AI Studio or VS Code)
+# =========================
+
+# --- Team A owns backend, schema, contracts, infra ---
+/server/                 @paresh
+/prisma/                 @paresh
+/shared/contracts/       @paresh
+/.github/                @paresh
+
+# --- Team B owns UI layer ---
+/frontend/               @paresh
+
+# --- Shared files require Team A review (optionally add Team B as well) ---
+/README.md               @paresh
+/package.json            @paresh
+/.env.example            @paresh
+
+# Optional: if you keep a vendor drop zone for AI Studio outputs
+/vendor/                 @paresh
+
+# =========================
+# UPGRADE PATH: Replace @paresh with teams when ready
+# /server/                 @TexQtic/team-a
+# /prisma/                 @TexQtic/team-a
+# /shared/contracts/       @TexQtic/team-a
+# /.github/                @TexQtic/team-a
+# /frontend/               @TexQtic/team-b
+# =========================
