@@ -161,11 +161,12 @@ After running `npx prisma db seed`:
   - Password: Password123!
 
 ### Admin Users
-- **admin@omniplatform.io** (SUPER_ADMIN)
+- **admin@texqtic.com** (SUPER_ADMIN)
   - Password: Password123!
   
-- **support@omniplatform.io** (SUPPORT)
+- **support@texqtic.com** (SUPPORT)
   - Password: Password123!
+  - Note: DEV SEED ONLY
 
 ### Feature Flags
 - `KILL_SWITCH_ALL` - Global kill switch (disabled)
