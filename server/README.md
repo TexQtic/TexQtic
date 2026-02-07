@@ -13,6 +13,7 @@ Multi-tenant platform backend with strict isolation, audit logging, and feature 
 ## Setup
 
 ### Prerequisites
+
 - Node.js v20+
 - PostgreSQL 14+ (or Docker)
 
@@ -35,6 +36,7 @@ cp ../.env.example .env
 ### Database Setup
 
 #### Option 1: Docker (Recommended)
+
 ```bash
 # Start PostgreSQL in Docker
 docker-compose up -d
@@ -44,6 +46,7 @@ docker-compose ps
 ```
 
 #### Option 2: Local PostgreSQL
+
 Ensure PostgreSQL is running and update DATABASE_URL in `.env`
 
 ### Prisma Migrations
@@ -97,26 +100,31 @@ npx prisma migrate dev --name your_migration_name
 ## API Structure
 
 ### Tenant Realm (Requires tenant auth)
+
 - `GET /api/me` - Current user info
 - `GET /api/tenant/audit-logs` - Tenant audit logs (RLS enforced)
 - `GET /api/tenant/memberships` - Tenant memberships (RLS enforced)
 
 ### Admin Realm (Requires admin auth)
+
 - `GET /api/control/tenants` - List all tenants
 - `GET /api/control/tenants/:id` - Get tenant details
 - `GET /api/control/audit-logs` - List all audit logs
 - `GET /api/control/feature-flags` - List feature flags
 
 ### Public
+
 - `GET /health` - Health check
 - `GET /` - API info
 
 ## Testing RLS Policies
 
 ### 1. Get Admin Token (for testing)
+
 Create a temporary test route or use Prisma Studio to get admin IDs, then generate tokens manually.
 
 ### 2. Test Admin Access
+
 ```bash
 # List all tenants (admin only)
 curl -X GET http://localhost:3001/api/control/tenants \
@@ -128,6 +136,7 @@ curl -X GET http://localhost:3001/api/control/audit-logs \
 ```
 
 ### 3. Test Tenant Isolation
+
 ```bash
 # Get tenant A memberships (with tenant A token)
 curl -X GET http://localhost:3001/api/tenant/memberships \
@@ -140,6 +149,7 @@ curl -X GET http://localhost:3001/api/tenant/memberships \
 ```
 
 ### 4. Test Audit Log Immutability
+
 ```sql
 -- In psql or Prisma Studio, try to update/delete audit log
 -- Should fail due to RLS policies
@@ -152,23 +162,24 @@ UPDATE audit_logs SET action = 'MODIFIED' WHERE id = 'some-id';
 After running `npx prisma db seed`:
 
 ### Tenants
+
 - **acme-corp** (B2B, Professional plan)
   - Owner: owner@acme.example.com
   - Password: Password123!
-  
 - **white-label-co** (B2C, Enterprise plan)
   - Owner: owner@whitelabel.example.com
   - Password: Password123!
 
 ### Admin Users
+
 - **admin@texqtic.com** (SUPER_ADMIN)
   - Password: Password123!
-  
 - **support@texqtic.com** (SUPPORT)
   - Password: Password123!
   - Note: DEV SEED ONLY
 
 ### Feature Flags
+
 - `KILL_SWITCH_ALL` - Global kill switch (disabled)
 - `AI_INSIGHTS_ENABLED` - AI insights (enabled)
 - `ADVANCED_ANALYTICS` - Advanced analytics (enabled)
@@ -189,26 +200,32 @@ Every request to tenant endpoints must include valid JWT with tenant context.
 Backend validates tenant access and sets DB session variables for RLS policies.
 
 ### RLS Session Variables
+
 - `app.tenant_id` - Current tenant UUID
 - `app.is_admin` - Admin bypass flag
 
 ## Troubleshooting
 
 ### "Table does not exist" error
+
 ```bash
 npm run db:migrate
 ```
 
 ### "RLS policies not working"
+
 ```bash
 npm run db:rls
 ```
 
 ### "Cannot connect to database"
+
 Check DATABASE_URL in `.env` and ensure PostgreSQL is running
 
 ### "Seed fails"
+
 Reset and reseed:
+
 ```bash
 npx prisma migrate reset
 npx prisma db seed

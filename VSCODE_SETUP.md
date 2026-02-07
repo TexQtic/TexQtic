@@ -534,6 +534,7 @@ Get your Gemini API key: https://aistudio.google.com/app/apikey
    - Run tests with coverage
 
 5. **Setup Playwright (E2E):**
+
    ```bash
    npm init playwright@latest
    ```

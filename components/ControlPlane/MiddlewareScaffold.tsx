@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const MiddlewareScaffold: React.FC = () => {
@@ -38,7 +37,9 @@ export async function middleware(req: Request) {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Middleware & Routing</h1>
-        <p className="text-slate-400 text-sm">Edge-side tenant resolution and security realm logic.</p>
+        <p className="text-slate-400 text-sm">
+          Edge-side tenant resolution and security realm logic.
+        </p>
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden font-mono">
