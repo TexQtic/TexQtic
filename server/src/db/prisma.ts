@@ -4,6 +4,8 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// Prisma client WITHOUT automatic role switching
+// We'll handle SET ROLE in withDbContext instead
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -22,5 +24,3 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   await prisma.$disconnect();
-  process.exit(0);
-});
