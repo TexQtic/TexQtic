@@ -62,7 +62,7 @@ fastify.get('/health', async () => {
 // Root route
 fastify.get('/', async () => {
   return {
-    name: 'OmniPlatform API',
+    name: 'TexQtic API',
     version: '0.1.0',
     status: 'running',
   };
