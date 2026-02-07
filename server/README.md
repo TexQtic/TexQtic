@@ -1,4 +1,4 @@
-# OmniPlatform Server
+# TexQtic Platform Server
 
 Multi-tenant platform backend with strict isolation, audit logging, and feature flags.
 

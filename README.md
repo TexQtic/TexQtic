@@ -1,5 +1,5 @@
 
-# OmniPlatform: Multi-Tenant Architecture Scaffold
+# TexQtic: Multi-Tenant Architecture Scaffold
 
 This scaffold demonstrates a clean, scalable, production-grade architecture for a three-sided global platform.
 

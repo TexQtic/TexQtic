@@ -1,4 +1,4 @@
-# VS Code Setup Guide for OmniPlatform
+# VS Code Setup Guide for TexQtic Platform
 
 ## 🎯 Tech Stack
 
@@ -454,7 +454,7 @@ Authorization: Bearer {{token}}
 ## 📁 Project Structure
 
 ```
-omni-platform/
+texqtic-platform/
 ├── components/          # React components
 │   ├── Auth/           # Authentication UI
 │   ├── ControlPlane/   # Super Admin components

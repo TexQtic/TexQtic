@@ -69,9 +69,9 @@ export const EXAMPLE_PRODUCTS = [
 ];
 
 export const AUDIT_LOGS: any[] = [
-  { id: 'a1', timestamp: '2024-05-20 14:22:01', adminUser: 'sjones@omni.com', action: 'TENANT_SUSPENDED', tenantId: 't4', details: 'Manual suspension due to billing delinquency.' },
-  { id: 'a2', timestamp: '2024-05-20 15:10:44', adminUser: 'akhan@omni.com', action: 'FEATURE_FLAG_UPDATED', tenantId: 't2', details: 'Enabled advanced_negotiations_v2 for ProSupply.' },
-  { id: 'a3', timestamp: '2024-05-20 16:05:12', adminUser: 'sjones@omni.com', action: 'AI_LIMIT_INCREASED', tenantId: 't1', details: 'Added 500k token quota per Enterprise SLA.' },
+  { id: 'a1', timestamp: '2024-05-20 14:22:01', adminUser: 'sjones@texqtic.com', action: 'TENANT_SUSPENDED', tenantId: 't4', details: 'Manual suspension due to billing delinquency.' },
+  { id: 'a2', timestamp: '2024-05-20 15:10:44', adminUser: 'akhan@texqtic.com', action: 'FEATURE_FLAG_UPDATED', tenantId: 't2', details: 'Enabled advanced_negotiations_v2 for ProSupply.' },
+  { id: 'a3', timestamp: '2024-05-20 16:05:12', adminUser: 'sjones@texqtic.com', action: 'AI_LIMIT_INCREASED', tenantId: 't1', details: 'Added 500k token quota per Enterprise SLA.' },
 ];
 
 export const COMPLIANCE_QUEUE: ComplianceRequest[] = [
@@ -105,7 +105,7 @@ export const DISPUTE_CASES = [
 ];
 
 export const ADMIN_USERS = [
-  { id: 'u1', email: 'sjones@omni.com', role: 'SuperAdmin', department: 'Executive', lastLogin: '2h ago' },
-  { id: 'u2', email: 'akhan@omni.com', role: 'OpsAdmin', department: 'Trust & Safety', lastLogin: '10m ago' },
-  { id: 'u3', email: 'vlee@omni.com', role: 'FinanceAdmin', department: 'Treasury', lastLogin: '1d ago' },
+  { id: 'u1', email: 'sjones@texqtic.com', role: 'SuperAdmin', department: 'Executive', lastLogin: '2h ago' },
+  { id: 'u2', email: 'akhan@texqtic.com', role: 'OpsAdmin', department: 'Trust & Safety', lastLogin: '10m ago' },
+  { id: 'u3', email: 'vlee@texqtic.com', role: 'FinanceAdmin', department: 'Treasury', lastLogin: '1d ago' },
 ];

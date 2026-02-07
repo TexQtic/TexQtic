@@ -9,7 +9,7 @@ export async function middleware(req: Request) {
   const path = new URL(req.url).pathname;
 
   // 1. Resolve Tenant from Hostname or Path
-  // Example: 'boutique.omni.com' -> 't4'
+  // Example: 'boutique.texqtic.com' -> 't4'
   const tenant = await resolveTenant(hostname, path);
   
   // 2. Security Realm Check
