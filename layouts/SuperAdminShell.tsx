@@ -31,7 +31,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({ children, acti
         <div className="bg-rose-600 text-white font-black px-2 py-0.5 rounded text-xs tracking-tighter uppercase">Control Plane</div>
         <div className="h-4 w-px bg-slate-700"></div>
         <div className="font-bold text-slate-100 flex items-center gap-2">
-          <span>🛡️</span> OmniPlatform
+          <span>🛡️</span> TexQtic
         </div>
       </div>
       <div className="flex items-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -40,7 +40,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({ children, acti
           Platform: Operational
         </div>
         <div className="flex items-center gap-2 px-3 py-1 bg-slate-800 rounded">
-          sjones@omni.com <span className="text-rose-500 ml-2">(SuperAdmin)</span>
+          sjones@texqtic.com <span className="text-rose-500 ml-2">(SuperAdmin)</span>
         </div>
       </div>
     </header>

@@ -73,7 +73,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
                     placeholder="my-shop"
                   />
                   <div className="px-4 py-3 bg-slate-100 border border-slate-200 border-l-0 rounded-r-xl text-slate-500 font-mono text-sm">
-                    .omniplatform.com
+                    .texqtic.com
                   </div>
                 </div>
               </div>

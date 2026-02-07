@@ -18,7 +18,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
       <div className="p-8 space-y-6">
         <div className="text-center space-y-2">
           <div className="text-3xl font-black tracking-tighter">
-            {isAdminRealm ? '🛡️ OmniAdmin' : '🚀 OmniPlatform'}
+            {isAdminRealm ? '🛡️ TexQtic Admin' : '🚀 TexQtic'}
           </div>
           <p className="text-slate-500 text-sm">
             {mode === 'LOGIN' ? `Sign in to your ${realm.toLowerCase()} account` : 'Create your platform organization'}

@@ -63,7 +63,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({ onSelectTenant, 
                     <span className="text-lg">{tenant.theme.logo}</span>
                     <div>
                       <div className="font-bold text-slate-100">{tenant.name}</div>
-                      <div className="text-[10px] text-slate-500 font-mono">{tenant.slug}.omniplatform.com</div>
+                      <div className="text-[10px] text-slate-500 font-mono">{tenant.slug}.texqtic.com</div>
                     </div>
                   </div>
                 </td>

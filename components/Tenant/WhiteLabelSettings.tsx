@@ -23,7 +23,7 @@ export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant 
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Required DNS Records</div>
                 <div className="font-mono text-[11px] text-slate-600 flex justify-between">
                   <span>Type: CNAME</span>
-                  <span>Value: proxy.omniplatform.com</span>
+                  <span>Value: proxy.texqtic.com</span>
                 </div>
               </div>
             </div>
