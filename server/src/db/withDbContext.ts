@@ -8,9 +8,14 @@ interface DbContext {
 /**
  * Execute a database operation with tenant/admin context
  * Sets session variables for RLS policies
+ * Uses app_user role to enforce RLS (Supabase workaround)
  */
 export async function withDbContext<T>(context: DbContext, fn: () => Promise<T>): Promise<T> {
   return await prisma.$transaction(async tx => {
+    // Switch to app_user role for RLS enforcement
+    // (Supabase doesn't allow direct auth with custom roles)
+    await tx.$executeRawUnsafe('SET ROLE app_user');
+
     // Set session variables for RLS
     if (context.isAdmin) {
       await tx.$executeRawUnsafe(`SELECT set_admin_context()`);
@@ -20,8 +25,13 @@ export async function withDbContext<T>(context: DbContext, fn: () => Promise<T>)
       await tx.$executeRawUnsafe(`SELECT clear_context()`);
     }
 
-    // Execute the operation within this context
-    return await fn();
+    try {
+      // Execute the operation within this context
+      return await fn();
+    } finally {
+      // Reset role for connection pooling
+      await tx.$executeRawUnsafe('RESET ROLE');
+    }
   });
 }
 

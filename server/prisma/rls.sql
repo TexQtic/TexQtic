@@ -23,7 +23,8 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY tenant_domains_tenant_access ON tenant_domains
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -31,7 +32,8 @@ CREATE POLICY tenant_domains_tenant_access ON tenant_domains
 CREATE POLICY tenant_branding_tenant_access ON tenant_branding
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -39,7 +41,8 @@ CREATE POLICY tenant_branding_tenant_access ON tenant_branding
 CREATE POLICY memberships_tenant_access ON memberships
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -47,7 +50,8 @@ CREATE POLICY memberships_tenant_access ON memberships
 CREATE POLICY invites_tenant_access ON invites
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -56,18 +60,20 @@ CREATE POLICY password_reset_tokens_access ON password_reset_tokens
   FOR ALL
   USING (
     current_setting('app.is_admin', true) = 'true'
-    OR EXISTS (
-      SELECT 1 FROM memberships m
-      WHERE m.user_id = password_reset_tokens.user_id
-        AND m.tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
-    )
+    OR (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM memberships m
+          WHERE m.user_id = password_reset_tokens.user_id
+            AND m.tenant_id::text = current_setting('app.tenant_id', true)
+        ))
   );
 
 -- tenant_feature_overrides
 CREATE POLICY tenant_feature_overrides_tenant_access ON tenant_feature_overrides
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -75,7 +81,8 @@ CREATE POLICY tenant_feature_overrides_tenant_access ON tenant_feature_overrides
 CREATE POLICY ai_budgets_tenant_access ON ai_budgets
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -83,7 +90,8 @@ CREATE POLICY ai_budgets_tenant_access ON ai_budgets
 CREATE POLICY ai_usage_meters_tenant_access ON ai_usage_meters
   FOR ALL
   USING (
-    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -102,7 +110,8 @@ CREATE POLICY impersonation_sessions_admin_access ON impersonation_sessions
 CREATE POLICY audit_logs_tenant_read ON audit_logs
   FOR SELECT
   USING (
-    (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
+    (NULLIF(current_setting('app.tenant_id', true), '') IS NOT NULL 
+     AND tenant_id::text = current_setting('app.tenant_id', true))
     OR current_setting('app.is_admin', true) = 'true'
   );
 
@@ -145,7 +154,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION set_admin_context()
 RETURNS void AS $$
 BEGIN
-  PERFORM set_config('app.tenant_id', '', true);
+  -- Use RESET instead of empty string to avoid UUID casting issues
+  PERFORM set_config('app.tenant_id', NULL, true);
   PERFORM set_config('app.is_admin', 'true', true);
 END;
 $$ LANGUAGE plpgsql;
@@ -153,7 +163,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION clear_context()
 RETURNS void AS $$
 BEGIN
-  PERFORM set_config('app.tenant_id', '', true);
+  PERFORM set_config('app.tenant_id', NULL, true);
   PERFORM set_config('app.is_admin', 'false', true);
 END;
 $$ LANGUAGE plpgsql;

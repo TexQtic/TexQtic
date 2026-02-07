@@ -4,6 +4,20 @@ import { z } from 'zod';
 import { config } from '../config/index.js';
 import { sendSuccess, sendBadRequest } from '../utils/response.js';
 import { getTenantContext } from '../lib/tenantContext.js';
+import { withTenantDb } from '../lib/dbContext.js';
+import {
+  loadTenantBudget,
+  getUsage,
+  enforceBudgetOrThrow,
+  upsertUsage,
+  estimateCostUSD,
+  getMonthKey,
+  BudgetExceededError,
+} from '../lib/aiBudget.js';
+import { writeAuditLog, createAiInsightsAudit, createAiNegotiationAudit } from '../lib/auditLog.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Initialize Gemini client (server-side only)
 let genAI: GoogleGenerativeAI | null = null;
@@ -25,40 +39,29 @@ const negotiationAdviceSchema = z.object({
 
 type NegotiationAdviceInput = z.infer<typeof negotiationAdviceSchema>;
 
-/**
- * Audit log helper (Phase 3A: graceful fallback if DB not ready)
- */
-function logAuditEntry(
-  tenantId: string | null,
-  action: string,
-  metadata: Record<string, any>,
-  logger: any
-) {
-  // TODO Phase 3B: Write to audit_logs table when DB ready
-  // For now: structured server log
-  logger.info(
-    {
-      audit: {
-        tenantId,
-        action,
-        timestamp: new Date().toISOString(),
-        ...metadata,
-      },
-    },
-    'AI_AUDIT_LOG'
-  );
-}
+// Configuration
+const AI_PREFLIGHT_TOKENS_INSIGHTS = parseInt(
+  process.env.AI_PREFLIGHT_TOKENS_INSIGHTS || '1500',
+  10
+);
+const AI_PREFLIGHT_TOKENS_NEGOTIATION = parseInt(
+  process.env.AI_PREFLIGHT_TOKENS_NEGOTIATION || '2500',
+  10
+);
 
 /**
- * Generate AI content with timeout and error handling
+ * Generate AI content with timeout and token usage tracking
  */
 async function generateContent(
   prompt: string,
   systemInstruction?: string,
   timeoutMs: number = 8000
-): Promise<string> {
+): Promise<{ text: string; tokensUsed: number }> {
   if (!genAI) {
-    return 'AI service temporarily unavailable. Please configure GEMINI_API_KEY.';
+    return {
+      text: 'AI service temporarily unavailable. Please configure GEMINI_API_KEY.',
+      tokensUsed: 0,
+    };
   }
 
   try {
@@ -75,10 +78,23 @@ async function generateContent(
 
     const result = await Promise.race([aiPromise, timeoutPromise]);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+
+    // Estimate tokens used based on response length
+    // Gemini SDK doesn't always provide usage metadata
+    // Rough estimate: 1 token ≈ 4 characters
+    const estimatedTokens = Math.ceil((prompt.length + text.length) / 4);
+
+    return {
+      text,
+      tokensUsed: estimatedTokens,
+    };
   } catch (error) {
     console.error('AI generation error:', error);
-    return 'AI service encountered an error. Please try again later.';
+    return {
+      text: 'AI service encountered an error. Please try again later.',
+      tokensUsed: 0,
+    };
   }
 }
 
@@ -92,45 +108,116 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    *   - experience (optional): context hint
    *
    * Response: { ok: true, data: { insightText: string, updatedAt: string } }
+   *
+   * Phase 3B: Budget enforcement + usage metering + audit logging
    */
   fastify.get('/insights', async (request, reply) => {
-    const { tenantId, realm } = getTenantContext(request);
+    const { tenantId, realm, userId } = getTenantContext(request);
     const { tenantType, experience } = request.query as {
       tenantType?: string;
       experience?: string;
     };
 
-    // Log audit entry
-    logAuditEntry(tenantId, 'ai.insights.request', { tenantType, experience, realm }, fastify.log);
-
-    // Build prompt
-    const basePrompt = 'Provide a brief market trend analysis';
-    const contextParts: string[] = [];
-
-    if (tenantType) {
-      contextParts.push(`for a ${tenantType} platform`);
-    }
-    if (experience) {
-      contextParts.push(`focusing on ${experience}`);
+    // Require tenant context for tenant-scoped endpoint
+    if (!tenantId) {
+      return reply.code(401).send({
+        ok: false,
+        error: 'UNAUTHORIZED',
+        message: 'Tenant context required for AI insights',
+      });
     }
 
-    const prompt =
-      contextParts.length > 0
-        ? `${basePrompt} ${contextParts.join(' ')}.`
-        : `${basePrompt} for a global commerce platform.`;
+    const requestId = `insights-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const monthKey = getMonthKey();
+    const model = 'gemini-1.5-flash';
 
-    const systemInstruction =
-      'You are a strategic AI advisor for a multi-tenant global commerce platform. ' +
-      'Provide architectural and market insights concisely in 2-3 sentences.';
+    try {
+      // Execute within tenant DB context (RLS enforced)
+      const result = await withTenantDb(prisma, tenantId, realm === 'admin', async tx => {
+        // 1. Load budget policy
+        const budget = await loadTenantBudget(tx, tenantId);
 
-    // Generate content
-    const insightText = await generateContent(prompt, systemInstruction);
+        // 2. Get current usage
+        const usage = await getUsage(tx, tenantId, monthKey);
 
-    return sendSuccess(reply, {
-      insightText,
-      updatedAt: new Date().toISOString(),
-      cached: false, // TODO Phase 3B: implement caching
-    });
+        // 3. Preflight budget check (conservative estimate)
+        const preflightTokens = AI_PREFLIGHT_TOKENS_INSIGHTS;
+        const preflightCost = estimateCostUSD(preflightTokens, model);
+        enforceBudgetOrThrow(budget, usage, preflightTokens, preflightCost);
+
+        // 4. Build prompt
+        const basePrompt = 'Provide a brief market trend analysis';
+        const contextParts: string[] = [];
+
+        if (tenantType) {
+          contextParts.push(`for a ${tenantType} platform`);
+        }
+        if (experience) {
+          contextParts.push(`focusing on ${experience}`);
+        }
+
+        const prompt =
+          contextParts.length > 0
+            ? `${basePrompt} ${contextParts.join(' ')}.`
+            : `${basePrompt} for a global commerce platform.`;
+
+        const systemInstruction =
+          'You are a strategic AI advisor for a multi-tenant global commerce platform. ' +
+          'Provide architectural and market insights concisely in 2-3 sentences.';
+
+        // 5. Generate content (AI call)
+        const { text: insightText, tokensUsed } = await generateContent(prompt, systemInstruction);
+
+        // 6. Calculate actual cost
+        const actualCost = estimateCostUSD(tokensUsed, model);
+
+        // 7. Update usage meter
+        await upsertUsage(tx, tenantId, monthKey, tokensUsed, actualCost);
+
+        // 8. Write audit log (DB-backed, append-only)
+        const auditEntry = createAiInsightsAudit(tenantId, userId, {
+          model,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+          requestId,
+          tenantType,
+          experience,
+        });
+        await writeAuditLog(tx, auditEntry);
+
+        return {
+          insightText,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+        };
+      });
+
+      // Add response headers for debugging
+      reply.header('X-AI-Month', result.monthKey);
+      reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
+      reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
+
+      return sendSuccess(reply, {
+        insightText: result.insightText,
+        updatedAt: new Date().toISOString(),
+        cached: false,
+      });
+    } catch (error) {
+      // Handle budget exceeded error
+      if (error instanceof BudgetExceededError) {
+        return reply.code(429).send(error.toJSON());
+      }
+
+      // Log and return generic error
+      console.error('[AI Insights] Error:', error);
+      return reply.code(500).send({
+        ok: false,
+        error: 'INTERNAL_ERROR',
+        message: 'Failed to generate insights',
+      });
+    }
   });
 
   /**
@@ -139,9 +226,20 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    *
    * Body: { productName?, targetPrice?, quantity?, context? }
    * Response: { ok: true, data: { adviceText: string, riskFlags: string[], updatedAt: string } }
+   *
+   * Phase 3B: Budget enforcement + usage metering + audit logging
    */
   fastify.post('/negotiation-advice', async (request, reply) => {
-    const { tenantId, realm } = getTenantContext(request);
+    const { tenantId, realm, userId } = getTenantContext(request);
+
+    // Require tenant context
+    if (!tenantId) {
+      return reply.code(401).send({
+        ok: false,
+        error: 'UNAUTHORIZED',
+        message: 'Tenant context required for AI negotiation advice',
+      });
+    }
 
     // Validate body
     const parseResult = negotiationAdviceSchema.safeParse(request.body);
@@ -151,49 +249,110 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
 
     const { productName, targetPrice, quantity, context } = parseResult.data;
 
-    // Log audit entry
-    logAuditEntry(
-      tenantId,
-      'ai.negotiation.request',
-      { productName, targetPrice, quantity, hasContext: !!context, realm },
-      fastify.log
-    );
+    const requestId = `negotiation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const monthKey = getMonthKey();
+    const model = 'gemini-1.5-flash';
 
-    // Build prompt
-    let prompt = 'Generate 3 strategic negotiation points for a B2B buyer.';
-    const details: string[] = [];
+    try {
+      // Execute within tenant DB context (RLS enforced)
+      const result = await withTenantDb(prisma, tenantId, realm === 'admin', async tx => {
+        // 1. Load budget policy
+        const budget = await loadTenantBudget(tx, tenantId);
 
-    if (productName) details.push(`Product: ${productName}`);
-    if (targetPrice) details.push(`Target Price: $${targetPrice}`);
-    if (quantity) details.push(`Quantity: ${quantity} units`);
-    if (context) details.push(`Context: ${context}`);
+        // 2. Get current usage
+        const usage = await getUsage(tx, tenantId, monthKey);
 
-    if (details.length > 0) {
-      prompt = `${details.join('. ')}. ${prompt}`;
+        // 3. Preflight budget check (conservative estimate)
+        const preflightTokens = AI_PREFLIGHT_TOKENS_NEGOTIATION;
+        const preflightCost = estimateCostUSD(preflightTokens, model);
+        enforceBudgetOrThrow(budget, usage, preflightTokens, preflightCost);
+
+        // 4. Build prompt
+        let prompt = 'Generate 3 strategic negotiation points for a B2B buyer.';
+        const details: string[] = [];
+
+        if (productName) details.push(`Product: ${productName}`);
+        if (targetPrice) details.push(`Target Price: $${targetPrice}`);
+        if (quantity) details.push(`Quantity: ${quantity} units`);
+        if (context) details.push(`Context: ${context}`);
+
+        if (details.length > 0) {
+          prompt = `${details.join('. ')}. ${prompt}`;
+        }
+
+        const systemInstruction =
+          'You are a B2B negotiation advisor. Provide 3 concise, actionable negotiation tactics. ' +
+          'Flag any high-risk strategies.';
+
+        // 5. Generate content (AI call)
+        const { text: adviceText, tokensUsed } = await generateContent(
+          prompt,
+          systemInstruction,
+          10000
+        );
+
+        // 6. Calculate actual cost
+        const actualCost = estimateCostUSD(tokensUsed, model);
+
+        // 7. Update usage meter
+        await upsertUsage(tx, tenantId, monthKey, tokensUsed, actualCost);
+
+        // 8. Write audit log (DB-backed, append-only)
+        const auditEntry = createAiNegotiationAudit(tenantId, userId, {
+          model,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+          requestId,
+          productName,
+          targetPrice,
+          quantity,
+        });
+        await writeAuditLog(tx, auditEntry);
+
+        // 9. Risk detection
+        const riskFlags: string[] = [];
+        const lowerAdvice = adviceText.toLowerCase();
+        if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
+          riskFlags.push('AGGRESSIVE_TACTICS');
+        }
+        if (targetPrice && targetPrice < 10) {
+          riskFlags.push('LOW_PRICE_THRESHOLD');
+        }
+
+        return {
+          adviceText,
+          riskFlags,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+        };
+      });
+
+      // Add response headers for debugging
+      reply.header('X-AI-Month', result.monthKey);
+      reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
+      reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
+
+      return sendSuccess(reply, {
+        adviceText: result.adviceText,
+        riskFlags: result.riskFlags,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      // Handle budget exceeded error
+      if (error instanceof BudgetExceededError) {
+        return reply.code(429).send(error.toJSON());
+      }
+
+      // Log and return generic error
+      console.error('[AI Negotiation] Error:', error);
+      return reply.code(500).send({
+        ok: false,
+        error: 'INTERNAL_ERROR',
+        message: 'Failed to generate negotiation advice',
+      });
     }
-
-    const systemInstruction =
-      'You are a B2B negotiation advisor. Provide 3 concise, actionable negotiation tactics. ' +
-      'Flag any high-risk strategies.';
-
-    // Generate content
-    const adviceText = await generateContent(prompt, systemInstruction, 10000);
-
-    // Simple risk detection (upgrade in Phase 3B)
-    const riskFlags: string[] = [];
-    const lowerAdvice = adviceText.toLowerCase();
-    if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
-      riskFlags.push('AGGRESSIVE_TACTICS');
-    }
-    if (targetPrice && targetPrice < 10) {
-      riskFlags.push('LOW_PRICE_THRESHOLD');
-    }
-
-    return sendSuccess(reply, {
-      adviceText,
-      riskFlags,
-      updatedAt: new Date().toISOString(),
-    });
   });
 
   /**
