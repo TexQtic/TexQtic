@@ -33,8 +33,15 @@ export function getTenantContext(request: FastifyRequest): TenantContext {
     };
   }
 
-  // Priority 3: TEMPORARY fallback - X-Tenant-Id header (for Phase 3A only)
-  // TODO Phase 3B: Remove this fallback and require authentication
+  /**
+   * TECHNICAL DEBT: X-Tenant-Id header fallback
+   * 
+   * Context: Phase 2 temporary workaround for unauthenticated tenant API access
+   * Phase Gate: REMOVE in Phase 3B when authentication is fully enforced
+   * Action Required: Delete this fallback block once all tenant endpoints require JWT auth
+   * 
+   * WARNING: This bypasses authentication - do not use in production Phase 3+
+   */
   const headerTenantId = request.headers['x-tenant-id'] as string | undefined;
   if (headerTenantId) {
     request.log.warn({ headerTenantId }, 'Using X-Tenant-Id fallback - REMOVE IN PHASE 3B');
