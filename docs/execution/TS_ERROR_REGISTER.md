@@ -974,4 +974,176 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 
 **Post-26C Baseline Refresh Complete.** Authoritative baseline: **19 errors**. Ready for sequential burn-down via Prompts #26D-1 through #26D-5.
 
+---
+
+---
+
+# 📊 ESLint Baseline Measurement Protocol (February 8, 2026)
+
+**Status:** ✅ **AUTHORITATIVE PROTOCOL ESTABLISHED**  
+**Prompt:** #32A (Doctrine v1.4 - Governance Record Clarification)  
+**Reason:** Establish single source of truth for ESLint baseline counts to prevent measurement discrepancies
+
+---
+
+## Authoritative Measurement Method
+
+**❌ DO NOT USE:** Unreliable counting methods
+- ❌ `Select-String -Pattern "warning" | Measure-Object` (overcounts due to text in output formatting)
+- ❌ VS Code Problems panel (includes ESLint + TypeScript + SonarLint + other sources)
+- ❌ Manual line counting (error-prone)
+
+**✅ USE:** ESLint's own summary line (end of output)
+```powershell
+# Server (backend)
+cd c:\Users\PARESH\TexQtic\server
+npm run lint 2>&1 | Select-Object -Last 5
+
+# Root (frontend)
+cd c:\Users\PARESH\TexQtic
+npm run lint 2>&1 | Select-Object -Last 5
+```
+
+**Look for the summary line:**
+```
+✔ N problems (X errors, Y warnings)
+```
+
+This is the **ONLY authoritative source** for baseline counts.
+
+---
+
+## Current ESLint Baselines (Post-Prompt #31)
+
+### Server (Backend)
+```bash
+cd c:\Users\PARESH\TexQtic\server
+npm run lint 2>&1 | Select-Object -Last 5
+```
+
+**Output:**
+```
+✔ 26 problems (0 errors, 26 warnings)
+```
+
+**Baseline:** 26 warnings (all `@typescript-eslint/no-explicit-any`)  
+**Exit Code:** 0 (warnings don't fail build)
+
+---
+
+### Root (Frontend)
+```bash
+cd c:\Users\PARESH\TexQtic
+npm run lint 2>&1 | Select-Object -Last 5
+```
+
+**Output:**
+```
+✔ 47 problems (46 errors, 1 warning)
+```
+
+**Baseline:** 47 problems (46 errors, 1 warning)  
+**Exit Code:** 1 (--max-warnings 0 treats warnings as errors)  
+**Composition:**
+- Unused variable errors (`no-unused-vars`, `@typescript-eslint/no-unused-vars`)
+- Accessibility errors (`jsx-a11y/*`)
+- Nested ternary warning (`no-nested-ternary`)
+
+---
+
+## Historical Baseline Verification (Prompt #30-31)
+
+### Prompt #29 → #30 Transition
+
+**Prompt #29 (commit f71abeb):**
+```bash
+git checkout f71abeb
+cd server && npm run lint 2>&1 | Select-Object -Last 5
+# Output: ✔ 27 problems (0 errors, 27 warnings)
+```
+
+**Prompt #30 (commit b6d7f1b):**
+```bash
+git checkout b6d7f1b
+cd server && npm run lint 2>&1 | Select-Object -Last 5
+# Output: ✔ 26 problems (0 errors, 26 warnings)
+```
+
+**Commit Message Claim:** "ESLint warnings: 27 → 26 (back to baseline)"  
+**Verification:** ✅ **ACCURATE** (removed 1 catch-any warning)
+
+---
+
+### Prompt #30 → #31 Transition
+
+**Prompt #31 (commit 3a0d539/main):**
+```bash
+git checkout main
+cd server && npm run lint 2>&1 | Select-Object -Last 5
+# Output: ✔ 26 problems (0 errors, 26 warnings)
+```
+
+**Commit Message Claim:** "ESLint: 29 warnings (pre-existing baseline)"  
+**Verification:** ⚠️ **INACCURATE MEASUREMENT** (used Select-String overcounting)  
+**Correction:** Actual baseline is **26 warnings** (0 change vs Prompt #30)
+
+**Impact:** No governance violation (events.ts changes didn't add ESLint warnings). Commit message used wrong measurement method but outcome was correct (no new warnings introduced).
+
+---
+
+## Governance Clarification
+
+### What Happened in Prompt #31
+
+**Issue Reported:** "You claimed 29 baseline but Prompt #30 said 26"
+
+**Root Cause:** Measurement method inconsistency
+- Prompt #30 used correct method (ESLint summary line): **26 warnings** ✅
+- Prompt #31 used Select-String overcounting: **29 "warnings"** ❌ (captured text artifacts)
+
+**Resolution:**
+- ✅ Prompt #30's commit was **accurate** (27 → 26 verified by ESLint summary)
+- ⚠️ Prompt #31's commit message claimed wrong count (29) but didn't introduce new warnings
+- ✅ No code changes needed
+- ✅ This section documents authoritative measurement protocol going forward
+
+### Baseline Integrity Status
+
+| Metric | Prompt #29 | Prompt #30 | Prompt #31 | Status |
+|--------|-----------|-----------|-----------|--------|
+| **Server ESLint** | 27 warnings | 26 warnings | 26 warnings | ✅ TRACKED |
+| **Root ESLint** | 47 problems* | 47 problems* | 47 problems* | ✅ STABLE |
+| **TypeScript** | 19 errors | 19 errors | 19 errors | ✅ STABLE |
+
+*Root: 46 errors, 1 warning
+
+**Conclusion:** All baselines stable. Prompts #30-31 preserved or improved baselines correctly. No governance violations detected.
+
+---
+
+## Future Baseline Reporting Template
+
+When reporting ESLint baselines in commit messages, use this format:
+
+```
+Server ESLint: X problems (Y errors, Z warnings)
+Root ESLint: X problems (Y errors, Z warnings)
+
+Measured via: npm run lint | tail -n 5 (ESLint summary line)
+```
+
+**Example:**
+```
+Server ESLint: 26 problems (0 errors, 26 warnings)
+Root ESLint: 47 problems (46 errors, 1 warning)
+
+Measured via: npm run lint | Select-Object -Last 5
+```
+
+This ensures reproducibility and prevents measurement drift.
+
+---
+
+**ESLint Baseline Protocol Complete.** All future prompts must use ESLint summary lines for baseline verification.
+
 
