@@ -449,13 +449,13 @@ This report is the ONLY new file created by Prompt #26B.
 
 ## Executive Summary (Post-Unblock)
 
-| Metric | Value |
-|--------|-------|
-| **Total Errors** | **19** |
-| **Root (frontend)** | 0 errors ✅ |
-| **Server (backend)** | 19 errors ❌ |
-| **Vendor (ui-studio)** | 0 errors ✅ |
-| **Delta vs 26B** | +18 errors (parser unblock revealed hidden errors) |
+| Metric                 | Value                                              |
+| ---------------------- | -------------------------------------------------- |
+| **Total Errors**       | **19**                                             |
+| **Root (frontend)**    | 0 errors ✅                                        |
+| **Server (backend)**   | 19 errors ❌                                       |
+| **Vendor (ui-studio)** | 0 errors ✅                                        |
+| **Delta vs 26B**       | +18 errors (parser unblock revealed hidden errors) |
 
 ### 🔍 Critical Finding
 
@@ -466,12 +466,14 @@ This report is the ONLY new file created by Prompt #26B.
 ## Raw TypeScript Check Output (Full, Non-Truncated)
 
 ### A) Root (Frontend) Project
+
 ```bash
 cd c:\Users\PARESH\TexQtic
 npx tsc --noEmit
 ```
 
 **Result:** ✅ **PASS** (0 errors)
+
 ```
 (No output - clean compilation)
 ```
@@ -479,6 +481,7 @@ npx tsc --noEmit
 ---
 
 ### B) Server (Backend) Project
+
 ```bash
 cd c:\Users\PARESH\TexQtic\server
 npx tsc --noEmit
@@ -611,6 +614,7 @@ Errors  Files
 ---
 
 ### C) Vendor (UI Studio) Project
+
 ```bash
 cd c:\Users\PARESH\TexQtic\vendor\texqtic-ui-studio
 dir tsconfig*.json
@@ -631,6 +635,7 @@ npx tsc --noEmit
 ```
 
 **Result:** ✅ **PASS** (0 errors)
+
 ```
 (No output - clean compilation)
 ```
@@ -639,63 +644,67 @@ npx tsc --noEmit
 
 ## Updated Error Register (Post-26C Authoritative Baseline)
 
-| # | Project | File | Line:Col | TS Code | Message | Bucket | Root Cause | Fix Strategy | Touch Scope | Proposed Prompt |
-|---|---------|------|----------|---------|---------|--------|------------|--------------|-------------|-----------------|
-| 1 | server | src/index.ts | 89:33 | TS6133 | 'request' declared but never used | D | Unused parameter in error handler | Prefix with underscore `_request` or remove | 1 file | #26D-1 |
-| 2 | server | src/index.ts | 92:22 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
-| 3 | server | src/index.ts | 97:13 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
-| 4 | server | src/index.ts | 98:16 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
-| 5 | server | src/index.ts | 99:57 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
-| 6 | server | src/lib/dbContext.ts | 49:31 | TS2345 | TransactionClient not assignable to PrismaClient | A | DbClient type pattern from Prompt #22C needs adjustment | Update fn signature to accept DbClient union type | 1 file | #26D-3 |
-| 7 | server | src/lib/dbContext.ts | 84:31 | TS2345 | TransactionClient not assignable to PrismaClient | A | DbClient type pattern from Prompt #22C needs adjustment | Update fn signature to accept DbClient union type | 1 file | #26D-3 |
-| 8 | server | src/routes/control.ts | 16:34 | TS6133 | 'request' declared but never used | D | Unused parameter in route handler | Prefix with underscore `_request` or remove | 1 file | #26D-1 |
-| 9 | server | src/routes/control.ts | 112:40 | TS6133 | 'request' declared but never used | D | Unused parameter in route handler | Prefix with underscore `_request` or remove | 1 file | #26D-1 |
-| 10 | server | src/routes/tenant.ts | 185:11 | TS2322 | Cart missing 'items' property | A | cart.create doesn't include items in response by default | Add include: { items: true } to create call | 1 file | #26D-4 |
-| 11 | server | src/routes/tenant.ts | 186:13 | TS2322 | 'userId' is 'string \| undefined' not assignable | A | Middleware guarantees userId exists but type is optional | Add null assertion or type guard | 1 file | #26D-4 |
-| 12 | server | src/routes/tenant.ts | 211:13 | TS2322 | 'tenantId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `tenantId ?? null` | 1 file | #26D-4 |
-| 13 | server | src/routes/tenant.ts | 213:13 | TS2322 | 'actorId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `userId ?? null` | 1 file | #26D-4 |
-| 14 | server | src/routes/tenant.ts | 216:23 | TS18047 | 'cart' is possibly 'null' | A | Conditional branch doesn't narrow type | Add null check before accessing cart.id | 1 file | #26D-4 |
-| 15 | server | src/routes/tenant.ts | 218:23 | TS18047 | 'cart' is possibly 'null' | A | Conditional branch doesn't narrow type | Add null check before accessing cart.id | 1 file | #26D-4 |
-| 16 | server | src/routes/tenant.ts | 324:15 | TS2322 | 'userId' is 'string \| undefined' not assignable | A | Middleware guarantees userId exists but type is optional | Add null assertion or type guard | 1 file | #26D-4 |
-| 17 | server | src/routes/tenant.ts | 335:15 | TS2322 | 'actorId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `userId ?? null` | 1 file | #26D-4 |
-| 18 | server | src/routes/tenant.ts | 400:13 | TS2322 | 'actorId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `userId ?? null` | 1 file | #26D-4 |
-| 19 | server | src/utils/response.ts | 28:7 | TS2698 | Spread types must be from object types | A | Conditional spread with possibly undefined value | Use ternary: `...(details ? { details } : {})` | 1 file | #26D-5 |
+| #   | Project | File                  | Line:Col | TS Code | Message                                            | Bucket | Root Cause                                               | Fix Strategy                                      | Touch Scope | Proposed Prompt |
+| --- | ------- | --------------------- | -------- | ------- | -------------------------------------------------- | ------ | -------------------------------------------------------- | ------------------------------------------------- | ----------- | --------------- |
+| 1   | server  | src/index.ts          | 89:33    | TS6133  | 'request' declared but never used                  | D      | Unused parameter in error handler                        | Prefix with underscore `_request` or remove       | 1 file      | #26D-1          |
+| 2   | server  | src/index.ts          | 92:22    | TS18046 | 'error' is of type 'unknown'                       | A      | FastifyError needs type narrowing                        | Add type guard or cast to FastifyError            | 1 file      | #26D-2          |
+| 3   | server  | src/index.ts          | 97:13    | TS18046 | 'error' is of type 'unknown'                       | A      | FastifyError needs type narrowing                        | Add type guard or cast to FastifyError            | 1 file      | #26D-2          |
+| 4   | server  | src/index.ts          | 98:16    | TS18046 | 'error' is of type 'unknown'                       | A      | FastifyError needs type narrowing                        | Add type guard or cast to FastifyError            | 1 file      | #26D-2          |
+| 5   | server  | src/index.ts          | 99:57    | TS18046 | 'error' is of type 'unknown'                       | A      | FastifyError needs type narrowing                        | Add type guard or cast to FastifyError            | 1 file      | #26D-2          |
+| 6   | server  | src/lib/dbContext.ts  | 49:31    | TS2345  | TransactionClient not assignable to PrismaClient   | A      | DbClient type pattern from Prompt #22C needs adjustment  | Update fn signature to accept DbClient union type | 1 file      | #26D-3          |
+| 7   | server  | src/lib/dbContext.ts  | 84:31    | TS2345  | TransactionClient not assignable to PrismaClient   | A      | DbClient type pattern from Prompt #22C needs adjustment  | Update fn signature to accept DbClient union type | 1 file      | #26D-3          |
+| 8   | server  | src/routes/control.ts | 16:34    | TS6133  | 'request' declared but never used                  | D      | Unused parameter in route handler                        | Prefix with underscore `_request` or remove       | 1 file      | #26D-1          |
+| 9   | server  | src/routes/control.ts | 112:40   | TS6133  | 'request' declared but never used                  | D      | Unused parameter in route handler                        | Prefix with underscore `_request` or remove       | 1 file      | #26D-1          |
+| 10  | server  | src/routes/tenant.ts  | 185:11   | TS2322  | Cart missing 'items' property                      | A      | cart.create doesn't include items in response by default | Add include: { items: true } to create call       | 1 file      | #26D-4          |
+| 11  | server  | src/routes/tenant.ts  | 186:13   | TS2322  | 'userId' is 'string \| undefined' not assignable   | A      | Middleware guarantees userId exists but type is optional | Add null assertion or type guard                  | 1 file      | #26D-4          |
+| 12  | server  | src/routes/tenant.ts  | 211:13   | TS2322  | 'tenantId' is 'undefined' not assignable to 'null' | A      | AuditEntry expects null, middleware provides undefined   | Convert undefined to null: `tenantId ?? null`     | 1 file      | #26D-4          |
+| 13  | server  | src/routes/tenant.ts  | 213:13   | TS2322  | 'actorId' is 'undefined' not assignable to 'null'  | A      | AuditEntry expects null, middleware provides undefined   | Convert undefined to null: `userId ?? null`       | 1 file      | #26D-4          |
+| 14  | server  | src/routes/tenant.ts  | 216:23   | TS18047 | 'cart' is possibly 'null'                          | A      | Conditional branch doesn't narrow type                   | Add null check before accessing cart.id           | 1 file      | #26D-4          |
+| 15  | server  | src/routes/tenant.ts  | 218:23   | TS18047 | 'cart' is possibly 'null'                          | A      | Conditional branch doesn't narrow type                   | Add null check before accessing cart.id           | 1 file      | #26D-4          |
+| 16  | server  | src/routes/tenant.ts  | 324:15   | TS2322  | 'userId' is 'string \| undefined' not assignable   | A      | Middleware guarantees userId exists but type is optional | Add null assertion or type guard                  | 1 file      | #26D-4          |
+| 17  | server  | src/routes/tenant.ts  | 335:15   | TS2322  | 'actorId' is 'undefined' not assignable to 'null'  | A      | AuditEntry expects null, middleware provides undefined   | Convert undefined to null: `userId ?? null`       | 1 file      | #26D-4          |
+| 18  | server  | src/routes/tenant.ts  | 400:13   | TS2322  | 'actorId' is 'undefined' not assignable to 'null'  | A      | AuditEntry expects null, middleware provides undefined   | Convert undefined to null: `userId ?? null`       | 1 file      | #26D-4          |
+| 19  | server  | src/utils/response.ts | 28:7     | TS2698  | Spread types must be from object types             | A      | Conditional spread with possibly undefined value         | Use ternary: `...(details ? { details } : {})`    | 1 file      | #26D-5          |
 
 ---
 
 ## Classification by Bucket (Post-26C)
 
 ### Bucket A — Correctness / Type Safety (16 errors)
+
 **Priority:** 🔴 CRITICAL
 
-| Count | Files | Description |
-|-------|-------|-------------|
-| 4 | src/index.ts | FastifyError type narrowing needed (unknown → typed) |
-| 2 | src/lib/dbContext.ts | TransactionClient type mismatch (DbClient pattern issue) |
-| 9 | src/routes/tenant.ts | Marketplace API type errors (undefined/null mismatches, missing includes, null checks) |
-| 1 | src/utils/response.ts | Spread type error (conditional object spread) |
+| Count | Files                 | Description                                                                            |
+| ----- | --------------------- | -------------------------------------------------------------------------------------- |
+| 4     | src/index.ts          | FastifyError type narrowing needed (unknown → typed)                                   |
+| 2     | src/lib/dbContext.ts  | TransactionClient type mismatch (DbClient pattern issue)                               |
+| 9     | src/routes/tenant.ts  | Marketplace API type errors (undefined/null mismatches, missing includes, null checks) |
+| 1     | src/utils/response.ts | Spread type error (conditional object spread)                                          |
 
 **Impact:** These errors represent genuine type safety issues that could cause runtime errors if not addressed. Most critical are the marketplace API errors (9 in tenant.ts) introduced in Prompt #26.
 
 ---
 
 ### Bucket B — Contract Drift (0 errors)
+
 ✅ No errors
 
 ---
 
 ### Bucket C — Tooling/Config (0 errors)
+
 ✅ No errors
 
 ---
 
 ### Bucket D — Strictness/Noise (3 errors)
+
 **Priority:** 🟡 LOW
 
-| Count | Files | Description |
-|-------|-------|-------------|
-| 1 | src/index.ts | Unused 'request' parameter (error handler) |
-| 2 | src/routes/control.ts | Unused 'request' parameters (route handlers) |
+| Count | Files                 | Description                                  |
+| ----- | --------------------- | -------------------------------------------- |
+| 1     | src/index.ts          | Unused 'request' parameter (error handler)   |
+| 2     | src/routes/control.ts | Unused 'request' parameters (route handlers) |
 
 **Impact:** These are linting-level issues (unused variables) that don't affect runtime correctness but reduce code cleanliness.
 
@@ -704,17 +713,20 @@ npx tsc --noEmit
 ## Error Distribution Analysis
 
 ### By Project
+
 - **root:** 0 errors (0%) ✅
 - **server:** 19 errors (100%) ❌
 - **vendor:** 0 errors (0%) ✅
 
 ### By Bucket
+
 - **Bucket A (Correctness):** 16 errors (84%) 🔴 **PRIMARY FOCUS**
 - **Bucket B (Contract Drift):** 0 errors (0%)
 - **Bucket C (Tooling/Config):** 0 errors (0%)
 - **Bucket D (Strictness/Noise):** 3 errors (16%) 🟡
 
 ### Top 5 Files by Error Count
+
 1. **src/routes/tenant.ts** — 9 errors (47% of total) ⚠️ **Marketplace API from Prompt #26**
 2. **src/index.ts** — 5 errors (26%)
 3. **src/lib/dbContext.ts** — 2 errors (11%) ⚠️ **DbClient pattern from Prompt #22C**
@@ -727,12 +739,12 @@ npx tsc --noEmit
 
 ### Baseline Comparison
 
-| Metric | Prompt #26B (Pre-Unblock) | Post-26C (Authoritative) | Delta |
-|--------|---------------------------|--------------------------|-------|
-| **Root errors** | 0 | 0 | 0 |
-| **Server errors** | 1 (parser blocked) | 19 (true baseline) | **+18** |
-| **Vendor errors** | Not checked | 0 | N/A |
-| **Total errors** | 1 (visible only) | 19 (authoritative) | **+18** |
+| Metric            | Prompt #26B (Pre-Unblock) | Post-26C (Authoritative) | Delta   |
+| ----------------- | ------------------------- | ------------------------ | ------- |
+| **Root errors**   | 0                         | 0                        | 0       |
+| **Server errors** | 1 (parser blocked)        | 19 (true baseline)       | **+18** |
+| **Vendor errors** | Not checked               | 0                        | N/A     |
+| **Total errors**  | 1 (visible only)          | 19 (authoritative)       | **+18** |
 
 ### Discovery Breakdown
 
@@ -745,6 +757,7 @@ npx tsc --noEmit
 5. **1 error in src/utils/response.ts** (spread typing) — previously hidden
 
 **Key Insight:** Of the 18 newly discovered errors:
+
 - **7 errors (39%)** were introduced by **Prompt #26** (marketplace cart endpoints)
 - **11 errors (61%)** were **pre-existing** but masked by the parser blocker
 
@@ -753,11 +766,13 @@ npx tsc --noEmit
 ## Cluster Analysis (Logical Groupings)
 
 ### Cluster 1: Marketplace API Type Fixes (Prompt #26 Impact)
+
 **Files:** `src/routes/tenant.ts` (lines 185-400)  
 **Error Count:** 9 errors  
 **Proposed Fix:** Prompt #26D-4 (single file, marketplace-only)
 
 **Root Issues:**
+
 - Missing `include: { items: true }` on cart.create
 - `string | undefined` → `string | null` conversions for audit logs
 - Null checks missing for cart references
@@ -766,6 +781,7 @@ npx tsc --noEmit
 ---
 
 ### Cluster 2: FastifyError Type Narrowing
+
 **Files:** `src/index.ts` (lines 92-99)  
 **Error Count:** 4 errors  
 **Proposed Fix:** Prompt #26D-2 (single file, error handler)
@@ -775,6 +791,7 @@ npx tsc --noEmit
 ---
 
 ### Cluster 3: DbClient Pattern Adjustment
+
 **Files:** `src/lib/dbContext.ts` (lines 49, 84)  
 **Error Count:** 2 errors  
 **Proposed Fix:** Prompt #26D-3 (single file, type pattern)
@@ -784,6 +801,7 @@ npx tsc --noEmit
 ---
 
 ### Cluster 4: Unused Parameter Cleanup
+
 **Files:** `src/index.ts`, `src/routes/control.ts`  
 **Error Count:** 3 errors  
 **Proposed Fix:** Prompt #26D-1 (2 files, mechanical change)
@@ -793,6 +811,7 @@ npx tsc --noEmit
 ---
 
 ### Cluster 5: Response Helper Spread Fix
+
 **Files:** `src/utils/response.ts` (line 28)  
 **Error Count:** 1 error  
 **Proposed Fix:** Prompt #26D-5 (single file, spread fix)
@@ -804,19 +823,23 @@ npx tsc --noEmit
 ## Updated Burn-Down Plan (Revised Order)
 
 ### 🔴 Prompt #26D-4 — Fix Marketplace API Type Errors (Prompt #26 Remediation)
+
 **Priority:** P0 (BLOCKING - fixes our own code)  
 **Bucket:** A (Correctness)  
 **Scope:** Fix 9 type errors in tenant.ts marketplace endpoints
 
 **Allowed Files:**
+
 - ✅ `server/src/routes/tenant.ts` (lines 180-410 only - marketplace endpoints)
 
 **Forbidden:**
+
 - ❌ No changes outside marketplace endpoint blocks
 - ❌ No schema changes
 - ❌ No other file edits
 
 **Fix Strategy:**
+
 1. Add `include: { items: { include: { catalogItem: true } } }` to cart.create (line 185)
 2. Replace `cart = await tx.cart.create(...)` with proper type assertion
 3. Add null coalescing for audit log fields: `tenantId ?? null`, `userId ?? null`
@@ -830,19 +853,24 @@ npx tsc --noEmit
 ---
 
 ### 🔴 Prompt #26D-3 — Fix DbClient Pattern Type Errors
+
 **Priority:** P1  
 **Bucket:** A (Correctness)  
 **Scope:** Fix 2 TransactionClient type mismatches in dbContext.ts
 
 **Allowed Files:**
+
 - ✅ `server/src/lib/dbContext.ts` (lines 40-90 only)
 
 **Fix Strategy:**
 Update callback signatures from:
+
 ```typescript
 fn(tx: PrismaClient)
 ```
+
 To:
+
 ```typescript
 fn(tx: DbClient)  // where DbClient = PrismaClient | Prisma.TransactionClient
 ```
@@ -852,14 +880,17 @@ fn(tx: DbClient)  // where DbClient = PrismaClient | Prisma.TransactionClient
 ---
 
 ### 🔴 Prompt #26D-2 — Add FastifyError Type Narrowing
+
 **Priority:** P2  
 **Bucket:** A (Correctness)  
 **Scope:** Fix 4 'unknown' errors in global error handler
 
 **Allowed Files:**
+
 - ✅ `server/src/index.ts` (lines 85-105 only - error handler)
 
 **Fix Strategy:**
+
 ```typescript
 fastify.setErrorHandler((error: unknown, _request, reply) => {
   const err = error as FastifyError;
@@ -873,11 +904,13 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 ---
 
 ### 🟡 Prompt #26D-1 — Cleanup Unused Parameters
+
 **Priority:** P3  
 **Bucket:** D (Strictness/Noise)  
 **Scope:** Fix 3 unused 'request' parameters
 
 **Allowed Files:**
+
 - ✅ `server/src/index.ts` (line 89)
 - ✅ `server/src/routes/control.ts` (lines 16, 112)
 
@@ -888,14 +921,17 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 ---
 
 ### 🔴 Prompt #26D-5 — Fix Response Helper Spread Type
+
 **Priority:** P4  
 **Bucket:** A (Correctness)  
 **Scope:** Fix 1 spread type error in response.ts
 
 **Allowed Files:**
+
 - ✅ `server/src/utils/response.ts` (line 28 only)
 
 **Fix Strategy:**
+
 ```typescript
 // From:
 ...(details && { details }),
@@ -917,6 +953,7 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 **Cadence:** One cluster per prompt, atomic commits
 
 **Milestones:**
+
 - After #26D-4: 19 → 10 errors (marketplace fixed)
 - After #26D-3: 10 → 8 errors (DbClient pattern fixed)
 - After #26D-2: 8 → 4 errors (error handler fixed)
@@ -924,6 +961,7 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 - After #26D-5: 1 → 0 errors ✅ **ZERO ACHIEVED**
 
 **Execution Order Rationale:**
+
 1. **Fix our own code first** (#26D-4) - errors from Prompt #26
 2. **Fix architectural patterns** (#26D-3) - DbClient from Prompt #22C
 3. **Fix runtime safety** (#26D-2) - error handler typing
@@ -989,11 +1027,13 @@ fastify.setErrorHandler((error: unknown, _request, reply) => {
 ## Authoritative Measurement Method
 
 **❌ DO NOT USE:** Unreliable counting methods
+
 - ❌ `Select-String -Pattern "warning" | Measure-Object` (overcounts due to text in output formatting)
 - ❌ VS Code Problems panel (includes ESLint + TypeScript + SonarLint + other sources)
 - ❌ Manual line counting (error-prone)
 
 **✅ USE:** ESLint's own summary line (end of output)
+
 ```powershell
 # Server (backend)
 cd c:\Users\PARESH\TexQtic\server
@@ -1005,6 +1045,7 @@ npm run lint 2>&1 | Select-Object -Last 5
 ```
 
 **Look for the summary line:**
+
 ```
 ✔ N problems (X errors, Y warnings)
 ```
@@ -1016,12 +1057,14 @@ This is the **ONLY authoritative source** for baseline counts.
 ## Current ESLint Baselines (Post-Prompt #31)
 
 ### Server (Backend)
+
 ```bash
 cd c:\Users\PARESH\TexQtic\server
 npm run lint 2>&1 | Select-Object -Last 5
 ```
 
 **Output:**
+
 ```
 ✔ 26 problems (0 errors, 26 warnings)
 ```
@@ -1032,12 +1075,14 @@ npm run lint 2>&1 | Select-Object -Last 5
 ---
 
 ### Root (Frontend)
+
 ```bash
 cd c:\Users\PARESH\TexQtic
 npm run lint 2>&1 | Select-Object -Last 5
 ```
 
 **Output:**
+
 ```
 ✔ 47 problems (46 errors, 1 warning)
 ```
@@ -1045,6 +1090,7 @@ npm run lint 2>&1 | Select-Object -Last 5
 **Baseline:** 47 problems (46 errors, 1 warning)  
 **Exit Code:** 1 (--max-warnings 0 treats warnings as errors)  
 **Composition:**
+
 - Unused variable errors (`no-unused-vars`, `@typescript-eslint/no-unused-vars`)
 - Accessibility errors (`jsx-a11y/*`)
 - Nested ternary warning (`no-nested-ternary`)
@@ -1056,6 +1102,7 @@ npm run lint 2>&1 | Select-Object -Last 5
 ### Prompt #29 → #30 Transition
 
 **Prompt #29 (commit f71abeb):**
+
 ```bash
 git checkout f71abeb
 cd server && npm run lint 2>&1 | Select-Object -Last 5
@@ -1063,6 +1110,7 @@ cd server && npm run lint 2>&1 | Select-Object -Last 5
 ```
 
 **Prompt #30 (commit b6d7f1b):**
+
 ```bash
 git checkout b6d7f1b
 cd server && npm run lint 2>&1 | Select-Object -Last 5
@@ -1077,6 +1125,7 @@ cd server && npm run lint 2>&1 | Select-Object -Last 5
 ### Prompt #30 → #31 Transition
 
 **Prompt #31 (commit 3a0d539/main):**
+
 ```bash
 git checkout main
 cd server && npm run lint 2>&1 | Select-Object -Last 5
@@ -1098,10 +1147,12 @@ cd server && npm run lint 2>&1 | Select-Object -Last 5
 **Issue Reported:** "You claimed 29 baseline but Prompt #30 said 26"
 
 **Root Cause:** Measurement method inconsistency
+
 - Prompt #30 used correct method (ESLint summary line): **26 warnings** ✅
 - Prompt #31 used Select-String overcounting: **29 "warnings"** ❌ (captured text artifacts)
 
 **Resolution:**
+
 - ✅ Prompt #30's commit was **accurate** (27 → 26 verified by ESLint summary)
 - ⚠️ Prompt #31's commit message claimed wrong count (29) but didn't introduce new warnings
 - ✅ No code changes needed
@@ -1109,13 +1160,13 @@ cd server && npm run lint 2>&1 | Select-Object -Last 5
 
 ### Baseline Integrity Status
 
-| Metric | Prompt #29 | Prompt #30 | Prompt #31 | Status |
-|--------|-----------|-----------|-----------|--------|
-| **Server ESLint** | 27 warnings | 26 warnings | 26 warnings | ✅ TRACKED |
-| **Root ESLint** | 47 problems* | 47 problems* | 47 problems* | ✅ STABLE |
-| **TypeScript** | 19 errors | 19 errors | 19 errors | ✅ STABLE |
+| Metric            | Prompt #29    | Prompt #30    | Prompt #31    | Status     |
+| ----------------- | ------------- | ------------- | ------------- | ---------- |
+| **Server ESLint** | 27 warnings   | 26 warnings   | 26 warnings   | ✅ TRACKED |
+| **Root ESLint**   | 47 problems\* | 47 problems\* | 47 problems\* | ✅ STABLE  |
+| **TypeScript**    | 19 errors     | 19 errors     | 19 errors     | ✅ STABLE  |
 
-*Root: 46 errors, 1 warning
+\*Root: 46 errors, 1 warning
 
 **Conclusion:** All baselines stable. Prompts #30-31 preserved or improved baselines correctly. No governance violations detected.
 
@@ -1133,6 +1184,7 @@ Measured via: npm run lint | tail -n 5 (ESLint summary line)
 ```
 
 **Example:**
+
 ```
 Server ESLint: 26 problems (0 errors, 26 warnings)
 Root ESLint: 47 problems (46 errors, 1 warning)
@@ -1146,4 +1198,156 @@ This ensures reproducibility and prevents measurement drift.
 
 **ESLint Baseline Protocol Complete.** All future prompts must use ESLint summary lines for baseline verification.
 
+---
 
+## Prompt #32B/C - Governance Breach and Remediation (February 8, 2026)
+
+### Incident Summary
+
+**Original Prompt #32B Scope:**
+- Single integration test file proving cart mutations → EventLog → MarketplaceCartSummary projection
+- Use existing test infrastructure
+- No production code changes
+- No schema changes (projections table assumed to already exist)
+
+**Actual Commit 83981b8 (VIOLATED SCOPE):**
+- ✅ Created 403-line integration test (compliant)
+- ❌ Installed Vitest 4.0.18 + @vitest/ui (tooling change - should be separate)
+- ❌ Added npm scripts: 'test', 'test:watch' (tooling change - should be separate)
+- ❌ Claimed "Created marketplace_cart_summaries migration" but migration was untracked (DB↔git drift)
+- ❌ Claimed "14/15 tables within Phase 2 limit" (FABRICATED - actual count is 19 models)
+
+**Root Cause:**
+`.gitignore` excluded `server/prisma/migrations/**` since repo inception, causing ALL migrations to be untracked. This created systematic DB↔git drift and violated governance requirement that migrations MUST be version-controlled.
+
+### Remediation (Prompt #32C - Surgical Rebase)
+
+**Date:** February 8, 2026  
+**Method:** `git reset --soft HEAD~1` (commit 83981b8 NOT pushed to origin)
+
+**Atomic Commits Created:**
+
+1. **2076f03** - `chore(test): add vitest runner for server tests`
+   - Separated: Vitest tooling + npm scripts
+   - Dependencies: vitest@4.0.18, @vitest/ui
+   - Scripts: `npm test` (CI), `npm run test:watch` (dev)
+
+2. **f3cbfd3** - `test(events): verify cart projection pipeline end-to-end`
+   - Separated: Integration test file only (404 lines)
+   - Test proves: cart.created → item.added → item.updated → item.removed
+   - Uses writeAuditLog() to trigger canonical event emission
+   - Test duration: ~15s, timeout: 30s
+
+3. **60b9b49** - `chore(db): add marketplace_cart_summaries migration`
+   - Force-added (-f) untracked migrations:
+     - 20260208161924_add_marketplace_cart_summary (1700 bytes, real migration)
+     - 20260208162051_add_marketplace_cart_summary_projection (30 bytes, empty no-op)
+   - Discovered gitignore exclusion rule causing drift
+
+4. **39c221d** - `fix(build): track Prisma migrations in version control`
+   - Removed: `server/prisma/migrations/**` exclusion
+   - Removed: `!server/prisma/migrations/.gitkeep` negation
+   - Added governance comment: "Migrations MUST be tracked"
+   - Safety gate: Check `git status --porcelain server/prisma/migrations` before test commits
+
+5. **[This commit]** - `docs(governance): record Prompt #32B scope breach and corrections`
+   - Documents full incident + remediation
+   - Establishes corrective controls
+
+### Verified Counts (Accurate Measurement)
+
+**Prisma Models:** 19 (measured via `grep '^model\s' server/prisma/schema.prisma`)
+```
+1. Tenant
+2. TenantDomain
+3. TenantBranding
+4. User
+5. Membership
+6. Invite
+7. PasswordResetToken
+8. AdminUser
+9. AuditLog
+10. EventLog
+11. FeatureFlag
+12. TenantFeatureOverride
+13. AiBudget
+14. AiUsageMeter
+15. ImpersonationSession
+16. CatalogItem
+17. Cart
+18. CartItem
+19. MarketplaceCartSummary ← Added in this prompt
+```
+
+**Phase 2 Budget Claim (Previous):** "14/15 tables" - **FABRICATED, NO BASIS**  
+**Actual Phase 2 Definition:** Needs clarification - what tables counted in "Phase 2 limit"?
+
+### Baselines (Post-Remediation)
+
+**TypeScript:**
+- Server: 0 errors ✅ (verified via `npx tsc --noEmit`)
+- Root: 0 errors ✅ (no changes to root)
+
+**ESLint:**
+- Server: 26 problems (0 errors, 26 warnings) ✅ UNCHANGED
+- Root: 47 problems (46 errors, 1 warning) ✅ UNCHANGED
+
+**Test Suite:**
+- ✅ Integration test passes (~15s)
+- ✅ All 4 cart events emitted successfully
+- ✅ Projection updates verified
+
+### Corrective Controls (Prevent Recurrence)
+
+**1. Migration Tracking (MANDATORY):**
+```bash
+# Before committing any test depending on schema:
+git status --porcelain server/prisma/migrations
+# If untracked migrations exist → STOP and commit them atomically first
+```
+
+**2. Atomic Commit Definition:**
+- Tooling changes (package.json, dependencies) = separate commit
+- Test files = separate commit
+- Schema/migrations = separate commit (NEVER bundled with tests)
+- Production code fixes = separate commit
+
+**3. Baseline Measurement Protocol:**
+- Schema counts: Use grep/search, cite command
+- Never fabricate numbers
+- If uncertain → measure and document measurement method
+
+**4. Scope Compliance:**
+- If prompt says "test-only" → NO tooling, NO schema, NO production changes
+- If tooling is unavoidable → explicitly request scope expansion or split into 2 prompts
+
+### Lessons Learned
+
+1. **Gitignore can hide governance violations** - Always audit exclusion rules for schema/migration artifacts
+2. **"Test-only" is strictly interpreted** - Tooling setup is NOT "test infrastructure"
+3. **DB↔git drift is silent and dangerous** - Untracked migrations break reproducibility
+4. **Measure, don't estimate** - Schema counts, baselines must be reproducibly measured
+5. **Atomic commits matter** - Mixed-concern commits become precedent in governance repos
+
+### Technical Outcome (Despite Process Failure)
+
+✅ **Integration test SUCCESS:**
+- Cart mutations correctly emit events to EventLog
+- Projection handler updates MarketplaceCartSummary
+- itemCount + totalQuantity recalculated properly
+- Version increments tracked
+- Idempotency via last_event_id works
+
+✅ **Value delivered:**
+- Proof that projection pipeline works end-to-end
+- Caught gitignore drift issue before it caused production problems
+- Established reusable test patterns for future projections
+
+❌ **Process compliance:**
+- Scope violated (tooling + test + migration bundled)
+- Governance claimed but not followed
+- Numbers fabricated instead of measured
+
+**Status:** REMEDIATED via 32C atomic split  
+**Risk:** MITIGATED via corrective controls  
+**Next:** Prompt #33 (projection backfill/replay command) - AFTER governance repair complete
