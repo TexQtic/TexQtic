@@ -325,12 +325,19 @@ export function assertNoSecretsInPayload(payload: Record<string, any>): void {
  *
  * Only these audit actions emit events in Prompt #15.
  * Other actions are silently ignored (no event emission).
+ *
+ * Prompt #17: Added compatibility mappings for legacy/production audit action names.
  */
 const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
+  // Prompt #15: Original doctrine-aligned action names
   TENANT_CREATED_ORIGIN: 'tenant.TENANT_CREATED_ORIGIN',
   TENANT_OWNER_CREATED: 'tenant.TENANT_OWNER_CREATED',
   TENANT_OWNER_MEMBERSHIP_CREATED: 'tenant.TENANT_OWNER_MEMBERSHIP_CREATED',
   TEAM_INVITE_CREATED: 'team.TEAM_INVITE_CREATED',
+
+  // Prompt #17: Compatibility mappings for legacy production action names
+  CREATE_TENANT: 'tenant.TENANT_CREATED_ORIGIN', // ← Maps to origin event
+  INVITE_MEMBER: 'team.TEAM_INVITE_CREATED',
 };
 
 /**
@@ -461,9 +468,12 @@ export async function maybeEmitEventFromAuditEntry(
     const metadata: EventMetadata = {};
 
     // Origin detection: action ends with _ORIGIN or metadataJson.origin === true
+    // Prompt #17: Also treat CREATE_TENANT as origin (legacy action name compatibility)
     const isOriginByName = auditLogRow.action.endsWith('_ORIGIN');
     const isOriginByMetadata = auditLogRow.metadataJson && auditLogRow.metadataJson.origin === true;
-    if (isOriginByName || isOriginByMetadata) {
+    const isOriginByLegacyAction = auditLogRow.action === 'CREATE_TENANT'; // Compatibility mapping
+
+    if (isOriginByName || isOriginByMetadata || isOriginByLegacyAction) {
       metadata.origin = true;
     }
 

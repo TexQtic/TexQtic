@@ -703,6 +703,115 @@ export async function storeEventBestEffort(
 }
 ```
 
+---
+
+## Prompt #17 — Compatibility Mappings (Legacy Audit Actions)
+
+**Status:** ✅ IMPLEMENTED  
+**Date:** February 8, 2026
+
+Events are now emitted and stored for legacy/production audit action names.
+
+### Why Compatibility Mappings Exist
+
+In production, some routes use **legacy audit action names** that predate Doctrine v1.4 naming conventions:
+
+- Legacy: `CREATE_TENANT` (production code)
+- Doctrine: `TENANT_CREATED_ORIGIN` (Prompt #15 standard)
+
+Rather than changing all routes immediately (risky, requires testing), Prompt #17 adds **compatibility mappings** in the event emission layer.
+
+**Result:** Legacy audit actions now emit Doctrine-compliant events without touching route code.
+
+### Compatibility Mappings Added
+
+Two legacy action names now emit P0 events:
+
+| Legacy Audit Action | Doctrine Event Name            | Origin? |
+| ------------------- | ------------------------------ | ------- |
+| `CREATE_TENANT`     | `tenant.TENANT_CREATED_ORIGIN` | Yes ✅  |
+| `INVITE_MEMBER`     | `team.TEAM_INVITE_CREATED`     | No      |
+
+**Implementation:** Updated `AUDIT_ACTION_TO_EVENT_NAME` mapping in `server/src/lib/events.ts`.
+
+### Origin Semantics Preserved
+
+For `CREATE_TENANT`, the emitted event correctly has:
+
+- `name = 'tenant.TENANT_CREATED_ORIGIN'` (origin event)
+- `metadata.origin = true` (genesis marker)
+
+**Implementation:** Added explicit origin detection for `CREATE_TENANT` action in event builder:
+
+```typescript
+const isOriginByLegacyAction = auditLogRow.action === 'CREATE_TENANT';
+if (isOriginByName || isOriginByMetadata || isOriginByLegacyAction) {
+  metadata.origin = true;
+}
+```
+
+### Verification Queries
+
+After triggering a tenant creation or team invite action, use these SQL queries to verify event storage:
+
+**1. Check audit log entry:**
+
+```sql
+SELECT created_at, action, entity, tenant_id, entity_id
+FROM audit_logs
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+**Expected:** Recent row with `action = 'CREATE_TENANT'` or `action = 'INVITE_MEMBER'`
+
+**2. Check corresponding event:**
+
+```sql
+SELECT name, occurred_at, tenant_id, entity_type, entity_id, audit_log_id
+FROM event_logs
+ORDER BY occurred_at DESC
+LIMIT 10;
+```
+
+**Expected outcomes:**
+
+- `audit_logs.action = 'CREATE_TENANT'` → `event_logs.name = 'tenant.TENANT_CREATED_ORIGIN'`
+- `audit_logs.action = 'INVITE_MEMBER'` → `event_logs.name = 'team.TEAM_INVITE_CREATED'`
+
+**3. Verify origin semantics:**
+
+```sql
+SELECT name, metadata_json->>'origin' AS is_origin
+FROM event_logs
+WHERE name = 'tenant.TENANT_CREATED_ORIGIN'
+ORDER BY occurred_at DESC
+LIMIT 5;
+```
+
+**Expected:** `is_origin = 'true'` for all `TENANT_CREATED_ORIGIN` events (regardless of source action name)
+
+### Temporary Nature
+
+**This is an interim compatibility layer.**
+
+Future work will standardize route-level audit action names to match Doctrine conventions, at which point these mappings can be deprecated. Until then, both legacy and Doctrine-aligned action names emit the same events.
+
+---
+
+### Out of Scope (Prompt #17)
+
+The following are **NOT included** in Prompt #17:
+
+- ❌ **Route Changes:** No modifications to existing routes (legacy action names preserved)
+- ❌ **Additional Mappings:** Only the two P0 actions mapped (CREATE_TENANT, INVITE_MEMBER)
+- ❌ **Schema Changes:** No Prisma schema modifications
+- ❌ **Endpoint Changes:** No API contract changes
+
+**Status:** Compatibility layer complete. Legacy production routes now emit Doctrine v1.4 events.
+
+---
+
 ### Out of Scope (Prompt #16)
 
 The following are **NOT included** in Prompt #16:
