@@ -184,8 +184,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         if (!cart) {
           cart = await tx.cart.create({
             data: {
-              tenantId,
-              userId,
+              tenantId: tenantId!,
+              userId: userId!,
               status: 'ACTIVE',
             },
             include: {
@@ -208,9 +208,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           // Audit: cart created
           await writeAuditLog(tx, {
             realm: 'TENANT',
-            tenantId,
+            tenantId: tenantId ?? null,
             actorType: 'USER',
-            actorId: userId,
+            actorId: userId ?? null,
             action: 'cart.CART_CREATED',
             entity: 'cart',
             entityId: cart.id,
@@ -322,17 +322,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           if (!cart) {
             cart = await tx.cart.create({
               data: {
-                tenantId,
-                userId,
+                tenantId: tenantId!,
+                userId: userId!,
                 status: 'ACTIVE',
               },
             });
 
             await writeAuditLog(tx, {
               realm: 'TENANT',
-              tenantId,
+              tenantId: tenantId ?? null,
               actorType: 'USER',
-              actorId: userId,
+              actorId: userId ?? null,
               action: 'cart.CART_CREATED',
               entity: 'cart',
               entityId: cart.id,
@@ -395,9 +395,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           // Audit: item added
           await writeAuditLog(tx, {
             realm: 'TENANT',
-            tenantId,
+            tenantId: tenantId ?? null,
             actorType: 'USER',
-            actorId: userId,
+            actorId: userId ?? null,
             action: 'cart.CART_ITEM_ADDED',
             entity: 'cart_item',
             entityId: cartItem.id,
@@ -502,9 +502,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
             await writeAuditLog(tx, {
               realm: 'TENANT',
-              tenantId,
+              tenantId: tenantId ?? null,
               actorType: 'USER',
-              actorId: userId,
+              actorId: userId ?? null,
               action: 'cart.CART_ITEM_REMOVED',
               entity: 'cart_item',
               entityId: cartItemId,
