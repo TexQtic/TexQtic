@@ -40,11 +40,11 @@ const negotiationAdviceSchema = z.object({
 type NegotiationAdviceInput = z.infer<typeof negotiationAdviceSchema>;
 
 // Configuration
-const AI_PREFLIGHT_TOKENS_INSIGHTS = parseInt(
+const AI_PREFLIGHT_TOKENS_INSIGHTS = Number.parseInt(
   process.env.AI_PREFLIGHT_TOKENS_INSIGHTS || '1500',
   10
 );
-const AI_PREFLIGHT_TOKENS_NEGOTIATION = parseInt(
+const AI_PREFLIGHT_TOKENS_NEGOTIATION = Number.parseInt(
   process.env.AI_PREFLIGHT_TOKENS_NEGOTIATION || '2500',
   10
 );
@@ -127,7 +127,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
       });
     }
 
-    const requestId = `insights-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = `insights-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const monthKey = getMonthKey();
     const model = 'gemini-1.5-flash';
 
@@ -249,7 +249,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
 
     const { productName, targetPrice, quantity, context } = parseResult.data;
 
-    const requestId = `negotiation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = `negotiation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const monthKey = getMonthKey();
     const model = 'gemini-1.5-flash';
 
