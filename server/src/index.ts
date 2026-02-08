@@ -6,6 +6,7 @@ import fastifyJwt from '@fastify/jwt';
 import { config } from './config/index.js';
 import controlRoutes from './routes/control.js';
 import tenantRoutes from './routes/tenant.js';
+import adminCartSummariesRoutes from './routes/admin-cart-summaries.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -102,15 +103,15 @@ fastify.addHook('onRequest', async (request, reply) => {
 // Import routes
 await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });
+await fastify.register(adminCartSummariesRoutes, { prefix: '/api/control/marketplace' });
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
   fastify.log.error(error);
 
   const err = toErrorLike(error);
-  const statusCode = typeof err.statusCode === 'number' && isFinite(err.statusCode)
-    ? err.statusCode
-    : 500;
+  const statusCode =
+    typeof err.statusCode === 'number' && isFinite(err.statusCode) ? err.statusCode : 500;
 
   reply.code(statusCode).send({
     success: false,
