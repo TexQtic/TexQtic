@@ -32,8 +32,9 @@ yarn-error.log*
 *.db-journal
 
 # Prisma
-server/prisma/migrations/**
-!server/prisma/migrations/.gitkeep
+# NOTE: Migrations MUST be tracked in version control (governance requirement)
+# Excluding migrations causes DB↔git drift and breaks reproducibility
+# All migration files in server/prisma/migrations/ are now tracked
 
 # SonarLint / SonarQube
 .sonarlint/
