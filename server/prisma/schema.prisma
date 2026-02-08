@@ -26,6 +26,8 @@ model Tenant {
   branding              TenantBranding?
   domains               TenantDomain[]
   featureOverrides      TenantFeatureOverride[]
+  catalogItems          CatalogItem[]
+  carts                 Cart[]
 
   @@map("tenants")
 }
@@ -65,6 +67,7 @@ model User {
   updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
   memberships         Membership[]
   passwordResetTokens PasswordResetToken[]
+  carts               Cart[]
 
   @@map("users")
 }
@@ -245,6 +248,56 @@ model ImpersonationSession {
   @@map("impersonation_sessions")
 }
 
+model CatalogItem {
+  id          String      @id @default(uuid()) @db.Uuid
+  tenantId    String      @map("tenant_id") @db.Uuid
+  name        String      @db.VarChar(255)
+  sku         String?     @db.VarChar(100)
+  description String?
+  price       Decimal?    @db.Decimal(10, 2)
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cartItems   CartItem[]
+
+  @@index([tenantId, active])
+  @@index([tenantId, updatedAt])
+  @@map("catalog_items")
+}
+
+model Cart {
+  id        String     @id @default(uuid()) @db.Uuid
+  tenantId  String     @map("tenant_id") @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  status    CartStatus @default(ACTIVE)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  @@index([tenantId, userId, status])
+  @@index([tenantId, updatedAt])
+  @@map("carts")
+}
+
+model CartItem {
+  id            String      @id @default(uuid()) @db.Uuid
+  cartId        String      @map("cart_id") @db.Uuid
+  catalogItemId String      @map("catalog_item_id") @db.Uuid
+  quantity      Int
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  cart          Cart        @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  catalogItem   CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, catalogItemId])
+  @@index([cartId])
+  @@index([catalogItemId])
+  @@map("cart_items")
+}
+
 enum TenantType {
   B2B
   B2C
@@ -300,4 +353,12 @@ enum ActorType {
   SYSTEM
 
   @@map("actor_type")
+}
+
+enum CartStatus {
+  ACTIVE
+  CHECKED_OUT
+  ABANDONED
+
+  @@map("cart_status")
 }
