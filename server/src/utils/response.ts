@@ -25,7 +25,7 @@ export function sendError(
     error: {
       code,
       message,
-      ...(details && { details }),
+      ...(details ? { details } : {}),
     },
   };
   return reply.code(statusCode).send(response);
