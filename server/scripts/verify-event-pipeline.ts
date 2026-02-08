@@ -220,7 +220,7 @@ async function main() {
     const eventCheckResult = await prisma.$queryRaw<EventCheck[]>`
       select e.id, e.name, e.audit_log_id
       from event_logs e
-      where e.audit_log_id = ${latestAudit.id}
+      where e.audit_log_id = ${latestAudit.id}::uuid
     `;
 
     if (!eventCheckResult || eventCheckResult.length === 0) {
