@@ -434,3 +434,544 @@ This report is the ONLY new file created by Prompt #26B.
 ---
 
 **Report Complete.** Ready for Prompt #26C execution.
+
+---
+
+---
+
+# 🔄 Post-26C Baseline Refresh (February 8, 2026)
+
+**Status:** ✅ **AUTHORITATIVE BASELINE ESTABLISHED**  
+**Trigger:** Prompt #26C completed (TS1005 syntax error fixed)  
+**Parser State:** ✅ Unblocked (AST construction complete)
+
+---
+
+## Executive Summary (Post-Unblock)
+
+| Metric | Value |
+|--------|-------|
+| **Total Errors** | **19** |
+| **Root (frontend)** | 0 errors ✅ |
+| **Server (backend)** | 19 errors ❌ |
+| **Vendor (ui-studio)** | 0 errors ✅ |
+| **Delta vs 26B** | +18 errors (parser unblock revealed hidden errors) |
+
+### 🔍 Critical Finding
+
+**Prompt #26C successfully unblocked the parser**, revealing 18 previously hidden type errors that were masked by the TS1005 syntax blocker. This is **Outcome B (Discovery)** as predicted in the strategic protocol.
+
+---
+
+## Raw TypeScript Check Output (Full, Non-Truncated)
+
+### A) Root (Frontend) Project
+```bash
+cd c:\Users\PARESH\TexQtic
+npx tsc --noEmit
+```
+
+**Result:** ✅ **PASS** (0 errors)
+```
+(No output - clean compilation)
+```
+
+---
+
+### B) Server (Backend) Project
+```bash
+cd c:\Users\PARESH\TexQtic\server
+npx tsc --noEmit
+```
+
+**Result:** ❌ **FAIL** (19 errors in 5 files)
+
+```
+src/index.ts:89:33 - error TS6133: 'request' is declared but its value is never read.
+
+89 fastify.setErrorHandler((error, request, reply) => {
+                                   ~~~~~~~
+
+src/index.ts:92:22 - error TS18046: 'error' is of type 'unknown'.
+
+92   const statusCode = error.statusCode || 500;
+                        ~~~~~
+
+src/index.ts:97:13 - error TS18046: 'error' is of type 'unknown'.
+
+97       code: error.code || 'INTERNAL_ERROR',
+               ~~~~~
+
+src/index.ts:98:16 - error TS18046: 'error' is of type 'unknown'.
+
+98       message: error.message || 'An unexpected error occurred',
+                  ~~~~~
+
+src/index.ts:99:57 - error TS18046: 'error' is of type 'unknown'.
+
+99       ...(config.NODE_ENV === 'development' && { stack: error.stack }),
+                                                           ~~~~~
+
+src/lib/dbContext.ts:49:31 - error TS2345: Argument of type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+  Type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">' is missing the following properties from type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>': $on, $connect, $disconnect, $use, and 2 more.
+
+49       const result = await fn(tx);
+                                 ~~
+
+src/lib/dbContext.ts:84:31 - error TS2345: Argument of type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+  Type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">' is missing the following properties from type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>': $on, $connect, $disconnect, $use, and 2 more.
+
+84       const result = await fn(tx);
+                                 ~~
+
+src/routes/control.ts:16:34 - error TS6133: 'request' is declared but its value is never read.
+
+16   fastify.get('/tenants', async (request, reply) => {
+                                    ~~~~~~~
+
+src/routes/control.ts:112:40 - error TS6133: 'request' is declared but its value is never read.
+
+112   fastify.get('/feature-flags', async (request, reply) => {
+                                           ~~~~~~~
+
+src/routes/tenant.ts:185:11 - error TS2322: Type '{ status: CartStatus; id: string; createdAt: Date; updatedAt: Date; userId: string; tenantId: string; }' is not assignable to type '{ items: ({ catalogItem: { id: string; name: string; sku: string | null; price: Decimal | null; active: boolean; }; } & { id: string; createdAt: Date; updatedAt: Date; quantity: number; catalogItemId: string; cartId: string; })[]; } & { ...; }'.
+  Property 'items' is missing in type '{ status: CartStatus; id: string; createdAt: Date; updatedAt: Date; userId: string; tenantId: string; }' but required in type '{ items: ({ catalogItem: { id: string; name: string; sku: string | null; price: Decimal | null; active: boolean; }; } & { id: string; createdAt: Date; updatedAt: Date; quantity: number; catalogItemId: string; cartId: string; })[]; }'.
+
+185           cart = await tx.cart.create({
+              ~~~~
+
+src/routes/tenant.ts:186:13 - error TS2322: Type '{ tenantId: string | undefined; userId: string | undefined; status: "ACTIVE"; }' is not assignable to type '(Without<CartCreateInput, CartUncheckedCreateInput> & CartUncheckedCreateInput) | (Without<...> & CartCreateInput)'.
+  Type '{ tenantId: string | undefined; userId: string | undefined; status: "ACTIVE"; }' is not assignable to type 'Without<CartUncheckedCreateInput, CartCreateInput> & CartCreateInput'.
+    Type '{ tenantId: string | undefined; userId: string | undefined; status: "ACTIVE"; }' is not assignable to type 'Without<CartUncheckedCreateInput, CartCreateInput>'.
+      Types of property 'userId' are incompatible.
+        Type 'string | undefined' is not assignable to type 'undefined'.
+          Type 'string' is not assignable to type 'undefined'.
+
+186             data: {
+                ~~~~
+
+src/routes/tenant.ts:211:13 - error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+
+211             tenantId,
+                ~~~~~~~~
+
+src/routes/tenant.ts:213:13 - error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+
+213             actorId: userId,
+                ~~~~~~~
+
+src/routes/tenant.ts:216:23 - error TS18047: 'cart' is possibly 'null'.
+
+216             entityId: cart.id,
+                          ~~~~
+
+src/routes/tenant.ts:218:23 - error TS18047: 'cart' is possibly 'null'.
+
+218               cartId: cart.id,
+                          ~~~~
+
+src/routes/tenant.ts:324:15 - error TS2322: Type '{ tenantId: string; userId: string | undefined; status: "ACTIVE"; }' is not assignable to type '(Without<CartCreateInput, CartUncheckedCreateInput> & CartUncheckedCreateInput) | (Without<...> & CartCreateInput)'.
+  Types of property 'userId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+324               data: {
+                  ~~~~
+
+src/routes/tenant.ts:335:15 - error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+
+335               actorId: userId,
+                  ~~~~~~~
+
+src/routes/tenant.ts:400:13 - error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+
+400             actorId: userId,
+                ~~~~~~~
+
+src/utils/response.ts:28:7 - error TS2698: Spread types may only be created from object types.
+
+28       ...(details && { details }),
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Found 19 errors in 5 files.
+
+Errors  Files
+     5  src/index.ts:89
+     2  src/lib/dbContext.ts:49
+     2  src/routes/control.ts:16
+     9  src/routes/tenant.ts:185
+     1  src/utils/response.ts:28
+```
+
+---
+
+### C) Vendor (UI Studio) Project
+```bash
+cd c:\Users\PARESH\TexQtic\vendor\texqtic-ui-studio
+dir tsconfig*.json
+```
+
+**Result:** ✅ tsconfig.json found
+
+```
+Directory: C:\Users\PARESH\TexQtic\vendor\texqtic-ui-studio
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        06-02-2026     12:18            520 tsconfig.json
+```
+
+```bash
+npx tsc --noEmit
+```
+
+**Result:** ✅ **PASS** (0 errors)
+```
+(No output - clean compilation)
+```
+
+---
+
+## Updated Error Register (Post-26C Authoritative Baseline)
+
+| # | Project | File | Line:Col | TS Code | Message | Bucket | Root Cause | Fix Strategy | Touch Scope | Proposed Prompt |
+|---|---------|------|----------|---------|---------|--------|------------|--------------|-------------|-----------------|
+| 1 | server | src/index.ts | 89:33 | TS6133 | 'request' declared but never used | D | Unused parameter in error handler | Prefix with underscore `_request` or remove | 1 file | #26D-1 |
+| 2 | server | src/index.ts | 92:22 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
+| 3 | server | src/index.ts | 97:13 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
+| 4 | server | src/index.ts | 98:16 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
+| 5 | server | src/index.ts | 99:57 | TS18046 | 'error' is of type 'unknown' | A | FastifyError needs type narrowing | Add type guard or cast to FastifyError | 1 file | #26D-2 |
+| 6 | server | src/lib/dbContext.ts | 49:31 | TS2345 | TransactionClient not assignable to PrismaClient | A | DbClient type pattern from Prompt #22C needs adjustment | Update fn signature to accept DbClient union type | 1 file | #26D-3 |
+| 7 | server | src/lib/dbContext.ts | 84:31 | TS2345 | TransactionClient not assignable to PrismaClient | A | DbClient type pattern from Prompt #22C needs adjustment | Update fn signature to accept DbClient union type | 1 file | #26D-3 |
+| 8 | server | src/routes/control.ts | 16:34 | TS6133 | 'request' declared but never used | D | Unused parameter in route handler | Prefix with underscore `_request` or remove | 1 file | #26D-1 |
+| 9 | server | src/routes/control.ts | 112:40 | TS6133 | 'request' declared but never used | D | Unused parameter in route handler | Prefix with underscore `_request` or remove | 1 file | #26D-1 |
+| 10 | server | src/routes/tenant.ts | 185:11 | TS2322 | Cart missing 'items' property | A | cart.create doesn't include items in response by default | Add include: { items: true } to create call | 1 file | #26D-4 |
+| 11 | server | src/routes/tenant.ts | 186:13 | TS2322 | 'userId' is 'string \| undefined' not assignable | A | Middleware guarantees userId exists but type is optional | Add null assertion or type guard | 1 file | #26D-4 |
+| 12 | server | src/routes/tenant.ts | 211:13 | TS2322 | 'tenantId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `tenantId ?? null` | 1 file | #26D-4 |
+| 13 | server | src/routes/tenant.ts | 213:13 | TS2322 | 'actorId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `userId ?? null` | 1 file | #26D-4 |
+| 14 | server | src/routes/tenant.ts | 216:23 | TS18047 | 'cart' is possibly 'null' | A | Conditional branch doesn't narrow type | Add null check before accessing cart.id | 1 file | #26D-4 |
+| 15 | server | src/routes/tenant.ts | 218:23 | TS18047 | 'cart' is possibly 'null' | A | Conditional branch doesn't narrow type | Add null check before accessing cart.id | 1 file | #26D-4 |
+| 16 | server | src/routes/tenant.ts | 324:15 | TS2322 | 'userId' is 'string \| undefined' not assignable | A | Middleware guarantees userId exists but type is optional | Add null assertion or type guard | 1 file | #26D-4 |
+| 17 | server | src/routes/tenant.ts | 335:15 | TS2322 | 'actorId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `userId ?? null` | 1 file | #26D-4 |
+| 18 | server | src/routes/tenant.ts | 400:13 | TS2322 | 'actorId' is 'undefined' not assignable to 'null' | A | AuditEntry expects null, middleware provides undefined | Convert undefined to null: `userId ?? null` | 1 file | #26D-4 |
+| 19 | server | src/utils/response.ts | 28:7 | TS2698 | Spread types must be from object types | A | Conditional spread with possibly undefined value | Use ternary: `...(details ? { details } : {})` | 1 file | #26D-5 |
+
+---
+
+## Classification by Bucket (Post-26C)
+
+### Bucket A — Correctness / Type Safety (16 errors)
+**Priority:** 🔴 CRITICAL
+
+| Count | Files | Description |
+|-------|-------|-------------|
+| 4 | src/index.ts | FastifyError type narrowing needed (unknown → typed) |
+| 2 | src/lib/dbContext.ts | TransactionClient type mismatch (DbClient pattern issue) |
+| 9 | src/routes/tenant.ts | Marketplace API type errors (undefined/null mismatches, missing includes, null checks) |
+| 1 | src/utils/response.ts | Spread type error (conditional object spread) |
+
+**Impact:** These errors represent genuine type safety issues that could cause runtime errors if not addressed. Most critical are the marketplace API errors (9 in tenant.ts) introduced in Prompt #26.
+
+---
+
+### Bucket B — Contract Drift (0 errors)
+✅ No errors
+
+---
+
+### Bucket C — Tooling/Config (0 errors)
+✅ No errors
+
+---
+
+### Bucket D — Strictness/Noise (3 errors)
+**Priority:** 🟡 LOW
+
+| Count | Files | Description |
+|-------|-------|-------------|
+| 1 | src/index.ts | Unused 'request' parameter (error handler) |
+| 2 | src/routes/control.ts | Unused 'request' parameters (route handlers) |
+
+**Impact:** These are linting-level issues (unused variables) that don't affect runtime correctness but reduce code cleanliness.
+
+---
+
+## Error Distribution Analysis
+
+### By Project
+- **root:** 0 errors (0%) ✅
+- **server:** 19 errors (100%) ❌
+- **vendor:** 0 errors (0%) ✅
+
+### By Bucket
+- **Bucket A (Correctness):** 16 errors (84%) 🔴 **PRIMARY FOCUS**
+- **Bucket B (Contract Drift):** 0 errors (0%)
+- **Bucket C (Tooling/Config):** 0 errors (0%)
+- **Bucket D (Strictness/Noise):** 3 errors (16%) 🟡
+
+### Top 5 Files by Error Count
+1. **src/routes/tenant.ts** — 9 errors (47% of total) ⚠️ **Marketplace API from Prompt #26**
+2. **src/index.ts** — 5 errors (26%)
+3. **src/lib/dbContext.ts** — 2 errors (11%) ⚠️ **DbClient pattern from Prompt #22C**
+4. **src/routes/control.ts** — 2 errors (11%)
+5. **src/utils/response.ts** — 1 error (5%)
+
+---
+
+## Delta Analysis vs Prompt #26B
+
+### Baseline Comparison
+
+| Metric | Prompt #26B (Pre-Unblock) | Post-26C (Authoritative) | Delta |
+|--------|---------------------------|--------------------------|-------|
+| **Root errors** | 0 | 0 | 0 |
+| **Server errors** | 1 (parser blocked) | 19 (true baseline) | **+18** |
+| **Vendor errors** | Not checked | 0 | N/A |
+| **Total errors** | 1 (visible only) | 19 (authoritative) | **+18** |
+
+### Discovery Breakdown
+
+**What the parser unblock revealed:**
+
+1. **4 errors in src/index.ts** (FastifyError typing) — previously hidden
+2. **2 errors in src/lib/dbContext.ts** (TransactionClient typing) — previously hidden
+3. **2 errors in src/routes/control.ts** (unused params) — previously hidden
+4. **9 errors in src/routes/tenant.ts** (marketplace API) — **7 from Prompt #26**, 2 pre-existing
+5. **1 error in src/utils/response.ts** (spread typing) — previously hidden
+
+**Key Insight:** Of the 18 newly discovered errors:
+- **7 errors (39%)** were introduced by **Prompt #26** (marketplace cart endpoints)
+- **11 errors (61%)** were **pre-existing** but masked by the parser blocker
+
+---
+
+## Cluster Analysis (Logical Groupings)
+
+### Cluster 1: Marketplace API Type Fixes (Prompt #26 Impact)
+**Files:** `src/routes/tenant.ts` (lines 185-400)  
+**Error Count:** 9 errors  
+**Proposed Fix:** Prompt #26D-4 (single file, marketplace-only)
+
+**Root Issues:**
+- Missing `include: { items: true }` on cart.create
+- `string | undefined` → `string | null` conversions for audit logs
+- Null checks missing for cart references
+- `userId`/`tenantId` type guards needed
+
+---
+
+### Cluster 2: FastifyError Type Narrowing
+**Files:** `src/index.ts` (lines 92-99)  
+**Error Count:** 4 errors  
+**Proposed Fix:** Prompt #26D-2 (single file, error handler)
+
+**Root Issue:** Global error handler receives `unknown` type, needs type guard/cast to `FastifyError`.
+
+---
+
+### Cluster 3: DbClient Pattern Adjustment
+**Files:** `src/lib/dbContext.ts` (lines 49, 84)  
+**Error Count:** 2 errors  
+**Proposed Fix:** Prompt #26D-3 (single file, type pattern)
+
+**Root Issue:** Callback functions expect `PrismaClient` but receive `TransactionClient` (Omit type). Need to accept `DbClient` union type from Prompt #22C pattern.
+
+---
+
+### Cluster 4: Unused Parameter Cleanup
+**Files:** `src/index.ts`, `src/routes/control.ts`  
+**Error Count:** 3 errors  
+**Proposed Fix:** Prompt #26D-1 (2 files, mechanical change)
+
+**Root Issue:** Unused `request` parameters in route handlers (prefix with `_`).
+
+---
+
+### Cluster 5: Response Helper Spread Fix
+**Files:** `src/utils/response.ts` (line 28)  
+**Error Count:** 1 error  
+**Proposed Fix:** Prompt #26D-5 (single file, spread fix)
+
+**Root Issue:** Conditional spread with potentially undefined value.
+
+---
+
+## Updated Burn-Down Plan (Revised Order)
+
+### 🔴 Prompt #26D-4 — Fix Marketplace API Type Errors (Prompt #26 Remediation)
+**Priority:** P0 (BLOCKING - fixes our own code)  
+**Bucket:** A (Correctness)  
+**Scope:** Fix 9 type errors in tenant.ts marketplace endpoints
+
+**Allowed Files:**
+- ✅ `server/src/routes/tenant.ts` (lines 180-410 only - marketplace endpoints)
+
+**Forbidden:**
+- ❌ No changes outside marketplace endpoint blocks
+- ❌ No schema changes
+- ❌ No other file edits
+
+**Fix Strategy:**
+1. Add `include: { items: { include: { catalogItem: true } } }` to cart.create (line 185)
+2. Replace `cart = await tx.cart.create(...)` with proper type assertion
+3. Add null coalescing for audit log fields: `tenantId ?? null`, `userId ?? null`
+4. Add null checks before `cart.id` accesses
+5. Add type guards for `userId`/`tenantId` where Prisma requires non-undefined
+
+**Expected Net Error Count:** 19 → 10 (remove 9 errors)
+
+**Why First:** These are errors we introduced in Prompt #26 - we should fix our own code before touching pre-existing issues.
+
+---
+
+### 🔴 Prompt #26D-3 — Fix DbClient Pattern Type Errors
+**Priority:** P1  
+**Bucket:** A (Correctness)  
+**Scope:** Fix 2 TransactionClient type mismatches in dbContext.ts
+
+**Allowed Files:**
+- ✅ `server/src/lib/dbContext.ts` (lines 40-90 only)
+
+**Fix Strategy:**
+Update callback signatures from:
+```typescript
+fn(tx: PrismaClient)
+```
+To:
+```typescript
+fn(tx: DbClient)  // where DbClient = PrismaClient | Prisma.TransactionClient
+```
+
+**Expected Net Error Count:** 10 → 8 (remove 2 errors)
+
+---
+
+### 🔴 Prompt #26D-2 — Add FastifyError Type Narrowing
+**Priority:** P2  
+**Bucket:** A (Correctness)  
+**Scope:** Fix 4 'unknown' errors in global error handler
+
+**Allowed Files:**
+- ✅ `server/src/index.ts` (lines 85-105 only - error handler)
+
+**Fix Strategy:**
+```typescript
+fastify.setErrorHandler((error: unknown, _request, reply) => {
+  const err = error as FastifyError;
+  const statusCode = err.statusCode || 500;
+  // ... rest uses 'err'
+});
+```
+
+**Expected Net Error Count:** 8 → 4 (remove 4 errors)
+
+---
+
+### 🟡 Prompt #26D-1 — Cleanup Unused Parameters
+**Priority:** P3  
+**Bucket:** D (Strictness/Noise)  
+**Scope:** Fix 3 unused 'request' parameters
+
+**Allowed Files:**
+- ✅ `server/src/index.ts` (line 89)
+- ✅ `server/src/routes/control.ts` (lines 16, 112)
+
+**Fix Strategy:** Prefix with underscore: `_request` (convention for intentionally unused params)
+
+**Expected Net Error Count:** 4 → 1 (remove 3 errors)
+
+---
+
+### 🔴 Prompt #26D-5 — Fix Response Helper Spread Type
+**Priority:** P4  
+**Bucket:** A (Correctness)  
+**Scope:** Fix 1 spread type error in response.ts
+
+**Allowed Files:**
+- ✅ `server/src/utils/response.ts` (line 28 only)
+
+**Fix Strategy:**
+```typescript
+// From:
+...(details && { details }),
+
+// To:
+...(details ? { details } : {}),
+```
+
+**Expected Net Error Count:** 1 → 0 (remove 1 error) ✅ **ZERO TARGET**
+
+---
+
+## Revised Ratchet Policy
+
+### Phase 1: Achieve Zero Baseline (UPDATED)
+
+**Timeline:** Prompts #26D-1 through #26D-5  
+**Target:** 19 → 0 errors (5-prompt sequence)  
+**Cadence:** One cluster per prompt, atomic commits
+
+**Milestones:**
+- After #26D-4: 19 → 10 errors (marketplace fixed)
+- After #26D-3: 10 → 8 errors (DbClient pattern fixed)
+- After #26D-2: 8 → 4 errors (error handler fixed)
+- After #26D-1: 4 → 1 error (unused params fixed)
+- After #26D-5: 1 → 0 errors ✅ **ZERO ACHIEVED**
+
+**Execution Order Rationale:**
+1. **Fix our own code first** (#26D-4) - errors from Prompt #26
+2. **Fix architectural patterns** (#26D-3) - DbClient from Prompt #22C
+3. **Fix runtime safety** (#26D-2) - error handler typing
+4. **Fix noise** (#26D-1) - unused vars (low priority)
+5. **Final cleanup** (#26D-5) - last correctness issue
+
+---
+
+### Phase 2: Strict Mode Enablement (DEFERRED)
+
+**Trigger:** After Phase 1 complete (0 errors achieved)
+
+**Timeline:** Post-zero baseline  
+**Target:** Enable `"strict": true`, assess new error surface
+
+**Note:** This phase is **ON HOLD** until 19 → 0 burn-down completes.
+
+---
+
+## Updated Verification Checklist
+
+- ✅ Root `npx tsc --noEmit` output captured (0 errors)
+- ✅ Server `npx tsc --noEmit` output captured (19 errors)
+- ✅ Vendor `tsconfig*.json` check completed (tsconfig.json found)
+- ✅ Vendor `npx tsc --noEmit` output captured (0 errors)
+- ✅ TS_ERROR_REGISTER.md updated with Post-26C section
+- ✅ Error register table completed (19 rows)
+- ✅ Counts by project + bucket included
+- ✅ Delta vs Prompt #26B explicitly written (+18 errors)
+- ✅ Cluster analysis completed (5 logical groups)
+- ✅ Burn-down plan revised (5 sequential prompts)
+
+---
+
+## Recommended Immediate Action
+
+### 🔴 PRIORITY: Execute Prompt #26D-4 First
+
+**Reason:** Fix the 9 type errors introduced by **our own Prompt #26** (marketplace API). Take responsibility for code we wrote.
+
+**Impact:** Reduces error count by 47% (19 → 10)
+
+**File:** `server/src/routes/tenant.ts` (marketplace endpoints only)
+
+**Success Condition:** All cart creation, cart retrieval, and cart item mutations compile cleanly with proper typing.
+
+---
+
+**Post-26C Baseline Refresh Complete.** Authoritative baseline: **19 errors**. Ready for sequential burn-down via Prompts #26D-1 through #26D-5.
+
+
