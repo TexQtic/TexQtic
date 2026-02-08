@@ -791,6 +791,155 @@ LIMIT 5;
 
 **Expected:** `is_origin = 'true'` for all `TENANT_CREATED_ORIGIN` events (regardless of source action name)
 
+---
+
+## Remote-First Verification (Prompt #18)
+
+### Source of Truth Principle
+
+**Remote Supabase is the source of truth** for all event pipeline verification.
+
+These scripts prove DB identity before making any claims about pipeline health. This eliminates guesswork about whether you're testing against local vs. remote databases.
+
+### Verification Scripts
+
+**Location:** `server/scripts/`
+
+#### 1. DB Identity Probe (`db-whoami.ts`)
+
+Prints the exact database identity (server IP/port, database name, user, timestamp) to prove which database is being queried.
+
+**Usage:**
+
+```bash
+cd server
+npx tsx scripts/db-whoami.ts
+```
+
+**Expected Output:**
+
+```
+DB_WHOAMI {"server_ip":"13.210.xxx.xxx","server_port":5432,"db":"postgres","user":"postgres.xxxxx","now":"2026-02-08T..."}
+```
+
+**On Error:**
+
+```
+DB_WHOAMI_ERROR <error message>
+```
+
+Exit code: 1
+
+#### 2. Event Pipeline Verifier (`verify-event-pipeline.ts`)
+
+Runs a comprehensive health check of the audit → event_logs pipeline:
+
+1. **DB Identity** — Confirms which database is being queried
+2. **Table Existence** — Verifies `audit_logs` and `event_logs` tables exist
+3. **Row Counts** — Shows total audit/event counts
+4. **Latest Audit** — Displays most recent audit log entry
+5. **Latest Event** — Displays most recent event log entry
+6. **Mapping Check** — Validates that mapped audit actions have corresponding events
+
+**Usage:**
+
+```bash
+cd server
+npx tsx scripts/verify-event-pipeline.ts
+```
+
+**Expected Output (Happy Path):**
+
+```
+=== DB Identity Check ===
+VERIFY_DB {"server_ip":"...","server_port":5432,"db":"postgres","user":"..."}
+
+=== Table Existence Check ===
+✓ audit_logs exists
+✓ event_logs exists
+
+=== Table Counts ===
+VERIFY_COUNTS {"audit_count":25,"event_count":4}
+
+=== Latest Audit Log ===
+VERIFY_LATEST_AUDIT {"id":"...","created_at":"...","action":"CREATE_TENANT","realm":"ADMIN",...}
+
+=== Latest Event Log ===
+VERIFY_LATEST_EVENT {"id":"...","name":"tenant.TENANT_CREATED_ORIGIN","occurred_at":"...",...}
+
+=== Mapping Check ===
+✓ Latest action "CREATE_TENANT" is mapped, checking for event...
+✓ Event found: tenant.TENANT_CREATED_ORIGIN (id: ...)
+VERIFY_PASS Event stored for mapped audit action
+```
+
+**Exit code:** 0
+
+### Understanding Verification Results
+
+#### `VERIFY_NOTE` — Not a Failure
+
+```
+VERIFY_NOTE Latest audit action "AI_BUDGET_VERIFY" is not mapped; no event emission expected
+```
+
+**Meaning:** The latest audit action is not one of the P0 mapped actions. This is **not an error** — event emission is only enabled for specific actions.
+
+**Mapped Actions (Prompt #17):**
+
+- `CREATE_TENANT` → `tenant.TENANT_CREATED_ORIGIN`
+- `INVITE_MEMBER` → `team.TEAM_INVITE_CREATED`
+- `TENANT_CREATED_ORIGIN` → `tenant.TENANT_CREATED_ORIGIN`
+- `TENANT_OWNER_CREATED` → `tenant.TENANT_OWNER_CREATED`
+- `TENANT_OWNER_MEMBERSHIP_CREATED` → `tenant.TENANT_OWNER_MEMBERSHIP_CREATED`
+- `TEAM_INVITE_CREATED` → `team.TEAM_INVITE_CREATED`
+
+**Action Required:** None. Trigger a P0 action (tenant creation or team invite) to test the pipeline.
+
+#### `VERIFY_FAIL` — Pipeline Issue Detected
+
+```
+VERIFY_FAIL Mapped audit action detected but no EventLog row found for audit_log_id "..."
+```
+
+**Meaning:** A mapped audit action was found, but no corresponding event was stored. This indicates one of:
+
+1. **Backend not running Prompt #15-17 code** — Server needs restart with latest commits
+2. **Event storage failing** — Check server logs for errors in `storeEventBestEffort()`
+3. **Emission disabled** — Verify event emission code is active
+
+**Troubleshooting Steps:**
+
+1. Restart backend server: `cd server && npm run dev`
+2. Check server logs for `EVENT_EMIT` console output
+3. Check for errors mentioning `storeEventBestEffort` or `maybeEmitEventFromAuditEntry`
+4. Verify `server/.env` DATABASE_URL points to remote Supabase
+5. Confirm migration `20260208054130_add_event_log` is applied: `npx prisma migrate status`
+
+#### `VERIFY_PASS` — Pipeline Healthy
+
+```
+VERIFY_PASS Event stored for mapped audit action
+```
+
+**Meaning:** ✅ The event pipeline is working correctly. Audit logs are triggering event emission, and events are being stored in `event_logs`.
+
+### When to Use These Scripts
+
+**Use `db-whoami.ts` when:**
+
+- Verifying .env configuration (local vs remote DB)
+- Debugging "wrong database" issues
+- Confirming migration target before `prisma migrate dev`
+- Sharing DB connection details in bug reports
+
+**Use `verify-event-pipeline.ts` when:**
+
+- Testing end-to-end event emission after code changes
+- Verifying Prompt #15-17 implementation
+- Diagnosing "events not appearing" issues
+- Confirming pipeline health after backend restart
+
 ### Temporary Nature
 
 **This is an interim compatibility layer.**
