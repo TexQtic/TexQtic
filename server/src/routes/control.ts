@@ -13,7 +13,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/control/tenants
    * List all tenants (admin only)
    */
-  fastify.get('/tenants', async (request, reply) => {
+  fastify.get('/tenants', async (_request, reply) => {
     const tenants = await withDbContext({ isAdmin: true }, async () => {
       return await prisma.tenant.findMany({
         include: {
@@ -109,7 +109,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/control/feature-flags
    * List all feature flags (admin only)
    */
-  fastify.get('/feature-flags', async (request, reply) => {
+  fastify.get('/feature-flags', async (_request, reply) => {
     const flags = await prisma.featureFlag.findMany({
       orderBy: { key: 'asc' },
     });
