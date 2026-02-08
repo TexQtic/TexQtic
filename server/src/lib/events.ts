@@ -151,6 +151,8 @@ export function makeEventName(domain: string, action: string): string {
  * - Prompt #10: Tenant provisioning
  * - Prompt #11: Tenant onboarding
  * - Prompt #13: Team invitations
+ * - Prompt #26: Marketplace cart operations
+ * - Prompt #31: Marketplace cart event emission
  *
  * Future events will be added as new features are implemented.
  */
@@ -158,7 +160,12 @@ export type KnownEventName =
   | 'tenant.TENANT_CREATED_ORIGIN' // Tenant provisioning (origin event)
   | 'tenant.TENANT_OWNER_CREATED' // Owner user creation during onboarding
   | 'tenant.TENANT_OWNER_MEMBERSHIP_CREATED' // Owner membership creation
-  | 'team.TEAM_INVITE_CREATED'; // Team invitation creation
+  | 'team.TEAM_INVITE_CREATED' // Team invitation creation
+  | 'marketplace.cart.created' // Cart created (Prompt #26)
+  | 'marketplace.cart.item.added' // Item added to cart (Prompt #26)
+  | 'marketplace.cart.item.updated' // Cart item quantity updated (Prompt #26)
+  | 'marketplace.cart.item.removed' // Item removed from cart (Prompt #26)
+  | 'marketplace.cart.checked_out'; // Cart checked out (future)
 
 /**
  * Event envelope with known event name (type-safe)
@@ -221,6 +228,11 @@ export const knownEventEnvelopeSchema = eventEnvelopeSchema.extend({
     'tenant.TENANT_OWNER_CREATED',
     'tenant.TENANT_OWNER_MEMBERSHIP_CREATED',
     'team.TEAM_INVITE_CREATED',
+    'marketplace.cart.created',
+    'marketplace.cart.item.added',
+    'marketplace.cart.item.updated',
+    'marketplace.cart.item.removed',
+    'marketplace.cart.checked_out',
   ]),
 });
 
@@ -333,6 +345,7 @@ export function assertNoSecretsInPayload(payload: Record<string, any>): void {
  * Other actions are silently ignored (no event emission).
  *
  * Prompt #17: Added compatibility mappings for legacy/production audit action names.
+ * Prompt #31: Added marketplace cart action mappings for event emission.
  */
 const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
   // Prompt #15: Original doctrine-aligned action names
@@ -344,6 +357,12 @@ const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
   // Prompt #17: Compatibility mappings for legacy production action names
   CREATE_TENANT: 'tenant.TENANT_CREATED_ORIGIN', // ← Maps to origin event
   INVITE_MEMBER: 'team.TEAM_INVITE_CREATED',
+
+  // Prompt #31: Marketplace cart mutations (emit marketplace.cart.* events)
+  'cart.CART_CREATED': 'marketplace.cart.created',
+  'cart.CART_ITEM_ADDED': 'marketplace.cart.item.added',
+  'cart.CART_ITEM_UPDATED': 'marketplace.cart.item.updated',
+  'cart.CART_ITEM_REMOVED': 'marketplace.cart.item.removed',
 };
 
 /**
