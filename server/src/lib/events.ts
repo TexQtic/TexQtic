@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
+import { applyProjections } from '../events/projections/index.js';
+// Auto-register projection handlers (side-effect import)
+import '../events/handlers/index.js';
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -411,6 +414,21 @@ export async function storeEventBestEffort(
         auditLogId, // Traceability: link back to audit log
       },
     });
+
+    // Prompt #29: Apply projections after successful EventLog write (best-effort)
+    // Projections are idempotent, replay-safe, and MUST NOT block writes
+    try {
+      await applyProjections(prisma, event);
+    } catch (projectionError: any) {
+      // Best-effort: projection failures never block event storage
+      // Log for observability, but do NOT throw
+      console.warn('[Event Projections] Failed to apply projections (non-blocking):', {
+        eventId: event.id,
+        eventName: event.name,
+        tenantId: event.tenantId,
+        error: projectionError instanceof Error ? projectionError.message : String(projectionError),
+      });
+    }
   } catch (error: any) {
     // Best-effort: swallow errors, never break requests
     // P2002 (unique violation) means event already stored - ignore safely
