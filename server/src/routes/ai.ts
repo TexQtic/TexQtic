@@ -77,7 +77,7 @@ async function generateContent(
     );
 
     const result = await Promise.race([aiPromise, timeoutPromise]);
-    const response = await result.response;
+    const response = result.response;
     const text = response.text();
 
     // Estimate tokens used based on response length

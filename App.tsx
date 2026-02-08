@@ -64,12 +64,10 @@ const App: React.FC = () => {
   const handleAuthSuccess = () => {
     if (authRealm === 'CONTROL_PLANE') {
       setAppState('CONTROL_PLANE');
+    } else if (authMode === 'SIGNUP') {
+      setAppState('VERIFY_EMAIL');
     } else {
-      if (authMode === 'SIGNUP') {
-        setAppState('VERIFY_EMAIL');
-      } else {
-        setAppState('EXPERIENCE');
-      }
+      setAppState('EXPERIENCE');
     }
   };
 
@@ -285,7 +283,7 @@ const App: React.FC = () => {
       case 'TEAM_MGMT':
       case 'INVITE_MEMBER':
       case 'SETTINGS':
-      case 'EXPERIENCE':
+      case 'EXPERIENCE': {
         const props = { 
           tenant: currentTenant, 
           children: renderExperienceContent(),
@@ -308,6 +306,7 @@ const App: React.FC = () => {
              {renderExperienceContent()}
           </ExperienceShell>
         );
+      }
       default:
         return <div>Invalid System State</div>;
     }
