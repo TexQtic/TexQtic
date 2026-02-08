@@ -1,4 +1,10 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
+
+/**
+ * DbClient union type: accepts both regular PrismaClient and TransactionClient
+ * (TransactionClient is the Omit type returned by $transaction)
+ */
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 /**
  * DB Context Management with RLS Session Variables
@@ -34,7 +40,7 @@ export async function withTenantDb<T>(
   prisma: PrismaClient,
   tenantId: string,
   isAdmin: boolean,
-  fn: (tx: PrismaClient) => Promise<T>
+  fn: (tx: DbClient) => Promise<T>
 ): Promise<T> {
   return prisma.$transaction(async tx => {
     try {
@@ -74,7 +80,7 @@ export async function withTenantDb<T>(
  */
 export async function withAdminDb<T>(
   prisma: PrismaClient,
-  fn: (tx: PrismaClient) => Promise<T>
+  fn: (tx: DbClient) => Promise<T>
 ): Promise<T> {
   return prisma.$transaction(async tx => {
     try {
