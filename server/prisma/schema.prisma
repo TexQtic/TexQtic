@@ -151,6 +151,28 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model EventLog {
+  id           String   @id @db.Uuid
+  version      String   @db.VarChar(10)
+  name         String   @db.VarChar(100)
+  occurredAt   DateTime @map("occurred_at") @db.Timestamptz(6)
+  tenantId     String?  @map("tenant_id") @db.Uuid
+  realm        String   @db.VarChar(20)
+  actorType    String   @map("actor_type") @db.VarChar(20)
+  actorId      String?  @map("actor_id") @db.Uuid
+  entityType   String   @map("entity_type") @db.VarChar(100)
+  entityId     String   @map("entity_id") @db.Uuid
+  payloadJson  Json?    @map("payload_json")
+  metadataJson Json?    @map("metadata_json")
+  auditLogId   String   @unique @map("audit_log_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([tenantId, occurredAt])
+  @@index([name, occurredAt])
+  @@index([entityType, entityId])
+  @@map("event_logs")
+}
+
 model FeatureFlag {
   key             String                  @id @db.VarChar(100)
   enabled         Boolean                 @default(false)

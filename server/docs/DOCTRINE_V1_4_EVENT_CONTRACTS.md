@@ -1,6 +1,6 @@
 # Doctrine v1.4 — Event Contracts Starter
 
-**Status:** ✅ EMISSION ACTIVE (P0 subset, console sink)  
+**Status:** ✅ STORAGE ACTIVE (EventLog table, best-effort persistence)  
 **Phase:** Phase 2 - Doctrine v1.4 Preparation  
 **Date:** February 8, 2026
 
@@ -573,6 +573,149 @@ For P0 actions, events are built deterministically from audit log rows:
 - ✅ Add event replay capabilities
 - ✅ Add pub/sub for real-time event streaming
 - ✅ Transition from "best-effort" to "critical-path" emission
+
+---
+
+## Prompt #16 — First-Class Event Storage
+
+**Status:** ✅ IMPLEMENTED  
+**Date:** February 8, 2026
+
+Events are now persisted to a dedicated EventLog table for first-class storage.
+
+### Why EventLog Exists
+
+**Doctrine principles require events to be:**
+
+1. **First-class entities** — Not nested in audit metadata, but stored as independent, queryable records
+2. **Immutable** — Append-only, never UPDATE or DELETE
+3. **Regulator-ready** — Structured, indexed, and traceable for compliance queries
+4. **Replay-safe** — Deterministic IDs enable idempotent replay
+
+**Separation from Audit Logs:**
+
+- **Audit logs** = Internal operational record (mutable concerns like RLS enforcement)
+- **Event logs** = External regulator/AI-facing record (strict immutability, versioned contracts)
+
+### EventLog Schema
+
+**Table:** `event_logs`
+
+**Fields:**
+
+| Field          | Type        | Description                                   |
+| -------------- | ----------- | --------------------------------------------- |
+| `id`           | UUID (PK)   | Event ID (deterministic, = audit.id)          |
+| `version`      | String      | Event envelope version ('v1')                 |
+| `name`         | String      | Event name (domain.ACTION)                    |
+| `occurredAt`   | Timestamptz | When event occurred                           |
+| `tenantId`     | UUID?       | Tenant isolation (null for admin/global)      |
+| `realm`        | String      | ADMIN or TENANT                               |
+| `actorType`    | String      | ADMIN, USER, or SYSTEM                        |
+| `actorId`      | UUID?       | Actor UUID (null for SYSTEM)                  |
+| `entityType`   | String      | Entity type (tenant, user, invite, etc.)      |
+| `entityId`     | UUID        | Entity UUID                                   |
+| `payloadJson`  | JSON?       | Event-specific data (no secrets)              |
+| `metadataJson` | JSON?       | origin, correlationId, causationId            |
+| `auditLogId`   | UUID UNIQUE | Traceability link back to audit log           |
+| `createdAt`    | Timestamptz | DB insertion time (immutable, auto-generated) |
+
+**Indexes:**
+
+- `(tenantId, occurredAt)` — Tenant-scoped queries
+- `(name, occurredAt)` — Event type queries
+- `(entityType, entityId)` — Entity-centric queries
+
+### Deterministic Linkage
+
+**Invariants (maintained throughout P0):**
+
+```
+event.id === audit.id === EventLog.id
+EventLog.auditLogId === audit.id
+event.occurredAt === audit.createdAt
+```
+
+**Why reuse audit.id:**
+
+- ✅ **Deterministic** — Replay produces identical event IDs
+- ✅ **Traceable** — Direct 1:1 mapping between audit and event
+- ✅ **Simple** — No external ID generator service needed
+- ✅ **Idempotent** — Duplicate storage attempts safely ignored (unique violation)
+
+### Storage Architecture
+
+**Hook Location:** `writeAuditLog()` in `server/src/lib/auditLog.ts`
+
+**Flow:**
+
+1. **Create audit log row** (source of truth)
+2. **Build event envelope** (from audit row, deterministic)
+3. **Validate event** (Zod + secret guards)
+4. **Emit to sink** (EVENT_EMIT console log)
+5. **Store to EventLog** (best-effort, non-blocking) ← **NEW in Prompt #16**
+
+**Best-Effort Persistence:**
+
+Event storage failures are **non-blocking**:
+
+- ✅ Unique violations (P2002) → Safely ignored (event already stored)
+- ✅ Other errors → Warning logged, request continues
+- ❌ Storage failures do NOT break application flow
+
+**Why best-effort:**
+
+- Audit logs remain source of truth
+- Event storage is secondary concern in P0
+- Future prompts will harden (e.g., retry, dead-letter queue)
+
+### Storage Implementation
+
+**Function:** `storeEventBestEffort()` in `server/src/lib/events.ts`
+
+**Signature:**
+
+```typescript
+export async function storeEventBestEffort(
+  prisma: PrismaClient,
+  event: KnownEventEnvelope,
+  auditLogId: string
+): Promise<void>;
+```
+
+**Mapping (event → EventLog):**
+
+```typescript
+{
+  id: event.id,                    // Deterministic
+  version: event.version,           // 'v1'
+  name: event.name,                 // domain.ACTION
+  occurredAt: new Date(event.occurredAt),
+  tenantId: event.tenantId,
+  realm: event.realm,
+  actorType: event.actor.type,
+  actorId: event.actor.id,
+  entityType: event.entity.type,
+  entityId: event.entity.id,
+  payloadJson: event.payload,
+  metadataJson: event.metadata,
+  auditLogId,                       // Traceability
+}
+```
+
+### Out of Scope (Prompt #16)
+
+The following are **NOT included** in Prompt #16:
+
+- ❌ **Read Endpoints:** No API routes for querying EventLog (Prompt #17+)
+- ❌ **Event Consumers:** No listeners or reactive workflows
+- ❌ **Replay UI:** No admin interface for event replay
+- ❌ **Pub/Sub:** No message queue integration
+- ❌ **Critical-Path Emission:** Still best-effort (not blocking requests)
+- ❌ **Route Changes:** No modifications to existing routes
+- ❌ **RLS Policies:** EventLog has no RLS yet (admin-accessible for now)
+
+**Status:** Storage foundation complete. Ready for Prompt #17 (Admin Query Endpoint).
 
 ---
 

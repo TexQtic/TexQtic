@@ -36,6 +36,8 @@ export interface AuditEntry {
  * Prompt #15: After successful write, attempts to emit a corresponding event
  * for P0 registry actions (best-effort, non-blocking).
  *
+ * Prompt #16: Also stores events to EventLog table (best-effort, non-blocking).
+ *
  * @param tx - Prisma transaction client (within RLS context)
  * @param entry - Audit entry to write
  * @returns Created audit log record
@@ -57,8 +59,8 @@ export async function writeAuditLog(tx: PrismaClient, entry: AuditEntry): Promis
       },
     });
 
-    // Prompt #15: Attempt event emission (best-effort, non-blocking)
-    maybeEmitEventFromAuditEntry(createdAuditLog);
+    // Prompt #15-16: Attempt event emission + storage (best-effort, non-blocking)
+    await maybeEmitEventFromAuditEntry(tx, createdAuditLog);
   } catch (error) {
     // Log failure but don't throw - audit logging should not break application flow
     console.error('[Audit Log] Failed to write audit entry:', {

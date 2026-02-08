@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PrismaClient } from '@prisma/client';
 
 /**
  * Doctrine v1.4 Event Contracts Starter
@@ -363,6 +364,66 @@ export function emitEventToSink(event: KnownEventEnvelope): void {
 }
 
 /**
+ * Store event to EventLog table (best-effort, non-blocking)
+ *
+ * Prompt #16: Persist events to first-class EventLog storage.
+ *
+ * Rules:
+ * - Deterministic linkage: EventLog.id = event.id, EventLog.auditLogId = auditLogId
+ * - Immutable: INSERT only, no UPDATE/DELETE
+ * - Best-effort: warnings only, never throw (don't break requests)
+ * - Unique violations (P2002) are swallowed (event already stored)
+ *
+ * @param prisma - Prisma client for database access
+ * @param event - Validated KnownEventEnvelope to store
+ * @param auditLogId - Audit log ID for traceability linkage
+ */
+export async function storeEventBestEffort(
+  prisma: PrismaClient,
+  event: KnownEventEnvelope,
+  auditLogId: string
+): Promise<void> {
+  try {
+    await prisma.eventLog.create({
+      data: {
+        id: event.id, // Deterministic: event.id = audit.id
+        version: event.version,
+        name: event.name,
+        occurredAt: new Date(event.occurredAt),
+        tenantId: event.tenantId,
+        realm: event.realm,
+        actorType: event.actor.type,
+        actorId: event.actor.id,
+        entityType: event.entity.type,
+        entityId: event.entity.id,
+        payloadJson: event.payload as any,
+        metadataJson: event.metadata as any,
+        auditLogId, // Traceability: link back to audit log
+      },
+    });
+  } catch (error: any) {
+    // Best-effort: swallow errors, never break requests
+    // P2002 (unique violation) means event already stored - ignore safely
+    if (error?.code === 'P2002') {
+      console.warn('[Event Storage] Event already stored (duplicate), ignoring:', {
+        eventId: event.id,
+        eventName: event.name,
+        auditLogId,
+      });
+      return;
+    }
+
+    // Other errors: log warning
+    console.warn('[Event Storage] Failed to store event (non-blocking):', {
+      eventId: event.id,
+      eventName: event.name,
+      auditLogId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
  * Build and emit event from audit log entry (best-effort, non-blocking)
  *
  * This is called after successful audit log write in writeAuditLog().
@@ -373,9 +434,15 @@ export function emitEventToSink(event: KnownEventEnvelope): void {
  * - Validate with validateKnownEvent() and assertNoSecretsInPayload()
  * - Best-effort: warnings only, never throw (don't break requests)
  *
+ * Prompt #16: Also stores event to EventLog table after emission.
+ *
+ * @param prisma - Prisma client for database access
  * @param auditLogRow - Created audit log row from database
  */
-export function maybeEmitEventFromAuditEntry(auditLogRow: AuditLogRow): void {
+export async function maybeEmitEventFromAuditEntry(
+  prisma: PrismaClient,
+  auditLogRow: AuditLogRow
+): Promise<void> {
   try {
     // Check if this action should emit an event
     const eventName = AUDIT_ACTION_TO_EVENT_NAME[auditLogRow.action];
@@ -395,8 +462,7 @@ export function maybeEmitEventFromAuditEntry(auditLogRow: AuditLogRow): void {
 
     // Origin detection: action ends with _ORIGIN or metadataJson.origin === true
     const isOriginByName = auditLogRow.action.endsWith('_ORIGIN');
-    const isOriginByMetadata =
-      auditLogRow.metadataJson && auditLogRow.metadataJson.origin === true;
+    const isOriginByMetadata = auditLogRow.metadataJson && auditLogRow.metadataJson.origin === true;
     if (isOriginByName || isOriginByMetadata) {
       metadata.origin = true;
     }
@@ -434,6 +500,9 @@ export function maybeEmitEventFromAuditEntry(auditLogRow: AuditLogRow): void {
 
     // Emit to sink
     emitEventToSink(validatedEvent);
+
+    // Prompt #16: Store to EventLog table
+    await storeEventBestEffort(prisma, validatedEvent, auditLogRow.id);
   } catch (error) {
     // Best-effort: log warning, do NOT throw (don't break requests)
     console.warn('[Event Emission] Failed to emit event (non-blocking):', {
