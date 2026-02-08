@@ -419,14 +419,16 @@ export async function storeEventBestEffort(
     // Projections are idempotent, replay-safe, and MUST NOT block writes
     try {
       await applyProjections(prisma, event);
-    } catch (projectionError: any) {
+    } catch (projectionError: unknown) {
       // Best-effort: projection failures never block event storage
       // Log for observability, but do NOT throw
+      const err =
+        projectionError instanceof Error ? projectionError : new Error(String(projectionError));
       console.warn('[Event Projections] Failed to apply projections (non-blocking):', {
         eventId: event.id,
         eventName: event.name,
         tenantId: event.tenantId,
-        error: projectionError instanceof Error ? projectionError.message : String(projectionError),
+        error: err.message,
       });
     }
   } catch (error: any) {
