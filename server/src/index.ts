@@ -7,6 +7,24 @@ import { config } from './config/index.js';
 import controlRoutes from './routes/control.js';
 import tenantRoutes from './routes/tenant.js';
 
+/**
+ * Type guard for Fastify-like error objects.
+ * Safely narrows unknown error to structured error with optional Fastify properties.
+ */
+type FastifyErrorLike = Error & {
+  statusCode?: number;
+  code?: string;
+  validation?: unknown;
+};
+
+function toErrorLike(err: unknown): FastifyErrorLike {
+  if (err instanceof Error) {
+    return err as FastifyErrorLike;
+  }
+  // Fallback for non-Error objects
+  return new Error(String(err)) as FastifyErrorLike;
+}
+
 const fastify = Fastify({
   logger: {
     level: config.NODE_ENV === 'production' ? 'info' : 'debug',
@@ -86,17 +104,20 @@ await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });
 
 // Error handler
-fastify.setErrorHandler((error, request, reply) => {
+fastify.setErrorHandler((error, _request, reply) => {
   fastify.log.error(error);
 
-  const statusCode = error.statusCode || 500;
+  const err = toErrorLike(error);
+  const statusCode = typeof err.statusCode === 'number' && isFinite(err.statusCode)
+    ? err.statusCode
+    : 500;
 
   reply.code(statusCode).send({
     success: false,
     error: {
-      code: error.code || 'INTERNAL_ERROR',
-      message: error.message || 'An unexpected error occurred',
-      ...(config.NODE_ENV === 'development' && { stack: error.stack }),
+      code: err.code || 'INTERNAL_ERROR',
+      message: err.message || 'An unexpected error occurred',
+      ...(config.NODE_ENV === 'development' && { stack: err.stack }),
     },
   });
 });
