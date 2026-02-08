@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import { config } from '../config/index.js';
-import { sendSuccess, sendBadRequest } from '../utils/response.js';
+import { sendSuccess, sendValidationError } from '../utils/response.js';
 import { getTenantContext } from '../lib/tenantContext.js';
 import { withTenantDb } from '../lib/dbContext.js';
 import {
@@ -36,8 +36,6 @@ const negotiationAdviceSchema = z.object({
   quantity: z.number().positive().optional(),
   context: z.string().max(500).optional(),
 });
-
-type NegotiationAdviceInput = z.infer<typeof negotiationAdviceSchema>;
 
 // Configuration
 const AI_PREFLIGHT_TOKENS_INSIGHTS = Number.parseInt(
@@ -175,7 +173,8 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         await upsertUsage(tx, tenantId, monthKey, tokensUsed, actualCost);
 
         // 8. Write audit log (DB-backed, append-only)
-        const auditEntry = createAiInsightsAudit(tenantId, userId, {
+        const auditUserId = userId ?? null;
+        const auditEntry = createAiInsightsAudit(tenantId, auditUserId, {
           model,
           tokensUsed,
           costEstimateUSD: actualCost,
@@ -244,7 +243,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     // Validate body
     const parseResult = negotiationAdviceSchema.safeParse(request.body);
     if (!parseResult.success) {
-      return sendBadRequest(reply, 'Invalid request body', parseResult.error.errors);
+      return sendValidationError(reply, parseResult.error.errors);
     }
 
     const { productName, targetPrice, quantity, context } = parseResult.data;
@@ -298,7 +297,8 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         await upsertUsage(tx, tenantId, monthKey, tokensUsed, actualCost);
 
         // 8. Write audit log (DB-backed, append-only)
-        const auditEntry = createAiNegotiationAudit(tenantId, userId, {
+        const auditUserId = userId ?? null;
+        const auditEntry = createAiNegotiationAudit(tenantId, auditUserId, {
           model,
           tokensUsed,
           costEstimateUSD: actualCost,

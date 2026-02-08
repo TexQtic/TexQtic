@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 /**
  * Doctrine v1.4 Event Contracts Starter
@@ -381,12 +384,12 @@ export function emitEventToSink(event: KnownEventEnvelope): void {
  * - Best-effort: warnings only, never throw (don't break requests)
  * - Unique violations (P2002) are swallowed (event already stored)
  *
- * @param prisma - Prisma client for database access
+ * @param prisma - Prisma client or transaction for database access
  * @param event - Validated KnownEventEnvelope to store
  * @param auditLogId - Audit log ID for traceability linkage
  */
 export async function storeEventBestEffort(
-  prisma: PrismaClient,
+  prisma: DbClient,
   event: KnownEventEnvelope,
   auditLogId: string
 ): Promise<void> {
@@ -443,11 +446,11 @@ export async function storeEventBestEffort(
  *
  * Prompt #16: Also stores event to EventLog table after emission.
  *
- * @param prisma - Prisma client for database access
+ * @param prisma - Prisma client or transaction for database access
  * @param auditLogRow - Created audit log row from database
  */
 export async function maybeEmitEventFromAuditEntry(
-  prisma: PrismaClient,
+  prisma: DbClient,
   auditLogRow: AuditLogRow
 ): Promise<void> {
   try {

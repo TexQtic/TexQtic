@@ -1,5 +1,8 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import { maybeEmitEventFromAuditEntry } from './events.js';
+
+// Type-widened client to support both direct client and transaction usage
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 /**
  * Audit Logging - Immutable DB-backed Audit Trail
@@ -38,11 +41,11 @@ export interface AuditEntry {
  *
  * Prompt #16: Also stores events to EventLog table (best-effort, non-blocking).
  *
- * @param tx - Prisma transaction client (within RLS context)
+ * @param tx - Prisma client or transaction (within RLS context)
  * @param entry - Audit entry to write
  * @returns Created audit log record
  */
-export async function writeAuditLog(tx: PrismaClient, entry: AuditEntry): Promise<void> {
+export async function writeAuditLog(tx: DbClient, entry: AuditEntry): Promise<void> {
   try {
     const createdAuditLog = await tx.auditLog.create({
       data: {

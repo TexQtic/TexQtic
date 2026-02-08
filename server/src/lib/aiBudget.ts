@@ -1,5 +1,8 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+
+// Type-widened client to support both direct client and transaction usage
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 /**
  * AI Budget Enforcement & Usage Metering
@@ -86,11 +89,11 @@ export function estimateCostUSD(tokens: number, _model: string = 'gemini-1.5-fla
 /**
  * Load tenant's AI budget policy from database
  *
- * @param tx - Prisma transaction client
+ * @param tx - Prisma client or transaction
  * @param tenantId - Tenant UUID
  * @returns Budget policy or default if not configured
  */
-export async function loadTenantBudget(tx: PrismaClient, tenantId: string): Promise<BudgetPolicy> {
+export async function loadTenantBudget(tx: DbClient, tenantId: string): Promise<BudgetPolicy> {
   const budget = await tx.aiBudget.findUnique({
     where: { tenantId },
     select: { monthlyLimit: true, hardStop: true },
@@ -115,13 +118,13 @@ export async function loadTenantBudget(tx: PrismaClient, tenantId: string): Prom
 /**
  * Get current month's usage for tenant
  *
- * @param tx - Prisma transaction client
+ * @param tx - Prisma client or transaction
  * @param tenantId - Tenant UUID
  * @param month - Month key (YYYY-MM)
  * @returns Current usage snapshot
  */
 export async function getUsage(
-  tx: PrismaClient,
+  tx: DbClient,
   tenantId: string,
   month: string
 ): Promise<UsageSnapshot> {
@@ -196,14 +199,14 @@ export function enforceBudgetOrThrow(
  *
  * Uses upsert to create or increment monthly usage record.
  *
- * @param tx - Prisma transaction client
+ * @param tx - Prisma client or transaction
  * @param tenantId - Tenant UUID
  * @param month - Month key (YYYY-MM)
  * @param addTokens - Tokens consumed in this call
  * @param addCost - Cost incurred in this call
  */
 export async function upsertUsage(
-  tx: PrismaClient,
+  tx: DbClient,
   tenantId: string,
   month: string,
   addTokens: number,
