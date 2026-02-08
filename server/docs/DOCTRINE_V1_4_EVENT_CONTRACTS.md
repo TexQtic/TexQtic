@@ -961,19 +961,115 @@ The following are **NOT included** in Prompt #17:
 
 ---
 
+## EventLog Security Lockdown (Prompt #19)
+
+### Overview
+
+EventLog is a **regulator-grade immutable record** that must not be exposed via public PostgREST endpoints. Prompt #19 implements Row Level Security (RLS) to satisfy Supabase Security Advisor requirements and prevent accidental public exposure.
+
+### Security Posture
+
+**Migration:** `20260208074800_event_logs_rls_lockdown`
+
+1. **RLS Enabled** — `ALTER TABLE public.event_logs ENABLE ROW LEVEL SECURITY`
+2. **Grants Revoked** — `REVOKE ALL ON TABLE public.event_logs FROM anon, authenticated`
+3. **Explicit Deny Policies** — Defense-in-depth deny policies for PostgREST roles
+
+### Policy Details
+
+**Policy: `event_logs_deny_anon_all`**
+
+- **Target:** `anon` role (unauthenticated PostgREST clients)
+- **Effect:** `USING (false) WITH CHECK (false)` — Deny all operations
+
+**Policy: `event_logs_deny_authenticated_all`**
+
+- **Target:** `authenticated` role (authenticated PostgREST clients)
+- **Effect:** `USING (false) WITH CHECK (false)` — Deny all operations
+
+### Access Model (Current State)
+
+✅ **Backend Application (`app_user` role):** Full access via Prisma  
+❌ **PostgREST Anonymous:** Denied (policy + revoked grants)  
+❌ **PostgREST Authenticated:** Denied (policy + revoked grants)  
+⏳ **Tenant/Admin API Access:** Not yet implemented (Prompt #20+)
+
+### Design Rationale
+
+**Why explicit deny policies?**
+
+RLS alone is not defense-in-depth. If grants are accidentally re-added to `anon`/`authenticated` in the future, explicit `USING (false)` policies ensure those roles still cannot access the table. This is critical for regulator-grade immutable records.
+
+**Why no allow policies yet?**
+
+EventLog access will be mediated through **controlled backend endpoints** (Prompt #20+), not via direct PostgREST queries. The backend uses the `app_user` role, which bypasses RLS for authorized operations.
+
+### Verification Queries
+
+**Confirm RLS enabled:**
+
+```sql
+SELECT
+  n.nspname AS schema,
+  c.relname AS table,
+  c.relrowsecurity AS rls_enabled,
+  c.relforcerowsecurity AS rls_forced
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public' AND c.relname = 'event_logs';
+```
+
+**Expected:** `rls_enabled = true`
+
+**Confirm deny policies exist:**
+
+```sql
+SELECT
+  polname,
+  polcmd,
+  pg_get_expr(polqual, polrelid) AS using_expr,
+  pg_get_expr(polwithcheck, polrelid) AS with_check_expr
+FROM pg_policy
+WHERE polrelid = 'public.event_logs'::regclass
+ORDER BY polname;
+```
+
+**Expected:** 2 policies, both with `USING (false)` and `WITH CHECK (false)`
+
+**Confirm grants removed:**
+
+```sql
+SELECT grantee, privilege_type
+FROM information_schema.role_table_grants
+WHERE table_schema='public' AND table_name='event_logs'
+  AND grantee IN ('anon','authenticated')
+ORDER BY grantee, privilege_type;
+```
+
+**Expected:** 0 rows (no privileges for anon/authenticated)
+
+### Status
+
+✅ **RLS Enabled:** Supabase Security Advisor error resolved  
+✅ **Public Exposure Risk:** Eliminated via deny policies  
+✅ **Backend Access:** Unchanged (app_user role unaffected)  
+⏳ **Tenant/Admin Access:** Future work (controlled endpoints, not PostgREST)
+
+---
+
 ### Out of Scope (Prompt #16)
 
 The following are **NOT included** in Prompt #16:
 
-- ❌ **Read Endpoints:** No API routes for querying EventLog (Prompt #17+)
+- ❌ **Read Endpoints:** No API routes for querying EventLog (Prompt #20+)
 - ❌ **Event Consumers:** No listeners or reactive workflows
 - ❌ **Replay UI:** No admin interface for event replay
 - ❌ **Pub/Sub:** No message queue integration
 - ❌ **Critical-Path Emission:** Still best-effort (not blocking requests)
 - ❌ **Route Changes:** No modifications to existing routes
-- ❌ **RLS Policies:** EventLog has no RLS yet (admin-accessible for now)
+- ❌ **RLS Policies:** Implemented in Prompt #19 (deny-only, controlled access via backend)
 
-**Status:** Storage foundation complete. Ready for Prompt #17 (Admin Query Endpoint).
+**Status:** Storage foundation complete. RLS hardening applied (Prompt #19).
 
 ---
 
