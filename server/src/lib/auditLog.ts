@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { maybeEmitEventFromAuditEntry } from './events.js';
 
 /**
  * Audit Logging - Immutable DB-backed Audit Trail
@@ -32,13 +33,16 @@ export interface AuditEntry {
  * - Admin logs must have tenantId=null and admin context set
  * - Never attempt UPDATE or DELETE on audit_logs
  *
+ * Prompt #15: After successful write, attempts to emit a corresponding event
+ * for P0 registry actions (best-effort, non-blocking).
+ *
  * @param tx - Prisma transaction client (within RLS context)
  * @param entry - Audit entry to write
  * @returns Created audit log record
  */
 export async function writeAuditLog(tx: PrismaClient, entry: AuditEntry): Promise<void> {
   try {
-    await tx.auditLog.create({
+    const createdAuditLog = await tx.auditLog.create({
       data: {
         realm: entry.realm,
         tenantId: entry.tenantId,
@@ -47,11 +51,14 @@ export async function writeAuditLog(tx: PrismaClient, entry: AuditEntry): Promis
         action: entry.action,
         entity: entry.entity,
         entityId: entry.entityId,
-        beforeJson: entry.beforeJson,
-        afterJson: entry.afterJson,
-        metadataJson: entry.metadataJson,
+        beforeJson: entry.beforeJson ?? undefined,
+        afterJson: entry.afterJson ?? undefined,
+        metadataJson: entry.metadataJson ?? undefined,
       },
     });
+
+    // Prompt #15: Attempt event emission (best-effort, non-blocking)
+    maybeEmitEventFromAuditEntry(createdAuditLog);
   } catch (error) {
     // Log failure but don't throw - audit logging should not break application flow
     console.error('[Audit Log] Failed to write audit entry:', {

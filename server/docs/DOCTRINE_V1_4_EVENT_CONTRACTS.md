@@ -1,6 +1,6 @@
 # Doctrine v1.4 — Event Contracts Starter
 
-**Status:** ✅ FOUNDATION COMPLETE (Contract-Only, No Emission Yet)  
+**Status:** ✅ EMISSION ACTIVE (P0 subset, console sink)  
 **Phase:** Phase 2 - Doctrine v1.4 Preparation  
 **Date:** February 8, 2026
 
@@ -478,18 +478,116 @@ const event: KnownEventEnvelope = {
 
 ---
 
-## Out of Scope (Prompt #14)
+## Prompt #15 — Emission Strategy (P0)
 
-This prompt establishes **contracts only**. The following are **NOT included** in Prompt #14:
+**Status:** ✅ IMPLEMENTED  
+**Date:** February 8, 2026
 
-- ❌ **Event Emission:** No events are emitted yet (Prompt #15+)
-- ❌ **Event Consumers:** No consumers or listeners (Prompt #16+)
-- ❌ **Event Storage:** No database table for events (Prompt #15+)
-- ❌ **Event Bus:** No pub/sub or message queue (Future)
+Events are now emitted automatically for P0 registry actions after successful audit log writes.
+
+### Emission Architecture
+
+**Source of Truth:** Audit logs remain the authoritative record. Events are derived sidecars.
+
+**Hook Location:** `writeAuditLog()` in `server/src/lib/auditLog.ts`
+
+After a successful audit log write, `maybeEmitEventFromAuditEntry()` is called to attempt event emission.
+
+### Deterministic Event ID Strategy
+
+**Event ID = Audit Log ID**
+
+The event ID is deterministically derived by reusing the audit log row's UUID:
+
+```typescript
+event.id = createdAuditLogRow.id;
+```
+
+**Rationale:**
+
+- ✅ **Deterministic:** Replay of audit logs produces identical event IDs
+- ✅ **Stable:** No randomness, no external dependencies
+- ✅ **Simple:** Zero additional infrastructure (no ID generator service)
+- ✅ **Traceable:** Direct 1:1 mapping between audit log and event
+
+### Best-Effort Non-Blocking Emission
+
+Event emission is **best-effort** and **non-blocking**:
+
+- ✅ If emission fails (validation error, secret detected), a warning is logged
+- ✅ The original request continues successfully (audit log write succeeded)
+- ❌ Emission failures do NOT break application flow
+
+**Why:** In P0, event emission is a secondary concern. Audit logs are the source of truth. Once event storage is added (Prompt #16+), emission will become critical-path.
+
+### Event Sink (P0: Console Logging)
+
+**Current Sink:** `console.info()` with prefix `EVENT_EMIT`
+
+Events are logged as single-line JSON:
+
+```
+EVENT_EMIT {"id":"123e4567-e89b-12d3-a456-426614174000","version":"v1","name":"tenant.TENANT_CREATED_ORIGIN",...}
+```
+
+**Why console logging:**
+
+- ✅ Simple (no storage infrastructure needed in P0)
+- ✅ Observable (logs visible in server output)
+- ✅ Testable (verify emission by inspecting logs)
+
+**Future:** Prompt #16+ will add event storage table, pub/sub, and consumers.
+
+### P0 Event Emission Mapping
+
+Only these audit actions emit events:
+
+| Audit Action                      | Event Name                               | Origin? |
+| --------------------------------- | ---------------------------------------- | ------- |
+| `TENANT_CREATED_ORIGIN`           | `tenant.TENANT_CREATED_ORIGIN`           | Yes     |
+| `TENANT_OWNER_CREATED`            | `tenant.TENANT_OWNER_CREATED`            | No      |
+| `TENANT_OWNER_MEMBERSHIP_CREATED` | `tenant.TENANT_OWNER_MEMBERSHIP_CREATED` | No      |
+| `TEAM_INVITE_CREATED`             | `team.TEAM_INVITE_CREATED`               | No      |
+
+All other audit actions are silently ignored (no event emission).
+
+### Event Building Process
+
+For P0 actions, events are built deterministically from audit log rows:
+
+1. **Event ID:** `event.id = auditLogRow.id` (deterministic, stable)
+2. **Occurred At:** `event.occurredAt = auditLogRow.createdAt.toISOString()`
+3. **Tenant ID / Realm:** `event.tenantId = auditLogRow.tenantId`, `event.realm = auditLogRow.realm`
+4. **Actor:** Mapped from `auditLogRow.actorType` and `auditLogRow.actorId`
+5. **Entity:** `event.entity = { type: auditLogRow.entity, id: auditLogRow.entityId }`
+6. **Payload:** Extracted from `auditLogRow.afterJson` (or `{}` if null)
+7. **Secret Guard:** `assertNoSecretsInPayload(payload)` throws if secrets detected
+8. **Metadata:** `origin=true` if action ends with `_ORIGIN` or `metadataJson.origin === true`; copy `correlationId` and `causationId` if present
+9. **Validation:** `validateKnownEvent(event)` ensures Zod schema compliance
+10. **Emission:** `emitEventToSink(event)` writes to console
+
+### Next Steps (Prompt #16+)
+
+- ✅ Add event storage table (`audit_events`) for persistence
+- ✅ Add event consumers and listeners
+- ✅ Add event replay capabilities
+- ✅ Add pub/sub for real-time event streaming
+- ✅ Transition from "best-effort" to "critical-path" emission
+
+---
+
+## Out of Scope (Prompt #15)
+
+The following are **NOT included** in Prompt #15:
+
+- ❌ **Event Storage:** No database table for events (console logging only)
+- ❌ **Event Consumers:** No consumers or listeners
+- ❌ **Pub/Sub:** No message queue or event bus
 - ❌ **Route Changes:** No modifications to existing routes
 - ❌ **Schema Changes:** No Prisma schema modifications
+- ❌ **Breaking Changes:** No changes to API response contracts
 
-**Status:** Foundation laid. Ready for Prompt #15 (Event Emission from Audit Logs).
+**Status:** Emission foundation complete. Ready for Prompt #16 (Event Storage & Consumers).
 
 ---
 

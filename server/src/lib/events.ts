@@ -314,3 +314,132 @@ function scanForSecrets(obj: any, depth: number = 0, path: string = 'payload'): 
 export function assertNoSecretsInPayload(payload: Record<string, any>): void {
   scanForSecrets(payload, 0, 'payload');
 }
+
+// ============================================================================
+// EVENT EMISSION (Prompt #15)
+// ============================================================================
+
+/**
+ * Audit action to event name mapping (P0 registry)
+ *
+ * Only these audit actions emit events in Prompt #15.
+ * Other actions are silently ignored (no event emission).
+ */
+const AUDIT_ACTION_TO_EVENT_NAME: Record<string, KnownEventName> = {
+  TENANT_CREATED_ORIGIN: 'tenant.TENANT_CREATED_ORIGIN',
+  TENANT_OWNER_CREATED: 'tenant.TENANT_OWNER_CREATED',
+  TENANT_OWNER_MEMBERSHIP_CREATED: 'tenant.TENANT_OWNER_MEMBERSHIP_CREATED',
+  TEAM_INVITE_CREATED: 'team.TEAM_INVITE_CREATED',
+};
+
+/**
+ * Audit log row structure (subset of Prisma AuditLog model)
+ */
+interface AuditLogRow {
+  id: string;
+  realm: 'ADMIN' | 'TENANT';
+  tenantId: string | null;
+  actorType: 'USER' | 'ADMIN' | 'SYSTEM';
+  actorId: string | null;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  beforeJson: any;
+  afterJson: any;
+  metadataJson: any;
+  createdAt: Date;
+}
+
+/**
+ * Emit event to sink (P0: console logging only)
+ *
+ * Future prompts will add storage, pub/sub, etc.
+ *
+ * @param event - Validated KnownEventEnvelope to emit
+ */
+export function emitEventToSink(event: KnownEventEnvelope): void {
+  // P0 sink: single-line JSON to console with prefix
+  console.info('EVENT_EMIT', JSON.stringify(event));
+}
+
+/**
+ * Build and emit event from audit log entry (best-effort, non-blocking)
+ *
+ * This is called after successful audit log write in writeAuditLog().
+ *
+ * Rules:
+ * - Only emit for P0 actions (AUDIT_ACTION_TO_EVENT_NAME registry)
+ * - Deterministic: event.id = auditLogRow.id
+ * - Validate with validateKnownEvent() and assertNoSecretsInPayload()
+ * - Best-effort: warnings only, never throw (don't break requests)
+ *
+ * @param auditLogRow - Created audit log row from database
+ */
+export function maybeEmitEventFromAuditEntry(auditLogRow: AuditLogRow): void {
+  try {
+    // Check if this action should emit an event
+    const eventName = AUDIT_ACTION_TO_EVENT_NAME[auditLogRow.action];
+    if (!eventName) {
+      // Not a P0 event action, silently skip
+      return;
+    }
+
+    // Build payload from afterJson (preferred) or empty object
+    const payload: Record<string, any> = auditLogRow.afterJson ?? {};
+
+    // Security guard: ensure no secrets in payload
+    assertNoSecretsInPayload(payload);
+
+    // Build metadata
+    const metadata: EventMetadata = {};
+
+    // Origin detection: action ends with _ORIGIN or metadataJson.origin === true
+    const isOriginByName = auditLogRow.action.endsWith('_ORIGIN');
+    const isOriginByMetadata =
+      auditLogRow.metadataJson && auditLogRow.metadataJson.origin === true;
+    if (isOriginByName || isOriginByMetadata) {
+      metadata.origin = true;
+    }
+
+    // Copy correlation/causation IDs if present
+    if (auditLogRow.metadataJson?.correlationId) {
+      metadata.correlationId = auditLogRow.metadataJson.correlationId;
+    }
+    if (auditLogRow.metadataJson?.causationId) {
+      metadata.causationId = auditLogRow.metadataJson.causationId;
+    }
+
+    // Build event envelope (deterministic, stable for replay)
+    const event: EventEnvelope = {
+      id: auditLogRow.id, // Deterministic: reuse audit log UUID
+      version: 'v1',
+      name: eventName,
+      occurredAt: auditLogRow.createdAt.toISOString(),
+      tenantId: auditLogRow.tenantId,
+      realm: auditLogRow.realm,
+      actor: {
+        type: auditLogRow.actorType,
+        id: auditLogRow.actorId,
+      },
+      entity: {
+        type: auditLogRow.entity,
+        id: auditLogRow.entityId ?? '', // EntityId required in EventEntity, default to empty if null
+      },
+      payload,
+      metadata,
+    };
+
+    // Validate with Zod (throws if invalid)
+    const validatedEvent = validateKnownEvent(event);
+
+    // Emit to sink
+    emitEventToSink(validatedEvent);
+  } catch (error) {
+    // Best-effort: log warning, do NOT throw (don't break requests)
+    console.warn('[Event Emission] Failed to emit event (non-blocking):', {
+      auditAction: auditLogRow.action,
+      auditId: auditLogRow.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
