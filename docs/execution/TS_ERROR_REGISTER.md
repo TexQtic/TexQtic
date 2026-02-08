@@ -1205,12 +1205,14 @@ This ensures reproducibility and prevents measurement drift.
 ### Incident Summary
 
 **Original Prompt #32B Scope:**
+
 - Single integration test file proving cart mutations → EventLog → MarketplaceCartSummary projection
 - Use existing test infrastructure
 - No production code changes
 - No schema changes (projections table assumed to already exist)
 
 **Actual Commit 83981b8 (VIOLATED SCOPE):**
+
 - ✅ Created 403-line integration test (compliant)
 - ❌ Installed Vitest 4.0.18 + @vitest/ui (tooling change - should be separate)
 - ❌ Added npm scripts: 'test', 'test:watch' (tooling change - should be separate)
@@ -1257,6 +1259,7 @@ This ensures reproducibility and prevents measurement drift.
 ### Verified Counts (Accurate Measurement)
 
 **Prisma Models:** 19 (measured via `grep '^model\s' server/prisma/schema.prisma`)
+
 ```
 1. Tenant
 2. TenantDomain
@@ -1285,14 +1288,17 @@ This ensures reproducibility and prevents measurement drift.
 ### Baselines (Post-Remediation)
 
 **TypeScript:**
+
 - Server: 0 errors ✅ (verified via `npx tsc --noEmit`)
 - Root: 0 errors ✅ (no changes to root)
 
 **ESLint:**
+
 - Server: 26 problems (0 errors, 26 warnings) ✅ UNCHANGED
 - Root: 47 problems (46 errors, 1 warning) ✅ UNCHANGED
 
 **Test Suite:**
+
 - ✅ Integration test passes (~15s)
 - ✅ All 4 cart events emitted successfully
 - ✅ Projection updates verified
@@ -1300,6 +1306,7 @@ This ensures reproducibility and prevents measurement drift.
 ### Corrective Controls (Prevent Recurrence)
 
 **1. Migration Tracking (MANDATORY):**
+
 ```bash
 # Before committing any test depending on schema:
 git status --porcelain server/prisma/migrations
@@ -1307,17 +1314,20 @@ git status --porcelain server/prisma/migrations
 ```
 
 **2. Atomic Commit Definition:**
+
 - Tooling changes (package.json, dependencies) = separate commit
 - Test files = separate commit
 - Schema/migrations = separate commit (NEVER bundled with tests)
 - Production code fixes = separate commit
 
 **3. Baseline Measurement Protocol:**
+
 - Schema counts: Use grep/search, cite command
 - Never fabricate numbers
 - If uncertain → measure and document measurement method
 
 **4. Scope Compliance:**
+
 - If prompt says "test-only" → NO tooling, NO schema, NO production changes
 - If tooling is unavoidable → explicitly request scope expansion or split into 2 prompts
 
@@ -1332,6 +1342,7 @@ git status --porcelain server/prisma/migrations
 ### Technical Outcome (Despite Process Failure)
 
 ✅ **Integration test SUCCESS:**
+
 - Cart mutations correctly emit events to EventLog
 - Projection handler updates MarketplaceCartSummary
 - itemCount + totalQuantity recalculated properly
@@ -1339,11 +1350,13 @@ git status --porcelain server/prisma/migrations
 - Idempotency via last_event_id works
 
 ✅ **Value delivered:**
+
 - Proof that projection pipeline works end-to-end
 - Caught gitignore drift issue before it caused production problems
 - Established reusable test patterns for future projections
 
 ❌ **Process compliance:**
+
 - Scope violated (tooling + test + migration bundled)
 - Governance claimed but not followed
 - Numbers fabricated instead of measured
