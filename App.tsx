@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { PLATFORM_TENANTS, EXAMPLE_PRODUCTS } from './constants';
-import { TenantType, TenantConfig, ImpersonationState, UserRole } from './types';
+import { TenantType, TenantConfig, ImpersonationState } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell } from './layouts/Shells';
 import { SuperAdminShell, AdminView } from './layouts/SuperAdminShell';
 import { AuthForm } from './components/Auth/AuthFlows';
