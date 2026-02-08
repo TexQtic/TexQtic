@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TenantConfig } from '../../types';
 
 export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant }) => {
