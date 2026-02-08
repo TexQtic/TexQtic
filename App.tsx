@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { PLATFORM_TENANTS, EXAMPLE_PRODUCTS } from './constants';
-import { TenantType, TenantConfig, ImpersonationState, UserRole } from './types';
+import { TenantType, TenantConfig, ImpersonationState } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell } from './layouts/Shells';
 import { SuperAdminShell, AdminView } from './layouts/SuperAdminShell';
 import { AuthForm } from './components/Auth/AuthFlows';
@@ -64,12 +64,10 @@ const App: React.FC = () => {
   const handleAuthSuccess = () => {
     if (authRealm === 'CONTROL_PLANE') {
       setAppState('CONTROL_PLANE');
+    } else if (authMode === 'SIGNUP') {
+      setAppState('VERIFY_EMAIL');
     } else {
-      if (authMode === 'SIGNUP') {
-        setAppState('VERIFY_EMAIL');
-      } else {
-        setAppState('EXPERIENCE');
-      }
+      setAppState('EXPERIENCE');
     }
   };
 
@@ -173,7 +171,7 @@ const App: React.FC = () => {
         return (
           <div className="space-y-12 animate-in fade-in duration-500">
             <section className="relative h-[400px] rounded-3xl overflow-hidden flex items-center px-12">
-               <img src="https://picsum.photos/seed/retail/1200/600" className="absolute inset-0 w-full h-full object-cover brightness-50" />
+               <img src="https://picsum.photos/seed/retail/1200/600" className="absolute inset-0 w-full h-full object-cover brightness-50" alt="Spring 2024 retail collections hero banner" />
                <div className="relative z-10 text-white max-w-lg space-y-4">
                  <h1 className="text-5xl font-black leading-tight">Spring 2024 Collections.</h1>
                  <p className="text-lg opacity-90">Sustainably sourced, ethically manufactured. Delivered to your door.</p>
@@ -184,13 +182,13 @@ const App: React.FC = () => {
             <section>
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-bold">New Arrivals</h2>
-                <a href="#" className="text-indigo-600 font-semibold underline underline-offset-4">See All</a>
+                <button type="button" className="text-indigo-600 font-semibold underline underline-offset-4">See All</button>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {EXAMPLE_PRODUCTS.slice(2).map(p => (
                    <div key={p.id} className="space-y-3">
                      <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100">
-                        <img src={p.image} className="w-full h-full object-cover hover:scale-110 transition duration-700" />
+                        <img src={p.image} className="w-full h-full object-cover hover:scale-110 transition duration-700" alt={p.name} />
                      </div>
                      <div>
                         <h4 className="font-medium text-slate-800">{p.name}</h4>
@@ -220,8 +218,8 @@ const App: React.FC = () => {
                  </button>
                </div>
                <div className="grid grid-cols-2 gap-4">
-                  <img src="https://picsum.photos/seed/wl1/400/500" className="rounded shadow-sm" />
-                  <img src="https://picsum.photos/seed/wl2/400/500" className="rounded shadow-sm translate-y-8" />
+                  <img src="https://picsum.photos/seed/wl1/400/500" className="rounded shadow-sm" alt="" aria-hidden="true" />
+                  <img src="https://picsum.photos/seed/wl2/400/500" className="rounded shadow-sm translate-y-8" alt="" aria-hidden="true" />
                </div>
             </div>
           </div>
@@ -285,7 +283,7 @@ const App: React.FC = () => {
       case 'TEAM_MGMT':
       case 'INVITE_MEMBER':
       case 'SETTINGS':
-      case 'EXPERIENCE':
+      case 'EXPERIENCE': {
         const props = { 
           tenant: currentTenant, 
           children: renderExperienceContent(),
@@ -308,6 +306,7 @@ const App: React.FC = () => {
              {renderExperienceContent()}
           </ExperienceShell>
         );
+      }
       default:
         return <div>Invalid System State</div>;
     }

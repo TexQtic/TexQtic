@@ -1,8 +1,5 @@
 {
-  "name": "OmniPlatform Architect & Control Plane",
+  "name": "TexQtic Platform & Control Plane",
   "description": "Production-grade multi-tenant architecture featuring an advanced Super Admin Control Plane for global tenant governance, financial oversight, and AI management.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
+  "requestFramePermissions": ["camera", "microphone"]
 }

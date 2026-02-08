@@ -1,0 +1,48 @@
+# GitHub Actions workflow for identity hygiene verification
+# Ensures no legacy "OmniPlatform" references exist in codebase
+
+name: Identity Hygiene Check
+
+on:
+  push:
+    branches: [main, develop, 'migration/*']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  verify-identity:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run identity verification
+        shell: powershell
+        run: |
+          Write-Host "Running identity hygiene check..." -ForegroundColor Cyan
+
+          $excludeDirs = @("node_modules", ".git", "dist", "build", "_ai_intake", "vendor")
+          $excludePattern = ($excludeDirs | ForEach-Object { [regex]::Escape($_) }) -join '|'
+
+          $matches = Get-ChildItem -Recurse -File -Exclude *.lock,OMNIPLATFORM_* |
+            Where-Object { $_.FullName -notmatch $excludePattern } |
+            Select-String -Pattern "omni" -CaseSensitive:$false
+
+          if ($matches) {
+            Write-Host "❌ FAIL: Found 'omni' references" -ForegroundColor Red
+            $matches | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber)" }
+            exit 1
+          } else {
+            Write-Host "✅ PASS: Identity hygiene verified" -ForegroundColor Green
+            exit 0
+          }
+
+      - name: Report status
+        if: always()
+        run: |
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Identity check passed - no legacy branding found" -ForegroundColor Green
+          } else {
+            Write-Host "Identity check failed - legacy branding detected" -ForegroundColor Red
+          }

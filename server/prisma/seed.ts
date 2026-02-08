@@ -12,23 +12,24 @@ async function main() {
   // ============================================================
   // 1. Create Admin Users
   // ============================================================
+  // DEV SEED ONLY - Not for production use
   console.log('Creating admin users...');
 
   const superAdmin = await prisma.adminUser.upsert({
-    where: { email: 'admin@omniplatform.io' },
+    where: { email: 'admin@texqtic.com' },
     update: {},
     create: {
-      email: 'admin@omniplatform.io',
+      email: 'admin@texqtic.com',
       passwordHash,
       role: 'SUPER_ADMIN',
     },
   });
 
   const supportAdmin = await prisma.adminUser.upsert({
-    where: { email: 'support@omniplatform.io' },
+    where: { email: 'support@texqtic.com' },
     update: {},
     create: {
-      email: 'support@omniplatform.io',
+      email: 'support@texqtic.com',
       passwordHash,
       role: 'SUPPORT',
     },

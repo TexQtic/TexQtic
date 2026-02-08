@@ -6,7 +6,7 @@
 
 ```powershell
 # Check Docker container
-docker ps | findstr omni-platform-db
+docker ps | findstr texqtic-platform-db
 
 # Or check local PostgreSQL service
 Get-Service postgresql* | Select-Object Status, Name
@@ -72,7 +72,7 @@ npx prisma db seed
 
 ```sql
 -- Connect to DB
-psql postgresql://postgres:postgres@localhost:5432/omni_platform
+psql postgresql://postgres:postgres@localhost:5432/texqtic_core_db
 
 -- Get tenant IDs
 SELECT id, slug FROM tenants;
