@@ -35,10 +35,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
         >
           {mode === 'SIGNUP' && (
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+              <label htmlFor="fullName" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                 Full Name
               </label>
               <input
+                id="fullName"
                 type="text"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
                 placeholder="Alex Rivera"
@@ -47,10 +48,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
             </div>
           )}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+            <label htmlFor="email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
               Email Address
             </label>
             <input
+              id="email"
               type="email"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
               placeholder="name@company.com"
@@ -58,10 +60,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+            <label htmlFor="password" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
               Password
             </label>
             <input
+              id="password"
               type="password"
               title="password"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"

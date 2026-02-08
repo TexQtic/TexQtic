@@ -70,7 +70,15 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
               <tr
                 key={tenant.id}
                 className="hover:bg-slate-800/30 transition-colors group cursor-pointer"
+                role="button"
+                tabIndex={0}
                 onClick={() => onSelectTenant(tenant)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectTenant(tenant);
+                  }
+                }}
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">

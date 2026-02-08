@@ -42,10 +42,11 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
             <h2 className="text-3xl font-bold">Tell us about your Business</h2>
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <label htmlFor="orgName" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                   Legal Entity Name
                 </label>
                 <input
+                  id="orgName"
                   type="text"
                   value={formData.orgName}
                   onChange={e => setFormData({ ...formData, orgName: e.target.value })}
@@ -54,10 +55,11 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <label htmlFor="industry" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                   Primary Industry
                 </label>
                 <input
+                  id="industry"
                   type="text"
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Manufacturing / Logistics / Consumer Goods"
@@ -72,11 +74,12 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
             <h2 className="text-3xl font-bold">Workspace Configuration</h2>
             <div className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <label htmlFor="subdomain" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                   Subdomain (Reserved)
                 </label>
                 <div className="flex">
                   <input
+                    id="subdomain"
                     type="text"
                     value={formData.domain}
                     onChange={e => setFormData({ ...formData, domain: e.target.value })}

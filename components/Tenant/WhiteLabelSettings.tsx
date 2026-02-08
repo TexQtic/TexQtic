@@ -21,6 +21,7 @@ export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant 
                   type="text"
                   className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
                   placeholder="shop.yourbrand.com"
+                  aria-label="Custom domain"
                 />
                 <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
                   Connect
@@ -42,11 +43,12 @@ export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant 
             <h3 className="font-bold text-slate-900">Visual Identity</h3>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-400">
+                <label htmlFor="primaryColor" className="text-[10px] font-bold uppercase text-slate-400">
                   Primary Color
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
+                    id="primaryColor"
                     type="color"
                     defaultValue={tenant.theme.primaryColor}
                     className="w-10 h-10 rounded cursor-pointer"
@@ -57,11 +59,12 @@ export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant 
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase text-slate-400">
+                <label htmlFor="secondaryColor" className="text-[10px] font-bold uppercase text-slate-400">
                   Secondary Color
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
+                    id="secondaryColor"
                     type="color"
                     defaultValue={tenant.theme.secondaryColor}
                     className="w-10 h-10 rounded cursor-pointer"
@@ -73,8 +76,9 @@ export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant 
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400">Logo URL</label>
+              <label htmlFor="logoUrl" className="text-[10px] font-bold uppercase text-slate-400">Logo URL</label>
               <input
+                id="logoUrl"
                 type="text"
                 className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
                 placeholder="https://cdn.yourbrand.com/logo.png"
