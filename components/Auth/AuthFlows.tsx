@@ -2,7 +2,6 @@ import React from 'react';
 
 interface AuthFormProps {
   realm: 'TENANT' | 'CONTROL_PLANE';
-  // eslint-disable-next-line no-unused-vars
   onSuccess: (data: any) => void;
   onSwitchMode: () => void;
   mode: 'LOGIN' | 'SIGNUP';
@@ -36,7 +35,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
         >
           {mode === 'SIGNUP' && (
             <div className="space-y-1">
-              <label htmlFor="fullName" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+              <label
+                htmlFor="fullName"
+                className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+              >
                 Full Name
               </label>
               <input
@@ -49,7 +51,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
             </div>
           )}
           <div className="space-y-1">
-            <label htmlFor="email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+            <label
+              htmlFor="email"
+              className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+            >
               Email Address
             </label>
             <input
@@ -61,7 +66,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="password" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+            <label
+              htmlFor="password"
+              className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+            >
               Password
             </label>
             <input
