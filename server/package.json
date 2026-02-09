@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "replay:marketplace-cart": "tsx src/events/replay/replay-marketplace-cart.ts",
+    "projection:health:marketplace-cart": "tsx src/events/health/marketplace-cart-projection-health.ts",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "typecheck": "tsc --noEmit",
