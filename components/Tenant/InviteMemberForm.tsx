@@ -12,12 +12,12 @@ export const InviteMemberForm: React.FC<{ onBack: () => void }> = ({ onBack }) =
 
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onBack(); }}>
         <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase text-slate-400">Email Address</label>
-          <input type="email" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="colleague@company.com" required />
+          <label htmlFor="invite-email" className="text-[10px] font-bold uppercase text-slate-400">Email Address</label>
+          <input id="invite-email" type="email" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="colleague@company.com" required />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase text-slate-400">Assign Role</label>
-          <select title="role" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+          <label htmlFor="invite-role" className="text-[10px] font-bold uppercase text-slate-400">Assign Role</label>
+          <select id="invite-role" title="role" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
             <option value={UserRole.TENANT_ADMIN}>Tenant Admin</option>
             <option value={UserRole.SELLER}>Seller / Sales Rep</option>
             <option value={UserRole.BUYER}>Procurement / Buyer</option>
