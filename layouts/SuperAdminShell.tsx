@@ -20,7 +20,7 @@ export type AdminView =
 interface SuperAdminShellProps {
   children: React.ReactNode;
   activeView: AdminView;
-  onViewChange: (view: AdminView) => void;
+  onViewChange: (_view: AdminView) => void;
 }
 
 export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
