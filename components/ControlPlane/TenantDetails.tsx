@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { TenantConfig, TenantStatus } from '../../types';
+import { TenantConfig } from '../../types';
 
 interface TenantDetailsProps {
   tenant: TenantConfig;
