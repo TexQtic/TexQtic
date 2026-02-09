@@ -40,6 +40,9 @@ export default [
       'jsx-a11y': jsxA11y,
     },
     rules: {
+      // Disable base rule (redundant with @typescript-eslint/no-unused-vars)
+      'no-unused-vars': 'off',
+
       // TypeScript - enforce unused vars/imports (prevents dead code)
       '@typescript-eslint/no-unused-vars': [
         'error',
