@@ -143,7 +143,7 @@ export const checkAIHealth = async (): Promise<{
     }>('/api/ai/health', { method: 'GET' });
 
     return response.data;
-  } catch (error) {
+  } catch (_error) {
     return {
       status: 'error',
       provider: 'unknown',
