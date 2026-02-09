@@ -17,12 +17,13 @@ export async function withDbContext<T>(context: DbContext, fn: () => Promise<T>)
     await tx.$executeRawUnsafe('SET ROLE app_user');
 
     // Set session variables for RLS
+    // Schema-qualified calls for app_user role compatibility
     if (context.isAdmin) {
-      await tx.$executeRawUnsafe(`SELECT set_admin_context()`);
+      await tx.$executeRawUnsafe(`SELECT public.set_admin_context()`);
     } else if (context.tenantId) {
-      await tx.$executeRawUnsafe(`SELECT set_tenant_context($1::uuid, false)`, context.tenantId);
+      await tx.$executeRawUnsafe(`SELECT public.set_tenant_context($1::uuid, false)`, context.tenantId);
     } else {
-      await tx.$executeRawUnsafe(`SELECT clear_context()`);
+      await tx.$executeRawUnsafe(`SELECT public.clear_context()`);
     }
 
     try {
