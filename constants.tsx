@@ -1,4 +1,3 @@
-import React from 'react';
 import { TenantType, TenantConfig, TenantStatus, ComplianceRequest, PayoutRequest } from './types';
 
 export const PLATFORM_TENANTS: Record<string, TenantConfig> = {
