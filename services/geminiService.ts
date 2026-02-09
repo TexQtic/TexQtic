@@ -29,7 +29,7 @@ export const generateNegotiationAdvice = async (product: string, targetPrice: nu
     });
     // Property access .text as per guidelines
     return response.text;
-  } catch (error) {
+  } catch (_error) {
     return "Negotiation strategy offline.";
   }
 };
