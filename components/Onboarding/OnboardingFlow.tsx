@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TenantType } from '../../types';
 
 interface OnboardingProps {
-  onComplete: (data: any) => void;
+  onComplete: (_data: any) => void;
 }
 
 export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
@@ -42,7 +42,10 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
             <h2 className="text-3xl font-bold">Tell us about your Business</h2>
             <div className="space-y-4">
               <div className="space-y-1">
-                <label htmlFor="orgName" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <label
+                  htmlFor="orgName"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
                   Legal Entity Name
                 </label>
                 <input
@@ -55,7 +58,10 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="industry" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <label
+                  htmlFor="industry"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
                   Primary Industry
                 </label>
                 <input
@@ -74,7 +80,10 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
             <h2 className="text-3xl font-bold">Workspace Configuration</h2>
             <div className="space-y-4">
               <div className="space-y-1">
-                <label htmlFor="subdomain" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <label
+                  htmlFor="subdomain"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
                   Subdomain (Reserved)
                 </label>
                 <div className="flex">
