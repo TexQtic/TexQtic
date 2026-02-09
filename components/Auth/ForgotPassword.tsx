@@ -18,8 +18,8 @@ export const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         {!submitted ? (
           <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Email Address</label>
-              <input type="email" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="name@company.com" required />
+              <label htmlFor="email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Email Address</label>
+              <input id="email" type="email" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="name@company.com" required />
             </div>
             <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:opacity-90 transition">
               Send Reset Link
