@@ -1370,3 +1370,88 @@ git status --porcelain server/prisma/migrations
 **Status:** REMEDIATED via 32C atomic split  
 **Risk:** MITIGATED via corrective controls  
 **Next:** Prompt #33 (projection backfill/replay command) - AFTER governance repair complete
+
+---
+
+## Push Checkpoint - Prompts #33-35 (February 9, 2026)
+
+### Push Summary
+
+**Date:** February 9, 2026  
+**Branch:** main  
+**Commits Pushed:** 27 (9aa0f83..89b9469)  
+**Remote:** https://github.com/TexQtic/TexQtic.git
+
+### This Session (Prompts #33-35)
+
+**Three new commits:**
+
+1. **ffbdf9b** - `feat(events): add CLI replay for marketplace cart projections`
+   - Created: replay-marketplace-cart.ts (424 lines)
+   - Features: stable ordering (createdAt ASC, id ASC), resumability (--since-event-id, --since), limits, dry-run
+   - NPM script: `replay:marketplace-cart`
+
+2. **cd3b682** - `feat(events): harden marketplace projection replay CLI safeguards`
+   - Added: --json (machine-readable output), --confirm (gate for limit > 5000), --max-runtime-seconds (1-86400)
+   - Exit codes: 0 (success), 2 (validation), 3 (partial), 1 (fatal)
+   - Modified: replay-marketplace-cart.ts (+228, -59 lines)
+
+3. **89b9469** - `feat(events): add projection health CLI for marketplace carts`
+   - Created: marketplace-cart-projection-health.ts (367 lines)
+   - Features: read-only inspection, staleness detection, missing projection detection, JSON output
+   - NPM script: `projection:health:marketplace-cart`
+
+### Baselines (Post-Push Verification)
+
+**TypeScript:**
+
+- Server: 0 errors ✅ (verified via `npx tsc --noEmit`)
+- Root: 0 errors ✅
+
+**ESLint:**
+
+- Server: 26 problems (0 errors, 26 warnings) ✅ BASELINE MAINTAINED
+- Root: 47 problems (46 errors, 1 warning) ⚠️ PRE-EXISTING (UI issues, unrelated to server changes)
+
+**Test Suite:**
+
+- Server: 1 test file passed (1)
+- Test: marketplace-cart-projection.integration.test.ts
+- Duration: ~15s
+
+**Git Status:**
+
+- Working tree: clean ✅
+- Branch alignment: `main...origin/main` (no longer ahead) ✅
+- Remote HEAD: 89b9469 ✅
+
+### Deployment Notes
+
+**Core Capabilities Pushed:**
+
+- Event projection replay system (with resumability + safeguards)
+- Operator health inspection tooling
+- Timeout protection for long-running replays
+- Confirmation gates for bulk operations
+
+**Governance Repairs Included:**
+
+- `.gitignore` migration drift fixed (Prompt #32C)
+- 9 historical migrations now tracked in version control
+- All Phase 2 + Phase 3A migrations baseline established
+
+**Risk Assessment:**
+
+- All 27 commits: atomic, verified before creation ✅
+- No schema changes in Prompts #33-35
+- No dependency changes in Prompts #33-35 (tsx already present)
+- Scope compliance: verified ✅
+- Linear history: preserved (no merge conflicts) ✅
+
+**CI Note:**
+
+Root `npm run ci:check` fails due to pre-existing UI lint errors (47 problems). Server-specific validation passes all checks (tsc, lint, tests). UI lint cleanup deferred to separate governance initiative.
+
+**Status:** PUSHED AND VERIFIED  
+**Next:** Prompt #36 or UI lint remediation
+
