@@ -1331,6 +1331,12 @@ git status --porcelain server/prisma/migrations
 - If prompt says "test-only" → NO tooling, NO schema, NO production changes
 - If tooling is unavoidable → explicitly request scope expansion or split into 2 prompts
 
+**5. No-Op Migration Policy:**
+
+- No-op migrations (empty migration.sql files) are **allowed only once**: when already applied to database and removing them would create drift
+- **Future no-op migrations are forbidden**: If `prisma migrate dev --create-only` generates empty migration, delete it and regenerate with actual schema changes before applying
+- Rationale: No-op migrations pollute migration history and create confusion. Exception exists for 20260208162051 (already applied), but this is the last permitted no-op.
+
 ### Lessons Learned
 
 1. **Gitignore can hide governance violations** - Always audit exclusion rules for schema/migration artifacts
