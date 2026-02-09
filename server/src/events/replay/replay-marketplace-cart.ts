@@ -3,6 +3,7 @@
  * CLI Replay for Marketplace Cart Projections
  *
  * Prompt #33: Idempotent backfill utility for MarketplaceCartSummary projections.
+ * Prompt #34: Operator-safe hardening with JSON output, confirmation gates, and exit codes.
  *
  * PURPOSE:
  * Replays historical marketplace.cart.* events from EventLog and applies
@@ -19,22 +20,33 @@
  *   --limit <number>           (Optional) Max events to process (default: 5000, max: 50000)
  *   --dry-run                  (Optional) Count events without applying projections
  *   --verbose                  (Optional) Log every event name/id
+ *   --json                     (Optional) Output machine-readable JSON summary
+ *   --confirm                  (Optional) Confirm destructive runs (required for limit > 5000)
+ *   --max-runtime-seconds <n>  (Optional) Kill switch for long operations (1-86400)
  *
  * CONSTRAINTS:
  * - Cannot use both --since-event-id and --since together
  * - Limit must be between 1 and 50000
  * - Tenant ID must be a valid UUID
+ * - Non-dry-run with limit > 5000 requires --confirm
  *
  * SAFETY:
  * - Best-effort: projection failures are logged but don't stop processing
  * - Idempotent: safe to rerun (existing projections are updated/skipped)
  * - Tenant-isolated: only processes events for specified tenant
  * - Stable ordering: createdAt ASC, id ASC (deterministic replay)
+ * - Timeout protection via --max-runtime-seconds
+ *
+ * EXIT CODES:
+ * - 0: Success (no failures)
+ * - 2: Validation/usage error
+ * - 3: Partial failure (some projections failed or timed out)
+ * - 1: Fatal error (DB query fails, unexpected crash)
  *
  * OUTPUT:
- * - Progress logs during processing
+ * - Progress logs during processing (stderr if --json)
  * - Final summary: scanned, applied, failed, duration
- * - Exit code 0 on success, 1 on error
+ * - JSON summary line to stdout (if --json)
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
@@ -54,6 +66,9 @@ interface CliArgs {
   limit: number;
   dryRun: boolean;
   verbose: boolean;
+  json: boolean;
+  confirm: boolean;
+  maxRuntimeSeconds?: number;
 }
 
 function parseArgs(): CliArgs {
@@ -63,6 +78,8 @@ function parseArgs(): CliArgs {
     limit: 5000,
     dryRun: false,
     verbose: false,
+    json: false,
+    confirm: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -74,7 +91,7 @@ function parseArgs(): CliArgs {
         if (!next || next.startsWith('--')) {
           console.error('❌ Error: --tenant-id requires a value');
           printUsage();
-          process.exit(1);
+          process.exit(2);
         }
         parsed.tenantId = next;
         i++;
@@ -84,7 +101,7 @@ function parseArgs(): CliArgs {
         if (!next || next.startsWith('--')) {
           console.error('❌ Error: --since-event-id requires a value');
           printUsage();
-          process.exit(1);
+          process.exit(2);
         }
         parsed.sinceEventId = next;
         i++;
@@ -94,7 +111,7 @@ function parseArgs(): CliArgs {
         if (!next || next.startsWith('--')) {
           console.error('❌ Error: --since requires a value');
           printUsage();
-          process.exit(1);
+          process.exit(2);
         }
         parsed.since = next;
         i++;
@@ -104,12 +121,12 @@ function parseArgs(): CliArgs {
         if (!next || next.startsWith('--')) {
           console.error('❌ Error: --limit requires a value');
           printUsage();
-          process.exit(1);
+          process.exit(2);
         }
         const limit = parseInt(next, 10);
         if (isNaN(limit) || limit < 1 || limit > 50000) {
           console.error('❌ Error: --limit must be between 1 and 50000');
-          process.exit(1);
+          process.exit(2);
         }
         parsed.limit = limit;
         i++;
@@ -123,10 +140,33 @@ function parseArgs(): CliArgs {
         parsed.verbose = true;
         break;
 
+      case '--json':
+        parsed.json = true;
+        break;
+
+      case '--confirm':
+        parsed.confirm = true;
+        break;
+
+      case '--max-runtime-seconds':
+        if (!next || next.startsWith('--')) {
+          console.error('❌ Error: --max-runtime-seconds requires a value');
+          printUsage();
+          process.exit(2);
+        }
+        const maxRuntime = parseInt(next, 10);
+        if (isNaN(maxRuntime) || maxRuntime < 1 || maxRuntime > 86400) {
+          console.error('❌ Error: --max-runtime-seconds must be between 1 and 86400');
+          process.exit(2);
+        }
+        parsed.maxRuntimeSeconds = maxRuntime;
+        i++;
+        break;
+
       default:
         console.error(`❌ Error: Unknown flag: ${arg}`);
         printUsage();
-        process.exit(1);
+        process.exit(2);
     }
   }
 
@@ -134,26 +174,26 @@ function parseArgs(): CliArgs {
   if (!parsed.tenantId) {
     console.error('❌ Error: --tenant-id is required');
     printUsage();
-    process.exit(1);
+    process.exit(2);
   }
 
   // Validate mutual exclusion
   if (parsed.sinceEventId && parsed.since) {
     console.error('❌ Error: Cannot use both --since-event-id and --since together');
     printUsage();
-    process.exit(1);
+    process.exit(2);
   }
 
   // Validate UUID format (basic check)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(parsed.tenantId)) {
     console.error('❌ Error: --tenant-id must be a valid UUID');
-    process.exit(1);
+    process.exit(2);
   }
 
   if (parsed.sinceEventId && !uuidRegex.test(parsed.sinceEventId)) {
     console.error('❌ Error: --since-event-id must be a valid UUID');
-    process.exit(1);
+    process.exit(2);
   }
 
   // Validate ISO datetime (basic check)
@@ -161,7 +201,7 @@ function parseArgs(): CliArgs {
     const date = new Date(parsed.since);
     if (isNaN(date.getTime())) {
       console.error('❌ Error: --since must be a valid ISO datetime');
-      process.exit(1);
+      process.exit(2);
     }
   }
 
@@ -174,12 +214,15 @@ Usage:
   npm run replay:marketplace-cart -- --tenant-id <uuid> [options]
 
 Options:
-  --tenant-id <uuid>         (Required) Tenant to replay events for
-  --since-event-id <uuid>    (Optional) Resume from event ID (exclusive)
-  --since <iso-datetime>     (Optional) Resume from timestamp (exclusive)
-  --limit <number>           (Optional) Max events to process (default: 5000, max: 50000)
-  --dry-run                  (Optional) Count events without applying projections
-  --verbose                  (Optional) Log every event name/id
+  --tenant-id <uuid>           (Required) Tenant to replay events for
+  --since-event-id <uuid>      (Optional) Resume from event ID (exclusive)
+  --since <iso-datetime>       (Optional) Resume from timestamp (exclusive)
+  --limit <number>             (Optional) Max events to process (default: 5000, max: 50000)
+  --dry-run                    (Optional) Count events without applying projections
+  --verbose                    (Optional) Log every event name/id
+  --json                       (Optional) Output machine-readable JSON summary
+  --confirm                    (Optional) Confirm destructive runs (required for limit > 5000)
+  --max-runtime-seconds <n>    (Optional) Max runtime in seconds (1-86400)
 
 Examples:
   # Dry-run for a tenant
@@ -188,11 +231,17 @@ Examples:
   # Replay up to 1000 events
   npm run replay:marketplace-cart -- --tenant-id abc-123 --limit 1000
 
+  # Large replay with confirmation
+  npm run replay:marketplace-cart -- --tenant-id abc-123 --limit 10000 --confirm
+
+  # JSON output for automation
+  npm run replay:marketplace-cart -- --tenant-id abc-123 --json
+
+  # With timeout protection
+  npm run replay:marketplace-cart -- --tenant-id abc-123 --max-runtime-seconds 300
+
   # Resume from a specific event
   npm run replay:marketplace-cart -- --tenant-id abc-123 --since-event-id xyz-789
-
-  # Resume from a timestamp
-  npm run replay:marketplace-cart -- --tenant-id abc-123 --since 2026-01-01T00:00:00Z
   `);
 }
 
@@ -261,24 +310,46 @@ function mapEventLogToEnvelope(row: EventLogRow): EventEnvelope {
 
 async function main() {
   const args = parseArgs();
-  const prisma = new PrismaClient();
-
-  console.log('🔄 Marketplace Cart Projection Replay');
-  console.log('━'.repeat(60));
-  console.log(`Tenant:     ${args.tenantId}`);
-  console.log(`Limit:      ${args.limit}`);
-  console.log(`Dry-run:    ${args.dryRun ? 'YES' : 'NO'}`);
-  console.log(`Verbose:    ${args.verbose ? 'YES' : 'NO'}`);
-  
-  if (args.sinceEventId) {
-    console.log(`Resume:     Event ID > ${args.sinceEventId}`);
-  } else if (args.since) {
-    console.log(`Resume:     Timestamp > ${args.since}`);
-  }
-  
-  console.log('━'.repeat(60));
-
+  const startedAt = new Date().toISOString();
   const startTime = Date.now();
+
+  // Confirmation gate for destructive runs
+  if (!args.dryRun && args.limit > 5000 && !args.confirm) {
+    const log = args.json ? console.error : console.log;
+    log('❌ Error: Non-dry-run with limit > 5000 requires --confirm flag');
+    log('');
+    log('This is a destructive operation that will apply projections to more than 5000 events.');
+    log('To proceed, add the --confirm flag:');
+    log('');
+    log(
+      `  npm run replay:marketplace-cart -- --tenant-id ${args.tenantId} --limit ${args.limit} --confirm`
+    );
+    log('');
+    process.exit(2);
+  }
+
+  const prisma = new PrismaClient();
+  const log = args.json ? console.error : console.log;
+
+  log('🔄 Marketplace Cart Projection Replay');
+  log('━'.repeat(60));
+  log(`Tenant:     ${args.tenantId}`);
+  log(`Limit:      ${args.limit}`);
+  log(`Dry-run:    ${args.dryRun ? 'YES' : 'NO'}`);
+  log(`Verbose:    ${args.verbose ? 'YES' : 'NO'}`);
+  log(`JSON:       ${args.json ? 'YES' : 'NO'}`);
+
+  if (args.maxRuntimeSeconds) {
+    log(`Timeout:    ${args.maxRuntimeSeconds}s`);
+  }
+
+  if (args.sinceEventId) {
+    log(`Resume:     Event ID > ${args.sinceEventId}`);
+  } else if (args.since) {
+    log(`Resume:     Timestamp > ${args.since}`);
+  }
+
+  log('━'.repeat(60));
 
   try {
     // Build WHERE clause
@@ -299,7 +370,9 @@ async function main() {
       });
 
       if (!sinceEvent) {
-        console.error(`❌ Error: Event with ID ${args.sinceEventId} not found`);
+        const logErr = args.json ? console.error : console.log;
+        logErr(`❌ Error: Event with ID ${args.sinceEventId} not found`);
+        await prisma.$disconnect();
         process.exit(1);
       }
 
@@ -318,18 +391,39 @@ async function main() {
     }
 
     // Query events with stable ordering
-    console.log('📊 Querying EventLog...');
+    log('📊 Querying EventLog...');
     const events = await prisma.eventLog.findMany({
       where,
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       take: args.limit,
     });
 
-    console.log(`✅ Found ${events.length} events\n`);
+    log(`✅ Found ${events.length} events\n`);
 
     if (events.length === 0) {
-      console.log('✨ No events to process');
+      log('✨ No events to process');
       await prisma.$disconnect();
+
+      if (args.json) {
+        const finishedAt = new Date().toISOString();
+        const summary = {
+          tenant_id: args.tenantId,
+          dry_run: args.dryRun,
+          since_event_id: args.sinceEventId || null,
+          since: args.since || null,
+          limit: args.limit,
+          scanned: 0,
+          applied: 0,
+          skipped: 0,
+          failed: 0,
+          duration_ms: Date.now() - startTime,
+          exit_code: 0,
+          started_at: startedAt,
+          finished_at: finishedAt,
+        };
+        console.log(JSON.stringify(summary));
+      }
+
       return;
     }
 
@@ -337,12 +431,23 @@ async function main() {
     let appliedCount = 0;
     let failedCount = 0;
     let skippedCount = 0;
+    let timedOut = false;
 
     for (const row of events) {
+      // Check timeout
+      if (args.maxRuntimeSeconds) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        if (elapsed >= args.maxRuntimeSeconds) {
+          timedOut = true;
+          log(`\n⏱️  Timeout: Reached ${args.maxRuntimeSeconds}s limit, stopping...`);
+          break;
+        }
+      }
+
       const envelope = mapEventLogToEnvelope(row);
 
       if (args.verbose) {
-        console.log(`  ${envelope.name} [${envelope.id}]`);
+        log(`  ${envelope.name} [${envelope.id}]`);
       }
 
       if (!args.dryRun) {
@@ -359,11 +464,9 @@ async function main() {
               }
             } else {
               failedCount++;
-              console.warn(
-                `⚠️  Projection failed: ${result.projectionName} for event ${envelope.id}`
-              );
+              log(`⚠️  Projection failed: ${result.projectionName} for event ${envelope.id}`);
               if (result.error) {
-                console.warn(`   Error: ${result.error}`);
+                log(`   Error: ${result.error}`);
               }
             }
           }
@@ -374,41 +477,107 @@ async function main() {
           }
         } catch (error) {
           failedCount++;
-          console.error(`❌ Unexpected error processing event ${envelope.id}:`, error);
+          log(`❌ Unexpected error processing event ${envelope.id}:`);
+          if (args.json) {
+            console.error(error);
+          } else {
+            log(error);
+          }
         }
       }
     }
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    const finishedAt = new Date().toISOString();
+    const durationMs = Date.now() - startTime;
+    const duration = (durationMs / 1000).toFixed(2);
+
+    // Determine exit code
+    let exitCode = 0;
+    if (failedCount > 0 || timedOut) {
+      exitCode = 3; // Partial failure
+    }
 
     // Print summary
-    console.log('\n' + '━'.repeat(60));
-    console.log('📈 Summary');
-    console.log('━'.repeat(60));
-    console.log(`Scanned:    ${events.length}`);
+    log('\n' + '━'.repeat(60));
+    log('📈 Summary');
+    log('━'.repeat(60));
+    log(`Scanned:    ${events.length}`);
 
     if (args.dryRun) {
-      console.log(`Mode:       DRY-RUN (no projections applied)`);
-      console.log(`Would process: ${events.length} events`);
+      log(`Mode:       DRY-RUN (no projections applied)`);
+      log(`Would process: ${events.length} events`);
     } else {
-      console.log(`Applied:    ${appliedCount}`);
-      console.log(`Skipped:    ${skippedCount}`);
-      console.log(`Failed:     ${failedCount}`);
+      log(`Applied:    ${appliedCount}`);
+      log(`Skipped:    ${skippedCount}`);
+      log(`Failed:     ${failedCount}`);
     }
 
-    console.log(`Duration:   ${duration}s`);
-    console.log('━'.repeat(60));
+    log(`Duration:   ${duration}s`);
+    if (timedOut) {
+      log(`Status:     TIMED OUT (partial results)`);
+    }
+    log('━'.repeat(60));
 
     if (!args.dryRun && failedCount > 0) {
-      console.log(`\n⚠️  Warning: ${failedCount} projection(s) failed (see logs above)`);
+      log(`\n⚠️  Warning: ${failedCount} projection(s) failed (see logs above)`);
     }
 
-    console.log('\n✅ Replay complete');
+    if (timedOut) {
+      log(`\n⏱️  Timeout: Processing stopped after ${duration}s`);
+    }
+
+    log('\n✅ Replay complete');
+
+    // Output JSON summary if requested
+    if (args.json) {
+      const summary = {
+        tenant_id: args.tenantId,
+        dry_run: args.dryRun,
+        since_event_id: args.sinceEventId || null,
+        since: args.since || null,
+        limit: args.limit,
+        scanned: events.length,
+        applied: appliedCount,
+        skipped: skippedCount,
+        failed: failedCount,
+        duration_ms: durationMs,
+        exit_code: exitCode,
+        started_at: startedAt,
+        finished_at: finishedAt,
+        timed_out: timedOut,
+      };
+      console.log(JSON.stringify(summary));
+    }
 
     await prisma.$disconnect();
+    process.exit(exitCode);
   } catch (error) {
-    console.error('\n❌ Fatal error:', error);
+    const logErr = args.json ? console.error : console.log;
+    logErr('\n❌ Fatal error:');
+    logErr(error);
     await prisma.$disconnect();
+
+    if (args.json) {
+      const finishedAt = new Date().toISOString();
+      const summary = {
+        tenant_id: args.tenantId,
+        dry_run: args.dryRun,
+        since_event_id: args.sinceEventId || null,
+        since: args.since || null,
+        limit: args.limit,
+        scanned: 0,
+        applied: 0,
+        skipped: 0,
+        failed: 0,
+        duration_ms: Date.now() - startTime,
+        exit_code: 1,
+        started_at: startedAt,
+        finished_at: finishedAt,
+        error: error instanceof Error ? error.message : String(error),
+      };
+      console.log(JSON.stringify(summary));
+    }
+
     process.exit(1);
   }
 }
