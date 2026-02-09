@@ -2,6 +2,7 @@ import React from 'react';
 
 interface AuthFormProps {
   realm: 'TENANT' | 'CONTROL_PLANE';
+  // eslint-disable-next-line no-unused-vars
   onSuccess: (data: any) => void;
   onSwitchMode: () => void;
   mode: 'LOGIN' | 'SIGNUP';
