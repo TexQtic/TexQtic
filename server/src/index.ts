@@ -4,6 +4,7 @@ import fastifyHelmet from '@fastify/helmet';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import { config } from './config/index.js';
+import authRoutes from './routes/auth.js';
 import controlRoutes from './routes/control.js';
 import tenantRoutes from './routes/tenant.js';
 import adminCartSummariesRoutes from './routes/admin-cart-summaries.js';
@@ -101,6 +102,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 });
 
 // Import routes
+await fastify.register(authRoutes, { prefix: '/api/auth' });
 await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });
 await fastify.register(adminCartSummariesRoutes, { prefix: '/api/control/marketplace' });

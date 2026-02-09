@@ -1,10 +1,10 @@
 #!/usr/bin/env tsx
 /**
  * Dev Preflight Check (Tooling Only)
- * 
+ *
  * Validates required environment variables before starting dev server.
  * Fails fast with actionable instructions if configuration is incomplete.
- * 
+ *
  * This is a tooling script - no application logic, no database access.
  */
 
@@ -24,7 +24,14 @@ if (fs.existsSync(envPath)) {
     if (!trimmed || trimmed.startsWith('#')) return;
     const [key, ...valueParts] = trimmed.split('=');
     if (key && valueParts.length > 0) {
-      const value = valueParts.join('=').trim();
+      let value = valueParts.join('=').trim();
+      // Strip surrounding quotes if present
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
       // Only set if not already in environment
       if (!process.env[key]) {
         process.env[key] = value;
@@ -37,34 +44,34 @@ if (fs.existsSync(envPath)) {
 const REQUIRED_ENV_VARS = [
   {
     name: 'DATABASE_URL',
-    validation: (val: string) => val.startsWith('postgresql://'),
-    hint: 'Must be a PostgreSQL connection string starting with postgresql://'
+    validation: (val: string) => val.startsWith('postgresql://') || val.startsWith('postgres://'),
+    hint: 'Must be a PostgreSQL connection string starting with postgresql:// or postgres://',
   },
   {
     name: 'JWT_ACCESS_SECRET',
     validation: (val: string) => val.length >= 32,
-    hint: 'Must be at least 32 characters long'
+    hint: 'Must be at least 32 characters long',
   },
   {
     name: 'JWT_REFRESH_SECRET',
     validation: (val: string) => val.length >= 32,
-    hint: 'Must be at least 32 characters long'
+    hint: 'Must be at least 32 characters long',
   },
   {
     name: 'JWT_ADMIN_ACCESS_SECRET',
     validation: (val: string) => val.length >= 32,
-    hint: 'Must be at least 32 characters long'
+    hint: 'Must be at least 32 characters long',
   },
   {
     name: 'JWT_ADMIN_REFRESH_SECRET',
     validation: (val: string) => val.length >= 32,
-    hint: 'Must be at least 32 characters long'
+    hint: 'Must be at least 32 characters long',
   },
   {
     name: 'GEMINI_API_KEY',
     validation: (val: string) => val.length >= 10 && !val.includes('your-'),
-    hint: 'Must be a valid Gemini API key (get from https://aistudio.google.com/apikey)'
-  }
+    hint: 'Must be a valid Gemini API key (get from https://aistudio.google.com/apikey)',
+  },
 ];
 
 // Check for .env file existence

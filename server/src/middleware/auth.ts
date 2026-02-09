@@ -34,11 +34,12 @@ export async function tenantMiddleware(request: FastifyRequest, reply: FastifyRe
 
 /**
  * Verify tenant user JWT and membership
+ * Alias: requireTenantAuth
  */
 export async function tenantAuthMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
     // Verify JWT using tenant realm
-    await request.jwtVerify({ onlyCookie: false });
+    await request.tenantJwtVerify({ onlyCookie: false });
     const payload = request.user as any;
 
     if (!payload.userId || !payload.tenantId) {
@@ -54,13 +55,22 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
     request.userId = payload.userId;
     request.tenantId = payload.tenantId;
     request.userRole = membership.role;
-  } catch (error) {
-    return sendUnauthorized(reply, 'Invalid or expired token');
+  } catch (tenantError) {
+    // Check if it's actually an admin token (wrong realm)
+    try {
+      await request.adminJwtVerify();
+      // If admin verify succeeds, it's a valid token but wrong realm
+      return sendForbidden(reply, 'Admin token not valid for tenant endpoints');
+    } catch {
+      // Neither realm accepts it - truly invalid
+      return sendUnauthorized(reply, 'Invalid or expired token');
+    }
   }
 }
 
 /**
  * Verify admin JWT
+ * Alias: requireAdminAuth
  */
 export async function adminAuthMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -74,8 +84,16 @@ export async function adminAuthMiddleware(request: FastifyRequest, reply: Fastif
     request.isAdmin = true;
     request.adminId = payload.adminId;
     request.adminRole = payload.role;
-  } catch (error) {
-    return sendUnauthorized(reply, 'Invalid or expired admin token');
+  } catch (adminError) {
+    // Check if it's actually a tenant token (wrong realm)
+    try {
+      await request.tenantJwtVerify({ onlyCookie: false });
+      // If tenant verify succeeds, it's a valid token but wrong realm
+      return sendForbidden(reply, 'Tenant token not valid for admin endpoints');
+    } catch {
+      // Neither realm accepts it - truly invalid
+      return sendUnauthorized(reply, 'Invalid or expired admin token');
+    }
   }
 }
 
@@ -93,3 +111,7 @@ export function requireAdminRole(...allowedRoles: string[]) {
     }
   };
 }
+
+// Aliases for requirement compliance
+export const requireAdminAuth = adminAuthMiddleware;
+export const requireTenantAuth = tenantAuthMiddleware;
