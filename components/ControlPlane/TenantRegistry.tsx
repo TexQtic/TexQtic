@@ -73,7 +73,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                 role="button"
                 tabIndex={0}
                 onClick={() => onSelectTenant(tenant)}
-                onKeyDown={(e) => {
+                onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     onSelectTenant(tenant);
@@ -114,7 +114,12 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex gap-3" onClick={e => e.stopPropagation()}>
+                  <div
+                    className="flex gap-3"
+                    role="presentation"
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                  >
                     <button
                       onClick={() => onSelectTenant(tenant)}
                       title="Config"
