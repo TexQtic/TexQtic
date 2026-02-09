@@ -13,13 +13,13 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
   <div className="min-h-screen flex flex-col font-sans">
     <header className="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="flex items-center gap-2 text-xl font-bold cursor-pointer" onClick={onNavigateHome}>
+        <button type="button" className="flex items-center gap-2 text-xl font-bold cursor-pointer" onClick={onNavigateHome}>
           <span>{tenant.theme.logo}</span>
           <span>{tenant.name}</span>
-        </div>
+        </button>
         <nav className="hidden md:flex gap-6 text-sm font-medium">
           <button onClick={onNavigateHome} className="text-blue-400">Companies</button>
-          <a href="#" className="hover:text-blue-400 transition">Certifications</a>
+          <button type="button" className="hover:text-blue-400 transition">Certifications</button>
           <button onClick={onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
         </nav>
         <button className="bg-blue-600 px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition">Post RFQ</button>
@@ -32,9 +32,9 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
 export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome }) => (
   <div className="min-h-screen flex bg-slate-100 font-sans">
     <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
-      <div className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={onNavigateHome}>
+      <button type="button" className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={onNavigateHome}>
         <span>{tenant.theme.logo}</span> {tenant.name}
-      </div>
+      </button>
       <nav className="flex-1 space-y-4">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
         <button onClick={onNavigateHome} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
@@ -69,9 +69,9 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
     </div>
     <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
       <div className="max-w-7xl mx-auto p-4 flex justify-between items-center">
-        <div className="text-2xl font-black text-indigo-600 tracking-tight flex items-center gap-2 cursor-pointer" onClick={onNavigateHome}>
+        <button type="button" className="text-2xl font-black text-indigo-600 tracking-tight flex items-center gap-2 cursor-pointer" onClick={onNavigateHome}>
            {tenant.theme.logo} {tenant.name}
-        </div>
+        </button>
         <div className="flex-1 max-w-md mx-8">
           <input title="search" type="text" placeholder="Search our collection..." className="w-full bg-slate-100 border-none rounded-full px-6 py-2.5 focus:ring-2 focus:ring-indigo-500 text-sm" />
         </div>
@@ -91,9 +91,9 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
 export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome }) => (
   <div className="min-h-screen font-sans" style={{ backgroundColor: '#ffffff' }}>
      <header className="p-12 text-center" style={{ borderBottom: `1px solid #eee` }}>
-       <div className="text-5xl font-serif italic mb-2 cursor-pointer transition-opacity hover:opacity-80" style={{ color: tenant.theme.primaryColor }} onClick={onNavigateHome}>
+       <button type="button" className="text-5xl font-serif italic mb-2 cursor-pointer transition-opacity hover:opacity-80" style={{ color: tenant.theme.primaryColor }} onClick={onNavigateHome}>
          {tenant.name}
-       </div>
+       </button>
        <div className="text-slate-400 text-[10px] font-bold tracking-[0.3em] uppercase">Maison de Commerce</div>
      </header>
      <nav className="flex justify-center gap-12 py-6 text-[10px] font-bold uppercase tracking-[0.2em] border-b border-slate-100 sticky top-0 bg-white/90 backdrop-blur-sm z-10">
