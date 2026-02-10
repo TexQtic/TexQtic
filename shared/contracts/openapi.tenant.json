@@ -1,12 +1,96 @@
 {
   "openapi": "3.0.3",
-  "info": { "title": "TexQtic Tenant API", "version": "0.1.0" },
+  "info": { "title": "TexQtic Tenant API", "version": "0.2.0" },
   "paths": {
     "/api/me": {
       "get": { "summary": "Current user + tenant", "responses": { "200": { "description": "OK" } } }
     },
+    "/api/tenant/activate": {
+      "post": {
+        "summary": "User-assisted tenant activation",
+        "description": "Activate a pre-provisioned tenant using an invite token. Users cannot create tenants.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["inviteToken", "userData"],
+                "properties": {
+                  "inviteToken": { "type": "string" },
+                  "userData": {
+                    "type": "object",
+                    "required": ["email", "password"],
+                    "properties": {
+                      "email": { "type": "string", "format": "email" },
+                      "password": { "type": "string", "minLength": 6 }
+                    }
+                  },
+                  "tenantData": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "industry": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Tenant activated successfully" } }
+      }
+    },
     "/api/tenant/memberships": {
-      "get": { "summary": "List memberships", "responses": { "200": { "description": "OK" } } }
+      "get": { "summary": "List memberships", "responses": { "200": { "description": "OK" } } },
+      "post": {
+        "summary": "Create/invite a new member",
+        "description": "Requires OWNER or ADMIN role",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "role"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string", "enum": ["OWNER", "ADMIN", "MEMBER", "VIEWER"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Member invited successfully" } }
+      }
+    },
+    "/api/tenant/branding": {
+      "put": {
+        "summary": "Update tenant branding",
+        "description": "Requires OWNER or ADMIN role",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "logoUrl": { "type": "string", "format": "uri", "nullable": true },
+                  "themeJson": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "primaryColor": { "type": "string" },
+                      "secondaryColor": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Branding updated successfully" } }
+      }
     },
     "/api/ai/insights": {
       "get": {

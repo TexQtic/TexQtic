@@ -1,6 +1,6 @@
 /**
  * TexQtic API Client
- * 
+ *
  * Centralized HTTP client with:
  * - JWT authentication
  * - Request/response interceptors
@@ -23,7 +23,7 @@ export type AuthRealm = 'TENANT' | 'CONTROL_PLANE';
 export function getToken(): string | null {
   const realm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
   if (!realm) return null;
-  
+
   return realm === 'CONTROL_PLANE'
     ? localStorage.getItem(ADMIN_TOKEN_KEY)
     : localStorage.getItem(TENANT_TOKEN_KEY);
@@ -34,7 +34,7 @@ export function getToken(): string | null {
  */
 export function setToken(token: string, realm: AuthRealm): void {
   localStorage.setItem(AUTH_REALM_KEY, realm);
-  
+
   if (realm === 'CONTROL_PLANE') {
     localStorage.setItem(ADMIN_TOKEN_KEY, token);
   } else {
@@ -76,10 +76,7 @@ export class APIError extends Error {
 /**
  * Generic API request function
  */
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getToken();
 
@@ -114,7 +111,11 @@ async function apiRequest<T>(
       if (response.status === 401) {
         clearAuth();
         window.location.href = '/'; // Redirect to login
-        throw new APIError(401, 'UNAUTHORIZED', errorData.error?.message || 'Authentication required');
+        throw new APIError(
+          401,
+          'UNAUTHORIZED',
+          errorData.error?.message || 'Authentication required'
+        );
       }
 
       // 403: Forbidden
@@ -142,12 +143,12 @@ async function apiRequest<T>(
 
     // Parse JSON response
     const data = await response.json();
-    
+
     // Handle backend response format: { success: true, data: {...} }
     if (data.success !== undefined) {
       return data.data as T;
     }
-    
+
     return data as T;
   } catch (error) {
     // Re-throw APIError as-is
@@ -173,6 +174,16 @@ export async function get<T>(endpoint: string): Promise<T> {
 export async function post<T>(endpoint: string, body?: any): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+/**
+ * PUT request
+ */
+export async function put<T>(endpoint: string, body?: any): Promise<T> {
+  return apiRequest<T>(endpoint, {
+    method: 'PUT',
     body: body ? JSON.stringify(body) : undefined,
   });
 }

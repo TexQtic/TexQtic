@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
 import { TenantType } from '../../types';
 
-interface OnboardingProps {
+interface ActivationFlowProps {
   onComplete: (_data: any) => void;
+  inviteToken?: string;
+  prefilledData?: {
+    orgName?: string;
+    domain?: string;
+  };
 }
 
-export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
+export const ActivationFlow: React.FC<ActivationFlowProps> = ({
+  onComplete,
+  inviteToken,
+  prefilledData,
+}) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    orgName: '',
+    orgName: prefilledData?.orgName || '',
     type: TenantType.B2B,
     industry: '',
-    domain: '',
+    domain: prefilledData?.domain || '',
+    inviteToken: inviteToken || '',
   });
 
   const next = () => setStep(s => s + 1);
@@ -39,7 +49,11 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
       <div className="space-y-8">
         {step === 1 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-            <h2 className="text-3xl font-bold">Tell us about your Business</h2>
+            <h2 className="text-3xl font-bold">Confirm Your Business Details</h2>
+            <p className="text-slate-500">
+              Your organization has been pre-registered. Please confirm and update the details
+              below.
+            </p>
             <div className="space-y-4">
               <div className="space-y-1">
                 <label
@@ -153,10 +167,10 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
 
         {step === 4 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-            <h2 className="text-3xl font-bold">Verification step</h2>
+            <h2 className="text-3xl font-bold">Business Verification</h2>
             <p className="text-slate-500">
-              To comply with global financial regulations, we require business documentation. You
-              can skip this during trial.
+              To comply with global financial regulations, we require business documentation. This
+              will be reviewed before trade and fund operations are enabled.
             </p>
             <div className="p-12 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center gap-4 text-center hover:border-indigo-500 transition cursor-pointer">
               <span className="text-4xl">📄</span>
@@ -164,6 +178,12 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
                 Upload Certificate of Incorporation
               </div>
               <div className="text-[10px] text-slate-400">PDF, JPG, PNG up to 10MB</div>
+            </div>
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <p className="text-xs text-amber-800">
+                <strong>Note:</strong> Trade capabilities and fund operations will remain blocked
+                until verification is completed and approved.
+              </p>
             </div>
           </div>
         )}
@@ -181,7 +201,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
             onClick={step === 4 ? () => onComplete(formData) : next}
             className="ml-auto px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest"
           >
-            {step === 4 ? 'Finalize Workspace' : 'Continue'}
+            {step === 4 ? 'Complete Activation' : 'Continue'}
           </button>
         </div>
       </div>

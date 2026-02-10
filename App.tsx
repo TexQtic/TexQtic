@@ -46,7 +46,6 @@ const App: React.FC = () => {
     | 'CONTROL_PLANE'
   >('AUTH');
   const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
-  const [authMode, setAuthMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
 
   const [currentTenantKey, setCurrentTenantKey] = useState<string>('global-aggregator');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
@@ -105,8 +104,6 @@ const App: React.FC = () => {
   const handleAuthSuccess = () => {
     if (authRealm === 'CONTROL_PLANE') {
       setAppState('CONTROL_PLANE');
-    } else if (authMode === 'SIGNUP') {
-      setAppState('VERIFY_EMAIL');
     } else {
       setAppState('EXPERIENCE');
     }
@@ -483,20 +480,13 @@ const App: React.FC = () => {
                 Staff Control Plane
               </button>
             </div>
-            <AuthForm
-              realm={authRealm}
-              mode={authMode}
-              onSwitchMode={() => setAuthMode(authMode === 'LOGIN' ? 'SIGNUP' : 'LOGIN')}
-              onSuccess={handleAuthSuccess}
-            />
-            {authMode === 'LOGIN' && (
-              <button
-                onClick={() => setAppState('FORGOT_PASSWORD')}
-                className="mt-4 text-[10px] font-bold uppercase text-slate-400 hover:text-indigo-600 tracking-widest"
-              >
-                Forgot Password?
-              </button>
-            )}
+            <AuthForm realm={authRealm} onSuccess={handleAuthSuccess} />
+            <button
+              onClick={() => setAppState('FORGOT_PASSWORD')}
+              className="mt-4 text-[10px] font-bold uppercase text-slate-400 hover:text-indigo-600 tracking-widest"
+            >
+              Forgot Password?
+            </button>
           </div>
         );
       case 'FORGOT_PASSWORD':

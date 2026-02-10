@@ -1,9 +1,34 @@
 {
   "openapi": "3.0.3",
-  "info": { "title": "TexQtic Control Plane API", "version": "0.1.0" },
+  "info": { "title": "TexQtic Control Plane API", "version": "0.2.0" },
   "paths": {
     "/api/control/tenants": {
       "get": { "summary": "List tenants", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/control/tenants/provision": {
+      "post": {
+        "summary": "Provision a new tenant (admin only)",
+        "description": "Admin-initiated tenant creation. This is the ONLY way to create tenants - no public signup.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "slug", "type", "ownerEmail", "ownerPassword"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "slug": { "type": "string" },
+                  "type": { "type": "string", "enum": ["B2B", "B2C", "INTERNAL"] },
+                  "ownerEmail": { "type": "string", "format": "email" },
+                  "ownerPassword": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Tenant provisioned successfully" } }
+      }
     },
     "/api/control/tenants/{id}": {
       "get": {

@@ -198,6 +198,121 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       );
     }
   });
+
+  /**
+   * POST /api/control/tenants/provision
+   * Admin-initiated tenant provisioning
+   * Creates a tenant with default branding and invited owner
+   *
+   * This is the ONLY way to create tenants - no public signup
+   */
+  fastify.post('/tenants/provision', async (request, reply) => {
+    try {
+      const bodySchema = z.object({
+        name: z.string().min(1, 'Tenant name is required').max(255),
+        slug: z
+          .string()
+          .min(1, 'Slug is required')
+          .max(100)
+          .regex(/^[a-z0-9-]+$/),
+        type: z.enum(['B2B', 'B2C', 'INTERNAL']),
+        ownerEmail: z.string().email('Invalid owner email'),
+        ownerPassword: z.string().min(6, 'Password must be at least 6 characters'),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { name, slug, type, ownerEmail, ownerPassword } = parseResult.data;
+
+      // Hash password
+      const bcrypt = await import('bcrypt');
+      const passwordHash = await bcrypt.hash(ownerPassword, 10);
+
+      // Create tenant, user, membership, and default branding in a transaction
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await prisma.$transaction(async tx => {
+          // Create tenant
+          const tenant = await tx.tenant.create({
+            data: {
+              name,
+              slug,
+              type,
+              status: 'ACTIVE',
+              plan: 'FREE',
+            },
+          });
+
+          // Create default branding
+          await tx.tenantBranding.create({
+            data: {
+              tenantId: tenant.id,
+              logoUrl: null,
+              themeJson: {
+                primaryColor: '#4F46E5',
+                secondaryColor: '#10B981',
+              },
+            },
+          });
+
+          // Create owner user
+          const user = await tx.user.create({
+            data: {
+              email: ownerEmail,
+              passwordHash,
+              emailVerified: false,
+            },
+          });
+
+          // Create owner membership
+          const membership = await tx.membership.create({
+            data: {
+              userId: user.id,
+              tenantId: tenant.id,
+              role: 'OWNER',
+            },
+          });
+
+          return { tenant, user, membership };
+        });
+      });
+
+      // Write audit log
+      await writeAuditLog({
+        tenantId: result.tenant.id,
+        realm: 'ADMIN',
+        actorType: 'ADMIN',
+        actorId: request.adminId!,
+        action: 'tenant.provisioned',
+        resourceType: 'tenant',
+        resourceId: result.tenant.id,
+        metadata: {
+          tenantName: name,
+          tenantSlug: slug,
+          ownerEmail,
+        },
+      });
+
+      return sendSuccess(reply, {
+        tenant: {
+          id: result.tenant.id,
+          name: result.tenant.name,
+          slug: result.tenant.slug,
+          type: result.tenant.type,
+          status: result.tenant.status,
+        },
+        owner: {
+          id: result.user.id,
+          email: result.user.email,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Tenant Provisioning] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Provisioning failed', 500);
+    }
+  });
 };
 
 export default controlRoutes;

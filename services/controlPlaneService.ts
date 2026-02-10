@@ -2,12 +2,13 @@
  * TexQtic Control Plane Service
  *
  * Admin-only APIs for platform governance and observability
- * 
+ *
  * CRITICAL: All endpoints require CONTROL_PLANE realm authentication
  * Wave 3 Scope: READ-ONLY operations only
+ * Wave 4 Scope: Admin tenant provisioning added
  */
 
-import { get } from './apiClient';
+import { get, post } from './apiClient';
 
 // ==================== TENANT MANAGEMENT ====================
 
@@ -114,7 +115,7 @@ export interface AuditLogsQueryParams {
 
 /**
  * Fetch audit logs (admin only)
- * 
+ *
  * @param params - Optional filters (tenantId, action, limit)
  */
 export async function getAuditLogs(params?: AuditLogsQueryParams): Promise<AuditLogsResponse> {
@@ -170,7 +171,7 @@ export interface EventsQueryParams {
 
 /**
  * Fetch event logs (admin only)
- * 
+ *
  * @param params - Optional filters (tenant_id, event_name, from, to, limit, cursor)
  */
 export async function getEvents(params?: EventsQueryParams): Promise<EventsResponse> {
@@ -239,7 +240,7 @@ export interface CartSummariesQueryParams {
 
 /**
  * Fetch marketplace cart summaries (admin only)
- * 
+ *
  * @param params - Required tenant_id, optional filters
  */
 export async function getCartSummaries(
@@ -270,6 +271,44 @@ export async function getCartSummaries(
 /**
  * Fetch single cart summary by cart ID (admin only)
  */
-export async function getCartSummaryByCartId(cartId: string): Promise<{ summary: MarketplaceCartSummary }> {
-  return get<{ summary: MarketplaceCartSummary }>(`/api/control/marketplace/cart-summaries/${cartId}`);
+export async function getCartSummaryByCartId(
+  cartId: string
+): Promise<{ summary: MarketplaceCartSummary }> {
+  return get<{ summary: MarketplaceCartSummary }>(
+    `/api/control/marketplace/cart-summaries/${cartId}`
+  );
+}
+
+// ==================== TENANT PROVISIONING ====================
+
+export interface ProvisionTenantRequest {
+  name: string;
+  slug: string;
+  type: 'B2B' | 'B2C' | 'INTERNAL';
+  ownerEmail: string;
+  ownerPassword: string;
+}
+
+export interface ProvisionTenantResponse {
+  tenant: {
+    id: string;
+    name: string;
+    slug: string;
+    type: string;
+    status: string;
+  };
+  owner: {
+    id: string;
+    email: string;
+  };
+}
+
+/**
+ * Provision a new tenant (admin only)
+ * This is the ONLY way to create tenants - no public signup
+ */
+export async function provisionTenant(
+  request: ProvisionTenantRequest
+): Promise<ProvisionTenantResponse> {
+  return post<ProvisionTenantResponse>('/api/control/tenants/provision', request);
 }
