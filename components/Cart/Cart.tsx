@@ -2,24 +2,43 @@
  * Cart Component
  *
  * Displays cart items with quantity controls and subtotal
+ * Wave 7: Enhanced with standardized loading/error/empty states and optimistic updates
  */
 
 import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
+import { LoadingState, EmptyState, ErrorState, CartItemSkeleton } from '../shared';
+import { APIError } from '../../services/apiClient';
 
 export const Cart: React.FC = () => {
   const { cart, loading, error, itemCount, subtotal, updateQuantity, removeItem } = useCart();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
+  const handleQuantityChange = async (
+    itemId: string,
+    newQuantity: number,
+    currentQuantity: number
+  ) => {
     if (newQuantity < 0) return;
 
+    // Optimistic update with rollback on failure
     setUpdatingItems(prev => new Set(prev).add(itemId));
+    setErrorMessage(null);
 
     try {
       await updateQuantity(itemId, newQuantity);
     } catch (err) {
       console.error('Failed to update quantity:', err);
+
+      // Show user-friendly error
+      if (err instanceof APIError) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage('Failed to update quantity. Please try again.');
+      }
+
+      // Context will handle rollback via refreshCart
     } finally {
       setUpdatingItems(prev => {
         const next = new Set(prev);
@@ -31,11 +50,18 @@ export const Cart: React.FC = () => {
 
   const handleRemove = async (itemId: string) => {
     setUpdatingItems(prev => new Set(prev).add(itemId));
+    setErrorMessage(null);
 
     try {
       await removeItem(itemId);
     } catch (err) {
       console.error('Failed to remove item:', err);
+
+      if (err instanceof APIError) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage('Failed to remove item. Please try again.');
+      }
     } finally {
       setUpdatingItems(prev => {
         const next = new Set(prev);
@@ -45,37 +71,44 @@ export const Cart: React.FC = () => {
     }
   };
 
+  // Loading state with skeleton
   if (loading && !cart) {
     return (
-      <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-        <p className="text-slate-500 mt-4">Loading cart...</p>
+      <div className="space-y-4 p-4">
+        <CartItemSkeleton />
+        <CartItemSkeleton />
+        <CartItemSkeleton />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-8 text-center">
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl">
-          {error}
-        </div>
-      </div>
-    );
+  // Error state
+  if (error && !cart) {
+    const apiError =
+      error instanceof Error
+        ? { status: 0, message: error.message }
+        : { status: 0, message: String(error) };
+
+    return <ErrorState error={apiError} onRetry={() => window.location.reload()} />;
   }
 
+  // Empty state
   if (!cart || cart.items.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <div className="text-4xl mb-4">🛒</div>
-        <h3 className="text-xl font-bold text-slate-800 mb-2">Your cart is empty</h3>
-        <p className="text-slate-500">Add items to get started</p>
-      </div>
-    );
+    return <EmptyState icon="🛒" title="Your cart is empty" message="Add items to get started" />;
   }
 
+  // Data state
   return (
     <div className="space-y-6">
+      {errorMessage && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
+          {errorMessage}
+          <button onClick={() => setErrorMessage(null)} className="ml-2 underline font-semibold">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Shopping Cart</h2>
         <div className="text-sm text-slate-500">
@@ -90,7 +123,7 @@ export const Cart: React.FC = () => {
           return (
             <div
               key={item.id}
-              className={`bg-white border border-slate-200 rounded-xl p-4 flex gap-4 items-center ${
+              className={`bg-white border border-slate-200 rounded-xl p-4 flex gap-4 items-center transition-opacity ${
                 isUpdating ? 'opacity-50' : ''
               }`}
             >
@@ -104,17 +137,17 @@ export const Cart: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                  onClick={() => handleQuantityChange(item.id, item.quantity - 1, item.quantity)}
                   disabled={isUpdating || item.quantity <= 1}
-                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold"
+                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors"
                 >
                   −
                 </button>
                 <div className="w-12 text-center font-bold">{item.quantity}</div>
                 <button
-                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                  onClick={() => handleQuantityChange(item.id, item.quantity + 1, item.quantity)}
                   disabled={isUpdating}
-                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold"
+                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors"
                 >
                   +
                 </button>
@@ -129,7 +162,7 @@ export const Cart: React.FC = () => {
               <button
                 onClick={() => handleRemove(item.id)}
                 disabled={isUpdating}
-                className="text-rose-600 hover:text-rose-700 text-sm font-bold disabled:opacity-30"
+                className="text-rose-600 hover:text-rose-700 text-sm font-bold disabled:opacity-30 transition-colors"
               >
                 Remove
               </button>
@@ -147,7 +180,7 @@ export const Cart: React.FC = () => {
       </div>
 
       <button
-        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition"
+        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-colors"
         onClick={() => console.log('Checkout not implemented (Wave 5)')}
       >
         Proceed to Checkout

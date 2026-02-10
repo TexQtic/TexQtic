@@ -1,33 +1,115 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getEvents, EventLog } from '../../services/controlPlaneService';
+import { LoadingState, EmptyState, ErrorState } from '../shared';
+import { APIError } from '../../services/apiClient';
 
 export const EventStream: React.FC = () => {
   const [events, setEvents] = useState<EventLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<APIError | null>(null);
+  const [isPolling, setIsPolling] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+
+  const fetchEvents = useCallback(async () => {
+    // Don't fetch if document is hidden (tab inactive) - save resources
+    if (document.hidden) {
+      return;
+    }
+
+    try {
+      const response = await getEvents({ limit: 30 });
+      setEvents(response.events);
+      setLoading(false);
+      setError(null);
+      setFailedAttempts(0);
+      setLastFetchTime(new Date());
+    } catch (err) {
+      console.error('Failed to load events:', err);
+      
+      const failureCount = failedAttempts + 1;
+      setFailedAttempts(failureCount);
+      
+      if (loading) {
+        // First load failed - show error state
+        if (err instanceof APIError) {
+          setError(err);
+        } else {
+          setError({
+            status: 0,
+            message: 'Failed to load events. Please try again.',
+            code: 'UNKNOWN_ERROR',
+          } as APIError);
+        }
+        setLoading(false);
+      } else {
+        // Polling failed - show disconnected indicator but keep existing data
+        setError({
+          status: 0,
+          message: 'Disconnected. Retrying...',
+          code: 'POLLING_FAILED',
+        } as APIError);
+      }
+    }
+  }, [loading, failedAttempts]);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await getEvents({ limit: 30 });
-        setEvents(response.events);
-        setLoading(false);
-        setError(null);
-      } catch (err: any) {
-        console.error('Failed to load events:', err);
-        setError(err.message || 'Failed to load events');
-        setLoading(false);
-      }
-    };
-
     // Initial fetch
     fetchEvents();
 
     // Poll for new events every 5 seconds
     const interval = setInterval(fetchEvents, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+    // Pause polling when tab becomes hidden
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsPolling(false);
+      } else {
+        setIsPolling(true);
+        // Fetch immediately when tab becomes visible again
+        fetchEvents();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchEvents]);
+
+  // Initial loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Live Event Stream</h1>
+          <p className="text-slate-400 text-sm">
+            Real-time trace of the platform's event-driven backbone.
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl">
+          <LoadingState message="Connecting to event stream..." />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (first load)
+  if (error && events.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Live Event Stream</h1>
+          <p className="text-slate-400 text-sm">
+            Real-time trace of the platform's event-driven backbone.
+          </p>
+        </div>
+        <ErrorState error={error} onRetry={fetchEvents} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -38,28 +120,29 @@ export const EventStream: React.FC = () => {
             Real-time trace of the platform's event-driven backbone.
           </p>
         </div>
-        {!loading && !error && (
-          <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold rounded-full animate-pulse uppercase">
-            Live Monitoring
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {lastFetchTime && (
+            <span className="text-slate-500 text-xs">
+              Last update: {lastFetchTime.toLocaleTimeString()}
+            </span>
+          )}
+          {!document.hidden && isPolling && !error && (
+            <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold rounded-full animate-pulse uppercase">
+              Live Monitoring
+            </div>
+          )}
+          {!isPolling && (
+            <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold rounded-full uppercase">
+              Paused (Tab Inactive)
+            </div>
+          )}
+          {error && error.code === 'POLLING_FAILED' && (
+            <div className="px-3 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-bold rounded-full uppercase">
+              Disconnected • Retrying...
+            </div>
+          )}
+        </div>
       </div>
-
-      {loading && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600 mx-auto"></div>
-          <p className="text-slate-400 mt-4">Loading event stream...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-rose-900/20 border border-rose-800 rounded-xl p-6 text-center">
-          <p className="text-rose-400 font-bold">Failed to load events</p>
-          <p className="text-slate-400 text-sm mt-2">{error}</p>
-        </div>
-      )}
-
-      {!loading && !error && (
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden font-mono text-[11px]">
           <div className="bg-slate-800/50 p-3 border-b border-slate-800 flex justify-between text-slate-500">
             <span className="w-32">EVENT_ID</span>

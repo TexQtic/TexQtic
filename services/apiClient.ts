@@ -59,18 +59,87 @@ export function getAuthRealm(): AuthRealm | null {
 }
 
 /**
+ * API Error interface - standardized error shape
+ */
+export interface ApiError {
+  status: number;
+  message: string;
+  code?: string;
+  details?: unknown;
+}
+
+/**
  * API Error class with structured error information
  */
-export class APIError extends Error {
-  constructor(
-    public statusCode: number,
-    public code: string,
-    message: string,
-    public details?: any
-  ) {
+export class APIError extends Error implements ApiError {
+  public status: number;
+  public code?: string;
+  public details?: unknown;
+
+  constructor(status: number, message: string, code?: string, details?: unknown) {
     super(message);
     this.name = 'APIError';
+    this.status = status;
+    this.code = code;
+    this.details = details;
   }
+}
+
+/**
+ * Retry configuration for GET requests
+ */
+interface RetryConfig {
+  maxAttempts: number;
+  delays: number[]; // Backoff delays in ms
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxAttempts: 3, // Initial + 2 retries
+  delays: [300, 900], // 300ms, 900ms backoff
+};
+
+/**
+ * Sleep utility for retry delays
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Retry wrapper for GET requests only
+ * Implements exponential backoff with limited attempts
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  config: RetryConfig = DEFAULT_RETRY_CONFIG
+): Promise<T> {
+  let lastError: Error | APIError | null = null;
+
+  for (let attempt = 0; attempt < config.maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error | APIError;
+
+      // Don't retry on client errors (4xx) except 429
+      if (error instanceof APIError) {
+        if (error.status >= 400 && error.status < 500 && error.status !== 429) {
+          throw error;
+        }
+      }
+
+      // Don't retry on last attempt
+      if (attempt === config.maxAttempts - 1) {
+        break;
+      }
+
+      // Wait before retrying
+      const delay = config.delays[attempt] || config.delays[config.delays.length - 1];
+      await sleep(delay);
+    }
+  }
+
+  throw lastError;
 }
 
 /**
@@ -118,31 +187,64 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
         window.location.href = '/'; // Redirect to login
         throw new APIError(
           401,
-          'UNAUTHORIZED',
-          errorData.error?.message || 'Authentication required'
+          errorData.error?.message || 'Session expired. Please log in again.',
+          'UNAUTHORIZED'
         );
       }
 
       // 403: Forbidden
       if (response.status === 403) {
-        throw new APIError(403, 'FORBIDDEN', errorData.error?.message || 'Access denied');
+        throw new APIError(
+          403,
+          errorData.error?.message || "You don't have access to this action.",
+          'FORBIDDEN'
+        );
+      }
+
+      // 404: Not Found
+      if (response.status === 404) {
+        throw new APIError(404, errorData.error?.message || 'Not found.', 'NOT_FOUND');
+      }
+
+      // 422: Validation Error
+      if (response.status === 422) {
+        throw new APIError(
+          422,
+          errorData.error?.message || 'Invalid request. Please check your input.',
+          errorData.error?.code || 'VALIDATION_ERROR',
+          errorData.error?.details
+        );
       }
 
       // 429: Rate limit / Budget exceeded (AI-specific)
       if (response.status === 429) {
+        const message =
+          errorData.error?.code === 'AI_BUDGET_EXCEEDED'
+            ? 'AI budget limit reached for this month.'
+            : errorData.error?.message || 'Rate limit exceeded. Please try again later.';
+
         throw new APIError(
           429,
+          message,
           errorData.error?.code || 'RATE_LIMIT_EXCEEDED',
-          errorData.error?.message || 'Rate limit exceeded',
           errorData.error?.details
+        );
+      }
+
+      // 5xx: Server errors
+      if (response.status >= 500) {
+        throw new APIError(
+          response.status,
+          'Service temporarily unavailable. Try again.',
+          errorData.error?.code || 'SERVER_ERROR'
         );
       }
 
       // Other errors
       throw new APIError(
         response.status,
-        errorData.error?.code || 'API_ERROR',
-        errorData.error?.message || errorData.message || 'API request failed'
+        errorData.error?.message || errorData.message || 'API request failed',
+        errorData.error?.code || 'API_ERROR'
       );
     }
 
@@ -162,15 +264,15 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     }
 
     // Network errors or other fetch failures
-    throw new APIError(0, 'NETWORK_ERROR', 'Network request failed');
+    throw new APIError(0, 'Network error. Please check your connection.', 'NETWORK_ERROR');
   }
 }
 
 /**
- * GET request
+ * GET request with automatic retry on transient failures
  */
 export async function get<T>(endpoint: string): Promise<T> {
-  return apiRequest<T>(endpoint, { method: 'GET' });
+  return withRetry(() => apiRequest<T>(endpoint, { method: 'GET' }));
 }
 
 /**

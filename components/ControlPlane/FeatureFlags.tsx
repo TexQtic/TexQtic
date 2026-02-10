@@ -4,16 +4,15 @@ import {
   upsertFeatureFlag,
   type FeatureFlag,
 } from '../../services/controlPlaneService';
+import { LoadingState, EmptyState, ErrorState } from '../shared';
+import { APIError } from '../../services/apiClient';
 
 export const FeatureFlags: React.FC = () => {
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<APIError | null>(null);
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    loadFlags();
-  }, []);
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   const loadFlags = async () => {
     try {
@@ -23,38 +22,85 @@ export const FeatureFlags: React.FC = () => {
       setFlags(response.flags);
     } catch (err) {
       console.error('Failed to load feature flags:', err);
-      setError('Failed to load feature flags');
+      if (err instanceof APIError) {
+        setError(err);
+      } else {
+        setError({
+          status: 0,
+          message: 'Failed to load feature flags. Please try again.',
+          code: 'UNKNOWN_ERROR',
+        } as APIError);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadFlags();
+  }, []);
+
   const handleToggle = async (flag: FeatureFlag) => {
     if (toggling[flag.key]) return; // Prevent concurrent toggles
 
+    // Optimistic update
+    const previousEnabled = flag.enabled;
+    setFlags(prev => prev.map(f => (f.key === flag.key ? { ...f, enabled: !f.enabled } : f)));
     setToggling(prev => ({ ...prev, [flag.key]: true }));
+    setToggleError(null);
 
     try {
       await upsertFeatureFlag(flag.key, {
-        enabled: !flag.enabled,
+        enabled: !previousEnabled,
         description: flag.description || undefined,
       });
-
-      // Update local state
-      setFlags(prev => prev.map(f => (f.key === flag.key ? { ...f, enabled: !f.enabled } : f)));
+      // Success - optimistic update is correct
     } catch (err) {
       console.error('Failed to toggle feature flag:', err);
-      setError(`Failed to toggle ${flag.key}`);
+
+      // Rollback on failure
+      setFlags(prev =>
+        prev.map(f => (f.key === flag.key ? { ...f, enabled: previousEnabled } : f))
+      );
+
+      if (err instanceof APIError) {
+        setToggleError(`Failed to toggle ${flag.key}: ${err.message}`);
+      } else {
+        setToggleError(`Failed to toggle ${flag.key}. Please try again.`);
+      }
     } finally {
       setToggling(prev => ({ ...prev, [flag.key]: false }));
     }
   };
 
+  // Initial loading state
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Feature Governance</h1>
-        <div className="text-slate-400">Loading feature flags...</div>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Feature Governance</h1>
+          <p className="text-slate-400 text-sm">
+            Control platform capabilities and staged rollouts.
+          </p>
+        </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-xl">
+          <LoadingState message="Loading feature flags..." />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Feature Governance</h1>
+          <p className="text-slate-400 text-sm">
+            Control platform capabilities and staged rollouts.
+          </p>
+        </div>
+        <ErrorState error={error} onRetry={loadFlags} />
       </div>
     );
   }
@@ -70,9 +116,15 @@ export const FeatureFlags: React.FC = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded">
-          {error}
+      {toggleError && (
+        <div className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl flex justify-between items-center">
+          <span>{toggleError}</span>
+          <button
+            onClick={() => setToggleError(null)}
+            className="text-red-300 hover:text-red-100 font-semibold text-sm underline"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
@@ -89,8 +141,12 @@ export const FeatureFlags: React.FC = () => {
           <tbody className="divide-y divide-slate-800">
             {flags.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
-                  No feature flags found
+                <td colSpan={4} className="p-0">
+                  <EmptyState
+                    icon="🚩"
+                    title="No feature flags configured"
+                    message="Feature flags will appear here when configured"
+                  />
                 </td>
               </tr>
             ) : (

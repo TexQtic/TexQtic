@@ -1,27 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { getAuditLogs, AuditLog } from '../../services/controlPlaneService';
+import { LoadingState, EmptyState, ErrorState, AuditLogSkeleton } from '../shared';
+import { APIError } from '../../services/apiClient';
 
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<APIError | null>(null);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getAuditLogs({ limit: 50 });
+      setLogs(response.logs);
+    } catch (err) {
+      console.error('Failed to load audit logs:', err);
+      if (err instanceof APIError) {
+        setError(err);
+      } else {
+        setError({
+          status: 0,
+          message: 'Failed to load audit logs. Please try again.',
+          code: 'UNKNOWN_ERROR',
+        } as APIError);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getAuditLogs({ limit: 50 });
-        setLogs(response.logs);
-      } catch (err: any) {
-        console.error('Failed to load audit logs:', err);
-        setError(err.message || 'Failed to load audit logs');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLogs();
   }, []);
 
@@ -29,7 +39,9 @@ export const AuditLogs: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">System Audit Logs</h1>
-        <p className="text-slate-400 text-sm">Immutable history of all platform-level operations.</p>
+        <p className="text-slate-400 text-sm">
+          Immutable history of all platform-level operations.
+        </p>
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -50,24 +62,30 @@ export const AuditLogs: React.FC = () => {
           </button>
         </div>
 
+        {/* Loading state with skeletons */}
         {loading && (
-          <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600 mx-auto"></div>
-            <p className="text-slate-400 mt-4">Loading audit logs...</p>
+          <div className="p-4 space-y-3">
+            <AuditLogSkeleton />
+            <AuditLogSkeleton />
+            <AuditLogSkeleton />
+            <AuditLogSkeleton />
+            <AuditLogSkeleton />
           </div>
         )}
 
-        {error && (
-          <div className="p-12 text-center">
-            <p className="text-rose-400 font-bold">Failed to load audit logs</p>
-            <p className="text-slate-400 text-sm mt-2">{error}</p>
-          </div>
-        )}
+        {/* Error state */}
+        {error && !loading && <ErrorState error={error} onRetry={fetchLogs} />}
 
+        {/* Empty state */}
         {!loading && !error && logs.length === 0 && (
-          <div className="p-12 text-center text-slate-500">No audit logs found</div>
+          <EmptyState
+            icon="📋"
+            title="No audit logs found"
+            message="Audit logs will appear here as admin actions are performed"
+          />
         )}
 
+        {/* Data state */}
         {!loading && !error && logs.length > 0 && (
           <div className="divide-y divide-slate-800 font-mono text-[11px]">
             {logs.map(log => (

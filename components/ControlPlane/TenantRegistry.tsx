@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getTenants, Tenant } from '../../services/controlPlaneService';
 import { TenantStatus, TenantConfig } from '../../types';
+import { LoadingState, EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
+import { APIError } from '../../services/apiClient';
 
 interface TenantRegistryProps {
   onSelectTenant: (tenant: TenantConfig) => void;
@@ -13,24 +15,32 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
 }) => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<APIError | null>(null);
+
+  const fetchTenants = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getTenants();
+      setTenants(response.tenants);
+    } catch (err) {
+      console.error('Failed to load tenants:', err);
+      if (err instanceof APIError) {
+        setError(err);
+      } else {
+        setError({
+          status: 0,
+          message: 'Failed to load tenants. Please try again.',
+          code: 'UNKNOWN_ERROR',
+        } as APIError);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTenants = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getTenants();
-        setTenants(response.tenants);
-      } catch (err: any) {
-        console.error('Failed to load tenants:', err);
-        setError(err.message || 'Failed to load tenants');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTenants();
   }, []);
 
@@ -79,6 +89,21 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     riskScore: 0,
   });
 
+  // Error state
+  if (error && !loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Tenant Registry</h1>
+            <p className="text-slate-400 text-sm">Manage global tenant lifecycle and governance.</p>
+          </div>
+        </div>
+        <ErrorState error={error} onRetry={fetchTenants} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -111,27 +136,29 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         ))}
       </div>
 
+      {/* Loading state with skeletons */}
       {loading && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto"></div>
-          <p className="text-slate-400 mt-4">Loading tenants...</p>
+        <div className="space-y-4">
+          <TenantRowSkeleton />
+          <TenantRowSkeleton />
+          <TenantRowSkeleton />
+          <TenantRowSkeleton />
         </div>
       )}
 
-      {error && (
-        <div className="bg-rose-900/20 border border-rose-800 rounded-xl p-6 text-center">
-          <p className="text-rose-400 font-bold">Failed to load tenants</p>
-          <p className="text-slate-400 text-sm mt-2">{error}</p>
+      {/* Empty state */}
+      {!loading && tenants.length === 0 && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl">
+          <EmptyState
+            icon="🏢"
+            title="No tenants found"
+            message="Tenant provisioning will be enabled in Wave 5"
+          />
         </div>
       )}
 
-      {!loading && !error && tenants.length === 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-          <p className="text-slate-400">No tenants found</p>
-        </div>
-      )}
-
-      {!loading && !error && tenants.length > 0 && (
+      {/* Data state */}
+      {!loading && tenants.length > 0 && (
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
