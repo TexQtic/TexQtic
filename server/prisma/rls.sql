@@ -20,6 +20,7 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 -- ============================================================
 
 -- tenant_domains
+DROP POLICY IF EXISTS tenant_domains_tenant_access ON tenant_domains;
 CREATE POLICY tenant_domains_tenant_access ON tenant_domains
   FOR ALL
   USING (
@@ -29,6 +30,7 @@ CREATE POLICY tenant_domains_tenant_access ON tenant_domains
   );
 
 -- tenant_branding
+DROP POLICY IF EXISTS tenant_branding_tenant_access ON tenant_branding;
 CREATE POLICY tenant_branding_tenant_access ON tenant_branding
   FOR ALL
   USING (
@@ -38,6 +40,7 @@ CREATE POLICY tenant_branding_tenant_access ON tenant_branding
   );
 
 -- memberships
+DROP POLICY IF EXISTS memberships_tenant_access ON memberships;
 CREATE POLICY memberships_tenant_access ON memberships
   FOR ALL
   USING (
@@ -47,6 +50,7 @@ CREATE POLICY memberships_tenant_access ON memberships
   );
 
 -- invites
+DROP POLICY IF EXISTS invites_tenant_access ON invites;
 CREATE POLICY invites_tenant_access ON invites
   FOR ALL
   USING (
@@ -56,6 +60,7 @@ CREATE POLICY invites_tenant_access ON invites
   );
 
 -- password_reset_tokens (via user_id join - simplified for now)
+DROP POLICY IF EXISTS password_reset_tokens_access ON password_reset_tokens;
 CREATE POLICY password_reset_tokens_access ON password_reset_tokens
   FOR ALL
   USING (
@@ -69,6 +74,7 @@ CREATE POLICY password_reset_tokens_access ON password_reset_tokens
   );
 
 -- tenant_feature_overrides
+DROP POLICY IF EXISTS tenant_feature_overrides_tenant_access ON tenant_feature_overrides;
 CREATE POLICY tenant_feature_overrides_tenant_access ON tenant_feature_overrides
   FOR ALL
   USING (
@@ -78,6 +84,7 @@ CREATE POLICY tenant_feature_overrides_tenant_access ON tenant_feature_overrides
   );
 
 -- ai_budgets
+DROP POLICY IF EXISTS ai_budgets_tenant_access ON ai_budgets;
 CREATE POLICY ai_budgets_tenant_access ON ai_budgets
   FOR ALL
   USING (
@@ -87,6 +94,7 @@ CREATE POLICY ai_budgets_tenant_access ON ai_budgets
   );
 
 -- ai_usage_meters
+DROP POLICY IF EXISTS ai_usage_meters_tenant_access ON ai_usage_meters;
 CREATE POLICY ai_usage_meters_tenant_access ON ai_usage_meters
   FOR ALL
   USING (
@@ -96,6 +104,7 @@ CREATE POLICY ai_usage_meters_tenant_access ON ai_usage_meters
   );
 
 -- impersonation_sessions
+DROP POLICY IF EXISTS impersonation_sessions_admin_access ON impersonation_sessions;
 CREATE POLICY impersonation_sessions_admin_access ON impersonation_sessions
   FOR ALL
   USING (
@@ -107,6 +116,7 @@ CREATE POLICY impersonation_sessions_admin_access ON impersonation_sessions
 -- ============================================================
 
 -- Allow tenants to read only their audit logs
+DROP POLICY IF EXISTS audit_logs_tenant_read ON audit_logs;
 CREATE POLICY audit_logs_tenant_read ON audit_logs
   FOR SELECT
   USING (
@@ -116,15 +126,18 @@ CREATE POLICY audit_logs_tenant_read ON audit_logs
   );
 
 -- Allow INSERT from application (app sets actor context)
+DROP POLICY IF EXISTS audit_logs_insert ON audit_logs;
 CREATE POLICY audit_logs_insert ON audit_logs
   FOR INSERT
   WITH CHECK (true);
 
 -- Explicitly DENY UPDATE and DELETE via policies
+DROP POLICY IF EXISTS audit_logs_no_update ON audit_logs;
 CREATE POLICY audit_logs_no_update ON audit_logs
   FOR UPDATE
   USING (false);
 
+DROP POLICY IF EXISTS audit_logs_no_delete ON audit_logs;
 CREATE POLICY audit_logs_no_delete ON audit_logs
   FOR DELETE
   USING (false);
@@ -167,3 +180,120 @@ BEGIN
   PERFORM set_config('app.is_admin', 'false', true);
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- PROMPT-51Bv3: Minimal tenant RLS + grants for carts/cart_items/catalog_items
+-- ============================================================================
+
+GRANT USAGE ON SCHEMA public TO app_user;
+
+-- Revoke all privileges first to ensure clean state
+REVOKE ALL ON TABLE public.carts FROM app_user;
+REVOKE ALL ON TABLE public.cart_items FROM app_user;
+REVOKE ALL ON TABLE public.catalog_items FROM app_user;
+
+-- Grant only required privileges (no DELETE)
+GRANT SELECT, INSERT, UPDATE ON TABLE public.carts TO app_user;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.cart_items TO app_user;
+GRANT SELECT ON TABLE public.catalog_items TO app_user;
+
+ALTER TABLE public.carts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.catalog_items ENABLE ROW LEVEL SECURITY;
+
+-- Legacy policy cleanup (must remove FOR ALL policies from earlier versions)
+DROP POLICY IF EXISTS carts_tenant_access ON public.carts;
+DROP POLICY IF EXISTS cart_items_tenant_access ON public.cart_items;
+DROP POLICY IF EXISTS catalog_items_tenant_access ON public.catalog_items;
+
+DROP POLICY IF EXISTS carts_tenant_select ON public.carts;
+DROP POLICY IF EXISTS carts_tenant_insert ON public.carts;
+DROP POLICY IF EXISTS carts_tenant_update ON public.carts;
+DROP POLICY IF EXISTS cart_items_tenant_select ON public.cart_items;
+DROP POLICY IF EXISTS cart_items_tenant_insert ON public.cart_items;
+DROP POLICY IF EXISTS cart_items_tenant_update ON public.cart_items;
+DROP POLICY IF EXISTS catalog_items_tenant_read ON public.catalog_items;
+
+CREATE POLICY carts_tenant_select
+ON public.carts
+FOR SELECT
+USING (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND tenant_id = current_setting('app.tenant_id', true)::uuid
+);
+
+CREATE POLICY carts_tenant_insert
+ON public.carts
+FOR INSERT
+WITH CHECK (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND tenant_id = current_setting('app.tenant_id', true)::uuid
+);
+
+CREATE POLICY carts_tenant_update
+ON public.carts
+FOR UPDATE
+USING (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND tenant_id = current_setting('app.tenant_id', true)::uuid
+)
+WITH CHECK (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND tenant_id = current_setting('app.tenant_id', true)::uuid
+);
+
+CREATE POLICY cart_items_tenant_select
+ON public.cart_items
+FOR SELECT
+USING (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND EXISTS (
+    SELECT 1
+    FROM public.carts c
+    WHERE c.id = cart_items.cart_id
+      AND c.tenant_id = current_setting('app.tenant_id', true)::uuid
+  )
+);
+
+CREATE POLICY cart_items_tenant_insert
+ON public.cart_items
+FOR INSERT
+WITH CHECK (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND EXISTS (
+    SELECT 1
+    FROM public.carts c
+    WHERE c.id = cart_items.cart_id
+      AND c.tenant_id = current_setting('app.tenant_id', true)::uuid
+  )
+);
+
+CREATE POLICY cart_items_tenant_update
+ON public.cart_items
+FOR UPDATE
+USING (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND EXISTS (
+    SELECT 1
+    FROM public.carts c
+    WHERE c.id = cart_items.cart_id
+      AND c.tenant_id = current_setting('app.tenant_id', true)::uuid
+  )
+)
+WITH CHECK (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND EXISTS (
+    SELECT 1
+    FROM public.carts c
+    WHERE c.id = cart_items.cart_id
+      AND c.tenant_id = current_setting('app.tenant_id', true)::uuid
+  )
+);
+
+CREATE POLICY catalog_items_tenant_read
+ON public.catalog_items
+FOR SELECT
+USING (
+  current_setting('app.tenant_id', true) IS NOT NULL
+  AND tenant_id = current_setting('app.tenant_id', true)::uuid
+);
