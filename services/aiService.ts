@@ -59,18 +59,18 @@ export const getPlatformInsights = async (prompt: string): Promise<string> => {
   } catch (error) {
     if (error instanceof APIError) {
       // Handle budget exceeded (429)
-      if (error.statusCode === 429) {
+      if (error.status === 429) {
         return 'AI budget limit reached for this month. Please contact your administrator to increase your quota.';
       }
-      
+
       // Handle auth errors
-      if (error.statusCode === 401) {
+      if (error.status === 401) {
         return 'Authentication required to access AI insights.';
       }
-      
+
       return `AI insights temporarily unavailable: ${error.message}`;
     }
-    
+
     console.error('AI Insight Error:', error);
     return 'Intelligence service currently unavailable. Please verify API configuration.';
   }
@@ -107,18 +107,18 @@ export const generateNegotiationAdvice = async (
   } catch (error) {
     if (error instanceof APIError) {
       // Handle budget exceeded (429)
-      if (error.statusCode === 429) {
+      if (error.status === 429) {
         return 'AI budget limit reached. Cannot generate negotiation advice at this time.';
       }
-      
+
       // Handle auth errors
-      if (error.statusCode === 401) {
+      if (error.status === 401) {
         return 'Authentication required for AI negotiation advice.';
       }
-      
+
       return `Negotiation advice unavailable: ${error.message}`;
     }
-    
+
     console.error('Negotiation Advice Error:', error);
     return 'Negotiation strategy offline.';
   }

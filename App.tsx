@@ -6,6 +6,7 @@ import { SuperAdminShell, AdminView } from './layouts/SuperAdminShell';
 import { AuthForm } from './components/Auth/AuthFlows';
 import { ForgotPassword } from './components/Auth/ForgotPassword';
 import { VerifyEmail } from './components/Auth/VerifyEmail';
+import { TokenHandler } from './components/Auth/TokenHandler';
 import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
 import { TeamManagement } from './components/Tenant/TeamManagement';
 import { InviteMemberForm } from './components/Tenant/InviteMemberForm';
@@ -38,6 +39,7 @@ const App: React.FC = () => {
     | 'AUTH'
     | 'FORGOT_PASSWORD'
     | 'VERIFY_EMAIL'
+    | 'TOKEN_HANDLER'
     | 'ONBOARDING'
     | 'EXPERIENCE'
     | 'TEAM_MGMT'
@@ -66,6 +68,15 @@ const App: React.FC = () => {
   const [showCart, setShowCart] = useState(false);
 
   const currentTenant = useMemo(() => PLATFORM_TENANTS[currentTenantKey], [currentTenantKey]);
+
+  // Check URL for token-based actions on mount (password reset, email verification)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setAppState('TOKEN_HANDLER');
+    }
+  }, []);
 
   useEffect(() => {
     if (appState === 'EXPERIENCE' || appState === 'SETTINGS') {
@@ -499,6 +510,12 @@ const App: React.FC = () => {
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
             <VerifyEmail onVerified={() => setAppState('ONBOARDING')} />
+          </div>
+        );
+      case 'TOKEN_HANDLER':
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+            <TokenHandler onComplete={() => setAppState('AUTH')} />
           </div>
         );
       case 'ONBOARDING':

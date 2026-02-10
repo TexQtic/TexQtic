@@ -1,6 +1,6 @@
 /**
  * TexQtic Authentication Service
- * 
+ *
  * Handles login, logout, and user session management
  */
 
@@ -80,4 +80,37 @@ export async function getCurrentUser(): Promise<CurrentUserResponse> {
  */
 export function isAuthenticatedFor(realm: AuthRealm): boolean {
   return getAuthRealm() === realm;
+}
+
+/**
+ * Request password reset token
+ * Always returns success to prevent user enumeration
+ */
+export async function forgotPassword(email: string): Promise<void> {
+  await post<{ message: string }>('/api/auth/forgot-password', { email });
+}
+
+/**
+ * Reset password using token
+ */
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await post<{ message: string }>('/api/auth/reset-password', {
+    token,
+    newPassword,
+  });
+}
+
+/**
+ * Verify email using JWT token
+ */
+export async function verifyEmail(token: string): Promise<void> {
+  await post<{ message: string }>('/api/auth/verify-email', { token });
+}
+
+/**
+ * Resend email verification link
+ * Always returns success to prevent user enumeration
+ */
+export async function resendVerification(email: string): Promise<void> {
+  await post<{ message: string }>('/api/auth/resend-verification', { email });
 }

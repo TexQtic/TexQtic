@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { LoadingState, EmptyState, ErrorState, CartItemSkeleton } from '../shared';
-import { APIError } from '../../services/apiClient';
+import { APIError, type ApiError } from '../../services/apiClient';
 
 export const Cart: React.FC = () => {
   const { cart, loading, error, itemCount, subtotal, updateQuantity, removeItem } = useCart();
@@ -84,9 +84,9 @@ export const Cart: React.FC = () => {
 
   // Error state
   if (error && !cart) {
-    const apiError =
-      error instanceof Error
-        ? { status: 0, message: error.message }
+    const apiError: ApiError =
+      typeof error === 'object' && error !== null && 'status' in error
+        ? (error as ApiError)
         : { status: 0, message: String(error) };
 
     return <ErrorState error={apiError} onRetry={() => window.location.reload()} />;
