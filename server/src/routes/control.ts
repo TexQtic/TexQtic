@@ -4,7 +4,7 @@ import { adminAuthMiddleware } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
 import { withDbContext } from '../db/withDbContext.js';
 import { prisma } from '../db/prisma.js';
-import { writeAuditLog, createAdminAudit } from '../lib/auditLog.js';
+import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
 
 const controlRoutes: FastifyPluginAsync = async fastify => {
   // All control routes require admin auth
@@ -376,6 +376,265 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Tenant Provisioning] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Provisioning failed', 500);
+    }
+  });
+
+  /**
+   * Wave 5B: Finance Authority Intents
+   * POST /api/control/finance/payouts/:payout_id/approve
+   * POST /api/control/finance/payouts/:payout_id/reject
+   */
+  fastify.post('/finance/payouts/:payout_id/approve', async (request, reply) => {
+    try {
+      const { payout_id } = request.params as { payout_id: string };
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        reason: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { reason } = parseResult.data;
+
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await writeAuthorityIntent(prisma, {
+          eventType: 'finance.payout.approved',
+          targetType: 'payout',
+          targetId: payout_id,
+          adminId: request.adminId!,
+          payload: { reason },
+          idempotencyKey,
+        });
+      });
+
+      return reply.code(result.wasReplay ? 200 : 201).send({ success: true, data: result.event });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Finance Payout Approve] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Approval failed', 500);
+    }
+  });
+
+  fastify.post('/finance/payouts/:payout_id/reject', async (request, reply) => {
+    try {
+      const { payout_id } = request.params as { payout_id: string };
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        reason: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { reason } = parseResult.data;
+
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await writeAuthorityIntent(prisma, {
+          eventType: 'finance.payout.rejected',
+          targetType: 'payout',
+          targetId: payout_id,
+          adminId: request.adminId!,
+          payload: { reason },
+          idempotencyKey,
+        });
+      });
+
+      return reply.code(result.wasReplay ? 200 : 201).send({ success: true, data: result.event });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Finance Payout Reject] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Rejection failed', 500);
+    }
+  });
+
+  /**
+   * Wave 5B: Compliance Authority Intents
+   * POST /api/control/compliance/requests/:request_id/approve
+   * POST /api/control/compliance/requests/:request_id/reject
+   */
+  fastify.post('/compliance/requests/:request_id/approve', async (request, reply) => {
+    try {
+      const { request_id } = request.params as { request_id: string };
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        reason: z.string().optional(),
+        notes: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { reason, notes } = parseResult.data;
+
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await writeAuthorityIntent(prisma, {
+          eventType: 'compliance.request.approved',
+          targetType: 'compliance_request',
+          targetId: request_id,
+          adminId: request.adminId!,
+          payload: { reason, notes },
+          idempotencyKey,
+        });
+      });
+
+      return reply.code(result.wasReplay ? 200 : 201).send({ success: true, data: result.event });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Compliance Request Approve] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Approval failed', 500);
+    }
+  });
+
+  fastify.post('/compliance/requests/:request_id/reject', async (request, reply) => {
+    try {
+      const { request_id } = request.params as { request_id: string };
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        reason: z.string().optional(),
+        notes: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { reason, notes } = parseResult.data;
+
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await writeAuthorityIntent(prisma, {
+          eventType: 'compliance.request.rejected',
+          targetType: 'compliance_request',
+          targetId: request_id,
+          adminId: request.adminId!,
+          payload: { reason, notes },
+          idempotencyKey,
+        });
+      });
+
+      return reply.code(result.wasReplay ? 200 : 201).send({ success: true, data: result.event });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Compliance Request Reject] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Rejection failed', 500);
+    }
+  });
+
+  /**
+   * Wave 5B: Dispute Authority Intents
+   * POST /api/control/disputes/:dispute_id/resolve
+   * POST /api/control/disputes/:dispute_id/escalate
+   */
+  fastify.post('/disputes/:dispute_id/resolve', async (request, reply) => {
+    try {
+      const { dispute_id } = request.params as { dispute_id: string };
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        resolution: z.string().optional(),
+        notes: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { resolution, notes } = parseResult.data;
+
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await writeAuthorityIntent(prisma, {
+          eventType: 'dispute.resolved',
+          targetType: 'dispute',
+          targetId: dispute_id,
+          adminId: request.adminId!,
+          payload: { resolution, notes },
+          idempotencyKey,
+        });
+      });
+
+      return reply.code(result.wasReplay ? 200 : 201).send({ success: true, data: result.event });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Dispute Resolve] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Resolution failed', 500);
+    }
+  });
+
+  fastify.post('/disputes/:dispute_id/escalate', async (request, reply) => {
+    try {
+      const { dispute_id } = request.params as { dispute_id: string };
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        resolution: z.string().optional(),
+        notes: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { resolution, notes } = parseResult.data;
+
+      const result = await withDbContext({ isAdmin: true }, async () => {
+        return await writeAuthorityIntent(prisma, {
+          eventType: 'dispute.escalated',
+          targetType: 'dispute',
+          targetId: dispute_id,
+          adminId: request.adminId!,
+          payload: { resolution, notes },
+          idempotencyKey,
+        });
+      });
+
+      return reply.code(result.wasReplay ? 200 : 201).send({ success: true, data: result.event });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Dispute Escalate] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Escalation failed', 500);
     }
   });
 };

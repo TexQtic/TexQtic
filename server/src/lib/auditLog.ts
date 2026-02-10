@@ -1,5 +1,6 @@
 import type { PrismaClient, Prisma } from '@prisma/client';
 import { maybeEmitEventFromAuditEntry } from './events.js';
+import { randomUUID } from 'node:crypto';
 
 // Type-widened client to support both direct client and transaction usage
 type DbClient = PrismaClient | Prisma.TransactionClient;
@@ -199,5 +200,130 @@ export function createAdminAudit(
     beforeJson: null,
     afterJson: null,
     metadataJson: metadata || {},
+  };
+}
+
+/**
+ * Wave 5B: Write authority intent event with idempotency support
+ *
+ * Records admin authority decisions as immutable events in:
+ * - Event log (source of truth for Phase 2)
+ * - Audit log (accountability trail)
+ *
+ * Idempotency: Checks event log for duplicate with same idempotency key
+ *
+ * @param prisma - Prisma client (withDbContext admin mode)
+ * @param params - Authority intent parameters
+ * @returns Recorded event payload
+ */
+export async function writeAuthorityIntent(
+  prisma: DbClient,
+  params: {
+    eventType: string;
+    targetType: string;
+    targetId: string;
+    adminId: string;
+    tenantId?: string | null;
+    payload: Record<string, any>;
+    idempotencyKey: string;
+  }
+): Promise<{ event: any; wasReplay: boolean }> {
+  const { eventType, targetType, targetId, adminId, tenantId, payload, idempotencyKey } = params;
+
+  // Idempotency check: search event log for duplicate
+  const existingEvent = await prisma.eventLog.findFirst({
+    where: {
+      name: eventType,
+      entityId: targetId,
+      payloadJson: {
+        path: ['metadata', 'idempotencyKey'],
+        equals: idempotencyKey,
+      },
+    },
+    orderBy: { occurredAt: 'desc' },
+  });
+
+  if (existingEvent) {
+    // Idempotent replay: return existing event
+    return {
+      event: {
+        id: existingEvent.id,
+        eventType: existingEvent.name,
+        targetType: existingEvent.entityType,
+        targetId: existingEvent.entityId,
+        occurredAt: existingEvent.occurredAt.toISOString(),
+        payload: existingEvent.payloadJson,
+      },
+      wasReplay: true,
+    };
+  }
+
+  // Generate event ID (will match audit log ID)
+  const eventId = randomUUID();
+  const occurredAt = new Date();
+
+  // Build event payload with metadata
+  const eventPayload = {
+    ...payload,
+    metadata: {
+      idempotencyKey,
+      adminId,
+      targetType,
+      targetId,
+      tenantId: tenantId || null,
+    },
+  };
+
+  // Write audit log first (event log needs auditLogId)
+  const auditLogEntry = await prisma.auditLog.create({
+    data: {
+      id: eventId, // Use same ID for deterministic linkage
+      realm: 'ADMIN',
+      tenantId: tenantId || null,
+      actorType: 'ADMIN',
+      actorId: adminId,
+      action: eventType,
+      entity: targetType,
+      entityId: targetId,
+      beforeJson: null,
+      afterJson: null,
+      metadataJson: {
+        idempotencyKey,
+        ...payload,
+      },
+    },
+  });
+
+  // Write to event log (referencing audit log)
+  await prisma.eventLog.create({
+    data: {
+      id: eventId,
+      version: 'v1',
+      name: eventType,
+      occurredAt,
+      tenantId: tenantId || null,
+      realm: 'ADMIN',
+      actorType: 'ADMIN',
+      actorId: adminId,
+      entityType: targetType,
+      entityId: targetId,
+      payloadJson: eventPayload as any,
+      metadataJson: {
+        idempotencyKey,
+      } as any,
+      auditLogId: auditLogEntry.id,
+    },
+  });
+
+  return {
+    event: {
+      id: eventId,
+      eventType,
+      targetType,
+      targetId,
+      occurredAt: occurredAt.toISOString(),
+      payload: eventPayload,
+    },
+    wasReplay: false,
   };
 }

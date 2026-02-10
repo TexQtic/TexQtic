@@ -109,6 +109,196 @@
           }
         }
       }
+    },
+    "/api/control/finance/payouts/{payout_id}/approve": {
+      "post": {
+        "summary": "Approve payout (admin only)",
+        "description": "Wave 5B: Record admin approval decision as immutable event (no payout execution).",
+        "parameters": [
+          { "name": "payout_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Approval recorded" },
+          "200": { "description": "Idempotent replay" }
+        }
+      }
+    },
+    "/api/control/finance/payouts/{payout_id}/reject": {
+      "post": {
+        "summary": "Reject payout (admin only)",
+        "description": "Wave 5B: Record admin rejection decision as immutable event.",
+        "parameters": [
+          { "name": "payout_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Rejection recorded" },
+          "200": { "description": "Idempotent replay" }
+        }
+      }
+    },
+    "/api/control/compliance/requests/{request_id}/approve": {
+      "post": {
+        "summary": "Approve compliance request (admin only)",
+        "description": "Wave 5B: Record admin approval decision as immutable event.",
+        "parameters": [
+          { "name": "request_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Approval recorded" },
+          "200": { "description": "Idempotent replay" }
+        }
+      }
+    },
+    "/api/control/compliance/requests/{request_id}/reject": {
+      "post": {
+        "summary": "Reject compliance request (admin only)",
+        "description": "Wave 5B: Record admin rejection decision as immutable event.",
+        "parameters": [
+          { "name": "request_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Rejection recorded" },
+          "200": { "description": "Idempotent replay" }
+        }
+      }
+    },
+    "/api/control/disputes/{dispute_id}/resolve": {
+      "post": {
+        "summary": "Resolve dispute (admin only)",
+        "description": "Wave 5B: Record admin resolution decision as immutable event.",
+        "parameters": [
+          { "name": "dispute_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resolution": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Resolution recorded" },
+          "200": { "description": "Idempotent replay" }
+        }
+      }
+    },
+    "/api/control/disputes/{dispute_id}/escalate": {
+      "post": {
+        "summary": "Escalate dispute (admin only)",
+        "description": "Wave 5B: Record admin escalation decision as immutable event.",
+        "parameters": [
+          { "name": "dispute_id", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resolution": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Escalation recorded" },
+          "200": { "description": "Idempotent replay" }
+        }
+      }
     }
   }
 }
