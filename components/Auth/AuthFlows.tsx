@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { login } from '../../services/authService';
+import type { AuthRealm } from '../../services/apiClient';
 
 interface AuthFormProps {
   realm: 'TENANT' | 'CONTROL_PLANE';
@@ -10,6 +12,36 @@ interface AuthFormProps {
 export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMode, mode }) => {
   const isAdminRealm = realm === 'CONTROL_PLANE';
   const accentColor = isAdminRealm ? 'rose-600' : 'indigo-600';
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (mode === 'SIGNUP') {
+      setError('Signup is not yet implemented. Please contact your administrator.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await login(
+        { email, password },
+        realm as AuthRealm
+      );
+      onSuccess(response);
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -26,13 +58,13 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
           </p>
         </div>
 
-        <form
-          className="space-y-4"
-          onSubmit={e => {
-            e.preventDefault();
-            onSuccess({});
-          }}
-        >
+        {error && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
+            {error}
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {mode === 'SIGNUP' && (
             <div className="space-y-1">
               <label
@@ -46,6 +78,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
                 type="text"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
                 placeholder="Alex Rivera"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
               />
             </div>
@@ -62,6 +96,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
               type="email"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
               placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
               required
             />
           </div>
@@ -78,15 +115,19 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess, onSwitchMo
               title="password"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
               placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
               required
             />
           </div>
 
           <button
             type="submit"
-            className={`w-full py-4 bg-${accentColor} text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition active:scale-95 uppercase text-xs tracking-widest`}
+            disabled={loading}
+            className={`w-full py-4 bg-${accentColor} text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition active:scale-95 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {mode === 'LOGIN' ? 'Secure Login' : 'Start Onboarding'}
+            {loading ? 'AUTHENTICATING...' : mode === 'LOGIN' ? 'Secure Login' : 'Start Onboarding'}
           </button>
         </form>
 

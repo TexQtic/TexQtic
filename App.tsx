@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { PLATFORM_TENANTS, EXAMPLE_PRODUCTS } from './constants';
 import { TenantType, TenantConfig, ImpersonationState } from './types';
@@ -28,7 +27,7 @@ import { EventStream } from './components/ControlPlane/EventStream';
 import { BackendSkeleton } from './components/ControlPlane/BackendSkeleton';
 import { MiddlewareScaffold } from './components/ControlPlane/MiddlewareScaffold';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
-import { getPlatformInsights } from './services/geminiService';
+import { getPlatformInsights } from './services/aiService';
 
 const App: React.FC = () => {
   // Production-grade State Machine

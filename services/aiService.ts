@@ -6,54 +6,27 @@
  * - NO client-side API keys
  * - All AI calls routed through /api/ai/* server endpoints
  * - Tenant context handled server-side
+ * - JWT authentication enforced
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+import { get, post, APIError } from './apiClient';
 
 interface InsightsResponse {
-  ok: boolean;
-  data: {
-    insightText: string;
-    updatedAt: string;
-    cached?: boolean;
-  };
+  insightText: string;
+  updatedAt: string;
+  cached?: boolean;
 }
 
 interface NegotiationAdviceResponse {
-  ok: boolean;
-  data: {
-    adviceText: string;
-    riskFlags: string[];
-    updatedAt: string;
-  };
+  adviceText: string;
+  riskFlags: string[];
+  updatedAt: string;
 }
 
-/**
- * Fetch helper with error handling
- */
-async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      credentials: 'include', // Include cookies for JWT auth
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: `HTTP ${response.status}: ${response.statusText}`,
-      }));
-      throw new Error(error.message || 'API request failed');
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
-  }
+interface AIHealthResponse {
+  status: string;
+  provider: string;
+  configured: boolean;
 }
 
 /**
@@ -80,12 +53,24 @@ export const getPlatformInsights = async (prompt: string): Promise<string> => {
     const queryString = params.toString();
     const endpoint = `/api/ai/insights${queryString ? `?${queryString}` : ''}`;
 
-    const response = await apiFetch<InsightsResponse>(endpoint, {
-      method: 'GET',
-    });
+    const response = await get<InsightsResponse>(endpoint);
 
-    return response.data.insightText;
+    return response.insightText;
   } catch (error) {
+    if (error instanceof APIError) {
+      // Handle budget exceeded (429)
+      if (error.statusCode === 429) {
+        return 'AI budget limit reached for this month. Please contact your administrator to increase your quota.';
+      }
+      
+      // Handle auth errors
+      if (error.statusCode === 401) {
+        return 'Authentication required to access AI insights.';
+      }
+      
+      return `AI insights temporarily unavailable: ${error.message}`;
+    }
+    
     console.error('AI Insight Error:', error);
     return 'Intelligence service currently unavailable. Please verify API configuration.';
   }
@@ -105,24 +90,35 @@ export const generateNegotiationAdvice = async (
   options?: { quantity?: number; context?: string }
 ): Promise<string> => {
   try {
-    const response = await apiFetch<NegotiationAdviceResponse>('/api/ai/negotiation-advice', {
-      method: 'POST',
-      body: JSON.stringify({
-        productName: product,
-        targetPrice,
-        quantity: options?.quantity,
-        context: options?.context,
-      }),
+    const response = await post<NegotiationAdviceResponse>('/api/ai/negotiation-advice', {
+      productName: product,
+      targetPrice,
+      quantity: options?.quantity,
+      context: options?.context,
     });
 
     // If risk flags present, prepend warning
-    let result = response.data.adviceText;
-    if (response.data.riskFlags.length > 0) {
-      result = `⚠️ Risk Flags: ${response.data.riskFlags.join(', ')}\n\n${result}`;
+    let result = response.adviceText;
+    if (response.riskFlags.length > 0) {
+      result = `⚠️ Risk Flags: ${response.riskFlags.join(', ')}\n\n${result}`;
     }
 
     return result;
   } catch (error) {
+    if (error instanceof APIError) {
+      // Handle budget exceeded (429)
+      if (error.statusCode === 429) {
+        return 'AI budget limit reached. Cannot generate negotiation advice at this time.';
+      }
+      
+      // Handle auth errors
+      if (error.statusCode === 401) {
+        return 'Authentication required for AI negotiation advice.';
+      }
+      
+      return `Negotiation advice unavailable: ${error.message}`;
+    }
+    
     console.error('Negotiation Advice Error:', error);
     return 'Negotiation strategy offline.';
   }
@@ -137,12 +133,8 @@ export const checkAIHealth = async (): Promise<{
   configured: boolean;
 }> => {
   try {
-    const response = await apiFetch<{
-      ok: boolean;
-      data: { status: string; provider: string; configured: boolean };
-    }>('/api/ai/health', { method: 'GET' });
-
-    return response.data;
+    const response = await get<AIHealthResponse>('/api/ai/health');
+    return response;
   } catch (_error) {
     return {
       status: 'error',

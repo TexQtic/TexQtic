@@ -1,35 +1,31 @@
+/**
+ * ⚠️ DEPRECATED - DO NOT USE ⚠️
+ * 
+ * This file contained a CRITICAL SECURITY VULNERABILITY:
+ * - Exposed VITE_GEMINI_API_KEY in browser
+ * - Bypassed backend budget enforcement
+ * - Bypassed audit logging
+ * - Bypassed RLS tenant isolation
+ * 
+ * REMEDIATION (Prompt #53 - Wave 1):
+ * All AI calls now route through services/aiService.ts → backend /api/ai/*
+ * This provides:
+ * ✅ Budget enforcement
+ * ✅ Audit logging
+ * ✅ Cost tracking
+ * ✅ RLS tenant isolation
+ * 
+ * DO NOT RESTORE THIS FILE OR REINTRODUCE CLIENT-SIDE AI CALLS.
+ */
 
-import { GoogleGenAI } from "@google/genai";
+// This file is intentionally empty and deprecated.
+// All AI functionality has been moved to services/aiService.ts
+// which properly routes through the backend governance layer.
 
-// Use Vite environment variable with VITE_ prefix
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || 'PLACEHOLDER_API_KEY' });
-
-export const getPlatformInsights = async (prompt: string) => {
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
-        systemInstruction: "You are a strategic AI advisor for a multi-tenant global commerce platform. Provide architectural and market insights concisely.",
-      },
-    });
-    // Property access .text as per guidelines
-    return response.text;
-  } catch (error) {
-    console.error("AI Insight Error:", error);
-    return "Intelligence service currently unavailable. Please verify API configuration.";
-  }
+export const getPlatformInsights = () => {
+  throw new Error('DEPRECATED: Use aiService.ts instead. This function bypasses backend security.');
 };
 
-export const generateNegotiationAdvice = async (product: string, targetPrice: number) => {
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Product: ${product}. Target Price: ${targetPrice}. Generate 3 strategic negotiation points for a B2B buyer.`,
-    });
-    // Property access .text as per guidelines
-    return response.text;
-  } catch (_error) {
-    return "Negotiation strategy offline.";
-  }
+export const generateNegotiationAdvice = () => {
+  throw new Error('DEPRECATED: Use aiService.ts instead. This function bypasses backend security.');
 };
