@@ -40,7 +40,7 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
   try {
     // Verify JWT using tenant realm
     await request.tenantJwtVerify({ onlyCookie: false });
-    const payload = request.user as any;
+    const payload = request.user as { userId?: string; tenantId?: string };
 
     if (!payload.userId || !payload.tenantId) {
       return sendUnauthorized(reply, 'Invalid token payload');
@@ -55,7 +55,7 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
     request.userId = payload.userId;
     request.tenantId = payload.tenantId;
     request.userRole = membership.role;
-  } catch (tenantError) {
+  } catch {
     // Check if it's actually an admin token (wrong realm)
     try {
       await request.adminJwtVerify();
@@ -84,7 +84,7 @@ export async function adminAuthMiddleware(request: FastifyRequest, reply: Fastif
     request.isAdmin = true;
     request.adminId = payload.adminId;
     request.adminRole = payload.role;
-  } catch (adminError) {
+  } catch {
     // Check if it's actually a tenant token (wrong realm)
     try {
       await request.tenantJwtVerify({ onlyCookie: false });

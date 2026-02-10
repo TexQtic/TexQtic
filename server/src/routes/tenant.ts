@@ -154,6 +154,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   fastify.post('/tenant/cart', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
     const { tenantId, userId } = request;
 
+    // Early guards for tenant context (guaranteed by middleware)
+    if (!tenantId || !userId) {
+      return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing', 401);
+    }
+
     const result = await withDbContext({ tenantId }, async () => {
       return await prisma.$transaction(async tx => {
         // Find existing active cart
@@ -184,8 +189,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         if (!cart) {
           cart = await tx.cart.create({
             data: {
-              tenantId: tenantId!,
-              userId: userId!,
+              tenantId: tenantId,
+              userId: userId,
               status: 'ACTIVE',
             },
             include: {
@@ -278,6 +283,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     async (request, reply) => {
       const { tenantId, userId } = request;
 
+      // Early guards for tenant context (guaranteed by middleware)
+      if (!tenantId || !userId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing', 401);
+      }
+
       // Validate body
       const bodySchema = z.object({
         catalogItemId: z.string().uuid(),
@@ -322,8 +332,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           if (!cart) {
             cart = await tx.cart.create({
               data: {
-                tenantId: tenantId!,
-                userId: userId!,
+                tenantId: tenantId,
+                userId: userId,
                 status: 'ACTIVE',
               },
             });
@@ -718,6 +728,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     async (request, reply) => {
       const { tenantId, userRole } = request;
 
+      // Early guard for tenant context (guaranteed by middleware)
+      if (!tenantId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing', 401);
+      }
+
       // Check permission
       if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
         return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
@@ -746,7 +761,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const invite = await withDbContext({ tenantId }, async () => {
           return await prisma.invite.create({
             data: {
-              tenantId: tenantId!,
+              tenantId: tenantId,
               email,
               role,
               tokenHash,
@@ -757,10 +772,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         // Write audit log
         await writeAuditLog(prisma, {
-          tenantId: tenantId!,
+          tenantId: tenantId ?? null,
           realm: 'TENANT',
           actorType: 'USER',
-          actorId: request.userId!,
+          actorId: request.userId ?? null,
           action: 'member.invited',
           entity: 'invite',
           entityId: invite.id,
@@ -821,9 +836,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         // Update or create branding
         const branding = await withDbContext({ tenantId }, async () => {
           return await prisma.tenantBranding.upsert({
-            where: { tenantId: tenantId! },
+            where: { tenantId: tenantId },
             create: {
-              tenantId: tenantId!,
+              tenantId: tenantId as string,
               logoUrl: logoUrl ?? undefined,
               themeJson: themeJson ?? undefined,
             },
@@ -836,10 +851,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         // Write audit log
         await writeAuditLog(prisma, {
-          tenantId: tenantId!,
+          tenantId: tenantId ?? null,
           realm: 'TENANT',
           actorType: 'USER',
-          actorId: request.userId!,
+          actorId: request.userId ?? null,
           action: 'branding.updated',
           entity: 'branding',
           entityId: branding.id,

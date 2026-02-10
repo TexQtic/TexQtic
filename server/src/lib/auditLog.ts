@@ -23,9 +23,9 @@ export interface AuditEntry {
   action: string; // e.g., 'AI_INSIGHTS', 'AI_NEGOTIATION_ADVICE'
   entity: string; // e.g., 'ai', 'tenant', 'user'
   entityId?: string | null;
-  beforeJson?: Record<string, any> | null;
-  afterJson?: Record<string, any> | null;
-  metadataJson?: Record<string, any> | null;
+  beforeJson?: Prisma.JsonValue | null;
+  afterJson?: Prisma.JsonValue | null;
+  metadataJson?: Prisma.JsonValue | null;
 }
 
 /**
@@ -187,7 +187,7 @@ export function createAdminAudit(
   adminId: string,
   action: string,
   entity: string,
-  metadata?: Record<string, any>
+  metadata?: Prisma.JsonValue
 ): AuditEntry {
   return {
     realm: 'ADMIN',
@@ -224,10 +224,10 @@ export async function writeAuthorityIntent(
     targetId: string;
     adminId: string;
     tenantId?: string | null;
-    payload: Record<string, any>;
+    payload: Prisma.JsonValue;
     idempotencyKey: string;
   }
-): Promise<{ event: any; wasReplay: boolean }> {
+): Promise<{ event: Prisma.JsonValue; wasReplay: boolean }> {
   const { eventType, targetType, targetId, adminId, tenantId, payload, idempotencyKey } = params;
 
   // Idempotency check: search event log for duplicate
@@ -262,9 +262,11 @@ export async function writeAuthorityIntent(
   const eventId = randomUUID();
   const occurredAt = new Date();
 
-  // Build event payload with metadata
-  const eventPayload = {
-    ...payload,
+  // Build event payload with metadata (type-safe merging)
+  const eventPayload: Prisma.JsonObject = {
+    ...(typeof payload === 'object' && payload !== null && !Array.isArray(payload)
+      ? (payload as Prisma.JsonObject)
+      : {}),
     metadata: {
       idempotencyKey,
       adminId,
@@ -285,10 +287,13 @@ export async function writeAuthorityIntent(
       action: eventType,
       entity: targetType,
       entityId: targetId,
-      metadataJson: {
-        idempotencyKey,
-        ...payload,
-      },
+      metadataJson: Object.assign(
+        {},
+        typeof payload === 'object' && payload !== null && !Array.isArray(payload)
+          ? (payload as Prisma.JsonObject)
+          : {},
+        { idempotencyKey }
+      ),
     },
   });
 
@@ -305,10 +310,10 @@ export async function writeAuthorityIntent(
       actorId: adminId,
       entityType: targetType,
       entityId: targetId,
-      payloadJson: eventPayload as any,
+      payloadJson: eventPayload,
       metadataJson: {
         idempotencyKey,
-      } as any,
+      },
       auditLogId: auditLogEntry.id,
     },
   });

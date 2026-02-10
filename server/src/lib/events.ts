@@ -103,7 +103,7 @@ export interface EventEnvelope {
   realm: EventRealm; // 'ADMIN' | 'TENANT'
   actor: EventActor; // Who performed the action
   entity: EventEntity; // What was affected
-  payload: Record<string, any>; // Event-specific data (no secrets!)
+  payload: Prisma.JsonValue; // Event-specific data (no secrets!)
   metadata: EventMetadata; // Correlation, origin, causation markers
 }
 
@@ -286,7 +286,7 @@ const SECRET_KEYS = [
  * @param path - Current path for error messages
  * @throws Error if secret keys are found
  */
-function scanForSecrets(obj: any, depth: number = 0, path: string = 'payload'): void {
+function scanForSecrets(obj: unknown, depth: number = 0, path: string = 'payload'): void {
   if (depth > 5) {
     // Limit recursion depth to avoid infinite loops
     return;
@@ -305,7 +305,13 @@ function scanForSecrets(obj: any, depth: number = 0, path: string = 'payload'): 
     return;
   }
 
-  for (const key of Object.keys(obj)) {
+  if (typeof obj !== 'object') {
+    return; // Skip primitives
+  }
+
+  const objRecord = obj as Record<string, unknown>;
+
+  for (const key of Object.keys(objRecord)) {
     const lowerKey = key.toLowerCase();
     if (SECRET_KEYS.some(secret => lowerKey.includes(secret))) {
       throw new Error(
@@ -314,7 +320,7 @@ function scanForSecrets(obj: any, depth: number = 0, path: string = 'payload'): 
       );
     }
 
-    scanForSecrets(obj[key], depth + 1, `${path}.${key}`);
+    scanForSecrets(objRecord[key], depth + 1, `${path}.${key}`);
   }
 }
 
@@ -330,7 +336,7 @@ function scanForSecrets(obj: any, depth: number = 0, path: string = 'payload'): 
  * assertNoSecretsInPayload({ id: '123', email: 'user@example.com' }); // OK
  * assertNoSecretsInPayload({ id: '123', password: 'secret' }); // Throws
  */
-export function assertNoSecretsInPayload(payload: Record<string, any>): void {
+export function assertNoSecretsInPayload(payload: Prisma.JsonValue): void {
   scanForSecrets(payload, 0, 'payload');
 }
 
@@ -377,9 +383,9 @@ interface AuditLogRow {
   action: string;
   entity: string;
   entityId: string | null;
-  beforeJson: any;
-  afterJson: any;
-  metadataJson: any;
+  beforeJson: Prisma.JsonValue | null;
+  afterJson: Prisma.JsonValue | null;
+  metadataJson: Prisma.JsonValue | null;
   createdAt: Date;
 }
 
@@ -428,8 +434,8 @@ export async function storeEventBestEffort(
         actorId: event.actor.id,
         entityType: event.entity.type,
         entityId: event.entity.id,
-        payloadJson: event.payload as any,
-        metadataJson: event.metadata as any,
+        payloadJson: event.payload ?? undefined,
+        metadataJson: (event.metadata as Prisma.InputJsonValue) ?? undefined,
         auditLogId, // Traceability: link back to audit log
       },
     });
@@ -450,10 +456,10 @@ export async function storeEventBestEffort(
         error: err.message,
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Best-effort: swallow errors, never break requests
     // P2002 (unique violation) means event already stored - ignore safely
-    if (error?.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       console.warn('[Event Storage] Event already stored (duplicate), ignoring:', {
         eventId: event.id,
         eventName: event.name,
@@ -501,7 +507,7 @@ export async function maybeEmitEventFromAuditEntry(
     }
 
     // Build payload from afterJson (preferred) or empty object
-    const payload: Record<string, any> = auditLogRow.afterJson ?? {};
+    const payload = (auditLogRow.afterJson as Prisma.JsonObject) ?? {};
 
     // Security guard: ensure no secrets in payload
     assertNoSecretsInPayload(payload);
@@ -509,10 +515,18 @@ export async function maybeEmitEventFromAuditEntry(
     // Build metadata
     const metadata: EventMetadata = {};
 
+    // Type-safe access to metadataJson (narrow from JsonValue to object)
+    const metaObj =
+      auditLogRow.metadataJson &&
+      typeof auditLogRow.metadataJson === 'object' &&
+      !Array.isArray(auditLogRow.metadataJson)
+        ? (auditLogRow.metadataJson as Record<string, unknown>)
+        : null;
+
     // Origin detection: action ends with _ORIGIN or metadataJson.origin === true
     // Prompt #17: Also treat CREATE_TENANT as origin (legacy action name compatibility)
     const isOriginByName = auditLogRow.action.endsWith('_ORIGIN');
-    const isOriginByMetadata = auditLogRow.metadataJson && auditLogRow.metadataJson.origin === true;
+    const isOriginByMetadata = metaObj && metaObj.origin === true;
     const isOriginByLegacyAction = auditLogRow.action === 'CREATE_TENANT'; // Compatibility mapping
 
     if (isOriginByName || isOriginByMetadata || isOriginByLegacyAction) {
@@ -520,11 +534,11 @@ export async function maybeEmitEventFromAuditEntry(
     }
 
     // Copy correlation/causation IDs if present
-    if (auditLogRow.metadataJson?.correlationId) {
-      metadata.correlationId = auditLogRow.metadataJson.correlationId;
+    if (metaObj?.correlationId && typeof metaObj.correlationId === 'string') {
+      metadata.correlationId = metaObj.correlationId;
     }
-    if (auditLogRow.metadataJson?.causationId) {
-      metadata.causationId = auditLogRow.metadataJson.causationId;
+    if (metaObj?.causationId && typeof metaObj.causationId === 'string') {
+      metadata.causationId = metaObj.causationId;
     }
 
     // Build event envelope (deterministic, stable for replay)

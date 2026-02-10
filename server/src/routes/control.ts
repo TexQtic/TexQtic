@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { adminAuthMiddleware } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
 import { withDbContext } from '../db/withDbContext.js';
@@ -125,6 +126,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.put('/feature-flags/:key', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { key } = request.params as { key: string };
 
       const bodySchema = z.object({
@@ -162,7 +169,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       await writeAuditLog(
         prisma,
         createAdminAudit(
-          request.adminId!,
+          adminId,
           existingFlag ? 'control.feature_flag.updated' : 'control.feature_flag.created',
           'feature_flag',
           {
@@ -212,7 +219,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       const { tenant_id, event_name, from, to, limit = 50, cursor } = queryResult.data;
 
       // Build filter conditions
-      const where: any = {};
+      const where: Prisma.EventLogWhereInput = {};
 
       if (tenant_id) {
         where.tenantId = tenant_id;
@@ -273,6 +280,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post('/tenants/provision', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const bodySchema = z.object({
         name: z.string().min(1, 'Tenant name is required').max(255),
         slug: z
@@ -349,7 +362,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         tenantId: result.tenant.id,
         realm: 'ADMIN',
         actorType: 'ADMIN',
-        actorId: request.adminId!,
+        actorId: adminId,
         action: 'tenant.provisioned',
         entity: 'tenant',
         entityId: result.tenant.id,
@@ -386,6 +399,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post('/finance/payouts/:payout_id/approve', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { payout_id } = request.params as { payout_id: string };
       const idempotencyKey = request.headers['idempotency-key'] as string;
 
@@ -411,7 +430,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           eventType: 'finance.payout.approved',
           targetType: 'payout',
           targetId: payout_id,
-          adminId: request.adminId!,
+          adminId: adminId,
           payload: { reason },
           idempotencyKey,
         });
@@ -426,6 +445,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.post('/finance/payouts/:payout_id/reject', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { payout_id } = request.params as { payout_id: string };
       const idempotencyKey = request.headers['idempotency-key'] as string;
 
@@ -451,7 +476,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           eventType: 'finance.payout.rejected',
           targetType: 'payout',
           targetId: payout_id,
-          adminId: request.adminId!,
+          adminId: adminId,
           payload: { reason },
           idempotencyKey,
         });
@@ -471,6 +496,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post('/compliance/requests/:request_id/approve', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { request_id } = request.params as { request_id: string };
       const idempotencyKey = request.headers['idempotency-key'] as string;
 
@@ -497,7 +528,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           eventType: 'compliance.request.approved',
           targetType: 'compliance_request',
           targetId: request_id,
-          adminId: request.adminId!,
+          adminId: adminId,
           payload: { reason, notes },
           idempotencyKey,
         });
@@ -512,6 +543,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.post('/compliance/requests/:request_id/reject', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { request_id } = request.params as { request_id: string };
       const idempotencyKey = request.headers['idempotency-key'] as string;
 
@@ -538,7 +575,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           eventType: 'compliance.request.rejected',
           targetType: 'compliance_request',
           targetId: request_id,
-          adminId: request.adminId!,
+          adminId: adminId,
           payload: { reason, notes },
           idempotencyKey,
         });
@@ -558,6 +595,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post('/disputes/:dispute_id/resolve', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { dispute_id } = request.params as { dispute_id: string };
       const idempotencyKey = request.headers['idempotency-key'] as string;
 
@@ -584,7 +627,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           eventType: 'dispute.resolved',
           targetType: 'dispute',
           targetId: dispute_id,
-          adminId: request.adminId!,
+          adminId: adminId,
           payload: { resolution, notes },
           idempotencyKey,
         });
@@ -599,6 +642,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
   fastify.post('/disputes/:dispute_id/escalate', async (request, reply) => {
     try {
+      // Early guard for adminId (guaranteed by middleware)
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
       const { dispute_id } = request.params as { dispute_id: string };
       const idempotencyKey = request.headers['idempotency-key'] as string;
 
@@ -625,7 +674,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           eventType: 'dispute.escalated',
           targetType: 'dispute',
           targetId: dispute_id,
-          adminId: request.adminId!,
+          adminId: adminId,
           payload: { resolution, notes },
           idempotencyKey,
         });

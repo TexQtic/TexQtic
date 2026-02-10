@@ -4,26 +4,26 @@ import { registerProjection } from '../projections/registry.js';
 
 /**
  * Marketplace Cart Summary Projection Handler
- * 
+ *
  * Prompt #27: Event-driven projection for cart state visibility.
- * 
+ *
  * PURPOSE:
  * - Provide admin-safe, query-optimized view of cart state
  * - Avoid direct reads from transactional cart tables
  * - Enable analytics without impacting write performance
- * 
+ *
  * EVENTS HANDLED:
  * - marketplace.cart.created
  * - marketplace.cart.item.added
  * - marketplace.cart.item.updated
  * - marketplace.cart.item.removed
  * - marketplace.cart.checked_out (future-safe)
- * 
+ *
  * IDEMPOTENCY:
  * - Uses last_event_id to prevent duplicate processing
  * - Uses version for optimistic locking
  * - Tolerates out-of-order delivery via event timestamps
- * 
+ *
  * TENANT ISOLATION:
  * - All queries filtered by tenantId
  * - RLS enforced at schema level
@@ -31,13 +31,10 @@ import { registerProjection } from '../projections/registry.js';
 
 /**
  * Handle marketplace.cart.created event
- * 
+ *
  * Creates initial projection entry with zero counts.
  */
-async function handleCartCreated(
-  db: DbClient,
-  event: EventEnvelope
-): Promise<ProjectionResult> {
+async function handleCartCreated(db: DbClient, event: EventEnvelope): Promise<ProjectionResult> {
   const projectionName = 'marketplace_cart_summary';
 
   try {
@@ -52,9 +49,19 @@ async function handleCartCreated(
       };
     }
 
-    // Extract cart data from payload
-    const cartId = event.payload.cartId || event.entity.id;
-    const userId = event.payload.userId;
+    // Extract cart data from payload (type-safe access)
+    if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) {
+      return {
+        success: false,
+        eventId: event.id,
+        eventName: event.name,
+        projectionName,
+        error: 'Invalid payload: expected object',
+      };
+    }
+    const payload = event.payload as Record<string, unknown>;
+    const cartId = (payload.cartId as string) || event.entity.id;
+    const userId = payload.userId as string;
 
     if (!cartId || !userId) {
       return {
@@ -130,7 +137,7 @@ async function handleCartCreated(
 
 /**
  * Handle cart item mutation events
- * 
+ *
  * Recalculates item_count and total_quantity from current cart state.
  * Handles: item.added, item.updated, item.removed
  */
@@ -152,8 +159,18 @@ async function handleCartItemMutation(
       };
     }
 
-    // Extract cart ID
-    const cartId = event.payload.cartId || event.entity.id;
+    // Extract cart ID (type-safe access)
+    if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) {
+      return {
+        success: false,
+        eventId: event.id,
+        eventName: event.name,
+        projectionName,
+        error: 'Invalid payload: expected object',
+      };
+    }
+    const payload = event.payload as Record<string, unknown>;
+    const cartId = (payload.cartId as string) || event.entity.id;
 
     if (!cartId) {
       return {
@@ -173,9 +190,19 @@ async function handleCartItemMutation(
 
     if (!existing) {
       // Projection doesn't exist - item event arrived before cart.created
-      // Create minimal projection from event data
-      const userId = event.payload.userId || event.actor.id;
-      
+      // Create minimal projection from event data (type-safe access)
+      if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) {
+        return {
+          success: false,
+          eventId: event.id,
+          eventName: event.name,
+          projectionName,
+          error: 'Invalid payload: expected object',
+        };
+      }
+      const itemPayload = event.payload as Record<string, unknown>;
+      const userId = (itemPayload.userId as string) || event.actor.id;
+
       if (!userId) {
         return {
           success: false,
@@ -188,7 +215,7 @@ async function handleCartItemMutation(
 
       // Query cart items to get counts
       const items = await db.cartItem.findMany({
-        where: { 
+        where: {
           cartId,
           cart: { tenantId: event.tenantId }, // Enforce tenant isolation
         },
@@ -244,7 +271,7 @@ async function handleCartItemMutation(
 
     // Query current cart items to recalculate counts
     const items = await db.cartItem.findMany({
-      where: { 
+      where: {
         cartId,
         cart: { tenantId: event.tenantId }, // Enforce tenant isolation
       },
@@ -256,7 +283,7 @@ async function handleCartItemMutation(
 
     // Update projection with optimistic locking
     await db.marketplaceCartSummary.update({
-      where: { 
+      where: {
         id: existing.id,
         version: existing.version, // Optimistic lock
       },
@@ -288,14 +315,11 @@ async function handleCartItemMutation(
 
 /**
  * Handle marketplace.cart.checked_out event (future-safe)
- * 
+ *
  * Currently no additional action beyond item mutation logic.
  * Future: Could update status or archive projection.
  */
-async function handleCartCheckedOut(
-  db: DbClient,
-  event: EventEnvelope
-): Promise<ProjectionResult> {
+async function handleCartCheckedOut(db: DbClient, event: EventEnvelope): Promise<ProjectionResult> {
   // For now, treat as item mutation (recalculate counts)
   // Future: Add status field or archive logic
   return handleCartItemMutation(db, event);
@@ -312,15 +336,15 @@ const marketplaceCartProjectionHandler: ProjectionHandler = async (
   switch (event.name) {
     case 'marketplace.cart.created':
       return handleCartCreated(db, event);
-    
+
     case 'marketplace.cart.item.added':
     case 'marketplace.cart.item.updated':
     case 'marketplace.cart.item.removed':
       return handleCartItemMutation(db, event);
-    
+
     case 'marketplace.cart.checked_out':
       return handleCartCheckedOut(db, event);
-    
+
     default:
       // Unknown event name - should never happen due to registry filtering
       return {

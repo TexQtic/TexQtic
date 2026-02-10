@@ -297,8 +297,8 @@ function mapEventLogToEnvelope(row: EventLogRow): EventEnvelope {
     realm: row.realm as 'ADMIN' | 'TENANT',
     actor,
     entity,
-    payload: (row.payloadJson as Record<string, unknown>) || {},
-    metadata: (row.metadataJson as Record<string, unknown>) || {},
+    payload: (row.payloadJson as Prisma.JsonObject) ?? {},
+    metadata: (row.metadataJson as Prisma.JsonObject) ?? {},
   };
 
   return envelope;
