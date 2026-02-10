@@ -41,6 +41,74 @@
     },
     "/api/control/audit-logs": {
       "get": { "summary": "List audit logs", "responses": { "200": { "description": "OK" } } }
+    },
+    "/api/control/feature-flags": {
+      "get": {
+        "summary": "List all feature flags",
+        "description": "Admin-only endpoint to retrieve all feature flags",
+        "responses": {
+          "200": {
+            "description": "Feature flags retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "flags": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "key": { "type": "string" },
+                              "enabled": { "type": "boolean" },
+                              "description": { "type": "string" },
+                              "createdAt": { "type": "string", "format": "date-time" },
+                              "updatedAt": { "type": "string", "format": "date-time" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/control/feature-flags/{key}": {
+      "put": {
+        "summary": "Upsert a feature flag",
+        "description": "Admin-only endpoint to create or update a feature flag. Wave 5A implementation.",
+        "parameters": [
+          { "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["enabled"],
+                "properties": {
+                  "enabled": { "type": "boolean" },
+                  "description": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feature flag upserted successfully"
+          }
+        }
+      }
     }
   }
 }

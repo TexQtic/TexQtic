@@ -4,6 +4,7 @@ import { adminAuthMiddleware } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
 import { withDbContext } from '../db/withDbContext.js';
 import { prisma } from '../db/prisma.js';
+import { writeAuditLog, createAdminAudit } from '../lib/auditLog.js';
 
 const controlRoutes: FastifyPluginAsync = async fastify => {
   // All control routes require admin auth
@@ -115,6 +116,70 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     });
 
     return sendSuccess(reply, { flags });
+  });
+
+  /**
+   * PUT /api/control/feature-flags/:key
+   * Upsert a feature flag (admin only)
+   * Wave 5A: Stateful mutation using existing FeatureFlag model
+   */
+  fastify.put('/feature-flags/:key', async (request, reply) => {
+    try {
+      const { key } = request.params as { key: string };
+
+      const bodySchema = z.object({
+        enabled: z.boolean(),
+        description: z.string().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { enabled, description } = parseResult.data;
+
+      // Get existing flag for audit trail
+      const existingFlag = await prisma.featureFlag.findUnique({
+        where: { key },
+      });
+
+      // Upsert the feature flag
+      const flag = await prisma.featureFlag.upsert({
+        where: { key },
+        create: {
+          key,
+          enabled,
+          description,
+        },
+        update: {
+          enabled,
+          ...(description !== undefined && { description }),
+        },
+      });
+
+      // Write audit log
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(
+          request.adminId!,
+          existingFlag ? 'control.feature_flag.updated' : 'control.feature_flag.created',
+          'feature_flag',
+          {
+            key,
+            enabled,
+            description,
+            beforeEnabled: existingFlag?.enabled,
+            afterEnabled: flag.enabled,
+          }
+        )
+      );
+
+      return sendSuccess(reply, { flag });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Feature Flag Upsert] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Feature flag upsert failed', 500);
+    }
   });
 
   /**

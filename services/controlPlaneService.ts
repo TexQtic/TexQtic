@@ -8,7 +8,7 @@
  * Wave 4 Scope: Admin tenant provisioning added
  */
 
-import { get, post } from './apiClient';
+import { get, post, put } from './apiClient';
 
 // ==================== TENANT MANAGEMENT ====================
 
@@ -311,4 +311,45 @@ export async function provisionTenant(
   request: ProvisionTenantRequest
 ): Promise<ProvisionTenantResponse> {
   return post<ProvisionTenantResponse>('/api/control/tenants/provision', request);
+}
+
+// ==================== FEATURE FLAGS ====================
+
+export interface FeatureFlag {
+  key: string;
+  enabled: boolean;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeatureFlagsResponse {
+  flags: FeatureFlag[];
+}
+
+export interface UpsertFeatureFlagRequest {
+  enabled: boolean;
+  description?: string;
+}
+
+export interface UpsertFeatureFlagResponse {
+  flag: FeatureFlag;
+}
+
+/**
+ * Fetch all feature flags (admin only)
+ */
+export async function getFeatureFlags(): Promise<FeatureFlagsResponse> {
+  return get<FeatureFlagsResponse>('/api/control/feature-flags');
+}
+
+/**
+ * Upsert a feature flag (admin only)
+ * Wave 5A: Stateful mutation using existing FeatureFlag model
+ */
+export async function upsertFeatureFlag(
+  key: string,
+  request: UpsertFeatureFlagRequest
+): Promise<UpsertFeatureFlagResponse> {
+  return put<UpsertFeatureFlagResponse>(`/api/control/feature-flags/${key}`, request);
 }
