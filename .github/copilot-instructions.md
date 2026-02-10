@@ -1,409 +1,443 @@
-# GitHub Copilot Governance Instructions
+TEXQTIC — GitHub Copilot Governance Instructions (Safe-Write Always On)
+CRITICAL: You are ALWAYS in “Safe-Write Mode”
 
-## CRITICAL: Pre-Implementation Review Protocol
+If any rule is violated, you MUST STOP and output only the TexQtic Blocker Report.
 
-**BEFORE implementing ANY change, GitHub Copilot MUST:**
+0) Absolute Behavioral Override (NON-NEGOTIABLE)
+SAFE-WRITE MODE — ALWAYS ON
 
-1. ✅ Review this instruction file
-2. ✅ Check applicable governance files
-3. ✅ Validate against guardrails
-4. ✅ Report violations immediately
-5. ✅ Seek clarification if rules are violated
-6. ✅ Only proceed after confirmation
+Allowlist Enforcement: You may edit ONLY files explicitly listed in the prompt’s ALLOWLIST (Modify).
 
----
+No File Creep: You must NOT create new files unless explicitly allowlisted.
 
-## Governance Files (MANDATORY REVIEW)
+No Hidden Fixes: You must NOT “fix environment,” “refactor,” or “clean up” beyond the task.
 
-All governance files are located in `/shared/contracts/` and MUST be reviewed for relevant changes:
+No Command Drift: You must use ONLY the “Approved Commands” in the prompt. No improvisation.
 
-### 1. Database & Schema Changes
+No Secrets: Never print DB URLs, .env contents, passwords, JWTs, API keys, or tokens.
 
-**Files to review:**
+Evidence Protocol: No claim is valid without raw terminal output (as specified).
 
-- [`/shared/contracts/db-naming-rules.md`](../shared/contracts/db-naming-rules.md)
-- [`/shared/contracts/schema-budget.md`](../shared/contracts/schema-budget.md)
-- [`/shared/contracts/rls-policy.md`](../shared/contracts/rls-policy.md)
+Stop-Loss: If blocked, do not guess. Output the Blocker Report and wait.
 
-**When to review:** Any change involving:
+1) TexQtic Repo Reality (Authoritative Context)
+Tech Stack (current)
 
-- Prisma schema modifications
-- Database migrations
-- Table/column naming
-- Enum definitions
-- JSONB fields
+Monorepo: pnpm + Turbo
 
-**Violation detection checklist:**
+Frontend: Next.js 15 / React 19
 
-- [ ] Are table names snake_case and plural?
-- [ ] Are column names snake_case?
-- [ ] Do Prisma models use PascalCase with `@@map()`?
-- [ ] Do Prisma fields use camelCase with `@map()`?
-- [ ] Is schema budget within limits? (Max 15 tables in Phase 2)
-- [ ] Is RLS properly applied for tenant-scoped tables?
-- [ ] Are JSONB fields named with `*_json` suffix?
+Backend: Node 22 LTS preferred (Node 20 LTS acceptable; Node 24+ is NOT allowed unless explicitly approved)
 
-**If violation detected:**
+Backend server: Fastify, typically on http://localhost:3001
 
-```
-🚨 GOVERNANCE VIOLATION DETECTED
+Database: Supabase Postgres + RLS
 
-Violation: [Specific rule violated]
-Location: [File/line]
-Rule: [Reference to governance file]
+ORM: Prisma (repo-pinned; do NOT use global/npx drift)
 
-❌ Implementation STOPPED
+Tooling Rules (critical)
 
-Required action:
-1. Review [governance file]
-2. Adjust approach to comply with: [specific rule]
-3. Confirm adjusted approach before proceeding
+Use pnpm. Avoid npm install unless explicitly instructed.
 
-Suggested fix: [Your recommendation]
-```
+Prisma commands MUST be run via:
 
----
+pnpm -C server exec prisma …
 
-### 2. API & Route Changes
+Do NOT run:
 
-**Files to review:**
+npx prisma …
 
-- [`/shared/contracts/openapi.control-plane.json`](../shared/contracts/openapi.control-plane.json)
-- [`/shared/contracts/openapi.tenant.json`](../shared/contracts/openapi.tenant.json)
+prisma db pull / db push / migrate dev
+unless the prompt explicitly allows it.
 
-**When to review:** Any change involving:
+1A) DATABASE AUTHORITY & URL GOVERNANCE (MANDATORY)
 
-- New API endpoints
-- Route modifications
-- Request/response schemas
-- Authentication/authorization
+Canonical Database Definition
 
-**Violation detection checklist:**
+TexQtic uses Supabase-hosted PostgreSQL as the single source of truth.
 
-- [ ] Does endpoint belong to correct plane (control/tenant)?
-- [ ] Is endpoint documented in OpenAPI spec?
-- [ ] Does tenant plane properly isolate tenants?
-- [ ] Are admin endpoints properly secured?
+Copilot MUST assume:
 
-**If violation detected:**
+✅ Remote Supabase Postgres is authoritative
 
-```
-🚨 API GOVERNANCE VIOLATION
+❌ Local Postgres is NEVER authoritative
 
-Violation: [Endpoint/route issue]
-Expected plane: [control/tenant]
-Rule: [Reference to governance file]
+❌ Prisma migrations are NEVER auto-applied without explicit approval
 
-❌ Implementation STOPPED
+DATABASE_URL CLASSES (CRITICAL DISTINCTION)
 
-Required action:
-1. Clarify which plane this endpoint belongs to
-2. Ensure proper tenant isolation
-3. Update OpenAPI spec if new endpoint
-```
+Copilot MUST understand and respect the following URL roles:
 
----
+1️⃣ DATABASE_URL — MIGRATION / RLS / SQL AUTHORITY
 
-### 3. Event System Changes
+Used ONLY for:
 
-**Files to review:**
+psql -f prisma/*.sql
 
-- [`/shared/contracts/event-names.md`](../shared/contracts/event-names.md)
+Applying RLS policies
 
-**When to review:** Any change involving:
+Manual SQL inspection
 
-- Event emission
-- Event handlers
-- Event naming
-- Pub/sub systems
+Prisma db pull (schema introspection)
 
-**Violation detection checklist:**
+📌 Points to Supabase pooler (transaction or session)
+📌 Must include sslmode=require
 
-- [ ] Are events domain-prefixed? (tenant._, admin._, audit._, ai._)
-- [ ] Are event names snake_case?
-- [ ] Is event naming approved by Team A?
-- [ ] No UI-invented event names?
+🚨 Copilot Rules
 
-**If violation detected:**
+MUST NOT print this URL
 
-```
-🚨 EVENT NAMING VIOLATION
+MUST NOT rewrite this URL
 
-Violation: Event name doesn't follow convention
-Event: [Event name]
-Expected format: domain.action (snake_case)
+MUST NOT assume it points to localhost
 
-❌ Implementation STOPPED
+MUST NOT attempt to "fix" it
 
-Required action:
-1. Use approved event names from /shared/contracts/event-names.md
-2. If new event needed, prefix with domain (tenant.*, admin.*, etc.)
-3. Get Team A approval for new event names
-```
+2️⃣ DIRECT_DATABASE_URL — PRISMA MIGRATION ENGINE ONLY
 
----
+Used ONLY for:
 
-### 4. Architecture & Domain Changes
+prisma migrate deploy
 
-**Files to review:**
+prisma migrate resolve
 
-- [`/shared/contracts/ARCHITECTURE-GOVERNANCE.md`](../shared/contracts/ARCHITECTURE-GOVERNANCE.md)
+Long-running DDL operations
 
-**When to review:** Any change involving:
+📌 Direct connection (NOT pooler)
+📌 Used only when explicitly instructed
 
-- New tables
-- New routes
-- Domain logic changes
-- Plane boundaries
+🚨 Copilot Rules
 
-**Violation detection checklist:**
+NEVER invent this variable
 
-- [ ] Is domain owner declared? (control/tenant/domain-name)
-- [ ] Is plane declared? (control-plane/tenant-plane)
-- [ ] Is lifecycle declared? (create/update/archive)
-- [ ] No business-domain tables in Phase 2?
-- [ ] Proper plane separation maintained?
+NEVER switch Prisma to use it implicitly
 
-**If violation detected:**
+If missing → BLOCK and report
 
-```
-🚨 ARCHITECTURE GOVERNANCE VIOLATION
+3️⃣ SHADOW_DATABASE_URL — FORBIDDEN BY DEFAULT
 
-Violation: [Architecture rule violated]
-Component: [Table/route/module]
-Missing: [Domain owner/plane/lifecycle]
+❌ No shadow DB in TexQtic Phase 2
 
-❌ Implementation STOPPED
+❌ Copilot must not enable or reference it
 
-Required action:
-1. Declare domain owner
-2. Declare plane (control/tenant)
-3. Declare lifecycle
-4. Verify no business-domain tables in Phase 2
-```
+If Prisma demands it → STOP
 
----
+PRISMA EXECUTION RULES (NON-NEGOTIABLE)
 
-## Phase 2 Constraints (ENFORCED)
+Prisma Command Matrix
 
-### Absolute Prohibitions
+Command	Allowed	Conditions
+prisma db pull	✅	After SQL applied
+prisma generate	✅	After schema confirmed
+prisma migrate dev	❌	NEVER
+prisma migrate deploy	⚠️	ONLY with explicit approval
+prisma db push	❌	NEVER
+prisma studio	⚠️	Read-only inspection only
 
-❌ **STOP implementation if any of these are detected:**
+REQUIRED EXECUTION SEQUENCE (WHEN SQL IS INVOLVED)
 
-1. **Business-domain tables** (no invoices, contracts, negotiations in Phase 2)
-2. **Workflow-history tables** (state machines, process logs)
-3. **More than 15 total tables**
-4. **Multiple Prisma schema files**
-5. **Direct `@google/genai` calls from frontend** (must use server proxy)
-6. **Tenant ID from client input** (must use session/auth)
-7. **CamelCase table/column names in database**
-8. **Secrets in code** (.env files, API keys)
+Copilot MUST follow this exact order and STOP if interrupted:
 
-### Required Declarations
+1. Apply SQL manually via psql using DATABASE_URL
+2. Verify SQL success (no ERROR / ROLLBACK)
+3. Run: prisma db pull
+4. Run: prisma generate
+5. Restart server
 
-✅ **Every new component must declare:**
+🚨 Any deviation → STOP
 
-- Domain owner
-- Plane (control/tenant)
-- Lifecycle stage
-- RLS requirement (if applicable)
+ABSOLUTE PROHIBITIONS
 
----
+Copilot MUST NOT:
 
-## Implementation Workflow
+❌ Auto-apply Prisma migrations
 
-### Step 1: Pre-Flight Check
+❌ Infer database topology
 
-```
-Before implementing [change description]:
+❌ Switch database URLs
 
-1. Identify affected systems:
-   - [ ] Database/Prisma: Review db-naming-rules.md, schema-budget.md, rls-policy.md
-   - [ ] API endpoints: Review openapi.control-plane.json, openapi.tenant.json
-   - [ ] Events: Review event-names.md
-   - [ ] Architecture: Review ARCHITECTURE-GOVERNANCE.md
+❌ Retry SQL execution with guessed flags
 
-2. Check Phase 2 constraints:
-   - [ ] No business-domain tables
-   - [ ] Schema budget within limits (≤15 tables)
-   - [ ] Proper plane separation
+❌ Create helper scripts for DB access
 
-3. Validate naming conventions:
-   - [ ] snake_case for DB
-   - [ ] camelCase for code
-   - [ ] Proper Prisma mapping
-```
+❌ Modify .env files
 
-### Step 2: Violation Detection
+❌ Log or echo connection strings
 
-```
-If ANY rule is violated:
+REQUIRED FAILURE MODE — DATABASE BLOCKER REPORT
 
-1. STOP implementation immediately
-2. Report violation using template above
-3. Suggest compliant alternative
-4. Wait for user confirmation
-5. Only proceed after explicit approval
-```
+If any of the following occur, Copilot MUST STOP and emit a blocker report:
 
-### Step 3: Implementation
+DATABASE_URL missing
 
-```
-After governance approval:
+SSL error
 
-1. Implement changes following approved approach
-2. Include governance checklist in commit message
-3. Reference governance files in PR description
-```
+Prisma asks for shadow DB
 
----
+Migration requires schema change
 
-## Commit Message Format
+RLS policy affects write path
 
-All commits MUST include governance checklist:
+Pooler connection rejects DDL
 
-```
-<type>: <description>
+Prisma reports timeout or deadlock
 
-Governance Review:
-- [x] DB naming rules: PASS/FAIL/N/A
-- [x] Schema budget: PASS/FAIL/N/A (X/15 tables)
-- [x] RLS policy: PASS/FAIL/N/A
-- [x] API contracts: PASS/FAIL/N/A
-- [x] Event naming: PASS/FAIL/N/A
-- [x] Architecture governance: PASS/FAIL/N/A
-- [x] Phase 2 constraints: PASS
+Mandatory Response Format
 
-Domain: [control/tenant/domain-name]
-Plane: [control-plane/tenant-plane/N/A]
-```
+🛑 DATABASE EXECUTION BLOCKER
 
----
+Task:
+[Task ID]
 
-## Example: Governance Check in Action
+Blocker Type:
+(Database URL / Prisma Migration / RLS Policy / Permission / Pooler Limitation)
 
-### Scenario: User asks to add a `contracts` table
+Evidence:
+- Command:
+- Error:
+- Affected table/policy:
 
-**Copilot Response:**
+Required User Action:
+- [Explicit approval OR clarification]
 
-```
-🚨 GOVERNANCE VIOLATION DETECTED
+No further actions taken.
 
-Violation: Business-domain table in Phase 2
-Request: Add 'contracts' table
-Rule: ARCHITECTURE-GOVERNANCE.md - "No business-domain tables allowed in Phase 2"
+COPILOT BEHAVIORAL OVERRIDE (ADD THIS VERBATIM)
 
-❌ Implementation STOPPED
+STRICT DATABASE MODE ENABLED.
+You are forbidden from modifying database configuration, Prisma migration state,
+or connection URLs unless explicitly instructed.
 
-Analysis:
-- 'contracts' is a business-domain table
-- Phase 2 is limited to control plane and tenant plane foundations
-- Business domain tables are planned for Phase 3+
+If a database action requires inference, retries, or alternative execution paths,
+you must STOP and emit a Database Execution Blocker report.
 
-Required action:
-Please confirm: Should this be deferred to Phase 3, or is there a different
-approach that fits within Phase 2 constraints?
+2) Pre-Implementation Protocol (MANDATORY)
 
-Alternative suggestions:
-1. Use JSONB field in existing table if extremely necessary
-2. Defer to Phase 3 roadmap
-3. Clarify if this is actually a control/tenant plane component
-```
+Before implementing ANY change, you MUST:
 
----
+A) Read & confirm constraints
 
-## Example: Compliant Implementation
+Re-read this file (copilot-instructions.md)
 
-### Scenario: User asks to add `tenant_domains` table
+Identify the prompt’s:
 
-**Copilot Response:**
+Objective
 
-```
-✅ GOVERNANCE PRE-FLIGHT CHECK
+Allowlist (Modify + Read-only)
 
-Request: Add 'tenant_domains' table
-Governance files reviewed:
-- db-naming-rules.md: ✅ PASS (snake_case, plural)
-- schema-budget.md: ✅ PASS (13/15 tables)
-- rls-policy.md: ✅ PASS (tenant-scoped, RLS required)
-- ARCHITECTURE-GOVERNANCE.md: ✅ PASS (tenant plane, clear ownership)
+Forbidden actions
 
-Domain: tenant
-Plane: tenant-plane
-RLS: Required (tenant isolation)
+Approved command set
 
-Proceeding with implementation...
-```
+Stop conditions
 
----
+Verification evidence required
 
-## Special Cases
+B) Repo safety preflight (MUST RUN)
 
-### Frontend Changes
+Run exactly:
 
-- ✅ UI components: No backend governance needed
-- ⚠️ API calls: Must use server proxy (no direct Google AI calls)
-- ⚠️ State management: Check event naming if emitting events
+git diff --name-only
+git status --short
 
-### Backend Changes
 
-- ⚠️ Always requires full governance review
-- ⚠️ Database changes: db-naming-rules.md + schema-budget.md + rls-policy.md
-- ⚠️ API changes: OpenAPI specs + plane separation
+If ANY unexpected file is modified, STOP and report.
 
-### Migration Changes
+C) Staging safety rule (prevents “accidental commit creep”)
 
-- ⚠️ Always requires governance review
-- ⚠️ Immutable once merged
-- ⚠️ Breaking changes require backward compatibility
+Before ANY commit:
 
----
+You MUST run:
 
-## Escalation Rules
+git status --short
 
-**When to escalate to Team A:**
+You MUST ensure staged files contain ONLY allowlisted files.
 
-1. Governance rules conflict with requirements
-2. Unclear which plane a component belongs to
-3. New event names needed
-4. Schema budget exceeded (>15 tables)
-5. Business domain table needed in Phase 2
+If not, STOP and fix staging (do NOT proceed).
 
-**Escalation format:**
+3) Secrets & Redaction (ZERO TOLERANCE)
+Forbidden to print (ever)
 
-```
-🔺 ESCALATION REQUIRED
+.env contents (any line)
 
-Issue: [Description]
-Affected governance: [File(s)]
-Conflict: [Specific conflict]
+DB URLs / connection strings (including partial)
 
-Recommendation: [Your suggestion]
+Passwords
 
-Awaiting Team A decision before proceeding.
-```
+JWTs or tokens (including first N chars)
 
----
+API keys
 
-## Governance Update Process
+Allowed
 
-If governance files need updates:
+“Loaded DATABASE_URL (redacted)” (no characters shown)
 
-1. ⚠️ Changes to `/shared/contracts/` require Team A approval
-2. ⚠️ Document reason for change
-3. ⚠️ Update this instruction file if workflow changes
-4. ⚠️ Notify all developers of governance changes
+HTTP status codes and non-secret response fields
 
----
+For token verification: show presence only:
 
-## Final Reminder
+token: "<REDACTED>" (no length, no prefix)
 
-**🚨 EVERY IMPLEMENTATION MUST:**
+If any secret is printed, STOP immediately and output the Blocker Report noting a Secrets Leak.
 
-1. Review applicable governance files FIRST
-2. Validate against Phase 2 constraints
-3. Report violations IMMEDIATELY
-4. Seek clarification BEFORE proceeding
-5. Document governance compliance in commits
+4) Governance Files (MANDATORY REVIEW — Only if applicable)
 
-**No exceptions. No shortcuts. Governance is non-negotiable.**
+Governance files are located in /shared/contracts/.
+Only review the ones relevant to the prompt scope.
+
+Database & Schema Changes
+
+Review:
+
+/shared/contracts/db-naming-rules.md
+
+/shared/contracts/schema-budget.md
+
+/shared/contracts/rls-policy.md
+
+Applies if modifying:
+
+server/prisma/schema.prisma
+
+SQL migration files
+
+RLS policy files
+
+table/column naming, enums, JSONB
+
+API & Routes
+
+Review:
+
+/shared/contracts/openapi.control-plane.json
+
+/shared/contracts/openapi.tenant.json
+
+Applies if modifying:
+
+server routes
+
+request/response schema
+
+auth middleware
+
+plane boundaries
+
+Event System
+
+Review:
+
+/shared/contracts/event-names.md
+
+Applies if modifying:
+
+event emission/handlers
+
+projection pipelines
+
+pub/sub topics
+
+Architecture & Domains
+
+Review:
+
+/shared/contracts/ARCHITECTURE-GOVERNANCE.md
+
+Applies if adding:
+tables/routes/domains
+control/tenant plane boundaries
+
+5) TexQtic Doctrine v1.4 Execution Rules (KEY)
+Atomic Commit Rule
+
+One prompt = one atomic commit (unless the prompt explicitly allows multiple commits).
+No mixing “fix + feature” in the same commit.
+
+Minimal Diff Discipline
+
+Make the smallest change that satisfies the success criteria.
+No refactors, no formatting churn, no “cleanup.”
+No “Optimism Claims”
+Do not say “works” unless verification outputs are pasted.
+
+6) Verification & Evidence Protocol (MUST FOLLOW)
+
+Each prompt will specify evidence requirements.
+If not specified, default minimum:
+
+Preflight:
+git diff --name-only
+git status --short
+
+Implementation gate:
+
+git diff --name-only (must show only allowlisted files)
+Runtime proof (as required):
+server start line OR health check output
+curl -i outputs (with secrets redacted)
+
+Commit gate:
+
+git status --short showing staged files
+git show --stat HEAD
+
+If any proof cannot be produced, STOP and output Blocker Report.
+
+7) Stop-Loss Protocol (When to STOP)
+
+You MUST STOP immediately if:
+
+A required file is not in allowlist
+A required dependency/package is missing
+A command outside “Approved Commands” is required
+An endpoint contract is ambiguous
+Any output would reveal secrets
+You would need a second hypothesis / “try another approach”
+You feel tempted to refactor to “make it cleaner”
+When blocked: output the Blocker Report only.
+
+8) TexQtic Blocker Report Template (MANDATORY)
+
+🛑 TEXQTIC EXECUTION BLOCKER DETECTED
+Task ID: <prompt-id>
+Status: Execution Halted
+
+1) Blocker
+
+Type: (Out-of-Scope File / Missing Dependency / Spec Ambiguity / Env Mismatch / Secrets Risk / Governance Conflict)
+Description: (precise, short)
+
+2) Technical Evidence
+
+Command run: <exact command>
+Observed output: <key lines only>
+Location: <file:line OR endpoint>
+
+3) Allowed Options Within Current Scope
+
+Option A: <within allowlist>
+Option B: <within allowlist>
+If none: No alternative within current constraints
+
+4) Required User Decision
+
+Choose exactly one:
+Expand allowlist: <files>
+Approve dependency install: <package>
+Clarify spec: <question>
+Waiting for instruction.
+
+9) Commit Message Requirements (TexQtic)
+
+Commit message must be prompt-scoped and atomic:
+prompt-<id> <short description>
+Optional footer (only if asked):
+Governance review: PASS/FAIL/N/A lines
+
+10) TexQtic-Specific “Never Again” Rules (from incident history)
+
+Never embed DB URLs in psql commands in chat logs.
+Never use npx prisma if repo Prisma exists; use pnpm -C server exec prisma.
+Never create “temporary scripts” unless explicitly allowlisted.
+Never modify more than allowlisted files—even for “small fixes.”
+Never commit with pre-staged files; always verify staged set first.
