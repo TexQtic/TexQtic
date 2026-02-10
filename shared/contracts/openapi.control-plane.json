@@ -1,9 +1,49 @@
 {
   "openapi": "3.0.3",
-  "info": { "title": "TexQtic Control Plane API", "version": "0.2.0" },
+  "info": {
+    "title": "TexQtic Control Plane API",
+    "version": "0.3.0",
+    "description": "Admin-facing control plane API for TexQtic multi-tenant SaaS platform. All endpoints require admin JWT authentication."
+  },
+  "servers": [
+    { "url": "http://localhost:3001", "description": "Local development" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "adminJwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Admin JWT token obtained from /api/auth/admin/login"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "enum": [false] },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "adminJwt": [] }],
   "paths": {
     "/api/control/tenants": {
-      "get": { "summary": "List tenants", "responses": { "200": { "description": "OK" } } }
+      "get": {
+        "summary": "List all tenants",
+        "description": "Returns all tenants with membership counts and related data",
+        "responses": {
+          "200": { "description": "Tenants retrieved successfully" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
     },
     "/api/control/tenants/provision": {
       "post": {
@@ -27,20 +67,62 @@
             }
           }
         },
-        "responses": { "200": { "description": "Tenant provisioned successfully" } }
+        "responses": {
+          "200": { "description": "Tenant provisioned successfully" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Provisioning failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
       }
     },
     "/api/control/tenants/{id}": {
       "get": {
         "summary": "Get tenant details",
+        "description": "Returns detailed tenant information including memberships, domains, branding, and AI budget",
         "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "Tenant ID" }
         ],
-        "responses": { "200": { "description": "OK" } }
+        "responses": {
+          "200": { "description": "Tenant details retrieved" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Tenant not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
       }
     },
     "/api/control/audit-logs": {
-      "get": { "summary": "List audit logs", "responses": { "200": { "description": "OK" } } }
+      "get": {
+        "summary": "List all audit logs",
+        "description": "Returns audit logs across all tenants or filtered by tenant/action. Admin-only.",
+        "parameters": [
+          { "name": "tenantId", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Filter by tenant ID" },
+          { "name": "action", "in": "query", "schema": { "type": "string" }, "description": "Filter by action" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 }, "description": "Results limit" }
+        ],
+        "responses": {
+          "200": { "description": "Audit logs retrieved" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/control/events": {
+      "get": {
+        "summary": "List immutable event logs",
+        "description": "Query event log backbone with filtering and cursor pagination. Doctrine v1.4 event read surface.",
+        "parameters": [
+          { "name": "tenant_id", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Filter by tenant ID" },
+          { "name": "event_name", "in": "query", "schema": { "type": "string", "maxLength": 100 }, "description": "Filter by event name" },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "Filter events after this timestamp" },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "Filter events before this timestamp" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 }, "description": "Results per page" },
+          { "name": "cursor", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Pagination cursor (event ID)" }
+        ],
+        "responses": {
+          "200": { "description": "Events retrieved with nextCursor" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Query failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
     },
     "/api/control/feature-flags": {
       "get": {
@@ -77,7 +159,8 @@
                 }
               }
             }
-          }
+          },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -104,9 +187,44 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Feature flag upserted successfully"
-          }
+          "200": { "description": "Feature flag upserted successfully" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Upsert failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/control/marketplace/cart-summaries": {
+      "get": {
+        "summary": "List marketplace cart summaries",
+        "description": "Read-only projection of cart summaries with filtering and pagination. Admin-only cross-tenant visibility.",
+        "parameters": [
+          { "name": "tenant_id", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Filter by tenant ID (omit to see all tenants)" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 }, "description": "Results per page" },
+          { "name": "cursor", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Pagination cursor (cart summary ID)" },
+          { "name": "updated_after", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "Filter by last_updated_at >= ISO date" }
+        ],
+        "responses": {
+          "200": { "description": "Cart summaries retrieved with pagination metadata" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Fetch failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/control/marketplace/cart-summaries/{cart_id}": {
+      "get": {
+        "summary": "Get cart summary by cart ID",
+        "description": "Retrieve a single cart summary from the projection table. Admin bypasses tenant isolation.",
+        "parameters": [
+          { "name": "cart_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" }, "description": "Cart ID" }
+        ],
+        "responses": {
+          "200": { "description": "Cart summary retrieved" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Cart summary not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Fetch failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -115,13 +233,8 @@
         "summary": "Approve payout (admin only)",
         "description": "Wave 5B: Record admin approval decision as immutable event (no payout execution).",
         "parameters": [
-          { "name": "payout_id", "in": "path", "required": true, "schema": { "type": "string" } },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "payout_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -136,8 +249,11 @@
           }
         },
         "responses": {
-          "201": { "description": "Approval recorded" },
-          "200": { "description": "Idempotent replay" }
+          "201": { "description": "Approval recorded (new event)" },
+          "200": { "description": "Idempotent replay (existing event returned)" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error (missing Idempotency-Key or invalid body)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Approval failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -146,13 +262,8 @@
         "summary": "Reject payout (admin only)",
         "description": "Wave 5B: Record admin rejection decision as immutable event.",
         "parameters": [
-          { "name": "payout_id", "in": "path", "required": true, "schema": { "type": "string" } },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "payout_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -167,8 +278,11 @@
           }
         },
         "responses": {
-          "201": { "description": "Rejection recorded" },
-          "200": { "description": "Idempotent replay" }
+          "201": { "description": "Rejection recorded (new event)" },
+          "200": { "description": "Idempotent replay (existing event returned)" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error (missing Idempotency-Key or invalid body)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Rejection failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -177,13 +291,8 @@
         "summary": "Approve compliance request (admin only)",
         "description": "Wave 5B: Record admin approval decision as immutable event.",
         "parameters": [
-          { "name": "request_id", "in": "path", "required": true, "schema": { "type": "string" } },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "request_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -199,8 +308,11 @@
           }
         },
         "responses": {
-          "201": { "description": "Approval recorded" },
-          "200": { "description": "Idempotent replay" }
+          "201": { "description": "Approval recorded (new event)" },
+          "200": { "description": "Idempotent replay (existing event returned)" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error (missing Idempotency-Key or invalid body)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Approval failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -209,13 +321,8 @@
         "summary": "Reject compliance request (admin only)",
         "description": "Wave 5B: Record admin rejection decision as immutable event.",
         "parameters": [
-          { "name": "request_id", "in": "path", "required": true, "schema": { "type": "string" } },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "request_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -231,8 +338,11 @@
           }
         },
         "responses": {
-          "201": { "description": "Rejection recorded" },
-          "200": { "description": "Idempotent replay" }
+          "201": { "description": "Rejection recorded (new event)" },
+          "200": { "description": "Idempotent replay (existing event returned)" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error (missing Idempotency-Key or invalid body)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Rejection failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -241,13 +351,8 @@
         "summary": "Resolve dispute (admin only)",
         "description": "Wave 5B: Record admin resolution decision as immutable event.",
         "parameters": [
-          { "name": "dispute_id", "in": "path", "required": true, "schema": { "type": "string" } },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "dispute_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -263,8 +368,11 @@
           }
         },
         "responses": {
-          "201": { "description": "Resolution recorded" },
-          "200": { "description": "Idempotent replay" }
+          "201": { "description": "Resolution recorded (new event)" },
+          "200": { "description": "Idempotent replay (existing event returned)" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error (missing Idempotency-Key or invalid body)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Resolution failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -273,13 +381,8 @@
         "summary": "Escalate dispute (admin only)",
         "description": "Wave 5B: Record admin escalation decision as immutable event.",
         "parameters": [
-          { "name": "dispute_id", "in": "path", "required": true, "schema": { "type": "string" } },
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "dispute_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -295,8 +398,11 @@
           }
         },
         "responses": {
-          "201": { "description": "Escalation recorded" },
-          "200": { "description": "Idempotent replay" }
+          "201": { "description": "Escalation recorded (new event)" },
+          "200": { "description": "Idempotent replay (existing event returned)" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Validation error (missing Idempotency-Key or invalid body)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Escalation failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     }

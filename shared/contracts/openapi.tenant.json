@@ -1,14 +1,135 @@
 {
   "openapi": "3.0.3",
-  "info": { "title": "TexQtic Tenant API", "version": "0.2.0" },
+  "info": {
+    "title": "TexQtic Tenant API",
+    "version": "0.3.0",
+    "description": "Tenant-facing API surface for TexQtic multi-tenant SaaS platform. Includes auth, catalog, cart, AI, and tenant management."
+  },
+  "servers": [{ "url": "http://localhost:3001", "description": "Local development" }],
+  "components": {
+    "securitySchemes": {
+      "tenantJwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Tenant JWT token obtained from /api/auth/tenant/login or /api/auth/login"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "enum": [false] },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
   "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Unified login (auto-detect admin vs tenant)",
+        "description": "Unified login endpoint. If tenantId provided, attempts tenant login. Otherwise, attempts admin login.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" },
+                  "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Optional tenant ID for tenant login"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Forbidden (no membership or inactive tenant)",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/tenant/login": {
+      "post": {
+        "summary": "Tenant user login",
+        "description": "Login as tenant user. Requires email, password, and tenantId.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "tenantId"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "tenantId": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "No membership for this tenant",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
     "/api/me": {
-      "get": { "summary": "Current user + tenant", "responses": { "200": { "description": "OK" } } }
+      "get": {
+        "summary": "Get current authenticated user + tenant",
+        "description": "Returns current user profile and tenant details",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "User and tenant details retrieved" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
     },
     "/api/tenant/activate": {
       "post": {
         "summary": "User-assisted tenant activation",
-        "description": "Activate a pre-provisioned tenant using an invite token. Users cannot create tenants.",
+        "description": "Activate a pre-provisioned tenant using an invite token. Users cannot create tenants directly.",
         "requestBody": {
           "required": true,
           "content": {
@@ -38,14 +159,58 @@
             }
           }
         },
-        "responses": { "200": { "description": "Tenant activated successfully" } }
+        "responses": {
+          "200": { "description": "Tenant activated successfully" },
+          "404": {
+            "description": "Invite not found or expired",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Email mismatch",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/audit-logs": {
+      "get": {
+        "summary": "Get audit logs for current tenant",
+        "description": "Returns audit logs scoped to the current tenant (last 50 entries)",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "Audit logs retrieved" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/tenant/memberships": {
-      "get": { "summary": "List memberships", "responses": { "200": { "description": "OK" } } },
+      "get": {
+        "summary": "List tenant memberships",
+        "description": "Returns all memberships for the current tenant",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "Memberships retrieved" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      },
       "post": {
-        "summary": "Create/invite a new member",
-        "description": "Requires OWNER or ADMIN role",
+        "summary": "Invite a new member",
+        "description": "Create an invite for a new member. Requires OWNER or ADMIN role.",
+        "security": [{ "tenantJwt": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -61,13 +226,28 @@
             }
           }
         },
-        "responses": { "200": { "description": "Member invited successfully" } }
+        "responses": {
+          "200": { "description": "Member invited successfully" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Forbidden (insufficient permissions)",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/tenant/branding": {
       "put": {
         "summary": "Update tenant branding",
-        "description": "Requires OWNER or ADMIN role",
+        "description": "Update tenant branding settings (logo, colors). Requires OWNER or ADMIN role.",
+        "security": [{ "tenantJwt": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -89,19 +269,294 @@
             }
           }
         },
-        "responses": { "200": { "description": "Branding updated successfully" } }
+        "responses": {
+          "200": { "description": "Branding updated successfully" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Forbidden (insufficient permissions)",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/catalog/items": {
+      "get": {
+        "summary": "List catalog items",
+        "description": "List tenant-visible catalog items with optional search and cursor pagination",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Search query (name or SKU)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+            "description": "Results per page"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Pagination cursor (item ID)"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Catalog items retrieved" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/cart": {
+      "post": {
+        "summary": "Create or get active cart",
+        "description": "Idempotent cart creation. Returns existing active cart or creates a new one.",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "201": { "description": "Cart created or retrieved" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get active cart with items",
+        "description": "Returns the current user's active cart with all items",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "Cart retrieved (or null if no active cart)" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/cart/items": {
+      "post": {
+        "summary": "Add item to cart",
+        "description": "Add item to cart or increment quantity if already present",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["catalogItemId", "quantity"],
+                "properties": {
+                  "catalogItemId": { "type": "string", "format": "uuid" },
+                  "quantity": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Item added to cart" },
+          "400": {
+            "description": "Bad request (inactive item)",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Forbidden (item not in tenant)",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Catalog item not found",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/cart/items/{id}": {
+      "patch": {
+        "summary": "Update cart item quantity",
+        "description": "Update cart item quantity (set to 0 to remove)",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Cart item ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["quantity"],
+                "properties": {
+                  "quantity": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cart item updated or removed" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "403": {
+            "description": "Forbidden (not your cart)",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "404": {
+            "description": "Cart item not found",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/ai/insights": {
       "get": {
-        "summary": "Get AI platform insights (server-proxy)",
-        "responses": { "200": { "description": "OK" } }
+        "summary": "Get AI platform insights",
+        "description": "Generate strategic AI insights for the tenant platform. Budget-enforced with metering and audit logging.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "tenantType",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Optional tenant type context"
+          },
+          {
+            "name": "experience",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Optional experience hint"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Insights generated" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Budget exceeded",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "AI service error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/ai/negotiation-advice": {
       "post": {
-        "summary": "Get negotiation advice (server-proxy)",
-        "responses": { "200": { "description": "OK" } }
+        "summary": "Get AI negotiation advice",
+        "description": "Generate negotiation strategy advice. Budget-enforced with metering and audit logging.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productName": { "type": "string" },
+                  "targetPrice": { "type": "number", "minimum": 0 },
+                  "quantity": { "type": "number", "minimum": 0 },
+                  "context": { "type": "string", "maxLength": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Advice generated" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "429": {
+            "description": "Budget exceeded",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "AI service error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai/health": {
+      "get": {
+        "summary": "AI service health check",
+        "description": "Check AI service operational status",
+        "responses": {
+          "200": { "description": "AI service status" }
+        }
       }
     }
   }
