@@ -1,63 +1,4 @@
-import { TenantType, TenantConfig, TenantStatus, ComplianceRequest, PayoutRequest } from './types';
-
-export const PLATFORM_TENANTS: Record<string, TenantConfig> = {
-  'global-aggregator': {
-    id: 't1',
-    slug: 'aggregator',
-    name: 'IndustryConnect Global',
-    type: TenantType.AGGREGATOR,
-    status: TenantStatus.ACTIVE,
-    plan: 'ENTERPRISE',
-    theme: { primaryColor: '#0f172a', secondaryColor: '#3b82f6', logo: '🌐' },
-    features: ['directory', 'leads', 'analytics'],
-    aiBudget: 1000000,
-    aiUsage: 250000,
-    billingStatus: 'CURRENT',
-    riskScore: 12,
-  },
-  'pro-wholesale': {
-    id: 't2',
-    slug: 'b2b-market',
-    name: 'ProSupply B2B',
-    type: TenantType.B2B,
-    status: TenantStatus.ACTIVE,
-    plan: 'PAID',
-    theme: { primaryColor: '#1e293b', secondaryColor: '#10b981', logo: '🏗️' },
-    features: ['bulk-catalog', 'negotiation', 'rfqs'],
-    aiBudget: 500000,
-    aiUsage: 480000,
-    billingStatus: 'CURRENT',
-    riskScore: 24,
-  },
-  'consumer-shop': {
-    id: 't3',
-    slug: 'retail',
-    name: 'DailyEssentials Store',
-    type: TenantType.B2C,
-    status: TenantStatus.TRIAL,
-    plan: 'TRIAL',
-    theme: { primaryColor: '#4f46e5', secondaryColor: '#f43f5e', logo: '🛍️' },
-    features: ['cart', 'reviews', 'returns'],
-    aiBudget: 100000,
-    aiUsage: 12000,
-    billingStatus: 'CURRENT',
-    riskScore: 5,
-  },
-  'boutique-brand': {
-    id: 't4',
-    slug: 'boutique',
-    name: 'LuxeLiving (White-Label)',
-    type: TenantType.WHITE_LABEL,
-    status: TenantStatus.SUSPENDED,
-    plan: 'PAID',
-    theme: { primaryColor: '#78350f', secondaryColor: '#d97706', logo: '✨' },
-    features: ['custom-branding', 'independent-checkout'],
-    aiBudget: 250000,
-    aiUsage: 250000,
-    billingStatus: 'DELINQUENT',
-    riskScore: 88,
-  },
-};
+import { TenantType, TenantConfig, TenantStatus } from './types';
 
 export const EXAMPLE_PRODUCTS = [
   {
@@ -121,48 +62,6 @@ export const AUDIT_LOGS: any[] = [
   },
 ];
 
-export const COMPLIANCE_QUEUE: ComplianceRequest[] = [
-  {
-    id: 'c1',
-    tenantName: 'Industrial Group A',
-    type: 'ISO9001',
-    status: 'PENDING',
-    submittedAt: '2024-05-21 09:00',
-  },
-  {
-    id: 'c2',
-    tenantName: 'SupplyCo Ltd',
-    type: 'BUSINESS_LICENSE',
-    status: 'PENDING',
-    submittedAt: '2024-05-21 10:30',
-  },
-  {
-    id: 'c3',
-    tenantName: 'Global Fabrics',
-    type: 'TAX_ID',
-    status: 'APPROVED',
-    submittedAt: '2024-05-20 11:15',
-  },
-];
-
-export const PAYOUT_QUEUE: PayoutRequest[] = [
-  { id: 'p1', tenantName: 'ProSupply B2B', amount: 14200.5, currency: 'USD', status: 'PENDING' },
-  {
-    id: 'p2',
-    tenantName: 'DailyEssentials',
-    amount: 3100.2,
-    currency: 'USD',
-    status: 'PROCESSING',
-  },
-];
-
-export const SYSTEM_HEALTH = [
-  { service: 'Identity API', status: 'UP', latency: '42ms' },
-  { service: 'Catalog Engine', status: 'UP', latency: '115ms' },
-  { service: 'Commerce Bus', status: 'UP', latency: '88ms' },
-  { service: 'AI Gateway', status: 'DEGRADED', latency: '1400ms' },
-];
-
 export const FEATURE_FLAGS = [
   {
     id: 'ff1',
@@ -191,25 +90,6 @@ export const FEATURE_FLAGS = [
     description: 'Allow CNAME mapping for white-label tenants.',
     global: true,
     status: 'PRODUCTION',
-  },
-];
-
-export const DISPUTE_CASES = [
-  {
-    id: 'd1',
-    tenantName: 'LuxeLiving',
-    counterparty: 'Supplier A',
-    reason: 'Non-delivery of high-value goods.',
-    priority: 'HIGH',
-    status: 'OPEN',
-  },
-  {
-    id: 'd2',
-    tenantName: 'ProSupply B2B',
-    counterparty: 'Logistics X',
-    reason: 'Damaged shipment (Freight).',
-    priority: 'MEDIUM',
-    status: 'UNDER_REVIEW',
   },
 ];
 

@@ -272,6 +272,154 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
+   * GET /api/control/finance/payouts
+   * List finance payout authority intents (admin only)
+   * Backed by EventLog - returns payout-related authority decisions
+   */
+  fastify.get('/finance/payouts', async (_request, reply) => {
+    try {
+      const payoutEvents = await withDbContext({ isAdmin: true }, async () => {
+        return await prisma.eventLog.findMany({
+          where: {
+            name: {
+              startsWith: 'finance.payout.',
+            },
+          },
+          orderBy: { occurredAt: 'desc' },
+          take: 100,
+        });
+      });
+
+      // Map events to payout-like shape
+      const payouts = payoutEvents.map(event => ({
+        id: event.entityId,
+        eventId: event.id,
+        status: event.name.includes('approved') ? 'APPROVED' : 'REJECTED',
+        decision: event.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
+        decidedAt: event.occurredAt.toISOString(),
+        decidedBy: event.actorId,
+        reason: (event.payloadJson as any)?.reason || null,
+        metadata: event.metadataJson,
+      }));
+
+      return sendSuccess(reply, { payouts });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Finance Payouts List] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch payouts', 500);
+    }
+  });
+
+  /**
+   * GET /api/control/compliance/requests
+   * List compliance request authority intents (admin only)
+   * Backed by EventLog - returns compliance-related authority decisions
+   */
+  fastify.get('/compliance/requests', async (_request, reply) => {
+    try {
+      const complianceEvents = await withDbContext({ isAdmin: true }, async () => {
+        return await prisma.eventLog.findMany({
+          where: {
+            name: {
+              startsWith: 'compliance.request.',
+            },
+          },
+          orderBy: { occurredAt: 'desc' },
+          take: 100,
+        });
+      });
+
+      // Map events to compliance request shape
+      const requests = complianceEvents.map(event => ({
+        id: event.entityId,
+        eventId: event.id,
+        status: event.name.includes('approved') ? 'APPROVED' : 'REJECTED',
+        decision: event.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
+        decidedAt: event.occurredAt.toISOString(),
+        decidedBy: event.actorId,
+        reason: (event.payloadJson as any)?.reason || null,
+        metadata: event.metadataJson,
+      }));
+
+      return sendSuccess(reply, { requests });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Compliance Requests List] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch compliance requests', 500);
+    }
+  });
+
+  /**
+   * GET /api/control/disputes
+   * List dispute authority intents (admin only)
+   * Backed by EventLog - returns dispute-related authority decisions
+   */
+  fastify.get('/disputes', async (_request, reply) => {
+    try {
+      const disputeEvents = await withDbContext({ isAdmin: true }, async () => {
+        return await prisma.eventLog.findMany({
+          where: {
+            name: {
+              startsWith: 'dispute.',
+            },
+          },
+          orderBy: { occurredAt: 'desc' },
+          take: 100,
+        });
+      });
+
+      // Map events to dispute shape
+      const disputes = disputeEvents.map(event => ({
+        id: event.entityId,
+        eventId: event.id,
+        status: event.name.includes('resolved') ? 'RESOLVED' : 'ESCALATED',
+        decision: event.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
+        decidedAt: event.occurredAt.toISOString(),
+        decidedBy: event.actorId,
+        resolution: (event.payloadJson as any)?.resolution || null,
+        notes: (event.payloadJson as any)?.notes || null,
+        metadata: event.metadataJson,
+      }));
+
+      return sendSuccess(reply, { disputes });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Disputes List] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch disputes', 500);
+    }
+  });
+
+  /**
+   * GET /api/control/system/health
+   * System health overview (admin only)
+   * Returns computed health based on available telemetry (minimal implementation)
+   */
+  fastify.get('/system/health', async (_request, reply) => {
+    try {
+      // Compute minimal health from database connectivity
+      const dbHealth = await prisma.$queryRaw<Array<{ result: number }>>`SELECT 1 as result`;
+      const isDbHealthy = dbHealth && dbHealth.length > 0;
+
+      return sendSuccess(reply, {
+        services: [
+          {
+            name: 'Database',
+            status: isDbHealthy ? 'UP' : 'DOWN',
+            lastCheck: new Date().toISOString(),
+          },
+          {
+            name: 'API',
+            status: 'UP',
+            lastCheck: new Date().toISOString(),
+          },
+        ],
+        overall: isDbHealthy ? 'HEALTHY' : 'DEGRADED',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[System Health] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch system health', 500);
+    }
+  });
+
+  /**
    * POST /api/control/tenants/provision
    * Admin-initiated tenant provisioning
    * Creates a tenant with default branding and invited owner

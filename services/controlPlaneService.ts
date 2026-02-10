@@ -353,3 +353,101 @@ export async function upsertFeatureFlag(
 ): Promise<UpsertFeatureFlagResponse> {
   return put<UpsertFeatureFlagResponse>(`/api/control/feature-flags/${key}`, request);
 }
+
+// ==================== FINANCE OPERATIONS ====================
+
+export interface PayoutDecision {
+  id: string;
+  eventId: string;
+  status: string;
+  decision: string;
+  decidedAt: string;
+  decidedBy: string | null;
+  reason: string | null;
+  metadata: Record<string, any> | null;
+}
+
+export interface PayoutsResponse {
+  payouts: PayoutDecision[];
+}
+
+/**
+ * Fetch payout authority intents (admin only)
+ * Backed by EventLog - returns payout-related authority decisions
+ */
+export async function getPayouts(): Promise<PayoutsResponse> {
+  return get<PayoutsResponse>('/api/control/finance/payouts');
+}
+
+// ==================== COMPLIANCE OPERATIONS ====================
+
+export interface ComplianceDecision {
+  id: string;
+  eventId: string;
+  status: string;
+  decision: string;
+  decidedAt: string;
+  decidedBy: string | null;
+  reason: string | null;
+  metadata: Record<string, any> | null;
+}
+
+export interface ComplianceRequestsResponse {
+  requests: ComplianceDecision[];
+}
+
+/**
+ * Fetch compliance request authority intents (admin only)
+ * Backed by EventLog - returns compliance-related authority decisions
+ */
+export async function getComplianceRequests(): Promise<ComplianceRequestsResponse> {
+  return get<ComplianceRequestsResponse>('/api/control/compliance/requests');
+}
+
+// ==================== DISPUTE OPERATIONS ====================
+
+export interface DisputeDecision {
+  id: string;
+  eventId: string;
+  status: string;
+  decision: string;
+  decidedAt: string;
+  decidedBy: string | null;
+  resolution: string | null;
+  notes: string | null;
+  metadata: Record<string, any> | null;
+}
+
+export interface DisputesResponse {
+  disputes: DisputeDecision[];
+}
+
+/**
+ * Fetch dispute authority intents (admin only)
+ * Backed by EventLog - returns dispute-related authority decisions
+ */
+export async function getDisputes(): Promise<DisputesResponse> {
+  return get<DisputesResponse>('/api/control/disputes');
+}
+
+// ==================== SYSTEM HEALTH ====================
+
+export interface HealthService {
+  name: string;
+  status: string;
+  lastCheck: string;
+}
+
+export interface SystemHealthResponse {
+  services: HealthService[];
+  overall: string;
+  timestamp: string;
+}
+
+/**
+ * Fetch system health overview (admin only)
+ * Returns computed health based on available telemetry
+ */
+export async function getSystemHealth(): Promise<SystemHealthResponse> {
+  return get<SystemHealthResponse>('/api/control/system/health');
+}

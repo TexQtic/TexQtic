@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { PLATFORM_TENANTS } from './constants';
 import { TenantType, TenantConfig, ImpersonationState } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell } from './layouts/Shells';
 import { SuperAdminShell, AdminView } from './layouts/SuperAdminShell';
@@ -32,6 +31,7 @@ import { getPlatformInsights } from './services/aiService';
 import { getCatalogItems, CatalogItem } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
+import { getTenants, Tenant } from './services/controlPlaneService';
 
 const App: React.FC = () => {
   // Production-grade State Machine
@@ -49,7 +49,11 @@ const App: React.FC = () => {
   >('AUTH');
   const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
 
-  const [currentTenantKey, setCurrentTenantKey] = useState<string>('global-aggregator');
+  // Tenant management state
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenantsLoading, setTenantsLoading] = useState(false);
+  const [tenantsError, setTenantsError] = useState<string | null>(null);
+  const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
   const [impersonation, setImpersonation] = useState<ImpersonationState>({
     isAdmin: false,
@@ -67,7 +71,52 @@ const App: React.FC = () => {
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [showCart, setShowCart] = useState(false);
 
-  const currentTenant = useMemo(() => PLATFORM_TENANTS[currentTenantKey], [currentTenantKey]);
+  // Fetch tenants from backend (for tenant picker in bottom-right)
+  useEffect(() => {
+    const fetchTenants = async () => {
+      setTenantsLoading(true);
+      setTenantsError(null);
+      try {
+        const response = await getTenants();
+        setTenants(response.tenants);
+        if (response.tenants.length > 0 && !currentTenantId) {
+          setCurrentTenantId(response.tenants[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to load tenants:', error);
+        setTenantsError('Failed to load tenants');
+        setTenants([]);
+      } finally {
+        setTenantsLoading(false);
+      }
+    };
+    fetchTenants();
+  }, []);
+
+  // Convert backend Tenant to TenantConfig for UI compatibility
+  const currentTenant: TenantConfig | null = useMemo(() => {
+    const tenant = tenants.find(t => t.id === currentTenantId);
+    if (!tenant) return null;
+
+    return {
+      id: tenant.id,
+      slug: tenant.slug,
+      name: tenant.name,
+      type: tenant.type as TenantType,
+      status: tenant.status as any,
+      plan: tenant.plan,
+      theme: {
+        primaryColor: tenant.branding?.primaryColor || '#4F46E5',
+        secondaryColor: '#10B981',
+        logo: tenant.branding?.logoUrl || '🏢',
+      },
+      features: [],
+      aiBudget: tenant.aiBudget?.monthlyLimit || 0,
+      aiUsage: 0, // No longer tracked in mock format
+      billingStatus: 'CURRENT',
+      riskScore: 0,
+    };
+  }, [tenants, currentTenantId]);
 
   // Check URL for token-based actions on mount (password reset, email verification)
   useEffect(() => {
@@ -79,7 +128,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (appState === 'EXPERIENCE' || appState === 'SETTINGS') {
+    if ((appState === 'EXPERIENCE' || appState === 'SETTINGS') && currentTenant) {
       const fetchInsight = async () => {
         setAiInsight('Thinking...');
         const insight = await getPlatformInsights(
@@ -121,16 +170,13 @@ const App: React.FC = () => {
   };
 
   const handleImpersonate = (tenant: TenantConfig) => {
-    const key = Object.keys(PLATFORM_TENANTS).find(k => PLATFORM_TENANTS[k].id === tenant.id);
-    if (key) {
-      setCurrentTenantKey(key);
-      setImpersonation({
-        isAdmin: true,
-        targetTenantId: tenant.id,
-        startTime: new Date().toISOString(),
-      });
-      setAppState('EXPERIENCE');
-    }
+    setCurrentTenantId(tenant.id);
+    setImpersonation({
+      isAdmin: true,
+      targetTenantId: tenant.id,
+      startTime: new Date().toISOString(),
+    });
+    setAppState('EXPERIENCE');
   };
 
   const handleExitImpersonation = () => {
@@ -139,6 +185,14 @@ const App: React.FC = () => {
   };
 
   const renderExperienceContent = () => {
+    if (!currentTenant) {
+      return (
+        <div className="p-8 text-center">
+          <p className="text-slate-500">Loading tenant data...</p>
+        </div>
+      );
+    }
+
     if (appState === 'TEAM_MGMT') return <TeamManagement />;
     if (appState === 'INVITE_MEMBER')
       return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;
@@ -601,6 +655,7 @@ const App: React.FC = () => {
   return (
     <div className="relative font-sans">
       {impersonation.isAdmin &&
+        currentTenant &&
         (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS') && (
           <div className="bg-rose-600 text-white px-6 py-2 sticky top-0 z-[100] flex justify-between items-center shadow-lg border-b border-rose-700 animate-in slide-in-from-top duration-300">
             <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-3">
@@ -655,19 +710,19 @@ const App: React.FC = () => {
                   >
                     Blueprint
                   </button>
-                  {!impersonation.isAdmin && (
+                  {!impersonation.isAdmin && tenants.length > 0 && (
                     <select
                       title="tenant-picker"
-                      value={currentTenantKey}
+                      value={currentTenantId}
                       onChange={e => {
-                        setCurrentTenantKey(e.target.value);
+                        setCurrentTenantId(e.target.value);
                         setAppState('EXPERIENCE');
                       }}
                       className="bg-transparent text-[10px] font-bold border-none focus:ring-0 cursor-pointer px-4 uppercase tracking-wider"
                     >
-                      {Object.keys(PLATFORM_TENANTS).map(key => (
-                        <option key={key} value={key}>
-                          {PLATFORM_TENANTS[key].name}
+                      {tenants.map(tenant => (
+                        <option key={tenant.id} value={tenant.id}>
+                          {tenant.name}
                         </option>
                       ))}
                     </select>
