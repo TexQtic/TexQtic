@@ -208,3 +208,6 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
     </div>
   );
 };
+
+// Export alias for compatibility
+export const OnboardingFlow = ActivationFlow;

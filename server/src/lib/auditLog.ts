@@ -285,8 +285,6 @@ export async function writeAuthorityIntent(
       action: eventType,
       entity: targetType,
       entityId: targetId,
-      beforeJson: null,
-      afterJson: null,
       metadataJson: {
         idempotencyKey,
         ...payload,

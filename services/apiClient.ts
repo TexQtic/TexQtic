@@ -81,10 +81,15 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   const token = getToken();
 
   // Build headers
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
+
+  // Merge with provided headers
+  if (options.headers) {
+    const providedHeaders = options.headers as Record<string, string>;
+    Object.assign(headers, providedHeaders);
+  }
 
   // Attach JWT if available
   if (token) {

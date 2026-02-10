@@ -26,6 +26,7 @@ export default [
         fetch: 'readonly',
         URLSearchParams: 'readonly',
         RequestInit: 'readonly',
+        localStorage: 'readonly',
         // Timer functions
         setTimeout: 'readonly',
         setInterval: 'readonly',

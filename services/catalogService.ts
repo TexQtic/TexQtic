@@ -18,6 +18,11 @@ export interface CatalogItem {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  // Optional display properties
+  imageUrl?: string;
+  category?: string;
+  basePrice?: number;
+  moq?: number;
 }
 
 export interface CatalogResponse {

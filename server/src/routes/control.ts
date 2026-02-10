@@ -345,15 +345,15 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Write audit log
-      await writeAuditLog({
+      await writeAuditLog(prisma, {
         tenantId: result.tenant.id,
         realm: 'ADMIN',
         actorType: 'ADMIN',
         actorId: request.adminId!,
         action: 'tenant.provisioned',
-        resourceType: 'tenant',
-        resourceId: result.tenant.id,
-        metadata: {
+        entity: 'tenant',
+        entityId: result.tenant.id,
+        metadataJson: {
           tenantName: name,
           tenantSlug: slug,
           ownerEmail,

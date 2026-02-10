@@ -673,15 +673,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Write audit log
-      await writeAuditLog({
+      await writeAuditLog(prisma, {
         tenantId: invite.tenantId,
         realm: 'TENANT',
         actorType: 'USER',
         actorId: result.user.id,
         action: 'user.activated',
-        resourceType: 'user',
-        resourceId: result.user.id,
-        metadata: {
+        entity: 'user',
+        entityId: result.user.id,
+        metadataJson: {
           inviteId: invite.id,
           role: invite.role,
         },
@@ -746,7 +746,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const invite = await withDbContext({ tenantId }, async () => {
           return await prisma.invite.create({
             data: {
-              tenantId,
+              tenantId: tenantId!,
               email,
               role,
               tokenHash,
@@ -756,15 +756,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         });
 
         // Write audit log
-        await writeAuditLog({
-          tenantId,
+        await writeAuditLog(prisma, {
+          tenantId: tenantId!,
           realm: 'TENANT',
           actorType: 'USER',
           actorId: request.userId!,
           action: 'member.invited',
-          resourceType: 'invite',
-          resourceId: invite.id,
-          metadata: {
+          entity: 'invite',
+          entityId: invite.id,
+          metadataJson: {
             email,
             role,
           },
@@ -821,29 +821,29 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         // Update or create branding
         const branding = await withDbContext({ tenantId }, async () => {
           return await prisma.tenantBranding.upsert({
-            where: { tenantId },
+            where: { tenantId: tenantId! },
             create: {
-              tenantId,
-              logoUrl,
-              themeJson,
+              tenantId: tenantId!,
+              logoUrl: logoUrl ?? undefined,
+              themeJson: themeJson ?? undefined,
             },
             update: {
-              logoUrl,
-              themeJson,
+              logoUrl: logoUrl ?? undefined,
+              themeJson: themeJson ?? undefined,
             },
           });
         });
 
         // Write audit log
-        await writeAuditLog({
-          tenantId,
+        await writeAuditLog(prisma, {
+          tenantId: tenantId!,
           realm: 'TENANT',
           actorType: 'USER',
           actorId: request.userId!,
           action: 'branding.updated',
-          resourceType: 'branding',
-          resourceId: branding.id,
-          metadata: {
+          entity: 'branding',
+          entityId: branding.id,
+          metadataJson: {
             logoUrl,
             themeJson,
           },

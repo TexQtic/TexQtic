@@ -63,13 +63,20 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     slug: tenant.slug,
     type: tenant.type as any,
     status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
-    plan: tenant.plan || 'BASIC',
+    plan: (tenant.plan === 'BASIC' ? 'TRIAL' : tenant.plan || 'TRIAL') as
+      | 'TRIAL'
+      | 'PAID'
+      | 'ENTERPRISE',
     theme: {
       primaryColor: tenant.branding?.primaryColor || '#4F46E5',
+      secondaryColor: '#10B981',
       logo: '🏢',
     },
+    features: [],
     aiUsage: tenant.aiBudget?.currentUsage || 0,
     aiBudget: tenant.aiBudget?.monthlyLimit || 1000,
+    billingStatus: 'CURRENT',
+    riskScore: 0,
   });
 
   return (

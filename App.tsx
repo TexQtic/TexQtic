@@ -88,7 +88,7 @@ const App: React.FC = () => {
         setCatalogError(null);
         try {
           const response = await getCatalogItems({ limit: 20 });
-          setProducts(response.data);
+          setProducts(response.items);
         } catch (error) {
           console.error('Failed to load catalog:', error);
           setCatalogError('Failed to load catalog. Please try again.');
@@ -427,7 +427,7 @@ const App: React.FC = () => {
   };
 
   // Cart-aware Add to Cart button components
-  const B2BAddToCartButton: React.FC<{ product: CatalogItem }> = ({ product }) => {
+  const B2BAddToCartButton: React.FC<{ product: CatalogItem }> = ({ product: _product }) => {
     return (
       <button className="w-full mt-4 border border-slate-200 py-2 rounded text-sm font-semibold hover:bg-slate-50 transition">
         Request Quote
