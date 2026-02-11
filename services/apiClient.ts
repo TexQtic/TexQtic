@@ -40,6 +40,9 @@ const TENANT_TOKEN_KEY = 'texqtic_tenant_token';
 const ADMIN_TOKEN_KEY = 'texqtic_admin_token';
 const AUTH_REALM_KEY = 'texqtic_auth_realm';
 
+// Wave 0-A: AbortController for in-flight request cancellation
+let currentAbortController = new AbortController();
+
 export type AuthRealm = 'TENANT' | 'CONTROL_PLANE';
 
 /**
@@ -89,12 +92,16 @@ export function getAuthRealm(): AuthRealm | null {
  * Prevents flicker loops and 401 storms during realm transitions
  */
 export function resetOnRealmChange(): void {
-  // Clear all auth tokens
+  // 1. Abort all in-flight requests
+  currentAbortController.abort();
+  currentAbortController = new AbortController();
+
+  // 2. Clear all auth tokens
   localStorage.removeItem(TENANT_TOKEN_KEY);
   localStorage.removeItem(ADMIN_TOKEN_KEY);
   localStorage.removeItem(AUTH_REALM_KEY);
 
-  // Navigate to root (single navigation, no loops)
+  // 3. Navigate to root (single navigation, no loops)
   window.location.href = '/';
 }
 
@@ -210,6 +217,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     const response = await fetch(url, {
       ...options,
       headers,
+      signal: currentAbortController.signal,
     });
 
     // Handle non-OK responses
