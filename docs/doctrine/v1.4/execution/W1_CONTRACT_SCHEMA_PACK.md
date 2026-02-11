@@ -15,12 +15,14 @@
 Wave 1 establishes the foundational contract governance primitives required for API stability, schema consistency, and automated contract verification. This wave implements the unified response envelope pattern and creates the infrastructure for contract-driven development.
 
 **Goals:**
+
 - Unified response envelope with `warnings[]` support
 - Schema pack build pipeline for contract validation
 - Edge gateway normalization (placeholder registration)
 - Contract smoke tests (baseline)
 
 **Non-Goals (Deferred):**
+
 - Runtime contract validation middleware
 - Full OpenAPI-to-Zod generation
 - E2E contract testing suite
@@ -33,6 +35,7 @@ Wave 1 establishes the foundational contract governance primitives required for 
 **Note:** Wave 1 is foundational infrastructure and does not map to specific doctrine tickets. It creates the primitives required for future contract-enforcement tickets in Doctrine v1.4 Part 3 & 4.
 
 **Related Governance Files:**
+
 - `shared/contracts/ARCHITECTURE-GOVERNANCE.md`
 - `shared/contracts/schema-budget.md`
 - `shared/contracts/db-naming-rules.md`
@@ -40,6 +43,7 @@ Wave 1 establishes the foundational contract governance primitives required for 
 - `shared/contracts/openapi.tenant.json` (563 lines)
 
 **Future Doctrine References (Not Yet Implemented):**
+
 - Doctrine v1.4 Part 3: Edge gateway contract enforcement
 - Doctrine v1.4 Part 4: Maker-checker warnings pattern
 
@@ -48,18 +52,21 @@ Wave 1 establishes the foundational contract governance primitives required for 
 ## 3. Exact Repo Paths Affected
 
 ### Modified Files
+
 - `server/src/types/index.ts` — Add `warnings` field to `SuccessResponse`
 - `server/src/utils/response.ts` — Add `sendSuccessWithWarnings()` helper
 - `server/src/routes/control.ts` — Update responses to use new envelope (sample)
 - `server/src/routes/tenant.ts` — Update responses to use new envelope (sample)
 
 ### New Files
+
 - `shared/contracts/schema-pack.json` — Contract bundle metadata
 - `scripts/validate-contracts.ts` — Contract smoke test script
 - `server/src/middleware/contractNormalizer.ts` — Placeholder for edge gateway
 - `docs/contracts/RESPONSE_ENVELOPE_SPEC.md` — Envelope documentation
 
 ### No Changes
+
 - `services/apiClient.ts` — Frontend already handles both envelope formats
 - Prisma schema — No database changes in Wave 1
 - RLS policies — No security changes in Wave 1
@@ -75,6 +82,7 @@ Wave 1 establishes the foundational contract governance primitives required for 
 **Change:** Update `SuccessResponse` type
 
 **Before:**
+
 ```typescript
 export interface SuccessResponse<T = unknown> {
   success: true;
@@ -83,6 +91,7 @@ export interface SuccessResponse<T = unknown> {
 ```
 
 **After:**
+
 ```typescript
 export interface Warning {
   code: string;
@@ -99,6 +108,7 @@ export interface SuccessResponse<T = unknown> {
 ```
 
 **Acceptance:**
+
 - ✅ `Warning` type exported
 - ✅ `warnings` field is optional (backward compatible)
 - ✅ Severity levels defined
@@ -115,6 +125,7 @@ export interface SuccessResponse<T = unknown> {
 **Change:** Add new helper function after `sendSuccess()`
 
 **Implementation:**
+
 ```typescript
 import type { Warning } from '../types/index.js';
 
@@ -134,6 +145,7 @@ export function sendSuccessWithWarnings<T>(
 ```
 
 **Usage Pattern:**
+
 ```typescript
 // Existing: No warnings
 return sendSuccess(reply, { tenants });
@@ -145,13 +157,14 @@ if (budgetNearLimit) {
     code: 'AI_BUDGET_NEAR_LIMIT',
     message: 'AI budget is 90% consumed',
     severity: 'WARN',
-    metadata: { usage: 900, limit: 1000 }
+    metadata: { usage: 900, limit: 1000 },
   });
 }
 return sendSuccessWithWarnings(reply, { tenants }, warnings);
 ```
 
 **Acceptance:**
+
 - ✅ Function exported
 - ✅ Empty warnings array omitted from response (clean JSON)
 - ✅ Compatible with existing `sendSuccess()` signature
@@ -165,6 +178,7 @@ return sendSuccessWithWarnings(reply, { tenants }, warnings);
 **File (New):** `shared/contracts/schema-pack.json`
 
 **Content:**
+
 ```json
 {
   "version": "1.0.0",
@@ -199,6 +213,7 @@ return sendSuccessWithWarnings(reply, { tenants }, warnings);
 ```
 
 **Acceptance:**
+
 - ✅ File lists all contract files
 - ✅ Governance file references included
 - ✅ Validation status tracked
@@ -213,11 +228,12 @@ return sendSuccessWithWarnings(reply, { tenants }, warnings);
 **File (New):** `scripts/validate-contracts.ts`
 
 **Implementation:**
+
 ```typescript
 #!/usr/bin/env node --import tsx
 /**
  * Contract Smoke Test
- * 
+ *
  * Validates:
  * - All contract files exist
  * - OpenAPI specs are valid JSON
@@ -242,7 +258,7 @@ async function main() {
   const result: TestResult = {
     passed: 0,
     failed: 0,
-    errors: []
+    errors: [],
   };
 
   // Test 1: Schema pack exists
@@ -313,6 +329,7 @@ main().catch(err => {
 ```
 
 **Add to `package.json`:**
+
 ```json
 "scripts": {
   "validate:contracts": "node --import tsx scripts/validate-contracts.ts"
@@ -320,6 +337,7 @@ main().catch(err => {
 ```
 
 **Acceptance:**
+
 - ✅ Script executable via `npm run validate:contracts`
 - ✅ Exits 0 if all tests pass
 - ✅ Exits 1 with error list if tests fail
@@ -334,23 +352,21 @@ main().catch(err => {
 **File (New):** `server/src/middleware/contractNormalizer.ts`
 
 **Implementation:**
+
 ```typescript
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 /**
  * Contract Normalizer Middleware (PLACEHOLDER)
- * 
+ *
  * Future: Validates request/response against OpenAPI contracts
  * Future: Enforces schema conformance at edge gateway
  * Future: Generates structured warnings for schema drift
- * 
+ *
  * Wave 1: Registration only, no enforcement
  */
 
-export async function contractNormalizerMiddleware(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
+export async function contractNormalizerMiddleware(request: FastifyRequest, reply: FastifyReply) {
   // TODO: Wave 2+ will implement contract validation
   // For now, this is a no-op placeholder
   return;
@@ -358,12 +374,14 @@ export async function contractNormalizerMiddleware(
 ```
 
 **Registration (Optional in Wave 1):**
+
 ```typescript
 // In server/src/index.ts (commented out)
 // await fastify.addHook('onRequest', contractNormalizerMiddleware);
 ```
 
 **Acceptance:**
+
 - ✅ File exists with placeholder implementation
 - ✅ JSDoc describes future behavior
 - ✅ No-op in Wave 1 (no performance impact)
@@ -378,12 +396,13 @@ export async function contractNormalizerMiddleware(
 **File (New):** `docs/contracts/RESPONSE_ENVELOPE_SPEC.md`
 
 **Content:**
-```markdown
+
+````markdown
 # TexQtic API Response Envelope Specification
 
 **Version:** 1.0.0  
 **Status:** ACTIVE  
-**Effective:** Wave 1+  
+**Effective:** Wave 1+
 
 ---
 
@@ -395,9 +414,9 @@ All TexQtic API responses follow this envelope structure:
 
 \`\`\`typescript
 {
-  success: true,
-  data: T,
-  warnings?: Warning[]
+success: true,
+data: T,
+warnings?: Warning[]
 }
 \`\`\`
 
@@ -405,12 +424,12 @@ All TexQtic API responses follow this envelope structure:
 
 \`\`\`typescript
 {
-  success: false,
-  error: {
-    code: string,
-    message: string,
-    details?: unknown
-  }
+success: false,
+error: {
+code: string,
+message: string,
+details?: unknown
+}
 }
 \`\`\`
 
@@ -420,14 +439,15 @@ All TexQtic API responses follow this envelope structure:
 
 \`\`\`typescript
 interface Warning {
-  code: string;
-  message: string;
-  severity?: 'INFO' | 'WARN' | 'CRITICAL';
-  metadata?: Record<string, unknown>;
+code: string;
+message: string;
+severity?: 'INFO' | 'WARN' | 'CRITICAL';
+metadata?: Record<string, unknown>;
 }
 \`\`\`
 
 **Warning Codes (Examples):**
+
 - \`AI_BUDGET_NEAR_LIMIT\` — AI usage approaching monthly cap
 - \`FEATURE_DEPRECATED\` — Endpoint or feature scheduled for removal
 - \`RLS_POLICY_UPDATED\` — Security policy changed
@@ -450,10 +470,10 @@ interface Warning {
 
 \`\`\`json
 {
-  "success": true,
-  "data": {
-    "tenants": [...]
-  }
+"success": true,
+"data": {
+"tenants": [...]
+}
 }
 \`\`\`
 
@@ -461,22 +481,22 @@ interface Warning {
 
 \`\`\`json
 {
-  "success": true,
-  "data": {
-    "tenants": [...]
-  },
-  "warnings": [
-    {
-      "code": "AI_BUDGET_NEAR_LIMIT",
-      "message": "AI budget is 90% consumed for this month",
-      "severity": "WARN",
-      "metadata": {
-        "usage": 900,
-        "limit": 1000,
-        "resetDate": "2026-03-01"
-      }
-    }
-  ]
+"success": true,
+"data": {
+"tenants": [...]
+},
+"warnings": [
+{
+"code": "AI_BUDGET_NEAR_LIMIT",
+"message": "AI budget is 90% consumed for this month",
+"severity": "WARN",
+"metadata": {
+"usage": 900,
+"limit": 1000,
+"resetDate": "2026-03-01"
+}
+}
+]
 }
 \`\`\`
 
@@ -484,15 +504,15 @@ interface Warning {
 
 \`\`\`json
 {
-  "success": false,
-  "error": {
-    "code": "REALM_MISMATCH",
-    "message": "Admin token required for this endpoint",
-    "details": {
-      "expectedRealm": "CONTROL_PLANE",
-      "receivedRealm": "TENANT"
-    }
-  }
+"success": false,
+"error": {
+"code": "REALM_MISMATCH",
+"message": "Admin token required for this endpoint",
+"details": {
+"expectedRealm": "CONTROL_PLANE",
+"receivedRealm": "TENANT"
+}
+}
 }
 \`\`\`
 
@@ -502,7 +522,7 @@ interface Warning {
 
 **Wave 1:** Add \`warnings\` field, update types, create helpers  
 **Wave 2+:** Gradually migrate high-risk endpoints to use warnings  
-**Future:** Runtime contract validation emits warnings for schema drift  
+**Future:** Runtime contract validation emits warnings for schema drift
 
 ---
 
@@ -511,9 +531,10 @@ interface Warning {
 - \`server/src/types/index.ts\` — Type definitions
 - \`server/src/utils/response.ts\` — Response helpers
 - \`shared/contracts/schema-pack.json\` — Contract metadata
-\`\`\`
+  \`\`\`
 
 **Acceptance:**
+
 - ✅ Specification document complete
 - ✅ Examples cover all response types
 - ✅ Migration strategy documented
@@ -526,6 +547,7 @@ interface Warning {
 ## 5. Commands to Run
 
 ### Implementation
+
 ```powershell
 # No database changes
 # No Prisma migration
@@ -534,8 +556,10 @@ interface Warning {
 # Run contract smoke test after Step 4
 npm run validate:contracts
 ```
+````
 
 ### Verification
+
 ```powershell
 # After Steps 1-2: TypeScript compilation
 cd server
@@ -549,6 +573,7 @@ git diff --name-only
 ```
 
 ### Commit
+
 ```powershell
 git add -A
 git commit -m "feat(contracts): add unified response envelope with warnings
@@ -588,6 +613,7 @@ Governance review: PASS"
 ### Rollback Strategy
 
 **Full Wave 1 Rollback:**
+
 ```powershell
 git revert <wave1-commit-hash>
 rm docs/contracts/RESPONSE_ENVELOPE_SPEC.md
@@ -597,6 +623,7 @@ rm server/src/middleware/contractNormalizer.ts
 ```
 
 **Selective Rollback:**
+
 - Types: Revert `server/src/types/index.ts`
 - Utils: Revert `server/src/utils/response.ts`
 - Metadata: Delete `shared/contracts/schema-pack.json`
@@ -607,6 +634,7 @@ rm server/src/middleware/contractNormalizer.ts
 ## 7. Acceptance Checklist
 
 ### Step 1-2: Envelope & Utilities
+
 - [ ] `Warning` type defined with severity levels
 - [ ] `SuccessResponse.warnings` field is optional
 - [ ] `sendSuccessWithWarnings()` exported
@@ -614,6 +642,7 @@ rm server/src/middleware/contractNormalizer.ts
 - [ ] Backward compatibility verified (existing responses work)
 
 ### Step 3-4: Contract Bundle & Tests
+
 - [ ] `schema-pack.json` created with accurate metadata
 - [ ] All governance files listed
 - [ ] `validate-contracts.ts` script executable
@@ -621,6 +650,7 @@ rm server/src/middleware/contractNormalizer.ts
 - [ ] Script exits 0 on success, 1 on failure
 
 ### Step 5-6: Middleware & Docs
+
 - [ ] `contractNormalizer.ts` created (placeholder)
 - [ ] JSDoc describes future behavior
 - [ ] Middleware is no-op (no performance impact)
@@ -629,6 +659,7 @@ rm server/src/middleware/contractNormalizer.ts
 - [ ] Migration strategy documented
 
 ### Integration
+
 - [ ] No breaking changes to existing API responses
 - [ ] Frontend can consume responses with/without warnings
 - [ ] Contract smoke test runs in CI/CD (future)

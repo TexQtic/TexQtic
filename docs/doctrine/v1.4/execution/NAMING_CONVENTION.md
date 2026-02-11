@@ -1,7 +1,7 @@
 # Doctrine v1.4 — Execution Plan Naming Convention
 
 **Effective Date:** 2026-02-11  
-**Status:** LOCKED  
+**Status:** LOCKED
 
 ---
 
@@ -14,6 +14,7 @@ W#_<PRIMARY_DOMAIN>_<SHORT_DESCRIPTOR>.md
 ```
 
 **Rules:**
+
 - `W#`: Wave number (0-9, then 10, 11, etc.)
 - `<PRIMARY_DOMAIN>`: UPPERCASE, single word or acronym (CONTRACT, RLS, EVENT, AUTH, etc.)
 - `<SHORT_DESCRIPTOR>`: UPPERCASE_SNAKE_CASE, max 4 words
@@ -21,6 +22,7 @@ W#_<PRIMARY_DOMAIN>_<SHORT_DESCRIPTOR>.md
 - Location: `docs/doctrine/v1.4/execution/`
 
 **Examples (Valid):**
+
 - `W0_REALM_ISOLATION_AND_ADMIN_POLL_GUARD.md`
 - `W1_CONTRACT_SCHEMA_PACK.md`
 - `W2_RLS_BASELINE_ENFORCEMENT.md`
@@ -28,6 +30,7 @@ W#_<PRIMARY_DOMAIN>_<SHORT_DESCRIPTOR>.md
 - `W4_PROJECTION_HEALTH_CHECKS.md`
 
 **Examples (Invalid):**
+
 - `wave_1_contract.md` (wrong format)
 - `W1-contract-pack.md` (hyphens not allowed)
 - `execution_plan_contracts.md` (no wave number)
@@ -46,10 +49,11 @@ Every execution plan file must begin with this header:
 **Track(s):** <TRACK_1>, <TRACK_2>, ...  
 **Status:** <STATUS>  
 **PR(s):** <PR_LINKS or TBD>  
-**Owner:** <GITHUB_USERNAME or TBD>  
+**Owner:** <GITHUB_USERNAME or TBD>
 ```
 
 **Status Values:**
+
 - `APPROVED (Pre-Implementation)` — Plan approved, not yet implemented
 - `IN_PROGRESS` — Implementation ongoing
 - `BLOCKED` — Waiting on dependency or approval
@@ -57,6 +61,7 @@ Every execution plan file must begin with this header:
 - `DEPRECATED` — Superseded by later wave
 
 **Track Values (Common):**
+
 - `AUTH_REALM` — Authentication and realm isolation
 - `CONTRACT_SCHEMA` — API contracts and schema governance
 - `RLS_POLICY` — Row-level security and tenant isolation
@@ -96,6 +101,7 @@ Governance review: PASS
 ```
 
 **Example:**
+
 ```
 docs(doctrine): add v1.4 W1 contract schema pack
 

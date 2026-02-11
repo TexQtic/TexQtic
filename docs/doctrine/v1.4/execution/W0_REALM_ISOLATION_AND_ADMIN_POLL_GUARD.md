@@ -5,7 +5,7 @@
 **Track:** AUTH_REALM  
 **Status:** APPROVED (Pre-Implementation)  
 **PR(s):** TBD  
-**Owner:** TBD  
+**Owner:** TBD
 
 ---
 
@@ -14,11 +14,13 @@
 Wave 0 addresses multi-realm JWT isolation defects causing 401 storms and UI flicker when tenant-realm users navigate to control-plane routes. The root cause is unchecked control-plane API calls firing regardless of authentication realm, resulting in continuous 401 retries and network spam.
 
 **Impact:**
+
 - Frontend: 401 storm on `/api/control/tenants`
 - UX: Spinner hangs, flicker loops
 - Security: No realm validation at client or server boundaries
 
 **Solution:**
+
 - Phase 0-A: Client-side realm guard (stop queries before network)
 - Phase 0-B: Dual API clients + server-side realm enforcement
 
@@ -26,28 +28,28 @@ Wave 0 addresses multi-realm JWT isolation defects causing 401 storms and UI fli
 
 ## Evidence-Backed Repo Map
 
-| Area | Verified Paths | Key Modules/Routes | Status | Evidence |
-|------|----------------|-------------------|--------|----------|
-| **Frontend Env** | `services/apiClient.ts` L16 | `import.meta.env.VITE_API_BASE_URL` | ✅ Exists | Grep: 2 matches (apiClient.ts, geminiService.ts.deprecated) |
-| | | No `NEXT_PUBLIC_` usage in repo code | ✅ Confirmed | All 20 matches are doctrine docs only |
-| **API Client** | `services/apiClient.ts` | `API_BASE_URL` resolution, token storage (L38-39) | ✅ Exists | Read L1-40 |
-| **Vercel Entry** | `api/index.ts` L166 | `export default async function handler(req, res)` | ✅ Exists | Grep + Read L166-171 |
-| **Fastify JWT Realms** | `server/src/types/fastify.d.ts` L32-58 | Type declarations for 4 decorators | ✅ Exists | Read L1-60 |
-| | `server/src/index.ts` L85-100 | Tenant/admin JWT registration | ✅ Exists | Read L85-140 |
-| | `server/src/middleware/auth.ts` | Used in `tenantAuthMiddleware`, `adminAuthMiddleware` | ✅ Exists | Read L1-100 |
-| | `api/index.ts` L94-103 | Vercel also registers both realms | ✅ Exists | Read L88-115 |
-| **Prisma** | `server/prisma/schema.prisma` L5 | `datasource db` with DATABASE_URL | ✅ Exists | Read L1-30 |
-| | `server/src/db/prisma.ts` L9-14 | Singleton PrismaClient export | ✅ Exists | Read L1-30 |
-| | `server/package.json` L7 | `"postinstall": "prisma generate"` | ✅ Exists | Grep match |
-| | `server/prisma/migrations/` | 12 migration files found | ✅ Exists | File search |
-| **Route Groups** | `server/src/index.ts` L131-134 | `/api/auth`, `/api/control`, `/api` (tenant), `/api/control/marketplace` | ✅ Exists | Grep + Read |
-| | `api/index.ts` L136 | Same registration in Vercel handler | ✅ Exists | Grep match |
-| | Route files | `auth.ts`, `control.ts`, `tenant.ts`, `ai.ts`, `admin-cart-summaries.ts` | ✅ Exists | File search |
-| **Governance** | `server/src/config/index.ts` L29 | `KILL_SWITCH_ALL` env var | ✅ Exists | Grep match |
-| | `server/src/index.ts` L119-123 | Kill-switch hook blocks all except /health | ✅ Exists | Read L117-127 |
-| | `server/prisma/migrations/` | `event_logs` table (migrations 20260208054130, 20260208074800) | ✅ Exists | Grep: 20+ matches |
-| | `shared/contracts/event-names.md` | Event naming rules | ✅ Exists | Read L1-15 |
-| **Contracts** | `shared/contracts/` | 7 files: ARCHITECTURE-GOVERNANCE, db-naming-rules, event-names, openapi x2, rls-policy, schema-budget | ✅ Exists | List dir |
+| Area                   | Verified Paths                         | Key Modules/Routes                                                                                    | Status       | Evidence                                                    |
+| ---------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------- |
+| **Frontend Env**       | `services/apiClient.ts` L16            | `import.meta.env.VITE_API_BASE_URL`                                                                   | ✅ Exists    | Grep: 2 matches (apiClient.ts, geminiService.ts.deprecated) |
+|                        |                                        | No `NEXT_PUBLIC_` usage in repo code                                                                  | ✅ Confirmed | All 20 matches are doctrine docs only                       |
+| **API Client**         | `services/apiClient.ts`                | `API_BASE_URL` resolution, token storage (L38-39)                                                     | ✅ Exists    | Read L1-40                                                  |
+| **Vercel Entry**       | `api/index.ts` L166                    | `export default async function handler(req, res)`                                                     | ✅ Exists    | Grep + Read L166-171                                        |
+| **Fastify JWT Realms** | `server/src/types/fastify.d.ts` L32-58 | Type declarations for 4 decorators                                                                    | ✅ Exists    | Read L1-60                                                  |
+|                        | `server/src/index.ts` L85-100          | Tenant/admin JWT registration                                                                         | ✅ Exists    | Read L85-140                                                |
+|                        | `server/src/middleware/auth.ts`        | Used in `tenantAuthMiddleware`, `adminAuthMiddleware`                                                 | ✅ Exists    | Read L1-100                                                 |
+|                        | `api/index.ts` L94-103                 | Vercel also registers both realms                                                                     | ✅ Exists    | Read L88-115                                                |
+| **Prisma**             | `server/prisma/schema.prisma` L5       | `datasource db` with DATABASE_URL                                                                     | ✅ Exists    | Read L1-30                                                  |
+|                        | `server/src/db/prisma.ts` L9-14        | Singleton PrismaClient export                                                                         | ✅ Exists    | Read L1-30                                                  |
+|                        | `server/package.json` L7               | `"postinstall": "prisma generate"`                                                                    | ✅ Exists    | Grep match                                                  |
+|                        | `server/prisma/migrations/`            | 12 migration files found                                                                              | ✅ Exists    | File search                                                 |
+| **Route Groups**       | `server/src/index.ts` L131-134         | `/api/auth`, `/api/control`, `/api` (tenant), `/api/control/marketplace`                              | ✅ Exists    | Grep + Read                                                 |
+|                        | `api/index.ts` L136                    | Same registration in Vercel handler                                                                   | ✅ Exists    | Grep match                                                  |
+|                        | Route files                            | `auth.ts`, `control.ts`, `tenant.ts`, `ai.ts`, `admin-cart-summaries.ts`                              | ✅ Exists    | File search                                                 |
+| **Governance**         | `server/src/config/index.ts` L29       | `KILL_SWITCH_ALL` env var                                                                             | ✅ Exists    | Grep match                                                  |
+|                        | `server/src/index.ts` L119-123         | Kill-switch hook blocks all except /health                                                            | ✅ Exists    | Read L117-127                                               |
+|                        | `server/prisma/migrations/`            | `event_logs` table (migrations 20260208054130, 20260208074800)                                        | ✅ Exists    | Grep: 20+ matches                                           |
+|                        | `shared/contracts/event-names.md`      | Event naming rules                                                                                    | ✅ Exists    | Read L1-15                                                  |
+| **Contracts**          | `shared/contracts/`                    | 7 files: ARCHITECTURE-GOVERNANCE, db-naming-rules, event-names, openapi x2, rls-policy, schema-budget | ✅ Exists    | List dir                                                    |
 
 ---
 
@@ -56,6 +58,7 @@ Wave 0 addresses multi-realm JWT isolation defects causing 401 storms and UI fli
 ### Problem: 401 Storm + UI Flicker
 
 **Observed Behavior:**
+
 - Network spam: Repeated `/api/control/tenants` requests returning 401
 - UI spinner hangs indefinitely
 - Page flicker when switching between tenant/admin views
@@ -63,13 +66,15 @@ Wave 0 addresses multi-realm JWT isolation defects causing 401 storms and UI fli
 **Root Cause (Verified):**
 
 File: `components/ControlPlane/TenantRegistry.tsx` L43
+
 ```tsx
 useEffect(() => {
-  fetchTenants();  // ⚠️ No realm gate — fires regardless of auth realm
+  fetchTenants(); // ⚠️ No realm gate — fires regardless of auth realm
 }, []);
 ```
 
 **Request Chain:**
+
 1. `TenantRegistry.tsx` L43 → `fetchTenants()` L20
 2. L26 → `getTenants()` from `services/controlPlaneService.ts` L77
 3. L77 → `get('/api/control/tenants')`
@@ -77,6 +82,7 @@ useEffect(() => {
 5. Frontend: No realm check before request → retry loop → 401 storm
 
 **Affected Components (Same Pattern):**
+
 - `AiGovernance.tsx` (getTenants)
 - `AuditLogs.tsx` (getAuditLogs)
 - `EventStream.tsx` (getEvents)
@@ -101,13 +107,16 @@ All 13 control-plane service functions call `/api/control/*` without realm valid
 **Change:** Import `getAuthRealm` from apiClient, add guard before ALL control-plane requests
 
 **Implementation:**
+
 ```typescript
 import { get, post, put, getAuthRealm } from './apiClient';
 
 function requireControlPlaneRealm() {
   const realm = getAuthRealm();
   if (realm !== 'CONTROL_PLANE') {
-    throw new Error(`REALM_MISMATCH: Control-plane endpoint requires CONTROL_PLANE realm, got ${realm || 'NONE'}`);
+    throw new Error(
+      `REALM_MISMATCH: Control-plane endpoint requires CONTROL_PLANE realm, got ${realm || 'NONE'}`
+    );
   }
 }
 
@@ -125,6 +134,7 @@ export async function getTenantById(tenantId: string): Promise<TenantDetailRespo
 ```
 
 **Affected Functions (All in controlPlaneService.ts):**
+
 1. `getTenants()` L77
 2. `getTenantById()` L84
 3. `getAuditLogs()` L138
@@ -140,6 +150,7 @@ export async function getTenantById(tenantId: string): Promise<TenantDetailRespo
 13. `getSystemHealth()` L452
 
 **Acceptance:**
+
 - ✅ Calling `getTenants()` when realm is TENANT → throws `REALM_MISMATCH` error (no 401 request sent)
 - ✅ Control-plane components catch error and show "Requires admin login" message
 - ✅ No `/api/control/*` requests leave browser unless realm === CONTROL_PLANE
@@ -155,6 +166,7 @@ export async function getTenantById(tenantId: string): Promise<TenantDetailRespo
 **Change:** Add `resetOnRealmChange()` function
 
 **Implementation:**
+
 ```typescript
 // Add near token management functions
 let currentAbortController = new AbortController();
@@ -177,6 +189,7 @@ export function resetOnRealmChange(): void {
 **Export:** Add to module exports
 
 **Acceptance:**
+
 - ✅ Function aborts pending fetches
 - ✅ Clears all auth state (3 localStorage keys)
 - ✅ Single navigation (no redirect loops)
@@ -192,6 +205,7 @@ export function resetOnRealmChange(): void {
 **Change:** Update `fetchTenants()` catch block
 
 **Implementation:**
+
 ```tsx
 } catch (err) {
   console.error('Failed to load tenants:', err);
@@ -214,6 +228,7 @@ export function resetOnRealmChange(): void {
 ```
 
 **Acceptance:**
+
 - ✅ When realm is TENANT, TenantRegistry shows "Requires admin" error state
 - ✅ No network request to `/api/control/tenants` is made
 - ✅ Error state renders user-friendly message
@@ -225,12 +240,14 @@ export function resetOnRealmChange(): void {
 #### Step 4: Preflight verification
 
 **Commands:**
+
 ```powershell
 git diff --name-only
 git status --short
 ```
 
 **Acceptance:**
+
 - ✅ Only modified:
   - `services/controlPlaneService.ts`
   - `services/apiClient.ts`
@@ -241,7 +258,8 @@ git status --short
 
 #### Step 5: Commit Phase 0-A
 
-**Message:** 
+**Message:**
+
 ```
 prompt-phase0a Multi-realm safety: block control-plane queries in tenant realm
 
@@ -254,12 +272,14 @@ Governance review: PASS
 ```
 
 **Verification:**
+
 ```powershell
 git status --short  # Ensure only modified files staged
 git show --stat HEAD
 ```
 
 **Runtime Test:**
+
 ```powershell
 # 1. Start server
 cd server; node --import tsx src/index.ts
@@ -283,19 +303,23 @@ cd server; node --import tsx src/index.ts
 #### Step 6: Create realm-specific API client wrappers
 
 **Files (New):**
+
 - `services/tenantApiClient.ts`
 - `services/adminApiClient.ts`
 
 **Implementation:**
 
 `services/tenantApiClient.ts`:
+
 ```typescript
 import { get, post, put, del, getAuthRealm } from './apiClient';
 
 function requireTenantRealm() {
   const realm = getAuthRealm();
   if (realm !== 'TENANT') {
-    throw new Error(`REALM_MISMATCH: Tenant endpoint requires TENANT realm, got ${realm || 'NONE'}`);
+    throw new Error(
+      `REALM_MISMATCH: Tenant endpoint requires TENANT realm, got ${realm || 'NONE'}`
+    );
   }
 }
 
@@ -321,13 +345,16 @@ export function tenantDelete<T>(endpoint: string): Promise<T> {
 ```
 
 `services/adminApiClient.ts`:
+
 ```typescript
 import { get, post, put, del, getAuthRealm } from './apiClient';
 
 function requireAdminRealm() {
   const realm = getAuthRealm();
   if (realm !== 'CONTROL_PLANE') {
-    throw new Error(`REALM_MISMATCH: Admin endpoint requires CONTROL_PLANE realm, got ${realm || 'NONE'}`);
+    throw new Error(
+      `REALM_MISMATCH: Admin endpoint requires CONTROL_PLANE realm, got ${realm || 'NONE'}`
+    );
   }
 }
 
@@ -353,6 +380,7 @@ export function adminDelete<T>(endpoint: string): Promise<T> {
 ```
 
 **Acceptance:**
+
 - ✅ Each wrapper enforces realm before making request
 - ✅ Tenant service functions can migrate to `tenantGet/tenantPost`
 - ✅ Admin/control services can migrate to `adminGet/adminPost`
@@ -367,6 +395,7 @@ export function adminDelete<T>(endpoint: string): Promise<T> {
 **File (New):** `server/src/middleware/realmGuard.ts`
 
 **Implementation:**
+
 ```typescript
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { sendForbidden } from '../utils/response.js';
@@ -404,13 +433,10 @@ function matchRealm(url: string): 'tenant' | 'admin' | 'public' {
 /**
  * Realm guard middleware
  * Validates JWT realm matches endpoint expectations
- * 
+ *
  * NOTE: Must run AFTER JWT verification middleware
  */
-export async function realmGuardMiddleware(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
+export async function realmGuardMiddleware(request: FastifyRequest, reply: FastifyReply) {
   const expectedRealm = matchRealm(request.url);
 
   // Public endpoints skip realm check
@@ -420,7 +446,7 @@ export async function realmGuardMiddleware(
 
   // Check JWT payload realm
   const jwtPayload = request.user as any;
-  
+
   if (expectedRealm === 'admin') {
     // Admin endpoint requires admin JWT
     if (!jwtPayload?.adminId) {
@@ -436,12 +462,14 @@ export async function realmGuardMiddleware(
 ```
 
 **Registration:** Add to Fastify `onRequest` hook in `server/src/index.ts`:
+
 ```typescript
 // After JWT registration, before route registration
 fastify.addHook('onRequest', realmGuardMiddleware);
 ```
 
 **Acceptance:**
+
 - ✅ `/api/control/*` with tenant token → 403 "Admin endpoint requires admin token"
 - ✅ `/api/tenant/*` with admin token → 403 "Tenant endpoint requires tenant token"
 - ✅ Clear error messages prevent confusion
@@ -454,6 +482,7 @@ fastify.addHook('onRequest', realmGuardMiddleware);
 #### Step 8: Commit Phase 0-B
 
 **Message:**
+
 ```
 prompt-phase0b Multi-realm enforcement: dual clients + server guard
 
@@ -466,6 +495,7 @@ Governance review: PASS
 ```
 
 **Verification:**
+
 ```powershell
 git diff --name-only
 git status --short
@@ -473,6 +503,7 @@ git show --stat HEAD
 ```
 
 **Runtime Test:**
+
 ```powershell
 # 1. Start server
 cd server; node --import tsx src/index.ts
@@ -509,11 +540,13 @@ curl -H "Authorization: Bearer $tenantToken" http://localhost:3001/api/control/t
 ### Rollback Strategy
 
 **Phase 0-A Rollback:**
+
 ```powershell
 git revert <commit-hash-phase0a>
 ```
 
 **Phase 0-B Rollback:**
+
 ```powershell
 git revert <commit-hash-phase0b>
 rm services/tenantApiClient.ts
@@ -522,6 +555,7 @@ rm server/src/middleware/realmGuard.ts
 ```
 
 **Manual Rollback (if needed):**
+
 1. Remove `requireControlPlaneRealm()` from controlPlaneService.ts
 2. Remove `resetOnRealmChange()` from apiClient.ts
 3. Restore original TenantRegistry catch block
@@ -533,6 +567,7 @@ rm server/src/middleware/realmGuard.ts
 ## Acceptance Checklist
 
 ### Phase 0-A
+
 - [ ] `requireControlPlaneRealm()` guard added to all 13 control-plane functions
 - [ ] `resetOnRealmChange()` exported from apiClient.ts
 - [ ] TenantRegistry catches REALM_MISMATCH error
@@ -544,6 +579,7 @@ rm server/src/middleware/realmGuard.ts
 - [ ] Commit message follows convention
 
 ### Phase 0-B
+
 - [ ] `tenantApiClient.ts` created with 4 wrapper functions
 - [ ] `adminApiClient.ts` created with 4 wrapper functions
 - [ ] `realmGuardMiddleware.ts` created with ENDPOINT_REALM_MAP
@@ -556,6 +592,7 @@ rm server/src/middleware/realmGuard.ts
 - [ ] Commit message follows convention
 
 ### Integration
+
 - [ ] Tenant user login → no control-plane polling
 - [ ] Admin user login → control-plane queries work
 - [ ] Realm switch → all requests abort, tokens cleared, navigate to /
