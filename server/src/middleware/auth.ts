@@ -36,10 +36,12 @@ export async function tenantMiddleware(request: FastifyRequest, reply: FastifyRe
 /**
  * Verify tenant user JWT and membership
  * Alias: requireTenantAuth
+ *
+ * Wave 0-B-FIX: Only verifies tenant JWT. Cross-realm detection handled by checkRealmMismatch.
  */
 export async function tenantAuthMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
-    // Verify JWT using tenant realm
+    // Verify JWT using tenant realm ONLY
     await request.tenantJwtVerify({ onlyCookie: false });
     const payload = request.user as { userId?: string; tenantId?: string };
 
@@ -48,6 +50,7 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
     }
 
     // Wave 0-B: Check realm mismatch using centralized mapping
+    // This catches cases where tenant token is used on admin-only endpoint
     if (checkRealmMismatch(request, reply)) {
       return; // checkRealmMismatch already sent 403 WRONG_REALM response
     }
@@ -62,30 +65,20 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
     request.tenantId = payload.tenantId;
     request.userRole = membership.role;
   } catch {
-    // Check if it's actually an admin token (wrong realm)
-    try {
-      await request.adminJwtVerify();
-      // If admin verify succeeds, it's a valid token but wrong realm
-      return sendError(
-        reply,
-        'WRONG_REALM',
-        'This endpoint requires tenant authentication. Please log in with a tenant account.',
-        403
-      );
-    } catch {
-      // Neither realm accepts it - truly invalid
-      return sendUnauthorized(reply, 'Invalid or expired token');
-    }
+    // Tenant JWT verification failed - invalid or expired
+    return sendUnauthorized(reply, 'Invalid or expired token');
   }
 }
 
 /**
  * Verify admin JWT
  * Alias: requireAdminAuth
+ *
+ * Wave 0-B-FIX: Only verifies admin JWT. Cross-realm detection handled by checkRealmMismatch.
  */
 export async function adminAuthMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
-    // Verify JWT using admin realm
+    // Verify JWT using admin realm ONLY
     const payload = await request.adminJwtVerify();
 
     if (!payload.adminId || !payload.role) {
@@ -97,24 +90,13 @@ export async function adminAuthMiddleware(request: FastifyRequest, reply: Fastif
     request.adminRole = payload.role;
 
     // Wave 0-B: Check realm mismatch using centralized mapping
+    // This catches cases where admin token is used on tenant-only endpoint
     if (checkRealmMismatch(request, reply)) {
       return; // checkRealmMismatch already sent 403 WRONG_REALM response
     }
   } catch {
-    // Check if it's actually a tenant token (wrong realm)
-    try {
-      await request.tenantJwtVerify({ onlyCookie: false });
-      // If tenant verify succeeds, it's a valid token but wrong realm
-      return sendError(
-        reply,
-        'WRONG_REALM',
-        'This endpoint requires admin authentication. Please log in as admin.',
-        403
-      );
-    } catch {
-      // Neither realm accepts it - truly invalid
-      return sendUnauthorized(reply, 'Invalid or expired admin token');
-    }
+    // Admin JWT verification failed - invalid or expired
+    return sendUnauthorized(reply, 'Invalid or expired admin token');
   }
 }
 
