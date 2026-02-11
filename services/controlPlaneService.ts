@@ -8,7 +8,23 @@
  * Wave 4 Scope: Admin tenant provisioning added
  */
 
-import { get, post, put } from './apiClient';
+import { get, post, put, getAuthRealm } from './apiClient';
+
+/**
+ * Wave 0-A: Realm guard helper
+ * Throws REALM_MISMATCH error if current realm is not CONTROL_PLANE
+ * Prevents 401 storm by failing fast before network request
+ */
+function requireControlPlaneRealm(): void {
+  const realm = getAuthRealm();
+  if (realm !== 'CONTROL_PLANE') {
+    throw new Error(
+      `REALM_MISMATCH: Control-plane endpoint requires CONTROL_PLANE realm, got ${
+        realm || 'NONE'
+      }`
+    );
+  }
+}
 
 // ==================== TENANT MANAGEMENT ====================
 
@@ -74,6 +90,7 @@ export interface TenantDetailResponse {
  * Fetch all tenants (admin only)
  */
 export async function getTenants(): Promise<TenantsResponse> {
+  requireControlPlaneRealm();
   return get<TenantsResponse>('/api/control/tenants');
 }
 
@@ -81,6 +98,7 @@ export async function getTenants(): Promise<TenantsResponse> {
  * Fetch single tenant details (admin only)
  */
 export async function getTenantById(tenantId: string): Promise<TenantDetailResponse> {
+  requireControlPlaneRealm();
   return get<TenantDetailResponse>(`/api/control/tenants/${tenantId}`);
 }
 
@@ -119,6 +137,7 @@ export interface AuditLogsQueryParams {
  * @param params - Optional filters (tenantId, action, limit)
  */
 export async function getAuditLogs(params?: AuditLogsQueryParams): Promise<AuditLogsResponse> {
+  requireControlPlaneRealm();
   const queryParams = new URLSearchParams();
 
   if (params?.tenantId) {
@@ -175,6 +194,7 @@ export interface EventsQueryParams {
  * @param params - Optional filters (tenant_id, event_name, from, to, limit, cursor)
  */
 export async function getEvents(params?: EventsQueryParams): Promise<EventsResponse> {
+  requireControlPlaneRealm();
   const queryParams = new URLSearchParams();
 
   if (params?.tenant_id) {
@@ -246,6 +266,7 @@ export interface CartSummariesQueryParams {
 export async function getCartSummaries(
   params: CartSummariesQueryParams
 ): Promise<CartSummariesResponse> {
+  requireControlPlaneRealm();
   const queryParams = new URLSearchParams();
 
   queryParams.append('tenant_id', params.tenant_id);
@@ -274,6 +295,7 @@ export async function getCartSummaries(
 export async function getCartSummaryByCartId(
   cartId: string
 ): Promise<{ summary: MarketplaceCartSummary }> {
+  requireControlPlaneRealm();
   return get<{ summary: MarketplaceCartSummary }>(
     `/api/control/marketplace/cart-summaries/${cartId}`
   );
@@ -310,6 +332,7 @@ export interface ProvisionTenantResponse {
 export async function provisionTenant(
   request: ProvisionTenantRequest
 ): Promise<ProvisionTenantResponse> {
+  requireControlPlaneRealm();
   return post<ProvisionTenantResponse>('/api/control/tenants/provision', request);
 }
 
@@ -340,6 +363,7 @@ export interface UpsertFeatureFlagResponse {
  * Fetch all feature flags (admin only)
  */
 export async function getFeatureFlags(): Promise<FeatureFlagsResponse> {
+  requireControlPlaneRealm();
   return get<FeatureFlagsResponse>('/api/control/feature-flags');
 }
 
@@ -351,6 +375,7 @@ export async function upsertFeatureFlag(
   key: string,
   request: UpsertFeatureFlagRequest
 ): Promise<UpsertFeatureFlagResponse> {
+  requireControlPlaneRealm();
   return put<UpsertFeatureFlagResponse>(`/api/control/feature-flags/${key}`, request);
 }
 
@@ -376,6 +401,7 @@ export interface PayoutsResponse {
  * Backed by EventLog - returns payout-related authority decisions
  */
 export async function getPayouts(): Promise<PayoutsResponse> {
+  requireControlPlaneRealm();
   return get<PayoutsResponse>('/api/control/finance/payouts');
 }
 
@@ -401,6 +427,7 @@ export interface ComplianceRequestsResponse {
  * Backed by EventLog - returns compliance-related authority decisions
  */
 export async function getComplianceRequests(): Promise<ComplianceRequestsResponse> {
+  requireControlPlaneRealm();
   return get<ComplianceRequestsResponse>('/api/control/compliance/requests');
 }
 
@@ -427,6 +454,7 @@ export interface DisputesResponse {
  * Backed by EventLog - returns dispute-related authority decisions
  */
 export async function getDisputes(): Promise<DisputesResponse> {
+  requireControlPlaneRealm();
   return get<DisputesResponse>('/api/control/disputes');
 }
 
@@ -449,5 +477,6 @@ export interface SystemHealthResponse {
  * Returns computed health based on available telemetry
  */
 export async function getSystemHealth(): Promise<SystemHealthResponse> {
+  requireControlPlaneRealm();
   return get<SystemHealthResponse>('/api/control/system/health');
 }

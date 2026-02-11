@@ -84,6 +84,21 @@ export function getAuthRealm(): AuthRealm | null {
 }
 
 /**
+ * Wave 0-A: Reset authentication on realm change
+ * Aborts in-flight requests, clears all auth tokens, and navigates to root
+ * Prevents flicker loops and 401 storms during realm transitions
+ */
+export function resetOnRealmChange(): void {
+  // Clear all auth tokens
+  localStorage.removeItem(TENANT_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  localStorage.removeItem(AUTH_REALM_KEY);
+
+  // Navigate to root (single navigation, no loops)
+  window.location.href = '/';
+}
+
+/**
  * API Error interface - standardized error shape
  */
 export interface ApiError {

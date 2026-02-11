@@ -26,7 +26,14 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
       setTenants(response.tenants);
     } catch (err) {
       console.error('Failed to load tenants:', err);
-      if (err instanceof APIError) {
+      // Wave 0-A: Handle realm mismatch without network request
+      if (err instanceof Error && err.message.startsWith('REALM_MISMATCH')) {
+        setError({
+          status: 403,
+          message: 'This view requires admin privileges. Please log in as admin.',
+          code: 'REALM_MISMATCH',
+        } as APIError);
+      } else if (err instanceof APIError) {
         setError(err);
       } else {
         setError({
