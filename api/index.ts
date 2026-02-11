@@ -14,6 +14,7 @@ import fastifyHelmet from '@fastify/helmet';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import { config } from '../server/src/config/index.js';
+import { realmHintGuardOnRequest } from '../server/src/middleware/realmGuard.js';
 import authRoutes from '../server/src/routes/auth.js';
 import controlRoutes from '../server/src/routes/control.js';
 import tenantRoutes from '../server/src/routes/tenant.js';
@@ -116,6 +117,9 @@ fastify.get('/api', async () => {
     status: 'running',
   };
 });
+
+// Wave 0-B-FIX-V3: Realm hint header guard (runs before auth)
+fastify.addHook('onRequest', realmHintGuardOnRequest);
 
 // Kill switch check
 fastify.addHook('onRequest', async (request, reply) => {

@@ -8,7 +8,7 @@
  * into auth middleware where request.user is populated.
  */
 
-import type { FastifyRequest } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { sendError } from '../utils/response.js';
 
 /**
@@ -97,4 +97,71 @@ export function checkRealmMismatch(request: FastifyRequest, reply: any): boolean
   }
 
   return false;
+}
+
+/**
+ * Wave 0-B-FIX-V3: Realm hint header guard (onRequest hook)
+ *
+ * Checks X-Texqtic-Realm header against expected endpoint realm.
+ * Returns 403 WRONG_REALM if mismatch detected, BEFORE JWT verification.
+ *
+ * Benefits:
+ * - Restores user-friendly 403 WRONG_REALM error (not generic 401)
+ * - Does NOT verify JWT, preserves single-verifier isolation
+ * - Backwards compatible (no-op if header missing)
+ *
+ * MUST run in onRequest phase (before auth middleware)
+ */
+export async function realmHintGuardOnRequest(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  const expectedRealm = matchRealm(request.url);
+
+  // Public endpoints skip realm check
+  if (expectedRealm === 'public') {
+    return;
+  }
+
+  // Read realm hint header (case-insensitive)
+  const realmHint = (request.headers['x-texqtic-realm'] as string)?.toLowerCase();
+
+  // If no hint header, skip check (backwards compatible)
+  if (!realmHint) {
+    return;
+  }
+
+  // Normalize hint: "tenant" | "control" -> internal realm values
+  let hintRealm: 'tenant' | 'admin' | null = null;
+  if (realmHint === 'tenant') {
+    hintRealm = 'tenant';
+  } else if (realmHint === 'control') {
+    hintRealm = 'admin';
+  }
+
+  // Invalid hint value - ignore it
+  if (!hintRealm) {
+    return;
+  }
+
+  // Check for mismatch
+  if (expectedRealm === 'admin' && hintRealm !== 'admin') {
+    return sendError(
+      reply,
+      'WRONG_REALM',
+      'WRONG_REALM: This endpoint requires control-plane authentication.',
+      403
+    );
+  }
+
+  if (expectedRealm === 'tenant' && hintRealm !== 'tenant') {
+    return sendError(
+      reply,
+      'WRONG_REALM',
+      'WRONG_REALM: This endpoint requires tenant authentication.',
+      403
+    );
+  }
+
+  // Hint matches expected realm - proceed to auth verification
 }

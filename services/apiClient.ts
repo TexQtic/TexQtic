@@ -320,46 +320,54 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
 /**
  * GET request with automatic retry on transient failures
+ * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function get<T>(endpoint: string): Promise<T> {
-  return withRetry(() => apiRequest<T>(endpoint, { method: 'GET' }));
+export async function get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+  return withRetry(() => apiRequest<T>(endpoint, { method: 'GET', headers }));
 }
 
 /**
  * POST request
+ * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function post<T>(endpoint: string, body?: any): Promise<T> {
+export async function post<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     body: body ? JSON.stringify(body) : undefined,
+    headers,
   });
 }
 
 /**
  * PUT request
+ * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function put<T>(endpoint: string, body?: any): Promise<T> {
+export async function put<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
     body: body ? JSON.stringify(body) : undefined,
+    headers,
   });
 }
 
 /**
  * PATCH request
+ * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function patch<T>(endpoint: string, body?: any): Promise<T> {
+export async function patch<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PATCH',
     body: body ? JSON.stringify(body) : undefined,
+    headers,
   });
 }
 
 /**
  * DELETE request
+ * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function del<T>(endpoint: string): Promise<T> {
-  return apiRequest<T>(endpoint, { method: 'DELETE' });
+export async function del<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+  return apiRequest<T>(endpoint, { method: 'DELETE', headers });
 }
 
 /**
