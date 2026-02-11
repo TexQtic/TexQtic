@@ -38,9 +38,17 @@ export interface FeatureFlagCheck {
 }
 
 // API Response types
+export interface Warning {
+  code: string;
+  message: string;
+  severity?: 'INFO' | 'WARN' | 'CRITICAL';
+  metadata?: Record<string, unknown>;
+}
+
 export interface SuccessResponse<T = unknown> {
   success: true;
   data: T;
+  warnings?: Warning[];
 }
 
 export interface ErrorResponse {

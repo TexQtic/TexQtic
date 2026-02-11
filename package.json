@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "db:migrate": "cd server && npm run db:migrate",
     "db:studio": "cd server && npm run db:studio",
+    "validate:contracts": "node --import tsx scripts/validate-contracts.ts",
     "verify:identity": "powershell -Command \"$matches = Select-String -Path . -Pattern 'omni' -Recurse -Exclude *.lock,OMNIPLATFORM_* | Where-Object { $_.Path -notmatch '(node_modules|.git|dist|build|_ai_intake|vendor)' }; if ($matches) { Write-Host 'Identity hygiene: FAIL - Found omni references'; $matches | ForEach-Object { Write-Host $_.Path \":\" $_.LineNumber }; exit 1 } else { Write-Host 'Identity hygiene: PASS'; exit 0 }\""
   },
   "dependencies": {

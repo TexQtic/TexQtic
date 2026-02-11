@@ -1,5 +1,5 @@
 import type { FastifyReply } from 'fastify';
-import type { SuccessResponse, ErrorResponse } from '../types/index.js';
+import type { SuccessResponse, ErrorResponse, Warning } from '../types/index.js';
 
 export function sendSuccess<T>(
   reply: FastifyReply,
@@ -9,6 +9,20 @@ export function sendSuccess<T>(
   const response: SuccessResponse<T> = {
     success: true,
     data,
+  };
+  return reply.code(statusCode).send(response);
+}
+
+export function sendSuccessWithWarnings<T>(
+  reply: FastifyReply,
+  data: T,
+  warnings: Warning[],
+  statusCode: number = 200
+): FastifyReply {
+  const response: SuccessResponse<T> = {
+    success: true,
+    data,
+    warnings: warnings.length > 0 ? warnings : undefined,
   };
   return reply.code(statusCode).send(response);
 }

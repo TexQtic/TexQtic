@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-02-11T00:00:00Z",
+  "contracts": {
+    "control-plane": {
+      "file": "openapi.control-plane.json",
+      "endpoints": 15,
+      "lastUpdated": "2026-02-08",
+      "status": "partial"
+    },
+    "tenant": {
+      "file": "openapi.tenant.json",
+      "endpoints": 22,
+      "lastUpdated": "2026-02-08",
+      "status": "partial"
+    }
+  },
+  "governance": {
+    "architecture": "ARCHITECTURE-GOVERNANCE.md",
+    "naming": "db-naming-rules.md",
+    "rls": "rls-policy.md",
+    "schema-budget": "schema-budget.md",
+    "events": "event-names.md"
+  },
+  "validation": {
+    "enabled": false,
+    "strict": false,
+    "enforcedEndpoints": []
+  }
+}
