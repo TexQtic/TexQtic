@@ -14,7 +14,7 @@
 // 3. Production check: prevent localhost in production builds
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  
+
   // If no env var, use same-origin (empty string)
   // This makes calls like: fetch("/api/auth/login")
   if (!envUrl) {
@@ -23,10 +23,11 @@ const API_BASE_URL = (() => {
 
   // If env var is set, validate it
   const baseUrl = envUrl;
-  
+
   // Runtime assertion: prevent localhost in production
   if (import.meta.env.PROD && baseUrl.includes('localhost')) {
-    const error = '🚨 FATAL: Production build is calling localhost API. Set VITE_API_BASE_URL to production URL or remove it for same-origin.';
+    const error =
+      '🚨 FATAL: Production build is calling localhost API. Set VITE_API_BASE_URL to production URL or remove it for same-origin.';
     console.error(error);
     throw new Error(error);
   }
