@@ -27,7 +27,7 @@ export const FinanceOps: React.FC = () => {
   }, []);
 
   if (loading) return <LoadingState message="Loading finance operations..." />;
-  if (error) return <ErrorState message={error} />;
+  if (error) return <ErrorState error={{ message: error }} />;
 
   return (
     <div className="space-y-6">
@@ -70,7 +70,7 @@ export const FinanceOps: React.FC = () => {
           Payout Authority Decisions
         </div>
         {payouts.length === 0 ? (
-          <EmptyState message="No payout decisions recorded yet" />
+          <EmptyState title="No payout decisions" message="No payout decisions recorded yet" />
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-800/50 text-slate-500 border-b border-slate-800">

@@ -27,8 +27,8 @@ export const SystemHealth: React.FC = () => {
   }, []);
 
   if (loading) return <LoadingState message="Loading system health..." />;
-  if (error) return <ErrorState message={error} />;
-  if (!health) return <ErrorState message="No health data available" />;
+  if (error) return <ErrorState error={{ message: error }} />;
+  if (!health) return <ErrorState error={{ message: 'No health data available' }} />;
 
   return (
     <div className="space-y-6">

@@ -27,7 +27,7 @@ export const ComplianceQueue: React.FC = () => {
   }, []);
 
   if (loading) return <LoadingState message="Loading compliance data..." />;
-  if (error) return <ErrorState message={error} />;
+  if (error) return <ErrorState error={{ message: error }} />;
 
   return (
     <div className="space-y-6">
@@ -42,7 +42,10 @@ export const ComplianceQueue: React.FC = () => {
 
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         {requests.length === 0 ? (
-          <EmptyState message="No compliance decisions recorded yet" />
+          <EmptyState
+            title="No compliance decisions"
+            message="No compliance decisions recorded yet"
+          />
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-800/50 text-slate-500 border-b border-slate-800">

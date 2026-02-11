@@ -27,7 +27,7 @@ export const AiGovernance: React.FC = () => {
   }, []);
 
   if (loading) return <LoadingState message="Loading AI governance data..." />;
-  if (error) return <ErrorState message={error} />;
+  if (error) return <ErrorState error={{ message: error }} />;
 
   return (
     <div className="space-y-6">
@@ -72,14 +72,14 @@ export const AiGovernance: React.FC = () => {
           Tenant Usage & Budgets
         </div>
         {tenants.length === 0 ? (
-          <EmptyState message="No tenants found" />
+          <EmptyState title="No tenants found" message="No tenants available to display" />
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-800/50 text-slate-500 border-b border-slate-800">
               <tr>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Tenant</th>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Monthly Limit</th>
-                <th className="px-6 py-3 font-bold uppercase text-[10px]">Hard Stop</th>
+                <th className="px-6 py-3 font-bold uppercase text-[10px]">Current Usage</th>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Actions</th>
               </tr>
             </thead>
@@ -91,7 +91,7 @@ export const AiGovernance: React.FC = () => {
                     {t.aiBudget ? t.aiBudget.monthlyLimit.toLocaleString() : '—'}
                   </td>
                   <td className="px-6 py-4 font-mono text-slate-400">
-                    {t.aiBudget ? (t.aiBudget.hardStop ? 'Yes' : 'No') : '—'}
+                    {t.aiBudget ? `${t.aiBudget.currentUsage.toLocaleString()} used` : '—'}
                   </td>
                   <td className="px-6 py-4">
                     <button className="text-slate-400 hover:text-white text-xs uppercase font-bold">

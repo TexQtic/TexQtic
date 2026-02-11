@@ -27,7 +27,7 @@ export const DisputeCases: React.FC = () => {
   }, []);
 
   if (loading) return <LoadingState message="Loading disputes..." />;
-  if (error) return <ErrorState message={error} />;
+  if (error) return <ErrorState error={{ message: error }} />;
 
   if (disputes.length === 0) {
     return (
@@ -40,7 +40,7 @@ export const DisputeCases: React.FC = () => {
             </p>
           </div>
         </div>
-        <EmptyState message="No dispute decisions recorded yet" />
+        <EmptyState title="No disputes" message="No dispute decisions recorded yet" />
       </div>
     );
   }
