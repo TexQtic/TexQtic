@@ -330,7 +330,11 @@ export async function get<T>(endpoint: string, headers?: Record<string, string>)
  * POST request
  * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function post<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
+export async function post<T>(
+  endpoint: string,
+  body?: any,
+  headers?: Record<string, string>
+): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     body: body ? JSON.stringify(body) : undefined,
@@ -342,7 +346,11 @@ export async function post<T>(endpoint: string, body?: any, headers?: Record<str
  * PUT request
  * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function put<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
+export async function put<T>(
+  endpoint: string,
+  body?: any,
+  headers?: Record<string, string>
+): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
     body: body ? JSON.stringify(body) : undefined,
@@ -354,7 +362,11 @@ export async function put<T>(endpoint: string, body?: any, headers?: Record<stri
  * PATCH request
  * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function patch<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
+export async function patch<T>(
+  endpoint: string,
+  body?: any,
+  headers?: Record<string, string>
+): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PATCH',
     body: body ? JSON.stringify(body) : undefined,

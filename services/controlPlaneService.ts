@@ -19,9 +19,7 @@ function requireControlPlaneRealm(): void {
   const realm = getAuthRealm();
   if (realm !== 'CONTROL_PLANE') {
     throw new Error(
-      `REALM_MISMATCH: Control-plane endpoint requires CONTROL_PLANE realm, got ${
-        realm || 'NONE'
-      }`
+      `REALM_MISMATCH: Control-plane endpoint requires CONTROL_PLANE realm, got ${realm || 'NONE'}`
     );
   }
 }
