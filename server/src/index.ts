@@ -48,9 +48,35 @@ await fastify.register(fastifyHelmet, {
   contentSecurityPolicy: false, // Disable for dev; configure for production
 });
 
+// CORS configuration with allowlist + Vercel preview support
+const allowedOrigins = config.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim());
+
 await fastify.register(fastifyCors, {
-  origin: config.CORS_ORIGIN,
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) {
+      cb(null, true);
+      return;
+    }
+
+    // Check explicit allowlist
+    if (allowedOrigins.includes(origin)) {
+      cb(null, true);
+      return;
+    }
+
+    // Allow Vercel preview deployments (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) {
+      cb(null, true);
+      return;
+    }
+
+    // Reject all other origins
+    cb(new Error('Not allowed by CORS'), false);
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 });
 
 await fastify.register(fastifyCookie, {

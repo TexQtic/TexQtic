@@ -21,7 +21,9 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1),
 
   // CORS
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  CORS_ALLOWED_ORIGINS: z
+    .string()
+    .default('http://localhost:5173,https://www.texqtic.com,https://texqtic.com'),
 
   // Feature Flags
   KILL_SWITCH_ALL: z
