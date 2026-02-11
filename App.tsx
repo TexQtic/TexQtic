@@ -72,7 +72,13 @@ const App: React.FC = () => {
   const [showCart, setShowCart] = useState(false);
 
   // Fetch tenants from backend (for tenant picker in bottom-right)
+  // GUARD: Only load control-plane tenants when in Staff Control Plane view
   useEffect(() => {
+    // Skip if not in control plane view or wrong realm
+    if (appState !== 'CONTROL_PLANE' || authRealm !== 'CONTROL_PLANE') {
+      return;
+    }
+
     const fetchTenants = async () => {
       setTenantsLoading(true);
       setTenantsError(null);
@@ -91,7 +97,7 @@ const App: React.FC = () => {
       }
     };
     fetchTenants();
-  }, []);
+  }, [appState, authRealm]);
 
   // Helper to normalize plan string to strict union type
   const normalizePlan = (plan: string | null | undefined): 'TRIAL' | 'PAID' | 'ENTERPRISE' => {
