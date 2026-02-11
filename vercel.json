@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "buildCommand": "npm install && npm run build && cd server && npm install",
+  "outputDirectory": "dist",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
