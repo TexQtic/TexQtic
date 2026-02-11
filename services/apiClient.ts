@@ -208,13 +208,15 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
       // 401: Unauthorized
       if (response.status === 401) {
+        const hadToken = !!token; // Only redirect if session existed
+
         clearAuth();
-        window.location.href = '/'; // Redirect to login
-        throw new APIError(
-          401,
-          errorData.error?.message || 'Session expired. Please log in again.',
-          'UNAUTHORIZED'
-        );
+
+        if (hadToken) {
+          window.location.href = '/'; // Session expired -> redirect to login
+        }
+
+        throw new APIError(401, errorData.error?.message || 'Unauthorized', 'UNAUTHORIZED');
       }
 
       // 403: Forbidden
