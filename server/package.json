@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev:preflight": "tsx scripts/dev-preflight.ts",
     "dev": "npm run dev:preflight && tsx watch src/index.ts",
     "build": "tsc",
