@@ -8,7 +8,24 @@
  * - Token management
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// API Base URL Resolution:
+// 1. Use VITE_API_BASE_URL from env (set in Vercel)
+// 2. Fallback to localhost:3001 for local dev
+// 3. Production check: prevent localhost in production builds
+const API_BASE_URL = (() => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  const fallback = 'http://localhost:3001';
+  const baseUrl = envUrl || fallback;
+
+  // Runtime assertion: prevent localhost in production
+  if (import.meta.env.PROD && baseUrl.includes('localhost')) {
+    const error = '🚨 FATAL: Production build is calling localhost API. Set VITE_API_BASE_URL env var.';
+    console.error(error);
+    throw new Error(error);
+  }
+
+  return baseUrl;
+})();
 
 // Token storage keys
 const TENANT_TOKEN_KEY = 'texqtic_tenant_token';
