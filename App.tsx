@@ -93,6 +93,13 @@ const App: React.FC = () => {
     fetchTenants();
   }, []);
 
+  // Helper to normalize plan string to strict union type
+  const normalizePlan = (plan: string | null | undefined): 'TRIAL' | 'PAID' | 'ENTERPRISE' => {
+    if (plan === 'TRIAL' || plan === 'PAID' || plan === 'ENTERPRISE') return plan;
+    if (plan === 'PROFESSIONAL') return 'PAID'; // Map PROFESSIONAL -> PAID
+    return 'TRIAL'; // Safe default
+  };
+
   // Convert backend Tenant to TenantConfig for UI compatibility
   const currentTenant: TenantConfig | null = useMemo(() => {
     const tenant = tenants.find(t => t.id === currentTenantId);
@@ -104,7 +111,7 @@ const App: React.FC = () => {
       name: tenant.name,
       type: tenant.type as TenantType,
       status: tenant.status as any,
-      plan: tenant.plan,
+      plan: normalizePlan(tenant.plan),
       theme: {
         primaryColor: tenant.branding?.primaryColor || '#4F46E5',
         secondaryColor: '#10B981',
@@ -187,8 +194,11 @@ const App: React.FC = () => {
   const renderExperienceContent = () => {
     if (!currentTenant) {
       return (
-        <div className="p-8 text-center">
-          <p className="text-slate-500">Loading tenant data...</p>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="text-4xl mb-4">⏳</div>
+            <p className="text-slate-500">Loading tenant data...</p>
+          </div>
         </div>
       );
     }
@@ -588,6 +598,17 @@ const App: React.FC = () => {
       case 'INVITE_MEMBER':
       case 'SETTINGS':
       case 'EXPERIENCE': {
+        if (!currentTenant) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-center">
+                <div className="text-4xl mb-4">⏳</div>
+                <p className="text-slate-500">Loading workspace...</p>
+              </div>
+            </div>
+          );
+        }
+
         const props = {
           tenant: currentTenant,
           children: renderExperienceContent(),
