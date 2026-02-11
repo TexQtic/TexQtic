@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { sendUnauthorized, sendForbidden, sendError } from '../utils/response.js';
+import { sendUnauthorized, sendForbidden } from '../utils/response.js';
 import { verifyTenantAccess, getUserMembership } from '../db/withDbContext.js';
 import { checkRealmMismatch } from './realmGuard.js';
 
