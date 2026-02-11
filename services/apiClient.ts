@@ -9,17 +9,24 @@
  */
 
 // API Base URL Resolution:
-// 1. Use VITE_API_BASE_URL from env (set in Vercel)
-// 2. Fallback to localhost:3001 for local dev
+// 1. Default to same-origin (empty string) for Vercel deployment
+// 2. Allow VITE_API_BASE_URL override for alternative API endpoints
 // 3. Production check: prevent localhost in production builds
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  const fallback = 'http://localhost:3001';
-  const baseUrl = envUrl || fallback;
+  
+  // If no env var, use same-origin (empty string)
+  // This makes calls like: fetch("/api/auth/login")
+  if (!envUrl) {
+    return '';
+  }
 
+  // If env var is set, validate it
+  const baseUrl = envUrl;
+  
   // Runtime assertion: prevent localhost in production
   if (import.meta.env.PROD && baseUrl.includes('localhost')) {
-    const error = '🚨 FATAL: Production build is calling localhost API. Set VITE_API_BASE_URL env var.';
+    const error = '🚨 FATAL: Production build is calling localhost API. Set VITE_API_BASE_URL to production URL or remove it for same-origin.';
     console.error(error);
     throw new Error(error);
   }
