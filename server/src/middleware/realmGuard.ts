@@ -4,11 +4,12 @@
  * Validates JWT realm matches endpoint expectations.
  * Prevents token misuse (e.g., tenant token on admin endpoint).
  *
- * Must run AFTER JWT verification middleware.
+ * This module exports utilities for realm checking that are integrated
+ * into auth middleware where request.user is populated.
  */
 
-import type { FastifyRequest, FastifyReply } from 'fastify';
-import { sendForbidden } from '../utils/response.js';
+import type { FastifyRequest } from 'fastify';
+import { sendError } from '../utils/response.js';
 
 /**
  * Endpoint to realm mapping
@@ -29,7 +30,7 @@ const ENDPOINT_REALM_MAP: Record<string, 'tenant' | 'admin' | 'public'> = {
  * Match request URL to expected realm
  * Uses longest-prefix matching for deterministic routing
  */
-function matchRealm(url: string): 'tenant' | 'admin' | 'public' {
+export function matchRealm(url: string): 'tenant' | 'admin' | 'public' {
   // Extract pathname (remove query string)
   const pathname = url.split('?')[0];
 
@@ -50,45 +51,50 @@ function matchRealm(url: string): 'tenant' | 'admin' | 'public' {
 }
 
 /**
- * Realm guard middleware
- * Validates JWT realm matches endpoint expectations
+ * Check if token realm matches endpoint expectations
+ * Returns error response if mismatch detected
  *
- * NOTE: Must run AFTER JWT verification middleware
+ * Should be called from within auth middleware after JWT verification
  */
-export async function realmGuardMiddleware(
-  request: FastifyRequest,
-  reply: FastifyReply
-): Promise<void> {
+export function checkRealmMismatch(request: FastifyRequest, reply: any): boolean {
   const expectedRealm = matchRealm(request.url);
 
   // Public endpoints skip realm check
   if (expectedRealm === 'public') {
-    return;
+    return false;
   }
 
   // Check JWT payload realm
   const jwtPayload = request.user as any;
 
-  // No token present - let auth middleware handle 401
+  // No token present - not a realm mismatch, auth will handle
   if (!jwtPayload) {
-    return;
+    return false;
   }
 
   if (expectedRealm === 'admin') {
     // Admin endpoint requires admin JWT
     if (!jwtPayload?.adminId) {
-      return sendForbidden(
+      sendError(
         reply,
-        'Admin endpoint requires admin token. Please log in as admin.'
+        'WRONG_REALM',
+        'This endpoint requires admin authentication. Please log in as admin.',
+        403
       );
+      return true;
     }
   } else if (expectedRealm === 'tenant') {
     // Tenant endpoint requires tenant JWT
     if (!jwtPayload?.userId || !jwtPayload?.tenantId) {
-      return sendForbidden(
+      sendError(
         reply,
-        'Tenant endpoint requires tenant token. Please log in as tenant user.'
+        'WRONG_REALM',
+        'This endpoint requires tenant authentication. Please log in with a tenant account.',
+        403
       );
+      return true;
     }
   }
+
+  return false;
 }

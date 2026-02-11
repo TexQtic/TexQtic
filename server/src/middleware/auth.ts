@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { sendUnauthorized, sendForbidden } from '../utils/response.js';
+import { sendUnauthorized, sendForbidden, sendError } from '../utils/response.js';
 import { verifyTenantAccess, getUserMembership } from '../db/withDbContext.js';
+import { checkRealmMismatch } from './realmGuard.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -46,6 +47,11 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
       return sendUnauthorized(reply, 'Invalid token payload');
     }
 
+    // Wave 0-B: Check realm mismatch using centralized mapping
+    if (checkRealmMismatch(request, reply)) {
+      return; // checkRealmMismatch already sent 403 WRONG_REALM response
+    }
+
     // Verify membership
     const membership = await getUserMembership(payload.userId, payload.tenantId);
     if (!membership) {
@@ -60,7 +66,12 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
     try {
       await request.adminJwtVerify();
       // If admin verify succeeds, it's a valid token but wrong realm
-      return sendForbidden(reply, 'Admin token not valid for tenant endpoints');
+      return sendError(
+        reply,
+        'WRONG_REALM',
+        'This endpoint requires tenant authentication. Please log in with a tenant account.',
+        403
+      );
     } catch {
       // Neither realm accepts it - truly invalid
       return sendUnauthorized(reply, 'Invalid or expired token');
@@ -84,12 +95,22 @@ export async function adminAuthMiddleware(request: FastifyRequest, reply: Fastif
     request.isAdmin = true;
     request.adminId = payload.adminId;
     request.adminRole = payload.role;
+
+    // Wave 0-B: Check realm mismatch using centralized mapping
+    if (checkRealmMismatch(request, reply)) {
+      return; // checkRealmMismatch already sent 403 WRONG_REALM response
+    }
   } catch {
     // Check if it's actually a tenant token (wrong realm)
     try {
       await request.tenantJwtVerify({ onlyCookie: false });
       // If tenant verify succeeds, it's a valid token but wrong realm
-      return sendForbidden(reply, 'Tenant token not valid for admin endpoints');
+      return sendError(
+        reply,
+        'WRONG_REALM',
+        'This endpoint requires admin authentication. Please log in as admin.',
+        403
+      );
     } catch {
       // Neither realm accepts it - truly invalid
       return sendUnauthorized(reply, 'Invalid or expired admin token');

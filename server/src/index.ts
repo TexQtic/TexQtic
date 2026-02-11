@@ -100,10 +100,6 @@ await fastify.register(fastifyJwt, {
   jwtSign: 'adminJwtSign',
 });
 
-// Wave 0-B: Realm guard middleware (must run after JWT registration)
-import { realmGuardMiddleware } from './middleware/realmGuard.js';
-fastify.addHook('onRequest', realmGuardMiddleware);
-
 // Health check
 fastify.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() };
