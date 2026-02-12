@@ -55,6 +55,20 @@ RLS does **NOT** attempt to:
 - **Prevent all logic bugs**: RLS enforces tenant boundaries but does not validate business rules.
 - **Serve as API-level authZ**: API middleware still validates JWTs, extracts claims, and enforces endpoint-level permissions.
 - **Eliminate security testing**: RLS policies must be tested like any other critical system component.
+- **Enforce Maker-Checker workflows**: RLS protects organizational boundaries ("which tenant"). Maker-Checker enforces process rules ("which approver"). Both are required; neither replaces the other.
+
+**Clarification: RLS vs. Maker-Checker**
+
+RLS answers: **"Can Org A access this resource?"** (boundary enforcement)  
+Maker-Checker answers: **"Can User X approve this action?"** (process enforcement)
+
+**Example:**
+
+- RLS ensures Org A cannot see Org B's escrow accounts
+- Maker-Checker ensures two Org A users must co-sign before funds release
+
+RLS is the **constitutional layer** protecting tenant isolation.  
+Maker-Checker is the **procedural layer** enforcing dual-signature governance.
 
 ---
 
@@ -74,12 +88,13 @@ SET LOCAL app.request_id = '<uuid>'; -- for audit trail
 
 ### 4.2 Context Fields
 
-| Field            | Type | Required | Purpose                                      |
-| ---------------- | ---- | -------- | -------------------------------------------- |
-| `app.org_id`     | UUID | Yes      | Tenant/organization identifier               |
-| `app.actor_id`   | UUID | Yes      | User/service performing the action           |
-| `app.realm`      | TEXT | Yes      | Execution context: `'tenant'` or `'control'` |
-| `app.request_id` | UUID | Yes      | Request correlation ID for audit             |
+| Field            | Type   | Required | Purpose                                                    |
+| ---------------- | ------ | -------- | ---------------------------------------------------------- |
+| `app.org_id`     | UUID   | Yes      | Tenant/organization identifier                             |
+| `app.actor_id`   | UUID   | Yes      | User/service performing the action                         |
+| `app.realm`      | TEXT   | Yes      | Execution context: `'tenant'` or `'control'`               |
+| `app.request_id` | UUID   | Yes      | Request correlation ID for audit                           |
+| `app.roles`      | TEXT[] | Optional | User role array (PostgreSQL TEXT[] type — NOT CSV or JSON) |
 
 ### 4.3 RLS Policy Template (Standard Pattern)
 
@@ -89,25 +104,114 @@ All tenant-scoped tables SHALL use this policy pattern:
 -- Enable RLS
 ALTER TABLE <table_name> ENABLE ROW LEVEL SECURITY;
 
--- Tenant isolation policy (SELECT)
+-- Context helper function (fail-closed enforcement)
+CREATE OR REPLACE FUNCTION app.require_org_id()
+RETURNS uuid
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  org_id uuid;
+BEGIN
+  org_id := current_setting('app.org_id', TRUE)::uuid;
+  IF org_id IS NULL THEN
+    RAISE EXCEPTION 'Missing required context: app.org_id';
+  END IF;
+  RETURN org_id;
+END;
+$$;
+
+-- Tenant isolation policy (SELECT) — FAIL-CLOSED
 CREATE POLICY tenant_isolation_select ON <table_name>
   FOR SELECT
   USING (
-    org_id = current_setting('app.org_id', TRUE)::uuid
+    org_id = app.require_org_id()
   );
 
--- Tenant isolation policy (INSERT/UPDATE/DELETE)
+-- Tenant isolation policy (INSERT/UPDATE/DELETE) — FAIL-CLOSED
 CREATE POLICY tenant_isolation_modify ON <table_name>
   FOR ALL
   USING (
-    org_id = current_setting('app.org_id', TRUE)::uuid
+    org_id = app.require_org_id()
   )
   WITH CHECK (
-    org_id = current_setting('app.org_id', TRUE)::uuid
+    org_id = app.require_org_id()
   );
 ```
 
-### 4.4 Control Plane Tables (Realm-Aware)
+**Critical Design Decision: Fail-Closed, Not Fail-Open**
+
+Policies MUST use `app.require_org_id()` which **throws an error** if context is missing.  
+**DO NOT** silently return zero rows — that masks systemic failure and creates regulatory risk.
+
+### 4.4 Events Table (Immutable Legal Ledger)
+
+**Special Status:** Events are the canonical legal record. RLS must protect event integrity while supporting multiple read patterns.
+
+**Event Types & Isolation:**
+
+1. **Tenant-Scoped Events** (invoices, payments, trade parties)  
+   Visible only to owning tenant
+
+2. **Governance-Level Events** (maker-checker approvals, overrides)  
+   Visible to control plane AND owning tenant
+
+3. **Service-Level Events** (projection updates, saga steps)  
+   Internal events; control plane visibility
+
+4. **Regulator Read-Only Access**  
+   Realm-based read access for compliance queries
+
+**Policy Implementation:**
+
+```sql
+-- Enable RLS
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+-- Read isolation: Tenant-scoped OR control plane
+CREATE POLICY events_read_isolation ON events
+  FOR SELECT
+  USING (
+    -- Control plane: see all events
+    current_setting('app.realm', TRUE) = 'control'
+    OR
+    -- Tenant plane: see only own events (fail-closed)
+    (current_setting('app.realm', TRUE) = 'tenant' AND org_id = app.require_org_id())
+  );
+
+-- Write isolation: Services MUST set context
+CREATE POLICY events_write_isolation ON events
+  FOR INSERT
+  WITH CHECK (
+    -- Enforce context presence
+    org_id = app.require_org_id()
+    AND
+    -- Enforce actor tracking
+    actor_id = current_setting('app.actor_id', TRUE)::uuid
+  );
+
+-- Immutability: Events are append-only (event sourcing)
+CREATE POLICY events_immutable ON events
+  FOR UPDATE
+  USING (false); -- No updates allowed
+
+CREATE POLICY events_no_delete ON events
+  FOR DELETE
+  USING (false); -- No deletes allowed
+```
+
+**Maker-Checker Integration:**
+
+RLS enforces **organizational boundary** (which tenant's events).  
+Maker-Checker enforces **process rules** (who can approve/override).
+
+These are orthogonal concerns:
+
+- RLS = "Can Org A see this event?" (boundary)
+- Maker-Checker = "Can User X approve this action?" (process)
+
+Both MUST be enforced; neither replaces the other.
+
+### 4.5 Control Plane Tables (Realm-Aware)
 
 Control plane tables (e.g., `organizations`, `system_config`) use realm-based policies:
 
@@ -222,6 +326,32 @@ export async function setTestBypass(prisma: PrismaClient): Promise<void> {
   await prisma.$executeRaw`SET LOCAL app.bypass_rls = 'true'`;
 }
 ```
+
+**CRITICAL: Database Role Restriction**
+
+The production application database role (`app_user`) **MUST NOT** have permission to set `app.bypass_rls`.
+
+**Role-Based Enforcement:**
+
+```sql
+-- Production role (CANNOT bypass RLS)
+CREATE ROLE app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+REVOKE SET ON PARAMETER app.bypass_rls FROM app_user; -- Explicit denial
+
+-- Test role (CAN bypass RLS for seeding)
+CREATE ROLE test_user;
+GRANT app_user TO test_user; -- Inherits base permissions
+GRANT SET ON PARAMETER app.bypass_rls TO test_user; -- Explicit grant
+
+-- Migration role (superuser for schema changes only)
+CREATE ROLE migration_user WITH SUPERUSER;
+```
+
+**Why This Matters:**
+
+Without role-based restriction, a SQL injection vulnerability becomes a **full RLS bypass**.  
+By revoking `SET` permission on `app.bypass_rls`, injection cannot disable RLS policies.
 
 ### Mode 3: Test-Safe Policies
 
@@ -357,13 +487,27 @@ If you write a new service, microservice, or background worker:
 3. Call `setDatabaseContext()` before ANY Prisma query
 4. **No context, no database.**
 
-### 9.4 Failure Mode
+### 9.4 Failure Mode (Fail-Closed Enforcement)
 
 If a service attempts to query without context:
 
-- RLS policies SHOULD block the query (return zero rows)
-- Application SHOULD log a critical error
-- Monitoring SHOULD alert on context-missing queries
+- RLS policies **MUST throw an error** (via `app.require_org_id()`)
+- Application **MUST NOT** silently return zero rows (masks systemic failure)
+- Monitoring **MUST** alert on context-missing errors
+- Incident response **MUST** investigate root cause (missing middleware, bypass attempt)
+
+**Why Fail-Closed:**
+
+Returning zero rows creates **false confidence**.  
+Operators assume "no data" when the real issue is "broken context propagation".
+
+In regulated environments, this is catastrophic:
+
+- Regulator export shows zero invoices → Audit failure
+- Compliance query returns empty set → Missed obligation
+- Background job silently skips all orgs → Data loss
+
+**Fail hard, fail visible, fail early.**
 
 ---
 
