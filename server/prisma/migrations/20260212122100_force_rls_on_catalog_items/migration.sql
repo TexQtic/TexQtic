@@ -1,0 +1,14 @@
+-- ============================================================================
+-- DB-HARDENING-WAVE-01 Gate A (Addendum): Force RLS for Table Owner
+-- Purpose: Ensure table owner respects RLS policies (constitutional enforcement)
+-- Context: Initial migration enabled RLS but didn't force it for owner
+-- ============================================================================
+-- CRITICAL FIX: Force RLS even for table owner (typical: postgres user)
+-- Without this, the table owner bypasses ALL policies (fail-open, not fail-closed)
+-- With this, EVERYONE must pass through RLS policies (true constitutional enforcement)
+ALTER TABLE catalog_items FORCE ROW LEVEL SECURITY;
+-- Verification:
+-- SELECT relname, relrowsecurity, relforcerowsecurity 
+-- FROM pg_class 
+-- WHERE relname = 'catalog_items';
+-- Expected: relrowsecurity = true, relforcerowsecurity = true
