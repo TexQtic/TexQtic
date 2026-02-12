@@ -1,0 +1,25 @@
+-- DB-HARDENING-WAVE-01 Gate B.2 — Drop legacy catalog_items tenant policy
+-- 
+-- RATIONALE:
+-- The legacy policy catalog_items_tenant_read uses app.tenant_id (pre-Doctrine v1.4).
+-- Gate B establishes app.org_id as the single source of truth (Section 11.3).
+-- The catalog_items table has updated RLS policies that use app.current_org_id().
+-- This legacy policy is now deadweight and must be removed.
+--
+-- CONSTITUTIONAL COMPLIANCE:
+-- - Supports single source of truth (app.org_id ONLY)
+-- - Removes reference to legacy context variable (app.tenant_id)
+-- - Makes RLS enforcement consistent across all catalog_items policies
+--
+-- SAFETY:
+-- - Uses IF EXISTS (idempotent, safe for re-runs)
+-- - Only affects catalog_items table (pilot scope)
+-- - Does NOT affect new RLS policies created in Gate A
+--
+-- VERIFICATION (after migration):
+-- SELECT polname, polcmd FROM pg_policy WHERE polrelid = 'catalog_items'::regclass;
+-- Expected: catalog_items_tenant_* policies (using app.current_org_id)
+-- Expected: catalog_items_bypass_* policies (using app.bypass_enabled)
+-- NOT expected: catalog_items_tenant_read (legacy, deleted by this migration)
+
+DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;

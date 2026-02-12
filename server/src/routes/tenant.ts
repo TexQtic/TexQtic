@@ -1,8 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
-import { sendSuccess, sendError, sendValidationError, sendNotFound } from '../utils/response.js';
-import { withDbContext } from '../db/withDbContext.js';
+import { sendSuccess, sendError, sendValidationError, sendNotFound, sendUnauthorized } from '../utils/response.js';
+import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
+import { withDbContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 
@@ -50,7 +51,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/tenant/audit-logs', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
     const { tenantId } = request;
 
-    const logs = await withDbContext({ tenantId }, async () => {
+    const logs = await withDbContextLegacy({ tenantId }, async () => {
       return await prisma.auditLog.findMany({
         where: { tenantId },
         orderBy: { createdAt: 'desc' },
@@ -71,7 +72,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     async (request, reply) => {
       const { tenantId } = request;
 
-      const memberships = await withDbContext({ tenantId }, async () => {
+      const memberships = await withDbContextLegacy({ tenantId }, async () => {
         return await prisma.membership.findMany({
           where: { tenantId },
           include: {
@@ -93,12 +94,18 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/tenant/catalog/items
    * Read tenant-visible catalog items with cursor pagination
+   * 
+   * Gate B.2: RLS-enforced tenant isolation via app.org_id context
+   * Manual tenant filters removed; RLS policies handle tenant boundary
    */
   fastify.get(
     '/tenant/catalog/items',
     { onRequest: tenantAuthMiddleware },
     async (request, reply) => {
-      const { tenantId } = request;
+      // Fail-closed: require database context (from databaseContextMiddleware)
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
 
       // Validate query params
       const querySchema = z.object({
@@ -114,10 +121,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { q, limit, cursor } = parseResult.data;
 
-      const items = await withDbContext({ tenantId }, async () => {
-        return await prisma.catalogItem.findMany({
+      // Gate B.2: RLS-enforced query (no manual tenantId filter)
+      // Tenant isolation enforced by: catalog_items tenant_id = app.current_org_id()
+      const items = await withDbContext(prisma, request.dbContext, async (tx) => {
+        return await tx.catalogItem.findMany({
           where: {
-            tenantId,
+            // Manual tenant filter REMOVED (RLS enforces tenant boundary)
             active: true,
             ...(q && {
               OR: [
@@ -159,7 +168,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing', 401);
     }
 
-    const result = await withDbContext({ tenantId }, async () => {
+    const result = await withDbContextLegacy({ tenantId }, async () => {
       return await prisma.$transaction(async tx => {
         // Find existing active cart
         let cart = await tx.cart.findFirst({
@@ -241,7 +250,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/tenant/cart', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
     const { tenantId, userId } = request;
 
-    const cart = await withDbContext({ tenantId }, async () => {
+    const cart = await withDbContextLegacy({ tenantId }, async () => {
       return await prisma.cart.findFirst({
         where: {
           tenantId,
@@ -301,7 +310,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { catalogItemId, quantity } = parseResult.data;
 
-      const result = await withDbContext({ tenantId }, async () => {
+      const result = await withDbContextLegacy({ tenantId }, async () => {
         return await prisma.$transaction(async tx => {
           // Validate catalog item exists, belongs to tenant, and is active
           const catalogItem = await tx.catalogItem.findUnique({
@@ -473,7 +482,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { quantity } = bodyResult.data;
 
-      const result = await withDbContext({ tenantId }, async () => {
+      const result = await withDbContextLegacy({ tenantId }, async () => {
         return await prisma.$transaction(async tx => {
           // Find cart item and verify it belongs to user's active cart
           const cartItem = await tx.cartItem.findUnique({
@@ -647,7 +656,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const passwordHash = await bcrypt.hash(userData.password, 10);
 
       // Create user and membership in transaction
-      const result = await withDbContext({ tenantId: invite.tenantId }, async () => {
+      const result = await withDbContextLegacy({ tenantId: invite.tenantId }, async () => {
         return await prisma.$transaction(async tx => {
           // Create or find user
           let user = await tx.user.findUnique({
@@ -758,7 +767,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
         // Create invite
-        const invite = await withDbContext({ tenantId }, async () => {
+        const invite = await withDbContextLegacy({ tenantId }, async () => {
           return await prisma.invite.create({
             data: {
               tenantId: tenantId,
@@ -834,7 +843,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const { logoUrl, themeJson } = parseResult.data;
 
         // Update or create branding
-        const branding = await withDbContext({ tenantId }, async () => {
+        const branding = await withDbContextLegacy({ tenantId }, async () => {
           return await prisma.tenantBranding.upsert({
             where: { tenantId: tenantId },
             create: {
