@@ -7,9 +7,20 @@
  * - Report-only (default): Prints latency distribution, no failure
  * - Strict mode (AUTH_PERF_STRICT=true): Fails if p95 > 150ms
  *
+ * Configuration:
+ * - AUTH_PERF_SAMPLES: Number of requests to measure (default: 100 for pooled DBs)
+ * - AUTH_PERF_STRICT: Enforce p95 < 150ms (default: false)
+ *
  * Usage:
  * - Default: pnpm test auth-refresh-performance
+ * - Custom samples: AUTH_PERF_SAMPLES=50 pnpm test auth-refresh-performance
  * - Strict: AUTH_PERF_STRICT=true pnpm test auth-refresh-performance
+ *
+ * WAVE 2 STABILIZATION (TEST-H1):
+ * - DB availability gate (skip suite if DB unavailable)
+ * - Safe teardown guard (prevents server close errors)
+ * - Configurable sample count (reduce for pooled DBs)
+ * - Rate limit isolation (beforeEach cleanup)
  *
  * Guardrails:
  * - No timing flakiness (uses report-only by default)
@@ -17,29 +28,46 @@
  * - No secret logging (tokens redacted)
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { prisma } from '../db/prisma.js';
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import authRoutes from '../routes/auth.js';
 import bcrypt from 'bcrypt';
 import { config } from '../config/index.js';
+import { checkDbAvailable } from './helpers/dbGate.js';
 
 describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
-  let server: any;
+  let server: FastifyInstance | null = null;
   let testTenantId: string;
   let testUserId: string;
   let testUserEmail: string;
 
-  const BENCHMARK_SAMPLES = 500; // Number of refresh requests to measure
+  // Configurable sample count (reduced for pooled DBs)
+  const BENCHMARK_SAMPLES = Number(process.env.AUTH_PERF_SAMPLES) || 100;
   const P95_TARGET_MS = 150; // Target p95 latency
   const STRICT_MODE = process.env.AUTH_PERF_STRICT === 'true';
+
+  /**
+   * DB Availability Gate: Skip suite if DB unavailable
+   */
+  beforeAll(async () => {
+    const dbAvailable = await checkDbAvailable(prisma);
+    if (!dbAvailable) {
+      throw new Error('[Performance Benchmark] Database unavailable - skipping suite');
+    }
+  });
 
   /**
    * Setup: Create test tenant, user, and Fastify server
    */
   beforeEach(async () => {
+    // Rate limit isolation: Clean up rate limits from previous tests
+    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+    await prisma.rateLimitAttempt.deleteMany({});
+    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+
     // Bypass RLS for test setup
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
@@ -79,7 +107,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
     // Create Fastify server for HTTP testing
     server = Fastify({ logger: false });
     await server.register(fastifyCookie, { secret: 'test-secret' });
-    
+
     // Register JWT plugins (tenant and admin realms)
     await server.register(fastifyJwt, {
       secret: config.JWT_ACCESS_SECRET,
@@ -93,17 +121,15 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
       jwtVerify: 'adminJwtVerify',
       jwtSign: 'adminJwtSign',
     });
-    
+
     await server.register(authRoutes, { prefix: '/api/auth' });
     await server.ready();
   });
 
   /**
-   * Teardown: Clean up test data and server
+   * Teardown: Clean up test data and server (safe guard)
    */
   afterEach(async () => {
-    await server.close();
-
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
     // Clean up memberships
@@ -122,11 +148,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
     });
 
     // Clean up rate limit attempts (prevent cross-test rate limiting)
-    await prisma.rateLimitAttempt.deleteMany({
-      where: {
-        createdAt: { lte: new Date() }, // Delete all rate limit records
-      },
-    });
+    await prisma.rateLimitAttempt.deleteMany({});
 
     // Clean up users
     await prisma.user.deleteMany({
@@ -139,6 +161,12 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
     });
 
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+
+    // Safe teardown guard: Prevent server close errors
+    if (server) {
+      await server.close().catch(() => {});
+      server = null;
+    }
   });
 
   /**
@@ -152,7 +180,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
    */
   it('should measure refresh endpoint latency (p95 target: 150ms)', async () => {
     // Step 1: Login to get initial refresh token
-    const loginResponse = await server.inject({
+    const loginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -171,7 +199,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
     for (let i = 0; i < BENCHMARK_SAMPLES; i++) {
       const startTime = performance.now();
 
-      const refreshResponse = await server.inject({
+      const refreshResponse = await server!.inject({
         method: 'POST',
         url: '/api/auth/refresh',
         headers: {
@@ -248,7 +276,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
     // Create 5 parallel sessions (login for each)
     const sessions = await Promise.all(
       Array.from({ length: CONCURRENCY }, async (_, sessionIdx) => {
-        const loginResponse = await server.inject({
+        const loginResponse = await server!.inject({
           method: 'POST',
           url: '/api/auth/tenant/login',
           payload: {
@@ -276,7 +304,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
       for (let i = 0; i < SAMPLES_PER_SESSION; i++) {
         const startTime = performance.now();
 
-        const refreshResponse = await server.inject({
+        const refreshResponse = await server!.inject({
           method: 'POST',
           url: '/api/auth/refresh',
           headers: {

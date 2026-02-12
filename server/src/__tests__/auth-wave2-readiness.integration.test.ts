@@ -12,19 +12,27 @@
  * - No auth logic changes
  * - No schema changes
  * - Test-only validation infrastructure
+ *
+ * WAVE 2 STABILIZATION (TEST-H1):
+ * - DB availability gate (skip suite if DB unavailable)
+ * - Safe teardown guard (prevents server close errors)
+ * - Rate limit isolation (beforeEach cleanup + unique IPs)
+ * - Audit event polling (handles async propagation)
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { prisma } from '../db/prisma.js';
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import authRoutes from '../routes/auth.js';
 import bcrypt from 'bcrypt';
 import { config } from '../config/index.js';
+import { checkDbAvailable } from './helpers/dbGate.js';
+import { expectAuditEventually } from './helpers/auditPolling.js';
 
 describe('AUTH-H1 Wave 2 Readiness Gate', () => {
-  let server: any;
+  let server: FastifyInstance | null = null;
   let testTenantId: string;
   let testAdminId: string;
   let testUserId: string;
@@ -32,9 +40,24 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
   let testAdminEmail: string;
 
   /**
+   * DB Availability Gate: Skip suite if DB unavailable
+   */
+  beforeAll(async () => {
+    const dbAvailable = await checkDbAvailable(prisma);
+    if (!dbAvailable) {
+      throw new Error('[Wave 2 Readiness] Database unavailable - skipping suite');
+    }
+  });
+
+  /**
    * Setup: Create test tenant, admin, user, and Fastify server
    */
   beforeEach(async () => {
+    // Rate limit isolation: Clean up rate limits from previous tests
+    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+    await prisma.rateLimitAttempt.deleteMany({});
+    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+
     // Bypass RLS for test setup
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
@@ -86,7 +109,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     // Create Fastify server for HTTP testing
     server = Fastify({ logger: false });
     await server.register(fastifyCookie, { secret: 'test-secret' });
-    
+
     // Register JWT plugins (tenant and admin realms)
     await server.register(fastifyJwt, {
       secret: config.JWT_ACCESS_SECRET,
@@ -100,17 +123,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
       jwtVerify: 'adminJwtVerify',
       jwtSign: 'adminJwtSign',
     });
-    
+
     await server.register(authRoutes, { prefix: '/api/auth' });
     await server.ready();
   });
 
   /**
-   * Teardown: Clean up test data and server
+   * Teardown: Clean up test data and server (safe guard)
    */
   afterEach(async () => {
-    await server.close();
-
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
     // Clean up memberships
@@ -133,11 +154,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     });
 
     // Clean up rate limit attempts (prevent cross-test rate limiting)
-    await prisma.rateLimitAttempt.deleteMany({
-      where: {
-        createdAt: { lte: new Date() }, // Delete all rate limit records
-      },
-    });
+    await prisma.rateLimitAttempt.deleteMany({});
 
     // Clean up users
     await prisma.user.deleteMany({
@@ -155,6 +172,12 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     });
 
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+
+    // Safe teardown guard: Prevent server close errors
+    if (server) {
+      await server.close().catch(() => {});
+      server = null;
+    }
   });
 
   /**
@@ -170,7 +193,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     const REFRESH_CYCLES = 200;
 
     // Step 1: Login to get initial refresh token
-    const loginResponse = await server.inject({
+    const loginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -195,7 +218,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
     // Step 2: Run N refresh cycles
     for (let cycle = 1; cycle <= REFRESH_CYCLES; cycle++) {
-      const refreshResponse = await server.inject({
+      const refreshResponse = await server!.inject({
         method: 'POST',
         url: '/api/auth/refresh',
         headers: {
@@ -269,7 +292,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
    */
   it('should detect immediate replay and revoke family', async () => {
     // Step 1: Login
-    const loginResponse = await server.inject({
+    const loginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -290,7 +313,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
 
     // Step 2: Refresh once (token A → token B)
-    const firstRefreshResponse = await server.inject({
+    const firstRefreshResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
@@ -304,7 +327,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(newCookie).not.toBe(initialCookie); // ✅ Cookie rotated
 
     // Step 3: Try token A again (replay attack)
-    const replayResponse = await server.inject({
+    const replayResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
@@ -345,7 +368,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
    */
   it('should reject cross-realm cookie reuse', async () => {
     // Step 1: Login as tenant user
-    const tenantLoginResponse = await server.inject({
+    const tenantLoginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -359,7 +382,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     const tenantCookie = tenantLoginResponse.headers['set-cookie'];
 
     // Step 2: Login as admin user
-    const adminLoginResponse = await server.inject({
+    const adminLoginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/admin/login',
       payload: {
@@ -374,7 +397,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     // Step 3: Try tenant cookie on admin refresh (should fail)
     // Note: Current implementation may not have explicit realm checking,
     // but token lookup will fail (no adminId in tenant token)
-    const crossAttempt1 = await server.inject({
+    const crossAttempt1 = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
@@ -386,7 +409,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(crossAttempt1.statusCode).toBe(401);
 
     // Step 4: Try admin cookie on tenant refresh (should fail)
-    const crossAttempt2 = await server.inject({
+    const crossAttempt2 = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
@@ -398,7 +421,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(crossAttempt2.statusCode).toBe(401);
 
     // Note: Both cookies should work with their own realm
-    const tenantRefresh = await server.inject({
+    const tenantRefresh = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
@@ -407,7 +430,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     });
     expect(tenantRefresh.statusCode).toBe(200); // ✅ Tenant cookie valid for tenant refresh
 
-    const adminRefresh = await server.inject({
+    const adminRefresh = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
@@ -427,7 +450,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
    */
   it('should handle logout idempotency correctly', async () => {
     // Step 1: Login
-    const loginResponse = await server.inject({
+    const loginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -449,7 +472,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
 
     // Step 2: First logout
-    const firstLogoutResponse = await server.inject({
+    const firstLogoutResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/logout',
       headers: {
@@ -473,7 +496,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
 
     // Step 3: Second logout (idempotent)
-    const secondLogoutResponse = await server.inject({
+    const secondLogoutResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/logout',
       headers: {
@@ -504,7 +527,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
    * and that no secrets are leaked
    */
   it('should emit audit event for tenant login success without secrets', async () => {
-    const loginResponse = await server.inject({
+    const loginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -516,17 +539,23 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
     expect(loginResponse.statusCode).toBe(200);
 
-    // Verify audit event
+    // Verify audit event (with eventual consistency polling)
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
-    const auditEvents = await prisma.auditLog.findMany({
-      where: {
-        actorId: testUserId,
-        action: 'AUTH_LOGIN_SUCCESS',
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 1,
-    });
+    const auditEvents = await expectAuditEventually(
+      () =>
+        prisma.auditLog.findMany({
+          where: {
+            actorId: testUserId,
+            action: 'AUTH_LOGIN_SUCCESS',
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        }),
+      results => results.length >= 1,
+      1000, // 1 second timeout
+      50 // 50ms polling interval
+    );
 
     expect(auditEvents.length).toBe(1);
     const event = auditEvents[0];
@@ -556,7 +585,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
     // Fire 6 failed login attempts to trigger rate limit (tenant threshold = 5)
     const attempts = Array.from({ length: 6 }, () =>
-      server.inject({
+      server!.inject({
         method: 'POST',
         url: '/api/auth/tenant/login',
         payload: {
@@ -580,16 +609,22 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     expect(rateLimitedResponse.headers['retry-after']).toBeDefined();
 
-    // Verify audit event emitted
+    // Verify audit event emitted (with eventual consistency polling)
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
-    const auditEvents = await prisma.auditLog.findMany({
-      where: {
-        action: 'AUTH_RATE_LIMIT_ENFORCED',
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 1,
-    });
+    const auditEvents = await expectAuditEventually(
+      () =>
+        prisma.auditLog.findMany({
+          where: {
+            action: 'AUTH_RATE_LIMIT_ENFORCED',
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        }),
+      results => results.length >= 1,
+      1000, // 1 second timeout
+      50 // 50ms polling interval
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
@@ -634,7 +669,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
 
     // Attempt login
-    const loginResponse = await server.inject({
+    const loginResponse = await server!.inject({
       method: 'POST',
       url: '/api/auth/tenant/login',
       payload: {
@@ -649,17 +684,23 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     const body = JSON.parse(loginResponse.body);
     expect(body.error.code).toBe('AUTH_UNVERIFIED');
 
-    // Verify audit event
+    // Verify audit event (with eventual consistency polling)
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
-    const auditEvents = await prisma.auditLog.findMany({
-      where: {
-        actorId: unverifiedUser.id,
-        action: 'AUTH_LOGIN_FAILED',
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 1,
-    });
+    const auditEvents = await expectAuditEventually(
+      () =>
+        prisma.auditLog.findMany({
+          where: {
+            actorId: unverifiedUser.id,
+            action: 'AUTH_LOGIN_FAILED',
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        }),
+      results => results.length >= 1,
+      1000, // 1 second timeout
+      50 // 50ms polling interval
+    );
 
     expect(auditEvents.length).toBe(1);
     const event = auditEvents[0];

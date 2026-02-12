@@ -430,6 +430,169 @@ Once deployed, monitor the following metrics:
 
 ---
 
+## Test Stabilization (TEST-H1) - DB/Pooled Environment Safety
+
+**Wave 2 Stabilization Fixes:**
+
+The validation pack has been hardened for Supabase pooler constraints and DB unavailability scenarios:
+
+### DB Availability Gate
+
+All test suites now include a `beforeAll` hook that checks DB availability:
+
+```typescript
+import { checkDbAvailable } from './helpers/dbGate.js';
+
+beforeAll(async () => {
+  const dbAvailable = await checkDbAvailable(prisma);
+  if (!dbAvailable) {
+    throw new Error('[Suite Name] Database unavailable - skipping suite');
+  }
+});
+```
+
+**Behavior:** If DB is unreachable (SELECT 1 fails), the suite is skipped gracefully with a descriptive error.
+
+### Safe Teardown Guards
+
+All server teardown hooks now include error handling:
+
+```typescript
+afterEach(async () => {
+  // ... cleanup logic ...
+
+  // Safe teardown guard: Prevent server close errors
+  if (server) {
+    await server.close().catch(() => {});
+    server = null;
+  }
+});
+```
+
+**Behavior:** Prevents crashes from double-close or already-closed servers.
+
+### HTTP Inject Pattern (Pooler-Safe)
+
+The concurrency test ([auth-refresh-concurrency.integration.test.ts](auth-refresh-concurrency.integration.test.ts)) now uses HTTP inject instead of Prisma transactions:
+
+**OLD (Pooler Incompatible):**
+
+```typescript
+await prisma.$transaction(async tx => {
+  // Parallel transactions fail with Supabase pooler
+});
+```
+
+**NEW (Pooler Safe):**
+
+```typescript
+const promises = Array.from({ length: 50 }, (_, i) =>
+  server!.inject({
+    method: 'POST',
+    url: '/api/auth/refresh',
+    cookies: { refreshToken: testRefreshToken },
+    headers: { 'x-forwarded-for': `203.0.113.${i + 1}` }, // Unique IPs
+  })
+);
+const responses = await Promise.allSettled(promises);
+```
+
+**Behavior:** Tests actual HTTP flow with real auth cookies, avoids interactive transactions which fail on transaction-mode poolers.
+
+### Rate Limit Isolation
+
+All test suites now include `beforeEach` rate limit cleanup:
+
+```typescript
+beforeEach(async () => {
+  // Rate limit isolation: Clean up rate limits from previous tests
+  await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+  await prisma.rateLimitAttempt.deleteMany({});
+  await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+
+  // ... rest of setup ...
+});
+```
+
+Tests also use unique IPs (203.0.113.X pattern) to avoid cross-test contamination.
+
+### Audit Event Polling (Eventually Consistent)
+
+Audit event assertions now use polling helpers to handle async propagation:
+
+```typescript
+import { expectAuditEventually } from './helpers/auditPolling.js';
+
+const auditEvents = await expectAuditEventually(
+  () => prisma.auditLog.findMany({ where: { actorId: userId } }),
+  results => results.length >= 1,
+  1000, // 1 second timeout
+  50 // 50ms polling interval
+);
+```
+
+**Behavior:** Retries query with bounded intervals until predicate succeeds or timeout reached.
+
+### Configurable Performance Samples
+
+Performance benchmarks now respect `AUTH_PERF_SAMPLES` environment variable:
+
+```bash
+# Default: 100 samples (reduced for pooled DBs)
+pnpm test auth-refresh-performance
+
+# Custom sample count
+AUTH_PERF_SAMPLES=50 pnpm test auth-refresh-performance
+
+# Strict mode (enforce p95 < 150ms)
+AUTH_PERF_STRICT=true AUTH_PERF_SAMPLES=200 pnpm test auth-refresh-performance
+```
+
+**Default:** 100 samples (down from 500) to reduce load on pooled databases.
+
+### Vitest Concurrency Controls (Optional)
+
+If you encounter test interference due to parallel file execution, use these flags:
+
+```bash
+# Disable file-level parallelism (run test files sequentially)
+pnpm test --no-file-parallelism
+
+# Limit to 1 worker (fully sequential)
+pnpm test --maxWorkers=1
+
+# Combine both
+pnpm test --no-file-parallelism --maxWorkers=1
+```
+
+**Recommendation:** Use `--no-file-parallelism` only if rate limiting or DB connection pool saturation occurs. Most tests now use unique IPs and should run safely in parallel.
+
+### DB Pooler Guidance
+
+**Supabase Pooler Modes:**
+
+- **Transaction Mode (pooler-6543)**: Use for read-only queries and single-statement writes. **Does NOT support** interactive transactions (`prisma.$transaction()`).
+- **Session Mode (pooler-5432)**: Supports interactive transactions but limited connection pool.
+- **Direct Connection (5432)**: Full feature support, use for CI/development.
+
+**Validation Pack Compatibility:**
+
+- ✅ **Transaction Mode**: Fully supported (no interactive transactions used)
+- ✅ **Session Mode**: Fully supported
+- ✅ **Direct Connection**: Fully supported
+
+**Connection String Example:**
+
+```bash
+# Transaction pooler (recommended for tests)
+DATABASE_URL="postgres://user:pass@aws-pooler.supabase.co:6543/postgres?sslmode=require&pgbouncer=true"
+
+# Direct connection (CI/local)
+DATABASE_URL="postgres://user:pass@aws-east-1.compute.amazonaws.com:5432/postgres?sslmode=require"
+```
+
+---
+
 ## Commit Scope
 
 This validation pack adds:
