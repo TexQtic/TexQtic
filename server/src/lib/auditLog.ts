@@ -219,11 +219,14 @@ export function createAuthAudit(params: {
     | 'AUTH_LOGOUT'
     | 'AUTH_REALM_VIOLATION'
     | 'AUTH_RATE_LIMIT_SHADOW'
-    | 'AUTH_REFRESH_ISSUED';
+    | 'AUTH_REFRESH_ISSUED'
+    | 'AUTH_REFRESH_SUCCESS'
+    | 'AUTH_REFRESH_FAILED'
+    | 'AUTH_REFRESH_REPLAY_DETECTED';
   realm: AuditRealm;
   tenantId: string | null;
   actorId: string | null;
-  email: string;
+  email: string | null;
   reasonCode?:
     | 'INVALID_CREDENTIALS'
     | 'NOT_VERIFIED'
@@ -231,7 +234,11 @@ export function createAuthAudit(params: {
     | 'INACTIVE_TENANT'
     | 'SUCCESS'
     | 'REALM_MISMATCH'
-    | 'RATE_LIMIT_THRESHOLD';
+    | 'RATE_LIMIT_THRESHOLD'
+    | 'INVALID_TOKEN'
+    | 'EXPIRED'
+    | 'REVOKED'
+    | 'ROTATED_REPLAY';
   ip?: string | null;
   userAgent?: string | null;
   rateLimitTrigger?: 'ip' | 'email' | 'both' | null;

@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
+import { randomUUID } from 'node:crypto';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
 import { withDbContext } from '../db/withDbContext.js';
 import { prisma } from '../db/prisma.js';
@@ -1261,6 +1262,382 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Resend Verification] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to process request', 500);
+    }
+  });
+
+  /**
+   * POST /api/auth/refresh
+   * Refresh access token using HttpOnly refresh token cookie
+   *
+   * Request: No body (uses cookie: texqtic_rt_tenant OR texqtic_rt_admin)
+   * Response: { success: true, data: { token: string } }
+   *
+   * Security: Strict single-use rotation with family tracking
+   * - Consumes refresh token (marks as rotated)
+   * - Issues new refresh token (same family)
+   * - Detects replay (reuse of rotated token) → revokes entire family
+   * - Fail-closed: any invalid state returns 401
+   *
+   * Realm separation:
+   * - texqtic_rt_tenant → tenant realm refresh
+   * - texqtic_rt_admin → admin realm refresh
+   * - Cannot fall back between realms
+   */
+  fastify.post('/refresh', async (request, reply) => {
+    const clientIp = (request.headers['x-forwarded-for'] as string) || request.ip;
+    const userAgent = request.headers['user-agent'] || 'unknown';
+
+    try {
+      // 1) Determine realm from cookie (strict, no fallback)
+      const tenantRefreshCookie = request.cookies.texqtic_rt_tenant;
+      const adminRefreshCookie = request.cookies.texqtic_rt_admin;
+
+      let realm: 'TENANT' | 'ADMIN';
+      let rawRefreshToken: string;
+
+      if (tenantRefreshCookie) {
+        realm = 'TENANT';
+        rawRefreshToken = tenantRefreshCookie;
+      } else if (adminRefreshCookie) {
+        realm = 'ADMIN';
+        rawRefreshToken = adminRefreshCookie;
+      } else {
+        // No refresh cookie present
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_FAILED',
+            realm: 'TENANT',
+            tenantId: null,
+            actorId: null,
+            email: null,
+            reasonCode: 'INVALID_TOKEN',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        return sendError(reply, 'AUTH_INVALID', 'No refresh token provided', 401);
+      }
+
+      // 2) Hash token and lookup in DB
+      const tokenHash = hashRefreshToken(rawRefreshToken);
+      const refreshTokenRow = await prisma.refreshToken.findFirst({
+        where: { tokenHash },
+      });
+
+      if (!refreshTokenRow) {
+        // Token not found
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_FAILED',
+            realm,
+            tenantId: null,
+            actorId: null,
+            email: null,
+            reasonCode: 'INVALID_TOKEN',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        return sendError(reply, 'AUTH_INVALID', 'Invalid refresh token', 401);
+      }
+
+      // Check if revoked
+      if (refreshTokenRow.revokedAt !== null) {
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_FAILED',
+            realm,
+            tenantId: refreshTokenRow.userId ? null : null, // tenantId not stored in RefreshToken
+            actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+            email: null,
+            reasonCode: 'REVOKED',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        return sendError(reply, 'AUTH_INVALID', 'Refresh token revoked', 401);
+      }
+
+      // Check if expired
+      if (refreshTokenRow.expiresAt < new Date()) {
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_FAILED',
+            realm,
+            tenantId: null,
+            actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+            email: null,
+            reasonCode: 'EXPIRED',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        return sendError(reply, 'AUTH_INVALID', 'Refresh token expired', 401);
+      }
+
+      // 3) Replay detection: if token already rotated, revoke family
+      if (refreshTokenRow.rotatedAt !== null) {
+        // Replay attempt detected - revoke entire family
+        await prisma.refreshToken.updateMany({
+          where: {
+            familyId: refreshTokenRow.familyId,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: new Date(),
+          },
+        });
+
+        // Clear the refresh cookie
+        const cookieName = realm === 'TENANT' ? 'texqtic_rt_tenant' : 'texqtic_rt_admin';
+        reply.setCookie(cookieName, '', {
+          httpOnly: true,
+          secure: config.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 0,
+        });
+
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_REPLAY_DETECTED',
+            realm,
+            tenantId: null,
+            actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+            email: null,
+            reasonCode: 'ROTATED_REPLAY',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+
+        return sendError(reply, 'AUTH_INVALID', 'Token replay detected - family revoked', 401);
+      }
+
+      // 4) Realm integrity check
+      if (realm === 'TENANT' && (!refreshTokenRow.userId || refreshTokenRow.adminId !== null)) {
+        // Tenant cookie but token belongs to admin or has no userId
+        await prisma.refreshToken.updateMany({
+          where: {
+            familyId: refreshTokenRow.familyId,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: new Date(),
+          },
+        });
+
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_FAILED',
+            realm,
+            tenantId: null,
+            actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+            email: null,
+            reasonCode: 'REALM_MISMATCH',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+
+        return sendError(reply, 'AUTH_INVALID', 'Realm mismatch', 401);
+      }
+
+      if (realm === 'ADMIN' && (!refreshTokenRow.adminId || refreshTokenRow.userId !== null)) {
+        // Admin cookie but token belongs to tenant user or has no adminId
+        await prisma.refreshToken.updateMany({
+          where: {
+            familyId: refreshTokenRow.familyId,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: new Date(),
+          },
+        });
+
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_FAILED',
+            realm,
+            tenantId: null,
+            actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+            email: null,
+            reasonCode: 'REALM_MISMATCH',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+
+        return sendError(reply, 'AUTH_INVALID', 'Realm mismatch', 401);
+      }
+
+      // 5) Issue new token pair (atomic rotation)
+      const newPlaintextRefreshToken = generateRefreshToken();
+      const newRefreshTokenHash = hashRefreshToken(newPlaintextRefreshToken);
+
+      const ttlDays =
+        realm === 'TENANT'
+          ? config.REFRESH_TOKEN_TTL_DAYS_TENANT
+          : config.REFRESH_TOKEN_TTL_DAYS_ADMIN;
+      const newExpiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000);
+
+      await prisma.$transaction(async tx => {
+        // Mark old token as rotated
+        await tx.refreshToken.update({
+          where: { id: refreshTokenRow.id },
+          data: {
+            rotatedAt: new Date(),
+            lastUsedAt: new Date(),
+          },
+        });
+
+        // Create new refresh token in same family
+        await tx.refreshToken.create({
+          data: {
+            id: randomUUID(),
+            userId: refreshTokenRow.userId,
+            adminId: refreshTokenRow.adminId,
+            tokenHash: newRefreshTokenHash,
+            familyId: refreshTokenRow.familyId,
+            expiresAt: newExpiresAt,
+            ip: clientIp,
+            userAgent,
+          },
+        });
+      });
+
+      // 6) Issue new access JWT
+      let accessToken: string;
+      let email: string | null = null;
+      let tenantId: string | null = null;
+
+      if (realm === 'TENANT') {
+        // Resolve tenant user + membership
+        if (!refreshTokenRow.userId) {
+          // Should never happen due to realm check, but satisfy TypeScript
+          return sendError(reply, 'AUTH_INVALID', 'Invalid token state', 401);
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { id: refreshTokenRow.userId },
+          select: {
+            id: true,
+            email: true,
+            memberships: {
+              select: {
+                tenantId: true,
+                role: true,
+              },
+            },
+          },
+        });
+
+        if (!user || user.memberships.length === 0) {
+          // User or membership no longer exists
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_REFRESH_FAILED',
+              realm,
+              tenantId: null,
+              actorId: refreshTokenRow.userId,
+              email: null,
+              reasonCode: 'INVALID_TOKEN',
+              ip: clientIp,
+              userAgent,
+            })
+          );
+          return sendError(reply, 'AUTH_INVALID', 'User or membership not found', 401);
+        }
+
+        email = user.email;
+        tenantId = user.memberships[0].tenantId;
+
+        accessToken = await reply.tenantJwtSign({
+          userId: user.id,
+          tenantId: user.memberships[0].tenantId,
+          role: user.memberships[0].role,
+        });
+      } else {
+        // ADMIN realm
+        if (!refreshTokenRow.adminId) {
+          // Should never happen due to realm check, but satisfy TypeScript
+          return sendError(reply, 'AUTH_INVALID', 'Invalid token state', 401);
+        }
+
+        const admin = await prisma.adminUser.findUnique({
+          where: { id: refreshTokenRow.adminId },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        });
+
+        if (!admin) {
+          // Admin no longer exists
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_REFRESH_FAILED',
+              realm,
+              tenantId: null,
+              actorId: refreshTokenRow.adminId,
+              email: null,
+              reasonCode: 'INVALID_TOKEN',
+              ip: clientIp,
+              userAgent,
+            })
+          );
+          return sendError(reply, 'AUTH_INVALID', 'Admin not found', 401);
+        }
+
+        email = admin.email;
+
+        accessToken = await reply.adminJwtSign({
+          adminId: admin.id,
+          role: admin.role,
+        });
+      }
+
+      // 7) Set new refresh cookie
+      const cookieName = realm === 'TENANT' ? 'texqtic_rt_tenant' : 'texqtic_rt_admin';
+      reply.setCookie(cookieName, newPlaintextRefreshToken, {
+        httpOnly: true,
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: ttlDays * 24 * 60 * 60,
+      });
+
+      // 8) Audit success
+      await writeAuditLog(
+        prisma,
+        createAuthAudit({
+          action: 'AUTH_REFRESH_SUCCESS',
+          realm,
+          tenantId,
+          actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+          email,
+          reasonCode: 'SUCCESS',
+          ip: clientIp,
+          userAgent,
+        })
+      );
+
+      // 9) Response (contract unchanged)
+      return sendSuccess(reply, { token: accessToken });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Refresh Token] Error');
+      // Fail-closed: map unexpected errors to 401
+      return sendError(reply, 'AUTH_INVALID', 'Token refresh failed', 401);
     }
   });
 };
