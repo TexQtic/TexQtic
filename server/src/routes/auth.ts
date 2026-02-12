@@ -152,6 +152,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
               id: true,
               email: true,
               passwordHash: true,
+              emailVerified: true,
               memberships: {
                 where: { tenantId },
                 select: {
@@ -175,6 +176,11 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           const isValidPassword = await verifyPassword(password, user.passwordHash);
           if (!isValidPassword) {
             return null;
+          }
+
+          // Check email verification (COMMIT 9: enforcement)
+          if (!user.emailVerified) {
+            return { error: 'NOT_VERIFIED' as const };
           }
 
           // Check membership for this tenant
@@ -216,6 +222,23 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         }
 
         if ('error' in result) {
+          if (result.error === 'NOT_VERIFIED') {
+            // Log failed login - email not verified
+            await writeAuditLog(
+              prisma,
+              createAuthAudit({
+                action: 'AUTH_LOGIN_FAILED',
+                realm: 'TENANT',
+                tenantId,
+                actorId: null,
+                email,
+                reasonCode: 'NOT_VERIFIED',
+                ip: clientIp,
+                userAgent,
+              })
+            );
+            return sendError(reply, 'AUTH_UNVERIFIED', 'Email verification required', 401);
+          }
           if (result.error === 'NO_MEMBERSHIP') {
             // Log failed login - no membership
             await writeAuditLog(
@@ -841,6 +864,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
             id: true,
             email: true,
             passwordHash: true,
+            emailVerified: true,
             memberships: {
               where: { tenantId },
               select: {
@@ -859,6 +883,11 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         const isValidPassword = await verifyPassword(password, user.passwordHash);
         if (!isValidPassword) {
           return null;
+        }
+
+        // Check email verification (COMMIT 9: enforcement)
+        if (!user.emailVerified) {
+          return { error: 'NOT_VERIFIED' as const };
         }
 
         // Check membership for this tenant
@@ -892,6 +921,26 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           })
         );
         return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
+      }
+
+      if ('error' in result) {
+        if (result.error === 'NOT_VERIFIED') {
+          // Log failed login - email not verified
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_LOGIN_FAILED',
+              realm: 'TENANT',
+              tenantId,
+              actorId: null,
+              email,
+              reasonCode: 'NOT_VERIFIED',
+              ip: clientIp,
+              userAgent,
+            })
+          );
+          return sendError(reply, 'AUTH_UNVERIFIED', 'Email verification required', 401);
+        }
       }
 
       if ('error' in result && result.error === 'NO_MEMBERSHIP') {
