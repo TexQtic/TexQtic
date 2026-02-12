@@ -206,14 +206,19 @@ export function createAdminAudit(
 /**
  * Create audit entry for authentication events
  *
- * Records login successes, failures, and realm violations.
+ * Records login successes, failures, realm violations, and rate limit events.
  * NEVER logs passwords, tokens, or other sensitive credentials.
  *
  * @param params - Auth audit parameters
  * @returns Audit entry ready for writeAuditLog()
  */
 export function createAuthAudit(params: {
-  action: 'AUTH_LOGIN_SUCCESS' | 'AUTH_LOGIN_FAILED' | 'AUTH_LOGOUT' | 'AUTH_REALM_VIOLATION';
+  action:
+    | 'AUTH_LOGIN_SUCCESS'
+    | 'AUTH_LOGIN_FAILED'
+    | 'AUTH_LOGOUT'
+    | 'AUTH_REALM_VIOLATION'
+    | 'AUTH_RATE_LIMIT_SHADOW';
   realm: AuditRealm;
   tenantId: string | null;
   actorId: string | null;
@@ -224,11 +229,14 @@ export function createAuthAudit(params: {
     | 'NO_MEMBERSHIP'
     | 'INACTIVE_TENANT'
     | 'SUCCESS'
-    | 'REALM_MISMATCH';
+    | 'REALM_MISMATCH'
+    | 'RATE_LIMIT_THRESHOLD';
   ip?: string | null;
   userAgent?: string | null;
+  rateLimitTrigger?: 'ip' | 'email' | 'both' | null;
 }): AuditEntry {
-  const { action, realm, tenantId, actorId, email, reasonCode, ip, userAgent } = params;
+  const { action, realm, tenantId, actorId, email, reasonCode, ip, userAgent, rateLimitTrigger } =
+    params;
 
   return {
     realm,
@@ -246,6 +254,7 @@ export function createAuthAudit(params: {
       reasonCode: reasonCode || null,
       ip: ip || null,
       userAgent: userAgent || null,
+      rateLimitTrigger: rateLimitTrigger || null,
       timestamp: new Date().toISOString(),
     },
   };

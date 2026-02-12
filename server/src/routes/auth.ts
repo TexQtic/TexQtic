@@ -67,39 +67,59 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     try {
       // If tenantId provided, attempt tenant login
       if (tenantId) {
-        // SHADOW MODE: Record rate limit attempt (does not block)
-        const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+        // SHADOW MODE: Record rate limit attempts using split keys (IP and email)
+        const emailNormalized = email.toLowerCase();
+        const ipKey = hashRateLimitKey(`ip:${clientIp}`);
+        const emailKey = hashRateLimitKey(`email:${emailNormalized}`);
+
+        // Record attempts for both dimensions (non-blocking)
         await recordAttempt({
-          key: rateLimitKey,
+          key: ipKey,
+          endpoint: '/api/auth/login',
+          realm: 'TENANT',
+          windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+        });
+        await recordAttempt({
+          key: emailKey,
           endpoint: '/api/auth/login',
           realm: 'TENANT',
           windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
         });
 
-        // SHADOW MODE: Check if threshold exceeded (log only, no block)
-        const isLimited = await isOverThreshold({
-          key: rateLimitKey,
+        // SHADOW MODE: Check if either threshold exceeded (log only, no block)
+        const isIpLimited = await isOverThreshold({
+          key: ipKey,
+          threshold: config.RATE_LIMIT_TENANT_LOGIN_MAX,
+          windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+        });
+        const isEmailLimited = await isOverThreshold({
+          key: emailKey,
           threshold: config.RATE_LIMIT_TENANT_LOGIN_MAX,
           windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
         });
 
-        if (isLimited) {
-          // SHADOW MODE: Log that limit would be triggered, but don't block
+        if (isIpLimited || isEmailLimited) {
+          // Determine which dimension(s) triggered
+          const trigger: 'ip' | 'email' | 'both' =
+            isIpLimited && isEmailLimited ? 'both' : isIpLimited ? 'ip' : 'email';
+
+          // SHADOW MODE: Log rate limit event with correct action/reason
           await writeAuditLog(
             prisma,
             createAuthAudit({
-              action: 'AUTH_LOGIN_FAILED',
+              action: 'AUTH_RATE_LIMIT_SHADOW',
               realm: 'TENANT',
               tenantId,
               actorId: null,
               email,
-              reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+              reasonCode: 'RATE_LIMIT_THRESHOLD',
               ip: clientIp,
               userAgent,
+              rateLimitTrigger: trigger,
             })
           );
           console.warn(
-            `[Rate Limiter SHADOW] Tenant login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+            `[Rate Limiter SHADOW] Tenant login threshold exceeded - trigger: ${trigger}, ip: ${clientIp.substring(0, 8)}..., email: ${emailNormalized.substring(0, 8)}...`
           );
           // DO NOT BLOCK - shadow mode only
         }
@@ -246,39 +266,59 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // No tenantId provided → attempt admin login
-      // SHADOW MODE: Record rate limit attempt (does not block)
-      const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+      // SHADOW MODE: Record rate limit attempts using split keys (IP and email)
+      const emailNormalized = email.toLowerCase();
+      const ipKey = hashRateLimitKey(`ip:${clientIp}`);
+      const emailKey = hashRateLimitKey(`email:${emailNormalized}`);
+
+      // Record attempts for both dimensions (non-blocking)
       await recordAttempt({
-        key: rateLimitKey,
+        key: ipKey,
+        endpoint: '/api/auth/login',
+        realm: 'ADMIN',
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+      await recordAttempt({
+        key: emailKey,
         endpoint: '/api/auth/login',
         realm: 'ADMIN',
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      // SHADOW MODE: Check if threshold exceeded (log only, no block)
-      const isLimited = await isOverThreshold({
-        key: rateLimitKey,
+      // SHADOW MODE: Check if either threshold exceeded (log only, no block)
+      const isIpLimited = await isOverThreshold({
+        key: ipKey,
+        threshold: config.RATE_LIMIT_ADMIN_LOGIN_MAX,
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+      const isEmailLimited = await isOverThreshold({
+        key: emailKey,
         threshold: config.RATE_LIMIT_ADMIN_LOGIN_MAX,
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      if (isLimited) {
-        // SHADOW MODE: Log that limit would be triggered, but don't block
+      if (isIpLimited || isEmailLimited) {
+        // Determine which dimension(s) triggered
+        const trigger: 'ip' | 'email' | 'both' =
+          isIpLimited && isEmailLimited ? 'both' : isIpLimited ? 'ip' : 'email';
+
+        // SHADOW MODE: Log rate limit event with correct action/reason
         await writeAuditLog(
           prisma,
           createAuthAudit({
-            action: 'AUTH_LOGIN_FAILED',
+            action: 'AUTH_RATE_LIMIT_SHADOW',
             realm: 'ADMIN',
             tenantId: null,
             actorId: null,
             email,
-            reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+            reasonCode: 'RATE_LIMIT_THRESHOLD',
             ip: clientIp,
             userAgent,
+            rateLimitTrigger: trigger,
           })
         );
         console.warn(
-          `[Rate Limiter SHADOW] Admin login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+          `[Rate Limiter SHADOW] Admin login threshold exceeded - trigger: ${trigger}, ip: ${clientIp.substring(0, 8)}..., email: ${emailNormalized.substring(0, 8)}...`
         );
         // DO NOT BLOCK - shadow mode only
       }
@@ -390,39 +430,59 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const userAgent = request.headers['user-agent'];
 
     try {
-      // SHADOW MODE: Record rate limit attempt (does not block)
-      const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+      // SHADOW MODE: Record rate limit attempts using split keys (IP and email)
+      const emailNormalized = email.toLowerCase();
+      const ipKey = hashRateLimitKey(`ip:${clientIp}`);
+      const emailKey = hashRateLimitKey(`email:${emailNormalized}`);
+
+      // Record attempts for both dimensions (non-blocking)
       await recordAttempt({
-        key: rateLimitKey,
+        key: ipKey,
+        endpoint: '/api/auth/admin/login',
+        realm: 'ADMIN',
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+      await recordAttempt({
+        key: emailKey,
         endpoint: '/api/auth/admin/login',
         realm: 'ADMIN',
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      // SHADOW MODE: Check if threshold exceeded (log only, no block)
-      const isLimited = await isOverThreshold({
-        key: rateLimitKey,
+      // SHADOW MODE: Check if either threshold exceeded (log only, no block)
+      const isIpLimited = await isOverThreshold({
+        key: ipKey,
+        threshold: config.RATE_LIMIT_ADMIN_LOGIN_MAX,
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+      const isEmailLimited = await isOverThreshold({
+        key: emailKey,
         threshold: config.RATE_LIMIT_ADMIN_LOGIN_MAX,
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      if (isLimited) {
-        // SHADOW MODE: Log that limit would be triggered, but don't block
+      if (isIpLimited || isEmailLimited) {
+        // Determine which dimension(s) triggered
+        const trigger: 'ip' | 'email' | 'both' =
+          isIpLimited && isEmailLimited ? 'both' : isIpLimited ? 'ip' : 'email';
+
+        // SHADOW MODE: Log rate limit event with correct action/reason
         await writeAuditLog(
           prisma,
           createAuthAudit({
-            action: 'AUTH_LOGIN_FAILED',
+            action: 'AUTH_RATE_LIMIT_SHADOW',
             realm: 'ADMIN',
             tenantId: null,
             actorId: null,
             email,
-            reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+            reasonCode: 'RATE_LIMIT_THRESHOLD',
             ip: clientIp,
             userAgent,
+            rateLimitTrigger: trigger,
           })
         );
         console.warn(
-          `[Rate Limiter SHADOW] Admin login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+          `[Rate Limiter SHADOW] Admin login threshold exceeded - trigger: ${trigger}, ip: ${clientIp.substring(0, 8)}..., email: ${emailNormalized.substring(0, 8)}...`
         );
         // DO NOT BLOCK - shadow mode only
       }
@@ -535,39 +595,59 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const userAgent = request.headers['user-agent'];
 
     try {
-      // SHADOW MODE: Record rate limit attempt (does not block)
-      const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+      // SHADOW MODE: Record rate limit attempts using split keys (IP and email)
+      const emailNormalized = email.toLowerCase();
+      const ipKey = hashRateLimitKey(`ip:${clientIp}`);
+      const emailKey = hashRateLimitKey(`email:${emailNormalized}`);
+
+      // Record attempts for both dimensions (non-blocking)
       await recordAttempt({
-        key: rateLimitKey,
+        key: ipKey,
+        endpoint: '/api/auth/tenant/login',
+        realm: 'TENANT',
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+      await recordAttempt({
+        key: emailKey,
         endpoint: '/api/auth/tenant/login',
         realm: 'TENANT',
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      // SHADOW MODE: Check if threshold exceeded (log only, no block)
-      const isLimited = await isOverThreshold({
-        key: rateLimitKey,
+      // SHADOW MODE: Check if either threshold exceeded (log only, no block)
+      const isIpLimited = await isOverThreshold({
+        key: ipKey,
+        threshold: config.RATE_LIMIT_TENANT_LOGIN_MAX,
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+      const isEmailLimited = await isOverThreshold({
+        key: emailKey,
         threshold: config.RATE_LIMIT_TENANT_LOGIN_MAX,
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      if (isLimited) {
-        // SHADOW MODE: Log that limit would be triggered, but don't block
+      if (isIpLimited || isEmailLimited) {
+        // Determine which dimension(s) triggered
+        const trigger: 'ip' | 'email' | 'both' =
+          isIpLimited && isEmailLimited ? 'both' : isIpLimited ? 'ip' : 'email';
+
+        // SHADOW MODE: Log rate limit event with correct action/reason
         await writeAuditLog(
           prisma,
           createAuthAudit({
-            action: 'AUTH_LOGIN_FAILED',
+            action: 'AUTH_RATE_LIMIT_SHADOW',
             realm: 'TENANT',
             tenantId,
             actorId: null,
             email,
-            reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+            reasonCode: 'RATE_LIMIT_THRESHOLD',
             ip: clientIp,
             userAgent,
+            rateLimitTrigger: trigger,
           })
         );
         console.warn(
-          `[Rate Limiter SHADOW] Tenant login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+          `[Rate Limiter SHADOW] Tenant login threshold exceeded - trigger: ${trigger}, ip: ${clientIp.substring(0, 8)}..., email: ${emailNormalized.substring(0, 8)}...`
         );
         // DO NOT BLOCK - shadow mode only
       }
