@@ -4,6 +4,7 @@
  */
 
 import '@fastify/jwt';
+import type { DatabaseContext } from '../lib/database-context.js';
 
 // JWT payload types
 interface AdminJwtPayload {
@@ -42,6 +43,14 @@ declare module 'fastify' {
      * Added by @fastify/jwt with namespace: 'tenant'
      */
     tenantJwtSign(payload: JwtSignPayload): Promise<string>;
+
+    /**
+     * Database RLS context (Gate B.1)
+     * Populated by database-context.middleware after JWT verification
+     * Contains: orgId, actorId, realm, requestId, roles
+     * Used by withDbContext() for transaction-local SET LOCAL statements
+     */
+    dbContext?: DatabaseContext;
   }
 
   interface FastifyReply {
