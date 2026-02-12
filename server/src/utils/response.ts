@@ -66,3 +66,12 @@ export function sendNotFound(
 export function sendValidationError(reply: FastifyReply, details: unknown): FastifyReply {
   return sendError(reply, 'VALIDATION_ERROR', 'Validation failed', 400, details);
 }
+
+export function sendRateLimitExceeded(
+  reply: FastifyReply,
+  retryAfterSeconds: number,
+  message: string = 'Too many requests'
+): FastifyReply {
+  reply.header('Retry-After', retryAfterSeconds.toString());
+  return sendError(reply, 'RATE_LIMIT_EXCEEDED', message, 429);
+}

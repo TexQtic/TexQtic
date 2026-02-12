@@ -219,6 +219,7 @@ export function createAuthAudit(params: {
     | 'AUTH_LOGOUT'
     | 'AUTH_REALM_VIOLATION'
     | 'AUTH_RATE_LIMIT_SHADOW'
+    | 'AUTH_RATE_LIMIT_ENFORCED'
     | 'AUTH_REFRESH_ISSUED'
     | 'AUTH_REFRESH_SUCCESS'
     | 'AUTH_REFRESH_FAILED'

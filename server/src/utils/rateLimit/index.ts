@@ -3,5 +3,6 @@ export {
   recordAttempt,
   getAttemptCount,
   isOverThreshold,
+  calculateRetryAfter,
   cleanupExpiredAttempts,
 } from './rateLimiter.js';

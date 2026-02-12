@@ -2,12 +2,10 @@ import crypto from 'crypto';
 import { prisma } from '../../db/prisma.js';
 
 /**
- * Rate Limiter - Shadow Mode Implementation
+ * Rate Limiter - Enforcement Mode
  *
- * Records login attempts and calculates rate limit violations without blocking.
- * This is SHADOW MODE - logs when threshold exceeded but does NOT return 429.
- *
- * Phase 2 (future): Enable blocking by returning isLimited: true
+ * Records login attempts and enforces rate limit violations by returning 429.
+ * COMMIT 8: Switched from shadow mode to enforcement mode.
  */
 
 /**
@@ -96,16 +94,16 @@ export async function getAttemptCount(params: {
 }
 
 /**
- * Check if rate limit threshold is exceeded (shadow mode)
+ * Check if rate limit threshold is exceeded (enforcement mode)
  *
  * Calculates current attempt count and compares to threshold.
- * Returns true if limit exceeded, but does NOT block requests.
+ * Returns true if limit exceeded (caller should block with 429).
  *
  * @param params - Check parameters
  * @param params.key - Hashed composite key
  * @param params.threshold - Maximum allowed attempts
  * @param params.windowMinutes - Time window
- * @returns true if threshold exceeded (for logging), false otherwise
+ * @returns true if threshold exceeded, false otherwise
  */
 export async function isOverThreshold(params: {
   key: string;
@@ -117,6 +115,19 @@ export async function isOverThreshold(params: {
   const count = await getAttemptCount({ key, windowMinutes });
 
   return count >= threshold;
+}
+
+/**
+ * Calculate Retry-After header value (seconds until window reset)
+ *
+ * Returns the full window duration in seconds (conservative approach).
+ * Alternatively could query oldest attempt and calculate precise reset time.
+ *
+ * @param windowMinutes - Rate limit window duration
+ * @returns Seconds until window reset
+ */
+export function calculateRetryAfter(windowMinutes: number): number {
+  return windowMinutes * 60;
 }
 
 /**
