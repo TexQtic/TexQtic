@@ -51,61 +51,75 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
   /**
    * Setup: Create test tenant, admin, user, and Fastify server
+   * TEST-H3: Wrapped in explicit transaction with timeout to prevent pooler timeout errors
    */
   beforeEach(async () => {
     // Rate limit isolation: Clean up rate limits from previous tests
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-    await prisma.rateLimitAttempt.deleteMany({});
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
-
-    // Bypass RLS for test setup
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-    // Create test tenant
-    const tenant = await prisma.tenant.create({
-      data: {
-        name: `Test Tenant Wave2 ${Date.now()}`,
-        slug: `test-tenant-wave2-${Date.now()}`,
-        plan: 'FREE',
+    await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        await tx.rateLimitAttempt.deleteMany({});
       },
-    });
-    testTenantId = tenant.id;
+      { timeout: 20000, maxWait: 20000 }
+    );
 
-    // Create test user (VERIFIED for happy path tests)
-    const passwordHash = await bcrypt.hash('password123', 10);
-    testUserEmail = `user-wave2-${Date.now()}@example.com`;
-    const user = await prisma.user.create({
-      data: {
-        email: testUserEmail,
-        passwordHash,
-        emailVerified: true,
-        emailVerifiedAt: new Date(), // ✅ Commit 9: Must be set for verified users
+    // Seed test data in a single transaction (bypass RLS + create entities)
+    const result = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+
+        // Create test tenant
+        const tenant = await tx.tenant.create({
+          data: {
+            name: `Test Tenant Wave2 ${Date.now()}`,
+            slug: `test-tenant-wave2-${Date.now()}`,
+            plan: 'FREE',
+          },
+        });
+
+        // Create test user (VERIFIED for happy path tests)
+        const passwordHash = await bcrypt.hash('password123', 10);
+        const userEmail = `user-wave2-${Date.now()}@example.com`;
+        const user = await tx.user.create({
+          data: {
+            email: userEmail,
+            passwordHash,
+            emailVerified: true,
+            emailVerifiedAt: new Date(), // ✅ Commit 9: Must be set for verified users
+          },
+        });
+
+        // Create tenant membership
+        await tx.membership.create({
+          data: {
+            tenantId: tenant.id,
+            userId: user.id,
+            role: 'OWNER',
+          },
+        });
+
+        // Create test admin
+        const adminPasswordHash = await bcrypt.hash('admin123', 10);
+        const adminEmail = `admin-wave2-${Date.now()}@example.com`;
+        const admin = await tx.adminUser.create({
+          data: {
+            email: adminEmail,
+            passwordHash: adminPasswordHash,
+            role: 'SUPER_ADMIN',
+          },
+        });
+
+        return { tenant, user, userEmail, admin, adminEmail };
       },
-    });
-    testUserId = user.id;
+      { timeout: 20000, maxWait: 20000 }
+    );
 
-    // Create tenant membership
-    await prisma.membership.create({
-      data: {
-        tenantId: testTenantId,
-        userId: testUserId,
-        role: 'OWNER',
-      },
-    });
-
-    // Create test admin
-    const adminPasswordHash = await bcrypt.hash('admin123', 10);
-    testAdminEmail = `admin-wave2-${Date.now()}@example.com`;
-    const admin = await prisma.adminUser.create({
-      data: {
-        email: testAdminEmail,
-        passwordHash: adminPasswordHash,
-        role: 'SUPER_ADMIN',
-      },
-    });
-    testAdminId = admin.id;
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+    // Store IDs for test use
+    testTenantId = result.tenant.id;
+    testUserId = result.user.id;
+    testUserEmail = result.userEmail;
+    testAdminId = result.admin.id;
+    testAdminEmail = result.adminEmail;
 
     // Create Fastify server for HTTP testing
     server = Fastify({ logger: false });
@@ -131,48 +145,53 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
   /**
    * Teardown: Clean up test data and server (safe guard)
+   * TEST-H3: Wrapped in explicit transaction with timeout to prevent pooler timeout errors
    */
   afterEach(async () => {
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+    // Cleanup in a single transaction (bypass RLS + delete entities)
+    await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
-    // Clean up memberships
-    await prisma.membership.deleteMany({
-      where: { tenantId: testTenantId },
-    });
+        // Clean up memberships
+        await tx.membership.deleteMany({
+          where: { tenantId: testTenantId },
+        });
 
-    // Clean up refresh tokens
-    await prisma.refreshToken.deleteMany({
-      where: {
-        OR: [{ userId: testUserId }, { adminId: testAdminId }],
+        // Clean up refresh tokens
+        await tx.refreshToken.deleteMany({
+          where: {
+            OR: [{ userId: testUserId }, { adminId: testAdminId }],
+          },
+        });
+
+        // Clean up audit logs
+        await tx.auditLog.deleteMany({
+          where: {
+            OR: [{ actorId: testUserId }, { actorId: testAdminId }],
+          },
+        });
+
+        // Clean up rate limit attempts (prevent cross-test rate limiting)
+        await tx.rateLimitAttempt.deleteMany({});
+
+        // Clean up users
+        await tx.user.deleteMany({
+          where: { id: testUserId },
+        });
+
+        // Clean up admins
+        await tx.adminUser.deleteMany({
+          where: { id: testAdminId },
+        });
+
+        // Clean up tenants
+        await tx.tenant.deleteMany({
+          where: { id: testTenantId },
+        });
       },
-    });
-
-    // Clean up audit logs
-    await prisma.auditLog.deleteMany({
-      where: {
-        OR: [{ actorId: testUserId }, { actorId: testAdminId }],
-      },
-    });
-
-    // Clean up rate limit attempts (prevent cross-test rate limiting)
-    await prisma.rateLimitAttempt.deleteMany({});
-
-    // Clean up users
-    await prisma.user.deleteMany({
-      where: { id: testUserId },
-    });
-
-    // Clean up admins
-    await prisma.adminUser.deleteMany({
-      where: { id: testAdminId },
-    });
-
-    // Clean up tenants
-    await prisma.tenant.deleteMany({
-      where: { id: testTenantId },
-    });
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // Safe teardown guard: Prevent server close errors
     if (server) {
@@ -218,13 +237,17 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(currentCookie).toBeDefined();
 
     // Extract familyId from first refresh token
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-    const initialTokens = await prisma.refreshToken.findMany({
-      where: { userId: testUserId, revokedAt: null },
-    });
-    expect(initialTokens.length).toBe(1);
-    const familyId = initialTokens[0].familyId;
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+    const familyId = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        const tokens = await tx.refreshToken.findMany({
+          where: { userId: testUserId, revokedAt: null },
+        });
+        expect(tokens.length).toBe(1);
+        return tokens[0].familyId;
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // Step 2: Run N refresh cycles
     for (let cycle = 1; cycle <= REFRESH_CYCLES; cycle++) {
@@ -246,11 +269,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
       // Verify state every 50 cycles
       if (cycle % 50 === 0) {
-        await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-        const familyTokens = await prisma.refreshToken.findMany({
-          where: { familyId },
-        });
+        const familyTokens = await prisma.$transaction(
+          async tx => {
+            await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+            return await tx.refreshToken.findMany({
+              where: { familyId },
+            });
+          },
+          { timeout: 20000, maxWait: 20000 }
+        );
 
         // Exactly 1 unrotated token (current)
         const unrotatedTokens = familyTokens.filter(t => t.rotatedAt === null);
@@ -262,22 +289,24 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
         // All rotated tokens should be older
         const rotatedTokens = familyTokens.filter(t => t.rotatedAt !== null);
         expect(rotatedTokens.length).toBeGreaterThan(0);
-
-        await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
       }
     }
 
     // Final verification: check family state
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-    const finalTokens = await prisma.refreshToken.findMany({
-      where: { familyId },
-    });
+    const finalTokens = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        return await tx.refreshToken.findMany({
+          where: { familyId },
+        });
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // Should have REFRESH_CYCLES + 1 tokens total (initial + rotations)
     expect(finalTokens.length).toBe(REFRESH_CYCLES + 1);
 
-    // Exactly 1 unrotated, unrevo ked
+    // Exactly 1 unrotated, unrevoked
     const activeFinalTokens = finalTokens.filter(t => t.rotatedAt === null && t.revokedAt === null);
     expect(activeFinalTokens.length).toBe(1);
 
@@ -287,9 +316,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
     // All tokens should share familyId
     expect(finalTokens.every(t => t.familyId === familyId)).toBe(true);
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
-  });
+  }, 30_000);
 
   /**
    * TEST B1: Immediate Replay Detection
@@ -315,12 +342,16 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(loginResponse.statusCode).toBe(200);
     const initialCookie = loginResponse.headers['set-cookie'];
 
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-    const initialTokens = await prisma.refreshToken.findMany({
-      where: { userId: testUserId, revokedAt: null },
-    });
+    const initialTokens = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        return await tx.refreshToken.findMany({
+          where: { userId: testUserId, revokedAt: null },
+        });
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
     const familyId = initialTokens[0].familyId;
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
 
     // Step 2: Refresh once (token A → token B)
     const firstRefreshResponse = await server!.inject({
@@ -355,16 +386,18 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(clearCookie).toContain('Max-Age=0');
 
     // Verify family revoked
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-    const familyTokens = await prisma.refreshToken.findMany({
-      where: { familyId },
-    });
+    const familyTokens = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        return await tx.refreshToken.findMany({
+          where: { familyId },
+        });
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // All tokens should be revoked
     expect(familyTokens.every(t => t.revokedAt !== null)).toBe(true);
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
   });
 
   /**
@@ -500,13 +533,17 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(loginResponse.statusCode).toBe(200);
     const initialCookie = loginResponse.headers['set-cookie'];
 
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-    const initialTokens = await prisma.refreshToken.findMany({
-      where: { userId: testUserId, revokedAt: null },
-    });
-    expect(initialTokens.length).toBe(1);
-    const tokenId = initialTokens[0].id;
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+    const { tokenId } = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        const initialTokens = await tx.refreshToken.findMany({
+          where: { userId: testUserId, revokedAt: null },
+        });
+        expect(initialTokens.length).toBe(1);
+        return { tokenId: initialTokens[0].id };
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // Step 2: First logout
     const firstLogoutResponse = await server!.inject({
@@ -524,13 +561,17 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(firstClearCookie).toContain('Max-Age=0');
 
     // Verify revokedAt set
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-    const tokenAfterFirstLogout = await prisma.refreshToken.findUnique({
-      where: { id: tokenId },
-    });
-    expect(tokenAfterFirstLogout?.revokedAt).not.toBeNull();
-    const firstRevokedAt = tokenAfterFirstLogout?.revokedAt;
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+    const firstRevokedAt = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        const tokenAfterFirstLogout = await tx.refreshToken.findUnique({
+          where: { id: tokenId },
+        });
+        expect(tokenAfterFirstLogout?.revokedAt).not.toBeNull();
+        return tokenAfterFirstLogout?.revokedAt;
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // Step 3: Second logout (idempotent)
     const secondLogoutResponse = await server!.inject({
@@ -549,12 +590,16 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(secondClearCookie).toContain('Max-Age=0');
 
     // Verify revokedAt remains stable (not updated)
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-    const tokenAfterSecondLogout = await prisma.refreshToken.findUnique({
-      where: { id: tokenId },
-    });
-    expect(tokenAfterSecondLogout?.revokedAt?.getTime()).toBe(firstRevokedAt?.getTime());
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+    await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        const tokenAfterSecondLogout = await tx.refreshToken.findUnique({
+          where: { id: tokenId },
+        });
+        expect(tokenAfterSecondLogout?.revokedAt?.getTime()).toBe(firstRevokedAt?.getTime());
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
   });
 
   /**
@@ -586,21 +631,25 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(loginResponse.statusCode).toBe(200);
 
     // Verify audit event (with eventual consistency polling)
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-    const auditEvents = await expectAuditEventually(
-      () =>
-        prisma.auditLog.findMany({
-          where: {
-            actorId: testUserId,
-            action: 'AUTH_LOGIN_SUCCESS',
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        }),
-      results => results.length >= 1,
-      1000, // 1 second timeout
-      50 // 50ms polling interval
+    const auditEvents = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        return await expectAuditEventually(
+          () =>
+            tx.auditLog.findMany({
+              where: {
+                actorId: testUserId,
+                action: 'AUTH_LOGIN_SUCCESS',
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+            }),
+          results => results.length >= 1,
+          1000, // 1 second timeout
+          50 // 50ms polling interval
+        );
+      },
+      { timeout: 20000, maxWait: 20000 }
     );
 
     expect(auditEvents.length).toBe(1);
@@ -615,8 +664,6 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     // Verify basic audit structure
     expect(event.actorId).toBe(testUserId);
     expect(event.actorType).toBe('USER');
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
   });
 
   /**
@@ -671,20 +718,24 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(rateLimitedResponse.headers['retry-after']).toBeDefined();
 
     // Verify audit event emitted (with eventual consistency polling)
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-    const auditEvents = await expectAuditEventually(
-      () =>
-        prisma.auditLog.findMany({
-          where: {
-            action: 'AUTH_RATE_LIMIT_ENFORCED',
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        }),
-      results => results.length >= 1,
-      1000, // 1 second timeout
-      50 // 50ms polling interval
+    const auditEvents = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        return await expectAuditEventually(
+          () =>
+            tx.auditLog.findMany({
+              where: {
+                action: 'AUTH_RATE_LIMIT_ENFORCED',
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+            }),
+          results => results.length >= 1,
+          1000, // 1 second timeout
+          50 // 50ms polling interval
+        );
+      },
+      { timeout: 20000, maxWait: 20000 }
     );
 
     expect(auditEvents.length).toBeGreaterThan(0);
@@ -695,9 +746,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(metadataStr).not.toContain('password');
     expect(metadataStr).not.toContain(testEmail); // Email should be hashed in rate limit context
     expect(metadataStr).not.toContain('token');
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
-  });
+  }, 20_000); // Extended timeout: multiple HTTP calls + DB cleanup + audit polling
 
   /**
    * TEST E3: Audit Event Integrity - Email Not Verified
@@ -706,29 +755,35 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
    */
   it('should emit audit event for unverified email without secrets', async () => {
     // Create unverified user with unique email to avoid rate limiting
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
     const passwordHash = await bcrypt.hash('password123', 10);
     const uniqueTimestamp = Date.now() + Math.random(); // Extra uniqueness
-    const unverifiedUser = await prisma.user.create({
-      data: {
-        email: `unverified-wave2-${uniqueTimestamp}@example.com`,
-        passwordHash,
-        emailVerified: false, // ❌ Not verified
-        emailVerifiedAt: null, // ❌ Explicitly null (Commit 9 invariant)
-      },
-    });
 
-    // Create tenant membership
-    await prisma.membership.create({
-      data: {
-        tenantId: testTenantId,
-        userId: unverifiedUser.id,
-        role: 'MEMBER',
-      },
-    });
+    const unverifiedUser = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
+        const user = await tx.user.create({
+          data: {
+            email: `unverified-wave2-${uniqueTimestamp}@example.com`,
+            passwordHash,
+            emailVerified: false, // ❌ Not verified
+            emailVerifiedAt: null, // ❌ Explicitly null (Commit 9 invariant)
+          },
+        });
+
+        // Create tenant membership
+        await tx.membership.create({
+          data: {
+            tenantId: testTenantId,
+            userId: user.id,
+            role: 'MEMBER',
+          },
+        });
+
+        return user;
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
 
     // Attempt login
     const loginResponse = await server!.inject({
@@ -755,21 +810,25 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(body.error.code).toBe('AUTH_UNVERIFIED');
 
     // Verify audit event (with eventual consistency polling)
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
-
-    const auditEvents = await expectAuditEventually(
-      () =>
-        prisma.auditLog.findMany({
-          where: {
-            actorId: unverifiedUser.id,
-            action: 'AUTH_LOGIN_FAILED',
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        }),
-      results => results.length >= 1,
-      1000, // 1 second timeout
-      50 // 50ms polling interval
+    const auditEvents = await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        return await expectAuditEventually(
+          () =>
+            tx.auditLog.findMany({
+              where: {
+                actorId: unverifiedUser.id,
+                action: 'AUTH_LOGIN_FAILED',
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+            }),
+          results => results.length >= 1,
+          1000, // 1 second timeout
+          50 // 50ms polling interval
+        );
+      },
+      { timeout: 20000, maxWait: 20000 }
     );
 
     expect(auditEvents.length).toBe(1);
@@ -787,13 +846,17 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(metadataStr).not.toContain('token');
 
     // Cleanup
-    await prisma.membership.deleteMany({
-      where: { userId: unverifiedUser.id },
-    });
-    await prisma.user.delete({
-      where: { id: unverifiedUser.id },
-    });
-
-    await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'off', true)`;
-  });
+    await prisma.$transaction(
+      async tx => {
+        await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+        await tx.membership.deleteMany({
+          where: { userId: unverifiedUser.id },
+        });
+        await tx.user.delete({
+          where: { id: unverifiedUser.id },
+        });
+      },
+      { timeout: 20000, maxWait: 20000 }
+    );
+  }, 20_000); // Extended timeout: user creation + login + DB cleanup + audit polling
 });
