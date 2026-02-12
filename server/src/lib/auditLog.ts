@@ -218,7 +218,8 @@ export function createAuthAudit(params: {
     | 'AUTH_LOGIN_FAILED'
     | 'AUTH_LOGOUT'
     | 'AUTH_REALM_VIOLATION'
-    | 'AUTH_RATE_LIMIT_SHADOW';
+    | 'AUTH_RATE_LIMIT_SHADOW'
+    | 'AUTH_REFRESH_ISSUED';
   realm: AuditRealm;
   tenantId: string | null;
   actorId: string | null;

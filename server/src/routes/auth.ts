@@ -15,6 +15,11 @@ import {
 import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../lib/emailStubs.js';
 import { writeAuditLog, createAuthAudit } from '../lib/auditLog.js';
 import { hashRateLimitKey, recordAttempt, isOverThreshold } from '../utils/rateLimit/index.js';
+import {
+  generateRefreshToken,
+  hashRefreshToken,
+  createRefreshSession,
+} from '../utils/auth/index.js';
 import { config } from '../config/index.js';
 
 /**
@@ -254,6 +259,57 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           })
         );
 
+        // Issue refresh token (HttpOnly cookie) - fail-open
+        try {
+          const refreshToken = generateRefreshToken();
+          const refreshTokenHash = hashRefreshToken(refreshToken);
+          const refreshExpiresAt = new Date(
+            Date.now() + config.REFRESH_TOKEN_TTL_DAYS_TENANT * 24 * 60 * 60 * 1000
+          );
+
+          await prisma.refreshToken.create({
+            data: createRefreshSession({
+              userId: result.user.id,
+              tokenHash: refreshTokenHash,
+              expiresAt: refreshExpiresAt,
+              ip: clientIp,
+              userAgent,
+            }),
+          });
+
+          // Set refresh token cookie (HttpOnly, Secure in prod)
+          reply.setCookie('texqtic_rt_tenant', refreshToken, {
+            httpOnly: true,
+            secure: config.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: config.REFRESH_TOKEN_TTL_DAYS_TENANT * 24 * 60 * 60,
+          });
+
+          // Log refresh token issuance (non-blocking)
+          try {
+            await writeAuditLog(
+              prisma,
+              createAuthAudit({
+                action: 'AUTH_REFRESH_ISSUED',
+                realm: 'TENANT',
+                tenantId: result.membership.tenantId,
+                actorId: result.user.id,
+                email: result.user.email,
+                reasonCode: 'SUCCESS',
+                ip: clientIp,
+                userAgent,
+              })
+            );
+          } catch (auditError) {
+            // Non-blocking: log error but continue
+            fastify.log.error({ err: auditError }, '[Refresh Token] Audit logging failed');
+          }
+        } catch (error) {
+          // Fail-open: log error but don't block login
+          fastify.log.error({ err: error }, '[Refresh Token] Issuance failed - login continues');
+        }
+
         return sendSuccess(reply, {
           token,
           user: {
@@ -386,6 +442,52 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           userAgent,
         })
       );
+
+      // Issue refresh token (HttpOnly cookie)
+      const refreshToken = generateRefreshToken();
+      const refreshTokenHash = hashRefreshToken(refreshToken);
+      const refreshExpiresAt = new Date(
+        Date.now() + config.REFRESH_TOKEN_TTL_DAYS_ADMIN * 24 * 60 * 60 * 1000
+      );
+
+      await prisma.refreshToken.create({
+        data: createRefreshSession({
+          adminId: result.id,
+          tokenHash: refreshTokenHash,
+          expiresAt: refreshExpiresAt,
+          ip: clientIp,
+          userAgent,
+        }),
+      });
+
+      // Set refresh token cookie (HttpOnly, Secure in prod)
+      reply.setCookie('texqtic_rt_admin', refreshToken, {
+        httpOnly: true,
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: config.REFRESH_TOKEN_TTL_DAYS_ADMIN * 24 * 60 * 60,
+      });
+
+      // Log refresh token issuance (non-blocking)
+      try {
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_ISSUED',
+            realm: 'ADMIN',
+            tenantId: null,
+            actorId: result.id,
+            email: result.email,
+            reasonCode: 'SUCCESS',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+      } catch (error) {
+        // Non-blocking: log error but continue
+        fastify.log.error({ err: error }, '[Refresh Token] Audit logging failed');
+      }
 
       return sendSuccess(reply, {
         token,
@@ -551,6 +653,57 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           userAgent,
         })
       );
+
+      // Issue refresh token (HttpOnly cookie) - fail-open
+      try {
+        const refreshToken = generateRefreshToken();
+        const refreshTokenHash = hashRefreshToken(refreshToken);
+        const refreshExpiresAt = new Date(
+          Date.now() + config.REFRESH_TOKEN_TTL_DAYS_ADMIN * 24 * 60 * 60 * 1000
+        );
+
+        await prisma.refreshToken.create({
+          data: createRefreshSession({
+            adminId: result.id,
+            tokenHash: refreshTokenHash,
+            expiresAt: refreshExpiresAt,
+            ip: clientIp,
+            userAgent,
+          }),
+        });
+
+        // Set refresh token cookie (HttpOnly, Secure in prod)
+        reply.setCookie('texqtic_rt_admin', refreshToken, {
+          httpOnly: true,
+          secure: config.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: config.REFRESH_TOKEN_TTL_DAYS_ADMIN * 24 * 60 * 60,
+        });
+
+        // Log refresh token issuance (non-blocking)
+        try {
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_REFRESH_ISSUED',
+              realm: 'ADMIN',
+              tenantId: null,
+              actorId: result.id,
+              email: result.email,
+              reasonCode: 'SUCCESS',
+              ip: clientIp,
+              userAgent,
+            })
+          );
+        } catch (auditError) {
+          // Non-blocking: log error but continue
+          fastify.log.error({ err: auditError }, '[Refresh Token] Audit logging failed');
+        }
+      } catch (error) {
+        // Fail-open: log error but don't block login
+        fastify.log.error({ err: error }, '[Refresh Token] Issuance failed - login continues');
+      }
 
       return sendSuccess(reply, {
         token,
@@ -753,6 +906,57 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           userAgent,
         })
       );
+
+      // Issue refresh token (HttpOnly cookie) - fail-open
+      try {
+        const refreshToken = generateRefreshToken();
+        const refreshTokenHash = hashRefreshToken(refreshToken);
+        const refreshExpiresAt = new Date(
+          Date.now() + config.REFRESH_TOKEN_TTL_DAYS_TENANT * 24 * 60 * 60 * 1000
+        );
+
+        await prisma.refreshToken.create({
+          data: createRefreshSession({
+            userId: result.user.id,
+            tokenHash: refreshTokenHash,
+            expiresAt: refreshExpiresAt,
+            ip: clientIp,
+            userAgent,
+          }),
+        });
+
+        // Set refresh token cookie (HttpOnly, Secure in prod)
+        reply.setCookie('texqtic_rt_tenant', refreshToken, {
+          httpOnly: true,
+          secure: config.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: config.REFRESH_TOKEN_TTL_DAYS_TENANT * 24 * 60 * 60,
+        });
+
+        // Log refresh token issuance (non-blocking)
+        try {
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_REFRESH_ISSUED',
+              realm: 'TENANT',
+              tenantId: result.membership.tenantId,
+              actorId: result.user.id,
+              email: result.user.email,
+              reasonCode: 'SUCCESS',
+              ip: clientIp,
+              userAgent,
+            })
+          );
+        } catch (auditError) {
+          // Non-blocking: log error but continue
+          fastify.log.error({ err: auditError }, '[Refresh Token] Audit logging failed');
+        }
+      } catch (error) {
+        // Fail-open: log error but don't block login
+        fastify.log.error({ err: error }, '[Refresh Token] Issuance failed - login continues');
+      }
 
       return sendSuccess(reply, {
         token,

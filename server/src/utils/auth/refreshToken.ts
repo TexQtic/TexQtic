@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { randomBytes, createHash, randomUUID } from 'node:crypto';
 
 /**
  * Generates a cryptographically secure opaque refresh token
@@ -6,7 +6,7 @@ import crypto from 'crypto';
  * @returns Plaintext refresh token (to be sent to client)
  */
 export function generateRefreshToken(): string {
-  const buffer = crypto.randomBytes(64);
+  const buffer = randomBytes(64);
   return buffer.toString('base64url'); // URL-safe, no padding
 }
 
@@ -17,7 +17,7 @@ export function generateRefreshToken(): string {
  * @returns SHA-256 hash as hex string
  */
 export function hashRefreshToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
+  return createHash('sha256').update(token).digest('hex');
 }
 
 /**
@@ -54,11 +54,11 @@ export function createRefreshSession(params: {
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     userId: userId ?? null,
     adminId: adminId ?? null,
     tokenHash,
-    familyId: familyId ?? crypto.randomUUID(), // Generate new family if not provided
+    familyId: familyId ?? randomUUID(), // Generate new family if not provided
     expiresAt,
     ip: ip ?? null,
     userAgent: userAgent ?? null,
@@ -116,7 +116,7 @@ export function rotateRefreshSession(params: {
       },
     },
     newTokenData: {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       userId: userId ?? null,
       adminId: adminId ?? null,
       tokenHash: newTokenHash,
