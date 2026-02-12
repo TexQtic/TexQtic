@@ -17,6 +17,10 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
 
+  // Refresh Token TTL (in days)
+  REFRESH_TOKEN_TTL_DAYS_TENANT: z.string().transform(Number).default('14'),
+  REFRESH_TOKEN_TTL_DAYS_ADMIN: z.string().transform(Number).default('7'),
+
   // AI
   GEMINI_API_KEY: z.string().min(1),
 
