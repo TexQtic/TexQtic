@@ -116,7 +116,7 @@ describe('AUTH-H1 COMMIT 7: Refresh Token Concurrency + Replay', () => {
     // Bypass RLS for test
     await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
 
-    const concurrentAttempts = 8; // Increase probability of race
+    const concurrentAttempts = 50; // Wave 2: Increased contention (8 → 50)
 
     // Simulate concurrent refresh attempts
     const promises = Array.from({ length: concurrentAttempts }, async () => {
