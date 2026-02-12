@@ -1321,7 +1321,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
       // 2) Hash token and lookup in DB
       const tokenHash = hashRefreshToken(rawRefreshToken);
-      const refreshTokenRow = await prisma.refreshToken.findFirst({
+      const refreshTokenRow = await prisma.refreshToken.findUnique({
         where: { tokenHash },
       });
 
@@ -1478,7 +1478,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'AUTH_INVALID', 'Realm mismatch', 401);
       }
 
-      // 5) Issue new token pair (atomic rotation)
+      // 5) Issue new token pair (atomic rotation with concurrency protection)
       const newPlaintextRefreshToken = generateRefreshToken();
       const newRefreshTokenHash = hashRefreshToken(newPlaintextRefreshToken);
 
@@ -1488,17 +1488,33 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           : config.REFRESH_TOKEN_TTL_DAYS_ADMIN;
       const newExpiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000);
 
+      const now = new Date();
+
+      // Try atomic rotation claim
+      let claimSucceeded = false;
+      
       await prisma.$transaction(async tx => {
-        // Mark old token as rotated
-        await tx.refreshToken.update({
-          where: { id: refreshTokenRow.id },
+        // Atomic rotation claim: only succeed if token is still fresh (not rotated/revoked/expired)
+        // This prevents concurrent refresh attempts from both succeeding
+        const claim = await tx.refreshToken.updateMany({
+          where: {
+            id: refreshTokenRow.id,
+            rotatedAt: null,
+            revokedAt: null,
+            expiresAt: { gt: now },
+          },
           data: {
-            rotatedAt: new Date(),
-            lastUsedAt: new Date(),
+            rotatedAt: now,
+            lastUsedAt: now,
           },
         });
 
-        // Create new refresh token in same family
+        // If claim failed (count !== 1), exit transaction cleanly (don't create new token)
+        if (claim.count !== 1) {
+          return; // Exit transaction without changes
+        }
+
+        // Claim succeeded - create new refresh token in same family
         await tx.refreshToken.create({
           data: {
             id: randomUUID(),
@@ -1511,7 +1527,50 @@ const authRoutes: FastifyPluginAsync = async fastify => {
             userAgent,
           },
         });
+
+        claimSucceeded = true;
       });
+
+      // If claim failed, handle as concurrent/replay attempt (OUTSIDE transaction)
+      if (!claimSucceeded) {
+        // Revoke entire family
+        await prisma.refreshToken.updateMany({
+          where: {
+            familyId: refreshTokenRow.familyId,
+            revokedAt: null,
+          },
+          data: {
+            revokedAt: now,
+          },
+        });
+
+        // Clear the refresh cookie
+        const cookieName = realm === 'TENANT' ? 'texqtic_rt_tenant' : 'texqtic_rt_admin';
+        reply.setCookie(cookieName, '', {
+          httpOnly: true,
+          secure: config.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 0,
+        });
+
+        // Audit the concurrent/replay attempt
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_REFRESH_REPLAY_DETECTED',
+            realm,
+            tenantId: null,
+            actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+            email: null,
+            reasonCode: 'ROTATED_REPLAY',
+            ip: clientIp,
+            userAgent,
+          })
+        );
+
+        return sendError(reply, 'AUTH_INVALID', 'Token replay detected - family revoked', 401);
+      }
 
       // 6) Issue new access JWT
       let accessToken: string;
@@ -1635,8 +1694,8 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       // 9) Response (contract unchanged)
       return sendSuccess(reply, { token: accessToken });
     } catch (error: unknown) {
+      // All errors: fail-closed
       fastify.log.error({ err: error }, '[Refresh Token] Error');
-      // Fail-closed: map unexpected errors to 401
       return sendError(reply, 'AUTH_INVALID', 'Token refresh failed', 401);
     }
   });
