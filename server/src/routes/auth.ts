@@ -1640,6 +1640,290 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'AUTH_INVALID', 'Token refresh failed', 401);
     }
   });
+
+  /**
+   * POST /api/auth/logout
+   * Logout endpoint - revokes refresh token and clears cookie
+   *
+   * Request: No body (reads cookies: texqtic_rt_tenant OR texqtic_rt_admin)
+   * Response: { success: true, data: { ok: true } }
+   *
+   * Security: Fail-open behavior
+   * - Always returns success (200 OK) even if token not found or DB operation fails
+   * - Idempotent: safe to call multiple times
+   * - Clears refresh cookie(s) regardless of DB state
+   * - Revokes refresh token in DB if found (sets revokedAt, lastUsedAt)
+   *
+   * Realm detection:
+   * - Based on cookie presence (texqtic_rt_tenant vs texqtic_rt_admin)
+   * - If both cookies present: security violation, revoke both
+   */
+  fastify.post('/logout', async (request, reply) => {
+    const clientIp = (request.headers['x-forwarded-for'] as string) || request.ip;
+    const userAgent = request.headers['user-agent'] || 'unknown';
+
+    try {
+      const tenantRefreshCookie = request.cookies.texqtic_rt_tenant;
+      const adminRefreshCookie = request.cookies.texqtic_rt_admin;
+
+      // Determine trigger and detect cookie violations
+      let trigger: 'tenant' | 'admin' | 'both' = 'tenant';
+      const cookiesToRevoke: Array<{ name: string; token: string; realm: 'TENANT' | 'ADMIN' }> = [];
+
+      if (tenantRefreshCookie && adminRefreshCookie) {
+        // Both cookies present - security violation
+        trigger = 'both';
+        cookiesToRevoke.push({
+          name: 'texqtic_rt_tenant',
+          token: tenantRefreshCookie,
+          realm: 'TENANT',
+        });
+        cookiesToRevoke.push({
+          name: 'texqtic_rt_admin',
+          token: adminRefreshCookie,
+          realm: 'ADMIN',
+        });
+
+        // Audit realm violation (non-blocking)
+        try {
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_REALM_VIOLATION',
+              realm: 'TENANT',
+              tenantId: null,
+              actorId: null,
+              email: null,
+              reasonCode: 'BOTH_COOKIES',
+              ip: clientIp,
+              userAgent,
+              metadataJson: { trigger, violation: 'both_cookies' },
+            })
+          );
+        } catch {
+          // Non-blocking: audit write must not prevent logout
+        }
+      } else if (tenantRefreshCookie) {
+        trigger = 'tenant';
+        cookiesToRevoke.push({
+          name: 'texqtic_rt_tenant',
+          token: tenantRefreshCookie,
+          realm: 'TENANT',
+        });
+      } else if (adminRefreshCookie) {
+        trigger = 'admin';
+        cookiesToRevoke.push({
+          name: 'texqtic_rt_admin',
+          token: adminRefreshCookie,
+          realm: 'ADMIN',
+        });
+      }
+
+      // No cookies present - nothing to revoke
+      if (cookiesToRevoke.length === 0) {
+        try {
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_LOGOUT_NOOP',
+              realm: 'TENANT',
+              tenantId: null,
+              actorId: null,
+              email: null,
+              reasonCode: 'NO_SESSION',
+              ip: clientIp,
+              userAgent,
+              metadataJson: { trigger: 'none' },
+            })
+          );
+        } catch {
+          // Non-blocking: audit write must not prevent logout
+        }
+        return sendSuccess(reply, { ok: true });
+      }
+
+      // Revoke tokens (fail-open: wrap in try/catch)
+      for (const { token, realm: tokenRealm } of cookiesToRevoke) {
+        try {
+          const tokenHash = hashRefreshToken(token);
+          const refreshTokenRow = await prisma.refreshToken.findFirst({
+            where: { tokenHash },
+          });
+
+          if (refreshTokenRow) {
+            // Validate realm-mismatch: cookie realm must match DB row realm
+            const dbIsAdminRealm = refreshTokenRow.adminId !== null;
+            const cookieIsAdminRealm = tokenRealm === 'ADMIN';
+            if (dbIsAdminRealm !== cookieIsAdminRealm) {
+              // Realm mismatch: cookie says TENANT but DB says ADMIN (or vice versa)
+              try {
+                await writeAuditLog(
+                  prisma,
+                  createAuthAudit({
+                    action: 'AUTH_REALM_VIOLATION',
+                    realm: tokenRealm,
+                    tenantId: null,
+                    actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+                    email: null,
+                    reasonCode: 'COOKIE_DB_REALM_MISMATCH',
+                    ip: clientIp,
+                    userAgent,
+                    metadataJson: {
+                      trigger,
+                      cookieRealm: tokenRealm,
+                      dbRealm: dbIsAdminRealm ? 'ADMIN' : 'TENANT',
+                    },
+                  })
+                );
+              } catch {
+                // Non-blocking: audit write must not prevent logout
+              }
+              // Continue with revocation despite mismatch (logout is fail-open)
+            }
+
+            if (refreshTokenRow.revokedAt === null) {
+              // Token exists and not yet revoked
+              await prisma.refreshToken.update({
+                where: { id: refreshTokenRow.id },
+                data: {
+                  revokedAt: new Date(),
+                  lastUsedAt: new Date(),
+                },
+              });
+
+              // Audit successful logout (non-blocking)
+              try {
+                await writeAuditLog(
+                  prisma,
+                  createAuthAudit({
+                    action: 'AUTH_LOGOUT_SUCCESS',
+                    realm: tokenRealm,
+                    tenantId: null,
+                    actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+                    email: null,
+                    reasonCode: 'SUCCESS',
+                    ip: clientIp,
+                    userAgent,
+                    metadataJson: { trigger },
+                  })
+                );
+              } catch {
+                // Non-blocking: audit write must not prevent logout
+              }
+            } else {
+              // Token already revoked (non-blocking)
+              try {
+                await writeAuditLog(
+                  prisma,
+                  createAuthAudit({
+                    action: 'AUTH_LOGOUT_NOOP',
+                    realm: tokenRealm,
+                    tenantId: null,
+                    actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
+                    email: null,
+                    reasonCode: 'ALREADY_REVOKED',
+                    ip: clientIp,
+                    userAgent,
+                    metadataJson: { trigger },
+                  })
+                );
+              } catch {
+                // Non-blocking: audit write must not prevent logout
+              }
+            }
+          } else {
+            // Token not found in DB (non-blocking)
+            try {
+              await writeAuditLog(
+                prisma,
+                createAuthAudit({
+                  action: 'AUTH_LOGOUT_NOOP',
+                  realm: tokenRealm,
+                  tenantId: null,
+                  actorId: null,
+                  email: null,
+                  reasonCode: 'TOKEN_NOT_FOUND',
+                  ip: clientIp,
+                  userAgent,
+                  metadataJson: { trigger },
+                })
+              );
+            } catch {
+              // Non-blocking: audit write must not prevent logout
+            }
+          }
+        } catch (error) {
+          // Fail-open: log error but continue (non-blocking)
+          fastify.log.error(
+            { err: error },
+            `[Logout] Failed to revoke token for realm ${tokenRealm}`
+          );
+          try {
+            await writeAuditLog(
+              prisma,
+              createAuthAudit({
+                action: 'AUTH_LOGOUT_FAILED',
+                realm: tokenRealm,
+                tenantId: null,
+                actorId: null,
+                email: null,
+                reasonCode: 'ERROR',
+                ip: clientIp,
+                userAgent,
+                metadataJson: { trigger, error: 'revoke_failed' },
+              })
+            );
+          } catch {
+            // Non-blocking: audit write must not prevent logout
+          }
+        }
+      }
+
+      // Clear BOTH cookies unconditionally (fail-open guarantee)
+      reply.setCookie('texqtic_rt_tenant', '', {
+        httpOnly: true,
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      });
+      reply.setCookie('texqtic_rt_admin', '', {
+        httpOnly: true,
+        secure: config.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 0,
+      });
+
+      // Always return success (fail-open)
+      return sendSuccess(reply, { ok: true });
+    } catch (error: unknown) {
+      // Fail-open: even on unexpected error, clear cookies and return success
+      fastify.log.error({ err: error }, '[Logout] Unexpected error');
+
+      // Attempt to clear cookies
+      try {
+        reply.setCookie('texqtic_rt_tenant', '', {
+          httpOnly: true,
+          secure: config.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 0,
+        });
+        reply.setCookie('texqtic_rt_admin', '', {
+          httpOnly: true,
+          secure: config.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 0,
+        });
+      } catch {
+        // Even cookie clearing failed, still return success
+      }
+
+      return sendSuccess(reply, { ok: true });
+    }
+  });
 };
 
 export default authRoutes;

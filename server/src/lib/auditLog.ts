@@ -222,7 +222,10 @@ export function createAuthAudit(params: {
     | 'AUTH_REFRESH_ISSUED'
     | 'AUTH_REFRESH_SUCCESS'
     | 'AUTH_REFRESH_FAILED'
-    | 'AUTH_REFRESH_REPLAY_DETECTED';
+    | 'AUTH_REFRESH_REPLAY_DETECTED'
+    | 'AUTH_LOGOUT_SUCCESS'
+    | 'AUTH_LOGOUT_FAILED'
+    | 'AUTH_LOGOUT_NOOP';
   realm: AuditRealm;
   tenantId: string | null;
   actorId: string | null;
@@ -238,13 +241,30 @@ export function createAuthAudit(params: {
     | 'INVALID_TOKEN'
     | 'EXPIRED'
     | 'REVOKED'
-    | 'ROTATED_REPLAY';
+    | 'ROTATED_REPLAY'
+    | 'NO_SESSION'
+    | 'TOKEN_NOT_FOUND'
+    | 'ALREADY_REVOKED'
+    | 'BOTH_COOKIES'
+    | 'COOKIE_DB_REALM_MISMATCH'
+    | 'ERROR';
   ip?: string | null;
   userAgent?: string | null;
   rateLimitTrigger?: 'ip' | 'email' | 'both' | null;
+  metadataJson?: Record<string, unknown>;
 }): AuditEntry {
-  const { action, realm, tenantId, actorId, email, reasonCode, ip, userAgent, rateLimitTrigger } =
-    params;
+  const {
+    action,
+    realm,
+    tenantId,
+    actorId,
+    email,
+    reasonCode,
+    ip,
+    userAgent,
+    rateLimitTrigger,
+    metadataJson,
+  } = params;
 
   return {
     realm,
@@ -264,6 +284,7 @@ export function createAuthAudit(params: {
       userAgent: userAgent || null,
       rateLimitTrigger: rateLimitTrigger || null,
       timestamp: new Date().toISOString(),
+      ...(metadataJson || {}), // Merge additional metadata
     },
   };
 }
