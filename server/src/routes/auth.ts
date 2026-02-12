@@ -13,7 +13,7 @@ import {
   getPasswordResetExpiry,
 } from '../lib/authTokens.js';
 import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../lib/emailStubs.js';
-import { writeAuditLog } from '../lib/auditLog.js';
+import { writeAuditLog, createAuthAudit } from '../lib/auditLog.js';
 
 /**
  * Password verification using bcrypt
@@ -57,6 +57,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const { email, password, tenantId } = parseResult.data;
+
+    // Extract client metadata for audit logging
+    const clientIp = request.ip;
+    const userAgent = request.headers['user-agent'];
 
     try {
       // If tenantId provided, attempt tenant login
@@ -115,14 +119,56 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         });
 
         if (!result) {
+          // Log failed tenant login
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_LOGIN_FAILED',
+              realm: 'TENANT',
+              tenantId,
+              actorId: null,
+              email,
+              reasonCode: 'INVALID_CREDENTIALS',
+              ip: clientIp,
+              userAgent,
+            })
+          );
           return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
         }
 
         if ('error' in result) {
           if (result.error === 'NO_MEMBERSHIP') {
+            // Log failed login - no membership
+            await writeAuditLog(
+              prisma,
+              createAuthAudit({
+                action: 'AUTH_LOGIN_FAILED',
+                realm: 'TENANT',
+                tenantId,
+                actorId: null,
+                email,
+                reasonCode: 'NO_MEMBERSHIP',
+                ip: clientIp,
+                userAgent,
+              })
+            );
             return sendError(reply, 'AUTH_FORBIDDEN', 'User is not a member of this tenant', 403);
           }
           if (result.error === 'INACTIVE_TENANT') {
+            // Log failed login - inactive tenant
+            await writeAuditLog(
+              prisma,
+              createAuthAudit({
+                action: 'AUTH_LOGIN_FAILED',
+                realm: 'TENANT',
+                tenantId,
+                actorId: null,
+                email,
+                reasonCode: 'INACTIVE_TENANT',
+                ip: clientIp,
+                userAgent,
+              })
+            );
             return sendError(reply, 'AUTH_FORBIDDEN', 'Tenant is inactive', 403);
           }
         }
@@ -133,6 +179,21 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           tenantId: result.membership.tenantId,
           role: result.membership.role,
         });
+
+        // Log successful tenant login
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_SUCCESS',
+            realm: 'TENANT',
+            tenantId: result.membership.tenantId,
+            actorId: result.user.id,
+            email: result.user.email,
+            reasonCode: 'SUCCESS',
+            ip: clientIp,
+            userAgent,
+          })
+        );
 
         return sendSuccess(reply, {
           token,
@@ -172,6 +233,20 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       if (!result) {
+        // Log failed admin login
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'ADMIN',
+            tenantId: null,
+            actorId: null,
+            email,
+            reasonCode: 'INVALID_CREDENTIALS',
+            ip: clientIp,
+            userAgent,
+          })
+        );
         return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
       }
 
@@ -180,6 +255,21 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         adminId: result.id,
         role: result.role,
       });
+
+      // Log successful admin login
+      await writeAuditLog(
+        prisma,
+        createAuthAudit({
+          action: 'AUTH_LOGIN_SUCCESS',
+          realm: 'ADMIN',
+          tenantId: null,
+          actorId: result.id,
+          email: result.email,
+          reasonCode: 'SUCCESS',
+          ip: clientIp,
+          userAgent,
+        })
+      );
 
       return sendSuccess(reply, {
         token,
@@ -219,6 +309,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
     const { email, password } = parseResult.data;
 
+    // Extract client metadata for audit logging
+    const clientIp = request.ip;
+    const userAgent = request.headers['user-agent'];
+
     try {
       // Execute DB query within admin RLS context
       const result = await withDbContext({ isAdmin: true }, async () => {
@@ -247,6 +341,20 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       if (!result) {
+        // Log failed admin login
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'ADMIN',
+            tenantId: null,
+            actorId: null,
+            email,
+            reasonCode: 'INVALID_CREDENTIALS',
+            ip: clientIp,
+            userAgent,
+          })
+        );
         return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
       }
 
@@ -255,6 +363,21 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         adminId: result.id,
         role: result.role,
       });
+
+      // Log successful admin login
+      await writeAuditLog(
+        prisma,
+        createAuthAudit({
+          action: 'AUTH_LOGIN_SUCCESS',
+          realm: 'ADMIN',
+          tenantId: null,
+          actorId: result.id,
+          email: result.email,
+          reasonCode: 'SUCCESS',
+          ip: clientIp,
+          userAgent,
+        })
+      );
 
       return sendSuccess(reply, {
         token,
@@ -293,6 +416,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const { email, password, tenantId } = parseResult.data;
+
+    // Extract client metadata for audit logging
+    const clientIp = request.ip;
+    const userAgent = request.headers['user-agent'];
 
     try {
       // Execute DB query within tenant RLS context
@@ -340,10 +467,38 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       if (!result) {
+        // Log failed tenant login
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'TENANT',
+            tenantId,
+            actorId: null,
+            email,
+            reasonCode: 'INVALID_CREDENTIALS',
+            ip: clientIp,
+            userAgent,
+          })
+        );
         return sendError(reply, 'AUTH_INVALID', 'Invalid credentials', 401);
       }
 
       if ('error' in result && result.error === 'NO_MEMBERSHIP') {
+        // Log failed login - no membership
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'TENANT',
+            tenantId,
+            actorId: null,
+            email,
+            reasonCode: 'NO_MEMBERSHIP',
+            ip: clientIp,
+            userAgent,
+          })
+        );
         return sendError(reply, 'AUTH_FORBIDDEN', 'User is not a member of this tenant', 403);
       }
 
@@ -353,6 +508,21 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         tenantId: result.membership.tenantId,
         role: result.membership.role,
       });
+
+      // Log successful tenant login
+      await writeAuditLog(
+        prisma,
+        createAuthAudit({
+          action: 'AUTH_LOGIN_SUCCESS',
+          realm: 'TENANT',
+          tenantId: result.membership.tenantId,
+          actorId: result.user.id,
+          email: result.user.email,
+          reasonCode: 'SUCCESS',
+          ip: clientIp,
+          userAgent,
+        })
+      );
 
       return sendSuccess(reply, {
         token,

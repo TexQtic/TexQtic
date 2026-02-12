@@ -204,6 +204,54 @@ export function createAdminAudit(
 }
 
 /**
+ * Create audit entry for authentication events
+ *
+ * Records login successes, failures, and realm violations.
+ * NEVER logs passwords, tokens, or other sensitive credentials.
+ *
+ * @param params - Auth audit parameters
+ * @returns Audit entry ready for writeAuditLog()
+ */
+export function createAuthAudit(params: {
+  action: 'AUTH_LOGIN_SUCCESS' | 'AUTH_LOGIN_FAILED' | 'AUTH_LOGOUT' | 'AUTH_REALM_VIOLATION';
+  realm: AuditRealm;
+  tenantId: string | null;
+  actorId: string | null;
+  email: string;
+  reasonCode?:
+    | 'INVALID_CREDENTIALS'
+    | 'NOT_VERIFIED'
+    | 'NO_MEMBERSHIP'
+    | 'INACTIVE_TENANT'
+    | 'SUCCESS'
+    | 'REALM_MISMATCH';
+  ip?: string | null;
+  userAgent?: string | null;
+}): AuditEntry {
+  const { action, realm, tenantId, actorId, email, reasonCode, ip, userAgent } = params;
+
+  return {
+    realm,
+    tenantId,
+    actorType: actorId ? (realm === 'ADMIN' ? 'ADMIN' : 'USER') : 'SYSTEM',
+    actorId,
+    action,
+    entity: 'auth',
+    entityId: null,
+    beforeJson: null,
+    afterJson: null,
+    metadataJson: {
+      email, // Safe to log (no password)
+      realmAttempted: realm,
+      reasonCode: reasonCode || null,
+      ip: ip || null,
+      userAgent: userAgent || null,
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
+
+/**
  * Wave 5B: Write authority intent event with idempotency support
  *
  * Records admin authority decisions as immutable events in:
