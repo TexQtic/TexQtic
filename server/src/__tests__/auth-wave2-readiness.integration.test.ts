@@ -71,7 +71,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
     });
     testTenantId = tenant.id;
 
-    // Create test user
+    // Create test user (VERIFIED for happy path tests)
     const passwordHash = await bcrypt.hash('password123', 10);
     testUserEmail = `user-wave2-${Date.now()}@example.com`;
     const user = await prisma.user.create({
@@ -79,6 +79,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
         email: testUserEmail,
         passwordHash,
         emailVerified: true,
+        emailVerifiedAt: new Date(), // ✅ Commit 9: Must be set for verified users
       },
     });
     testUserId = user.id;
@@ -202,6 +203,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
         tenantId: testTenantId,
       },
     });
+
+    // Diagnostic: Print response if not 200
+    if (loginResponse.statusCode !== 200) {
+      const body = JSON.parse(loginResponse.body);
+      throw new Error(
+        `Production stress test login failed: ${loginResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
 
     expect(loginResponse.statusCode).toBe(200);
     let currentCookie = loginResponse.headers['set-cookie'];
@@ -378,6 +388,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
       },
     });
 
+    // Diagnostic: Print response if not 200
+    if (tenantLoginResponse.statusCode !== 200) {
+      const body = JSON.parse(tenantLoginResponse.body);
+      throw new Error(
+        `Cross-realm tenant login failed: ${tenantLoginResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
+
     expect(tenantLoginResponse.statusCode).toBe(200);
     const tenantCookie = tenantLoginResponse.headers['set-cookie'];
 
@@ -390,6 +409,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
         password: 'admin123',
       },
     });
+
+    // Diagnostic: Print response if not 200
+    if (adminLoginResponse.statusCode !== 200) {
+      const body = JSON.parse(adminLoginResponse.body);
+      throw new Error(
+        `Cross-realm admin login failed: ${adminLoginResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
 
     expect(adminLoginResponse.statusCode).toBe(200);
     const adminCookie = adminLoginResponse.headers['set-cookie'];
@@ -459,6 +487,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
         tenantId: testTenantId,
       },
     });
+
+    // Diagnostic: Print response if not 200
+    if (loginResponse.statusCode !== 200) {
+      const body = JSON.parse(loginResponse.body);
+      throw new Error(
+        `Replay test login failed: ${loginResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
 
     expect(loginResponse.statusCode).toBe(200);
     const initialCookie = loginResponse.headers['set-cookie'];
@@ -537,6 +574,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
       },
     });
 
+    // Diagnostic: Print response if not 200
+    if (loginResponse.statusCode !== 200) {
+      const body = JSON.parse(loginResponse.body);
+      throw new Error(
+        `E1 audit test login failed: ${loginResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
+
     expect(loginResponse.statusCode).toBe(200);
 
     // Verify audit event (with eventual consistency polling)
@@ -577,11 +623,16 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
    * TEST E2: Audit Event Integrity - Rate Limit Enforced
    *
    * Trigger rate limit and verify audit event emitted without secrets
+   *
+   * TEST-H2 Fix: Use existing VERIFIED user email with WRONG password
+   * - User exists and is verified (passes verification gate)
+   * - Wrong password triggers auth failure (drives rate limiter)
+   * - After 5 failed attempts, 6th should return 429
    */
   it('should emit audit event for rate limit enforcement without secrets', async () => {
-    // Generate unique email for rate limit test
-    const testEmail = `ratelimit-wave2-${Date.now()}@example.com`;
-    const testPassword = 'wrongpassword';
+    // Use existing verified test user's email with WRONG password
+    const testEmail = testUserEmail; // ✅ Verified user from setup
+    const testPassword = 'wrongpassword123'; // ❌ Wrong password
 
     // Fire 6 failed login attempts to trigger rate limit (tenant threshold = 5)
     const attempts = Array.from({ length: 6 }, () =>
@@ -603,6 +654,16 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
 
     // Last attempt should be rate limited (429)
     const rateLimitedResponse = responses[responses.length - 1];
+
+    // Diagnostic: Print response if not 429
+    if (rateLimitedResponse.statusCode !== 429) {
+      const body = JSON.parse(rateLimitedResponse.body);
+      throw new Error(
+        `Expected 429, got ${rateLimitedResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
+
     expect(rateLimitedResponse.statusCode).toBe(429);
 
     const body = JSON.parse(rateLimitedResponse.body);
@@ -654,6 +715,7 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
         email: `unverified-wave2-${uniqueTimestamp}@example.com`,
         passwordHash,
         emailVerified: false, // ❌ Not verified
+        emailVerifiedAt: null, // ❌ Explicitly null (Commit 9 invariant)
       },
     });
 
@@ -679,7 +741,15 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
       },
     });
 
-    // Should be blocked with 401
+    // Should be blocked with 401 (NOT_VERIFIED)
+    if (loginResponse.statusCode !== 401) {
+      const body = JSON.parse(loginResponse.body);
+      throw new Error(
+        `Expected 401 for unverified user, got ${loginResponse.statusCode}. ` +
+          `Error: ${body.error?.code || 'unknown'}, Message: ${body.error?.message || 'none'}`
+      );
+    }
+
     expect(loginResponse.statusCode).toBe(401);
     const body = JSON.parse(loginResponse.body);
     expect(body.error.code).toBe('AUTH_UNVERIFIED');
