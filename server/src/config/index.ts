@@ -21,6 +21,11 @@ const envSchema = z.object({
   REFRESH_TOKEN_TTL_DAYS_TENANT: z.string().transform(Number).default('14'),
   REFRESH_TOKEN_TTL_DAYS_ADMIN: z.string().transform(Number).default('7'),
 
+  // Rate Limiting (shadow mode)
+  RATE_LIMIT_TENANT_LOGIN_MAX: z.string().transform(Number).default('5'),
+  RATE_LIMIT_ADMIN_LOGIN_MAX: z.string().transform(Number).default('3'),
+  RATE_LIMIT_WINDOW_MINUTES: z.string().transform(Number).default('10'),
+
   // AI
   GEMINI_API_KEY: z.string().min(1),
 

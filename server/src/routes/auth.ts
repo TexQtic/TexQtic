@@ -14,6 +14,8 @@ import {
 } from '../lib/authTokens.js';
 import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../lib/emailStubs.js';
 import { writeAuditLog, createAuthAudit } from '../lib/auditLog.js';
+import { hashRateLimitKey, recordAttempt, isOverThreshold } from '../utils/rateLimit/index.js';
+import { config } from '../config/index.js';
 
 /**
  * Password verification using bcrypt
@@ -65,6 +67,43 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     try {
       // If tenantId provided, attempt tenant login
       if (tenantId) {
+        // SHADOW MODE: Record rate limit attempt (does not block)
+        const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+        await recordAttempt({
+          key: rateLimitKey,
+          endpoint: '/api/auth/login',
+          realm: 'TENANT',
+          windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+        });
+
+        // SHADOW MODE: Check if threshold exceeded (log only, no block)
+        const isLimited = await isOverThreshold({
+          key: rateLimitKey,
+          threshold: config.RATE_LIMIT_TENANT_LOGIN_MAX,
+          windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+        });
+
+        if (isLimited) {
+          // SHADOW MODE: Log that limit would be triggered, but don't block
+          await writeAuditLog(
+            prisma,
+            createAuthAudit({
+              action: 'AUTH_LOGIN_FAILED',
+              realm: 'TENANT',
+              tenantId,
+              actorId: null,
+              email,
+              reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+              ip: clientIp,
+              userAgent,
+            })
+          );
+          console.warn(
+            `[Rate Limiter SHADOW] Tenant login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+          );
+          // DO NOT BLOCK - shadow mode only
+        }
+
         const result = await withDbContext({ tenantId }, async () => {
           // Look up user by email
           const user = await prisma.user.findUnique({
@@ -207,6 +246,43 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // No tenantId provided → attempt admin login
+      // SHADOW MODE: Record rate limit attempt (does not block)
+      const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+      await recordAttempt({
+        key: rateLimitKey,
+        endpoint: '/api/auth/login',
+        realm: 'ADMIN',
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+
+      // SHADOW MODE: Check if threshold exceeded (log only, no block)
+      const isLimited = await isOverThreshold({
+        key: rateLimitKey,
+        threshold: config.RATE_LIMIT_ADMIN_LOGIN_MAX,
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+
+      if (isLimited) {
+        // SHADOW MODE: Log that limit would be triggered, but don't block
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'ADMIN',
+            tenantId: null,
+            actorId: null,
+            email,
+            reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        console.warn(
+          `[Rate Limiter SHADOW] Admin login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+        );
+        // DO NOT BLOCK - shadow mode only
+      }
+
       const result = await withDbContext({ isAdmin: true }, async () => {
         // Look up admin user
         const admin = await prisma.adminUser.findUnique({
@@ -314,6 +390,43 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const userAgent = request.headers['user-agent'];
 
     try {
+      // SHADOW MODE: Record rate limit attempt (does not block)
+      const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+      await recordAttempt({
+        key: rateLimitKey,
+        endpoint: '/api/auth/admin/login',
+        realm: 'ADMIN',
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+
+      // SHADOW MODE: Check if threshold exceeded (log only, no block)
+      const isLimited = await isOverThreshold({
+        key: rateLimitKey,
+        threshold: config.RATE_LIMIT_ADMIN_LOGIN_MAX,
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+
+      if (isLimited) {
+        // SHADOW MODE: Log that limit would be triggered, but don't block
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'ADMIN',
+            tenantId: null,
+            actorId: null,
+            email,
+            reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        console.warn(
+          `[Rate Limiter SHADOW] Admin login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+        );
+        // DO NOT BLOCK - shadow mode only
+      }
+
       // Execute DB query within admin RLS context
       const result = await withDbContext({ isAdmin: true }, async () => {
         // Look up admin user
@@ -422,6 +535,43 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const userAgent = request.headers['user-agent'];
 
     try {
+      // SHADOW MODE: Record rate limit attempt (does not block)
+      const rateLimitKey = hashRateLimitKey(`${email}:${clientIp}`);
+      await recordAttempt({
+        key: rateLimitKey,
+        endpoint: '/api/auth/tenant/login',
+        realm: 'TENANT',
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+
+      // SHADOW MODE: Check if threshold exceeded (log only, no block)
+      const isLimited = await isOverThreshold({
+        key: rateLimitKey,
+        threshold: config.RATE_LIMIT_TENANT_LOGIN_MAX,
+        windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
+      });
+
+      if (isLimited) {
+        // SHADOW MODE: Log that limit would be triggered, but don't block
+        await writeAuditLog(
+          prisma,
+          createAuthAudit({
+            action: 'AUTH_LOGIN_FAILED',
+            realm: 'TENANT',
+            tenantId,
+            actorId: null,
+            email,
+            reasonCode: 'REALM_MISMATCH', // Using REALM_MISMATCH to indicate rate limit shadow
+            ip: clientIp,
+            userAgent,
+          })
+        );
+        console.warn(
+          `[Rate Limiter SHADOW] Tenant login threshold exceeded for key: ${rateLimitKey.substring(0, 16)}...`
+        );
+        // DO NOT BLOCK - shadow mode only
+      }
+
       // Execute DB query within tenant RLS context
       const result = await withDbContext({ tenantId }, async () => {
         // Look up user by email
