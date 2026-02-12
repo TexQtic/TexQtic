@@ -17,6 +17,7 @@
 Wave 2 readiness tests cannot be considered meaningful until the RLS Context Model is fully implemented. Without proper RLS enforcement and tenant isolation, any test results are **false positives** that mask cross-tenant data leakage.
 
 **This wave establishes:**
+
 1. **Constitutional enforcement primitive** — RLS policies as authoritative tenant boundaries
 2. **Context-first database access** — No query executes without proper tenant context
 3. **Pooler-safe architecture** — Transaction-local context prevents session bleed
@@ -25,6 +26,7 @@ Wave 2 readiness tests cannot be considered meaningful until the RLS Context Mod
 ### 1.2 Scope Boundaries
 
 **IN SCOPE:**
+
 - Database RLS policy implementation (SQL)
 - Shared context library (`@texqtic/db-context`)
 - Middleware for context extraction from JWT claims
@@ -33,6 +35,7 @@ Wave 2 readiness tests cannot be considered meaningful until the RLS Context Mod
 - Microservice contract tests and enforcement
 
 **OUT OF SCOPE:**
+
 - Application-level RBAC (authorization logic remains unchanged)
 - API endpoint permission checks (handled by existing middleware)
 - Frontend state management
@@ -41,6 +44,7 @@ Wave 2 readiness tests cannot be considered meaningful until the RLS Context Mod
 ### 1.3 Success Criteria
 
 This wave is **COMPLETE** when:
+
 1. ✅ All tenant-scoped tables have RLS policies enabled
 2. ✅ All database queries execute with valid tenant context
 3. ✅ Tests use seed-only bypass (no production bypass mechanisms)
@@ -54,29 +58,40 @@ This wave is **COMPLETE** when:
 ### 2.1 Infrastructure Requirements
 
 **Database Configuration (MUST VERIFY):**
+
 - Supabase Postgres with PgBouncer pooler
 - Pooler mode: **Transaction** (port 6543)
-- Connection URL format: `postgresql://postgres.<project-ref>:<password>@<pooler-url>:6543/postgres?sslmode=require`
+- Connection URL format: `postgresql://postgres.<project-ref>:<password>@<pooler-url>:6543/postgres?sslmode=require&pgbouncer=true`
 - Superuser access available for migration application
 
-**Verification command:**
-```sql
--- Run in psql to verify pooler mode
-SHOW pool_mode; -- Expected: 'transaction'
-```
+**Verification Checklist:**
+
+1. ✅ Confirm using pooler host + port **6543** (transaction pooler)
+2. ✅ Confirm URL includes `pgbouncer=true` parameter
+3. ✅ Verify transaction-local settings behave correctly:
+   ```sql
+   -- Test SET LOCAL behavior
+   BEGIN;
+   SET LOCAL app.test_var = 'test_value';
+   SELECT current_setting('app.test_var', TRUE); -- Should return 'test_value'
+   COMMIT;
+   SELECT current_setting('app.test_var', TRUE); -- Should return NULL (cleared)
+   ```
+
+**Note:** `SHOW pool_mode` is a PgBouncer admin command, not available in standard Postgres connections. Rely on port selection (6543) and pooler parameter for verification.
 
 ### 2.2 Required Context Fields
 
 Every database transaction MUST establish these fields:
 
-| Field | Type | Source | Required | Purpose |
-|-------|------|--------|----------|---------|
-| `app.org_id` | UUID | JWT claim `org_id` | Yes | Tenant isolation boundary |
-| `app.actor_id` | UUID | JWT claim `sub` (user ID) | Yes | Actor performing action |
-| `app.realm` | TEXT | Route prefix or JWT claim | Yes | `'tenant'` or `'control'` |
-| `app.request_id` | UUID | Generated per request | Yes | Audit trail / tracing |
-| `app.auth_level` | TEXT | JWT claim `role` or `auth_level` | Optional | RBAC metadata |
-| `app.roles` | TEXT[] | JWT claim `roles` | Optional | User role array |
+| Field            | Type   | Source                           | Required | Purpose                   |
+| ---------------- | ------ | -------------------------------- | -------- | ------------------------- |
+| `app.org_id`     | UUID   | JWT claim `org_id`               | Yes      | Tenant isolation boundary |
+| `app.actor_id`   | UUID   | JWT claim `sub` (user ID)        | Yes      | Actor performing action   |
+| `app.realm`      | TEXT   | Route prefix or JWT claim        | Yes      | `'tenant'` or `'control'` |
+| `app.request_id` | UUID   | Generated per request            | Yes      | Audit trail / tracing     |
+| `app.auth_level` | TEXT   | JWT claim `role` or `auth_level` | Optional | RBAC metadata             |
+| `app.roles`      | TEXT[] | JWT claim `roles`                | Optional | User role array           |
 
 **Context Completeness Rule:**  
 Minimum viable context = `org_id` + `actor_id` + `realm` + `request_id`
@@ -84,6 +99,7 @@ Minimum viable context = `org_id` + `actor_id` + `realm` + `request_id`
 ### 2.3 Existing Codebase State
 
 **Assumptions (MUST VERIFY):**
+
 - Prisma Client is used for all database access
 - JWT middleware already extracts claims
 - Route handlers have access to `req.user` or similar
@@ -149,18 +165,21 @@ Minimum viable context = `org_id` + `actor_id` + `realm` + `request_id`
 ### 3.2 Component Responsibilities
 
 **Middleware Layer:**
+
 - Extract JWT claims
 - Build DatabaseContext object
 - Determine realm based on route prefix (`/api/control/*` → `'control'`, else → `'tenant'`)
 - Generate request_id (UUID v4)
 
 **Database Access Layer:**
+
 - Enforce "no context, no database" rule
 - Set transaction-local context variables (always `SET LOCAL`)
 - Wrap all Prisma operations in context-aware wrapper
 - Provide test-only bypass mechanism (gated by `NODE_ENV=test`)
 
 **RLS Policy Layer:**
+
 - Read context from `current_setting('app.*')`
 - Enforce tenant isolation (standard template)
 - Support bypass for test/seed roles (when `app.bypass_rls = 'true'`)
@@ -177,19 +196,27 @@ Minimum viable context = `org_id` + `actor_id` + `realm` + `request_id`
 **File:** `server/prisma/rls/000_context_helpers.sql`
 
 **Required Functions:**
+
 ```sql
 -- Example structure (DO NOT IMPLEMENT YET)
 -- Function: app.current_org_id() → UUID
 -- Function: app.current_actor_id() → UUID
 -- Function: app.current_realm() → TEXT
 -- Function: app.current_request_id() → UUID
--- Function: app.bypass_enabled() → BOOLEAN
+-- Function: app.bypass_enabled() → BOOLEAN (reads 'on'/'off', returns boolean)
 ```
+
+**Bypass Semantics:**
+
+- Use `'on'` / `'off'` (not `'true'` / `'false'`)
+- Helper function: `app.bypass_enabled()` returns `BOOLEAN`
+- Implementation: `current_setting('app.bypass_rls', TRUE) = 'on'`
 
 **Purpose:**  
 Encapsulate `current_setting()` calls for cleaner policy definitions.
 
 **Verification:**
+
 ```sql
 -- After applying migration
 SELECT app.current_org_id(); -- Should return NULL or fail gracefully
@@ -200,6 +227,7 @@ SELECT app.current_org_id(); -- Should return NULL or fail gracefully
 **Task:** Identify and enable RLS on all tenant-scoped tables
 
 **Tenant-Scoped Tables (Initial List — VERIFY AGAINST SCHEMA):**
+
 - `invoices`
 - `invoice_items`
 - `payments`
@@ -211,16 +239,18 @@ SELECT app.current_org_id(); -- Should return NULL or fail gracefully
 - `audit_logs`
 
 **SQL Template:**
+
 ```sql
 ALTER TABLE <table_name> ENABLE ROW LEVEL SECURITY;
 ```
 
 **Verification:**
+
 ```sql
 -- Check RLS status
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public' 
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
   AND rowsecurity = true;
 ```
 
@@ -229,34 +259,56 @@ WHERE schemaname = 'public'
 **Task:** Create tenant isolation policies using standard template
 
 **Policy Template (for each tenant table):**
+
 ```sql
--- SELECT policy
+-- SELECT policy (fail-closed: requires context)
 CREATE POLICY tenant_isolation_select ON <table_name>
   FOR SELECT
   USING (
     app.bypass_enabled() = true
     OR
-    org_id = app.current_org_id()
+    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 
--- Modify policy (INSERT/UPDATE/DELETE)
-CREATE POLICY tenant_isolation_modify ON <table_name>
-  FOR ALL
+-- INSERT policy (fail-closed: requires context)
+CREATE POLICY tenant_isolation_insert ON <table_name>
+  FOR INSERT
+  WITH CHECK (
+    app.bypass_enabled() = true
+    OR
+    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+  );
+
+-- UPDATE policy (fail-closed: requires context)
+CREATE POLICY tenant_isolation_update ON <table_name>
+  FOR UPDATE
   USING (
     app.bypass_enabled() = true
     OR
-    org_id = app.current_org_id()
+    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   )
   WITH CHECK (
     app.bypass_enabled() = true
     OR
-    org_id = app.current_org_id()
+    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+  );
+
+-- DELETE policy (fail-closed: requires context)
+CREATE POLICY tenant_isolation_delete ON <table_name>
+  FOR DELETE
+  USING (
+    app.bypass_enabled() = true
+    OR
+    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 ```
+
+**Critical:** Explicit `IS NOT NULL` check ensures queries **fail closed** (throw error) when context is missing, not return empty results.
 
 **Special Cases:**
 
 **Trade Parties (Multi-Tenant Visibility):**
+
 ```sql
 -- Trade parties visible when:
 -- 1. Belongs to current tenant (buyer)
@@ -272,19 +324,33 @@ CREATE POLICY trade_party_select ON trade_parties
   );
 ```
 
-**Events Table (Projection System):**
+**Events Table (Append-Only Ledger):**
+
 ```sql
--- Events are append-only; reader isolation handled by projections
--- RLS ensures events are only visible to owning tenant
-CREATE POLICY events_isolation ON events
+-- Read policy: Tenant-scoped visibility
+CREATE POLICY events_read ON events
   FOR SELECT
   USING (
     app.bypass_enabled() = true
     OR
-    org_id = app.current_org_id()
+    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 
--- Prevent modification (event sourcing immutability)
+-- Write policy: Enforce provenance (org + actor context required)
+CREATE POLICY events_insert ON events
+  FOR INSERT
+  WITH CHECK (
+    app.bypass_enabled() = true
+    OR
+    (
+      org_id = app.current_org_id()
+      AND actor_id = app.current_actor_id()
+      AND app.current_org_id() IS NOT NULL
+      AND app.current_actor_id() IS NOT NULL
+    )
+  );
+
+-- Immutability: No updates or deletes (event sourcing)
 CREATE POLICY events_immutable ON events
   FOR UPDATE
   USING (false);
@@ -294,17 +360,21 @@ CREATE POLICY events_no_delete ON events
   USING (false);
 ```
 
+**Critical:** INSERT policy enforces event provenance (tenant + actor) at database level.
+
 ### 4.4 Phase 4: Control Plane Policies
 
 **Task:** Create realm-aware policies for control plane tables
 
 **Control Plane Tables:**
+
 - `organizations` (tenant registry)
 - `system_config`
 - `feature_flags`
 - `super_admins`
 
 **Policy Template:**
+
 ```sql
 CREATE POLICY control_plane_access ON organizations
   FOR SELECT
@@ -322,28 +392,50 @@ CREATE POLICY control_plane_access ON organizations
 **Task:** Implement bypass flag support with strict governance
 
 **Bypass Rules:**
-1. Only effective when `app.bypass_rls = 'true'`
+
+1. Only effective when `app.bypass_rls = 'on'` (standardized semantics)
 2. MUST be guarded in application code (`NODE_ENV=test` check)
-3. SHOULD log warning when enabled
-4. Used ONLY for:
+3. MUST be restricted by database role (production role CANNOT set bypass)
+4. SHOULD log warning when enabled
+5. Used ONLY for:
    - Test data seeding
    - CI/CD seed scripts
    - Development database inspection (read-only)
 
+**Database Role Governance (CRITICAL):**
+
+```sql
+-- Production application role (CANNOT bypass RLS)
+CREATE ROLE app_user_prod;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user_prod;
+REVOKE SET ON PARAMETER app.bypass_rls FROM app_user_prod; -- Explicit denial
+
+-- Test/Seed role (CAN bypass RLS for seeding)
+CREATE ROLE app_user_test;
+GRANT app_user_prod TO app_user_test; -- Inherits base permissions
+GRANT SET ON PARAMETER app.bypass_rls TO app_user_test; -- Explicit grant
+```
+
+**Why This Matters:**
+Without role-based restriction, a SQL injection vulnerability becomes a full RLS bypass.  
+With role restriction, even compromised application code cannot disable RLS.
+
 **Example Policy with Bypass:**
+
 ```sql
 CREATE POLICY tenant_isolation_select ON invoices
   FOR SELECT
   USING (
-    current_setting('app.bypass_rls', TRUE) = 'true'
+    current_setting('app.bypass_rls', TRUE) = 'on'
     OR
-    org_id = current_setting('app.org_id', TRUE)::uuid
+    (org_id = current_setting('app.org_id', TRUE)::uuid AND current_setting('app.org_id', TRUE) IS NOT NULL)
   );
 ```
 
 ### 4.6 Migration Strategy
 
 **Safe Rollout:**
+
 1. Apply context helpers first (no impact)
 2. Enable RLS on ONE pilot table (`invoices`)
 3. Test pilot table with new context wrapper
@@ -351,6 +443,7 @@ CREATE POLICY tenant_isolation_select ON invoices
 5. Apply all policies in single migration (atomic)
 
 **Rollback Plan:**
+
 ```sql
 -- Emergency rollback (if needed)
 ALTER TABLE <table_name> DISABLE ROW LEVEL SECURITY;
@@ -369,18 +462,20 @@ DROP POLICY IF EXISTS <policy_name> ON <table_name>;
 **Required Exports:**
 
 **1. DatabaseContext Interface**
+
 ```typescript
 export interface DatabaseContext {
-  orgId: string;        // UUID
-  actorId: string;      // UUID
+  orgId: string; // UUID
+  actorId: string; // UUID
   realm: 'tenant' | 'control';
-  requestId: string;    // UUID
-  authLevel?: string;   // Optional RBAC metadata
-  roles?: string[];     // Optional role array
+  requestId: string; // UUID
+  authLevel?: string; // Optional RBAC metadata
+  roles?: string[]; // Optional role array
 }
 ```
 
 **2. buildContextFromRequest()**
+
 ```typescript
 export function buildContextFromRequest(req: FastifyRequest): DatabaseContext {
   // Extract from req.user (JWT claims)
@@ -392,6 +487,7 @@ export function buildContextFromRequest(req: FastifyRequest): DatabaseContext {
 ```
 
 **3. withDbContext()**
+
 ```typescript
 export async function withDbContext<T>(
   prisma: PrismaClient,
@@ -407,6 +503,7 @@ export async function withDbContext<T>(
 ```
 
 **4. withBypassForSeed() (Test-Only)**
+
 ```typescript
 export async function withBypassForSeed<T>(
   prisma: PrismaClient,
@@ -414,26 +511,30 @@ export async function withBypassForSeed<T>(
 ): Promise<T> {
   // Guard: if (process.env.NODE_ENV !== 'test') throw error
   // Log warning
-  // Execute: SET LOCAL app.bypass_rls = 'true'
+  // Execute: SET LOCAL app.bypass_rls = 'on'  (standardized syntax)
   // Run callback
   // Return result
 }
 ```
+
+**Note:** Use `'on'` not `'true'` (prevents string/boolean ambiguity).
 
 ### 5.2 Phase 2: Add Context Middleware
 
 **Location:** `server/src/middleware/database-context.middleware.ts`
 
 **Responsibilities:**
+
 - Extract JWT claims from `req.user`
 - Call `buildContextFromRequest(req)`
 - Attach to request: `req.dbContext = context`
 - Handle missing claims (401 Unauthorized)
 
 **Integration Point:**
+
 ```typescript
 // In server setup
-app.register(jwtAuthMiddleware);       // Existing
+app.register(jwtAuthMiddleware); // Existing
 app.register(databaseContextMiddleware); // NEW
 ```
 
@@ -444,6 +545,7 @@ app.register(databaseContextMiddleware); // NEW
 **Location:** `server/src/lib/db.ts`
 
 **Pattern:**
+
 ```typescript
 // BEFORE (vulnerable)
 const invoices = await prisma.invoice.findMany({ ... });
@@ -455,6 +557,7 @@ const invoices = await withDbContext(prisma, req.dbContext, async () => {
 ```
 
 **Enforcement Mechanisms:**
+
 1. **Linter Rule:** Detect bare `prisma.*` calls outside db layer
 2. **Code Review:** Require context wrapper in all PRs
 3. **CI Check:** Run linter as pre-commit hook
@@ -462,12 +565,14 @@ const invoices = await withDbContext(prisma, req.dbContext, async () => {
 ### 5.4 Phase 4: Update Route Handlers
 
 **Migration Strategy:**
+
 - Update auth routes first (pilot)
 - Then invoice routes (high-value, high-risk)
 - Then remaining tenant routes
 - Finally control plane routes
 
 **Example Migration:**
+
 ```typescript
 // OLD
 async function getInvoices(req: FastifyRequest, reply: FastifyReply) {
@@ -496,6 +601,7 @@ async function getInvoices(req: FastifyRequest, reply: FastifyReply) {
 
 **Current Issue:**  
 Tests may use session-scoped context or bypass mechanisms that:
+
 - Bleed context between tests (pooler reuse)
 - Don't actually test RLS enforcement
 - Cause flaky failures due to shared state
@@ -508,6 +614,7 @@ Transaction-local context + seed-only bypass + tag-based cleanup
 **Rule:** Bypass ONLY during test data seeding, NEVER during test execution
 
 **Pattern:**
+
 ```typescript
 // BEFORE (wrong)
 beforeEach(async () => {
@@ -529,7 +636,8 @@ test('invoice query respects RLS', async () => {
   const invoices = await withDbContext(prisma, context, async () => {
     return prisma.invoice.findMany();
   });
-  // Should only return ORG_A invoices
+  // Fail-closed: Only Org A invoices returned (or throw if context invalid)
+  expect(invoices.every(inv => inv.orgId === ORG_A_ID)).toBe(true);
 });
 ```
 
@@ -540,6 +648,7 @@ test('invoice query respects RLS', async () => {
 **Solution:** Tag test data with `request_id` or `test_run_id`, then clean by tag
 
 **Pattern:**
+
 ```typescript
 let testRunId: string;
 
@@ -570,6 +679,7 @@ afterEach(async () => {
 **Rule:** Timeouts are a LAST RESORT. Optimize teardown first.
 
 **Optimization Checklist:**
+
 - ✅ Use tag-based cleanup (fast, targeted)
 - ✅ Close connections properly (`prisma.$disconnect()`)
 - ✅ Use database transactions for isolation (faster than cleanup)
@@ -577,6 +687,7 @@ afterEach(async () => {
 - ⚠️ Only increase timeout if above fail
 
 **Transaction-Based Test Pattern (Fastest):**
+
 ```typescript
 test('invoice query', async () => {
   await prisma.$transaction(async (tx) => {
@@ -592,6 +703,7 @@ test('invoice query', async () => {
 ### 6.5 Phase 4: RLS Enforcement Tests
 
 **Required Tests:**
+
 1. **Cross-tenant isolation:** Org A cannot see Org B's invoices
 2. **Pooler safety:** Context doesn't bleed between transactions
 3. **Bypass governance:** Bypass fails outside test environment
@@ -599,6 +711,7 @@ test('invoice query', async () => {
 5. **Realm enforcement:** Control plane queries work as expected
 
 **Example Test:**
+
 ```typescript
 describe('RLS Tenant Isolation', () => {
   test('org A cannot see org B invoices', async () => {
@@ -630,6 +743,7 @@ describe('RLS Tenant Isolation', () => {
 **When TexQtic scales to multiple services, context MUST propagate.**
 
 **Required Headers (Service-to-Service):**
+
 ```http
 X-TexQtic-Org-ID: <uuid>
 X-TexQtic-Actor-ID: <uuid>
@@ -638,11 +752,12 @@ X-TexQtic-Request-ID: <uuid>
 ```
 
 **Contract Test Example:**
+
 ```typescript
 describe('Microservice Context Propagation', () => {
   test('service B receives context from service A', async () => {
     const contextA = { orgId: ORG_A_ID, actorId: USER_A_ID, realm: 'tenant', requestId: uuid() };
-    
+
     // Service A calls Service B
     const response = await fetch('http://service-b/api/invoices', {
       headers: {
@@ -679,15 +794,17 @@ describe('Microservice Context Propagation', () => {
 **Purpose:** Shared context extraction/propagation for all services
 
 **Exports:**
+
 - `extractDatabaseContext(headers: Headers): DatabaseContext`
 - `injectContextHeaders(context: DatabaseContext): HeadersInit`
 - `validateContext(context: Partial<DatabaseContext>): DatabaseContext`
 
 **Usage:**
+
 ```typescript
 // In Service B (receiving side)
-app.register(async (instance) => {
-  instance.addHook('preHandler', async (req) => {
+app.register(async instance => {
+  instance.addHook('preHandler', async req => {
     req.dbContext = extractDatabaseContext(req.headers);
   });
 });
@@ -700,12 +817,14 @@ await fetch('http://service-b/api/invoices', { headers });
 ### 7.3 Enforcement Strategy
 
 **CODEOWNERS Rule:**
+
 ```
 # Require approval for context changes
 server/src/lib/database-context.ts @texqtic/platform-eng
 ```
 
 **Linter Rule (ESLint Custom):**
+
 ```javascript
 // Detect bare Prisma calls outside db layer
 rules: {
@@ -720,6 +839,7 @@ rules: {
 ```
 
 **CI Check:**
+
 ```yaml
 # .github/workflows/rls-check.yml
 - name: Verify RLS Context Usage
@@ -737,6 +857,7 @@ rules: {
 **Status:** 🔴 BLOCKED (Not Started)
 
 **Requirements:**
+
 - [ ] Context helper functions created (`000_context_helpers.sql`)
 - [ ] RLS enabled on pilot table (`invoices`)
 - [ ] Standard tenant policy applied to pilot table
@@ -744,6 +865,7 @@ rules: {
 - [ ] Verification query confirms RLS active
 
 **Verification:**
+
 ```sql
 -- Confirm RLS enabled
 SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = 'invoices';
@@ -763,6 +885,7 @@ SELECT policyname FROM pg_policies WHERE tablename = 'invoices';
 **Status:** 🔴 BLOCKED (Waiting on Gate A)
 
 **Requirements:**
+
 - [ ] `@texqtic/db-context` library created
 - [ ] Context middleware added to server
 - [ ] Pilot route updated (auth or invoice routes)
@@ -770,6 +893,7 @@ SELECT policyname FROM pg_policies WHERE tablename = 'invoices';
 - [ ] Pilot route returns only tenant-scoped data
 
 **Verification:**
+
 ```bash
 # Manual test: Query as Org A
 curl -H "Authorization: Bearer <ORG_A_JWT>" \
@@ -788,6 +912,7 @@ curl -H "Authorization: Bearer <ORG_A_JWT>" \
 **Status:** 🔴 BLOCKED (Waiting on Gate B)
 
 **Requirements:**
+
 - [ ] Seed-only bypass implemented (`withBypassForSeed`)
 - [ ] Tag-based cleanup pattern added to pilot test
 - [ ] Pooler safety test added (context isolation)
@@ -795,6 +920,7 @@ curl -H "Authorization: Bearer <ORG_A_JWT>" \
 - [ ] All pilot tests pass with RLS active
 
 **Verification:**
+
 ```bash
 # Run pilot tests
 npm test -- --testPathPattern=invoice
@@ -814,6 +940,7 @@ npm test -- --testPathPattern=invoice
 **Status:** 🔴 BLOCKED (Waiting on Gate C)
 
 **Requirements:**
+
 - [ ] RLS enabled on ALL tenant-scoped tables
 - [ ] All tenant routes updated to use context wrapper
 - [ ] Control plane routes updated (realm-aware)
@@ -823,6 +950,7 @@ npm test -- --testPathPattern=invoice
 - [ ] CI pipeline includes RLS enforcement checks
 
 **Verification:**
+
 ```bash
 # Run full test suite
 npm test
@@ -841,6 +969,7 @@ psql -c "SELECT tablename FROM pg_tables WHERE schemaname='public' AND rowsecuri
 **Status:** 🔴 BLOCKED (Waiting on Gate D)
 
 **Requirements:**
+
 - [ ] All previous gates passed
 - [ ] Re-run Wave 2 readiness tests WITH RLS active
 - [ ] Tests pass (no cross-tenant leakage)
@@ -848,6 +977,7 @@ psql -c "SELECT tablename FROM pg_tables WHERE schemaname='public' AND rowsecuri
 - [ ] Audit log confirms context used for all queries
 
 **Verification:**
+
 ```bash
 # Re-run Wave 2 readiness
 npm run test:wave2-readiness
@@ -869,12 +999,14 @@ psql -c "SELECT COUNT(*) FROM audit_log WHERE context_missing = true;"
 **Description:** Session-scoped context (`SET`) persists across pooled connections, causing Org A to see Org B's data.
 
 **Mitigation:**
+
 - ✅ **ALWAYS use `SET LOCAL`** (transaction-scoped)
 - ✅ Verify in tests: context clears after transaction
 - ✅ Add CI check: grep for `SET app.` (session-scoped)
 - ✅ Document: "No SET without LOCAL"
 
 **Detection:**
+
 ```typescript
 test('pooler safety: context does not bleed', async () => {
   // Transaction 1: Set context for Org A
@@ -883,11 +1015,14 @@ test('pooler safety: context does not bleed', async () => {
     expect(invoices[0].orgId).toBe(ORG_A_ID);
   });
 
-  // Transaction 2: Query without context (should fail or see nothing)
-  const invoices = await prisma.invoice.findMany();
-  expect(invoices).toHaveLength(0); // Context cleared
+  // Transaction 2: Query without context (MUST FAIL CLOSED)
+  await expect(async () => {
+    await prisma.invoice.findMany();
+  }).rejects.toThrow(); // Missing context throws RLS error
 });
 ```
+
+**Critical Change:** Query without context must **throw error**, not return empty array (fail-closed enforcement).
 
 ---
 
@@ -897,12 +1032,14 @@ test('pooler safety: context does not bleed', async () => {
 **Description:** `SET LOCAL` context lives until transaction ends. Long transactions may hold context too long, causing pooler exhaustion.
 
 **Mitigation:**
+
 - ⚠️ Keep transactions short (< 1 second)
 - ⚠️ Use read-committed isolation (Supabase default)
 - ⚠️ Monitor transaction duration (pgBouncer metrics)
 - ✅ Document: "Context wrapper is NOT for batch jobs"
 
 **Alternative for Batch Jobs:**
+
 ```typescript
 // For large batch operations, set context per-batch
 for (const batch of batches) {
@@ -920,16 +1057,18 @@ for (const batch of batches) {
 **Description:** `request_id` context enables audit logging, but audit inserts may slow down queries.
 
 **Mitigation:**
+
 - ✅ Use async audit log writer (background job)
 - ✅ Insert audit records AFTER business logic commit
 - ✅ Use separate connection pool for audit writes
 - ✅ Monitor audit lag (metric: `audit_lag_seconds`)
 
 **Pattern:**
+
 ```typescript
 await withDbContext(prisma, context, async () => {
   const invoice = await prisma.invoice.create({ ... });
-  
+
   // Audit happens async (fire-and-forget)
   auditQueue.push({
     action: 'invoice.create',
@@ -938,7 +1077,7 @@ await withDbContext(prisma, context, async () => {
     requestId: context.requestId,
     entityId: invoice.id,
   });
-  
+
   return invoice;
 });
 ```
@@ -951,12 +1090,14 @@ await withDbContext(prisma, context, async () => {
 **Description:** Service-to-service calls may forget to propagate context headers, causing silent failures.
 
 **Mitigation:**
+
 - ✅ Create shared HTTP client that auto-injects headers
 - ✅ Contract tests: "missing org_id fails"
 - ✅ Linter rule: detect fetch() without context headers
 - ✅ Monitoring: alert on 400 errors from missing context
 
 **Shared Client:**
+
 ```typescript
 // @texqtic/http-client
 export function createContextAwareClient(context: DatabaseContext) {
@@ -980,12 +1121,14 @@ export function createContextAwareClient(context: DatabaseContext) {
 **Description:** `withBypassForSeed()` accidentally used in production code, disabling RLS.
 
 **Mitigation:**
+
 - ✅ Guard with `if (NODE_ENV !== 'test') throw error`
 - ✅ Log warning when bypass used (even in test)
 - ✅ Linter rule: detect `withBypassForSeed` outside test files
 - ✅ CI check: grep production code for bypass usage
 
 **Detection:**
+
 ```bash
 # CI check
 grep -r "withBypassForSeed" server/src --exclude-dir=__tests__
@@ -999,61 +1142,61 @@ grep -r "withBypassForSeed" server/src --exclude-dir=__tests__
 
 ### 10.1 Database Layer
 
-- [x] Context helper functions created and tested
-- [x] RLS enabled on all tenant-scoped tables
-- [x] Standard tenant policies applied
-- [x] Trade party multi-tenant policies applied
-- [x] Events table immutability policies applied
-- [x] Control plane realm-aware policies applied
-- [x] Bypass flag support added (test-only)
-- [x] SQL migrations applied to all environments
+- [ ] Context helper functions created and tested
+- [ ] RLS enabled on all tenant-scoped tables
+- [ ] Standard tenant policies applied (explicit INSERT/UPDATE/DELETE)
+- [ ] Trade party multi-tenant policies applied
+- [ ] Events table policies applied (append-only with INSERT enforcement)
+- [ ] Control plane realm-aware policies applied
+- [ ] Bypass flag support added (test-only, role-gated)
+- [ ] SQL migrations applied to all environments
 
 ### 10.2 Server Layer
 
-- [x] `@texqtic/db-context` library created
-- [x] `buildContextFromRequest()` implemented
-- [x] `withDbContext()` implemented (enforces SET LOCAL)
-- [x] `withBypassForSeed()` implemented (NODE_ENV guarded)
-- [x] Context middleware added to server
-- [x] All tenant routes updated to use context wrapper
-- [x] All control plane routes updated (realm-aware)
-- [x] "No context, no database" rule enforced
+- [ ] `@texqtic/db-context` library created
+- [ ] `buildContextFromRequest()` implemented
+- [ ] `withDbContext()` implemented (enforces SET LOCAL)
+- [ ] `withBypassForSeed()` implemented (NODE_ENV guarded, uses 'on'/'off')
+- [ ] Context middleware added to server
+- [ ] All tenant routes updated to use context wrapper
+- [ ] All control plane routes updated (realm-aware)
+- [ ] "No context, no database" rule enforced (fail-closed)
 
 ### 10.3 Test Layer
 
-- [x] Seed-only bypass pattern implemented
-- [x] Tag-based cleanup pattern implemented
-- [x] RLS isolation tests added (cross-tenant, pooler safety)
-- [x] Bypass governance tests added (NODE_ENV check)
-- [x] All integration tests updated and passing
-- [x] Test timeouts optimized (< 30s per suite)
-- [x] CI pipeline includes RLS tests
+- [ ] Seed-only bypass pattern implemented
+- [ ] Tag-based cleanup pattern implemented
+- [ ] RLS isolation tests added (cross-tenant, pooler safety, fail-closed)
+- [ ] Bypass governance tests added (NODE_ENV check + role restriction)
+- [ ] All integration tests updated and passing
+- [ ] Test timeouts optimized (< 30s per suite)
+- [ ] CI pipeline includes RLS tests
 
 ### 10.4 Microservice Readiness
 
-- [x] Context header contract defined
-- [x] `@texqtic/context` shared library created
-- [x] Contract tests added (missing context fails)
-- [x] Shared HTTP client with auto-inject created
-- [x] Lint rules for context enforcement added
-- [x] CODEOWNERS rules for context files added
+- [ ] Context header contract defined
+- [ ] `@texqtic/context` shared library created
+- [ ] Contract tests added (missing context fails)
+- [ ] Shared HTTP client with auto-inject created
+- [ ] Lint rules for context enforcement added
+- [ ] CODEOWNERS rules for context files added
 
 ### 10.5 Documentation
 
-- [x] Implementation guide complete (this document)
-- [x] Decision record complete (DECISION-0001)
-- [x] API docs updated (context requirements)
-- [x] Database schema docs updated (RLS policies)
-- [x] Runbook for troubleshooting context issues
+- [ ] Implementation guide complete (this document)
+- [ ] Decision record complete (DECISION-0001)
+- [ ] API docs updated (context requirements)
+- [ ] Database schema docs updated (RLS policies)
+- [ ] Runbook for troubleshooting context issues
 
 ### 10.6 Production Readiness
 
-- [x] All gates (A-E) passed
-- [x] Performance testing complete (< 50ms overhead)
-- [x] Monitoring dashboards created (context metrics)
-- [x] Alerts configured (context-missing queries)
-- [x] Rollback plan tested and documented
-- [x] Wave 2 readiness tests re-run and PASS
+- [ ] All gates (A-E) passed
+- [ ] Performance testing complete (< 50ms overhead)
+- [ ] Monitoring dashboards created (context metrics)
+- [ ] Alerts configured (context-missing queries)
+- [ ] Rollback plan tested and documented
+- [ ] Wave 2 readiness tests re-run and PASS
 
 ---
 
@@ -1074,6 +1217,7 @@ grep -r "withBypassForSeed" server/src --exclude-dir=__tests__
 This guide is now ready for execution. Work begins at **Gate A: Database Foundation**.
 
 **Next Actions:**
+
 1. Review this guide with platform engineering team
 2. Assign owners to each gate
 3. Begin Gate A: Create `000_context_helpers.sql`
