@@ -324,8 +324,9 @@ CREATE POLICY tenant_isolation_delete ON <table_name>
 **FORCE RLS Operational Note:**
 
 - `ALTER TABLE <table_name> FORCE ROW LEVEL SECURITY;` MUST be applied to every RLS-enabled table
-- **Why:** Without FORCE, table owner (typically `postgres` user) bypasses ALL policies (fail-open breach)
-- **Impact:** Even superuser/owner connections respect RLS; seeding REQUIRES triple-gated bypass
+- **Without FORCE RLS:** Table owner may bypass RLS depending on role and how access is performed
+- **With FORCE RLS:** RLS is applied even to table owner (superuser is still special in PostgreSQL)
+- **Impact:** With FORCE enabled, even owner connections respect RLS; seeding REQUIRES triple-gated bypass
 - **Pooler-Safe Execution:** All context setting MUST use `SET LOCAL` within a transaction; NEVER use session-level `SET` (causes context bleed across pooled connections)
 
 **Special Cases:**
@@ -492,10 +493,13 @@ DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;
 ```
 
 **Rationale for deferring cleanup:**
+
 - Avoid breaking existing behavior before server context is validated
-- Legacy policy does not interfere with new policies (both enforce tenant isolation)
-- Redundancy is acceptable during transition; divergence is not
-- Remove only after confirming new context wrapper works in production routes
+- Pre-existing policy uses **legacy-named context variable** (`app.tenant_id`)
+- **Gate B decision:** Server will set ONLY `app.org_id` (canonical Doctrine v1.4 variable)
+- Once Gate B ships, legacy policy becomes deadweight (never triggers) and misleading (wrong variable name)
+- Remove in Gate B.2 after confirming new context wrapper works in production routes
+- **Doctrine compliance:** Supporting both context variables is FORBIDDEN (prevents split-brain)
 
 **Rollback Plan:**
 
@@ -928,7 +932,7 @@ rules: {
 - **Physical column:** `tenant_id` (UUID)
 - **Context variable:** `app.org_id`
 - **Policies:** 8 new + 1 pre-existing (catalog_items_tenant_read with app.tenant_id)
-- **Migrations:** 
+- **Migrations:**
   - `20260212122000_db_hardening_wave_01_gate_a_context_helpers_and_pilot_rls`
   - `20260212122100_force_rls_on_catalog_items`
 
@@ -936,7 +940,7 @@ rules: {
 
 ```sql
 -- Confirm RLS enabled AND forced
-SELECT tablename, rowsecurity, relforcerowsecurity 
+SELECT tablename, rowsecurity, relforcerowsecurity
 FROM pg_tables t
 JOIN pg_class c ON t.tablename = c.relname
 WHERE tablename = 'catalog_items';
@@ -950,7 +954,8 @@ SELECT policyname, cmd FROM pg_policies WHERE tablename = 'catalog_items';
 
 **Known Issues:**
 
-1. **Pre-existing legacy policy:** `catalog_items_tenant_read` uses old context variable `app.tenant_id`
+1. **Pre-existing legacy policy:** `catalog_items_tenant_read` uses **legacy-named context variable** `app.tenant_id`
+   - **Gate B decision:** Server will set ONLY `app.org_id` (canonical), making legacy policy deadweight
    - **Action:** Leave in place for Gate A; schedule removal in Gate B.2 after pilot route validation
    - **Cleanup command:** `DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;`
 
@@ -981,6 +986,7 @@ DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;
 ```
 
 **Verification checklist for B.2:**
+
 - [ ] Pilot route tested with real JWT tokens
 - [ ] Cross-tenant isolation verified (Org A cannot see Org B items)
 - [ ] Context logs show `SET LOCAL app.org_id` executed
@@ -1339,6 +1345,46 @@ grep -r "withBypassForSeed" server/src --exclude-dir=__tests__
 **Lifecycle:** Created during gate, may be deleted after gate passes (or kept for regression testing)
 
 **Governance:** Allowlisted explicitly; NOT subject to production code review standards
+
+**Operations Constraint (CRITICAL):**
+
+- Verify scripts MUST be **read-only** (SELECT + EXPLAIN only)
+- **FORBIDDEN operations:** INSERT, UPDATE, DELETE, TRUNCATE, ALTER, DROP
+- **Rationale:** Prevents "verification scripts becoming mutation scripts"
+- Any seed work MUST be done via migrations or test-only fixtures
+- Violating this constraint removes script from allowlist
+
+### 11.3 Single Source of Context Truth (Doctrine v1.4 Constitutional Rule)
+
+**Server Context Variable Enforcement:**
+
+The server MUST set exactly **one** tenant boundary variable: `app.org_id`
+
+**FORBIDDEN:**
+
+- Setting `app.tenant_id` outside transitional cleanup work (Gate A → Gate B.2)
+- Supporting both `app.org_id` AND `app.tenant_id` simultaneously in production
+- Creating "fallback" logic that checks multiple context variables
+
+**Rationale:**
+
+- Prevents context split-brain (policies checking different variables)
+- Ensures deterministic RLS behavior across all services
+- Simplifies debugging (single authoritative context key)
+- Doctrine v1.4 canonical naming: `org_id` (not `tenant_id`)
+
+**Enforcement:**
+
+- Gate B library MUST set only `app.org_id`
+- Any code setting `app.tenant_id` after Gate B.2 is FORBIDDEN
+- Linter rule: detect `app.tenant_id` in server code (fails CI)
+
+**Transition Plan:**
+
+- Gate A: Database policies use `tenant_id = app.current_org_id()` (schema column vs context variable)
+- Gate B: Server sets only `app.org_id` context
+- Gate B.2: Drop legacy policies referencing `app.tenant_id` context
+- Post Gate B.2: `app.tenant_id` is deadweight, never set by server
 
 ---
 
