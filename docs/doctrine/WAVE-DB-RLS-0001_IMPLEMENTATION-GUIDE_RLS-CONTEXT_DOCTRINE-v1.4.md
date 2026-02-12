@@ -96,6 +96,14 @@ Every database transaction MUST establish these fields:
 **Context Completeness Rule:**  
 Minimum viable context = `org_id` + `actor_id` + `realm` + `request_id`
 
+**IMPORTANT: tenant_id vs org_id Mapping (Doctrine Clarification)**
+
+- **Physical column name:** `tenant_id` (UUID) — legacy naming convention in schema
+- **Doctrine context variable:** `app.org_id` — canonical name in RLS context model
+- **Policy implementation:** Policies compare `tenant_id = app.current_org_id()`
+- **Rationale:** `tenant_id` is a legacy synonym for organizational boundary; Doctrine v1.4 standardizes on `org_id` for context variables to align with multi-tenant terminology
+- **Optional helper (future):** `app.current_tenant_id()` could alias `app.current_org_id()` for schema compatibility, but NOT required for Gate A
+
 ### 2.3 Existing Codebase State
 
 **Assumptions (MUST VERIFY):**
@@ -226,22 +234,28 @@ SELECT app.current_org_id(); -- Should return NULL or fail gracefully
 
 **Task:** Identify and enable RLS on all tenant-scoped tables
 
-**Tenant-Scoped Tables (Initial List — VERIFY AGAINST SCHEMA):**
+**Tenant-Scoped Tables (ACTUAL — verified in schema):**
 
-- `invoices`
-- `invoice_items`
-- `payments`
-- `trade_parties`
-- `events` (special handling required)
-- `users` (tenant members only, not super admin)
-- `team_members`
-- `subscriptions`
+- `catalog_items` ✅ **PILOT TABLE (Gate A)**
+- `carts`
+- `cart_items`
+- `marketplace_cart_summaries`
 - `audit_logs`
+- `event_logs`
+- `memberships`
+- `invites`
+- `tenant_feature_overrides`
+- `ai_budgets`
+- `ai_usage_meters`
+- `impersonation_sessions`
+
+**Note:** Original guide listed `invoices`, `invoice_items`, `payments`, `trade_parties` as examples, but these tables do not exist in current schema. Use actual schema tables.
 
 **SQL Template:**
 
 ```sql
 ALTER TABLE <table_name> ENABLE ROW LEVEL SECURITY;
+ALTER TABLE <table_name> FORCE ROW LEVEL SECURITY; -- CRITICAL: Ensures table owner respects policies
 ```
 
 **Verification:**
@@ -260,6 +274,8 @@ WHERE schemaname = 'public'
 
 **Policy Template (for each tenant table):**
 
+**IMPORTANT:** Physical column is `tenant_id` (legacy naming), context is `app.org_id` (Doctrine v1.4 standard).
+
 ```sql
 -- SELECT policy (fail-closed: requires context)
 CREATE POLICY tenant_isolation_select ON <table_name>
@@ -267,7 +283,7 @@ CREATE POLICY tenant_isolation_select ON <table_name>
   USING (
     app.bypass_enabled() = true
     OR
-    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+    (tenant_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 
 -- INSERT policy (fail-closed: requires context)
@@ -276,7 +292,7 @@ CREATE POLICY tenant_isolation_insert ON <table_name>
   WITH CHECK (
     app.bypass_enabled() = true
     OR
-    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+    (tenant_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 
 -- UPDATE policy (fail-closed: requires context)
@@ -285,12 +301,12 @@ CREATE POLICY tenant_isolation_update ON <table_name>
   USING (
     app.bypass_enabled() = true
     OR
-    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+    (tenant_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   )
   WITH CHECK (
     app.bypass_enabled() = true
     OR
-    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+    (tenant_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 
 -- DELETE policy (fail-closed: requires context)
@@ -299,11 +315,18 @@ CREATE POLICY tenant_isolation_delete ON <table_name>
   USING (
     app.bypass_enabled() = true
     OR
-    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+    (tenant_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 ```
 
 **Critical:** Explicit `IS NOT NULL` check ensures queries **fail closed** (throw error) when context is missing, not return empty results.
+
+**FORCE RLS Operational Note:**
+
+- `ALTER TABLE <table_name> FORCE ROW LEVEL SECURITY;` MUST be applied to every RLS-enabled table
+- **Why:** Without FORCE, table owner (typically `postgres` user) bypasses ALL policies (fail-open breach)
+- **Impact:** Even superuser/owner connections respect RLS; seeding REQUIRES triple-gated bypass
+- **Pooler-Safe Execution:** All context setting MUST use `SET LOCAL` within a transaction; NEVER use session-level `SET` (causes context bleed across pooled connections)
 
 **Special Cases:**
 
@@ -326,24 +349,26 @@ CREATE POLICY trade_party_select ON trade_parties
 
 **Events Table (Append-Only Ledger):**
 
+**Note:** Event-related tables in actual schema are `event_logs` (not `events`). Adjust table name accordingly.
+
 ```sql
 -- Read policy: Tenant-scoped visibility
-CREATE POLICY events_read ON events
+CREATE POLICY events_read ON event_logs
   FOR SELECT
   USING (
     app.bypass_enabled() = true
     OR
-    (org_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
+    (tenant_id = app.current_org_id() AND app.current_org_id() IS NOT NULL)
   );
 
 -- Write policy: Enforce provenance (org + actor context required)
-CREATE POLICY events_insert ON events
+CREATE POLICY events_insert ON event_logs
   FOR INSERT
   WITH CHECK (
     app.bypass_enabled() = true
     OR
     (
-      org_id = app.current_org_id()
+      tenant_id = app.current_org_id()
       AND actor_id = app.current_actor_id()
       AND app.current_org_id() IS NOT NULL
       AND app.current_actor_id() IS NOT NULL
@@ -351,11 +376,11 @@ CREATE POLICY events_insert ON events
   );
 
 -- Immutability: No updates or deletes (event sourcing)
-CREATE POLICY events_immutable ON events
+CREATE POLICY events_immutable ON event_logs
   FOR UPDATE
   USING (false);
 
-CREATE POLICY events_no_delete ON events
+CREATE POLICY events_no_delete ON event_logs
   FOR DELETE
   USING (false);
 ```
@@ -420,27 +445,57 @@ GRANT SET ON PARAMETER app.bypass_rls TO app_user_test; -- Explicit grant
 Without role-based restriction, a SQL injection vulnerability becomes a full RLS bypass.  
 With role restriction, even compromised application code cannot disable RLS.
 
-**Example Policy with Bypass:**
+**Example Policy with Bypass (Actual Implementation):**
 
 ```sql
-CREATE POLICY tenant_isolation_select ON invoices
+CREATE POLICY tenant_select ON catalog_items
   FOR SELECT
   USING (
-    current_setting('app.bypass_rls', TRUE) = 'on'
-    OR
-    (org_id = current_setting('app.org_id', TRUE)::uuid AND current_setting('app.org_id', TRUE) IS NOT NULL)
+    app.require_org_context()
+    AND catalog_items.tenant_id = app.current_org_id()
+    AND NOT app.bypass_enabled()
   );
+
+CREATE POLICY bypass_select ON catalog_items
+  FOR SELECT
+  USING (app.bypass_enabled());
 ```
+
+**Note:** Actual implementation uses separate policies for tenant isolation and bypass (cleaner separation of concerns).
 
 ### 4.6 Migration Strategy
 
 **Safe Rollout:**
 
 1. Apply context helpers first (no impact)
-2. Enable RLS on ONE pilot table (`invoices`)
-3. Test pilot table with new context wrapper
-4. If successful, batch-enable remaining tables
+2. Enable RLS on ONE pilot table (`catalog_items`) ✅ **COMPLETED IN GATE A**
+3. Test pilot table with new context wrapper (Gate B)
+4. If successful, batch-enable remaining tables (Gate D)
 5. Apply all policies in single migration (atomic)
+
+**Gate A Implementation Notes:**
+
+- **Pilot table:** `catalog_items` (confirmed in actual implementation)
+- **Physical column:** `tenant_id` (UUID)
+- **Context variable:** `app.org_id` (Doctrine v1.4 standard)
+- **Policies created:** 8 new policies (4 tenant + 4 bypass)
+- **FORCE RLS applied:** Yes (critical for table owner enforcement)
+- **Pre-existing policy detected:** `catalog_items_tenant_read` (uses `app.tenant_id`, old convention)
+
+**Legacy Policy Cleanup Plan (Gate B.2):**
+
+After pilot route validation in Gate B confirms new context model works end-to-end:
+
+```sql
+-- DROP legacy policy (scheduled for Gate B.2, NOT Gate A)
+DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;
+```
+
+**Rationale for deferring cleanup:**
+- Avoid breaking existing behavior before server context is validated
+- Legacy policy does not interfere with new policies (both enforce tenant isolation)
+- Redundancy is acceptable during transition; divergence is not
+- Remove only after confirming new context wrapper works in production routes
 
 **Rollback Plan:**
 
@@ -571,25 +626,25 @@ const invoices = await withDbContext(prisma, req.dbContext, async () => {
 - Then remaining tenant routes
 - Finally control plane routes
 
-**Example Migration:**
+**Example Migration (Adjusted for Actual Schema):**
 
 ```typescript
 // OLD
-async function getInvoices(req: FastifyRequest, reply: FastifyReply) {
-  const invoices = await prisma.invoice.findMany({
-    where: { orgId: req.user.orgId }, // Manual filter
+async function getCatalogItems(req: FastifyRequest, reply: FastifyReply) {
+  const items = await prisma.catalogItem.findMany({
+    where: { tenantId: req.user.orgId }, // Manual filter (legacy)
   });
-  return invoices;
+  return items;
 }
 
 // NEW
-async function getInvoices(req: FastifyRequest, reply: FastifyReply) {
-  const invoices = await withDbContext(prisma, req.dbContext, async () => {
-    return prisma.invoice.findMany({
+async function getCatalogItems(req: FastifyRequest, reply: FastifyReply) {
+  const items = await withDbContext(prisma, req.dbContext, async () => {
+    return prisma.catalogItem.findMany({
       // No manual filter needed — RLS enforces isolation
     });
   });
-  return invoices;
+  return items;
 }
 ```
 
@@ -630,14 +685,14 @@ beforeEach(async () => {
   // Bypass cleared after transaction
 });
 
-test('invoice query respects RLS', async () => {
+test('catalog items query respects RLS', async () => {
   // RLS ACTIVE — bypass cleared
   const context = { orgId: ORG_A_ID, actorId: USER_A_ID, realm: 'tenant', requestId: uuid() };
-  const invoices = await withDbContext(prisma, context, async () => {
-    return prisma.invoice.findMany();
+  const items = await withDbContext(prisma, context, async () => {
+    return prisma.catalogItem.findMany();
   });
-  // Fail-closed: Only Org A invoices returned (or throw if context invalid)
-  expect(invoices.every(inv => inv.orgId === ORG_A_ID)).toBe(true);
+  // Fail-closed: Only Org A items returned (or throw if context invalid)
+  expect(items.every(item => item.tenantId === ORG_A_ID)).toBe(true);
 });
 ```
 
@@ -710,26 +765,26 @@ test('invoice query', async () => {
 4. **Missing context:** Query fails when context not set
 5. **Realm enforcement:** Control plane queries work as expected
 
-**Example Test:**
+**Example Test (Adjusted for catalog_items pilot):**
 
 ```typescript
 describe('RLS Tenant Isolation', () => {
-  test('org A cannot see org B invoices', async () => {
+  test('org A cannot see org B catalog items', async () => {
     // Seed data for both orgs
     await withBypassForSeed(prisma, async () => {
-      await prisma.invoice.create({ data: { orgId: ORG_A_ID, ... } });
-      await prisma.invoice.create({ data: { orgId: ORG_B_ID, ... } });
+      await prisma.catalogItem.create({ data: { tenantId: ORG_A_ID, ... } });
+      await prisma.catalogItem.create({ data: { tenantId: ORG_B_ID, ... } });
     });
 
     // Query as Org A
     const contextA = { orgId: ORG_A_ID, actorId: USER_A_ID, realm: 'tenant', requestId: uuid() };
-    const invoicesA = await withDbContext(prisma, contextA, async () => {
-      return prisma.invoice.findMany();
+    const itemsA = await withDbContext(prisma, contextA, async () => {
+      return prisma.catalogItem.findMany();
     });
 
-    // Should only see Org A's invoice
-    expect(invoicesA).toHaveLength(1);
-    expect(invoicesA[0].orgId).toBe(ORG_A_ID);
+    // Should only see Org A's items
+    expect(itemsA).toHaveLength(1);
+    expect(itemsA[0].tenantId).toBe(ORG_A_ID);
   });
 });
 ```
@@ -854,53 +909,94 @@ rules: {
 
 ### Gate A: Database Foundation
 
-**Status:** 🔴 BLOCKED (Not Started)
+**Status:** ✅ **COMPLETE** (Implemented: 2026-02-12, Commit: e1187c5)
 
 **Requirements:**
 
-- [ ] Context helper functions created (`000_context_helpers.sql`)
-- [ ] RLS enabled on pilot table (`invoices`)
-- [ ] Standard tenant policy applied to pilot table
-- [ ] SQL migration applied to production-like environment
-- [ ] Verification query confirms RLS active
+- [x] Context helper functions created (8 functions in app schema)
+- [x] RLS enabled on pilot table (`catalog_items`)
+- [x] FORCE RLS enabled on pilot table (table owner enforcement)
+- [x] Standard tenant policies applied to pilot table (4 explicit policies)
+- [x] Bypass policies applied (triple-gated: 4 policies)
+- [x] SQL migrations applied (2 migrations: 20260212122000 + 20260212122100)
+- [x] Verification script created (verify-gate-a-rls.ts)
+- [x] Verification confirms RLS active
+
+**Actual Implementation:**
+
+- **Pilot table:** `catalog_items` (NOT invoices)
+- **Physical column:** `tenant_id` (UUID)
+- **Context variable:** `app.org_id`
+- **Policies:** 8 new + 1 pre-existing (catalog_items_tenant_read with app.tenant_id)
+- **Migrations:** 
+  - `20260212122000_db_hardening_wave_01_gate_a_context_helpers_and_pilot_rls`
+  - `20260212122100_force_rls_on_catalog_items`
 
 **Verification:**
 
 ```sql
--- Confirm RLS enabled
-SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = 'invoices';
--- Expected: rowsecurity = true
+-- Confirm RLS enabled AND forced
+SELECT tablename, rowsecurity, relforcerowsecurity 
+FROM pg_tables t
+JOIN pg_class c ON t.tablename = c.relname
+WHERE tablename = 'catalog_items';
+-- Expected: rowsecurity = true, relforcerowsecurity = true
 
 -- Confirm policies exist
-SELECT policyname FROM pg_policies WHERE tablename = 'invoices';
--- Expected: tenant_isolation_select, tenant_isolation_modify
+SELECT policyname, cmd FROM pg_policies WHERE tablename = 'catalog_items';
+-- Expected: 8 new policies (tenant_select/insert/update/delete + bypass_select/insert/update/delete)
+-- Plus: 1 pre-existing (catalog_items_tenant_read) — to be removed in Gate B.2
 ```
 
-**Exit Criteria:** Database ready for context-aware queries
+**Known Issues:**
+
+1. **Pre-existing legacy policy:** `catalog_items_tenant_read` uses old context variable `app.tenant_id`
+   - **Action:** Leave in place for Gate A; schedule removal in Gate B.2 after pilot route validation
+   - **Cleanup command:** `DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;`
+
+**Exit Criteria:** ✅ Database ready for context-aware queries
 
 ---
 
 ### Gate B: Server Integration (Pilot)
 
-**Status:** 🔴 BLOCKED (Waiting on Gate A)
+**Status:** � **READY TO START** (Gate A complete)
 
 **Requirements:**
 
 - [ ] `@texqtic/db-context` library created
 - [ ] Context middleware added to server
-- [ ] Pilot route updated (auth or invoice routes)
+- [ ] Pilot route updated (catalog items route recommended)
 - [ ] Manual test confirms context propagation
 - [ ] Pilot route returns only tenant-scoped data
+- [ ] **Gate B.2:** Remove legacy policy after validation
+
+**Gate B.2: Legacy Policy Cleanup**
+
+After pilot route confirms new context model works:
+
+```sql
+-- Execute this ONLY after pilot route validation passes
+DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;
+```
+
+**Verification checklist for B.2:**
+- [ ] Pilot route tested with real JWT tokens
+- [ ] Cross-tenant isolation verified (Org A cannot see Org B items)
+- [ ] Context logs show `SET LOCAL app.org_id` executed
+- [ ] No RLS errors in production logs
+- [ ] THEN drop legacy policy
 
 **Verification:**
 
 ```bash
-# Manual test: Query as Org A
+# Manual test: Query as Org A (adjust endpoint for actual schema)
 curl -H "Authorization: Bearer <ORG_A_JWT>" \
-  http://localhost:3001/api/tenant/invoices
+  http://localhost:3001/api/tenant/catalog-items
 
-# Verify response contains only Org A invoices
-# Check logs for: "SET LOCAL app.org_id = '<ORG_A_ID>'"
+# Verify response contains only Org A items
+# Check server logs for: "SET LOCAL app.org_id = '<ORG_A_ID>'"
+# Verify tenantId field in response matches org_id from JWT
 ```
 
 **Exit Criteria:** One route uses RLS context successfully
@@ -922,13 +1018,14 @@ curl -H "Authorization: Bearer <ORG_A_JWT>" \
 **Verification:**
 
 ```bash
-# Run pilot tests
-npm test -- --testPathPattern=invoice
+# Run pilot tests (adjust pattern for actual table)
+npm test -- --testPathPattern=catalog
 
 # Confirm:
-# - No "SET app.bypass_rls" (only SET LOCAL)
+# - No "SET app.bypass_rls" (only SET LOCAL within transactions)
 # - Tests use withDbContext()
 # - Cleanup uses tags, not deleteMany({})
+# - Context clears after transaction (pooler safety)
 ```
 
 **Exit Criteria:** Test infrastructure is RLS-safe
@@ -955,9 +1052,10 @@ npm test -- --testPathPattern=invoice
 # Run full test suite
 npm test
 
-# Check RLS coverage
-psql -c "SELECT tablename FROM pg_tables WHERE schemaname='public' AND rowsecurity=true;"
-# Should include: invoices, invoice_items, payments, trade_parties, events, users, etc.
+# Check RLS coverage (adjust for actual schema)
+psql -c "SELECT tablename, relforcerowsecurity FROM pg_tables t JOIN pg_class c ON t.tablename = c.relname WHERE schemaname='public' AND rowsecurity=true;"
+# Should include: catalog_items, carts, cart_items, marketplace_cart_summaries, audit_logs, event_logs, memberships, etc.
+# relforcerowsecurity should be TRUE for all (table owner enforcement)
 ```
 
 **Exit Criteria:** RLS enforced across entire platform
@@ -1011,13 +1109,13 @@ psql -c "SELECT COUNT(*) FROM audit_log WHERE context_missing = true;"
 test('pooler safety: context does not bleed', async () => {
   // Transaction 1: Set context for Org A
   await withDbContext(prisma, { orgId: ORG_A_ID, ... }, async () => {
-    const invoices = await prisma.invoice.findMany();
-    expect(invoices[0].orgId).toBe(ORG_A_ID);
+    const items = await prisma.catalogItem.findMany();
+    expect(items[0].tenantId).toBe(ORG_A_ID);
   });
 
   // Transaction 2: Query without context (MUST FAIL CLOSED)
   await expect(async () => {
-    await prisma.invoice.findMany();
+    await prisma.catalogItem.findMany();
   }).rejects.toThrow(); // Missing context throws RLS error
 });
 ```
@@ -1200,6 +1298,50 @@ grep -r "withBypassForSeed" server/src --exclude-dir=__tests__
 
 ---
 
+## 11. Governance & Allowlist (Drift-Proofing)
+
+### 11.1 Safe-Write File Allowlist
+
+**Files explicitly ALLOWED for modification during RLS implementation waves:**
+
+1. **Database migrations:**
+   - `server/prisma/migrations/**/*.sql` (new migrations only)
+   - `server/prisma/migrations/**/migration.sql` (Prisma migration files)
+
+2. **Verification utilities:**
+   - `server/prisma/verify-*.ts` (DB verification scripts for Gate validation)
+   - Example: `verify-gate-a-rls.ts`, `verify-gate-b-rls.ts`
+
+3. **Documentation:**
+   - `docs/doctrine/WAVE-DB-RLS-0001_IMPLEMENTATION-GUIDE_RLS-CONTEXT_DOCTRINE-v1.4.md` (this file)
+   - `docs/doctrine/DECISION-0001_RLS-AS-CONSTITUTIONAL-BOUNDARY_DOCTRINE-v1.4_CONTEXT-MODEL.md`
+
+4. **Context library (Gate B only):**
+   - `server/src/lib/database-context.ts` (when Gate B begins)
+   - `server/src/middleware/database-context.middleware.ts` (when Gate B begins)
+
+**FORBIDDEN (NEVER MODIFY):**
+
+- `.env` or `.env.example` files
+- `server/prisma/schema.prisma` (unless explicit Gate requirement)
+- Production route handlers (until Gate B+)
+- Test files (until Gate C)
+- Any file outside server/prisma during Gate A
+
+### 11.2 Verification Script Conventions
+
+**Purpose:** Ad-hoc DB inspection scripts for gate validation (NOT production code)
+
+**Naming:** `verify-<gate>-<aspect>.ts` (e.g., `verify-gate-a-rls.ts`)
+
+**Location:** `server/prisma/` (co-located with migrations for easy access)
+
+**Lifecycle:** Created during gate, may be deleted after gate passes (or kept for regression testing)
+
+**Governance:** Allowlisted explicitly; NOT subject to production code review standards
+
+---
+
 ## Completion Checklist
 
 - [x] File created at exact path: `docs/doctrine/WAVE-DB-RLS-0001_IMPLEMENTATION-GUIDE_RLS-CONTEXT_DOCTRINE-v1.4.md`
@@ -1207,6 +1349,12 @@ grep -r "withBypassForSeed" server/src --exclude-dir=__tests__
 - [x] Includes microservice enforcement strategy (Section 7)
 - [x] Contains risk mitigation strategies (Section 9)
 - [x] Contains definition of done checklist (Section 10)
+- [x] Contains governance & allowlist rules (Section 11)
+- [x] Pilot table corrected (catalog_items, not invoices)
+- [x] tenant_id/org_id mapping documented
+- [x] Legacy policy cleanup planned (Gate B.2)
+- [x] FORCE RLS operational notes included
+- [x] Pooler-safety emphasized (SET LOCAL only)
 - [x] No code changes made (documentation only)
 - [x] No secrets or connection strings added
 
