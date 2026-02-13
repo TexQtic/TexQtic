@@ -9,7 +9,7 @@ import {
   sendUnauthorized,
 } from '../utils/response.js';
 import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
-import { withDbContext } from '../lib/database-context.js';
+import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 
@@ -70,17 +70,20 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/tenant/memberships
-   * Get memberships for current tenant (tests RLS)
+   * Get memberships for current tenant (Gate D.1: RLS-enforced)
+   * Manual tenant filter removed; RLS policies handle tenant boundary
    */
   fastify.get(
     '/tenant/memberships',
     { onRequest: tenantAuthMiddleware },
     async (request, reply) => {
-      const { tenantId } = request;
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
 
-      const memberships = await withDbContextLegacy({ tenantId }, async () => {
-        return await prisma.membership.findMany({
-          where: { tenantId },
+      const memberships = await withDbContext(prisma, dbContext, async (tx) => {
+        return await tx.membership.findMany({
           include: {
             user: {
               select: {
@@ -663,15 +666,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const bcrypt = await import('bcrypt');
       const passwordHash = await bcrypt.hash(userData.password, 10);
 
-      // Create user and membership in transaction
-      const result = await withDbContextLegacy({ tenantId: invite.tenantId }, async () => {
-        return await prisma.$transaction(async tx => {
+      // Gate D.1: Build db context for invite tenant
+      const dbContext: DatabaseContext = {
+        orgId: invite.tenantId,
+        actorId: invite.tenantId, // System actor for activation
+        realm: 'tenant',
+        requestId: crypto.randomUUID(),
+      };
+
+      // Create user and membership in transaction (RLS-enforced)
+      const result = await withDbContext(prisma, dbContext, async (tx) => {
+        return await tx.$transaction(async (innerTx) => {
           // Create or find user
-          let user = await tx.user.findUnique({
+          let user = await innerTx.user.findUnique({
             where: { email: userData.email },
           });
 
-          user ??= await tx.user.create({
+          user ??= await innerTx.user.create({
             data: {
               email: userData.email,
               passwordHash,
@@ -680,8 +691,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             },
           });
 
-          // Create membership
-          const membership = await tx.membership.create({
+          // Create membership (RLS will enforce tenant_id = org_id)
+          const membership = await innerTx.membership.create({
             data: {
               userId: user.id,
               tenantId: invite.tenantId,
@@ -689,8 +700,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             },
           });
 
-          // Mark invite as accepted
-          await tx.invite.update({
+          // Mark invite as accepted (RLS-enforced update)
+          await innerTx.invite.update({
             where: { id: invite.id },
             data: { acceptedAt: new Date() },
           });
@@ -774,18 +785,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-        // Create invite
-        const invite = await withDbContextLegacy({ tenantId }, async () => {
-          return await prisma.invite.create({
-            data: {
-              tenantId: tenantId,
-              email,
-              role,
-              tokenHash,
-              expiresAt,
-            },
-          });
+      // Gate D.1: RLS-enforced invite creation (manual tenantId removed)
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const invite = await withDbContext(prisma, dbContext, async (tx) => {
+        return await tx.invite.create({
+          data: {
+            tenantId,
+            email,
+            role,
+            tokenHash,
+            expiresAt,
+          },
         });
+      });
 
         // Write audit log
         await writeAuditLog(prisma, {

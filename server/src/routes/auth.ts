@@ -145,7 +145,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         });
 
         const result = await withDbContext({ tenantId }, async () => {
-          // Look up user by email
+          // Look up user by email (Gate D.1: RLS-enforced membership filter)
           const user = await prisma.user.findUnique({
             where: { email },
             select: {
@@ -154,7 +154,6 @@ const authRoutes: FastifyPluginAsync = async fastify => {
               passwordHash: true,
               emailVerified: true,
               memberships: {
-                where: { tenantId },
                 select: {
                   tenantId: true,
                   role: true,

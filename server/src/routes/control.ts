@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { adminAuthMiddleware } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
-import { withDbContext } from '../db/withDbContext.js';
+import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
+import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
 
@@ -457,53 +458,41 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       const bcrypt = await import('bcrypt');
       const passwordHash = await bcrypt.hash(ownerPassword, 10);
 
-      // Create tenant, user, membership, and default branding in a transaction
-      const result = await withDbContext({ isAdmin: true }, async () => {
-        return await prisma.$transaction(async tx => {
-          // Create tenant
-          const tenant = await tx.tenant.create({
-            data: {
-              name,
-              slug,
-              type,
-              status: 'ACTIVE',
-              plan: 'FREE',
-            },
-          });
-
-          // Create default branding
-          await tx.tenantBranding.create({
-            data: {
-              tenantId: tenant.id,
-              logoUrl: null,
-              themeJson: {
-                primaryColor: '#4F46E5',
-                secondaryColor: '#10B981',
-              },
-            },
-          });
-
-          // Create owner user
-          const user = await tx.user.create({
-            data: {
-              email: ownerEmail,
-              passwordHash,
-              emailVerified: false,
-            },
-          });
-
-          // Create owner membership
-          const membership = await tx.membership.create({
-            data: {
-              userId: user.id,
-              tenantId: tenant.id,
-              role: 'OWNER',
-            },
-          });
-
-          return { tenant, user, membership };
-        });
+      // Gate D.1: Create tenant first (tenants table not RLS-protected yet)
+      // Then use RLS-enforced context for membership creation
+      const tenant = await prisma.tenant.create({
+        data: {
+          name,
+          slug,
+          type,
+          status: 'ACTIVE',
+          plan: 'FREE',
+        },
       });
+
+      // Create default branding (no RLS requirement)
+      await prisma.tenantBranding.create({
+        data: {
+          tenantId: tenant.id,
+          logoUrl: null,
+          themeJson: {
+            primaryColor: '#4F46E5',
+            secondaryColor: '#10B981',
+          },
+        },
+      });
+
+      // Create owner user (no RLS requirement)
+      const user = await prisma.user.create({
+        data: {
+          email: ownerEmail,
+          passwordHash,
+          emailVerified: false,
+        },
+      });
+
+      // Gate D.1: Create membership with RLS enforcement
+      const dbContext: DatabaseContext = {\n        orgId: tenant.id,\n        actorId: adminId,\n        realm: 'control',\n        requestId: (await import('node:crypto')).randomUUID(),\n      };\n\n      const membership = await withDbContext(prisma, dbContext, async (tx) => {\n        return await tx.membership.create({\n          data: {\n            userId: user.id,\n            tenantId: tenant.id,\n            role: 'OWNER',\n          },\n        });\n      });\n\n      const result = { tenant, user, membership };
 
       // Write audit log
       await writeAuditLog(prisma, {
