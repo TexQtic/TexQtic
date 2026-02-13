@@ -147,9 +147,13 @@ export async function withDbContext<T>(
 
   // Execute in transaction with context
   return prisma.$transaction(async tx => {
-    // CRITICAL: Switch to RLS-enforced role (Gate B.4 Option 2)
-    // postgres role has BYPASSRLS=true, texqtic_app has BYPASSRLS=false
-    // SET LOCAL ensures role reverts after transaction (pooler-safe)
+    // GATE C.3 HARDENING: Use texqtic_app role (NOBYPASSRLS)
+    // DATABASE_URL currently connects as postgres (BYPASSRLS=true) due to Supabase pooler constraints
+    // SET LOCAL ROLE switches to texqtic_app (BYPASSRLS=false) for this transaction only
+    // Transaction scope ensures automatic revert (pooler-safe)
+    //
+    // ROADMAP: When DATABASE_URL is migrated to use texqtic_app directly, remove this line
+    // See: server/prisma/verify-texqtic-app-role.ts for role verification
     await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
 
     // CONSTITUTIONAL ENFORCEMENT: Set ONLY app.org_id (never app.tenant_id)
