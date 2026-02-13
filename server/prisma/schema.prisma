@@ -20,15 +20,15 @@ model Tenant {
   aiBudget                 AiBudget?
   aiUsageMeters            AiUsageMeter[]
   auditLogs                AuditLog[]
+  carts                    Cart[]
+  catalogItems             CatalogItem[]
   impersonationSessions    ImpersonationSession[]
   invites                  Invite[]
+  marketplaceCartSummaries MarketplaceCartSummary[]
   memberships              Membership[]
   branding                 TenantBranding?
   domains                  TenantDomain[]
   featureOverrides         TenantFeatureOverride[]
-  catalogItems             CatalogItem[]
-  carts                    Cart[]
-  marketplaceCartSummaries MarketplaceCartSummary[]
 
   @@map("tenants")
 }
@@ -66,11 +66,11 @@ model User {
   emailVerifiedAt          DateTime?                @map("email_verified_at") @db.Timestamptz(6)
   createdAt                DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  carts                    Cart[]
+  marketplaceCartSummaries MarketplaceCartSummary[]
   memberships              Membership[]
   passwordResetTokens      PasswordResetToken[]
   refreshTokens            RefreshToken[]
-  carts                    Cart[]
-  marketplaceCartSummaries MarketplaceCartSummary[]
 
   @@map("users")
 }
@@ -135,8 +135,8 @@ model RefreshToken {
   ip         String?    @db.VarChar(45)
   userAgent  String?    @map("user_agent") @db.VarChar(500)
   createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   admin      AdminUser? @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([adminId])
@@ -299,8 +299,8 @@ model CatalogItem {
   active      Boolean    @default(true)
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
-  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   cartItems   CartItem[]
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, active])
   @@index([tenantId, updatedAt])
@@ -314,9 +314,9 @@ model Cart {
   status    CartStatus              @default(ACTIVE)
   createdAt DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  items     CartItem[]
   tenant    Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     CartItem[]
   summary   MarketplaceCartSummary?
 
   @@index([tenantId, userId, status])
@@ -338,6 +338,28 @@ model CartItem {
   @@index([cartId])
   @@index([catalogItemId])
   @@map("cart_items")
+}
+
+model MarketplaceCartSummary {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  cartId        String   @unique @map("cart_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  itemCount     Int      @default(0) @map("item_count")
+  totalQuantity Int      @default(0) @map("total_quantity")
+  lastEventId   String?  @map("last_event_id") @db.Uuid
+  version       Int      @default(1)
+  lastUpdatedAt DateTime @map("last_updated_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, lastUpdatedAt])
+  @@index([tenantId, userId])
+  @@index([cartId])
+  @@map("marketplace_cart_summaries")
 }
 
 enum TenantType {
@@ -403,37 +425,4 @@ enum CartStatus {
   ABANDONED
 
   @@map("cart_status")
-}
-
-// ============================================================================
-// EVENT PROJECTIONS (Read Models)
-// ============================================================================
-// Domain: marketplace
-// Plane: tenant-plane
-// Lifecycle: event-driven projection (append/update from events)
-// Purpose: Read-optimized view of cart state for admin & analytics queries
-// RLS: Yes (tenant-scoped, multi-tenant isolation required)
-// Indexes: tenant queries, cart lookups, temporal ordering
-// Idempotency: last_event_id + version for replay safety
-
-model MarketplaceCartSummary {
-  id            String   @id @default(uuid()) @db.Uuid
-  tenantId      String   @map("tenant_id") @db.Uuid
-  cartId        String   @unique @map("cart_id") @db.Uuid
-  userId        String   @map("user_id") @db.Uuid
-  itemCount     Int      @default(0) @map("item_count")
-  totalQuantity Int      @default(0) @map("total_quantity")
-  lastEventId   String?  @map("last_event_id") @db.Uuid
-  version       Int      @default(1)
-  lastUpdatedAt DateTime @map("last_updated_at") @db.Timestamptz(6)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, lastUpdatedAt])
-  @@index([tenantId, userId])
-  @@index([cartId])
-  @@map("marketplace_cart_summaries")
 }

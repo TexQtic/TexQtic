@@ -1,7 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
-import { sendSuccess, sendError, sendValidationError, sendNotFound, sendUnauthorized } from '../utils/response.js';
+import {
+  sendSuccess,
+  sendError,
+  sendValidationError,
+  sendNotFound,
+  sendUnauthorized,
+} from '../utils/response.js';
 import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
 import { withDbContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
@@ -94,7 +100,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/tenant/catalog/items
    * Read tenant-visible catalog items with cursor pagination
-   * 
+   *
    * Gate B.2: RLS-enforced tenant isolation via app.org_id context
    * Manual tenant filters removed; RLS policies handle tenant boundary
    */
@@ -123,7 +129,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       // Gate B.2: RLS-enforced query (no manual tenantId filter)
       // Tenant isolation enforced by: catalog_items tenant_id = app.current_org_id()
-      const items = await withDbContext(prisma, request.dbContext, async (tx) => {
+      const items = await withDbContext(prisma, request.dbContext, async tx => {
         return await tx.catalogItem.findMany({
           where: {
             // Manual tenant filter REMOVED (RLS enforces tenant boundary)
@@ -609,10 +615,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           email: z.string().email(),
           password: z.string().min(6),
         }),
-        tenantData: z.object({
-          name: z.string().optional(),
-          industry: z.string().optional(),
-        }).optional(),
+        tenantData: z
+          .object({
+            name: z.string().optional(),
+            industry: z.string().optional(),
+          })
+          .optional(),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -815,71 +823,70 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Update tenant branding settings
    * Requires OWNER or ADMIN role
    */
-  fastify.put(
-    '/tenant/branding',
-    { onRequest: tenantAuthMiddleware },
-    async (request, reply) => {
-      const { tenantId, userRole } = request;
+  fastify.put('/tenant/branding', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+    const { tenantId, userRole } = request;
 
-      // Check permission
-      if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
-        return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
-      }
+    // Check permission
+    if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+      return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+    }
 
-      try {
-        const bodySchema = z.object({
-          logoUrl: z.string().url().optional().nullable(),
-          themeJson: z.object({
+    try {
+      const bodySchema = z.object({
+        logoUrl: z.string().url().optional().nullable(),
+        themeJson: z
+          .object({
             primaryColor: z.string().optional(),
             secondaryColor: z.string().optional(),
-          }).optional().nullable(),
-        });
+          })
+          .optional()
+          .nullable(),
+      });
 
-        const parseResult = bodySchema.safeParse(request.body);
-        if (!parseResult.success) {
-          return sendValidationError(reply, parseResult.error.errors);
-        }
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
 
-        const { logoUrl, themeJson } = parseResult.data;
+      const { logoUrl, themeJson } = parseResult.data;
 
-        // Update or create branding
-        const branding = await withDbContextLegacy({ tenantId }, async () => {
-          return await prisma.tenantBranding.upsert({
-            where: { tenantId: tenantId },
-            create: {
-              tenantId: tenantId as string,
-              logoUrl: logoUrl ?? undefined,
-              themeJson: themeJson ?? undefined,
-            },
-            update: {
-              logoUrl: logoUrl ?? undefined,
-              themeJson: themeJson ?? undefined,
-            },
-          });
-        });
-
-        // Write audit log
-        await writeAuditLog(prisma, {
-          tenantId: tenantId ?? null,
-          realm: 'TENANT',
-          actorType: 'USER',
-          actorId: request.userId ?? null,
-          action: 'branding.updated',
-          entity: 'branding',
-          entityId: branding.id,
-          metadataJson: {
-            logoUrl,
-            themeJson,
+      // Update or create branding
+      const branding = await withDbContextLegacy({ tenantId }, async () => {
+        return await prisma.tenantBranding.upsert({
+          where: { tenantId: tenantId },
+          create: {
+            tenantId: tenantId as string,
+            logoUrl: logoUrl ?? undefined,
+            themeJson: themeJson ?? undefined,
+          },
+          update: {
+            logoUrl: logoUrl ?? undefined,
+            themeJson: themeJson ?? undefined,
           },
         });
+      });
 
-        return sendSuccess(reply, { branding });
-      } catch (error: unknown) {
-        fastify.log.error({ err: error }, '[Update Branding] Error');
-        return sendError(reply, 'INTERNAL_ERROR', 'Failed to update branding', 500);
-      }
+      // Write audit log
+      await writeAuditLog(prisma, {
+        tenantId: tenantId ?? null,
+        realm: 'TENANT',
+        actorType: 'USER',
+        actorId: request.userId ?? null,
+        action: 'branding.updated',
+        entity: 'branding',
+        entityId: branding.id,
+        metadataJson: {
+          logoUrl,
+          themeJson,
+        },
+      });
+
+      return sendSuccess(reply, { branding });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Update Branding] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to update branding', 500);
     }
-  );
+  });
 };
 
 export default tenantRoutes;

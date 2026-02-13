@@ -188,11 +188,17 @@ describe('RLS Catalog Items — Cross-Tenant Isolation (Smoke)', () => {
     });
     // Transaction 1 complete — context cleared (SET LOCAL semantics)
 
-    // Short delay to ensure connection pool release
+    // DOCTRINE NOTE: 100ms delays are a stability smell.
+    // These prevent connection pool contention but can hide underlying issues.
+    // TODO (Gate C.2/C.3): Test removal of all setTimeout delays.
+    // Better pattern: DB-level barriers (e.g., SELECT 1 in separate tx) or full awaits.
+    // Keeping for now since 3/3 passes prove deterministic behavior.
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // CRITICAL ASSERTION: Verify context is cleared outside transaction
-    const contextAfterA = await prisma.$queryRaw<Array<{ org_id: string | null; realm: string | null }>>`
+    const contextAfterA = await prisma.$queryRaw<
+      Array<{ org_id: string | null; realm: string | null }>
+    >`
       SELECT 
         current_setting('app.org_id', true) as org_id,
         current_setting('app.realm', true) as realm
@@ -200,7 +206,7 @@ describe('RLS Catalog Items — Cross-Tenant Isolation (Smoke)', () => {
     expect(contextAfterA[0].org_id).toBeFalsy(); // Should be empty/null
     expect(contextAfterA[0].realm).toBeFalsy(); // Should be empty/null
 
-    // Short delay before next transaction
+    // Delay (see DOCTRINE NOTE above for removal plan)
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Transaction 2: Query with Org B context (new transaction, different org)
@@ -221,11 +227,13 @@ describe('RLS Catalog Items — Cross-Tenant Isolation (Smoke)', () => {
     });
     // Transaction 2 complete — context cleared again
 
-    // Short delay to ensure connection pool release
+    // Delay (see DOCTRINE NOTE above for removal plan)
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // CRITICAL ASSERTION: Verify context cleared after second transaction
-    const contextAfterB = await prisma.$queryRaw<Array<{ org_id: string | null; realm: string | null }>>`
+    const contextAfterB = await prisma.$queryRaw<
+      Array<{ org_id: string | null; realm: string | null }>
+    >`
       SELECT 
         current_setting('app.org_id', true) as org_id,
         current_setting('app.realm', true) as realm
@@ -233,7 +241,7 @@ describe('RLS Catalog Items — Cross-Tenant Isolation (Smoke)', () => {
     expect(contextAfterB[0].org_id).toBeFalsy();
     expect(contextAfterB[0].realm).toBeFalsy();
 
-    // Short delay before final transaction
+    // Delay (see DOCTRINE NOTE above for removal plan)
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Transaction 3: Switch back to Org A context (verify no bleed from B)

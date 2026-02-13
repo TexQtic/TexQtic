@@ -1,0 +1,31 @@
+﻿
+> texqtic-platform-server@0.1.0 test C:\Users\PARESH\TexQtic\server
+> vitest run "--no-file-parallelism" "--max" "Workers=1" "rls-catalog-items.smoke"
+
+node.exe : file:///C:/Users/PARESH/TexQtic/server/node_modules/vitest/dist/chunks/cac.D
+VeoLl0M.js:404
+At C:\Users\PARESH\AppData\Roaming\npm\pnpm.ps1:24 char:5
++     & "node$exe"  "$basedir/node_modules/pnpm/bin/pnpm.cjs" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (file:///C:/User...DVeoLl0M.js:404:String) 
+    [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+          throw new CACError(`Unknown option \`${name.length > 1 ? `--${name}` : 
+`-${name}`}\``);
+                ^
+
+CACError: Unknown option `--max`
+    at Command.checkUnknownOptions (file:///C:/Users/PARESH/TexQtic/server/node_modules
+/vitest/dist/chunks/cac.DVeoLl0M.js:404:17)
+    at CAC.runMatchedCommand (file:///C:/Users/PARESH/TexQtic/server/node_modules/vites
+t/dist/chunks/cac.DVeoLl0M.js:604:13)
+    at CAC.parse (file:///C:/Users/PARESH/TexQtic/server/node_modules/vitest/dist/chunk
+s/cac.DVeoLl0M.js:545:12)
+    at file:///C:/Users/PARESH/TexQtic/server/node_modules/vitest/dist/cli.js:28:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.13.0
+ÔÇëELIFECYCLEÔÇë Test failed. See above for more details.

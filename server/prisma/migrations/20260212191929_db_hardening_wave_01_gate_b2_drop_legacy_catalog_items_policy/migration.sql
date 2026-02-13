@@ -21,5 +21,4 @@
 -- Expected: catalog_items_tenant_* policies (using app.current_org_id)
 -- Expected: catalog_items_bypass_* policies (using app.bypass_enabled)
 -- NOT expected: catalog_items_tenant_read (legacy, deleted by this migration)
-
 DROP POLICY IF EXISTS catalog_items_tenant_read ON catalog_items;
