@@ -9,7 +9,11 @@ import {
   sendUnauthorized,
 } from '../utils/response.js';
 import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
-import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
+import {
+  withDbContext,
+  buildContextFromRequest,
+  type DatabaseContext,
+} from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 
@@ -82,7 +86,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
 
-      const memberships = await withDbContext(prisma, dbContext, async (tx) => {
+      const memberships = await withDbContext(prisma, dbContext, async tx => {
         return await tx.membership.findMany({
           include: {
             user: {
@@ -168,22 +172,44 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * POST /api/tenant/cart
    * Create or return active cart for authenticated tenant user (idempotent)
+   * Gate D.2: RLS-enforced, manual tenant filters removed
    */
   fastify.post('/tenant/cart', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
-    const { tenantId, userId } = request;
+    const { userId } = request;
 
-    // Early guards for tenant context (guaranteed by middleware)
-    if (!tenantId || !userId) {
-      return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing', 401);
-    }
+    // Build database context from request
+    const dbContext = buildContextFromRequest(request);
 
-    const result = await withDbContextLegacy({ tenantId }, async () => {
-      return await prisma.$transaction(async tx => {
-        // Find existing active cart
-        let cart = await tx.cart.findFirst({
-          where: {
-            tenantId,
-            userId,
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      // Find existing active cart (RLS enforces tenant boundary)
+      let cart = await tx.cart.findFirst({
+        where: {
+          userId,
+          status: 'ACTIVE',
+        },
+        include: {
+          items: {
+            include: {
+              catalogItem: {
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                  price: true,
+                  active: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Create if not exists
+      if (!cart) {
+        cart = await tx.cart.create({
+          data: {
+            tenantId: dbContext.orgId,
+            userId: userId,
             status: 'ACTIVE',
           },
           include: {
@@ -203,50 +229,24 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        // Create if not exists
-        if (!cart) {
-          cart = await tx.cart.create({
-            data: {
-              tenantId: tenantId,
-              userId: userId,
-              status: 'ACTIVE',
-            },
-            include: {
-              items: {
-                include: {
-                  catalogItem: {
-                    select: {
-                      id: true,
-                      name: true,
-                      sku: true,
-                      price: true,
-                      active: true,
-                    },
-                  },
-                },
-              },
-            },
-          });
+        // Audit: cart created
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'cart.CART_CREATED',
+          entity: 'cart',
+          entityId: cart.id,
+          metadataJson: {
+            cartId: cart.id,
+            tenantId: dbContext.orgId,
+            userId,
+          },
+        });
+      }
 
-          // Audit: cart created
-          await writeAuditLog(tx, {
-            realm: 'TENANT',
-            tenantId: tenantId ?? null,
-            actorType: 'USER',
-            actorId: userId ?? null,
-            action: 'cart.CART_CREATED',
-            entity: 'cart',
-            entityId: cart.id,
-            metadataJson: {
-              cartId: cart.id,
-              tenantId,
-              userId,
-            },
-          });
-        }
-
-        return cart;
-      });
+      return cart;
     });
 
     return sendSuccess(reply, { cart: result }, 201);
@@ -255,14 +255,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/tenant/cart
    * Get active cart with items for current tenant user
+   * Gate D.2: RLS-enforced, manual tenant filter removed
    */
   fastify.get('/tenant/cart', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
-    const { tenantId, userId } = request;
+    const { userId } = request;
 
-    const cart = await withDbContextLegacy({ tenantId }, async () => {
-      return await prisma.cart.findFirst({
+    // Build database context from request
+    const dbContext = buildContextFromRequest(request);
+
+    const cart = await withDbContext(prisma, dbContext, async tx => {
+      return await tx.cart.findFirst({
         where: {
-          tenantId,
           userId,
           status: 'ACTIVE',
         },
@@ -294,17 +297,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * POST /api/tenant/cart/items
    * Add item to cart or increment quantity if already present
+   * Gate D.2: RLS-enforced, manual tenant validation removed
    */
   fastify.post(
     '/tenant/cart/items',
     { onRequest: tenantAuthMiddleware },
     async (request, reply) => {
-      const { tenantId, userId } = request;
-
-      // Early guards for tenant context (guaranteed by middleware)
-      if (!tenantId || !userId) {
-        return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing', 401);
-      }
+      const { userId } = request;
 
       // Validate body
       const bodySchema = z.object({
@@ -319,135 +318,131 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { catalogItemId, quantity } = parseResult.data;
 
-      const result = await withDbContextLegacy({ tenantId }, async () => {
-        return await prisma.$transaction(async tx => {
-          // Validate catalog item exists, belongs to tenant, and is active
-          const catalogItem = await tx.catalogItem.findUnique({
-            where: { id: catalogItemId },
-          });
+      // Build database context from request
+      const dbContext = buildContextFromRequest(request);
 
-          if (!catalogItem) {
-            return { error: 'CATALOG_ITEM_NOT_FOUND' };
-          }
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        // Validate catalog item exists and is active (RLS enforces tenant boundary)
+        const catalogItem = await tx.catalogItem.findUnique({
+          where: { id: catalogItemId },
+        });
 
-          if (catalogItem.tenantId !== tenantId) {
-            return { error: 'FORBIDDEN' };
-          }
+        if (!catalogItem) {
+          return { error: 'CATALOG_ITEM_NOT_FOUND' };
+        }
 
-          if (!catalogItem.active) {
-            return { error: 'CATALOG_ITEM_INACTIVE' };
-          }
+        // RLS removed: catalogItem.tenantId check (RLS policies enforce tenant boundary)
 
-          // Ensure active cart exists (create if missing)
-          let cart = await tx.cart.findFirst({
-            where: {
-              tenantId,
-              userId,
+        if (!catalogItem.active) {
+          return { error: 'CATALOG_ITEM_INACTIVE' };
+        }
+
+        // Ensure active cart exists (create if missing, RLS enforces tenant boundary)
+        let cart = await tx.cart.findFirst({
+          where: {
+            userId,
+            status: 'ACTIVE',
+          },
+        });
+
+        if (!cart) {
+          cart = await tx.cart.create({
+            data: {
+              tenantId: dbContext.orgId,
+              userId: userId,
               status: 'ACTIVE',
             },
           });
 
-          if (!cart) {
-            cart = await tx.cart.create({
-              data: {
-                tenantId: tenantId,
-                userId: userId,
-                status: 'ACTIVE',
-              },
-            });
-
-            await writeAuditLog(tx, {
-              realm: 'TENANT',
-              tenantId: tenantId ?? null,
-              actorType: 'USER',
-              actorId: userId ?? null,
-              action: 'cart.CART_CREATED',
-              entity: 'cart',
-              entityId: cart.id,
-              metadataJson: { cartId: cart.id, tenantId, userId },
-            });
-          }
-
-          // Upsert cart item
-          const existingCartItem = await tx.cartItem.findUnique({
-            where: {
-              cartId_catalogItemId: {
-                cartId: cart.id,
-                catalogItemId,
-              },
-            },
-          });
-
-          let cartItem;
-          let resultingQuantity;
-
-          if (existingCartItem) {
-            resultingQuantity = existingCartItem.quantity + quantity;
-            cartItem = await tx.cartItem.update({
-              where: { id: existingCartItem.id },
-              data: { quantity: resultingQuantity },
-              include: {
-                catalogItem: {
-                  select: {
-                    id: true,
-                    name: true,
-                    sku: true,
-                    price: true,
-                    active: true,
-                  },
-                },
-              },
-            });
-          } else {
-            resultingQuantity = quantity;
-            cartItem = await tx.cartItem.create({
-              data: {
-                cartId: cart.id,
-                catalogItemId,
-                quantity,
-              },
-              include: {
-                catalogItem: {
-                  select: {
-                    id: true,
-                    name: true,
-                    sku: true,
-                    price: true,
-                    active: true,
-                  },
-                },
-              },
-            });
-          }
-
-          // Audit: item added
           await writeAuditLog(tx, {
             realm: 'TENANT',
-            tenantId: tenantId ?? null,
+            tenantId: dbContext.orgId,
             actorType: 'USER',
             actorId: userId ?? null,
-            action: 'cart.CART_ITEM_ADDED',
-            entity: 'cart_item',
-            entityId: cartItem.id,
-            metadataJson: {
+            action: 'cart.CART_CREATED',
+            entity: 'cart',
+            entityId: cart.id,
+            metadataJson: { cartId: cart.id, tenantId: dbContext.orgId, userId },
+          });
+        }
+
+        // Upsert cart item
+        const existingCartItem = await tx.cartItem.findUnique({
+          where: {
+            cartId_catalogItemId: {
               cartId: cart.id,
               catalogItemId,
-              quantityAdded: quantity,
-              resultingQuantity,
+            },
+          },
+        });
+
+        let cartItem;
+        let resultingQuantity;
+
+        if (existingCartItem) {
+          resultingQuantity = existingCartItem.quantity + quantity;
+          cartItem = await tx.cartItem.update({
+            where: { id: existingCartItem.id },
+            data: { quantity: resultingQuantity },
+            include: {
+              catalogItem: {
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                  price: true,
+                  active: true,
+                },
+              },
             },
           });
+        } else {
+          resultingQuantity = quantity;
+          cartItem = await tx.cartItem.create({
+            data: {
+              cartId: cart.id,
+              catalogItemId,
+              quantity,
+            },
+            include: {
+              catalogItem: {
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                  price: true,
+                  active: true,
+                },
+              },
+            },
+          });
+        }
 
-          return { cartItem };
+        // Audit: item added
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'cart.CART_ITEM_ADDED',
+          entity: 'cart_item',
+          entityId: cartItem.id,
+          metadataJson: {
+            cartId: cart.id,
+            catalogItemId,
+            quantityAdded: quantity,
+            resultingQuantity,
+          },
         });
+
+        return { cartItem };
       });
 
       if ('error' in result) {
         if (result.error === 'CATALOG_ITEM_NOT_FOUND') {
           return sendNotFound(reply, 'Catalog item not found');
         }
-        if (result.error === 'FORBIDDEN') {
-          return sendError(reply, 'FORBIDDEN', 'Catalog item does not belong to this tenant', 403);
-        }
+        // RLS removed: FORBIDDEN error (RLS policies enforce tenant boundary at DB level)
         if (result.error === 'CATALOG_ITEM_INACTIVE') {
           return sendError(reply, 'BAD_REQUEST', 'Catalog item is not active', 400);
         }
@@ -460,12 +455,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * PATCH /api/tenant/cart/items/:id
    * Update cart item quantity or remove if quantity is 0
+   * Gate D.2: RLS-enforced, manual tenant/cart ownership checks removed
    */
   fastify.patch(
     '/tenant/cart/items/:id',
     { onRequest: tenantAuthMiddleware },
     async (request, reply) => {
-      const { tenantId, userId } = request;
+      const { userId } = request;
 
       // Validate params
       const paramsSchema = z.object({
@@ -491,96 +487,95 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { quantity } = bodyResult.data;
 
-      const result = await withDbContextLegacy({ tenantId }, async () => {
-        return await prisma.$transaction(async tx => {
-          // Find cart item and verify it belongs to user's active cart
-          const cartItem = await tx.cartItem.findUnique({
-            where: { id: cartItemId },
-            include: {
-              cart: true,
-              catalogItem: {
-                select: {
-                  id: true,
-                  name: true,
-                  sku: true,
-                  price: true,
-                  active: true,
-                },
+      // Build database context from request
+      const dbContext = buildContextFromRequest(request);
+
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        // Find cart item (RLS enforces tenant boundary via cart FK)
+        const cartItem = await tx.cartItem.findUnique({
+          where: { id: cartItemId },
+          include: {
+            cart: true,
+            catalogItem: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+                price: true,
+                active: true,
               },
             },
-          });
+          },
+        });
 
-          if (!cartItem) {
-            return { error: 'CART_ITEM_NOT_FOUND' };
-          }
+        if (!cartItem) {
+          return { error: 'CART_ITEM_NOT_FOUND' };
+        }
 
-          if (
-            cartItem.cart.tenantId !== tenantId ||
-            cartItem.cart.userId !== userId ||
-            cartItem.cart.status !== 'ACTIVE'
-          ) {
-            return { error: 'FORBIDDEN' };
-          }
+        // Verify user ownership and cart status (user-level check, not tenant-level)
+        // RLS removed: cartItem.cart.tenantId check (RLS policies enforce tenant boundary)
+        if (cartItem.cart.userId !== userId || cartItem.cart.status !== 'ACTIVE') {
+          return { error: 'FORBIDDEN' };
+        }
 
-          // If quantity is 0, remove the item
-          if (quantity === 0) {
-            await tx.cartItem.delete({
-              where: { id: cartItemId },
-            });
-
-            await writeAuditLog(tx, {
-              realm: 'TENANT',
-              tenantId: tenantId ?? null,
-              actorType: 'USER',
-              actorId: userId ?? null,
-              action: 'cart.CART_ITEM_REMOVED',
-              entity: 'cart_item',
-              entityId: cartItemId,
-              metadataJson: {
-                cartId: cartItem.cartId,
-                catalogItemId: cartItem.catalogItemId,
-                previousQuantity: cartItem.quantity,
-              },
-            });
-
-            return { removed: true };
-          }
-
-          // Otherwise update quantity
-          const updatedCartItem = await tx.cartItem.update({
+        // If quantity is 0, remove the item
+        if (quantity === 0) {
+          await tx.cartItem.delete({
             where: { id: cartItemId },
-            data: { quantity },
-            include: {
-              catalogItem: {
-                select: {
-                  id: true,
-                  name: true,
-                  sku: true,
-                  price: true,
-                  active: true,
-                },
-              },
-            },
           });
 
           await writeAuditLog(tx, {
             realm: 'TENANT',
-            tenantId,
+            tenantId: dbContext.orgId,
             actorType: 'USER',
-            actorId: userId,
-            action: 'cart.CART_ITEM_UPDATED',
+            actorId: userId ?? null,
+            action: 'cart.CART_ITEM_REMOVED',
             entity: 'cart_item',
             entityId: cartItemId,
             metadataJson: {
               cartId: cartItem.cartId,
               catalogItemId: cartItem.catalogItemId,
               previousQuantity: cartItem.quantity,
-              newQuantity: quantity,
             },
           });
 
-          return { cartItem: updatedCartItem };
+          return { removed: true };
+        }
+
+        // Otherwise update quantity
+        const updatedCartItem = await tx.cartItem.update({
+          where: { id: cartItemId },
+          data: { quantity },
+          include: {
+            catalogItem: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+                price: true,
+                active: true,
+              },
+            },
+          },
         });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId,
+          action: 'cart.CART_ITEM_UPDATED',
+          entity: 'cart_item',
+          entityId: cartItemId,
+          metadataJson: {
+            cartId: cartItem.cartId,
+            catalogItemId: cartItem.catalogItemId,
+            previousQuantity: cartItem.quantity,
+            newQuantity: quantity,
+          },
+        });
+
+        return { cartItem: updatedCartItem };
       });
 
       if ('error' in result) {
@@ -675,8 +670,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       };
 
       // Create user and membership in transaction (RLS-enforced)
-      const result = await withDbContext(prisma, dbContext, async (tx) => {
-        return await tx.$transaction(async (innerTx) => {
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        return await tx.$transaction(async innerTx => {
           // Create or find user
           let user = await innerTx.user.findUnique({
             where: { email: userData.email },
@@ -785,23 +780,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-      // Gate D.1: RLS-enforced invite creation (manual tenantId removed)
-      const dbContext = request.dbContext;
-      if (!dbContext) {
-        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
-      }
+        // Gate D.1: RLS-enforced invite creation (manual tenantId removed)
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
 
-      const invite = await withDbContext(prisma, dbContext, async (tx) => {
-        return await tx.invite.create({
-          data: {
-            tenantId,
-            email,
-            role,
-            tokenHash,
-            expiresAt,
-          },
+        const invite = await withDbContext(prisma, dbContext, async tx => {
+          return await tx.invite.create({
+            data: {
+              tenantId,
+              email,
+              role,
+              tokenHash,
+              expiresAt,
+            },
+          });
         });
-      });
 
         // Write audit log
         await writeAuditLog(prisma, {
