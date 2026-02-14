@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { config } from '../config/index.js';
 import { sendSuccess, sendValidationError } from '../utils/response.js';
 import { getTenantContext } from '../lib/tenantContext.js';
-import { withTenantDb } from '../lib/dbContext.js';
+import { withDbContext, buildContextFromRequest } from '../lib/database-context.js';
 import {
   loadTenantBudget,
   getUsage,
@@ -130,13 +130,17 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     const model = 'gemini-1.5-flash';
 
     try {
+      // Build database context from request (Doctrine v1.4)
+      const dbContext = buildContextFromRequest(request);
+      const contextTenantId = dbContext.orgId;
+
       // Execute within tenant DB context (RLS enforced)
-      const result = await withTenantDb(prisma, tenantId, realm === 'admin', async tx => {
+      const result = await withDbContext(prisma, dbContext, async tx => {
         // 1. Load budget policy
-        const budget = await loadTenantBudget(tx, tenantId);
+        const budget = await loadTenantBudget(tx, contextTenantId);
 
         // 2. Get current usage
-        const usage = await getUsage(tx, tenantId, monthKey);
+        const usage = await getUsage(tx, contextTenantId, monthKey);
 
         // 3. Preflight budget check (conservative estimate)
         const preflightTokens = AI_PREFLIGHT_TOKENS_INSIGHTS;
@@ -170,11 +174,11 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         const actualCost = estimateCostUSD(tokensUsed, model);
 
         // 7. Update usage meter
-        await upsertUsage(tx, tenantId, monthKey, tokensUsed, actualCost);
+        await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
 
         // 8. Write audit log (DB-backed, append-only)
         const auditUserId = userId ?? null;
-        const auditEntry = createAiInsightsAudit(tenantId, auditUserId, {
+        const auditEntry = createAiInsightsAudit(contextTenantId, auditUserId, {
           model,
           tokensUsed,
           costEstimateUSD: actualCost,
@@ -253,13 +257,17 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     const model = 'gemini-1.5-flash';
 
     try {
+      // Build database context from request (Doctrine v1.4)
+      const dbContext = buildContextFromRequest(request);
+      const contextTenantId = dbContext.orgId;
+
       // Execute within tenant DB context (RLS enforced)
-      const result = await withTenantDb(prisma, tenantId, realm === 'admin', async tx => {
+      const result = await withDbContext(prisma, dbContext, async tx => {
         // 1. Load budget policy
-        const budget = await loadTenantBudget(tx, tenantId);
+        const budget = await loadTenantBudget(tx, contextTenantId);
 
         // 2. Get current usage
-        const usage = await getUsage(tx, tenantId, monthKey);
+        const usage = await getUsage(tx, contextTenantId, monthKey);
 
         // 3. Preflight budget check (conservative estimate)
         const preflightTokens = AI_PREFLIGHT_TOKENS_NEGOTIATION;
@@ -294,11 +302,11 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         const actualCost = estimateCostUSD(tokensUsed, model);
 
         // 7. Update usage meter
-        await upsertUsage(tx, tenantId, monthKey, tokensUsed, actualCost);
+        await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
 
         // 8. Write audit log (DB-backed, append-only)
         const auditUserId = userId ?? null;
-        const auditEntry = createAiNegotiationAudit(tenantId, auditUserId, {
+        const auditEntry = createAiNegotiationAudit(contextTenantId, auditUserId, {
           model,
           tokensUsed,
           costEstimateUSD: actualCost,
