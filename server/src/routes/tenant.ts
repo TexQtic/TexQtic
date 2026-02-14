@@ -56,14 +56,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/tenant/audit-logs
-   * Get audit logs for current tenant only
+   * Get audit logs for current tenant only (Gate D.3: RLS-enforced)
+   * Manual tenant filter removed; RLS policies handle tenant boundary
    */
   fastify.get('/tenant/audit-logs', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
-    const { tenantId } = request;
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
 
-    const logs = await withDbContextLegacy({ tenantId }, async () => {
-      return await prisma.auditLog.findMany({
-        where: { tenantId },
+    const logs = await withDbContext(prisma, dbContext, async tx => {
+      return await tx.auditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: 50,
       });
