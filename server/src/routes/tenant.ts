@@ -864,12 +864,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { logoUrl, themeJson } = parseResult.data;
 
-      // Update or create branding
-      const branding = await withDbContextLegacy({ tenantId }, async () => {
-        return await prisma.tenantBranding.upsert({
-          where: { tenantId: tenantId },
+      // Build database context (RLS enforcement)
+      const dbContext = buildContextFromRequest(request);
+
+      // Update or create branding (RLS handles tenant boundary)
+      const branding = await withDbContext(prisma, dbContext, async tx => {
+        // For upsert, WHERE clause without tenant_id (RLS filters reads)
+        // For CREATE, use orgId from context
+        return await tx.tenantBranding.upsert({
+          where: { tenantId: dbContext.orgId },
           create: {
-            tenantId: tenantId as string,
+            tenantId: dbContext.orgId,
             logoUrl: logoUrl ?? undefined,
             themeJson: themeJson ?? undefined,
           },

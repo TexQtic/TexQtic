@@ -470,18 +470,6 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         },
       });
 
-      // Create default branding (no RLS requirement)
-      await prisma.tenantBranding.create({
-        data: {
-          tenantId: tenant.id,
-          logoUrl: null,
-          themeJson: {
-            primaryColor: '#4F46E5',
-            secondaryColor: '#10B981',
-          },
-        },
-      });
-
       // Create owner user (no RLS requirement)
       const user = await prisma.user.create({
         data: {
