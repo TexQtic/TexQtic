@@ -241,3 +241,135 @@ export async function withBypassForSeed<T>(
     return callback(tx);
   });
 }
+
+/**
+ * ProjectorBypassContext — Explicit context for projector bypass authorization
+ *
+ * PRODUCTION-SAFE BYPASS:
+ * - realm: 'system' (distinguishes from tenant/control operations)
+ * - role: 'PROJECTOR' (explicit authorization for projection writes)
+ *
+ * This context type enforces compile-time contract that projector bypass
+ * is ONLY used for system projection operations, not arbitrary writes.
+ */
+export interface ProjectorBypassContext {
+  realm: 'system';
+  role: 'PROJECTOR';
+}
+
+/**
+ * withBypassForProjector — Production-safe RLS bypass for projection writes
+ *
+ * CONSTITUTIONAL CONSTRAINTS (Gate D.6):
+ * - ONLY for system projector execution (event-driven projection handlers)
+ * - NEVER for tenant or admin operations
+ * - Requires explicit context parameter (compile-time safety)
+ *
+ * Bypass Authorization:
+ * - app.projector_bypass = 'on'
+ * - app.realm = 'system'
+ * - app.roles = 'PROJECTOR'
+ *
+ * Enforced by projector_bypass_enabled() SQL function:
+ * (current_setting('app.projector_bypass') = 'on'
+ *  AND current_setting('app.realm') = 'system'
+ *  AND app.has_role('PROJECTOR'))
+ *
+ * USE CASE:
+ * Projection tables (e.g., marketplace_cart_summaries) are written by event
+ * handlers running in system context, OUTSIDE tenant request boundaries.
+ * RLS policies enforce tenant isolation on reads, but projector writes
+ * need bypass to populate rows for all tenants.
+ *
+ * OPERATIONAL ALERT:
+ * - Logs info message (projector execution is expected, not exceptional)
+ * - Makes bypass explicit and auditable in production logs
+ *
+ * @param prisma - Prisma client instance
+ * @param context - Explicit projector bypass context (must be { realm: 'system', role: 'PROJECTOR' })
+ * @param callback - Async projection write operation
+ * @returns Result from callback
+ * @throws Error if context is invalid (production safety)
+ */
+export async function withBypassForProjector<T>(
+  prisma: PrismaClient,
+  context: ProjectorBypassContext,
+  callback: (tx: any) => Promise<T>
+): Promise<T> {
+  // CRITICAL: Validate explicit authorization context
+  if (context.realm !== 'system') {
+    throw new Error(
+      'Projector bypass requires realm="system". ' +
+        'This bypass is production-safe ONLY for system projector execution. ' +
+        'Attempted realm: ' +
+        context.realm
+    );
+  }
+
+  if (context.role !== 'PROJECTOR') {
+    throw new Error(
+      'Projector bypass requires role="PROJECTOR". ' +
+        'This enforces explicit authorization for projection writes. ' +
+        'Attempted role: ' +
+        context.role
+    );
+  }
+
+  // Operational visibility (info, not warning — projector bypass is expected)
+  console.info(
+    '🔧 RLS bypass enabled (projector mode) — authorization: ' +
+      'projector_bypass=on + realm=system + role=PROJECTOR'
+  );
+
+  // Execute in transaction with projector bypass context
+  return prisma.$transaction(async tx => {
+    // Projector bypass context (Gate D.6)
+    await tx.$executeRawUnsafe(`SELECT set_config('app.projector_bypass', 'on', true)`);
+
+    await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'system', true)`);
+
+    await tx.$executeRawUnsafe(`SELECT set_config('app.roles', 'PROJECTOR', true)`);
+
+    // Run projection operation
+    return callback(tx);
+  });
+}
+
+/**
+ * withNoContext — Test-only helper for fail-closed testing
+ *
+ * Purpose: Test that RLS blocks operations when NO context or bypass is provided
+ *
+ * Use ONLY in test fail-closed scenarios to verify:
+ * - Operations fail when context is missing
+ * - Restrictive guard policies block access
+ * - Constitutional fail-closed behavior works
+ *
+ * Implementation:
+ * - Sets LOCAL ROLE to texqtic_app (triggers RLS, NO BYPASSRLS)
+ * - Does NOT set any GUCs (no context, no bypass)
+ * - Operations should be blocked by restrictive guard policies
+ *
+ * @param prisma - Prisma client instance
+ * @param callback - Operation to test (should fail/return empty)
+ * @returns Result from callback (typically empty or error)
+ */
+export async function withNoContext<T>(
+  prisma: PrismaClient,
+  callback: (tx: any) => Promise<T>
+): Promise<T> {
+  return prisma.$transaction(async tx => {
+    // Set role to texqtic_app (NO BYPASSRLS) to trigger RLS
+    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
+
+    // NO GUCs set - context is completely empty
+    // app.org_id = not set (NULL)
+    // app.bypass_rls = not set
+    // app.projector_bypass = not set
+    // app.realm = not set
+    // app.roles = not set
+
+    // Restrictive guard policies should block all operations
+    return callback(tx);
+  });
+}

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { applyProjections } from '../events/projections/index.js';
+import { withBypassForProjector } from './database-context.js';
 // Auto-register projection handlers (side-effect import)
 import '../events/handlers/index.js';
 
@@ -440,10 +441,17 @@ export async function storeEventBestEffort(
       },
     });
 
-    // Prompt #29: Apply projections after successful EventLog write (best-effort)
+    // Prompt #29 + Gate D.6: Apply projections after successful EventLog write (best-effort)
     // Projections are idempotent, replay-safe, and MUST NOT block writes
+    // Gate D.6: Projector bypass required for projection table writes (system operation)
     try {
-      await applyProjections(prisma, event);
+      await withBypassForProjector(
+        prisma as PrismaClient,
+        { realm: 'system', role: 'PROJECTOR' },
+        async tx => {
+          await applyProjections(tx, event);
+        }
+      );
     } catch (projectionError: unknown) {
       // Best-effort: projection failures never block event storage
       // Log for observability, but do NOT throw

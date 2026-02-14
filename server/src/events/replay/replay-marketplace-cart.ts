@@ -52,6 +52,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import type { EventEnvelope, EventActor, EventEntity } from '../../lib/events.js';
 import { applyProjections } from '../projections/index.js';
+import { withBypassForProjector } from '../../lib/database-context.js';
 // Auto-register projection handlers
 import '../handlers/index.js';
 
@@ -452,7 +453,14 @@ async function main() {
 
       if (!args.dryRun) {
         try {
-          const results = await applyProjections(prisma, envelope);
+          // Gate D.6: Replay must use projector bypass (same as live event processing)
+          const results = await withBypassForProjector(
+            prisma,
+            { realm: 'system', role: 'PROJECTOR' },
+            async (tx) => {
+              return await applyProjections(tx, envelope);
+            }
+          );
 
           // Count successes and failures
           for (const result of results) {
@@ -478,6 +486,7 @@ async function main() {
         } catch (error) {
           failedCount++;
           log(`❌ Unexpected error processing event ${envelope.id}:`);
+        }
           if (args.json) {
             console.error(error);
           } else {
