@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Generated files
+.turbo/
+.vercel/
+
+# Database
+*.db
+prisma/migrations/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Test outputs
+coverage/
+.vitest/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
