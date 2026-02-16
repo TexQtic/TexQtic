@@ -480,7 +480,24 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Gate D.1: Create membership with RLS enforcement
-      const dbContext: DatabaseContext = {\n        orgId: tenant.id,\n        actorId: adminId,\n        realm: 'control',\n        requestId: (await import('node:crypto')).randomUUID(),\n      };\n\n      const membership = await withDbContext(prisma, dbContext, async (tx) => {\n        return await tx.membership.create({\n          data: {\n            userId: user.id,\n            tenantId: tenant.id,\n            role: 'OWNER',\n          },\n        });\n      });\n\n      const result = { tenant, user, membership };
+      const dbContext: DatabaseContext = {
+        orgId: tenant.id,
+        actorId: adminId,
+        realm: 'control',
+        requestId: (await import('node:crypto')).randomUUID(),
+      };
+
+      const membership = await withDbContext(prisma, dbContext, async tx => {
+        return await tx.membership.create({
+          data: {
+            userId: user.id,
+            tenantId: tenant.id,
+            role: 'OWNER',
+          },
+        });
+      });
+
+      const result = { tenant, user, membership };
 
       // Write audit log
       await writeAuditLog(prisma, {
