@@ -8,6 +8,8 @@
 --    - Authentication flow tests
 --
 -- No behavior change: Only grants missing privileges; RLS policies remain unchanged.
+-- Grant schema-level USAGE (required for table access)
+GRANT USAGE ON SCHEMA public TO texqtic_app;
 -- Grant privileges for rate_limit_attempts (needed by E.3)
 GRANT SELECT,
   INSERT,
