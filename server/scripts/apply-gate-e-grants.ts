@@ -1,11 +1,11 @@
 /**
  * Apply Gate E Infrastructure Grants
- * 
+ *
  * Purpose: Apply SQL grants from gate-e-table-grants.sql to fix
  *          "permission denied for schema public" errors in E.3/E.4 tests.
- * 
+ *
  * Usage: pnpm tsx scripts/apply-gate-e-grants.ts
- * 
+ *
  * Safe: Idempotent grants (can be run multiple times)
  * No credentials embedded: Uses DATABASE_URL from env
  */
@@ -27,11 +27,20 @@ async function main() {
   const sqlPath = join(__dirname, '../prisma/gate-e-table-grants.sql');
   const sql = readFileSync(sqlPath, 'utf-8');
 
-  // Split by semicolon and filter out comments/empty
-  const statements = sql
+  // Remove comment lines, then split by semicolon
+  const cleanedSql = sql
+    .split('\n')
+    .filter(line => {
+      const trimmed = line.trim();
+      return trimmed && !trimmed.startsWith('--');
+    })
+    .join('\n');
+
+  // Split by semicolon and filter empty
+  const statements = cleanedSql
     .split(';')
     .map(s => s.trim())
-    .filter(s => s && !s.startsWith('--'));
+    .filter(s => s.length > 0);
 
   console.log(`   Found ${statements.length} SQL statements`);
 
@@ -39,7 +48,7 @@ async function main() {
   for (let i = 0; i < statements.length; i++) {
     const stmt = statements[i];
     console.log(`   [${i + 1}/${statements.length}] Executing...`);
-    
+
     try {
       const result = await prisma.$executeRawUnsafe(stmt);
       console.log(`   ✅ Success`);
@@ -54,8 +63,9 @@ async function main() {
   }
 
   console.log('\n✅ Gate E grants applied successfully');
-  console.log('   texqtic_app now has:');
+  console.log('   app_user now has:');
   console.log('   - USAGE on schema public');
+  console.log('   - SELECT on users, admin_users, memberships, tenants (auth login flows)');
   console.log('   - SELECT/INSERT/UPDATE/DELETE on rate_limit_attempts');
   console.log('   - SELECT/INSERT/UPDATE/DELETE on refresh_tokens');
   console.log('   - USAGE/SELECT on all sequences');
