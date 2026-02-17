@@ -228,18 +228,53 @@ export async function withBypassForSeed<T>(
       'bypass_rls=on + realm=test + roles=TEST_SEED'
   );
 
-  // Execute in transaction with bypass context
-  return prisma.$transaction(async tx => {
-    // Triple-gate bypass context (Section 6.3)
-    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+  // Retry configuration for transient transaction acquisition failures
+  const maxRetries = 4;
+  const baseDelayMs = 200;
+  let lastError: any;
 
-    await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'test', true)`);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      // Execute in transaction with bypass context
+      return await prisma.$transaction(async tx => {
+        // Triple-gate bypass context (Section 6.3)
+        await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
 
-    await tx.$executeRawUnsafe(`SELECT set_config('app.roles', 'TEST_SEED', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'test', true)`);
 
-    // Run seed operation
-    return callback(tx);
-  });
+        await tx.$executeRawUnsafe(`SELECT set_config('app.roles', 'TEST_SEED', true)`);
+
+        // Run seed operation
+        return callback(tx);
+      });
+    } catch (error: any) {
+      lastError = error;
+
+      // Only retry on transient transaction acquisition errors
+      const isTransientError =
+        error?.code === 'P2028' || // Unable to start transaction
+        error?.message?.includes('Transaction not found') ||
+        error?.message?.includes('Unable to start a transaction');
+
+      if (!isTransientError || attempt === maxRetries) {
+        // Non-transient error or final attempt: fail immediately
+        throw error;
+      }
+
+      // Calculate exponential backoff with cap
+      const delayMs = Math.min(baseDelayMs * Math.pow(2, attempt), 1500);
+      console.warn(
+        `⚠️  [withBypassForSeed] Transaction acquisition failed (attempt ${attempt + 1}/${maxRetries + 1}), ` +
+          `retrying in ${delayMs}ms... (${error.code || 'unknown'})`
+      );
+
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  // Should never reach here due to throw in loop, but TypeScript needs this
+  throw lastError;
 }
 
 /**
