@@ -41,6 +41,21 @@ async function verifyPassword(password: string, passwordHash: string): Promise<b
 }
 
 /**
+ * Extract client IP from request
+ * Checks x-forwarded-for header first (for proxies/tests), then falls back to request.ip
+ * Handles comma-separated list in x-forwarded-for by taking the first IP
+ */
+function getClientIp(request: any): string {
+  const forwarded = request.headers['x-forwarded-for'];
+  if (forwarded) {
+    // x-forwarded-for can be comma-separated list, take first IP
+    const ip = typeof forwarded === 'string' ? forwarded : forwarded[0];
+    return ip.split(',')[0].trim();
+  }
+  return request.ip;
+}
+
+/**
  * Authentication Routes
  *
  * Provides login endpoints for both admin and tenant realms.
@@ -77,7 +92,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const { email, password, tenantId } = parseResult.data;
 
     // Extract client metadata for audit logging
-    const clientIp = request.ip;
+    const clientIp = getClientIp(request);
     const userAgent = request.headers['user-agent'];
 
     try {
@@ -144,9 +159,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
         });
 
-        const result = await withDbContext({ tenantId }, async () => {
+        const result = await withDbContext({ tenantId }, async tx => {
           // Look up user by email (Gate D.1: RLS-enforced membership filter)
-          const user = await prisma.user.findUnique({
+          const user = await tx.user.findUnique({
             where: { email },
             select: {
               id: true,
@@ -420,9 +435,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      const result = await withDbContext({ isAdmin: true }, async () => {
+      const result = await withDbContext({ isAdmin: true }, async tx => {
         // Look up admin user
-        const admin = await prisma.adminUser.findUnique({
+        const admin = await tx.adminUser.findUnique({
           where: { email },
           select: {
             id: true,
@@ -569,7 +584,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const { email, password } = parseResult.data;
 
     // Extract client metadata for audit logging
-    const clientIp = request.ip;
+    const clientIp = getClientIp(request);
     const userAgent = request.headers['user-agent'];
 
     try {
@@ -635,9 +650,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Execute DB query within admin RLS context
-      const result = await withDbContext({ isAdmin: true }, async () => {
+      const result = await withDbContext({ isAdmin: true }, async tx => {
         // Look up admin user
-        const admin = await prisma.adminUser.findUnique({
+        const admin = await tx.adminUser.findUnique({
           where: { email },
           select: {
             id: true,
@@ -789,7 +804,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
     const { email, password, tenantId } = parseResult.data;
 
     // Extract client metadata for audit logging
-    const clientIp = request.ip;
+    const clientIp = getClientIp(request);
     const userAgent = request.headers['user-agent'];
 
     try {
@@ -855,9 +870,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Execute DB query within tenant RLS context
-      const result = await withDbContext({ tenantId }, async () => {
+      const result = await withDbContext({ tenantId }, async tx => {
         // Look up user by email
-        const user = await prisma.user.findUnique({
+        const user = await tx.user.findUnique({
           where: { email },
           select: {
             id: true,
