@@ -1,4 +1,5 @@
 import { prisma } from './prisma.js';
+import type { Prisma } from '@prisma/client';
 
 interface DbContext {
   tenantId?: string;
@@ -10,7 +11,10 @@ interface DbContext {
  * Sets session variables for RLS policies
  * Uses app_user role to enforce RLS (Supabase workaround)
  */
-export async function withDbContext<T>(context: DbContext, fn: () => Promise<T>): Promise<T> {
+export async function withDbContext<T>(
+  context: DbContext,
+  fn: (tx: Prisma.TransactionClient) => Promise<T>
+): Promise<T> {
   return await prisma.$transaction(async tx => {
     // Switch to app_user role for RLS enforcement
     // (Supabase doesn't allow direct auth with custom roles)
@@ -21,14 +25,17 @@ export async function withDbContext<T>(context: DbContext, fn: () => Promise<T>)
     if (context.isAdmin) {
       await tx.$executeRawUnsafe(`SELECT public.set_admin_context()`);
     } else if (context.tenantId) {
-      await tx.$executeRawUnsafe(`SELECT public.set_tenant_context($1::uuid, false)`, context.tenantId);
+      await tx.$executeRawUnsafe(
+        `SELECT public.set_tenant_context($1::uuid, false)`,
+        context.tenantId
+      );
     } else {
       await tx.$executeRawUnsafe(`SELECT public.clear_context()`);
     }
 
     try {
       // Execute the operation within this context
-      return await fn();
+      return await fn(tx);
     } finally {
       // Reset role for connection pooling
       await tx.$executeRawUnsafe('RESET ROLE');
