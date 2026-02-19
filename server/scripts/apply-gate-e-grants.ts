@@ -68,6 +68,7 @@ async function main() {
   console.log('   - SELECT on users, admin_users, memberships, tenants (auth login flows)');
   console.log('   - SELECT/INSERT/UPDATE/DELETE on rate_limit_attempts');
   console.log('   - SELECT/INSERT/UPDATE/DELETE on refresh_tokens');
+  console.log('   - SELECT on audit_logs (audit verification)');
   console.log('   - USAGE/SELECT on all sequences');
 }
 

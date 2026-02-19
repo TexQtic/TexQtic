@@ -46,6 +46,14 @@ GRANT SELECT,
   UPDATE,
   DELETE ON TABLE public.refresh_tokens TO app_user;
 -- ============================================================================
+-- AUDIT TABLES (READ-ONLY)
+-- Required by: E.4 audit emission tests, operational audit log queries
+-- ============================================================================
+-- audit_logs: audit event verification (E.4)
+-- Line: gate-e-4-audit.integration.test.ts - tx.auditLog.findMany in withDbContext
+-- Note: INSERT handled by triggers; app_user only needs SELECT for verification
+GRANT SELECT ON TABLE public.audit_logs TO app_user;
+-- ============================================================================
 -- SEQUENCES
 -- Prisma uses RETURNING for UUIDs, but grant sequences for safety
 -- ============================================================================
@@ -69,7 +77,8 @@ WHERE schemaname = 'public'
     'memberships',
     'tenants',
     'rate_limit_attempts',
-    'refresh_tokens'
+    'refresh_tokens',
+    'audit_logs'
   )
 ORDER BY tablename;
 -- Verify RLS is still enabled (should be 't' for all)
@@ -84,6 +93,7 @@ WHERE schemaname = 'public'
     'memberships',
     'tenants',
     'rate_limit_attempts',
-    'refresh_tokens'
+    'refresh_tokens',
+    'audit_logs'
   )
 ORDER BY tablename;
