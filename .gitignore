@@ -22,6 +22,9 @@ build/
 .env.test.local
 .env.production.local
 
+# Backups (never commit backup files — may contain secrets)
+*.bak
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
