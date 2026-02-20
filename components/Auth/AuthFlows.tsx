@@ -23,7 +23,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await login({ email, password }, realm as AuthRealm);
+      // TODO: Replace hardcoded tenantId with dynamic resolution via
+      //       GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
+      //       acme-corp: faf2e4a7-5d79-4b00-811b-8d0dce4f4d80
+      const TEMP_TENANT_ID = 'faf2e4a7-5d79-4b00-811b-8d0dce4f4d80';
+      const response = await login(
+        { email, password, tenantId: isAdminRealm ? undefined : TEMP_TENANT_ID },
+        realm as AuthRealm
+      );
       onSuccess(response);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');

@@ -42,17 +42,21 @@ export interface CurrentUserResponse {
 }
 
 /**
- * Login to tenant or admin realm
+ * Login to tenant or admin realm.
+ * Routes to the explicit realm endpoint to avoid auto-detect ambiguity.
  */
 export async function login(
   credentials: LoginCredentials,
   realm: AuthRealm
 ): Promise<LoginResponse> {
-  const response = await post<LoginResponse>('/api/auth/login', {
-    email: credentials.email,
-    password: credentials.password,
-    tenantId: realm === 'TENANT' ? credentials.tenantId : undefined,
-  });
+  const isAdmin = realm === 'CONTROL_PLANE';
+  const endpoint = isAdmin ? '/api/auth/admin/login' : '/api/auth/tenant/login';
+
+  const body = isAdmin
+    ? { email: credentials.email, password: credentials.password }
+    : { email: credentials.email, password: credentials.password, tenantId: credentials.tenantId };
+
+  const response = await post<LoginResponse>(endpoint, body);
 
   // Store token
   setToken(response.token, realm);
