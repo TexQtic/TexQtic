@@ -7,6 +7,11 @@
  * - Exports handler that emits requests to Fastify's internal request handler
  */
 
+// Load Fastify module augmentations (tenantJwtSign, adminJwtSign, dbContext, etc.)
+// Must be an ambient reference — the .d.ts has no top-level imports so this
+// applies the FastifyRequest/FastifyReply augmentations globally in this compilation.
+/// <reference path="../server/src/types/fastify.d.ts" />
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
