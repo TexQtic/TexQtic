@@ -8,7 +8,11 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaClient } from '@prisma/client';
-import { withDbContext, withBypassForSeed, type DatabaseContext } from '../../lib/database-context.js';
+import {
+  withDbContext,
+  withBypassForSeed,
+  type DatabaseContext,
+} from '../../lib/database-context.js';
 import { randomUUID } from 'node:crypto';
 
 describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
@@ -36,7 +40,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       const userBId = randomUUID();
 
       // Seed data with bypass
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         // Create orgs (tenants)
         await tx.tenant.create({
           data: {
@@ -101,7 +105,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-org-a-query`,
       };
 
-      const orgAMemberships = await withDbContext(prisma, orgAContext, async (tx) => {
+      const orgAMemberships = await withDbContext(prisma, orgAContext, async tx => {
         return await tx.membership.findMany();
       });
 
@@ -110,7 +114,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       expect(orgAMemberships[0].userId).toBe(userAId);
 
       // Cleanup
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.membership.deleteMany({ where: { tenantId: { in: [orgAId, orgBId] } } });
         await tx.user.deleteMany({ where: { id: { in: [userAId, userBId] } } });
         await tx.tenant.deleteMany({ where: { id: { in: [orgAId, orgBId] } } });
@@ -124,13 +128,23 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       const userBId = randomUUID();
 
       // Seed data
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.tenant.create({
-          data: { id: orgAId, name: `Org A ${testRunId}`, slug: `org-a2-${testRunId}`, type: 'B2B' },
+          data: {
+            id: orgAId,
+            name: `Org A ${testRunId}`,
+            slug: `org-a2-${testRunId}`,
+            type: 'B2B',
+          },
         });
 
         await tx.tenant.create({
-          data: { id: orgBId, name: `Org B ${testRunId}`, slug: `org-b2-${testRunId}`, type: 'B2B' },
+          data: {
+            id: orgBId,
+            name: `Org B ${testRunId}`,
+            slug: `org-b2-${testRunId}`,
+            type: 'B2B',
+          },
         });
 
         await tx.user.create({
@@ -158,7 +172,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-org-b-query`,
       };
 
-      const orgBMemberships = await withDbContext(prisma, orgBContext, async (tx) => {
+      const orgBMemberships = await withDbContext(prisma, orgBContext, async tx => {
         return await tx.membership.findMany();
       });
 
@@ -167,7 +181,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       expect(orgBMemberships[0].role).toBe('ADMIN');
 
       // Cleanup
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.membership.deleteMany({ where: { tenantId: { in: [orgAId, orgBId] } } });
         await tx.user.deleteMany({ where: { id: { in: [userAId, userBId] } } });
         await tx.tenant.deleteMany({ where: { id: { in: [orgAId, orgBId] } } });
@@ -180,7 +194,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       const userAId = randomUUID();
       const userBId = randomUUID();
 
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.tenant.createMany({
           data: [
             { id: orgAId, name: `Org A ${testRunId}`, slug: `org-a3-${testRunId}`, type: 'B2B' },
@@ -211,17 +225,17 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-cross-tenant`,
       };
 
-      const orgAView = await withDbContext(prisma, orgAContext, async (tx) => {
+      const orgAView = await withDbContext(prisma, orgAContext, async tx => {
         return await tx.membership.findMany();
       });
 
       // Verify no Org B data visible
-      const orgBMembershipIds = orgAView.filter(m => m.tenantId === orgBId);
+      const orgBMembershipIds = orgAView.filter((m: { tenantId: string }) => m.tenantId === orgBId);
       expect(orgBMembershipIds.length).toBe(0);
-      expect(orgAView.every(m => m.tenantId === orgAId)).toBe(true);
+      expect(orgAView.every((m: { tenantId: string }) => m.tenantId === orgAId)).toBe(true);
 
       // Cleanup
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.membership.deleteMany({ where: { tenantId: { in: [orgAId, orgBId] } } });
         await tx.user.deleteMany({ where: { id: { in: [userAId, userBId] } } });
         await tx.tenant.deleteMany({ where: { id: { in: [orgAId, orgBId] } } });
@@ -234,7 +248,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       const orgAId = randomUUID();
       const orgBId = randomUUID();
 
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.tenant.createMany({
           data: [
             { id: orgAId, name: `Org A ${testRunId}`, slug: `org-a4-${testRunId}`, type: 'B2B' },
@@ -272,7 +286,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-invite-org-a`,
       };
 
-      const orgAInvites = await withDbContext(prisma, orgAContext, async (tx) => {
+      const orgAInvites = await withDbContext(prisma, orgAContext, async tx => {
         return await tx.invite.findMany();
       });
 
@@ -281,7 +295,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       expect(orgAInvites[0].email).toBe(`invitea-${testRunId}@test.com`);
 
       // Cleanup
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.invite.deleteMany({ where: { tenantId: { in: [orgAId, orgBId] } } });
         await tx.tenant.deleteMany({ where: { id: { in: [orgAId, orgBId] } } });
       });
@@ -291,7 +305,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       const orgAId = randomUUID();
       const orgBId = randomUUID();
 
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.tenant.createMany({
           data: [
             { id: orgAId, name: `Org A ${testRunId}`, slug: `org-a5-${testRunId}`, type: 'B2B' },
@@ -329,17 +343,17 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-invite-org-b`,
       };
 
-      const orgBView = await withDbContext(prisma, orgBContext, async (tx) => {
+      const orgBView = await withDbContext(prisma, orgBContext, async tx => {
         return await tx.invite.findMany();
       });
 
       // Verify no Org A invites visible
-      const orgAInvites = orgBView.filter(i => i.tenantId === orgAId);
+      const orgAInvites = orgBView.filter((i: { tenantId: string }) => i.tenantId === orgAId);
       expect(orgAInvites.length).toBe(0);
-      expect(orgBView.every(i => i.tenantId === orgBId)).toBe(true);
+      expect(orgBView.every((i: { tenantId: string }) => i.tenantId === orgBId)).toBe(true);
 
       // Cleanup
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.invite.deleteMany({ where: { tenantId: { in: [orgAId, orgBId] } } });
         await tx.tenant.deleteMany({ where: { id: { in: [orgAId, orgBId] } } });
       });
@@ -357,7 +371,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       for (const ctx of incompleteContexts) {
         await expect(
           // @ts-expect-error Testing invalid context
-          withDbContext(prisma, ctx, async (tx) => {
+          withDbContext(prisma, ctx, async tx => {
             return tx.membership.findMany();
           })
         ).rejects.toThrow(/Invalid context/);
@@ -373,7 +387,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       for (const ctx of incompleteContexts) {
         await expect(
           // @ts-expect-error Testing invalid context
-          withDbContext(prisma, ctx, async (tx) => {
+          withDbContext(prisma, ctx, async tx => {
             return tx.invite.findMany();
           })
         ).rejects.toThrow(/Invalid context/);
@@ -388,11 +402,21 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       const userAId = randomUUID();
       const userBId = randomUUID();
 
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.tenant.createMany({
           data: [
-            { id: orgAId, name: `Org A ${testRunId}`, slug: `org-a-pool-${testRunId}`, type: 'B2B' },
-            { id: orgBId, name: `Org B ${testRunId}`, slug: `org-b-pool-${testRunId}`, type: 'B2B' },
+            {
+              id: orgAId,
+              name: `Org A ${testRunId}`,
+              slug: `org-a-pool-${testRunId}`,
+              type: 'B2B',
+            },
+            {
+              id: orgBId,
+              name: `Org B ${testRunId}`,
+              slug: `org-b-pool-${testRunId}`,
+              type: 'B2B',
+            },
           ],
         });
 
@@ -419,7 +443,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-pool-1`,
       };
 
-      const query1 = await withDbContext(prisma, orgAContext, async (tx) => {
+      const query1 = await withDbContext(prisma, orgAContext, async tx => {
         return await tx.membership.findMany();
       });
 
@@ -434,7 +458,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
         requestId: `${testRunId}-pool-2`,
       };
 
-      const query2 = await withDbContext(prisma, orgBContext, async (tx) => {
+      const query2 = await withDbContext(prisma, orgBContext, async tx => {
         return await tx.membership.findMany();
       });
 
@@ -442,7 +466,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       expect(query2[0].tenantId).toBe(orgBId);
 
       // Query 3: Back to Org A
-      const query3 = await withDbContext(prisma, orgAContext, async (tx) => {
+      const query3 = await withDbContext(prisma, orgAContext, async tx => {
         return await tx.membership.findMany();
       });
 
@@ -450,7 +474,7 @@ describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
       expect(query3[0].tenantId).toBe(orgAId);
 
       // Cleanup
-      await withBypassForSeed(prisma, async (tx) => {
+      await withBypassForSeed(prisma, async tx => {
         await tx.membership.deleteMany({ where: { tenantId: { in: [orgAId, orgBId] } } });
         await tx.user.deleteMany({ where: { id: { in: [userAId, userBId] } } });
         await tx.tenant.deleteMany({ where: { id: { in: [orgAId, orgBId] } } });

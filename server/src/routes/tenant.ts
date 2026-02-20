@@ -8,7 +8,7 @@ import {
   sendNotFound,
   sendUnauthorized,
 } from '../utils/response.js';
-import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
+import type { Prisma } from '@prisma/client';
 import {
   withDbContext,
   buildContextFromRequest,
@@ -566,7 +566,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           realm: 'TENANT',
           tenantId: dbContext.orgId,
           actorType: 'USER',
-          actorId: userId,
+          actorId: userId ?? null,
           action: 'cart.CART_ITEM_UPDATED',
           entity: 'cart_item',
           entityId: cartItemId,
@@ -674,7 +674,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       // Create user and membership in transaction (RLS-enforced)
       const result = await withDbContext(prisma, dbContext, async tx => {
-        return await tx.$transaction(async innerTx => {
+        return await tx.$transaction(async (innerTx: Prisma.TransactionClient) => {
           // Create or find user
           let user = await innerTx.user.findUnique({
             where: { email: userData.email },

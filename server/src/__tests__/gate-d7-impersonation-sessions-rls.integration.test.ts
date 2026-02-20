@@ -274,10 +274,10 @@ describe('Gate D.7: Control-Plane RLS (impersonation_sessions)', () => {
       });
 
       expect(sessionsA).toHaveLength(2); // Only Admin A's sessions
-      expect(sessionsA.every(s => s.adminId === ADMIN_A_ID)).toBe(true);
+      expect(sessionsA.every((s: { adminId: string }) => s.adminId === ADMIN_A_ID)).toBe(true);
 
       // Verify SESSION_B1 (Admin B's session) is NOT visible to Admin A
-      const sessionBIds = sessionsA.map(s => s.id);
+      const sessionBIds = sessionsA.map((s: { id: string }) => s.id);
       expect(sessionBIds).not.toContain(SESSION_B1_ID);
 
       // Admin B reads sessions (should see only their 1 session)
@@ -401,7 +401,7 @@ describe('Gate D.7: Control-Plane RLS (impersonation_sessions)', () => {
         });
       });
       expect(sessionsA1).toHaveLength(2);
-      expect(sessionsA1.every(s => s.adminId === ADMIN_A_ID)).toBe(true);
+      expect(sessionsA1.every((s: { adminId: string }) => s.adminId === ADMIN_A_ID)).toBe(true);
 
       // Transaction 2: Admin B reads their sessions (1 session)
       const sessionsB = await withDbContext(prisma, contextAdminB, async tx => {
@@ -421,7 +421,7 @@ describe('Gate D.7: Control-Plane RLS (impersonation_sessions)', () => {
         });
       });
       expect(sessionsA2).toHaveLength(2);
-      expect(sessionsA2.every(s => s.adminId === ADMIN_A_ID)).toBe(true);
+      expect(sessionsA2.every((s: { adminId: string }) => s.adminId === ADMIN_A_ID)).toBe(true);
     }
   );
 });

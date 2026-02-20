@@ -33,8 +33,6 @@ const prisma = new PrismaClient();
 
 // Deterministic UUID generation (hex-compliant)
 const TEST_TAG = 'gate-d6-proj';
-const ORG_A_ID = '0000aa00-d600-d600-d600-000000000001';
-const ORG_B_ID = '0000bb00-d600-d600-d600-000000000002';
 const USER_A_ID = 'aaaa0000-d600-d600-d600-000000000001';
 const USER_B_ID = 'bbbb0000-d600-d600-d600-000000000002';
 const TENANT_A_ID = '0000aa00-d600-d600-d600-00000000000a';

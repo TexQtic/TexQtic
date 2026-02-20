@@ -12,7 +12,7 @@
  * Doctrine: v1.4 (app.org_id = tenant boundary)
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { prisma } from '../db/prisma.js';
 import { withDbContext, withBypassForSeed } from '../lib/database-context.js';
 import type { DatabaseContext } from '../lib/database-context.js';

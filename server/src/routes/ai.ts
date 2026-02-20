@@ -110,7 +110,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    * Phase 3B: Budget enforcement + usage metering + audit logging
    */
   fastify.get('/insights', async (request, reply) => {
-    const { tenantId, realm, userId } = getTenantContext(request);
+    const { tenantId, realm: _realm, userId } = getTenantContext(request);
     const { tenantType, experience } = request.query as {
       tenantType?: string;
       experience?: string;
@@ -233,7 +233,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    * Phase 3B: Budget enforcement + usage metering + audit logging
    */
   fastify.post('/negotiation-advice', async (request, reply) => {
-    const { tenantId, realm, userId } = getTenantContext(request);
+    const { tenantId, realm: _realm, userId } = getTenantContext(request);
 
     // Require tenant context
     if (!tenantId) {

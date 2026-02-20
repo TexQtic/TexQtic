@@ -18,8 +18,6 @@
  */
 
 import { vi } from 'vitest';
-import { PrismaClient } from '@prisma/client';
-
 // CRITICAL: Mock prisma module BEFORE any imports that use it
 // This ensures auth routes + rate limiter use the same Prisma instance
 // Note: Mock is hoisted, so we use process.env directly (no const reference)
@@ -33,10 +31,6 @@ vi.mock('../db/prisma.js', async () => {
   };
 });
 
-// Debug flag: Set GATE_E_DEBUG=1 to enable verbose logging
-// Default OFF to prevent transaction timeouts from debug overhead
-const ENABLE_GATE_E_DEBUG = process.env.GATE_E_DEBUG === '1';
-
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
@@ -46,33 +40,9 @@ import { checkDbAvailable } from './helpers/dbGate.js';
 import { withBypassForSeed } from '../lib/database-context.js';
 import authRoutes from '../routes/auth.js';
 import bcrypt from 'bcrypt';
-import { config } from '../config/index.js';
+
 import { hashRateLimitKey } from '../utils/rateLimit/index.js';
 
-/**
- * Test-only helper: Prove runtime identity and GUC context
- * Logs current_user, session_user, and all app.* GUC settings
- * Guarded by ENABLE_GATE_E_DEBUG flag to prevent transaction timeouts
- */
-async function debugWhoAmI(prismaInstance: any, label: string) {
-  if (!ENABLE_GATE_E_DEBUG) return;
-
-  try {
-    const rows = await prismaInstance.$queryRawUnsafe(`
-      SELECT
-        current_user as current_user,
-        session_user as session_user,
-        current_setting('app.realm', true) as realm,
-        current_setting('app.org_id', true) as org_id,
-        current_setting('app.actor_id', true) as actor_id,
-        current_setting('app.bypass_rls', true) as bypass_rls,
-        inet_server_port() as port
-    `);
-    console.log(`[DEBUG ${label}]`, rows?.[0]);
-  } catch (err) {
-    console.error(`[DEBUG ${label} ERROR]`, err);
-  }
-}
 describe('Gate E.3: Rate Limiting Integrity', () => {
   let server: FastifyInstance | null = null;
   let testTenantId: string;

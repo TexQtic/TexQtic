@@ -28,7 +28,7 @@ export interface DatabaseContext {
   actorId: string;
 
   /** Execution realm - derived from route prefix */
-  realm: 'tenant' | 'control';
+  realm: 'tenant' | 'control' | 'admin';
 
   /** Request trace UUID - generated per-request */
   requestId: string;
