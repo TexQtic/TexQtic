@@ -457,7 +457,7 @@ async function main() {
           const results = await withBypassForProjector(
             prisma,
             { realm: 'system', role: 'PROJECTOR' },
-            async (tx) => {
+            async tx => {
               return await applyProjections(tx, envelope);
             }
           );
@@ -486,7 +486,6 @@ async function main() {
         } catch (error) {
           failedCount++;
           log(`❌ Unexpected error processing event ${envelope.id}:`);
-        }
           if (args.json) {
             console.error(error);
           } else {
