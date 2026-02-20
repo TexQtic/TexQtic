@@ -976,7 +976,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Generate tenant JWT token
-      const token = await request.tenantJwtSign({
+      const token = await reply.tenantJwtSign({
         userId: result.user.id,
         tenantId: result.membership.tenantId,
         role: result.membership.role,
