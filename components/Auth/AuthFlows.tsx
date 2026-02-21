@@ -3,7 +3,7 @@ import { login } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
 
 // Flip to true locally to inspect login payloads without exposing tokens
-const AUTH_DEBUG = true;
+const AUTH_DEBUG = false;
 
 // TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
 const SEEDED_TENANTS = [
@@ -28,7 +28,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('SUBMIT FIRED', { realm, isAdminRealm, selectedTenantId, email });
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -44,27 +43,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     }
 
     try {
-      if (AUTH_DEBUG) {
-        console.log('[auth] submit (redacted)', {
-          emailLength: cleanEmail.length,
-          passwordLength: password.length,
-          tenantIdLength: isAdminRealm ? 'N/A' : selectedTenantId?.length,
-          realm,
-        });
-      }
-
-      console.log('CALLING LOGIN', {
-        endpoint: isAdminRealm ? '/api/auth/admin/login' : '/api/auth/tenant/login',
-        tenantId: isAdminRealm ? undefined : selectedTenantId,
-      });
       const response = await login(
         { email: cleanEmail, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
         realm as AuthRealm
       );
-      console.log('LOGIN SUCCESS', { hasToken: !!(response as any)?.token, realm });
       onSuccess(response);
     } catch (err: any) {
-      console.log('LOGIN CATCH', { status: err.status, code: err.code, message: err.message });
       if (err.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
         setError('Too many attempts. Wait 10 minutes.');
       } else if (err.status === 401) {

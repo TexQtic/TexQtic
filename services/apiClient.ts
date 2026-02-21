@@ -41,7 +41,7 @@ const ADMIN_TOKEN_KEY = 'texqtic_admin_token';
 const AUTH_REALM_KEY = 'texqtic_auth_realm';
 
 // Flip to true locally to diagnose auth request issues. Never commit as true.
-const AUTH_DEBUG = true;
+const AUTH_DEBUG = false;
 
 // Wave 0-A: AbortController for in-flight request cancellation
 let currentAbortController = new AbortController();
@@ -267,11 +267,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
         }
         // Auth routes: do NOT redirect. Bubble the server message to the caller
         // so the login form can display the accurate error (wrong password, locked, etc.)
-        throw new APIError(
-          401,
-          errorData.error?.message || 'Invalid credentials.',
-          'UNAUTHORIZED'
-        );
+        throw new APIError(401, errorData.error?.message || 'Invalid credentials.', 'UNAUTHORIZED');
       }
 
       // 403: Forbidden
