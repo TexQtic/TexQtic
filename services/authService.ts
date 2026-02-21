@@ -44,6 +44,11 @@ export interface CurrentUserResponse {
 /**
  * Login to tenant or admin realm.
  * Routes to the explicit realm endpoint to avoid auto-detect ambiguity.
+ *
+ * Normalizes the response defensively: apiRequest unwraps { success, data }
+ * envelopes, but if the raw envelope is ever returned (e.g. data.success absent),
+ * response.token would be undefined. We check both shapes so setToken always
+ * receives the actual JWT string.
  */
 export async function login(
   credentials: LoginCredentials,
@@ -56,12 +61,16 @@ export async function login(
     ? { email: credentials.email, password: credentials.password }
     : { email: credentials.email, password: credentials.password, tenantId: credentials.tenantId };
 
-  const response = await post<LoginResponse>(endpoint, body);
+  // post<any> so we can inspect the shape before typing it
+  const raw = await post<any>(endpoint, body);
 
-  // Store token
-  setToken(response.token, realm);
+  // Normalize: handle both unwrapped { token, ... } and wrapped { data: { token, ... } }
+  const payload: LoginResponse = raw?.data?.token ? raw.data : raw;
 
-  return response;
+  // Store token — must run before returning so token is available on next request
+  setToken(payload.token, realm);
+
+  return payload;
 }
 
 /**
