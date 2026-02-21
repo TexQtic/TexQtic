@@ -122,7 +122,25 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 
 #### Gaps In Progress
 
-- None — Wave 2 Critical Path complete (G-001 + G-002 + G-003 + G-013 all VALIDATED)
+- G-004 — Stabilization: unify control plane DB context (VALIDATED, governance pending commit)
+
+---
+
+#### G-004 — VALIDATED 2026-02-21
+
+- Commit `a19f30b` — `fix(control): unify db context usage to canonical pattern (G-004)`
+- File changed: `server/src/routes/control.ts` (1 file, 44 insertions, 23 deletions)
+- Changes:
+  - Removed `import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js'`
+  - Added `import { randomUUID } from 'node:crypto'`
+  - Added `import { Prisma, type EventLog } from '@prisma/client'` (EventLog type for 3 map callbacks)
+  - Added module-level `withAdminContext<T>` helper: uses canonical `withDbContext` + `SET LOCAL ROLE texqtic_app` + `app.is_admin = 'true'` for cross-tenant admin reads
+  - Migrated 13 `withDbContextLegacy({ isAdmin: true })` call sites: 7 read routes (prisma → tx), 6 authority-intent write routes (`_tx` unused param, `writeAuthorityIntent(prisma, ...)` preserved)
+  - Replaced dynamic `(await import('node:crypto')).randomUUID()` with static `randomUUID()` in provision route
+- Gate outputs (post-implementation):
+  - `pnpm -C server run typecheck` → EXIT 0 ✅
+  - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors)
+- Verification: `Get-Content control.ts | Select-String 'withDbContextLegacy' | Where notmatch '^//'` → 0 results ✅
 
 ---
 
