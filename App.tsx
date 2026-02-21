@@ -32,6 +32,7 @@ import { getCatalogItems, CatalogItem } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
 import { getTenants, Tenant } from './services/controlPlaneService';
+import { getCurrentUser } from './services/authService';
 
 const App: React.FC = () => {
   // Production-grade State Machine
@@ -174,12 +175,42 @@ const App: React.FC = () => {
     }
   }, [appState]);
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async (data: any) => {
     if (authRealm === 'CONTROL_PLANE') {
       setAppState('CONTROL_PLANE');
-    } else {
-      setAppState('EXPERIENCE');
+      return;
     }
+
+    // TENANT realm: call /api/me to hydrate tenant context before transitioning.
+    // This prevents the "Loading workspace..." hang caused by tenants[] being empty
+    // when currentTenant is derived (tenants[] is only fetched for CONTROL_PLANE otherwise).
+    try {
+      const me = await getCurrentUser();
+      if (me.tenant) {
+        const t = me.tenant;
+        setTenants([{
+          id: t.id,
+          slug: t.slug,
+          name: t.name,
+          type: t.type,
+          status: t.status,
+          plan: t.plan,
+          createdAt: '',
+          updatedAt: '',
+        } as Tenant]);
+        setCurrentTenantId(t.id);
+      } else {
+        // /api/me returned no tenant — fall back to tenantId from login response
+        const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
+        if (tenantId) setCurrentTenantId(tenantId);
+      }
+    } catch {
+      // /api/me failed — best-effort: use tenantId from login payload
+      const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
+      if (tenantId) setCurrentTenantId(tenantId);
+    }
+
+    setAppState('EXPERIENCE');
   };
 
   const handleImpersonate = (tenant: TenantConfig) => {
