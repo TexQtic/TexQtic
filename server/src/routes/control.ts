@@ -1,12 +1,33 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
+import { Prisma, type EventLog } from '@prisma/client';
 import { adminAuthMiddleware } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
-import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js';
+import { randomUUID } from 'node:crypto';
 import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
+
+// ── Admin context helper (G-004) ──────────────────────────────────────────────
+// Canonical replacement for withDbContextLegacy({ isAdmin: true }).
+// Uses canonical withDbContext (texqtic_app role + transaction-local SET LOCAL),
+// then sets app.is_admin = 'true' so _admin_all RLS policies grant
+// cross-tenant access on tables that enforce RLS (e.g. audit_logs).
+const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
+
+async function withAdminContext<T>(callback: (tx: any) => Promise<T>): Promise<T> {
+  const ctx: DatabaseContext = {
+    orgId:     ADMIN_SENTINEL_ID,
+    actorId:   ADMIN_SENTINEL_ID,
+    realm:     'control',
+    requestId: randomUUID(),
+  };
+  return withDbContext(prisma, ctx, async tx => {
+    // Admin RLS bypass: flag checked by _admin_all policies
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+    return callback(tx);
+  });
+}
 
 const controlRoutes: FastifyPluginAsync = async fastify => {
   // All control routes require admin auth
@@ -17,8 +38,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * List all tenants (admin only)
    */
   fastify.get('/tenants', async (_request, reply) => {
-    const tenants = await withDbContextLegacy({ isAdmin: true }, async () => {
-      return await prisma.tenant.findMany({
+    const tenants = await withAdminContext(async tx => {
+      return await tx.tenant.findMany({
         include: {
           domains: true,
           branding: true,
@@ -43,8 +64,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/tenants/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
 
-    const tenant = await withDbContextLegacy({ isAdmin: true }, async () => {
-      return await prisma.tenant.findUnique({
+    const tenant = await withAdminContext(async tx => {
+      return await tx.tenant.findUnique({
         where: { id },
         include: {
           domains: true,
@@ -86,8 +107,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       limit?: string;
     };
 
-    const logs = await withDbContextLegacy({ isAdmin: true }, async () => {
-      return await prisma.auditLog.findMany({
+    const logs = await withAdminContext(async tx => {
+      return await tx.auditLog.findMany({
         where: {
           ...(query.tenantId && { tenantId: query.tenantId }),
           ...(query.action && { action: query.action }),
@@ -246,8 +267,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Execute query within admin context
-      const events = await withDbContextLegacy({ isAdmin: true }, async () => {
-        return await prisma.eventLog.findMany({
+      const events = await withAdminContext(async tx => {
+        return await tx.eventLog.findMany({
           where,
           orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
           take: limit,
@@ -279,8 +300,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/finance/payouts', async (_request, reply) => {
     try {
-      const payoutEvents = await withDbContextLegacy({ isAdmin: true }, async () => {
-        return await prisma.eventLog.findMany({
+      const payoutEvents: EventLog[] = await withAdminContext(async tx => {
+        return await tx.eventLog.findMany({
           where: {
             name: {
               startsWith: 'finance.payout.',
@@ -317,8 +338,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/compliance/requests', async (_request, reply) => {
     try {
-      const complianceEvents = await withDbContextLegacy({ isAdmin: true }, async () => {
-        return await prisma.eventLog.findMany({
+      const complianceEvents: EventLog[] = await withAdminContext(async tx => {
+        return await tx.eventLog.findMany({
           where: {
             name: {
               startsWith: 'compliance.request.',
@@ -355,8 +376,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/disputes', async (_request, reply) => {
     try {
-      const disputeEvents = await withDbContextLegacy({ isAdmin: true }, async () => {
-        return await prisma.eventLog.findMany({
+      const disputeEvents: EventLog[] = await withAdminContext(async tx => {
+        return await tx.eventLog.findMany({
           where: {
             name: {
               startsWith: 'dispute.',
@@ -484,7 +505,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         orgId: tenant.id,
         actorId: adminId,
         realm: 'control',
-        requestId: (await import('node:crypto')).randomUUID(),
+        requestId: randomUUID(),
       };
 
       const membership = await withDbContext(prisma, dbContext, async tx => {
@@ -567,7 +588,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { reason } = parseResult.data;
 
-      const result = await withDbContextLegacy({ isAdmin: true }, async () => {
+      const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'finance.payout.approved',
           targetType: 'payout',
@@ -613,7 +634,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { reason } = parseResult.data;
 
-      const result = await withDbContextLegacy({ isAdmin: true }, async () => {
+      const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'finance.payout.rejected',
           targetType: 'payout',
@@ -665,7 +686,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { reason, notes } = parseResult.data;
 
-      const result = await withDbContextLegacy({ isAdmin: true }, async () => {
+      const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'compliance.request.approved',
           targetType: 'compliance_request',
@@ -712,7 +733,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { reason, notes } = parseResult.data;
 
-      const result = await withDbContextLegacy({ isAdmin: true }, async () => {
+      const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'compliance.request.rejected',
           targetType: 'compliance_request',
@@ -764,7 +785,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { resolution, notes } = parseResult.data;
 
-      const result = await withDbContextLegacy({ isAdmin: true }, async () => {
+      const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'dispute.resolved',
           targetType: 'dispute',
@@ -811,7 +832,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { resolution, notes } = parseResult.data;
 
-      const result = await withDbContextLegacy({ isAdmin: true }, async () => {
+      const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'dispute.escalated',
           targetType: 'dispute',
