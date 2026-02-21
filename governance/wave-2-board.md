@@ -9,7 +9,7 @@ Branch: wave-2-stabilization
 
 - [x] G-001 — RLS context variable unification (`app.tenant_id` → `app.org_id` in all policies) — VALIDATED `1389ed7` — Step 1: 0 rows · Step 2: 20 policies · Step 3: 0 cross-tenant rows
 - [x] G-002 — FORCE RLS on all tenant commerce tables (`carts`, `orders`, `order_items`, `catalog_items`, `cart_items`) — VALIDATED `2d16e73` — all 13 tables t/t · cross-tenant COUNT 0 · positive control OK
-- [ ] G-003 — Add SELECT + INSERT RLS policies for `orders` + `order_items`
+- [x] G-003 — Add SELECT + INSERT RLS policies for `orders` + `order_items` — VALIDATED (no-code) — live policies already correct · SELECT+INSERT+admin_all on both tables · app.org_id · cross-tenant COUNT 0
 - [ ] G-013 — CI 0-row cross-tenant proof (automated, PR-gated)
 
 ---

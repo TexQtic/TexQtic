@@ -68,12 +68,26 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 - Proof run output:
   - Step 1: All 13 tables relrowsecurity=true, relforcerowsecurity=true ✅
     - Tables covered: ai_budgets, ai_usage_meters, audit_logs, cart_items, carts, catalog_items, invites, memberships, order_items, orders, tenant_branding, tenant_domains, tenant_feature_overrides
-  - Step 2: Cross-tenant carts COUNT(*) = 0 (WL context, non-WL filter) ✅
+  - Step 2: Cross-tenant carts COUNT(\*) = 0 (WL context, non-WL filter) ✅
   - Step 3: Positive control — WL own carts query succeeded without error ✅
+
+#### G-003 — VALIDATED 2026-02-21 (no SQL change required)
+
+- No commit — live policies were already correct (applied in prior hardening waves)
+- Phase 1 audit result (6 policies for orders + order_items):
+  - `orders_tenant_select` (SELECT) — USING `app.org_id IS NOT NULL AND app.org_id <> '' AND tenant_id = app.org_id::uuid` ✅
+  - `orders_tenant_insert` (INSERT) — WITH CHECK same predicate ✅
+  - `orders_admin_all` (ALL) — USING `app.is_admin = 'true'` ✅
+  - `order_items_tenant_select` (SELECT) — same predicate ✅
+  - `order_items_tenant_insert` (INSERT) — WITH CHECK same predicate ✅
+  - `order_items_admin_all` (ALL) — admin bypass ✅
+- `app.tenant_id` references: 0 ✅
+- Phase 3 proof:
+  - Cross-tenant orders COUNT(\*) = 0 (WL context, non-WL filter) ✅
+  - Positive control (own-tenant orders COUNT) = 0, no error ✅
 
 #### Gaps In Progress
 
-- G-003 — orders + order_items policies (Step 2 of G-001 proof confirmed these exist; need formal verification)
 - G-013 — CI cross-tenant 0-row proof (automated, PR-gated)
 
 ---
