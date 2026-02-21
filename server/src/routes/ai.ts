@@ -233,140 +233,136 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    *
    * Phase 3B: Budget enforcement + usage metering + audit logging
    */
-  fastify.post(
-    '/negotiation-advice',
-    { onRequest: tenantAuthMiddleware },
-    async (request, reply) => {
-      const { tenantId, realm: _realm, userId } = getTenantContext(request);
+  fastify.post('/negotiation-advice', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+    const { tenantId, realm: _realm, userId } = getTenantContext(request);
 
-      // Require tenant context
-      if (!tenantId) {
-        return reply.code(401).send({
-          ok: false,
-          error: 'UNAUTHORIZED',
-          message: 'Tenant context required for AI negotiation advice',
-        });
-      }
+    // Require tenant context
+    if (!tenantId) {
+      return reply.code(401).send({
+        ok: false,
+        error: 'UNAUTHORIZED',
+        message: 'Tenant context required for AI negotiation advice',
+      });
+    }
 
-      // Validate body
-      const parseResult = negotiationAdviceSchema.safeParse(request.body);
-      if (!parseResult.success) {
-        return sendValidationError(reply, parseResult.error.errors);
-      }
+    // Validate body
+    const parseResult = negotiationAdviceSchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
 
-      const { productName, targetPrice, quantity, context } = parseResult.data;
+    const { productName, targetPrice, quantity, context } = parseResult.data;
 
-      const requestId = `negotiation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-      const monthKey = getMonthKey();
-      const model = 'gemini-1.5-flash';
+    const requestId = `negotiation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    const monthKey = getMonthKey();
+    const model = 'gemini-1.5-flash';
 
-      try {
-        // Build database context from request (Doctrine v1.4)
-        const dbContext = buildContextFromRequest(request);
-        const contextTenantId = dbContext.orgId;
+    try {
+      // Build database context from request (Doctrine v1.4)
+      const dbContext = buildContextFromRequest(request);
+      const contextTenantId = dbContext.orgId;
 
-        // Execute within tenant DB context (RLS enforced)
-        const result = await withDbContext(prisma, dbContext, async tx => {
-          // 1. Load budget policy
-          const budget = await loadTenantBudget(tx, contextTenantId);
+      // Execute within tenant DB context (RLS enforced)
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        // 1. Load budget policy
+        const budget = await loadTenantBudget(tx, contextTenantId);
 
-          // 2. Get current usage
-          const usage = await getUsage(tx, contextTenantId, monthKey);
+        // 2. Get current usage
+        const usage = await getUsage(tx, contextTenantId, monthKey);
 
-          // 3. Preflight budget check (conservative estimate)
-          const preflightTokens = AI_PREFLIGHT_TOKENS_NEGOTIATION;
-          const preflightCost = estimateCostUSD(preflightTokens, model);
-          enforceBudgetOrThrow(budget, usage, preflightTokens, preflightCost);
+        // 3. Preflight budget check (conservative estimate)
+        const preflightTokens = AI_PREFLIGHT_TOKENS_NEGOTIATION;
+        const preflightCost = estimateCostUSD(preflightTokens, model);
+        enforceBudgetOrThrow(budget, usage, preflightTokens, preflightCost);
 
-          // 4. Build prompt
-          let prompt = 'Generate 3 strategic negotiation points for a B2B buyer.';
-          const details: string[] = [];
+        // 4. Build prompt
+        let prompt = 'Generate 3 strategic negotiation points for a B2B buyer.';
+        const details: string[] = [];
 
-          if (productName) details.push(`Product: ${productName}`);
-          if (targetPrice) details.push(`Target Price: $${targetPrice}`);
-          if (quantity) details.push(`Quantity: ${quantity} units`);
-          if (context) details.push(`Context: ${context}`);
+        if (productName) details.push(`Product: ${productName}`);
+        if (targetPrice) details.push(`Target Price: $${targetPrice}`);
+        if (quantity) details.push(`Quantity: ${quantity} units`);
+        if (context) details.push(`Context: ${context}`);
 
-          if (details.length > 0) {
-            prompt = `${details.join('. ')}. ${prompt}`;
-          }
-
-          const systemInstruction =
-            'You are a B2B negotiation advisor. Provide 3 concise, actionable negotiation tactics. ' +
-            'Flag any high-risk strategies.';
-
-          // 5. Generate content (AI call)
-          const { text: adviceText, tokensUsed } = await generateContent(
-            prompt,
-            systemInstruction,
-            10000
-          );
-
-          // 6. Calculate actual cost
-          const actualCost = estimateCostUSD(tokensUsed, model);
-
-          // 7. Update usage meter
-          await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
-
-          // 8. Write audit log (DB-backed, append-only)
-          const auditUserId = userId ?? null;
-          const auditEntry = createAiNegotiationAudit(contextTenantId, auditUserId, {
-            model,
-            tokensUsed,
-            costEstimateUSD: actualCost,
-            monthKey,
-            requestId,
-            productName,
-            targetPrice,
-            quantity,
-          });
-          await writeAuditLog(tx, auditEntry);
-
-          // 9. Risk detection
-          const riskFlags: string[] = [];
-          const lowerAdvice = adviceText.toLowerCase();
-          if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
-            riskFlags.push('AGGRESSIVE_TACTICS');
-          }
-          if (targetPrice && targetPrice < 10) {
-            riskFlags.push('LOW_PRICE_THRESHOLD');
-          }
-
-          return {
-            adviceText,
-            riskFlags,
-            tokensUsed,
-            costEstimateUSD: actualCost,
-            monthKey,
-          };
-        });
-
-        // Add response headers for debugging
-        reply.header('X-AI-Month', result.monthKey);
-        reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
-        reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
-
-        return sendSuccess(reply, {
-          adviceText: result.adviceText,
-          riskFlags: result.riskFlags,
-          updatedAt: new Date().toISOString(),
-        });
-      } catch (error) {
-        // Handle budget exceeded error
-        if (error instanceof BudgetExceededError) {
-          return reply.code(429).send(error.toJSON());
+        if (details.length > 0) {
+          prompt = `${details.join('. ')}. ${prompt}`;
         }
 
-        // Log and return generic error
-        console.error('[AI Negotiation] Error:', error);
-        return reply.code(500).send({
-          ok: false,
-          error: 'INTERNAL_ERROR',
-          message: 'Failed to generate negotiation advice',
+        const systemInstruction =
+          'You are a B2B negotiation advisor. Provide 3 concise, actionable negotiation tactics. ' +
+          'Flag any high-risk strategies.';
+
+        // 5. Generate content (AI call)
+        const { text: adviceText, tokensUsed } = await generateContent(
+          prompt,
+          systemInstruction,
+          10000
+        );
+
+        // 6. Calculate actual cost
+        const actualCost = estimateCostUSD(tokensUsed, model);
+
+        // 7. Update usage meter
+        await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
+
+        // 8. Write audit log (DB-backed, append-only)
+        const auditUserId = userId ?? null;
+        const auditEntry = createAiNegotiationAudit(contextTenantId, auditUserId, {
+          model,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+          requestId,
+          productName,
+          targetPrice,
+          quantity,
         });
+        await writeAuditLog(tx, auditEntry);
+
+        // 9. Risk detection
+        const riskFlags: string[] = [];
+        const lowerAdvice = adviceText.toLowerCase();
+        if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
+          riskFlags.push('AGGRESSIVE_TACTICS');
+        }
+        if (targetPrice && targetPrice < 10) {
+          riskFlags.push('LOW_PRICE_THRESHOLD');
+        }
+
+        return {
+          adviceText,
+          riskFlags,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+        };
+      });
+
+      // Add response headers for debugging
+      reply.header('X-AI-Month', result.monthKey);
+      reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
+      reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
+
+      return sendSuccess(reply, {
+        adviceText: result.adviceText,
+        riskFlags: result.riskFlags,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      // Handle budget exceeded error
+      if (error instanceof BudgetExceededError) {
+        return reply.code(429).send(error.toJSON());
       }
+
+      // Log and return generic error
+      console.error('[AI Negotiation] Error:', error);
+      return reply.code(500).send({
+        ok: false,
+        error: 'INTERNAL_ERROR',
+        message: 'Failed to generate negotiation advice',
+      });
     }
-  );
+  });
 
   /**
    * GET /api/ai/health
