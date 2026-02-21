@@ -256,18 +256,18 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
       // 401: Unauthorized
       if (response.status === 401) {
-        if (AUTH_DEBUG) {
-          console.log('[apiClient] 401 handler', { isAuthRoute, hadToken: !!token });
-        }
-
-        if (!isAuthRoute) {
-          // Non-auth route: session expired — clear tokens and redirect to login
-          clearAuth();
-          window.location.href = '/';
-        }
-        // Auth routes: do NOT redirect. Bubble the server message to the caller
-        // so the login form can display the accurate error (wrong password, locked, etc.)
-        throw new APIError(401, errorData.error?.message || 'Invalid credentials.', 'UNAUTHORIZED');
+        // For auth routes: bubble error to the form so it can display "Invalid credentials."
+        // For non-auth routes: do NOT hard-redirect. The token may be freshly issued (e.g.
+        // the very first API call after login) and the 401 may be a backend/RLS issue on
+        // that specific endpoint, not a true session expiry. Redirecting here causes the
+        // "login succeeds → catalog 401 → clearAuth → reload → back to login" loop visible
+        // in Vercel logs. Throw the error; callers (useEffect in App.tsx) catch it and show
+        // a graceful error state. Explicit logout (authService.logout) handles token clearing.
+        throw new APIError(
+          401,
+          errorData.error?.message || 'Unauthorized.',
+          'UNAUTHORIZED'
+        );
       }
 
       // 403: Forbidden
