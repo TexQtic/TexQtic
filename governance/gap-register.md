@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-21 (G-001 + G-002 + G-003 VALIDATED; G-QG-001 added)
+Last Updated: 2026-02-21 (G-001 + G-002 + G-003 + G-013 VALIDATED; G-QG-001 added)
 Doctrine Version: v1.4
 
 ---
@@ -23,7 +23,7 @@ Doctrine Version: v1.4
 | G-001  | **RLS policies check `app.tenant_id`; new routes set `app.org_id`** — policies do not fire            | `server/prisma/rls.sql`; `server/src/lib/database-context.ts`   | 🔴 High | VALIDATED   | 1389ed7 | Step 1: 0 policies reference `app.tenant_id` · Step 2: 20 policies reference `app.org_id` · Step 3: cross-tenant 0 rows |
 | G-002  | `FORCE ROW LEVEL SECURITY` missing on `carts`, `orders`, `order_items`, `catalog_items`, `cart_items` | `server/prisma/rls.sql`; `server/prisma/supabase_hardening.sql` | 🔴 High | VALIDATED   | 2d16e73 | All 13 tables: relrowsecurity=true, relforcerowsecurity=true · cross-tenant COUNT’s 0 · positive control passes         |
 | G-003  | `orders` and `order_items` RLS policies absent from all SQL files                                     | `server/prisma/rls.sql`                                         | 🔴 High | VALIDATED   | no-code | Live policies already correct: SELECT+INSERT+admin_all on both tables referencing `app.org_id` · cross-tenant COUNT 0   |
-| G-013  | CI cross-tenant 0-row proof not automated                                                             | `server/prisma/verify-rls-data.ts`; CI config                   | 🟠 Med  | NOT STARTED | —       | Test suite runs 0-row assertion against Supabase on PR                                                                  |
+| G-013  | CI cross-tenant 0-row proof not automated                                                             | `server/scripts/ci/rls-proof.ts`; `.github/workflows/rls-proof.yml` | 🟠 Med  | VALIDATED   | 7f474ab | Step 1: 0 `app.tenant_id` policy refs · Step 2: Tenant A cross-tenant 0, own-count 2 · Step 3: Tenant B cross-tenant 0, own-count 0 · non-vacuous ✅ |
 
 ---
 
@@ -48,8 +48,8 @@ Doctrine Version: v1.4
 
 > Policy: Wave work may proceed when **server gates pass** (`pnpm -C server run typecheck` + `pnpm -C server run lint`). Root `pnpm run lint` is deferred until G-QG-001 is resolved.
 
-| Gap ID   | Description                                              | Wave          | Risk    | Status      | Commit | Validation Proof                                                                                                                           |
-| -------- | -------------------------------------------------------- | ------------- | ------- | ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gap ID   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Wave             | Risk   | Status      | Commit | Validation Proof                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------ | ----------- | ------ | -------------------------------------------------- |
 | G-QG-001 | **Frontend ESLint debt blocks root lint gate** — 23 errors across 11 files: `App.tsx` (unused vars), `Auth/ForgotPassword.tsx` + `Auth/TokenHandler.tsx` + `Auth/VerifyEmail.tsx` (`React` not defined / unused vars), `Auth/AuthFlows.tsx` (unused var), `Cart/Cart.tsx` (unused vars), `ControlPlane/AuditLogs.tsx` + `ControlPlane/TenantRegistry.tsx` (unused vars), `ControlPlane/EventStream.tsx` (setState-in-effect), `constants.tsx` (unused imports), `services/apiClient.ts` (`AbortController` not defined) | Wave 3 / cleanup | 🟡 Low | NOT STARTED | —      | `pnpm run lint` exits 0 with no errors or warnings |
 
 ---

@@ -103,9 +103,26 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
   - `constants.tsx` — `TenantType`, `TenantConfig`, `TenantStatus` unused imports
   - `services/apiClient.ts` — `AbortController` not defined (2 occurrences)
 
+#### G-013 — VALIDATED 2026-02-21
+
+- Commit `7f474ab` — `feat(ci): add PR-gated RLS cross-tenant 0-row proof (G-013)`
+- Files: `server/scripts/ci/rls-proof.ts`, `.github/workflows/rls-proof.yml`, `server/package.json` (script `ci:rls-proof`)
+- Gate outputs prior to commit:
+  - `pnpm -C server run typecheck` → EXIT 0 ✅
+  - `pnpm -C server run lint` → EXIT 0 ✅ (67 warnings, 0 errors)
+- Proof run output (`pnpm run ci:rls-proof`):
+  - Step 1 — Legacy policy variable check: `app.tenant_id` references = **0** ✅
+  - Step 2 — Tenant A (ACME) isolation: cross-tenant rows = **0**, own-tenant rows = **2** (non-vacuous) ✅
+  - Step 3 — Tenant B (WL) isolation: cross-tenant rows = **0**, own-tenant rows = **0** (positive control executed) ✅
+  - Result: `ALL STEPS PASS — RLS isolation verified (G-013)` EXIT 0
+- CI workflow: `.github/workflows/rls-proof.yml` — triggers on `pull_request` → `[main, develop]`
+  - Required secrets: `DATABASE_URL`, `CI_TENANT_A_ID`, `CI_TENANT_B_ID`
+  - Steps: checkout → Node 22 → pnpm → install → validate secrets → typecheck → lint → ci:rls-proof
+  - Missing secrets → hard FAIL (silence is never a pass)
+
 #### Gaps In Progress
 
-- G-013 — CI cross-tenant 0-row proof (automated, PR-gated)
+- None — Wave 2 Critical Path complete (G-001 + G-002 + G-003 + G-013 all VALIDATED)
 
 ---
 
