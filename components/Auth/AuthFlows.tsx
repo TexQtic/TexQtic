@@ -27,15 +27,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Core login logic — called from both button onClick and form onSubmit.
+  // Decoupled from the event so it cannot be silently swallowed by browser
+  // form validation or event-capture from third-party scripts on the page.
+  const doLogin = async () => {
     setError(null);
     setLoading(true);
 
-    // Trim email to avoid whitespace-induced 401s (backend does exact match)
     const cleanEmail = email.trim();
 
-    // Guard: tenantId must always be present for tenant realm
     if (!isAdminRealm && !selectedTenantId) {
       setError('Please select a tenant.');
       setLoading(false);
@@ -59,6 +59,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Thin shim so pressing Enter in any field still submits
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    doLogin();
   };
 
   return (
@@ -145,7 +151,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
           )}
 
           <button
-            type="submit"
+            type="button"
+            onClick={doLogin}
             disabled={loading}
             className={`w-full py-4 bg-${accentColor} text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition active:scale-95 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed`}
           >
