@@ -61,10 +61,20 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
   - Step 2: 20 policies reference `app.org_id` ✅
   - Step 3: Cross-tenant isolation — WL context reads 0 non-WL cart rows ✅
 
+#### G-002 — VALIDATED 2026-02-21
+
+- Commit `2d16e73` — `migrations/pr-g002-force-rls.sql` ENABLE + FORCE RLS on 13 tenant-scoped tables
+- Applied via psql to live Supabase
+- Proof run output:
+  - Step 1: All 13 tables relrowsecurity=true, relforcerowsecurity=true ✅
+    - Tables covered: ai_budgets, ai_usage_meters, audit_logs, cart_items, carts, catalog_items, invites, memberships, order_items, orders, tenant_branding, tenant_domains, tenant_feature_overrides
+  - Step 2: Cross-tenant carts COUNT(*) = 0 (WL context, non-WL filter) ✅
+  - Step 3: Positive control — WL own carts query succeeded without error ✅
+
 #### Gaps In Progress
 
-- G-002 — FORCE RLS on commerce tables (next)
-- G-003 — orders + order_items policies (partially present — confirmed in Step 2)
+- G-003 — orders + order_items policies (Step 2 of G-001 proof confirmed these exist; need formal verification)
+- G-013 — CI cross-tenant 0-row proof (automated, PR-gated)
 
 ---
 

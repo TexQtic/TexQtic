@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-21 (G-001 VALIDATED)
+Last Updated: 2026-02-21 (G-001 + G-002 VALIDATED)
 Doctrine Version: v1.4
 
 ---
@@ -18,12 +18,12 @@ Doctrine Version: v1.4
 
 ## 🔴 Critical Path
 
-| Gap ID | Description                                                                                           | Affected Files                                                  | Risk    | Status      | Commit  | Validation Proof                                                                                                          |
-| ------ | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| G-001  | **RLS policies check `app.tenant_id`; new routes set `app.org_id`** — policies do not fire            | `server/prisma/rls.sql`; `server/src/lib/database-context.ts`   | 🔴 High | VALIDATED   | 1389ed7 | Step 1: 0 policies reference `app.tenant_id` · Step 2: 20 policies reference `app.org_id` · Step 3: cross-tenant 0 rows  |
-| G-002  | `FORCE ROW LEVEL SECURITY` missing on `carts`, `orders`, `order_items`, `catalog_items`, `cart_items` | `server/prisma/rls.sql`; `server/prisma/supabase_hardening.sql` | 🔴 High | NOT STARTED | —       | `relforcerowsecurity=true` in `pg_class` for each table                                                                   |
-| G-003  | `orders` and `order_items` RLS policies absent from all SQL files                                     | `server/prisma/rls.sql`                                         | 🔴 High | NOT STARTED | —       | `pg_policies` shows SELECT + INSERT policies for both tables                                                              |
-| G-013  | CI cross-tenant 0-row proof not automated                                                             | `server/prisma/verify-rls-data.ts`; CI config                   | 🟠 Med  | NOT STARTED | —       | Test suite runs 0-row assertion against Supabase on PR                                                                    |
+| Gap ID | Description                                                                                           | Affected Files                                                  | Risk    | Status      | Commit  | Validation Proof                                                                                                        |
+| ------ | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------- | ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| G-001  | **RLS policies check `app.tenant_id`; new routes set `app.org_id`** — policies do not fire            | `server/prisma/rls.sql`; `server/src/lib/database-context.ts`   | 🔴 High | VALIDATED   | 1389ed7 | Step 1: 0 policies reference `app.tenant_id` · Step 2: 20 policies reference `app.org_id` · Step 3: cross-tenant 0 rows |
+| G-002  | `FORCE ROW LEVEL SECURITY` missing on `carts`, `orders`, `order_items`, `catalog_items`, `cart_items` | `server/prisma/rls.sql`; `server/prisma/supabase_hardening.sql` | 🔴 High | VALIDATED   | 2d16e73 | All 13 tables: relrowsecurity=true, relforcerowsecurity=true · cross-tenant COUNT’s 0 · positive control passes |
+| G-003  | `orders` and `order_items` RLS policies absent from all SQL files                                     | `server/prisma/rls.sql`                                         | 🔴 High | NOT STARTED | —       | `pg_policies` shows SELECT + INSERT policies for both tables                                                            |
+| G-013  | CI cross-tenant 0-row proof not automated                                                             | `server/prisma/verify-rls-data.ts`; CI config                   | 🟠 Med  | NOT STARTED | —       | Test suite runs 0-row assertion against Supabase on PR                                                                  |
 
 ---
 
