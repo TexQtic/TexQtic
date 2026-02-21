@@ -3,7 +3,7 @@ import { login } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
 
 // Flip to true locally to inspect login payloads without exposing tokens
-const AUTH_DEBUG = false;
+const AUTH_DEBUG = true;
 
 // TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
 const SEEDED_TENANTS = [
@@ -28,6 +28,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('SUBMIT FIRED', { realm, isAdminRealm, selectedTenantId, email });
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -52,6 +53,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
         });
       }
 
+      console.log('CALLING LOGIN', {
+        endpoint: isAdminRealm ? '/api/auth/admin/login' : '/api/auth/tenant/login',
+        tenantId: isAdminRealm ? undefined : selectedTenantId,
+      });
       const response = await login(
         { email: cleanEmail, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
         realm as AuthRealm
