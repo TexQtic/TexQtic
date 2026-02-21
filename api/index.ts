@@ -24,6 +24,7 @@ import authRoutes from '../server/src/routes/auth.js';
 import controlRoutes from '../server/src/routes/control.js';
 import tenantRoutes from '../server/src/routes/tenant.js';
 import adminCartSummariesRoutes from '../server/src/routes/admin-cart-summaries.js';
+import aiRoutes from '../server/src/routes/ai.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -144,6 +145,7 @@ await fastify.register(authRoutes, { prefix: '/api/auth' });
 await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });
 await fastify.register(adminCartSummariesRoutes, { prefix: '/api/control/marketplace' });
+await fastify.register(aiRoutes, { prefix: '/api/ai' });
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
