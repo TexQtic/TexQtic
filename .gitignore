@@ -43,3 +43,6 @@ yarn-error.log*
 .sonarlint/
 .scannerwork/
 .sonarqube/
+
+# Local validation tooling (do not commit)
+server/scripts/proof-*.ts

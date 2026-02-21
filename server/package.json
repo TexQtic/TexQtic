@@ -21,7 +21,8 @@
     "db:rls": "psql $DATABASE_URL -f prisma/rls.sql",
     "db:harden": "tsx prisma/apply-hardening.ts",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "ci:rls-proof": "tsx scripts/ci/rls-proof.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^10.0.1",

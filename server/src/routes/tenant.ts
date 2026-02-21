@@ -659,7 +659,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (cart.items.length === 0) return { error: 'CART_EMPTY' };
 
       // Compute totals (Decimal → number for arithmetic)
-      const subtotal = cart.items.reduce((sum, item) => {
+      const cartItems = cart.items;
+      const subtotal = cartItems.reduce((sum: number, item: typeof cartItems[number]) => {
         return sum + Number(item.catalogItem.price) * item.quantity;
       }, 0);
       const total = subtotal; // stub: no tax/fees
@@ -675,7 +676,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           subtotal,
           total,
           items: {
-            create: cart.items.map(item => ({
+            create: cartItems.map((item: typeof cartItems[number]) => ({
               tenantId: dbContext.orgId,
               catalogItemId: item.catalogItemId,
               sku: item.catalogItem.sku ?? '',

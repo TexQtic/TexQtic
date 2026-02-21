@@ -1,0 +1,97 @@
+# G-013 — RLS Cross-Tenant 0-Row Proof
+#
+# Runs on every PR targeting main or develop.
+# Validates that Postgres RLS enforces tenant isolation at the DB level.
+#
+# Required repository secrets:
+#   DATABASE_URL    — Supabase Postgres connection string (sslmode=require)
+#   CI_TENANT_A_ID  — UUID of first known tenant (e.g. ACME)
+#   CI_TENANT_B_ID  — UUID of second known tenant (e.g. WL)
+#
+# The job FAILS if any secret is absent or if any proof assertion fails.
+# Silence = breach. A missing secret NEVER produces a passing run.
+
+name: RLS Cross-Tenant 0-Row Proof (G-013)
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  rls-proof:
+    name: RLS 0-Row Proof
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-server-${{ hashFiles('server/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-server-
+
+      - name: Install server dependencies
+        working-directory: server
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate required secrets
+        shell: bash
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CI_TENANT_A_ID: ${{ secrets.CI_TENANT_A_ID }}
+          CI_TENANT_B_ID: ${{ secrets.CI_TENANT_B_ID }}
+        run: |
+          MISSING=0
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL secret is not configured."
+            echo "::error::Add DATABASE_URL to GitHub repository secrets (Settings → Secrets)."
+            MISSING=1
+          fi
+          if [ -z "$CI_TENANT_A_ID" ]; then
+            echo "::error::CI_TENANT_A_ID secret is not configured."
+            MISSING=1
+          fi
+          if [ -z "$CI_TENANT_B_ID" ]; then
+            echo "::error::CI_TENANT_B_ID secret is not configured."
+            MISSING=1
+          fi
+          if [ "$MISSING" -eq 1 ]; then
+            echo "::error::One or more required secrets are missing. A missing secret NEVER produces a passing run."
+            exit 1
+          fi
+          echo "Secrets present: DATABASE_URL=<redacted> CI_TENANT_A_ID=<redacted> CI_TENANT_B_ID=<redacted>"
+
+      - name: Typecheck (server)
+        working-directory: server
+        run: pnpm run typecheck
+
+      - name: Lint (server)
+        working-directory: server
+        run: pnpm run lint
+
+      - name: Run RLS 0-row cross-tenant proof
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CI_TENANT_A_ID: ${{ secrets.CI_TENANT_A_ID }}
+          CI_TENANT_B_ID: ${{ secrets.CI_TENANT_B_ID }}
+        run: pnpm run ci:rls-proof
