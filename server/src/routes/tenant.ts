@@ -83,7 +83,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get(
     '/tenant/memberships',
-    { onRequest: tenantAuthMiddleware },
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
       const dbContext = request.dbContext;
       if (!dbContext) {
@@ -751,7 +751,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post(
     '/tenant/memberships',
-    { onRequest: tenantAuthMiddleware },
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
       const { tenantId, userRole } = request;
 
