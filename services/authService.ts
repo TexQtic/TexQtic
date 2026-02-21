@@ -8,7 +8,7 @@ import { post, get, setToken, clearAuth, getAuthRealm } from './apiClient';
 import type { AuthRealm } from './apiClient';
 
 // Flip to true locally to inspect login payloads (never commit as true)
-const DEBUG_AUTH = false;
+const AUTH_DEBUG = false;
 
 export interface LoginCredentials {
   email: string;
@@ -71,11 +71,11 @@ export async function login(
     ? { email: credentials.email, password: credentials.password }
     : { email: credentials.email, password: credentials.password, tenantId: credentials.tenantId };
 
-  if (DEBUG_AUTH) {
+  if (AUTH_DEBUG) {
     console.log('[auth] login attempt', {
       endpoint,
-      hasTenantId: !isAdmin && !!credentials.tenantId,
-      tenantId: !isAdmin ? credentials.tenantId : 'N/A',
+      tenantIdPresent: !isAdmin && !!credentials.tenantId,
+      tenantIdLength: !isAdmin ? (credentials.tenantId?.length ?? 0) : 'N/A',
     });
   }
 

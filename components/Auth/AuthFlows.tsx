@@ -3,7 +3,7 @@ import { login } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
 
 // Flip to true locally to inspect login payloads without exposing tokens
-const DEBUG_AUTH = false;
+const AUTH_DEBUG = false;
 
 // TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
 const SEEDED_TENANTS = [
@@ -43,11 +43,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     }
 
     try {
-      if (DEBUG_AUTH) {
-        console.log('[auth] submit payload (redacted)', {
-          email: cleanEmail,
+      if (AUTH_DEBUG) {
+        console.log('[auth] submit (redacted)', {
+          emailLength: cleanEmail.length,
           passwordLength: password.length,
-          tenantId: isAdminRealm ? 'N/A (admin realm)' : selectedTenantId,
+          tenantIdLength: isAdminRealm ? 'N/A' : selectedTenantId?.length,
           realm,
         });
       }
@@ -58,11 +58,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
       );
       onSuccess(response);
     } catch (err: any) {
-      // Differentiate rate-limit from credential failure for actionable UX
       if (err.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
-        setError('Too many login attempts. Please wait 10 minutes and try again.');
+        setError('Too many attempts. Wait 10 minutes.');
+      } else if (err.status === 401) {
+        setError('Invalid credentials.');
       } else {
-        setError(err.message || 'Login failed. Please check your credentials.');
+        setError(`Login failed: ${err.message || 'Unknown error.'}`);
       }
     } finally {
       setLoading(false);

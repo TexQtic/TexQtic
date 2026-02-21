@@ -40,6 +40,9 @@ const TENANT_TOKEN_KEY = 'texqtic_tenant_token';
 const ADMIN_TOKEN_KEY = 'texqtic_admin_token';
 const AUTH_REALM_KEY = 'texqtic_auth_realm';
 
+// Flip to true locally to diagnose auth request issues. Never commit as true.
+const AUTH_DEBUG = false;
+
 // Wave 0-A: AbortController for in-flight request cancellation
 let currentAbortController = new AbortController();
 
@@ -196,6 +199,13 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getToken();
 
+  // Auth endpoints are pre-authentication by definition.
+  // Attaching a stale bearer token causes the server to validate the token header
+  // BEFORE checking credentials, returning 401 on the stale token rather than the
+  // actual credential error — which then incorrectly triggers the session-expired
+  // redirect loop. Skip Authorization + skip the redirect 401 handler for these routes.
+  const isAuthRoute = endpoint.includes('/api/auth/');
+
   // Build headers
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -207,9 +217,20 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     Object.assign(headers, providedHeaders);
   }
 
-  // Attach JWT if available
-  if (token) {
+  // Attach JWT only for non-auth routes
+  if (token && !isAuthRoute) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  if (AUTH_DEBUG) {
+    console.log('[apiClient] →', {
+      url,
+      method: options.method || 'GET',
+      isAuthRoute,
+      hasStoredToken: !!token,
+      attachedAuth: !!token && !isAuthRoute,
+      storedRealm: localStorage.getItem('texqtic_auth_realm'),
+    });
   }
 
   // Make request
@@ -219,6 +240,10 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       headers,
       signal: currentAbortController.signal,
     });
+
+    if (AUTH_DEBUG) {
+      console.log('[apiClient] ←', { url, status: response.status });
+    }
 
     // Handle non-OK responses
     if (!response.ok) {
@@ -231,15 +256,22 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
       // 401: Unauthorized
       if (response.status === 401) {
-        const hadToken = !!token; // Only redirect if session existed
-
-        clearAuth();
-
-        if (hadToken) {
-          window.location.href = '/'; // Session expired -> redirect to login
+        if (AUTH_DEBUG) {
+          console.log('[apiClient] 401 handler', { isAuthRoute, hadToken: !!token });
         }
 
-        throw new APIError(401, errorData.error?.message || 'Unauthorized', 'UNAUTHORIZED');
+        if (!isAuthRoute) {
+          // Non-auth route: session expired — clear tokens and redirect to login
+          clearAuth();
+          window.location.href = '/';
+        }
+        // Auth routes: do NOT redirect. Bubble the server message to the caller
+        // so the login form can display the accurate error (wrong password, locked, etc.)
+        throw new APIError(
+          401,
+          errorData.error?.message || 'Invalid credentials.',
+          'UNAUTHORIZED'
+        );
       }
 
       // 403: Forbidden
