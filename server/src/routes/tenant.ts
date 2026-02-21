@@ -380,6 +380,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
+        // MOQ enforcement: finalQty = existing + incoming must meet moq
+        const currentQty = existingCartItem?.quantity ?? 0;
+        const finalQty = currentQty + quantity;
+        if (finalQty < catalogItem.moq) {
+          return {
+            error: 'MOQ_NOT_MET' as const,
+            requiredMoq: catalogItem.moq,
+            finalQty,
+          };
+        }
+
         let cartItem;
         let resultingQuantity;
 
@@ -449,6 +460,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         // RLS removed: FORBIDDEN error (RLS policies enforce tenant boundary at DB level)
         if (result.error === 'CATALOG_ITEM_INACTIVE') {
           return sendError(reply, 'BAD_REQUEST', 'Catalog item is not active', 400);
+        }
+        if (result.error === 'MOQ_NOT_MET') {
+          return reply.status(422).send({
+            success: false,
+            error: {
+              code: 'MOQ_NOT_MET',
+              message: 'Quantity below minimum order quantity',
+              requiredMoq: result.requiredMoq,
+              finalQty: result.finalQty,
+            },
+          });
         }
       }
 
@@ -603,6 +625,152 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(reply, { cartItem: result.cartItem });
     }
   );
+
+  // ---------------------------------------------------------------------------
+  // PR-A: Orders + Checkout
+  // ---------------------------------------------------------------------------
+
+  /**
+   * POST /api/tenant/checkout
+   * Convert active cart → order (stub payment, PAYMENT_PENDING status)
+   * Gate PR-A: RLS-enforced via withDbContext
+   */
+  fastify.post('/tenant/checkout', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = buildContextFromRequest(request);
+    const t0 = Date.now();
+
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      // Load active cart with items + catalog metadata
+      const cart = await tx.cart.findFirst({
+        where: { userId, status: 'ACTIVE' },
+        include: {
+          items: {
+            include: {
+              catalogItem: {
+                select: { id: true, name: true, sku: true, price: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!cart) return { error: 'CART_NOT_FOUND' };
+      if (cart.items.length === 0) return { error: 'CART_EMPTY' };
+
+      // Compute totals (Decimal → number for arithmetic)
+      const subtotal = cart.items.reduce((sum, item) => {
+        return sum + Number(item.catalogItem.price) * item.quantity;
+      }, 0);
+      const total = subtotal; // stub: no tax/fees
+
+      // Create order + items + mark cart checked-out in single transaction
+      const order = await tx.order.create({
+        data: {
+          tenantId: dbContext.orgId,
+          userId: userId!,
+          cartId: cart.id,
+          status: 'PAYMENT_PENDING',
+          currency: 'USD',
+          subtotal,
+          total,
+          items: {
+            create: cart.items.map(item => ({
+              tenantId: dbContext.orgId,
+              catalogItemId: item.catalogItemId,
+              sku: item.catalogItem.sku ?? '',
+              name: item.catalogItem.name,
+              quantity: item.quantity,
+              unitPrice: Number(item.catalogItem.price),
+              lineTotal: Number(item.catalogItem.price) * item.quantity,
+            })),
+          },
+        },
+      });
+
+      await tx.cart.update({
+        where: { id: cart.id },
+        data: { status: 'CHECKED_OUT' },
+      });
+
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: dbContext.orgId,
+        actorType: 'USER',
+        actorId: userId ?? null,
+        action: 'order.CHECKOUT_COMPLETED',
+        entity: 'order',
+        entityId: order.id,
+        metadataJson: {
+          cartId: cart.id,
+          itemCount: cart.items.length,
+          subtotal,
+          total,
+          orderId: order.id,
+          durationMs: Date.now() - t0,
+        },
+      });
+
+      return {
+        orderId: order.id,
+        status: order.status,
+        subtotal,
+        total,
+        currency: order.currency,
+        itemCount: cart.items.length,
+      };
+    });
+
+    if ('error' in result) {
+      if (result.error === 'CART_NOT_FOUND') return sendNotFound(reply, 'No active cart found');
+      if (result.error === 'CART_EMPTY') return sendError(reply, 'BAD_REQUEST', 'Cart is empty', 400);
+    }
+
+    return sendSuccess(reply, result, 201);
+  });
+
+  /**
+   * GET /api/tenant/orders
+   * List orders for current tenant user (RLS-enforced)
+   */
+  fastify.get('/tenant/orders', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = buildContextFromRequest(request);
+
+    const orders = await withDbContext(prisma, dbContext, async tx => {
+      return tx.order.findMany({
+        where: { userId },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+    });
+
+    return sendSuccess(reply, { orders, count: orders.length });
+  });
+
+  /**
+   * GET /api/tenant/orders/:id
+   * Get single order with items (RLS-enforced)
+   */
+  fastify.get('/tenant/orders/:id', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+    const { id: orderId } = paramsResult.data;
+    const dbContext = buildContextFromRequest(request);
+
+    const order = await withDbContext(prisma, dbContext, async tx => {
+      return tx.order.findUnique({
+        where: { id: orderId },
+        include: { items: true },
+      });
+    });
+
+    if (!order) return sendNotFound(reply, 'Order not found');
+    return sendSuccess(reply, { order });
+  });
 
   /**
    * POST /api/tenant/activate
