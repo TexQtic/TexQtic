@@ -58,7 +58,10 @@ export async function login(
   realm: AuthRealm
 ): Promise<LoginResponse> {
   const isAdmin = realm === 'CONTROL_PLANE';
-  const endpoint = isAdmin ? '/api/auth/admin/login' : '/api/auth/tenant/login';
+  // Backend unified endpoint: POST /api/auth/login with x-realm-hint header.
+  // Admin realm retains its dedicated endpoint (/api/auth/admin/login) which is
+  // already working. Only tenant login was wired to the wrong route.
+  const endpoint = isAdmin ? '/api/auth/admin/login' : '/api/auth/login';
 
   // CRITICAL: clear any stale token BEFORE calling post().
   // apiRequest() reads getToken() and attaches it as Authorization header on every
@@ -71,16 +74,23 @@ export async function login(
     ? { email: credentials.email, password: credentials.password }
     : { email: credentials.email, password: credentials.password, tenantId: credentials.tenantId };
 
+  // Tenant realm requires x-realm-hint: tenant so the unified /api/auth/login
+  // endpoint knows which credential flow to execute.
+  const realmHeader: Record<string, string> | undefined = isAdmin
+    ? undefined
+    : { 'x-realm-hint': 'tenant' };
+
   if (AUTH_DEBUG) {
     console.log('[auth] login attempt', {
       endpoint,
+      realmHeader,
       tenantIdPresent: !isAdmin && !!credentials.tenantId,
       tenantIdLength: !isAdmin ? (credentials.tenantId?.length ?? 0) : 'N/A',
     });
   }
 
   // post<any> so we can inspect the shape before typing it
-  const raw = await post<any>(endpoint, body);
+  const raw = await post<any>(endpoint, body, realmHeader);
 
   // Normalize: handle both unwrapped { token, ... } and wrapped { data: { token, ... } }
   const payload: LoginResponse = raw?.data?.token ? raw.data : raw;
