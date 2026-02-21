@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-21 (G-001 + G-002 VALIDATED)
+Last Updated: 2026-02-21 (G-001 + G-002 + G-003 VALIDATED; G-QG-001 added)
 Doctrine Version: v1.4
 
 ---
@@ -41,6 +41,16 @@ Doctrine Version: v1.4
 | G-011  | Impersonation session route not found in route files                                                      | `server/src/routes/control.ts`                                   | 🟡 Low | NOT STARTED | —      | POST/DELETE impersonation endpoints respond correctly                     |
 | G-012  | Email notifications are stubs — no real delivery                                                          | `server/src/lib/emailStubs.ts`                                   | 🟡 Low | NOT STARTED | —      | Email provider integration test passes                                    |
 | G-014  | `tenant/activate` POST has nested `tx.$transaction` inside `withDbContext` (double-transaction nesting)   | `server/src/routes/tenant.ts`                                    | 🟠 Med | NOT STARTED | —      | Activation flow works in single transaction; no nested tx                 |
+
+---
+
+# QUALITY GATE DEBT
+
+> Policy: Wave work may proceed when **server gates pass** (`pnpm -C server run typecheck` + `pnpm -C server run lint`). Root `pnpm run lint` is deferred until G-QG-001 is resolved.
+
+| Gap ID   | Description                                              | Wave          | Risk    | Status      | Commit | Validation Proof                                                                                                                           |
+| -------- | -------------------------------------------------------- | ------------- | ------- | ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| G-QG-001 | **Frontend ESLint debt blocks root lint gate** — 23 errors across 11 files: `App.tsx` (unused vars), `Auth/ForgotPassword.tsx` + `Auth/TokenHandler.tsx` + `Auth/VerifyEmail.tsx` (`React` not defined / unused vars), `Auth/AuthFlows.tsx` (unused var), `Cart/Cart.tsx` (unused vars), `ControlPlane/AuditLogs.tsx` + `ControlPlane/TenantRegistry.tsx` (unused vars), `ControlPlane/EventStream.tsx` (setState-in-effect), `constants.tsx` (unused imports), `services/apiClient.ts` (`AbortController` not defined) | Wave 3 / cleanup | 🟡 Low | NOT STARTED | —      | `pnpm run lint` exits 0 with no errors or warnings |
 
 ---
 

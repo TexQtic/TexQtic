@@ -86,6 +86,23 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
   - Cross-tenant orders COUNT(\*) = 0 (WL context, non-WL filter) ✅
   - Positive control (own-tenant orders COUNT) = 0, no error ✅
 
+#### Quality Gate Decision — 2026-02-21
+
+- Command: `pnpm run typecheck` → EXIT 0 ✅ (after fix: implicit-any in `tenant.ts:662/678` resolved — `cartItems` typed const + `typeof cartItems[number]` callbacks)
+- Command: `pnpm run lint` → EXIT 1 ❌ — 23 errors, 1 warning in FRONTEND files only (pre-existing debt, unrelated to Wave-2 RLS work)
+- Command: `pnpm -C server run typecheck` → EXIT 0 ✅
+- Command: `pnpm -C server run lint` → EXIT 0 ✅ (67 warnings, 0 errors — warnings-only, not blocked)
+- **Decision:** Adopt server-scope gate split for Wave-2 execution. Root lint deferred, tracked as G-QG-001 (Wave 3 / cleanup bucket). Wave-2 tasks MAY proceed when server gates pass.
+- Frontend lint failures summary:
+  - `App.tsx` — unused vars (`tenantsLoading`, `tenantsError`) + missing `useEffect` dep
+  - `Auth/ForgotPassword.tsx`, `Auth/TokenHandler.tsx`, `Auth/VerifyEmail.tsx` — `React` not defined in JSX
+  - `Auth/AuthFlows.tsx` — `AUTH_DEBUG` unused
+  - `Cart/Cart.tsx` — `LoadingState` unused, `currentQuantity` unused arg
+  - `ControlPlane/AuditLogs.tsx`, `ControlPlane/TenantRegistry.tsx` — `LoadingState` unused
+  - `ControlPlane/EventStream.tsx` — `EmptyState` unused + setState-in-effect
+  - `constants.tsx` — `TenantType`, `TenantConfig`, `TenantStatus` unused imports
+  - `services/apiClient.ts` — `AbortController` not defined (2 occurrences)
+
 #### Gaps In Progress
 
 - G-013 — CI cross-tenant 0-row proof (automated, PR-gated)

@@ -29,6 +29,19 @@ Branch: wave-2-stabilization
 
 ---
 
+# Execution Gates (Wave 2)
+
+> Adopted 2026-02-21 due to pre-existing frontend lint debt (G-QG-001).
+
+| Gate | Command | Scope | Required |
+| ---- | ------- | ----- | -------- |
+| Typecheck | `pnpm -C server run typecheck` | Server only | ✅ Mandatory |
+| Lint | `pnpm -C server run lint` | Server only | ✅ Mandatory |
+| Root typecheck | `pnpm run typecheck` | Root + server | ✅ Mandatory |
+| Root lint | `pnpm run lint` | All files | ⏸ Deferred — tracked as G-QG-001 |
+
+---
+
 # Completion Gate
 
 Wave 2 is complete ONLY when ALL of the following are true:
