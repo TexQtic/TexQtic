@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
+import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
 import {
   sendSuccess,
   sendError,
@@ -59,7 +60,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Get audit logs for current tenant only (Gate D.3: RLS-enforced)
    * Manual tenant filter removed; RLS policies handle tenant boundary
    */
-  fastify.get('/tenant/audit-logs', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.get('/tenant/audit-logs', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const dbContext = request.dbContext;
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
@@ -116,7 +117,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get(
     '/tenant/catalog/items',
-    { onRequest: tenantAuthMiddleware },
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
       // Fail-closed: require database context (from databaseContextMiddleware)
       if (!request.dbContext) {
