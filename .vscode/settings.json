@@ -100,6 +100,14 @@
   "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
   },
+  // Prevent Prettier format-on-save for TypeScript files during surgical edits
+  // (avoids large formatting-only diffs on targeted changes)
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": false
+  },
   // Suppress Connected Mode notifications
   "sonarlint.focusOnNewCode": false
 }
