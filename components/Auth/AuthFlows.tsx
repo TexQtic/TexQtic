@@ -19,24 +19,39 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedTenantId, setSelectedTenantId] = useState(SEEDED_TENANTS[0].id);
+  // Explicit <string> type so onChange (e.target.value: string) is assignable to the setter
+  const [selectedTenantId, setSelectedTenantId] = useState<string>(SEEDED_TENANTS[0].id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     setLoading(true);
+
+    // Trim email to avoid whitespace-induced 401s (backend does exact match)
+    const cleanEmail = email.trim();
+
+    // Guard: tenantId must always be present for tenant realm
+    if (!isAdminRealm && !selectedTenantId) {
+      setError('Please select a tenant.');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await login(
-        { email, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
+        { email: cleanEmail, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
         realm as AuthRealm
       );
       onSuccess(response);
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      // Differentiate rate-limit from credential failure for actionable UX
+      if (err.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
+        setError('Too many login attempts. Please wait 10 minutes and try again.');
+      } else {
+        setError(err.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
