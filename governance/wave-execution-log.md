@@ -41,6 +41,33 @@ Lessons learned / adjustments required.
 
 ---
 
+# Wave 2 — Stabilization (In Progress)
+
+Start Date: 2026-02-21
+End Date: —
+Branch: main
+Tag: —
+
+#### Objective
+
+Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` (canonical per Decision-0001). Enforce FORCE RLS on commerce tables. Add orders/order_items policies. Standardize middleware and clean up dual-context pattern.
+
+#### G-001 — VALIDATED 2026-02-21
+
+- Commit `25a5519` — initial context variable substitution in all policy bodies (`rls.sql`)
+- Commit `1389ed7` — add comprehensive legacy DROP POLICY cleanup block (old per-op naming: `_tenant_select/_insert/_update/_delete` variants dropped; orphan `tenants_tenant_read` + `users_tenant_read` dropped)
+- Proof run output:
+  - Step 1: 0 policies reference `app.tenant_id` ✅
+  - Step 2: 20 policies reference `app.org_id` ✅
+  - Step 3: Cross-tenant isolation — WL context reads 0 non-WL cart rows ✅
+
+#### Gaps In Progress
+
+- G-002 — FORCE RLS on commerce tables (next)
+- G-003 — orders + order_items policies (partially present — confirmed in Step 2)
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation

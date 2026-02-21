@@ -7,7 +7,7 @@ Branch: wave-2-stabilization
 
 # 🔴 CRITICAL PATH
 
-- [ ] G-001 — RLS context variable unification (`app.tenant_id` → `app.org_id` in all policies) — SQL committed `25a5519`; pending DB proof
+- [x] G-001 — RLS context variable unification (`app.tenant_id` → `app.org_id` in all policies) — VALIDATED `1389ed7` — Step 1: 0 rows · Step 2: 20 policies · Step 3: 0 cross-tenant rows
 - [ ] G-002 — FORCE RLS on all tenant commerce tables (`carts`, `orders`, `order_items`, `catalog_items`, `cart_items`)
 - [ ] G-003 — Add SELECT + INSERT RLS policies for `orders` + `order_items`
 - [ ] G-013 — CI 0-row cross-tenant proof (automated, PR-gated)
