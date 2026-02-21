@@ -41,7 +41,7 @@ const ADMIN_TOKEN_KEY = 'texqtic_admin_token';
 const AUTH_REALM_KEY = 'texqtic_auth_realm';
 
 // Flip to true locally to diagnose auth request issues. Never commit as true.
-const AUTH_DEBUG = false;
+const AUTH_DEBUG = true;
 
 // Wave 0-A: AbortController for in-flight request cancellation
 let currentAbortController = new AbortController();

@@ -8,7 +8,7 @@ import { post, get, setToken, clearAuth, getAuthRealm } from './apiClient';
 import type { AuthRealm } from './apiClient';
 
 // Flip to true locally to inspect login payloads (never commit as true)
-const AUTH_DEBUG = false;
+const AUTH_DEBUG = true;
 
 export interface LoginCredentials {
   email: string;
@@ -82,8 +82,20 @@ export async function login(
   // post<any> so we can inspect the shape before typing it
   const raw = await post<any>(endpoint, body);
 
+  if (AUTH_DEBUG) {
+    console.log('[auth] raw response shape', {
+      rawKeys: raw ? Object.keys(raw) : null,
+      hasToken: !!(raw?.token),
+      hasDataToken: !!(raw?.data?.token),
+    });
+  }
+
   // Normalize: handle both unwrapped { token, ... } and wrapped { data: { token, ... } }
   const payload: LoginResponse = raw?.data?.token ? raw.data : raw;
+
+  if (AUTH_DEBUG) {
+    console.log('[auth] setToken called', { hasToken: !!payload.token, realm });
+  }
 
   // Store token — must run before returning so token is available on next request
   setToken(payload.token, realm);
