@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { login } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
 
+// Flip to true locally to inspect login payloads without exposing tokens
+const DEBUG_AUTH = false;
+
 // TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
 const SEEDED_TENANTS = [
   { slug: 'acme-corp', id: 'faf2e4a7-5d79-4b00-811b-8d0dce4f4d80', label: 'Acme Corporation' },
@@ -40,6 +43,15 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     }
 
     try {
+      if (DEBUG_AUTH) {
+        console.log('[auth] submit payload (redacted)', {
+          email: cleanEmail,
+          passwordLength: password.length,
+          tenantId: isAdminRealm ? 'N/A (admin realm)' : selectedTenantId,
+          realm,
+        });
+      }
+
       const response = await login(
         { email: cleanEmail, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
         realm as AuthRealm

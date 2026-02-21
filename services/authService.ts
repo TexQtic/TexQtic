@@ -7,6 +7,9 @@
 import { post, get, setToken, clearAuth, getAuthRealm } from './apiClient';
 import type { AuthRealm } from './apiClient';
 
+// Flip to true locally to inspect login payloads (never commit as true)
+const DEBUG_AUTH = false;
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -57,9 +60,24 @@ export async function login(
   const isAdmin = realm === 'CONTROL_PLANE';
   const endpoint = isAdmin ? '/api/auth/admin/login' : '/api/auth/tenant/login';
 
+  // CRITICAL: clear any stale token BEFORE calling post().
+  // apiRequest() reads getToken() and attaches it as Authorization header on every
+  // request — including login itself. If a stale/expired token exists, the server
+  // rejects it with 401, hadToken=true triggers a page redirect, and the user sees
+  // "spinner → back to login" with no error message shown.
+  clearAuth();
+
   const body = isAdmin
     ? { email: credentials.email, password: credentials.password }
     : { email: credentials.email, password: credentials.password, tenantId: credentials.tenantId };
+
+  if (DEBUG_AUTH) {
+    console.log('[auth] login attempt', {
+      endpoint,
+      hasTenantId: !isAdmin && !!credentials.tenantId,
+      tenantId: !isAdmin ? credentials.tenantId : 'N/A',
+    });
+  }
 
   // post<any> so we can inspect the shape before typing it
   const raw = await post<any>(endpoint, body);
