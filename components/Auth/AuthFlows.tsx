@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { login } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
 
+// TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
+const SEEDED_TENANTS = [
+  { slug: 'acme-corp', id: 'faf2e4a7-5d79-4b00-811b-8d0dce4f4d80', label: 'Acme Corporation' },
+  { slug: 'white-label-co', id: '960c2e3b-64cf-4ba8-88d1-4e8f72d61782', label: 'White Label Co' },
+] as const;
+
 interface AuthFormProps {
   realm: 'TENANT' | 'CONTROL_PLANE';
   onSuccess: (data: any) => void;
@@ -13,6 +19,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedTenantId, setSelectedTenantId] = useState(SEEDED_TENANTS[0].id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,12 +30,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
     setLoading(true);
 
     try {
-      // TODO: Replace hardcoded tenantId with dynamic resolution via
-      //       GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
-      //       acme-corp: faf2e4a7-5d79-4b00-811b-8d0dce4f4d80
-      const TEMP_TENANT_ID = 'faf2e4a7-5d79-4b00-811b-8d0dce4f4d80';
       const response = await login(
-        { email, password, tenantId: isAdminRealm ? undefined : TEMP_TENANT_ID },
+        { email, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
         realm as AuthRealm
       );
       onSuccess(response);
@@ -96,6 +99,31 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
               required
             />
           </div>
+
+          {!isAdminRealm && (
+            <div className="space-y-1">
+              <label
+                htmlFor="tenant"
+                className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+              >
+                Tenant
+              </label>
+              {/* TODO: Replace with dynamic tenant resolver once GET /api/public/tenants/resolve exists */}
+              <select
+                id="tenant"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                value={selectedTenantId}
+                onChange={e => setSelectedTenantId(e.target.value)}
+                disabled={loading}
+              >
+                {SEEDED_TENANTS.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <button
             type="submit"
