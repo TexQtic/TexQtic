@@ -262,6 +262,77 @@ Zero 500s. Zero "context missing" / UNAUTHORIZED errors. RLS isolation intact.
 
 ---
 
+#### G-006 — BLOCKED 2026-02-22
+
+**Gap:** Remove legacy 2-arg `withDbContext({ isAdmin: true }, fn)` in `auth.ts` and align admin login to canonical context construction.
+
+**Pre-implementation grep discovery (mandatory per spec):**
+
+Full grep `server/src/**/*.ts` for pattern `withDbContext\(\{`:
+
+| File | Line | Pattern | Scope |
+|------|------|---------|-------|
+| `routes/auth.ts` | 438 | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target |
+| `routes/auth.ts` | 653 | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target (not in prior discovery summary) |
+| `routes/auth.ts` | 162 | `withDbContext({ tenantId }, …)` | ❌ Deferred → G-006D |
+| `routes/auth.ts` | 873 | `withDbContext({ tenantId }, …)` | ❌ Deferred → G-006D |
+| `routes/admin-cart-summaries.ts` | 52 | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C |
+| `routes/admin-cart-summaries.ts` | 140 | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C |
+| `__tests__/gate-e-4-audit…ts` | 182, 236, 286, 358, 437, 494 | various | ❌ Test scope, out of G-006 |
+
+**Implementation attempted:**
+
+- Added `import { withDbContext as withDbContextCanonical, type DatabaseContext } from '../lib/database-context.js'`
+- Added `const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001'`
+- Replaced lines 438 + 653 with canonical 3-arg form: `withDbContextCanonical(prisma, adminCtx, async tx => { … })`
+- typecheck EXIT 0 ✅ · lint 68w/0e ✅
+
+**Implementation commit:** `f196445`
+
+**Runtime validation — FAILED:**
+
+| Test | Result | Detail |
+|------|--------|--------|
+| `POST /api/auth/admin/login` | ❌ 500 INTERNAL_ERROR | PG-42501: `permission denied for table admin_users` |
+
+**Root cause identified from server logs:**
+
+```
+prisma:query SET LOCAL ROLE texqtic_app
+...
+prisma:query SELECT … FROM "public"."admin_users" …
+prisma:error ConnectorError { code: "42501", message: "permission denied for table admin_users" }
+```
+
+- Canonical `withDbContext` executes `SET LOCAL ROLE texqtic_app`
+- `texqtic_app` role does NOT have `GRANT SELECT` on `admin_users` table
+- Legacy `withDbContext({ isAdmin: true })` executed `SET ROLE app_user` — which DOES have the grant
+- DB permission boundary is different for admin-only tables vs tenant data tables
+
+**Stop-Loss — revert executed:**
+
+- `git revert --no-edit f196445` → `c9ef413`
+- Admin login restored: `POST /api/auth/admin/login` → 200 `success=True` ✅
+
+**Revert commit:** `c9ef413`
+
+**Formal Design Options (awaiting user decision):**
+
+| Option | Description | DB change? | Code change? |
+|--------|-------------|-----------|-------------|
+| A | Grant `texqtic_app` SELECT on `admin_users` → re-apply canonical form | ✅ Yes | Same as `f196445` |
+| B | Use `prisma.adminUser.findUnique()` directly (no role switch) in login callbacks | ❌ No | Different code shape |
+| C | Lock G-006 to NOT include auth.ts admin login calls; redefine scope | ❌ No | No change to auth.ts |
+
+**Follow-on gaps formally logged:**
+
+- **G-006C** — `admin-cart-summaries.ts` lines 52 + 140 (`isAdmin: true`); Wave 3; OPEN
+- **G-006D** — `auth.ts` lines 166 + 889 (`tenantId` form); Wave TBD; OPEN
+
+**Status:** BLOCKED — awaiting design decision before any implementation retry.
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
