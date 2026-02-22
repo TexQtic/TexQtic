@@ -8,8 +8,11 @@ BEGIN;
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- PART 1: FIX HELPER FUNCTIONS (function_search_path_mutable)
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- Doctrine v1.4: canonical tenant key = app.org_id (NOT app.tenant_id)
+-- is_local=true on ALL set_config calls — transaction-scoped, prevents pooler bleed
+-- (session-global set_config leaks tenant context across pooled connections → cross-tenant data exposure)
+-- G-007: false→true (tx-local) | G-007-HOTFIX: restore app.org_id key | G-007B: repo reconcile + anti-regression
 -- Set tenant context (fixes search_path warning)
--- G-007: tx-local (is_local=true); G-007-HOTFIX: restored app.org_id canonical key (Doctrine v1.4)
 CREATE OR REPLACE FUNCTION public.set_tenant_context(
     p_tenant_id uuid,
     p_is_admin boolean DEFAULT false
@@ -27,13 +30,14 @@ $BODY$;
 -- Set admin context (fixes search_path warning)
 CREATE OR REPLACE FUNCTION public.set_admin_context() RETURNS void LANGUAGE plpgsql
 SET search_path = public,
-  pg_catalog AS $BODY$ BEGIN -- G-007: is_local=true — transaction-scoped; prevents pooler bleed
+  pg_catalog AS $BODY$ BEGIN -- G-007B: is_local=true — transaction-scoped; prevents pooler bleed (Doctrine v1.4)
   PERFORM set_config('app.is_admin', 'true', true);
-PERFORM set_config('app.tenant_id', '', true);
+  PERFORM set_config('app.tenant_id', '', true);
 END;
 $BODY$;
 -- Clear context (fixes search_path warning)
--- G-007: tx-local (is_local=true); G-007-HOTFIX: also clears app.org_id canonical key
+-- Doctrine v1.4: clears app.org_id (canonical), app.tenant_id (legacy/defensive), app.is_admin
+-- G-007: tx-local | G-007-HOTFIX: clear app.org_id | G-007B: explicit pooler-bleed prevention note
 CREATE OR REPLACE FUNCTION public.clear_context() RETURNS void LANGUAGE plpgsql
 SET search_path = public,
   pg_catalog AS $BODY$ BEGIN
@@ -101,25 +105,28 @@ CREATE POLICY feature_flags_deny_all ON public.feature_flags FOR ALL USING (fals
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- PART 5: ADD POLICIES TO TENANT-SCOPED TABLES (rls_enabled_no_policy)
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
--- Policy Pattern: tenant_id match OR admin bypass
+-- Doctrine v1.4: Policy Pattern uses app.org_id (canonical) OR admin bypass
+-- G-007B anti-regression: all policies updated from app.tenant_id → app.org_id
+-- Note: rls.sql supersedes these per-op policies with FOR ALL policies on canonical key.
+-- These per-op policies remain as a defence-in-depth fallback for standalone apply.
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- tenant_domains (already has RLS, add policies)
 DROP POLICY IF EXISTS tenant_domains_tenant_select ON public.tenant_domains;
 CREATE POLICY tenant_domains_tenant_select ON public.tenant_domains FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_domains_tenant_insert ON public.tenant_domains;
 CREATE POLICY tenant_domains_tenant_insert ON public.tenant_domains FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_domains_tenant_update ON public.tenant_domains;
 CREATE POLICY tenant_domains_tenant_update ON public.tenant_domains FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_domains_tenant_delete ON public.tenant_domains;
@@ -130,19 +137,19 @@ CREATE POLICY tenant_domains_tenant_delete ON public.tenant_domains FOR DELETE U
 DROP POLICY IF EXISTS tenant_branding_tenant_select ON public.tenant_branding;
 CREATE POLICY tenant_branding_tenant_select ON public.tenant_branding FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_branding_tenant_insert ON public.tenant_branding;
 CREATE POLICY tenant_branding_tenant_insert ON public.tenant_branding FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_branding_tenant_update ON public.tenant_branding;
 CREATE POLICY tenant_branding_tenant_update ON public.tenant_branding FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_branding_tenant_delete ON public.tenant_branding;
@@ -153,91 +160,91 @@ CREATE POLICY tenant_branding_tenant_delete ON public.tenant_branding FOR DELETE
 DROP POLICY IF EXISTS memberships_tenant_select ON public.memberships;
 CREATE POLICY memberships_tenant_select ON public.memberships FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS memberships_tenant_insert ON public.memberships;
 CREATE POLICY memberships_tenant_insert ON public.memberships FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS memberships_tenant_update ON public.memberships;
 CREATE POLICY memberships_tenant_update ON public.memberships FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS memberships_tenant_delete ON public.memberships;
 CREATE POLICY memberships_tenant_delete ON public.memberships FOR DELETE USING (
-  tenant_id = current_setting('app.tenant_id', true)::uuid
+  tenant_id = current_setting('app.org_id', true)::uuid
   OR current_setting('app.is_admin', true) = 'true'
 );
 -- invites (already has RLS, add policies)
 DROP POLICY IF EXISTS invites_tenant_select ON public.invites;
 CREATE POLICY invites_tenant_select ON public.invites FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS invites_tenant_insert ON public.invites;
 CREATE POLICY invites_tenant_insert ON public.invites FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS invites_tenant_update ON public.invites;
 CREATE POLICY invites_tenant_update ON public.invites FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS invites_tenant_delete ON public.invites;
 CREATE POLICY invites_tenant_delete ON public.invites FOR DELETE USING (
-  tenant_id = current_setting('app.tenant_id', true)::uuid
+  tenant_id = current_setting('app.org_id', true)::uuid
   OR current_setting('app.is_admin', true) = 'true'
 );
 -- password_reset_tokens (already has RLS, add policies)
 DROP POLICY IF EXISTS password_reset_tokens_tenant_select ON public.password_reset_tokens;
 CREATE POLICY password_reset_tokens_tenant_select ON public.password_reset_tokens FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS password_reset_tokens_tenant_insert ON public.password_reset_tokens;
 CREATE POLICY password_reset_tokens_tenant_insert ON public.password_reset_tokens FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS password_reset_tokens_tenant_update ON public.password_reset_tokens;
 CREATE POLICY password_reset_tokens_tenant_update ON public.password_reset_tokens FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS password_reset_tokens_tenant_delete ON public.password_reset_tokens;
 CREATE POLICY password_reset_tokens_tenant_delete ON public.password_reset_tokens FOR DELETE USING (
-  tenant_id = current_setting('app.tenant_id', true)::uuid
+  tenant_id = current_setting('app.org_id', true)::uuid
   OR current_setting('app.is_admin', true) = 'true'
 );
 -- tenant_feature_overrides (already has RLS, add policies)
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_select ON public.tenant_feature_overrides;
 CREATE POLICY tenant_feature_overrides_tenant_select ON public.tenant_feature_overrides FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_insert ON public.tenant_feature_overrides;
 CREATE POLICY tenant_feature_overrides_tenant_insert ON public.tenant_feature_overrides FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_update ON public.tenant_feature_overrides;
 CREATE POLICY tenant_feature_overrides_tenant_update ON public.tenant_feature_overrides FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_delete ON public.tenant_feature_overrides;
@@ -248,19 +255,19 @@ CREATE POLICY tenant_feature_overrides_tenant_delete ON public.tenant_feature_ov
 DROP POLICY IF EXISTS ai_budgets_tenant_select ON public.ai_budgets;
 CREATE POLICY ai_budgets_tenant_select ON public.ai_budgets FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS ai_budgets_tenant_insert ON public.ai_budgets;
 CREATE POLICY ai_budgets_tenant_insert ON public.ai_budgets FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS ai_budgets_tenant_update ON public.ai_budgets;
 CREATE POLICY ai_budgets_tenant_update ON public.ai_budgets FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS ai_budgets_tenant_delete ON public.ai_budgets;
@@ -271,19 +278,19 @@ CREATE POLICY ai_budgets_tenant_delete ON public.ai_budgets FOR DELETE USING (
 DROP POLICY IF EXISTS ai_usage_meters_tenant_select ON public.ai_usage_meters;
 CREATE POLICY ai_usage_meters_tenant_select ON public.ai_usage_meters FOR
 SELECT USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS ai_usage_meters_tenant_insert ON public.ai_usage_meters;
 CREATE POLICY ai_usage_meters_tenant_insert ON public.ai_usage_meters FOR
 INSERT WITH CHECK (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS ai_usage_meters_tenant_update ON public.ai_usage_meters;
 CREATE POLICY ai_usage_meters_tenant_update ON public.ai_usage_meters FOR
 UPDATE USING (
-    tenant_id = current_setting('app.tenant_id', true)::uuid
+    tenant_id = current_setting('app.org_id', true)::uuid
     OR current_setting('app.is_admin', true) = 'true'
   );
 DROP POLICY IF EXISTS ai_usage_meters_tenant_delete ON public.ai_usage_meters;
@@ -322,15 +329,16 @@ DROP POLICY IF EXISTS audit_logs_tenant_read ON public.audit_logs;
 DROP POLICY IF EXISTS audit_logs_no_update ON public.audit_logs;
 DROP POLICY IF EXISTS audit_logs_no_delete ON public.audit_logs;
 -- SELECT: Tenant-scoped read (own logs only) OR admin can see all
+-- G-007B: uses app.org_id (Doctrine v1.4 canonical key)
 CREATE POLICY audit_logs_select ON public.audit_logs FOR
 SELECT USING (
     (
-      tenant_id = current_setting('app.tenant_id', true)::uuid
+      tenant_id = current_setting('app.org_id', true)::uuid
     )
     OR current_setting('app.is_admin', true) = 'true'
   );
 -- INSERT: Enforce proper tenant context (NOT always true!)
--- Rule: Admin logs have tenant_id = null, tenant logs must match app.tenant_id
+-- Rule: Admin logs have tenant_id = null, tenant logs must match app.org_id (Doctrine v1.4)
 CREATE POLICY audit_logs_insert_strict ON public.audit_logs FOR
 INSERT WITH CHECK (
     -- Admin logs: tenant_id must be null AND must be admin context
@@ -341,7 +349,7 @@ INSERT WITH CHECK (
     OR -- Tenant logs: tenant_id must match session context
     (
       tenant_id IS NOT NULL
-      AND tenant_id = current_setting('app.tenant_id', true)::uuid
+      AND tenant_id = current_setting('app.org_id', true)::uuid
     )
   );
 -- UPDATE: Deny all (append-only requirement)
