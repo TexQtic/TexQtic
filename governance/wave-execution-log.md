@@ -784,6 +784,56 @@ SELECT key FROM feature_flags WHERE key IN ('OP_PLATFORM_READ_ONLY','OP_AI_AUTOM
 
 ---
 
+#### G-011 — VALIDATED 2026-02-22 (impersonation session routes missing)
+
+**Gap:** No impersonation endpoints existed in any route file.
+
+**Fix:** Added dedicated plugin `server/src/routes/admin/impersonation.ts` with:
+- `POST /api/control/impersonation/start` — creates `ImpersonationSession`, returns time-bounded tenant JWT (30-min `exp` in payload)
+- `POST /api/control/impersonation/stop` — sets `endedAt`, writes IMPERSONATION_STOP audit
+- `GET /api/control/impersonation/status/:impersonationId` — returns active/ended state
+
+**Revocation strategy:** JWT TTL (exp-based) + `endedAt` DB marker. `tenantAuthMiddleware` untouched per allowlist constraint; revocation is exp-based only, documented.
+
+**Static gates:**
+```
+tsc --noEmit → EXIT 0 (0 errors)
+eslint → 0 errors (only .eslintignore deprecation warning)
+git diff --name-only → only allowlist files
+app.tenant_id match → line 22 JSDoc comment only (no code usage)
+$transaction in route file → 0 matches
+```
+
+**Functional validation:**
+```
+POST /api/control/impersonation/start
+  → 201 OK — impersonationId=69ec58c8-...; expiresAt=2026-02-22T14:52:06Z; token present=True ✅
+
+GET /api/control/impersonation/status/69ec58c8-...
+  → 200 — active=true; endedAt=null ✅
+
+POST /api/control/impersonation/stop
+  → 200 OK ✅
+
+GET /api/control/impersonation/status/69ec58c8-... (after stop)
+  → 200 — active=false; endedAt=2026-02-22T14:22:27Z ✅
+
+Neg-1 (tenant JWT on admin route) → 401 ✅
+Neg-2 (missing reason field)      → 400 ✅
+Neg-3 (userId not a member)       → 404 ✅
+```
+
+**Commits:**
+
+| Commit | Description |
+|---|---|
+| `3860447` | `feat(G-011)`: control-plane impersonation routes with auditable, time-bounded tokens |
+| (this commit) | `governance(G-011)`: proof + validation outputs |
+
+**Validation status: VALIDATED ✅ — 2026-02-22**
+
+---
+
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
 
 Start Date: 2026-02-12
