@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
@@ -15,6 +16,7 @@ import {
 } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
+import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
@@ -672,12 +674,25 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (!cart) return { error: 'CART_NOT_FOUND' };
       if (cart.items.length === 0) return { error: 'CART_EMPTY' };
 
-      // Compute totals (Decimal → number for arithmetic)
+      // Compute totals via canonical Phase-1 function (G-010)
+      // Stop-loss: TotalsInputError thrown if unitPrice/quantity invalid (never silent)
       const cartItems = cart.items;
-      const subtotal = cartItems.reduce((sum: number, item: typeof cartItems[number]) => {
-        return sum + Number(item.catalogItem.price) * item.quantity;
-      }, 0);
-      const total = subtotal; // stub: no tax/fees
+      let totals;
+      try {
+        totals = computeTotals(
+          cartItems.map((item: typeof cartItems[number]) => ({
+            unitPrice: Number(item.catalogItem.price),
+            quantity: item.quantity,
+          })),
+          'USD'
+        );
+      } catch (err) {
+        if (err instanceof TotalsInputError) {
+          return { error: 'INVALID_LINE_ITEM', code: err.code, message: err.message };
+        }
+        throw err;
+      }
+      const { subtotal, grandTotal: total, discountTotal, taxTotal, feeTotal, breakdown } = totals;
 
       // Create order + items + mark cart checked-out in single transaction
       const order = await tx.order.create({
@@ -686,7 +701,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           userId: userId!,
           cartId: cart.id,
           status: 'PAYMENT_PENDING',
-          currency: 'USD',
+          currency: totals.currency,
           subtotal,
           total,
           items: {
@@ -719,8 +734,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         metadataJson: {
           cartId: cart.id,
           itemCount: cart.items.length,
-          subtotal,
-          total,
+          totals: { subtotal, discountTotal, taxTotal, feeTotal, grandTotal: total, currency: totals.currency, breakdown } as unknown as Prisma.JsonValue,
           orderId: order.id,
           durationMs: Date.now() - t0,
         },
@@ -729,16 +743,26 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return {
         orderId: order.id,
         status: order.status,
-        subtotal,
-        total,
-        currency: order.currency,
+        currency: totals.currency,
         itemCount: cart.items.length,
+        totals: {
+          subtotal,
+          discountTotal,
+          taxableAmount: totals.taxableAmount,
+          taxTotal,
+          feeTotal,
+          grandTotal: total,
+          breakdown,
+        },
       };
     });
 
     if ('error' in result) {
       if (result.error === 'CART_NOT_FOUND') return sendNotFound(reply, 'No active cart found');
       if (result.error === 'CART_EMPTY') return sendError(reply, 'BAD_REQUEST', 'Cart is empty', 400);
+      if (result.error === 'INVALID_LINE_ITEM') {
+        return sendError(reply, 'BAD_REQUEST', `Checkout aborted: ${result.message}`, 400);
+      }
     }
 
     return sendSuccess(reply, result, 201);
