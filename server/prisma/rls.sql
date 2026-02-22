@@ -184,7 +184,20 @@ SELECT USING (
     )
     OR current_setting('app.is_admin', true) = 'true'
   );
--- tenants table: no RLS policy needed; app layer enforces admin checks
+-- tenants table: supabase_hardening.sql installs tenants_deny_all (FOR ALL USING false)
+-- as a defence-in-depth baseline. That policy blocks app_user (NOBYPASSRLS) from
+-- reading the tenant row during login, because Prisma fetches membership.tenant
+-- as a nested relation — causing membership.tenant = null → TypeError → 500.
+-- Fix: add a permissive SELECT that allows app_user to read exactly the current
+-- org's row (id = app.org_id) or any row in admin context.
+-- tenants_deny_all remains intact and is OR-combined with this policy per Postgres
+-- permissive-policy semantics; it continues to block anon/authenticated roles.
+DROP POLICY IF EXISTS tenants_app_user_select ON public.tenants;
+CREATE POLICY tenants_app_user_select ON public.tenants FOR
+SELECT USING (
+    id::text = current_setting('app.org_id', true)
+    OR current_setting('app.is_admin', true) = 'true'
+  );
 -- ============================================================
 -- HELPER FUNCTION: Set DB session context safely
 -- ============================================================
