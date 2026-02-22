@@ -453,6 +453,24 @@ Zero 500s. Zero PG errors. Context isolation preserved.
 
 **Implementation commit:** `09365b2`
 
+**G-007-HOTFIX — 2026-02-22**
+
+**Root cause (discovered post-apply):** G-007's `set_tenant_context` replaced `app.tenant_id` with `p_tenant_id::text` using `is_local=true`, but TexQtic RLS policies read `app.org_id` (Doctrine v1.4 canonical key) — not `app.tenant_id`. Result: tenant login reached DB, found user, but RLS policies evaluated `current_setting('app.org_id', true)` = `''` → tenant rows invisible → AUTH_INVALID / INTERNAL_ERROR in prod.
+
+**Hotfix changes (`80d4501`):**
+
+| Function | Change |
+|---|---|
+| `set_tenant_context` | Sets `app.org_id` (canonical, was missing), sets `app.is_admin` with CASE (boolean-safe), clears `app.tenant_id` defensively |
+| `clear_context` | Clears `app.org_id` (canonical), `app.is_admin`, `app.tenant_id` |
+| `set_admin_context` | Unchanged |
+
+**DB applied:** `CREATE OR REPLACE` run in Supabase SQL editor. `pg_get_functiondef` confirmed `app.org_id` present.
+
+**G-007 tx-local safety (`is_local=true`) fully preserved throughout hotfix.**
+
+**Hotfix commit:** `80d4501`
+
 ---
 
 # Wave History
