@@ -224,6 +224,20 @@ async function main() {
       enabled: false,
       description: 'Enable multi-currency support',
     },
+    // G-009: OP_* control-plane operation flags (Doctrine v1.4 §2 Feature Flags)
+    // Seeded disabled by default; control plane enables at runtime as needed.
+    {
+      key: 'OP_PLATFORM_READ_ONLY',
+      enabled: false,
+      description:
+        'OP flag — activates global platform read-only mode; blocks all state-changing tenant operations when enabled',
+    },
+    {
+      key: 'OP_AI_AUTOMATION_ENABLED',
+      enabled: false,
+      description:
+        'OP flag — enables AI guardrails and automation pipelines; must be explicitly enabled by control plane before AI-driven workflows run',
+    },
   ];
 
   for (const flag of flags) {
