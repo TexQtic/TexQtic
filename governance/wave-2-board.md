@@ -18,6 +18,7 @@ Branch: wave-2-stabilization
 
 - [x] G-004 — Remove dual `withDbContext`; unify `control.ts` to canonical pattern (`src/lib/database-context.ts`) — VALIDATED `a19f30b` — 13 legacy call sites migrated · `withAdminContext` helper (canonical + `app.is_admin`) · 0 invocations of legacy import remain · typecheck/lint EXIT 0
 - [x] G-005-BLOCKER — Restore tenant login: add `users_tenant_select` policy on `public.users` (FORCE RLS + no policy → deny-all) — VALIDATED `b060f60` — Proof 1: policy exists w/ `app.org_id` qual · Proof 2: member read 1 row · Proof 3: cross-tenant 0 rows · typecheck/lint EXIT 0
+- [x] G-TENANTS-SELECT — Fix login 500: `tenants_deny_all` blocked `app_user` nested relation read (`membership.tenant` → null → TypeError); add `tenants_app_user_select` (SELECT, `id = app.org_id`) — VALIDATED `94da295` — A: policy in pg_policies · B: cross-tenant 0 rows · C: ACME 1 row ACTIVE · D: set_tenant_context 1 row ACTIVE · `tenants_deny_all` remains intact · typecheck/lint EXIT 0
 - [ ] G-005 — Standardize middleware: ALL tenant routes use `[tenantAuthMiddleware, databaseContextMiddleware]`
 - [ ] G-006 — Align admin bypass to new context model (control-plane realm check replaces `app.is_admin`)
 - [ ] G-007 — Fix `supabase_hardening.sql` `set_config(..., false)` → `true` (transaction-local, pooler-safe)

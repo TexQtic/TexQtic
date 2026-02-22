@@ -169,6 +169,41 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 
 ---
 
+#### G-TENANTS-SELECT — VALIDATED 2026-02-22
+
+- Commit `94da295` — `fix(rls): allow app_user select on tenants scoped by app.org_id`
+- File changed: `server/prisma/rls.sql` (1 file, 14 insertions, 1 deletion)
+- Root cause:
+  - `supabase_hardening.sql` installed `tenants_deny_all` (FOR ALL USING false) on `public.tenants` as defence-in-depth
+  - No matching SELECT policy existed for `app_user` (NOBYPASSRLS role)
+  - Prisma fetches `membership.tenant` as a nested relation during login; FORCE RLS → 0 rows → Prisma resolves relation as `null`
+  - `auth.ts` reads `membership.tenant.status` without null guard → TypeError → 500 INTERNAL_ERROR `"Login failed"`
+  - This code path was unreachable before G-005-BLOCKER (user reads returned 0 → `result = null` → 401, never reached membership.tenant)
+- Fix:
+  - Added `tenants_app_user_select` policy: `id::text = current_setting('app.org_id', true) OR is_admin = 'true'`
+  - Exposure strictly one row: `tenants.id == app.org_id` — no tenant listing possible without org_id
+  - `tenants_deny_all` (FOR ALL/false) remains intact; permissive policies are OR-combined per Postgres semantics — it continues blocking anon/authenticated roles
+- Applied via: `psql "--dbname=$dbUrl" -f __apply_tenants_policy.sql` → APPLY_EXIT:0
+- Proof A (policy in pg_policies):
+  - `tenants_app_user_select` present · cmd=SELECT · qual=`id::text = app.org_id OR is_admin = 'true'` ✅
+  - `tenants_deny_all` still present · cmd=ALL · qual=false ✅
+- Proof B (negative control — cross-tenant):
+  - `SET LOCAL ROLE app_user; set_config('app.org_id', ACME_UUID)` → `SELECT id FROM tenants WHERE id = WL_UUID` → **0 rows** ✅
+- Proof C (positive control — same-tenant):
+  - `SET LOCAL ROLE app_user; set_config('app.org_id', ACME_UUID)` → `SELECT id, status FROM tenants WHERE id = ACME_UUID` → **1 row, ACTIVE** ✅
+- Proof D (login path via set_tenant_context):
+  - `SET LOCAL ROLE app_user; set_tenant_context(ACME_UUID)` → `SELECT id, status FROM tenants WHERE id = ACME_UUID` → **1 row, ACTIVE** ✅
+- Gate outputs:
+  - `pnpm -C server run typecheck` → EXIT 0 ✅
+  - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors)
+- Risk assessment:
+  - Row exposure: strictly `tenants.id == app.org_id` — one row max, no listing
+  - Aligns with Doctrine v1.4 canonical context = `app.org_id`
+  - `tenants_deny_all` remains as baseline guardrail for non-app_user roles
+- Follow-up (not in scope): add null guard `membership.tenant?.status` in auth.ts to convert future RLS denials to 401/403 instead of 500 (Wave 2 tail hardening)
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
