@@ -9,7 +9,6 @@ import {
   sendNotFound,
   sendUnauthorized,
 } from '../utils/response.js';
-import type { Prisma } from '@prisma/client';
 import {
   withDbContext,
   type DatabaseContext,
@@ -865,55 +864,65 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         requestId: crypto.randomUUID(),
       };
 
-      // Create user and membership in transaction (RLS-enforced)
+      // G-014: Single atomic transaction — nested $transaction removed.
+      // All activation writes + audit log execute in one connection, one context lifecycle.
       const result = await withDbContext(prisma, dbContext, async tx => {
-        return await tx.$transaction(async (innerTx: Prisma.TransactionClient) => {
-          // Create or find user
-          let user = await innerTx.user.findUnique({
-            where: { email: userData.email },
-          });
+        // Stop-loss: assert app.org_id context is set to expected tenantId before any writes
+        const [ctxRow] = await tx.$queryRaw<[{ org_id: string }]>`
+          SELECT current_setting('app.org_id', true) AS org_id
+        `;
+        if (ctxRow?.org_id !== invite.tenantId) {
+          throw new Error(
+            `[G-014] Activation stop-loss: app.org_id mismatch. ` +
+              `Expected ${invite.tenantId}, got ${ctxRow?.org_id}`
+          );
+        }
 
-          user ??= await innerTx.user.create({
-            data: {
-              email: userData.email,
-              passwordHash,
-              emailVerified: true,
-              emailVerifiedAt: new Date(),
-            },
-          });
-
-          // Create membership (RLS will enforce tenant_id = org_id)
-          const membership = await innerTx.membership.create({
-            data: {
-              userId: user.id,
-              tenantId: invite.tenantId,
-              role: invite.role,
-            },
-          });
-
-          // Mark invite as accepted (RLS-enforced update)
-          await innerTx.invite.update({
-            where: { id: invite.id },
-            data: { acceptedAt: new Date() },
-          });
-
-          return { user, membership };
+        // Create or find user
+        let user = await tx.user.findUnique({
+          where: { email: userData.email },
         });
-      });
 
-      // Write audit log
-      await writeAuditLog(prisma, {
-        tenantId: invite.tenantId,
-        realm: 'TENANT',
-        actorType: 'USER',
-        actorId: result.user.id,
-        action: 'user.activated',
-        entity: 'user',
-        entityId: result.user.id,
-        metadataJson: {
-          inviteId: invite.id,
-          role: invite.role,
-        },
+        user ??= await tx.user.create({
+          data: {
+            email: userData.email,
+            passwordHash,
+            emailVerified: true,
+            emailVerifiedAt: new Date(),
+          },
+        });
+
+        // Create membership (RLS will enforce tenant_id = org_id)
+        const membership = await tx.membership.create({
+          data: {
+            userId: user.id,
+            tenantId: invite.tenantId,
+            role: invite.role,
+          },
+        });
+
+        // Mark invite as accepted (RLS-enforced update)
+        await tx.invite.update({
+          where: { id: invite.id },
+          data: { acceptedAt: new Date() },
+        });
+
+        // Write audit log inside the same transaction — atomic with activation writes (G-014)
+        await writeAuditLog(tx, {
+          tenantId: invite.tenantId,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: user.id,
+          action: 'user.activated',
+          entity: 'user',
+          entityId: user.id,
+          metadataJson: {
+            inviteId: invite.id,
+            role: invite.role,
+          },
+        });
+
+        return { user, membership };
       });
 
       return sendSuccess(reply, {
