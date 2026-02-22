@@ -10,6 +10,7 @@ import controlRoutes from './routes/control.js';
 import tenantRoutes from './routes/tenant.js';
 import adminCartSummariesRoutes from './routes/admin-cart-summaries.js';
 import aiRoutes from './routes/ai.js';
+import tenantProvisionRoutes from './routes/admin/tenantProvision.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -138,6 +139,8 @@ await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });
 await fastify.register(adminCartSummariesRoutes, { prefix: '/api/control/marketplace' });
 await fastify.register(aiRoutes, { prefix: '/api/ai' });
+// G-008: Canonical admin tenant provisioning (Doctrine v1.4)
+await fastify.register(tenantProvisionRoutes, { prefix: '/api/admin' });
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
