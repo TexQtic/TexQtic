@@ -509,7 +509,69 @@ Zero 500s. Zero PG errors. Context isolation preserved.
 
 ---
 
-# Wave History
+#### G-008 — IMPLEMENTED 2026-02-22 (admin tenant provisioning endpoint)
+
+**Objective:** Implement canonical `POST /api/admin/tenants/provision` endpoint under Doctrine v1.4 constitutional rules. Sole governed mechanism for tenant creation from the control plane.
+
+**Files created/modified:**
+
+| File | Change |
+|---|---|
+| `server/src/types/tenantProvision.types.ts` | NEW — `TenantProvisionRequest`, `TenantProvisionResult`, `ProvisionContext` interfaces |
+| `server/src/services/tenantProvision.service.ts` | NEW — `provisionTenant()`: single atomic tx, dual-phase context lifecycle |
+| `server/src/routes/admin/tenantProvision.ts` | NEW — Fastify plugin, `POST /tenants/provision`, admin guard + zod validation |
+| `server/src/index.ts` | MODIFIED — import + register at prefix `/api/admin` |
+
+**Constitutional compliance:**
+
+| Constraint | Status |
+|---|---|
+| `app.org_id` exclusively (NEVER `app.tenant_id` in set_config) | ✅ |
+| All `set_config` calls use `tx-local=true` | ✅ |
+| Admin context entered before any writes (Phase 1) | ✅ |
+| DB-level stop-loss: asserts `current_setting('app.is_admin')='true'` | ✅ |
+| Tenant context (`app.org_id=newOrgId`) set before membership creation (Phase 2) | ✅ |
+| Context auto-clears on tx commit (SET LOCAL semantics) | ✅ |
+| No global session bleed | ✅ |
+| `adminAuthMiddleware` + `request.isAdmin` guard (defense-in-depth) | ✅ |
+| Password hashed via bcrypt before tx open | ✅ |
+| No Prisma schema modification | ✅ |
+| No RLS policy modification | ✅ |
+
+**Static gates:**
+
+- `pnpm exec tsc --noEmit` → EXIT 0, 0 errors ✅
+- `pnpm exec eslint` on new files → 0 errors, 0 warnings ✅
+- `grep app.tenant_id` in functional code → 0 matches ✅
+- `grep set_config.*false` → 0 matches ✅
+- No context helper (database-context.ts) mutation ✅
+- Staged set matches allowlist exactly (4 files) ✅
+
+**GR-007 proof block (required before marking VALIDATED):**
+
+> These SQL proofs must be executed in production after first use of this endpoint:
+
+```sql
+-- 7.1 Function integrity
+SELECT pg_get_functiondef('set_tenant_context'::regproc);
+-- Must show: set_config('app.org_id', ..., true)
+-- Must NOT show: app.tenant_id
+
+-- 7.2a Membership visibility (after provisioning first tenant)
+SELECT count(*) FROM memberships;  -- Expected: >= 1
+
+-- 7.2b User visibility
+SELECT count(*) FROM users;        -- Expected: >= 1
+
+-- 7.2d Context leak check (fresh session)
+SELECT current_setting('app.org_id', true);  -- Must return NULL
+```
+
+**Implementation commit:** `1eb5a46`
+
+**Validation status:** IMPLEMENTED — GR-007 production proof pending first endpoint use
+
+---
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
 
