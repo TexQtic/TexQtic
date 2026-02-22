@@ -8,8 +8,9 @@ import {
   sendValidationError,
   sendRateLimitExceeded,
 } from '../utils/response.js';
-import { withDbContext } from '../db/withDbContext.js';
+import { withDbContext } from '../db/withDbContext.js'; // legacy — kept for tenantId calls (G-006D)
 import { prisma } from '../db/prisma.js';
+import { withDbContext as withDbContextCanonical, type DatabaseContext } from '../lib/database-context.js';
 import {
   generateSecureToken,
   hashToken,
@@ -32,6 +33,9 @@ import {
   createRefreshSession,
 } from '../utils/auth/index.js';
 import { config } from '../config/index.js';
+
+/** Admin sentinel UUID — used for canonical admin DB context (G-006) */
+const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
 
 /**
  * Password verification using bcrypt
@@ -435,7 +439,13 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      const result = await withDbContext({ isAdmin: true }, async tx => {
+      const adminCtx: DatabaseContext = {
+        orgId: ADMIN_SENTINEL_ID,
+        actorId: ADMIN_SENTINEL_ID,
+        realm: 'control',
+        requestId: randomUUID(),
+      };
+      const result = await withDbContextCanonical(prisma, adminCtx, async tx => {
         // Look up admin user
         const admin = await tx.adminUser.findUnique({
           where: { email },
@@ -650,7 +660,13 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Execute DB query within admin RLS context
-      const result = await withDbContext({ isAdmin: true }, async tx => {
+      const adminCtx: DatabaseContext = {
+        orgId: ADMIN_SENTINEL_ID,
+        actorId: ADMIN_SENTINEL_ID,
+        realm: 'control',
+        requestId: randomUUID(),
+      };
+      const result = await withDbContextCanonical(prisma, adminCtx, async tx => {
         // Look up admin user
         const admin = await tx.adminUser.findUnique({
           where: { email },
