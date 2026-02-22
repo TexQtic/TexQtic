@@ -19,47 +19,38 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 -- and must be removed before the canonical app.org_id policies are applied.
 -- IF EXISTS makes these safe to run on a clean DB.
 -- ============================================================
-
 DROP POLICY IF EXISTS tenant_domains_tenant_select ON tenant_domains;
 DROP POLICY IF EXISTS tenant_domains_tenant_insert ON tenant_domains;
 DROP POLICY IF EXISTS tenant_domains_tenant_update ON tenant_domains;
 DROP POLICY IF EXISTS tenant_domains_tenant_delete ON tenant_domains;
-
 DROP POLICY IF EXISTS tenant_branding_tenant_select ON tenant_branding;
 DROP POLICY IF EXISTS tenant_branding_tenant_insert ON tenant_branding;
 DROP POLICY IF EXISTS tenant_branding_tenant_update ON tenant_branding;
 DROP POLICY IF EXISTS tenant_branding_tenant_delete ON tenant_branding;
-
 DROP POLICY IF EXISTS memberships_tenant_select ON memberships;
 DROP POLICY IF EXISTS memberships_tenant_insert ON memberships;
 DROP POLICY IF EXISTS memberships_tenant_update ON memberships;
 DROP POLICY IF EXISTS memberships_tenant_delete ON memberships;
-
 DROP POLICY IF EXISTS invites_tenant_select ON invites;
 DROP POLICY IF EXISTS invites_tenant_insert ON invites;
 DROP POLICY IF EXISTS invites_tenant_update ON invites;
 DROP POLICY IF EXISTS invites_tenant_delete ON invites;
-
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_select ON tenant_feature_overrides;
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_insert ON tenant_feature_overrides;
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_update ON tenant_feature_overrides;
 DROP POLICY IF EXISTS tenant_feature_overrides_tenant_delete ON tenant_feature_overrides;
-
 DROP POLICY IF EXISTS ai_budgets_tenant_select ON ai_budgets;
 DROP POLICY IF EXISTS ai_budgets_tenant_insert ON ai_budgets;
 DROP POLICY IF EXISTS ai_budgets_tenant_update ON ai_budgets;
 DROP POLICY IF EXISTS ai_budgets_tenant_delete ON ai_budgets;
-
 DROP POLICY IF EXISTS ai_usage_meters_tenant_select ON ai_usage_meters;
 DROP POLICY IF EXISTS ai_usage_meters_tenant_insert ON ai_usage_meters;
 DROP POLICY IF EXISTS ai_usage_meters_tenant_update ON ai_usage_meters;
 DROP POLICY IF EXISTS ai_usage_meters_tenant_delete ON ai_usage_meters;
-
 -- External orphan policies (not in rls.sql origin — created manually or by hardening script)
 -- These reference app.tenant_id and must be removed. Tenants/users are admin-controlled at app layer.
 DROP POLICY IF EXISTS tenants_tenant_read ON tenants;
 DROP POLICY IF EXISTS users_tenant_read ON users;
-
 -- ============================================================
 -- TENANT-SCOPED TABLES: Allow access only to matching tenant_id
 -- ============================================================
@@ -183,9 +174,8 @@ FROM PUBLIC;
 -- or admin context. This preserves isolation (no cross-tenant user reads) while
 -- allowing the auth route to look up credentials during login.
 DROP POLICY IF EXISTS users_tenant_select ON public.users;
-CREATE POLICY users_tenant_select ON public.users
-  FOR SELECT
-  USING (
+CREATE POLICY users_tenant_select ON public.users FOR
+SELECT USING (
     EXISTS (
       SELECT 1
       FROM public.memberships m
