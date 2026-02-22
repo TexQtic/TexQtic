@@ -435,30 +435,20 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      const result = await withDbContext({ isAdmin: true }, async tx => {
-        // Look up admin user
-        const admin = await tx.adminUser.findUnique({
-          where: { email },
-          select: {
-            id: true,
-            email: true,
-            passwordHash: true,
-            role: true,
-          },
-        });
-
-        if (!admin) {
-          return null;
-        }
-
-        // Verify password using bcrypt
-        const isValidPassword = await verifyPassword(password, admin.passwordHash);
-        if (!isValidPassword) {
-          return null;
-        }
-
-        return admin;
+      // Pre-auth lookup: admin_users is not tenant-scoped; direct read requires no RLS context (G-006 Option B)
+      const adminRecord = await prisma.adminUser.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
+          role: true,
+        },
       });
+      const result =
+        adminRecord && (await verifyPassword(password, adminRecord.passwordHash))
+          ? adminRecord
+          : null;
 
       if (!result) {
         // Log failed admin login
@@ -649,31 +639,20 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
       });
 
-      // Execute DB query within admin RLS context
-      const result = await withDbContext({ isAdmin: true }, async tx => {
-        // Look up admin user
-        const admin = await tx.adminUser.findUnique({
-          where: { email },
-          select: {
-            id: true,
-            email: true,
-            passwordHash: true,
-            role: true,
-          },
-        });
-
-        if (!admin) {
-          return null;
-        }
-
-        // Verify password using bcrypt
-        const isValidPassword = await verifyPassword(password, admin.passwordHash);
-        if (!isValidPassword) {
-          return null;
-        }
-
-        return admin;
+      // Pre-auth lookup: admin_users is not tenant-scoped; direct read requires no RLS context (G-006 Option B)
+      const adminRecord = await prisma.adminUser.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
+          role: true,
+        },
       });
+      const result =
+        adminRecord && (await verifyPassword(password, adminRecord.passwordHash))
+          ? adminRecord
+          : null;
 
       if (!result) {
         // Log failed admin login
