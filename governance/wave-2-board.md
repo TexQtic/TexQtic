@@ -23,7 +23,7 @@ Branch: wave-2-stabilization
 - [x] G-006 — Remove legacy `withDbContext({ isAdmin: true })` in admin login — **VALIDATED `4971731`** — Option B: direct `prisma.adminUser.findUnique()` (no role switch); admin login 200 ✅; control routes 200 ✅; tenant regression OK ✅; typecheck EXIT 0; lint 68w/0e. G-006C + G-006D deferred, formally logged.
 - [x] G-007 + G-007B — Fix `supabase_hardening.sql` `set_config(..., false)` → `true` (tx-local, pooler-safe) + restore `app.org_id` canonical key (Doctrine v1.4) + Part 5/6 policies updated `app.tenant_id` → `app.org_id` (anti-regression) — **VALIDATED `09365b2` + `80d4501` + `80a6971`** — Functions corrected; DB applied; pg_get_functiondef verified; Part 5+6 policies updated; comments updated; typecheck EXIT 0; lint EXIT 0 ✅
 - [ ] G-008 — Add `schema_version` + `reasoning_hash` FK to `EventLog` schema
-- [ ] G-009 — Seed `OP_PLATFORM_READ_ONLY` and `OP_AI_AUTOMATION_ENABLED` feature flags
+- [x] G-009 — Seed `OP_PLATFORM_READ_ONLY` and `OP_AI_AUTOMATION_ENABLED` feature flags
 - [ ] G-010 — Implement tax/fee computation in checkout (replace stub)
 - [ ] G-011 — Add impersonation session routes to `control.ts`
 - [ ] G-012 — Replace `emailStubs.ts` with real email provider integration

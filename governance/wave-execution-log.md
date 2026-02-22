@@ -707,6 +707,83 @@ End-to-end activation smoke test requires a live provisioned tenant (e.g., G-008
 
 ---
 
+#### G-009 — VALIDATED 2026-02-22 (seed missing OP_* flags)
+
+**Objective:** Deterministically seed the two missing OP_* control-plane feature flags (`OP_PLATFORM_READ_ONLY`, `OP_AI_AUTOMATION_ENABLED`) so all envs (local/stage/prod) have a known-good baseline without manual DB patching.
+
+**Storage shape (discovered read-only):**
+
+| Table | Model | PK | Relevant fields |
+|---|---|---|---|
+| `feature_flags` | `FeatureFlag` | `key VARCHAR(100)` | `enabled BOOL`, `description TEXT?` |
+
+OP_* flags are global/control-plane rows (no tenant scoping, no RLS enforcement for seed role). Idempotence provided by `prisma.featureFlag.upsert({ where: { key } })`.
+
+**Files modified (1 file — frozen allowlist):**
+
+| File | Change |
+|---|---|
+| `server/prisma/seed.ts` | MODIFY — added 2 entries to `flags` array in Section 7 |
+
+**Flags seeded:**
+
+| Key | Default | Doctrine Ref | Meaning |
+|---|---|---|---|
+| `OP_PLATFORM_READ_ONLY` | `false` | Doctrine v1.4 §2; v1.3 ops table | Activates global read-only mode; blocks all tenant state-changing operations when `true` |
+| `OP_AI_AUTOMATION_ENABLED` | `false` | Doctrine v1.4 §8; v1.3 ops table | Enables AI guardrails and automation pipelines; must be explicitly enabled by control plane |
+
+Both default to `false` (safe; control plane enables at runtime).
+
+**Constitutional compliance:**
+
+| Constraint | Status |
+|---|---|
+| No schema change / migration | ✅ |
+| No RLS policy change | ✅ |
+| No tenant scoping / `app.org_id` writes in seed | ✅ — feature_flags is global |
+| No `set_config(..., false)` introduced | ✅ |
+| Seed is idempotent (upsert on PK) | ✅ |
+
+**Static gates:**
+
+- `pnpm exec tsc --noEmit` → EXIT 0 ✅
+- `grep set_config.*false \| app.tenant_id` in `seed.ts` → 0 matches ✅
+- `git diff --name-only` → `server/prisma/seed.ts` only ✅
+
+**Proof run — 2026-02-22:**
+
+```
+=== G-009 Proof ===
+Total feature_flags rows: 6
+OP_* query result count: 2 (expected: 2)
+  OP_AI_AUTOMATION_ENABLED | enabled: false
+  OP_PLATFORM_READ_ONLY | enabled: false
+
+=== Idempotence ===
+Second query count: 2 (must equal 2)
+
+PASS ✅ G-009 acceptance criterion met
+```
+
+Seed re-run also confirmed `6 feature flags` (unchanged — no duplication).
+
+**Acceptance criterion (wave-2-board):**
+```sql
+SELECT key FROM feature_flags WHERE key IN ('OP_PLATFORM_READ_ONLY','OP_AI_AUTOMATION_ENABLED');
+-- Returns 2 rows ✅
+```
+
+**Commits:**
+
+| Commit | Description |
+|---|---|
+| `380fde7` | `fix(G-009)`: seed OP_* flags deterministically |
+| (this commit) | `governance(G-009)`: proof + validation outputs |
+
+**Validation status: VALIDATED ✅ — 2026-02-22**
+
+---
+
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
 
 Start Date: 2026-02-12
