@@ -140,7 +140,10 @@ await fastify.register(tenantRoutes, { prefix: '/api' });
 await fastify.register(adminCartSummariesRoutes, { prefix: '/api/control/marketplace' });
 await fastify.register(aiRoutes, { prefix: '/api/ai' });
 // G-008: Canonical admin tenant provisioning (Doctrine v1.4)
-await fastify.register(tenantProvisionRoutes, { prefix: '/api/admin' });
+// Registered under /api/control (admin realm, mapped in realmGuard ENDPOINT_REALM_MAP)
+// Note: /api/admin was originally chosen but is unmapped in realmGuard → WRONG_REALM.
+// Option B resolution: use /api/control (already mapped as admin realm). No realmGuard change.
+await fastify.register(tenantProvisionRoutes, { prefix: '/api/control' });
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
