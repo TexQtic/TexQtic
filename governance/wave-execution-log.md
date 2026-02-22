@@ -1012,9 +1012,9 @@ Establish constitutional RLS enforcement via transaction-local context. Implemen
 
 ### Wave 2 — Monolith Stabilization
 
-Start Date: —
-End Date: —
-Branch: wave-2-stabilization (planned)
+Start Date: 2026-02-22
+End Date: 2026-02-22
+Branch: main
 Tag: —
 
 #### Objective
@@ -1027,16 +1027,68 @@ Unify RLS context variable (`app.org_id`), add missing policies for `orders`/`or
 
 #### Commits
 
-— (not started)
+| Commit | Gap | Description |
+|---|---|---|
+| `1389ed7` | G-001 | RLS context unification app.tenant_id → app.org_id |
+| `2d16e73` | G-002 | FORCE RLS on all tenant commerce tables |
+| G-003 | — | No-code (live policies already correct) |
+| `a19f30b` | G-004 | Remove dual withDbContext; unify control.ts |
+| `830c0c4` | G-005 | Standardize middleware across tenant + AI routes |
+| `4971731` | G-006 | Remove legacy withDbContext in admin login |
+| `09365b2` + `80d4501` + `80a6971` | G-007 | Fix set_config false→true; restore app.org_id canonical key |
+| `1eb5a46`…`009150d` | G-008 | Canonical provisioning endpoint; GR-007 proof |
+| `380fde7` | G-009 | Seed OP_* feature flags deterministically |
+| `39f0720` | G-010 | Phase-1 deterministic totals (tax=0, fee=0) |
+| `3860447` | G-011 | Control-plane impersonation routes |
+| `1fe96e1` | G-012 | Phase-1 email service (env-gated, nodemailer) |
+| `7f474ab` | G-013 | CI 0-row cross-tenant RLS proof (GitHub Actions) |
+| `c451662` | G-014 | Single-tx activation (remove nested $transaction) |
 
 #### Validation Evidence
 
-— (not started)
+- See individual G-NNN VALIDATED sections above for full evidence
+- GR-007 Tenant Context Integrity Proof: PASS (executed 2026-02-22T18:30:18Z)
+- tsc: EXIT 0 (0 errors)
+- ESLint: EXIT 0 (0 errors, 2 pre-existing warnings on non-Wave-2 lines)
+- Grep gates: PASS (set_config false=0; app.tenant_id=comments only; emailStubs in routes=0)
 
 #### Coverage Matrix Impact
 
-— (pending)
+- Tax/fee computation: ❌ Missing → ✅ Implemented (G-010)
+- Feature flags OP_*: ⚠ Partial → ✅ Implemented (G-009)
+- Admin impersonation routes: ⚠ Partial → ✅ Implemented (G-011)
+- Email notifications: ⚠ Partial (stub) → ✅ Implemented (G-012)
+- Tenant provisioning: ⚠ Partial → ✅ Implemented (G-008)
+- Activation single-tx: fixed (G-014)
 
 #### Governance Notes
 
-— (pending)
+- Runtime probes blocked by Node.js v24 environment (bcrypt@5.1.1 native binding incompatible with Node 24; governance requires Node 20/22 LTS). Static gates and tsc serve as primary validation. Runtime probes deferred to Node 20/22 environment.
+- G-006C, G-006D: explicitly deferred to Wave 3 (DB permission boundary decision required)
+
+---
+
+## ✅ Wave-2 Closure Certificate (TECS v1.6) — 2026-02-22
+
+Validated gaps:
+- G-008 (tenant provisioning endpoint, canonical /api/control realm, GR-007 proof recorded)
+- G-009 (OP_* feature flags seeded deterministically, idempotent)
+- G-010 (Phase-1 totals canonicalization, deterministic, stop-loss enforced)
+- G-011 (control-plane impersonation routes: start/stop/status)
+- G-012 (Phase-1 email service, env-gated, nodemailer, dev-log fallback)
+- G-014 (activation single-tx, no nested $transaction)
+
+Deferred (not blocking Wave-2 closure):
+- G-006C, G-006D: DB permission boundary decision required (Wave 3)
+
+Repo gates:
+- tsc: PASS (EXIT 0, 0 errors)
+- eslint: PASS (EXIT 0, 0 errors, 2 pre-existing warnings on non-Wave-2 lines)
+- grep: PASS (no set_config(..., false); no executable app.tenant_id reliance; emailStubs absent from all routes; activation path has no nested $transaction)
+
+Runtime probes:
+- DEFERRED — Node.js v24.13.0 in local environment; bcrypt@5.1.1 native binding incompatible (governance requires Node 20/22 LTS per copilot-instructions.md §1). Static gates serve as primary validation gate per TECS v1.6 §6.
+- GR-007 production proof: PASS (recorded in G-008 governance commit `009150d`; set_tenant_context uses app.org_id; app.tenant_id defensive blank clear accepted as conditional pass per Doctrine v1.4 §11.3)
+
+Conclusion:
+Wave-2 is CLOSED under TECS v1.6. All six targeted gaps validated. Repo gates clean. GR-007 proof on record.

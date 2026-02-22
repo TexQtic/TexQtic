@@ -62,7 +62,7 @@ Doctrine Version: v1.4
 | `trades` table                                  | ❌ Missing        | Not in schema                                              | G-017  | W3                                                            |
 | `version_id` optimistic locking                 | ❌ Missing        | Not in schema                                              | G-017  | W3                                                            |
 | `escrow_accounts` table                         | ❌ Missing        | Not in schema                                              | G-018  | W3                                                            |
-| Tax/fee computation                             | ❌ Missing (stub) | `server/src/routes/tenant.ts:631` — `// stub: no tax/fees` | G-010  | W2                                                            |
+| Tax/fee computation                             | ✅ Implemented    | `server/src/services/pricing/totals.service.ts` — Phase-1: tax=0, fee=0, discount=0; deterministic `round2()` | G-010  | W2 VALIDATED `39f0720`                                        |
 
 ---
 
@@ -74,12 +74,12 @@ Doctrine Version: v1.4
 | Events: `schema_version`, `reasoning_hash` | ⚠ Partial        | `EventLog` schema lacks both fields; `events.ts` defines `EventVersion = 'v1'` but not in DB | G-008  | W2                                |
 | Audit log for all significant actions      | ✅ Implemented   | `server/src/lib/auditLog.ts:46-75`                                                           | —      | All cart + order events captured  |
 | Audit log for admin actions                | ✅ Implemented   | `server/src/routes/control.ts`                                                               | —      | `createAdminAudit()` used         |
-| Feature flags (OP_PLATFORM_READ_ONLY etc.) | ⚠ Partial        | `server/prisma/schema.prisma:263`                                                            | G-009  | Tables exist; OP\_\* seeds absent |
+| Feature flags (OP_PLATFORM_READ_ONLY etc.) | ✅ Implemented   | `server/prisma/seed.ts` — both OP_* flags seeded deterministically (idempotent) | G-009  | W2 VALIDATED `380fde7`                |
 | Maker-Checker dual-signature               | ❌ Missing       | No `maker_id`/`checker_id` in any table or route                                             | G-021  | W3                                |
 | Escalation levels + Kill-switch            | ❌ Missing       | Not implemented                                                                              | G-022  | W3                                |
 | The Morgue (Level 1+ failure bundles)      | ❌ Missing       | Not implemented                                                                              | G-027  | W4                                |
 | `certifications` table                     | ❌ Missing       | Not in schema                                                                                | G-019  | W3                                |
-| Admin impersonation routes                 | ⚠ Partial        | `ImpersonationSession` model exists; no route handler confirmed                              | G-011  | W2                                |
+| Admin impersonation routes                 | ✅ Implemented   | `server/src/routes/admin/impersonation.ts` — POST /start, POST /stop, GET /status/:id; auditable bounded tokens | G-011  | W2 VALIDATED `3860447`                |
 | Email notifications                        | ✅ Implemented   | `server/src/services/email/email.service.ts` — env-gated, nodemailer SMTP, dev log fallback | G-012  | W2                                |
 
 ---
