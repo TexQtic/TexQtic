@@ -834,6 +834,86 @@ Neg-3 (userId not a member)       → 404 ✅
 
 ---
 
+#### G-010 — VALIDATED 2026-02-22 (Tax/fee stub in checkout)
+
+**Gap:** `POST /api/tenant/checkout` had an inline stub: `const total = subtotal; // stub: no tax/fees`. No canonical computation existed.
+
+**Discovery:**
+- Single call site: `server/src/routes/tenant.ts` checkout handler
+- Line items sourced from `cart.items[].catalogItem.price` (Decimal) × `item.quantity` (Int)
+- Persistence schema: `Order.subtotal` + `Order.total` only (no taxTotal/feeTotal/discountTotal columns)
+- No existing pricing service, no discount field on CartItem
+
+**Fix:** Created `server/src/services/pricing/totals.service.ts` (canonical; pure function, no DB reads)
+and rewired the checkout handler to use it.
+
+**Phase-1 rules (documented):**
+| Rule | Value |
+|---|---|
+| tax | 0 (no jurisdiction data) |
+| fees | 0 (no platform fee config) |
+| discount | 0 (no discount engine; CartItem has no discount field) |
+| rounding | `round2()` = `Math.round((n + Number.EPSILON) * 100) / 100` applied once per component |
+| grandTotal | subtotal − discountTotal + taxTotal + feeTotal |
+| Order.total | stores grandTotal |
+
+**Checkout response shape (new):**
+```json
+{
+  "orderId": "...",
+  "status": "PAYMENT_PENDING",
+  "currency": "USD",
+  "itemCount": 1,
+  "totals": {
+    "subtotal": 999,
+    "discountTotal": 0,
+    "taxableAmount": 999,
+    "taxTotal": 0,
+    "feeTotal": 0,
+    "grandTotal": 999,
+    "breakdown": { "tax": [], "fees": [] }
+  }
+}
+```
+
+**Static gates:**
+```
+tsc --noEmit → EXIT 0 (0 errors)
+eslint → 0 errors (1 pre-existing warning on userId!)
+git diff --name-only → M server/src/routes/tenant.ts + ?? server/src/services/pricing/
+set_config.*false / app.tenant_id → 0 code matches
+nested $transaction in new files → 0 matches
+stub 'stub.*no tax' → 0 matches (confirmed removed)
+```
+
+**Functional validation:**
+```
+Scenario: SKU-A (9.99) × qty 100
+Manual recompute: round2(9.99 × 100) = 999.00
+
+Run 1 → POST /api/tenant/checkout:
+  grandTotal=999 subtotal=999 taxTotal=0 feeTotal=0 ✅
+
+Run 2 (new cart, same item/qty) → POST /api/tenant/checkout:
+  grandTotal=999 subtotal=999 taxTotal=0 feeTotal=0 ✅ (deterministic)
+
+Stop-loss tests (via tsx):
+  Neg-1: unitPrice=-1, qty=1  → TotalsInputError code=INVALID_UNIT_PRICE ✅
+  Neg-2: unitPrice=9.99, qty=0 → TotalsInputError code=INVALID_QUANTITY ✅
+  Neg-3: unitPrice=NaN, qty=1 → TotalsInputError code=INVALID_UNIT_PRICE ✅
+```
+
+**Commits:**
+
+| Commit | Description |
+|---|---|
+| `39f0720` | `fix(G-010)`: replace tax/fee stub with deterministic Phase-1 totals computation |
+| (this commit) | `governance(G-010)`: totals rules documented + validation evidence |
+
+**Validation status: VALIDATED ✅ — 2026-02-22**
+
+---
+
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
 
 Start Date: 2026-02-12
