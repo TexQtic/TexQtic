@@ -9,14 +9,19 @@ BEGIN;
 -- PART 1: FIX HELPER FUNCTIONS (function_search_path_mutable)
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- Set tenant context (fixes search_path warning)
+-- G-007: tx-local (is_local=true); G-007-HOTFIX: restored app.org_id canonical key (Doctrine v1.4)
 CREATE OR REPLACE FUNCTION public.set_tenant_context(
     p_tenant_id uuid,
     p_is_admin boolean DEFAULT false
   ) RETURNS void LANGUAGE plpgsql
 SET search_path = public,
-  pg_catalog AS $BODY$ BEGIN -- G-007: is_local=true — transaction-scoped; prevents pooler bleed
-  PERFORM set_config('app.tenant_id', p_tenant_id::text, true);
-PERFORM set_config('app.is_admin', p_is_admin::text, true);
+  pg_catalog AS $BODY$ BEGIN
+  -- Canonical tenant key (Doctrine v1.4)
+  PERFORM set_config('app.org_id', p_tenant_id::text, true);
+  -- Admin flag (kept until Wave 3 realm migration)
+  PERFORM set_config('app.is_admin', CASE WHEN p_is_admin THEN 'true' ELSE 'false' END, true);
+  -- Defensive legacy cleanup (tx-local)
+  PERFORM set_config('app.tenant_id', '', true);
 END;
 $BODY$;
 -- Set admin context (fixes search_path warning)
@@ -28,11 +33,13 @@ PERFORM set_config('app.tenant_id', '', true);
 END;
 $BODY$;
 -- Clear context (fixes search_path warning)
+-- G-007: tx-local (is_local=true); G-007-HOTFIX: also clears app.org_id canonical key
 CREATE OR REPLACE FUNCTION public.clear_context() RETURNS void LANGUAGE plpgsql
 SET search_path = public,
-  pg_catalog AS $BODY$ BEGIN -- G-007: is_local=true — transaction-scoped; prevents pooler bleed
+  pg_catalog AS $BODY$ BEGIN
+  PERFORM set_config('app.org_id', '', true);
+  PERFORM set_config('app.is_admin', 'false', true);
   PERFORM set_config('app.tenant_id', '', true);
-PERFORM set_config('app.is_admin', 'false', true);
 END;
 $BODY$;
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
