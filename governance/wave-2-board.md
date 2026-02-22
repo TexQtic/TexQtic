@@ -28,6 +28,7 @@ Branch: wave-2-stabilization
 - [x] G-011 — Add impersonation session routes to `control.ts`
 - [x] G-012 — Replace `emailStubs.ts` with real email provider integration
 - [x] G-014 — Refactor `POST /tenant/activate` to single transaction (remove nested `tx.$transaction`)
+- [x] G-BCR-001 — Replace `bcrypt@5.1.1` native binding with `bcryptjs@3.0.3` (pure-JS, eliminates Node-version startup failures) — VALIDATED `3f16bf6`
 
 ---
 

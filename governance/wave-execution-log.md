@@ -1068,6 +1068,62 @@ Unify RLS context variable (`app.org_id`), add missing policies for `orders`/`or
 
 ---
 
+### Wave-2 Post-Closure Hotfix: G-BCR-001 — bcrypt native binding replacement
+
+**Triggered by:** Wave-2 runtime validation on Node 24.13.0 — `bcrypt@5.1.1` native binding (`bcrypt_lib.node`) could not load, blocking server startup entirely.
+
+**Root cause:** `bcrypt` uses a native C++ addon compiled for a specific Node ABI. When Node version changes (v22 → v24), pre-built binaries are incompatible and `pnpm rebuild bcrypt` may fail.
+
+**Fix:** Replace with `bcryptjs@3.0.3` (pure JavaScript implementation). API is 100% identical (`hash`, `compare`, async-only). Ships its own TypeScript types. No security parameter changes.
+
+**Discovery results:**
+| File | Usage | Salt rounds |
+|---|---|---|
+| `src/lib/authTokens.ts` | `bcrypt.hash(token, 10)`, `bcrypt.compare()` | 10 |
+| `src/routes/auth.ts` | `bcrypt.compare()`, `bcrypt.hash(pw, 10)` | 10 |
+| `src/routes/tenant.ts` | dynamic `await import('bcrypt')` → static import | 10 |
+| `src/services/tenantProvision.service.ts` | `bcrypt.hash(pw, BCRYPT_ROUNDS)` | 12 |
+| `prisma/seed.ts` | `bcrypt.hash('Password123!', 10)` | 10 |
+| 7 test files | hash/compare in test fixture setup | 4–10 |
+
+**Changes:**
+- `package.json`: remove `bcrypt@5.1.1` + `@types/bcrypt@5.0.2`; add `bcryptjs@3.0.3`
+- All `import bcrypt from 'bcrypt'` → `import bcrypt from 'bcryptjs'`
+- `tenant.ts`: dynamic `await import('bcrypt')` → top-level static import
+
+**Static gates:**
+```
+tsc --noEmit → EXIT 0 (0 errors)
+eslint (touched files) → EXIT 0 (0 errors, 3 pre-existing warnings)
+Select-String 'from .bcrypt\'' → 0 matches (all imports migrated)
+```
+
+**Functional validation:**
+```
+bcryptjs hash/compare proof (scripts/bcrypt-proof.ts, deleted post-run):
+  rounds=10 hash prefix: $2b$10$
+  rounds=10 correct match: true
+  rounds=10 wrong match:   false
+  rounds=12 hash prefix: $2b$12$
+  rounds=12 correct match: true
+  rounds=12 wrong match:   false
+  ALL ASSERTIONS PASSED
+
+Server startup proof (Node 24.13.0 — previously failing):
+  GET http://localhost:3001/health → 200 {"status":"ok"}
+  No native binding errors in startup log.
+```
+
+**Commits:**
+| Commit | Description |
+|---|---|
+| `3f16bf6` | `fix(G-015): replace bcrypt with bcryptjs...` (commit message used G-015 placeholder; registered as G-BCR-001 in governance) |
+| (this commit) | `governance(G-BCR-001)`: evidence + static gates |
+
+**Validation status: VALIDATED ✅ — 2026-02-22**
+
+---
+
 ## ✅ Wave-2 Closure Certificate (TECS v1.6) — 2026-02-22
 
 Validated gaps:
@@ -1087,7 +1143,7 @@ Repo gates:
 - grep: PASS (no set_config(..., false); no executable app.tenant_id reliance; emailStubs absent from all routes; activation path has no nested $transaction)
 
 Runtime probes:
-- DEFERRED — Node.js v24.13.0 in local environment; bcrypt@5.1.1 native binding incompatible (governance requires Node 20/22 LTS per copilot-instructions.md §1). Static gates serve as primary validation gate per TECS v1.6 §6.
+- CONFIRMED — Node.js v24.13.0; bcrypt native binding replaced with bcryptjs@3.0.3 (pure-JS); server starts cleanly; GET /health → 200. See G-BCR-001 section above.
 - GR-007 production proof: PASS (recorded in G-008 governance commit `009150d`; set_tenant_context uses app.org_id; app.tenant_id defensive blank clear accepted as conditional pass per Doctrine v1.4 §11.3)
 
 Conclusion:
