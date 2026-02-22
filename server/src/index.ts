@@ -11,6 +11,7 @@ import tenantRoutes from './routes/tenant.js';
 import adminCartSummariesRoutes from './routes/admin-cart-summaries.js';
 import aiRoutes from './routes/ai.js';
 import tenantProvisionRoutes from './routes/admin/tenantProvision.js';
+import impersonationRoutes from './routes/admin/impersonation.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -144,6 +145,10 @@ await fastify.register(aiRoutes, { prefix: '/api/ai' });
 // Note: /api/admin was originally chosen but is unmapped in realmGuard → WRONG_REALM.
 // Option B resolution: use /api/control (already mapped as admin realm). No realmGuard change.
 await fastify.register(tenantProvisionRoutes, { prefix: '/api/control' });
+// G-011: Control-plane impersonation routes (admin realm)
+// Routes: POST /api/control/impersonation/start, POST /api/control/impersonation/stop,
+//         GET  /api/control/impersonation/status/:id
+await fastify.register(impersonationRoutes, { prefix: '/api/control' });
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
