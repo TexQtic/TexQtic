@@ -90,10 +90,22 @@ export async function provisionTenant(
     // PHASE 1 — Admin context (tx-local, pooler-safe)
     // Sets ONLY app.org_id with ADMIN_SENTINEL_ID for cross-tenant admin access
     // NEVER sets app.tenant_id (forbidden by Doctrine v1.4 §11.3)
+    //
+    // NOTE: We do NOT call SET LOCAL ROLE texqtic_app until Phase 2 (membership).
+    //
+    // `tenants` is a control-plane table — no tenant_id column, no tenant-scoped
+    // RLS INSERT policy. texqtic_app cannot INSERT here.
+    // `users` is a global table — no tenant_id column, belongs to no single tenant.
+    // texqtic_app cannot INSERT here either.
+    //
+    // Both are created as postgres (BYPASSRLS), which is the connection's native role.
+    // Only `memberships` — which IS tenant-scoped and has RLS — requires the role
+    // switch to texqtic_app with an org_id context.
+    //
+    // This correctly reflects the architecture:
+    //   tenants, users  → control-plane writes (postgres, BYPASSRLS)
+    //   memberships     → tenant-plane write (texqtic_app + org_id context)
     // ─────────────────────────────────────────────────────────────────────────
-
-    // Switch to texqtic_app role (NOBYPASSRLS) for RLS enforcement
-    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
 
     // Set admin org context (tx-local=true → auto-clears on tx end)
     await tx.$executeRawUnsafe(
@@ -110,7 +122,7 @@ export async function provisionTenant(
     // Set control-plane realm (tx-local=true)
     await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'control', true)`);
 
-    // Grant admin RLS bypass — checked by _admin_all policies (tx-local=true)
+    // Grant admin RLS bypass flag (tx-local=true)
     await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
     // Explicit RLS enforcement (not bypassed; admin flag is the bypass mechanism)
@@ -135,7 +147,8 @@ export async function provisionTenant(
       );
     }
 
-    // ── Create organization (tenant) ──────────────────────────────────────────
+    // ── Create organization (tenant) ─────────────────────────────────────────
+    // Runs as postgres (BYPASSRLS) — tenants is a control-plane table.
     const slug = slugify(orgName);
 
     const tenant = await tx.tenant.create({
@@ -149,23 +162,9 @@ export async function provisionTenant(
       },
     });
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PHASE 2 — Switch to tenant context for membership + user creation
-    // org_id is updated to new tenant's ID (tx-local, same transaction)
-    // is_admin remains 'true' — required to write to a newly-empty tenant
-    // (no existing members → tenant-plane SELECT policies would return empty)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // Switch canonical org boundary to new tenant (tx-local=true)
-    await tx.$executeRawUnsafe(
-      `SELECT set_config('app.org_id', $1, true)`,
-      tenant.id
-    );
-
-    // Narrow realm to tenant-plane (tx-local=true)
-    await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
-
     // ── Create or find primary admin user ─────────────────────────────────────
+    // Runs as postgres (BYPASSRLS) — users is a global table (no tenant_id column).
+    // texqtic_app cannot INSERT into users (no applicable INSERT policy).
     let user = await tx.user.findUnique({
       where: { email: primaryAdminEmail },
       select: { id: true },
@@ -180,6 +179,25 @@ export async function provisionTenant(
         select: { id: true },
       });
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PHASE 2 — Tenant context for membership creation only
+    // Now switch to texqtic_app (NOBYPASSRLS) so RLS is enforced on memberships.
+    // memberships IS tenant-scoped; its INSERT policy requires app.org_id = tenant.id.
+    // Switch org_id to the new tenant — tx-local, same transaction.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Enforce RLS for tenant-scoped membership write
+    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
+
+    // Switch canonical org boundary to new tenant (tx-local=true)
+    await tx.$executeRawUnsafe(
+      `SELECT set_config('app.org_id', $1, true)`,
+      tenant.id
+    );
+
+    // Narrow realm to tenant-plane (tx-local=true)
+    await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
 
     // ── Create primary OWNER membership ───────────────────────────────────────
     const membership = await tx.membership.create({
