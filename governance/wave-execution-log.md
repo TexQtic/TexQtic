@@ -144,6 +144,31 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 
 ---
 
+#### G-005-BLOCKER — VALIDATED 2026-02-22
+
+- Commit `b060f60` — `fix(rls): add tenant-scoped SELECT policy for public.users (login unblock)`
+- File changed: `server/prisma/rls.sql` (1 file, 20 insertions, 3 deletions)
+- Root cause:
+  - `supabase_hardening.sql` applied `ENABLE + FORCE ROW LEVEL SECURITY` on `public.users`
+  - G-001 legacy cleanup dropped `users_tenant_read` without a replacement
+  - `texqtic_app` with any `app.org_id` context returned 0 rows (PostgreSQL deny-all when FORCE RLS + no policy)
+  - Auth route: `withDbContext({ tenantId }, tx => tx.user.findUnique(...))` → `result = null` → `AUTH_INVALID 401`
+- Fix:
+  - Added `users_tenant_select` policy: `EXISTS (memberships m WHERE m.user_id = users.id AND m.tenant_id = app.org_id::uuid) OR is_admin = 'true'`
+  - Pattern consistent with all other tenant-scoped tables; no cross-tenant reads possible
+- Applied via: `psql --dbname="$DATABASE_URL" -v ON_ERROR_STOP=1 --file=prisma/rls.sql` → APPLY_EXIT:0
+- Proof 1 (policy in pg_policies):
+  - `users_tenant_select` present · cmd=SELECT · qual contains `app.org_id` + `EXISTS (memberships m ...)` ✅
+- Proof 2 (member read):
+  - `SET LOCAL ROLE texqtic_app; set_config('app.org_id', ACME_UUID)` → `SELECT ... owner@acme.example.com` → **1 row** ✅
+- Proof 3 (cross-tenant blocked):
+  - `SET LOCAL ROLE texqtic_app; set_config('app.org_id', WL_UUID)` → `SELECT ... owner@acme.example.com` → **0 rows** ✅
+- Gate outputs:
+  - `pnpm -C server run typecheck` → EXIT 0 ✅
+  - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors)
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
