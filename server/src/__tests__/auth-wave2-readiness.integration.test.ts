@@ -26,7 +26,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import authRoutes from '../routes/auth.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { config } from '../config/index.js';
 import { checkDbAvailable } from './helpers/dbGate.js';
 import { expectAuditEventually } from './helpers/auditPolling.js';

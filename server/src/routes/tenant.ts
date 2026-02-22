@@ -18,6 +18,7 @@ import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
 import { sendInviteMemberEmail } from '../services/email/email.service.js';
+import bcrypt from 'bcryptjs';
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
@@ -878,7 +879,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Hash password
-      const bcrypt = await import('bcrypt');
       const passwordHash = await bcrypt.hash(userData.password, 10);
 
       // Gate D.1: Build db context for invite tenant

@@ -30,7 +30,7 @@ import { prisma } from '../db/prisma.js';
 import { checkDbAvailable } from './helpers/dbGate.js';
 import { expectAuditEventually } from './helpers/auditPolling.js';
 import authRoutes from '../routes/auth.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { generateRefreshToken, hashRefreshToken } from '../utils/auth/refreshToken.js';
 import { withBypassForSeed } from '../lib/database-context.js';
 import { withDbContext } from '../db/withDbContext.js';

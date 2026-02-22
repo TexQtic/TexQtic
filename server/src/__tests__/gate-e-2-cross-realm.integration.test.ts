@@ -3,7 +3,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { randomUUID } from 'node:crypto';
 import controlRoutes from '../routes/control.js';
 import tenantRoutes from '../routes/tenant.js';

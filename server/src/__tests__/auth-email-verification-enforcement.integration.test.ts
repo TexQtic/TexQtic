@@ -18,7 +18,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { prisma } from '../db/prisma.js';
 import { randomUUID } from 'node:crypto';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 describe('AUTH-H1 COMMIT 9: Email Verification Enforcement', () => {
   let testTenantId: string;

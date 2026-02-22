@@ -13,7 +13,7 @@
  * - No global session bleed permitted
  */
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../db/prisma.js';
 import type {
   TenantProvisionRequest,
