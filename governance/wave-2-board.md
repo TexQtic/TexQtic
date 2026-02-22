@@ -26,7 +26,7 @@ Branch: wave-2-stabilization
 - [x] G-009 — Seed `OP_PLATFORM_READ_ONLY` and `OP_AI_AUTOMATION_ENABLED` feature flags
 - [x] G-010 — Implement tax/fee computation in checkout (replace stub)
 - [x] G-011 — Add impersonation session routes to `control.ts`
-- [ ] G-012 — Replace `emailStubs.ts` with real email provider integration
+- [x] G-012 — Replace `emailStubs.ts` with real email provider integration
 - [ ] G-014 — Refactor `POST /tenant/activate` to single transaction (remove nested `tx.$transaction`)
 
 ---

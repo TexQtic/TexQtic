@@ -80,7 +80,7 @@ Doctrine Version: v1.4
 | The Morgue (Level 1+ failure bundles)      | ❌ Missing       | Not implemented                                                                              | G-027  | W4                                |
 | `certifications` table                     | ❌ Missing       | Not in schema                                                                                | G-019  | W3                                |
 | Admin impersonation routes                 | ⚠ Partial        | `ImpersonationSession` model exists; no route handler confirmed                              | G-011  | W2                                |
-| Email notifications                        | ⚠ Partial (stub) | `server/src/lib/emailStubs.ts`                                                               | G-012  | W2                                |
+| Email notifications                        | ✅ Implemented   | `server/src/services/email/email.service.ts` — env-gated, nodemailer SMTP, dev log fallback | G-012  | W2                                |
 
 ---
 

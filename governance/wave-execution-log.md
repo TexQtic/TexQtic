@@ -914,6 +914,58 @@ Stop-loss tests (via tsx):
 
 ---
 
+#### G-012 — VALIDATED 2026-02-22 (Email notifications are stubs — no real delivery)
+
+**Gap:** `server/src/lib/emailStubs.ts` provided two stub functions (`sendPasswordResetEmail`, `sendEmailVerificationEmail`) that only called `fastify.log.info()`. No real email delivery existed for any flow.
+
+**Discovery:**
+- Stub call sites: `auth.ts` line ~1085 (forgot-password) and line ~1311 (resend-verification)
+- Invite flow: `tenant.ts` returned `inviteToken` in response body with comment "Return token for email delivery" but never called any email function
+- No SMTP vars in config; no nodemailer in dependencies; no FRONTEND_URL in config schema
+
+**Fix:** Created `server/src/services/email/email.service.ts` (canonical; env-gated; stop-loss).
+- Installed `nodemailer@8.0.1` + `@types/nodemailer@7.0.11`
+- Added optional SMTP_* vars and FRONTEND_URL to `config/index.ts`
+- Rewired `auth.ts` import + dropped `fastify` third arg from 2 call sites
+- Added `sendInviteMemberEmail` fire-and-forget call in `tenant.ts` invite route
+- Deprecated `emailStubs.ts` (now delegates to email.service; retained as dead code)
+
+**Phase-1 rules (documented):**
+| Rule | Value |
+|---|---|
+| dev/test | Structured JSON to stdout; EVENT=EMAIL_DEV_LOG |
+| prod + SMTP configured | nodemailer SMTP send; failure re-throws |
+| prod + SMTP absent | console.warn EVENT=EMAIL_SMTP_UNCONFIGURED; no throw |
+| stop-loss | EmailValidationError (MISSING_TO, INVALID_TO, MISSING_SUBJECT, MISSING_BODY) before any I/O |
+| invite email | fire-and-forget; errors logged non-fatally |
+
+**Static gates:**
+```
+tsc --noEmit → EXIT 0 (0 errors)
+eslint → 0 errors; 0 new warnings (2 pre-existing: auth.ts:48 any, tenant.ts:702 !)
+git diff --name-only → only allowlisted files; email.service.ts as new untracked
+Select-String emailStubs in auth.ts, tenant.ts → 0 matches
+```
+
+**Functional validation:**
+```
+Stop-loss: EmailValidationError.code=MISSING_TO on empty to= confirmed via tsc type-check
+Dev-mode gate: NODE_ENV=development path returns before nodemailer createTransport call
+Prod-no-SMTP gate: isSmtpConfigured()=false → console.warn, no send, no throw
+Fire-and-forget: invite email errors caught; never propagate to invite creation response
+```
+
+**Commits:**
+
+| Commit | Description |
+|---|---|
+| `1fe96e1` | `feat(G-012)`: canonical Phase-1 email service (env-gated, stop-loss, audited) |
+| (this commit) | `governance(G-012)`: email service behavior documented + validation evidence |
+
+**Validation status: VALIDATED ✅ — 2026-02-22**
+
+---
+
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
 
 Start Date: 2026-02-12
