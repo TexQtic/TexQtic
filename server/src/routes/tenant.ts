@@ -12,7 +12,6 @@ import {
 import type { Prisma } from '@prisma/client';
 import {
   withDbContext,
-  buildContextFromRequest,
   type DatabaseContext,
 } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
@@ -178,11 +177,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Create or return active cart for authenticated tenant user (idempotent)
    * Gate D.2: RLS-enforced, manual tenant filters removed
    */
-  fastify.post('/tenant/cart', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.post('/tenant/cart', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { userId } = request;
 
-    // Build database context from request
-    const dbContext = buildContextFromRequest(request);
+    // Database context injected by databaseContextMiddleware (G-005)
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
 
     const result = await withDbContext(prisma, dbContext, async tx => {
       // Find existing active cart (RLS enforces tenant boundary)
@@ -261,11 +263,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Get active cart with items for current tenant user
    * Gate D.2: RLS-enforced, manual tenant filter removed
    */
-  fastify.get('/tenant/cart', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.get('/tenant/cart', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { userId } = request;
 
-    // Build database context from request
-    const dbContext = buildContextFromRequest(request);
+    // Database context injected by databaseContextMiddleware (G-005)
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
 
     const cart = await withDbContext(prisma, dbContext, async tx => {
       return await tx.cart.findFirst({
@@ -305,7 +310,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post(
     '/tenant/cart/items',
-    { onRequest: tenantAuthMiddleware },
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
       const { userId } = request;
 
@@ -322,8 +327,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { catalogItemId, quantity } = parseResult.data;
 
-      // Build database context from request
-      const dbContext = buildContextFromRequest(request);
+      // Database context injected by databaseContextMiddleware (G-005)
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
 
       const result = await withDbContext(prisma, dbContext, async tx => {
         // Validate catalog item exists and is active (RLS enforces tenant boundary)
@@ -485,7 +493,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.patch(
     '/tenant/cart/items/:id',
-    { onRequest: tenantAuthMiddleware },
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
       const { userId } = request;
 
@@ -513,8 +521,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { quantity } = bodyResult.data;
 
-      // Build database context from request
-      const dbContext = buildContextFromRequest(request);
+      // Database context injected by databaseContextMiddleware (G-005)
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
 
       const result = await withDbContext(prisma, dbContext, async tx => {
         // Find cart item (RLS enforces tenant boundary via cart FK)
@@ -635,9 +646,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Convert active cart → order (stub payment, PAYMENT_PENDING status)
    * Gate PR-A: RLS-enforced via withDbContext
    */
-  fastify.post('/tenant/checkout', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.post('/tenant/checkout', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { userId } = request;
-    const dbContext = buildContextFromRequest(request);
+    // Database context injected by databaseContextMiddleware (G-005)
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
     const t0 = Date.now();
 
     const result = await withDbContext(prisma, dbContext, async tx => {
@@ -734,9 +749,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/tenant/orders
    * List orders for current tenant user (RLS-enforced)
    */
-  fastify.get('/tenant/orders', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.get('/tenant/orders', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { userId } = request;
-    const dbContext = buildContextFromRequest(request);
+    // Database context injected by databaseContextMiddleware (G-005)
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
 
     const orders = await withDbContext(prisma, dbContext, async tx => {
       return tx.order.findMany({
@@ -754,13 +773,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/tenant/orders/:id
    * Get single order with items (RLS-enforced)
    */
-  fastify.get('/tenant/orders/:id', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.get('/tenant/orders/:id', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const paramsSchema = z.object({ id: z.string().uuid() });
     const paramsResult = paramsSchema.safeParse(request.params);
     if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
 
     const { id: orderId } = paramsResult.data;
-    const dbContext = buildContextFromRequest(request);
+    // Database context injected by databaseContextMiddleware (G-005)
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
 
     const order = await withDbContext(prisma, dbContext, async tx => {
       return tx.order.findUnique({
@@ -1007,7 +1030,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Update tenant branding settings
    * Requires OWNER or ADMIN role
    */
-  fastify.put('/tenant/branding', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.put('/tenant/branding', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { tenantId, userRole } = request;
 
     // Check permission
@@ -1034,8 +1057,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const { logoUrl, themeJson } = parseResult.data;
 
-      // Build database context (RLS enforcement)
-      const dbContext = buildContextFromRequest(request);
+      // Database context injected by databaseContextMiddleware (G-005)
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
 
       // Update or create branding (RLS handles tenant boundary)
       const branding = await withDbContext(prisma, dbContext, async tx => {

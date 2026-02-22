@@ -5,7 +5,8 @@ import { config } from '../config/index.js';
 import { sendSuccess, sendValidationError } from '../utils/response.js';
 import { getTenantContext } from '../lib/tenantContext.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
-import { withDbContext, buildContextFromRequest } from '../lib/database-context.js';
+import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
+import { withDbContext } from '../lib/database-context.js';
 import {
   loadTenantBudget,
   getUsage,
@@ -110,7 +111,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    *
    * Phase 3B: Budget enforcement + usage metering + audit logging
    */
-  fastify.get('/insights', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.get('/insights', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { tenantId, realm: _realm, userId } = getTenantContext(request);
     const { tenantType, experience } = request.query as {
       tenantType?: string;
@@ -131,8 +132,11 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     const model = 'gemini-1.5-flash';
 
     try {
-      // Build database context from request (Doctrine v1.4)
-      const dbContext = buildContextFromRequest(request);
+      // Database context injected by databaseContextMiddleware (G-005)
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return reply.code(401).send({ ok: false, error: 'UNAUTHORIZED', message: 'Database context missing' });
+      }
       const contextTenantId = dbContext.orgId;
 
       // Execute within tenant DB context (RLS enforced)
@@ -233,7 +237,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    *
    * Phase 3B: Budget enforcement + usage metering + audit logging
    */
-  fastify.post('/negotiation-advice', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
+  fastify.post('/negotiation-advice', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { tenantId, realm: _realm, userId } = getTenantContext(request);
 
     // Require tenant context
@@ -258,8 +262,11 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     const model = 'gemini-1.5-flash';
 
     try {
-      // Build database context from request (Doctrine v1.4)
-      const dbContext = buildContextFromRequest(request);
+      // Database context injected by databaseContextMiddleware (G-005)
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return reply.code(401).send({ ok: false, error: 'UNAUTHORIZED', message: 'Database context missing' });
+      }
       const contextTenantId = dbContext.orgId;
 
       // Execute within tenant DB context (RLS enforced)
