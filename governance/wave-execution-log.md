@@ -473,6 +473,42 @@ Zero 500s. Zero PG errors. Context isolation preserved.
 
 ---
 
+#### G-007B — VALIDATED 2026-02-22 (repo reconcile + anti-regression)
+
+**Trigger:** Post-G-007-HOTFIX investigation confirmed that `supabase_hardening.sql` Part 5 policies (8 tenant-scoped tables) and Part 6 audit_logs policies still referenced `app.tenant_id` — the legacy key superseded by Doctrine v1.4. While `rls.sql` drops and replaces these by name in the prod apply sequence, standalone apply of `supabase_hardening.sql` would create incorrect policies causing `memberships_visible=0` and AUTH_INVALID login failures.
+
+**Regression timeline:**
+
+| Timestamp | Event |
+|---|---|
+| G-007 apply (`09365b2`) | `set_config(..., false)` → `true` — correct; but function still used `app.tenant_id` (pre-existing bug) |
+| Post-G-007 discovery | Tenant login returns 401 AUTH_INVALID; `memberships_visible=0` confirmed in prod |
+| G-007-HOTFIX apply (`80d4501`) | `set_tenant_context` now sets `app.org_id`; `clear_context` clears `app.org_id`; DB applied via Supabase SQL editor |
+| G-007-HOTFIX DB proof | `pg_get_functiondef` confirmed `app.org_id` present; `memberships_visible=1` ✅ |
+| G-007B (`80a6971`) | Repo reconcile: Part 5+6 policies updated; Doctrine v1.4 comments added |
+
+**Changes in `80a6971` (`supabase_hardening.sql`):**
+
+| Section | Change |
+|---|---|
+| Part 1 header | Added: "Doctrine v1.4: canonical key = app.org_id; is_local=true prevents pooler bleed" |
+| `set_tenant_context` comment | Added G-007B tag + pooler-bleed note |
+| `set_admin_context` comment | Updated to reference G-007B + Doctrine v1.4 |
+| `clear_context` comment | Added explicit pooler-bleed prevention note |
+| Part 5: 8 tables (tenant_domains, tenant_branding, memberships, invites, password_reset_tokens, tenant_feature_overrides, ai_budgets, ai_usage_meters) | All `current_setting('app.tenant_id', true)::uuid` → `current_setting('app.org_id', true)::uuid` in SELECT/INSERT/UPDATE/DELETE policy bodies |
+| Part 6: audit_logs SELECT + INSERT policies | `app.tenant_id` → `app.org_id` in both policy bodies |
+
+**Anti-regression prevention note:** If `supabase_hardening.sql` is re-applied to a fresh environment WITHOUT `rls.sql` following it, Part 5 per-op policies now use the correct `app.org_id` key → memberships visible → login succeeds. Doctrine v1.4 comment header makes the canonical key explicit for future maintainers.
+
+**Static gates:**
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅ (SQL-only change)
+- `pnpm -C server run lint` → EXIT 0 ✅ (0 errors)
+
+**Implementation commit:** `80a6971`
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
