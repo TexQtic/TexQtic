@@ -1,0 +1,6 @@
+# Normalize all text files to LF on commit
+* text=auto eol=lf
+
+# Markdown — force LF to prevent CRLF churn on Windows that causes ghost diffs
+# in governance files after committing
+*.md text eol=lf
