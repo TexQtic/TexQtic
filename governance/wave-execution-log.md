@@ -400,6 +400,61 @@ Zero 500s. Zero regressions. RLS isolation preserved.
 
 ---
 
+#### G-007 — VALIDATED 2026-02-22 (tx-local set_config)
+
+**Change:** All 6 `set_config(..., false)` calls in `server/prisma/supabase_hardening.sql` changed to `set_config(..., true)` — transaction-local enforcement. Eliminates pooler session-bleed risk.
+
+**Affected functions:**
+
+| SQL Function | Lines fixed | Change |
+|---|---|---|
+| `public.set_tenant_context()` | L21 + L22 | `false` → `true` |
+| `public.set_admin_context()` | L33 + L34 | `false` → `true` |
+| `public.clear_context()` | L44 + L45 | `false` → `true` |
+
+**Why safe:** All TS callers (`withTenantDb`, `withAdminDb`, `withDbContext`) invoke these functions inside `prisma.$transaction()`. `is_local=true` inside a transaction is equivalent to `is_local=false` for that transaction's lifetime, and auto-resets on COMMIT/ROLLBACK — eliminating the pooler bleed vector.
+
+**Static gates:**
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅ (SQL-only change, no TS impact)
+- `pnpm -C server run lint` → 68 warnings, 0 errors ✅
+
+**DB apply evidence:**
+
+```json
+{ "proname": "clear_context",      "pg_get_functiondef": "...set_config('app.tenant_id', '', true)...set_config('app.is_admin', 'false', true)..." }
+{ "proname": "set_admin_context",  "pg_get_functiondef": "...set_config('app.is_admin', 'true', true)...set_config('app.tenant_id', '', true)..." }
+{ "proname": "set_tenant_context", "pg_get_functiondef": "...set_config('app.tenant_id', p_tenant_id::text, true)...set_config('app.is_admin', p_is_admin::text, true)..." }
+```
+
+All 3 rows returned. Zero `false` in any function body. **APPLY_OK.**
+
+**Server log proof (set_tenant_context in-tx execution):**
+
+```
+prisma:query BEGIN
+prisma:query SET ROLE app_user
+prisma:query SELECT public.set_tenant_context($1::uuid, false)  ← is_local=true internally, no PG error
+prisma:query SELECT ... FROM users WHERE email = $1             ← RLS context applied
+prisma:query RESET ROLE
+prisma:query COMMIT
+→ statusCode: 401  (fail-closed, not 500)
+```
+
+**Local runtime smoke:**
+
+| Test | Endpoint | Result |
+|---|---|---|
+| T1 Admin login | `POST /api/auth/admin/login` | 200 ✅ |
+| T2 Control route | `GET /api/control/tenants` | 200 ✅ |
+| T3 Tenant context | `POST /api/auth/login` (tenant path) | 401 fail-closed ✅ (context executed OK; local seed creds differ) |
+
+Zero 500s. Zero PG errors. Context isolation preserved.
+
+**Implementation commit:** `09365b2`
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
