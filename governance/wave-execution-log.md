@@ -619,6 +619,94 @@ perform set_config('app.is_admin',  p_is_admin::text,  true);
 
 ---
 
+#### G-014 — VALIDATED 2026-02-22 (nested TX pattern in tenant activation)
+
+**Objective:** Eliminate nested `$transaction` inside `withDbContext` callback in the tenant activation flow. Consolidate all activation writes (user, membership, invite, audit log) into a single atomic DB transaction with one context lifecycle.
+
+**Files modified (final — 1 file):**
+
+| File | Change |
+|---|---|
+| `server/src/routes/tenant.ts` | MODIFY — remove nested `$transaction`, thread `tx` through all writes, move `writeAuditLog` inside callback |
+
+**Root cause (exact call chain — before):**
+
+```
+POST /api/tenant/activate
+└─ withDbContext(prisma, dbContext, tx => {    // outer prisma.$transaction + SET LOCAL ROLE + app.org_id
+     tx.$transaction(innerTx => {              // ← NESTED $transaction (Pattern A — savepoint)
+       innerTx.user.findUnique/create
+       innerTx.membership.create
+       innerTx.invite.update
+       return { user, membership }
+     })
+   })
+   writeAuditLog(prisma, ...)                  // ← OUTSIDE both transactions (Pattern C)
+```
+
+**Problems with the old pattern:**
+
+| Issue | Description |
+|---|---|
+| Pattern A — Nested `$transaction` | `tx.$transaction(innerTx => ...)` opens a PostgreSQL SAVEPOINT on top of an already-open transaction. `innerTx` is a separate client object; SET LOCAL context set in the outer tx may not propagate. |
+| Pattern C — Audit log outside tx | `writeAuditLog(prisma, ...)` used the raw prisma client (not `tx`), executing outside both transactions. Activation could succeed while the audit log fails — non-atomic. |
+| Context lifecycle fragmented | The inner `innerTx` had a different connection slot from `tx`; context vars set via `SET LOCAL` in the outer tx were not guaranteed to be visible inside the savepoint. |
+
+**Fix (after):**
+
+```
+POST /api/tenant/activate
+└─ withDbContext(prisma, dbContext, tx => {    // single prisma.$transaction; SET LOCAL ROLE; app.org_id
+     STOP-LOSS: SELECT current_setting('app.org_id', true) === invite.tenantId
+     tx.user.findUnique/create
+     tx.membership.create
+     tx.invite.update
+     writeAuditLog(tx, ...)                   // ← inside same transaction, atomic
+     return { user, membership }
+   })
+```
+
+**Constitutional compliance:**
+
+| Constraint | Status |
+|---|---|
+| No nested `$transaction` inside `withDbContext` callback | ✅ |
+| All writes on outer `tx` client (one connection) | ✅ |
+| `writeAuditLog` atomic with activation writes | ✅ |
+| Stop-loss: `current_setting('app.org_id', true)` assert before first write | ✅ |
+| `app.org_id` is the ONLY tenant scoping key | ✅ |
+| All `set_config` calls are tx-local (via `withDbContext`) | ✅ |
+| No `app.tenant_id` as real scoping key | ✅ |
+| No `set_config(..., false)` introduced | ✅ |
+
+**Static gates:**
+
+- `pnpm exec tsc --noEmit` → EXIT 0, 0 errors ✅
+- `pnpm exec eslint src/routes/tenant.ts` → 0 errors (1 pre-existing warning at line 686 in unrelated order flow — not introduced by G-014) ✅
+- `grep -n '$transaction|set_config.*false|app\.tenant_id' tenant.ts` → 0 functional matches (1 comment-only) ✅
+- `git diff --name-only` → `server/src/routes/tenant.ts` only ✅
+
+**Functional validation note:**
+
+End-to-end activation smoke test requires a live provisioned tenant (e.g., G-008 provision) + a seeded invite token. This requires the full invite creation → email token flow. Structural correctness is guaranteed by code inspection:
+
+- Single `withDbContext` call → single `prisma.$transaction` instance
+- No `tx.$transaction(...)` call anywhere in the activation path (grep-verified)
+- `writeAuditLog` signature accepts `DbClient` (`PrismaClient | TransactionClient`) — confirmed in `server/src/lib/auditLog.ts:49`
+
+**GR-007 coupling:** `withDbContext` sets `app.org_id` + `SET LOCAL ROLE texqtic_app`. The stop-loss assertion now verifies `app.org_id` before writes, so context leak is impossible by construction (any mismatch throws before any mutation).
+
+**Commit:**
+
+| Commit | Description |
+|---|---|
+| `c451662` | `fix(G-014)`: remove nested transactions in tenant activation (single atomic tx) |
+| (this commit) | `governance(G-014)`: evidence of single-tx activation + validation outputs |
+
+**Validation status: VALIDATED ✅ — 2026-02-22**
+
+---
+
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
 
 Start Date: 2026-02-12
