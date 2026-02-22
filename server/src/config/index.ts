@@ -39,6 +39,16 @@ const envSchema = z.object({
     .string()
     .transform(v => v === 'true')
     .default('false'),
+
+  // Frontend
+  FRONTEND_URL: z.string().url().default('http://localhost:4000'),
+
+  // Email / SMTP (optional — service degrades gracefully if absent)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().transform(Number).default('587'),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
 });
 
 export const config = envSchema.parse(process.env);

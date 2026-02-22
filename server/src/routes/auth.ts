@@ -18,7 +18,7 @@ import {
   verifyEmailVerificationToken,
   getPasswordResetExpiry,
 } from '../lib/authTokens.js';
-import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../lib/emailStubs.js';
+import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/email/email.service.js';
 import { writeAuditLog, createAuthAudit } from '../lib/auditLog.js';
 import {
   hashRateLimitKey,
@@ -1081,8 +1081,8 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        // Send reset email (stubbed - logs to console)
-        await sendPasswordResetEmail(email, resetToken, fastify);
+        // Send reset email (G-012: governed email service, env-gated)
+        await sendPasswordResetEmail(email, resetToken);
 
         // Write audit log (no tenant context for password reset)
         await writeAuditLog(prisma, {
@@ -1308,7 +1308,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           user.id,
           user.email
         );
-        await sendEmailVerificationEmail(email, verificationToken, fastify);
+        await sendEmailVerificationEmail(email, verificationToken);
 
         // Write audit log
         await writeAuditLog(prisma, {

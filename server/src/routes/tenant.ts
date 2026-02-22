@@ -17,6 +17,7 @@ import {
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
+import { sendInviteMemberEmail } from '../services/email/email.service.js';
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
@@ -1041,6 +1042,26 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             role,
           },
         });
+
+        // G-012: Fire-and-forget invite email — errors logged, never block invite creation
+        try {
+          const tenantRecord = await prisma.tenant.findUnique({
+            where: { id: tenantId ?? '' },
+            select: { name: true },
+          });
+          await sendInviteMemberEmail(
+            email,
+            token,
+            tenantRecord?.name ?? 'your organization',
+            {
+              tenantId: tenantId ?? null,
+              triggeredBy: 'user',
+              actorId: request.userId ?? null,
+            }
+          );
+        } catch (emailErr) {
+          fastify.log.error({ err: emailErr }, '[Invite] Email send failed (non-fatal)');
+        }
 
         return sendSuccess(reply, {
           invite: {
