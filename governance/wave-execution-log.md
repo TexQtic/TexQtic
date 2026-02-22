@@ -204,6 +204,31 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 
 ---
 
+#### G-005 — VALIDATED 2026-02-22
+
+**Gap:** Middleware pattern inconsistent — some routes called `buildContextFromRequest(request)` inline instead of using `databaseContextMiddleware`
+
+**Root cause:** Routes were authored before `databaseContextMiddleware` was established as the canonical pattern. No lint rule enforced the standard.
+
+**Blast radius (full discovery):**
+- 10 violating routes: `POST /tenant/cart`, `GET /tenant/cart`, `POST /tenant/cart/items`, `PATCH /tenant/cart/items/:id`, `POST /tenant/checkout`, `GET /tenant/orders`, `GET /tenant/orders/:id`, `PUT /tenant/branding` (tenant.ts); `GET /insights`, `POST /negotiation-advice` (ai.ts)
+- 4 already-correct routes: `GET /tenant/audit-logs`, `GET /tenant/memberships`, `GET /tenant/catalog/items`, `POST /tenant/memberships`
+- 2 excluded (intentional): `POST /tenant/activate` (invite-based activation, no JWT — manual `dbContext` from `invite.tenantId` correct); `GET /me` (non-tenant-scoped user read, no `withDbContext`)
+
+**Fix applied per route:**
+1. `onRequest: tenantAuthMiddleware` → `onRequest: [tenantAuthMiddleware, databaseContextMiddleware]`
+2. `const dbContext = buildContextFromRequest(request)` → `const dbContext = request.dbContext`
+3. Fail-closed null guard added: `if (!dbContext) return sendError(reply, 'UNAUTHORIZED', ..., 401)`
+4. `buildContextFromRequest` import removed from `server/src/routes/tenant.ts` and `server/src/routes/ai.ts` (unused after migration)
+
+**Gate outputs:**
+- `pnpm -C server run typecheck` → EXIT 0 ✅
+- `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors — baseline unchanged)
+
+**Implementation commit:** `830c0c4`
+
+---
+
 # Wave History
 
 ### Wave DB-RLS-0001 — RLS Context Model Foundation
