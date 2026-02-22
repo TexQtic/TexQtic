@@ -17,6 +17,7 @@ Branch: wave-2-stabilization
 # 🟡 STABILIZATION TASKS
 
 - [x] G-004 — Remove dual `withDbContext`; unify `control.ts` to canonical pattern (`src/lib/database-context.ts`) — VALIDATED `a19f30b` — 13 legacy call sites migrated · `withAdminContext` helper (canonical + `app.is_admin`) · 0 invocations of legacy import remain · typecheck/lint EXIT 0
+- [x] G-005-BLOCKER — Restore tenant login: add `users_tenant_select` policy on `public.users` (FORCE RLS + no policy → deny-all) — VALIDATED `b060f60` — Proof 1: policy exists w/ `app.org_id` qual · Proof 2: member read 1 row · Proof 3: cross-tenant 0 rows · typecheck/lint EXIT 0
 - [ ] G-005 — Standardize middleware: ALL tenant routes use `[tenantAuthMiddleware, databaseContextMiddleware]`
 - [ ] G-006 — Align admin bypass to new context model (control-plane realm check replaces `app.is_admin`)
 - [ ] G-007 — Fix `supabase_hardening.sql` `set_config(..., false)` → `true` (transaction-local, pooler-safe)
