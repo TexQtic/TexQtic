@@ -211,21 +211,54 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 **Root cause:** Routes were authored before `databaseContextMiddleware` was established as the canonical pattern. No lint rule enforced the standard.
 
 **Blast radius (full discovery):**
+
 - 10 violating routes: `POST /tenant/cart`, `GET /tenant/cart`, `POST /tenant/cart/items`, `PATCH /tenant/cart/items/:id`, `POST /tenant/checkout`, `GET /tenant/orders`, `GET /tenant/orders/:id`, `PUT /tenant/branding` (tenant.ts); `GET /insights`, `POST /negotiation-advice` (ai.ts)
 - 4 already-correct routes: `GET /tenant/audit-logs`, `GET /tenant/memberships`, `GET /tenant/catalog/items`, `POST /tenant/memberships`
 - 2 excluded (intentional): `POST /tenant/activate` (invite-based activation, no JWT — manual `dbContext` from `invite.tenantId` correct); `GET /me` (non-tenant-scoped user read, no `withDbContext`)
 
 **Fix applied per route:**
+
 1. `onRequest: tenantAuthMiddleware` → `onRequest: [tenantAuthMiddleware, databaseContextMiddleware]`
 2. `const dbContext = buildContextFromRequest(request)` → `const dbContext = request.dbContext`
 3. Fail-closed null guard added: `if (!dbContext) return sendError(reply, 'UNAUTHORIZED', ..., 401)`
 4. `buildContextFromRequest` import removed from `server/src/routes/tenant.ts` and `server/src/routes/ai.ts` (unused after migration)
 
 **Gate outputs:**
+
 - `pnpm -C server run typecheck` → EXIT 0 ✅
 - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors — baseline unchanged)
 
-**Implementation commit:** `830c0c4`
+**Local runtime validation (all 10 routes — context plumbing only):**
+
+| Route | Result | Classification |
+|-------|--------|----------------|
+| `GET /tenant/cart` | 200 OK ✅ | — |
+| `POST /tenant/cart` | 200 OK ✅ | — |
+| `POST /tenant/cart/items` | 404 NOT_FOUND ✅ | Cat A — fake UUID, business logic correct |
+| `PATCH /tenant/cart/items/:id` | 404 NOT_FOUND ✅ | Cat A — fake UUID, business logic correct |
+| `POST /tenant/checkout` | 400 BAD_REQUEST `Cart is empty` ✅ | Cat A — empty cart, business logic correct |
+| `GET /tenant/orders` | 200 OK `count=2` ✅ | Real data returned |
+| `GET /tenant/orders/:id` | 404 NOT_FOUND ✅ | Cat A — fake UUID, business logic correct |
+| `PUT /tenant/branding` | 200 OK ✅ | — |
+| `GET /ai/insights` | 200 OK ✅ | AI response returned |
+| `POST /ai/negotiation-advice` | 200 OK ✅ | AI response returned |
+
+Zero 500s. Zero "context missing" / UNAUTHORIZED errors. RLS isolation intact.
+
+**Production smoke (3 endpoints — context integrity):**
+
+| Endpoint | Result |
+|----------|--------|
+| `GET /tenant/cart` | 200 OK ✅ |
+| `GET /tenant/orders` | 200 OK `count=2` ✅ |
+| `GET /ai/insights` | 200 OK ✅ |
+
+- ✅ No new 500 signatures introduced
+- ✅ Auth context preserved (no unexpected 401/403)
+- ✅ RLS isolation unchanged
+
+**Implementation commit:** `830c0c4`  
+**Governance commit:** `e6e60e5`
 
 ---
 
