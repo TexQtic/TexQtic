@@ -230,28 +230,28 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 
 **Local runtime validation (all 10 routes — context plumbing only):**
 
-| Route | Result | Classification |
-|-------|--------|----------------|
-| `GET /tenant/cart` | 200 OK ✅ | — |
-| `POST /tenant/cart` | 200 OK ✅ | — |
-| `POST /tenant/cart/items` | 404 NOT_FOUND ✅ | Cat A — fake UUID, business logic correct |
-| `PATCH /tenant/cart/items/:id` | 404 NOT_FOUND ✅ | Cat A — fake UUID, business logic correct |
-| `POST /tenant/checkout` | 400 BAD_REQUEST `Cart is empty` ✅ | Cat A — empty cart, business logic correct |
-| `GET /tenant/orders` | 200 OK `count=2` ✅ | Real data returned |
-| `GET /tenant/orders/:id` | 404 NOT_FOUND ✅ | Cat A — fake UUID, business logic correct |
-| `PUT /tenant/branding` | 200 OK ✅ | — |
-| `GET /ai/insights` | 200 OK ✅ | AI response returned |
-| `POST /ai/negotiation-advice` | 200 OK ✅ | AI response returned |
+| Route                          | Result                             | Classification                             |
+| ------------------------------ | ---------------------------------- | ------------------------------------------ |
+| `GET /tenant/cart`             | 200 OK ✅                          | —                                          |
+| `POST /tenant/cart`            | 200 OK ✅                          | —                                          |
+| `POST /tenant/cart/items`      | 404 NOT_FOUND ✅                   | Cat A — fake UUID, business logic correct  |
+| `PATCH /tenant/cart/items/:id` | 404 NOT_FOUND ✅                   | Cat A — fake UUID, business logic correct  |
+| `POST /tenant/checkout`        | 400 BAD_REQUEST `Cart is empty` ✅ | Cat A — empty cart, business logic correct |
+| `GET /tenant/orders`           | 200 OK `count=2` ✅                | Real data returned                         |
+| `GET /tenant/orders/:id`       | 404 NOT_FOUND ✅                   | Cat A — fake UUID, business logic correct  |
+| `PUT /tenant/branding`         | 200 OK ✅                          | —                                          |
+| `GET /ai/insights`             | 200 OK ✅                          | AI response returned                       |
+| `POST /ai/negotiation-advice`  | 200 OK ✅                          | AI response returned                       |
 
 Zero 500s. Zero "context missing" / UNAUTHORIZED errors. RLS isolation intact.
 
 **Production smoke (3 endpoints — context integrity):**
 
-| Endpoint | Result |
-|----------|--------|
-| `GET /tenant/cart` | 200 OK ✅ |
+| Endpoint             | Result              |
+| -------------------- | ------------------- |
+| `GET /tenant/cart`   | 200 OK ✅           |
 | `GET /tenant/orders` | 200 OK `count=2` ✅ |
-| `GET /ai/insights` | 200 OK ✅ |
+| `GET /ai/insights`   | 200 OK ✅           |
 
 - ✅ No new 500 signatures introduced
 - ✅ Auth context preserved (no unexpected 401/403)
@@ -270,15 +270,15 @@ Zero 500s. Zero "context missing" / UNAUTHORIZED errors. RLS isolation intact.
 
 Full grep `server/src/**/*.ts` for pattern `withDbContext\(\{`:
 
-| File | Line | Pattern | Scope |
-|------|------|---------|-------|
-| `routes/auth.ts` | 438 | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target |
-| `routes/auth.ts` | 653 | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target (not in prior discovery summary) |
-| `routes/auth.ts` | 162 | `withDbContext({ tenantId }, …)` | ❌ Deferred → G-006D |
-| `routes/auth.ts` | 873 | `withDbContext({ tenantId }, …)` | ❌ Deferred → G-006D |
-| `routes/admin-cart-summaries.ts` | 52 | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C |
-| `routes/admin-cart-summaries.ts` | 140 | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C |
-| `__tests__/gate-e-4-audit…ts` | 182, 236, 286, 358, 437, 494 | various | ❌ Test scope, out of G-006 |
+| File                             | Line                         | Pattern                               | Scope                                            |
+| -------------------------------- | ---------------------------- | ------------------------------------- | ------------------------------------------------ |
+| `routes/auth.ts`                 | 438                          | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target                                  |
+| `routes/auth.ts`                 | 653                          | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target (not in prior discovery summary) |
+| `routes/auth.ts`                 | 162                          | `withDbContext({ tenantId }, …)`      | ❌ Deferred → G-006D                             |
+| `routes/auth.ts`                 | 873                          | `withDbContext({ tenantId }, …)`      | ❌ Deferred → G-006D                             |
+| `routes/admin-cart-summaries.ts` | 52                           | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C                      |
+| `routes/admin-cart-summaries.ts` | 140                          | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C                      |
+| `__tests__/gate-e-4-audit…ts`    | 182, 236, 286, 358, 437, 494 | various                               | ❌ Test scope, out of G-006                      |
 
 **Implementation attempted:**
 
@@ -291,8 +291,8 @@ Full grep `server/src/**/*.ts` for pattern `withDbContext\(\{`:
 
 **Runtime validation — FAILED:**
 
-| Test | Result | Detail |
-|------|--------|--------|
+| Test                         | Result                | Detail                                              |
+| ---------------------------- | --------------------- | --------------------------------------------------- |
 | `POST /api/auth/admin/login` | ❌ 500 INTERNAL_ERROR | PG-42501: `permission denied for table admin_users` |
 
 **Root cause identified from server logs:**
@@ -318,11 +318,11 @@ prisma:error ConnectorError { code: "42501", message: "permission denied for tab
 
 **Formal Design Options (awaiting user decision):**
 
-| Option | Description | DB change? | Code change? |
-|--------|-------------|-----------|-------------|
-| A | Grant `texqtic_app` SELECT on `admin_users` → re-apply canonical form | ✅ Yes | Same as `f196445` |
-| B | Use `prisma.adminUser.findUnique()` directly (no role switch) in login callbacks | ❌ No | Different code shape |
-| C | Lock G-006 to NOT include auth.ts admin login calls; redefine scope | ❌ No | No change to auth.ts |
+| Option | Description                                                                      | DB change? | Code change?         |
+| ------ | -------------------------------------------------------------------------------- | ---------- | -------------------- |
+| A      | Grant `texqtic_app` SELECT on `admin_users` → re-apply canonical form            | ✅ Yes     | Same as `f196445`    |
+| B      | Use `prisma.adminUser.findUnique()` directly (no role switch) in login callbacks | ❌ No      | Different code shape |
+| C      | Lock G-006 to NOT include auth.ts admin login calls; redefine scope              | ❌ No      | No change to auth.ts |
 
 **Follow-on gaps formally logged:**
 
@@ -330,6 +330,73 @@ prisma:error ConnectorError { code: "42501", message: "permission denied for tab
 - **G-006D** — `auth.ts` lines 166 + 889 (`tenantId` form); Wave TBD; OPEN
 
 **Status:** BLOCKED — awaiting design decision before any implementation retry.
+
+---
+
+#### G-006 — VALIDATED 2026-02-22 (Option B resolution)
+
+**Design decision:** Option B — direct `prisma.adminUser.findUnique()` for pre-auth admin lookup (no role switch, no transaction wrapper). Justified: `admin_users` is not tenant-scoped; the admin login step is pre-auth and needs no RLS context. Everything post-authentication continues using `withAdminContext` (unchanged).
+
+**Blast radius confirmed (pre-implementation grep):**
+
+- `auth.ts` lines 438 + 653: `withDbContext({ isAdmin: true })` — FIXED ✅
+- `auth.ts` lines 166 + 889: `withDbContext({ tenantId })` — NOT TOUCHED (G-006D, deferred)
+- `admin-cart-summaries.ts` lines 52 + 140: `withDbContext({ isAdmin: true })` — NOT TOUCHED (G-006C, deferred)
+- Test files: all `withDbContext` calls — NOT TOUCHED (out of scope)
+
+**Fix applied (both admin login endpoints):**
+
+Before:
+
+```typescript
+const result = await withDbContext({ isAdmin: true }, async tx => {
+  const admin = await tx.adminUser.findUnique({ where: { email }, select: {...} });
+  if (!admin) return null;
+  const isValid = await verifyPassword(password, admin.passwordHash);
+  return isValid ? admin : null;
+});
+```
+
+After:
+
+```typescript
+// Pre-auth lookup: admin_users is not tenant-scoped; direct read requires no RLS context (G-006 Option B)
+const adminRecord = await prisma.adminUser.findUnique({
+  where: { email },
+  select: { id: true, email: true, passwordHash: true, role: true },
+});
+const result =
+  adminRecord && (await verifyPassword(password, adminRecord.passwordHash)) ? adminRecord : null;
+```
+
+**Gate outputs:**
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅
+- `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors — baseline unchanged)
+
+**Server log proof (Option B path):**
+
+```
+SELECT … FROM "public"."admin_users" WHERE (email = $1) LIMIT $2 OFFSET $3
+```
+
+- NO `BEGIN` ✅
+- NO `SET LOCAL ROLE texqtic_app` ✅ (removes the PG-42501 failure path)
+- NO `set_config(…)` RLS context ✅
+- Query succeeds directly; statusCode 200 ✅
+
+**Local runtime validation (4 points):**
+
+| Test                            | Endpoint                          | Result              |
+| ------------------------------- | --------------------------------- | ------------------- |
+| T1 Admin login                  | `POST /api/auth/admin/login`      | 200 success=True ✅ |
+| T2 Control route                | `GET /api/control/tenants`        | 200 success=True ✅ |
+| T3 Tenant login (regression)    | `POST /api/auth/login` (tenantId) | 200 success=True ✅ |
+| T4 Tenant commerce (regression) | `GET /api/tenant/orders`          | 200 count=2 ✅      |
+
+Zero 500s. Zero regressions. RLS isolation preserved.
+
+**Implementation commit:** `4971731`
 
 ---
 
