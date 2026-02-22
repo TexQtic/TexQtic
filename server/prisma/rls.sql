@@ -174,10 +174,27 @@ UPDATE,
   DELETE ON audit_logs
 FROM PUBLIC;
 -- ============================================================
--- ADMIN READ ACCESS: tenants, users (with admin flag)
+-- IDENTITY TABLES: users + tenants (foundational, not tenant-scoped)
 -- ============================================================
--- tenants table: no RLS, but app layer enforces admin checks
--- users table: no RLS, but app layer enforces admin checks
+-- users table: RLS is ENABLED + FORCE (from supabase_hardening.sql).
+-- G-005-BLOCKER: supabase_hardening.sql dropped users_tenant_read with no
+-- replacement, making public.users unreadable by texqtic_app → AUTH_INVALID.
+-- Policy: allow SELECT for rows where the user is a member of the current tenant,
+-- or admin context. This preserves isolation (no cross-tenant user reads) while
+-- allowing the auth route to look up credentials during login.
+DROP POLICY IF EXISTS users_tenant_select ON public.users;
+CREATE POLICY users_tenant_select ON public.users
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.memberships m
+      WHERE m.user_id = public.users.id
+        AND m.tenant_id = current_setting('app.org_id', true)::uuid
+    )
+    OR current_setting('app.is_admin', true) = 'true'
+  );
+-- tenants table: no RLS policy needed; app layer enforces admin checks
 -- ============================================================
 -- HELPER FUNCTION: Set DB session context safely
 -- ============================================================
