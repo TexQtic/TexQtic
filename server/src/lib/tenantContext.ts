@@ -33,25 +33,8 @@ export function getTenantContext(request: FastifyRequest): TenantContext {
     };
   }
 
-  /**
-   * TECHNICAL DEBT: X-Tenant-Id header fallback
-   * 
-   * Context: Phase 2 temporary workaround for unauthenticated tenant API access
-   * Phase Gate: REMOVE in Phase 3B when authentication is fully enforced
-   * Action Required: Delete this fallback block once all tenant endpoints require JWT auth
-   * 
-   * WARNING: This bypasses authentication - do not use in production Phase 3+
-   */
-  const headerTenantId = request.headers['x-tenant-id'] as string | undefined;
-  if (headerTenantId) {
-    request.log.warn({ headerTenantId }, 'Using X-Tenant-Id fallback - REMOVE IN PHASE 3B');
-    return {
-      tenantId: headerTenantId,
-      realm: 'public',
-    };
-  }
-
-  // No tenant context available
+  // G-W3-A1: X-Tenant-Id header fallback removed — fail-closed (auth required).
+  // No authenticated context available; upstream auth guards must reject.
   return {
     tenantId: null,
     realm: 'public',

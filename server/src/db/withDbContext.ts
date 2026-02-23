@@ -7,39 +7,46 @@ interface DbContext {
 }
 
 /**
- * Execute a database operation with tenant/admin context
- * Sets session variables for RLS policies
- * Uses app_user role to enforce RLS (Supabase workaround)
+ * Execute a database operation with tenant/admin context.
+ *
+ * Doctrine v1.4 — Constitutional Tenancy (G-W3-A1):
+ * - SET LOCAL ROLE texqtic_app  (tx-local; auto-resets on commit/rollback)
+ * - All set_config calls use tx-local=true
+ * - No RESET ROLE (tx-local SET LOCAL makes it unnecessary)
+ * - No helper function calls (set_tenant_context / set_admin_context / clear_context)
  */
 export async function withDbContext<T>(
   context: DbContext,
   fn: (tx: Prisma.TransactionClient) => Promise<T>
 ): Promise<T> {
   return await prisma.$transaction(async tx => {
-    // Switch to app_user role for RLS enforcement
-    // (Supabase doesn't allow direct auth with custom roles)
-    await tx.$executeRawUnsafe('SET ROLE app_user');
+    // Doctrine v1.4: switch to canonical app role (tx-local)
+    await tx.$executeRawUnsafe('SET LOCAL ROLE texqtic_app');
 
-    // Set session variables for RLS
-    // Schema-qualified calls for app_user role compatibility
+    // Defensive drift clear: legacy key app.tenant_id (was set by old helper)
+    await tx.$executeRawUnsafe(`SELECT set_config('app.tenant_id', '', true)`);
+    // Ensure bypass is explicitly off for this transaction
+    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'off', true)`);
+
     if (context.isAdmin) {
-      await tx.$executeRawUnsafe(`SELECT public.set_admin_context()`);
+      // Admin realm: cross-tenant; no org_id
+      await tx.$executeRawUnsafe(`SELECT set_config('app.org_id', '', true)`);
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
     } else if (context.tenantId) {
+      // Tenant realm: tx-local org_id (compat: context.tenantId maps to org_id)
       await tx.$executeRawUnsafe(
-        `SELECT public.set_tenant_context($1::uuid, false)`,
+        `SELECT set_config('app.org_id', $1::text, true)`,
         context.tenantId
       );
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'false', true)`);
     } else {
-      await tx.$executeRawUnsafe(`SELECT public.clear_context()`);
+      // No context: fail-closed (org_id empty → RLS denies access)
+      await tx.$executeRawUnsafe(`SELECT set_config('app.org_id', '', true)`);
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'false', true)`);
     }
 
-    try {
-      // Execute the operation within this context
-      return await fn(tx);
-    } finally {
-      // Reset role for connection pooling
-      await tx.$executeRawUnsafe('RESET ROLE');
-    }
+    // Execute the operation within this tx-local context
+    return await fn(tx);
   });
 }
 
