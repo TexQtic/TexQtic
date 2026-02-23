@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { sendUnauthorized, sendForbidden } from '../utils/response.js';
-import { verifyTenantAccess, getUserMembership } from '../db/withDbContext.js';
+import { getUserMembership } from '../db/withDbContext.js';
 import { checkRealmMismatch } from './realmGuard.js';
 
 declare module 'fastify' {
@@ -14,24 +14,8 @@ declare module 'fastify' {
   }
 }
 
-/**
- * Extract and validate tenant from X-Tenant-Id header
- */
-export async function tenantMiddleware(request: FastifyRequest, reply: FastifyReply) {
-  const tenantId = request.headers['x-tenant-id'] as string;
-
-  if (!tenantId) {
-    return sendUnauthorized(reply, 'Missing X-Tenant-Id header');
-  }
-
-  // Validate tenant exists and is active
-  const isValid = await verifyTenantAccess(tenantId);
-  if (!isValid) {
-    return sendForbidden(reply, 'Invalid or inactive tenant');
-  }
-
-  request.tenantId = tenantId;
-}
+// G-W3-A1 cleanup: tenantMiddleware (X-Tenant-Id header bypass, 0 callers) deleted.
+// Tenant context MUST come from JWT. See lib/tenantContext.ts.
 
 /**
  * Verify tenant user JWT and membership
