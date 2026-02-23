@@ -40,9 +40,6 @@ const envSchema = z.object({
     .transform(v => v === 'true')
     .default('false'),
 
-  // Frontend
-  FRONTEND_URL: z.string().url().default('http://localhost:4000'),
-
   // Email / SMTP (optional — service degrades gracefully if absent)
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().transform(Number).default('587'),
@@ -51,6 +48,28 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional(),
 });
 
-export const config = envSchema.parse(process.env);
+const _baseConfig = envSchema.parse(process.env);
 
-export type Config = z.infer<typeof envSchema>;
+// FRONTEND_URL — non-fatal: sanitize common Vercel mistakes (quote-wrapping,
+// trailing whitespace) then safeParse so a bad value never takes down the API.
+const _frontendUrlRaw = process.env.FRONTEND_URL;
+const _frontendUrlClean = _frontendUrlRaw
+  ?.trim()
+  .replace(/^"|"$/g, '')
+  .replace(/^'|'$/g, '');
+
+const _parsedFrontendUrl = z.string().url().safeParse(_frontendUrlClean);
+
+const FRONTEND_URL_VALUE = _parsedFrontendUrl.success
+  ? _parsedFrontendUrl.data
+  : 'https://www.texqtic.com';
+
+if (!_parsedFrontendUrl.success) {
+  console.warn('[config] FRONTEND_URL invalid/missing; using fallback https://www.texqtic.com', {
+    value: _frontendUrlRaw,
+  });
+}
+
+export const config = { ..._baseConfig, FRONTEND_URL: FRONTEND_URL_VALUE };
+
+export type Config = z.infer<typeof envSchema> & { FRONTEND_URL: string };
