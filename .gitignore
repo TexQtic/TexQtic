@@ -46,3 +46,6 @@ yarn-error.log*
 
 # Local validation tooling (do not commit)
 server/scripts/proof-*.ts
+
+# Local archive/transport artifacts (never commit)
+*.zip
