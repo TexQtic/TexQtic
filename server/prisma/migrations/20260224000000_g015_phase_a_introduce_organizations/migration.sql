@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public.organizations (
   -- Slug canonicalization: prevents normalization bugs across lifecycle (G-015 review)
   CONSTRAINT organizations_slug_lowercase CHECK (slug = lower(slug))
 );
-COMMENT ON TABLE public.organizations IS 'G-015: Doctrine v1.4 canonical organization identity table. ' '1:1 with tenants.id during transition. Authoritative for legal_name, ' 'jurisdiction, risk_score, effective_at, superseded_at. ' 'Phase B adds deferred FK to tenants. Phase D promotes to sole authority.';
+COMMENT ON TABLE public.organizations IS 'G-015: Doctrine v1.4 canonical organization identity table. 1:1 with tenants.id during transition. Authoritative for legal_name, jurisdiction, risk_score, effective_at, superseded_at. Phase B adds deferred FK to tenants. Phase D promotes to sole authority.';
 COMMENT ON COLUMN public.organizations.id IS 'Same UUID as tenants.id. Not a FK in Phase A (added deferred in Phase B).';
 COMMENT ON COLUMN public.organizations.legal_name IS 'Doctrine §3.1 canonical invariant. Seeded from tenants.name in backfill.';
 COMMENT ON COLUMN public.organizations.jurisdiction IS 'ISO 3166-2 jurisdiction code (e.g. US-DE, GB, IN-MH). Default UNKNOWN for legacy tenants.';
@@ -229,7 +229,7 @@ END IF;
 RETURN NEW;
 END;
 $$;
-COMMENT ON FUNCTION public.sync_tenants_to_organizations() IS 'G-015 Phase A: AFTER INSERT OR UPDATE trigger on tenants. ' 'Maintains identity parity between tenants and organizations without ' 'requiring application changes. SECURITY DEFINER to bypass RLS on organizations. ' 'Idempotent via ON CONFLICT DO NOTHING.';
+COMMENT ON FUNCTION public.sync_tenants_to_organizations() IS 'G-015 Phase A: AFTER INSERT OR UPDATE trigger on tenants. Maintains identity parity between tenants and organizations without requiring application changes. SECURITY DEFINER to bypass RLS on organizations. Idempotent via ON CONFLICT DO NOTHING.';
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- §6  TRIGGER: trg_sync_tenants_to_org ON public.tenants
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -240,7 +240,7 @@ AFTER
 INSERT
   OR
 UPDATE ON public.tenants FOR EACH ROW EXECUTE FUNCTION public.sync_tenants_to_organizations();
-COMMENT ON TRIGGER trg_sync_tenants_to_org ON public.tenants IS 'G-015 Phase A: Fires after every tenant INSERT or UPDATE. ' 'Syncs to organizations to maintain identity parity. Non-blocking (AFTER).';
+COMMENT ON TRIGGER trg_sync_tenants_to_org ON public.tenants IS 'G-015 Phase A: Fires after every tenant INSERT or UPDATE. Syncs to organizations to maintain identity parity. Non-blocking (AFTER).';
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- §7  VERIFICATION BLOCK
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
