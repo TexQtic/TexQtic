@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-22 (G-007B VALIDATED — supabase_hardening.sql Part 5+6 policies reconciled to app.org_id; Doctrine v1.4 anti-regression)
+Last Updated: 2026-02-23 (G-006C RLS Consolidation — 11 migration files created; Supabase Performance Advisor policy-sprawl elimination; Wave 3 launch)
 Doctrine Version: v1.4
 
 ---
@@ -61,6 +61,26 @@ Doctrine Version: v1.4
 ---
 
 # WAVE 3 — Canonical Doctrine Buildout
+
+## RLS Entropy Elimination
+
+| Gap ID        | Description                                                                                                              | Affected Files                                                                                                                                                                                                                   | Risk    | Status      | Migration Timestamp Range          | Validation Proof                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| G-006C (RLS)  | **Multiple permissive RLS policies per command per table** — Supabase Performance Advisor flagged policy sprawl across 11 tables; eliminates OR-policy explosion before G-016–G-023 domains are added | `server/prisma/migrations/20260223010000…20260223110000` (11 migration files) | 🟠 Med  | IN PROGRESS | 20260223010000 – 20260223110000    | Pending `prisma migrate deploy` per table; verification SQL embedded in each migration; cross-tenant 0-row proof blocks per migration |
+
+**Tables in scope (apply in order):**
+`audit_logs` → `carts` → `cart_items` → `catalog_items` → `orders` → `order_items` → `memberships` → `tenant_branding` → `tenant_domains` → `event_logs` → `impersonation_sessions`
+
+**Expected end state per table:**
+- 1 permissive policy per command (SELECT / INSERT / UPDATE / DELETE)
+- RESTRICTIVE guard policies untouched
+- FORCE RLS: unchanged
+- Cross-tenant 0-row proof: PASS
+- Supabase Performance Advisor: cleared
+
+---
+
+## Schema Domain Buildout
 
 | Gap ID | Description                                                                                          | Status      | Notes                                         |
 | ------ | ---------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------- |

@@ -1148,3 +1148,89 @@ Runtime probes:
 
 Conclusion:
 Wave-2 is CLOSED under TECS v1.6. All six targeted gaps validated. Repo gates clean. GR-007 proof on record.
+
+---
+
+# Wave 3 — Canonical Doctrine Buildout (In Progress)
+
+Start Date: 2026-02-23
+End Date: —
+Branch: main
+Tag: —
+
+## Objective
+
+Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-024. The entropy elimination step is a prerequisite: adding G-016–G-023 domain tables on top of policy sprawl compounds complexity exponentially.
+
+---
+
+## G-006C (RLS Consolidation) — IN PROGRESS 2026-02-23
+
+**Task:** Replace N permissive RLS policies per (table, command) with exactly 1 unified permissive policy per command. No functional access change allowed.
+
+**Root cause:** Supabase Performance Advisor flagged multiple permissive policies on the same table+command across 11 tenant/control-plane tables.
+
+**Doctrine alignment:** Doctrine v1.4 section 6 (single policy per command per role, fail-closed via RESTRICTIVE guard).
+
+**Security fix (audit_logs INSERT):** WITH CHECK tightened from require_org_context() IS NOT NULL (always-true boolean) to explicit require_org_context() AND tenant_id = app.current_org_id().
+
+### Migration Files Created (deploy in strict order — one commit per table)
+
+| Order | Timestamp      | Table                  | Migration Dir                                               |
+| ----- | -------------- | ---------------------- | ----------------------------------------------------------- |
+| 1     | 20260223010000 | audit_logs             | 20260223010000_g006c_rls_audit_logs_consolidation           |
+| 2     | 20260223020000 | carts                  | 20260223020000_g006c_rls_carts_consolidation                |
+| 3     | 20260223030000 | cart_items             | 20260223030000_g006c_rls_cart_items_consolidation           |
+| 4     | 20260223040000 | catalog_items          | 20260223040000_g006c_rls_catalog_items_consolidation        |
+| 5     | 20260223050000 | orders                 | 20260223050000_g006c_rls_orders_consolidation               |
+| 6     | 20260223060000 | order_items            | 20260223060000_g006c_rls_order_items_consolidation          |
+| 7     | 20260223070000 | memberships            | 20260223070000_g006c_rls_memberships_consolidation          |
+| 8     | 20260223080000 | tenant_branding        | 20260223080000_g006c_rls_tenant_branding_consolidation      |
+| 9     | 20260223090000 | tenant_domains         | 20260223090000_g006c_rls_tenant_domains_consolidation       |
+| 10    | 20260223100000 | event_logs             | 20260223100000_g006c_rls_event_logs_consolidation           |
+| 11    | 20260223110000 | impersonation_sessions | 20260223110000_g006c_rls_impersonation_sessions_consolidation |
+
+### RESTRICTIVE Guard Policies — NOT Touched
+
+| Table                  | RESTRICTIVE Policy Name               |
+| ---------------------- | ------------------------------------- |
+| audit_logs             | audit_logs_guard                      |
+| event_logs             | event_logs_guard                      |
+| carts                  | carts_guard                           |
+| cart_items             | cart_items_guard                      |
+| catalog_items          | catalog_items_guard (SELECT only)     |
+| memberships            | memberships_guard_require_context     |
+| tenant_branding        | tenant_branding_guard_policy          |
+| tenant_domains         | tenant_domains_guard_policy           |
+| impersonation_sessions | restrictive_guard                     |
+
+### Deploy Command (per table — requires explicit approval per doctrine)
+
+  pnpm -C server exec prisma migrate deploy
+
+### Post-Deploy Verification (per table)
+
+  SELECT tablename, cmd, permissive, count(*)
+  FROM pg_policies
+  WHERE tablename = '<table>'
+  GROUP BY tablename, cmd, permissive
+  ORDER BY cmd, permissive;
+  -- Expected: count(*) = 1 for every PERMISSIVE row
+
+### Expected End State (after all 11 tables)
+
+| Condition                          | Expected              |
+| ---------------------------------- | --------------------- |
+| Multiple permissive policies       | Eliminated            |
+| FORCE RLS                          | Unchanged             |
+| Cross-tenant isolation             | 0-row proof per table |
+| Supabase Performance Advisor warns | Cleared               |
+| Supabase Security Advisor warns    | Cleared               |
+| Doctrine compliance                | Partial -> Compliant  |
+
+### Post-Completion Actions
+
+1. Re-run Supabase Security Advisor
+2. Re-run Supabase Performance Advisor
+3. Update Coverage Matrix snapshot
+4. Mark G-006C (RLS) closed in Gap Register — status: VALIDATED
