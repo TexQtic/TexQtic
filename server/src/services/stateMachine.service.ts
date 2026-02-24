@@ -36,6 +36,8 @@ import {
   runPreDbGuardrails,
   assertSystemAutomationBoundary,
 } from './stateMachine.guardrails.js';
+import type { EscalationService } from './escalation.service.js';
+import { GovError } from './escalation.types.js';
 
 // ─── UUID Validation ──────────────────────────────────────────────────────────
 
@@ -56,11 +58,17 @@ function denied(code: TransitionErrorCode, message: string): TransitionDeniedRes
 
 export class StateMachineService {
   /**
-   * @param db - Prisma client. Injected for testability.
-   *             In production, pass the singleton from src/db/prisma.ts.
-   *             In tests, pass a mocked PrismaClient.
+   * @param db                - Prisma client. Injected for testability.
+   *                            In production, pass the singleton from src/db/prisma.ts.
+   *                            In tests, pass a mocked PrismaClient.
+   * @param escalationService - EscalationService (optional). When provided, freeze checks
+   *                            run before every transition (G-022 Gate D integration).
+   *                            When null/undefined, freeze checks are skipped (backward compat).
    */
-  constructor(private readonly db: PrismaClient) {}
+  constructor(
+    private readonly db: PrismaClient,
+    private readonly escalationService?: EscalationService | null,
+  ) {}
 
   /**
    * transition() — Enforce a lifecycle state change.
@@ -117,6 +125,25 @@ export class StateMachineService {
         return denied(err.code as TransitionErrorCode, err.message);
       }
       throw err; // unexpected — re-throw
+    }
+
+    // ── Step 3.5: G-022 Freeze Checks (precondition hooks) ───────────────────
+    // If EscalationService is injected, run org-level and entity-level freeze checks.
+    // Both checks throw GovError if a freeze is active.
+    // This runs BEFORE any DB read/write — cheap pre-condition guard.
+    if (this.escalationService) {
+      try {
+        await this.escalationService.checkOrgFreeze(req.orgId);
+        await this.escalationService.checkEntityFreeze(req.entityType, req.entityId);
+      } catch (err) {
+        if (err instanceof GovError) {
+          return denied(
+            'TRANSITION_NOT_PERMITTED',
+            `G-022 Freeze: ${err.message}`,
+          );
+        }
+        throw err; // unexpected DB error — re-throw
+      }
     }
 
     // ── Step 4: Normalize state keys ──────────────────────────────────────────

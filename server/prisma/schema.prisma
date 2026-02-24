@@ -28,6 +28,7 @@ model Tenant {
   memberships              Membership[]
   orderItems               OrderItem[]
   orders                   Order[]
+  organizations            organizations?
   branding                 TenantBranding?
   domains                  TenantDomain[]
   featureOverrides         TenantFeatureOverride[]
@@ -412,42 +413,32 @@ model Order {
   @@map("orders")
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// G-020: Lifecycle State Machine — Governance Infrastructure
-// Migration: 20260301000000_g020_lifecycle_state_machine_core
-// Doctrine: v1.4 + G-020 Design v1.1 + D-020-A/B/C/D
-// DO NOT modify existing models above. ADD ONLY below this line.
-// ─────────────────────────────────────────────────────────────────────────────
-
 /// G-020 §2.2: Authoritative registry of all valid lifecycle states.
 /// Platform-level governance table. READ-ONLY at runtime.
 /// Populated via governance migrations only.
 /// entity_type IN ('TRADE', 'ESCROW', 'CERTIFICATION') — enforced by DB CHECK.
 model LifecycleState {
-  id                   String   @id @default(uuid()) @db.Uuid
+  id                                                                                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Domain discriminant: TRADE | ESCROW | CERTIFICATION
-  entityType           String   @map("entity_type")
+  entityType                                                                           String              @map("entity_type")
   /// Uppercase machine-readable state key, e.g. ORDER_CONFIRMED
-  stateKey             String   @map("state_key")
+  stateKey                                                                             String              @map("state_key")
   /// If true, no outbound transitions are permitted from this state
-  isTerminal           Boolean  @default(false) @map("is_terminal")
+  isTerminal                                                                           Boolean             @default(false) @map("is_terminal")
   /// If true, transitioning INTO this state cannot be undone by normal service calls
-  isIrreversible       Boolean  @default(false) @map("is_irreversible")
+  isIrreversible                                                                       Boolean             @default(false) @map("is_irreversible")
   /// G-022 integration: 0=routine, 1=notable, 2=significant, 3=high, 4=critical
-  severityLevel        Int      @default(0) @map("severity_level")
+  severityLevel                                                                        Int                 @default(0) @map("severity_level")
   /// Default MC gate for any transition INTO this state
-  requiresMakerChecker Boolean  @default(false) @map("requires_maker_checker")
-  description          String?
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  /// Inverse: transitions departing from this state key
-  /// Note: Prisma does not support composite FK @relation for these.
-  /// The DB-level FKs on allowed_transitions(entity_type, from_state_key/to_state_key)
-  /// reference lifecycle_states(entity_type, state_key) directly.
+  requiresMakerChecker                                                                 Boolean             @default(false) @map("requires_maker_checker")
+  description                                                                          String?
+  createdAt                                                                            DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  allowed_transitions_allowed_transitions_entity_type_from_state_keyTolifecycle_states AllowedTransition[] @relation("allowed_transitions_entity_type_from_state_keyTolifecycle_states")
+  allowed_transitions_allowed_transitions_entity_type_to_state_keyTolifecycle_states   AllowedTransition[] @relation("allowed_transitions_entity_type_to_state_keyTolifecycle_states")
 
   @@unique([entityType, stateKey])
-  @@index([entityType])
-  @@index([entityType, stateKey])
+  @@index([entityType], map: "idx_lifecycle_states_entity_type")
+  @@index([entityType, stateKey], map: "idx_lifecycle_states_entity_type_state_key")
   @@map("lifecycle_states")
 }
 
@@ -456,26 +447,28 @@ model LifecycleState {
 /// Composite DB FKs to lifecycle_states(entity_type, state_key) enforce graph integrity.
 /// No row = transition denied unconditionally by StateMachineService.
 model AllowedTransition {
-  id                   String   @id @default(uuid()) @db.Uuid
+  id                                                                                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Domain discriminant: TRADE | ESCROW | CERTIFICATION
-  entityType           String   @map("entity_type")
+  entityType                                                                        String         @map("entity_type")
   /// Source state key — DB FK: (entity_type, from_state_key) → lifecycle_states
-  fromStateKey         String   @map("from_state_key")
+  fromStateKey                                                                      String         @map("from_state_key")
   /// Target state key — DB FK: (entity_type, to_state_key) → lifecycle_states
-  toStateKey           String   @map("to_state_key")
+  toStateKey                                                                        String         @map("to_state_key")
   /// D-020-A: Actor types permitted to trigger this edge.
   /// Values: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
   /// DB constraint: array_length >= 1 (empty array is schema-prohibited)
-  allowedActorType     String[] @map("allowed_actor_type")
+  allowedActorType                                                                  String[]       @map("allowed_actor_type")
   /// Edge-level MC gate (overrides lifecycle_states.requires_maker_checker for target state)
-  requiresMakerChecker Boolean  @default(false) @map("requires_maker_checker")
+  requiresMakerChecker                                                              Boolean        @default(false) @map("requires_maker_checker")
   /// If true, successful traversal of this edge triggers a G-022 escalation record
-  requiresEscalation   Boolean  @default(false) @map("requires_escalation")
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  requiresEscalation                                                                Boolean        @default(false) @map("requires_escalation")
+  createdAt                                                                         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  lifecycle_states_allowed_transitions_entity_type_from_state_keyTolifecycle_states LifecycleState @relation("allowed_transitions_entity_type_from_state_keyTolifecycle_states", fields: [entityType, fromStateKey], references: [entityType, stateKey], onUpdate: Restrict, map: "allowed_transitions_from_state_fk")
+  lifecycle_states_allowed_transitions_entity_type_to_state_keyTolifecycle_states   LifecycleState @relation("allowed_transitions_entity_type_to_state_keyTolifecycle_states", fields: [entityType, toStateKey], references: [entityType, stateKey], onUpdate: Restrict, map: "allowed_transitions_to_state_fk")
 
-  @@unique([entityType, fromStateKey, toStateKey])
-  @@index([entityType, fromStateKey])
-  @@index([entityType, fromStateKey, toStateKey])
+  @@unique([entityType, fromStateKey, toStateKey], map: "allowed_transitions_unique_edge")
+  @@index([entityType, fromStateKey], map: "idx_allowed_transitions_entity_from")
+  @@index([entityType, fromStateKey, toStateKey], map: "idx_allowed_transitions_entity_from_to")
   @@map("allowed_transitions")
 }
 
@@ -485,46 +478,47 @@ model AllowedTransition {
 /// tradeId is a SOFT REFERENCE — no FK to trades (G-017 will add FK when trades table lands).
 /// orgId → organizations.id is a live FK (G-015 Phase A).
 model TradeLifecycleLog {
-  id              String   @id @default(uuid()) @db.Uuid
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Live FK → organizations.id (G-015). RLS boundary: current_setting('app.org_id', true)
-  orgId           String   @map("org_id") @db.Uuid
+  orgId           String        @map("org_id") @db.Uuid
   /// SOFT REFERENCE: UUID of the trade. No FK yet — deferred to G-017.
-  tradeId         String   @map("trade_id") @db.Uuid
+  tradeId         String        @map("trade_id") @db.Uuid
   /// Prior state key (matches lifecycle_states.state_key for TRADE entity_type)
-  fromStateKey    String   @map("from_state_key")
+  fromStateKey    String        @map("from_state_key")
   /// New state key (matches lifecycle_states.state_key for TRADE entity_type)
-  toStateKey      String   @map("to_state_key")
+  toStateKey      String        @map("to_state_key")
   /// D-020-A: UUID of the user who triggered this transition (null for SYSTEM_AUTOMATION)
-  actorUserId     String?  @map("actor_user_id") @db.Uuid
+  actorUserId     String?       @map("actor_user_id") @db.Uuid
   /// D-020-A: UUID of the admin who triggered this transition (null for user/system)
-  actorAdminId    String?  @map("actor_admin_id") @db.Uuid
+  actorAdminId    String?       @map("actor_admin_id") @db.Uuid
   /// D-020-A: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
-  actorType       String   @map("actor_type")
+  actorType       String        @map("actor_type")
   /// Role snapshot at time of transition (not a live FK)
-  actorRole       String   @map("actor_role")
+  actorRole       String        @map("actor_role")
   /// G-022: escalation severity level if triggered (1–4), null if not
-  escalationLevel Int?     @map("escalation_level")
+  escalationLevel Int?          @map("escalation_level")
   /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
-  makerUserId     String?  @map("maker_user_id") @db.Uuid
+  makerUserId     String?       @map("maker_user_id") @db.Uuid
   /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
-  checkerUserId   String?  @map("checker_user_id") @db.Uuid
+  checkerUserId   String?       @map("checker_user_id") @db.Uuid
   /// D-020-C: true if an AI recommendation preceded this human-confirmed transition.
   /// reason must then contain: "AI_RECOMMENDED: <summary> — HUMAN_CONFIRMED by <actorId>"
-  aiTriggered     Boolean  @default(false) @map("ai_triggered")
+  aiTriggered     Boolean       @default(false) @map("ai_triggered")
   /// UUID of the ImpersonationSession if transition occurred during platform impersonation
-  impersonationId String?  @map("impersonation_id") @db.Uuid
+  impersonationId String?       @map("impersonation_id") @db.Uuid
   /// D-020-D: Mandatory justification. Non-empty enforced by DB CHECK.
   reason          String
   /// Fastify request ID for correlation (null for background job transitions)
-  requestId       String?  @map("request_id")
+  requestId       String?       @map("request_id")
   /// Wall-clock timestamp set by DB at commit time — not caller-supplied
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  organizations   organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "trade_lifecycle_logs_org_id_fk")
 
-  @@index([orgId, tradeId])
-  @@index([orgId, tradeId, createdAt(sort: Desc)])
-  @@index([orgId])
-  @@index([tradeId])
-  @@index([toStateKey])
+  @@index([orgId], map: "idx_trade_lifecycle_logs_org_id")
+  @@index([orgId, tradeId], map: "idx_trade_lifecycle_logs_org_trade")
+  @@index([orgId, tradeId, createdAt(sort: Desc)], map: "idx_trade_lifecycle_logs_org_trade_created")
+  @@index([toStateKey], map: "idx_trade_lifecycle_logs_to_state")
+  @@index([tradeId], map: "idx_trade_lifecycle_logs_trade_id")
   @@map("trade_lifecycle_logs")
 }
 
@@ -535,55 +529,49 @@ model TradeLifecycleLog {
 /// G-020 D-020-D: Three-layer immutability (same as TradeLifecycleLog).
 /// escrowId is a SOFT REFERENCE — no FK to escrow_accounts (G-018 will add FK).
 model EscrowLifecycleLog {
-  id              String   @id @default(uuid()) @db.Uuid
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Live FK → organizations.id (G-015). RLS boundary: current_setting('app.org_id', true)
-  orgId           String   @map("org_id") @db.Uuid
+  orgId           String        @map("org_id") @db.Uuid
   /// SOFT REFERENCE: UUID of the escrow record. No FK yet — deferred to G-018.
-  escrowId        String   @map("escrow_id") @db.Uuid
+  escrowId        String        @map("escrow_id") @db.Uuid
   /// Prior state key (matches lifecycle_states.state_key for ESCROW entity_type)
-  fromStateKey    String   @map("from_state_key")
+  fromStateKey    String        @map("from_state_key")
   /// New state key (matches lifecycle_states.state_key for ESCROW entity_type)
-  toStateKey      String   @map("to_state_key")
+  toStateKey      String        @map("to_state_key")
   /// D-020-A: UUID of the user who triggered this transition (null for SYSTEM_AUTOMATION)
-  actorUserId     String?  @map("actor_user_id") @db.Uuid
+  actorUserId     String?       @map("actor_user_id") @db.Uuid
   /// D-020-A: UUID of the admin who triggered this transition (null for user/system)
-  actorAdminId    String?  @map("actor_admin_id") @db.Uuid
+  actorAdminId    String?       @map("actor_admin_id") @db.Uuid
   /// D-020-A: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
-  actorType       String   @map("actor_type")
+  actorType       String        @map("actor_type")
   /// Role snapshot at time of transition (not a live FK)
-  actorRole       String   @map("actor_role")
+  actorRole       String        @map("actor_role")
   /// G-022: escalation severity level if triggered (1–4), null if not
-  escalationLevel Int?     @map("escalation_level")
+  escalationLevel Int?          @map("escalation_level")
   /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
-  makerUserId     String?  @map("maker_user_id") @db.Uuid
+  makerUserId     String?       @map("maker_user_id") @db.Uuid
   /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
-  checkerUserId   String?  @map("checker_user_id") @db.Uuid
+  checkerUserId   String?       @map("checker_user_id") @db.Uuid
   /// D-020-C: true if AI recommendation preceded this human-confirmed transition.
   /// AI has zero direct authority over escrow state. Human confirmation is mandatory.
-  aiTriggered     Boolean  @default(false) @map("ai_triggered")
+  aiTriggered     Boolean       @default(false) @map("ai_triggered")
   /// UUID of the ImpersonationSession if transition occurred during platform impersonation
-  impersonationId String?  @map("impersonation_id") @db.Uuid
+  impersonationId String?       @map("impersonation_id") @db.Uuid
   /// D-020-D: Mandatory justification. Non-empty enforced by DB CHECK.
   reason          String
   /// Fastify request ID for correlation (null for background job transitions)
-  requestId       String?  @map("request_id")
+  requestId       String?       @map("request_id")
   /// Wall-clock timestamp set by DB at commit time — not caller-supplied
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  organizations   organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "escrow_lifecycle_logs_org_id_fk")
 
-  @@index([orgId, escrowId])
-  @@index([orgId, escrowId, createdAt(sort: Desc)])
-  @@index([orgId])
-  @@index([escrowId])
-  @@index([toStateKey])
+  @@index([escrowId], map: "idx_escrow_lifecycle_logs_escrow_id")
+  @@index([orgId, escrowId], map: "idx_escrow_lifecycle_logs_org_escrow")
+  @@index([orgId, escrowId, createdAt(sort: Desc)], map: "idx_escrow_lifecycle_logs_org_escrow_created")
+  @@index([orgId], map: "idx_escrow_lifecycle_logs_org_id")
+  @@index([toStateKey], map: "idx_escrow_lifecycle_logs_to_state")
   @@map("escrow_lifecycle_logs")
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// G-021: Maker–Checker Approval Models
-// Design: docs/governance/G-021_MAKER_CHECKER_DESIGN.md (APPROVED 2026-02-24)
-// Directives: D-021-A (payload hash) · D-021-B (active uniqueness) · D-021-C (trigger)
-// DB objects: pending_approvals · approval_signatures (migration 20260302000000)
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// G-021 §3.A: Pending Maker–Checker approval request.
 /// Created when StateMachineService.transition() returns PENDING_APPROVAL.
@@ -592,7 +580,7 @@ model EscrowLifecycleLog {
 /// D-021-C: maker_principal_fingerprint enables DB trigger to enforce Maker≠Checker.
 /// MUTABLE on status only — all Maker identity/payload fields are frozen at insert.
 model PendingApproval {
-  id                        String              @id @default(uuid()) @db.Uuid
+  id                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId                     String              @map("org_id") @db.Uuid
   entityType                String              @map("entity_type")
   entityId                  String              @map("entity_id") @db.Uuid
@@ -603,26 +591,27 @@ model PendingApproval {
   requestedByActorType      String              @map("requested_by_actor_type")
   requestedByRole           String              @map("requested_by_role")
   requestReason             String              @map("request_reason")
-  status                    String              @default("REQUESTED")
-  expiresAt                 DateTime            @map("expires_at") @db.Timestamptz(6)
+  frozenPayload             Json                @map("frozen_payload")
   /// D-021-A: SHA-256 hex (64 chars) over canonical transition fields.
   frozenPayloadHash         String              @map("frozen_payload_hash")
   /// D-021-C: "{requestedByActorType}:{requestedByUserId|requestedByAdminId}"
   makerPrincipalFingerprint String              @map("maker_principal_fingerprint")
-  frozenPayload             Json                @map("frozen_payload")
+  status                    String              @default("REQUESTED")
   attemptCount              Int                 @default(1) @map("attempt_count")
+  expiresAt                 DateTime            @map("expires_at") @db.Timestamptz(6)
   /// Soft reference to G-022 escalation_records (no FK until escalation_records exists).
   escalationId              String?             @map("escalation_id") @db.Uuid
   aiTriggered               Boolean             @default(false) @map("ai_triggered")
   impersonationId           String?             @map("impersonation_id") @db.Uuid
   requestId                 String?             @map("request_id")
   createdAt                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                 DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedAt                 DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   signatures                ApprovalSignature[]
+  organizations             organizations       @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "pending_approvals_org_id_fk")
 
-  @@index([orgId])
-  @@index([orgId, entityId])
-  @@index([status])
+  @@index([orgId, entityType, entityId], map: "idx_pending_approvals_org_entity")
+  @@index([orgId], map: "idx_pending_approvals_org_id")
+  @@index([orgId, status], map: "idx_pending_approvals_org_status")
   @@map("pending_approvals")
 }
 
@@ -633,7 +622,7 @@ model PendingApproval {
 /// D-021-C: DB trigger check_maker_checker_separation fires on INSERT (AFTER).
 /// signer_actor_type CHECK: IN ('CHECKER','PLATFORM_ADMIN') — no SYSTEM_AUTOMATION.
 model ApprovalSignature {
-  id              String          @id @default(uuid()) @db.Uuid
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   approvalId      String          @map("approval_id") @db.Uuid
   orgId           String          @map("org_id") @db.Uuid
   signerUserId    String?         @map("signer_user_id") @db.Uuid
@@ -645,14 +634,108 @@ model ApprovalSignature {
   impersonationId String?         @map("impersonation_id") @db.Uuid
   /// No updated_at — this table is append-only with zero mutable columns.
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  approval        PendingApproval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  approval        PendingApproval @relation(fields: [approvalId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "approval_signatures_approval_id_fk")
 
-  @@index([approvalId])
-  @@index([orgId])
+  @@index([approvalId], map: "idx_approval_signatures_approval_id")
+  @@index([orgId], map: "idx_approval_signatures_org_id")
   @@map("approval_signatures")
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+/// G-022: Append-only governance escalation record.
+/// Covers entity-level (TRADE/ESCROW/APPROVAL/LIFECYCLE_LOG),
+/// org-level (ORG — D-022-B), and global (GLOBAL — D-022-C) events.
+///
+/// D-022-A: parent_escalation_id enables a strictly monotonic severity upgrade chain.
+/// Trigger trg_escalation_severity_upgrade enforces: new.severity > parent.severity
+/// and parent.status = 'OPEN'. No UPDATE ever permitted.
+///
+/// D-022-B: Org-level freeze is stored as entity_type='ORG', entity_id=org_id,
+/// severity_level >= 3, status='OPEN'. NO boolean column on organizations.
+///
+/// D-022-C: freeze_recommendation=true on GLOBAL rows is informational only.
+/// EscalationService sets this flag; NO automated system reads it to toggle config.
+///
+/// Three-layer immutability:
+/// Layer 1: EscalationService exposes no update/delete methods
+/// Layer 2: DB trigger trg_escalation_events_immutability raises [E-022-IMMUTABLE]
+/// Layer 3: RLS — no UPDATE or DELETE policy defined on this table
+model EscalationEvent {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Live FK → organizations.id (G-015). RLS boundary.
+  /// For entity_type='GLOBAL': platform-level sentinel org UUID.
+  orgId                String            @map("org_id") @db.Uuid
+  /// Domain scope: TRADE | ESCROW | APPROVAL | LIFECYCLE_LOG | ORG | GLOBAL
+  /// DB CHECK constraint enforces this set.
+  entityType           String            @map("entity_type")
+  /// UUID of the escalated entity.
+  /// For entity_type='ORG': equals org_id (D-022-B).
+  /// For entity_type='GLOBAL': sentinel constant UUID.
+  entityId             String            @map("entity_id") @db.Uuid
+  /// D-022-A: NULL for root escalation. Set to prior row's id when upgrading severity.
+  /// DB trigger ensures new.severity_level > parent.severity_level (strictly monotonic).
+  parentEscalationId   String?           @map("parent_escalation_id") @db.Uuid
+  /// EVENT SOURCE: STATE_MACHINE | APPROVAL | MANUAL | SYSTEM
+  source               String
+  /// SEVERITY: 0=Informational 1=Review 2=HighRisk 3=Critical 4=PlatformFreezeCandidate
+  /// DB CHECK: IN (0,1,2,3,4)
+  severityLevel        Int               @map("severity_level")
+  /// D-022-C: Informational flag only. True on GLOBAL LEVEL_4 rows.
+  /// Reading this flag NEVER triggers config changes automatically.
+  freezeRecommendation Boolean           @default(false) @map("freeze_recommendation")
+  /// ACTOR TYPE: PLATFORM_ADMIN | TENANT_ADMIN | SYSTEM_AUTOMATION | SERVICE_LAYER
+  triggeredByActorType String            @map("triggered_by_actor_type")
+  /// sub/fingerprint of the initiating actor (non-null, non-empty)
+  triggeredByPrincipal String            @map("triggered_by_principal")
+  /// Mandatory justification. Non-empty enforced by DB CHECK.
+  reason               String
+  /// STATUS: OPEN | RESOLVED | OVERRIDDEN
+  /// Transitions: OPEN → RESOLVED or OPEN → OVERRIDDEN. Never reversed.
+  /// No UPDATE permitted — status is immutable once written.
+  status               String            @default("OPEN")
+  /// NULL until resolved. Must be non-null when status != 'OPEN'.
+  resolvedByPrincipal  String?           @map("resolved_by_principal")
+  resolutionReason     String?           @map("resolution_reason")
+  resolvedAt           DateTime?         @map("resolved_at") @db.Timestamptz(6)
+  /// Wall-clock timestamp set by DB at commit time — not caller-supplied.
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  organizations        organizations     @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  parent               EscalationEvent?  @relation("EscalationUpgradeChain", fields: [parentEscalationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  children             EscalationEvent[] @relation("EscalationUpgradeChain")
+
+  @@index([entityType, entityId, status, severityLevel], map: "escalation_events_entity_freeze_idx")
+  @@index([orgId, createdAt(sort: Desc)], map: "escalation_events_org_id_idx")
+  @@map("escalation_events")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model organizations {
+  id                    String               @id @db.Uuid
+  slug                  String               @unique @db.VarChar(100)
+  legal_name            String               @db.VarChar(500)
+  jurisdiction          String               @default("UNKNOWN") @db.VarChar(100)
+  registration_no       String?              @db.VarChar(200)
+  org_type              String               @default("B2B") @db.VarChar(50)
+  risk_score            Int                  @default(0) @db.SmallInt
+  status                String               @default("ACTIVE") @db.VarChar(30)
+  plan                  String               @default("FREE") @db.VarChar(30)
+  effective_at          DateTime             @default(now()) @db.Timestamptz(6)
+  superseded_at         DateTime?            @db.Timestamptz(6)
+  created_at            DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime             @default(now()) @db.Timestamptz(6)
+  escalation_events     EscalationEvent[]
+  escrow_lifecycle_logs EscrowLifecycleLog[]
+  tenants               Tenant               @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pending_approvals     PendingApproval[]
+  trade_lifecycle_logs  TradeLifecycleLog[]
+
+  @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
+  @@index([jurisdiction], map: "idx_organizations_jurisdiction")
+  @@index([status], map: "idx_organizations_status")
+  @@index([status, created_at(sort: Desc)], map: "idx_organizations_status_created")
+}
 
 enum TenantType {
   B2B

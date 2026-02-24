@@ -45,6 +45,8 @@ import {
   recomputePayloadHash,
   verifyPayloadHash,
 } from './makerChecker.guardrails.js';
+import type { EscalationService } from './escalation.service.js';
+import { GovError } from './escalation.types.js';
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -92,12 +94,16 @@ function isLockNotAvailableError(err: unknown): boolean {
 
 export class MakerCheckerService {
   /**
-   * @param db           - Prisma client (injected for testability).
-   * @param stateMachine - StateMachineService (injected; used only in verifyAndReplay).
+   * @param db                - Prisma client (injected for testability).
+   * @param stateMachine      - StateMachineService (injected; used only in verifyAndReplay).
+   * @param escalationService - EscalationService (optional). When provided, freeze checks
+   *                            run in verifyAndReplay() before SM.transition() call
+   *                            (G-022 Gate D integration). Null = skip (backward compat).
    */
   constructor(
     private readonly db: PrismaClient,
     private readonly stateMachine: StateMachineService,
+    private readonly escalationService?: EscalationService | null,
   ) {}
 
   // ─── Method 1: createApprovalRequest ───────────────────────────────────────
@@ -524,6 +530,26 @@ export class MakerCheckerService {
 
     // Step 7: Replay through StateMachineService.
     //
+    // G-022 precondition hooks: check org-level and entity-level freeze BEFORE
+    // calling SM.transition(). These run after all G-021 validations are complete.
+    // D-022-D: Freeze checks run here (inside verifyAndReplay) so that even
+    // a fully APPROVED approval cannot replay on a frozen entity/org.
+    if (this.escalationService) {
+      try {
+        await this.escalationService.checkOrgFreeze(approval.orgId);
+        await this.escalationService.checkEntityFreeze(approval.entityType, approval.entityId);
+      } catch (err) {
+        if (err instanceof GovError) {
+          return {
+            status:  'ERROR',
+            code:    'REPLAY_TRANSITION_DENIED',
+            message: `G-022 Freeze blocked replay for approval ${input.approvalId}: ${err.message}`,
+          };
+        }
+        throw err; // unexpected DB error — re-throw
+      }
+    }
+
     // Reason format (Day 3): includes idempotency marker + D-021-A hash anchor.
     //   "CHECKER_APPROVAL:{id}|APPROVAL_ID:{id}|FROZEN_HASH:{hash}|{signerReason}"
     //
