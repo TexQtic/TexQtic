@@ -34,6 +34,7 @@ import type {
   VerifyReplayResult,
   PendingApprovalRow,
   ApprovalSignatureRow,
+  ApprovalQueueQuery,
 } from './makerChecker.types.js';
 import {
   computePayloadHash,
@@ -71,6 +72,18 @@ function isMakerCheckerSamePrincipalError(err: unknown): boolean {
   if (err instanceof Error) {
     const msg = err.message ?? '';
     return msg.includes('MAKER_CHECKER_SAME_PRINCIPAL') || msg.includes('P0002');
+  }
+  return false;
+}
+
+/**
+ * Returns true if the error is a Postgres LockNotAvailable error (SQLSTATE 55P03).
+ * Raised by SELECT ... FOR UPDATE NOWAIT when the row is already locked.
+ */
+function isLockNotAvailableError(err: unknown): boolean {
+  if (err instanceof Error) {
+    const msg = err.message ?? '';
+    return msg.includes('could not obtain lock') || msg.includes('55P03');
   }
   return false;
 }
@@ -320,20 +333,44 @@ export class MakerCheckerService {
    * Verify payload integrity (D-021-A) and replay the approved transition
    * through StateMachineService.
    *
+   * Day 3 upgrades:
+   *   - Caller actor type validation (SYSTEM_AUTOMATION blocked).
+   *   - Org ID match check against the loaded row.
+   *   - Idempotency: SELECT FOR UPDATE NOWAIT on pending_approvals row +
+   *     lifecycle log marker check. Marker = "APPROVAL_ID:{approvalId}" in reason.
+   *   - Reason format: "CHECKER_APPROVAL:{id}|APPROVAL_ID:{id}|FROZEN_HASH:{hash}|{signerReason}"
+   *   - aiTriggered forced false unconditionally.
+   *   - Returns transitionId from StateMachineService on APPLIED.
+   *
    * Steps:
+   *   0. Validate callerActorType (if provided): SYSTEM_AUTOMATION → REPLAY_TRANSITION_DENIED.
    *   1. Fetch pending_approvals row (with signatures).
+   *   1b. Org ID match check.
    *   2. Verify status === 'APPROVED'.
    *   3. Verify not expired.
-   *   4. D-021-A: Recompute hash from stored canonical fields, compare vs stored hash.
-   *      Mismatch → PAYLOAD_INTEGRITY_VIOLATION (replay blocked unconditionally).
-   *   5. Find the APPROVE signature (must exist — APPROVED implies one was recorded).
-   *   6. Call stateMachine.transition() with CHECKER actor type.
-   *      reason = "CHECKER_APPROVAL:{approvalId}|{signature reason}"
-   *      requestId = "replay:{approvalId}:{signatureId}"
+   *   4. D-021-A: Recompute hash, compare vs stored. Mismatch → HASH_MISMATCH.
+   *   5. Find the APPROVE signature.
+   *   6. Idempotency lock + marker check via DB transaction.
+   *   7. Call stateMachine.transition() with CHECKER actor type.
    *
    * @returns VerifyReplayResult (APPLIED | ERROR)
    */
   async verifyAndReplay(input: VerifyAndReplayInput): Promise<VerifyReplayResult> {
+    // Step 0: Caller actor type guard — SYSTEM_AUTOMATION cannot replay
+    // SignerActorType = 'CHECKER' | 'PLATFORM_ADMIN', so this only fires if
+    // caller passes an invalid value via unsafe cast (defense-in-depth).
+    if (
+      input.callerActorType != null &&
+      (input.callerActorType as string) === 'SYSTEM_AUTOMATION'
+    ) {
+      return {
+        status:  'ERROR',
+        code:    'REPLAY_TRANSITION_DENIED',
+        message: 'SYSTEM_AUTOMATION is not permitted to trigger approval replay. ' +
+                 'Only CHECKER or PLATFORM_ADMIN actors may call verifyAndReplay.',
+      };
+    }
+
     // Step 1: Fetch approval + signatures
     let approval: (PendingApprovalRow & { signatures: ApprovalSignatureRow[] }) | null;
     try {
@@ -354,9 +391,19 @@ export class MakerCheckerService {
 
     if (!approval) {
       return {
-        status: 'ERROR',
-        code:   'APPROVAL_NOT_FOUND',
+        status:  'ERROR',
+        code:    'APPROVAL_NOT_FOUND',
         message: `Approval ${input.approvalId} not found.`,
+      };
+    }
+
+    // Step 1b: Org ID match check
+    if (input.orgId != null && approval.orgId !== input.orgId) {
+      return {
+        status:  'ERROR',
+        code:    'APPROVAL_NOT_FOUND',
+        message: `Approval ${input.approvalId} does not belong to org ${input.orgId}. ` +
+                 'Cross-tenant replay is forbidden.',
       };
     }
 
@@ -411,7 +458,6 @@ export class MakerCheckerService {
     // Step 5: Find the APPROVE signature
     const approveSig = approval.signatures.find(s => s.decision === 'APPROVE');
     if (!approveSig) {
-      // This should be unreachable if status transitions are correct, but guard defensively
       return {
         status:  'ERROR',
         code:    'APPROVAL_NOT_APPROVED',
@@ -419,27 +465,92 @@ export class MakerCheckerService {
       };
     }
 
-    // Step 6: Replay through StateMachineService
-    // The Checker acts with their own credentials; the original Maker's userId is preserved
-    // in the reason chain for audit linkage.
-    const replayReason = `CHECKER_APPROVAL:${input.approvalId}|${approveSig.reason}`;
+    // Step 6: Idempotency — acquire row-level lock + check lifecycle log for replay marker.
+    //
+    // Strategy (no schema change required):
+    //   a) SELECT FOR UPDATE NOWAIT on pending_approvals row → serialises concurrent replays.
+    //   b) Query the entity-type-specific lifecycle log for an entry whose reason contains
+    //      the marker "APPROVAL_ID:{approvalId}". SM writes this marker during the first replay.
+    //   c) If marker found → ALREADY_REPLAYED (idempotent guard).
+    //   d) If not found → release lock → call SM (writes marker into lifecycle log reason).
+    //   e) Next concurrent caller: acquires lock after first commits, then sees the marker.
+    //
+    // Limitation: CERTIFICATION entity type has no lifecycle log (G-023 deferred).
+    //   Attempts on CERTIFICATION approvals skip the marker check and allow replay.
+    //   This is accepted: CERTIFICATION state machine transitions currently return
+    //   CERTIFICATION_LOG_DEFERRED from SM anyway (safe no-op).
+    let alreadyReplayed = false;
+    try {
+      await (this.db as unknown as {
+        $transaction: (fn: (tx: PrismaClient) => Promise<void>) => Promise<void>;
+      }).$transaction(async (tx: PrismaClient) => {
+        // Lock the row to prevent concurrent replay of the same approval
+        await (tx as unknown as {
+          $queryRaw: (strings: TemplateStringsArray, ...values: unknown[]) => Promise<unknown>;
+        }).$queryRaw`SELECT id FROM pending_approvals WHERE id = ${input.approvalId}::uuid FOR UPDATE NOWAIT`;
+
+        alreadyReplayed = await this.checkReplayMarker(tx, approval!, input.approvalId);
+      });
+    } catch (err) {
+      if (isLockNotAvailableError(err)) {
+        return {
+          status:  'ERROR',
+          code:    'DB_ERROR',
+          message:
+            `Concurrent replay detected for approval ${input.approvalId}. ` +
+            'Another replay is in progress. Try again in a moment.',
+        };
+      }
+      return {
+        status:  'ERROR',
+        code:    'DB_ERROR',
+        message:
+          err instanceof Error
+            ? `Idempotency check failed: ${err.message}`
+            : 'Unknown error during idempotency check',
+      };
+    }
+
+    if (alreadyReplayed) {
+      return {
+        status:  'ERROR',
+        code:    'ALREADY_REPLAYED',
+        message:
+          `Approval ${input.approvalId} has already been replayed. ` +
+          'Idempotency marker "APPROVAL_ID:{id}" found in lifecycle log. ' +
+          `Current approval status: ${approval.status}. Duplicate replay is blocked.`,
+      };
+    }
+
+    // Step 7: Replay through StateMachineService.
+    //
+    // Reason format (Day 3): includes idempotency marker + D-021-A hash anchor.
+    //   "CHECKER_APPROVAL:{id}|APPROVAL_ID:{id}|FROZEN_HASH:{hash}|{signerReason}"
+    //
+    // aiTriggered is unconditionally false — AI has no authority over approval replay.
+    // The APPROVE signature was already written by a human Checker (signApproval).
+    const replayReason =
+      `CHECKER_APPROVAL:${input.approvalId}|` +
+      `APPROVAL_ID:${input.approvalId}|` +
+      `FROZEN_HASH:${approval.frozenPayloadHash}|` +
+      approveSig.reason;
     const replayRequestId = `replay:${input.approvalId}:${approveSig.id}`;
 
     const replayResult = await this.stateMachine.transition({
-      orgId:        approval.orgId,
-      entityType:   approval.entityType as 'TRADE' | 'ESCROW' | 'CERTIFICATION',
-      entityId:     approval.entityId,
-      fromStateKey: approval.fromStateKey,
-      toStateKey:   approval.toStateKey,
-      actorType:    'CHECKER',
-      // Checker identity
-      actorUserId:  approveSig.signerUserId ?? undefined,
-      actorAdminId: approveSig.signerAdminId ?? undefined,
-      actorRole:    approveSig.signerRole,
-      reason:       replayReason,
-      requestId:    replayRequestId,
-      // Pass through Maker's userId for impersonation audit chain
-      makerUserId:  approval.requestedByUserId ?? undefined,
+      orgId:         approval.orgId,
+      entityType:    approval.entityType as 'TRADE' | 'ESCROW' | 'CERTIFICATION',
+      entityId:      approval.entityId,
+      fromStateKey:  approval.fromStateKey,
+      toStateKey:    approval.toStateKey,
+      actorType:     'CHECKER',
+      actorUserId:   approveSig.signerUserId ?? undefined,
+      actorAdminId:  approveSig.signerAdminId ?? undefined,
+      actorRole:     approveSig.signerRole,
+      reason:        replayReason,
+      requestId:     replayRequestId,
+      makerUserId:   approval.requestedByUserId ?? undefined,
+      checkerUserId: approveSig.signerUserId ?? undefined,
+      aiTriggered:   false,  // unconditional — AI has no replay authority
     });
 
     if (replayResult.status !== 'APPLIED') {
@@ -454,17 +565,64 @@ export class MakerCheckerService {
     }
 
     return {
-      status:     'APPLIED',
-      approvalId: input.approvalId,
+      status:       'APPLIED',
+      approvalId:   input.approvalId,
+      transitionId: (replayResult as { transitionId?: string }).transitionId,
     };
+  }
+
+  // ─── Private: checkReplayMarker ────────────────────────────────────────────
+
+  /**
+   * Check whether a replay marker exists in the entity-type-specific lifecycle log.
+   * The marker is "APPROVAL_ID:{approvalId}" embedded in the reason field by SM.
+   *
+   * Called inside a $transaction to ensure atomicity with the FOR UPDATE lock.
+   *
+   * @returns true if this approval has already been replayed.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async checkReplayMarker(tx: any, approval: PendingApprovalRow, approvalId: string): Promise<boolean> {
+    const marker = `APPROVAL_ID:${approvalId}`;
+
+    if (approval.entityType === 'TRADE') {
+      const existing = await tx.tradeLifecycleLog.findFirst({
+        where: {
+          orgId:        approval.orgId,
+          tradeId:      approval.entityId,
+          fromStateKey: approval.fromStateKey,
+          toStateKey:   approval.toStateKey,
+          reason:       { contains: marker },
+        },
+        select: { id: true },
+      });
+      return existing !== null;
+    }
+
+    if (approval.entityType === 'ESCROW') {
+      const existing = await tx.escrowLifecycleLog.findFirst({
+        where: {
+          orgId:        approval.orgId,
+          escrowId:     approval.entityId,
+          fromStateKey: approval.fromStateKey,
+          toStateKey:   approval.toStateKey,
+          reason:       { contains: marker },
+        },
+        select: { id: true },
+      });
+      return existing !== null;
+    }
+
+    // CERTIFICATION: lifecycle log deferred to G-023 — no marker check possible.
+    // SM transition() returns CERTIFICATION_LOG_DEFERRED anyway (safe path).
+    return false;
   }
 
   // ─── Method 4: getPendingQueue ─────────────────────────────────────────────
 
   /**
-   * List all REQUESTED and ESCALATED approval requests for an org.
+   * List all REQUESTED and ESCALATED approval requests for an org (tenant scope).
    * Ordered by expires_at ASC (most urgent first).
-   * Pagination not implemented in Day 2 — G-021 Day 3 concern.
    *
    * @param orgId - Tenant org UUID (caller must supply authenticated org_id).
    * @returns Array of PendingApprovalRow in ascending expiry order.
@@ -474,6 +632,72 @@ export class MakerCheckerService {
       where:   { orgId, status: { in: ['REQUESTED', 'ESCALATED'] } },
       orderBy: { expiresAt: 'asc' },
     });
+    return rows as PendingApprovalRow[];
+  }
+
+  // ─── Method 5: getApprovalById (Day 3) ────────────────────────────────────
+
+  /**
+   * Fetch a single pending_approvals row by ID with its signatures.
+   * Optionally validates orgId to prevent cross-tenant access.
+   *
+   * @param approvalId - UUID of the pending_approvals record.
+   * @param orgId      - If provided, returns null if the row belonds to a different org.
+   * @returns The row (with signatures) or null if not found / org mismatch.
+   */
+  async getApprovalById(
+    approvalId: string,
+    orgId?: string,
+  ): Promise<(PendingApprovalRow & { signatures: ApprovalSignatureRow[] }) | null> {
+    const row = (await this.db.pendingApproval.findUnique({
+      where:   { id: approvalId },
+      include: { signatures: true },
+    })) as (PendingApprovalRow & { signatures: ApprovalSignatureRow[] }) | null;
+
+    if (!row) return null;
+    if (orgId != null && row.orgId !== orgId) return null;
+
+    return row;
+  }
+
+  // ─── Method 6: getControlPlaneQueue (Day 3) ───────────────────────────────
+
+  /**
+   * List approval requests for control-plane admin view.
+   * Supports cross-org filtering (CONTROL_PLANE scope) or org-scoped (TENANT scope).
+   *
+   * For TENANT scope: orgId is required (same as getPendingQueue, plus optional filters).
+   * For CONTROL_PLANE scope: orgId is optional — if omitted, returns across all orgs.
+   *
+   * Ordered by expires_at ASC (most urgent first).
+   *
+   * @param query - ApprovalQueueQuery filter set.
+   * @returns Array of PendingApprovalRow matching the filters.
+   */
+  async getControlPlaneQueue(query: ApprovalQueueQuery): Promise<PendingApprovalRow[]> {
+    const effectiveStatuses: string[] =
+      query.status && query.status.length > 0
+        ? query.status
+        : ['REQUESTED', 'ESCALATED'];
+
+    // Build where clause dynamically
+    const where: Record<string, unknown> = {
+      status: { in: effectiveStatuses },
+    };
+
+    if (query.orgId) {
+      where['orgId'] = query.orgId;
+    }
+    if (query.entityType) {
+      where['entityType'] = query.entityType;
+    }
+
+    const rows = await this.db.pendingApproval.findMany({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where:   where as any,
+      orderBy: { expiresAt: 'asc' },
+    });
+
     return rows as PendingApprovalRow[];
   }
 }

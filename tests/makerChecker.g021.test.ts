@@ -113,10 +113,17 @@ type MockDb = {
   approvalSignature: {
     create: ReturnType<typeof vi.fn>;
   };
+  // Day 3 compatibility: verifyAndReplay now uses $transaction + lifecycle log marker check.
+  // These fields are added here to keep Day 2 P-04 green without touching any assertions.
+  tradeLifecycleLog: {
+    findFirst: ReturnType<typeof vi.fn>;
+  };
+  $transaction: ReturnType<typeof vi.fn>;
+  $queryRaw:    ReturnType<typeof vi.fn>;
 };
 
 function makeMockDb(overrides?: Partial<MockDb>): MockDb {
-  return {
+  const db: MockDb = {
     pendingApproval: {
       create:     vi.fn(() => Promise.resolve(makeApprovalRow())),
       findUnique: vi.fn(() => Promise.resolve(makeApprovalRow())),
@@ -128,7 +135,18 @@ function makeMockDb(overrides?: Partial<MockDb>): MockDb {
       create: vi.fn(() => Promise.resolve(makeSignatureRow())),
       ...overrides?.approvalSignature,
     },
+    // Day 3 compat: $transaction calls the callback with db itself (tx = db in unit tests).
+    // Default: no existing lifecycle log marker → replay proceeds to SM call.
+    tradeLifecycleLog: {
+      findFirst: vi.fn(() => Promise.resolve(null)),
+      ...overrides?.tradeLifecycleLog,
+    },
+    $queryRaw:    vi.fn(() => Promise.resolve([])),
+    $transaction: vi.fn(), // self-reference set below
   };
+  // Self-referential: tx is the db itself so all model methods are available inside callback.
+  db.$transaction = vi.fn((fn: (tx: unknown) => Promise<unknown>) => fn(db));
+  return db;
 }
 
 function makeMockStateMachine() {

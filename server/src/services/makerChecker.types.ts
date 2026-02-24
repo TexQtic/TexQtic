@@ -97,11 +97,26 @@ export type SignApprovalInput = {
  * Input to MakerCheckerService.verifyAndReplay().
  * Fetches an APPROVED pending_approval, validates D-021-A hash, then
  * replays the transition through StateMachineService with CHECKER actor.
+ *
+ * Day 3: Extended with caller identity fields for validation.
+ * SYSTEM_AUTOMATION is blocked unconditionally at service level.
  */
 export type VerifyAndReplayInput = {
   approvalId: string;
   /** Org context for RLS — optional when fetching by approvalId in service context. */
   orgId?: string;
+  /**
+   * Caller's actor type. Must be CHECKER or PLATFORM_ADMIN.
+   * SYSTEM_AUTOMATION is rejected before any DB access.
+   * If omitted, caller type validation is skipped (backward compat).
+   */
+  callerActorType?: SignerActorType;
+  /** UUID of the user calling replay. Used for audit if callerActorType = CHECKER. */
+  callerUserId?: string | null;
+  /** UUID of the admin calling replay. Used for audit if callerActorType = PLATFORM_ADMIN. */
+  callerAdminId?: string | null;
+  /** ImpersonationSession UUID if replay is called during platform impersonation. */
+  callerImpersonationId?: string | null;
 };
 
 // ─── Result Types ──────────────────────────────────────────────────────────────
@@ -117,8 +132,19 @@ export type SignApprovalResult =
   | { status: 'ERROR'; code: ApprovalErrorCode; message: string };
 
 export type VerifyReplayResult =
-  | { status: 'APPLIED'; approvalId: string }
+  | { status: 'APPLIED'; approvalId: string; transitionId?: string }
   | { status: 'ERROR'; code: ApprovalErrorCode; message: string };
+
+/**
+ * Day 3: Explicit alias matching the prompt's VerifyAndReplayResult name.
+ * Identical to VerifyReplayResult — both are stable exports.
+ */
+export type VerifyAndReplayResult = VerifyReplayResult;
+
+/**
+ * Day 3: Alias for CreateApprovalResult matching the prompt's naming convention.
+ */
+export type CreateApprovalRequestResult = CreateApprovalResult;
 
 // ─── Error Codes ───────────────────────────────────────────────────────────────
 
@@ -135,12 +161,16 @@ export type ApprovalErrorCode =
   | 'APPROVAL_NOT_ACTIVE'
   /** Approval is not in APPROVED state — cannot replay. */
   | 'APPROVAL_NOT_APPROVED'
+  /** D-021-A: Replayed fields do not match stored frozen_payload_hash. Semantic alias for PAYLOAD_INTEGRITY_VIOLATION. */
+  | 'HASH_MISMATCH'
   /** D-021-A: Replayed fields do not match stored frozen_payload_hash. */
   | 'PAYLOAD_INTEGRITY_VIOLATION'
   /** pending_approvals record not found for the given org. */
   | 'APPROVAL_NOT_FOUND'
   /** Principal exclusivity violated (both or neither user/admin IDs set). */
   | 'PRINCIPAL_EXCLUSIVITY_VIOLATION'
+  /** Approval has already been replayed (idempotency marker found in lifecycle log). */
+  | 'ALREADY_REPLAYED'
   /** StateMachineService returned DENIED during replay. */
   | 'REPLAY_TRANSITION_DENIED'
   /** DB constraint error not covered by the above. */
@@ -176,6 +206,29 @@ export type PendingApprovalRow = {
   requestId: string | null;
   createdAt: Date;
   updatedAt: Date;
+};
+
+// ─── Queue Types (Day 3) ──────────────────────────────────────────────────────
+
+/**
+ * Scope of an approval queue query.
+ * TENANT: org-scoped (RLS boundary applies).
+ * CONTROL_PLANE: cross-org admin view (optional orgId filter).
+ */
+export type QueueScope = 'TENANT' | 'CONTROL_PLANE';
+
+/**
+ * Filters for MakerCheckerService.getControlPlaneQueue().
+ * Used by control-plane admin endpoints to inspect cross-org approval queues.
+ */
+export type ApprovalQueueQuery = {
+  scope: QueueScope;
+  /** Filter by org (mandatory for TENANT scope; optional for CONTROL_PLANE). */
+  orgId?: string;
+  /** Filter by one or more statuses. Defaults to ['REQUESTED', 'ESCALATED'] if omitted. */
+  status?: ApprovalStatus[];
+  /** Filter by entity type. */
+  entityType?: EntityType;
 };
 
 /**

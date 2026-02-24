@@ -12,6 +12,7 @@ import adminCartSummariesRoutes from './routes/admin-cart-summaries.js';
 import aiRoutes from './routes/ai.js';
 import tenantProvisionRoutes from './routes/admin/tenantProvision.js';
 import impersonationRoutes from './routes/admin/impersonation.js';
+import internalGovRoutes from './routes/internal/index.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -149,6 +150,11 @@ await fastify.register(tenantProvisionRoutes, { prefix: '/api/control' });
 // Routes: POST /api/control/impersonation/start, POST /api/control/impersonation/stop,
 //         GET  /api/control/impersonation/status/:id
 await fastify.register(impersonationRoutes, { prefix: '/api/control' });
+// G-021 Day 3: Internal governance routes (maker-checker queues + replay)
+// Tenant endpoints: /api/internal/gov/*  (X-Texqtic-Internal: true + tenant JWT)
+// Admin endpoints:  /api/control/internal/gov/* (X-Texqtic-Internal: true + admin JWT)
+// No prefix argument — plugin manages its own /api/* absolute paths.
+await fastify.register(internalGovRoutes);
 
 // Error handler
 fastify.setErrorHandler((error, _request, reply) => {
