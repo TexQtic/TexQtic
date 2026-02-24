@@ -1234,3 +1234,70 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 2. Re-run Supabase Performance Advisor
 3. Update Coverage Matrix snapshot
 4. Mark G-006C (RLS) closed in Gap Register — status: VALIDATED
+
+
+---
+
+## G-020 Day 2 -- Lifecycle State Machine Core Schema -- PASS 2026-02-24
+
+**Task ID:** G-020-DAY2-MIGRATION-SOFTREF
+**Commit:** `aec967f` -- `feat(g020): lifecycle state machine core schema (soft refs) + RLS + immutability`
+**Migration:** `server/prisma/migrations/20260301000000_g020_lifecycle_state_machine_core/`
+**Constitutional Review:** APPROVED 2026-02-24 (D-020-A / D-020-B / D-020-C / D-020-D)
+
+### What Landed
+
+| Object | Type | Notes |
+|--------|------|-------|
+| `lifecycle_states` | TABLE | Authoritative state registry; UNIQUE(entity_type, state_key); FORCE RLS; SELECT for texqtic_app |
+| `allowed_transitions` | TABLE | Permitted edge graph; `allowed_actor_type TEXT[] NOT NULL` (D-020-A); composite FK to lifecycle_states; FORCE RLS |
+| `prevent_lifecycle_log_update_delete()` | FUNCTION | Layer 2 immutability backstop; BEFORE UPDATE OR DELETE raises P0001; unconditional |
+| `trade_lifecycle_logs` | TABLE | 16 audit fields per D-020-D; org_id live FK to organizations; trade_id soft ref; FORCE RLS |
+| `trg_immutable_trade_lifecycle_log` | TRIGGER | Attached to trade_lifecycle_logs |
+| `escrow_lifecycle_logs` | TABLE | Mirror of trade log scoped to escrow; D-020-B neutrality encoded; escrow_id soft ref; FORCE RLS |
+| `trg_immutable_escrow_lifecycle_log` | TRIGGER | Attached to escrow_lifecycle_logs |
+| LifecycleState, AllowedTransition, TradeLifecycleLog, EscrowLifecycleLog | Prisma models | ADD ONLY; no existing model touched |
+
+### Governance Decisions Recorded
+
+**Soft References (intentional, correctly sequenced):**
+- `trade_id UUID NOT NULL` -- no FK constraint. Hardening deferred to **G-017** (trades table, Week 3)
+- `escrow_id UUID NOT NULL` -- no FK constraint. Hardening deferred to **G-018** (escrow_accounts, Week 4)
+
+**Composite FK implemented now (not deferred):**
+- `allowed_transitions(entity_type, from_state_key)` -> `lifecycle_states(entity_type, state_key)` OK
+- `allowed_transitions(entity_type, to_state_key)` -> `lifecycle_states(entity_type, state_key)` OK
+- Stronger than original spec (which marked these optional). Landed correctly.
+
+**SYSTEM_AUTOMATION guardrail (Day 3 service guardrail -- not a schema change):**
+- ALLOWED: SLA timeout escalation, expiry triggers, housekeeping transitions into ESCALATED/PENDING_REVIEW
+- FORBIDDEN: approve trades, confirm orders, confirm settlement, bypass Maker-Checker
+- Boundary encoded in D-020-C.
+
+### Constitutional Directive Compliance
+
+| Directive | Check |
+|-----------|-------|
+| D-020-A: actor classification schema-enforced | OK `allowed_actor_type TEXT[] NOT NULL` + `array_length >= 1` CHECK + 6-value enum CHECK on log tables |
+| D-020-B: escrow neutrality, no financial columns | OK Zero monetary fields; COMMENT ON TABLE constitutionally binding |
+| D-020-C: AI boundary, advisory flag only | OK `ai_triggered BOOLEAN` column; no direct AI actor path |
+| D-020-D: log immutability, three layers | OK Service (no update/delete method) + trigger (P0001) + RLS (USING false) |
+| FORCE RLS on all new tables | OK All 4 tables |
+| app.org_id only (never app.tenant_id) | OK Verified by grep -- zero occurrences |
+| No existing table modified | OK git diff --name-only shows schema.prisma only (model additions) |
+
+### Gate Results
+
+| Gate | Result |
+|------|--------|
+| `prisma format` | OK EXIT 0 -- 38ms |
+| `prisma generate` | OK EXIT 0 -- Prisma Client v6.1.0 |
+| git status --short pre-commit | OK Exactly 2 paths staged |
+| git show --stat HEAD | OK 3 files, 990 insertions, 0 deletions |
+| Post-migration verify block | OK Embedded in migration.sql section 7 |
+
+### What This Unlocks
+
+- Governance infrastructure tables exist -- ready for Day 3 StateMachineService authoring
+- G-021 (Maker-Checker) and G-022 (Escalation Engine) designs may proceed in parallel
+- Wave plan sequencing preserved: trades (G-017, Week 3), escrow (G-018, Week 4)
