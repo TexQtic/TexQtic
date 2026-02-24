@@ -1151,20 +1151,20 @@ Wave-2 is CLOSED under TECS v1.6. All six targeted gaps validated. Repo gates cl
 
 ---
 
-# Wave 3 — Canonical Doctrine Buildout (In Progress)
+# Wave 3 ï¿½ Canonical Doctrine Buildout (In Progress)
 
 Start Date: 2026-02-23
-End Date: —
+End Date: ï¿½
 Branch: main
-Tag: —
+Tag: ï¿½
 
 ## Objective
 
-Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-024. The entropy elimination step is a prerequisite: adding G-016–G-023 domain tables on top of policy sprawl compounds complexity exponentially.
+Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-024. The entropy elimination step is a prerequisite: adding G-016ï¿½G-023 domain tables on top of policy sprawl compounds complexity exponentially.
 
 ---
 
-## G-006C (RLS Consolidation) — IN PROGRESS 2026-02-23
+## G-006C (RLS Consolidation) ï¿½ IN PROGRESS 2026-02-23
 
 **Task:** Replace N permissive RLS policies per (table, command) with exactly 1 unified permissive policy per command. No functional access change allowed.
 
@@ -1174,7 +1174,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 
 **Security fix (audit_logs INSERT):** WITH CHECK tightened from require_org_context() IS NOT NULL (always-true boolean) to explicit require_org_context() AND tenant_id = app.current_org_id().
 
-### Migration Files Created (deploy in strict order — one commit per table)
+### Migration Files Created (deploy in strict order ï¿½ one commit per table)
 
 | Order | Timestamp      | Table                  | Migration Dir                                               |
 | ----- | -------------- | ---------------------- | ----------------------------------------------------------- |
@@ -1190,7 +1190,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 | 10    | 20260223100000 | event_logs             | 20260223100000_g006c_rls_event_logs_consolidation           |
 | 11    | 20260223110000 | impersonation_sessions | 20260223110000_g006c_rls_impersonation_sessions_consolidation |
 
-### RESTRICTIVE Guard Policies — NOT Touched
+### RESTRICTIVE Guard Policies ï¿½ NOT Touched
 
 | Table                  | RESTRICTIVE Policy Name               |
 | ---------------------- | ------------------------------------- |
@@ -1204,7 +1204,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 | tenant_domains         | tenant_domains_guard_policy           |
 | impersonation_sessions | restrictive_guard                     |
 
-### Deploy Command (per table — requires explicit approval per doctrine)
+### Deploy Command (per table ï¿½ requires explicit approval per doctrine)
 
   pnpm -C server exec prisma migrate deploy
 
@@ -1233,7 +1233,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 1. Re-run Supabase Security Advisor
 2. Re-run Supabase Performance Advisor
 3. Update Coverage Matrix snapshot
-4. Mark G-006C (RLS) closed in Gap Register — status: VALIDATED
+4. Mark G-006C (RLS) closed in Gap Register ï¿½ status: VALIDATED
 
 
 ---
@@ -1325,3 +1325,30 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 | Day 3 | StateMachineService + guardrails + 43-edge seed graph + 20 tests + evidence doc | PASS |
 
 Commit: 9c3ca28
+
+---
+
+### G-021 â€” Maker-Checker Governance (Days 1â€“3) â€” Constitutional Review Note (2026-02-24)
+
+**Gate:** PASS / CLOSED
+
+| Day | Deliverable | Status |
+|-----|-------------|--------|
+| Day 1 | G-021 Design v1.1 + D-021-A/B/C constitutional directives | PASS |
+| Day 2 | Schema (pending_approvals, approval_signatures) + RLS + DB triggers (D-021-B uniqueness, D-021-C makerâ‰ checker, D-021-D immutability) + MakerCheckerService (createApprovalRequest, signApproval, verifyAndReplay, getPendingQueue) + 14 tests | PASS |
+| Day 3 | verifyAndReplay upgraded (hash+expiry+idempotency+caller guard) + internal queue APIs (8 endpoints, X-Texqtic-Internal guard) + 15 Day 3 tests + evidence doc | PASS |
+
+Commits: 407013a (Day 2), de3be8f (Day 3)
+
+**Governance Notes:**
+
+- D-021-A: Payload hash computed at request creation, verified before replay. Mismatch â†’ PAYLOAD_INTEGRITY_VIOLATION (replay permanently blocked).
+- D-021-B: Duplicate active requests caught as ACTIVE_REQUEST_EXISTS via DB unique partial index (P2002 backstop).
+- D-021-C: Makerâ‰ Checker enforced at service layer (fingerprint comparison) AND by DB trigger `check_maker_checker_separation` (AFTER INSERT on approval_signatures).
+- D-021-D: Approval signatures are append-only; UPDATE/DELETE raise P0001 via trigger.
+- Idempotency: `SELECT FOR UPDATE NOWAIT` + lifecycle log marker (`APPROVAL_ID:{id}` in reason) prevents double-replay.
+- `aiTriggered` forced `false` unconditionally in replay â€” AI has no replay authority.
+- Internal endpoints require `X-Texqtic-Internal: true` header (enforced before auth middleware).
+- Realm split: tenant routes at `/api/internal/gov/*`, admin routes at `/api/control/internal/gov/*` â€” no realmGuard edit required.
+
+**Compatibility patch note:** Day 3 introduced `$transaction` in `verifyAndReplay`. Day 2 unit mocks (`tests/makerChecker.g021.test.ts`) were extended with `$transaction` / `$queryRaw` / `tradeLifecycleLog.findFirst` to restore P-04 (mock surface parity only â€” no assertions changed). This was a governance-approved allowlist addendum, not scope creep.
