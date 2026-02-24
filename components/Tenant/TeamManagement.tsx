@@ -1,13 +1,32 @@
 
-import React from 'react';
-import { UserRole } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { getMemberships, type Membership } from '../../services/tenantService';
+import { APIError } from '../../services/apiClient';
 
 export const TeamManagement: React.FC = () => {
-  const members = [
-    { name: 'Sarah Miller', email: 'sarah@acme.com', role: UserRole.TENANT_OWNER, status: 'Active' },
-    { name: 'James Chen', email: 'james@acme.com', role: UserRole.TENANT_ADMIN, status: 'Active' },
-    { name: 'Elena Rodriguez', email: 'elena@acme.com', role: UserRole.SELLER, status: 'Invited' },
-  ];
+  const [members, setMembers] = useState<Membership[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await getMemberships();
+        setMembers(response.memberships);
+      } catch (err) {
+        if (err instanceof APIError) {
+          setError(err.message);
+        } else {
+          setError('Failed to load team members. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMembers();
+  }, []);
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -19,42 +38,67 @@ export const TeamManagement: React.FC = () => {
         <button className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-900/10">Invite Member</button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Member</th>
-              <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Role</th>
-              <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Status</th>
-              <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {members.map((m, i) => (
-              <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="font-bold text-slate-900">{m.name}</div>
-                  <div className="text-xs text-slate-500">{m.email}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${m.role === UserRole.TENANT_OWNER ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                    {m.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${m.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                    <span className="text-xs text-slate-600">{m.status}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-indigo-600 font-bold text-[10px] uppercase hover:underline">Edit Access</button>
-                </td>
+      {loading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-slate-500 text-sm">Loading team members…</p>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && members.length === 0 && (
+        <div className="text-center py-12 text-slate-500 text-sm">No team members found.</div>
+      )}
+
+      {!loading && !error && members.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Member</th>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Role</th>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Status</th>
+                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {members.map((m) => (
+                <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="font-bold text-slate-900">{m.user.email}</div>
+                    <div className="text-xs text-slate-500 font-mono">{m.user.id.slice(0, 8)}…</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      m.role === 'OWNER'
+                        ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
+                        : 'bg-slate-50 border-slate-100 text-slate-500'
+                    }`}>
+                      {m.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${
+                        m.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`}></div>
+                      <span className="text-xs text-slate-600 capitalize">{m.status.toLowerCase()}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button className="text-indigo-600 font-bold text-[10px] uppercase hover:underline">Edit Access</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

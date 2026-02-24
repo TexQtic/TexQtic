@@ -7,7 +7,7 @@
  * - Branding configuration
  */
 
-import { post, put } from './apiClient';
+import { post, put, get } from './apiClient';
 
 // ==================== ACTIVATION ====================
 
@@ -49,6 +49,36 @@ export async function activateTenant(
 }
 
 // ==================== MEMBERSHIP ====================
+
+export interface MemberUser {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+}
+
+export interface Membership {
+  id: string;
+  role: string;
+  status: string;
+  userId: string;
+  tenantId: string;
+  createdAt?: string;
+  updatedAt?: string;
+  user: MemberUser;
+}
+
+export interface MembershipsResponse {
+  memberships: Membership[];
+  count: number;
+}
+
+/**
+ * Fetch all memberships for the current tenant (G-W3-ROUTING-001)
+ * Requires OWNER or ADMIN role; RLS-enforced.
+ */
+export async function getMemberships(): Promise<MembershipsResponse> {
+  return get<MembershipsResponse>('/api/tenant/memberships');
+}
 
 export interface CreateMembershipRequest {
   email: string;
