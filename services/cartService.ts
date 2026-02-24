@@ -104,3 +104,32 @@ export function calculateSubtotal(cart: Cart): number {
     return sum + item.catalogItem.price * item.quantity;
   }, 0);
 }
+
+// ==================== CHECKOUT (G-W3-ROUTING-001) ====================
+
+export interface CheckoutTotals {
+  subtotal: number;
+  discountTotal: number;
+  taxableAmount: number;
+  taxTotal: number;
+  feeTotal: number;
+  grandTotal: number;
+  breakdown: Record<string, unknown>;
+}
+
+export interface CheckoutResult {
+  orderId: string;
+  status: string;
+  currency: string;
+  itemCount: number;
+  totals: CheckoutTotals;
+}
+
+/**
+ * Convert active cart into an order (POST /api/tenant/checkout).
+ * On success, the cart is marked CHECKED_OUT on the server.
+ * Callers should call refreshCart() afterwards to clear local cart state.
+ */
+export async function checkout(): Promise<CheckoutResult> {
+  return post<CheckoutResult>('/api/tenant/checkout');
+}

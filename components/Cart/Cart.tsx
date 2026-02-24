@@ -9,11 +9,14 @@ import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { LoadingState, EmptyState, ErrorState, CartItemSkeleton } from '../shared';
 import { APIError, type ApiError } from '../../services/apiClient';
+import { checkout, type CheckoutResult } from '../../services/cartService';
 
 export const Cart: React.FC = () => {
-  const { cart, loading, error, itemCount, subtotal, updateQuantity, removeItem } = useCart();
+  const { cart, loading, error, itemCount, subtotal, updateQuantity, removeItem, refreshCart } = useCart();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [orderConfirmation, setOrderConfirmation] = useState<CheckoutResult | null>(null);
 
   const handleQuantityChange = async (
     itemId: string,
@@ -71,6 +74,26 @@ export const Cart: React.FC = () => {
     }
   };
 
+  /** G-W3-ROUTING-001: Wire checkout to POST /api/tenant/checkout */
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    setErrorMessage(null);
+    try {
+      const result = await checkout();
+      setOrderConfirmation(result);
+      // Refresh cart so it reflects the CHECKED_OUT status (cart will be empty/null)
+      await refreshCart();
+    } catch (err) {
+      if (err instanceof APIError) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage('Checkout failed. Please try again.');
+      }
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   // Loading state with skeleton
   if (loading && !cart) {
     return (
@@ -90,6 +113,32 @@ export const Cart: React.FC = () => {
         : { status: 0, message: String(error) };
 
     return <ErrorState error={apiError} onRetry={() => window.location.reload()} />;
+  }
+
+  // Order confirmation state (shown after successful checkout)
+  if (orderConfirmation) {
+    return (
+      <div className="space-y-6 p-4 flex flex-col items-center justify-center min-h-[300px]">
+        <div className="text-5xl">✅</div>
+        <div className="text-center space-y-2">
+          <h3 className="text-xl font-bold text-slate-900">Order Placed!</h3>
+          <p className="text-sm text-slate-500">
+            Order <span className="font-mono font-bold text-slate-700">{orderConfirmation.orderId.slice(0, 8)}…</span> is{' '}
+            <span className="capitalize">{orderConfirmation.status.toLowerCase().replace('_', ' ')}</span>.
+          </p>
+          <p className="text-lg font-bold text-indigo-600">
+            Total: {orderConfirmation.currency} {orderConfirmation.totals.grandTotal.toFixed(2)}
+          </p>
+          <p className="text-xs text-slate-400">{orderConfirmation.itemCount} item(s) ordered</p>
+        </div>
+        <button
+          onClick={() => setOrderConfirmation(null)}
+          className="px-6 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs uppercase hover:bg-slate-200 transition"
+        >
+          Done
+        </button>
+      </div>
+    );
   }
 
   // Empty state
@@ -180,10 +229,11 @@ export const Cart: React.FC = () => {
       </div>
 
       <button
-        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-colors"
-        onClick={() => console.log('Checkout not implemented (Wave 5)')}
+        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={handleCheckout}
+        disabled={checkoutLoading || updatingItems.size > 0}
       >
-        Proceed to Checkout
+        {checkoutLoading ? 'Processing…' : 'Proceed to Checkout'}
       </button>
     </div>
   );
