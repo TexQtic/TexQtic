@@ -436,8 +436,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Pre-auth lookup: admin_users is not tenant-scoped; direct read requires no RLS context (G-006 Option B)
+      // Use emailNormalized (lowercase) — DB stores admin emails lowercase via provisioning script
       const adminRecord = await prisma.adminUser.findUnique({
-        where: { email },
+        where: { email: emailNormalized },
         select: {
           id: true,
           email: true,
@@ -640,8 +641,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Pre-auth lookup: admin_users is not tenant-scoped; direct read requires no RLS context (G-006 Option B)
+      // Use emailNormalized (lowercase) — DB stores admin emails lowercase via provisioning script
       const adminRecord = await prisma.adminUser.findUnique({
-        where: { email },
+        where: { email: emailNormalized },
         select: {
           id: true,
           email: true,
