@@ -26,9 +26,11 @@ build/
 *.bak
 
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+server-smoke*.log
 
 # Database
 *.db
