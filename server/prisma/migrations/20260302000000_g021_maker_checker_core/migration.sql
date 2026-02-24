@@ -54,7 +54,7 @@ IF NOT EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'organizations'
-) THEN RAISE EXCEPTION 'G-021 PRE-FLIGHT BLOCKED: public.organizations does not exist. ' 'Apply G-015 Phase A migration before this migration.';
+) THEN RAISE EXCEPTION 'G-021 PRE-FLIGHT BLOCKED: public.organizations does not exist. Apply G-015 Phase A migration before this migration.';
 END IF;
 -- Require lifecycle_states (G-020 must precede G-021)
 IF NOT EXISTS (
@@ -62,7 +62,7 @@ IF NOT EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'lifecycle_states'
-) THEN RAISE EXCEPTION 'G-021 PRE-FLIGHT BLOCKED: public.lifecycle_states does not exist. ' 'Apply G-020 Day 2 migration (20260301000000_g020_lifecycle_state_machine_core) ' 'before this migration.';
+) THEN RAISE EXCEPTION 'G-021 PRE-FLIGHT BLOCKED: public.lifecycle_states does not exist. Apply G-020 Day 2 migration (20260301000000_g020_lifecycle_state_machine_core) before this migration.';
 END IF;
 -- Idempotency guard: abort if already applied
 IF EXISTS (
@@ -70,9 +70,9 @@ IF EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'pending_approvals'
-) THEN RAISE EXCEPTION 'G-021 PRE-FLIGHT BLOCKED: public.pending_approvals already exists. ' 'Migration 20260302000000_g021_maker_checker_core may already be applied.';
+) THEN RAISE EXCEPTION 'G-021 PRE-FLIGHT BLOCKED: public.pending_approvals already exists. Migration 20260302000000_g021_maker_checker_core may already be applied.';
 END IF;
-RAISE NOTICE 'G-021 pre-flight OK: organizations + lifecycle_states present, ' 'pending_approvals absent. Proceeding.';
+RAISE NOTICE 'G-021 pre-flight OK: organizations + lifecycle_states present, pending_approvals absent. Proceeding.';
 END;
 $$;
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -174,11 +174,11 @@ CREATE TABLE public.pending_approvals (
   -- ── attempt_count must be positive ──────────────────────────────────
   CONSTRAINT pending_approvals_attempt_count_positive CHECK (attempt_count >= 1)
 );
-COMMENT ON TABLE public.pending_approvals IS 'G-021 §3.A: One record per in-flight Maker–Checker approval request. ' 'Created when StateMachineService.transition() returns PENDING_APPROVAL. ' 'D-021-A: frozen_payload_hash enforces replay integrity. ' 'D-021-B: partial unique index prevents concurrent active requests per entity+transition. ' 'D-021-C: maker_principal_fingerprint enables DB-trigger Maker≠Checker enforcement. ' 'Doctrine v1.4.';
-COMMENT ON COLUMN public.pending_approvals.frozen_payload_hash IS 'D-021-A: SHA-256 hex (64 chars) over canonical fields: ' 'entity_type|entity_id|from_state_key|to_state_key|actor_type|principal_id|role|reason. ' 'Recomputed at replay time. Mismatch = PAYLOAD_INTEGRITY_VIOLATION. Never updated.';
-COMMENT ON COLUMN public.pending_approvals.maker_principal_fingerprint IS 'D-021-C: "{requested_by_actor_type}:{requested_by_user_id OR admin_id}". ' 'Read by trigger check_maker_checker_separation on approval_signatures INSERT. ' 'Prevents Maker=Checker bypass even if service layer is circumvented. Never updated.';
-COMMENT ON COLUMN public.pending_approvals.entity_id IS 'SOFT REFERENCE: UUID of the entity being transitioned. ' 'No FK constraint — entity table FKs deferred to G-017 (trades) and G-018 (escrow_accounts).';
-COMMENT ON COLUMN public.pending_approvals.escalation_id IS 'SOFT REFERENCE to G-022 escalation_records.id. ' 'FK hardening deferred to G-022 (escalation_records table does not exist yet).';
+COMMENT ON TABLE public.pending_approvals IS 'G-021 §3.A: One record per in-flight Maker-Checker approval request. Created when StateMachineService.transition() returns PENDING_APPROVAL. D-021-A: frozen_payload_hash enforces replay integrity. D-021-B: partial unique index prevents concurrent active requests per entity+transition. D-021-C: maker_principal_fingerprint enables DB-trigger Maker!=Checker enforcement. Doctrine v1.4.';
+COMMENT ON COLUMN public.pending_approvals.frozen_payload_hash IS 'D-021-A: SHA-256 hex (64 chars) over canonical fields: entity_type|entity_id|from_state_key|to_state_key|actor_type|principal_id|role|reason. Recomputed at replay time. Mismatch = PAYLOAD_INTEGRITY_VIOLATION. Never updated.';
+COMMENT ON COLUMN public.pending_approvals.maker_principal_fingerprint IS 'D-021-C: {requested_by_actor_type}:{requested_by_user_id OR admin_id}. Read by trigger check_maker_checker_separation on approval_signatures INSERT. Prevents Maker=Checker bypass even if service layer is circumvented. Never updated.';
+COMMENT ON COLUMN public.pending_approvals.entity_id IS 'SOFT REFERENCE: UUID of the entity being transitioned. No FK constraint - entity table FKs deferred to G-017 (trades) and G-018 (escrow_accounts).';
+COMMENT ON COLUMN public.pending_approvals.escalation_id IS 'SOFT REFERENCE to G-022 escalation_records.id. FK hardening deferred to G-022 (escalation_records table does not exist yet).';
 -- ── Indexes ──────────────────────────────────────────────────────────────────
 CREATE INDEX idx_pending_approvals_org_id ON public.pending_approvals (org_id);
 CREATE INDEX idx_pending_approvals_org_entity ON public.pending_approvals (org_id, entity_type, entity_id);
@@ -256,8 +256,8 @@ CREATE TABLE public.approval_signatures (
     )
   )
 );
-COMMENT ON TABLE public.approval_signatures IS 'G-021 §3.B: Append-only audit log of Checker APPROVE/REJECT decisions. ' 'Three-layer immutability: service (no update/delete method) + trigger (§4/§5) + RLS (§8). ' 'D-021-C: AFTER INSERT trigger check_maker_checker_separation enforces Maker≠Checker ' 'unconditionally, independently of the service layer. ' 'signer_actor_type CHECK excludes SYSTEM_AUTOMATION and TENANT_USER at schema level.';
-COMMENT ON COLUMN public.approval_signatures.signer_actor_type IS 'D-021-C: Actor type of the signing principal. ' 'CHECK constraint: IN (CHECKER, PLATFORM_ADMIN). ' 'SYSTEM_AUTOMATION is unconditionally disallowed — no automated approval is permitted. ' 'AI has no actor type and cannot appear here. Doctrine v1.4 + G-021 anti-abuse §6.3.';
+COMMENT ON TABLE public.approval_signatures IS 'G-021 §3.B: Append-only audit log of Checker APPROVE/REJECT decisions. Three-layer immutability: service (no update/delete method) + trigger (§4/§5) + RLS (§8). D-021-C: AFTER INSERT trigger check_maker_checker_separation enforces Maker!=Checker unconditionally, independently of the service layer. signer_actor_type CHECK excludes SYSTEM_AUTOMATION and TENANT_USER at schema level.';
+COMMENT ON COLUMN public.approval_signatures.signer_actor_type IS 'D-021-C: Actor type of the signing principal. CHECK constraint: IN (CHECKER, PLATFORM_ADMIN). SYSTEM_AUTOMATION is unconditionally disallowed - no automated approval is permitted. AI has no actor type and cannot appear here. Doctrine v1.4 + G-021 anti-abuse §6.3.';
 -- ── Indexes ──────────────────────────────────────────────────────────────────
 CREATE INDEX idx_approval_signatures_approval_id ON public.approval_signatures (approval_id);
 CREATE INDEX idx_approval_signatures_org_id ON public.approval_signatures (org_id);
@@ -269,11 +269,11 @@ WHERE signer_user_id IS NOT NULL;
 --     Fires BEFORE UPDATE OR DELETE. Unconditional — no override path.
 --     ERRCODE P0001 (same as G-020 lifecycle log immutability).
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CREATE OR REPLACE FUNCTION public.prevent_approval_signature_modification() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'APPROVAL_SIGNATURE_IMMUTABLE: approval_signatures rows are append-only. ' 'UPDATE and DELETE are unconditionally prohibited on table %. ' 'This is G-021 D-021 Layer 2 enforcement. ' 'No escalation path exists for signature mutation. ' 'Corrections require creating a new approval cycle via MakerCheckerService.',
+CREATE OR REPLACE FUNCTION public.prevent_approval_signature_modification() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'APPROVAL_SIGNATURE_IMMUTABLE: approval_signatures rows are append-only. UPDATE and DELETE are unconditionally prohibited on table %. This is G-021 D-021 Layer 2 enforcement. No escalation path exists for signature mutation. Corrections require creating a new approval cycle via MakerCheckerService.',
   TG_TABLE_NAME USING ERRCODE = 'P0001';
 END;
 $$;
-COMMENT ON FUNCTION public.prevent_approval_signature_modification() IS 'G-021 Layer 2: Unconditional immutability backstop for approval_signatures. ' 'Fires BEFORE UPDATE OR DELETE on approval_signatures. ' 'Raises SQLSTATE P0001 regardless of caller role or session privileges. ' 'Cannot be bypassed without dropping the trigger (requires postgres role + migration window).';
+COMMENT ON FUNCTION public.prevent_approval_signature_modification() IS 'G-021 Layer 2: Unconditional immutability backstop for approval_signatures. Fires BEFORE UPDATE OR DELETE on approval_signatures. Raises SQLSTATE P0001 regardless of caller role or session privileges. Cannot be bypassed without dropping the trigger (requires postgres role + migration window)';
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- §5  TRIGGER: trg_immutable_approval_signature
 --     Attaches the immutability function to approval_signatures.
@@ -308,8 +308,8 @@ BEGIN -- Step 1: Retrieve the Maker's fingerprint from the parent approval recor
 SELECT maker_principal_fingerprint INTO v_maker_fp
 FROM public.pending_approvals
 WHERE id = NEW.approval_id;
-IF v_maker_fp IS NULL THEN -- pending_approvals row not found — FK should have caught this, but guard defensively.
-RAISE EXCEPTION 'G-021 INTEGRITY ERROR: pending_approvals row not found for approval_id %. ' 'This indicates a FK violation that should be impossible.',
+IF v_maker_fp IS NULL THEN -- pending_approvals row not found - FK should have caught this, but guard defensively.
+RAISE EXCEPTION 'G-021 INTEGRITY ERROR: pending_approvals row not found for approval_id %. This indicates a FK violation that should be impossible.',
 NEW.approval_id USING ERRCODE = 'P0003';
 END IF;
 -- Step 2: Derive the signer's fingerprint in the same format as the service layer.
@@ -319,14 +319,14 @@ v_signer_fp := NEW.signer_actor_type || ':' || COALESCE(
   NEW.signer_admin_id::text
 );
 -- Step 3: Compare. Any match is a constitutional violation.
-IF v_signer_fp = v_maker_fp THEN RAISE EXCEPTION 'MAKER_CHECKER_SAME_PRINCIPAL: signer fingerprint (%) matches maker fingerprint ' 'on pending_approval %. D-021-C constitutional rule violated. ' 'The same principal cannot be both Maker and Checker. ' 'This is enforced at DB level, independently of the service layer.',
+IF v_signer_fp = v_maker_fp THEN RAISE EXCEPTION 'MAKER_CHECKER_SAME_PRINCIPAL: signer fingerprint (%) matches maker fingerprint on pending_approval %. D-021-C constitutional rule violated. The same principal cannot be both Maker and Checker. This is enforced at DB level, independently of the service layer.',
 v_signer_fp,
 NEW.approval_id USING ERRCODE = 'P0002';
 END IF;
 RETURN NEW;
 END;
 $$;
-COMMENT ON FUNCTION public.check_maker_checker_separation() IS 'G-021 D-021-C: AFTER INSERT trigger enforcing Maker≠Checker at DB level. ' 'SECURITY DEFINER: reads pending_approvals.maker_principal_fingerprint across ' 'any RLS context. Raises P0002 MAKER_CHECKER_SAME_PRINCIPAL if fingerprints match. ' 'Fingerprint format: "{actor_type}:{user_id OR admin_id}". ' 'Service layer also enforces this; DB trigger is the constitutional backstop. ' 'Cannot be bypassed without dropping the trigger (requires postgres role).';
+COMMENT ON FUNCTION public.check_maker_checker_separation() IS 'G-021 D-021-C: AFTER INSERT trigger enforcing Maker!=Checker at DB level. SECURITY DEFINER: reads pending_approvals.maker_principal_fingerprint across any RLS context. Raises P0002 MAKER_CHECKER_SAME_PRINCIPAL if fingerprints match. Fingerprint format: {actor_type}:{user_id OR admin_id}. Service layer also enforces this; DB trigger is the constitutional backstop. Cannot be bypassed without dropping the trigger (requires postgres role).';
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- §7  TRIGGER: trg_check_maker_checker_separation
 --     Attaches D-021-C enforcement to approval_signatures AFTER INSERT.
@@ -430,7 +430,7 @@ SELECT COUNT(*) INTO tbl_count
 FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name IN ('pending_approvals', 'approval_signatures');
-IF tbl_count != 2 THEN RAISE EXCEPTION 'G-021 VERIFY FAIL: Expected 2 tables, found %. ' 'Check pending_approvals and approval_signatures.',
+IF tbl_count != 2 THEN RAISE EXCEPTION 'G-021 VERIFY FAIL: Expected 2 tables, found %. Check pending_approvals and approval_signatures.',
 tbl_count;
 END IF;
 -- 2. Verify ENABLE ROW LEVEL SECURITY on both tables

@@ -1352,3 +1352,58 @@ Commits: 407013a (Day 2), de3be8f (Day 3)
 - Realm split: tenant routes at `/api/internal/gov/*`, admin routes at `/api/control/internal/gov/*` — no realmGuard edit required.
 
 **Compatibility patch note:** Day 3 introduced `$transaction` in `verifyAndReplay`. Day 2 unit mocks (`tests/makerChecker.g021.test.ts`) were extended with `$transaction` / `$queryRaw` / `tradeLifecycleLog.findFirst` to restore P-04 (mock surface parity only — no assertions changed). This was a governance-approved allowlist addendum, not scope creep.
+
+---
+
+## 📅 Week 2 Status — Governance Backbone Complete (2026-02-24)
+
+**Status: GOVERNANCE BACKBONE COMPLETE**
+
+| Gap | Description | Status |
+|-----|-------------|--------|
+| G-020 | State Machine (Schema + Service + Seed + 43-edge graph + 20 tests) | ✅ CLOSED |
+| G-021 | Maker-Checker (Schema + Service + Replay Integrity + Internal Queues + 29 tests) | ✅ CLOSED |
+
+**Gates (A–C) — All Green:**
+
+| Gate | Description | Status |
+|------|-------------|--------|
+| Gate A — Canonical Identity | `org_id` single authority, no `app.tenant_id`, RLS intact | ✅ PASSED |
+| Gate B — Lifecycle Enforcement | All transitions validated, no shortcut paths, SYSTEM_AUTOMATION guardrail enforced | ✅ PASSED |
+| Gate C — Approval Enforcement | DB-level Maker≠Checker, active uniqueness constraint, replay integrity hash, idempotency enforced | ✅ PASSED |
+
+**Next Gate: Gate D — Escalation Control**
+
+Blocked until G-022 complete. Requirements:
+- Escalation record required for override
+- Platform admin override logged
+- No silent override path
+- Escalation cannot auto-close approval
+
+**Next Action: G-022 Escalation Design + Schema**
+
+Proceeding to Week 3 — Governance Hardening + AI Traceability.
+
+---
+
+## 📅 Updated 6-Week Execution Timeline (Recalibrated 2026-02-24)
+
+| Week | Focus | Gaps | Status |
+|------|-------|------|--------|
+| Week 1 | Canonical Integrity | G-015 Phase C | ✅ Complete |
+| Week 2 | Governance Backbone | G-020, G-021 | ✅ Complete (ahead of schedule) |
+| Week 3 | Governance Hardening + AI Traceability | G-022 (impl), G-023 reasoning_hash + reasoning_logs, escalation event emission hooks | 🔜 In Progress |
+| Week 4 | Trade Domain Core | G-017 trades table, hard FKs from G-020 logs, Maker-Checker replay to real trade state | ⏳ Pending |
+| Week 5 | Escrow Domain (Non-Fintech Mode) | G-018 escrow_accounts, hard FK for escrow lifecycle logs, neutral settlement acknowledgment | ⏳ Pending |
+| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | ⏳ Pending |
+
+**Drift Risk Assessment (2026-02-24):**
+
+| Category | Status |
+|----------|--------|
+| Security | 🟢 Strong |
+| Governance | 🟢 Strong |
+| Drift Risk | 🟡 Controlled |
+| Feature Creep | 🟢 None |
+| Fintech Creep | 🟢 None |
+| AI Autonomy Creep | 🟢 Blocked |
