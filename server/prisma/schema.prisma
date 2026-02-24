@@ -578,6 +578,82 @@ model EscrowLifecycleLog {
   @@map("escrow_lifecycle_logs")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// G-021: Maker–Checker Approval Models
+// Design: docs/governance/G-021_MAKER_CHECKER_DESIGN.md (APPROVED 2026-02-24)
+// Directives: D-021-A (payload hash) · D-021-B (active uniqueness) · D-021-C (trigger)
+// DB objects: pending_approvals · approval_signatures (migration 20260302000000)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// G-021 §3.A: Pending Maker–Checker approval request.
+/// Created when StateMachineService.transition() returns PENDING_APPROVAL.
+/// D-021-A: frozen_payload_hash enforces replay integrity (SHA-256 hex, len=64).
+/// D-021-B: partial unique index enforces one active request per entity+transition.
+/// D-021-C: maker_principal_fingerprint enables DB trigger to enforce Maker≠Checker.
+/// MUTABLE on status only — all Maker identity/payload fields are frozen at insert.
+model PendingApproval {
+  id                        String              @id @default(uuid()) @db.Uuid
+  orgId                     String              @map("org_id") @db.Uuid
+  entityType                String              @map("entity_type")
+  entityId                  String              @map("entity_id") @db.Uuid
+  fromStateKey              String              @map("from_state_key")
+  toStateKey                String              @map("to_state_key")
+  requestedByUserId         String?             @map("requested_by_user_id") @db.Uuid
+  requestedByAdminId        String?             @map("requested_by_admin_id") @db.Uuid
+  requestedByActorType      String              @map("requested_by_actor_type")
+  requestedByRole           String              @map("requested_by_role")
+  requestReason             String              @map("request_reason")
+  status                    String              @default("REQUESTED")
+  expiresAt                 DateTime            @map("expires_at") @db.Timestamptz(6)
+  /// D-021-A: SHA-256 hex (64 chars) over canonical transition fields.
+  frozenPayloadHash         String              @map("frozen_payload_hash")
+  /// D-021-C: "{requestedByActorType}:{requestedByUserId|requestedByAdminId}"
+  makerPrincipalFingerprint String              @map("maker_principal_fingerprint")
+  frozenPayload             Json                @map("frozen_payload")
+  attemptCount              Int                 @default(1) @map("attempt_count")
+  /// Soft reference to G-022 escalation_records (no FK until escalation_records exists).
+  escalationId              String?             @map("escalation_id") @db.Uuid
+  aiTriggered               Boolean             @default(false) @map("ai_triggered")
+  impersonationId           String?             @map("impersonation_id") @db.Uuid
+  requestId                 String?             @map("request_id")
+  createdAt                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  signatures                ApprovalSignature[]
+
+  @@index([orgId])
+  @@index([orgId, entityId])
+  @@index([status])
+  @@map("pending_approvals")
+}
+
+/// G-021 §3.B: Append-only Checker decision record.
+/// ALL columns are immutable after insert.
+/// Layer 2: DB trigger prevent_approval_signature_modification raises P0001 on UPDATE/DELETE.
+/// Layer 3: RLS UPDATE/DELETE policies USING false.
+/// D-021-C: DB trigger check_maker_checker_separation fires on INSERT (AFTER).
+/// signer_actor_type CHECK: IN ('CHECKER','PLATFORM_ADMIN') — no SYSTEM_AUTOMATION.
+model ApprovalSignature {
+  id              String          @id @default(uuid()) @db.Uuid
+  approvalId      String          @map("approval_id") @db.Uuid
+  orgId           String          @map("org_id") @db.Uuid
+  signerUserId    String?         @map("signer_user_id") @db.Uuid
+  signerAdminId   String?         @map("signer_admin_id") @db.Uuid
+  signerActorType String          @map("signer_actor_type")
+  signerRole      String          @map("signer_role")
+  decision        String
+  reason          String
+  impersonationId String?         @map("impersonation_id") @db.Uuid
+  /// No updated_at — this table is append-only with zero mutable columns.
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  approval        PendingApproval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+
+  @@index([approvalId])
+  @@index([orgId])
+  @@map("approval_signatures")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 enum TenantType {
   B2B
   B2C
