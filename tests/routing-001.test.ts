@@ -53,7 +53,7 @@ import {
 // -- Assertion sink -----------------------------------------------------------
 // assertExported() is a no-op. Passing a symbol verifies the import resolves;
 // tsc --noEmit fails if any named export is missing.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function assertExported(_: any): void { /* noop */ }
 
 assertExported(setImpersonationToken);      // apiClient
