@@ -2,11 +2,15 @@
 
 **Task ID:** G-021-DAY1-DESIGN  
 **Wave:** 3 — Stabilization + Governance  
-**Status:** DESIGN ONLY — no schema changes, no migrations, no service edits  
+**Status:** Day 1 PASS / APPROVED — Day 2 AUTHORIZED with hardening directives D-021-A / D-021-B / D-021-C (2026-02-24)  
 **Date:** 2026-02-24  
 **Doctrine:** v1.4 + Addendum Draft v1  
 **Prerequisite:** G-020 Day 3 PASS — `StateMachineService.transition()` returns `PENDING_APPROVAL` when
-`allowed_transitions.requires_maker_checker = true`. Commit `9c3ca28`.
+`allowed_transitions.requires_maker_checker = true`. Commit `9c3ca28`.  
+**Hardening Directives (locked before Day 2 schema):**
+- **D-021-A** — Frozen payload integrity hash: prevent "approve A, execute B" replay substitution (§10.1)
+- **D-021-B** — Active request uniqueness covering `REQUESTED` + `ESCALATED` states (§10.2)
+- **D-021-C** — Maker ≠ Checker enforced at DB level via trigger, not service-only (§10.3)
 
 ---
 
@@ -125,11 +129,11 @@ At most **one** `pending_approvals` record may exist in `REQUESTED` state for a 
 `(org_id, entity_type, entity_id, from_state_key, to_state_key)` combination at any time.
 
 Implemented via:
-- A **partial unique index** on `pending_approvals`:
+- A **partial unique index** on `pending_approvals` (D-021-B — covers both active states to prevent contradictory approvals racing after escalation):
   ```sql
   CREATE UNIQUE INDEX pending_approvals_open_unique
     ON pending_approvals (org_id, entity_type, entity_id, from_state_key, to_state_key)
-    WHERE status = 'REQUESTED';
+    WHERE status IN ('REQUESTED', 'ESCALATED');
   ```
 - The `MakerCheckerService.createApprovalRequest()` method checks for an existing open request  
   **before** inserting and returns the existing request ID if found (with a flag `already_exists: true`).
@@ -160,6 +164,8 @@ Implemented via:
 | `requested_by_role` | `TEXT` | NOT NULL | Role snapshot at Maker request time. |
 | `request_reason` | `TEXT` | NOT NULL | Maker's justification. Immutable after insert. |
 | `frozen_payload` | `JSONB` | NOT NULL | Full `TransitionRequest` (minus secrets) frozen at creation time. Used to validate replay. |
+| `frozen_payload_hash` | `TEXT` | NOT NULL | **D-021-A.** Deterministic SHA-256 hex of the canonical hash input (see §10.1). Computed at insert by `MakerCheckerService.createApprovalRequest()`. Never updated. Replay validator recomputes and compares — mismatch is a hard deny. |
+| `maker_principal_fingerprint` | `TEXT` | NOT NULL | **D-021-C.** Opaque string `"{requested_by_actor_type}:{requested_by_user_id ?? requested_by_admin_id}"` computed at insert. Stored for DB-trigger comparison against the Checker signer — prevents Maker = Checker at DB level even if service is bypassed. |
 | `status` | `TEXT` | NOT NULL | `CHECK (status IN ('REQUESTED','APPROVED','REJECTED','EXPIRED','CANCELLED','ESCALATED'))`. Default `'REQUESTED'`. |
 | `attempt_count` | `INT` | NOT NULL | Monotonic counter of how many times this `(entity_id, from→to)` has been rejected/expired. Default `1`. |
 | `expires_at` | `TIMESTAMPTZ` | NOT NULL | Computed at insert = `created_at + TTL` based on severity level. |
@@ -183,10 +189,18 @@ CONSTRAINT pending_approvals_principal_exclusivity
 CONSTRAINT pending_approvals_no_system_maker
   CHECK (requested_by_actor_type NOT IN ('SYSTEM_AUTOMATION'))
 
--- Partial unique index for open-request idempotency (see §2.5)
+-- D-021-A: frozen_payload_hash must be non-empty (length guard; content validated at service layer)
+CONSTRAINT pending_approvals_hash_nonempty
+  CHECK (char_length(frozen_payload_hash) = 64)  -- SHA-256 hex = 64 chars
+
+-- D-021-B: One active request per entity+transition — covers REQUESTED and ESCALATED
 CREATE UNIQUE INDEX pending_approvals_open_unique
   ON pending_approvals (org_id, entity_type, entity_id, from_state_key, to_state_key)
-  WHERE status = 'REQUESTED';
+  WHERE status IN ('REQUESTED', 'ESCALATED');
+
+-- D-021-C: maker_principal_fingerprint must be non-empty (content validated by trigger on approval_signatures)
+CONSTRAINT pending_approvals_fingerprint_nonempty
+  CHECK (char_length(maker_principal_fingerprint) > 0)
 ```
 
 **RLS Policy (design intent):**
@@ -202,7 +216,7 @@ WITH CHECK (org_id = current_setting('app.org_id')::uuid)
 ```
 
 **Immutability triggers (design intent):**
-- `from_state_key`, `to_state_key`, `frozen_payload`, `request_reason`, `requested_by_*`, `created_at` are immutable after insert (trigger raises `P0001` on UPDATE of these columns).
+- `from_state_key`, `to_state_key`, `frozen_payload`, `frozen_payload_hash`, `maker_principal_fingerprint`, `request_reason`, `requested_by_*`, `created_at` are immutable after insert (trigger raises `P0001` on UPDATE of these columns).
 - `status`, `updated_at`, `escalation_id` are the only mutable columns.
 
 ---
@@ -237,6 +251,20 @@ CONSTRAINT approval_signatures_principal_exclusivity
 -- No SYSTEM_AUTOMATION or AI as signer (belt-and-suspenders at DB layer)
 CONSTRAINT approval_signatures_no_system_signer
   CHECK (signer_actor_type NOT IN ('SYSTEM_AUTOMATION', 'TENANT_USER'))
+
+-- D-021-C: Maker ≠ Checker at DB level — AFTER INSERT trigger (design intent, SQL in Day 2)
+-- Trigger name: check_maker_checker_separation
+-- Logic:
+--   1. SELECT maker_principal_fingerprint INTO v_maker_fp
+--      FROM pending_approvals WHERE id = NEW.approval_id;
+--   2. v_signer_fp := NEW.signer_actor_type || ':' ||
+--        COALESCE(NEW.signer_user_id::text, NEW.signer_admin_id::text);
+--   3. IF v_signer_fp = v_maker_fp THEN
+--        RAISE EXCEPTION 'MAKER_CHECKER_SAME_PRINCIPAL'
+--          USING ERRCODE = 'P0002';
+--      END IF;
+-- This trigger fires on every INSERT into approval_signatures,
+-- independently of the service layer.
 ```
 
 **Immutability triggers (design intent):**
@@ -293,7 +321,7 @@ WITH CHECK (org_id = current_setting('app.org_id')::uuid)
 |---------------|-------------|
 | SYSTEM_AUTOMATION as Checker | DB CHECK + service actorType guard |
 | AI as Checker | DB CHECK (no AI actor type exists in schema) + service guard |
-| Maker = Checker (same UUID) | Service-layer same-principal check; DB doesn't enforce this directly (two separate columns) |
+| Maker = Checker (same UUID) | Service: `MakerCheckerService.approve()` same-principal check; **D-021-C:** `AFTER INSERT` trigger on `approval_signatures` compares `maker_principal_fingerprint` vs computed signer fingerprint — fires independently of service layer, raises `P0002` |
 | Expired approval signed | Service-layer `expires_at` check; DB doesn't block on expiry alone |
 | Replay without approval | `StateMachineService.transition()` CHECKER completion path requires `makerUserId != null`; `MakerCheckerService` provides `makerUserId` only after confirming approval record is `APPROVED` |
 | Cross-tenant approval | RLS on both tables (`org_id` anchor) |
@@ -441,7 +469,7 @@ This makes the replay traceable back to the approval record in all log correlati
 **Enforcement points:**
 - `MakerCheckerService.approve()`: Compares `signer_user_id` vs `requested_by_user_id` AND `signer_admin_id` vs `requested_by_admin_id` before writing the signature.
 - If either pair matches → reject with code `MAKER_CHECKER_SAME_PRINCIPAL` (error code defined in G-021 Day 2 service layer).
-- DB does NOT enforce this directly (the two principals are in separate columns on separate tables) — this is a service-layer-only check.
+- **D-021-C — DB-level trigger:** An `AFTER INSERT` trigger on `approval_signatures` (`check_maker_checker_separation`) computes the signer fingerprint as `signer_actor_type:COALESCE(signer_user_id, signer_admin_id)` and compares it against `pending_approvals.maker_principal_fingerprint` fetched by `approval_id`. A match raises `P0002 'MAKER_CHECKER_SAME_PRINCIPAL'`. This fires independently of the service layer — a direct DB write bypassing `MakerCheckerService` cannot circumvent this check. See §10.3 for full trigger design.
 
 **Edge case — impersonation:**  
 If a PLATFORM_ADMIN is impersonating a tenant user and submits as Maker, they **cannot** exit impersonation and approve as Checker with their own admin identity. The `impersonation_id` on the `pending_approvals` record is used to detect this. When `impersonation_id IS NOT NULL`, the checker's `actorAdminId` is compared against the impersonating admin ID in the impersonation session record — if they match, the approval is rejected.
@@ -570,6 +598,9 @@ A Checker role user sees:
 | I-08 | `approval_signatures` are append-only | DB trigger: P0001 on any UPDATE or DELETE |
 | I-09 | Replay must match frozen payload | Service: field-by-field validation before replay call |
 | I-10 | Platform Admin override requires G-022 escalation record | Service: no override path exists in `MakerCheckerService` without escalation FK |
+| I-11 | Replay payload cannot be substituted ("approve A, execute B" blocked) | D-021-A: `frozen_payload_hash` recomputed at replay; mismatch → hard deny before `StateMachineService.transition()` is called |
+| I-12 | No two active approval requests for same entity+transition (including post-escalation) | D-021-B: partial unique index `WHERE status IN ('REQUESTED','ESCALATED')` raises 23505 on duplicate insert |
+| I-13 | Maker ≠ Checker enforced at DB layer independently of service | D-021-C: `check_maker_checker_separation` trigger on `approval_signatures` raises `P0002` if fingerprints match |
 
 ---
 
@@ -608,6 +639,9 @@ A Checker role user sees:
 
 | Item | Deferred To | Notes |
 |------|------------|-------|
+| D-021-A: `frozen_payload_hash` column + SHA-256 computation in service | G-021 Day 2 | **LOCKED** — hash input defined in §10.1; column `TEXT NOT NULL CHECK(char_length=64)` |
+| D-021-B: active request uniqueness `WHERE status IN ('REQUESTED','ESCALATED')` | G-021 Day 2 | **LOCKED** — partial unique index design final (§10.2); replaces Day 1 REQUESTED-only index |
+| D-021-C: `maker_principal_fingerprint` column + `check_maker_checker_separation` trigger | G-021 Day 2 | **LOCKED** — trigger design in §10.3; SQL in Day 2 migration |
 | `pending_approvals` SQL migration file | G-021 Day 2 | Design approved here; schema is provisional until SQL review |
 | `approval_signatures` SQL migration file | G-021 Day 2 | Same |
 | RLS policy SQL for both tables | G-021 Day 2 | Pattern: same as `trade_lifecycle_logs` immutability from G-020 Day 2 |
@@ -627,5 +661,134 @@ A Checker role user sees:
 
 ---
 
+---
+
+## 10. Hardening Directives (D-021-A / D-021-B / D-021-C)
+
+> These directives were issued after G-021 Day 1 constitutional review (2026-02-24).  
+> Status: **LOCKED** — embedded into Day 2 migration + service before any SQL is written.
+
+---
+
+### 10.1 D-021-A — Frozen Payload Integrity Hash
+
+**Threat:** An attacker or misconfigured service could retrieve an `APPROVED` pending_approval, then replay it against a *different* entity or transition than the one the Checker reviewed ("approve A, execute B").
+
+**Mitigation:** A deterministic `frozen_payload_hash` (SHA-256 hex) is computed at `createApprovalRequest()` time and stored in `pending_approvals`. At replay time, `MakerCheckerService` recomputes the hash from the *actual* replay request parameters and compares. Mismatch → hard deny before `StateMachineService.transition()` is ever called.
+
+**Canonical hash input (deterministic field order, no whitespace, all lowercase):**
+
+```
+INPUT = entity_type
+      + "|" + entity_id                          (UUID, lowercase)
+      + "|" + from_state_key                     (uppercase normalized)
+      + "|" + to_state_key                       (uppercase normalized)
+      + "|" + requested_by_actor_type            (uppercase)
+      + "|" + (requested_by_user_id ?? requested_by_admin_id)  (UUID, lowercase)
+      + "|" + requested_by_role                  (as-is, trimmed)
+      + "|" + request_reason                     (trimmed, do NOT normalize — reason is part of intent)
+
+HASH = SHA-256(INPUT).hexdigest()  // 64-character lowercase hex string
+```
+
+**Why `created_at` is excluded:** Including `created_at` would require replaying within the same millisecond clock, creating a fragile determinism dependency. The fields above are sufficient to uniquely and stably identify the approved intent.
+
+**Service contract:**
+- `createApprovalRequest()` computes and stores `frozen_payload_hash`.
+- `approve()` (after marking status APPROVED) passes the hash to the replay path.
+- Replay validation in `MakerCheckerService` recomputes hash from `frozenPayload` fields and compares. If `computedHash !== storedHash` → return `{ error: 'PAYLOAD_INTEGRITY_VIOLATION' }` and do NOT call `StateMachineService.transition()`.
+
+**DB column:** `frozen_payload_hash TEXT NOT NULL CHECK(char_length(frozen_payload_hash) = 64)`
+
+---
+
+### 10.2 D-021-B — Active Request Uniqueness (REQUESTED + ESCALATED)
+
+**Threat:** Multiple concurrent approval requests for the same `(org_id, entity_type, entity_id, from_state_key, to_state_key)` create ambiguity about which approval is authoritative, enable approval spam, and could produce contradictory log writes if two requests are approved concurrently.
+
+**Day 1 design gap:** The Day 1 partial unique index only covered `status = 'REQUESTED'`. Once a request is escalated (`status = 'ESCALATED'`), a new REQUESTED request could be inserted for the same transition, creating two concurrent active records.
+
+**Hardened constraint:**
+```sql
+CREATE UNIQUE INDEX pending_approvals_open_unique
+  ON pending_approvals (org_id, entity_type, entity_id, from_state_key, to_state_key)
+  WHERE status IN ('REQUESTED', 'ESCALATED');
+```
+
+**Behavioral contract:**
+- A new approval request for a transition that already has `status = 'ESCALATED'` will fail with Postgres `23505` (unique_violation).
+- `MakerCheckerService.createApprovalRequest()` catches `23505` and returns `{ alreadyExists: true, approvalId: existingId, status: existingStatus }` — the caller is informed and must not create a duplicate.
+- To re-submit after escalation, the ESCALATED record must first be resolved (APPROVED or REJECTED) via G-022. Only then is the uniqueness slot freed.
+
+---
+
+### 10.3 D-021-C — Checker Separation Rule at DB Level
+
+**Threat:** Service-layer-only enforcement of Maker ≠ Checker can be bypassed by:
+- A future route that calls the DB directly without going through `MakerCheckerService`
+- A misconfigured service that omits the check
+- A migration hotfix that writes `approval_signatures` rows directly
+
+**Mitigation:** A DB-level `AFTER INSERT` trigger on `approval_signatures` enforces the rule unconditionally.
+
+**Column added to `pending_approvals`:**
+```sql
+maker_principal_fingerprint TEXT NOT NULL
+  CHECK (char_length(maker_principal_fingerprint) > 0)
+```
+
+**Fingerprint computation (service, at `createApprovalRequest()` time):**
+```
+maker_principal_fingerprint = requested_by_actor_type + ":" + COALESCE(requested_by_user_id, requested_by_admin_id)::text
+
+Examples:
+  "TENANT_USER:a1b2c3d4-..."
+  "PLATFORM_ADMIN:f9e8d7c6-..."
+  "MAKER:a1b2c3d4-..."
+```
+
+**Trigger design (SQL in Day 2 migration):**
+```sql
+CREATE OR REPLACE FUNCTION check_maker_checker_separation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER  -- must read pending_approvals across RLS
+AS $$
+DECLARE
+  v_maker_fp  TEXT;
+  v_signer_fp TEXT;
+BEGIN
+  SELECT maker_principal_fingerprint
+    INTO v_maker_fp
+    FROM public.pending_approvals
+   WHERE id = NEW.approval_id;
+
+  v_signer_fp := NEW.signer_actor_type || ':' ||
+    COALESCE(NEW.signer_user_id::text, NEW.signer_admin_id::text);
+
+  IF v_signer_fp = v_maker_fp THEN
+    RAISE EXCEPTION 'MAKER_CHECKER_SAME_PRINCIPAL: signer % matches maker fingerprint on approval %',
+      v_signer_fp, NEW.approval_id
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_check_maker_checker_separation
+  AFTER INSERT ON public.approval_signatures
+  FOR EACH ROW
+  EXECUTE FUNCTION check_maker_checker_separation();
+```
+
+**Why `SECURITY DEFINER`:** The trigger must read `pending_approvals.maker_principal_fingerprint` to compare. Since `approval_signatures` inserts run in the Checker's RLS context (their `org_id`), and `pending_approvals` is also RLS-scoped, the same-org read should succeed. However, in platform-admin override scenarios (G-022), the Checker's RLS context may differ from the Maker's row. `SECURITY DEFINER` ensures the trigger can always read the parent row regardless of caller context.
+
+**Error handling in service:** `MakerCheckerService.approve()` catches `P0002` and returns `{ error: 'MAKER_CHECKER_SAME_PRINCIPAL', code: 'DB_TRIGGER_VIOLATION' }` to the caller rather than propagating a raw DB exception.
+
+---
+
 *Document produced under SAFE-WRITE MODE — design only. No migrations. No schema edits. No service modifications.*  
-*Next action: G-021 Day 2 — SQL migration + Prisma schema + MakerCheckerService skeleton (pending constitutional review of this document).*
+*Day 1 Gate: PASS / CLOSED / APPROVED. Day 2 AUTHORIZED.*  
+*Next action: G-021 Day 2 — SQL migration (pending_approvals + approval_signatures + triggers) + Prisma schema + MakerCheckerService skeleton.*  
+*All three hardening directives (D-021-A / D-021-B / D-021-C) MUST be included in Day 2 migration. No partial migration permitted.*
