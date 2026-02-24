@@ -412,6 +412,172 @@ model Order {
   @@map("orders")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// G-020: Lifecycle State Machine — Governance Infrastructure
+// Migration: 20260301000000_g020_lifecycle_state_machine_core
+// Doctrine: v1.4 + G-020 Design v1.1 + D-020-A/B/C/D
+// DO NOT modify existing models above. ADD ONLY below this line.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// G-020 §2.2: Authoritative registry of all valid lifecycle states.
+/// Platform-level governance table. READ-ONLY at runtime.
+/// Populated via governance migrations only.
+/// entity_type IN ('TRADE', 'ESCROW', 'CERTIFICATION') — enforced by DB CHECK.
+model LifecycleState {
+  id                   String   @id @default(uuid()) @db.Uuid
+  /// Domain discriminant: TRADE | ESCROW | CERTIFICATION
+  entityType           String   @map("entity_type")
+  /// Uppercase machine-readable state key, e.g. ORDER_CONFIRMED
+  stateKey             String   @map("state_key")
+  /// If true, no outbound transitions are permitted from this state
+  isTerminal           Boolean  @default(false) @map("is_terminal")
+  /// If true, transitioning INTO this state cannot be undone by normal service calls
+  isIrreversible       Boolean  @default(false) @map("is_irreversible")
+  /// G-022 integration: 0=routine, 1=notable, 2=significant, 3=high, 4=critical
+  severityLevel        Int      @default(0) @map("severity_level")
+  /// Default MC gate for any transition INTO this state
+  requiresMakerChecker Boolean  @default(false) @map("requires_maker_checker")
+  description          String?
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  /// Inverse: transitions departing from this state key
+  /// Note: Prisma does not support composite FK @relation for these.
+  /// The DB-level FKs on allowed_transitions(entity_type, from_state_key/to_state_key)
+  /// reference lifecycle_states(entity_type, state_key) directly.
+
+  @@unique([entityType, stateKey])
+  @@index([entityType])
+  @@index([entityType, stateKey])
+  @@map("lifecycle_states")
+}
+
+/// G-020 §2.3 + D-020-A: Every permitted directed edge in the lifecycle state graph.
+/// D-020-A: allowedActorType TEXT[] NOT NULL is schema-enforced (array_length >= 1).
+/// Composite DB FKs to lifecycle_states(entity_type, state_key) enforce graph integrity.
+/// No row = transition denied unconditionally by StateMachineService.
+model AllowedTransition {
+  id                   String   @id @default(uuid()) @db.Uuid
+  /// Domain discriminant: TRADE | ESCROW | CERTIFICATION
+  entityType           String   @map("entity_type")
+  /// Source state key — DB FK: (entity_type, from_state_key) → lifecycle_states
+  fromStateKey         String   @map("from_state_key")
+  /// Target state key — DB FK: (entity_type, to_state_key) → lifecycle_states
+  toStateKey           String   @map("to_state_key")
+  /// D-020-A: Actor types permitted to trigger this edge.
+  /// Values: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
+  /// DB constraint: array_length >= 1 (empty array is schema-prohibited)
+  allowedActorType     String[] @map("allowed_actor_type")
+  /// Edge-level MC gate (overrides lifecycle_states.requires_maker_checker for target state)
+  requiresMakerChecker Boolean  @default(false) @map("requires_maker_checker")
+  /// If true, successful traversal of this edge triggers a G-022 escalation record
+  requiresEscalation   Boolean  @default(false) @map("requires_escalation")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([entityType, fromStateKey, toStateKey])
+  @@index([entityType, fromStateKey])
+  @@index([entityType, fromStateKey, toStateKey])
+  @@map("allowed_transitions")
+}
+
+/// G-020 D-020-D: Immutable, append-only audit log of all trade state transitions.
+/// Three-layer immutability: StateMachineService (no update/delete method) +
+/// DB trigger (prevent_lifecycle_log_update_delete) + RLS (UPDATE/DELETE = USING false).
+/// tradeId is a SOFT REFERENCE — no FK to trades (G-017 will add FK when trades table lands).
+/// orgId → organizations.id is a live FK (G-015 Phase A).
+model TradeLifecycleLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  /// Live FK → organizations.id (G-015). RLS boundary: current_setting('app.org_id', true)
+  orgId           String   @map("org_id") @db.Uuid
+  /// SOFT REFERENCE: UUID of the trade. No FK yet — deferred to G-017.
+  tradeId         String   @map("trade_id") @db.Uuid
+  /// Prior state key (matches lifecycle_states.state_key for TRADE entity_type)
+  fromStateKey    String   @map("from_state_key")
+  /// New state key (matches lifecycle_states.state_key for TRADE entity_type)
+  toStateKey      String   @map("to_state_key")
+  /// D-020-A: UUID of the user who triggered this transition (null for SYSTEM_AUTOMATION)
+  actorUserId     String?  @map("actor_user_id") @db.Uuid
+  /// D-020-A: UUID of the admin who triggered this transition (null for user/system)
+  actorAdminId    String?  @map("actor_admin_id") @db.Uuid
+  /// D-020-A: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
+  actorType       String   @map("actor_type")
+  /// Role snapshot at time of transition (not a live FK)
+  actorRole       String   @map("actor_role")
+  /// G-022: escalation severity level if triggered (1–4), null if not
+  escalationLevel Int?     @map("escalation_level")
+  /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
+  makerUserId     String?  @map("maker_user_id") @db.Uuid
+  /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
+  checkerUserId   String?  @map("checker_user_id") @db.Uuid
+  /// D-020-C: true if an AI recommendation preceded this human-confirmed transition.
+  /// reason must then contain: "AI_RECOMMENDED: <summary> — HUMAN_CONFIRMED by <actorId>"
+  aiTriggered     Boolean  @default(false) @map("ai_triggered")
+  /// UUID of the ImpersonationSession if transition occurred during platform impersonation
+  impersonationId String?  @map("impersonation_id") @db.Uuid
+  /// D-020-D: Mandatory justification. Non-empty enforced by DB CHECK.
+  reason          String
+  /// Fastify request ID for correlation (null for background job transitions)
+  requestId       String?  @map("request_id")
+  /// Wall-clock timestamp set by DB at commit time — not caller-supplied
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([orgId, tradeId])
+  @@index([orgId, tradeId, createdAt(sort: Desc)])
+  @@index([orgId])
+  @@index([tradeId])
+  @@index([toStateKey])
+  @@map("trade_lifecycle_logs")
+}
+
+/// G-020 D-020-B ESCROW NEUTRALITY: This model records state acknowledgements ONLY.
+/// No financial operation occurs during escrow state transitions.
+/// No monetary fields, no payment ledger references, no fund movement — ever
+/// without a formally approved Fintech Integration Review.
+/// G-020 D-020-D: Three-layer immutability (same as TradeLifecycleLog).
+/// escrowId is a SOFT REFERENCE — no FK to escrow_accounts (G-018 will add FK).
+model EscrowLifecycleLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  /// Live FK → organizations.id (G-015). RLS boundary: current_setting('app.org_id', true)
+  orgId           String   @map("org_id") @db.Uuid
+  /// SOFT REFERENCE: UUID of the escrow record. No FK yet — deferred to G-018.
+  escrowId        String   @map("escrow_id") @db.Uuid
+  /// Prior state key (matches lifecycle_states.state_key for ESCROW entity_type)
+  fromStateKey    String   @map("from_state_key")
+  /// New state key (matches lifecycle_states.state_key for ESCROW entity_type)
+  toStateKey      String   @map("to_state_key")
+  /// D-020-A: UUID of the user who triggered this transition (null for SYSTEM_AUTOMATION)
+  actorUserId     String?  @map("actor_user_id") @db.Uuid
+  /// D-020-A: UUID of the admin who triggered this transition (null for user/system)
+  actorAdminId    String?  @map("actor_admin_id") @db.Uuid
+  /// D-020-A: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
+  actorType       String   @map("actor_type")
+  /// Role snapshot at time of transition (not a live FK)
+  actorRole       String   @map("actor_role")
+  /// G-022: escalation severity level if triggered (1–4), null if not
+  escalationLevel Int?     @map("escalation_level")
+  /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
+  makerUserId     String?  @map("maker_user_id") @db.Uuid
+  /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
+  checkerUserId   String?  @map("checker_user_id") @db.Uuid
+  /// D-020-C: true if AI recommendation preceded this human-confirmed transition.
+  /// AI has zero direct authority over escrow state. Human confirmation is mandatory.
+  aiTriggered     Boolean  @default(false) @map("ai_triggered")
+  /// UUID of the ImpersonationSession if transition occurred during platform impersonation
+  impersonationId String?  @map("impersonation_id") @db.Uuid
+  /// D-020-D: Mandatory justification. Non-empty enforced by DB CHECK.
+  reason          String
+  /// Fastify request ID for correlation (null for background job transitions)
+  requestId       String?  @map("request_id")
+  /// Wall-clock timestamp set by DB at commit time — not caller-supplied
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([orgId, escrowId])
+  @@index([orgId, escrowId, createdAt(sort: Desc)])
+  @@index([orgId])
+  @@index([escrowId])
+  @@index([toStateKey])
+  @@map("escrow_lifecycle_logs")
+}
+
 enum TenantType {
   B2B
   B2C
