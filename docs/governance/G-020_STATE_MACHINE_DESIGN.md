@@ -5,7 +5,8 @@
 |--------------|-------------------------------------------------------------------------------------------|
 | **ID**       | G-020                                                                                     |
 | **Date**     | 2026-02-24                                                                                |
-| **Status**   | DESIGN PHASE — No schema changes committed                                                |
+| **Status**   | Draft v1.1 — Constitutional Review APPROVED WITH 4 HARDENING DIRECTIVES                  |
+| **Review**   | 2026-02-24 — D-020-A (actor type) · D-020-B (escrow neutrality) · D-020-C (AI boundary) · D-020-D (audit append-only) |
 | **Author**   | Architecture Review (Safe-Write Mode)                                                     |
 | **Scope**    | trade_state · escrow_state · certification_state · future extensibility                   |
 | **Links**    | G-021 (Maker-Checker) · G-022 (Escalation Engine) · Doctrine v1.4 · G-015 organizations  |
@@ -281,6 +282,7 @@ INDEX ON (is_terminal) WHERE is_terminal = true    -- terminal state fast-check
 | `requires_maker_checker`  | `BOOLEAN`     | NO       | `false`             | **Edge-level override.** If `true` here, Maker-Checker is required regardless of `state_definitions` setting. If `false` here, defers to `state_definitions.requires_maker_checker` for the target state. |
 | `escalation_level`        | `SMALLINT`    | YES      | `NULL`              | If set: transition automatically triggers an escalation record at this severity level. NULL = no auto-escalation. Used by G-022. |
 | `actor_roles_permitted`   | `TEXT[]`      | YES      | `NULL`              | Array of role strings permitted to trigger this transition. NULL = any authenticated role in tenant. e.g. `{OWNER,ADMIN}`. |
+| `allowed_actor_type`      | `TEXT[]`      | NO       | `{TENANT_USER}`     | **D-020-A.** One or more actor classification types permitted for this edge. Enforcement layer validates the caller's classified type against this array before any other check. Cannot be NULL or empty — fail-closed. Valid values: `TENANT_USER` · `TENANT_ADMIN` · `PLATFORM_ADMIN` · `SYSTEM_AUTOMATION` · `MAKER` · `CHECKER`. See §9.1 for full type definitions and precedence rules. |
 | `description`             | `TEXT`        | YES      | `NULL`              | Governance narrative. Documents the business justification for this permitted edge.                              |
 | `created_at`              | `TIMESTAMPTZ` | NO       | `now()`             | Immutable.                                                                                                       |
 
@@ -293,6 +295,9 @@ FK from_state_id → state_definitions(id)
 FK to_state_id   → state_definitions(id)
 CHECK (from_state_id != to_state_id)             -- no self-loop transitions
 CHECK (escalation_level IS NULL OR escalation_level BETWEEN 1 AND 4)
+-- D-020-A: actor type is mandatory and must contain at least one valid classification
+CHECK (array_length(allowed_actor_type, 1) >= 1)
+-- Valid allowed_actor_type elements: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
 ```
 
 **Cross-domain guard (enforcement-layer responsibility, not DB constraint):**
@@ -1602,9 +1607,9 @@ G-020 writes to G-021 data at one point only: after a successful transition, it 
 
 ---
 
-### 8.7 Acceptance Criteria — Day 1 Gate
+### 8.7 Acceptance Criteria — Day 1 Gate (v1.1 Updated)
 
-The following criteria must ALL be satisfied before G-020 advances to Day 2 (migration authoring). This list is the constitutional review checklist.
+The following criteria must ALL be satisfied before G-020 advances to Day 2 (migration authoring). Rows 15–18 were added after constitutional review (2026-02-24).
 
 | # | Criterion | Status |
 |---|-----------|--------|
@@ -1622,8 +1627,12 @@ The following criteria must ALL be satisfied before G-020 advances to Day 2 (mig
 | 12 | No hidden state mutation paths | ✅ Verified in §8.4 |
 | 13 | Non-fintech constraint respected (escrow = acknowledgement only) | ✅ Verified in §8.5 |
 | 14 | Anti-bazaar alignment confirmed (no shortcut to ORDER_CONFIRMED) | ✅ Verified in §8.6 |
+| 15 | **D-020-A:** `allowed_actor_type` column added to `allowed_transitions`; actor classification enum defined and schema-enforced | ✅ Defined in §9.1 |
+| 16 | **D-020-B:** Escrow neutrality doctrine clause explicit — no financial ledger mutation during escrow transitions | ✅ Defined in §9.2 |
+| 17 | **D-020-C:** AI decision boundary frozen — AI-triggered transitions must route through Maker-Checker or explicit tenant confirmation | ✅ Defined in §9.3 |
+| 18 | **D-020-D:** Transition log immutability explicit — append-only, RLS-protected, mandatory audit fields enumerated | ✅ Defined in §9.4 |
 
-**All 14 criteria met. G-020 Day 1 gate: PASS.**
+**All 18 criteria met. G-020 Day 1 gate: PASS (v1.1 — post constitutional review).**
 
 ---
 
@@ -1652,19 +1661,247 @@ The following items are intentionally deferred to Day 2 and must NOT be assumed 
 
 | Field | Value |
 |-------|-------|
-| **Design status** | COMPLETE — ready for constitutional review |
+| **Design version** | Draft v1.1 |
+| **Constitutional review** | APPROVED WITH 4 HARDENING DIRECTIVES (2026-02-24) |
 | **Schema changes committed** | NONE |
 | **Files modified** | `docs/governance/G-020_STATE_MACHINE_DESIGN.md` only |
-| **Gate** | Day 1 acceptance criteria: 14/14 PASS |
-| **Next action** | Paste this document for constitutional review → stress-test transition logic → approve or refine |
-| **Day 2 gate** | Constitutional review approval + no unresolved design questions |
+| **Gate** | Day 1 acceptance criteria: 18/18 PASS |
+| **Day 2 gate** | ✅ CLEARED — migration authoring may begin |
+| **Day 2 prerequisite** | Section 9 hardening directives must be reflected in migration DDL and service implementation |
 
 ---
 
 *— End of Part 8: Doctrine Compliance Validation —*
 
-*— G-020 Design Document COMPLETE —*
+---
+
+## 9. Constitutional Hardening Directives
+
+> **Document Amendment — 2026-02-24.** These four directives were issued following constitutional review of Draft v1. They are non-blocking for Day 2 migration authoring but MUST be reflected in the migration DDL, service implementation, and any future design extensions. They are now constitutionally binding.
+
+---
+
+### 9.1 D-020-A — Actor Classification at Schema Level
+
+**Directive:** Every permitted edge in `allowed_transitions` must carry an explicit actor classification. Application-level branching alone is insufficient. Actor type enforcement must be schema-encoded and enforcement-layer-validated before any other transition check.
+
+#### Actor Type Enum
+
+| Actor Type | Description | Typical Principals |
+|------------|-------------|--------------------|
+| `TENANT_USER` | Standard authenticated org member. Default type. | Trade owner, buyer, seller, org member |
+| `TENANT_ADMIN` | Org-level administrator. Higher privilege than user within the tenant boundary. | Org admin, account manager |
+| `PLATFORM_ADMIN` | TexQtic control-plane operator. Acts in control realm. `app.is_admin = 'true'`. | TexQtic ops, support |
+| `SYSTEM_AUTOMATION` | Automated process, background job, or rule engine. `actorId = null`, `realm = 'control'`. NOT AI. | Timeout escalation job, SLA enforcement |
+| `MAKER` | The initiating party in a Maker-Checker flow. Must not also be the `CHECKER` on the same request. | Trade initiator, compliance submitter |
+| `CHECKER` | The approving party in a Maker-Checker flow. Must be a different principal from `MAKER`. | Second approver, compliance reviewer |
+
+#### Enforcement Rules (D-020-A)
+
+1. `allowed_actor_type` is a mandatory, non-nullable `TEXT[]` column on `allowed_transitions`.
+2. The enforcement layer classifies the incoming actor into one of the six types at the start of `StateMachineService.transition()`, before edge lookup.
+3. If the actor's classified type is not in `allowed_transitions.allowed_actor_type` for the matched edge, the transition is rejected with `ACTOR_ROLE_NOT_PERMITTED`.
+4. `PLATFORM_ADMIN` actors are classified in `realm = 'control'`. Any `PLATFORM_ADMIN`-classified actor calling a `TENANT_USER`-only edge is rejected — even for edges where they have matching `actor_roles_permitted`.
+5. `SYSTEM_AUTOMATION` transitions are classified separately from `PLATFORM_ADMIN` — automated jobs must be explicitly permitted on their edges. A `PLATFORM_ADMIN` cannot impersonate `SYSTEM_AUTOMATION` and vice versa.
+6. `MAKER` and `CHECKER` are sub-classifications of either `TENANT_USER` or `TENANT_ADMIN`. An actor may hold both a base type and a flow-role classification simultaneously.
+7. The schema CHECK constraint `array_length(allowed_actor_type, 1) >= 1` prevents empty arrays at migration time.
+
+#### Actor Type Priority in conflict resolution
+
+If an actor could be classified into multiple types (e.g. a `TENANT_ADMIN` acting as `MAKER`), the enforcement layer uses the most specific applicable type for the operation context:
+
+```
+CHECKER > MAKER > TENANT_ADMIN > TENANT_USER  (for tenant-realm actors)
+SYSTEM_AUTOMATION (independent, never merged with tenant types)
+PLATFORM_ADMIN (independent, never merged with tenant types)
+```
+
+#### Representative edge classifications (illustrative, not exhaustive)
+
+| Edge | `allowed_actor_type` | Notes |
+|------|---------------------|-------|
+| `DRAFT → NEGOTIATION` | `{TENANT_USER, TENANT_ADMIN}` | Any org member may begin negotiation |
+| `NEGOTIATION → PENDING_COMPLIANCE` | `{TENANT_ADMIN}` | Compliance submission is admin-only |
+| `PENDING_COMPLIANCE → APPROVED` | `{PLATFORM_ADMIN}` | Approval is platform-level |
+| `APPROVED → ORDER_CONFIRMED` | `{MAKER}` | Requires MC; MAKER initiates |
+| `ORDER_CONFIRMED → ESCALATED` | `{TENANT_ADMIN, PLATFORM_ADMIN, SYSTEM_AUTOMATION}` | Escalation via multiple actors |
+| `ESCALATED → CLOSED` | `{CHECKER, PLATFORM_ADMIN}` | Resolution requires checker or platform |
+| `CERT ACTIVE → REVOKED` | `{PLATFORM_ADMIN}` | Revocation is platform-exclusive |
+| Timeout auto-escalation | `{SYSTEM_AUTOMATION}` | Background job only — no human actor |
+
+---
+
+### 9.2 D-020-B — Escrow Neutrality Doctrine Clause
+
+**Directive:** The escrow state domain is a status acknowledgement layer only. It carries no financial semantics, executes no monetary operations, and must not be extended to include any ledger mutation capability under any future design.
+
+#### Doctrine Clause (Constitutionally Binding)
+
+> **ESCROW NEUTRALITY CLAUSE — TexQtic Doctrine v1.4 Extension**
+>
+> Escrow state transitions in G-020 (and all future state machine extensions) are acknowledgement records only. They assert that two or more parties have reached a shared understanding of an escrow arrangement's status.
+>
+> The following are permanently prohibited within the state machine for any escrow-domain transition:
+> - Mutation of any financial or monetary field on any entity table (`amount`, `price`, `settlement_value`, `currency`, etc.)
+> - Invocation of any payment gateway, financial messaging bus, or ledger write API
+> - Creation of any `payment_record`, `ledger_entry`, or `settlement_instruction` row
+> - Any operation that moves, reserves, captures, releases, or refunds funds
+>
+> If a future product requirement demands financial settlement acknowledgement, a separate **Fintech Integration Review** must be conducted and approved before any escrow-state transition is permitted to carry financial side-effects. The state machine is NOT the appropriate integration point for financial operations.
+
+#### Enforcement (D-020-B)
+
+| Layer | How Neutrality Is Maintained |
+|-------|------------------------------|
+| Schema | `state_definitions` and `allowed_transitions` carry no monetary columns. |
+| Service | `StateMachineService.transition()` performs only: state validation, log INSERT, entity `current_state_id` UPDATE, audit event emission. Zero other side-effects are permitted in the atomic transaction for escrow-domain transitions. |
+| Code review | Any PR introducing a monetary operation within `StateMachineService` transaction scope for an escrow-domain edge must be rejected and requires a Fintech Integration Review approval. |
+| Design gate | No escrow-related column addition to `trades` or `escrow_records` tables may carry financial semantics without explicit doctrine review. |
+
+#### Escrow State → Business Meaning Map (Neutrality Confirmed)
+
+| Escrow State | Business Meaning | Financial Operation? |
+|--------------|-----------------|---------------------|
+| `ESCROW_PENDING` | Parties have agreed to use an escrow arrangement | None |
+| `ESCROW_ACTIVE` | Arrangement is acknowledged as active by both parties | None |
+| `ESCROW_DISPUTED` | One or both parties have raised a dispute | None |
+| `ESCROW_ESCALATED` | Platform has been asked to mediate | None |
+| `ESCROW_RELEASED` | Both parties acknowledge the arrangement is complete | None |
+| `ESCROW_REFUNDED` | Both parties acknowledge the arrangement is unwound | None |
+| `ESCROW_CLOSED` | Terminal: arrangement fully resolved | None |
+
+---
+
+### 9.3 D-020-C — AI Decision Boundary
+
+**Directive:** AI components within TexQtic (recommendation engine, risk flagging, compliance suggestions) are advisory only. They may not autonomously execute lifecycle transitions, override Maker-Checker requirements, or auto-confirm trade states. This boundary must be permanently encoded in the state machine design.
+
+#### AI Capability Boundary (Constitutionally Frozen)
+
+| AI May | AI May Not |
+|--------|------------|
+| Recommend a transition (surface in UI as a suggestion) | Execute `StateMachineService.transition()` directly |
+| Flag a trade as high-risk for human review | Set `current_state_id` on any entity |
+| Suggest an escalation level for human review | Create escalation records autonomously |
+| Propose compliance check outcomes for human approval | Approve or reject its own compliance suggestions |
+| Identify sanctions risk and surface for human decision | Add entries to `allowed_transitions` at runtime |
+| Generate a Maker-Checker request for human approval | Approve or fulfil a Maker-Checker request it created |
+| Provide transition recommendation in audit metadata | Suppress or redact an audit event |
+
+#### Enforcement Rules (D-020-C)
+
+1. All AI-triggered transitions must route through Maker-Checker (G-021) or explicit tenant confirmation before `StateMachineService.transition()` is invoked.
+2. AI system actors are classified as `SYSTEM_AUTOMATION` type only when executing pre-approved, rule-based automations (e.g. SLA timeout escalation). AI inference-based automation is NOT classified as `SYSTEM_AUTOMATION` — it requires a human confirmation gate.
+3. No edge in `allowed_transitions` may have `allowed_actor_type = {SYSTEM_AUTOMATION}` for any transition that represents a business judgment (e.g. compliance approval, trade confirmation, certification grant). `SYSTEM_AUTOMATION` is permitted only for purely mechanical operations (e.g. timeout escalation, SLA enforcement).
+4. The `reason` field in `StateMachineService.transition()` MUST record AI participation when an AI recommendation preceded a human-confirmed transition. The format is: `reason: "AI_RECOMMENDED: <summary> — HUMAN_CONFIRMED by <actorId>"`.
+5. Any future integration of an AI API into the Fastify request pipeline that results in a call to `StateMachineService.transition()` must be reviewed against this directive before deployment.
+
+#### AI Participation in Transition Flow
+
+```
+AI Engine
+    │
+    ▼
+[Recommendation surfaced to human actor in UI]
+    │
+    ▼
+[Human actor reviews and EXPLICITLY confirms OR rejects]
+    │
+    ├─ CONFIRM → StateMachineService.transition() [with reason recording AI participation]
+    │
+    └─ REJECT  → No state change. Audit event: TRANSITION_AI_RECOMMENDATION_REJECTED
+```
+
+The AI engine never has a direct path to `StateMachineService.transition()` without a human confirmation node in the call chain.
+
+---
+
+### 9.4 D-020-D — Transition Log Immutability and Audit Integrity
+
+**Directive:** The `state_transition_log` table is the legal record of all lifecycle events in the platform. Its immutability must be explicit, structurally enforced at multiple layers, and the mandatory audit fields must be formally enumerated.
+
+#### Immutability Model (Three Layers)
+
+| Layer | Mechanism | Effect |
+|-------|-----------|--------|
+| **Layer 1 — Service** | `StateMachineService` exposes only an INSERT method for the log. No `updateTransitionLog()` or `deleteTransitionLog()` method exists or may be created. | Software-layer append-only enforcement |
+| **Layer 2 — DB Trigger** | `BEFORE UPDATE OR DELETE ON state_transition_log` trigger raises `EXCEPTION 'state_transition_log is append-only'` unconditionally. No role may bypass this trigger (no `SECURITY DEFINER` override permitted). | DB-layer enforcement — no escalation path around it |
+| **Layer 3 — RLS** | `REVOKE UPDATE, DELETE ON state_transition_log FROM texqtic_app, texqtic_admin`. Even `PLATFORM_ADMIN` role actors cannot UPDATE or DELETE via the `texqtic_app` or `texqtic_admin` DB roles. Only the `postgres` migration role has physical access — and only during approved migration windows. | Permission-layer enforcement |
+
+#### Log Immutability Is Not Configurable
+
+Unlike the terminal state guard (which is a logical constraint), the transition log's append-only enforcement is UNCONDITIONAL. There is no override escalation path, no `APPROVED_FOR_LOG_CORRECTION` status, and no exceptional protocol that permits UPDATE or DELETE on a log row. If a log entry contains an error, the correction mechanism is a new forward INSERT with `reason: "CORRECTION OF LOG_ID <uuid>"` and an escalation record.
+
+#### Mandatory Audit Fields (D-020-D)
+
+Every row in `state_transition_log` MUST contain the following fields. `NOT NULL` is enforced at schema level:
+
+| Field | Type | NOT NULL | Description |
+|-------|------|----------|-------------|
+| `id` | `UUID` | YES | Primary key — immutable row identifier |
+| `org_id` | `UUID` | YES | Tenant boundary — RLS key |
+| `entity_type` | `TEXT` | YES | Domain entity class (`trade`, `escrow_record`, `certification`) |
+| `entity_id` | `UUID` | YES | The specific entity that transitioned |
+| `actor_id` | `UUID` | YES¹ | The authenticated principal who triggered the transition. ¹ NULL only for `SYSTEM_AUTOMATION` transitions |
+| `actor_role` | `TEXT` | YES | Role of the actor at time of transition (e.g. `TENANT_ADMIN`, `MAKER`) |
+| `actor_type` | `TEXT` | YES | **D-020-A/D.** Actor classification at time of transition. One of the six `allowed_actor_type` values |
+| `from_state_id` | `UUID` | NO | NULL only for initial state assignment (entity creation). FK → `state_definitions(id)` |
+| `to_state_id` | `UUID` | YES | FK → `state_definitions(id)`. The new state |
+| `transition_id` | `UUID` | YES | FK → `allowed_transitions(id)`. The specific permitted edge that was used |
+| `reason` | `TEXT` | YES² | Human-readable justification. ² Required for all transitions into irreversible states; for other transitions, empty string is NOT permitted — must be meaningful |
+| `maker_checker_ref` | `UUID` | NO | FK → G-021 MC request. NULL if transition did not require MC |
+| `escalation_ref` | `UUID` | NO | FK → G-022 escalation record. NULL if transition did not trigger escalation |
+| `metadata` | `JSONB` | NO | Additional context (AI participation, request_id, IP, user-agent). NULL permitted |
+| `occurred_at` | `TIMESTAMPTZ` | YES | Wall-clock timestamp at time of transition commit. Set by DB `now()` — not caller-supplied |
+| `request_id` | `TEXT` | NO | Fastify request ID for correlation. NULL for background job transitions |
+
+> ¹ `actor_id` is NULL only for `actor_type = SYSTEM_AUTOMATION` transitions. For all human-initiated transitions, `actor_id NOT NULL` is enforced.
+
+#### RLS Policy on `state_transition_log` (Formal Statement)
+
+```sql
+-- NOTATIONAL (not executable without migration)
+
+-- Tenants may read their own org's log only
+CREATE POLICY stl_tenant_select ON state_transition_log
+  FOR SELECT TO texqtic_app
+  USING (org_id::text = current_setting('app.org_id', true));
+
+-- Platform admins may read any org's log (control-plane audit)
+CREATE POLICY stl_admin_select ON state_transition_log
+  FOR SELECT TO texqtic_admin
+  USING (current_setting('app.is_admin', true) = 'true');
+
+-- INSERT is the only write operation permitted for the app role
+CREATE POLICY stl_insert ON state_transition_log
+  FOR INSERT TO texqtic_app
+  WITH CHECK (org_id::text = current_setting('app.org_id', true));
+
+-- No UPDATE or DELETE policy exists — no UPDATE/DELETE is permitted
+-- Enforced additionally by BEFORE UPDATE OR DELETE trigger (Layer 2)
+```
+
+---
+
+### 9.5 Directive Compliance Summary
+
+| Directive | Title | Risk Level | Status |
+|-----------|-------|-----------|--------|
+| D-020-A | Actor Classification at Schema Level | Medium | ✅ Incorporated in §2.3 (`allowed_actor_type` column) + §9.1 |
+| D-020-B | Escrow Neutrality Doctrine Clause | High | ✅ Incorporated in §9.2 (constitutionally binding clause) |
+| D-020-C | AI Decision Boundary | Medium | ✅ Incorporated in §9.3 (frozen boundary + enforcement rules) |
+| D-020-D | Transition Log Immutability and Audit Integrity | Low (Critical) | ✅ Incorporated in §9.4 (three-layer model + mandatory fields) |
+
+**All 4 directives incorporated. G-020 v1.1 Day 1 gate: CLEARED for Day 2 migration authoring.**
+
+---
+
+*— End of Section 9: Constitutional Hardening Directives —*
+
+*— G-020 Design Document v1.1 COMPLETE —*
 
 ---
 
 *Document cross-references: `docs/DOCTRINE_ADDENDUM_POSITIONING_MONEY.md` · `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md` · `shared/contracts/rls-policy.md` · `server/prisma/rls.sql` · G-015 Phase C Validation Report · Doctrine v1.4*
+
+*Constitutional review: 2026-02-24 — APPROVED WITH 4 HARDENING DIRECTIVES (D-020-A · D-020-B · D-020-C · D-020-D)*
