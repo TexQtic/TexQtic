@@ -31,8 +31,9 @@ import { getPlatformInsights } from './services/aiService';
 import { getCatalogItems, CatalogItem } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
-import { getTenants, Tenant } from './services/controlPlaneService';
+import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { getCurrentUser } from './services/authService';
+import { setImpersonationToken } from './services/apiClient';
 
 const App: React.FC = () => {
   // Production-grade State Machine
@@ -60,7 +61,19 @@ const App: React.FC = () => {
     isAdmin: false,
     targetTenantId: null,
     startTime: null,
+    impersonationId: null,
+    token: null,
+    expiresAt: null,
   });
+
+  /** G-W3-ROUTING-001: Reason-input dialog before API-backed impersonation start */
+  const [impersonationDialog, setImpersonationDialog] = useState<{
+    open: boolean;
+    tenant: TenantConfig | null;
+    reason: string;
+    loading: boolean;
+    error: string | null;
+  }>({ open: false, tenant: null, reason: '', loading: false, error: null });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
   const [showArchitecture, setShowArchitecture] = useState(false);
@@ -213,18 +226,73 @@ const App: React.FC = () => {
     setAppState('EXPERIENCE');
   };
 
+  /** G-W3-ROUTING-001: Open reason dialog — API call deferred to handleImpersonateConfirm */
   const handleImpersonate = (tenant: TenantConfig) => {
-    setCurrentTenantId(tenant.id);
-    setImpersonation({
-      isAdmin: true,
-      targetTenantId: tenant.id,
-      startTime: new Date().toISOString(),
-    });
-    setAppState('EXPERIENCE');
+    setImpersonationDialog({ open: true, tenant, reason: '', loading: false, error: null });
   };
 
-  const handleExitImpersonation = () => {
-    setImpersonation({ isAdmin: false, targetTenantId: null, startTime: null });
+  /** G-W3-ROUTING-001: Confirm impersonation — fetch member userId, call server, store token */
+  const handleImpersonateConfirm = async () => {
+    if (!impersonationDialog.tenant) return;
+    const reason = impersonationDialog.reason.trim();
+    if (reason.length < 10) {
+      setImpersonationDialog(d => ({ ...d, error: 'Reason must be at least 10 characters.' }));
+      return;
+    }
+    setImpersonationDialog(d => ({ ...d, loading: true, error: null }));
+    try {
+      // Fetch tenant details to find an eligible member userId
+      const detail = await getTenantById(impersonationDialog.tenant!.id);
+      const members = detail.tenant.memberships ?? [];
+      const target =
+        members.find(m => m.role === 'OWNER' && m.status === 'ACTIVE') ||
+        members.find(m => m.role === 'ADMIN' && m.status === 'ACTIVE') ||
+        members.find(m => m.status === 'ACTIVE') ||
+        members[0];
+      if (!target) {
+        setImpersonationDialog(d => ({ ...d, loading: false, error: 'No eligible member found for this tenant.' }));
+        return;
+      }
+      const result = await startImpersonationSession({
+        orgId: impersonationDialog.tenant!.id,
+        userId: target.user.id,
+        reason,
+      });
+      // Apply impersonation JWT — admin token in localStorage is untouched
+      setImpersonationToken(result.token);
+      setCurrentTenantId(impersonationDialog.tenant!.id);
+      setImpersonation({
+        isAdmin: true,
+        targetTenantId: impersonationDialog.tenant!.id,
+        startTime: new Date().toISOString(),
+        impersonationId: result.impersonationId,
+        token: result.token,
+        expiresAt: result.expiresAt,
+      });
+      setImpersonationDialog({ open: false, tenant: null, reason: '', loading: false, error: null });
+      setAppState('EXPERIENCE');
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to start impersonation session.';
+      setImpersonationDialog(d => ({ ...d, loading: false, error: msg }));
+    }
+  };
+
+  /** G-W3-ROUTING-001: Stop impersonation via server API, then restore admin session */
+  const handleExitImpersonation = async () => {
+    if (impersonation.impersonationId) {
+      try {
+        await stopImpersonationSession({
+          impersonationId: impersonation.impersonationId,
+          reason: 'Admin exited impersonation session via UI.',
+        });
+      } catch (err) {
+        // Log but don't block exit — state must be cleared regardless
+        console.error('[Impersonation] stop error (ignored, clearing state):', err);
+      }
+    }
+    // Clear impersonation token override — admin JWT in localStorage is restored automatically
+    setImpersonationToken(null);
+    setImpersonation({ isAdmin: false, targetTenantId: null, startTime: null, impersonationId: null, token: null, expiresAt: null });
     setAppState('CONTROL_PLANE');
   };
 
@@ -712,6 +780,62 @@ const App: React.FC = () => {
 
   return (
     <div className="relative font-sans">
+      {/* G-W3-ROUTING-001: Impersonation reason dialog */}
+      {impersonationDialog.open && impersonationDialog.tenant && (
+        <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 space-y-6 shadow-2xl">
+            <div>
+              <h2 className="text-lg font-bold">Impersonate Tenant</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                You are about to impersonate{' '}
+                <strong>{impersonationDialog.tenant.name}</strong>. A time-bounded session
+                will be created with a 30-minute expiry.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                Reason (required, min 10 chars)
+              </label>
+              <textarea
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-rose-500 outline-none"
+                rows={3}
+                placeholder="e.g. Investigating tenant support ticket #1234..."
+                value={impersonationDialog.reason}
+                onChange={e => setImpersonationDialog(d => ({ ...d, reason: e.target.value }))}
+              />
+              {impersonationDialog.reason.length > 0 && impersonationDialog.reason.length < 10 && (
+                <p className="text-[10px] text-amber-600">
+                  {10 - impersonationDialog.reason.length} more character(s) required.
+                </p>
+              )}
+            </div>
+            {impersonationDialog.error && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
+                {impersonationDialog.error}
+              </div>
+            )}
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() =>
+                  setImpersonationDialog({ open: false, tenant: null, reason: '', loading: false, error: null })
+                }
+                className="flex-1 py-3 font-bold text-slate-500 text-xs uppercase tracking-widest hover:text-slate-900 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleImpersonateConfirm}
+                disabled={impersonationDialog.loading || impersonationDialog.reason.trim().length < 10}
+                className="flex-1 py-3 bg-rose-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {impersonationDialog.loading ? 'Starting...' : 'Start Impersonation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {impersonation.isAdmin &&
         currentTenant &&
         (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS') && (
@@ -719,6 +843,11 @@ const App: React.FC = () => {
             <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
               Staff Active: {currentTenant.name} ({currentTenant.id})
+              {impersonation.expiresAt && (
+                <span className="text-rose-200 font-normal normal-case tracking-normal">
+                  — expires {new Date(impersonation.expiresAt).toLocaleTimeString()}
+                </span>
+              )}
             </div>
             <button
               onClick={handleExitImpersonation}

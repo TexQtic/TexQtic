@@ -40,6 +40,19 @@ const TENANT_TOKEN_KEY = 'texqtic_tenant_token';
 const ADMIN_TOKEN_KEY = 'texqtic_admin_token';
 const AUTH_REALM_KEY = 'texqtic_auth_realm';
 
+// G-W3-ROUTING-001: Impersonation token override.
+// When set, replaces the stored tenant token for non-auth requests.
+// Admin token in localStorage is preserved untouched.
+let _impersonationTokenOverride: string | null = null;
+
+/**
+ * Set (or clear) the impersonation JWT that overrides normal tenant token selection.
+ * Call with null to clear when exiting impersonation.
+ */
+export function setImpersonationToken(token: string | null): void {
+  _impersonationTokenOverride = token;
+}
+
 // Flip to true locally to diagnose auth request issues. Never commit as true.
 const AUTH_DEBUG = false;
 
@@ -49,9 +62,12 @@ let currentAbortController = new AbortController();
 export type AuthRealm = 'TENANT' | 'CONTROL_PLANE';
 
 /**
- * Get stored JWT token based on current realm
+ * Get stored JWT token based on current realm.
+ * If an impersonation token override is active it takes precedence over the
+ * stored tenant token (admin token in localStorage is never overwritten).
  */
 export function getToken(): string | null {
+  if (_impersonationTokenOverride) return _impersonationTokenOverride;
   const realm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
   if (!realm) return null;
 

@@ -9,6 +9,7 @@
  */
 
 import { get, post, put, getAuthRealm } from './apiClient';
+import { adminPost } from './adminApiClient';
 
 /**
  * Wave 0-A: Realm guard helper
@@ -477,4 +478,46 @@ export interface SystemHealthResponse {
 export async function getSystemHealth(): Promise<SystemHealthResponse> {
   requireControlPlaneRealm();
   return get<SystemHealthResponse>('/api/control/system/health');
+}
+
+// ==================== IMPERSONATION (G-W3-ROUTING-001) ====================
+
+export interface StartImpersonationRequest {
+  orgId: string;
+  userId: string;
+  reason: string; // min 10 chars — enforced server-side by Zod
+}
+
+export interface StartImpersonationResponse {
+  impersonationId: string;
+  token: string;     // tenant-shaped JWT, 30-min TTL
+  expiresAt: string; // ISO 8601
+}
+
+export interface StopImpersonationRequest {
+  impersonationId: string;
+  reason: string; // min 10 chars — enforced server-side by Zod
+}
+
+/**
+ * Start a time-bounded impersonation session.
+ * Uses adminPost to send X-Texqtic-Realm: control header.
+ * Returns a tenant-shaped JWT (separate from the admin session token).
+ */
+export async function startImpersonationSession(
+  request: StartImpersonationRequest
+): Promise<StartImpersonationResponse> {
+  requireControlPlaneRealm();
+  return adminPost<StartImpersonationResponse>('/api/control/impersonation/start', request);
+}
+
+/**
+ * Stop an active impersonation session.
+ * Writes IMPERSONATION_STOP audit event on the server.
+ */
+export async function stopImpersonationSession(
+  request: StopImpersonationRequest
+): Promise<{ ended: boolean }> {
+  requireControlPlaneRealm();
+  return adminPost<{ ended: boolean }>('/api/control/impersonation/stop', request);
 }

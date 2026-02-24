@@ -85,4 +85,8 @@ export interface ImpersonationState {
   isAdmin: boolean;
   targetTenantId: string | null;
   startTime: string | null;
+  /** G-W3-ROUTING-001: API-backed impersonation session fields */
+  impersonationId: string | null;
+  token: string | null;     // tenant-shaped JWT — stored separately from admin token
+  expiresAt: string | null; // ISO 8601 expiry from server
 }
