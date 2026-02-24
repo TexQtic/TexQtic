@@ -1301,3 +1301,27 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 - Governance infrastructure tables exist -- ready for Day 3 StateMachineService authoring
 - G-021 (Maker-Checker) and G-022 (Escalation Engine) designs may proceed in parallel
 - Wave plan sequencing preserved: trades (G-017, Week 3), escrow (G-018, Week 4)
+
+
+---
+
+### G-020 Day 3 — Constitutional Review Note (2026-02-24)
+
+**Gate:** PASS / CLOSED
+
+**Tightening Clause logged (non-blocking):**
+> SYSTEM_AUTOMATION may execute ONLY housekeeping transitions (timeouts, SLA expiry, escalation routing).
+> SYSTEM_AUTOMATION must NEVER perform value-bearing confirmation transitions
+> (APPROVED, ORDER_CONFIRMED, SETTLEMENT_ACKNOWLEDGED, RELEASED, CLOSED, CANCELLED, REFUNDED, VOIDED).
+> This is encoded in stateMachine.guardrails.ts (SYSTEM_AUTOMATION_FORBIDDEN_TO_STATES set)
+> and mirrored in seed llowed_actor_type[] arrays.
+> No code change required — doctrine is already enforced; this entry closes the governance record.
+
+**Week 2 Progress:**
+| Day | Deliverable | Status |
+|-----|-------------|--------|
+| Day 1 | G-020 Design v1.1 + constitutional hardening (D-020-A/B/C/D) | PASS |
+| Day 2 | Schema: lifecycle_states, allowed_transitions, trade/escrow_lifecycle_logs + RLS + triggers | PASS |
+| Day 3 | StateMachineService + guardrails + 43-edge seed graph + 20 tests + evidence doc | PASS |
+
+Commit: 9c3ca28
