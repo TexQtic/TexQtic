@@ -8,7 +8,7 @@
  * - Remove items
  */
 
-import { get, post, patch } from './apiClient';
+import { tenantGet, tenantPost, tenantPatch } from './tenantApiClient';
 
 export interface CatalogItem {
   id: string;
@@ -50,7 +50,7 @@ export interface UpdateCartItemRequest {
  * Idempotent operation
  */
 export async function getOrCreateCart(): Promise<Cart> {
-  const response = await post<{ cart: Cart }>('/api/tenant/cart');
+  const response = await tenantPost<{ cart: Cart }>('/api/tenant/cart');
   return response.cart;
 }
 
@@ -58,7 +58,7 @@ export async function getOrCreateCart(): Promise<Cart> {
  * Get current active cart
  */
 export async function getCart(): Promise<Cart | null> {
-  const response = await get<{ cart: Cart | null }>('/api/tenant/cart');
+  const response = await tenantGet<{ cart: Cart | null }>('/api/tenant/cart');
   return response.cart;
 }
 
@@ -66,7 +66,7 @@ export async function getCart(): Promise<Cart | null> {
  * Add item to cart or increment quantity if already present
  */
 export async function addToCart(request: AddToCartRequest): Promise<CartItem> {
-  const response = await post<{ cartItem: CartItem }>('/api/tenant/cart/items', request);
+  const response = await tenantPost<{ cartItem: CartItem }>('/api/tenant/cart/items', request);
   return response.cartItem;
 }
 
@@ -77,7 +77,7 @@ export async function updateCartItem(
   itemId: string,
   request: UpdateCartItemRequest
 ): Promise<CartItem | { removed: true }> {
-  const response = await patch<{ cartItem?: CartItem; removed?: boolean }>(
+  const response = await tenantPatch<{ cartItem?: CartItem; removed?: boolean }>(
     `/api/tenant/cart/items/${itemId}`,
     request
   );
@@ -131,5 +131,5 @@ export interface CheckoutResult {
  * Callers should call refreshCart() afterwards to clear local cart state.
  */
 export async function checkout(): Promise<CheckoutResult> {
-  return post<CheckoutResult>('/api/tenant/checkout');
+  return tenantPost<CheckoutResult>('/api/tenant/checkout');
 }

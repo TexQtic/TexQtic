@@ -7,7 +7,8 @@
  * - Branding configuration
  */
 
-import { post, put, get } from './apiClient';
+import { post } from './apiClient';
+import { tenantGet, tenantPost, tenantPut } from './tenantApiClient';
 
 // ==================== ACTIVATION ====================
 
@@ -77,7 +78,7 @@ export interface MembershipsResponse {
  * Requires OWNER or ADMIN role; RLS-enforced.
  */
 export async function getMemberships(): Promise<MembershipsResponse> {
-  return get<MembershipsResponse>('/api/tenant/memberships');
+  return tenantGet<MembershipsResponse>('/api/tenant/memberships');
 }
 
 export interface CreateMembershipRequest {
@@ -102,7 +103,7 @@ export interface CreateMembershipResponse {
 export async function createMembership(
   request: CreateMembershipRequest
 ): Promise<CreateMembershipResponse> {
-  return post<CreateMembershipResponse>('/api/tenant/memberships', request);
+  return tenantPost<CreateMembershipResponse>('/api/tenant/memberships', request);
 }
 
 // ==================== BRANDING ====================
@@ -133,5 +134,5 @@ export interface UpdateBrandingResponse {
 export async function updateBranding(
   request: UpdateBrandingRequest
 ): Promise<UpdateBrandingResponse> {
-  return put<UpdateBrandingResponse>('/api/tenant/branding', request);
+  return tenantPut<UpdateBrandingResponse>('/api/tenant/branding', request);
 }

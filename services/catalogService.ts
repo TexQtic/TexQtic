@@ -6,7 +6,7 @@
  * - Search catalog
  */
 
-import { get } from './apiClient';
+import { tenantGet } from './tenantApiClient';
 
 export interface CatalogItem {
   id: string;
@@ -62,7 +62,7 @@ export async function getCatalogItems(params: CatalogQueryParams = {}): Promise<
   const queryPrefix = queryString ? '?' : '';
   const endpoint = `/api/tenant/catalog/items${queryPrefix}${queryString}`;
 
-  return get<CatalogResponse>(endpoint);
+  return tenantGet<CatalogResponse>(endpoint);
 }
 
 /**

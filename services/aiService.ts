@@ -9,7 +9,8 @@
  * - JWT authentication enforced
  */
 
-import { get, post, APIError } from './apiClient';
+import { get, APIError } from './apiClient';
+import { tenantGet, tenantPost } from './tenantApiClient';
 
 interface InsightsResponse {
   insightText: string;
@@ -53,7 +54,7 @@ export const getPlatformInsights = async (prompt: string): Promise<string> => {
     const queryString = params.toString();
     const endpoint = `/api/ai/insights${queryString ? `?${queryString}` : ''}`;
 
-    const response = await get<InsightsResponse>(endpoint);
+    const response = await tenantGet<InsightsResponse>(endpoint);
 
     return response.insightText;
   } catch (error) {
@@ -90,7 +91,7 @@ export const generateNegotiationAdvice = async (
   options?: { quantity?: number; context?: string }
 ): Promise<string> => {
   try {
-    const response = await post<NegotiationAdviceResponse>('/api/ai/negotiation-advice', {
+    const response = await tenantPost<NegotiationAdviceResponse>('/api/ai/negotiation-advice', {
       productName: product,
       targetPrice,
       quantity: options?.quantity,
