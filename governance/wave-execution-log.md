@@ -1469,3 +1469,69 @@ No production code changed. No migrations. No schema changes.
 Tests 2 (admin login audit) and 5 (replay detection audit) in `gate-e-4-audit` remain failing.  
 Root cause: auth routes (`server/src/routes/auth/**`) do not emit these events with the field values the tests expect (or do not emit them at all). This is outside GATE-TEST-001 allowlist and requires a separate prompt targeting `server/src/routes/auth/**`.  
 STOP condition triggered per governance rules — no speculative fix applied.
+
+---
+
+### GATE-TEST-002 — gate-e-4-audit Replay Detection tenantId Fix
+
+**Date:** 2026-02-24  
+**Task ID:** GATE-TEST-002  
+**Prompt scope:** `server/src/routes/auth.ts` (modified)
+
+#### Root Cause Diagnosis
+
+| Test | Failure mode | Root cause |
+|---|---|---|
+| Test 2 — admin login audit | Timeout polling withDbContext({ isAdmin: true }) | RLS GAP: audit_logs_guard RESTRICTIVE requires require_org_context() OR bypass_enabled() — both FALSE for admin context. Requires migration. |
+| Test 5 — replay detection audit | tenant_id = NULL row invisible to { tenantId: testTenantId } context | auth.ts wrote tenantId: null for replay audit; SELECT policy tenant_id = app.current_org_id() evaluates NULL = UUID -> FALSE. Fix: look up membership. |
+
+#### Changes Applied
+
+| Change | File | Description |
+|---|---|---|
+| **Modified** | `server/src/routes/auth.ts` | Both replay detection paths (rotatedAt !== null path and !claimSucceeded concurrent path) now resolve tenantId from prisma.membership.findFirst when realm === 'TENANT'. Audit written with resolved tenantId instead of null. |
+
+No production auth behavior changed. No migrations. No schema changes.
+
+#### Validation Evidence
+
+- VS Code diagnostics: zero new TypeScript errors introduced PASS
+- gate-e-4-audit.integration.test.ts isolated run:
+  - PASS: should emit audit log for successful tenant login (10591ms)
+  - FAIL: should emit audit log for successful admin login (9930ms) <- Test 2 BLOCKED
+  - PASS: should emit audit log for failed login (wrong password) (6545ms)
+  - PASS: should emit audit log for successful token refresh (7171ms)
+  - PASS: should emit audit log for token replay detection (7343ms) <- Test 5 FIXED
+  - PASS: should emit audit log for rate limit enforcement (12053ms)
+  - Test Files: 1 failed (1) | Tests: 1 failed | 5 passed (6)
+- Net improvement: gate-e-4-audit 4/6 -> 5/6
+
+#### Governance Notes — Test 2 STOP Condition
+
+Test 2 (should emit audit log for successful admin login) cannot be fixed without a new RLS migration.
+withDbContext({ isAdmin: true }) sets app.org_id = '', making require_org_context() = FALSE and bypass_enabled() = FALSE.
+The RESTRICTIVE audit_logs_guard policy blocks ALL audit_logs access for admin context.
+Required next action: New migration adding OR current_setting('app.is_admin', true) = 'true' to audit_logs_guard AND a matching PERMISSIVE SELECT policy for is_admin = 'true'.
+This is a Gate D.3 RLS addition — separate prompt + migration allowlist required.
+
+---
+
+### GATE-TEST-002 - gate-e-4-audit Replay Detection tenantId Fix
+
+**Date:** 2026-02-24
+**Task ID:** GATE-TEST-002
+**Prompt scope:** server/src/routes/auth.ts (modified)
+
+#### Changes Applied
+
+Both replay detection paths in auth.ts now resolve tenantId from prisma.membership.findFirst when realm === TENANT. Audit written with resolved tenantId instead of null. No auth behavior changed.
+
+#### Validation Evidence
+
+- gate-e-4-audit isolated: Tests 1 failed / 5 passed (6) -- Test 5 FIXED, Test 2 BLOCKED (RLS migration required)
+- Net improvement: gate-e-4-audit 4/6 -> 5/6
+- VS Code diagnostics: zero new TypeScript errors introduced
+
+#### Governance Notes - Test 2 STOP
+
+Test 2 (admin login audit) requires audit_logs_guard RLS migration to add admin-context pass-through. Outside GATE-TEST-002 allowlist. Separate prompt required.

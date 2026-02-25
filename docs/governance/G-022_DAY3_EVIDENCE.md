@@ -345,6 +345,7 @@ const auditEvents = await expectAuditEventually(
 | Single atomic commit target | ✅ READY | `feat(g022): escalation routes + audit emission + integration tests` |
 | test:ci / test:supabase scripts | ✅ ADDED | `server/package.json` — `pnpm test:ci` = `vitest run --maxWorkers=1` |
 | gate-e-4-audit fix (MVCC) | ✅ PARTIAL | MVCC fix applied (6 call sites); 4/6 tests pass. 2 remain (admin+replay) — non-MVCC root cause outside allowlist |
+| gate-e-4-audit replay fix (GATE-TEST-002) | ✅ PARTIAL | `auth.ts` replay paths now write audit with resolved `tenantId` from membership; Test 5 passes. 5/6 pass. Test 2 blocked: requires `audit_logs_guard` RLS migration for admin-context SELECT. |
 | vitest.config.ts created | ✅ COMPLETE | `server/vitest.config.ts` excludes `dist/**`; 20 duplicate files eliminated |
 
 ---

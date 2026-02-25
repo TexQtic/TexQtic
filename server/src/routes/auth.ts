@@ -1472,12 +1472,23 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           maxAge: 0,
         });
 
+        // GATE-TEST-002: Resolve tenantId for tenant-realm replay audit so the
+        // row is readable via RLS tenant context (tenant_id = app.current_org_id()).
+        let replayTenantId: string | null = null;
+        if (realm === 'TENANT' && refreshTokenRow.userId) {
+          const replayMembership = await prisma.membership.findFirst({
+            where: { userId: refreshTokenRow.userId },
+            select: { tenantId: true },
+          });
+          replayTenantId = replayMembership?.tenantId ?? null;
+        }
+
         await writeAuditLog(
           prisma,
           createAuthAudit({
             action: 'AUTH_REFRESH_REPLAY_DETECTED',
             realm,
-            tenantId: null,
+            tenantId: replayTenantId,
             actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
             email: null,
             reasonCode: 'ROTATED_REPLAY',
@@ -1625,12 +1636,23 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         });
 
         // Audit the concurrent/replay attempt
+        // GATE-TEST-002: Resolve tenantId for tenant-realm replay audit so the
+        // row is readable via RLS tenant context (tenant_id = app.current_org_id()).
+        let concurrentReplayTenantId: string | null = null;
+        if (realm === 'TENANT' && refreshTokenRow.userId) {
+          const concurrentMembership = await prisma.membership.findFirst({
+            where: { userId: refreshTokenRow.userId },
+            select: { tenantId: true },
+          });
+          concurrentReplayTenantId = concurrentMembership?.tenantId ?? null;
+        }
+
         await writeAuditLog(
           prisma,
           createAuthAudit({
             action: 'AUTH_REFRESH_REPLAY_DETECTED',
             realm,
-            tenantId: null,
+            tenantId: concurrentReplayTenantId,
             actorId: refreshTokenRow.userId || refreshTokenRow.adminId,
             email: null,
             reasonCode: 'ROTATED_REPLAY',
