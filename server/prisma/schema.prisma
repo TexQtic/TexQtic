@@ -20,6 +20,7 @@ model Tenant {
   aiBudget                 AiBudget?
   aiUsageMeters            AiUsageMeter[]
   auditLogs                AuditLog[]
+  reasoningLogs            ReasoningLog[]
   carts                    Cart[]
   catalogItems             CatalogItem[]
   impersonationSessions    ImpersonationSession[]
@@ -187,9 +188,11 @@ model AuditLog {
   entityId     String?    @map("entity_id") @db.Uuid
   beforeJson   Json?      @map("before_json")
   afterJson    Json?      @map("after_json")
-  metadataJson Json?      @map("metadata_json")
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  tenant       Tenant?    @relation(fields: [tenantId], references: [id])
+  metadataJson    Json?         @map("metadata_json")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  reasoningLogId  String?       @map("reasoning_log_id") @db.Uuid
+  tenant          Tenant?       @relation(fields: [tenantId], references: [id])
+  reasoningLog    ReasoningLog? @relation(fields: [reasoningLogId], references: [id])
 
   @@index([tenantId])
   @@index([actorId])
@@ -197,6 +200,24 @@ model AuditLog {
   @@index([entity])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model ReasoningLog {
+  id              String     @id @default(uuid()) @db.Uuid
+  tenantId        String     @map("tenant_id") @db.Uuid
+  requestId       String     @map("request_id")
+  reasoningHash   String     @map("reasoning_hash")
+  model           String
+  promptSummary   String?    @map("prompt_summary")
+  responseSummary String?    @map("response_summary")
+  tokensUsed      Int        @default(0) @map("tokens_used")
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant          Tenant     @relation(fields: [tenantId], references: [id])
+  auditLogs       AuditLog[]
+
+  @@index([tenantId])
+  @@index([requestId])
+  @@map("reasoning_logs")
 }
 
 model EventLog {
