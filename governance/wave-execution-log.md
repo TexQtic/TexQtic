@@ -1407,3 +1407,65 @@ Proceeding to Week 3 — Governance Hardening + AI Traceability.
 | Feature Creep | 🟢 None |
 | Fintech Creep | 🟢 None |
 | AI Autonomy Creep | 🟢 Blocked |
+---
+
+### G-022 Day 3 — Escalation Routes + Audit Emission + Integration Tests
+
+**Date:** 2026-02-24  
+**Task ID:** G-022-DAY3-ROUTES-AUDIT  
+**Commit target:** `feat(g022): escalation routes + audit emission + integration tests`
+
+#### Deliverables
+
+- Control plane routes: `POST /api/control/escalations`, `POST /:id/upgrade`, `POST /:id/resolve`, `GET /api/control/escalations`
+- Tenant plane routes: `GET /api/tenant/escalations`, `POST /api/tenant/escalations` (LEVEL_0/1 only)
+- G-022 audit factory helpers in `server/src/utils/audit.ts`
+- 5-test integration suite (`escalation.g022.integration.test.ts`) — all mocked, no DB required
+
+#### Validation Evidence
+
+- `tsc --noEmit`: ✅ CLEAN (0 errors)
+- `vitest run` (G-022 suites): ✅ 28/28 passed (23 Day 2 + 5 Day 3)
+- D-022-A/B/C/D: ✅ all constitutional directives enforced in routes + service
+- Audit in same Prisma tx as escalation INSERT: ✅ enforced in `withDbContext` callback pattern
+- orgId never from client body in tenant routes: ✅ derived from JWT only
+- Kill switch not auto-toggled: ✅ D-022-C compliant
+
+#### Files Changed
+
+Modified: `server/src/routes/control.ts`, `server/src/routes/tenant.ts`, `server/src/services/escalation.service.ts`, `server/src/services/escalation.types.ts`  
+New: `server/src/routes/control/escalation.g022.ts`, `server/src/routes/tenant/escalation.g022.ts`, `server/src/utils/audit.ts`, `server/src/services/escalation.g022.integration.test.ts`, `docs/governance/G-022_DAY3_EVIDENCE.md`
+
+---
+
+### GATE-TEST-001 — Vitest dist Exclusion + gate-e-4-audit MVCC Fix
+
+**Date:** 2026-02-24  
+**Task ID:** GATE-TEST-001  
+**Prompt scope:** `server/vitest.config.ts` (new), `server/src/__tests__/gate-e-4-audit.integration.test.ts` (modified)  
+**Commit target:** `fix(test): exclude dist from vitest + fix gate-e-4-audit MVCC polling`
+
+#### Changes Applied
+
+| Change | File | Description |
+|---|---|---|
+| **New** | `server/vitest.config.ts` | Excludes `**/dist/**` from Vitest test discovery |
+| **Modified** | `server/src/__tests__/gate-e-4-audit.integration.test.ts` | 6 MVCC fixes: `withDbContext` moved inside `queryFn`; timeout 1000→5000ms; interval 50→100ms |
+
+No production code changed. No migrations. No schema changes.
+
+#### Validation Evidence
+
+- `tsc --noEmit`: ✅ exit 0 (clean)
+- `gate-e-4-audit` isolated: `2 failed | 4 passed (6)` — MVCC fix resolved AUTH_LOGIN_FAILED; 2 remain (non-MVCC pre-existing auth route issue, outside allowlist)
+- **Tier B before:** `14 failed / 31 passed (45 files)`, `1016s`
+- **Tier B after:** `5 failed / 20 passed (25 files)`, `700s`
+- dist exclusion eliminated **20 duplicate compiled test files** from discovery
+- **Net failing file reduction: 14 → 5 (−9 files)**
+- Zero G-022 Day 3 files in any failure line ✅
+
+#### Governance Notes
+
+Tests 2 (admin login audit) and 5 (replay detection audit) in `gate-e-4-audit` remain failing.  
+Root cause: auth routes (`server/src/routes/auth/**`) do not emit these events with the field values the tests expect (or do not emit them at all). This is outside GATE-TEST-001 allowlist and requires a separate prompt targeting `server/src/routes/auth/**`.  
+STOP condition triggered per governance rules — no speculative fix applied.

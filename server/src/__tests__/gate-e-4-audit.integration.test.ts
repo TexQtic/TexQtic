@@ -179,9 +179,10 @@ describe('Gate E.4: Audit Emission Integrity', () => {
     expect(response.statusCode).toBe(200);
 
     // Verify audit log emitted (with polling for async propagation)
-    const auditEvents = await withDbContext({ tenantId: testTenantId }, async tx => {
-      return await expectAuditEventually(
-        () =>
+    // GATE-TEST-001: withDbContext moved inside queryFn — fresh snapshot per poll attempt (MVCC fix).
+    const auditEvents = await expectAuditEventually(
+      () =>
+        withDbContext({ tenantId: testTenantId }, async tx =>
           tx.auditLog.findMany({
             where: {
               action: 'AUTH_LOGIN_SUCCESS',
@@ -190,12 +191,12 @@ describe('Gate E.4: Audit Emission Integrity', () => {
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
-          }),
-        results => results.length >= 1,
-        1000,
-        50
-      );
-    });
+          })
+        ),
+      results => results.length >= 1,
+      5000,
+      100
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
@@ -233,9 +234,10 @@ describe('Gate E.4: Audit Emission Integrity', () => {
     expect(response.statusCode).toBe(200);
 
     // Verify audit log emitted
-    const auditEvents = await withDbContext({ isAdmin: true }, async tx => {
-      return await expectAuditEventually(
-        () =>
+    // GATE-TEST-001: withDbContext moved inside queryFn — fresh snapshot per poll attempt (MVCC fix).
+    const auditEvents = await expectAuditEventually(
+      () =>
+        withDbContext({ isAdmin: true }, async tx =>
           tx.auditLog.findMany({
             where: {
               action: 'AUTH_LOGIN_SUCCESS',
@@ -244,12 +246,12 @@ describe('Gate E.4: Audit Emission Integrity', () => {
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
-          }),
-        results => results.length >= 1,
-        1000,
-        50
-      );
-    });
+          })
+        ),
+      results => results.length >= 1,
+      5000,
+      100
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
@@ -283,9 +285,10 @@ describe('Gate E.4: Audit Emission Integrity', () => {
     expect(response.statusCode).toBe(401);
 
     // Verify audit log emitted
-    const auditEvents = await withDbContext({ tenantId: testTenantId }, async tx => {
-      return await expectAuditEventually(
-        () =>
+    // GATE-TEST-001: withDbContext moved inside queryFn — fresh snapshot per poll attempt (MVCC fix).
+    const auditEvents = await expectAuditEventually(
+      () =>
+        withDbContext({ tenantId: testTenantId }, async tx =>
           tx.auditLog.findMany({
             where: {
               action: 'AUTH_LOGIN_FAILED',
@@ -293,12 +296,12 @@ describe('Gate E.4: Audit Emission Integrity', () => {
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
-          }),
-        results => results.length >= 1,
-        1000,
-        50
-      );
-    });
+          })
+        ),
+      results => results.length >= 1,
+      5000,
+      100
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
@@ -355,9 +358,10 @@ describe('Gate E.4: Audit Emission Integrity', () => {
     expect(response.statusCode).toBe(200);
 
     // Verify audit log emitted
-    const auditEvents = await withDbContext({ tenantId: testTenantId }, async tx => {
-      return await expectAuditEventually(
-        () =>
+    // GATE-TEST-001: withDbContext moved inside queryFn — fresh snapshot per poll attempt (MVCC fix).
+    const auditEvents = await expectAuditEventually(
+      () =>
+        withDbContext({ tenantId: testTenantId }, async tx =>
           tx.auditLog.findMany({
             where: {
               action: 'AUTH_REFRESH_SUCCESS',
@@ -365,12 +369,12 @@ describe('Gate E.4: Audit Emission Integrity', () => {
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
-          }),
-        results => results.length >= 1,
-        1000,
-        50
-      );
-    });
+          })
+        ),
+      results => results.length >= 1,
+      5000,
+      100
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
@@ -434,9 +438,10 @@ describe('Gate E.4: Audit Emission Integrity', () => {
     expect(secondResponse.statusCode).toBe(401);
 
     // Verify audit log emitted
-    const auditEvents = await withDbContext({ tenantId: testTenantId }, async tx => {
-      return await expectAuditEventually(
-        () =>
+    // GATE-TEST-001: withDbContext moved inside queryFn — fresh snapshot per poll attempt (MVCC fix).
+    const auditEvents = await expectAuditEventually(
+      () =>
+        withDbContext({ tenantId: testTenantId }, async tx =>
           tx.auditLog.findMany({
             where: {
               action: 'AUTH_REFRESH_REPLAY_DETECTED',
@@ -444,12 +449,12 @@ describe('Gate E.4: Audit Emission Integrity', () => {
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
-          }),
-        results => results.length >= 1,
-        1000,
-        50
-      );
-    });
+          })
+        ),
+      results => results.length >= 1,
+      5000,
+      100
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
@@ -491,9 +496,10 @@ describe('Gate E.4: Audit Emission Integrity', () => {
     }
 
     // Verify audit log emitted
-    const auditEvents = await withDbContext({ tenantId: testTenantId }, async tx => {
-      return await expectAuditEventually(
-        () =>
+    // GATE-TEST-001: withDbContext moved inside queryFn — fresh snapshot per poll attempt (MVCC fix).
+    const auditEvents = await expectAuditEventually(
+      () =>
+        withDbContext({ tenantId: testTenantId }, async tx =>
           tx.auditLog.findMany({
             where: {
               action: 'AUTH_RATE_LIMIT_ENFORCED',
@@ -501,12 +507,12 @@ describe('Gate E.4: Audit Emission Integrity', () => {
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
-          }),
-        results => results.length >= 1,
-        1000,
-        50
-      );
-    });
+          })
+        ),
+      results => results.length >= 1,
+      5000,
+      100
+    );
 
     expect(auditEvents.length).toBeGreaterThan(0);
     const event = auditEvents[0];
