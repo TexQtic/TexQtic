@@ -346,6 +346,7 @@ const auditEvents = await expectAuditEventually(
 | test:ci / test:supabase scripts | ✅ ADDED | `server/package.json` — `pnpm test:ci` = `vitest run --maxWorkers=1` |
 | gate-e-4-audit fix (MVCC) | ✅ PARTIAL | MVCC fix applied (6 call sites); 4/6 tests pass. 2 remain (admin+replay) — non-MVCC root cause outside allowlist |
 | gate-e-4-audit replay fix (GATE-TEST-002) | ✅ PARTIAL | `auth.ts` replay paths now write audit with resolved `tenantId` from membership; Test 5 passes. 5/6 pass. Test 2 blocked: requires `audit_logs_guard` RLS migration for admin-context SELECT. |
+| gate-e-4-audit admin SELECT fix (GATE-TEST-003) | ✅ COMPLETE | `audit_logs_guard` RESTRICTIVE extended with `OR current_setting('app.is_admin', true) = 'true'`; `audit_logs_admin_select` PERMISSIVE SELECT added for `is_admin=true AND tenant_id IS NULL`. Migration applied to Supabase 2026-02-25. gate-e-4-audit: **6/6 PASS**. |
 | vitest.config.ts created | ✅ COMPLETE | `server/vitest.config.ts` excludes `dist/**`; 20 duplicate files eliminated |
 
 ---

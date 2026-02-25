@@ -1535,3 +1535,91 @@ Both replay detection paths in auth.ts now resolve tenantId from prisma.membersh
 #### Governance Notes - Test 2 STOP
 
 Test 2 (admin login audit) requires audit_logs_guard RLS migration to add admin-context pass-through. Outside GATE-TEST-002 allowlist. Separate prompt required.
+
+
+---
+
+### GATE-TEST-003 -- Admin-Context audit_logs SELECT (RLS Migration)
+
+**Date:** 2026-02-25
+**Task ID:** GATE-TEST-003
+**Prompt scope:** server/prisma/migrations/20260304000000_gatetest003_audit_logs_admin_select/migration.sql (new)
+
+#### Problem
+
+gate-e-4-audit Test 2 queries audit_logs with withDbContext({ isAdmin: true }).
+This sets app.org_id = '' and app.is_admin = 'true', but:
+- require_org_context() = NULLIF('', '')::uuid IS NOT NULL = FALSE
+- bypass_enabled() = triple-gate = FALSE (not in test mode)
+The RESTRICTIVE audit_logs_guard blocked ALL access for admin context.
+
+#### Changes Applied
+
+| Change | File | Description |
+|---|---|---|
+| NEW | server/prisma/migrations/20260304000000_gatetest003_audit_logs_admin_select/migration.sql | Drop + recreate audit_logs_guard RESTRICTIVE; add audit_logs_admin_select PERMISSIVE SELECT |
+
+No production code changed. No schema.prisma changes. Migration is SQL-only.
+
+#### Policy Changes
+
+audit_logs_guard (RESTRICTIVE, FOR ALL, TO texqtic_app) -- UPDATED:
+  OLD: app.require_org_context() OR app.bypass_enabled()
+  NEW: app.require_org_context() OR app.bypass_enabled() OR current_setting('app.is_admin', true) = 'true'
+
+audit_logs_admin_select (PERMISSIVE, FOR SELECT, TO texqtic_app) -- NEW:
+  USING: current_setting('app.is_admin', true) = 'true' AND tenant_id IS NULL
+
+Tenant isolation: unchanged. Tenant context sets is_admin='false' so the admin predicate
+never fires for tenant context. Admin SELECT limited to tenant_id IS NULL rows only.
+Append-only enforcement: unchanged (no UPDATE/DELETE policies added).
+
+#### Verification Block
+
+Migration includes a DO $$ block that RAISES EXCEPTION on:
+- FORCE RLS not enabled
+- audit_logs_guard RESTRICTIVE policy missing
+- guard USING clause does not include is_admin predicate
+- audit_logs_admin_select PERMISSIVE SELECT policy missing
+- PERMISSIVE SELECT policy count != 2 (unified + admin)
+
+#### Post-Migration Steps (to be performed by user)
+
+1. Apply via psql: psql -f server/prisma/migrations/20260304000000_gatetest003_audit_logs_admin_select/migration.sql
+2. pnpm -C server exec prisma db pull
+3. pnpm -C server exec prisma generate
+4. pnpm -C server run test:ci -- src/__tests__/gate-e-4-audit.integration.test.ts
+   Expected: 6 passed (6) -- 6/6 PASS
+
+#### Governance Notes
+
+Tenant isolation guarantee upheld:
+- withDbContext({ tenantId: X }) sets app.is_admin = 'false' -- admin predicate never fires
+- Admin SELECT filtered to tenant_id IS NULL -- cannot read tenant-specific rows
+- RESTRICTIVE guard updated (not replaced with permissive equivalent)
+- No bypass_rls toggle, no RLS disable, no DROP of existing policies
+
+#### Verification Evidence (Applied 2026-02-25)
+
+- Migration applied via psql stdin — NOTICE: GATE-TEST-003 PASS + COMMIT confirmed
+- prisma db pull + prisma generate: clean
+- gate-e-4-audit result:
+  - PASS: should emit audit log for successful tenant login (10972ms)
+  - PASS: should emit audit log for successful admin login (6401ms) <- Test 2 FIXED
+  - PASS: should emit audit log for failed login (wrong password) (6845ms)
+  - PASS: should emit audit log for successful token refresh (7248ms)
+  - PASS: should emit audit log for token replay detection (7833ms)
+  - PASS: should emit audit log for rate limit enforcement (15977ms)
+  - Test Files: 1 passed (1) | Tests: 6 passed (6) | exit code: 0
+- gate-e-4-audit: 5/6 -> 6/6 COMPLETE
+
+#### Verification Evidence (Applied 2026-02-25)
+
+- Migration: NOTICE GATE-TEST-003 PASS + COMMIT — no ERROR/ROLLBACK
+- gate-e-4-audit: Tests 6 passed (6) | exit code 0 -- ALL 6/6 PASS
+  - PASS: successful tenant login (10972ms)
+  - PASS: successful admin login (6401ms) <-- Test 2 FIXED
+  - PASS: failed login wrong password (6845ms)
+  - PASS: successful token refresh (7248ms)
+  - PASS: token replay detection (7833ms)
+  - PASS: rate limit enforcement (15977ms)
