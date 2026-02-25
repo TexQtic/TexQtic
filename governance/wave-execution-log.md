@@ -1626,10 +1626,10 @@ Tenant isolation guarantee upheld:
 
 ---
 
-### G-023 — Reasoning Hash + Reasoning Logs FK (2026-02-25)
+### G-023 ï¿½ Reasoning Hash + Reasoning Logs FK (2026-02-25)
 
 **Commits:** `48a7fd3` (feat(db))  `2f432ad` (feat(ai))
-**Migration:** `20260305000000_g023_reasoning_logs` — applied, BEGIN/COMMIT, NOTICE G-023 PASS
+**Migration:** `20260305000000_g023_reasoning_logs` ï¿½ applied, BEGIN/COMMIT, NOTICE G-023 PASS
 
 #### Changes
 
@@ -1643,7 +1643,7 @@ Tenant isolation guarantee upheld:
 
 #### Verification Evidence (Applied 2026-02-25)
 
-- Migration: NOTICE G-023 PASS — RLS: t, FORCE: t, guard: 1, SELECT: 1, INSERT: 1, trigger: 1, audit_logs.reasoning_log_id: t + COMMIT
+- Migration: NOTICE G-023 PASS ï¿½ RLS: t, FORCE: t, guard: 1, SELECT: 1, INSERT: 1, trigger: 1, audit_logs.reasoning_log_id: t + COMMIT
 - pnpm -C server exec tsc --noEmit  exit 0
 - gate-g023-reasoning-logs: Tests 6 passed (6) | exit 0
   - PASS: RL-01 tenant A sees only own reasoning_logs row
@@ -1656,10 +1656,10 @@ Tenant isolation guarantee upheld:
 
 ---
 
-### G-017 Day 1 — Trades Domain: Schema + RLS (2026-02-25)
+### G-017 Day 1 ï¿½ Trades Domain: Schema + RLS (2026-02-25)
 
-**Commit:** TBD (feat(db): introduce trades domain + RLS (G-017 Day 1))
-**Migration:** `20260306000000_g017_trades_domain` — applied, BEGIN/COMMIT, NOTICE G-017 PASS
+**Commit:** `96b9a1c` (feat(db): introduce trades domain + RLS (G-017 Day 1))
+**Migration:** `20260306000000_g017_trades_domain` ï¿½ applied, BEGIN/COMMIT, NOTICE G-017 PASS
 
 #### Changes
 
@@ -1674,16 +1674,16 @@ Tenant isolation guarantee upheld:
 
 #### Governance Notes
 
-- No new lifecycle states created — reuses lifecycle_states (G-020)
-- No escrow FK in Day 1 — deferred to G-018
+- No new lifecycle states created ï¿½ reuses lifecycle_states (G-020)
+- No escrow FK in Day 1 ï¿½ deferred to G-018
 - freeze_recommended is informational only (D-022-C); canonical freeze truth remains escalation_events
-- reasoning_log_id ON DELETE RESTRICT — reasoning_logs is append-only anyway
-- No superadmin policy in Day 1 — explicitly deferred
+- reasoning_log_id ON DELETE RESTRICT ï¿½ reasoning_logs is append-only anyway
+- No superadmin policy in Day 1 ï¿½ explicitly deferred
 - trade_lifecycle_logs.trade_id soft FK wiring deferred (follow-up migration)
 
 #### Verification Evidence (Applied 2026-02-25)
 
-- Migration: NOTICE G-017 PASS — lifecycle_states: t, trades RLS: t/t, trade_events RLS: t/t, trades_guard: 1, events_guard: 1, lifecycle_fk: 1 + COMMIT
+- Migration: NOTICE G-017 PASS ï¿½ lifecycle_states: t, trades RLS: t/t, trade_events RLS: t/t, trades_guard: 1, events_guard: 1, lifecycle_fk: 1 + COMMIT
 - pnpm exec prisma db pull  clean
 - pnpm exec prisma generate  exit 0 (Prisma Client v6.1.0)
 - pnpm exec tsc --noEmit  exit 0
