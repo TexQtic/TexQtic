@@ -1623,3 +1623,33 @@ Tenant isolation guarantee upheld:
   - PASS: successful token refresh (7248ms)
   - PASS: token replay detection (7833ms)
   - PASS: rate limit enforcement (15977ms)
+
+---
+
+### G-023 — Reasoning Hash + Reasoning Logs FK (2026-02-25)
+
+**Commits:** `48a7fd3` (feat(db))  `2f432ad` (feat(ai))
+**Migration:** `20260305000000_g023_reasoning_logs` — applied, BEGIN/COMMIT, NOTICE G-023 PASS
+
+#### Changes
+
+- Created `reasoning_logs` table (append-only, ENABLE+FORCE RLS, texqtic_app)
+- Added `audit_logs.reasoning_log_id` nullable FK (ON DELETE SET NULL)
+- Immutability trigger [E-023-IMMUTABLE]: UPDATE always blocked; DELETE allowed only in bypass context (TG_OP='DELETE' AND bypass_rls='on')
+- RLS: RESTRICTIVE guard + PERMISSIVE SELECT/INSERT (tenant-scoped)
+- AI routes (insights + negotiation): SHA-256(prompt||response) reasoning hash, reasoning_log + audit_log written atomically in same Prisma tx
+- New audit factories: buildAiInsightsReasoningAudit / buildAiNegotiationReasoningAudit in utils/audit.ts
+- Integration tests: 6/6 PASS (RL-01..RL-05: isolation, FK, fail-closed, immutability)
+
+#### Verification Evidence (Applied 2026-02-25)
+
+- Migration: NOTICE G-023 PASS — RLS: t, FORCE: t, guard: 1, SELECT: 1, INSERT: 1, trigger: 1, audit_logs.reasoning_log_id: t + COMMIT
+- pnpm -C server exec tsc --noEmit  exit 0
+- gate-g023-reasoning-logs: Tests 6 passed (6) | exit 0
+  - PASS: RL-01 tenant A sees only own reasoning_logs row
+  - PASS: RL-01b tenant B sees only own reasoning_logs row
+  - PASS: RL-02 audit_log.reasoningLogId FK points to seeded reasoning_log
+  - PASS: RL-03 no-context call returns zero rows (fail-closed)
+  - PASS: RL-04 wrong-tenant context cannot read foreign reasoning_log
+  - PASS: RL-05 UPDATE via bypass context raises E-023-IMMUTABLE (append-only enforced)
+- gate-e-4-audit regression: Tests 6 passed (6) | exit 0
