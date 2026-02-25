@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
 import tenantEscalationRoutes from './tenant/escalation.g022.js';
+import tenantTradesRoutes from './tenant/trades.g017.js';
 import {
   sendSuccess,
   sendError,
@@ -1162,6 +1163,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // GET  /api/tenant/escalations
   // POST /api/tenant/escalations
   await fastify.register(tenantEscalationRoutes, { prefix: '/tenant/escalations' });
+
+  // ─── G-017: Tenant trade routes ──────────────────────────────────────────────
+  // POST /api/tenant/trades
+  // POST /api/tenant/trades/:id/transition
+  await fastify.register(tenantTradesRoutes, { prefix: '/tenant/trades' });
 };
 
 export default tenantRoutes;

@@ -162,6 +162,140 @@ export function createEscalationOverriddenAudit(
   };
 }
 
+// ─── G-017 Trade Audit Factories ─────────────────────────────────────────────
+
+/**
+ * G-017 Day 3: Typed audit entry builders for trade domain actions.
+ * Callers must pass the result to writeAuditLog() in the SAME Prisma tx
+ * as the corresponding trade mutation.
+ */
+
+export type TradeAuditBase = {
+  realm: AuditRealm;
+  tenantId: string;
+  actorType: ActorType;
+  actorId: string | null;
+  tradeId: string;
+};
+
+// ─── TRADE_CREATED ────────────────────────────────────────────────────────────
+
+export type TradeCreatedAuditParams = TradeAuditBase & {
+  tradeReference: string;
+  grossAmount: number;
+  currency: string;
+  reason: string;
+};
+
+export function createTradeCreatedAudit(params: TradeCreatedAuditParams): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'TRADE_CREATED',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:        params.tradeId,
+      tradeReference: params.tradeReference,
+      grossAmount:    params.grossAmount,
+      currency:       params.currency,
+      reason:         params.reason,
+    },
+  };
+}
+
+// ─── TRADE_TRANSITION_APPLIED ─────────────────────────────────────────────────
+
+export type TradeTransitionAppliedAuditParams = TradeAuditBase & {
+  fromStateKey: string;
+  toStateKey: string;
+  transitionId?: string;
+  reason: string;
+};
+
+export function createTradeTransitionAppliedAudit(
+  params: TradeTransitionAppliedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'TRADE_TRANSITION_APPLIED',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:      params.tradeId,
+      fromStateKey: params.fromStateKey,
+      toStateKey:   params.toStateKey,
+      transitionId: params.transitionId ?? null,
+      reason:       params.reason,
+    },
+  };
+}
+
+// ─── TRADE_TRANSITION_PENDING ─────────────────────────────────────────────────
+
+export type TradeTransitionPendingAuditParams = TradeAuditBase & {
+  fromStateKey: string;
+  toStateKey: string;
+  requiredActors: string[];
+  reason: string;
+};
+
+export function createTradeTransitionPendingAudit(
+  params: TradeTransitionPendingAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'TRADE_TRANSITION_PENDING',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:        params.tradeId,
+      fromStateKey:   params.fromStateKey,
+      toStateKey:     params.toStateKey,
+      requiredActors: params.requiredActors,
+      reason:         params.reason,
+    },
+  };
+}
+
+// ─── TRADE_TRANSITION_REJECTED ────────────────────────────────────────────────
+
+export type TradeTransitionRejectedAuditParams = TradeAuditBase & {
+  toStateKey: string;
+  errorCode: string;
+  errorMessage: string;
+  reason: string;
+};
+
+export function createTradeTransitionRejectedAudit(
+  params: TradeTransitionRejectedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'TRADE_TRANSITION_REJECTED',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:      params.tradeId,
+      toStateKey:   params.toStateKey,
+      errorCode:    params.errorCode,
+      errorMessage: params.errorMessage,
+      reason:       params.reason,
+    },
+  };
+}
+
 // ─── G-023 AI Reasoning Audit Data Builders ──────────────────────────────────
 
 /**

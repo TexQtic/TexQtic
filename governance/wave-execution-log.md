@@ -1716,3 +1716,38 @@ Tenant isolation guarantee upheld:
 - tsc errors: 0
 
 #### Notes: No schema, no migrations, no routes
+
+### G-017 Day 3 — Trade Routes + Audit Emission + Integration Tests
+
+**Task:** G-017-DAY3-ROUTES-INTEGRATION  
+**Branch:** main
+
+#### Files Touched (Allowlist)
+
+- `server/src/routes/tenant/trades.g017.ts` — CREATED (POST / createTrade, POST /:id/transition)
+- `server/src/routes/control/trades.g017.ts` — CREATED (GET / listTrades, POST /:id/transition)
+- `server/src/routes/tenant.ts` — MODIFIED (import + plugin register)
+- `server/src/routes/control.ts` — MODIFIED (import + plugin register)
+- `server/src/utils/audit.ts` — MODIFIED (4 trade audit factories appended)
+- `server/src/__tests__/trades.g017.integration.test.ts` — CREATED (17 mocked integration tests)
+- `docs/governance/G-017_DAY3_EVIDENCE.md` — CREATED
+- `governance/wave-execution-log.md` — MODIFIED (this entry)
+
+#### Gates Run
+
+- `pnpm -C server exec tsc --noEmit`  exit 0
+- `pnpm -C server exec vitest run src/__tests__/trades.g017.integration.test.ts`  exit 0
+
+#### Result Counts
+
+- Test files: 1 passed
+- Tests: 17 passed, 0 failed
+- tsc errors: 0
+
+#### Notes
+
+- D-017-A enforced: tenantId never accepted from request body (`z.never()` guard, T-003 coverage)
+- Audit factories emitted atomically inside same `withDbContext` callback as trade mutations
+- `makeTxBoundPrisma` proxy preserves RLS context while enabling `TradeService.()`
+- Control plane uses `withTradeAdminContext` helper with `SET LOCAL app.is_admin = 'true'`
+- Vitest v4 gotcha documented: constructor mocks must use `function` keyword, not arrow functions
