@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { config } from '../config/index.js';
 import { sendSuccess, sendValidationError } from '../utils/response.js';
 import { getTenantContext } from '../lib/tenantContext.js';
@@ -16,7 +17,10 @@ import {
   getMonthKey,
   BudgetExceededError,
 } from '../lib/aiBudget.js';
-import { writeAuditLog, createAiInsightsAudit, createAiNegotiationAudit } from '../lib/auditLog.js';
+import {
+  buildAiInsightsReasoningAudit,
+  buildAiNegotiationReasoningAudit,
+} from '../utils/audit.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -181,9 +185,25 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         // 7. Update usage meter
         await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
 
-        // 8. Write audit log (DB-backed, append-only)
+        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
         const auditUserId = userId ?? null;
-        const auditEntry = createAiInsightsAudit(contextTenantId, auditUserId, {
+        const reasoningHash = createHash('sha256')
+          .update(prompt + insightText)
+          .digest('hex');
+        const reasoningLog = await tx.reasoningLog.create({
+          data: {
+            tenantId: contextTenantId,
+            requestId,
+            reasoningHash,
+            model,
+            promptSummary: prompt.slice(0, 200),
+            responseSummary: insightText.slice(0, 200),
+            tokensUsed,
+          },
+        });
+        const auditData = buildAiInsightsReasoningAudit({
+          tenantId: contextTenantId,
+          userId: auditUserId,
           model,
           tokensUsed,
           costEstimateUSD: actualCost,
@@ -191,8 +211,9 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           requestId,
           tenantType,
           experience,
+          reasoningLogId: reasoningLog.id,
         });
-        await writeAuditLog(tx, auditEntry);
+        await tx.auditLog.create({ data: auditData });
 
         return {
           insightText,
@@ -312,9 +333,25 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         // 7. Update usage meter
         await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
 
-        // 8. Write audit log (DB-backed, append-only)
         const auditUserId = userId ?? null;
-        const auditEntry = createAiNegotiationAudit(contextTenantId, auditUserId, {
+        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
+        const negReasoningHash = createHash('sha256')
+          .update(prompt + adviceText)
+          .digest('hex');
+        const negReasoningLog = await tx.reasoningLog.create({
+          data: {
+            tenantId: contextTenantId,
+            requestId,
+            reasoningHash: negReasoningHash,
+            model,
+            promptSummary: prompt.slice(0, 200),
+            responseSummary: adviceText.slice(0, 200),
+            tokensUsed,
+          },
+        });
+        const negAuditData = buildAiNegotiationReasoningAudit({
+          tenantId: contextTenantId,
+          userId: auditUserId,
           model,
           tokensUsed,
           costEstimateUSD: actualCost,
@@ -323,8 +360,9 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           productName,
           targetPrice,
           quantity,
+          reasoningLogId: negReasoningLog.id,
         });
-        await writeAuditLog(tx, auditEntry);
+        await tx.auditLog.create({ data: negAuditData });
 
         // 9. Risk detection
         const riskFlags: string[] = [];

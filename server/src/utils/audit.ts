@@ -161,3 +161,110 @@ export function createEscalationOverriddenAudit(
     },
   };
 }
+
+// ─── G-023 AI Reasoning Audit Data Builders ──────────────────────────────────
+
+/**
+ * G-023: AI audit data shape for direct Prisma auditLog.create() calls.
+ *
+ * These builders produce a data object that includes `reasoningLogId` for the
+ * FK column added in the G-023 migration. They are used ONLY in AI routes
+ * (ai.ts) which call tx.auditLog.create() directly rather than writeAuditLog(),
+ * because writeAuditLog() pre-dates G-023 and does not carry the FK field.
+ *
+ * Invariant (G-023):
+ *   The reasoning_log row MUST be created FIRST in the same Prisma transaction,
+ *   and its id passed as `reasoningLogId` before calling tx.auditLog.create().
+ *   No partial-write is permitted.
+ */
+export type AiReasoningAuditData = {
+  realm: 'TENANT';
+  tenantId: string;
+  actorType: ActorType;
+  actorId: string | null;
+  action: string;
+  entity: 'ai';
+  entityId: null;
+  metadataJson: Record<string, unknown>;
+  reasoningLogId: string;
+};
+
+export type AiInsightsReasoningAuditParams = {
+  tenantId: string;
+  userId: string | null;
+  model: string;
+  tokensUsed: number;
+  costEstimateUSD: number;
+  monthKey: string;
+  requestId?: string;
+  tenantType?: string;
+  experience?: string;
+  reasoningLogId: string;
+};
+
+export function buildAiInsightsReasoningAudit(
+  params: AiInsightsReasoningAuditParams,
+): AiReasoningAuditData {
+  return {
+    realm:     'TENANT',
+    tenantId:  params.tenantId,
+    actorType: params.userId ? 'USER' : 'SYSTEM',
+    actorId:   params.userId,
+    action:    'AI_INSIGHTS',
+    entity:    'ai',
+    entityId:  null,
+    metadataJson: {
+      model:             params.model,
+      tokensUsed:        params.tokensUsed,
+      costEstimateUSD:   params.costEstimateUSD,
+      monthKey:          params.monthKey,
+      requestId:         params.requestId,
+      tenantType:        params.tenantType,
+      experience:        params.experience,
+      reasoningLogId:    params.reasoningLogId,
+      timestamp:         new Date().toISOString(),
+    },
+    reasoningLogId: params.reasoningLogId,
+  };
+}
+
+export type AiNegotiationReasoningAuditParams = {
+  tenantId: string;
+  userId: string | null;
+  model: string;
+  tokensUsed: number;
+  costEstimateUSD: number;
+  monthKey: string;
+  requestId?: string;
+  productName?: string;
+  targetPrice?: number;
+  quantity?: number;
+  reasoningLogId: string;
+};
+
+export function buildAiNegotiationReasoningAudit(
+  params: AiNegotiationReasoningAuditParams,
+): AiReasoningAuditData {
+  return {
+    realm:     'TENANT',
+    tenantId:  params.tenantId,
+    actorType: params.userId ? 'USER' : 'SYSTEM',
+    actorId:   params.userId,
+    action:    'AI_NEGOTIATION_ADVICE',
+    entity:    'ai',
+    entityId:  null,
+    metadataJson: {
+      model:           params.model,
+      tokensUsed:      params.tokensUsed,
+      costEstimateUSD: params.costEstimateUSD,
+      monthKey:        params.monthKey,
+      requestId:       params.requestId,
+      productName:     params.productName,
+      targetPrice:     params.targetPrice,
+      quantity:        params.quantity,
+      reasoningLogId:  params.reasoningLogId,
+      timestamp:       new Date().toISOString(),
+    },
+    reasoningLogId: params.reasoningLogId,
+  };
+}
