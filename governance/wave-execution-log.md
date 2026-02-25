@@ -1653,3 +1653,37 @@ Tenant isolation guarantee upheld:
   - PASS: RL-04 wrong-tenant context cannot read foreign reasoning_log
   - PASS: RL-05 UPDATE via bypass context raises E-023-IMMUTABLE (append-only enforced)
 - gate-e-4-audit regression: Tests 6 passed (6) | exit 0
+
+---
+
+### G-017 Day 1 — Trades Domain: Schema + RLS (2026-02-25)
+
+**Commit:** TBD (feat(db): introduce trades domain + RLS (G-017 Day 1))
+**Migration:** `20260306000000_g017_trades_domain` — applied, BEGIN/COMMIT, NOTICE G-017 PASS
+
+#### Changes
+
+- Created `public.trades` table: UUID PK, tenant_id FKtenants, lifecycle_state_id FKlifecycle_states (G-020), buyer/seller_org_id, trade_reference (UNIQUE per tenant), currency, gross_amount (CHECK > 0), freeze_recommended (G-022 compat, informational), reasoning_log_id nullable FKreasoning_logs (G-023), created_by_user_id, created_at, updated_at
+- Updated_at maintenance trigger (trg_trades_set_updated_at) on BEFORE UPDATE
+- Created `public.trade_events` table: UUID PK, tenant_id, trade_id FKtrades ON DELETE CASCADE, event_type, metadata JSONB, created_by_user_id, created_at
+- ENABLE + FORCE RLS on both tables
+- RESTRICTIVE guard + PERMISSIVE SELECT/INSERT on both tables (texqtic_app)
+- GRANT SELECT, INSERT only to texqtic_app (no UPDATE/DELETE grant)
+- Prisma models: Trade + TradeEvent; back-relations added to Tenant, LifecycleState, ReasoningLog
+- Design doc: docs/governance/G-017_DAY1_DESIGN.md
+
+#### Governance Notes
+
+- No new lifecycle states created — reuses lifecycle_states (G-020)
+- No escrow FK in Day 1 — deferred to G-018
+- freeze_recommended is informational only (D-022-C); canonical freeze truth remains escalation_events
+- reasoning_log_id ON DELETE RESTRICT — reasoning_logs is append-only anyway
+- No superadmin policy in Day 1 — explicitly deferred
+- trade_lifecycle_logs.trade_id soft FK wiring deferred (follow-up migration)
+
+#### Verification Evidence (Applied 2026-02-25)
+
+- Migration: NOTICE G-017 PASS — lifecycle_states: t, trades RLS: t/t, trade_events RLS: t/t, trades_guard: 1, events_guard: 1, lifecycle_fk: 1 + COMMIT
+- pnpm exec prisma db pull  clean
+- pnpm exec prisma generate  exit 0 (Prisma Client v6.1.0)
+- pnpm exec tsc --noEmit  exit 0
