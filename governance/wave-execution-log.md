@@ -1687,3 +1687,32 @@ Tenant isolation guarantee upheld:
 - pnpm exec prisma db pull  clean
 - pnpm exec prisma generate  exit 0 (Prisma Client v6.1.0)
 - pnpm exec tsc --noEmit  exit 0
+
+---
+
+### G-017 Day 2 — Trade Service + Lifecycle Enforcement
+
+**Task:** G-017-DAY2-TRADE-SERVICE-LIFECYCLE  
+**Date:** 2026-02-25  
+**Branch:** main
+
+#### Files Touched (Allowlist)
+
+- `server/src/services/trade.g017.types.ts` — CREATED
+- `server/src/services/trade.g017.service.ts` — CREATED
+- `server/src/services/trade.g017.test.ts` — CREATED (14 unit tests, Prisma mocked)
+- `docs/governance/G-017_DAY2_EVIDENCE.md` — CREATED
+- `governance/wave-execution-log.md` — MODIFIED (this entry)
+
+#### Gates Run
+
+- `pnpm -C server exec tsc --noEmit` → exit 0
+- `pnpm -C server exec vitest run src/services/trade.g017.test.ts` → exit 0
+
+#### Result Counts
+
+- Test files: 1 passed
+- Tests: 14 passed, 0 failed
+- tsc errors: 0
+
+#### Notes: No schema, no migrations, no routes
