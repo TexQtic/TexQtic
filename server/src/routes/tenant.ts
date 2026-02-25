@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
+import tenantEscalationRoutes from './tenant/escalation.g022.js';
 import {
   sendSuccess,
   sendError,
@@ -1156,6 +1157,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to update branding', 500);
     }
   });
+
+  // ─── G-022: Tenant escalation routes ────────────────────────────────────────
+  // GET  /api/tenant/escalations
+  // POST /api/tenant/escalations
+  await fastify.register(tenantEscalationRoutes, { prefix: '/tenant/escalations' });
 };
 
 export default tenantRoutes;

@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
+import controlEscalationRoutes from './control/escalation.g022.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -741,6 +742,13 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'INTERNAL_ERROR', 'Escalation failed', 500);
     }
   });
+
+  // ─── G-022: Escalation governance routes ──────────────────────────────────
+  // POST /api/control/escalations
+  // POST /api/control/escalations/:id/upgrade
+  // POST /api/control/escalations/:id/resolve
+  // GET  /api/control/escalations
+  await fastify.register(controlEscalationRoutes, { prefix: '/escalations' });
 };
 
 export default controlRoutes;

@@ -40,6 +40,8 @@ import {
   type UpgradeEscalationResult,
   type ResolveEscalationResult,
   type OverrideEscalationResult,
+  type ListEscalationsInput,
+  type ListEscalationsResult,
   type EscalationEventRow,
 } from './escalation.types.js';
 
@@ -450,6 +452,38 @@ export class EscalationService {
         status: 'ERROR',
         code: 'DB_ERROR',
         message: `DB write failed during escalation override: ${msg}`,
+      };
+    }
+  }
+
+  // ─── Method 5a: listEscalations ─────────────────────────────────────────────
+
+  /**
+   * List escalation_events rows for a given org (RLS boundary = orgId).
+   * Optional filters: entityType, entityId, status.
+   *
+   * Returns at most `input.limit` rows (default 50) ordered by createdAt DESC.
+   * @returns ListEscalationsResult — never throws.
+   */
+  async listEscalations(input: ListEscalationsInput): Promise<ListEscalationsResult> {
+    try {
+      const rows = (await this.db.escalationEvent.findMany({
+        where: {
+          orgId: input.orgId,
+          ...(input.entityType && { entityType: input.entityType }),
+          ...(input.entityId   && { entityId:   input.entityId }),
+          ...(input.status     && { status:      input.status }),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: input.limit ?? 50,
+      })) as EscalationEventRow[];
+
+      return { status: 'OK', rows, count: rows.length };
+    } catch (err) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: err instanceof Error ? `DB read failed: ${err.message}` : 'Unknown query error',
       };
     }
   }

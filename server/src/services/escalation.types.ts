@@ -196,6 +196,25 @@ export class GovError extends Error {
   }
 }
 
+// ─── List Input / Result ───────────────────────────────────────────────────────
+
+/**
+ * Input to EscalationService.listEscalations().
+ * All fields are optional filters. orgId is mandatory (RLS boundary).
+ */
+export type ListEscalationsInput = {
+  orgId: string;
+  entityType?: EscalationEntityType;
+  entityId?: string;
+  status?: EscalationStatus;
+  /** Max rows to return. Defaults to 50. */
+  limit?: number;
+};
+
+export type ListEscalationsResult =
+  | { status: 'OK'; rows: EscalationEventRow[]; count: number }
+  | { status: 'ERROR'; code: EscalationErrorCode; message: string };
+
 // ─── Internal Row Shape ────────────────────────────────────────────────────────
 
 /**
