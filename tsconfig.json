@@ -23,8 +23,7 @@
     "components",
     "layouts",
     "services",
-    "tests",
     "vite-env.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "server", "api"]
+  "exclude": ["node_modules", "dist", "server", "api", "tests"]
 }
