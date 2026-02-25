@@ -51,3 +51,7 @@ server/scripts/proof-*.ts
 
 # Local archive/transport artifacts (never commit)
 *.zip
+
+# Debug / test-run output files (never commit — use logs, not files)
+server/*.txt
+server/*.json.bak
