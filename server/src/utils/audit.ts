@@ -560,3 +560,124 @@ export function buildAiNegotiationReasoningAudit(
     reasoningLogId: params.reasoningLogId,
   };
 }
+
+// ─── G-019 Settlement Audit Factories ────────────────────────────────────────
+//
+// These factories produce AuditEntry objects for SettlementService events.
+// Callers pass the result to the injected WriteAuditLogFn (writeAuditLog) within
+// the SAME Prisma tx as all settlement mutations — do NOT call outside a tx.
+//
+// Actions emitted:
+//   SETTLEMENT_APPLIED          — ledger + state transitions committed successfully
+//   SETTLEMENT_PENDING_APPROVAL — SM returned PENDING_APPROVAL after ledger write
+//   SETTLEMENT_REJECTED         — settlement blocked before any writes (gate failure)
+
+export type SettlementAuditBase = {
+  realm:     AuditRealm;
+  tenantId:  string;
+  actorType: ActorType;
+  actorId:   string | null;
+  tradeId:   string;
+  escrowId:  string;
+};
+
+// ─── SETTLEMENT_APPLIED ───────────────────────────────────────────────────────
+
+export type SettlementAppliedAuditParams = SettlementAuditBase & {
+  transactionId:  string;
+  amount:         number;
+  currency:       string;
+  referenceId:    string;
+  escrowReleased: boolean;
+  tradeClosed:    boolean;
+  reason:         string;
+};
+
+export function createSettlementAppliedAudit(
+  params: SettlementAppliedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'SETTLEMENT_APPLIED',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:        params.tradeId,
+      escrowId:       params.escrowId,
+      transactionId:  params.transactionId,
+      amount:         params.amount,
+      currency:       params.currency,
+      referenceId:    params.referenceId,
+      escrowReleased: params.escrowReleased,
+      tradeClosed:    params.tradeClosed,
+      reason:         params.reason,
+    },
+  };
+}
+
+// ─── SETTLEMENT_PENDING_APPROVAL ──────────────────────────────────────────────
+
+export type SettlementPendingAuditParams = SettlementAuditBase & {
+  transactionId:  string;
+  amount:         number;
+  currency:       string;
+  referenceId:    string;
+  requiredActors: ('MAKER' | 'CHECKER')[];
+  reason:         string;
+};
+
+export function createSettlementPendingAudit(
+  params: SettlementPendingAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'SETTLEMENT_PENDING_APPROVAL',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:        params.tradeId,
+      escrowId:       params.escrowId,
+      transactionId:  params.transactionId,
+      amount:         params.amount,
+      currency:       params.currency,
+      referenceId:    params.referenceId,
+      requiredActors: params.requiredActors,
+      reason:         params.reason,
+    },
+  };
+}
+
+// ─── SETTLEMENT_REJECTED ──────────────────────────────────────────────────────
+
+export type SettlementRejectedAuditParams = SettlementAuditBase & {
+  errorCode:    string;
+  errorMessage: string;
+  reason:       string;
+};
+
+export function createSettlementRejectedAudit(
+  params: SettlementRejectedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'SETTLEMENT_REJECTED',
+    entity:    'trade',
+    entityId:  params.tradeId,
+    metadataJson: {
+      tradeId:      params.tradeId,
+      escrowId:     params.escrowId,
+      errorCode:    params.errorCode,
+      errorMessage: params.errorMessage,
+      reason:       params.reason,
+    },
+  };
+}
