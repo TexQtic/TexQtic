@@ -221,3 +221,61 @@ export type TransitionEscrowResult =
       approvalId?: string;
     }
   | { status: 'ERROR'; code: EscrowServiceErrorCode; message: string };
+
+// ─── Read: listEscrowAccounts ─────────────────────────────────────────────────
+
+/**
+ * A single escrow account row (camelCase) returned by service read methods.
+ * lifecycle_state_key is joined from lifecycle_states.
+ */
+export type EscrowAccountRow = {
+  id: string;
+  tenantId: string;
+  currency: string;
+  lifecycleStateId: string;
+  lifecycleStateKey: string;
+  createdByUserId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ListEscrowAccountsInput = {
+  /** Required for tenant plane. Omit (or pass undefined) for control-plane cross-tenant listing. */
+  tenantId?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type ListEscrowAccountsResult =
+  | { status: 'OK'; escrows: EscrowAccountRow[]; count: number }
+  | { status: 'ERROR'; code: EscrowServiceErrorCode; message: string };
+
+// ─── Read: getEscrowAccountDetail ─────────────────────────────────────────────
+
+/**
+ * A single escrow transaction row (camelCase) returned by service read methods.
+ */
+export type EscrowTransactionRow = {
+  id: string;
+  tenantId: string;
+  escrowId: string;
+  entryType: string;
+  direction: string;
+  /** Amount as string; NUMERIC(18,6) is returned as string by $queryRaw. */
+  amount: string;
+  currency: string;
+  referenceId: string | null;
+  metadata: Record<string, unknown>;
+  createdByUserId: string | null;
+  createdAt: string;
+};
+
+export type GetEscrowAccountDetailResult =
+  | {
+      status: 'OK';
+      escrow: EscrowAccountRow;
+      /** D-020-B: derived balance = SUM(CREDIT) - SUM(DEBIT). Never stored; always computed. */
+      balance: number;
+      recentTransactions: EscrowTransactionRow[];
+    }
+  | { status: 'ERROR'; code: EscrowServiceErrorCode; message: string };

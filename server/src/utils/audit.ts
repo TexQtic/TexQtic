@@ -296,6 +296,164 @@ export function createTradeTransitionRejectedAudit(
   };
 }
 
+// ─── G-018 Escrow Audit Factories ────────────────────────────────────────────
+
+export type EscrowAuditBase = {
+  realm:     AuditRealm;
+  tenantId:  string;
+  actorType: ActorType;
+  actorId:   string | null;
+  escrowId:  string;
+};
+
+// ─── ESCROW_CREATED ───────────────────────────────────────────────────────────
+
+export type EscrowCreatedAuditParams = EscrowAuditBase & {
+  currency: string;
+  reason:   string;
+};
+
+export function createEscrowCreatedAudit(
+  params: EscrowCreatedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'ESCROW_CREATED',
+    entity:    'escrow_account',
+    entityId:  params.escrowId,
+    metadataJson: {
+      escrowId: params.escrowId,
+      currency: params.currency,
+      reason:   params.reason,
+    },
+  };
+}
+
+// ─── ESCROW_LEDGER_ENTRY_RECORDED ─────────────────────────────────────────────
+
+export type EscrowLedgerEntryRecordedAuditParams = EscrowAuditBase & {
+  transactionId: string;
+  direction:     string;
+  entryType:     string;
+  amount:        string;
+  reason:        string;
+};
+
+export function createEscrowLedgerEntryRecordedAudit(
+  params: EscrowLedgerEntryRecordedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'ESCROW_LEDGER_ENTRY_RECORDED',
+    entity:    'escrow_account',
+    entityId:  params.escrowId,
+    metadataJson: {
+      escrowId:      params.escrowId,
+      transactionId: params.transactionId,
+      direction:     params.direction,
+      entryType:     params.entryType,
+      amount:        params.amount,
+      reason:        params.reason,
+    },
+  };
+}
+
+// ─── ESCROW_TRANSITION_APPLIED ────────────────────────────────────────────────
+
+export type EscrowTransitionAppliedAuditParams = EscrowAuditBase & {
+  fromStateKey: string;
+  toStateKey:   string;
+  transitionId: string | null;
+  reason:       string;
+};
+
+export function createEscrowTransitionAppliedAudit(
+  params: EscrowTransitionAppliedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'ESCROW_TRANSITION_APPLIED',
+    entity:    'escrow_account',
+    entityId:  params.escrowId,
+    metadataJson: {
+      escrowId:     params.escrowId,
+      fromStateKey: params.fromStateKey,
+      toStateKey:   params.toStateKey,
+      transitionId: params.transitionId ?? null,
+      reason:       params.reason,
+    },
+  };
+}
+
+// ─── ESCROW_TRANSITION_PENDING ────────────────────────────────────────────────
+
+export type EscrowTransitionPendingAuditParams = EscrowAuditBase & {
+  fromStateKey:   string;
+  toStateKey:     string;
+  requiredActors: string[];
+  reason:         string;
+};
+
+export function createEscrowTransitionPendingAudit(
+  params: EscrowTransitionPendingAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'ESCROW_TRANSITION_PENDING',
+    entity:    'escrow_account',
+    entityId:  params.escrowId,
+    metadataJson: {
+      escrowId:       params.escrowId,
+      fromStateKey:   params.fromStateKey,
+      toStateKey:     params.toStateKey,
+      requiredActors: params.requiredActors,
+      reason:         params.reason,
+    },
+  };
+}
+
+// ─── ESCROW_TRANSITION_REJECTED ───────────────────────────────────────────────
+
+export type EscrowTransitionRejectedAuditParams = EscrowAuditBase & {
+  toStateKey:   string;
+  errorCode:    string;
+  errorMessage: string;
+  reason:       string;
+};
+
+export function createEscrowTransitionRejectedAudit(
+  params: EscrowTransitionRejectedAuditParams,
+): AuditEntry {
+  return {
+    realm:     params.realm,
+    tenantId:  params.tenantId,
+    actorType: params.actorType,
+    actorId:   params.actorId,
+    action:    'ESCROW_TRANSITION_REJECTED',
+    entity:    'escrow_account',
+    entityId:  params.escrowId,
+    metadataJson: {
+      escrowId:     params.escrowId,
+      toStateKey:   params.toStateKey,
+      errorCode:    params.errorCode,
+      errorMessage: params.errorMessage,
+      reason:       params.reason,
+    },
+  };
+}
+
 // ─── G-023 AI Reasoning Audit Data Builders ──────────────────────────────────
 
 /**

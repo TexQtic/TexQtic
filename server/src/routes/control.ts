@@ -9,6 +9,7 @@ import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
 import controlEscalationRoutes from './control/escalation.g022.js';
 import controlTradesRoutes from './control/trades.g017.js';
+import controlEscrowRoutes from './control/escrow.g018.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -755,6 +756,11 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET  /api/control/trades
   // POST /api/control/trades/:id/transition
   await fastify.register(controlTradesRoutes, { prefix: '/trades' });
+
+  // ─── G-018: Escrow governance routes ─────────────────────────────────────────
+  // GET /api/control/escrows
+  // GET /api/control/escrows/:escrowId
+  await fastify.register(controlEscrowRoutes, { prefix: '/escrows' });
 };
 
 export default controlRoutes;

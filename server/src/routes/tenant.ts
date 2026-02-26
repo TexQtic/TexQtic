@@ -5,6 +5,7 @@ import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
 import tenantEscalationRoutes from './tenant/escalation.g022.js';
 import tenantTradesRoutes from './tenant/trades.g017.js';
+import tenantEscrowRoutes from './tenant/escrow.g018.js';
 import {
   sendSuccess,
   sendError,
@@ -1168,6 +1169,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // POST /api/tenant/trades
   // POST /api/tenant/trades/:id/transition
   await fastify.register(tenantTradesRoutes, { prefix: '/tenant/trades' });
+
+  // ─── G-018: Escrow Governance Routes ───────────────────────────────────────
+  // POST /api/tenant/escrows
+  // POST /api/tenant/escrows/:escrowId/transactions
+  // POST /api/tenant/escrows/:escrowId/transition
+  // GET  /api/tenant/escrows
+  // GET  /api/tenant/escrows/:escrowId
+  await fastify.register(tenantEscrowRoutes, { prefix: '/tenant/escrows' });
 };
 
 export default tenantRoutes;

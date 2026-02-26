@@ -56,6 +56,9 @@ import type {
   TransitionEscrowInput,
   TransitionEscrowResult,
   EscrowServiceErrorCode,
+  ListEscrowAccountsInput,
+  ListEscrowAccountsResult,
+  GetEscrowAccountDetailResult,
 } from './escrow.types.js';
 
 // ─── Internal Raw Query Row Types ─────────────────────────────────────────────
@@ -79,6 +82,31 @@ type RawBalanceRow = {
 
 type RawDuplicateRow = {
   id: string;
+};
+
+type RawEscrowAccountListRow = {
+  id: string;
+  tenant_id: string;
+  currency: string;
+  lifecycle_state_id: string;
+  lifecycle_state_key: string;
+  created_by_user_id: string | null;
+  created_at: Date;
+  updated_at: Date;
+};
+
+type RawEscrowTransactionListRow = {
+  id: string;
+  tenant_id: string;
+  escrow_id: string;
+  entry_type: string;
+  direction: string;
+  amount: string;
+  currency: string;
+  reference_id: string | null;
+  metadata: unknown;
+  created_by_user_id: string | null;
+  created_at: Date;
 };
 
 // ─── Internal Error Builder ───────────────────────────────────────────────────
@@ -680,5 +708,170 @@ export class EscrowService {
       code: 'STATE_MACHINE_DENIED',
       message: `Transition denied [${denied.code}]: ${denied.message}`,
     };
+  }
+
+  // ─── Method 5: listEscrowAccounts ─────────────────────────────────────────
+
+  /**
+   * List escrow accounts for a tenant (control plane: cross-tenant when orgId empty).
+   * Joins lifecycle_states for the human-readable stateKey.
+   * D-020-B: balance is NOT returned here — use getEscrowAccountDetail.
+   */
+  async listEscrowAccounts(
+    input: ListEscrowAccountsInput,
+  ): Promise<ListEscrowAccountsResult> {
+    const { tenantId, limit = 20, offset = 0 } = input;
+    try {
+      let rows: RawEscrowAccountListRow[];
+      if (tenantId) {
+        rows = (await this.db.$queryRaw`
+          SELECT ea.id, ea.tenant_id, ea.currency, ea.lifecycle_state_id,
+                 ls.state_key AS lifecycle_state_key,
+                 ea.created_by_user_id, ea.created_at, ea.updated_at
+          FROM public.escrow_accounts ea
+          LEFT JOIN public.lifecycle_states ls ON ls.id = ea.lifecycle_state_id
+          WHERE ea.tenant_id = ${tenantId}::uuid
+          ORDER BY ea.created_at DESC
+          LIMIT ${BigInt(limit)} OFFSET ${BigInt(offset)}
+        `) as RawEscrowAccountListRow[];
+      } else {
+        rows = (await this.db.$queryRaw`
+          SELECT ea.id, ea.tenant_id, ea.currency, ea.lifecycle_state_id,
+                 ls.state_key AS lifecycle_state_key,
+                 ea.created_by_user_id, ea.created_at, ea.updated_at
+          FROM public.escrow_accounts ea
+          LEFT JOIN public.lifecycle_states ls ON ls.id = ea.lifecycle_state_id
+          ORDER BY ea.created_at DESC
+          LIMIT ${BigInt(limit)} OFFSET ${BigInt(offset)}
+        `) as RawEscrowAccountListRow[];
+      }
+
+      const accounts = rows.map(r => ({
+        id:               r.id,
+        tenantId:         r.tenant_id,
+        currency:         r.currency,
+        lifecycleStateId: r.lifecycle_state_id,
+        lifecycleStateKey: r.lifecycle_state_key,
+        createdByUserId:  r.created_by_user_id ?? null,
+        createdAt:        r.created_at.toISOString(),
+        updatedAt:        r.updated_at.toISOString(),
+      }));
+
+      return { status: 'OK', escrows: accounts, count: accounts.length };
+    } catch (err) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: err instanceof Error ? err.message : 'DB error listing escrow accounts.',
+      };
+    }
+  }
+
+  // ─── Method 6: getEscrowAccountDetail ────────────────────────────────────
+
+  /**
+   * Load a single escrow account plus its last 20 transactions and derived balance.
+   * Tenant-scoped (tenant_id must match) unless tenantId is omitted (admin cross-tenant access).
+   * When called from the control plane, admin RLS bypass (SET LOCAL app.is_admin='true') must
+   * already be in effect before this method is invoked.
+   */
+  async getEscrowAccountDetail(
+    escrowId: string,
+    tenantId?: string,
+  ): Promise<GetEscrowAccountDetailResult> {
+    // Load account
+    let accountRows: RawEscrowAccountListRow[];
+    try {
+      if (tenantId) {
+        accountRows = (await this.db.$queryRaw`
+          SELECT ea.id, ea.tenant_id, ea.currency, ea.lifecycle_state_id,
+                 ls.state_key AS lifecycle_state_key,
+                 ea.created_by_user_id, ea.created_at, ea.updated_at
+          FROM public.escrow_accounts ea
+          LEFT JOIN public.lifecycle_states ls ON ls.id = ea.lifecycle_state_id
+          WHERE ea.id = ${escrowId}::uuid
+            AND ea.tenant_id = ${tenantId}::uuid
+          LIMIT 1
+        `) as RawEscrowAccountListRow[];
+      } else {
+        accountRows = (await this.db.$queryRaw`
+          SELECT ea.id, ea.tenant_id, ea.currency, ea.lifecycle_state_id,
+                 ls.state_key AS lifecycle_state_key,
+                 ea.created_by_user_id, ea.created_at, ea.updated_at
+          FROM public.escrow_accounts ea
+          LEFT JOIN public.lifecycle_states ls ON ls.id = ea.lifecycle_state_id
+          WHERE ea.id = ${escrowId}::uuid
+          LIMIT 1
+        `) as RawEscrowAccountListRow[];
+      }
+    } catch (err) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: err instanceof Error ? err.message : 'DB error loading escrow account.',
+      };
+    }
+
+    if (accountRows.length === 0) {
+      return {
+        status: 'ERROR',
+        code: 'ESCROW_NOT_FOUND',
+        message: `Escrow account ${escrowId} not found${tenantId ? ` for tenant ${tenantId}` : ''}.`,
+      };
+    }
+
+    const r = accountRows[0];
+    const account = {
+      id:                r.id,
+      tenantId:          r.tenant_id,
+      currency:          r.currency,
+      lifecycleStateId:  r.lifecycle_state_id,
+      lifecycleStateKey: r.lifecycle_state_key,
+      createdByUserId:   r.created_by_user_id ?? null,
+      createdAt:         r.created_at.toISOString(),
+      updatedAt:         r.updated_at.toISOString(),
+    };
+
+    // Load last 20 transactions
+    let txRows: RawEscrowTransactionListRow[];
+    const resolvedTenantId = r.tenant_id;
+    try {
+      txRows = (await this.db.$queryRaw`
+        SELECT id, tenant_id, escrow_id, entry_type, direction,
+               amount::TEXT AS amount, currency, reference_id, metadata,
+               created_by_user_id, created_at
+        FROM public.escrow_transactions
+        WHERE escrow_id = ${escrowId}::uuid
+          AND tenant_id = ${resolvedTenantId}::uuid
+        ORDER BY created_at DESC
+        LIMIT ${BigInt(20)}
+      `) as RawEscrowTransactionListRow[];
+    } catch (err) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: err instanceof Error ? err.message : 'DB error loading escrow transactions.',
+      };
+    }
+
+    const transactions = txRows.map(t => ({
+      id:              t.id,
+      tenantId:        t.tenant_id,
+      escrowId:        t.escrow_id,
+      entryType:       t.entry_type,
+      direction:       t.direction,
+      amount:          t.amount,
+      currency:        t.currency,
+      referenceId:     t.reference_id ?? null,
+      metadata:        t.metadata as Record<string, unknown>,
+      createdByUserId: t.created_by_user_id ?? null,
+      createdAt:       t.created_at.toISOString(),
+    }));
+
+    // Derived balance
+    const balanceResult = await this.computeDerivedBalance(escrowId);
+    const balance = balanceResult.status === 'OK' ? balanceResult.balance : 0;
+
+    return { status: 'OK', escrow: account, recentTransactions: transactions, balance };
   }
 }
