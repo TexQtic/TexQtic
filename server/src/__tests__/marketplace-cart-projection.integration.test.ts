@@ -12,6 +12,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
@@ -20,7 +21,7 @@ import type { Prisma } from '@prisma/client';
 // Type helper for database client (handles both PrismaClient and TransactionClient)
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
-describe('Marketplace Cart Projection Pipeline', () => {
+describe.skipIf(!hasDb)('Marketplace Cart Projection Pipeline', () => {
   // Test fixtures - IDs created during setup
   let testTenantId: string;
   let testUserId: string;

@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { hasDb } from '../helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import {
   withDbContext,
@@ -15,7 +16,7 @@ import {
 } from '../../lib/database-context.js';
 import { randomUUID } from 'node:crypto';
 
-describe('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
+describe.skipIf(!hasDb)('GATE D.1 — Memberships + Invites RLS (DB-level)', () => {
   let prisma: PrismaClient;
   const testRunId = `gate-d1-${Date.now()}`;
 

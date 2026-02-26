@@ -20,14 +20,14 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { prisma } from '../db/prisma.js';
-import { checkDbAvailable } from './helpers/dbGate.js';
+import { checkDbAvailable, hasDb } from './helpers/dbGate.js';
 import { withBypassForSeed } from '../lib/database-context.js';
 import { withDbContext } from '../db/withDbContext.js';
 import { createHash } from 'node:crypto';
 
 // ─── Test State ────────────────────────────────────────────────────────────────
 
-describe('Gate G-023: Reasoning Logs RLS + FK Integrity', () => {
+describe.skipIf(!hasDb)('Gate G-023: Reasoning Logs RLS + FK Integrity', () => {
   let tenantAId: string;
   let tenantBId: string;
   let seedReasoningLogAId: string;  // belonging to tenant A

@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { randomUUID } from 'node:crypto';
 import controlRoutes from '../routes/control.js';
 import tenantRoutes from '../routes/tenant.js';
+import { hasDb } from './helpers/dbGate.js';
 import { prisma } from '../db/prisma.js';
 
 /**
@@ -42,7 +43,7 @@ import { prisma } from '../db/prisma.js';
  * This test verifies the middleware correctly rejects cross-realm attempts.
  */
 
-describe('Gate E.2 — Cross-Realm Isolation', () => {
+describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
   let server: FastifyInstance;
 
   const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-min-32-chars-long';

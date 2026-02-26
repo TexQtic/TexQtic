@@ -21,6 +21,7 @@
  */
 
 import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { prisma } from '../db/prisma.js';
 import { withDbContext } from '../lib/database-context.js';
 import { makeDbContext, makeTestOrgId, makeTestActorId } from './helpers/rlsContext.js';
@@ -31,7 +32,7 @@ import {
   verifyCleanupComplete,
 } from './helpers/cleanupRls.js';
 
-describe('RLS Catalog Items — Cross-Tenant Isolation (Smoke)', () => {
+describe.skipIf(!hasDb)('RLS Catalog Items — Cross-Tenant Isolation (Smoke)', () => {
   let testRunId: string;
   let orgAId: string;
   let orgBId: string;

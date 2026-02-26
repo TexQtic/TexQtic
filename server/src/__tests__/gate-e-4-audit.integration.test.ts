@@ -27,7 +27,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import { prisma } from '../db/prisma.js';
-import { checkDbAvailable } from './helpers/dbGate.js';
+import { checkDbAvailable, hasDb } from './helpers/dbGate.js';
 import { expectAuditEventually } from './helpers/auditPolling.js';
 import authRoutes from '../routes/auth.js';
 import bcrypt from 'bcryptjs';
@@ -36,7 +36,7 @@ import { withBypassForSeed } from '../lib/database-context.js';
 import { withDbContext } from '../db/withDbContext.js';
 import { randomUUID } from 'crypto';
 
-describe('Gate E.4: Audit Emission Integrity', () => {
+describe.skipIf(!hasDb)('Gate E.4: Audit Emission Integrity', () => {
   let server: FastifyInstance | null = null;
   let testTenantId: string;
   let testUserId: string;

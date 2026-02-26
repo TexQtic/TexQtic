@@ -21,6 +21,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import {
   withDbContext,
@@ -74,7 +75,7 @@ const contextTenant: DatabaseContext = {
   requestId: 'test-req-tenant',
 };
 
-describe('Gate D.7: Control-Plane RLS (impersonation_sessions)', () => {
+describe.skipIf(!hasDb)('Gate D.7: Control-Plane RLS (impersonation_sessions)', () => {
   beforeAll(async () => {
     // Seed test data with bypass mode (triple-gated)
     await withBypassForSeed(prisma, async tx => {

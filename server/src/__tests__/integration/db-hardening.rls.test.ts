@@ -9,11 +9,12 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { hasDb } from '../helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import { withDbContext } from '../../lib/database-context.js';
 import type { DatabaseContext } from '../../lib/database-context.js';
 
-describe('GATE C.3 — DB Hardening', () => {
+describe.skipIf(!hasDb)('GATE C.3 — DB Hardening', () => {
   let prisma: PrismaClient;
 
   beforeAll(() => {

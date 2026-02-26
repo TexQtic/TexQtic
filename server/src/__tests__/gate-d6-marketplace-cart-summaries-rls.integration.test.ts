@@ -20,6 +20,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import {
   withDbContext,
@@ -67,7 +68,7 @@ const contextA2: DatabaseContext = {
   requestId: 'test-req-a2',
 };
 
-describe('Gate D.6: Projection Table RLS (marketplace_cart_summaries)', () => {
+describe.skipIf(!hasDb)('Gate D.6: Projection Table RLS (marketplace_cart_summaries)', () => {
   beforeAll(async () => {
     // Seed test data with bypass mode (triple-gated for base data)
     await withBypassForSeed(prisma, async tx => {

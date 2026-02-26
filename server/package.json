@@ -11,7 +11,7 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --sequence=sequential --maxWorkers=1",
+    "test:ci": "vitest run --no-file-parallelism --maxWorkers=1",
     "test:supabase": "vitest run --maxWorkers=1",
     "replay:marketplace-cart": "tsx src/events/replay/replay-marketplace-cart.ts",
     "projection:health:marketplace-cart": "tsx src/events/health/marketplace-cart-projection-health.ts",

@@ -30,6 +30,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'node:crypto';
 import { config } from '../config/index.js';
+import { hasDb } from './helpers/dbGate.js';
 import { prisma } from '../db/prisma.js';
 import { withBypassForSeed } from '../lib/database-context.js';
 import { cleanupCatalogItemsByTag, verifyCleanupComplete } from './helpers/cleanupRls.js';
@@ -37,7 +38,7 @@ import { seedTenantForTest, seedCatalogItemsForOrg } from './helpers/seedRls.js'
 import tenantRoutes from '../routes/tenant.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
 
-describe('Gate C.2 — Pilot Route RLS Contract Tests', () => {
+describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
   let server: FastifyInstance | null = null;
   let testRunId: string;
   let orgAId: string;

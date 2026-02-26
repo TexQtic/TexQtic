@@ -27,6 +27,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { prisma } from '../db/prisma.js';
 import { randomUUID } from 'node:crypto';
 import { withDbContext, withBypassForSeed, type DatabaseContext } from '../lib/database-context.js';
@@ -53,7 +54,7 @@ const createdIds = {
   eventLogs: new Set<string>(),
 };
 
-describe('Gate D.3: RLS Enforcement — audit_logs + event_logs', () => {
+describe.skipIf(!hasDb)('Gate D.3: RLS Enforcement — audit_logs + event_logs', () => {
   beforeAll(async () => {
     console.log(`[Gate D.3] Test run ID: ${testRunId}`);
     console.log(`[Gate D.3] Org A: ${orgAId}, Org B: ${orgBId}`);

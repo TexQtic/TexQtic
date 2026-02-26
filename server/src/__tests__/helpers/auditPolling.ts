@@ -28,11 +28,16 @@
  * @returns Promise<T> - Query result when predicate succeeds
  * @throws Error if timeout reached without success
  */
+// ENV-TUNABLE: TEST_DB_TIMEOUT_MS controls the default polling window.
+// Supabase pooler round-trips can be 2-5s; 15 000ms default gives 3× headroom.
+const DEFAULT_POLL_TIMEOUT_MS = parseInt(process.env.TEST_DB_TIMEOUT_MS ?? '15000');
+const DEFAULT_POLL_INTERVAL_MS = 100;
+
 export async function expectAuditEventually<T>(
   queryFn: () => Promise<T>,
   predicate: (result: T) => boolean,
-  timeoutMs: number = 1000,
-  intervalMs: number = 50
+  timeoutMs: number = DEFAULT_POLL_TIMEOUT_MS,
+  intervalMs: number = DEFAULT_POLL_INTERVAL_MS
 ): Promise<T> {
   const startTime = Date.now();
 
@@ -67,8 +72,8 @@ export async function expectAuditEventually<T>(
 export async function expectAuditEventsEventually<T>(
   queryFn: () => Promise<T[]>,
   predicate: (results: T[]) => boolean,
-  timeoutMs: number = 1000,
-  intervalMs: number = 50
+  timeoutMs: number = DEFAULT_POLL_TIMEOUT_MS,
+  intervalMs: number = DEFAULT_POLL_INTERVAL_MS
 ): Promise<T[]> {
   const startTime = Date.now();
 

@@ -36,14 +36,14 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import { prisma } from '../db/prisma.js';
-import { checkDbAvailable } from './helpers/dbGate.js';
+import { checkDbAvailable, hasDb } from './helpers/dbGate.js';
 import { withBypassForSeed } from '../lib/database-context.js';
 import authRoutes from '../routes/auth.js';
 import bcrypt from 'bcryptjs';
 
 import { hashRateLimitKey } from '../utils/rateLimit/index.js';
 
-describe('Gate E.3: Rate Limiting Integrity', () => {
+describe.skipIf(!hasDb)('Gate E.3: Rate Limiting Integrity', () => {
   let server: FastifyInstance | null = null;
   let testTenantId: string;
   let testUserId: string;

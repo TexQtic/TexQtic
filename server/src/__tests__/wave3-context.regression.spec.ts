@@ -12,6 +12,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -160,7 +161,7 @@ describe('G-W3-A3 Group 3 — Static Drift Detection (no DB)', () => {
 // GROUP 1 — Canonical Context Key Enforcement (DB-live)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('G-W3-A3 Group 1 — Canonical Context Key Enforcement (DB-live)', () => {
+describe.skipIf(!hasDb)('G-W3-A3 Group 1 — Canonical Context Key Enforcement (DB-live)', () => {
   let prisma: PrismaClient;
   let dbAvailable = true;
 

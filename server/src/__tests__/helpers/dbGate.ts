@@ -15,6 +15,17 @@
 import type { PrismaClient } from '@prisma/client';
 
 /**
+ * True only when DATABASE_URL is present AND non-empty.
+ *
+ * Guards against both undefined (CI / no .env) and "" (Windows
+ * shell where `$env:DATABASE_URL=""` is treated as "not set" by
+ * some runtimes).  Use with `describe.skipIf(!hasDb)`.
+ */
+export const hasDb = Boolean(
+  process.env.DATABASE_URL && process.env.DATABASE_URL.trim().length > 0
+);
+
+/**
  * Check database connectivity and skip suite if unavailable.
  *
  * Attempts a simple SELECT 1 query. If it fails, the test suite

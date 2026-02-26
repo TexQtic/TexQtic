@@ -13,6 +13,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { prisma } from '../db/prisma.js';
 import { withDbContext, withBypassForSeed } from '../lib/database-context.js';
 import type { DatabaseContext } from '../lib/database-context.js';
@@ -128,7 +129,7 @@ afterEach(async () => {
 // Test Suite: Cart RLS Enforcement
 // ============================================================================
 
-describe(
+describe.skipIf(!hasDb)(
   'Gate D.2: RLS Enforcement — carts + cart_items',
   { timeout: 30000 }, // Increase timeout for database operations
   () => {

@@ -17,6 +17,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { hasDb } from './helpers/dbGate.js';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { withDbContext, withBypassForSeed } from '../lib/database-context.js';
@@ -40,7 +41,7 @@ function tenantCtx(orgId: string): DatabaseContext {
 // GROUP 2 — Cross-Tenant Negative Control
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('G-W3-A3 Group 2 — Cross-Tenant RLS Negative Control (DB-live)', () => {
+describe.skipIf(!hasDb)('G-W3-A3 Group 2 — Cross-Tenant RLS Negative Control (DB-live)', () => {
   let prisma: PrismaClient;
   let dbAvailable = true;
 

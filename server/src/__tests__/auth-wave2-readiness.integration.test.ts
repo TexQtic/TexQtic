@@ -28,10 +28,13 @@ import fastifyJwt from '@fastify/jwt';
 import authRoutes from '../routes/auth.js';
 import bcrypt from 'bcryptjs';
 import { config } from '../config/index.js';
-import { checkDbAvailable } from './helpers/dbGate.js';
+import { checkDbAvailable, hasDb } from './helpers/dbGate.js';
 import { expectAuditEventually } from './helpers/auditPolling.js';
 
-describe('AUTH-H1 Wave 2 Readiness Gate', () => {
+// ENV-TUNABLE: match vitest.config.ts + auditPolling.ts window.
+const TEST_AUDIT_TIMEOUT_MS = parseInt(process.env.TEST_DB_TIMEOUT_MS ?? '15000');
+
+describe.skipIf(!hasDb)('AUTH-H1 Wave 2 Readiness Gate', () => {
   let server: FastifyInstance | null = null;
   let testTenantId: string;
   let testAdminId: string;
@@ -645,8 +648,8 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
               take: 1,
             }),
           results => results.length >= 1,
-          1000, // 1 second timeout
-          50 // 50ms polling interval
+          TEST_AUDIT_TIMEOUT_MS,
+          100
         );
       },
       { timeout: 20000, maxWait: 20000 }
@@ -731,8 +734,8 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
               take: 1,
             }),
           results => results.length >= 1,
-          1000, // 1 second timeout
-          50 // 50ms polling interval
+          TEST_AUDIT_TIMEOUT_MS,
+          100
         );
       },
       { timeout: 20000, maxWait: 20000 }
@@ -824,8 +827,8 @@ describe('AUTH-H1 Wave 2 Readiness Gate', () => {
               take: 1,
             }),
           results => results.length >= 1,
-          1000, // 1 second timeout
-          50 // 50ms polling interval
+          TEST_AUDIT_TIMEOUT_MS,
+          100
         );
       },
       { timeout: 20000, maxWait: 20000 }

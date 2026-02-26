@@ -27,6 +27,7 @@ import { randomUUID } from 'node:crypto';
 import controlRoutes from '../routes/control.js';
 import tenantRoutes from '../routes/tenant.js';
 import impersonationRoutes from '../routes/admin/impersonation.js';
+import { hasDb } from './helpers/dbGate.js';
 import { prisma } from '../db/prisma.js';
 
 // ─── JWT secrets ─────────────────────────────────────────────────────────────
@@ -298,7 +299,7 @@ describe('G-W3-A4 Group 3 — No JWT rejected on all protected endpoints', () =>
 //   6. Cross-tenant isolation: impersonation token cannot access another tenant's /me
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('G-W3-A4 Group 4 — Impersonation Integrity (DB-live)', () => {
+describe.skipIf(!hasDb)('G-W3-A4 Group 4 — Impersonation Integrity (DB-live)', () => {
   let server: FastifyInstance;
   let dbAvailable = true;
 
