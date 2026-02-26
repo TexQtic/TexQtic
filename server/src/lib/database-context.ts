@@ -331,6 +331,19 @@ export async function withBypassForProjector<T>(
   context: ProjectorBypassContext,
   callback: (tx: any) => Promise<T>
 ): Promise<T> {
+  // RUNTIME GUARD: reject a Prisma.TransactionClient being passed as PrismaClient.
+  // TypeScript's `as PrismaClient` cast does NOT change the runtime object — a
+  // TransactionClient passed here silently lacks $transaction, causing a confusing
+  // "prisma.$transaction is not a function" error deep inside this function.
+  // Fail loudly with a clear message so callers are immediately directed to the fix.
+  if (typeof (prisma as unknown as Record<string, unknown>)['$transaction'] !== 'function') {
+    throw new Error(
+      '[withBypassForProjector] Received a Prisma.TransactionClient instead of a full PrismaClient. ' +
+        'The projector bypass requires a real PrismaClient with $transaction(). ' +
+        'Always pass the module-level prismaSingleton — never the `tx` argument from an outer transaction.'
+    );
+  }
+
   // CRITICAL: Validate explicit authorization context
   if (context.realm !== 'system') {
     throw new Error(
