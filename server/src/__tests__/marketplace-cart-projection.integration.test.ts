@@ -276,6 +276,27 @@ describe('Marketplace Cart Projection Pipeline', () => {
   }
 
   /**
+   * Poll until MarketplaceCartSummary exists with version > greaterThan.
+   *
+   * Projections are applied asynchronously (setImmediate after TX commit) so the
+   * test cannot read them immediately — it must wait for the projector to settle.
+   */
+  async function waitForProjection(
+    cartId: string,
+    greaterThan = 0,
+    timeoutMs = 5000
+  ) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const p = await prisma.marketplaceCartSummary.findUnique({ where: { cartId } });
+      if (p && p.version > greaterThan) return p;
+      await new Promise<void>(r => setTimeout(r, 50));
+    }
+    // Return final value so assertions produce a meaningful failure message
+    return prisma.marketplaceCartSummary.findUnique({ where: { cartId } });
+  }
+
+  /**
    * TEST CASE: End-to-end cart projection pipeline
    *
    * Verifies:
@@ -305,11 +326,8 @@ describe('Marketplace Cart Projection Pipeline', () => {
       expect(createEvent?.name).toBe('marketplace.cart.created');
 
       // Assert: MarketplaceCartSummary projection created with 0 items
-      let projection = await prisma.marketplaceCartSummary.findUnique({
-        where: {
-          cartId: testCartId,
-        },
-      });
+      // Projection is async (setImmediate-deferred) — poll until it appears.
+      let projection = await waitForProjection(testCartId!);
       expect(projection).toBeDefined();
       expect(projection?.itemCount).toBe(0);
       expect(projection?.totalQuantity).toBe(0);
@@ -334,11 +352,8 @@ describe('Marketplace Cart Projection Pipeline', () => {
       expect(addEvent?.name).toBe('marketplace.cart.item.added');
 
       // Assert: Projection updated with 1 item, quantity 3
-      projection = await prisma.marketplaceCartSummary.findUnique({
-        where: {
-          cartId: testCartId!,
-        },
-      });
+      // Poll until projection version advances past the initial version.
+      projection = await waitForProjection(testCartId!, initialVersion);
       expect(projection).toBeDefined();
       expect(projection?.itemCount).toBe(1);
       expect(projection?.totalQuantity).toBe(3);
@@ -363,15 +378,14 @@ describe('Marketplace Cart Projection Pipeline', () => {
       expect(updateEvent?.name).toBe('marketplace.cart.item.updated');
 
       // Assert: Projection reflects new quantity (still 1 item, but quantity 5)
-      projection = await prisma.marketplaceCartSummary.findUnique({
-        where: {
-          cartId: testCartId!,
-        },
-      });
+      // Poll until projection version advances past afterAddVersion.
+      projection = await waitForProjection(testCartId!, afterAddVersion);
       expect(projection).toBeDefined();
       expect(projection?.itemCount).toBe(1);
       expect(projection?.totalQuantity).toBe(5);
       expect(projection?.version).toBeGreaterThan(afterAddVersion);
+
+      const afterUpdateVersion = projection!.version;
 
       // STEP 4: Remove item from cart
       await prisma.$transaction(async tx => {
@@ -390,11 +404,8 @@ describe('Marketplace Cart Projection Pipeline', () => {
       expect(removeEvent?.name).toBe('marketplace.cart.item.removed');
 
       // Assert: Projection back to 0 items, 0 quantity
-      projection = await prisma.marketplaceCartSummary.findUnique({
-        where: {
-          cartId: testCartId!,
-        },
-      });
+      // Poll until projection version advances past afterUpdateVersion.
+      projection = await waitForProjection(testCartId!, afterUpdateVersion);
       expect(projection).toBeDefined();
       expect(projection?.itemCount).toBe(0);
       expect(projection?.totalQuantity).toBe(0);

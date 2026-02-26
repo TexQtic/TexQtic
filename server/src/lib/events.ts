@@ -3,6 +3,7 @@ import type { PrismaClient } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { applyProjections } from '../events/projections/index.js';
 import { withBypassForProjector } from './database-context.js';
+import { prisma as prismaSingleton } from '../db/prisma.js';
 // Auto-register projection handlers (side-effect import)
 import '../events/handlers/index.js';
 
@@ -444,26 +445,34 @@ export async function storeEventBestEffort(
     // Prompt #29 + Gate D.6: Apply projections after successful EventLog write (best-effort)
     // Projections are idempotent, replay-safe, and MUST NOT block writes
     // Gate D.6: Projector bypass required for projection table writes (system operation)
-    try {
-      await withBypassForProjector(
-        prisma as PrismaClient,
+    //
+    // CRITICAL: Deferred via setImmediate so any outer transaction commits BEFORE the
+    // projector runs. The projector writes FK-referencing rows (e.g. marketplaceCartSummary
+    // → carts). If called synchronously while inside a caller's prisma.$transaction, the
+    // FK target (cart row) is not yet visible to the projector's separate connection.
+    // Projector must always run on a real PrismaClient (needs $transaction).
+    // NEVER pass a TransactionClient into withBypassForProjector — it has no $transaction.
+    const deferredEvent = event; // capture in closure before async handoff
+    setImmediate(() => {
+      withBypassForProjector(
+        prismaSingleton,
         { realm: 'system', role: 'PROJECTOR' },
         async tx => {
-          await applyProjections(tx, event);
+          await applyProjections(tx, deferredEvent);
         }
-      );
-    } catch (projectionError: unknown) {
-      // Best-effort: projection failures never block event storage
-      // Log for observability, but do NOT throw
-      const err =
-        projectionError instanceof Error ? projectionError : new Error(String(projectionError));
-      console.warn('[Event Projections] Failed to apply projections (non-blocking):', {
-        eventId: event.id,
-        eventName: event.name,
-        tenantId: event.tenantId,
-        error: err.message,
+      ).catch((projectionError: unknown) => {
+        // Best-effort: projection failures never block event storage
+        // Log for observability, but do NOT throw
+        const err =
+          projectionError instanceof Error ? projectionError : new Error(String(projectionError));
+        console.warn('[Event Projections] Failed to apply projections (non-blocking):', {
+          eventId: deferredEvent.id,
+          eventName: deferredEvent.name,
+          tenantId: deferredEvent.tenantId,
+          error: err.message,
+        });
       });
-    }
+    });
   } catch (error: unknown) {
     // Best-effort: swallow errors, never break requests
     // P2002 (unique violation) means event already stored - ignore safely
