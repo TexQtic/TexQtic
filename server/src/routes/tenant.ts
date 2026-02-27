@@ -36,6 +36,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/me', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
     const { userId, tenantId, userRole } = request;
 
+    // Guard: tenantId must be present (set by tenantAuthMiddleware from JWT).
+    // Missing tenantId means the token is malformed or for wrong realm.
+    if (!tenantId) {
+      return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing from token', 401);
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -46,26 +52,29 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       },
     });
 
-    // G-015 Phase C: read org identity via admin-context (organizations table, RESTRICTIVE guard)
+    // G-015 Phase C: read org identity via admin-context (organizations table, RESTRICTIVE guard).
     // Cannot read organizations in tenant-realm without admin elevation.
     // Preserve response shape: legal_name → name, org_type → type.
-    let tenant: { id: string; slug: string; name: string; type: string; status: string; plan: string } | null = null;
-    if (tenantId) {
-      try {
-        const org = await getOrganizationIdentity(tenantId, prisma);
-        tenant = {
-          id: org.id,
-          slug: org.slug,
-          name: org.legal_name,
-          type: org.org_type,
-          status: org.status,
-          plan: org.plan,
-        };
-      } catch (err) {
-        if (!(err instanceof OrganizationNotFoundError)) throw err;
-        // Org not yet provisioned — return null tenant (fail-permissive only for /me)
-        tenant = null;
+    // MUST return a non-null tenant object — returning null causes the frontend
+    // workspace spinner to hang indefinitely (tenants[] stays empty).
+    let tenant: { id: string; slug: string; name: string; type: string; status: string; plan: string };
+    try {
+      const org = await getOrganizationIdentity(tenantId, prisma);
+      tenant = {
+        id: org.id,
+        slug: org.slug,
+        name: org.legal_name,
+        type: org.org_type,
+        status: org.status,
+        plan: org.plan,
+      };
+    } catch (err) {
+      if (err instanceof OrganizationNotFoundError) {
+        // Org row not yet provisioned. Return explicit 404 so the UI can show
+        // a "provisioning in progress" state rather than spinning indefinitely.
+        return sendError(reply, 'NOT_FOUND', 'Organisation not yet provisioned for this tenant', 404);
       }
+      throw err;
     }
 
     return sendSuccess(reply, {
