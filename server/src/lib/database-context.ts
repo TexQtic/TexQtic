@@ -421,3 +421,134 @@ export async function withNoContext<T>(
     return callback(tx);
   });
 }
+
+// ── G-015 Phase C: Organization Identity Helper (Option C — admin-context read) ─────────────────
+//
+// RATIONALE:
+// - public.organizations has a RESTRICTIVE guard that allows ONLY admin-realm or bypass reads.
+// - Tenant-realm code CANNOT read organizations directly without an RLS policy change.
+// - Option C: all org identity reads go through withOrgAdminContext (admin realm, app.is_admin=true).
+// - NO RLS policy changes are made. The guard policy remains intact.
+// - Tenant realm reads of organizations remain blocked by the guard policy.
+//
+// Mirrors the withAdminContext pattern established in control.ts (G-004).
+//
+// DOCTRINE COMPLIANCE:
+// - Uses canonical withDbContext (texqtic_app role + tx-local SET LOCAL)
+// - app.is_admin = 'true' enables the _admin_all policies that gate organizations SELECT
+// - Sentinel orgId used so withDbContext does not fail-closed on orgId validation
+// - requestId generated per call for trace auditability
+
+const ORG_ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
+
+/**
+ * OrganizationNotFoundError — thrown by getOrganizationIdentity when org record is absent.
+ *
+ * Stop-loss: never returns null/undefined silently.
+ * All callers must handle this error explicitly (no silent zero-row fallback).
+ */
+export class OrganizationNotFoundError extends Error {
+  readonly code = 'ORGANIZATION_NOT_FOUND' as const;
+  readonly orgId: string;
+
+  constructor(orgId: string) {
+    super(`[G-015] Organization not found: ${orgId}`);
+    this.name = 'OrganizationNotFoundError';
+    this.orgId = orgId;
+  }
+}
+
+/**
+ * OrganizationIdentity — minimal org identity shape for Phase C canonical reads.
+ *
+ * Only fields confirmed to exist in the organizations table are included.
+ * Do NOT invent columns — schema.prisma is the authoritative source.
+ */
+export interface OrganizationIdentity {
+  id: string;
+  slug: string;
+  legal_name: string;
+  status: string;
+  org_type: string;
+  jurisdiction: string;
+  risk_score: number;
+  plan: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * withOrgAdminContext — run a callback in admin realm to read the organizations table.
+ *
+ * CONSTITUTIONAL CONSTRAINT (G-015 Phase C):
+ * - organizations has a RESTRICTIVE guard: SELECT only allowed when app.is_admin = 'true'
+ *   OR the bypass RLS bypass context is on.
+ * - This helper elevates to admin-realm (app.is_admin = true) inside a tx-local context.
+ * - NO RLS policies are changed. The guard remains intact.
+ * - Use ONLY for read operations on the organizations table.
+ *
+ * @param prismaClient - PrismaClient instance (module-level singleton)
+ * @param callback - async operation (should only read organizations)
+ * @returns Result from callback
+ */
+export async function withOrgAdminContext<T>(
+  prismaClient: PrismaClient,
+  callback: (tx: any) => Promise<T>
+): Promise<T> {
+  const ctx: DatabaseContext = {
+    orgId: ORG_ADMIN_SENTINEL_ID,
+    actorId: ORG_ADMIN_SENTINEL_ID,
+    realm: 'control',
+    requestId: randomUUID(),
+  };
+  return withDbContext(prismaClient, ctx, async tx => {
+    // Admin RLS bypass flag: checked by _admin_all policies on organizations
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+    return callback(tx);
+  });
+}
+
+/**
+ * getOrganizationIdentity — canonical org identity read via admin-context (G-015 Phase C).
+ *
+ * USAGE:
+ * - Call this instead of prisma.tenant.findUnique() wherever org identity metadata
+ *   (legal_name, slug, org_type, jurisdiction, status, plan) is needed.
+ * - Uses withOrgAdminContext so the organizations RESTRICTIVE guard allows the SELECT.
+ * - Safe to call from tenant-plane request handlers (admin elevation is scoped to this tx only).
+ *
+ * STOP-LOSS:
+ * - Throws OrganizationNotFoundError if org is absent (never silent zero-row).
+ * - Callers must handle OrganizationNotFoundError explicitly.
+ *
+ * @param orgId - UUID of the organization (= tenants.id per TexQtic schema: organizations.id FK tenants.id)
+ * @param prismaClient - PrismaClient instance (module-level singleton)
+ * @returns OrganizationIdentity record
+ * @throws OrganizationNotFoundError if organization does not exist
+ */
+export async function getOrganizationIdentity(
+  orgId: string,
+  prismaClient: PrismaClient
+): Promise<OrganizationIdentity> {
+  return withOrgAdminContext(prismaClient, async tx => {
+    const org = await tx.organizations.findUnique({
+      where: { id: orgId },
+      select: {
+        id: true,
+        slug: true,
+        legal_name: true,
+        status: true,
+        org_type: true,
+        jurisdiction: true,
+        risk_score: true,
+        plan: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+    if (!org) {
+      throw new OrganizationNotFoundError(orgId);
+    }
+    return org;
+  });
+}

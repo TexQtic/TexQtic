@@ -17,6 +17,8 @@ import {
 import {
   withDbContext,
   type DatabaseContext,
+  getOrganizationIdentity,
+  OrganizationNotFoundError,
 } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
@@ -42,17 +44,27 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       },
     });
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        type: true,
-        status: true,
-        plan: true,
-      },
-    });
+    // G-015 Phase C: read org identity via admin-context (organizations table, RESTRICTIVE guard)
+    // Cannot read organizations in tenant-realm without admin elevation.
+    // Preserve response shape: legal_name → name, org_type → type.
+    let tenant: { id: string; slug: string; name: string; type: string; status: string; plan: string } | null = null;
+    if (tenantId) {
+      try {
+        const org = await getOrganizationIdentity(tenantId, prisma);
+        tenant = {
+          id: org.id,
+          slug: org.slug,
+          name: org.legal_name,
+          type: org.org_type,
+          status: org.status,
+          plan: org.plan,
+        };
+      } catch (err) {
+        if (!(err instanceof OrganizationNotFoundError)) throw err;
+        // Org not yet provisioned — return null tenant (fail-permissive only for /me)
+        tenant = null;
+      }
+    }
 
     return sendSuccess(reply, {
       user,
@@ -1048,15 +1060,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         });
 
         // G-012: Fire-and-forget invite email — errors logged, never block invite creation
+        // G-015 Phase C: org display name read via admin-context (organizations.legal_name)
         try {
-          const tenantRecord = await prisma.tenant.findUnique({
-            where: { id: tenantId ?? '' },
-            select: { name: true },
-          });
+          let orgDisplayName = 'your organization';
+          if (tenantId) {
+            const org = await getOrganizationIdentity(tenantId, prisma);
+            orgDisplayName = org.legal_name;
+          }
           await sendInviteMemberEmail(
             email,
             token,
-            tenantRecord?.name ?? 'your organization',
+            orgDisplayName,
             {
               tenantId: tenantId ?? null,
               triggeredBy: 'user',
