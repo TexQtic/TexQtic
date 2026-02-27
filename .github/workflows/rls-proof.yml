@@ -11,11 +11,12 @@
 # The job FAILS if any secret is absent or if any proof assertion fails.
 # Silence = breach. A missing secret NEVER produces a passing run.
 
+# NOTE: trigger moved off pull_request (requires DB secrets not available on every PR).
+# Run manually via Actions tab or as part of the db-gates.yml schedule.
 name: RLS Cross-Tenant 0-Row Proof (G-013)
 
 on:
-  pull_request:
-    branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
   rls-proof:

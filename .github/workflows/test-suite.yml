@@ -1,30 +1,22 @@
-# INF-TEST-POOL-001 — Full Test Suite (Sequential Mode)
+# INF-TEST-GATES-003 P2 — PR Gate (No-DB)
 #
 # Runs on every PR targeting main or develop.
-# Executes the full Vitest suite in sequential mode (--sequence=sequential
-# --maxWorkers=1) to prevent Supabase PgBouncer session-mode pool saturation
-# under concurrency.
+# Executes typecheck, lint, and the full Vitest suite WITHOUT a DATABASE_URL.
+# DB-dependent tests detect the absent URL via the hasDb helper and SKIP cleanly.
+# This gate never requires database secrets — it always passes for pure logic/unit work.
 #
-# Design rationale:
-#   Projections now execute real DB transactions (correct behavior post-17b5bbf).
-#   Running 20+ test files in parallel bursts past the pgbouncer session pool limit.
-#   Sequential execution serialises DB access, keeping CI signal deterministic.
-#   This constraint is lifted once platform infra pool is scaled (see INF-TEST-POOL-001).
-#
-# Required repository secrets:
-#   DATABASE_URL — Supabase Postgres connection string (sslmode=require)
-#
-# The job FAILS if DATABASE_URL is absent. A missing secret NEVER produces a passing run.
+# DB/RLS integration gates run separately on a schedule + manual trigger
+# via the "DB / RLS Integration Gates" workflow (db-gates.yml).
 
-name: Full Test Suite — Sequential (INF-TEST-POOL-001)
+name: PR Gate — Typecheck + No-DB Tests (INF-TEST-GATES-003)
 
 on:
   pull_request:
     branches: [main, develop]
 
 jobs:
-  test-suite:
-    name: Vitest (sequential)
+  pr-gate:
+    name: Typecheck + No-DB Vitest
     runs-on: ubuntu-latest
 
     steps:
@@ -58,25 +50,18 @@ jobs:
         working-directory: server
         run: pnpm install --frozen-lockfile
 
-      - name: Validate required secrets
-        shell: bash
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "::error::DATABASE_URL secret is not configured."
-            echo "::error::Add DATABASE_URL to GitHub repository secrets (Settings → Secrets)."
-            echo "::error::A missing secret NEVER produces a passing run."
-            exit 1
-          fi
-          echo "Secrets present: DATABASE_URL=<redacted>"
-
       - name: Typecheck (server)
         working-directory: server
         run: pnpm run typecheck
 
-      - name: Run full test suite (sequential — INF-TEST-POOL-001)
+      - name: Lint (server)
+        working-directory: server
+        run: pnpm run lint
+
+      - name: Run Vitest — no-DB mode (DB suites skip via hasDb guard)
         working-directory: server
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Explicitly empty — hasDb helper treats this as absent.
+          # DB-dependent describes will SKIP, not FAIL.
+          DATABASE_URL: ''
         run: pnpm run test:ci
