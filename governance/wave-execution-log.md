@@ -2128,3 +2128,71 @@ certifications_pkey                    | p (PK)
 ### Gap Register Update
 
 G-019 row updated: FAIL → VALIDATED; commit `3c7dae7` added; **G-019 certifications domain CLOSED**.
+
+---
+
+## GOVERNANCE-SYNC-009 — G-016 Traceability Graph Phase A CLOSED (2026-02-27)
+
+| Field | Value |
+|-------|-------|
+| Environment | Supabase dev (aws-1-ap-northeast-1.pooler.supabase.com) |
+| Date | 2026-02-27 |
+| Migration | `20260312000000_g016_traceability_graph_phase_a` (commit `44ab6d6`) |
+| Apply method | `psql -d "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migration.sql` (PGCLIENTENCODING=UTF8) |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260312000000_g016_traceability_graph_phase_a` → EXIT:0 |
+
+### Migration DO Block Output
+
+```
+NOTICE: [G-016] PASS -- nodes: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, tenant_select=1, tenant_insert=1, tenant_update=1, admin_select=1 | edges: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, tenant_select=1, tenant_insert=1, tenant_update=1, admin_select=1
+```
+
+### Proof 1a — pg_policies: traceability_nodes (5 rows)
+
+| policyname | permissive | cmd | qual |
+|------------|-----------|-----|------|
+| traceability_nodes_guard | RESTRICTIVE | ALL | app.require_org_context() OR app.bypass_enabled() OR is_admin='true' |
+| traceability_nodes_admin_select | PERMISSIVE | SELECT | current_setting('app.is_admin', true) = 'true' |
+| traceability_nodes_tenant_insert | PERMISSIVE | INSERT | (with check: require_org_context AND org_id = current_org_id()) |
+| traceability_nodes_tenant_select | PERMISSIVE | SELECT | org_id = app.current_org_id() OR bypass_enabled() |
+| traceability_nodes_tenant_update | PERMISSIVE | UPDATE | org_id = app.current_org_id() OR bypass_enabled() |
+
+### Proof 1b — pg_policies: traceability_edges (5 rows)
+
+| policyname | permissive | cmd | qual |
+|------------|-----------|-----|------|
+| traceability_edges_guard | RESTRICTIVE | ALL | app.require_org_context() OR app.bypass_enabled() OR is_admin='true' |
+| traceability_edges_admin_select | PERMISSIVE | SELECT | current_setting('app.is_admin', true) = 'true' |
+| traceability_edges_tenant_insert | PERMISSIVE | INSERT | (with check: require_org_context AND org_id = current_org_id()) |
+| traceability_edges_tenant_select | PERMISSIVE | SELECT | org_id = app.current_org_id() OR bypass_enabled() |
+| traceability_edges_tenant_update | PERMISSIVE | UPDATE | org_id = app.current_org_id() OR bypass_enabled() |
+
+### Proof 2 — RLS flags + constraints
+
+```
+      relname       | relrowsecurity | relforcerowsecurity
+--------------------+----------------+---------------------
+ traceability_edges | t              | t
+ traceability_nodes | t              | t
+
+              conname                | contype
+--------------------------------------+---------
+ traceability_nodes_org_id_fkey       | f (FK -> organizations)
+ traceability_nodes_pkey              | p (PK)
+ traceability_edges_from_node_id_fkey | f (FK -> traceability_nodes ON DELETE CASCADE)
+ traceability_edges_org_id_fkey       | f (FK -> organizations)
+ traceability_edges_to_node_id_fkey   | f (FK -> traceability_nodes ON DELETE CASCADE)
+ traceability_edges_pkey              | p (PK)
+```
+
+### Proof 3 — Data (vacuous)
+
+0 rows in public.traceability_nodes, 0 rows in public.traceability_edges. Dev is unseeded. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until tenant routes used with valid JWT in dev/staging (safe method: POST /api/tenant/traceability/nodes via curl with tenant JWT, then verify admin SELECT returns rows via /api/control/traceability/nodes).
+
+### Gates
+
+**Gates:** typecheck EXIT 0 ✅ | lint 0 errors / 92 warnings (all pre-existing) ✅
+
+### Gap Register Update
+
+G-016 row updated: NOT STARTED → VALIDATED; commit `44ab6d6` added; **G-016 Phase A traceability graph CLOSED**.
