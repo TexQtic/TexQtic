@@ -90,11 +90,14 @@ FROM (
     LIMIT 20
   ) sub;
 IF invalid_buyer_count > 0
-OR invalid_seller_count > 0 THEN RAISE EXCEPTION E'[G-017-FK-STOP-LOSS] Invalid org references detected — FK constraints NOT applied.\n' 'invalid_buyer_count=%, invalid_seller_count=%.\n' 'Sample trade IDs with invalid buyer_org_id (up to 20): [%]\n' 'Sample trade IDs with invalid seller_org_id (up to 20): [%]\n' 'ACTION REQUIRED: Fix data (ensure all buyer/seller org UUIDs exist in organizations) before retrying.',
-invalid_buyer_count,
-invalid_seller_count,
-COALESCE(sample_buyer, 'none'),
-COALESCE(sample_seller, 'none');
+OR invalid_seller_count > 0 THEN
+  RAISE EXCEPTION USING MESSAGE = format(
+    '[G-017-FK-STOP-LOSS] Invalid org references detected -- FK constraints NOT applied. invalid_buyer_count=%s, invalid_seller_count=%s. Sample trade IDs with invalid buyer_org_id (up to 20): [%s]. Sample trade IDs with invalid seller_org_id (up to 20): [%s]. ACTION REQUIRED: Fix data (ensure all buyer/seller org UUIDs exist in organizations) before retrying.',
+    invalid_buyer_count,
+    invalid_seller_count,
+    COALESCE(sample_buyer, 'none'),
+    COALESCE(sample_seller, 'none')
+  );
 END IF;
 RAISE NOTICE '[G-017-FK-PREFLIGHT] PASS — 0 invalid buyer_org_id, 0 invalid seller_org_id. Proceeding to add FK constraints.';
 END;
