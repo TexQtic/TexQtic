@@ -1,5 +1,6 @@
 /**
- * G-019 Day 2 — Tenant Plane Settlement Routes
+ * Tenant Plane Settlement Routes
+ * (formerly labeled G-019 Day 2 — label misuse corrected per GOVERNANCE-SYNC-003)
  *
  * Fastify plugin — registered at /api/tenant/settlements
  *

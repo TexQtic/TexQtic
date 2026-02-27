@@ -6,7 +6,7 @@ import { databaseContextMiddleware } from '../middleware/database-context.middle
 import tenantEscalationRoutes from './tenant/escalation.g022.js';
 import tenantTradesRoutes from './tenant/trades.g017.js';
 import tenantEscrowRoutes from './tenant/escrow.g018.js';
-import tenantSettlementRoutes from './tenant/settlement.g019.js';
+import tenantSettlementRoutes from './tenant/settlement.js';
 import {
   sendSuccess,
   sendError,

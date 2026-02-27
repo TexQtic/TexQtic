@@ -10,7 +10,7 @@ import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/au
 import controlEscalationRoutes from './control/escalation.g022.js';
 import controlTradesRoutes from './control/trades.g017.js';
 import controlEscrowRoutes from './control/escrow.g018.js';
-import controlSettlementRoutes from './control/settlement.g019.js';
+import controlSettlementRoutes from './control/settlement.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).

@@ -115,8 +115,8 @@ vi.mock('../middleware/database-context.middleware.js', () => ({
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
-import tenantSettlementRoutes from '../routes/tenant/settlement.g019.js';
-import controlSettlementRoutes from '../routes/control/settlement.g019.js';
+import tenantSettlementRoutes from '../routes/tenant/settlement.js';
+import controlSettlementRoutes from '../routes/control/settlement.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
