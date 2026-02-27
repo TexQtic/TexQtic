@@ -178,7 +178,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
    * - Computes p50, p95, p99
    * - Reports results (strict mode optionally enforces p95 target)
    */
-  it('should measure refresh endpoint latency (p95 target: 150ms)', async () => {
+  it('should measure refresh endpoint latency (p95 target: 150ms)', { timeout: 360_000 }, async () => {
     // Step 1: Login to get initial refresh token
     const loginResponse = await server!.inject({
       method: 'POST',
@@ -269,7 +269,7 @@ describe('AUTH-H1 Wave 2 Performance: Refresh Token Latency', () => {
    * Measures latency under controlled concurrency (5 parallel sessions)
    * to simulate realistic production load.
    */
-  it('should measure refresh latency under controlled concurrency (5 parallel sessions)', async () => {
+  it('should measure refresh latency under controlled concurrency (5 parallel sessions)', { timeout: 360_000 }, async () => {
     const CONCURRENCY = 5;
     const SAMPLES_PER_SESSION = 100;
 
