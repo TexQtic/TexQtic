@@ -99,7 +99,8 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       // If tenantId provided, attempt tenant login
       if (tenantId) {
         // ENFORCEMENT MODE: Check rate limit BEFORE recording attempt
-        const emailNormalized = email.toLowerCase();
+        // PROD-LOGIN-001: normalize email (trim + lowercase) for both rate-limit keys and DB lookup
+        const emailNormalized = email.trim().toLowerCase();
         const ipKey = hashRateLimitKey(`ip:${clientIp}`);
         const emailKey = hashRateLimitKey(`email:${emailNormalized}`);
 
@@ -161,8 +162,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
         const result = await withDbContext({ tenantId }, async tx => {
           // Look up user by email (Gate D.1: RLS-enforced membership filter)
+          // PROD-LOGIN-001: use emailNormalized (trimmed + lowercased) so mixed-case requests
+          // resolve to the canonical lowercase email stored in the DB.
           const user = await tx.user.findUnique({
-            where: { email },
+            where: { email: emailNormalized },
             select: {
               id: true,
               email: true,

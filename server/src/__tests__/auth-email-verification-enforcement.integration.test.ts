@@ -498,4 +498,41 @@ describe('AUTH-H1 COMMIT 9: Email Verification Enforcement', () => {
       // 403: Authorization failures (membership, tenant status)
     });
   });
+
+  // PROD-LOGIN-001: Regression — email normalization at DB lookup
+  describe('PROD-LOGIN-001: Email Normalization at Lookup', () => {
+    it('should find user by normalized email when request email has mixed case', async () => {
+      // Bypass RLS for test reads
+      await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+
+      // DB stores email in lowercase (canonical form set during registration).
+      // The login handler previously did: findUnique({ where: { email } }) using the
+      // raw request value — causing AUTH_INVALID when frontend sends mixed-case email.
+      // Fix: normalize to email.trim().toLowerCase() before the DB lookup.
+
+      const storedEmail = verifiedUserEmail; // e.g. 'verified-user-1234@example.com' (lowercase)
+
+      // Simulate a mixed-case email as a client might send (e.g. autofill, copy-paste)
+      const mixedCaseEmail = storedEmail.charAt(0).toUpperCase() + storedEmail.slice(1);
+
+      // Pre-fix behaviour: raw findUnique with mixed case → null on case-sensitive varchar
+      const rawLookup = await prisma.user.findUnique({
+        where: { email: mixedCaseEmail },
+        select: { id: true },
+      });
+      // Postgres VARCHAR unique index is case-sensitive: mixed-case misses the stored lowercase row
+      expect(rawLookup).toBeNull(); // proves the bug: raw lookup returns null → AUTH_INVALID
+
+      // Post-fix behaviour: normalizing before lookup finds the correct user
+      const normalizedEmail = mixedCaseEmail.trim().toLowerCase();
+      expect(normalizedEmail).toBe(storedEmail); // sanity: normalization equals stored form
+
+      const normalizedLookup = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: { id: true },
+      });
+      expect(normalizedLookup).not.toBeNull(); // proves the fix: normalized lookup succeeds
+      expect(normalizedLookup!.id).toBe(verifiedUserId);
+    });
+  });
 });
