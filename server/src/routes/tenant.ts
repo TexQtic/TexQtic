@@ -8,6 +8,7 @@ import tenantTradesRoutes from './tenant/trades.g017.js';
 import tenantEscrowRoutes from './tenant/escrow.g018.js';
 import tenantSettlementRoutes from './tenant/settlement.js';
 import tenantCertificationRoutes from './tenant/certifications.g019.js';
+import tenantTraceabilityRoutes from './tenant/traceability.g016.js';
 import {
   sendSuccess,
   sendError,
@@ -1206,6 +1207,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // PATCH /api/tenant/certifications/:id
   // POST  /api/tenant/certifications/:id/transition
   await fastify.register(tenantCertificationRoutes, { prefix: '/tenant/certifications' });
+
+  // ─── G-016: Traceability Graph Routes (Phase A) ──────────────────────────────
+  // POST  /api/tenant/traceability/nodes
+  // GET   /api/tenant/traceability/nodes
+  // GET   /api/tenant/traceability/nodes/:id/neighbors
+  // POST  /api/tenant/traceability/edges
+  // GET   /api/tenant/traceability/edges
+  await fastify.register(tenantTraceabilityRoutes, { prefix: '/tenant/traceability' });
 };
 
 export default tenantRoutes;

@@ -830,6 +830,60 @@ model Certification {
   @@map("certifications")
 }
 
+/// G-016 Phase A — Supply-chain traceability node (one per batch per org).
+model TraceabilityNode {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// RLS boundary: scopes row to one organization. FK to organizations(id).
+  orgId      String   @map("org_id") @db.Uuid
+  /// Human-readable supply-chain batch identifier (e.g., SKU-LOT-2026-001).
+  batchId    String   @map("batch_id")
+  /// Node type classification (RAW_MATERIAL, PROCESSING, DISTRIBUTION, RETAIL, …).
+  nodeType   String   @map("node_type")
+  /// Extensible metadata blob. Application layer enforces size stop-loss.
+  meta       Json     @default("{}") @db.JsonB
+  /// Visibility scope: TENANT (default) or SHARED (future cross-org sharing).
+  visibility String   @default("TENANT")
+  /// Optional geospatial hash (geohash / H3) for location-aware queries.
+  geoHash    String?  @map("geo_hash")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// Maintained by DB trigger trg_traceability_nodes_set_updated_at on BEFORE UPDATE.
+  updatedAt  DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  org        organizations    @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  edgesFrom  TraceabilityEdge[] @relation("EdgeFrom")
+  edgesTo    TraceabilityEdge[] @relation("EdgeTo")
+
+  @@unique([orgId, batchId])
+  @@index([orgId, nodeType])
+  @@map("traceability_nodes")
+}
+
+/// G-016 Phase A — Directed edge between two traceability nodes.
+model TraceabilityEdge {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// RLS boundary: scopes edge to one organization.
+  orgId            String  @map("org_id") @db.Uuid
+  /// Source node (directed graph: from_node_id → to_node_id).
+  fromNodeId       String  @map("from_node_id") @db.Uuid
+  /// Target node.
+  toNodeId         String  @map("to_node_id") @db.Uuid
+  /// Edge classification (SOURCED_FROM, PROCESSED_INTO, SHIPPED_TO, …).
+  edgeType         String  @map("edge_type")
+  /// Optional transformation reference (processing batch, recipe ID, etc.).
+  transformationId String? @map("transformation_id")
+  /// Extensible metadata blob.
+  meta             Json    @default("{}") @db.JsonB
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  org      organizations   @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  fromNode TraceabilityNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  toNode   TraceabilityNode @relation("EdgeTo",   fields: [toNodeId],   references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([orgId, fromNodeId])
+  @@index([orgId, toNodeId])
+  @@map("traceability_edges")
+}
+
 model organizations {
   id                    String               @id @db.Uuid
   slug                  String               @unique @db.VarChar(100)
@@ -845,6 +899,8 @@ model organizations {
   created_at            DateTime             @default(now()) @db.Timestamptz(6)
   updated_at            DateTime             @default(now()) @db.Timestamptz(6)
   certifications        Certification[]
+  traceabilityNodes     TraceabilityNode[]
+  traceabilityEdges     TraceabilityEdge[]
   escalation_events     EscalationEvent[]
   escrow_lifecycle_logs EscrowLifecycleLog[]
   tenants               Tenant               @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
