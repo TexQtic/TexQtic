@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-27 (GOVERNANCE-SYNC-002 — sync G-006 BLOCKED→VALIDATED per wave log commit `4971731`; all Wave 2 G-001–G-014 rows verified against wave-execution-log; no other discrepancies found)
+Last Updated: 2026-02-27 (GOVERNANCE-SYNC-003 — G-019 label-misuse fix recorded; `settlement.g019.ts` renamed to `settlement.ts` (tenant + control planes), impl commit `6e94a9a`; gap-register G-019 row updated to reflect fix)
 Doctrine Version: v1.4
 
 ---
@@ -90,7 +90,7 @@ Doctrine Version: v1.4
 | G-016  | `traceability_nodes` and `traceability_edges` tables — MISSING | NOT STARTED | — | XL scope; supply chain graph; no migration, no Prisma model, no routes, no services; depends on G-015 Phase C |
 | G-017  | `trades` + `trade_events` tables + RLS + lifecycle FK + Day 4 pending_approvals trigger hardening | VALIDATED ⚠️ | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` | ✅ schema + RLS (RESTRICTIVE guard + PERMISSIVE SELECT/INSERT) + lifecycle FK + route (`trades.g017.ts`) + service (`trade.g017.service.ts`) + 17 tests; ⚠️ CAVEATS: `buyer_org_id` / `seller_org_id` have NO FK to `organizations` (unvalidated UUIDs); no admin-plane RLS policies (deferred); gap register was incorrectly NOT STARTED — corrected GOVERNANCE-SYNC-001 |
 | G-018  | `escrow_accounts` table + lifecycle FK + Day 3 tenant+control routes | VALIDATED | `7c1d3a3` `efeb752` `8d7d2ee` | ✅ schema + RLS + service (ledger + lifecycle + governance) + routes (tenant + control) |
-| G-019  | `certifications` table — MISSING; settlement routes were mislabeled G-019 | FAIL / LABEL MISUSE | — | ❌ certifications NOT IMPLEMENTED (no migration, no Prisma model, no route, no service); `settlement.g019.ts` (commits `2dc6217` `57e91ce`) implements settlement routes, NOT certifications — G-019 label MISAPPLIED; 6 CERTIFICATION lifecycle states seeded but orphaned (no consumer table); see audit `2066313` |
+| G-019  | `certifications` table — MISSING; settlement routes were mislabeled G-019 **— LABEL MISUSE FIXED** (`6e94a9a`) | FAIL | — | ❌ certifications NOT IMPLEMENTED (no migration, no Prisma model, no route, no service); `settlement.g019.ts` (commits `2dc6217` `57e91ce`) implemented settlement routes, NOT certifications — G-019 label MISAPPLIED; **FIXED in `6e94a9a`**: renamed to `settlement.ts` (tenant + control planes); JSDoc headers corrected; import paths updated; 6 CERTIFICATION lifecycle states seeded but orphaned (no consumer table); see audit `2066313` |
 | G-020  | State machine transition tables (trade, escrow, certification lifecycle) | VALIDATED | `aec967f` `9c3ca28` | ✅ schema + RLS + seed (43-edge graph across TRADE/ESCROW/CERTIFICATION entities) + `StateMachineService` transition enforcement + 20 tests; CLOSED per wave log |
 | G-021  | Maker-Checker dual-signature enforcement | VALIDATED | `407013a` `de3be8f` | ✅ schema + RLS + replay integrity hash + `maker_id ≠ checker_id` DB trigger + active-uniqueness constraint + idempotency + 29 tests; CLOSED per wave log |
 | G-022  | Escalation levels + kill-switch mechanism | VALIDATED | `e138ff0` `5d8e43c` | ✅ schema + RLS + `EscalationService` (freeze gate D-022-B/C) + tenant routes (LEVEL_0/1) + control routes (upgrade/resolve) + 28 tests (23 Day2 + 5 Day3) |

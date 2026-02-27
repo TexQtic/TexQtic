@@ -1833,10 +1833,46 @@ TECS v1.6 two-commit protocol was not enforced in Wave 3 implementation prompts.
 ### Outstanding Issues (NOT fixed here — governance record only)
 
 1. **G-015 Phase C** — not implemented; requires migration + read-path service changes before Superadmin wave
-2. **G-019 certifications** — not implemented; `settlement.g019.ts` label must be corrected (rename to non-G-019 identifier)
+2. **G-019 certifications** — not implemented; `settlement.g019.ts` label corrected — **FIXED `6e94a9a` (GOVERNANCE-SYNC-003)**: renamed to `settlement.ts` (tenant + control planes); G-019 certifications domain remains unimplemented
 3. **G-017 FK gap** — `buyer_org_id` / `seller_org_id` have no FK to `organizations`; requires follow-on hardening migration
 4. **G-017 admin-plane RLS** — no cross-tenant admin RLS on `trades`; explicitly deferred in Day 1 migration comment
 
 ### Prevention (TECS v1.6 Governance-Sync enforcement)
 
 Every future implementation prompt must hard-require a governance commit. Template in copilot-instructions.md addendum. CI guard recommended: reject PRs modifying `server/**` without also modifying `governance/gap-register.md` + `governance/wave-execution-log.md` (with exceptions for tests and trivial docs).
+
+---
+
+## GOVERNANCE-SYNC-003 — G-019 Label-Misuse Fix
+
+**Task:** GOVERNANCE-SYNC-003  
+**Date:** 2026-02-27  
+**Type:** Governance + label fix (server route rename — no behavior change)  
+**Implementation commit:** `6e94a9a`  
+**Triggered by:** GOVERNANCE-SYNC-001 outstanding issue #2; audit `2066313`
+
+### Root Cause
+
+`server/src/routes/tenant/settlement.g019.ts` and `server/src/routes/control/settlement.g019.ts` were both labeled G-019 in file name and JSDoc header. G-019 is the **certifications** gap (NOT STARTED). Settlement routes are a distinct domain concept implemented in Wave 3 (commits `2dc6217` `57e91ce`) but with the wrong gap identifier attached.
+
+### Actions Taken
+
+| Change | Files | Type |
+|--------|-------|------|
+| `git mv` tenant route file | `settlement.g019.ts` → `settlement.ts` | Rename (99% similarity) |
+| `git mv` control route file | `settlement.g019.ts` → `settlement.ts` | Rename (99% similarity) |
+| Fix JSDoc `G-019 Day 2` header | Both renamed files | Label correction |
+| Update import in `tenant.ts` | `./tenant/settlement.g019.js` → `./tenant/settlement.js` | Import path |
+| Update import in `control.ts` | `./control/settlement.g019.js` → `./control/settlement.js` | Import path |
+| Fix integration test import paths | `settlement.g019.integration.test.ts` | Required for typecheck (tsconfig includes `src/**/*`) |
+
+**Allowlist expansion note:** `server/src/__tests__/settlement.g019.integration.test.ts` was not in the original prompt allowlist but is required for `tsc --noEmit` EXIT 0 because it directly imports the renamed route files. Only import paths were changed — zero test behavior change.
+
+### Gates
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅
+- `pnpm -C server run lint` → EXIT 0 ✅ (0 errors, 91 warnings — pre-existing; no new errors from rename)
+
+### Gap Register Update
+
+G-019 row updated: FAIL / LABEL MISUSE → FAIL (label fixed, certifications still NOT IMPLEMENTED). Commit `6e94a9a` recorded.
