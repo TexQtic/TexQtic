@@ -2013,3 +2013,66 @@ Both constraints reference `public.organizations(id)` with `ON DELETE RESTRICT`.
 ### Gap Register Update
 
 G-017 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-006, 2026-02-27, env: Supabase dev)**. Hotfix commit `2512508` added to commit list.
+
+---
+
+## GOVERNANCE-SYNC-007 — G-017 Admin-Plane SELECT RLS Implemented + DB Applied
+
+**Task:** TECS v1.6 G-017 Admin-Plane RLS (deferred caveat closed)
+**Date:** 2026-02-27
+**Type:** Implementation + DB deployment + governance close
+**Implementation commit:** `7350164` (amended)
+**Migration:** `20260310000000_g017_trades_admin_rls`
+**Environment:** Supabase dev (aws-1-ap-northeast-1.pooler.supabase.com, schema: public)
+
+### Why This Was Needed
+
+G-017 Day 1 (20260306000000) explicitly deferred admin-plane RLS policies. The RESTRICTIVE guards on `public.trades` and `public.trade_events` use `app.require_org_context() OR app.bypass_enabled()`. In admin context (withDbContext + is_admin=true), BOTH are FALSE (no app.org_id set for cross-tenant admin session; bypass requires test/service realm). Result: admin realm could not SELECT from trades even with no matching guard predicate.
+
+### Solution (mirrors GATE-TEST-003 pattern for audit_logs)
+
+| Step | Change | Table |
+|------|--------|-------|
+| Rebuild RESTRICTIVE guard | Add `OR current_setting('app.is_admin', true) = 'true'` | trades |
+| Rebuild RESTRICTIVE guard | Add `OR current_setting('app.is_admin', true) = 'true'` | trade_events |
+| Add PERMISSIVE SELECT | `trades_admin_select` USING `is_admin = 'true'` (cross-tenant) | trades |
+| Add PERMISSIVE SELECT | `trade_events_admin_select` USING `is_admin = 'true'` (cross-tenant) | trade_events |
+
+Tenant SELECT/INSERT policies **unchanged** — `trades_tenant_select` and `trade_events_tenant_select` still use `tenant_id = app.current_org_id()`. Isolation preserved.
+
+### Apply Sequence
+
+| Command | Result |
+|---------|--------|
+| `psql --dbname=$DATABASE_URL --set=ON_ERROR_STOP=1 -f migration.sql` (PGCLIENTENCODING=UTF8) | EXIT:0 ✅ |
+| Migration DO block notice | `[G-017-ADMIN-RLS] PASS -- trades_guard: RESTRICTIVE+admin t, trade_events_guard: RESTRICTIVE+admin t, trades_admin_select: 1, trade_events_admin_select: 1, tenant isolation policies intact: trades=1, events=1` ✅ |
+| `prisma migrate resolve --applied 20260310000000_g017_trades_admin_rls` | `Migration marked as applied` ✅ |
+| `prisma migrate status` | `20260310000000_g017_trades_admin_rls` no longer in pending list ✅ |
+
+### Proof Outputs
+
+**Proof 1 — pg_policies (6 rows):**
+```
+trade_events | trade_events_admin_select  | PERMISSIVE  | SELECT | current_setting('app.is_admin', true) = 'true'
+trade_events | trade_events_guard         | RESTRICTIVE | ALL    | require_org_context() OR bypass_enabled() OR current_setting('app.is_admin'...)
+trade_events | trade_events_tenant_select | PERMISSIVE  | SELECT | tenant_id = app.current_org_id() OR bypass_enabled()
+trades       | trades_admin_select        | PERMISSIVE  | SELECT | current_setting('app.is_admin', true) = 'true'
+trades       | trades_guard               | RESTRICTIVE | ALL    | require_org_context() OR bypass_enabled() OR current_setting('app.is_admin'...)
+trades       | trades_tenant_select       | PERMISSIVE  | SELECT | tenant_id = app.current_org_id() OR bypass_enabled()
+```
+
+**Proof 2 — Tenant isolation unchanged:**
+```
+trades_guard               | guard_has_admin_pred: TRUE  | tenant_policy_scoped: FALSE
+trades_tenant_select       | guard_has_admin_pred: FALSE | tenant_policy_scoped: TRUE
+trade_events_guard         | guard_has_admin_pred: TRUE  | tenant_policy_scoped: FALSE
+trade_events_tenant_select | guard_has_admin_pred: FALSE | tenant_policy_scoped: TRUE
+```
+
+**Proof 3 — Data (vacuous):** trades: 0 rows, trade_events: 0 rows in dev. Tables are empty. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until dev/staging seeded.
+
+**Gates:** typecheck EXIT 0 ✅ | lint 0 errors / 92 warnings (all pre-existing) ✅
+
+### Gap Register Update
+
+G-017 row updated: scope expanded to include admin-plane SELECT RLS; commit `7350164` added; **deferred admin RLS caveat CLOSED**.
