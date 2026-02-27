@@ -2076,3 +2076,55 @@ trade_events_tenant_select | guard_has_admin_pred: FALSE | tenant_policy_scoped:
 ### Gap Register Update
 
 G-017 row updated: scope expanded to include admin-plane SELECT RLS; commit `7350164` added; **deferred admin RLS caveat CLOSED**.
+---
+
+## GOVERNANCE-SYNC-008 — G-019 Certifications Domain CLOSED (2026-02-27)
+
+| Field | Value |
+|-------|-------|
+| Environment | Supabase dev (aws-1-ap-northeast-1.pooler.supabase.com) |
+| Date | 2026-02-27 |
+| Migration | `20260311000000_g019_certifications_domain` (commit `3c7dae7`) |
+| Apply method | `psql -f migration.sql --set=ON_ERROR_STOP=1` (PGCLIENTENCODING=UTF8) |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260311000000_g019_certifications_domain` → EXIT:0 |
+
+### Migration DO Block Output
+
+```
+NOTICE: [G-019] PASS -- certifications: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, tenant_select=1, tenant_insert=1, tenant_update=1, admin_select=1
+```
+
+### Proof 1 — pg_policies (5 rows)
+
+| policyname | permissive | cmd | qual |
+|------------|-----------|-----|------|
+| certifications_guard | RESTRICTIVE | ALL | require_org_context() OR bypass_enabled() OR is_admin='true' |
+| certifications_admin_select | PERMISSIVE | SELECT | current_setting('app.is_admin', true) = 'true' |
+| certifications_tenant_insert | PERMISSIVE | INSERT | (with check on org_id = current_org_id()) |
+| certifications_tenant_select | PERMISSIVE | SELECT | org_id = app.current_org_id() OR bypass_enabled() |
+| certifications_tenant_update | PERMISSIVE | UPDATE | org_id = app.current_org_id() OR bypass_enabled() |
+
+### Proof 2 — RLS flags + constraints
+
+```
+relname        | relrowsecurity | relforcerowsecurity
+certifications | t              | t
+
+conname                                | contype
+certifications_expires_after_issued    | c (CHECK)
+certifications_lifecycle_state_id_fkey | f (FK)
+certifications_org_id_fkey             | f (FK)
+certifications_pkey                    | p (PK)
+```
+
+### Proof 3 — Data (vacuous)
+
+0 rows in public.certifications. Dev is unseeded. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until dev/staging seeded.
+
+### Gates
+
+**Gates:** typecheck EXIT 0 ✅ | lint 0 errors / 92 warnings (all pre-existing) ✅
+
+### Gap Register Update
+
+G-019 row updated: FAIL → VALIDATED; commit `3c7dae7` added; **G-019 certifications domain CLOSED**.
