@@ -1390,12 +1390,12 @@ Proceeding to Week 3 — Governance Hardening + AI Traceability.
 
 | Week | Focus | Gaps | Status |
 |------|-------|------|--------|
-| Week 1 | Canonical Integrity | G-015 Phase C | ❌ RETRACTED — NOT IMPLEMENTED (GOVERNANCE-SYNC-001, 2026-02-27); Phase A ✅ `bb9a898` / Phase B ✅ `a838bd8`; Phase C has no migration and no read-path implementation; see audit `2066313` |
+| Week 1 | Canonical Integrity | G-015 Phase C | ✅ IMPLEMENTED (GOVERNANCE-SYNC-004, 2026-02-27) via Option C admin-context: `withOrgAdminContext` + `getOrganizationIdentity` added to `database-context.ts`; GET /me + invite-email wired; NO RLS change; organizations RESTRICTIVE guard intact; commit `790d0e6` |
 | Week 2 | Governance Backbone | G-020, G-021 | ✅ Complete (ahead of schedule) — G-020: `aec967f` `9c3ca28`; G-021: `407013a` `de3be8f` |
 | Week 3 | Governance Hardening + AI Traceability | G-022 (impl), G-023 reasoning_hash + reasoning_logs, escalation event emission hooks | ✅ Complete (delivered out-of-order) — G-022: `e138ff0` `5d8e43c`; G-023: `48a7fd3` `2f432ad` |
 | Week 4 | Trade Domain Core | G-017 trades table, hard FKs from G-020 logs, Maker-Checker replay to real trade state | ✅ Complete (delivered out-of-order) — G-017: `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3`; ⚠️ buyer/seller org FK gap documented |
 | Week 5 | Escrow Domain (Non-Fintech Mode) | G-018 escrow_accounts, hard FK for escrow lifecycle logs, neutral settlement acknowledgment | ✅ Complete (delivered out-of-order) — G-018: `7c1d3a3` `efeb752` `8d7d2ee` |
-| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | ⏳ Pending — G-016 NOT STARTED; G-015 Phase C prerequisite unmet |
+| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | ⏳ Pending — G-016 NOT STARTED; G-015 Phase C ✅ CLOSED (GOVERNANCE-SYNC-004) |
 
 **Drift Risk Assessment (2026-02-24):**
 
@@ -1820,7 +1820,7 @@ TECS v1.6 two-commit protocol was not enforced in Wave 3 implementation prompts.
 
 | Gap | Old Status (incorrect) | Corrected Status | Key Commits |
 |-----|------------------------|------------------|-------------|
-| G-015 | NOT STARTED (gap register) / ✅ Complete (wave log — FALSE) | PARTIAL — Phase A ✅ Phase B ✅ Phase C ❌ | `bb9a898` `a838bd8` |
+| G-015 | NOT STARTED (gap register) / ✅ Complete (wave log — FALSE) | VALIDATED — Phase A ✅ Phase B ✅ Phase C ✅ Option C (GOVERNANCE-SYNC-004) | `bb9a898` `a838bd8` `790d0e6` |
 | G-016 | NOT STARTED | NOT STARTED (accurate) | — |
 | G-017 | NOT STARTED | VALIDATED ⚠️ (buyer/seller org FK gap documented) | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` |
 | G-018 | NOT STARTED | VALIDATED | `7c1d3a3` `efeb752` `8d7d2ee` |
@@ -1832,7 +1832,7 @@ TECS v1.6 two-commit protocol was not enforced in Wave 3 implementation prompts.
 
 ### Outstanding Issues (NOT fixed here — governance record only)
 
-1. **G-015 Phase C** — not implemented; requires migration + read-path service changes before Superadmin wave
+1. **G-015 Phase C** — ~~not implemented; requires migration + read-path service changes~~ **CLOSED (GOVERNANCE-SYNC-004, 2026-02-27)**: implemented via Option C admin-context (`withOrgAdminContext` + `getOrganizationIdentity`); no migration, no RLS changes; commit `790d0e6`
 2. **G-019 certifications** — not implemented; `settlement.g019.ts` label corrected — **FIXED `6e94a9a` (GOVERNANCE-SYNC-003)**: renamed to `settlement.ts` (tenant + control planes); G-019 certifications domain remains unimplemented
 3. **G-017 FK gap** — `buyer_org_id` / `seller_org_id` have no FK to `organizations`; requires follow-on hardening migration
 4. **G-017 admin-plane RLS** — no cross-tenant admin RLS on `trades`; explicitly deferred in Day 1 migration comment
@@ -1876,3 +1876,43 @@ Every future implementation prompt must hard-require a governance commit. Templa
 ### Gap Register Update
 
 G-019 row updated: FAIL / LABEL MISUSE → FAIL (label fixed, certifications still NOT IMPLEMENTED). Commit `6e94a9a` recorded.
+
+---
+
+## GOVERNANCE-SYNC-004 — G-015 Phase C Implemented via Option C (Admin-Context)
+
+**Task:** TECS v1.6 G-015 Phase C  
+**Date:** 2026-02-27  
+**Type:** Implementation + governance close  
+**Implementation commit:** `790d0e6`  
+**Pattern:** Option C — admin-context read cutover (no RLS change, no migration)
+
+### Context
+
+G-015 Phase C required `organizations` to become the canonical identity source for org metadata reads. The `organizations` table has a RESTRICTIVE guard that blocks all tenant-realm reads (admin-realm or bypass only). Option C was selected: all org identity reads go through a new `withOrgAdminContext` helper that elevates to admin realm inside a tx-local context — identical to the `withAdminContext` pattern established in `control.ts` (G-004).
+
+**No migration, no RLS policy changes, no SECURITY DEFINER functions.**
+
+### Implementation (2 files changed)
+
+| File | Change |
+|------|--------|
+| `server/src/lib/database-context.ts` | Added `OrganizationNotFoundError`, `OrganizationIdentity` interface, `withOrgAdminContext`, `getOrganizationIdentity` |
+| `server/src/routes/tenant.ts` | GET /me: replaced `prisma.tenant.findUnique` → `getOrganizationIdentity`; invite-email: replaced `prisma.tenant.findUnique` → `getOrganizationIdentity`; response shape preserved (legal_name→name, org_type→type mapping) |
+
+### Stop-Loss Compliance
+
+- `organizations` RESTRICTIVE guard policy: **INTACT — NO CHANGE**
+- Tenant-realm reads of organizations: **REMAIN BLOCKED by guard policy**
+- No prisma/migrations touched
+- No RLS SQL written
+- Files touched: 2 implementation + 2 governance = 4 total (within 6-file limit)
+
+### Gates
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅
+- `pnpm -C server run lint` → 0 errors, 92 warnings (all pre-existing) ✅
+
+### Gap Register Update
+
+G-015 row updated: PARTIAL → VALIDATED. Phase C ✅ Option C. Commit `790d0e6` recorded.

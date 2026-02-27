@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-27 (GOVERNANCE-SYNC-003 — G-019 label-misuse fix recorded; `settlement.g019.ts` renamed to `settlement.ts` (tenant + control planes), impl commit `6e94a9a`; gap-register G-019 row updated to reflect fix)
+Last Updated: 2026-02-27 (GOVERNANCE-SYNC-004 — G-015 Phase C CLOSED via Option C admin-context; `withOrgAdminContext` + `getOrganizationIdentity` implemented in `database-context.ts`; GET /me + invite-email wired; no RLS change; no migration; commit `790d0e6`; gap-register G-015 row updated to VALIDATED; GOVERNANCE-SYNC-003 also on this date — G-019 label-misuse fix recorded; `settlement.g019.ts` renamed to `settlement.ts` (tenant + control planes), impl commit `6e94a9a`; gap-register G-019 row updated to reflect fix)
 Doctrine Version: v1.4
 
 ---
@@ -86,7 +86,7 @@ Doctrine Version: v1.4
 
 | Gap ID | Description | Status | Commit(s) | Validation Proof / Notes |
 | ------ | ----------- | ------ | --------- | ------------------------ |
-| G-015  | `organizations` table — Phase A: introduce org table + RLS + dual-write trigger; Phase B: deferred FK `organizations.id → tenants.id`; **Phase C: read cutover to `organizations` as canonical identity — NOT IMPLEMENTED** | PARTIAL | Phase A: `bb9a898` · Phase B: `a838bd8` | Phase A ✅ table + trigger + 3 RLS policies (admin-realm-only); Phase B ✅ deferred FK, parity-check preflight; Phase C ❌ no migration exists; zero `prisma.organizations.findX` calls in `server/src/**`; wave log Phase C ✅ entry RETRACTED (GOVERNANCE-SYNC-001) |
+| G-015  | `organizations` table — Phase A: introduce org table + RLS + dual-write trigger; Phase B: deferred FK `organizations.id → tenants.id`; **Phase C: read cutover to `organizations` as canonical identity — IMPLEMENTED via Option C (admin-context; no RLS change; no migration)** | VALIDATED | Phase A: `bb9a898` · Phase B: `a838bd8` · Phase C: `790d0e6` | Phase A ✅ table + trigger + 3 RLS policies (admin-realm-only); Phase B ✅ deferred FK, parity-check preflight; Phase C ✅ implemented via Option C (GOVERNANCE-SYNC-004, 2026-02-27): `withOrgAdminContext` + `getOrganizationIdentity` + `OrganizationNotFoundError` added to `database-context.ts`; GET /me and invite-email paths wired; **tenant realm reads remain blocked by org RESTRICTIVE guard policy** (no RLS change); typecheck EXIT 0 · lint 0 errors |
 | G-016  | `traceability_nodes` and `traceability_edges` tables — MISSING | NOT STARTED | — | XL scope; supply chain graph; no migration, no Prisma model, no routes, no services; depends on G-015 Phase C |
 | G-017  | `trades` + `trade_events` tables + RLS + lifecycle FK + Day 4 pending_approvals trigger hardening | VALIDATED ⚠️ | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` | ✅ schema + RLS (RESTRICTIVE guard + PERMISSIVE SELECT/INSERT) + lifecycle FK + route (`trades.g017.ts`) + service (`trade.g017.service.ts`) + 17 tests; ⚠️ CAVEATS: `buyer_org_id` / `seller_org_id` have NO FK to `organizations` (unvalidated UUIDs); no admin-plane RLS policies (deferred); gap register was incorrectly NOT STARTED — corrected GOVERNANCE-SYNC-001 |
 | G-018  | `escrow_accounts` table + lifecycle FK + Day 3 tenant+control routes | VALIDATED | `7c1d3a3` `efeb752` `8d7d2ee` | ✅ schema + RLS + service (ledger + lifecycle + governance) + routes (tenant + control) |
