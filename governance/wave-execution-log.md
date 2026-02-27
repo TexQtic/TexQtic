@@ -1966,3 +1966,50 @@ ON DELETE RESTRICT chosen: trades are immutable governance artefacts; CASCADE wo
 ### Gap Register Update
 
 G-017 row updated: VALIDATED ⚠️ → **VALIDATED** (⚠️ FK CAVEAT CLOSED). Commits `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` `8069d48` recorded.
+
+---
+
+## GOVERNANCE-SYNC-006 — G-017 FK Hardening DB-Applied Proof
+
+**Task:** TECS v1.6 G-017 DB Deployment Verification (Option B1)  
+**Date:** 2026-02-27  
+**Type:** DB deployment + governance proof  
+**Hotfix commit:** `2512508` (migration RAISE EXCEPTION syntax fix)  
+**Environment:** Supabase dev DB (aws-1-ap-northeast-1.pooler.supabase.com, schema: public)
+
+### Why a Hotfix Was Needed
+
+Migration `20260309000000_g017_fk_buyer_seller_orgs` was committed (commit `8069d48`) with a `RAISE EXCEPTION` format string split across adjacent string literals — valid in some contexts but rejected by the PostgreSQL RAISE statement parser. Additionally, the em dash character (`—`) was encoded as UTF-8 but rendered as `ÔÇö` under Windows codepage 850/1252 with psql 16 connecting to server 17, causing a parse error at line 101.
+
+**Hotfix (commit `2512508`):** collapsed the multi-literal format string into a single `RAISE EXCEPTION USING MESSAGE = format(...)` call; replaced em dash with ASCII `--`. **Logic and placeholders unchanged.**
+
+### Execution Sequence
+
+| Step | Command | Result |
+|------|---------|--------|
+| 1A — tables exist | `SELECT to_regclass('public.trades'), to_regclass('public.organizations')` | `trades \| organizations` — both non-null ✅ |
+| 1B — constraints absent | `pg_constraint` query for both FK names | 0 rows (not yet applied) ✅ |
+| 2 — apply migration | `psql --dbname=$DATABASE_URL --set=ON_ERROR_STOP=1 -f migration.sql` (with `PGCLIENTENCODING=UTF8`) | EXIT:0 ✅ |
+| 3 — preflight PASS | RAISE NOTICE `[G-017-FK-PREFLIGHT] PASS — 0 invalid buyer_org_id, 0 invalid seller_org_id` | ✅ |
+| 4 — ALTER TABLE ×2 | `ALTER TABLE` (buyer FK) + `ALTER TABLE` (seller FK) | ✅ |
+| 5 — verify PASS | RAISE NOTICE `[G-017-FK-VERIFY] PASS — fk_trades_buyer_org_id: ✓, fk_trades_seller_org_id: ✓` | ✅ |
+| 6 — COMMIT | `COMMIT` | ✅ |
+| 7 — pg_constraint proof | 2-row proof query | ✅ (see below) |
+| 8 — ledger sync | `prisma migrate resolve --applied 20260309000000_g017_fk_buyer_seller_orgs` | `Migration marked as applied` ✅ |
+| 9 — status confirm | `prisma migrate status` | `20260309000000_g017_fk_buyer_seller_orgs` no longer in pending list ✅ |
+
+### Constraint Proof (pg_constraint query output)
+
+```
+         conname         |                          def
+-------------------------+---------------------------------------------------
+ fk_trades_buyer_org_id  | FOREIGN KEY (buyer_org_id)  REFERENCES organizations(id) ON DELETE RESTRICT
+ fk_trades_seller_org_id | FOREIGN KEY (seller_org_id) REFERENCES organizations(id) ON DELETE RESTRICT
+(2 rows)
+```
+
+Both constraints reference `public.organizations(id)` with `ON DELETE RESTRICT`. ✅
+
+### Gap Register Update
+
+G-017 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-006, 2026-02-27, env: Supabase dev)**. Hotfix commit `2512508` added to commit list.
