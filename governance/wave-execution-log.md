@@ -1916,3 +1916,53 @@ G-015 Phase C required `organizations` to become the canonical identity source f
 ### Gap Register Update
 
 G-015 row updated: PARTIAL → VALIDATED. Phase C ✅ Option C. Commit `790d0e6` recorded.
+
+---
+
+## GOVERNANCE-SYNC-005 — G-017 FK Hardening Closed
+
+**Task:** TECS v1.6 G-017 FK Hardening  
+**Date:** 2026-03-09  
+**Type:** Implementation + governance close  
+**Implementation commit:** `8069d48`  
+**Migration:** `20260309000000_g017_fk_buyer_seller_orgs`
+
+### Context
+
+G-017 originally left `trades.buyer_org_id` and `trades.seller_org_id` as bare `UUID` columns with no FK constraint to `organizations(id)`. Indexes existed (`trades_buyer_org_id_idx`, `trades_seller_org_id_idx`), but referential integrity was unenforceable at the DB layer, leaving unvalidated UUIDs as a ⚠️ CAVEAT on the gap register.
+
+G-017 FK Hardening adds full referential integrity via two named FK constraints, with an embedded atomic preflight stop-loss in the migration body.
+
+### Implementation
+
+| File | Change |
+|------|--------|
+| `server/prisma/migrations/20260309000000_g017_fk_buyer_seller_orgs/migration.sql` | §1 preflight DO block (rollback if invalid buyer/seller UUID); §2 ADD CONSTRAINT fk_trades_buyer_org_id; §3 ADD CONSTRAINT fk_trades_seller_org_id; §4 post-add verification DO block |
+| `server/prisma/schema.prisma` | `Trade` model: added `buyerOrg @relation("TradeBuyer")` + `sellerOrg @relation("TradeSeller")`; `organizations` model: added `tradesBuyer[] @relation("TradeBuyer")` + `tradesSeller[] @relation("TradeSeller")` |
+
+### Constraint Specification
+
+| Constraint | Column | Reference | On Delete | On Update |
+|------------|--------|-----------|-----------|-----------|
+| `fk_trades_buyer_org_id` | `trades.buyer_org_id` | `organizations(id)` | RESTRICT | NO ACTION |
+| `fk_trades_seller_org_id` | `trades.seller_org_id` | `organizations(id)` | RESTRICT | NO ACTION |
+
+ON DELETE RESTRICT chosen: trades are immutable governance artefacts; CASCADE would silently destroy trade records if an org is deleted.
+
+### Stop-Loss Compliance
+
+- Migration wraps all DDL in `BEGIN; ... COMMIT;` — atomic rollback on any failure
+- Preflight DO block raises `EXCEPTION` with count + sample IDs if any `buyer_org_id` or `seller_org_id` does not exist in `organizations` — failsafe hard stop
+- Post-add verification DO block confirms both constraints in `information_schema.table_constraints` — hard stop if missing
+- No RLS changes made
+- No routes or services modified
+- Files touched: 2 implementation + 2 governance = 4 total
+
+### Gates
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅
+- `pnpm -C server run lint` → 0 errors, 92 warnings (all pre-existing) ✅
+
+### Gap Register Update
+
+G-017 row updated: VALIDATED ⚠️ → **VALIDATED** (⚠️ FK CAVEAT CLOSED). Commits `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` `8069d48` recorded.
