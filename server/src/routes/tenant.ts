@@ -7,6 +7,7 @@ import tenantEscalationRoutes from './tenant/escalation.g022.js';
 import tenantTradesRoutes from './tenant/trades.g017.js';
 import tenantEscrowRoutes from './tenant/escrow.g018.js';
 import tenantSettlementRoutes from './tenant/settlement.js';
+import tenantCertificationRoutes from './tenant/certifications.g019.js';
 import {
   sendSuccess,
   sendError,
@@ -1197,6 +1198,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // POST /api/tenant/settlements/preview
   // POST /api/tenant/settlements
   await fastify.register(tenantSettlementRoutes, { prefix: '/tenant/settlements' });
+
+  // ─── G-019: Certification Routes ─────────────────────────────────────────
+  // POST  /api/tenant/certifications
+  // GET   /api/tenant/certifications
+  // GET   /api/tenant/certifications/:id
+  // PATCH /api/tenant/certifications/:id
+  // POST  /api/tenant/certifications/:id/transition
+  await fastify.register(tenantCertificationRoutes, { prefix: '/tenant/certifications' });
 };
 
 export default tenantRoutes;
