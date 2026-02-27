@@ -6,6 +6,7 @@ import { databaseContextMiddleware } from '../middleware/database-context.middle
 import tenantEscalationRoutes from './tenant/escalation.g022.js';
 import tenantTradesRoutes from './tenant/trades.g017.js';
 import tenantEscrowRoutes from './tenant/escrow.g018.js';
+import tenantSettlementRoutes from './tenant/settlement.g019.js';
 import {
   sendSuccess,
   sendError,
@@ -1177,6 +1178,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // GET  /api/tenant/escrows
   // GET  /api/tenant/escrows/:escrowId
   await fastify.register(tenantEscrowRoutes, { prefix: '/tenant/escrows' });
+
+  // ─── G-019: Settlement Routes ─────────────────────────────────────────────
+  // POST /api/tenant/settlements/preview
+  // POST /api/tenant/settlements
+  await fastify.register(tenantSettlementRoutes, { prefix: '/tenant/settlements' });
 };
 
 export default tenantRoutes;

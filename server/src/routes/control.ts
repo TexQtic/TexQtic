@@ -10,6 +10,7 @@ import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/au
 import controlEscalationRoutes from './control/escalation.g022.js';
 import controlTradesRoutes from './control/trades.g017.js';
 import controlEscrowRoutes from './control/escrow.g018.js';
+import controlSettlementRoutes from './control/settlement.g019.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -761,6 +762,11 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // GET /api/control/escrows
   // GET /api/control/escrows/:escrowId
   await fastify.register(controlEscrowRoutes, { prefix: '/escrows' });
+
+  // ─── G-019: Settlement governance routes ──────────────────────────────────────
+  // POST /api/control/settlements/preview
+  // POST /api/control/settlements
+  await fastify.register(controlSettlementRoutes, { prefix: '/settlements' });
 };
 
 export default controlRoutes;
