@@ -1,6 +1,6 @@
 import type { PrismaClient, Prisma } from '@prisma/client';
 import { maybeEmitEventFromAuditEntry } from './events.js';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 
 // Type-widened client to support both direct client and transaction usage
 type DbClient = PrismaClient | Prisma.TransactionClient;
@@ -278,7 +278,7 @@ export function createAuthAudit(params: {
     beforeJson: null,
     afterJson: null,
     metadataJson: {
-      email, // Safe to log (no password)
+      email_hash: email ? createHash('sha256').update(email.toLowerCase().trim()).digest('hex') : null, // D3: email hashed, not stored plaintext
       realmAttempted: realm,
       reasonCode: reasonCode || null,
       ip: ip || null,

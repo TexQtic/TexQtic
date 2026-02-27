@@ -461,33 +461,49 @@ describe.skipIf(!hasDb)('AUTH-H1 Wave 2 Readiness Gate', () => {
     expect(adminLoginResponse.statusCode).toBe(200);
     const adminCookie = adminLoginResponse.headers['set-cookie'];
 
-    // Step 3: Try tenant cookie on admin refresh (should fail)
-    // Note: Current implementation may not have explicit realm checking,
-    // but token lookup will fail (no adminId in tenant token)
+    // D1: Craft genuine cross-realm cookies by extracting the raw token value from each
+    // Set-Cookie header and placing it inside the OTHER realm's cookie name.
+    // e.g. admin token value → texqtic_rt_tenant (tenant cookie name) → server detects
+    // TENANT realm but finds adminId in DB row → realm-integrity check fires → 401.
+    // Crucially, the server must NOT revoke the family so the original cookies remain valid.
+    const extractTokenValue = (
+      setCookieHeader: string | string[] | undefined,
+      cookieName: string
+    ): string => {
+      const header = Array.isArray(setCookieHeader)
+        ? (setCookieHeader.find(h => h.startsWith(cookieName + '=')) ?? '')
+        : (setCookieHeader ?? '');
+      const match = header.match(new RegExp(cookieName + '=([^;]+)'));
+      return match ? match[1] : '';
+    };
+    const tenantTokenValue = extractTokenValue(tenantCookie, 'texqtic_rt_tenant');
+    const adminTokenValue = extractTokenValue(adminCookie, 'texqtic_rt_admin');
+
+    // Step 3: Admin token value placed in tenant cookie name → realm=TENANT, token has adminId → mismatch → 401
     const crossAttempt1 = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
-        cookie: tenantCookie,
+        cookie: `texqtic_rt_tenant=${adminTokenValue}`, // cross-realm: admin token in tenant cookie
       },
     });
 
-    // Should fail (token not found or realm mismatch)
+    // Should fail: realm-integrity check rejects (no userId on an admin token)
     expect(crossAttempt1.statusCode).toBe(401);
 
-    // Step 4: Try admin cookie on tenant refresh (should fail)
+    // Step 4: Tenant token value placed in admin cookie name → realm=ADMIN, token has userId → mismatch → 401
     const crossAttempt2 = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',
       headers: {
-        cookie: adminCookie,
+        cookie: `texqtic_rt_admin=${tenantTokenValue}`, // cross-realm: tenant token in admin cookie
       },
     });
 
-    // Should fail (token not found or realm mismatch)
+    // Should fail: realm-integrity check rejects (no adminId on a tenant token)
     expect(crossAttempt2.statusCode).toBe(401);
 
-    // Note: Both cookies should work with their own realm
+    // Note: Both original cookies work with their own realm (tokens NOT consumed in cross-realm attempts above)
     const tenantRefresh = await server!.inject({
       method: 'POST',
       url: '/api/auth/refresh',

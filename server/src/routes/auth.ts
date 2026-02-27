@@ -194,7 +194,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
           // Check email verification (COMMIT 9: enforcement)
           if (!user.emailVerified) {
-            return { error: 'NOT_VERIFIED' as const };
+            return { error: 'NOT_VERIFIED' as const, userId: user.id }; // D4: pass userId so actorId is set in audit log
           }
 
           // Check membership for this tenant
@@ -244,7 +244,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
                 action: 'AUTH_LOGIN_FAILED',
                 realm: 'TENANT',
                 tenantId,
-                actorId: null,
+                actorId: result.userId ?? null, // D4: include actorId so audit is findable by userId
                 email,
                 reasonCode: 'NOT_VERIFIED',
                 ip: clientIp,
@@ -882,7 +882,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
         // Check email verification (COMMIT 9: enforcement)
         if (!user.emailVerified) {
-          return { error: 'NOT_VERIFIED' as const };
+          return { error: 'NOT_VERIFIED' as const, userId: user.id }; // D4: pass userId so actorId is set in audit log
         }
 
         // Check membership for this tenant
@@ -927,7 +927,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
               action: 'AUTH_LOGIN_FAILED',
               realm: 'TENANT',
               tenantId,
-              actorId: null,
+              actorId: result.userId ?? null, // D4: include actorId so audit is findable by userId
               email,
               reasonCode: 'NOT_VERIFIED',
               ip: clientIp,
@@ -1502,17 +1502,8 @@ const authRoutes: FastifyPluginAsync = async fastify => {
 
       // 4) Realm integrity check
       if (realm === 'TENANT' && (!refreshTokenRow.userId || refreshTokenRow.adminId !== null)) {
-        // Tenant cookie but token belongs to admin or has no userId
-        await prisma.refreshToken.updateMany({
-          where: {
-            familyId: refreshTokenRow.familyId,
-            revokedAt: null,
-          },
-          data: {
-            revokedAt: new Date(),
-          },
-        });
-
+        // D1: Tenant cookie but token belongs to admin (or has no userId) — reject without revoking family
+        // Not revoking preserves the legitimate owner's session; the token simply can't be used cross-realm.
         await writeAuditLog(
           prisma,
           createAuthAudit({
@@ -1531,17 +1522,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       }
 
       if (realm === 'ADMIN' && (!refreshTokenRow.adminId || refreshTokenRow.userId !== null)) {
-        // Admin cookie but token belongs to tenant user or has no adminId
-        await prisma.refreshToken.updateMany({
-          where: {
-            familyId: refreshTokenRow.familyId,
-            revokedAt: null,
-          },
-          data: {
-            revokedAt: new Date(),
-          },
-        });
-
+        // D1: Admin cookie but token belongs to tenant user (or has no adminId) — reject without revoking family
         await writeAuditLog(
           prisma,
           createAuthAudit({
@@ -2030,30 +2011,8 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         }
       }
 
-      // Clear BOTH cookies unconditionally (fail-open guarantee)
-      reply.setCookie('texqtic_rt_tenant', '', {
-        httpOnly: true,
-        secure: config.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 0,
-      });
-      reply.setCookie('texqtic_rt_admin', '', {
-        httpOnly: true,
-        secure: config.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 0,
-      });
-
-      // Always return success (fail-open)
-      return sendSuccess(reply, { ok: true });
-    } catch (error: unknown) {
-      // Fail-open: even on unexpected error, clear cookies and return success
-      fastify.log.error({ err: error }, '[Logout] Unexpected error');
-
-      // Attempt to clear cookies
-      try {
+      // D2: Clear only cookies that were presented in the request (scope-minimal revocation)
+      if (tenantRefreshCookie) {
         reply.setCookie('texqtic_rt_tenant', '', {
           httpOnly: true,
           secure: config.NODE_ENV === 'production',
@@ -2061,6 +2020,8 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           path: '/',
           maxAge: 0,
         });
+      }
+      if (adminRefreshCookie) {
         reply.setCookie('texqtic_rt_admin', '', {
           httpOnly: true,
           secure: config.NODE_ENV === 'production',
@@ -2068,6 +2029,36 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           path: '/',
           maxAge: 0,
         });
+      }
+
+      // Always return success (fail-open)
+      return sendSuccess(reply, { ok: true });
+    } catch (error: unknown) {
+      // Fail-open: even on unexpected error, clear cookies and return success
+      fastify.log.error({ err: error }, '[Logout] Unexpected error');
+
+      // D2: In error path, re-read cookies and clear only what was presented
+      try {
+        const tcFail = request.cookies.texqtic_rt_tenant;
+        const acFail = request.cookies.texqtic_rt_admin;
+        if (tcFail) {
+          reply.setCookie('texqtic_rt_tenant', '', {
+            httpOnly: true,
+            secure: config.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 0,
+          });
+        }
+        if (acFail) {
+          reply.setCookie('texqtic_rt_admin', '', {
+            httpOnly: true,
+            secure: config.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 0,
+          });
+        }
       } catch {
         // Even cookie clearing failed, still return success
       }
