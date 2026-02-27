@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-02-23 (G-006C RLS Consolidation — 11 migration files created; Supabase Performance Advisor policy-sprawl elimination; Wave 3 launch)
+Last Updated: 2026-02-27 (GOVERNANCE-SYNC-001 — reconcile gap-register vs. wave-execution-log; G-015 through G-023 status corrected per audit `2066313`; false G-015 Phase C completion retracted; see `docs/audits/GAP-015-016-017-019-VALIDATION-REPORT.md`)
 Doctrine Version: v1.4
 
 ---
@@ -82,18 +82,20 @@ Doctrine Version: v1.4
 
 ## Schema Domain Buildout
 
-| Gap ID | Description                                                                                          | Status      | Notes                                         |
-| ------ | ---------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------- |
-| G-015  | `organizations` table naming divergence; missing `org_type`, `risk_score`, `status=banned` invariant | NOT STARTED | Requires Prisma migration + SQL               |
-| G-016  | `traceability_nodes` and `traceability_edges` tables — MISSING                                       | NOT STARTED | XL scope; supply chain graph                  |
-| G-017  | `trades` table + `version_id` optimistic locking — MISSING                                           | NOT STARTED | XL scope; contractual commerce unit           |
-| G-018  | `escrow_accounts` table — MISSING                                                                    | NOT STARTED | XL scope; requires trade FK                   |
-| G-019  | `certifications` table — MISSING                                                                     | NOT STARTED | L scope; GOTS/OEKO-TEX/etc.                   |
-| G-020  | State machine transition tables (trade, escrow, certification) — MISSING                             | NOT STARTED | XL scope; DB-level physical laws              |
-| G-021  | Maker-Checker dual-signature enforcement — MISSING                                                   | NOT STARTED | XL scope; `maker_id != checker_id` constraint |
-| G-022  | Escalation levels + Kill-switch mechanism — MISSING                                                  | NOT STARTED | L scope; Level 0–3 + Read-Only mode           |
-| G-023  | `reasoning_hash` / `reasoning_logs` FK for AI events — MISSING                                       | NOT STARTED | M scope; AI explainability                    |
-| G-024  | `sanctions` table — MISSING                                                                          | NOT STARTED | M scope                                       |
+> **GOVERNANCE-SYNC-001 (2026-02-27):** Table expanded with Commit + Validation Proof columns. All statuses corrected per drift-detection audit `2066313`. False G-015 Phase C ✅ entry in wave-execution-log retracted. Source: `docs/audits/GAP-015-016-017-019-VALIDATION-REPORT.md`.
+
+| Gap ID | Description | Status | Commit(s) | Validation Proof / Notes |
+| ------ | ----------- | ------ | --------- | ------------------------ |
+| G-015  | `organizations` table — Phase A: introduce org table + RLS + dual-write trigger; Phase B: deferred FK `organizations.id → tenants.id`; **Phase C: read cutover to `organizations` as canonical identity — NOT IMPLEMENTED** | PARTIAL | Phase A: `bb9a898` · Phase B: `a838bd8` | Phase A ✅ table + trigger + 3 RLS policies (admin-realm-only); Phase B ✅ deferred FK, parity-check preflight; Phase C ❌ no migration exists; zero `prisma.organizations.findX` calls in `server/src/**`; wave log Phase C ✅ entry RETRACTED (GOVERNANCE-SYNC-001) |
+| G-016  | `traceability_nodes` and `traceability_edges` tables — MISSING | NOT STARTED | — | XL scope; supply chain graph; no migration, no Prisma model, no routes, no services; depends on G-015 Phase C |
+| G-017  | `trades` + `trade_events` tables + RLS + lifecycle FK + Day 4 pending_approvals trigger hardening | VALIDATED ⚠️ | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` | ✅ schema + RLS (RESTRICTIVE guard + PERMISSIVE SELECT/INSERT) + lifecycle FK + route (`trades.g017.ts`) + service (`trade.g017.service.ts`) + 17 tests; ⚠️ CAVEATS: `buyer_org_id` / `seller_org_id` have NO FK to `organizations` (unvalidated UUIDs); no admin-plane RLS policies (deferred); gap register was incorrectly NOT STARTED — corrected GOVERNANCE-SYNC-001 |
+| G-018  | `escrow_accounts` table + lifecycle FK + Day 3 tenant+control routes | VALIDATED | `7c1d3a3` `efeb752` `8d7d2ee` | ✅ schema + RLS + service (ledger + lifecycle + governance) + routes (tenant + control) |
+| G-019  | `certifications` table — MISSING; settlement routes were mislabeled G-019 | FAIL / LABEL MISUSE | — | ❌ certifications NOT IMPLEMENTED (no migration, no Prisma model, no route, no service); `settlement.g019.ts` (commits `2dc6217` `57e91ce`) implements settlement routes, NOT certifications — G-019 label MISAPPLIED; 6 CERTIFICATION lifecycle states seeded but orphaned (no consumer table); see audit `2066313` |
+| G-020  | State machine transition tables (trade, escrow, certification lifecycle) | VALIDATED | `aec967f` `9c3ca28` | ✅ schema + RLS + seed (43-edge graph across TRADE/ESCROW/CERTIFICATION entities) + `StateMachineService` transition enforcement + 20 tests; CLOSED per wave log |
+| G-021  | Maker-Checker dual-signature enforcement | VALIDATED | `407013a` `de3be8f` | ✅ schema + RLS + replay integrity hash + `maker_id ≠ checker_id` DB trigger + active-uniqueness constraint + idempotency + 29 tests; CLOSED per wave log |
+| G-022  | Escalation levels + kill-switch mechanism | VALIDATED | `e138ff0` `5d8e43c` | ✅ schema + RLS + `EscalationService` (freeze gate D-022-B/C) + tenant routes (LEVEL_0/1) + control routes (upgrade/resolve) + 28 tests (23 Day2 + 5 Day3) |
+| G-023  | `reasoning_logs` table + `reasoning_hash` FK for AI events | VALIDATED | `48a7fd3` `2f432ad` | ✅ schema (reasoning_logs + audit_logs FK) + service (emit reasoning_log per AI call) + wave log evidence doc |
+| G-024  | `sanctions` table — MISSING | NOT STARTED | — | M scope |
 
 ---
 

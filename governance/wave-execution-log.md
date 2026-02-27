@@ -1390,12 +1390,12 @@ Proceeding to Week 3 — Governance Hardening + AI Traceability.
 
 | Week | Focus | Gaps | Status |
 |------|-------|------|--------|
-| Week 1 | Canonical Integrity | G-015 Phase C | ✅ Complete |
-| Week 2 | Governance Backbone | G-020, G-021 | ✅ Complete (ahead of schedule) |
-| Week 3 | Governance Hardening + AI Traceability | G-022 (impl), G-023 reasoning_hash + reasoning_logs, escalation event emission hooks | 🔜 In Progress |
-| Week 4 | Trade Domain Core | G-017 trades table, hard FKs from G-020 logs, Maker-Checker replay to real trade state | ⏳ Pending |
-| Week 5 | Escrow Domain (Non-Fintech Mode) | G-018 escrow_accounts, hard FK for escrow lifecycle logs, neutral settlement acknowledgment | ⏳ Pending |
-| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | ⏳ Pending |
+| Week 1 | Canonical Integrity | G-015 Phase C | ❌ RETRACTED — NOT IMPLEMENTED (GOVERNANCE-SYNC-001, 2026-02-27); Phase A ✅ `bb9a898` / Phase B ✅ `a838bd8`; Phase C has no migration and no read-path implementation; see audit `2066313` |
+| Week 2 | Governance Backbone | G-020, G-021 | ✅ Complete (ahead of schedule) — G-020: `aec967f` `9c3ca28`; G-021: `407013a` `de3be8f` |
+| Week 3 | Governance Hardening + AI Traceability | G-022 (impl), G-023 reasoning_hash + reasoning_logs, escalation event emission hooks | ✅ Complete (delivered out-of-order) — G-022: `e138ff0` `5d8e43c`; G-023: `48a7fd3` `2f432ad` |
+| Week 4 | Trade Domain Core | G-017 trades table, hard FKs from G-020 logs, Maker-Checker replay to real trade state | ✅ Complete (delivered out-of-order) — G-017: `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3`; ⚠️ buyer/seller org FK gap documented |
+| Week 5 | Escrow Domain (Non-Fintech Mode) | G-018 escrow_accounts, hard FK for escrow lifecycle logs, neutral settlement acknowledgment | ✅ Complete (delivered out-of-order) — G-018: `7c1d3a3` `efeb752` `8d7d2ee` |
+| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | ⏳ Pending — G-016 NOT STARTED; G-015 Phase C prerequisite unmet |
 
 **Drift Risk Assessment (2026-02-24):**
 
@@ -1790,3 +1790,53 @@ Tenant isolation guarantee upheld:
 - Realm mismatch does NOT revoke token family (D1); protects legitimate sessions from cross-realm forgery
 - Email hash is hex-encoded, lowercase-normalised, empty-safe (null stored for null/empty email)
 - `userId` returned from `withDbContext` is consumed only for `actorId`; never serialised in HTTP response (no user-enumeration risk)
+
+---
+
+## GOVERNANCE-SYNC-001 — Gap Register Reconciliation (TECS v1.6 Governance Law)
+
+**Task:** GOVERNANCE-SYNC-001  
+**Date:** 2026-02-27  
+**Type:** Governance-only (no runtime code changes)  
+**Trigger:** Drift-detection audit `2066313` (`docs/audits/GAP-015-016-017-019-VALIDATION-REPORT.md`)  
+**TECS v1.6 basis:** Governance Law — a gap cannot be marked VALIDATED unless governance entries include proof artifacts; two-commit protocol; gap lifecycle requires governance updates before close.
+
+### Root Cause
+
+TECS v1.6 two-commit protocol was not enforced in Wave 3 implementation prompts. Implementation commits for G-017/G-018/G-019-settlement/G-020/G-021/G-022/G-023 were made without corresponding governance commits updating `gap-register.md`. This caused:
+
+1. `gap-register.md` Schema Domain Buildout table showing all G-015–G-023 as `NOT STARTED` despite most being implemented or partially implemented.
+2. Wave execution log 6-Week Timeline (entry dated 2026-02-24) falsely marking `G-015 Phase C | ✅ Complete` with no implementation evidence, no migration, and no read-path changes.
+3. Contradiction between gap register (NOT STARTED for G-015) and wave log (✅ Complete for G-015 Phase C).
+
+### Actions Taken (Governance Files Only)
+
+| File | Change |
+|------|--------|
+| `governance/gap-register.md` | Header updated; Schema Domain Buildout table expanded with Commit + Validation Proof columns; G-015 through G-023 statuses corrected |
+| `governance/wave-execution-log.md` | False G-015 Phase C ✅ Complete entry **RETRACTED** and replaced with ❌ NOT IMPLEMENTED; Weeks 2–5 updated with actual commit hashes |
+
+### Corrected Status Summary
+
+| Gap | Old Status (incorrect) | Corrected Status | Key Commits |
+|-----|------------------------|------------------|-------------|
+| G-015 | NOT STARTED (gap register) / ✅ Complete (wave log — FALSE) | PARTIAL — Phase A ✅ Phase B ✅ Phase C ❌ | `bb9a898` `a838bd8` |
+| G-016 | NOT STARTED | NOT STARTED (accurate) | — |
+| G-017 | NOT STARTED | VALIDATED ⚠️ (buyer/seller org FK gap documented) | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` |
+| G-018 | NOT STARTED | VALIDATED | `7c1d3a3` `efeb752` `8d7d2ee` |
+| G-019 | NOT STARTED | FAIL / LABEL MISUSE — certifications absent; settlement mislabeled | `2dc6217` `57e91ce` (settlement only) |
+| G-020 | NOT STARTED | VALIDATED / CLOSED | `aec967f` `9c3ca28` |
+| G-021 | NOT STARTED | VALIDATED / CLOSED | `407013a` `de3be8f` |
+| G-022 | NOT STARTED | VALIDATED | `e138ff0` `5d8e43c` |
+| G-023 | NOT STARTED | VALIDATED | `48a7fd3` `2f432ad` |
+
+### Outstanding Issues (NOT fixed here — governance record only)
+
+1. **G-015 Phase C** — not implemented; requires migration + read-path service changes before Superadmin wave
+2. **G-019 certifications** — not implemented; `settlement.g019.ts` label must be corrected (rename to non-G-019 identifier)
+3. **G-017 FK gap** — `buyer_org_id` / `seller_org_id` have no FK to `organizations`; requires follow-on hardening migration
+4. **G-017 admin-plane RLS** — no cross-tenant admin RLS on `trades`; explicitly deferred in Day 1 migration comment
+
+### Prevention (TECS v1.6 Governance-Sync enforcement)
+
+Every future implementation prompt must hard-require a governance commit. Template in copilot-instructions.md addendum. CI guard recommended: reject PRs modifying `server/**` without also modifying `governance/gap-register.md` + `governance/wave-execution-log.md` (with exceptions for tests and trivial docs).
