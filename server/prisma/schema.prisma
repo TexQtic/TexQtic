@@ -764,6 +764,10 @@ model Trade {
   /// Maintained by DB trigger trg_trades_set_updated_at on BEFORE UPDATE.
   updatedAt         DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
   events            TradeEvent[]
+  /// G-017 Hardening: FK to organizations(id). Buyer org must exist.
+  buyerOrg          organizations  @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  /// G-017 Hardening: FK to organizations(id). Seller org must exist.
+  sellerOrg         organizations  @relation("TradeSeller", fields: [sellerOrgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   lifecycleState    LifecycleState @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
   reasoningLog      ReasoningLog?  @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   tenant            Tenant         @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
@@ -813,6 +817,10 @@ model organizations {
   escrow_lifecycle_logs EscrowLifecycleLog[]
   tenants               Tenant               @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pending_approvals     PendingApproval[]
+  /// G-017 Hardening: back-reference for trades where this org is the buyer.
+  tradesBuyer           Trade[]              @relation("TradeBuyer")
+  /// G-017 Hardening: back-reference for trades where this org is the seller.
+  tradesSeller          Trade[]              @relation("TradeSeller")
   trade_lifecycle_logs  TradeLifecycleLog[]
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
