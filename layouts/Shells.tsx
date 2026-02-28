@@ -107,3 +107,85 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavi
      </main>
   </div>
 );
+
+// ── WhiteLabelAdminShell ───────────────────────────────────────────────────────
+// Wave 4 P1: Store Admin back-office console for WL OWNER / ADMIN users.
+// Rendered when appState === 'WL_ADMIN'. The storefront shell (WhiteLabelShell)
+// remains reachable via the "← Storefront" link at the bottom of the sidebar.
+
+interface WLAdminShellProps {
+  tenant: TenantConfig;
+  children: React.ReactNode;
+  activeView: string;
+  onViewChange: (view: string) => void;
+  onNavigateStorefront?: () => void;
+}
+
+const WL_ADMIN_NAV = [
+  { key: 'BRANDING',    label: 'Store Profile',  icon: '🎨' },
+  { key: 'STAFF',       label: 'Staff',           icon: '👥' },
+  { key: 'PRODUCTS',    label: 'Products',        icon: '📦' },
+  { key: 'COLLECTIONS', label: 'Collections',     icon: '🗂️' },
+  { key: 'ORDERS',      label: 'Orders',          icon: '🛍️' },
+  { key: 'DOMAINS',     label: 'Domains',         icon: '🌐' },
+] as const;
+
+export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
+  tenant,
+  children,
+  activeView,
+  onViewChange,
+  onNavigateStorefront,
+}) => (
+  <div className="min-h-screen flex bg-white font-sans">
+    <aside className="w-60 border-r border-slate-100 flex flex-col py-8 px-6 sticky top-0 h-screen overflow-y-auto">
+      <div className="mb-8">
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Store Admin</div>
+        <div
+          className="font-serif italic text-lg truncate"
+          style={{ color: tenant.theme.primaryColor }}
+        >
+          {tenant.name}
+        </div>
+      </div>
+      <nav className="flex-1 space-y-1">
+        {WL_ADMIN_NAV.map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => onViewChange(key)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+              activeView === key
+                ? 'bg-slate-900 text-white font-semibold'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-base leading-none">{icon}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+      {onNavigateStorefront && (
+        <button
+          onClick={onNavigateStorefront}
+          className="mt-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-700 transition-colors flex items-center gap-1"
+        >
+          ← Storefront
+        </button>
+      )}
+      <div className="mt-4 pt-4 border-t border-slate-100 text-[9px] text-slate-300 font-mono">
+        WL Admin · Wave 4 P1
+      </div>
+    </aside>
+    <div className="flex-1 flex flex-col min-h-screen">
+      <header className="h-14 border-b border-slate-100 flex items-center px-8 justify-between sticky top-0 bg-white z-10">
+        <h2 className="font-semibold text-slate-700 text-sm">
+          {WL_ADMIN_NAV.find(n => n.key === activeView)?.label ?? 'Store Admin'}
+        </h2>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-200 px-3 py-1 rounded-full">
+          White Label
+        </span>
+      </header>
+      <main className="flex-1 p-8 bg-slate-50 relative">{children}</main>
+    </div>
+  </div>
+);

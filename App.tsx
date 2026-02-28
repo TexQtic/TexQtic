@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TenantType, TenantConfig, ImpersonationState } from './types';
-import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell } from './layouts/Shells';
+import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell, WhiteLabelAdminShell } from './layouts/Shells';
 import { SuperAdminShell, AdminView } from './layouts/SuperAdminShell';
 import { AuthForm } from './components/Auth/AuthFlows';
 import { ForgotPassword } from './components/Auth/ForgotPassword';
@@ -10,6 +10,7 @@ import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
 import { TeamManagement } from './components/Tenant/TeamManagement';
 import { InviteMemberForm } from './components/Tenant/InviteMemberForm';
 import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
+import { WLStubPanel } from './components/WhiteLabelAdmin/WLStubPanel';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -48,8 +49,12 @@ const App: React.FC = () => {
     | 'INVITE_MEMBER'
     | 'SETTINGS'
     | 'CONTROL_PLANE'
+    | 'WL_ADMIN'
   >('AUTH');
   const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
+  // Wave 4 P1: active panel in the WL Store Admin console
+  type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
+  const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -212,6 +217,11 @@ const App: React.FC = () => {
         : TenantType.AGGREGATOR
     );
 
+    // G-WL-TYPE-MISMATCH Wave4-P1: roles that default to the WL Store Admin console.
+    // Buyer/Seller/Staff continue to land in the storefront (EXPERIENCE).
+    const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
+    let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
+
     try {
       const me = await getCurrentUser();
       if (me.tenant) {
@@ -227,12 +237,20 @@ const App: React.FC = () => {
           updatedAt: '',
         } as Tenant]);
         setCurrentTenantId(t.id);
+        // Deterministic WL routing: OWNER/ADMIN on a WL tenant -> Store Admin console.
+        if (t.type === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has(me.role ?? '')) {
+          nextState = 'WL_ADMIN';
+        }
       } else {
         // /api/me returned no tenant — seed stub so currentTenant is never null
         const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
         if (tenantId) {
           setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: stubType, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
           setCurrentTenantId(tenantId);
+        }
+        // WL admin routing applies in provisioning-stub window too.
+        if (stubType === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
+          nextState = 'WL_ADMIN';
         }
       }
     } catch (err) {
@@ -242,13 +260,17 @@ const App: React.FC = () => {
         setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: stubType, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
         setCurrentTenantId(tenantId);
       }
+      // WL admin routing applies even when /api/me fails (provisioning gap).
+      if (stubType === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
+        nextState = 'WL_ADMIN';
+      }
       // Show deterministic error banner for unprovisioned tenant (404)
       if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
         setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
       }
     }
 
-    setAppState('EXPERIENCE');
+    setAppState(nextState);
   };
 
   /** G-W3-ROUTING-001: Open reason dialog — API call deferred to handleImpersonateConfirm */
@@ -319,6 +341,20 @@ const App: React.FC = () => {
     setImpersonationToken(null);
     setImpersonation({ isAdmin: false, targetTenantId: null, startTime: null, impersonationId: null, token: null, expiresAt: null });
     setAppState('CONTROL_PLANE');
+  };
+
+  /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
+  const renderWLAdminContent = () => {
+    if (!currentTenant) return null;
+    switch (wlAdminView) {
+      case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} />;
+      case 'STAFF':       return <TeamManagement />;
+      case 'PRODUCTS':    return <WLStubPanel title="Products" icon="📦" description="Manage your store catalog, variants, and pricing. Full product management coming in Wave 4." />;
+      case 'COLLECTIONS': return <WLStubPanel title="Collections" icon="🗂️" description="Group products into curated storefront collections for your buyers." />;
+      case 'ORDERS':      return <WLStubPanel title="Orders" icon="🛍️" description="View and manage customer orders, fulfillment, and returns." />;
+      case 'DOMAINS':     return <WLStubPanel title="Domains" icon="🌐" description="Connect a custom domain and configure DNS for your white-label store." />;
+      default:            return <WLStubPanel title="Coming Soon" description="This panel is under construction." />;
+    }
   };
 
   const renderExperienceContent = () => {
@@ -724,6 +760,41 @@ const App: React.FC = () => {
             {renderAdminView()}
           </SuperAdminShell>
         );
+      case 'WL_ADMIN': {
+        if (!currentTenant) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-center">
+                <div className="text-4xl mb-4">⏳</div>
+                <p className="text-slate-500">Loading workspace...</p>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <CartProvider>
+            {tenantProvisionError && (
+              <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
+                ⚠️ {tenantProvisionError}
+                <button
+                  className="ml-4 text-amber-600 underline text-xs"
+                  onClick={() => setTenantProvisionError(null)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+            <WhiteLabelAdminShell
+              tenant={currentTenant}
+              activeView={wlAdminView}
+              onViewChange={(v) => setWlAdminView(v as WLAdminView)}
+              onNavigateStorefront={() => setAppState('EXPERIENCE')}
+            >
+              {renderWLAdminContent()}
+            </WhiteLabelAdminShell>
+          </CartProvider>
+        );
+      }
       case 'TEAM_MGMT':
       case 'INVITE_MEMBER':
       case 'SETTINGS':
@@ -875,7 +946,7 @@ const App: React.FC = () => {
       )}
       {impersonation.isAdmin &&
         currentTenant &&
-        (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS') && (
+        (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS' || appState === 'WL_ADMIN') && (
           <div className="bg-rose-600 text-white px-6 py-2 sticky top-0 z-[100] flex justify-between items-center shadow-lg border-b border-rose-700 animate-in slide-in-from-top duration-300">
             <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
