@@ -32,6 +32,10 @@ import {
   createRefreshSession,
 } from '../utils/auth/index.js';
 import { config } from '../config/index.js';
+import {
+  getOrganizationIdentity,
+  OrganizationNotFoundError,
+} from '../lib/database-context.js';
 
 /**
  * Password verification using bcrypt
@@ -365,6 +369,22 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           fastify.log.error({ err: error }, '[Refresh Token] Issuance failed - login continues');
         }
 
+        // Fail-open org_type lookup: read from organizations table via admin-context.
+        // If the org is not yet provisioned (OrganizationNotFoundError) tenantType is null.
+        // Do NOT block login on this — provisioning window is a valid state.
+        // Expected values: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null
+        let tenantType: string | null = null;
+        try {
+          const org = await getOrganizationIdentity(result.membership.tenantId, prisma);
+          tenantType = org.org_type;
+        } catch (err) {
+          if (!(err instanceof OrganizationNotFoundError)) {
+            // Unexpected DB error — log but still fail-open (do not block login)
+            fastify.log.warn({ err }, '[Login] org_type lookup failed — tenantType will be null');
+          }
+          // OrganizationNotFoundError: org not provisioned yet — tenantType null is correct
+        }
+
         return sendSuccess(reply, {
           token,
           user: {
@@ -373,6 +393,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
             role: 'TENANT',
             tenantId: result.membership.tenantId,
           },
+          // tenantType: canonical org_type from organizations table (Doctrine v1.4).
+          // Used by frontend for deterministic shell routing during /api/me fallback.
+          // null when org not yet provisioned (G-WL-TYPE-MISMATCH follow-on fix).
+          tenantType,
         });
       }
 
