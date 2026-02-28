@@ -2704,3 +2704,140 @@ No ERROR. File is now parse-safe and can be applied cleanly via `prisma migrate 
 ### Gap Register Update
 
 G-018 row updated: added commit `98eb08d` to commit refs + **Migration File Repaired ✅ (GOVERNANCE-SYNC-013, 2026-02-28)** note with patch description, parse proof summary, and impl commit.
+
+---
+
+## GOVERNANCE-SYNC-014 — G-020 Lifecycle State Machine DB Applied (2026-02-28)
+
+### Scope
+
+Ledger sync for `20260301000000_g020_lifecycle_state_machine_core`. G-020 was found fully present in DB (applied out-of-band as a prerequisite for G-017 trades domain). No psql apply executed — pre-flight guard would raise EXCEPTION (`lifecycle_states` already exists). Also ledger-synced `20260212000000_gw3_db_roles_bootstrap` in the same session.
+
+### Precondition Check — A/B/C Existence Proofs
+
+| Label | Migration | In DB? | Evidence | Action |
+|-------|-----------|--------|----------|--------|
+| A | `20260212000000_gw3_db_roles_bootstrap` | ✅ Present | `texqtic_app: 1`, `texqtic_admin: 1` in pg_roles | Ledger-sync only |
+| B | `20260306000000_g017_trades_domain` | ✅ Present | `trades: trades`, `trade_events: trade_events` via to_regclass | Note for next TECS |
+| C | `20260307000000_g017_day4_pending_approvals_trade_fk_hardening` | ❌ Absent | `trg_g017_pending_approvals_trade_entity_fk: 0`, fn `g017_enforce_pending_approvals_trade_entity_fk: 0` | Separate TECS needed |
+
+**Stop-loss note:** C is absent from DB. G-020 was already in DB (not newly applied), so stop-loss for C does not block ledger-sync of G-020. C requires its own TECS DB-apply prompt (20260307 timestamp) before B can be ledger-synced.
+
+### G-020 Objects in DB (Pre-Apply Confirmation)
+
+All 7 G-020 objects verified present before ledger-sync:
+
+```
+lifecycle_states:          PRESENT (to_regclass → 'lifecycle_states')
+allowed_transitions:       PRESENT (to_regclass → 'allowed_transitions')
+trade_lifecycle_logs:      PRESENT (to_regclass → 'trade_lifecycle_logs')
+escrow_lifecycle_logs:     PRESENT (to_regclass → 'escrow_lifecycle_logs')
+prevent_lifecycle_log_update_delete fn:  PRESENT (pg_proc count: 1)
+trg_immutable_trade_lifecycle_log:       PRESENT (pg_trigger count: 1)
+trg_immutable_escrow_lifecycle_log:      PRESENT (pg_trigger count: 1)
+```
+
+Pre-flight guard in migration.sql: `RAISE EXCEPTION 'G-020 PRE-FLIGHT BLOCKED: public.lifecycle_states already exists.'` → confirms out-of-band apply; psql -f NOT executed.
+
+### Apply Method
+
+psql -f NOT run (pre-flight guard would block). G-020 was applied out-of-band as a prerequisite for G-017 trades domain (which has `lifecycle_state_id UUID NOT NULL REFERENCES public.lifecycle_states(id)`).
+
+### Post-Apply Proof Queries
+
+**Proof 1 — FORCE RLS flags (all 4 G-020 tables):**
+
+```
+       relname        | relrowsecurity | relforcerowsecurity
+-----------------------+----------------+---------------------
+ allowed_transitions   | t              | t
+ escrow_lifecycle_logs | t              | t
+ lifecycle_states      | t              | t
+ trade_lifecycle_logs  | t              | t
+(4 rows)
+```
+
+**Proof 2 — RLS policies (14 total):**
+
+```
+ allowed_transitions   | allowed_transitions_admin_select    | SELECT | PERMISSIVE
+ allowed_transitions   | allowed_transitions_app_select      | SELECT | PERMISSIVE
+ escrow_lifecycle_logs | escrow_lifecycle_logs_admin_select  | SELECT | PERMISSIVE
+ escrow_lifecycle_logs | escrow_lifecycle_logs_no_delete     | DELETE | PERMISSIVE
+ escrow_lifecycle_logs | escrow_lifecycle_logs_no_update     | UPDATE | PERMISSIVE
+ escrow_lifecycle_logs | escrow_lifecycle_logs_tenant_insert | INSERT | PERMISSIVE
+ escrow_lifecycle_logs | escrow_lifecycle_logs_tenant_select | SELECT | PERMISSIVE
+ lifecycle_states      | lifecycle_states_admin_select       | SELECT | PERMISSIVE
+ lifecycle_states      | lifecycle_states_app_select         | SELECT | PERMISSIVE
+ trade_lifecycle_logs  | trade_lifecycle_logs_admin_select   | SELECT | PERMISSIVE
+ trade_lifecycle_logs  | trade_lifecycle_logs_no_delete      | DELETE | PERMISSIVE
+ trade_lifecycle_logs  | trade_lifecycle_logs_no_update      | UPDATE | PERMISSIVE
+ trade_lifecycle_logs  | trade_lifecycle_logs_tenant_insert  | INSERT | PERMISSIVE
+ trade_lifecycle_logs  | trade_lifecycle_logs_tenant_select  | SELECT | PERMISSIVE
+(14 rows)
+```
+
+**Proof 3 — Key constraints (representative):**
+
+```
+lifecycle_states:      pkey + unique(entity_type, state_key) + 3 CHECK constraints
+allowed_transitions:   pkey + unique_edge + from_state_fk + to_state_fk + 3 CHECK constraints
+escrow_lifecycle_logs: pkey + escrow_id_fk + org_id_fk + 4 CHECK constraints
+trade_lifecycle_logs:  pkey + org_id_fk + 4+ CHECK constraints
+```
+
+**Proof 4 — Row counts (dev env):**
+
+```
+lifecycle_states:    0 rows (vacuous — schema proven by constraints/policies)
+allowed_transitions: 0 rows
+trade_lifecycle_logs: 0 rows
+escrow_lifecycle_logs: 0 rows
+```
+
+### Ledger Sync
+
+```
+pnpm exec prisma migrate resolve --applied 20260212000000_gw3_db_roles_bootstrap
+→ Migration 20260212000000_gw3_db_roles_bootstrap marked as applied.
+
+pnpm exec prisma migrate resolve --applied 20260301000000_g020_lifecycle_state_machine_core
+→ Migration 20260301000000_g020_lifecycle_state_machine_core marked as applied.
+```
+
+### Migration Status (before ledger sync) — 8 pending
+
+```
+20260212000000_gw3_db_roles_bootstrap
+20260301000000_g020_lifecycle_state_machine_core
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+```
+
+### Migration Status (after ledger sync) — 6 pending
+
+```
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+```
+
+`20260212000000_gw3_db_roles_bootstrap` removed from pending ✅  
+`20260301000000_g020_lifecycle_state_machine_core` removed from pending ✅
+
+### Next Steps (planning)
+
+- C (20260307_g017_day4_pending_approvals_trade_fk_hardening): NOT in DB — requires dedicated TECS DB-apply prompt
+- B (20260306_g017_trades_domain): IN DB, ledger pending — after C is applied, ledger-sync B in a subsequent TECS
+- G-021 (20260302), G-022 (20260303), GATE-003 (20260304), G-023 (20260305): all need existence proofs + apply/sync per TECS
+
+### Gap Register Update
+
+G-020 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-014, 2026-02-28)** with full proof note (all objects in DB, FORCE RLS t/t on all 4 tables, 14 policies, constraints verified, row counts 0 vacuous, ledger-synced).
