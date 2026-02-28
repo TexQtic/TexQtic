@@ -246,6 +246,8 @@ describe('TradeService', () => {
         fromStateKey: 'DRAFT',
         toStateKey: 'ORDER_CONFIRMED',
       }),
+      // G-020: SM is now called with { db: txDb } so log + entity update share one tx
+      expect.objectContaining({ db: expect.anything() }),
     );
     expect(result.status).toBe('APPLIED');
   });
@@ -350,4 +352,24 @@ describe('TradeService', () => {
     expect(sm.transition).toHaveBeenCalledOnce();
     expect(result.status).toBe('APPLIED');
   });
+
+  it(
+    'T-15: transitionTrade atomicity — if trade.update throws inside $transaction, returns DB_ERROR (SM log rolled back)',
+    async () => {
+      (db.trade.findFirst as Mock).mockResolvedValueOnce(TRADE_ROW);
+      (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce({ stateKey: 'DRAFT' }); // fromState
+      (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce(TO_STATE);              // toState inside tx
+      sm.transition.mockResolvedValueOnce(SM_APPLIED);
+      // Simulate atomic failure: trade.update throws → $transaction rolls back SM log too
+      (db.trade.update as Mock).mockRejectedValueOnce(new Error('unique constraint violation'));
+
+      const result = await svc.transitionTrade(VALID_TRANSITION_INPUT);
+
+      // Must return DB_ERROR; SM log + trade.update share the same tx — both rolled back
+      expect(result.status).toBe('ERROR');
+      const err = result as { status: 'ERROR'; code: string; message: string };
+      expect(err.code).toBe('DB_ERROR');
+      expect(err.message).toContain('unique constraint violation');
+    },
+  );
 });

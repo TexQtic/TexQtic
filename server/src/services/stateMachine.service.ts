@@ -94,7 +94,7 @@ export class StateMachineService {
    *
    * @returns TransitionResult — never throws (all errors become DENIED results).
    */
-  async transition(req: TransitionRequest): Promise<TransitionResult> {
+  async transition(req: TransitionRequest, opts?: { db?: PrismaClient }): Promise<TransitionResult> {
     // ── Step 1: UUID validation ───────────────────────────────────────────────
     if (!isValidUuid(req.entityId)) {
       return denied('INVALID_UUID', `entityId is not a valid UUID: '${req.entityId}'`);
@@ -292,27 +292,30 @@ export class StateMachineService {
     // INTENT of the transition as an immutable audit record.
     try {
       if (normalizedEntityType === 'TRADE') {
-        const log = await this.db.$transaction(async tx => {
-          return tx.tradeLifecycleLog.create({
-            data: {
-              orgId: req.orgId,
-              tradeId: req.entityId, // soft reference — no FK until G-017
-              fromStateKey: normalizedFromState,
-              toStateKey: normalizedToState,
-              actorUserId: req.actorUserId ?? null,
-              actorAdminId: req.actorAdminId ?? null,
-              actorType: req.actorType,
-              actorRole: req.actorRole,
-              escalationLevel: req.escalationLevel ?? null,
-              makerUserId: req.makerUserId ?? null,
-              checkerUserId: req.checkerUserId ?? null,
-              aiTriggered: req.aiTriggered ?? false,
-              impersonationId: req.impersonationId ?? null,
-              reason: req.reason,
-              requestId: req.requestId ?? null,
-            },
-          });
-        });
+        // G-020 Atomicity: when opts.db is provided, we are inside a caller-managed
+        // transaction — write the log directly (no nested $transaction) so the
+        // SM log INSERT and the caller's entity UPDATE share one atomic boundary.
+        // When opts.db is absent, wrap in own $transaction for standalone atomicity.
+        const logData = {
+          orgId: req.orgId,
+          tradeId: req.entityId, // soft reference — no FK until G-017
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          actorUserId: req.actorUserId ?? null,
+          actorAdminId: req.actorAdminId ?? null,
+          actorType: req.actorType,
+          actorRole: req.actorRole,
+          escalationLevel: req.escalationLevel ?? null,
+          makerUserId: req.makerUserId ?? null,
+          checkerUserId: req.checkerUserId ?? null,
+          aiTriggered: req.aiTriggered ?? false,
+          impersonationId: req.impersonationId ?? null,
+          reason: req.reason,
+          requestId: req.requestId ?? null,
+        };
+        const log = opts?.db
+          ? await opts.db.tradeLifecycleLog.create({ data: logData })
+          : await this.db.$transaction(async tx => tx.tradeLifecycleLog.create({ data: logData }));
 
         return {
           status: 'APPLIED',
@@ -326,27 +329,27 @@ export class StateMachineService {
       }
 
       if (normalizedEntityType === 'ESCROW') {
-        const log = await this.db.$transaction(async tx => {
-          return tx.escrowLifecycleLog.create({
-            data: {
-              orgId: req.orgId,
-              escrowId: req.entityId, // soft reference — no FK until G-018
-              fromStateKey: normalizedFromState,
-              toStateKey: normalizedToState,
-              actorUserId: req.actorUserId ?? null,
-              actorAdminId: req.actorAdminId ?? null,
-              actorType: req.actorType,
-              actorRole: req.actorRole,
-              escalationLevel: req.escalationLevel ?? null,
-              makerUserId: req.makerUserId ?? null,
-              checkerUserId: req.checkerUserId ?? null,
-              aiTriggered: req.aiTriggered ?? false,
-              impersonationId: req.impersonationId ?? null,
-              reason: req.reason,
-              requestId: req.requestId ?? null,
-            },
-          });
-        });
+        // Same shared-tx pattern as TRADE: write directly when inside caller's tx.
+        const logData = {
+          orgId: req.orgId,
+          escrowId: req.entityId, // soft reference — no FK until G-018
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          actorUserId: req.actorUserId ?? null,
+          actorAdminId: req.actorAdminId ?? null,
+          actorType: req.actorType,
+          actorRole: req.actorRole,
+          escalationLevel: req.escalationLevel ?? null,
+          makerUserId: req.makerUserId ?? null,
+          checkerUserId: req.checkerUserId ?? null,
+          aiTriggered: req.aiTriggered ?? false,
+          impersonationId: req.impersonationId ?? null,
+          reason: req.reason,
+          requestId: req.requestId ?? null,
+        };
+        const log = opts?.db
+          ? await opts.db.escrowLifecycleLog.create({ data: logData })
+          : await this.db.$transaction(async tx => tx.escrowLifecycleLog.create({ data: logData }));
 
         return {
           status: 'APPLIED',

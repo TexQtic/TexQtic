@@ -548,39 +548,79 @@ export class EscrowService {
       };
     }
 
-    // ── Step 6: StateMachineService.transition() ──────────────────────────────
-    // SM validates allowed_transitions, actor permissions, escalation requirements,
-    // maker-checker requirements, and writes escrow_lifecycle_log on APPLIED.
-    // orgId === tenantId per TexQtic schema (organizations.id = tenants.id).
-    let smResult;
+    // ── Steps 6–7 (atomic): SM transition + entity update in single transaction ──
+    // G-020 Atomicity: SM lifecycle log INSERT and escrow_accounts.lifecycle_state_id
+    // UPDATE must succeed or fail together. opts.db passes the shared tx client into
+    // StateMachineService so both writes use the same Prisma $transaction boundary.
+    //
+    let smResult!: Awaited<ReturnType<typeof this.stateMachine['transition']>>;
+    let atomicError: Error | null = null;
+
     try {
-      smResult = await this.stateMachine.transition({
-        entityType: 'ESCROW',
-        entityId: escrow.id,
-        orgId: input.tenantId,
-        fromStateKey: fromState.stateKey,
-        toStateKey: input.toStateKey,
-        actorType: input.actorType,
-        actorUserId: input.actorUserId ?? null,
-        actorAdminId: input.actorAdminId ?? null,
-        actorRole: input.actorRole,
-        reason: input.reason,
-        aiTriggered: input.aiTriggered ?? false,
-        escalationLevel: input.escalationLevel ?? null,
-        makerUserId: input.makerUserId ?? null,
-        checkerUserId: input.checkerUserId ?? null,
-        impersonationId: input.impersonationId ?? null,
-        requestId: input.requestId ?? null,
+      await this.db.$transaction(async (tx) => {
+        const txDb = tx as unknown as PrismaClient;
+
+        // SM with shared tx — escrow_lifecycle_log INSERT uses txDb (same tx as entity UPDATE)
+        smResult = await this.stateMachine.transition(
+          {
+            entityType: 'ESCROW',
+            entityId: escrow.id,
+            orgId: input.tenantId,
+            fromStateKey: fromState.stateKey,
+            toStateKey: input.toStateKey,
+            actorType: input.actorType,
+            actorUserId: input.actorUserId ?? null,
+            actorAdminId: input.actorAdminId ?? null,
+            actorRole: input.actorRole,
+            reason: input.reason,
+            aiTriggered: input.aiTriggered ?? false,
+            escalationLevel: input.escalationLevel ?? null,
+            makerUserId: input.makerUserId ?? null,
+            checkerUserId: input.checkerUserId ?? null,
+            impersonationId: input.impersonationId ?? null,
+            requestId: input.requestId ?? null,
+          },
+          { db: txDb },
+        );
+
+        // Non-APPLIED: no entity mutations — return from callback (tx commits cleanly).
+        if (smResult.status !== 'APPLIED') return;
+
+        // APPLIED: resolve toState UUID + update escrow_accounts inside same tx.
+        const toState = await txDb.lifecycleState.findFirst({
+          where: { entityType: 'ESCROW', stateKey: input.toStateKey },
+          select: { id: true },
+        });
+        if (!toState) {
+          throw new Error(
+            `Target state '${input.toStateKey}' not found in lifecycle_states ` +
+            "for entityType='ESCROW'. Schema integrity issue — check G-020 seed data.",
+          );
+        }
+
+        // Atomic UPDATE of escrow_accounts.lifecycle_state_id in same tx as SM log write.
+        // escrow_accounts has no Prisma model (G-018 Day 1 applied without db pull),
+        // so $executeRaw is used. The txDb TransactionClient supports $executeRaw.
+        await (txDb as unknown as { $executeRaw: (...args: unknown[]) => Promise<number> }).$executeRaw`
+          UPDATE public.escrow_accounts
+          SET lifecycle_state_id = ${toState.id}::uuid
+          WHERE id = ${escrow.id}::uuid
+        `;
       });
     } catch (err) {
+      // Transaction failed — SM log write + entity update atomically rolled back.
+      atomicError = err instanceof Error ? err : new Error(String(err));
+    }
+
+    if (atomicError !== null) {
       return dbError(
-        'STATE_MACHINE_DENIED',
-        err,
-        'StateMachineService.transition() threw an unexpected error.',
+        'DB_ERROR',
+        atomicError,
+        'Failed to complete escrow lifecycle transition atomically.',
       );
     }
 
-    // ── Step 7: Interpret TransitionResult ────────────────────────────────────
+    // ── Step 7: Interpret SM result (smResult is set; atomicError === null) ───
 
     // ── G-021: PENDING_APPROVAL ───────────────────────────────────────────────
     if (smResult.status === 'PENDING_APPROVAL') {
@@ -638,49 +678,8 @@ export class EscrowService {
       };
     }
 
-    // ── APPLIED: update lifecycle_state_id ────────────────────────────────────
+    // ── APPLIED ───────────────────────────────────────────────────────────────
     if (smResult.status === 'APPLIED') {
-      // Resolve target lifecycle_state_id UUID (need it for the UPDATE).
-      let toState: { id: string } | null;
-      try {
-        toState = await this.db.lifecycleState.findFirst({
-          where: { entityType: 'ESCROW', stateKey: input.toStateKey },
-          select: { id: true },
-        });
-      } catch (err) {
-        return dbError(
-          'DB_ERROR',
-          err,
-          'DB error resolving target lifecycle state after APPLIED.',
-        );
-      }
-
-      if (!toState) {
-        return {
-          status: 'ERROR',
-          code: 'INVALID_LIFECYCLE_STATE',
-          message:
-            `Target state '${input.toStateKey}' not found in lifecycle_states for ` +
-            "entityType='ESCROW'. Schema integrity issue — check G-020 seed data.",
-        };
-      }
-
-      // Update escrow_accounts.lifecycle_state_id to reflect the applied transition.
-      // The escrow_lifecycle_log was already written atomically by StateMachineService.
-      try {
-        await this.db.$executeRaw`
-          UPDATE public.escrow_accounts
-          SET lifecycle_state_id = ${toState.id}::uuid
-          WHERE id = ${escrow.id}::uuid
-        `;
-      } catch (err) {
-        return dbError(
-          'DB_ERROR',
-          err,
-          'DB error updating escrow_accounts.lifecycle_state_id after APPLIED transition.',
-        );
-      }
-
       return {
         status: 'APPLIED',
         escrowId: escrow.id,

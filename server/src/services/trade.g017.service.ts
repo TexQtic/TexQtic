@@ -276,7 +276,7 @@ export class TradeService {
         where: { id: trade.lifecycleStateId },
         select: { stateKey: true },
       });
-    } catch (err) {
+    } catch {
       return {
         status: 'ERROR',
         code: 'DB_ERROR',
@@ -294,46 +294,99 @@ export class TradeService {
       };
     }
 
-    // ── Step 6: Call StateMachineService.transition() ─────────────────────────
-    let smResult;
+    // ── Steps 6–7 (atomic): SM transition + entity update in single transaction ──
+    // G-020 Atomicity requirement: the SM lifecycle log INSERT and the
+    // trade.lifecycleStateId UPDATE must succeed or fail together.
+    // opts.db passes the shared transaction client into StateMachineService so the
+    // log write uses the same Prisma $transaction as the entity state update.
+    // If PENDING_APPROVAL / DENIED / ESCALATION_REQUIRED: no writes occur; tx commits cleanly.
+    //
+    let smResult!: Awaited<ReturnType<typeof this.stateMachine['transition']>>;
+    let atomicError: Error | null = null;
 
     try {
-      smResult = await this.stateMachine.transition({
-        entityType: 'TRADE',
-        entityId: trade.id,
-        // orgId === tenantId per TexQtic schema (organizations.id = tenants.id)
-        orgId: input.tenantId,
-        fromStateKey: fromState.stateKey,
-        toStateKey: input.toStateKey,
-        actorType: input.actorType,
-        actorUserId: input.actorUserId ?? null,
-        actorAdminId: input.actorAdminId ?? null,
-        actorRole: input.actorRole,
-        reason: input.reason,
-        aiTriggered: input.aiTriggered ?? false,
-        escalationLevel: input.escalationLevel ?? null,
-        makerUserId: input.makerUserId ?? null,
-        checkerUserId: input.checkerUserId ?? null,
-        impersonationId: input.impersonationId ?? null,
-        requestId: input.requestId ?? null,
+      await this.db.$transaction(async (tx) => {
+        const txDb = tx as unknown as PrismaClient;
+
+        // SM with shared tx — lifecycle log INSERT uses txDb (same tx as entity UPDATE below)
+        smResult = await this.stateMachine.transition(
+          {
+            entityType: 'TRADE',
+            entityId: trade.id,
+            // orgId === tenantId per TexQtic schema (organizations.id = tenants.id)
+            orgId: input.tenantId,
+            fromStateKey: fromState.stateKey,
+            toStateKey: input.toStateKey,
+            actorType: input.actorType,
+            actorUserId: input.actorUserId ?? null,
+            actorAdminId: input.actorAdminId ?? null,
+            actorRole: input.actorRole,
+            reason: input.reason,
+            aiTriggered: input.aiTriggered ?? false,
+            escalationLevel: input.escalationLevel ?? null,
+            makerUserId: input.makerUserId ?? null,
+            checkerUserId: input.checkerUserId ?? null,
+            impersonationId: input.impersonationId ?? null,
+            requestId: input.requestId ?? null,
+          },
+          { db: txDb },
+        );
+
+        // Non-APPLIED: no entity mutations — return from callback (tx commits cleanly, no writes).
+        if (smResult.status !== 'APPLIED') return;
+
+        // APPLIED: resolve toState UUID inside the same tx, then update entity + emit event.
+        const toState = await txDb.lifecycleState.findFirst({
+          where: { entityType: 'TRADE', stateKey: input.toStateKey },
+          select: { id: true },
+        });
+        if (!toState) {
+          throw new Error(
+            `Target state '${input.toStateKey}' not found in lifecycle_states ` +
+            "for entityType='TRADE'. Schema integrity issue — check G-020 seed data.",
+          );
+        }
+
+        // Atomic: trade lifecycle state update + audit event — all in same tx as SM log
+        await txDb.trade.update({
+          where: { id: trade.id },
+          data: { lifecycleStateId: toState.id },
+        });
+
+        await txDb.tradeEvent.create({
+          data: {
+            tenantId: input.tenantId,
+            tradeId: trade.id,
+            eventType: 'TRADE_TRANSITION_APPLIED',
+            metadata: {
+              from: fromState.stateKey,
+              to: input.toStateKey,
+              transitionId: smResult.transitionId,
+              reason: input.reason,
+            },
+            createdByUserId: input.actorUserId ?? input.actorAdminId ?? null,
+          },
+        });
       });
     } catch (err) {
+      // Transaction failed — SM log write + entity update atomically rolled back.
+      atomicError = err instanceof Error ? err : new Error(String(err));
+    }
+
+    if (atomicError !== null) {
       return {
         status: 'ERROR',
-        code: 'STATE_MACHINE_ERROR',
-        message:
-          err instanceof Error
-            ? `StateMachineService.transition() threw: ${err.message}`
-            : 'Unknown error from StateMachineService.',
+        code: 'DB_ERROR',
+        message: `Failed to complete lifecycle transition atomically: ${atomicError.message}`,
       };
     }
 
-    // ── Step 7: Interpret TransitionResult ────────────────────────────────────
+    // ── Step 7: Interpret SM result (smResult is set; atomicError === null) ───
 
     // ── G-021 Maker-Checker: PENDING_APPROVAL ─────────────────────────────────
     if (smResult.status === 'PENDING_APPROVAL') {
-      // Emit informational trade_events record — trade.lifecycleStateId is NOT updated.
-      // Caller (route / G-021 flow) is responsible for creating pending_approvals record.
+      // SM did not write a log (returns before log write for PENDING_APPROVAL).
+      // Emit informational event — trade.lifecycleStateId is NOT updated.
       try {
         await this.db.tradeEvent.create({
           data: {
@@ -350,8 +403,7 @@ export class TradeService {
           },
         });
       } catch {
-        // Trade_events write failure is non-fatal for PENDING_APPROVAL —
-        // trade state is unchanged; the pending flow is still initiated.
+        // Non-fatal: event write failure must not block PENDING_APPROVAL return.
       }
 
       return {
@@ -363,78 +415,14 @@ export class TradeService {
       };
     }
 
-    // ── APPLIED: update trade + emit event (atomic) ───────────────────────────
+    // ── APPLIED ───────────────────────────────────────────────────────────────
     if (smResult.status === 'APPLIED') {
-      // Resolve target lifecycle state UUID
-      let toState: { id: string } | null;
-
-      try {
-        toState = await this.db.lifecycleState.findFirst({
-          where: { entityType: 'TRADE', stateKey: input.toStateKey },
-          select: { id: true },
-        });
-      } catch (err) {
-        return {
-          status: 'ERROR',
-          code: 'DB_ERROR',
-          message: 'Failed to resolve target lifecycle state from lifecycle_states.',
-        };
-      }
-
-      if (!toState) {
-        return {
-          status: 'ERROR',
-          code: 'INVALID_LIFECYCLE_STATE',
-          message:
-            `Target state '${input.toStateKey}' not found in lifecycle_states ` +
-            "for entityType='TRADE'. Schema integrity issue.",
-        };
-      }
-
-      // Atomic: trade.lifecycleStateId update + trade_events INSERT
-      const appliedTransitionId = smResult.transitionId;
-
-      try {
-        await this.db.$transaction(async (tx) => {
-          const txDb = tx as unknown as PrismaClient;
-
-          await txDb.trade.update({
-            where: { id: trade!.id },
-            data: { lifecycleStateId: toState!.id },
-          });
-
-          await txDb.tradeEvent.create({
-            data: {
-              tenantId: input.tenantId,
-              tradeId: trade!.id,
-              eventType: 'TRADE_TRANSITION_APPLIED',
-              metadata: {
-                from: fromState!.stateKey,
-                to: input.toStateKey,
-                transitionId: appliedTransitionId,
-                reason: input.reason,
-              },
-              createdByUserId: input.actorUserId ?? input.actorAdminId ?? null,
-            },
-          });
-        });
-      } catch (err) {
-        return {
-          status: 'ERROR',
-          code: 'DB_ERROR',
-          message:
-            err instanceof Error
-              ? `Failed to apply trade state update atomically: ${err.message}`
-              : 'Unknown DB error during transition apply.',
-        };
-      }
-
       return {
         status: 'APPLIED',
         tradeId: trade.id,
         fromStateKey: fromState.stateKey,
         toStateKey: input.toStateKey,
-        transitionId: appliedTransitionId,
+        transitionId: smResult.transitionId,
       };
     }
 

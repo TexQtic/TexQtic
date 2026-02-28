@@ -539,39 +539,12 @@ export class CertificationService {
       };
     }
 
-    // Step 8: on APPLIED, update the certification's lifecycle_state_id
-    if (smResult.status === 'APPLIED') {
-      try {
-        const newState = await this.db.lifecycleState.findFirst({
-          where: { entityType: 'CERTIFICATION', stateKey: input.toStateKey.toUpperCase() },
-          select: { id: true },
-        });
-
-        if (!newState) {
-          return {
-            status: 'ERROR',
-            code: 'INVALID_LIFECYCLE_STATE',
-            message: `Target state '${input.toStateKey}' not found in lifecycle_states for CERTIFICATION.`,
-          };
-        }
-
-        await this.db.certification.update({
-          where: { id: cert.id },
-          data: { lifecycleStateId: newState.id },
-        });
-
-        return { status: 'APPLIED', newStateKey: input.toStateKey.toUpperCase() };
-      } catch (err) {
-        return {
-          status: 'ERROR',
-          code: 'DB_ERROR',
-          message:
-            err instanceof Error
-              ? `DB error updating lifecycle state after transition: ${err.message}`
-              : 'Unknown DB error updating lifecycle state after transition.',
-        };
-      }
-    }
+    // G-020 NOTE: APPLIED branch permanently removed.
+    // StateMachineService.transition() always returns CERTIFICATION_LOG_DEFERRED (DENIED)
+    // for entityType='CERTIFICATION' (SM step 5 fast-path, certification.g019.service.ts
+    // line ~520). This 'if (smResult.status === "APPLIED")' block was therefore
+    // unreachable — removed to eliminate dead code and avoid misleading audit coverage.
+    // G-023 will implement CERTIFICATION lifecycle log writes and add the APPLIED handler.
 
     // PENDING_APPROVAL or ESCALATION_REQUIRED: SM queued the transition; no DB update yet
     return {

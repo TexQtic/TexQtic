@@ -23,18 +23,23 @@ interface MockDb {
   lifecycleState: { findFirst: Mock };
   $queryRaw: Mock;
   $executeRaw: Mock;
+  $transaction: Mock;
 }
 
 // ─── Mock Factory Helpers ─────────────────────────────────────────────────────
 
 function makeDb(): MockDb {
-  return {
+  const db: MockDb = {
     lifecycleState: {
       findFirst: vi.fn(),
     },
     $queryRaw: vi.fn(),
     $executeRaw: vi.fn(),
+    // G-020: $transaction calls the callback with db itself so both SM log and
+    // $executeRaw UPDATE share the same mock instance (atomic boundary simulation)
+    $transaction: vi.fn((cb: (tx: MockDb) => unknown) => cb(db)),
   };
+  return db;
 }
 
 function makeStateMachine() {
@@ -331,6 +336,27 @@ describe('EscrowService', () => {
 
       // MakerCheckerService must NOT have been called for APPLIED path
       expect(mc.createApprovalRequest).not.toHaveBeenCalled();
+    },
+  );
+
+  it(
+    'E-09: APPLIED atomicity — if $executeRaw throws inside $transaction, returns DB_ERROR (SM log rolled back)',
+    async () => {
+      (db.$queryRaw as Mock).mockResolvedValueOnce([ESCROW_ROW]);
+      (esc.checkEntityFreeze as Mock).mockResolvedValueOnce(undefined);
+      (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce(FROM_STATE); // fromState (outside tx)
+      (sm.transition as Mock).mockResolvedValueOnce(SM_APPLIED);               // SM returns APPLIED (inside tx)
+      (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce(TO_STATE);   // toState (inside tx)
+      // Simulate atomic failure: $executeRaw throws → $transaction rolls back SM log too
+      (db.$executeRaw as Mock).mockRejectedValueOnce(new Error('escrow update DB error'));
+
+      const result = await svc.transitionEscrow(VALID_TRANSITION_INPUT);
+
+      // Must return DB_ERROR — SM log write + $executeRaw share same tx → both rolled back
+      expect(result.status).toBe('ERROR');
+      const err = result as { status: 'ERROR'; code: string; message: string };
+      expect(err.code).toBe('DB_ERROR');
+      expect(err.message).toContain('escrow update DB error');
     },
   );
 });
