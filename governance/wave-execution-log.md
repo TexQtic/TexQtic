@@ -3046,3 +3046,109 @@ pnpm -C server exec prisma migrate resolve --applied 20260306000000_g017_trades_
 ### Gap Register Update
 
 G-017 row updated: added **trades_domain Ledger-Sync ✅ (GOVERNANCE-SYNC-016, 2026-02-28)** noting resolve-only, to_regclass proof, out-of-band apply origin.
+
+---
+
+## GOVERNANCE-SYNC-017 — G-021 Maker-Checker Core Ledger Sync (Resolve-Only)
+
+**Date:** 2026-03-01
+**Migration:** `20260302000000_g021_maker_checker_core`
+**Path:** Resolve-only (all DB objects present out-of-band)
+**Environment:** Supabase dev (`aws-1-ap-northeast-1.pooler.supabase.com:5432`)
+
+### Static Migration Scan
+
+Migration file `server/prisma/migrations/20260302000000_g021_maker_checker_core/migration.sql` (513 lines) fully read.
+
+- §4 `prevent_approval_signature_modification()`: single-line `RAISE EXCEPTION` — **parse-safe ✅**
+- §6 `check_maker_checker_separation()`: format-string `RAISE EXCEPTION 'msg', var USING ERRCODE` — **parse-safe ✅**
+- §10 VERIFY DO block: all `RAISE EXCEPTION`/`RAISE NOTICE` use single string literals — **no adjacent-literal hazards ✅**
+- Non-ASCII box-drawing chars in RAISE NOTICE: safe with `PGCLIENTENCODING=UTF8` ✅
+
+**No parse hazards found. Migration parse-safe — no file patch required.**
+
+### Pending Migrations BEFORE — 4 pending
+
+```
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+```
+
+### DB Existence Proof (BEFORE resolve)
+
+**Proof — to_regclass + fn + tg counts:**
+```
+        pa         |         as2
+-------------------+---------------------
+ pending_approvals | approval_signatures
+(1 row)
+
+ fn_count
+----------
+ 2
+(1 row)
+
+ tg_count
+----------
+ 2
+(1 row)
+```
+
+Both tables present ✅ — fn_count=2 ✅ — tg_count=2 ✅  
+Pre-flight guard blocks re-apply (pending_approvals already exists) → resolve-only path.
+
+### Ledger Sync
+
+```
+pnpm exec prisma migrate resolve --applied 20260302000000_g021_maker_checker_core
+→ Migration 20260302000000_g021_maker_checker_core marked as applied.
+```
+
+### Post-Apply Proofs
+
+```
+ rls_policy_count
+------------------
+ 10
+(1 row)
+
+       relname       | rls_on | force_rls
+---------------------+--------+-----------
+ approval_signatures | t      | t
+ pending_approvals   | t      | t
+(2 rows)
+
+            indexname            | (indexdef — partial unique on REQUESTED+ESCALATED)
+---------------------------------+-----------------------------------------------------
+ pending_approvals_active_unique | CREATE UNIQUE INDEX ... WHERE status = ANY (ARRAY['REQUESTED','ESCALATED'])
+(1 row)
+
+         tbl         | rows
+---------------------+------
+ pending_approvals   | 0
+ approval_signatures | 0
+(2 rows)
+```
+
+- 10 RLS policies ✅ (5 pending_approvals + 5 approval_signatures)
+- ENABLE+FORCE RLS: t/t on both tables ✅
+- `pending_approvals_active_unique` partial index ✅ (D-021-B)
+- Row counts: 0/0 ✅ (vacuous — structure proven by constraints/triggers/RLS)
+- 2 trigger functions confirmed ✅ (`prevent_approval_signature_modification`, `check_maker_checker_separation`)
+- 2 triggers on `approval_signatures` confirmed ✅ (immutability + D-021-C)
+
+### Pending Migrations AFTER — 3 pending
+
+```
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+```
+
+`20260302000000_g021_maker_checker_core` removed from pending ✅
+
+### Gap Register Update
+
+G-021 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-017, 2026-03-01)** noting resolve-only path, 10 RLS policies, FORCE RLS t/t, 2 triggers, D-021-B partial index, D-021-C maker≠checker enforcement.
