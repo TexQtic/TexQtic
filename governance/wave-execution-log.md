@@ -2281,3 +2281,113 @@ Before `7bacd80`, `App.tsx` `handleAuthSuccess`:
 ### Gap Register Update
 
 G-007C row added to Wave 2 Stabilization table: VALIDATED; commits `be66f41` + `7bacd80` recorded. Regressions / Incidents (Post-Validation) section added. G-WL-TYPE-MISMATCH (NOT STARTED) added to Wave 4 table.
+
+---
+
+## Wave 4 — White Label Surfaces + Store Admin (In Progress)
+
+Start Date: 2026-02-28
+End Date: —
+Branch: main
+Tag: —
+
+### Objective
+
+Implement deterministic WL tenant routing and the WL Store Admin back-office entry point. Ensure WHITE_LABEL tenants with OWNER/ADMIN roles land in a dedicated back-office console (not the storefront shell) on login — both when provisioned and during the provisioning gap window.
+
+---
+
+### G-WL-TYPE-MISMATCH — VALIDATED 2026-02-28
+
+#### Summary
+
+WL stub tenant in `handleAuthSuccess` hardcoded `type: 'B2B'`, causing WL tenants in the provisioning window to render the Enterprise/B2B sidebar. Fixed in two commits (backend + frontend).
+
+#### Commits
+
+- `65ab907` — `feat(auth): include tenantType in login response (G-WL-TYPE-MISMATCH)`
+- `ef46214` — `fix(wl): seed stub tenant type from login payload (G-WL-TYPE-MISMATCH)`
+
+#### Backend (`65ab907`)
+
+- `server/src/routes/auth.ts`: imports `getOrganizationIdentity` + `OrganizationNotFoundError` from `database-context.ts`
+- After JWT issuance, fail-open `getOrganizationIdentity(tenantId, prisma)` call: reads `organizations.org_type` via `withOrgAdminContext` (admin-realm elevation)
+- `OrganizationNotFoundError` → `tenantType: null` (provisioning gap — do NOT block login)
+- Unexpected DB errors → `fastify.log.warn` + `tenantType: null`
+- `tenantType` included in `sendSuccess` response alongside existing `token`/`user`/`tenantId`
+- Backward compatible: all existing fields unchanged
+- Pre-existing test failures (`auth-email-verification` FK drift + 38-min timeout) confirmed unrelated — `gate-e-4-audit` login test PASS ✅
+
+#### Frontend (`ef46214`)
+
+- `services/authService.ts`: `LoginResponse.tenantType?: string | null` added (canonical per Doctrine v1.4 — organizations.org_type)
+- `App.tsx`: `handleAuthSuccess` extracts `rawTenantType` from `data.tenantType`; enum-validates against `Object.values(TenantType)`; falls back to `TenantType.AGGREGATOR` if absent/unrecognized
+- Both stub paths (`else` branch + `catch` block) now use `stubType` — never hardcodes `'B2B'`
+- Happy path (`me.tenant.type`) unchanged
+
+#### Proof Table
+
+| Login user | `data.tenantType` | `currentTenant.type` | Shell |
+|---|---|---|---|
+| WL owner (provisioned) | — | `WHITE_LABEL` (from `/api/me`) | `WhiteLabelShell` |
+| WL owner (provisioning window) | `'WHITE_LABEL'` | `WHITE_LABEL` (stub) | `WhiteLabelShell` ✅ |
+| B2B owner (provisioned) | — | `B2B` (from `/api/me`) | `B2BShell` ✅ |
+| Any user (tenantType null) | `null` | `AGGREGATOR` (stub) | AggregatorShell + banner |
+
+#### Gates
+
+`tsc --noEmit` EXIT 0 ✅ · `eslint` 0 errors ✅ · `gate-e-4-audit` tenant login PASS ✅
+
+---
+
+### G-WL-ADMIN — VALIDATED 2026-02-28
+
+#### Summary
+
+Wave 4 P1: WL OWNER/ADMIN had no back-office surface — they landed on the storefront shell (WhiteLabelShell) which is consumer-facing. Implemented `WL_ADMIN` app state, deterministic post-login router rule, and `WhiteLabelAdminShell` with 6 nav panels.
+
+#### Commits
+
+- `46a60e4` — `feat(wl): add Store Admin entry point + WL admin shell (Wave4-P1)`
+
+#### Changes
+
+**`App.tsx`**
+- `'WL_ADMIN'` added to appState union type
+- `WLAdminView` type: `'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS'`
+- `wlAdminView` state (defaults `'BRANDING'` on each login)
+- Router rule in `handleAuthSuccess` (all 3 paths — me.tenant, stub-else, stub-catch):
+  - `WL_ADMIN_ROLES = {TENANT_OWNER, TENANT_ADMIN, OWNER, ADMIN}`
+  - `WHITE_LABEL + WL_ADMIN_ROLES` → `nextState = 'WL_ADMIN'`; else → `EXPERIENCE`
+- `renderWLAdminContent()`: BRANDING→`WhiteLabelSettings`, STAFF→`TeamManagement`, PRODUCTS/COLLECTIONS/ORDERS/DOMAINS→`WLStubPanel`
+- `WL_ADMIN` case in `renderCurrentState()`: renders `WhiteLabelAdminShell` inside `CartProvider`; banner compatible
+- Impersonation banner updated to include `WL_ADMIN` check
+
+**`layouts/Shells.tsx`**
+- `WhiteLabelAdminShell` added: sidebar with 6 nav items (🎨 Store Profile, 👥 Staff, 📦 Products, 🗂️ Collections, 🛍️ Orders, 🌐 Domains); no B2B/Enterprise chrome; "← Storefront" link routes to `EXPERIENCE`
+
+**`components/WhiteLabelAdmin/WLStubPanel.tsx`** (new)
+- Reusable coming-soon stub panel for Products, Collections, Orders, Domains
+
+#### Routing Matrix
+
+| Actor | Tenant Type | Role | Post-login state |
+|---|---|---|---|
+| WL owner | WHITE_LABEL | TENANT_OWNER / ADMIN | `WL_ADMIN` → `WhiteLabelAdminShell` |
+| WL buyer | WHITE_LABEL | BUYER | `EXPERIENCE` → `WhiteLabelShell` |
+| B2B owner | B2B | any | `EXPERIENCE` → `B2BShell` |
+| B2C owner | B2C | any | `EXPERIENCE` → `B2CShell` |
+| WL (provisioning gap) | WHITE_LABEL stub | OWNER | `WL_ADMIN` + banner |
+
+#### Gates
+
+`tsc --noEmit` EXIT 0 ✅ · `eslint` 0 errors / 1 pre-existing warning ✅
+
+#### Follow-ons (Wave 4 subsequent)
+
+| Panel | Status | Notes |
+|---|---|---|
+| Products | STUB | Full product management — catalog variants, pricing rules |
+| Collections | STUB | Curated collection grouping for WL storefronts |
+| Orders | STUB | Order management, fulfillment, returns |
+| Domains | STUB | Custom domain connection, DNS configuration (G-026 prerequisite) |

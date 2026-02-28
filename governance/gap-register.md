@@ -57,7 +57,7 @@ Doctrine Version: v1.4
 
 | Gap ID | Symptom | Root Cause | Fix | Caused-by Chain | Follow-on |
 |--------|---------|------------|-----|-----------------|-----------|
-| G-007C | Infinite "Loading workspace…" spinner after tenant login | `handleAuthSuccess` seeded `tenants[]` only on `me.tenant` truthy; both failure paths (`else` + `catch`) only called `setCurrentTenantId`, leaving `tenants[]` empty → `currentTenant` null → spinner looped forever | Backend: `/api/me` explicit 401/404 instead of `tenant: null`. Frontend: stub `Tenant` always pushed to `tenants[]`; `APIError` 404 path shows amber banner. | G-015 Phase C introduced `getOrganizationIdentity` in `/api/me`; `OrganizationNotFoundError` was silently swallowed; missing `tenantId` JWT had no guard | G-WL-TYPE-MISMATCH (NOT STARTED) |
+| G-007C | Infinite "Loading workspace…" spinner after tenant login | `handleAuthSuccess` seeded `tenants[]` only on `me.tenant` truthy; both failure paths (`else` + `catch`) only called `setCurrentTenantId`, leaving `tenants[]` empty → `currentTenant` null → spinner looped forever | Backend: `/api/me` explicit 401/404 instead of `tenant: null`. Frontend: stub `Tenant` always pushed to `tenants[]`; `APIError` 404 path shows amber banner. | G-015 Phase C introduced `getOrganizationIdentity` in `/api/me`; `OrganizationNotFoundError` was silently swallowed; missing `tenantId` JWT had no guard | G-WL-TYPE-MISMATCH (**VALIDATED** `65ab907`+`ef46214`) · G-WL-ADMIN (**VALIDATED** `46a60e4`) |
 
 ---
 
@@ -122,7 +122,8 @@ Doctrine Version: v1.4
 | G-026  | Custom domain routing / tenant resolution (white-label) — stub only | NOT STARTED | L scope; edge runtime + Prisma constraints |
 | G-027  | The Morgue (Level 1+ failure event bundles) — MISSING               | NOT STARTED | L scope; post-mortem + regulator review    |
 | G-028  | Insight caching / vector store / inference separation for AI        | NOT STARTED | XL scope; future AI infrastructure         |
-| G-WL-TYPE-MISMATCH | WL tenant renders as wrong shell/type when org is unprovisioned — stub in `handleAuthSuccess` defaults `type: 'B2B'`; if a WL org is not yet provisioned the stub may be used and wrong shell rendered | NOT STARTED | S scope; follow-on from G-007C; verify `/api/me` response `type`+`plan` match WL tenant record; fix stub to pass through type from login payload |
+| G-WL-TYPE-MISMATCH | WL tenant renders as wrong shell/type when org is unprovisioned — stub defaulted `type: 'B2B'`; WL org in provisioning gap rendered B2B/Enterprise sidebar | **VALIDATED** | `65ab907` (backend) · `ef46214` (frontend). Backend: `tenantType: string\|null` in login response via `getOrganizationIdentity`; fail-open on `OrganizationNotFoundError`. Frontend: `LoginResponse.tenantType` typed; `stubType` enum-validated from `data.tenantType` (AGGREGATOR fallback); both stub paths fixed. Happy path unchanged. Gates: tsc EXIT 0 · eslint 0 errors · gate-e-4-audit login PASS. |
+| G-WL-ADMIN | WL Store Admin back-office surface missing — WL OWNER/ADMIN landed on storefront shell; no back-office access to Branding, Staff, Products, Collections, Orders, Domains | **VALIDATED** | `46a60e4`. `'WL_ADMIN'` appState added. Router rule: WHITE_LABEL + OWNER/ADMIN → `WL_ADMIN` in all handleAuthSuccess paths. `WhiteLabelAdminShell` in Shells.tsx: sidebar with 6 panels (no B2B chrome). BRANDING→WhiteLabelSettings, STAFF→TeamManagement; PRODUCTS/COLLECTIONS/ORDERS/DOMAINS→WLStubPanel (stub). Provision banner compatible. "← Storefront" link restores WhiteLabelShell. Gates: tsc EXIT 0 · eslint 0 errors. Follow-ons: Products, Collections, Orders, Domains full panels (Wave 4). |
 
 ---
 
