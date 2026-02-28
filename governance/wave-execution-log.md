@@ -3517,7 +3517,75 @@ Database schema is up to date!
 | 018 | G-022 escalation core | resolve-only |
 | 019 | GATE-TEST-003 audit_logs admin select | resolve-only |
 | 020 | G-023 reasoning logs | resolve-only |
+| 021 | G-020 Runtime Enforcement Atomicity | impl commit |
 
 ### Gap Register Update
 
 G-023 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-020, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 3 RLS policies, 4 indexes, immutability trigger, `audit_logs.reasoning_log_id` FK column live, 23 reasoning_logs rows + 5 audit_logs FK references. **MILESTONE: All 57 migrations ledger-synced.**
+
+---
+
+## GOVERNANCE-SYNC-021 — G-020 Runtime Enforcement Atomicity VALIDATED (2026-02-28)
+
+**Task:** G-020 Runtime Enforcement Atomicity Hardening  
+**Date:** 2026-02-28  
+**Type:** Implementation + governance close  
+**Implementation commit:** `61d1a96`  
+**Governance-Sync number:** GOVERNANCE-SYNC-021
+
+### Symptom / Risk Closed
+
+G-020 shipped a two-phase atomicity gap between `StateMachineService.transition()` and callers:
+
+1. SM `transition()` wrote the lifecycle log inside its own internal `$transaction`
+2. Caller (TradeService / EscrowService) then wrote `entity.lifecycleStateId` in a **separate** `$transaction`
+
+If step 2 failed after step 1 succeeded, the audit log recorded the transition as APPLIED but the entity's `lifecycleStateId` remained at the old state — an inconsistent invariant visible to any downstream read.
+
+### Solution Architecture
+
+| Change | File | Description |
+|--------|------|--------------|
+| `opts?.db` param | `stateMachine.service.ts` | When `opts.db` is provided, SM log write uses `opts.db` directly (no nested `$transaction`); when absent, wraps in own tx as before (backward compatible) |
+| Atomic trade transition | `trade.g017.service.ts` | SM log INSERT + `trade.lifecycleStateId` UPDATE + `tradeEvent` INSERT all in ONE `this.db.$transaction` |
+| Atomic escrow transition | `escrow.service.ts` | SM log INSERT + `$executeRaw UPDATE escrow_accounts.lifecycle_state_id` all in ONE `this.db.$transaction` |
+| Dead code removal | `certification.g019.service.ts` | Permanently unreachable APPLIED branch removed (SM always returns `CERTIFICATION_LOG_DEFERRED` for entityType='CERTIFICATION'); G-023 will add handler |
+| Regression test T-15 | `trade.g017.test.ts` | When `trade.update` throws inside `$transaction`, `transitionTrade()` returns `DB_ERROR` — proves SM log + entity update share same tx boundary |
+| Regression test E-09 | `escrow.g018.day2.test.ts` | When `$executeRaw` throws inside `$transaction`, `transitionEscrow()` returns `DB_ERROR` — proves SM log + UPDATE share same tx boundary |
+
+### Files Changed (Allowlist)
+
+| File | Type |
+|------|------|
+| `server/src/services/stateMachine.service.ts` | MODIFIED — `opts?: { db?: PrismaClient }` param added; conditional log write |
+| `server/src/services/trade.g017.service.ts` | MODIFIED — Steps 6+7 atomicified |
+| `server/src/services/escrow.service.ts` | MODIFIED — Steps 6+7 atomicified |
+| `server/src/services/certification.g019.service.ts` | MODIFIED — dead APPLIED branch removed |
+| `server/src/services/trade.g017.test.ts` | MODIFIED — T-09 second arg added; T-15 added |
+| `server/src/services/escrow.g018.day2.test.ts` | MODIFIED — MockDb `$transaction` added; E-09 added |
+
+### Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 ✅ |
+| `pnpm -C server run lint` | 0 errors (89 warnings, all pre-existing) ✅ |
+| `vitest run trade.g017.test.ts escrow.g018.day2.test.ts` | 24/24 passed (14+T-15 trade, 8+E-09 escrow) ✅ |
+| `vitest run tests/stateMachine.g020.test.ts` | 20/20 passed (no regressions) ✅ |
+
+### What Did NOT Change
+
+- Guardrails ordering (A/B/C) — unmodified
+- SM validation semantics (fromState, allowedTransition, escalation freeze) — `this.db` reads unchanged
+- PENDING_APPROVAL / DENIED / ESCALATION_REQUIRED behavior — unmodified
+- Prisma schema — no changes
+- Migrations — no new migrations
+- Certification SM behavior — SM still returns `CERTIFICATION_LOG_DEFERRED` (no functional change; dead code removed only)
+
+### Gap Register Update
+
+G-020 row updated: commit `61d1a96` added; description expanded to include **Runtime Enforcement Atomicity CLOSED ✅ (GOVERNANCE-SYNC-021, 2026-02-28)**; two-phase atomicity gap, solution pattern, and gate results documented.
+
+| Sync # | Gap / Area | Type |
+|--------|-----------|------|
+| 021 | G-020 Runtime Enforcement Atomicity | impl commit |
