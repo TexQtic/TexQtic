@@ -2650,3 +2650,57 @@ escrow_accounts_tenant_id_idx
 ### Gap Register Update
 
 G-018 row updated: added **Cycle Fix DB Applied ✅ (GOVERNANCE-SYNC-012, 2026-02-28, env: Supabase dev)**. Apply method: psql (operational SQL extracted due to migration file pre-flight syntax bug). Ledger sync: resolve --applied. Proof: column/index/FK/RLS queries all verified.
+
+---
+
+## GOVERNANCE-SYNC-013 — G-018 cycle-fix migration file repaired (parse-safe) (2026-02-28)
+
+### Scope
+
+File-only patch to `server/prisma/migrations/20260308010000_g018_day1_escrow_schema_cycle_fix/migration.sql`. No database state change. No Prisma migration apply. No schema.prisma change.
+
+### Problem
+
+Two `RAISE NOTICE` statements in the migration file had PL/pgSQL-invalid adjacent string literals (`'str1' 'str2'`). PostgreSQL parses the entire DO block at plan time — even branches that will never execute — so the adjacent literal in the pre-flight guard caused:
+
+```
+ERROR: syntax error at or near "'migration may already be applied. Skipping.'"
+```
+
+Additionally, non-ASCII characters were present: em dash `—` (U+2014) and Unicode arrow `→` (U+2192). These had been worked around in GOVERNANCE-SYNC-012 by applying the operational SQL manually via `psql -c`, but the file itself remained parse-unsafe.
+
+### Fix — 2 minimal replacements
+
+**Change 1** (pre-flight DO block — idempotency guard):
+- OLD: `RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist — ' 'migration may already be applied. Skipping.';`
+- NEW: `RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist -- migration may already be applied. Skipping.';`
+
+**Change 2** (verification DO block — PASS notice):
+- OLD: `RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. ' 'Canonical link remains: trades.escrow_id → escrow_accounts.id. ' 'escrow_accounts.trade_id removed.';`
+- NEW: `RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. Canonical link remains: trades.escrow_id -> escrow_accounts.id. escrow_accounts.trade_id removed.';`
+
+No operational SQL changed (DROP INDEX IF EXISTS ×2, ALTER TABLE DROP COLUMN IF EXISTS, RAISE EXCEPTION statements all untouched).
+
+### psql Parse Proof
+
+```
+BEGIN
+DO
+NOTICE:  G-018 FIX: escrow_accounts.trade_id does not exist -- migration may already be applied. Skipping.
+DROP INDEX
+DROP INDEX
+ALTER TABLE
+DO
+NOTICE:  G-018 FIX PASS: Circular FK broken. Canonical link remains: trades.escrow_id -> escrow_accounts.id. escrow_accounts.trade_id removed.
+COMMIT
+```
+
+No ERROR. File is now parse-safe and can be applied cleanly via `prisma migrate deploy` if ever needed.
+
+### Implementation Commit
+
+- `98eb08d` — `fix(migrations): make g018 cycle-fix migration parse-safe (no behavior change)` — 1 file changed, 2 insertions(+), 2 deletions(-)
+
+### Gap Register Update
+
+G-018 row updated: added commit `98eb08d` to commit refs + **Migration File Repaired ✅ (GOVERNANCE-SYNC-013, 2026-02-28)** note with patch description, parse proof summary, and impl commit.
