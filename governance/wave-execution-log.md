@@ -2841,3 +2841,139 @@ pnpm exec prisma migrate resolve --applied 20260301000000_g020_lifecycle_state_m
 ### Gap Register Update
 
 G-020 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-014, 2026-02-28)** with full proof note (all objects in DB, FORCE RLS t/t on all 4 tables, 14 policies, constraints verified, row counts 0 vacuous, ledger-synced).
+
+---
+
+## GOVERNANCE-SYNC-015 — G-017 Day4 Pending Approvals FK Hardening DB Applied (2026-02-28)
+
+### Scope
+
+Applied `20260307000000_g017_day4_pending_approvals_trade_fk_hardening` via psql. This migration installs the DB-level referential integrity guard on `public.pending_approvals`: when `entity_type = 'TRADE'`, `entity_id` must reference an existing `public.trades(id)`. Enforced via `BEFORE INSERT OR UPDATE` trigger with SECURITY DEFINER + `search_path=public` to bypass session RLS on trades.
+
+### Pending Migrations BEFORE — 6 pending
+
+```
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+```
+
+### Existence Proof (BEFORE apply)
+
+```
+trigger_count (trg_g017_pending_approvals_trade_entity_fk):          0
+function_count (g017_enforce_pending_approvals_trade_entity_fk):     0
+```
+
+Stop-loss decision: both absent → proceed with psql apply.
+
+### Migration File Patch (parse-safe, no behavior change)
+
+Same PL/pgSQL adjacent-literal issue found as in G-018 cycle-fix. The verification DO block had a multi-line `RAISE NOTICE` with 4 adjacent string literals:
+
+- OLD:
+```sql
+RAISE NOTICE
+  'G-017 Day4 PASS: pending_approvals TRADE FK hardening installed -- '
+  'function: g017_enforce_pending_approvals_trade_entity_fk, '
+  'trigger: trg_g017_pending_approvals_trade_entity_fk (BEFORE INSERT OR UPDATE), '
+  'SQLSTATE: P0003, SECURITY DEFINER, search_path=public';
+```
+- NEW:
+```sql
+RAISE NOTICE 'G-017 Day4 PASS: pending_approvals TRADE FK hardening installed -- function: g017_enforce_pending_approvals_trade_entity_fk, trigger: trg_g017_pending_approvals_trade_entity_fk (BEFORE INSERT OR UPDATE), SQLSTATE: P0003, SECURITY DEFINER, search_path=public';
+```
+
+Impl commit: `bdb9ab7` — `fix(migrations): make g017 day4 trade-fk-hardening migration parse-safe (no behavior change)` — 1 file
+
+### Apply Command
+
+```
+$env:PGCLIENTENCODING='UTF8'
+& psql "--dbname=<DATABASE_URL_REDACTED>" "--variable=ON_ERROR_STOP=1" \
+  -f "...\20260307000000_g017_day4_pending_approvals_trade_fk_hardening\migration.sql"
+```
+
+### Apply Output (key lines)
+
+```
+BEGIN
+CREATE FUNCTION
+COMMENT
+DROP TRIGGER  (NOTICE: trigger does not exist, skipping)
+CREATE TRIGGER
+COMMENT
+DO
+NOTICE: G-017 Day4 VERIFY: function g017_enforce_pending_approvals_trade_entity_fk EXISTS -- OK
+NOTICE: G-017 Day4 VERIFY: trigger trg_g017_pending_approvals_trade_entity_fk EXISTS -- OK
+NOTICE: G-017 Day4 VERIFY: trigger tgenabled = 'O' (enabled for origin) -- OK
+NOTICE: G-017 Day4 VERIFY: public.pending_approvals EXISTS -- OK
+NOTICE: G-017 Day4 VERIFY: public.trades EXISTS -- OK
+NOTICE: G-017 Day4 PASS: pending_approvals TRADE FK hardening installed
+COMMIT
+```
+
+No ERROR lines. Exit code 1 is PowerShell stderr-NOTICE artifact (expected).
+
+### Post-Apply Proof Queries
+
+**Proof A — Object counts:**
+```
+trigger_count (trg_g017_pending_approvals_trade_entity_fk):          1
+function_count (g017_enforce_pending_approvals_trade_entity_fk):     1
+```
+
+**Proof B — Trigger attachment + enabled status:**
+```
+                  tgname                    |      tgrelid      | tgenabled
+--------------------------------------------+-------------------+-----------
+ trg_g017_pending_approvals_trade_entity_fk | pending_approvals | O
+(1 row)
+```
+tgrelid = `pending_approvals` ✅, tgenabled = `O` (enabled for origin + replica) ✅
+
+**Proof C — Function definition excerpt:**
+```
+CREATE OR REPLACE FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk()
+  RETURNS trigger
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_trade_exists BOOLEAN;
+BEGIN
+  -- Guard 1: Only validate when entity_type is 'TRADE'.
+```
+SECURITY DEFINER ✅, search_path=public ✅, RETURNS trigger ✅
+
+### Ledger Sync
+
+```
+pnpm -C server exec prisma migrate resolve --applied 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+→ Migration 20260307000000_g017_day4_pending_approvals_trade_fk_hardening marked as applied.
+```
+
+### Pending Migrations AFTER — 5 pending
+
+```
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+```
+
+`20260307000000_g017_day4_pending_approvals_trade_fk_hardening` removed from pending ✅
+
+### Next Steps (planning)
+
+- `20260306000000_g017_trades_domain`: trades + trade_events tables confirmed present in DB (GOVERNANCE-SYNC-014 existence proof); only ledger-sync needed — next TECS
+- `20260302000000_g021_maker_checker_core`, `20260303000000_g022_escalation_core`, `20260304000000_gatetest003_audit_logs_admin_select`, `20260305000000_g023_reasoning_logs`: each needs existence proof + apply/sync per TECS in timestamp order
+
+### Gap Register Update
+
+G-017 row updated: added commit `bdb9ab7` + **Day4 FK Hardening DB Applied ✅ (GOVERNANCE-SYNC-015, 2026-02-28)** with function/trigger proof, tgrelid, tgenabled, DO block PASS note, ledger sync confirmation.
