@@ -33,9 +33,7 @@
 --   DROP FUNCTION IF EXISTS public.g017_enforce_pending_approvals_trade_entity_fk();
 --
 -- ============================================================================
-
 BEGIN;
-
 -- ============================================================================
 -- §1: Trigger Function
 --
@@ -61,59 +59,41 @@ BEGIN;
 --   - entity_type = 'CERTIFICATION' → no check here (no FK table yet)
 --   - For all non-TRADE types the trigger simply returns NEW unchanged.
 -- ============================================================================
-
-CREATE OR REPLACE FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk()
-  RETURNS trigger
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path = public
-AS $$
-DECLARE
-  v_trade_exists BOOLEAN;
-BEGIN
-  -- ── Guard 1: Only validate when entity_type is 'TRADE'. ─────────────────
-  IF NEW.entity_type <> 'TRADE' THEN
-    RETURN NEW;
-  END IF;
-
-  -- ── Guard 2: Skip check when neither entity_id nor entity_type changed. ─
-  --   (On INSERT, TG_OP = 'INSERT' so OLD is NULL — always proceed.)
-  --   (On UPDATE, short-circuit if both columns are unchanged.)
-  IF TG_OP = 'UPDATE'
-     AND (NEW.entity_id IS NOT DISTINCT FROM OLD.entity_id)
-     AND (NEW.entity_type IS NOT DISTINCT FROM OLD.entity_type)
-  THEN
-    RETURN NEW;
-  END IF;
-
-  -- ── Referential check: does trades.id = NEW.entity_id exist? ────────────
-  --   SECURITY DEFINER + search_path = public ensures RLS on trades is
-  --   evaluated with the function owner's rights, not the session caller's,
-  --   so a tenant-scoped RLS context cannot hide a valid trade row.
-  SELECT EXISTS (
+CREATE OR REPLACE FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
+DECLARE v_trade_exists BOOLEAN;
+BEGIN -- ── Guard 1: Only validate when entity_type is 'TRADE'. ─────────────────
+IF NEW.entity_type <> 'TRADE' THEN RETURN NEW;
+END IF;
+-- ── Guard 2: Skip check when neither entity_id nor entity_type changed. ─
+--   (On INSERT, TG_OP = 'INSERT' so OLD is NULL — always proceed.)
+--   (On UPDATE, short-circuit if both columns are unchanged.)
+IF TG_OP = 'UPDATE'
+AND (
+  NEW.entity_id IS NOT DISTINCT
+  FROM OLD.entity_id
+)
+AND (
+  NEW.entity_type IS NOT DISTINCT
+  FROM OLD.entity_type
+) THEN RETURN NEW;
+END IF;
+-- ── Referential check: does trades.id = NEW.entity_id exist? ────────────
+--   SECURITY DEFINER + search_path = public ensures RLS on trades is
+--   evaluated with the function owner's rights, not the session caller's,
+--   so a tenant-scoped RLS context cannot hide a valid trade row.
+SELECT EXISTS (
     SELECT 1
     FROM public.trades t
     WHERE t.id = NEW.entity_id
   ) INTO v_trade_exists;
-
-  IF NOT v_trade_exists THEN
-    RAISE EXCEPTION
-      'G-017 FK_HARDEN_FAIL: pending_approvals TRADE entity_id does not reference trades.id — entity_id: %',
-      NEW.entity_id
-      USING ERRCODE = 'P0003';
-  END IF;
-
-  RETURN NEW;
+IF NOT v_trade_exists THEN RAISE EXCEPTION 'G-017 FK_HARDEN_FAIL: pending_approvals TRADE entity_id does not reference trades.id — entity_id: %',
+NEW.entity_id USING ERRCODE = 'P0003';
+END IF;
+RETURN NEW;
 END;
 $$;
-
-COMMENT ON FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk() IS
-  'G-017 Day 4 — Trigger function enforcing referential integrity for '
-  'pending_approvals rows whose entity_type = ''TRADE''. '
-  'Validates entity_id EXISTS in public.trades. '
-  'SECURITY DEFINER + search_path=public to bypass session RLS on trades. '
-  'Raises SQLSTATE P0003 on violation. Non-TRADE rows are passed through unchanged.';
-
+COMMENT ON FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk() IS 'G-017 Day 4 — Trigger function enforcing referential integrity for ' 'pending_approvals rows whose entity_type = ''TRADE''. ' 'Validates entity_id EXISTS in public.trades. ' 'SECURITY DEFINER + search_path=public to bypass session RLS on trades. ' 'Raises SQLSTATE P0003 on violation. Non-TRADE rows are passed through unchanged.';
 -- ============================================================================
 -- §2: Trigger
 --
@@ -127,23 +107,12 @@ COMMENT ON FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk() IS
 --     is inside the function) so the function body owns the conditional —
 --     this keeps the WHEN clause contract auditable in one place.
 -- ============================================================================
-
-DROP TRIGGER IF EXISTS trg_g017_pending_approvals_trade_entity_fk
-  ON public.pending_approvals;
-
-CREATE TRIGGER trg_g017_pending_approvals_trade_entity_fk
-  BEFORE INSERT OR UPDATE
-  ON public.pending_approvals
-  FOR EACH ROW
-  EXECUTE FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk();
-
-COMMENT ON TRIGGER trg_g017_pending_approvals_trade_entity_fk
-  ON public.pending_approvals IS
-  'G-017 Day 4 — Before-row trigger enforcing TRADE entity_id → trades.id '
-  'referential integrity on public.pending_approvals. '
-  'See function g017_enforce_pending_approvals_trade_entity_fk() for the '
-  'validation logic and SQLSTATE P0003 error contract.';
-
+DROP TRIGGER IF EXISTS trg_g017_pending_approvals_trade_entity_fk ON public.pending_approvals;
+CREATE TRIGGER trg_g017_pending_approvals_trade_entity_fk BEFORE
+INSERT
+  OR
+UPDATE ON public.pending_approvals FOR EACH ROW EXECUTE FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk();
+COMMENT ON TRIGGER trg_g017_pending_approvals_trade_entity_fk ON public.pending_approvals IS 'G-017 Day 4 — Before-row trigger enforcing TRADE entity_id → trades.id ' 'referential integrity on public.pending_approvals. ' 'See function g017_enforce_pending_approvals_trade_entity_fk() for the ' 'validation logic and SQLSTATE P0003 error contract.';
 -- ============================================================================
 -- §3: Post-Migration Verification (read-only DO block — no data written)
 --
@@ -157,106 +126,71 @@ COMMENT ON TRIGGER trg_g017_pending_approvals_trade_entity_fk
 --   d) public.pending_approvals table exists (sanity)
 --   e) public.trades table exists (sanity — our referential target)
 -- ============================================================================
-
 DO $$
-DECLARE
-  v_func_exists    BOOLEAN;
-  v_trigger_exists BOOLEAN;
-  v_trigger_enabled CHAR(1);
-  v_pa_exists      BOOLEAN;
-  v_trades_exists  BOOLEAN;
-BEGIN
-
-  -- (a) Function must exist in pg_proc
-  SELECT EXISTS (
+DECLARE v_func_exists BOOLEAN;
+v_trigger_exists BOOLEAN;
+v_trigger_enabled CHAR(1);
+v_pa_exists BOOLEAN;
+v_trades_exists BOOLEAN;
+BEGIN -- (a) Function must exist in pg_proc
+SELECT EXISTS (
     SELECT 1
     FROM pg_catalog.pg_proc p
-    JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+      JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public'
       AND p.proname = 'g017_enforce_pending_approvals_trade_entity_fk'
   ) INTO v_func_exists;
-
-  IF NOT v_func_exists THEN
-    RAISE EXCEPTION
-      'G-017 Day4 VERIFY FAIL: function public.g017_enforce_pending_approvals_trade_entity_fk() not found in pg_proc';
-  END IF;
-
-  RAISE NOTICE 'G-017 Day4 VERIFY: function g017_enforce_pending_approvals_trade_entity_fk EXISTS — OK';
-
-  -- (b) Trigger must exist in pg_trigger for public.pending_approvals
-  SELECT EXISTS (
+IF NOT v_func_exists THEN RAISE EXCEPTION 'G-017 Day4 VERIFY FAIL: function public.g017_enforce_pending_approvals_trade_entity_fk() not found in pg_proc';
+END IF;
+RAISE NOTICE 'G-017 Day4 VERIFY: function g017_enforce_pending_approvals_trade_entity_fk EXISTS — OK';
+-- (b) Trigger must exist in pg_trigger for public.pending_approvals
+SELECT EXISTS (
     SELECT 1
     FROM pg_catalog.pg_trigger t
-    JOIN pg_catalog.pg_class c ON c.oid = t.tgrelid
-    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_catalog.pg_class c ON c.oid = t.tgrelid
+      JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public'
-      AND c.relname  = 'pending_approvals'
-      AND t.tgname   = 'trg_g017_pending_approvals_trade_entity_fk'
+      AND c.relname = 'pending_approvals'
+      AND t.tgname = 'trg_g017_pending_approvals_trade_entity_fk'
   ) INTO v_trigger_exists;
-
-  IF NOT v_trigger_exists THEN
-    RAISE EXCEPTION
-      'G-017 Day4 VERIFY FAIL: trigger trg_g017_pending_approvals_trade_entity_fk on public.pending_approvals not found in pg_trigger';
-  END IF;
-
-  RAISE NOTICE 'G-017 Day4 VERIFY: trigger trg_g017_pending_approvals_trade_entity_fk EXISTS — OK';
-
-  -- (c) Trigger must be enabled (tgenabled = 'O': fires on origin + replica)
-  SELECT t.tgenabled
-  FROM pg_catalog.pg_trigger t
+IF NOT v_trigger_exists THEN RAISE EXCEPTION 'G-017 Day4 VERIFY FAIL: trigger trg_g017_pending_approvals_trade_entity_fk on public.pending_approvals not found in pg_trigger';
+END IF;
+RAISE NOTICE 'G-017 Day4 VERIFY: trigger trg_g017_pending_approvals_trade_entity_fk EXISTS — OK';
+-- (c) Trigger must be enabled (tgenabled = 'O': fires on origin + replica)
+SELECT t.tgenabled
+FROM pg_catalog.pg_trigger t
   JOIN pg_catalog.pg_class c ON c.oid = t.tgrelid
   JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-  WHERE n.nspname = 'public'
-    AND c.relname  = 'pending_approvals'
-    AND t.tgname   = 'trg_g017_pending_approvals_trade_entity_fk'
-  INTO v_trigger_enabled;
-
-  IF v_trigger_enabled IS DISTINCT FROM 'O' THEN
-    RAISE EXCEPTION
-      'G-017 Day4 VERIFY FAIL: trigger trg_g017_pending_approvals_trade_entity_fk is not enabled (tgenabled=%). Expected ''O''.',
-      v_trigger_enabled;
-  END IF;
-
-  RAISE NOTICE 'G-017 Day4 VERIFY: trigger tgenabled = ''O'' (enabled for origin) — OK';
-
-  -- (d) public.pending_approvals must exist
-  SELECT EXISTS (
+WHERE n.nspname = 'public'
+  AND c.relname = 'pending_approvals'
+  AND t.tgname = 'trg_g017_pending_approvals_trade_entity_fk' INTO v_trigger_enabled;
+IF v_trigger_enabled IS DISTINCT
+FROM 'O' THEN RAISE EXCEPTION 'G-017 Day4 VERIFY FAIL: trigger trg_g017_pending_approvals_trade_entity_fk is not enabled (tgenabled=%). Expected ''O''.',
+  v_trigger_enabled;
+END IF;
+RAISE NOTICE 'G-017 Day4 VERIFY: trigger tgenabled = ''O'' (enabled for origin) — OK';
+-- (d) public.pending_approvals must exist
+SELECT EXISTS (
     SELECT 1
     FROM information_schema.tables
     WHERE table_schema = 'public'
-      AND table_name   = 'pending_approvals'
+      AND table_name = 'pending_approvals'
   ) INTO v_pa_exists;
-
-  IF NOT v_pa_exists THEN
-    RAISE EXCEPTION
-      'G-017 Day4 VERIFY FAIL: public.pending_approvals table does not exist';
-  END IF;
-
-  RAISE NOTICE 'G-017 Day4 VERIFY: public.pending_approvals EXISTS — OK';
-
-  -- (e) public.trades must exist
-  SELECT EXISTS (
+IF NOT v_pa_exists THEN RAISE EXCEPTION 'G-017 Day4 VERIFY FAIL: public.pending_approvals table does not exist';
+END IF;
+RAISE NOTICE 'G-017 Day4 VERIFY: public.pending_approvals EXISTS — OK';
+-- (e) public.trades must exist
+SELECT EXISTS (
     SELECT 1
     FROM information_schema.tables
     WHERE table_schema = 'public'
-      AND table_name   = 'trades'
+      AND table_name = 'trades'
   ) INTO v_trades_exists;
-
-  IF NOT v_trades_exists THEN
-    RAISE EXCEPTION
-      'G-017 Day4 VERIFY FAIL: public.trades table does not exist — G-017 Day 1 migration must precede Day 4';
-  END IF;
-
-  RAISE NOTICE 'G-017 Day4 VERIFY: public.trades EXISTS — OK';
-
-  -- ── Summary ─────────────────────────────────────────────────────────────
-  RAISE NOTICE
-    'G-017 Day4 PASS: pending_approvals TRADE FK hardening installed — '
-    'function: g017_enforce_pending_approvals_trade_entity_fk, '
-    'trigger: trg_g017_pending_approvals_trade_entity_fk (BEFORE INSERT OR UPDATE), '
-    'SQLSTATE: P0003, SECURITY DEFINER, search_path=public';
-
+IF NOT v_trades_exists THEN RAISE EXCEPTION 'G-017 Day4 VERIFY FAIL: public.trades table does not exist — G-017 Day 1 migration must precede Day 4';
+END IF;
+RAISE NOTICE 'G-017 Day4 VERIFY: public.trades EXISTS — OK';
+-- ── Summary ─────────────────────────────────────────────────────────────
+RAISE NOTICE 'G-017 Day4 PASS: pending_approvals TRADE FK hardening installed -- function: g017_enforce_pending_approvals_trade_entity_fk, trigger: trg_g017_pending_approvals_trade_entity_fk (BEFORE INSERT OR UPDATE), SQLSTATE: P0003, SECURITY DEFINER, search_path=public';
 END;
 $$;
-
 COMMIT;
