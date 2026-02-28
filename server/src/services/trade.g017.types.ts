@@ -130,5 +130,7 @@ export type TradeTransitionResult =
       fromStateKey: string;
       toStateKey: string;
       requiredActors: ('MAKER' | 'CHECKER')[];
+      /** pending_approvals row id if MakerCheckerService was injected and succeeded. */
+      approvalId?: string;
     }
   | { status: 'ERROR'; code: TradeServiceErrorCode; message: string };

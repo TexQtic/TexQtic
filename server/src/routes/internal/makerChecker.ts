@@ -41,6 +41,7 @@ import { prisma } from '../../db/prisma.js';
 import { sendSuccess, sendError } from '../../utils/response.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { MakerCheckerService } from '../../services/makerChecker.service.js';
+import { EscalationService } from '../../services/escalation.service.js';
 import type { SignerActorType } from '../../services/makerChecker.types.js';
 
 // ─── Internal‐only header guard ───────────────────────────────────────────────
@@ -94,9 +95,12 @@ const adminQueueQuerySchema = z.object({
 
 // ─── Service factory ──────────────────────────────────────────────────────────
 
+// G-021 Fix C: inject EscalationService so verifyAndReplay() performs freeze
+// checks (D-022-D) before replaying APPROVED transitions through StateMachineService.
 function buildService(): MakerCheckerService {
-  const sm = new StateMachineService(prisma);
-  return new MakerCheckerService(prisma, sm);
+  const escalation = new EscalationService(prisma);
+  const sm = new StateMachineService(prisma, escalation);
+  return new MakerCheckerService(prisma, sm, escalation);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

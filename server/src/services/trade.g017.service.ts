@@ -50,9 +50,9 @@ export class TradeService {
     private readonly db: PrismaClient,
     private readonly stateMachine: StateMachineService,
     private readonly escalation: EscalationService,
-    // _makerChecker: optional injection; G-021 MC flows handled via SM PENDING_APPROVAL.
-    // Leading underscore: intentionally unused per noUnusedParameters convention.
-    _makerChecker?: MakerCheckerService,
+    // G-021 Fix A: makerChecker is now stored and used — creates pending_approvals row
+    // when StateMachineService returns PENDING_APPROVAL. Non-fatal if absent or throws.
+    private readonly makerChecker?: MakerCheckerService,
   ) {}
 
   // ─── Method 1: createTrade ──────────────────────────────────────────────────
@@ -406,12 +406,54 @@ export class TradeService {
         // Non-fatal: event write failure must not block PENDING_APPROVAL return.
       }
 
+      // G-021 Fix A: Create pending_approvals row when MakerCheckerService is injected.
+      // Non-fatal: if MC write fails, PENDING_APPROVAL status is still returned.
+      // approvalId remains undefined — caller handles absent approvalId gracefully.
+      let approvalId: string | undefined;
+      if (this.makerChecker) {
+        try {
+          const frozenPayload: Record<string, unknown> = {
+            tradeId: trade.id,
+            toStateKey: input.toStateKey,
+            actorType: input.actorType,
+            actorRole: input.actorRole,
+            reason: input.reason,
+            aiTriggered: input.aiTriggered ?? false,
+          };
+
+          const mcResult = await this.makerChecker.createApprovalRequest({
+            orgId:                input.tenantId,
+            entityType:           'TRADE',
+            entityId:             trade.id,
+            fromStateKey:         fromState.stateKey,
+            toStateKey:           input.toStateKey,
+            requestedByActorType: input.actorType,
+            requestedByUserId:    input.actorUserId ?? null,
+            requestedByAdminId:   input.actorAdminId ?? null,
+            requestedByRole:      input.actorRole,
+            requestReason:        input.reason,
+            frozenPayload,
+            severityLevel:        input.escalationLevel ?? 1,
+            aiTriggered:          input.aiTriggered ?? false,
+            impersonationId:      input.impersonationId ?? null,
+            requestId:            input.requestId ?? null,
+          });
+
+          if (mcResult.status === 'CREATED') {
+            approvalId = mcResult.approvalId;
+          }
+        } catch {
+          // MakerChecker write failure is non-fatal.
+        }
+      }
+
       return {
         status: 'PENDING_APPROVAL',
         tradeId: trade.id,
         fromStateKey: fromState.stateKey,
         toStateKey: input.toStateKey,
         requiredActors: smResult.requiredActors,
+        approvalId,
       };
     }
 

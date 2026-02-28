@@ -21,9 +21,16 @@ import { randomUUID } from 'node:crypto';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
+import { writeAuditLog } from '../../lib/auditLog.js';
 import { EscrowService } from '../../services/escrow.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
+import { MakerCheckerService } from '../../services/makerChecker.service.js';
+import {
+  createEscrowTransitionAppliedAudit,
+  createEscrowTransitionPendingAudit,
+  createEscrowTransitionRejectedAudit,
+} from '../../utils/audit.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -81,6 +88,16 @@ const listQuerySchema = z.object({
 });
 
 const escrowIdParamSchema = z.object({ escrowId: uuidSchema });
+
+// G-021 Fix B: transition body schema mirrors tenant plane pattern
+const transitionEscrowBodySchema = z.object({
+  /** Target org for RLS context — admin provides explicitly. */
+  orgId:       uuidSchema,
+  toStateKey:  z.string().min(1).max(100).trim().toUpperCase(),
+  reason:      z.string().min(1).max(2000).trim(),
+  actorRole:   z.string().min(1).max(100).trim(),
+  aiTriggered: z.boolean().optional().default(false),
+});
 
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
@@ -185,6 +202,133 @@ const controlEscrowRoutes: FastifyPluginAsync = async fastify => {
       } catch (err) {
         fastify.log.error({ err }, '[G-018] GET /control/escrows/:escrowId error');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to load escrow account', 500);
+      }
+    },
+  );
+
+  // ─── POST /api/control/escrows/:escrowId/transition ────────────────────────────────────
+  /**
+   * G-021 Fix B — Admin-initiated escrow lifecycle transition (control plane).
+   * Mirrors tenant plane pattern: MakerCheckerService is injected so that
+   * PENDING_APPROVAL transitions create pending_approvals rows.
+   * D-022-B: Freeze gate enforced by EscrowService.transitionEscrow().
+   * Audit emitted atomically in the same Prisma transaction.
+   */
+  fastify.post(
+    '/:escrowId/transition',
+    async (request, reply) => {
+      const adminId = request.adminId ?? ADMIN_SENTINEL_ID;
+
+      const paramResult = escrowIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { escrowId } = paramResult.data;
+
+      const bodyResult = transitionEscrowBodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+      const body = bodyResult.data;
+
+      try {
+        const result = await withEscrowAdminContext(body.orgId, adminId, async tx => {
+          const txBound       = makeTxBoundPrisma(tx);
+          const escalationSvc = new EscalationService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          // G-021 Fix B: inject MC so EscrowService creates pending_approvals on PENDING_APPROVAL
+          const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
+
+          const transResult = await escrowSvc.transitionEscrow({
+            escrowId,
+            tenantId:     body.orgId,   // admin provides org explicitly; service re-validates
+            toStateKey:   body.toStateKey,
+            actorType:    'PLATFORM_ADMIN' as const,
+            actorAdminId: adminId,
+            actorRole:    body.actorRole,
+            reason:       body.reason,
+            aiTriggered:  body.aiTriggered,
+          });
+
+          // Emit typed audit based on outcome
+          if (transResult.status === 'APPLIED') {
+            await writeAuditLog(
+              tx as unknown as PrismaClient,
+              createEscrowTransitionAppliedAudit({
+                realm:        'ADMIN',
+                tenantId:     body.orgId,
+                actorType:    'ADMIN',
+                actorId:      adminId,
+                escrowId,
+                fromStateKey: transResult.fromStateKey,
+                toStateKey:   transResult.toStateKey,
+                transitionId: transResult.transitionId ?? null,
+                reason:       body.reason,
+              }),
+            );
+          } else if (transResult.status === 'PENDING_APPROVAL') {
+            await writeAuditLog(
+              tx as unknown as PrismaClient,
+              createEscrowTransitionPendingAudit({
+                realm:          'ADMIN',
+                tenantId:       body.orgId,
+                actorType:      'ADMIN',
+                actorId:        adminId,
+                escrowId,
+                fromStateKey:   transResult.fromStateKey,
+                toStateKey:     body.toStateKey,
+                requiredActors: transResult.requiredActors ?? [],
+                reason:         body.reason,
+              }),
+            );
+          } else if (transResult.status === 'ERROR') {
+            await writeAuditLog(
+              tx as unknown as PrismaClient,
+              createEscrowTransitionRejectedAudit({
+                realm:        'ADMIN',
+                tenantId:     body.orgId,
+                actorType:    'ADMIN',
+                actorId:      adminId,
+                escrowId,
+                toStateKey:   body.toStateKey,
+                errorCode:    transResult.code,
+                errorMessage: transResult.message,
+                reason:       body.reason,
+              }),
+            );
+          }
+
+          return transResult;
+        });
+
+        if (result.status === 'ERROR') {
+          const statusCode =
+            result.code === 'ESCROW_NOT_FOUND'   ? 404
+            : result.code === 'ENTITY_FROZEN'    ? 423
+            : 422;
+          return sendError(reply, result.code, result.message, statusCode);
+        }
+
+        if (result.status === 'APPLIED') {
+          return sendSuccess(reply, {
+            status:       result.status,
+            fromStateKey: result.fromStateKey,
+            toStateKey:   result.toStateKey,
+            transitionId: result.transitionId ?? null,
+          });
+        }
+
+        // PENDING_APPROVAL
+        return sendSuccess(reply, {
+          status:         result.status,
+          fromStateKey:   result.fromStateKey,
+          requiredActors: result.requiredActors ?? [],
+          approvalId:     result.approvalId ?? null,
+        }, 202);
+      } catch (err) {
+        fastify.log.error({ err }, '[G-018] POST /control/escrows/:escrowId/transition error');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to transition escrow account', 500);
       }
     },
   );

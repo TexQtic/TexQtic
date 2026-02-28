@@ -57,6 +57,18 @@ function makeEscalation() {
   };
 }
 
+// ── G-021 MakerCheckerService mock ────────────────────────────────────────────
+
+function makeMakerChecker() {
+  return {
+    createApprovalRequest: vi.fn().mockResolvedValue({
+      status: 'CREATED' as const,
+      approvalId: 'approval-uuid-g021-000000000001',
+      expiresAt: new Date(),
+    }),
+  };
+}
+
 // ─── Shared fixtures ──────────────────────────────────────────────────────────
 
 const DRAFT_STATE = { id: 'draft-state-uuid-0000-000000000001' };
@@ -372,4 +384,59 @@ describe('TradeService', () => {
       expect(err.message).toContain('unique constraint violation');
     },
   );
+
+  // ── G-021 tests (T1, T2) ──────────────────────────────────────────────────
+
+  it('T-G021-1: transitionTrade PENDING_APPROVAL with MC injected — creates approvalId', async () => {
+    const mc = makeMakerChecker();
+    const svcWithMc = new TradeService(
+      db as never,
+      sm as never,
+      esc as never,
+      mc as never,
+    );
+
+    (db.trade.findFirst as Mock).mockResolvedValueOnce(TRADE_ROW);
+    (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce({ stateKey: 'DRAFT' });
+    (db.tradeEvent.create as Mock).mockResolvedValue({ id: 'event-pending-001' });
+    sm.transition.mockResolvedValueOnce(SM_PENDING);
+
+    const result = await svcWithMc.transitionTrade(VALID_TRANSITION_INPUT);
+
+    // Status must be PENDING_APPROVAL
+    expect(result.status).toBe('PENDING_APPROVAL');
+    const r = result as Extract<typeof result, { status: 'PENDING_APPROVAL' }>;
+    // approvalId must be set (MC injected + createApprovalRequest returned CREATED)
+    expect(r.approvalId).toBe('approval-uuid-g021-000000000001');
+    // MC must have been called with correct entity data
+    expect(mc.createApprovalRequest).toHaveBeenCalledOnce();
+    expect(mc.createApprovalRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'TRADE',
+        entityId:   TRADE_ROW.id,
+        orgId:      TRADE_ROW.tenantId,
+        fromStateKey: 'DRAFT',
+      }),
+    );
+    // trade.update MUST NOT have been called (no lifecycle change for PENDING_APPROVAL)
+    expect(db.trade.update).not.toHaveBeenCalled();
+  });
+
+  it('T-G021-2: transitionTrade PENDING_APPROVAL without MC injection — returns PENDING_APPROVAL, approvalId absent', async () => {
+    // svc constructed without mcSvc (in beforeEach) — documented fallback
+    (db.trade.findFirst as Mock).mockResolvedValueOnce(TRADE_ROW);
+    (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce({ stateKey: 'DRAFT' });
+    (db.tradeEvent.create as Mock).mockResolvedValue({ id: 'event-pending-002' });
+    sm.transition.mockResolvedValueOnce(SM_PENDING);
+
+    const result = await svc.transitionTrade(VALID_TRANSITION_INPUT);
+
+    // Status must still be PENDING_APPROVAL
+    expect(result.status).toBe('PENDING_APPROVAL');
+    const r = result as Extract<typeof result, { status: 'PENDING_APPROVAL' }>;
+    // Without MC, approvalId must be undefined (no pending_approvals row created)
+    expect(r.approvalId).toBeUndefined();
+    // trade.update MUST NOT have been called
+    expect(db.trade.update).not.toHaveBeenCalled();
+  });
 });
