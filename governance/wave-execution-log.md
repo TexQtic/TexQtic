@@ -3589,3 +3589,83 @@ G-020 row updated: commit `61d1a96` added; description expanded to include **Run
 | Sync # | Gap / Area | Type |
 |--------|-----------|------|
 | 021 | G-020 Runtime Enforcement Atomicity | impl commit |
+
+
+---
+
+## GOVERNANCE-SYNC-022 — G-021 Runtime Enforcement CLOSED (2026-02-28)
+
+### Context / Symptom
+
+Three runtime enforcement gaps identified post-G-021 schema closure:
+
+1. **Trade PENDING_APPROVAL dead-end**: _makerChecker underscore param in TradeService discarded injection — no pending_approvals row written on PENDING_APPROVAL.
+2. **Control-plane Escrow dead-end**: Control-plane escrow route had only GET endpoints; no transition endpoint existed to create pending_approvals rows via admin path.
+3. **Replay freeze skipped**: uildService() in internal makerChecker route omitted EscalationService — erifyAndReplay() freeze checks never ran (guarded by if (this.escalationService)).
+
+### Root Cause Summary
+
+| Gap | Root Cause |
+|-----|-----------|
+| Fix A (Trade MC) | _makerChecker underscore pattern discarded; no createApprovalRequest() call in PENDING_APPROVAL block |
+| Fix A2 (Trade routes) | Tenant + control trade routes passed only 3 args to TradeService — no MC 4th arg |
+| Fix B (CP Escrow) | Control-plane escrow route had no transition endpoint at all |
+| Fix C (Replay route) | uildService() omitted EscalationService — erifyAndReplay() freeze guard never activated |
+
+### Fix Summary
+
+**Fix A** — TradeService constructor: _makerChecker renamed to private readonly makerChecker; PENDING_APPROVAL block calls createApprovalRequest(); pprovalId returned in result; 	rade.g017.types.ts gains pprovalId?: string.
+
+**Fix A2** — Both trade routes (tenant + control) now construct MakerCheckerService and pass as 4th arg to TradeService; PENDING_APPROVAL response surfaces pprovalId.
+
+**Fix B** — outes/control/escrow.g018.ts gains POST /:escrowId/transition endpoint with MakerCheckerService injected into EscrowService; mirrors tenant escrow pattern; typed audit emitted atomically.
+
+**Fix C** — outes/internal/makerChecker.ts uildService() now constructs EscalationService and injects into both StateMachineService and MakerCheckerService.
+
+### Proof Table
+
+| Assertion | Result |
+|-----------|--------|
+| trade creates pending approval when MC injected (T-G021-1) | ? |
+| trade PENDING_APPROVAL without MC returns status + no approvalId (T-G021-2) | ? |
+| replay denied when entity frozen (T-G021-3) | ? |
+| replay proceeds when entity not frozen (T-G021-3b) | ? |
+| all tests pass (19/19) | ? |
+
+### Gates Output Summary
+
+| Gate | Result |
+|------|--------|
+| pnpm -C server run typecheck | EXIT 0 ? |
+| pnpm -C server run lint | 0 errors (86 warnings, all pre-existing) ? |
+| itest run trade.g017.test.ts makerChecker.g021.test.ts | 19/19 passed ? |
+
+### Pending Migrations Report
+
+| Checkpoint | Status |
+|-----------|--------|
+| BEFORE (preflight) | 57 migrations, "Database schema is up to date!" — 0 pending ? |
+| AFTER (post-impl) | 57 migrations, "Database schema is up to date!" — 0 pending ? |
+
+No schema changes. No migrations added.
+
+### Files Changed (Allowlist)
+
+| File | Change Type |
+|------|------------|
+| server/src/services/trade.g017.service.ts | MODIFIED — Fix A |
+| server/src/services/trade.g017.types.ts | MODIFIED — approvalId? added |
+| server/src/routes/tenant/trades.g017.ts | MODIFIED — Fix A2 |
+| server/src/routes/control/trades.g017.ts | MODIFIED — Fix A2 |
+| server/src/routes/control/escrow.g018.ts | MODIFIED — Fix B |
+| server/src/routes/internal/makerChecker.ts | MODIFIED — Fix C |
+| server/src/services/trade.g017.test.ts | MODIFIED — T-G021-1 + T-G021-2 |
+| server/src/services/makerChecker.g021.test.ts | CREATED — T-G021-3 + T-G021-3b |
+
+### Gap Register Update
+
+G-021 row updated: commit `9c15026` added; **Runtime Enforcement Wiring CLOSED (GOVERNANCE-SYNC-022, 2026-02-28)**; dependency on G-020 / G-022 integration noted; trade PENDING_APPROVAL dead-end prevention recorded.
+
+| Sync # | Gap / Area | Type |
+|--------|-----------|------|
+| 022 | G-021 Runtime Enforcement Wiring | impl commit |
