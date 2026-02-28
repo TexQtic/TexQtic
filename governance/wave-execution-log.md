@@ -3669,3 +3669,41 @@ G-021 row updated: commit `9c15026` added; **Runtime Enforcement Wiring CLOSED (
 | Sync # | Gap / Area | Type |
 |--------|-----------|------|
 | 022 | G-021 Runtime Enforcement Wiring | impl commit |
+
+---
+
+## GOVERNANCE-SYNC-023 -- G-022 Runtime Enforcement CLOSED (CERTIFICATION freeze wiring) (2026-02-28)
+
+### Context / Symptom
+GAP-G022-01: tenant certifications route constructed StateMachineService at 5 handler sites without EscalationService -- SM Step 3.5 freeze checks silently skipped for all CERTIFICATION operations.
+
+### Stop-Loss: GAP-G022-02 (Registered, Not Fixed Here)
+'CERTIFICATION' is absent from EscalationEntityType union and DB escalation_events CHECK constraint. Entity-level freeze for individual CERTIFICATION rows cannot be created. T-G022-CERT-ENTITY-FROZEN deferred. GAP-G022-02 registered for a follow-up TECS (add CERTIFICATION to enum + DB migration).
+
+### Root Cause
+StateMachineService accepts escalationService as optional 2nd constructor arg (backward compat). Without injection, Step 3.5 freeze checks are silently skipped.
+
+### Fix Summary
+server/src/routes/tenant/certifications.g019.ts: Added EscalationService import. All 5 SM instantiation sites (createCertification, listCertifications, getCertification, updateCertification, transitionCertification) changed to construct txBound + EscalationService + SM with escalation injected. Pattern mirrors trade/escrow routes.
+
+### Tests
+| T-G022-CERT-ORG-FROZEN | org freeze blocks CERTIFICATION via SM | PASS |
+| T-G022-CERT-NOT-FROZEN | no freeze -> SM proceeds to CERTIFICATION_LOG_DEFERRED | PASS |
+
+### Gates
+| typecheck | EXIT 0 |
+| lint | 0 errors (86 warnings pre-existing) |
+| vitest | 2/2 PASS |
+
+### Pending Migrations
+| BEFORE | 0 (57 migrations, "Database schema is up to date!") |
+| AFTER  | 0 (unchanged) |
+
+### Files Changed
+| server/src/routes/tenant/certifications.g019.ts | MODIFIED -- GAP-G022-01 fix |
+| server/src/services/certification.g022.freeze.test.ts | CREATED -- T-G022-CERT-ORG-FROZEN + T-G022-CERT-NOT-FROZEN |
+
+### Gap Register Update
+G-022 row updated: commit e8d0811 added; CERTIFICATION freeze wiring CLOSED (GOVERNANCE-SYNC-023, 2026-02-28); GAP-G022-02 registered.
+
+| 023 | G-022 Certification Freeze Wiring | impl commit e8d0811 |
