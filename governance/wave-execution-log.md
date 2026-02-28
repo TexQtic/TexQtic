@@ -3280,3 +3280,107 @@ All proofs GREEN:
 ### Gap Register Update
 
 G-022 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-018, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 4 RLS policies, 4 explicit indexes, D-022-A severity upgrade trigger, D-022-B org freeze via entity_type=ORG design confirmed.
+
+---
+
+## GOVERNANCE-SYNC-019 — GATE-TEST-003 audit_logs Admin Select Ledger Sync (Resolve-Only)
+
+**Date:** 2026-02-28
+**Migration:** `20260304000000_gatetest003_audit_logs_admin_select`
+**Path:** Resolve-only (all DB objects confirmed present out-of-band)
+**Environment:** Supabase dev (`aws-1-ap-northeast-1.pooler.supabase.com:5432`)
+
+### Static Migration Scan
+
+Migration file `server/prisma/migrations/20260304000000_gatetest003_audit_logs_admin_select/migration.sql` (183 lines) fully read.
+
+- Wrapped in explicit `BEGIN; ... COMMIT;` (not Prisma auto-transaction)
+- **No pre-flight EXCEPTION guard** — uses `DROP POLICY IF EXISTS` + `CREATE POLICY` (idempotent DDL)
+- STEP 1: Drops + recreates `audit_logs_guard` RESTRICTIVE policy adding `OR current_setting('app.is_admin', true) = 'true'` predicate
+- STEP 2: Drops + recreates `audit_logs_admin_select` PERMISSIVE SELECT policy (`tenant_id IS NULL` rows, admin context only)
+- STEP 3 VERIFY DO block: all `RAISE EXCEPTION` use format-string + var pattern — **parse-safe ✅**; final `RAISE NOTICE` has single format string with `%` params — **parse-safe ✅**
+- **No adjacent string literal `RAISE NOTICE 'a' 'b'` hazards. No non-ASCII in RAISE strings. Migration parse-safe — no file patch required.**
+
+### Pending Migrations BEFORE — 2 pending
+
+```
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+```
+
+### DB Existence Proof (BEFORE resolve)
+
+**Proof — audit_logs RLS flags + policies + guard is_admin predicate + admin_select count:**
+```
+  relname   | rls_on | force_rls
+------------+--------+-----------
+ audit_logs | t      | t
+(1 row)
+
+        policyname         |  cmd   | permissive
+---------------------------+--------+-------------
+ audit_logs_admin_select   | SELECT | PERMISSIVE
+ audit_logs_guard          | ALL    | RESTRICTIVE
+ audit_logs_insert_unified | INSERT | PERMISSIVE
+ audit_logs_no_delete      | DELETE | PERMISSIVE
+ audit_logs_no_update      | UPDATE | PERMISSIVE
+ audit_logs_select_unified | SELECT | PERMISSIVE
+(6 rows)
+
+    policyname    | has_admin_predicate
+------------------+---------------------
+ audit_logs_guard | t
+(1 row)
+
+ admin_select_cnt
+------------------
+ 1
+(1 row)
+```
+
+- `audit_logs_admin_select` PERMISSIVE SELECT ✅ present
+- `audit_logs_guard` RESTRICTIVE with `has_admin_predicate=t` ✅
+- `admin_select_cnt = 1` ✅
+- 2 PERMISSIVE SELECT policies (`audit_logs_select_unified` + `audit_logs_admin_select`) ✅ matches VERIFY DO check 5
+
+**Decision: resolve-only (all policy objects present and correct).**
+
+### Ledger Sync
+
+```
+pnpm exec prisma migrate resolve --applied 20260304000000_gatetest003_audit_logs_admin_select
+→ Migration 20260304000000_gatetest003_audit_logs_admin_select marked as applied.
+```
+
+### Post-Apply Proofs
+
+**RLS flags (from existence proof above):** `rls_on=t, force_rls=t` ✅
+
+**Policies:** 6 total on `audit_logs`:
+- `audit_logs_guard` — RESTRICTIVE ALL (incl. is_admin predicate) ✅
+- `audit_logs_select_unified` — PERMISSIVE SELECT ✅
+- `audit_logs_admin_select` — PERMISSIVE SELECT (admin, tenant_id IS NULL) ✅
+- `audit_logs_insert_unified` — PERMISSIVE INSERT ✅
+- `audit_logs_no_update` — PERMISSIVE UPDATE ✅
+- `audit_logs_no_delete` — PERMISSIVE DELETE ✅
+
+**Row count:**
+```
+ audit_logs_rows
+-----------------
+ 55
+(1 row)
+```
+55 live rows ✅ (non-vacuous — audit events have been generated in dev environment)
+
+### Pending Migrations AFTER — 1 pending
+
+```
+20260305000000_g023_reasoning_logs
+```
+
+`20260304000000_gatetest003_audit_logs_admin_select` removed from pending ✅
+
+### Gap Register Update
+
+GATE-TEST-003 new row added to gap-register.md (between G-022 and G-023 in Schema Domain Buildout section): **DB Applied ✅ (GOVERNANCE-SYNC-019, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 6 policies on audit_logs, has_admin_predicate=t, 2 PERMISSIVE SELECT policies matching VERIFY check, 55 live audit rows.
