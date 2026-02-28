@@ -26,6 +26,7 @@ import { EscrowService } from '../../services/escrow.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { MakerCheckerService } from '../../services/makerChecker.service.js';
+import { SanctionsService } from '../../services/sanctions.service.js';
 import {
   createEscrowTransitionAppliedAudit,
   createEscrowTransitionPendingAudit,
@@ -127,8 +128,9 @@ const controlEscrowRoutes: FastifyPluginAsync = async fastify => {
           async tx => {
             const txBound       = makeTxBoundPrisma(tx);
             const escalationSvc = new EscalationService(txBound);
-            const smSvc         = new StateMachineService(txBound, escalationSvc);
-            const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc);
+            const sanctionsSvc  = new SanctionsService(txBound);
+            const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
+            const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
 
             return escrowSvc.listEscrowAccounts({
               tenantId: query.tenantId,   // undefined → cross-tenant admin list
@@ -181,8 +183,9 @@ const controlEscrowRoutes: FastifyPluginAsync = async fastify => {
           async tx => {
             const txBound       = makeTxBoundPrisma(tx);
             const escalationSvc = new EscalationService(txBound);
-            const smSvc         = new StateMachineService(txBound, escalationSvc);
-            const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc);
+            const sanctionsSvc  = new SanctionsService(txBound);
+            const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
+            const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
 
             // No tenantId passed → cross-tenant admin access (admin bypass in effect)
             return escrowSvc.getEscrowAccountDetail(escrowId);
@@ -235,10 +238,11 @@ const controlEscrowRoutes: FastifyPluginAsync = async fastify => {
         const result = await withEscrowAdminContext(body.orgId, adminId, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           // G-021 Fix B: inject MC so EscrowService creates pending_approvals on PENDING_APPROVAL
           const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
 
           const transResult = await escrowSvc.transitionEscrow({
             escrowId,

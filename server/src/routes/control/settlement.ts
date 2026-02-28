@@ -48,6 +48,7 @@ import { TradeService } from '../../services/trade.g017.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { MakerCheckerService } from '../../services/makerChecker.service.js';
+import { SanctionsService } from '../../services/sanctions.service.js';
 import {
   SettlementService,
   type WriteAuditLogFn,
@@ -190,10 +191,11 @@ const controlSettlementRoutes: FastifyPluginAsync = async fastify => {
         const result = await withSettlementAdminContext(orgId, adminId, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
-          const tradeSvc      = new TradeService(txBound, smSvc, escalationSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
+          const tradeSvc      = new TradeService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
           const boundAudit: WriteAuditLogFn = (db, entry) => writeAuditLog(db, entry);
           const settlementSvc = new SettlementService(
             txBound, tradeSvc, escrowSvc, escalationSvc, boundAudit,
@@ -252,10 +254,11 @@ const controlSettlementRoutes: FastifyPluginAsync = async fastify => {
         const result = await withSettlementAdminContext(body.tenantId, adminId, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
-          const tradeSvc      = new TradeService(txBound, smSvc, escalationSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
+          const tradeSvc      = new TradeService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
           const boundAudit: WriteAuditLogFn = (db, entry) => writeAuditLog(db, entry);
           const settlementSvc = new SettlementService(
             txBound, tradeSvc, escrowSvc, escalationSvc, boundAudit,

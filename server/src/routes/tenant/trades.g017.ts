@@ -33,6 +33,7 @@ import { TradeService } from '../../services/trade.g017.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { MakerCheckerService } from '../../services/makerChecker.service.js';
+import { SanctionsService } from '../../services/sanctions.service.js';
 import {
   createTradeCreatedAudit,
   createTradeTransitionAppliedAudit,
@@ -124,8 +125,9 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound         = makeTxBoundPrisma(tx);
           const escalationSvc   = new EscalationService(txBound);
-          const smSvc           = new StateMachineService(txBound, escalationSvc);
-          const tradeSvc        = new TradeService(txBound, smSvc, escalationSvc);
+          const sanctionsSvc    = new SanctionsService(txBound);
+          const smSvc           = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
+          const tradeSvc        = new TradeService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
 
           const createResult = await tradeSvc.createTrade({
             tenantId:        dbContext.orgId,   // D-017-A: from JWT only
@@ -215,10 +217,11 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound         = makeTxBoundPrisma(tx);
           const escalationSvc   = new EscalationService(txBound);
-          const smSvc           = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc    = new SanctionsService(txBound);
+          const smSvc           = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           // G-021 Fix A2: inject MC so TradeService creates pending_approvals on PENDING_APPROVAL
           const mcSvc           = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const tradeSvc        = new TradeService(txBound, smSvc, escalationSvc, mcSvc);
+          const tradeSvc        = new TradeService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
 
           const transResult = await tradeSvc.transitionTrade({
             tradeId,

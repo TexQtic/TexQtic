@@ -32,6 +32,7 @@ import { EscrowService } from '../../services/escrow.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { MakerCheckerService } from '../../services/makerChecker.service.js';
+import { SanctionsService } from '../../services/sanctions.service.js';
 import {
   createEscrowCreatedAudit,
   createEscrowLedgerEntryRecordedAudit,
@@ -133,9 +134,10 @@ const tenantEscrowRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
 
           const createResult = await escrowSvc.createEscrowAccount({
             tenantId:        dbContext.orgId,   // D-017-A: from JWT only
@@ -215,9 +217,10 @@ const tenantEscrowRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
 
           const txResult = await escrowSvc.recordTransaction({
             tenantId:        dbContext.orgId,   // D-017-A: from JWT only
@@ -316,9 +319,10 @@ const tenantEscrowRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
           const mcSvc         = new MakerCheckerService(txBound, smSvc, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, mcSvc, sanctionsSvc);
 
           const transResult = await escrowSvc.transitionEscrow({
             escrowId,
@@ -436,8 +440,9 @@ const tenantEscrowRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
 
           return escrowSvc.listEscrowAccounts({
             tenantId: dbContext.orgId,
@@ -489,8 +494,9 @@ const tenantEscrowRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const txBound       = makeTxBoundPrisma(tx);
           const escalationSvc = new EscalationService(txBound);
-          const smSvc         = new StateMachineService(txBound, escalationSvc);
-          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc);
+          const sanctionsSvc  = new SanctionsService(txBound);
+          const smSvc         = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
+          const escrowSvc     = new EscrowService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
 
           return escrowSvc.getEscrowAccountDetail(escrowId, dbContext.orgId);
         });

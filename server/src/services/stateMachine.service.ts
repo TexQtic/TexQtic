@@ -38,6 +38,8 @@ import {
 } from './stateMachine.guardrails.js';
 import type { EscalationService } from './escalation.service.js';
 import { GovError } from './escalation.types.js';
+import type { SanctionsService } from './sanctions.service.js';
+import { SanctionBlockError } from './sanctions.service.js';
 
 // ─── UUID Validation ──────────────────────────────────────────────────────────
 
@@ -64,10 +66,15 @@ export class StateMachineService {
    * @param escalationService - EscalationService (optional). When provided, freeze checks
    *                            run before every transition (G-022 Gate D integration).
    *                            When null/undefined, freeze checks are skipped (backward compat).
+   * @param sanctionsService  - SanctionsService (optional, G-024). When provided, org-level
+   *                            and entity-level sanction checks run BEFORE escalation freeze
+   *                            checks (step 3.5a/b). When null/undefined, sanction checks
+   *                            are skipped (backward compat). Should be injected in production.
    */
   constructor(
     private readonly db: PrismaClient,
     private readonly escalationService?: EscalationService | null,
+    private readonly sanctionsService?: SanctionsService | null,
   ) {}
 
   /**
@@ -127,7 +134,26 @@ export class StateMachineService {
       throw err; // unexpected — re-throw
     }
 
-    // ── Step 3.5: G-022 Freeze Checks (precondition hooks) ───────────────────
+    // ── Step 3.5a: G-024 Sanctions Checks (highest-priority precondition) ─
+    // If SanctionsService is injected, run org-level and entity-level sanction checks
+    // BEFORE escalation freeze checks. SanctionBlockError is thrown on violation.
+    // Uses SECURITY DEFINER DB functions (bypass RLS) — runs in the active transaction.
+    if (this.sanctionsService) {
+      try {
+        await this.sanctionsService.checkOrgSanction(req.orgId);
+        await this.sanctionsService.checkEntitySanction(req.entityType, req.entityId);
+      } catch (err) {
+        if (err instanceof SanctionBlockError) {
+          return denied(
+            'TRANSITION_NOT_PERMITTED',
+            `G-024 Sanction: ${err.message}`,
+          );
+        }
+        throw err; // unexpected DB error — re-throw
+      }
+    }
+
+    // ── Step 3.5b: G-022 Freeze Checks (precondition hooks) ─────────────
     // If EscalationService is injected, run org-level and entity-level freeze checks.
     // Both checks throw GovError if a freeze is active.
     // This runs BEFORE any DB read/write — cheap pre-condition guard.

@@ -29,6 +29,7 @@ import { writeAuditLog } from '../../lib/auditLog.js';
 import { CertificationService } from '../../services/certification.g019.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
+import { SanctionsService } from '../../services/sanctions.service.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -119,9 +120,11 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
       return withDbContext(prisma, dbContext, async tx => {
         const txBound = makeTxBoundPrisma(tx);
         const escalationSvc = new EscalationService(txBound);
+        const sanctionsSvc  = new SanctionsService(txBound);
         const svc = new CertificationService(
           txBound,
-          new StateMachineService(txBound, escalationSvc),
+          new StateMachineService(txBound, escalationSvc, sanctionsSvc),
+          sanctionsSvc,
         );
 
         const result = await svc.createCertification({
@@ -190,9 +193,11 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
       return withDbContext(prisma, dbContext, async tx => {
         const txBound = makeTxBoundPrisma(tx);
         const escalationSvc = new EscalationService(txBound);
+        const sanctionsSvc  = new SanctionsService(txBound);
         const svc = new CertificationService(
           txBound,
-          new StateMachineService(txBound, escalationSvc),
+          new StateMachineService(txBound, escalationSvc, sanctionsSvc),
+          sanctionsSvc,
         );
 
         const result = await svc.listCertifications(dbContext.orgId, {
@@ -237,9 +242,11 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
       return withDbContext(prisma, dbContext, async tx => {
         const txBound = makeTxBoundPrisma(tx);
         const escalationSvc = new EscalationService(txBound);
+        const sanctionsSvc  = new SanctionsService(txBound);
         const svc = new CertificationService(
           txBound,
-          new StateMachineService(txBound, escalationSvc),
+          new StateMachineService(txBound, escalationSvc, sanctionsSvc),
+          sanctionsSvc,
         );
 
         const result = await svc.getCertification(id, dbContext.orgId);
@@ -288,9 +295,11 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
       return withDbContext(prisma, dbContext, async tx => {
         const txBound = makeTxBoundPrisma(tx);
         const escalationSvc = new EscalationService(txBound);
+        const sanctionsSvc  = new SanctionsService(txBound);
         const svc = new CertificationService(
           txBound,
-          new StateMachineService(txBound, escalationSvc),
+          new StateMachineService(txBound, escalationSvc, sanctionsSvc),
+          sanctionsSvc,
         );
 
         const result = await svc.updateCertification({
@@ -364,9 +373,11 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
       return withDbContext(prisma, dbContext, async tx => {
         const txBound = makeTxBoundPrisma(tx);
         const escalationSvc = new EscalationService(txBound);
+        const sanctionsSvc  = new SanctionsService(txBound);
         const svc = new CertificationService(
           txBound,
-          new StateMachineService(txBound, escalationSvc),
+          new StateMachineService(txBound, escalationSvc, sanctionsSvc),
+          sanctionsSvc,
         );
 
         const result = await svc.transitionCertification({

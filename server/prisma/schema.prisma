@@ -727,6 +727,8 @@ model EscalationEvent {
   organizations        organizations     @relation(fields: [orgId], references: [id], onUpdate: NoAction)
   parent               EscalationEvent?  @relation("EscalationUpgradeChain", fields: [parentEscalationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   children             EscalationEvent[] @relation("EscalationUpgradeChain")
+  /// G-024: back-reference for sanctions triggered by this escalation event.
+  sanctions            Sanction[]
 
   @@index([entityType, entityId, status, severityLevel], map: "escalation_events_entity_freeze_idx")
   @@index([orgId, createdAt(sort: Desc)], map: "escalation_events_org_id_idx")
@@ -910,11 +912,53 @@ model organizations {
   /// G-017 Hardening: back-reference for trades where this org is the seller.
   tradesSeller          Trade[]              @relation("TradeSeller")
   trade_lifecycle_logs  TradeLifecycleLog[]
+  /// G-024: back-reference for sanctions imposed on this organization.
+  sanctions             Sanction[]
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
   @@index([jurisdiction], map: "idx_organizations_jurisdiction")
   @@index([status], map: "idx_organizations_status")
   @@index([status, created_at(sort: Desc)], map: "idx_organizations_status_created")
+}
+
+/// G-024: Sanctions domain.
+/// RLS: RESTRICTIVE guard (fail-closed) + admin SELECT only. No tenant SELECT policy.
+/// Enforcement provided via SECURITY DEFINER functions is_org_sanctioned / is_entity_sanctioned.
+/// This model contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Sanction {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// RLS boundary: every sanction is scoped to one organization.
+  orgId              String           @map("org_id") @db.Uuid
+  /// Optional secondary scope. Both must be NULL or both must be set (DB CHECK).
+  entityType         String?          @map("entity_type")
+  entityId           String?          @map("entity_id") @db.Uuid
+  /// FRICTION | SUPPRESSION | FEATURE_RESTRICTION | SUSPENDED | PERMANENT_BAN
+  sanctionType       String           @map("sanction_type")
+  /// 1=Friction(non-blocking) 2=Suppression 3=Hard-block 4=Suspended 5=PermanentBan
+  severity           Int              @default(1) @db.SmallInt
+  /// ACTIVE | DECAYED | LIFTED
+  status             String           @default("ACTIVE")
+  /// Mandatory justification for the sanction. Non-empty enforced by service layer.
+  reason             String
+  /// Actor type that imposed the sanction (e.g., RISK_COMPLIANCE_AUTHORITY).
+  imposedByActor     String           @map("imposed_by_actor")
+  /// Sub/fingerprint of the principal that imposed the sanction.
+  imposedByPrincipal String           @map("imposed_by_principal")
+  /// Optional link to the escalation event that triggered this sanction (G-022).
+  escalationEventId  String?          @map("escalation_event_id") @db.Uuid
+  /// Optional TTL -- NULL means no decay configured.
+  decaysAt           DateTime?        @map("decays_at") @db.Timestamptz(6)
+  /// NULL until lifted. Must be non-null when status='LIFTED'.
+  liftedAt           DateTime?        @map("lifted_at") @db.Timestamptz(6)
+  liftedByPrincipal  String?          @map("lifted_by_principal")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  organizations      organizations    @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  escalationEvent    EscalationEvent? @relation(fields: [escalationEventId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([orgId, createdAt(sort: Desc)], map: "sanctions_org_id_created_idx")
+  @@map("sanctions")
 }
 
 enum TenantType {

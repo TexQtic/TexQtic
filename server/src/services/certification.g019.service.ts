@@ -21,6 +21,8 @@
 
 import type { PrismaClient } from '@prisma/client';
 import type { StateMachineService } from './stateMachine.service.js';
+import type { SanctionsService } from './sanctions.service.js';
+import { SanctionBlockError } from './sanctions.service.js';
 
 // ─── Error Codes ─────────────────────────────────────────────────────────────
 
@@ -105,10 +107,14 @@ export class CertificationService {
   /**
    * @param db            - Prisma client (injected; scoped via withDbContext at route level).
    * @param stateMachine  - StateMachineService for lifecycle transition enforcement.
+   * @param sanctions     - SanctionsService (optional, G-024). When provided, org sanction
+   *                        check is enforced before certification creation. Optional for
+   *                        backward compat; should be injected in all production routes.
    */
   constructor(
     private readonly db: PrismaClient,
     private readonly stateMachine: StateMachineService,
+    private readonly sanctions?: SanctionsService | null,
   ) {}
 
   // ─── Method 1: createCertification ─────────────────────────────────────────
@@ -143,6 +149,22 @@ export class CertificationService {
         code: 'INVALID_INPUT',
         message: 'expiresAt must be after issuedAt.',
       };
+    }
+
+    // ── G-024: Sanction check — org BEFORE lifecycle lookup or DB write ────────
+    if (this.sanctions) {
+      try {
+        await this.sanctions.checkOrgSanction(input.orgId);
+      } catch (err) {
+        if (err instanceof SanctionBlockError) {
+          return {
+            status: 'ERROR',
+            code: 'INVALID_INPUT',
+            message: err.message,
+          };
+        }
+        throw err;
+      }
     }
 
     try {

@@ -40,6 +40,8 @@ import type { StateMachineService } from './stateMachine.service.js';
 import type { EscalationService } from './escalation.service.js';
 import type { MakerCheckerService } from './makerChecker.service.js';
 import { GovError } from './escalation.types.js';
+import type { SanctionsService } from './sanctions.service.js';
+import { SanctionBlockError } from './sanctions.service.js';
 import {
   isValidAmount,
   isValidCurrency,
@@ -145,6 +147,9 @@ export class EscrowService {
     private readonly stateMachine: StateMachineService,
     private readonly escalation: EscalationService,
     private readonly makerChecker?: MakerCheckerService | null,
+    // G-024: SanctionsService for org sanction checks in create + recordTransaction RELEASE.
+    // Optional for backward compat; should be injected in all production routes.
+    private readonly sanctions?: SanctionsService | null,
   ) {}
 
   // ─── Method 1: createEscrowAccount ─────────────────────────────────────────
@@ -181,6 +186,19 @@ export class EscrowService {
         message:
           'reason is required for escrow account creation. Provide an explicit justification.',
       };
+    }
+
+    // ── G-024: Sanction check — org BEFORE lifecycle lookup or INSERT ───────────
+    // tenantId == orgId in this codebase (organizations.id == tenants.id per G-015).
+    if (this.sanctions) {
+      try {
+        await this.sanctions.checkOrgSanction(input.tenantId);
+      } catch (err) {
+        if (err instanceof SanctionBlockError) {
+          return dbError('DB_ERROR', err, err.message);
+        }
+        throw err;
+      }
     }
 
     // ── Resolve DRAFT lifecycle state (stop condition if absent) ──────────────
@@ -351,6 +369,20 @@ export class EscrowService {
 
       if (dupeRows.length > 0) {
         return { status: 'DUPLICATE_REFERENCE', existingTransactionId: dupeRows[0].id };
+      }
+    }
+
+    // ── G-024: Sanction check for RELEASE ledger entries ─────────────────────
+    // RELEASE entries represent monetary outflow (funds leaving escrow).
+    // A sanctioned org must not be able to release funds. Block before INSERT.
+    if (this.sanctions && input.entryType === 'RELEASE') {
+      try {
+        await this.sanctions.checkOrgSanction(input.tenantId);
+      } catch (err) {
+        if (err instanceof SanctionBlockError) {
+          return dbError('DB_ERROR', err, err.message);
+        }
+        throw err;
       }
     }
 

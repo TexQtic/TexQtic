@@ -26,6 +26,8 @@ import type { StateMachineService } from './stateMachine.service.js';
 import type { EscalationService } from './escalation.service.js';
 import type { MakerCheckerService } from './makerChecker.service.js';
 import { GovError } from './escalation.types.js';
+import type { SanctionsService } from './sanctions.service.js';
+import { SanctionBlockError } from './sanctions.service.js';
 import type {
   TradeCreateInput,
   TradeCreateResult,
@@ -53,6 +55,9 @@ export class TradeService {
     // G-021 Fix A: makerChecker is now stored and used — creates pending_approvals row
     // when StateMachineService returns PENDING_APPROVAL. Non-fatal if absent or throws.
     private readonly makerChecker?: MakerCheckerService,
+    // G-024: SanctionsService for buyer/seller sanction checks before trade creation.
+    // Optional for backward compat; should be injected in all production routes.
+    private readonly sanctions?: SanctionsService | null,
   ) {}
 
   // ─── Method 1: createTrade ──────────────────────────────────────────────────
@@ -103,7 +108,23 @@ export class TradeService {
       };
     }
 
-    try {
+    try {      // ── G-024: Sanction check — buyer + seller orgs BEFORE any DB writes ────────
+      // Both buyer and seller are checked independently. Either sanctioned party blocks.
+      if (this.sanctions) {
+        try {
+          await this.sanctions.checkOrgSanction(input.buyerOrgId);
+          await this.sanctions.checkOrgSanction(input.sellerOrgId);
+        } catch (err) {
+          if (err instanceof SanctionBlockError) {
+            return {
+              status: 'ERROR',
+              code: 'DB_ERROR',
+              message: err.message,
+            };
+          }
+          throw err;
+        }
+      }
       // ── Resolve DRAFT lifecycle state (stop condition if missing) ─────────
       const draftState = await this.db.lifecycleState.findFirst({
         where: { entityType: 'TRADE', stateKey: 'DRAFT' },
