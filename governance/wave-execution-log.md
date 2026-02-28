@@ -2977,3 +2977,72 @@ pnpm -C server exec prisma migrate resolve --applied 20260307000000_g017_day4_pe
 ### Gap Register Update
 
 G-017 row updated: added commit `bdb9ab7` + **Day4 FK Hardening DB Applied ✅ (GOVERNANCE-SYNC-015, 2026-02-28)** with function/trigger proof, tgrelid, tgenabled, DO block PASS note, ledger sync confirmation.
+
+---
+
+## GOVERNANCE-SYNC-016 — G-017 trades_domain ledger-sync only (resolve-only) (2026-02-28)
+
+### Scope
+
+Ledger-sync only for `20260306000000_g017_trades_domain`. Tables `public.trades` and `public.trade_events` confirmed present in Supabase dev DB (applied out-of-band previously as the G-017 Day1 domain schema). No psql apply executed. No SQL changes. Only `prisma migrate resolve --applied`.
+
+### Pending Migrations BEFORE — 5 pending
+
+```
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+```
+
+### DB Existence Proof (BEFORE resolve)
+
+**Proof A — to_regclass:**
+```
+ trades_table | trade_events_table
+--------------+--------------------
+ trades       | trade_events
+(1 row)
+```
+
+Both tables present ✅ — stop-loss passed; proceed with resolve.
+
+**Proof B — row counts (dev env):**
+```
+ trades_count | trade_events_count
+--------------+--------------------
+            0 |                  0
+(1 row)
+```
+
+Row counts 0 — vacuous data proof (structure proven by prior existence proofs and constraints).
+
+### Ledger Sync
+
+```
+pnpm -C server exec prisma migrate resolve --applied 20260306000000_g017_trades_domain
+→ Migration 20260306000000_g017_trades_domain marked as applied.
+```
+
+### Pending Migrations AFTER — 4 pending
+
+```
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+```
+
+`20260306000000_g017_trades_domain` removed from pending ✅
+
+### Next Steps (planning)
+
+- `20260302000000_g021_maker_checker_core`: next in timestamp order; needs existence proof + apply/sync TECS
+- `20260303000000_g022_escalation_core`: existence proof + apply/sync TECS
+- `20260304000000_gatetest003_audit_logs_admin_select`: existence proof + apply/sync TECS
+- `20260305000000_g023_reasoning_logs`: existence proof + apply/sync TECS
+
+### Gap Register Update
+
+G-017 row updated: added **trades_domain Ledger-Sync ✅ (GOVERNANCE-SYNC-016, 2026-02-28)** noting resolve-only, to_regclass proof, out-of-band apply origin.
