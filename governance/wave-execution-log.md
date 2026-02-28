@@ -2391,3 +2391,128 @@ Wave 4 P1: WL OWNER/ADMIN had no back-office surface — they landed on the stor
 | Collections | STUB | Curated collection grouping for WL storefronts |
 | Orders | STUB | Order management, fulfillment, returns |
 | Domains | STUB | Custom domain connection, DNS configuration (G-026 prerequisite) |
+
+---
+
+## GOVERNANCE-SYNC-011 — G-018 Day 1 DB Applied (2026-02-28)
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-02-28 |
+| Type | DB Apply — Schema-only migration |
+| Gap ID | G-018 |
+| Migration | `20260308000000_g018_day1_escrow_schema` |
+| Impl commit | `7c1d3a3` |
+| Apply method | `psql "--dbname=$DATABASE_URL" "--variable=ON_ERROR_STOP=1" -f migration.sql` (URL redacted) |
+| Environment | Supabase dev |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260308000000_g018_day1_escrow_schema` → `Migration marked as applied.` |
+| Scope | Day 1 schema-only; no routes, no services, no tests |
+
+### §16 PASS Notice (captured from psql output)
+
+```
+NOTICE:  G-018 pre-flight OK: trades, pending_approvals, escrow_lifecycle_logs, lifecycle_states present; escrow_accounts absent. Proceeding.
+NOTICE:  G-018 §13: escrow_lifecycle_logs_escrow_id_fk added — escrow_lifecycle_logs.escrow_id now a hard FK to escrow_accounts.id.
+NOTICE:  G-018 VERIFY: escrow_accounts EXISTS — OK
+NOTICE:  G-018 VERIFY: escrow_transactions EXISTS — OK
+NOTICE:  G-018 VERIFY: escrow_accounts RLS: t/t — OK
+NOTICE:  G-018 VERIFY: escrow_transactions RLS: t/t — OK
+NOTICE:  G-018 VERIFY: escrow_accounts_guard RESTRICTIVE EXISTS — OK
+NOTICE:  G-018 VERIFY: escrow_transactions_guard RESTRICTIVE EXISTS — OK
+NOTICE:  G-018 VERIFY: trades.escrow_id column EXISTS — OK
+NOTICE:  G-018 VERIFY: trades_escrow_id_fk FK EXISTS — OK
+NOTICE:  G-018 VERIFY: escrow_lifecycle_logs_escrow_id_fk FK EXISTS — OK
+NOTICE:  G-018 VERIFY: trg_g018_pending_approvals_escrow_entity_fk EXISTS — OK
+NOTICE:  G-018 VERIFY: escrow maker-checker trigger tgenabled='O' — OK
+NOTICE:  G-018 VERIFY: trg_immutable_escrow_transaction EXISTS — OK
+NOTICE:  G-018 PASS: escrow schema created — escrow_accounts RLS: t/t, escrow_transactions RLS: t/t, trades.escrow_id: ok, escrow_lifecycle_logs FK: ok, pending_approvals ESCROW enforcement: ok, escrow_transactions immutable: ok
+COMMIT
+```
+
+Note: psql emits NOTICE lines to stderr; PowerShell reported exit code 1 (NativeCommandError) even on clean COMMIT — expected Windows psql behaviour. No SQL `ERROR:` present in output. COMMIT was the final line.
+
+### Proof Queries
+
+#### 3a) pg_policies — escrow_accounts (3 rows)
+
+| policyname | permissive | cmd |
+|---|---|---|
+| escrow_accounts_guard | RESTRICTIVE | ALL |
+| escrow_accounts_tenant_insert | PERMISSIVE | INSERT |
+| escrow_accounts_tenant_select | PERMISSIVE | SELECT |
+
+#### 3b) pg_policies — escrow_transactions (5 rows)
+
+| policyname | permissive | cmd |
+|---|---|---|
+| escrow_transactions_guard | RESTRICTIVE | ALL |
+| escrow_transactions_no_delete | PERMISSIVE | DELETE |
+| escrow_transactions_no_update | PERMISSIVE | UPDATE |
+| escrow_transactions_tenant_insert | PERMISSIVE | INSERT |
+| escrow_transactions_tenant_select | PERMISSIVE | SELECT |
+
+`no_update` and `no_delete` use `USING (false)` — Layer 3 append-only enforcement confirmed.
+
+#### 3c) FORCE RLS flags
+
+| relname | relrowsecurity | relforcerowsecurity |
+|---|---|---|
+| escrow_accounts | t | t |
+| escrow_transactions | t | t |
+
+#### 3d) FK constraints
+
+| conname | contype | def |
+|---|---|---|
+| escrow_lifecycle_logs_escrow_id_fk | f | FOREIGN KEY (escrow_id) REFERENCES escrow_accounts(id) ON DELETE CASCADE |
+| trades_escrow_id_fk | f | FOREIGN KEY (escrow_id) REFERENCES escrow_accounts(id) ON DELETE RESTRICT |
+
+#### 3e) Row counts
+
+| escrow_accounts_count | escrow_transactions_count |
+|---|---|
+| 0 | 0 |
+
+Vacuous — Day 1 is schema-only. Policy/trigger/FK structure proven via §16 DO block PASS notice.
+
+### Migration Status (before ledger sync) — Pending list
+
+```
+20260212000000_gw3_db_roles_bootstrap
+20260301000000_g020_lifecycle_state_machine_core
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+20260308000000_g018_day1_escrow_schema          ← TARGET (applied in this sync)
+20260308010000_g018_day1_escrow_schema_cycle_fix
+```
+
+### Migration Status (after ledger sync) — Pending list
+
+```
+20260212000000_gw3_db_roles_bootstrap
+20260301000000_g020_lifecycle_state_machine_core
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+20260308010000_g018_day1_escrow_schema_cycle_fix
+```
+
+`20260308000000_g018_day1_escrow_schema` removed from pending list ✅
+
+### Governance Notes
+
+- Day 1 schema-only boundary maintained: no API routes, no service logic, no tests added or modified.
+- No balance fields on `escrow_accounts` or `escrow_transactions` (D-020-B constitutionally binding).
+- `escrow_transactions` append-only: 3-layer enforcement confirmed (trigger P0005 §10/§15, RLS deny via `no_update`/`no_delete` USING false, service boundary documented in README).
+- Remaining pending migrations not touched in this sync.
+
+### Gap Register Update
+
+G-018 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-011, 2026-02-28, env: Supabase dev)**. Apply method: psql. Commit: `7c1d3a3`. Ledger sync: resolve --applied. Proof: §16 PASS notice + pg_policies/rls flags/constraints verified.
