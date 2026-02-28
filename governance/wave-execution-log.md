@@ -2196,3 +2196,88 @@ NOTICE: [G-016] PASS -- nodes: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, te
 ### Gap Register Update
 
 G-016 row updated: NOT STARTED → VALIDATED; commit `44ab6d6` added; **G-016 Phase A traceability graph CLOSED**.
+
+---
+
+## GOVERNANCE-SYNC-010 — G-007C VALIDATED — /api/me Explicit Errors + Tenant Spinner Fix (2026-02-28)
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-02-28 |
+| Type | Hotfix / Regression — auth/login stability |
+| Gap ID | G-007C |
+| Backend commit | `be66f41` (`feat(auth): restore /api/me tenant payload to prevent workspace spinner`) |
+| Frontend commit | `7bacd80` (`fix(app): prevent tenant workspace hang when /api/me fails`) |
+| Governance commit | this commit (governance-only) |
+| No migration | ✅ No schema, RLS, or migration changes |
+
+### Context / Symptom
+
+After tenant login, `GET /api/me` was called by `handleAuthSuccess` in `App.tsx`. Two silent failure paths caused `tenant: null` to be returned to the frontend:
+
+1. **Missing `tenantId` in JWT context** — no guard; the `if (tenantId)` branch was simply not entered → `tenant` remained null
+2. **`OrganizationNotFoundError`** — caught silently → `tenant = null`
+
+The frontend `handleAuthSuccess` gated `tenants[]` seeding on `if (me.tenant)`. When `tenant` was null, `tenants[]` was never populated. Since `currentTenant` is derived from `tenants.find(t => t.id === currentTenantId)`, it remained null. The EXPERIENCE render path returned the "Loading workspace…" spinner (`if (!currentTenant)`) indefinitely.
+
+### Root Cause
+
+Before `be66f41`, `/api/me` in `server/src/routes/tenant.ts`:
+- `tenant` typed `{ ... } | null`, initialised to `null`
+- `if (tenantId)` block skipped entirely when JWT lacked tenantId → null passed through silently
+- `OrganizationNotFoundError` caught and swallowed: `tenant = null`
+- `sendSuccess(reply, { user, tenant, ... })` forwarded the null to the frontend
+
+Before `7bacd80`, `App.tsx` `handleAuthSuccess`:
+- `else` branch (null `me.tenant`): only `setCurrentTenantId(tenantId)` — never seeded `tenants[]`
+- `catch` block: only `setCurrentTenantId(tenantId)` — never seeded `tenants[]`
+- Both paths left `tenants[]` empty → `currentTenant = null` → infinite spinner
+
+### Fix
+
+#### Backend (`be66f41` — `server/src/routes/tenant.ts`)
+
+- Guard added: `if (!tenantId) return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing from token', 401)`
+- `OrganizationNotFoundError` → `return sendError(reply, 'NOT_FOUND', 'Organisation not yet provisioned for this tenant', 404)` (explicit, not swallowed)
+- `tenant` field typed non-nullable; `sendSuccess` always provides the full object on success
+
+#### Frontend (`7bacd80` — `App.tsx`)
+
+- `catch` block seeds stub `Tenant` into `tenants[]`: `{ id: tenantId, slug: tenantId, name: 'Workspace', type: 'B2B', status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' }`
+- `else` branch (null `me.tenant`) also seeds same stub (was: only `setCurrentTenantId`)
+- `tenantProvisionError` state added: `APIError.status === 404` + message includes "Organisation not yet provisioned" → amber fixed banner "Tenant not provisioned yet…" (dismissible via Dismiss button)
+- Banner rendered as fixed overlay inside `CartProvider` in EXPERIENCE — non-blocking, app renders normally
+- `APIError` imported from `services/apiClient`
+- Pre-existing lint fixes collocated (0 logic change): `_tenantsLoading`/`_tenantsError` prefixed; impersonation `label` given `htmlFor`/`id`
+
+### Proof / Validation
+
+| Scenario | Before | After |
+|----------|--------|-------|
+| ACME tenant login (org provisioned) | workspace loads OR spinner | workspace loads ✅ |
+| WL tenant login (org provisioned) | workspace loads OR spinner | workspace loads ✅ |
+| Tenant login — org NOT yet provisioned (404 from /api/me) | infinite spinner | EXPERIENCE renders + amber banner ✅ |
+| Tenant login — tenantId missing in JWT (401 from /api/me) | silent null, spinner | 401 propagated; frontend stub seeds tenants[] ✅ |
+| `currentTenant` after any login path | can be null → spinner | always non-null (stub minimum) ✅ |
+
+### Dependency Chain
+
+- **Introduced by:** G-015 Phase C (`790d0e6`) added `getOrganizationIdentity` call to `/api/me`, which throws `OrganizationNotFoundError` when org row not found in provisioning gap window
+- **Depends on:** `APIError` class in `services/apiClient.ts` (pre-existing); `OrganizationNotFoundError` in `server/src/lib/database-context.ts` (pre-existing, G-015)
+- **Unblocks:** tenants in provisioning queue (G-008 scope) now see deterministic UI instead of infinite spinner
+
+### Follow-ons
+
+- **G-WL-TYPE-MISMATCH (NOT STARTED)** — WL tenant stub uses hardcoded `type: 'B2B'`; if a WL org is not yet provisioned the stub is used and may render the wrong shell. Fix: pass `type`/`plan` from login payload if available.
+
+### Gates
+
+**Backend gates (`be66f41`):** `pnpm -C server run typecheck` EXIT 0 ✅ | `pnpm -C server run lint` 0 errors / 92 warnings ✅
+
+**Frontend gates (`7bacd80`):** `tsc --noEmit` EXIT 0 ✅ | `eslint App.tsx` 0 errors / 1 warning (pre-existing `react-hooks/exhaustive-deps`) ✅
+
+**Governance gates:** No typecheck/lint required (governance-only files). `git status --short` clean before commit ✅.
+
+### Gap Register Update
+
+G-007C row added to Wave 2 Stabilization table: VALIDATED; commits `be66f41` + `7bacd80` recorded. Regressions / Incidents (Post-Validation) section added. G-WL-TYPE-MISMATCH (NOT STARTED) added to Wave 4 table.
