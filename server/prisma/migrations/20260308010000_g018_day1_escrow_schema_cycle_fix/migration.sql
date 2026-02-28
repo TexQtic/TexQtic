@@ -49,7 +49,7 @@ DO $$ BEGIN IF NOT EXISTS (
   WHERE table_schema = 'public'
     AND table_name = 'escrow_accounts'
     AND column_name = 'trade_id'
-) THEN RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist — ' 'migration may already be applied. Skipping.';
+) THEN RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist -- migration may already be applied. Skipping.';
 END IF;
 END;
 $$;
@@ -91,7 +91,7 @@ IF NOT EXISTS (
     AND constraint_type = 'FOREIGN KEY'
 ) THEN RAISE EXCEPTION 'G-018 FIX VERIFY FAIL: trades_escrow_id_fk FK constraint missing';
 END IF;
-RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. ' 'Canonical link remains: trades.escrow_id → escrow_accounts.id. ' 'escrow_accounts.trade_id removed.';
+RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. Canonical link remains: trades.escrow_id -> escrow_accounts.id. escrow_accounts.trade_id removed.';
 END;
 $$;
 COMMIT;
