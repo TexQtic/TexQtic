@@ -3384,3 +3384,140 @@ pnpm exec prisma migrate resolve --applied 20260304000000_gatetest003_audit_logs
 ### Gap Register Update
 
 GATE-TEST-003 new row added to gap-register.md (between G-022 and G-023 in Schema Domain Buildout section): **DB Applied ✅ (GOVERNANCE-SYNC-019, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 6 policies on audit_logs, has_admin_predicate=t, 2 PERMISSIVE SELECT policies matching VERIFY check, 55 live audit rows.
+
+---
+
+## GOVERNANCE-SYNC-020 — G-023 Reasoning Logs Ledger Sync (Resolve-Only)
+
+**Date:** 2026-02-28
+**Migration:** `20260305000000_g023_reasoning_logs`
+**Path:** Resolve-only (all DB objects confirmed present out-of-band)
+**Environment:** Supabase dev (`aws-1-ap-northeast-1.pooler.supabase.com:5432`)
+
+### Static Migration Scan
+
+Migration file `server/prisma/migrations/20260305000000_g023_reasoning_logs/migration.sql` (300 lines) fully read.
+
+- Wrapped in explicit `BEGIN; ... COMMIT;`
+- **No EXCEPTION pre-flight guard** — all DDL uses `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `DROP TRIGGER IF EXISTS`, `DROP POLICY IF EXISTS` (fully idempotent)
+- §5 fn `reasoning_logs_immutability()`: `RAISE EXCEPTION '[E-023-IMMUTABLE] reasoning_logs rows are append-only...', OLD.id` — format string + var — **parse-safe ✅**
+- §8 VERIFY DO block: all `RAISE EXCEPTION 'G-023 FAIL: ...', var` — format string + var — **parse-safe ✅**; final `RAISE NOTICE` single format string with `%` params — **parse-safe ✅**
+- **No adjacent string literal hazards. No non-ASCII in RAISE strings. Migration parse-safe — no file patch required.**
+
+### Pending Migrations BEFORE — 1 pending
+
+```
+20260305000000_g023_reasoning_logs
+```
+
+### DB Existence Proof (BEFORE resolve)
+
+**Proof — table, column, RLS, policies, indexes, trigger:**
+```
+ reasoning_logs_table
+----------------------
+ reasoning_logs
+(1 row)
+
+ col_exists
+------------
+ 1
+(1 row)
+
+    relname     | rls_on | force_rls
+----------------+--------+-----------
+ reasoning_logs | t      | t
+(1 row)
+
+          policyname          |  cmd   | permissive
+------------------------------+--------+-------------
+ reasoning_logs_guard         | ALL    | RESTRICTIVE
+ reasoning_logs_tenant_insert | INSERT | PERMISSIVE
+ reasoning_logs_tenant_select | SELECT | PERMISSIVE
+(3 rows)
+
+           indexname
+-------------------------------
+ reasoning_logs_created_at_idx
+ reasoning_logs_pkey
+ reasoning_logs_request_id_idx
+ reasoning_logs_tenant_id_idx
+(4 rows)
+
+ trigger_count
+---------------
+ 1
+(1 row)
+```
+
+All objects present ✅ — Decision: **resolve-only**.
+
+### Ledger Sync
+
+```
+pnpm exec prisma migrate resolve --applied 20260305000000_g023_reasoning_logs
+→ Migration 20260305000000_g023_reasoning_logs marked as applied.
+```
+
+### Post-Apply Proofs
+
+**RLS flags:** `rls_on=t, force_rls=t` ✅
+
+**Policies (3 rows):**
+- `reasoning_logs_guard` — RESTRICTIVE ALL (fail-closed baseline: require_org_context OR bypass) ✅
+- `reasoning_logs_tenant_select` — PERMISSIVE SELECT (tenant_id = current_org_id OR bypass) ✅
+- `reasoning_logs_tenant_insert` — PERMISSIVE INSERT (require_org_context AND org match OR bypass) ✅
+
+**Indexes (4 on reasoning_logs):**
+- `reasoning_logs_pkey` ✅
+- `reasoning_logs_created_at_idx` ✅
+- `reasoning_logs_request_id_idx` ✅
+- `reasoning_logs_tenant_id_idx` ✅
+
+**Trigger:** `trg_reasoning_logs_immutability` count=1 ✅ (BEFORE UPDATE OR DELETE; append-only; bypass_rls DELETE escape for test seed)
+
+**audit_logs.reasoning_log_id column:** col_exists=1 ✅ (nullable FK → reasoning_logs.id ON DELETE SET NULL)
+
+**Row counts:**
+```
+ reasoning_logs_rows
+---------------------
+ 23
+(1 row)
+
+ audit_logs_with_reasoning
+---------------------------
+ 5
+(1 row)
+```
+23 live AI reasoning log entries ✅ (non-vacuous — AI events actively generated in dev)
+5 audit_log rows referencing reasoning_log_id ✅ (FK live and in use)
+
+### Pending Migrations AFTER — ZERO PENDING
+
+```
+Database schema is up to date!
+```
+
+**🎉 MILESTONE: All 57 Prisma migrations are now ledger-synced. Zero pending migrations remain.**
+
+`20260305000000_g023_reasoning_logs` removed from pending ✅
+
+### Ledger Sync Backlog Summary (GOVERNANCE-SYNC-011 → 020)
+
+| GOVERNANCE-SYNC | Migration | Method |
+|---|---|---|
+| 011 | G-018 Day1 escrow schema | psql apply |
+| 012 | G-018 cycle fix | psql apply |
+| 013 | G-018 cycle fix file repair | impl patch commit |
+| 014 | G-020 lifecycle state machine | resolve-only |
+| 015 | G-017 Day4 trade FK hardening | psql apply (after file patch) |
+| 016 | G-017 trades domain | resolve-only |
+| 017 | G-021 maker-checker core | resolve-only |
+| 018 | G-022 escalation core | resolve-only |
+| 019 | GATE-TEST-003 audit_logs admin select | resolve-only |
+| 020 | G-023 reasoning logs | resolve-only |
+
+### Gap Register Update
+
+G-023 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-020, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 3 RLS policies, 4 indexes, immutability trigger, `audit_logs.reasoning_log_id` FK column live, 23 reasoning_logs rows + 5 audit_logs FK references. **MILESTONE: All 57 migrations ledger-synced.**
