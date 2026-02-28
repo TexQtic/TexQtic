@@ -24,6 +24,8 @@ export interface LoginResponse {
     role?: string;
     tenantId?: string;
   };
+  /** Canonical org_type from organizations table (Doctrine v1.4). null when org not yet provisioned. */
+  tenantType?: string | null;
 }
 
 export interface CurrentUserResponse {

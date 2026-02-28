@@ -200,6 +200,18 @@ const App: React.FC = () => {
     // when currentTenant is derived (tenants[] is only fetched for CONTROL_PLANE otherwise).
     // Clear any previous provision error from a prior login attempt.
     setTenantProvisionError(null);
+
+    // Parse tenantType from login payload — fallback to AGGREGATOR (non-Enterprise-safe) if absent.
+    // Values expected: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null
+    // AGGREGATOR default intentionally chosen: it renders a neutral console that does not
+    // mislead a WL tenant into thinking they are in an Enterprise (B2B) workspace.
+    const rawTenantType: string | null = (data?.tenantType as string) ?? null;
+    const stubType: TenantType = (
+      rawTenantType !== null && (Object.values(TenantType) as string[]).includes(rawTenantType)
+        ? (rawTenantType as TenantType)
+        : TenantType.AGGREGATOR
+    );
+
     try {
       const me = await getCurrentUser();
       if (me.tenant) {
@@ -219,7 +231,7 @@ const App: React.FC = () => {
         // /api/me returned no tenant — seed stub so currentTenant is never null
         const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
         if (tenantId) {
-          setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: 'B2B', status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
+          setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: stubType, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
           setCurrentTenantId(tenantId);
         }
       }
@@ -227,7 +239,7 @@ const App: React.FC = () => {
       // /api/me failed — seed stub tenant so UI never hangs on Loading workspace spinner
       const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
       if (tenantId) {
-        setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: 'B2B', status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
+        setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: stubType, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
         setCurrentTenantId(tenantId);
       }
       // Show deterministic error banner for unprovisioned tenant (404)
