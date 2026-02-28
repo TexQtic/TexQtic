@@ -3593,34 +3593,36 @@ G-020 row updated: commit `61d1a96` added; description expanded to include **Run
 
 ---
 
-## GOVERNANCE-SYNC-022 — G-021 Runtime Enforcement CLOSED (2026-02-28)
+## GOVERNANCE-SYNC-022 ï¿½ G-021 Runtime Enforcement CLOSED (2026-02-28)
 
 ### Context / Symptom
 
 Three runtime enforcement gaps identified post-G-021 schema closure:
 
-1. **Trade PENDING_APPROVAL dead-end**: _makerChecker underscore param in TradeService discarded injection — no pending_approvals row written on PENDING_APPROVAL.
+1. **Trade PENDING_APPROVAL dead-end**: _makerChecker underscore param in TradeService discarded injection ï¿½ no pending_approvals row written on PENDING_APPROVAL.
 2. **Control-plane Escrow dead-end**: Control-plane escrow route had only GET endpoints; no transition endpoint existed to create pending_approvals rows via admin path.
-3. **Replay freeze skipped**: uildService() in internal makerChecker route omitted EscalationService — erifyAndReplay() freeze checks never ran (guarded by if (this.escalationService)).
+3. **Replay freeze skipped**: uildService() in internal makerChecker route omitted EscalationService ï¿½ erifyAndReplay() freeze checks never ran (guarded by if (this.escalationService)).
 
 ### Root Cause Summary
 
 | Gap | Root Cause |
 |-----|-----------|
 | Fix A (Trade MC) | _makerChecker underscore pattern discarded; no createApprovalRequest() call in PENDING_APPROVAL block |
-| Fix A2 (Trade routes) | Tenant + control trade routes passed only 3 args to TradeService — no MC 4th arg |
+| Fix A2 (Trade routes) | Tenant + control trade routes passed only 3 args to TradeService ï¿½ no MC 4th arg |
 | Fix B (CP Escrow) | Control-plane escrow route had no transition endpoint at all |
-| Fix C (Replay route) | uildService() omitted EscalationService — erifyAndReplay() freeze guard never activated |
+| Fix C (Replay route) | uildService() omitted EscalationService ï¿½ erifyAndReplay() freeze guard never activated |
 
 ### Fix Summary
 
-**Fix A** — TradeService constructor: _makerChecker renamed to private readonly makerChecker; PENDING_APPROVAL block calls createApprovalRequest(); pprovalId returned in result; 	rade.g017.types.ts gains pprovalId?: string.
+**Fix A** ï¿½ TradeService constructor: _makerChecker renamed to private readonly makerChecker; PENDING_APPROVAL block calls createApprovalRequest(); pprovalId returned in result; 	rade.g017.types.ts gains pprovalId?: string.
 
-**Fix A2** — Both trade routes (tenant + control) now construct MakerCheckerService and pass as 4th arg to TradeService; PENDING_APPROVAL response surfaces pprovalId.
+**Fix A2** ï¿½ Both trade routes (tenant + control) now construct MakerCheckerService and pass as 4th arg to TradeService; PENDING_APPROVAL response surfaces pprovalId.
 
-**Fix B** — outes/control/escrow.g018.ts gains POST /:escrowId/transition endpoint with MakerCheckerService injected into EscrowService; mirrors tenant escrow pattern; typed audit emitted atomically.
+**Fix B** ï¿½ 
+outes/control/escrow.g018.ts gains POST /:escrowId/transition endpoint with MakerCheckerService injected into EscrowService; mirrors tenant escrow pattern; typed audit emitted atomically.
 
-**Fix C** — outes/internal/makerChecker.ts uildService() now constructs EscalationService and injects into both StateMachineService and MakerCheckerService.
+**Fix C** ï¿½ 
+outes/internal/makerChecker.ts uildService() now constructs EscalationService and injects into both StateMachineService and MakerCheckerService.
 
 ### Proof Table
 
@@ -3644,8 +3646,8 @@ Three runtime enforcement gaps identified post-G-021 schema closure:
 
 | Checkpoint | Status |
 |-----------|--------|
-| BEFORE (preflight) | 57 migrations, "Database schema is up to date!" — 0 pending ? |
-| AFTER (post-impl) | 57 migrations, "Database schema is up to date!" — 0 pending ? |
+| BEFORE (preflight) | 57 migrations, "Database schema is up to date!" ï¿½ 0 pending ? |
+| AFTER (post-impl) | 57 migrations, "Database schema is up to date!" ï¿½ 0 pending ? |
 
 No schema changes. No migrations added.
 
@@ -3653,14 +3655,14 @@ No schema changes. No migrations added.
 
 | File | Change Type |
 |------|------------|
-| server/src/services/trade.g017.service.ts | MODIFIED — Fix A |
-| server/src/services/trade.g017.types.ts | MODIFIED — approvalId? added |
-| server/src/routes/tenant/trades.g017.ts | MODIFIED — Fix A2 |
-| server/src/routes/control/trades.g017.ts | MODIFIED — Fix A2 |
-| server/src/routes/control/escrow.g018.ts | MODIFIED — Fix B |
-| server/src/routes/internal/makerChecker.ts | MODIFIED — Fix C |
-| server/src/services/trade.g017.test.ts | MODIFIED — T-G021-1 + T-G021-2 |
-| server/src/services/makerChecker.g021.test.ts | CREATED — T-G021-3 + T-G021-3b |
+| server/src/services/trade.g017.service.ts | MODIFIED ï¿½ Fix A |
+| server/src/services/trade.g017.types.ts | MODIFIED ï¿½ approvalId? added |
+| server/src/routes/tenant/trades.g017.ts | MODIFIED ï¿½ Fix A2 |
+| server/src/routes/control/trades.g017.ts | MODIFIED ï¿½ Fix A2 |
+| server/src/routes/control/escrow.g018.ts | MODIFIED ï¿½ Fix B |
+| server/src/routes/internal/makerChecker.ts | MODIFIED ï¿½ Fix C |
+| server/src/services/trade.g017.test.ts | MODIFIED ï¿½ T-G021-1 + T-G021-2 |
+| server/src/services/makerChecker.g021.test.ts | CREATED ï¿½ T-G021-3 + T-G021-3b |
 
 ### Gap Register Update
 
@@ -3707,3 +3709,94 @@ server/src/routes/tenant/certifications.g019.ts: Added EscalationService import.
 G-022 row updated: commit e8d0811 added; CERTIFICATION freeze wiring CLOSED (GOVERNANCE-SYNC-023, 2026-02-28); GAP-G022-02 registered.
 
 | 023 | G-022 Certification Freeze Wiring | impl commit e8d0811 |
+
+---
+
+## GOVERNANCE-SYNC-024 -- G-024 Sanctions Domain CLOSED (table + runtime enforcement + tests) (2026-03-13)
+
+### Context / Symptom
+G-024: `public.sanctions` table was missing. Platform had no runtime mechanism to block
+trade creation, state transitions, escrow operations, or maker-checker replays for
+sanctioned organisations. `gap-register.md` line 120: status `NOT STARTED`.
+
+### Fix Summary
+**Step A â€” DB Migration**: `20260313000000_g024_sanctions_domain/migration.sql` adds
+`public.sanctions` table (13 columns, 4 CHECK constraints), 3 indexes (2 partial
+WHERE status='ACTIVE', 1 general), ENABLE+FORCE RLS, `sanctions_set_updated_at()`
+trigger, 2 RLS policies (RESTRICTIVE guard + admin SELECT), GRANT
+SELECT/INSERT/UPDATE to texqtic_app, and two SECURITY DEFINER enforcement functions
+`public.is_org_sanctioned(UUID, SMALLINT)` and `public.is_entity_sanctioned(TEXT,
+UUID, SMALLINT)` with GRANT EXECUTE. DO-block verification confirms all objects present.
+
+**Step B â€” Prisma / access path**: `Sanction` model added to `schema.prisma` with
+FK to `organizations` and optional FK to `EscalationEvent`. Back-refs added.
+
+**Step C â€” SanctionsService** (`sanctions.service.ts`): `SanctionBlockError`
+(code=`SANCTION_BLOCKED`) and `SanctionsService` with `checkOrgSanction` /
+`checkEntitySanction`. Both call SECURITY DEFINER functions via `$queryRaw`,
+bypassing tenant RLS â€” required for cross-tenant buyer/seller enforcement.
+Blocking threshold: severity >= 2. severity=1 (FRICTION) is non-blocking (G-024-A).
+
+**Step D â€” Injection at enforce points**:
+| Service | Method | Enforcement |
+|---------|--------|-------------|
+| StateMachineService | transition() step 3.5a | checkOrgSanction + checkEntitySanction BEFORE G-022 freeze check |
+| TradeService | createTrade() | checkOrgSanction(buyerOrgId) + checkOrgSanction(sellerOrgId) |
+| CertificationService | createCertification() | checkOrgSanction(orgId) |
+| EscrowService | createEscrowAccount() | checkOrgSanction(tenantId) |
+| EscrowService | recordTransaction() [RELEASE only] | checkOrgSanction(tenantId) |
+
+**Replay Safety**: SM.transition() enforces sanctions at step 3.5a. Since
+MakerCheckerService.verifyAndReplay() calls transition() internally, any sanction
+imposed after the MAKER step will block the CHECKER replay. No special case needed.
+
+**Step E â€” Route wiring** (7 route files, all construction sites updated):
+| File | Sites Updated |
+|------|--------------|
+| control/escrow.g018.ts | 3 |
+| control/settlement.ts | 2 |
+| control/trades.g017.ts | 1 |
+| internal/makerChecker.ts | 1 (buildService â€” replay-safe path) |
+| tenant/certifications.g019.ts | 5 |
+| tenant/escrow.g018.ts | 5 |
+| tenant/trades.g017.ts | 2 |
+
+### Tests
+| T-G024-01 | checkOrgSanction resolves when is_org_sanctioned=false | PASS |
+| T-G024-02 | checkOrgSanction throws SanctionBlockError (code=SANCTION_BLOCKED) when is_org_sanctioned=true | PASS |
+| T-G024-03 | checkEntitySanction throws SanctionBlockError when is_entity_sanctioned=true | PASS |
+| T-G024-04 | buyer sanctioned: createTrade returns ERROR code=DB_ERROR | PASS |
+| T-G024-05 | seller sanctioned: createTrade returns ERROR code=DB_ERROR | PASS |
+| T-G024-06 | RELEASE blocked when org sanctioned: recordTransaction returns ERROR code=DB_ERROR | PASS |
+
+### Gates
+| typecheck | EXIT 0 |
+| lint | 0 errors (102 warnings pre-existing) |
+| vitest G-024 | 6/6 PASS (VITEST_EXIT: 0) |
+
+### Pending Migrations
+| BEFORE | 0 (57 migrations applied, "Database schema is up to date!") |
+| AFTER  | 1 pending (20260313000000_g024_sanctions_domain â€” requires `pnpm -C server exec prisma migrate deploy` in prod with DIRECT_DATABASE_URL) |
+
+### Files Changed
+| server/prisma/migrations/20260313000000_g024_sanctions_domain/migration.sql | CREATED |
+| server/prisma/schema.prisma | MODIFIED â€” Sanction model + back-refs |
+| server/src/services/sanctions.service.ts | CREATED |
+| server/src/services/sanctions.g024.test.ts | CREATED â€” T-G024-01..06 |
+| server/src/services/stateMachine.service.ts | MODIFIED â€” step 3.5a/b |
+| server/src/services/trade.g017.service.ts | MODIFIED â€” buyer+seller check |
+| server/src/services/certification.g019.service.ts | MODIFIED â€” org check |
+| server/src/services/escrow.service.ts | MODIFIED â€” create + RELEASE check |
+| server/src/routes/control/escrow.g018.ts | MODIFIED â€” 3 sites |
+| server/src/routes/control/settlement.ts | MODIFIED â€” 2 sites |
+| server/src/routes/control/trades.g017.ts | MODIFIED â€” 1 site |
+| server/src/routes/internal/makerChecker.ts | MODIFIED â€” buildService |
+| server/src/routes/tenant/certifications.g019.ts | MODIFIED â€” 5 sites |
+| server/src/routes/tenant/escrow.g018.ts | MODIFIED â€” 5 sites |
+| server/src/routes/tenant/trades.g017.ts | MODIFIED â€” 2 sites |
+
+### Gap Register Update
+G-024 row updated: status `NOT STARTED` â†’ `VALIDATED`; commit `a133123` added;
+sanctions domain CLOSED (GOVERNANCE-SYNC-024, 2026-03-13).
+
+| 024 | G-024 Sanctions Domain | impl commit a133123 |
