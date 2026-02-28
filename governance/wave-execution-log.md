@@ -3152,3 +3152,131 @@ pnpm exec prisma migrate resolve --applied 20260302000000_g021_maker_checker_cor
 ### Gap Register Update
 
 G-021 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-017, 2026-03-01)** noting resolve-only path, 10 RLS policies, FORCE RLS t/t, 2 triggers, D-021-B partial index, D-021-C maker≠checker enforcement.
+
+---
+
+## GOVERNANCE-SYNC-018 — G-022 Escalation Core Ledger Sync (Resolve-Only)
+
+**Date:** 2026-02-28
+**Migration:** `20260303000000_g022_escalation_core`
+**Path:** Resolve-only (all DB objects present out-of-band)
+**Environment:** Supabase dev (`aws-1-ap-northeast-1.pooler.supabase.com:5432`)
+
+### Static Migration Scan
+
+Migration file `server/prisma/migrations/20260303000000_g022_escalation_core/migration.sql` (383 lines) fully read.
+
+- §1 Pre-flight guard: raises EXCEPTION if `escalation_events` already exists — confirms idempotency guard ✅
+- §3 fn `escalation_events_immutability()`: `RAISE EXCEPTION 'msg', OLD.id` — format string + var — **parse-safe ✅**
+- §5 fn `escalation_severity_upgrade_check()`: all `RAISE EXCEPTION` use format string + var pattern — **parse-safe ✅**
+- §8 GRANTS DO block: RAISE NOTICE strings contain em dash `—` (U+2014) — NOT a PL/pgSQL parse error; safe with `PGCLIENTENCODING=UTF8` ✅
+- §9 VERIFY DO block: single-literal ASCII RAISE NOTICE — **parse-safe ✅**
+- **No adjacent string literal `RAISE NOTICE 'a' 'b'` hazards found. Migration parse-safe — no file patch required.**
+
+### Pending Migrations BEFORE — 3 pending
+
+```
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+```
+
+### DB Existence Proof (BEFORE resolve)
+
+**Proof — to_regclass + fn + tg counts:**
+```
+ escalation_events_table
+-------------------------
+ escalation_events
+(1 row)
+
+ fn_count
+----------
+ 2
+(1 row)
+
+ tg_count
+----------
+ 2
+(1 row)
+```
+
+`escalation_events` present ✅ — fn_count=2 ✅ — tg_count=2 ✅
+Pre-flight guard blocks re-apply (escalation_events already exists) → resolve-only path.
+
+### Ledger Sync
+
+```
+pnpm exec prisma migrate resolve --applied 20260303000000_g022_escalation_core
+→ Migration 20260303000000_g022_escalation_core marked as applied.
+```
+
+### Post-Apply Proofs
+
+**RLS flags:**
+```
+     relname      | rls_on | force_rls
+------------------+--------+-----------
+ escalation_events | t      | t
+(1 row)
+```
+
+**Policies (4 rows):**
+```
+          policyname            |  cmd   | permissive
+--------------------------------+--------+------------
+ escalation_events_admin_insert  | INSERT | PERMISSIVE
+ escalation_events_admin_select  | SELECT | PERMISSIVE
+ escalation_events_tenant_insert | INSERT | PERMISSIVE
+ escalation_events_tenant_select | SELECT | PERMISSIVE
+(4 rows)
+```
+
+**Indexes (5 rows):**
+```
+             indexname
+------------------------------------
+ escalation_events_entity_freeze_idx
+ escalation_events_org_freeze_idx
+ escalation_events_org_id_idx
+ escalation_events_parent_idx
+ escalation_events_pkey
+(5 rows)
+```
+
+**Triggers:**
+```
+              tgname               | enabled
+------------------------------------+---------
+ trg_escalation_events_immutability | O
+ trg_escalation_severity_upgrade    | O
+(2 rows)
+```
+
+**Row count:**
+```
+ rows
+------
+ 0
+(1 row)
+```
+
+All proofs GREEN:
+- ENABLE+FORCE RLS: t/t ✅
+- 4 RLS policies ✅ (tenant_select, admin_select, tenant_insert, admin_insert)
+- 5 indexes ✅ (pkey + entity_freeze + org_freeze + org_id + parent chain)
+- 2 triggers enabled=O ✅ (immutability BEFORE UPDATE/DELETE + D-022-A severity upgrade BEFORE INSERT)
+- Row count: 0 ✅ (vacuous — structure proven by RLS + triggers + indexes + constraints)
+
+### Pending Migrations AFTER — 2 pending
+
+```
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+```
+
+`20260303000000_g022_escalation_core` removed from pending ✅
+
+### Gap Register Update
+
+G-022 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-018, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 4 RLS policies, 4 explicit indexes, D-022-A severity upgrade trigger, D-022-B org freeze via entity_type=ORG design confirmed.
