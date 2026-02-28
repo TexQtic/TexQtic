@@ -33,7 +33,7 @@ import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { getCurrentUser } from './services/authService';
-import { setImpersonationToken } from './services/apiClient';
+import { setImpersonationToken, APIError } from './services/apiClient';
 
 const App: React.FC = () => {
   // Production-grade State Machine
@@ -53,8 +53,9 @@ const App: React.FC = () => {
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [tenantsLoading, setTenantsLoading] = useState(false);
-  const [tenantsError, setTenantsError] = useState<string | null>(null);
+  const [_tenantsLoading, setTenantsLoading] = useState(false);
+  const [_tenantsError, setTenantsError] = useState<string | null>(null);
+  const [tenantProvisionError, setTenantProvisionError] = useState<string | null>(null);
   const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
   const [impersonation, setImpersonation] = useState<ImpersonationState>({
@@ -197,6 +198,8 @@ const App: React.FC = () => {
     // TENANT realm: call /api/me to hydrate tenant context before transitioning.
     // This prevents the "Loading workspace..." hang caused by tenants[] being empty
     // when currentTenant is derived (tenants[] is only fetched for CONTROL_PLANE otherwise).
+    // Clear any previous provision error from a prior login attempt.
+    setTenantProvisionError(null);
     try {
       const me = await getCurrentUser();
       if (me.tenant) {
@@ -213,14 +216,24 @@ const App: React.FC = () => {
         } as Tenant]);
         setCurrentTenantId(t.id);
       } else {
-        // /api/me returned no tenant — fall back to tenantId from login response
+        // /api/me returned no tenant — seed stub so currentTenant is never null
         const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
-        if (tenantId) setCurrentTenantId(tenantId);
+        if (tenantId) {
+          setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: 'B2B', status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
+          setCurrentTenantId(tenantId);
+        }
       }
-    } catch {
-      // /api/me failed — best-effort: use tenantId from login payload
+    } catch (err) {
+      // /api/me failed — seed stub tenant so UI never hangs on Loading workspace spinner
       const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
-      if (tenantId) setCurrentTenantId(tenantId);
+      if (tenantId) {
+        setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: 'B2B', status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
+        setCurrentTenantId(tenantId);
+      }
+      // Show deterministic error banner for unprovisioned tenant (404)
+      if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
+        setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
+      }
     }
 
     setAppState('EXPERIENCE');
@@ -739,6 +752,17 @@ const App: React.FC = () => {
         }
         return (
           <CartProvider>
+            {tenantProvisionError && (
+              <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
+                ⚠️ {tenantProvisionError}
+                <button
+                  className="ml-4 text-amber-600 underline text-xs"
+                  onClick={() => setTenantProvisionError(null)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <ExperienceShell {...props}>
               <div className="absolute top-4 right-4 z-[60] flex gap-2">
                 <CartToggleButton setShowCart={setShowCart} />
@@ -793,10 +817,11 @@ const App: React.FC = () => {
               </p>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+              <label htmlFor="impersonation-reason" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                 Reason (required, min 10 chars)
               </label>
               <textarea
+                id="impersonation-reason"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-rose-500 outline-none"
                 rows={3}
                 placeholder="e.g. Investigating tenant support ticket #1234..."
