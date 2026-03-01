@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { adminAuthMiddleware } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
-import { withDbContext } from '../db/withDbContext.js';
+import { withAdminContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 
 /**
@@ -49,7 +49,7 @@ const adminCartSummariesRoutes: FastifyPluginAsync = async fastify => {
     const { tenant_id, limit, cursor, updated_after } = parseResult.data;
 
     try {
-      const summaries = await withDbContext({ isAdmin: true }, async () => {
+      const summaries = await withAdminContext(prisma, async tx => {
         // Build where clause
         const where: {
           tenantId?: string;
@@ -73,7 +73,7 @@ const adminCartSummariesRoutes: FastifyPluginAsync = async fastify => {
         }
 
         // Query projection table ONLY
-        const items = await prisma.marketplaceCartSummary.findMany({
+        const items = await tx.marketplaceCartSummary.findMany({
           where,
           orderBy: [
             { lastUpdatedAt: 'desc' },
@@ -137,9 +137,9 @@ const adminCartSummariesRoutes: FastifyPluginAsync = async fastify => {
     const { cart_id } = parseResult.data;
 
     try {
-      const summary = await withDbContext({ isAdmin: true }, async () => {
+      const summary = await withAdminContext(prisma, async tx => {
         // Query projection table ONLY (not Cart, CartItem, or CatalogItem)
-        return await prisma.marketplaceCartSummary.findUnique({
+        return await tx.marketplaceCartSummary.findUnique({
           where: { cartId: cart_id },
           select: {
             id: true,

@@ -601,3 +601,50 @@ export async function getOrganizationIdentity(
     return org;
   });
 }
+
+// ── G-006C: Admin Context Helper ───────────────────────────────────────────────────────────────────
+//
+// RATIONALE:
+// - Control-plane admin routes need cross-tenant RLS access (app.is_admin = 'true').
+// - withDbContext fail-closes on missing orgId, so a sentinel is used.
+// - This shadows / exports the local pattern established in control.ts (G-004)
+//   so it can be consumed by any route without duplicating the helper.
+
+/**
+ * ADMIN_SENTINEL_ID — placeholder org/actor UUID for admin-realm operations.
+ *
+ * Admin operations are cross-tenant (no meaningful orgId). This sentinel
+ * satisfies withDbContext's fail-closed orgId/actorId requirements.
+ */
+export const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
+
+/**
+ * withAdminContext — Execute DB operations in admin realm with RLS bypass.
+ *
+ * Sets app.is_admin = 'true' in the transaction-local GUC so that:
+ * - admin_select RLS policies grant cross-tenant SELECT
+ * - restrictive_guard admin arm passes
+ *
+ * Canonical replacement for the legacy 2-arg withDbContext({ isAdmin: true }, fn)
+ * pattern in admin routes (G-006C closure).
+ *
+ * @param prismaClient - Prisma client instance (module-level singleton)
+ * @param callback - Async DB operation (must use tx, not outer prisma)
+ * @returns Result from callback
+ */
+export async function withAdminContext<T>(
+  prismaClient: PrismaClient,
+  callback: (tx: any) => Promise<T>
+): Promise<T> {
+  const ctx: DatabaseContext = {
+    orgId:     ADMIN_SENTINEL_ID,
+    actorId:   ADMIN_SENTINEL_ID,
+    realm:     'control',
+    requestId: randomUUID(),
+  };
+  return withDbContext(prismaClient, ctx, async tx => {
+    // Admin RLS bypass flag: checked by admin_select policies and restrictive_guard admin arm
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+    return callback(tx);
+  });
+}
