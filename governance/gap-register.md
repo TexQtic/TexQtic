@@ -150,3 +150,156 @@ Doctrine Version: v1.4
 | Multi-region tenant routing            | Geographic isolation for compliance    | W5            |
 | AI model drift detection + auto-freeze | Safety boundary for AI automation      | W5            |
 | Real-time event streaming (WebSocket)  | Live audit feed for control plane      | W5            |
+
+---
+
+# Role Model + RLS Vocabulary Anchor (2026-03-01)
+
+> **Anchored:** 2026-03-01. Investigation basis: TECS WAVE 3 TAIL / ROLE MODEL FOUNDATION investigation.
+> Reference gaps: G-006C, G-006D, OPS-ENV-002, OPS-DB-RECOVER-001.
+> This section is a permanent planning anchor — do not rewrite; append updates as addenda.
+
+---
+
+## 1. Agreed 3-Role Model — Stable Contract
+
+### Tenant Admin (Org Admin)
+- **Scope:** Single org/tenant. All DB reads and writes are RLS-scoped to one `tenant_id` via `app.org_id`.
+- **Identity:** Real tenant user; `memberships` row exists with `MembershipRole` in (OWNER, ADMIN, MEMBER, VIEWER). JWT carries `userId` + `tenantId`.
+- **DB context:** `withDbContext` → `app.org_id = <tenantId>`, `app.actor_id = <userId>`, `app.realm = 'tenant'`, `app.bypass_rls = 'off'`. `app.is_admin` is NOT set.
+- **RLS enforcement:** `tenant_id = current_setting('app.org_id', true)` arm in all PERMISSIVE policies.
+- **Note (current gap):** `MembershipRole` stored in DB and on `request.userRole` but NEVER flows into DB GUC `app.roles`. RLS treats all tenant users identically. Role boundary is app-layer only. See decision point D-5 in gap list below.
+
+### Platform Admin (Control Plane Operator)
+- **Scope:** Cross-tenant bounded reads and writes (support, compliance, finance ops). Cross-tenant only where RLS explicitly permits via `app.is_admin = 'true'`.
+- **Identity:** Admin principal; `admin_users` row with `AdminRole` in (SUPER_ADMIN, SUPPORT, ANALYST). JWT carries `adminId` + `role`. Middleware: `adminAuthMiddleware` → `request.isAdmin = true`, `request.adminId`, `request.adminRole`.
+- **DB context:** `withAdminContext` → sentinel `orgId = actorId = '00000000-0000-0000-0000-000000000001'`, `realm = 'control'`, then `app.is_admin = 'true'`. Context: `buildContextFromRequest` is NOT used for admin routes (would fail-closed on missing `orgId`).
+- **RLS enforcement:** `current_setting('app.is_admin', true) = 'true'` arm in PERMISSIVE policies + RESTRICTIVE guard admin arm.
+- **Capability flag:** `app.is_admin` is the current runtime capability flag for platform admin identity.
+
+### Superadmin (Platform Controller / Orchestrator) — FUTURE FLAG
+- **Scope:** All operations including privileged overrides (e.g., force-void, cross-tenant destructive actions). Must be explicit and audited; never accidental.
+- **Identity:** `AdminRole.SUPER_ADMIN` exists in DB enum (schema.prisma line 999) and seeded. `requireAdminRole('SUPER_ADMIN')` helper exported from `auth.ts` line 90. Currently zero runtime differentiation from Platform Admin at DB/RLS level.
+- **DB context (not implemented):** No `app.is_superadmin` GUC. No DB function checks for superadmin. Same `withAdminContext` path as Platform Admin — indistinguishable at RLS.
+- **Required:** Introduce `app.is_superadmin = 'true'` as a separate GUC; add superadmin-specific policies. See TECS item OPS-RLS-SUPERADMIN-001 (future wave).
+
+---
+
+## 2. CRITICAL DB Vocabulary Mismatch — D-1 — MUST FIX BEFORE CONTINUING
+
+**Status: CRITICAL / BLOCKING — impersonation_sessions RLS permanently fail-closed**
+
+### The Mismatch
+| Layer | Value set | Source |
+|-------|-----------|--------|
+| `withAdminContext` (TypeScript) | `realm = 'control'` | `database-context.ts` line ~590; `DatabaseContext` union type = `'tenant' \| 'control'` |
+| `app.current_realm()` SQL function comment | values: `'tenant'` or `'control'` | Gate-A migration comment |
+| `app.require_admin_context()` | checks `current_realm() = 'admin'` | Gate-D7 migration line 17 |
+| **Result** | `require_admin_context()` is **always FALSE** in production | Dead function |
+
+### Impact
+Any policy that uses `app.require_admin_context()` as a predicate is permanently fail-closed (always blocks) for all production admin operations:
+- `impersonation_sessions` SELECT/INSERT/UPDATE unified policies: all fail-closed → impersonation cannot function under RLS.
+- These tables survive today only because the service (`impersonation.service.ts`) uses raw `prisma.$transaction` without `SET LOCAL ROLE texqtic_app`, bypassing RLS as the postgres superuser (`BYPASSRLS`). This is security debt, not correctness.
+
+### Long-term Vocabulary Principle
+- `app.realm` is a **plane identifier** only. Values: `tenant`, `control`, `system`, `test`. Do NOT use realm to grant privileges.
+- Platform admin capability → explicit flag: `app.is_admin = 'true'` (current) → `app.is_platform_admin = 'true'` (future rename, controlled TECS).
+- Superadmin capability → separate flag: `app.is_superadmin = 'true'` (future).
+- Never use `realm = 'admin'`; the admin plane IS the control plane (`realm = 'control'`).
+
+### Safe Remediation Path
+- **Short term (Wave 3 tail — P0):** Fix `app.require_admin_context()` DB function to treat `realm IN ('control')` as admin-capable, OR retire the function and key off `app.is_admin = 'true'` + `actor_id NOT NULL` directly. Either path resolves the dead-function gap.
+- **Medium term:** If `app.is_admin` is renamed to `app.is_platform_admin`, do so via a single controlled TECS with a migration covering all policy references in one transaction.
+
+---
+
+## 3. audit_logs Mixed Policy State — Decision: Option B
+
+**Current state (as of 2026-03-01):**
+- `rls.sql` creates `audit_logs_tenant_read` (PERMISSIVE SELECT).
+- Migration `20260304000000_gatetest003_audit_logs_admin_select` creates `audit_logs_admin_select` (PERMISSIVE SELECT, `tenant_id IS NULL` only) + extends `audit_logs_guard` RESTRICTIVE with admin arm.
+- Gatetest003 verifier DO block expects `audit_logs_select_unified` + `audit_logs_admin_select` = exactly 2 SELECT policies. If `audit_logs_tenant_read` was never dropped, count = 3 → verifier FAIL.
+
+### Option A — Drop audit_logs_admin_select; rely on existing unified tenant policy
+**Pros:** Fastest. Minimal SQL touch if unified already has admin arm.
+**Cons:**
+- If remaining unified policy is tenant-only, platform admin loses cross-tenant audit visibility.
+- Does not fix naming drift (`audit_logs_tenant_read` vs expected `audit_logs_select_unified`).
+- Higher regression risk: removing known admin gate without confirming remaining policy covers admin arm.
+- **Only safe if** live `pg_policies.qual` for the remaining SELECT policy explicitly includes `OR current_setting('app.is_admin', true) = 'true'`.
+
+### Option B — Single unified SELECT policy with tenant OR admin arm; remove extra admin policy ✅ CHOSEN
+**Pros:**
+- Cleanest structure: one PERMISSIVE SELECT for `texqtic_app`.
+- Explicitly enforces cross-tenant admin reads through `app.is_admin`.
+- Removes naming drift; establishes canonical policy name `audit_logs_select_unified`.
+- Future-proof: add `OR current_setting('app.is_superadmin', true) = 'true'` arm without creating new policies.
+
+**Required reconciliation steps for Option B:**
+1. Drop `audit_logs_tenant_read` (rls.sql name) and `audit_logs_admin_select`.
+2. Create `audit_logs_select_unified` with qual:
+   - `(org_id IS NOT NULL AND tenant_id::text = current_setting('app.org_id', true))` — tenant arm
+   - `OR current_setting('app.is_admin', true) = 'true'` — platform admin arm (cross-tenant, NO `tenant_id IS NULL` restriction — see key semantic decision below)
+3. Confirm gatetest003-equivalent verifier count = 1 (unified) + verify RESTRICTIVE guard unchanged.
+
+**Key semantic decision recorded:** Platform admin cross-tenant audit reads SHOULD include tenant-scoped rows (not only `tenant_id IS NULL`). Rationale: admin investigation requires reading "what did tenant X do?" The `tenant_id IS NULL` restriction in `audit_logs_admin_select` was a conservative first pass; Option B removes it. Mandatory compensating control: all control-plane read endpoints that query `audit_logs` MUST log via `writeAuditLog` (see D-3 gap, and TECS item below).
+
+**Decision:** Option B. Record: "audit_logs SELECT consolidation → single `audit_logs_select_unified` policy; admin arm without `tenant_id IS NULL` restriction; mandatory read-audit logging on all control-plane GET /audit-logs handlers."
+
+---
+
+## 4. Gap List — Wave 3 Tail Specific Gaps
+
+| ID | Gap | Severity | First identified |
+|----|-----|---------|-----------------|
+| D-1 | `app.require_admin_context()` always returns FALSE in production; `realm = 'admin'` never set; impersonation RLS dead-code | **CRITICAL** | 2026-03-01 investigation |
+| D-2 | `AdminRole.SUPER_ADMIN` exists in schema/seed but zero runtime differentiation from SUPPORT/ANALYST at RLS level | **HIGH** | 2026-03-01 investigation |
+| D-3 | All admin READ endpoints (`GET /api/control/*`) are unlogged — no `writeAuditLog` call on any of 9 GET handlers | **HIGH** | 2026-03-01 investigation |
+| D-4 | `impersonation.service` uses raw `prisma.$transaction` without `SET LOCAL ROLE texqtic_app` — operates as postgres BYPASSRLS superuser; RLS not enforced for impersonation writes | **MEDIUM** | 2026-03-01 investigation |
+| D-5 | `MembershipRole` (OWNER/ADMIN/MEMBER/VIEWER) never flows to `app.roles` GUC; RLS treats all tenant users identically — role boundary is app-layer only | **MEDIUM** | 2026-03-01 investigation |
+| D-6 | `audit_logs` mixed policy naming: `audit_logs_tenant_read` (rls.sql) coexists with gatetest003 expectation of `audit_logs_select_unified`; verifier may fail depending on apply order | **MEDIUM** | 2026-03-01 investigation |
+| D-7 | `audit_logs_admin_select` restricts admin reads to `tenant_id IS NULL` rows only — blocks cross-tenant investigation reads | **LOW** | 2026-03-01 investigation (resolved by Option B above) |
+| D-8 | `withDbContext` sets `bypass_rls = 'off'` but does NOT explicitly reset `app.is_admin`; pooler theoretically could bleed `is_admin='true'` from prior tx (mitigated by SET LOCAL semantics) | **LOW** | 2026-03-01 investigation |
+
+---
+
+## 5. Wave 3 Tail — Priority Ladder (No-Drift Execution Order)
+
+Established 2026-03-01. Must not be reordered without a new governance anchor.
+
+```
+P0 — OPS-RLS-ADMIN-REALM-001
+     Fix require_admin_context() dead function (D-1)
+     Blocks: impersonation RLS correctness; D-4 fix pre-req
+     Direction: keep realm='control'; update DB function to check
+                realm IN ('control') instead of realm = 'admin',
+                OR remove realm check entirely and key off
+                app.is_admin + actor_id NOT NULL
+     → MUST complete before Wave 3.1+ RLS consolidation resumes
+
+P1 — G-006C-AUDIT-LOGS-UNIFY-001
+     Resolve audit_logs mixed state using Option B (D-6, D-7)
+     + add control-plane read-audit logging (D-3)
+     Targets:
+       - Platform admin can read cross-tenant audit rows (no tenant_id IS NULL)
+       - Tenant admin reads only own-tenant rows
+       - Admin GET /api/control/audit-logs is logged via writeAuditLog
+     → Only after P0
+
+P2 — Remaining G-006C RLS consolidation waves
+     (carts, cart_items, memberships, other tables per wave board)
+     → Only after P0 + P1
+```
+
+---
+
+## 6. Queued TECS Sequence (Plan → Implement)
+
+| TECS ID | Title | Priority | Blocks | Notes |
+|---------|-------|---------|--------|-------|
+| **OPS-RLS-ADMIN-REALM-001** | Fix admin realm mismatch — `require_admin_context()` dead function | P0 | All control-plane RLS correctness; impersonation.service refactor | Aligns `realm` vocabulary with code; repairs impersonation session RLS |
+| **G-006C-AUDIT-LOGS-UNIFY-001** | audit_logs Option B consolidation + admin-view audit logging | P1 | D-3, D-6, D-7 | Single `audit_logs_select_unified` policy; fold admin arm; drop extra policy; add `writeAuditLog` to all GET /api/control/* read endpoints |
+| **OPS-IMPERSONATION-RLS-001** | Wire `impersonation.service` through `withAdminContext` (fix D-4) | P1 (after OPS-RLS-ADMIN-REALM-001) | Impersonation security correctness | Replace raw `prisma.$transaction` with RLS-enforced context in `startImpersonation` + `stopImpersonation` |
+| **G-006C-WAVE3-REMAINING** | Remaining Wave 3 RLS consolidation (carts, memberships, other tables) | P2 | — | Resume per wave-2-board.md after P0 + P1 complete |
+| **OPS-RLS-SUPERADMIN-001** | Introduce `app.is_superadmin` GUC + superadmin-specific policies | Future / Wave 4+ | Console planning | Distinct runtime capability for SuperAdmin beyond Platform Admin |
