@@ -3939,3 +3939,66 @@ Wave 3 Tail Sprint -- PHASE A of G-006D/G-006C/RLS Consolidation driver.
 - No net-new lint warnings introduced.
 
 | G-006D | Login context modernization CLOSED | impl `56c0387` |
+
+
+---
+
+## GOVERNANCE-SYNC-028 -- G-006C VALIDATED/CLOSED: Admin Cart Summaries Canonical Context + Admin RLS Select
+
+Date: 2026-03-01 (UTC)
+Task ID: G-006C
+Status: VALIDATED / CLOSED
+Implementation Commit: `6f673ad`
+Migration ID: `20260314000000_g006c_admin_cart_summaries_admin_rls`
+
+### Scope
+Wave 3 Tail Sprint -- PHASE B of G-006D/G-006C/RLS Consolidation driver.
+
+### Actions
+
+1. **`server/src/lib/database-context.ts`** -- Added:
+   - `ADMIN_SENTINEL_ID` constant (`'00000000-0000-0000-0000-000000000001'`) -- placeholder org/actor UUID for admin-realm operations (matches the local sentinel in control.ts G-004).
+   - `withAdminContext(prismaClient, callback)` -- exported canonical helper that builds a `DatabaseContext` (orgId=ADMIN_SENTINEL_ID, actorId=ADMIN_SENTINEL_ID, realm='control', requestId=randomUUID()), calls canonical `withDbContext`, then sets `app.is_admin='true'` (tx-local GUC) before invoking callback.
+
+2. **`server/src/routes/admin-cart-summaries.ts`** -- Changes:
+   - Removed `import { withDbContext } from '../db/withDbContext.js'` (legacy 2-arg import eliminated).
+   - Added `import { withAdminContext } from '../lib/database-context.js'`.
+   - **Call site 1** (GET /cart-summaries): `withDbContext({ isAdmin: true }, async () =>` replaced with `withAdminContext(prisma, async tx =>`.
+   - `prisma.marketplaceCartSummary.findMany` inside that callback replaced with `tx.marketplaceCartSummary.findMany`.
+   - **Call site 2** (GET /cart-summaries/:cart_id): `withDbContext({ isAdmin: true }, async () =>` replaced with `withAdminContext(prisma, async tx =>`.
+   - `prisma.marketplaceCartSummary.findUnique` inside that callback replaced with `tx.marketplaceCartSummary.findUnique`.
+   - Route behavior preserved: optional tenant_id filter, cursor pagination, :cart_id lookup.
+
+3. **Migration `20260314000000_g006c_admin_cart_summaries_admin_rls`** -- Created:
+   - STEP 1: `CREATE POLICY admin_select ON marketplace_cart_summaries FOR SELECT USING (current_setting('app.is_admin', true) = 'true')` -- PERMISSIVE, grants cross-tenant SELECT when app.is_admin='true'.
+   - STEP 2: `DROP POLICY restrictive_guard` + `CREATE POLICY restrictive_guard AS RESTRICTIVE FOR ALL` -- original arms preserved (require_org_context OR projector_bypass_enabled OR bypass_enabled) plus new `OR current_setting('app.is_admin', true) = 'true'` arm in both USING and WITH CHECK.
+   - STEP 3: DO block verifies admin_select + restrictive_guard present + FORCE RLS still intact.
+   - No other tables touched. No schema change. No FORCE RLS change. No projector/test-bypass arms altered.
+
+### No Changes Made To
+- Tests (not touched per task constraint)
+- Any tables other than marketplace_cart_summaries
+- Any RLS policies other than admin_select (new) and restrictive_guard (admin arm added)
+- Any other routes or files
+
+### Verification
+
+| Gate | Result |
+| ---- | ------ |
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors / 104 warnings, all pre-existing) |
+| Only allowlisted files staged | admin-cart-summaries.ts + database-context.ts + migration.sql |
+| Legacy `withDbContext` import removed from `admin-cart-summaries.ts` | YES |
+| `withAdminContext` exported from `database-context.ts` | YES |
+| `tx` used for all queries inside callbacks (not module prisma) | YES |
+| Migration admin_select policy: USING is_admin='true' | YES (file verified) |
+| Migration restrictive_guard admin arm added | YES (file verified) |
+| No other tables in migration | YES |
+| Migration DB application | PENDING -- requires psql apply to Supabase dev env |
+
+### Notes
+- The critical correctness issue: the legacy code called `withDbContext({ isAdmin: true })` which set `app.is_admin='true'` inside the transaction, but the `restrictive_guard` did not include an admin arm. Under FORCE RLS this meant admin requests could be blocked by the guard before reaching the permissive policies -- silent zero-rows or permission denied. The migration closes this gap.
+- `ADMIN_SENTINEL_ID` in `database-context.ts` matches the existing local `ADMIN_SENTINEL_ID` in `control.ts` (G-004). They are now consistent.
+- The +1 lint warning (104 vs 103) is the `(tx: any)` parameter in `withAdminContext` -- identical to the pre-existing pattern for all other helpers in the file.
+
+| G-006C | Admin cart summaries canonical context + admin RLS select CLOSED | impl `6f673ad` | migration `20260314000000_g006c_admin_cart_summaries_admin_rls` |
