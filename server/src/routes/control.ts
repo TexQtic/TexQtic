@@ -105,8 +105,15 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/control/audit-logs
    * List all audit logs (admin only)
+   *
+   * D-3 fix (G-006C-AUDIT-LOGS-UNIFY-001): admin read access is now itself audited.
+   * The audit write uses the existing writeAuditLog(prisma, ...) pattern (postgres role)
+   * matching all other admin audit writes in this file. One entry per request, not per row.
    */
   fastify.get('/audit-logs', async (request, reply) => {
+    // adminId guaranteed by adminAuthMiddleware
+    const adminId = request.adminId ?? 'unknown';
+
     const query = request.query as {
       tenantId?: string;
       action?: string;
@@ -131,6 +138,17 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         },
       });
     });
+
+    // D-3: Audit the admin read (one entry per request, no loop risk)
+    await writeAuditLog(
+      prisma,
+      createAdminAudit(adminId, 'ADMIN_AUDIT_LOG_VIEW', 'audit_log', {
+        filterTenantId: query.tenantId ?? null,
+        filterAction: query.action ?? null,
+        filterLimit: query.limit ? parseInt(query.limit) : 50,
+        resultCount: logs.length,
+      })
+    );
 
     return sendSuccess(reply, { logs, count: logs.length });
   });
