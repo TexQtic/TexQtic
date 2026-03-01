@@ -3800,3 +3800,53 @@ G-024 row updated: status `NOT STARTED` → `VALIDATED`; commit `a133123` added;
 sanctions domain CLOSED (GOVERNANCE-SYNC-024, 2026-03-13).
 
 | 024 | G-024 Sanctions Domain | impl commit a133123 |
+
+---
+
+## GOVERNANCE-SYNC-025 — OPS-ENV-001 Prisma Migration Env Hardening
+
+Date: 2026-03-14
+Task ID: OPS-ENV-001
+Status: VALIDATED
+
+### Root Cause
+`schema.prisma` used `directUrl = env("MIGRATION_DATABASE_URL")` while all TECS
+prompts and copilot-instructions referenced `DIRECT_DATABASE_URL`. The naming
+mismatch caused three consecutive production deploy blocks across the G-024
+migration cycle.
+
+### Decision
+Option A — Standardize on `DIRECT_DATABASE_URL` (Prisma community convention).
+`MIGRATION_DATABASE_URL` retained as backward-compat alias in scripts only (with
+deprecation warning); it is NOT read by Prisma anymore.
+
+### Files Changed
+| File | Change |
+| ---- | ------ |
+| server/prisma/schema.prisma | `directUrl = env("MIGRATION_DATABASE_URL")` → `env("DIRECT_DATABASE_URL")` |
+| server/.env.example | Database section rewritten; two-URL pattern + endpoint type table documented |
+| server/scripts/prisma-env-preflight.ts | CREATED — validates DIRECT_DATABASE_URL, classifies endpoint, blocks TX_POOLER (exit 1) |
+| server/scripts/migrate-deploy.ts | CREATED — wrapper: loads .env, validates, injects env, runs `prisma migrate deploy` |
+| server/package.json | Added `prisma:preflight` and `migrate:deploy:prod` scripts |
+| docs/ops/prisma-migrations.md | CREATED — canonical ops guide for Prisma migrations |
+
+### Proof (Phase 4 — All EXIT Codes Verified)
+| Scenario | Expected | Actual |
+| -------- | -------- | ------ |
+| DIRECT_DATABASE_URL missing | EXIT 1 | EXIT 1 ✅ |
+| TX pooler (aws-0-*:6543) | EXIT 1 | EXIT 1 ✅ |
+| Session pooler (aws-1-*:5432) | EXIT 0 | EXIT 0 ✅ |
+| Direct host (db.*.supabase.co:5432) | EXIT 0 | EXIT 0 ✅ |
+
+Typecheck: EXIT 0 ✅  
+No business logic changes. No migrations applied. No RLS change.
+
+### Notes
+- `server/.env` (gitignored) still contains `MIGRATION_DATABASE_URL` key — operator
+  must manually rename to `DIRECT_DATABASE_URL`. The `migrate-deploy.ts` wrapper
+  accepts the legacy key with a deprecation warning as a one-cycle grace period.
+- G-024 production migration (`20260313000000_g024_sanctions_domain`) still pending
+  — blocked by this env mismatch (now resolved). Run `pnpm -C server migrate:deploy:prod`
+  after renaming the key in `server/.env`.
+
+| OPS-ENV-001 | Prisma env var hardening | impl commits below |
