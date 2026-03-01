@@ -3887,3 +3887,55 @@ Status: VALIDATED
 
 | OPS-ENV-002 | G-024 prod deploy complete | no commit (gitignored + ledger-only) |
 | OPS-DB-RECOVER-001 | g006c ledger recovery + G-024 deploy unblocked | no commit |
+
+
+---
+
+## GOVERNANCE-SYNC-027 -- G-006D VALIDATED/CLOSED: Login Context Modernization
+
+Date: 2026-03-01 (UTC)
+Task ID: G-006D
+Status: VALIDATED / CLOSED
+Implementation Commit: `56c0387`
+
+### Scope
+Wave 3 Tail Sprint -- PHASE A of G-006D/G-006C/RLS Consolidation driver.
+
+### Actions
+
+1. **`server/src/lib/database-context.ts`** -- Added:
+   - `LOGIN_SENTINEL_ACTOR` constant (`'00000000-0000-0000-0000-000000000002'`) -- clearly named placeholder actor UUID for pre-auth login flows.
+   - `withLoginContext(prismaClient, tenantId, callback)` -- canonical exported helper that builds a `DatabaseContext` (orgId=tenantId, actorId=LOGIN_SENTINEL_ACTOR, realm='tenant', requestId=randomUUID()) and delegates to the 3-arg canonical `withDbContext`.
+
+2. **`server/src/routes/auth.ts`** -- Changes:
+   - Removed `import { withDbContext } from '../db/withDbContext.js'` (legacy 2-arg import eliminated).
+   - Added `withLoginContext` to existing import from `'../lib/database-context.js'`.
+   - **Call site 1** (`POST /api/auth/login`, unified login): `withDbContext({ tenantId }, async tx =>` replaced with `withLoginContext(prisma, tenantId, async tx =>`.
+   - **Latent membership filter fix** (same call site): added `where: { tenantId }` to the memberships query in unified login -- previously all memberships were fetched without tenant scoping.
+   - **Call site 2** (`POST /api/auth/tenant/login`): `withDbContext({ tenantId }, async tx =>` replaced with `withLoginContext(prisma, tenantId, async tx =>`.
+   - In both call sites `tx` is used as the transaction client (not module-level `prisma`).
+
+### No Changes Made To
+- Tests (not touched per task constraint)
+- Migrations (none required)
+- RLS policies (none required)
+- Any other routes or files
+
+### Verification
+
+| Gate | Result |
+| ---- | ------ |
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors / 103 warnings, all pre-existing) |
+| Only allowlisted files modified | database-context.ts + auth.ts |
+| Legacy withDbContext import removed from auth.ts | YES |
+| withLoginContext exported from database-context.ts | YES |
+| LOGIN_SENTINEL_ACTOR constant defined | YES |
+| Membership where: { tenantId } filter added to unified login | YES |
+
+### Notes
+- `POST /api/auth/login` and `POST /api/auth/tenant/login` both now use the canonical `withDbContext` path via `withLoginContext`.
+- The membership filter fix closes a latent issue: without it, the first membership across all tenants could be returned if a user belonged to multiple tenants (unified login lacked the filter that the explicit tenant login already had).
+- No net-new lint warnings introduced.
+
+| G-006D | Login context modernization CLOSED | impl `56c0387` |
