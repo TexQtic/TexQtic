@@ -4049,3 +4049,40 @@ ealm='control' AND actor_id NOT NULL AND is_admin='true'
   - TestC: control+nonadmin -> admin_ctx=f, bypass=f -> 0 rows (RESTRICTIVE guard filters) -> PASS
   Note: PostgreSQL SELECT+RLS returns 0 rows (not 'permission denied') when RESTRICTIVE policy evaluates false. Correct behavior.
 - Gap D-4: VALIDATED
+
+---
+
+## GOVERNANCE-SYNC-029 -- G-006C-AUDIT-LOGS-UNIFY-001
+
+**Date:** 2026-03-01
+**Status:** COMPLETE
+
+### DB Changes (migration 20260301130000_g006c_audit_logs_unify)
+- Dropped: audit_logs_tenant_read (IF EXISTS -- was absent)
+- Dropped: audit_logs_admin_select (was: PERMISSIVE SELECT, tenant_id IS NULL only -- D-7 bug)
+- Dropped: audit_logs_select_unified (was: PERMISSIVE SELECT, tenant arm only -- D-6 gap)
+- Created: audit_logs_select_unified (new, canonical Option B)
+  USING: tenant_id::text = app.org_id OR is_admin = 'true'
+- DO block verification PASS: exactly 1 PERMISSIVE SELECT, RESTRICTIVE guard intact
+- FORCE RLS: t (unchanged)
+- Prisma ledger: marked applied
+
+### Code Changes (server/src/routes/control.ts)
+- GET /api/control/audit-logs now calls writeAuditLog(prisma, createAdminAudit(...))
+  action: ADMIN_AUDIT_LOG_VIEW, entity: audit_log, metadata: filter params + resultCount
+- One audit entry per request, no recursive loop risk
+- Uses existing writeAuditLog(prisma, ...) pattern matching all other admin writes in file
+
+### RLS Verification Results
+- TEST_A_tenant(org=test-uuid): count=0 rows (own tenant, test UUID has no rows) -- PASS
+- TEST_A_admin_rows_visible_under_tenant: count=0 (admin rows NOT visible under tenant context) -- PASS (no tenant_id IS NULL leakage)
+- TEST_B_admin: count=93 rows (all rows visible cross-tenant) -- PASS (D-7 fix confirmed)
+- TEST_C_nonadmin: count=0 rows (blocked) -- PASS
+
+### Quality Gates
+- typecheck: EXIT 0
+- lint: 0 errors (104 warnings, unchanged baseline)
+
+### Gap Close
+- D-6: VALIDATED (policy naming conflict resolved; single canonical policy)
+- D-7: VALIDATED (admin_select tenant_id IS NULL restriction removed; admin sees all rows)
