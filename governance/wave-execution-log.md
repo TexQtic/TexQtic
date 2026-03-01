@@ -3842,11 +3842,48 @@ Typecheck: EXIT 0 ✅
 No business logic changes. No migrations applied. No RLS change.
 
 ### Notes
-- `server/.env` (gitignored) still contains `MIGRATION_DATABASE_URL` key — operator
-  must manually rename to `DIRECT_DATABASE_URL`. The `migrate-deploy.ts` wrapper
-  accepts the legacy key with a deprecation warning as a one-cycle grace period.
-- G-024 production migration (`20260313000000_g024_sanctions_domain`) still pending
-  — blocked by this env mismatch (now resolved). Run `pnpm -C server migrate:deploy:prod`
-  after renaming the key in `server/.env`.
+- `server/.env` (gitignored) key renamed: `MIGRATION_DATABASE_URL` → `DIRECT_DATABASE_URL` (OPS-ENV-002, 2026-03-01). One-cycle grace period in `migrate-deploy.ts` has expired.
+- G-024 production migration (`20260313000000_g024_sanctions_domain`) **APPLIED ✅** via `pnpm -C server migrate:deploy:prod` after OPS-ENV-002 key rename + OPS-DB-RECOVER-001 ledger fix (g006c stuck row, Path B). See GOVERNANCE-SYNC-026.
 
 | OPS-ENV-001 | Prisma env var hardening | impl commits below |
+
+---
+
+## GOVERNANCE-SYNC-026 — OPS-ENV-002 + OPS-DB-RECOVER-001: G-024 Production Deploy APPLIED
+
+Date: 2026-03-01 (UTC)  
+Task IDs: OPS-ENV-002, OPS-DB-RECOVER-001  
+Status: VALIDATED
+
+### Actions
+1. **OPS-ENV-002**: Renamed `MIGRATION_DATABASE_URL` → `DIRECT_DATABASE_URL` in `server/.env` (gitignored). Preflight: `DIRECT_DATABASE_URL`, SESSION_POOLER (aws-1-*:5432), EXIT 0.
+2. **OPS-DB-RECOVER-001**: Discovered stuck `_prisma_migrations` row for `20260223020000_g006c_rls_carts_consolidation` (`finished_at=NULL`, `applied_steps_count=0` from Mar-1 failed deploy). DB investigation confirmed all carts unified policies present in DB out-of-band → Path B. SQL: `UPDATE _prisma_migrations SET finished_at=NOW(), applied_steps_count=1 WHERE migration_name='20260223020000_g006c_rls_carts_consolidation' AND finished_at IS NULL AND rolled_back_at IS NULL` — 1 row affected.
+3. **Deploy**: `pnpm -C server migrate:deploy:prod` → SUCCESS. "Applying migration `20260313000000_g024_sanctions_domain`". "All migrations have been successfully applied."
+4. **Post-deploy**: "Database schema is up to date!" (0 pending, 58 total migrations).
+
+### Verification
+| Check | Result |
+| ----- | ------ |
+| `public.sanctions` table | EXISTS ✅ |
+| `relrowsecurity` + `relforcerowsecurity` | true / true ✅ |
+| `sanctions_guard` (RESTRICTIVE ALL) | present ✅ |
+| `sanctions_admin_select` (PERMISSIVE SELECT) | present ✅ |
+| `sanctions_pkey` | present ✅ |
+| `sanctions_active_org_severity_idx` | present ✅ |
+| `sanctions_active_entity_severity_idx` | present ✅ |
+| `sanctions_org_id_created_idx` | present ✅ |
+| `is_entity_sanctioned()` fn | present ✅ |
+| `is_org_sanctioned()` fn | present ✅ |
+| `sanctions_set_updated_at()` fn | present ✅ |
+| Row count | 0 (vacuous — structure proven by RLS + indexes + functions) |
+| `/health` | HTTP 200 ✅ |
+
+### Notes
+- No tracked files modified. No new commits for OPS-ENV-002/OPS-DB-RECOVER-001 (env key rename is gitignored; ledger fix is DB-only).
+- `server/.env` key rename is gitignored — no repo trace. One-cycle grace period (legacy key fallback in `migrate-deploy.ts`) has now expired.
+- g006c (`20260223020000_g006c_rls_carts_consolidation`) ledger-synced via Path B. All 4 carts unified policies + FORCE RLS already present in DB out-of-band, consistent with Wave 3 pattern.
+- G-024 full cycle COMPLETE: impl (`a133123`) → governance sync GOVERNANCE-SYNC-024 (`71cbc4b`) → OPS-ENV-001 GOVERNANCE-SYNC-025 (`6951c9f`, `a38644e`) → OPS-ENV-002 + OPS-DB-RECOVER-001 (this entry, no new commit).
+- gap-register.md updated: G-024 row — DB Migration APPLIED ✅; OPS-ENV-002 + OPS-DB-RECOVER-001 rows added to Ops section.
+
+| OPS-ENV-002 | G-024 prod deploy complete | no commit (gitignored + ledger-only) |
+| OPS-DB-RECOVER-001 | g006c ledger recovery + G-024 deploy unblocked | no commit |
