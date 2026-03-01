@@ -18,6 +18,7 @@ import type {
   ImpersonationSessionStatus,
 } from '../types/impersonation.types.js';
 import { writeAuditLog } from '../lib/auditLog.js';
+import { withAdminContext } from '../lib/database-context.js';
 
 /** TTL in minutes for impersonation tokens */
 const IMPERSONATION_TTL_MINUTES = 30;
@@ -52,7 +53,7 @@ export async function startImpersonation(
 ): Promise<StartImpersonationResult> {
   const { orgId, userId, reason } = req;
 
-  return prisma.$transaction(async tx => {
+  return withAdminContext(prisma, async tx => {
     // Stop-loss: verify tenant exists and is ACTIVE
     const tenant = await tx.tenant.findUnique({
       where: { id: orgId },
@@ -147,7 +148,7 @@ export async function stopImpersonation(
   impersonationId: string,
   stopReason: string
 ): Promise<void> {
-  await prisma.$transaction(async tx => {
+  await withAdminContext(prisma, async tx => {
     const session = await tx.impersonationSession.findUnique({
       where: { id: impersonationId },
       select: {
@@ -224,43 +225,45 @@ export async function getImpersonationStatus(
   adminRole: string,
   impersonationId: string
 ): Promise<ImpersonationSessionStatus> {
-  const session = await prisma.impersonationSession.findUnique({
-    where: { id: impersonationId },
-    select: {
-      id: true,
-      adminId: true,
-      tenantId: true,
-      endedAt: true,
-      expiresAt: true,
-      createdAt: true,
-    },
+  return withAdminContext(prisma, async tx => {
+    const session = await tx.impersonationSession.findUnique({
+      where: { id: impersonationId },
+      select: {
+        id: true,
+        adminId: true,
+        tenantId: true,
+        endedAt: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+    });
+
+    if (!session) {
+      throw new ImpersonationAbortError(
+        `Impersonation session ${impersonationId} not found`,
+        'SESSION_NOT_FOUND'
+      );
+    }
+
+    // Only the session owner or SUPER_ADMIN can view status
+    if (session.adminId !== adminId && adminRole !== 'SUPER_ADMIN') {
+      throw new ImpersonationAbortError(
+        'Not authorized to view this impersonation session',
+        'NOT_AUTHORIZED'
+      );
+    }
+
+    const now = new Date();
+    const active = session.endedAt === null && session.expiresAt > now;
+
+    return {
+      impersonationId: session.id,
+      adminId: session.adminId,
+      orgId: session.tenantId,
+      startedAt: session.createdAt,
+      expiresAt: session.expiresAt,
+      endedAt: session.endedAt,
+      active,
+    };
   });
-
-  if (!session) {
-    throw new ImpersonationAbortError(
-      `Impersonation session ${impersonationId} not found`,
-      'SESSION_NOT_FOUND'
-    );
-  }
-
-  // Only the session owner or SUPER_ADMIN can view status
-  if (session.adminId !== adminId && adminRole !== 'SUPER_ADMIN') {
-    throw new ImpersonationAbortError(
-      'Not authorized to view this impersonation session',
-      'NOT_AUTHORIZED'
-    );
-  }
-
-  const now = new Date();
-  const active = session.endedAt === null && session.expiresAt > now;
-
-  return {
-    impersonationId: session.id,
-    adminId: session.adminId,
-    orgId: session.tenantId,
-    startedAt: session.createdAt,
-    expiresAt: session.expiresAt,
-    endedAt: session.endedAt,
-    active,
-  };
 }
