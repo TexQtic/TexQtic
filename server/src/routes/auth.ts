@@ -8,7 +8,6 @@ import {
   sendValidationError,
   sendRateLimitExceeded,
 } from '../utils/response.js';
-import { withDbContext } from '../db/withDbContext.js';
 import { prisma } from '../db/prisma.js';
 import {
   generateSecureToken,
@@ -35,6 +34,7 @@ import { config } from '../config/index.js';
 import {
   getOrganizationIdentity,
   OrganizationNotFoundError,
+  withLoginContext,
 } from '../lib/database-context.js';
 
 /**
@@ -164,7 +164,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           windowMinutes: config.RATE_LIMIT_WINDOW_MINUTES,
         });
 
-        const result = await withDbContext({ tenantId }, async tx => {
+        const result = await withLoginContext(prisma, tenantId, async tx => {
           // Look up user by email (Gate D.1: RLS-enforced membership filter)
           // PROD-LOGIN-001: use emailNormalized (trimmed + lowercased) so mixed-case requests
           // resolve to the canonical lowercase email stored in the DB.
@@ -176,6 +176,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
               passwordHash: true,
               emailVerified: true,
               memberships: {
+                where: { tenantId },
                 select: {
                   tenantId: true,
                   role: true,
@@ -878,7 +879,7 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // Execute DB query within tenant RLS context
-      const result = await withDbContext({ tenantId }, async tx => {
+      const result = await withLoginContext(prisma, tenantId, async tx => {
         // Look up user by email
         const user = await tx.user.findUnique({
           where: { email },

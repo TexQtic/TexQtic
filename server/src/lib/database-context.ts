@@ -422,6 +422,55 @@ export async function withNoContext<T>(
   });
 }
 
+// ── G-006D: Login Context Helper ─────────────────────────────────────────────────────────────────
+//
+// RATIONALE:
+// - During login the actor UUID is not yet known (authentication is not complete).
+// - withDbContext fail-closes on missing actorId, so we supply a sentinel that is
+//   clearly identifiable in audit logs as a login-flow placeholder, not a real user.
+// - orgId = tenantId so RLS correctly scopes users/memberships to the target tenant.
+
+/**
+ * LOGIN_SENTINEL_ACTOR — placeholder actor UUID for pre-authentication login flows.
+ *
+ * During login the actor is not yet known (authentication has not completed).
+ * This sentinel satisfies withDbContext's fail-closed actorId requirement while
+ * keeping the audit trail honest: the DB context is scoped to the tenantId org
+ * boundary, and the actor is identified as the login sentinel, not a real user UUID.
+ *
+ * DO NOT use this sentinel outside the withLoginContext flow.
+ */
+export const LOGIN_SENTINEL_ACTOR = '00000000-0000-0000-0000-000000000002';
+
+/**
+ * withLoginContext — Execute tenant auth DB operations with canonical RLS context.
+ *
+ * Used exclusively by the login auth path where the actor UUID is not yet known.
+ * Sets orgId = tenantId so RLS policies correctly scope users/memberships to the
+ * target tenant. Uses LOGIN_SENTINEL_ACTOR as the actorId placeholder.
+ *
+ * Replaces the legacy 2-arg withDbContext({ tenantId }, fn) pattern in auth.ts
+ * (G-006D closure).
+ *
+ * @param prismaClient - Prisma client instance (module-level singleton)
+ * @param tenantId - Target tenant UUID (= app.org_id boundary for RLS)
+ * @param callback - Async DB operation (must use tx, not outer prisma)
+ * @returns Result from callback
+ */
+export async function withLoginContext<T>(
+  prismaClient: PrismaClient,
+  tenantId: string,
+  callback: (tx: any) => Promise<T>
+): Promise<T> {
+  const ctx: DatabaseContext = {
+    orgId: tenantId,
+    actorId: LOGIN_SENTINEL_ACTOR,
+    realm: 'tenant',
+    requestId: randomUUID(),
+  };
+  return withDbContext(prismaClient, ctx, callback);
+}
+
 // ── G-015 Phase C: Organization Identity Helper (Option C — admin-context read) ─────────────────
 //
 // RATIONALE:
