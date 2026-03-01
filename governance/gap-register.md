@@ -258,7 +258,7 @@ Any policy that uses `app.require_admin_context()` as a predicate is permanently
 | D-1 | `app.require_admin_context()` always returns FALSE in production; `realm = 'admin'` never set; impersonation RLS dead-code | **CRITICAL** | 2026-03-01 investigation |
 | D-2 | `AdminRole.SUPER_ADMIN` exists in schema/seed but zero runtime differentiation from SUPPORT/ANALYST at RLS level | **HIGH** | 2026-03-01 investigation |
 | D-3 | All admin READ endpoints (`GET /api/control/*`) are unlogged — no `writeAuditLog` call on any of 9 GET handlers | **HIGH** | 2026-03-01 investigation |
-| D-4 | `impersonation.service` uses raw `prisma.$transaction` without `SET LOCAL ROLE texqtic_app` — operates as postgres BYPASSRLS superuser; RLS not enforced for impersonation writes | **MEDIUM** | 2026-03-01 investigation |
+| D-4 | `impersonation.service` uses raw `prisma.$transaction` without `SET LOCAL ROLE texqtic_app` — operates as postgres BYPASSRLS superuser; RLS not enforced for impersonation writes | **VALIDATED (BYPASSRLS path removed) — GOVERNANCE-SYNC-028** | 2026-03-01 investigation |
 | D-5 | `MembershipRole` (OWNER/ADMIN/MEMBER/VIEWER) never flows to `app.roles` GUC; RLS treats all tenant users identically — role boundary is app-layer only | **MEDIUM** | 2026-03-01 investigation |
 | D-6 | `audit_logs` mixed policy naming: `audit_logs_tenant_read` (rls.sql) coexists with gatetest003 expectation of `audit_logs_select_unified`; verifier may fail depending on apply order | **MEDIUM** | 2026-03-01 investigation |
 | D-7 | `audit_logs_admin_select` restricts admin reads to `tenant_id IS NULL` rows only — blocks cross-tenant investigation reads | **LOW** | 2026-03-01 investigation (resolved by Option B above) |
@@ -302,7 +302,7 @@ P2 — Remaining G-006C RLS consolidation waves
 |---------|-------|---------|--------|-------|
 | **OPS-RLS-ADMIN-REALM-001** | Fix admin realm mismatch — `require_admin_context()` dead function | ✅ COMPLETE | All control-plane RLS correctness; impersonation.service refactor | Migration `20260301120000_ops_rls_admin_realm_fix` applied. GOVERNANCE-SYNC-027. |
 | **G-006C-AUDIT-LOGS-UNIFY-001** | audit_logs Option B consolidation + admin-view audit logging | P1 | D-3, D-6, D-7 | Single `audit_logs_select_unified` policy; fold admin arm; drop extra policy; add `writeAuditLog` to all GET /api/control/* read endpoints |
-| **OPS-IMPERSONATION-RLS-001** | Wire `impersonation.service` through `withAdminContext` (fix D-4) | P1 (after OPS-RLS-ADMIN-REALM-001) | Impersonation security correctness | Replace raw `prisma.$transaction` with RLS-enforced context in `startImpersonation` + `stopImpersonation` |
+| **OPS-IMPERSONATION-RLS-001** | Wire `impersonation.service` through `withAdminContext` (fix D-4) | ✅ COMPLETE | Impersonation security correctness | All 3 functions use `withAdminContext`. Typecheck EXIT 0. Lint 0 errors. RLS verified. GOVERNANCE-SYNC-028. |
 | **G-006C-WAVE3-REMAINING** | Remaining Wave 3 RLS consolidation (carts, memberships, other tables) | P2 | — | Resume per wave-2-board.md after P0 + P1 complete |
 | **OPS-RLS-SUPERADMIN-001** | Introduce `app.is_superadmin` GUC + superadmin-specific policies | Future / Wave 4+ | Console planning | Distinct runtime capability for SuperAdmin beyond Platform Admin |
 

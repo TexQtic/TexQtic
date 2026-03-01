@@ -1,10 +1,10 @@
-# TEXQTIC — WAVE EXECUTION LOG
+﻿# TEXQTIC â€” WAVE EXECUTION LOG
 
 ---
 
 ## Entry Template
 
-### Wave X — \<Wave Name\>
+### Wave X â€” \<Wave Name\>
 
 Start Date:
 End Date:
@@ -22,8 +22,8 @@ Brief description of what this wave accomplishes.
 
 #### Commits
 
-- \<commit hash\> — description
-- \<commit hash\> — description
+- \<commit hash\> â€” description
+- \<commit hash\> â€” description
 
 #### Validation Evidence
 
@@ -33,7 +33,7 @@ Brief description of what this wave accomplishes.
 
 #### Coverage Matrix Impact
 
-What moved from Partial → Implemented?
+What moved from Partial â†’ Implemented?
 
 #### Governance Notes
 
@@ -41,172 +41,172 @@ Lessons learned / adjustments required.
 
 ---
 
-# Wave 2 — Stabilization (In Progress)
+# Wave 2 â€” Stabilization (In Progress)
 
 Start Date: 2026-02-21
-End Date: —
+End Date: â€”
 Branch: main
-Tag: —
+Tag: â€”
 
 #### Objective
 
 Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` (canonical per Decision-0001). Enforce FORCE RLS on commerce tables. Add orders/order_items policies. Standardize middleware and clean up dual-context pattern.
 
-#### G-001 — VALIDATED 2026-02-21
+#### G-001 â€” VALIDATED 2026-02-21
 
-- Commit `25a5519` — initial context variable substitution in all policy bodies (`rls.sql`)
-- Commit `1389ed7` — add comprehensive legacy DROP POLICY cleanup block (old per-op naming: `_tenant_select/_insert/_update/_delete` variants dropped; orphan `tenants_tenant_read` + `users_tenant_read` dropped)
+- Commit `25a5519` â€” initial context variable substitution in all policy bodies (`rls.sql`)
+- Commit `1389ed7` â€” add comprehensive legacy DROP POLICY cleanup block (old per-op naming: `_tenant_select/_insert/_update/_delete` variants dropped; orphan `tenants_tenant_read` + `users_tenant_read` dropped)
 - Proof run output:
-  - Step 1: 0 policies reference `app.tenant_id` ✅
-  - Step 2: 20 policies reference `app.org_id` ✅
-  - Step 3: Cross-tenant isolation — WL context reads 0 non-WL cart rows ✅
+  - Step 1: 0 policies reference `app.tenant_id` âœ…
+  - Step 2: 20 policies reference `app.org_id` âœ…
+  - Step 3: Cross-tenant isolation â€” WL context reads 0 non-WL cart rows âœ…
 
-#### G-002 — VALIDATED 2026-02-21
+#### G-002 â€” VALIDATED 2026-02-21
 
-- Commit `2d16e73` — `migrations/pr-g002-force-rls.sql` ENABLE + FORCE RLS on 13 tenant-scoped tables
+- Commit `2d16e73` â€” `migrations/pr-g002-force-rls.sql` ENABLE + FORCE RLS on 13 tenant-scoped tables
 - Applied via psql to live Supabase
 - Proof run output:
-  - Step 1: All 13 tables relrowsecurity=true, relforcerowsecurity=true ✅
+  - Step 1: All 13 tables relrowsecurity=true, relforcerowsecurity=true âœ…
     - Tables covered: ai_budgets, ai_usage_meters, audit_logs, cart_items, carts, catalog_items, invites, memberships, order_items, orders, tenant_branding, tenant_domains, tenant_feature_overrides
-  - Step 2: Cross-tenant carts COUNT(\*) = 0 (WL context, non-WL filter) ✅
-  - Step 3: Positive control — WL own carts query succeeded without error ✅
+  - Step 2: Cross-tenant carts COUNT(\*) = 0 (WL context, non-WL filter) âœ…
+  - Step 3: Positive control â€” WL own carts query succeeded without error âœ…
 
-#### G-003 — VALIDATED 2026-02-21 (no SQL change required)
+#### G-003 â€” VALIDATED 2026-02-21 (no SQL change required)
 
-- No commit — live policies were already correct (applied in prior hardening waves)
+- No commit â€” live policies were already correct (applied in prior hardening waves)
 - Phase 1 audit result (6 policies for orders + order_items):
-  - `orders_tenant_select` (SELECT) — USING `app.org_id IS NOT NULL AND app.org_id <> '' AND tenant_id = app.org_id::uuid` ✅
-  - `orders_tenant_insert` (INSERT) — WITH CHECK same predicate ✅
-  - `orders_admin_all` (ALL) — USING `app.is_admin = 'true'` ✅
-  - `order_items_tenant_select` (SELECT) — same predicate ✅
-  - `order_items_tenant_insert` (INSERT) — WITH CHECK same predicate ✅
-  - `order_items_admin_all` (ALL) — admin bypass ✅
-- `app.tenant_id` references: 0 ✅
+  - `orders_tenant_select` (SELECT) â€” USING `app.org_id IS NOT NULL AND app.org_id <> '' AND tenant_id = app.org_id::uuid` âœ…
+  - `orders_tenant_insert` (INSERT) â€” WITH CHECK same predicate âœ…
+  - `orders_admin_all` (ALL) â€” USING `app.is_admin = 'true'` âœ…
+  - `order_items_tenant_select` (SELECT) â€” same predicate âœ…
+  - `order_items_tenant_insert` (INSERT) â€” WITH CHECK same predicate âœ…
+  - `order_items_admin_all` (ALL) â€” admin bypass âœ…
+- `app.tenant_id` references: 0 âœ…
 - Phase 3 proof:
-  - Cross-tenant orders COUNT(\*) = 0 (WL context, non-WL filter) ✅
-  - Positive control (own-tenant orders COUNT) = 0, no error ✅
+  - Cross-tenant orders COUNT(\*) = 0 (WL context, non-WL filter) âœ…
+  - Positive control (own-tenant orders COUNT) = 0, no error âœ…
 
-#### Quality Gate Decision — 2026-02-21
+#### Quality Gate Decision â€” 2026-02-21
 
-- Command: `pnpm run typecheck` → EXIT 0 ✅ (after fix: implicit-any in `tenant.ts:662/678` resolved — `cartItems` typed const + `typeof cartItems[number]` callbacks)
-- Command: `pnpm run lint` → EXIT 1 ❌ — 23 errors, 1 warning in FRONTEND files only (pre-existing debt, unrelated to Wave-2 RLS work)
-- Command: `pnpm -C server run typecheck` → EXIT 0 ✅
-- Command: `pnpm -C server run lint` → EXIT 0 ✅ (67 warnings, 0 errors — warnings-only, not blocked)
+- Command: `pnpm run typecheck` â†’ EXIT 0 âœ… (after fix: implicit-any in `tenant.ts:662/678` resolved â€” `cartItems` typed const + `typeof cartItems[number]` callbacks)
+- Command: `pnpm run lint` â†’ EXIT 1 âŒ â€” 23 errors, 1 warning in FRONTEND files only (pre-existing debt, unrelated to Wave-2 RLS work)
+- Command: `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+- Command: `pnpm -C server run lint` â†’ EXIT 0 âœ… (67 warnings, 0 errors â€” warnings-only, not blocked)
 - **Decision:** Adopt server-scope gate split for Wave-2 execution. Root lint deferred, tracked as G-QG-001 (Wave 3 / cleanup bucket). Wave-2 tasks MAY proceed when server gates pass.
 - Frontend lint failures summary:
-  - `App.tsx` — unused vars (`tenantsLoading`, `tenantsError`) + missing `useEffect` dep
-  - `Auth/ForgotPassword.tsx`, `Auth/TokenHandler.tsx`, `Auth/VerifyEmail.tsx` — `React` not defined in JSX
-  - `Auth/AuthFlows.tsx` — `AUTH_DEBUG` unused
-  - `Cart/Cart.tsx` — `LoadingState` unused, `currentQuantity` unused arg
-  - `ControlPlane/AuditLogs.tsx`, `ControlPlane/TenantRegistry.tsx` — `LoadingState` unused
-  - `ControlPlane/EventStream.tsx` — `EmptyState` unused + setState-in-effect
-  - `constants.tsx` — `TenantType`, `TenantConfig`, `TenantStatus` unused imports
-  - `services/apiClient.ts` — `AbortController` not defined (2 occurrences)
+  - `App.tsx` â€” unused vars (`tenantsLoading`, `tenantsError`) + missing `useEffect` dep
+  - `Auth/ForgotPassword.tsx`, `Auth/TokenHandler.tsx`, `Auth/VerifyEmail.tsx` â€” `React` not defined in JSX
+  - `Auth/AuthFlows.tsx` â€” `AUTH_DEBUG` unused
+  - `Cart/Cart.tsx` â€” `LoadingState` unused, `currentQuantity` unused arg
+  - `ControlPlane/AuditLogs.tsx`, `ControlPlane/TenantRegistry.tsx` â€” `LoadingState` unused
+  - `ControlPlane/EventStream.tsx` â€” `EmptyState` unused + setState-in-effect
+  - `constants.tsx` â€” `TenantType`, `TenantConfig`, `TenantStatus` unused imports
+  - `services/apiClient.ts` â€” `AbortController` not defined (2 occurrences)
 
-#### G-013 — VALIDATED 2026-02-21
+#### G-013 â€” VALIDATED 2026-02-21
 
-- Commit `7f474ab` — `feat(ci): add PR-gated RLS cross-tenant 0-row proof (G-013)`
+- Commit `7f474ab` â€” `feat(ci): add PR-gated RLS cross-tenant 0-row proof (G-013)`
 - Files: `server/scripts/ci/rls-proof.ts`, `.github/workflows/rls-proof.yml`, `server/package.json` (script `ci:rls-proof`)
 - Gate outputs prior to commit:
-  - `pnpm -C server run typecheck` → EXIT 0 ✅
-  - `pnpm -C server run lint` → EXIT 0 ✅ (67 warnings, 0 errors)
+  - `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+  - `pnpm -C server run lint` â†’ EXIT 0 âœ… (67 warnings, 0 errors)
 - Proof run output (`pnpm run ci:rls-proof`):
-  - Step 1 — Legacy policy variable check: `app.tenant_id` references = **0** ✅
-  - Step 2 — Tenant A (ACME) isolation: cross-tenant rows = **0**, own-tenant rows = **2** (non-vacuous) ✅
-  - Step 3 — Tenant B (WL) isolation: cross-tenant rows = **0**, own-tenant rows = **0** (positive control executed) ✅
-  - Result: `ALL STEPS PASS — RLS isolation verified (G-013)` EXIT 0
-- CI workflow: `.github/workflows/rls-proof.yml` — triggers on `pull_request` → `[main, develop]`
+  - Step 1 â€” Legacy policy variable check: `app.tenant_id` references = **0** âœ…
+  - Step 2 â€” Tenant A (ACME) isolation: cross-tenant rows = **0**, own-tenant rows = **2** (non-vacuous) âœ…
+  - Step 3 â€” Tenant B (WL) isolation: cross-tenant rows = **0**, own-tenant rows = **0** (positive control executed) âœ…
+  - Result: `ALL STEPS PASS â€” RLS isolation verified (G-013)` EXIT 0
+- CI workflow: `.github/workflows/rls-proof.yml` â€” triggers on `pull_request` â†’ `[main, develop]`
   - Required secrets: `DATABASE_URL`, `CI_TENANT_A_ID`, `CI_TENANT_B_ID`
-  - Steps: checkout → Node 22 → pnpm → install → validate secrets → typecheck → lint → ci:rls-proof
-  - Missing secrets → hard FAIL (silence is never a pass)
+  - Steps: checkout â†’ Node 22 â†’ pnpm â†’ install â†’ validate secrets â†’ typecheck â†’ lint â†’ ci:rls-proof
+  - Missing secrets â†’ hard FAIL (silence is never a pass)
 
 #### Gaps In Progress
 
-- G-004 — Stabilization: unify control plane DB context (VALIDATED, governance pending commit)
+- G-004 â€” Stabilization: unify control plane DB context (VALIDATED, governance pending commit)
 
 ---
 
-#### G-004 — VALIDATED 2026-02-21
+#### G-004 â€” VALIDATED 2026-02-21
 
-- Commit `a19f30b` — `fix(control): unify db context usage to canonical pattern (G-004)`
+- Commit `a19f30b` â€” `fix(control): unify db context usage to canonical pattern (G-004)`
 - File changed: `server/src/routes/control.ts` (1 file, 44 insertions, 23 deletions)
 - Changes:
   - Removed `import { withDbContext as withDbContextLegacy } from '../db/withDbContext.js'`
   - Added `import { randomUUID } from 'node:crypto'`
   - Added `import { Prisma, type EventLog } from '@prisma/client'` (EventLog type for 3 map callbacks)
   - Added module-level `withAdminContext<T>` helper: uses canonical `withDbContext` + `SET LOCAL ROLE texqtic_app` + `app.is_admin = 'true'` for cross-tenant admin reads
-  - Migrated 13 `withDbContextLegacy({ isAdmin: true })` call sites: 7 read routes (prisma → tx), 6 authority-intent write routes (`_tx` unused param, `writeAuthorityIntent(prisma, ...)` preserved)
+  - Migrated 13 `withDbContextLegacy({ isAdmin: true })` call sites: 7 read routes (prisma â†’ tx), 6 authority-intent write routes (`_tx` unused param, `writeAuthorityIntent(prisma, ...)` preserved)
   - Replaced dynamic `(await import('node:crypto')).randomUUID()` with static `randomUUID()` in provision route
 - Gate outputs (post-implementation):
-  - `pnpm -C server run typecheck` → EXIT 0 ✅
-  - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors)
-- Verification: `Get-Content control.ts | Select-String 'withDbContextLegacy' | Where notmatch '^//'` → 0 results ✅
+  - `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+  - `pnpm -C server run lint` â†’ EXIT 0 âœ… (68 warnings, 0 errors)
+- Verification: `Get-Content control.ts | Select-String 'withDbContextLegacy' | Where notmatch '^//'` â†’ 0 results âœ…
 
 ---
 
-#### G-005-BLOCKER — VALIDATED 2026-02-22
+#### G-005-BLOCKER â€” VALIDATED 2026-02-22
 
-- Commit `b060f60` — `fix(rls): add tenant-scoped SELECT policy for public.users (login unblock)`
+- Commit `b060f60` â€” `fix(rls): add tenant-scoped SELECT policy for public.users (login unblock)`
 - File changed: `server/prisma/rls.sql` (1 file, 20 insertions, 3 deletions)
 - Root cause:
   - `supabase_hardening.sql` applied `ENABLE + FORCE ROW LEVEL SECURITY` on `public.users`
   - G-001 legacy cleanup dropped `users_tenant_read` without a replacement
   - `texqtic_app` with any `app.org_id` context returned 0 rows (PostgreSQL deny-all when FORCE RLS + no policy)
-  - Auth route: `withDbContext({ tenantId }, tx => tx.user.findUnique(...))` → `result = null` → `AUTH_INVALID 401`
+  - Auth route: `withDbContext({ tenantId }, tx => tx.user.findUnique(...))` â†’ `result = null` â†’ `AUTH_INVALID 401`
 - Fix:
   - Added `users_tenant_select` policy: `EXISTS (memberships m WHERE m.user_id = users.id AND m.tenant_id = app.org_id::uuid) OR is_admin = 'true'`
   - Pattern consistent with all other tenant-scoped tables; no cross-tenant reads possible
-- Applied via: `psql --dbname="$DATABASE_URL" -v ON_ERROR_STOP=1 --file=prisma/rls.sql` → APPLY_EXIT:0
+- Applied via: `psql --dbname="$DATABASE_URL" -v ON_ERROR_STOP=1 --file=prisma/rls.sql` â†’ APPLY_EXIT:0
 - Proof 1 (policy in pg_policies):
-  - `users_tenant_select` present · cmd=SELECT · qual contains `app.org_id` + `EXISTS (memberships m ...)` ✅
+  - `users_tenant_select` present Â· cmd=SELECT Â· qual contains `app.org_id` + `EXISTS (memberships m ...)` âœ…
 - Proof 2 (member read):
-  - `SET LOCAL ROLE texqtic_app; set_config('app.org_id', ACME_UUID)` → `SELECT ... owner@acme.example.com` → **1 row** ✅
+  - `SET LOCAL ROLE texqtic_app; set_config('app.org_id', ACME_UUID)` â†’ `SELECT ... owner@acme.example.com` â†’ **1 row** âœ…
 - Proof 3 (cross-tenant blocked):
-  - `SET LOCAL ROLE texqtic_app; set_config('app.org_id', WL_UUID)` → `SELECT ... owner@acme.example.com` → **0 rows** ✅
+  - `SET LOCAL ROLE texqtic_app; set_config('app.org_id', WL_UUID)` â†’ `SELECT ... owner@acme.example.com` â†’ **0 rows** âœ…
 - Gate outputs:
-  - `pnpm -C server run typecheck` → EXIT 0 ✅
-  - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors)
+  - `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+  - `pnpm -C server run lint` â†’ EXIT 0 âœ… (68 warnings, 0 errors)
 
 ---
 
-#### G-TENANTS-SELECT — VALIDATED 2026-02-22
+#### G-TENANTS-SELECT â€” VALIDATED 2026-02-22
 
-- Commit `94da295` — `fix(rls): allow app_user select on tenants scoped by app.org_id`
+- Commit `94da295` â€” `fix(rls): allow app_user select on tenants scoped by app.org_id`
 - File changed: `server/prisma/rls.sql` (1 file, 14 insertions, 1 deletion)
 - Root cause:
   - `supabase_hardening.sql` installed `tenants_deny_all` (FOR ALL USING false) on `public.tenants` as defence-in-depth
   - No matching SELECT policy existed for `app_user` (NOBYPASSRLS role)
-  - Prisma fetches `membership.tenant` as a nested relation during login; FORCE RLS → 0 rows → Prisma resolves relation as `null`
-  - `auth.ts` reads `membership.tenant.status` without null guard → TypeError → 500 INTERNAL_ERROR `"Login failed"`
-  - This code path was unreachable before G-005-BLOCKER (user reads returned 0 → `result = null` → 401, never reached membership.tenant)
+  - Prisma fetches `membership.tenant` as a nested relation during login; FORCE RLS â†’ 0 rows â†’ Prisma resolves relation as `null`
+  - `auth.ts` reads `membership.tenant.status` without null guard â†’ TypeError â†’ 500 INTERNAL_ERROR `"Login failed"`
+  - This code path was unreachable before G-005-BLOCKER (user reads returned 0 â†’ `result = null` â†’ 401, never reached membership.tenant)
 - Fix:
   - Added `tenants_app_user_select` policy: `id::text = current_setting('app.org_id', true) OR is_admin = 'true'`
-  - Exposure strictly one row: `tenants.id == app.org_id` — no tenant listing possible without org_id
-  - `tenants_deny_all` (FOR ALL/false) remains intact; permissive policies are OR-combined per Postgres semantics — it continues blocking anon/authenticated roles
-- Applied via: `psql "--dbname=$dbUrl" -f __apply_tenants_policy.sql` → APPLY_EXIT:0
+  - Exposure strictly one row: `tenants.id == app.org_id` â€” no tenant listing possible without org_id
+  - `tenants_deny_all` (FOR ALL/false) remains intact; permissive policies are OR-combined per Postgres semantics â€” it continues blocking anon/authenticated roles
+- Applied via: `psql "--dbname=$dbUrl" -f __apply_tenants_policy.sql` â†’ APPLY_EXIT:0
 - Proof A (policy in pg_policies):
-  - `tenants_app_user_select` present · cmd=SELECT · qual=`id::text = app.org_id OR is_admin = 'true'` ✅
-  - `tenants_deny_all` still present · cmd=ALL · qual=false ✅
-- Proof B (negative control — cross-tenant):
-  - `SET LOCAL ROLE app_user; set_config('app.org_id', ACME_UUID)` → `SELECT id FROM tenants WHERE id = WL_UUID` → **0 rows** ✅
-- Proof C (positive control — same-tenant):
-  - `SET LOCAL ROLE app_user; set_config('app.org_id', ACME_UUID)` → `SELECT id, status FROM tenants WHERE id = ACME_UUID` → **1 row, ACTIVE** ✅
+  - `tenants_app_user_select` present Â· cmd=SELECT Â· qual=`id::text = app.org_id OR is_admin = 'true'` âœ…
+  - `tenants_deny_all` still present Â· cmd=ALL Â· qual=false âœ…
+- Proof B (negative control â€” cross-tenant):
+  - `SET LOCAL ROLE app_user; set_config('app.org_id', ACME_UUID)` â†’ `SELECT id FROM tenants WHERE id = WL_UUID` â†’ **0 rows** âœ…
+- Proof C (positive control â€” same-tenant):
+  - `SET LOCAL ROLE app_user; set_config('app.org_id', ACME_UUID)` â†’ `SELECT id, status FROM tenants WHERE id = ACME_UUID` â†’ **1 row, ACTIVE** âœ…
 - Proof D (login path via set_tenant_context):
-  - `SET LOCAL ROLE app_user; set_tenant_context(ACME_UUID)` → `SELECT id, status FROM tenants WHERE id = ACME_UUID` → **1 row, ACTIVE** ✅
+  - `SET LOCAL ROLE app_user; set_tenant_context(ACME_UUID)` â†’ `SELECT id, status FROM tenants WHERE id = ACME_UUID` â†’ **1 row, ACTIVE** âœ…
 - Gate outputs:
-  - `pnpm -C server run typecheck` → EXIT 0 ✅
-  - `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors)
+  - `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+  - `pnpm -C server run lint` â†’ EXIT 0 âœ… (68 warnings, 0 errors)
 - Risk assessment:
-  - Row exposure: strictly `tenants.id == app.org_id` — one row max, no listing
+  - Row exposure: strictly `tenants.id == app.org_id` â€” one row max, no listing
   - Aligns with Doctrine v1.4 canonical context = `app.org_id`
   - `tenants_deny_all` remains as baseline guardrail for non-app_user roles
 - Follow-up (not in scope): add null guard `membership.tenant?.status` in auth.ts to convert future RLS denials to 401/403 instead of 500 (Wave 2 tail hardening)
 
 ---
 
-#### G-005 — VALIDATED 2026-02-22
+#### G-005 â€” VALIDATED 2026-02-22
 
-**Gap:** Middleware pattern inconsistent — some routes called `buildContextFromRequest(request)` inline instead of using `databaseContextMiddleware`
+**Gap:** Middleware pattern inconsistent â€” some routes called `buildContextFromRequest(request)` inline instead of using `databaseContextMiddleware`
 
 **Root cause:** Routes were authored before `databaseContextMiddleware` was established as the canonical pattern. No lint rule enforced the standard.
 
@@ -214,55 +214,55 @@ Unify RLS tenant context variable from `app.tenant_id` (legacy) to `app.org_id` 
 
 - 10 violating routes: `POST /tenant/cart`, `GET /tenant/cart`, `POST /tenant/cart/items`, `PATCH /tenant/cart/items/:id`, `POST /tenant/checkout`, `GET /tenant/orders`, `GET /tenant/orders/:id`, `PUT /tenant/branding` (tenant.ts); `GET /insights`, `POST /negotiation-advice` (ai.ts)
 - 4 already-correct routes: `GET /tenant/audit-logs`, `GET /tenant/memberships`, `GET /tenant/catalog/items`, `POST /tenant/memberships`
-- 2 excluded (intentional): `POST /tenant/activate` (invite-based activation, no JWT — manual `dbContext` from `invite.tenantId` correct); `GET /me` (non-tenant-scoped user read, no `withDbContext`)
+- 2 excluded (intentional): `POST /tenant/activate` (invite-based activation, no JWT â€” manual `dbContext` from `invite.tenantId` correct); `GET /me` (non-tenant-scoped user read, no `withDbContext`)
 
 **Fix applied per route:**
 
-1. `onRequest: tenantAuthMiddleware` → `onRequest: [tenantAuthMiddleware, databaseContextMiddleware]`
-2. `const dbContext = buildContextFromRequest(request)` → `const dbContext = request.dbContext`
+1. `onRequest: tenantAuthMiddleware` â†’ `onRequest: [tenantAuthMiddleware, databaseContextMiddleware]`
+2. `const dbContext = buildContextFromRequest(request)` â†’ `const dbContext = request.dbContext`
 3. Fail-closed null guard added: `if (!dbContext) return sendError(reply, 'UNAUTHORIZED', ..., 401)`
 4. `buildContextFromRequest` import removed from `server/src/routes/tenant.ts` and `server/src/routes/ai.ts` (unused after migration)
 
 **Gate outputs:**
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅
-- `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors — baseline unchanged)
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+- `pnpm -C server run lint` â†’ EXIT 0 âœ… (68 warnings, 0 errors â€” baseline unchanged)
 
-**Local runtime validation (all 10 routes — context plumbing only):**
+**Local runtime validation (all 10 routes â€” context plumbing only):**
 
 | Route                          | Result                             | Classification                             |
 | ------------------------------ | ---------------------------------- | ------------------------------------------ |
-| `GET /tenant/cart`             | 200 OK ✅                          | —                                          |
-| `POST /tenant/cart`            | 200 OK ✅                          | —                                          |
-| `POST /tenant/cart/items`      | 404 NOT_FOUND ✅                   | Cat A — fake UUID, business logic correct  |
-| `PATCH /tenant/cart/items/:id` | 404 NOT_FOUND ✅                   | Cat A — fake UUID, business logic correct  |
-| `POST /tenant/checkout`        | 400 BAD_REQUEST `Cart is empty` ✅ | Cat A — empty cart, business logic correct |
-| `GET /tenant/orders`           | 200 OK `count=2` ✅                | Real data returned                         |
-| `GET /tenant/orders/:id`       | 404 NOT_FOUND ✅                   | Cat A — fake UUID, business logic correct  |
-| `PUT /tenant/branding`         | 200 OK ✅                          | —                                          |
-| `GET /ai/insights`             | 200 OK ✅                          | AI response returned                       |
-| `POST /ai/negotiation-advice`  | 200 OK ✅                          | AI response returned                       |
+| `GET /tenant/cart`             | 200 OK âœ…                          | â€”                                          |
+| `POST /tenant/cart`            | 200 OK âœ…                          | â€”                                          |
+| `POST /tenant/cart/items`      | 404 NOT_FOUND âœ…                   | Cat A â€” fake UUID, business logic correct  |
+| `PATCH /tenant/cart/items/:id` | 404 NOT_FOUND âœ…                   | Cat A â€” fake UUID, business logic correct  |
+| `POST /tenant/checkout`        | 400 BAD_REQUEST `Cart is empty` âœ… | Cat A â€” empty cart, business logic correct |
+| `GET /tenant/orders`           | 200 OK `count=2` âœ…                | Real data returned                         |
+| `GET /tenant/orders/:id`       | 404 NOT_FOUND âœ…                   | Cat A â€” fake UUID, business logic correct  |
+| `PUT /tenant/branding`         | 200 OK âœ…                          | â€”                                          |
+| `GET /ai/insights`             | 200 OK âœ…                          | AI response returned                       |
+| `POST /ai/negotiation-advice`  | 200 OK âœ…                          | AI response returned                       |
 
 Zero 500s. Zero "context missing" / UNAUTHORIZED errors. RLS isolation intact.
 
-**Production smoke (3 endpoints — context integrity):**
+**Production smoke (3 endpoints â€” context integrity):**
 
 | Endpoint             | Result              |
 | -------------------- | ------------------- |
-| `GET /tenant/cart`   | 200 OK ✅           |
-| `GET /tenant/orders` | 200 OK `count=2` ✅ |
-| `GET /ai/insights`   | 200 OK ✅           |
+| `GET /tenant/cart`   | 200 OK âœ…           |
+| `GET /tenant/orders` | 200 OK `count=2` âœ… |
+| `GET /ai/insights`   | 200 OK âœ…           |
 
-- ✅ No new 500 signatures introduced
-- ✅ Auth context preserved (no unexpected 401/403)
-- ✅ RLS isolation unchanged
+- âœ… No new 500 signatures introduced
+- âœ… Auth context preserved (no unexpected 401/403)
+- âœ… RLS isolation unchanged
 
 **Implementation commit:** `830c0c4`  
 **Governance commit:** `e6e60e5`
 
 ---
 
-#### G-006 — BLOCKED 2026-02-22
+#### G-006 â€” BLOCKED 2026-02-22
 
 **Gap:** Remove legacy 2-arg `withDbContext({ isAdmin: true }, fn)` in `auth.ts` and align admin login to canonical context construction.
 
@@ -272,47 +272,47 @@ Full grep `server/src/**/*.ts` for pattern `withDbContext\(\{`:
 
 | File                             | Line                         | Pattern                               | Scope                                            |
 | -------------------------------- | ---------------------------- | ------------------------------------- | ------------------------------------------------ |
-| `routes/auth.ts`                 | 438                          | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target                                  |
-| `routes/auth.ts`                 | 653                          | `withDbContext({ isAdmin: true }, …)` | ✅ G-006 target (not in prior discovery summary) |
-| `routes/auth.ts`                 | 162                          | `withDbContext({ tenantId }, …)`      | ❌ Deferred → G-006D                             |
-| `routes/auth.ts`                 | 873                          | `withDbContext({ tenantId }, …)`      | ❌ Deferred → G-006D                             |
-| `routes/admin-cart-summaries.ts` | 52                           | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C                      |
-| `routes/admin-cart-summaries.ts` | 140                          | `withDbContext({ isAdmin: true }, …)` | ❌ Not allowlisted → G-006C                      |
-| `__tests__/gate-e-4-audit…ts`    | 182, 236, 286, 358, 437, 494 | various                               | ❌ Test scope, out of G-006                      |
+| `routes/auth.ts`                 | 438                          | `withDbContext({ isAdmin: true }, â€¦)` | âœ… G-006 target                                  |
+| `routes/auth.ts`                 | 653                          | `withDbContext({ isAdmin: true }, â€¦)` | âœ… G-006 target (not in prior discovery summary) |
+| `routes/auth.ts`                 | 162                          | `withDbContext({ tenantId }, â€¦)`      | âŒ Deferred â†’ G-006D                             |
+| `routes/auth.ts`                 | 873                          | `withDbContext({ tenantId }, â€¦)`      | âŒ Deferred â†’ G-006D                             |
+| `routes/admin-cart-summaries.ts` | 52                           | `withDbContext({ isAdmin: true }, â€¦)` | âŒ Not allowlisted â†’ G-006C                      |
+| `routes/admin-cart-summaries.ts` | 140                          | `withDbContext({ isAdmin: true }, â€¦)` | âŒ Not allowlisted â†’ G-006C                      |
+| `__tests__/gate-e-4-auditâ€¦ts`    | 182, 236, 286, 358, 437, 494 | various                               | âŒ Test scope, out of G-006                      |
 
 **Implementation attempted:**
 
 - Added `import { withDbContext as withDbContextCanonical, type DatabaseContext } from '../lib/database-context.js'`
 - Added `const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001'`
-- Replaced lines 438 + 653 with canonical 3-arg form: `withDbContextCanonical(prisma, adminCtx, async tx => { … })`
-- typecheck EXIT 0 ✅ · lint 68w/0e ✅
+- Replaced lines 438 + 653 with canonical 3-arg form: `withDbContextCanonical(prisma, adminCtx, async tx => { â€¦ })`
+- typecheck EXIT 0 âœ… Â· lint 68w/0e âœ…
 
 **Implementation commit:** `f196445`
 
-**Runtime validation — FAILED:**
+**Runtime validation â€” FAILED:**
 
 | Test                         | Result                | Detail                                              |
 | ---------------------------- | --------------------- | --------------------------------------------------- |
-| `POST /api/auth/admin/login` | ❌ 500 INTERNAL_ERROR | PG-42501: `permission denied for table admin_users` |
+| `POST /api/auth/admin/login` | âŒ 500 INTERNAL_ERROR | PG-42501: `permission denied for table admin_users` |
 
 **Root cause identified from server logs:**
 
 ```
 prisma:query SET LOCAL ROLE texqtic_app
 ...
-prisma:query SELECT … FROM "public"."admin_users" …
+prisma:query SELECT â€¦ FROM "public"."admin_users" â€¦
 prisma:error ConnectorError { code: "42501", message: "permission denied for table admin_users" }
 ```
 
 - Canonical `withDbContext` executes `SET LOCAL ROLE texqtic_app`
 - `texqtic_app` role does NOT have `GRANT SELECT` on `admin_users` table
-- Legacy `withDbContext({ isAdmin: true })` executed `SET ROLE app_user` — which DOES have the grant
+- Legacy `withDbContext({ isAdmin: true })` executed `SET ROLE app_user` â€” which DOES have the grant
 - DB permission boundary is different for admin-only tables vs tenant data tables
 
-**Stop-Loss — revert executed:**
+**Stop-Loss â€” revert executed:**
 
-- `git revert --no-edit f196445` → `c9ef413`
-- Admin login restored: `POST /api/auth/admin/login` → 200 `success=True` ✅
+- `git revert --no-edit f196445` â†’ `c9ef413`
+- Admin login restored: `POST /api/auth/admin/login` â†’ 200 `success=True` âœ…
 
 **Revert commit:** `c9ef413`
 
@@ -320,29 +320,29 @@ prisma:error ConnectorError { code: "42501", message: "permission denied for tab
 
 | Option | Description                                                                      | DB change? | Code change?         |
 | ------ | -------------------------------------------------------------------------------- | ---------- | -------------------- |
-| A      | Grant `texqtic_app` SELECT on `admin_users` → re-apply canonical form            | ✅ Yes     | Same as `f196445`    |
-| B      | Use `prisma.adminUser.findUnique()` directly (no role switch) in login callbacks | ❌ No      | Different code shape |
-| C      | Lock G-006 to NOT include auth.ts admin login calls; redefine scope              | ❌ No      | No change to auth.ts |
+| A      | Grant `texqtic_app` SELECT on `admin_users` â†’ re-apply canonical form            | âœ… Yes     | Same as `f196445`    |
+| B      | Use `prisma.adminUser.findUnique()` directly (no role switch) in login callbacks | âŒ No      | Different code shape |
+| C      | Lock G-006 to NOT include auth.ts admin login calls; redefine scope              | âŒ No      | No change to auth.ts |
 
 **Follow-on gaps formally logged:**
 
-- **G-006C** — `admin-cart-summaries.ts` lines 52 + 140 (`isAdmin: true`); Wave 3; OPEN
-- **G-006D** — `auth.ts` lines 166 + 889 (`tenantId` form); Wave TBD; OPEN
+- **G-006C** â€” `admin-cart-summaries.ts` lines 52 + 140 (`isAdmin: true`); Wave 3; OPEN
+- **G-006D** â€” `auth.ts` lines 166 + 889 (`tenantId` form); Wave TBD; OPEN
 
-**Status:** BLOCKED — awaiting design decision before any implementation retry.
+**Status:** BLOCKED â€” awaiting design decision before any implementation retry.
 
 ---
 
-#### G-006 — VALIDATED 2026-02-22 (Option B resolution)
+#### G-006 â€” VALIDATED 2026-02-22 (Option B resolution)
 
-**Design decision:** Option B — direct `prisma.adminUser.findUnique()` for pre-auth admin lookup (no role switch, no transaction wrapper). Justified: `admin_users` is not tenant-scoped; the admin login step is pre-auth and needs no RLS context. Everything post-authentication continues using `withAdminContext` (unchanged).
+**Design decision:** Option B â€” direct `prisma.adminUser.findUnique()` for pre-auth admin lookup (no role switch, no transaction wrapper). Justified: `admin_users` is not tenant-scoped; the admin login step is pre-auth and needs no RLS context. Everything post-authentication continues using `withAdminContext` (unchanged).
 
 **Blast radius confirmed (pre-implementation grep):**
 
-- `auth.ts` lines 438 + 653: `withDbContext({ isAdmin: true })` — FIXED ✅
-- `auth.ts` lines 166 + 889: `withDbContext({ tenantId })` — NOT TOUCHED (G-006D, deferred)
-- `admin-cart-summaries.ts` lines 52 + 140: `withDbContext({ isAdmin: true })` — NOT TOUCHED (G-006C, deferred)
-- Test files: all `withDbContext` calls — NOT TOUCHED (out of scope)
+- `auth.ts` lines 438 + 653: `withDbContext({ isAdmin: true })` â€” FIXED âœ…
+- `auth.ts` lines 166 + 889: `withDbContext({ tenantId })` â€” NOT TOUCHED (G-006D, deferred)
+- `admin-cart-summaries.ts` lines 52 + 140: `withDbContext({ isAdmin: true })` â€” NOT TOUCHED (G-006C, deferred)
+- Test files: all `withDbContext` calls â€” NOT TOUCHED (out of scope)
 
 **Fix applied (both admin login endpoints):**
 
@@ -371,28 +371,28 @@ const result =
 
 **Gate outputs:**
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅
-- `pnpm -C server run lint` → EXIT 0 ✅ (68 warnings, 0 errors — baseline unchanged)
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+- `pnpm -C server run lint` â†’ EXIT 0 âœ… (68 warnings, 0 errors â€” baseline unchanged)
 
 **Server log proof (Option B path):**
 
 ```
-SELECT … FROM "public"."admin_users" WHERE (email = $1) LIMIT $2 OFFSET $3
+SELECT â€¦ FROM "public"."admin_users" WHERE (email = $1) LIMIT $2 OFFSET $3
 ```
 
-- NO `BEGIN` ✅
-- NO `SET LOCAL ROLE texqtic_app` ✅ (removes the PG-42501 failure path)
-- NO `set_config(…)` RLS context ✅
-- Query succeeds directly; statusCode 200 ✅
+- NO `BEGIN` âœ…
+- NO `SET LOCAL ROLE texqtic_app` âœ… (removes the PG-42501 failure path)
+- NO `set_config(â€¦)` RLS context âœ…
+- Query succeeds directly; statusCode 200 âœ…
 
 **Local runtime validation (4 points):**
 
 | Test                            | Endpoint                          | Result              |
 | ------------------------------- | --------------------------------- | ------------------- |
-| T1 Admin login                  | `POST /api/auth/admin/login`      | 200 success=True ✅ |
-| T2 Control route                | `GET /api/control/tenants`        | 200 success=True ✅ |
-| T3 Tenant login (regression)    | `POST /api/auth/login` (tenantId) | 200 success=True ✅ |
-| T4 Tenant commerce (regression) | `GET /api/tenant/orders`          | 200 count=2 ✅      |
+| T1 Admin login                  | `POST /api/auth/admin/login`      | 200 success=True âœ… |
+| T2 Control route                | `GET /api/control/tenants`        | 200 success=True âœ… |
+| T3 Tenant login (regression)    | `POST /api/auth/login` (tenantId) | 200 success=True âœ… |
+| T4 Tenant commerce (regression) | `GET /api/tenant/orders`          | 200 count=2 âœ…      |
 
 Zero 500s. Zero regressions. RLS isolation preserved.
 
@@ -400,24 +400,24 @@ Zero 500s. Zero regressions. RLS isolation preserved.
 
 ---
 
-#### G-007 — VALIDATED 2026-02-22 (tx-local set_config)
+#### G-007 â€” VALIDATED 2026-02-22 (tx-local set_config)
 
-**Change:** All 6 `set_config(..., false)` calls in `server/prisma/supabase_hardening.sql` changed to `set_config(..., true)` — transaction-local enforcement. Eliminates pooler session-bleed risk.
+**Change:** All 6 `set_config(..., false)` calls in `server/prisma/supabase_hardening.sql` changed to `set_config(..., true)` â€” transaction-local enforcement. Eliminates pooler session-bleed risk.
 
 **Affected functions:**
 
 | SQL Function | Lines fixed | Change |
 |---|---|---|
-| `public.set_tenant_context()` | L21 + L22 | `false` → `true` |
-| `public.set_admin_context()` | L33 + L34 | `false` → `true` |
-| `public.clear_context()` | L44 + L45 | `false` → `true` |
+| `public.set_tenant_context()` | L21 + L22 | `false` â†’ `true` |
+| `public.set_admin_context()` | L33 + L34 | `false` â†’ `true` |
+| `public.clear_context()` | L44 + L45 | `false` â†’ `true` |
 
-**Why safe:** All TS callers (`withTenantDb`, `withAdminDb`, `withDbContext`) invoke these functions inside `prisma.$transaction()`. `is_local=true` inside a transaction is equivalent to `is_local=false` for that transaction's lifetime, and auto-resets on COMMIT/ROLLBACK — eliminating the pooler bleed vector.
+**Why safe:** All TS callers (`withTenantDb`, `withAdminDb`, `withDbContext`) invoke these functions inside `prisma.$transaction()`. `is_local=true` inside a transaction is equivalent to `is_local=false` for that transaction's lifetime, and auto-resets on COMMIT/ROLLBACK â€” eliminating the pooler bleed vector.
 
 **Static gates:**
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅ (SQL-only change, no TS impact)
-- `pnpm -C server run lint` → 68 warnings, 0 errors ✅
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ… (SQL-only change, no TS impact)
+- `pnpm -C server run lint` â†’ 68 warnings, 0 errors âœ…
 
 **DB apply evidence:**
 
@@ -434,28 +434,28 @@ All 3 rows returned. Zero `false` in any function body. **APPLY_OK.**
 ```
 prisma:query BEGIN
 prisma:query SET ROLE app_user
-prisma:query SELECT public.set_tenant_context($1::uuid, false)  ← is_local=true internally, no PG error
-prisma:query SELECT ... FROM users WHERE email = $1             ← RLS context applied
+prisma:query SELECT public.set_tenant_context($1::uuid, false)  â† is_local=true internally, no PG error
+prisma:query SELECT ... FROM users WHERE email = $1             â† RLS context applied
 prisma:query RESET ROLE
 prisma:query COMMIT
-→ statusCode: 401  (fail-closed, not 500)
+â†’ statusCode: 401  (fail-closed, not 500)
 ```
 
 **Local runtime smoke:**
 
 | Test | Endpoint | Result |
 |---|---|---|
-| T1 Admin login | `POST /api/auth/admin/login` | 200 ✅ |
-| T2 Control route | `GET /api/control/tenants` | 200 ✅ |
-| T3 Tenant context | `POST /api/auth/login` (tenant path) | 401 fail-closed ✅ (context executed OK; local seed creds differ) |
+| T1 Admin login | `POST /api/auth/admin/login` | 200 âœ… |
+| T2 Control route | `GET /api/control/tenants` | 200 âœ… |
+| T3 Tenant context | `POST /api/auth/login` (tenant path) | 401 fail-closed âœ… (context executed OK; local seed creds differ) |
 
 Zero 500s. Zero PG errors. Context isolation preserved.
 
 **Implementation commit:** `09365b2`
 
-**G-007-HOTFIX — 2026-02-22**
+**G-007-HOTFIX â€” 2026-02-22**
 
-**Root cause (discovered post-apply):** G-007's `set_tenant_context` replaced `app.tenant_id` with `p_tenant_id::text` using `is_local=true`, but TexQtic RLS policies read `app.org_id` (Doctrine v1.4 canonical key) — not `app.tenant_id`. Result: tenant login reached DB, found user, but RLS policies evaluated `current_setting('app.org_id', true)` = `''` → tenant rows invisible → AUTH_INVALID / INTERNAL_ERROR in prod.
+**Root cause (discovered post-apply):** G-007's `set_tenant_context` replaced `app.tenant_id` with `p_tenant_id::text` using `is_local=true`, but TexQtic RLS policies read `app.org_id` (Doctrine v1.4 canonical key) â€” not `app.tenant_id`. Result: tenant login reached DB, found user, but RLS policies evaluated `current_setting('app.org_id', true)` = `''` â†’ tenant rows invisible â†’ AUTH_INVALID / INTERNAL_ERROR in prod.
 
 **Hotfix changes (`80d4501`):**
 
@@ -473,18 +473,18 @@ Zero 500s. Zero PG errors. Context isolation preserved.
 
 ---
 
-#### G-007B — VALIDATED 2026-02-22 (repo reconcile + anti-regression)
+#### G-007B â€” VALIDATED 2026-02-22 (repo reconcile + anti-regression)
 
-**Trigger:** Post-G-007-HOTFIX investigation confirmed that `supabase_hardening.sql` Part 5 policies (8 tenant-scoped tables) and Part 6 audit_logs policies still referenced `app.tenant_id` — the legacy key superseded by Doctrine v1.4. While `rls.sql` drops and replaces these by name in the prod apply sequence, standalone apply of `supabase_hardening.sql` would create incorrect policies causing `memberships_visible=0` and AUTH_INVALID login failures.
+**Trigger:** Post-G-007-HOTFIX investigation confirmed that `supabase_hardening.sql` Part 5 policies (8 tenant-scoped tables) and Part 6 audit_logs policies still referenced `app.tenant_id` â€” the legacy key superseded by Doctrine v1.4. While `rls.sql` drops and replaces these by name in the prod apply sequence, standalone apply of `supabase_hardening.sql` would create incorrect policies causing `memberships_visible=0` and AUTH_INVALID login failures.
 
 **Regression timeline:**
 
 | Timestamp | Event |
 |---|---|
-| G-007 apply (`09365b2`) | `set_config(..., false)` → `true` — correct; but function still used `app.tenant_id` (pre-existing bug) |
+| G-007 apply (`09365b2`) | `set_config(..., false)` â†’ `true` â€” correct; but function still used `app.tenant_id` (pre-existing bug) |
 | Post-G-007 discovery | Tenant login returns 401 AUTH_INVALID; `memberships_visible=0` confirmed in prod |
 | G-007-HOTFIX apply (`80d4501`) | `set_tenant_context` now sets `app.org_id`; `clear_context` clears `app.org_id`; DB applied via Supabase SQL editor |
-| G-007-HOTFIX DB proof | `pg_get_functiondef` confirmed `app.org_id` present; `memberships_visible=1` ✅ |
+| G-007-HOTFIX DB proof | `pg_get_functiondef` confirmed `app.org_id` present; `memberships_visible=1` âœ… |
 | G-007B (`80a6971`) | Repo reconcile: Part 5+6 policies updated; Doctrine v1.4 comments added |
 
 **Changes in `80a6971` (`supabase_hardening.sql`):**
@@ -495,21 +495,21 @@ Zero 500s. Zero PG errors. Context isolation preserved.
 | `set_tenant_context` comment | Added G-007B tag + pooler-bleed note |
 | `set_admin_context` comment | Updated to reference G-007B + Doctrine v1.4 |
 | `clear_context` comment | Added explicit pooler-bleed prevention note |
-| Part 5: 8 tables (tenant_domains, tenant_branding, memberships, invites, password_reset_tokens, tenant_feature_overrides, ai_budgets, ai_usage_meters) | All `current_setting('app.tenant_id', true)::uuid` → `current_setting('app.org_id', true)::uuid` in SELECT/INSERT/UPDATE/DELETE policy bodies |
-| Part 6: audit_logs SELECT + INSERT policies | `app.tenant_id` → `app.org_id` in both policy bodies |
+| Part 5: 8 tables (tenant_domains, tenant_branding, memberships, invites, password_reset_tokens, tenant_feature_overrides, ai_budgets, ai_usage_meters) | All `current_setting('app.tenant_id', true)::uuid` â†’ `current_setting('app.org_id', true)::uuid` in SELECT/INSERT/UPDATE/DELETE policy bodies |
+| Part 6: audit_logs SELECT + INSERT policies | `app.tenant_id` â†’ `app.org_id` in both policy bodies |
 
-**Anti-regression prevention note:** If `supabase_hardening.sql` is re-applied to a fresh environment WITHOUT `rls.sql` following it, Part 5 per-op policies now use the correct `app.org_id` key → memberships visible → login succeeds. Doctrine v1.4 comment header makes the canonical key explicit for future maintainers.
+**Anti-regression prevention note:** If `supabase_hardening.sql` is re-applied to a fresh environment WITHOUT `rls.sql` following it, Part 5 per-op policies now use the correct `app.org_id` key â†’ memberships visible â†’ login succeeds. Doctrine v1.4 comment header makes the canonical key explicit for future maintainers.
 
 **Static gates:**
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅ (SQL-only change)
-- `pnpm -C server run lint` → EXIT 0 ✅ (0 errors)
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ… (SQL-only change)
+- `pnpm -C server run lint` â†’ EXIT 0 âœ… (0 errors)
 
 **Implementation commit:** `80a6971`
 
 ---
 
-#### G-008 — VALIDATED 2026-02-22 (admin tenant provisioning endpoint)
+#### G-008 â€” VALIDATED 2026-02-22 (admin tenant provisioning endpoint)
 
 **Objective:** Implement canonical `POST /api/control/tenants/provision` endpoint under Doctrine v1.4 constitutional rules. Sole governed mechanism for tenant creation from the control plane.
 
@@ -517,66 +517,66 @@ Zero 500s. Zero PG errors. Context isolation preserved.
 
 | File | Change |
 |---|---|
-| `server/src/types/tenantProvision.types.ts` | NEW — `TenantProvisionRequest`, `TenantProvisionResult`, `ProvisionContext` interfaces |
-| `server/src/services/tenantProvision.service.ts` | NEW — `provisionTenant()`: single atomic tx, dual-phase context lifecycle |
-| `server/src/routes/admin/tenantProvision.ts` | NEW — Fastify plugin, `POST /tenants/provision`, admin guard + zod validation |
-| `server/src/index.ts` | MODIFIED — import + register (prefix corrected: `/api/control`) |
-| `server/src/routes/control.ts` | MODIFIED — legacy handler removed (allowlist expansion, stop-loss #2) |
+| `server/src/types/tenantProvision.types.ts` | NEW â€” `TenantProvisionRequest`, `TenantProvisionResult`, `ProvisionContext` interfaces |
+| `server/src/services/tenantProvision.service.ts` | NEW â€” `provisionTenant()`: single atomic tx, dual-phase context lifecycle |
+| `server/src/routes/admin/tenantProvision.ts` | NEW â€” Fastify plugin, `POST /tenants/provision`, admin guard + zod validation |
+| `server/src/index.ts` | MODIFIED â€” import + register (prefix corrected: `/api/control`) |
+| `server/src/routes/control.ts` | MODIFIED â€” legacy handler removed (allowlist expansion, stop-loss #2) |
 
 **Stop-loss events (3 blockers discovered and resolved):**
 
 | # | Blocker | Type | Resolution |
 |---|---------|------|------------|
-| 1 | `/api/admin` unmapped in `realmGuard.ENDPOINT_REALM_MAP` → WRONG_REALM 403 | Out-of-scope file required | Option B: prefix moved to `/api/control` (already mapped). `index.ts` only. |
-| 2 | `FST_ERR_DUPLICATED_ROUTE` — legacy `POST /tenants/provision` in `control.ts` conflicts with G-008 plugin | Out-of-scope file required | Option A: allowlist expanded to `control.ts` (deletion-only). Legacy handler removed, replaced with comment. |
-| 3 | RLS INSERT policy blocks `texqtic_app` role from inserting into `tenants` + `users` tables | Architecture discovery | `SET LOCAL ROLE texqtic_app` moved to Phase 2 only (before membership creation). `tenants` + `users` created as postgres/BYPASSRLS (correct architecture — they are control-plane / global tables). |
+| 1 | `/api/admin` unmapped in `realmGuard.ENDPOINT_REALM_MAP` â†’ WRONG_REALM 403 | Out-of-scope file required | Option B: prefix moved to `/api/control` (already mapped). `index.ts` only. |
+| 2 | `FST_ERR_DUPLICATED_ROUTE` â€” legacy `POST /tenants/provision` in `control.ts` conflicts with G-008 plugin | Out-of-scope file required | Option A: allowlist expanded to `control.ts` (deletion-only). Legacy handler removed, replaced with comment. |
+| 3 | RLS INSERT policy blocks `texqtic_app` role from inserting into `tenants` + `users` tables | Architecture discovery | `SET LOCAL ROLE texqtic_app` moved to Phase 2 only (before membership creation). `tenants` + `users` created as postgres/BYPASSRLS (correct architecture â€” they are control-plane / global tables). |
 
 **Transaction architecture (final):**
 
 ```
-Phase 1 — postgres role (BYPASSRLS):
-  set_config('app.org_id',      ADMIN_SENTINEL_ID, true)   ← tx-local
-  set_config('app.actor_id',    adminActorId,       true)   ← tx-local
-  set_config('app.realm',       'control',          true)   ← tx-local
-  set_config('app.is_admin',    'true',             true)   ← tx-local
-  set_config('app.bypass_rls',  'off',              true)   ← tx-local
-  set_config('app.request_id',  requestId,          true)   ← tx-local
+Phase 1 â€” postgres role (BYPASSRLS):
+  set_config('app.org_id',      ADMIN_SENTINEL_ID, true)   â† tx-local
+  set_config('app.actor_id',    adminActorId,       true)   â† tx-local
+  set_config('app.realm',       'control',          true)   â† tx-local
+  set_config('app.is_admin',    'true',             true)   â† tx-local
+  set_config('app.bypass_rls',  'off',              true)   â† tx-local
+  set_config('app.request_id',  requestId,          true)   â† tx-local
   STOP-LOSS: assert current_setting('app.is_admin') = 'true'
   CREATE tenant (control-plane table, no tenant RLS INSERT policy)
   UPSERT user   (global table, no tenant RLS INSERT policy)
 
-Phase 2 — texqtic_app role (NOBYPASSRLS):
+Phase 2 â€” texqtic_app role (NOBYPASSRLS):
   SET LOCAL ROLE texqtic_app
-  set_config('app.org_id',  newTenantId, true)   ← tx-local, switch
-  set_config('app.realm',   'tenant',    true)   ← tx-local, switch
+  set_config('app.org_id',  newTenantId, true)   â† tx-local, switch
+  set_config('app.realm',   'tenant',    true)   â† tx-local, switch
   CREATE membership (tenant-scoped, RLS INSERT policy enforced)
 
-Context auto-clears: SET LOCAL semantics on tx commit → pooler connection clean
+Context auto-clears: SET LOCAL semantics on tx commit â†’ pooler connection clean
 ```
 
 **Constitutional compliance (final):**
 
 | Constraint | Status |
 |---|---|
-| `app.org_id` exclusively (NEVER `app.tenant_id` in set_config) | ✅ |
-| All `set_config` calls use `tx-local=true` | ✅ |
-| Admin stop-loss assertion before any writes | ✅ |
-| `adminAuthMiddleware` + `request.isAdmin` double guard | ✅ |
-| Single atomic transaction | ✅ |
-| Context auto-clears on tx commit | ✅ |
-| Password hashed before tx open | ✅ |
-| No Prisma schema modification | ✅ |
-| No RLS policy modification | ✅ |
+| `app.org_id` exclusively (NEVER `app.tenant_id` in set_config) | âœ… |
+| All `set_config` calls use `tx-local=true` | âœ… |
+| Admin stop-loss assertion before any writes | âœ… |
+| `adminAuthMiddleware` + `request.isAdmin` double guard | âœ… |
+| Single atomic transaction | âœ… |
+| Context auto-clears on tx commit | âœ… |
+| Password hashed before tx open | âœ… |
+| No Prisma schema modification | âœ… |
+| No RLS policy modification | âœ… |
 
 **Static gates (all commits):**
 
-- `pnpm exec tsc --noEmit` → EXIT 0 ✅
-- `pnpm exec eslint` on new files → 0 errors, 0 warnings ✅
-- No `app.tenant_id` in functional `set_config` calls ✅
-- No `set_config(..., false)` ✅
-- No context helper mutation ✅
+- `pnpm exec tsc --noEmit` â†’ EXIT 0 âœ…
+- `pnpm exec eslint` on new files â†’ 0 errors, 0 warnings âœ…
+- No `app.tenant_id` in functional `set_config` calls âœ…
+- No `set_config(..., false)` âœ…
+- No context helper mutation âœ…
 
-**GR-007 Production Proof — EXECUTED 2026-02-22T18:30:18Z**
+**GR-007 Production Proof â€” EXECUTED 2026-02-22T18:30:18Z**
 
 First provision call:
 ```
@@ -587,81 +587,81 @@ userId:       42f7afff-d149-4b29-89bb-77bc3adc5d7e
 membershipId: 1d1d5da6-c19c-445b-953d-ae02a878c7cf
 ```
 
-7.1 — `set_tenant_context` function body (relevant lines):
+7.1 â€” `set_tenant_context` function body (relevant lines):
 ```sql
 perform set_config('app.org_id',    p_tenant_id::text, true);
 perform set_config('app.tenant_id', '',                 true);  -- blank (defensive clear)
 perform set_config('app.is_admin',  p_is_admin::text,  true);
 ```
-> **Note:** `app.tenant_id` appears but is explicitly set to `''` (empty string). This is G-007-HOTFIX intentional defensive blanking — prevents legacy RLS policies from reading a stale value. The canonical key `app.org_id` receives the actual tenant UUID. **Conditional PASS per G-007 governance docs.**
+> **Note:** `app.tenant_id` appears but is explicitly set to `''` (empty string). This is G-007-HOTFIX intentional defensive blanking â€” prevents legacy RLS policies from reading a stale value. The canonical key `app.org_id` receives the actual tenant UUID. **Conditional PASS per G-007 governance docs.**
 
 | Proof | Result | PASS? |
 |---|---|---|
-| 7.1 `set_tenant_context` uses `app.org_id` | `true` | ✅ PASS |
-| 7.1 `app.tenant_id` set to meaningful value | `''` (empty, blanked) | ✅ CONDITIONAL PASS |
-| 7.2a `count(*) FROM memberships` | 3 | ✅ PASS (≥ 1) |
-| 7.2b `count(*) FROM users` | 3 | ✅ PASS (≥ 1) |
-| 7.2c scoped: `memberships WHERE tenant_id = newOrgId` | 1 | ✅ PASS (≥ 1) |
-| 7.2d context leak (fresh connection) | `"NULL"` | ✅ PASS |
+| 7.1 `set_tenant_context` uses `app.org_id` | `true` | âœ… PASS |
+| 7.1 `app.tenant_id` set to meaningful value | `''` (empty, blanked) | âœ… CONDITIONAL PASS |
+| 7.2a `count(*) FROM memberships` | 3 | âœ… PASS (â‰¥ 1) |
+| 7.2b `count(*) FROM users` | 3 | âœ… PASS (â‰¥ 1) |
+| 7.2c scoped: `memberships WHERE tenant_id = newOrgId` | 1 | âœ… PASS (â‰¥ 1) |
+| 7.2d context leak (fresh connection) | `"NULL"` | âœ… PASS |
 
 **Commits (6 total):**
 
 | Commit | Description |
 |---|---|
-| `1eb5a46` | `feat(G-008)`: implementation — route + service + types + index registration |
+| `1eb5a46` | `feat(G-008)`: implementation â€” route + service + types + index registration |
 | `ffca39c` | `governance(G-008)`: initial validation evidence + GR-007 proof block |
-| `2107c6d` | `fix(G-008)`: prefix `/api/admin` → `/api/control` (blocker #1) |
+| `2107c6d` | `fix(G-008)`: prefix `/api/admin` â†’ `/api/control` (blocker #1) |
 | `790e63f` | `fix(G-008)`: remove legacy handler from `control.ts` (blocker #2) |
-| `64b8c4e` | `fix(G-008)`: role switch to Phase 2 only (blocker #3 — RLS architecture) |
+| `64b8c4e` | `fix(G-008)`: role switch to Phase 2 only (blocker #3 â€” RLS architecture) |
 | (this commit) | `governance(G-008)`: GR-007 proof results + VALIDATED |
 
-**Validation status: VALIDATED ✅ — GR-007 proof executed 2026-02-22T18:30:18Z**
+**Validation status: VALIDATED âœ… â€” GR-007 proof executed 2026-02-22T18:30:18Z**
 
 ---
 
-#### G-014 — VALIDATED 2026-02-22 (nested TX pattern in tenant activation)
+#### G-014 â€” VALIDATED 2026-02-22 (nested TX pattern in tenant activation)
 
 **Objective:** Eliminate nested `$transaction` inside `withDbContext` callback in the tenant activation flow. Consolidate all activation writes (user, membership, invite, audit log) into a single atomic DB transaction with one context lifecycle.
 
-**Files modified (final — 1 file):**
+**Files modified (final â€” 1 file):**
 
 | File | Change |
 |---|---|
-| `server/src/routes/tenant.ts` | MODIFY — remove nested `$transaction`, thread `tx` through all writes, move `writeAuditLog` inside callback |
+| `server/src/routes/tenant.ts` | MODIFY â€” remove nested `$transaction`, thread `tx` through all writes, move `writeAuditLog` inside callback |
 
-**Root cause (exact call chain — before):**
+**Root cause (exact call chain â€” before):**
 
 ```
 POST /api/tenant/activate
-└─ withDbContext(prisma, dbContext, tx => {    // outer prisma.$transaction + SET LOCAL ROLE + app.org_id
-     tx.$transaction(innerTx => {              // ← NESTED $transaction (Pattern A — savepoint)
+â””â”€ withDbContext(prisma, dbContext, tx => {    // outer prisma.$transaction + SET LOCAL ROLE + app.org_id
+     tx.$transaction(innerTx => {              // â† NESTED $transaction (Pattern A â€” savepoint)
        innerTx.user.findUnique/create
        innerTx.membership.create
        innerTx.invite.update
        return { user, membership }
      })
    })
-   writeAuditLog(prisma, ...)                  // ← OUTSIDE both transactions (Pattern C)
+   writeAuditLog(prisma, ...)                  // â† OUTSIDE both transactions (Pattern C)
 ```
 
 **Problems with the old pattern:**
 
 | Issue | Description |
 |---|---|
-| Pattern A — Nested `$transaction` | `tx.$transaction(innerTx => ...)` opens a PostgreSQL SAVEPOINT on top of an already-open transaction. `innerTx` is a separate client object; SET LOCAL context set in the outer tx may not propagate. |
-| Pattern C — Audit log outside tx | `writeAuditLog(prisma, ...)` used the raw prisma client (not `tx`), executing outside both transactions. Activation could succeed while the audit log fails — non-atomic. |
+| Pattern A â€” Nested `$transaction` | `tx.$transaction(innerTx => ...)` opens a PostgreSQL SAVEPOINT on top of an already-open transaction. `innerTx` is a separate client object; SET LOCAL context set in the outer tx may not propagate. |
+| Pattern C â€” Audit log outside tx | `writeAuditLog(prisma, ...)` used the raw prisma client (not `tx`), executing outside both transactions. Activation could succeed while the audit log fails â€” non-atomic. |
 | Context lifecycle fragmented | The inner `innerTx` had a different connection slot from `tx`; context vars set via `SET LOCAL` in the outer tx were not guaranteed to be visible inside the savepoint. |
 
 **Fix (after):**
 
 ```
 POST /api/tenant/activate
-└─ withDbContext(prisma, dbContext, tx => {    // single prisma.$transaction; SET LOCAL ROLE; app.org_id
+â””â”€ withDbContext(prisma, dbContext, tx => {    // single prisma.$transaction; SET LOCAL ROLE; app.org_id
      STOP-LOSS: SELECT current_setting('app.org_id', true) === invite.tenantId
      tx.user.findUnique/create
      tx.membership.create
      tx.invite.update
-     writeAuditLog(tx, ...)                   // ← inside same transaction, atomic
+     writeAuditLog(tx, ...)                   // â† inside same transaction, atomic
      return { user, membership }
    })
 ```
@@ -670,29 +670,29 @@ POST /api/tenant/activate
 
 | Constraint | Status |
 |---|---|
-| No nested `$transaction` inside `withDbContext` callback | ✅ |
-| All writes on outer `tx` client (one connection) | ✅ |
-| `writeAuditLog` atomic with activation writes | ✅ |
-| Stop-loss: `current_setting('app.org_id', true)` assert before first write | ✅ |
-| `app.org_id` is the ONLY tenant scoping key | ✅ |
-| All `set_config` calls are tx-local (via `withDbContext`) | ✅ |
-| No `app.tenant_id` as real scoping key | ✅ |
-| No `set_config(..., false)` introduced | ✅ |
+| No nested `$transaction` inside `withDbContext` callback | âœ… |
+| All writes on outer `tx` client (one connection) | âœ… |
+| `writeAuditLog` atomic with activation writes | âœ… |
+| Stop-loss: `current_setting('app.org_id', true)` assert before first write | âœ… |
+| `app.org_id` is the ONLY tenant scoping key | âœ… |
+| All `set_config` calls are tx-local (via `withDbContext`) | âœ… |
+| No `app.tenant_id` as real scoping key | âœ… |
+| No `set_config(..., false)` introduced | âœ… |
 
 **Static gates:**
 
-- `pnpm exec tsc --noEmit` → EXIT 0, 0 errors ✅
-- `pnpm exec eslint src/routes/tenant.ts` → 0 errors (1 pre-existing warning at line 686 in unrelated order flow — not introduced by G-014) ✅
-- `grep -n '$transaction|set_config.*false|app\.tenant_id' tenant.ts` → 0 functional matches (1 comment-only) ✅
-- `git diff --name-only` → `server/src/routes/tenant.ts` only ✅
+- `pnpm exec tsc --noEmit` â†’ EXIT 0, 0 errors âœ…
+- `pnpm exec eslint src/routes/tenant.ts` â†’ 0 errors (1 pre-existing warning at line 686 in unrelated order flow â€” not introduced by G-014) âœ…
+- `grep -n '$transaction|set_config.*false|app\.tenant_id' tenant.ts` â†’ 0 functional matches (1 comment-only) âœ…
+- `git diff --name-only` â†’ `server/src/routes/tenant.ts` only âœ…
 
 **Functional validation note:**
 
-End-to-end activation smoke test requires a live provisioned tenant (e.g., G-008 provision) + a seeded invite token. This requires the full invite creation → email token flow. Structural correctness is guaranteed by code inspection:
+End-to-end activation smoke test requires a live provisioned tenant (e.g., G-008 provision) + a seeded invite token. This requires the full invite creation â†’ email token flow. Structural correctness is guaranteed by code inspection:
 
-- Single `withDbContext` call → single `prisma.$transaction` instance
+- Single `withDbContext` call â†’ single `prisma.$transaction` instance
 - No `tx.$transaction(...)` call anywhere in the activation path (grep-verified)
-- `writeAuditLog` signature accepts `DbClient` (`PrismaClient | TransactionClient`) — confirmed in `server/src/lib/auditLog.ts:49`
+- `writeAuditLog` signature accepts `DbClient` (`PrismaClient | TransactionClient`) â€” confirmed in `server/src/lib/auditLog.ts:49`
 
 **GR-007 coupling:** `withDbContext` sets `app.org_id` + `SET LOCAL ROLE texqtic_app`. The stop-loss assertion now verifies `app.org_id` before writes, so context leak is impossible by construction (any mismatch throws before any mutation).
 
@@ -703,11 +703,11 @@ End-to-end activation smoke test requires a live provisioned tenant (e.g., G-008
 | `c451662` | `fix(G-014)`: remove nested transactions in tenant activation (single atomic tx) |
 | (this commit) | `governance(G-014)`: evidence of single-tx activation + validation outputs |
 
-**Validation status: VALIDATED ✅ — 2026-02-22**
+**Validation status: VALIDATED âœ… â€” 2026-02-22**
 
 ---
 
-#### G-009 — VALIDATED 2026-02-22 (seed missing OP_* flags)
+#### G-009 â€” VALIDATED 2026-02-22 (seed missing OP_* flags)
 
 **Objective:** Deterministically seed the two missing OP_* control-plane feature flags (`OP_PLATFORM_READ_ONLY`, `OP_AI_AUTOMATION_ENABLED`) so all envs (local/stage/prod) have a known-good baseline without manual DB patching.
 
@@ -719,18 +719,18 @@ End-to-end activation smoke test requires a live provisioned tenant (e.g., G-008
 
 OP_* flags are global/control-plane rows (no tenant scoping, no RLS enforcement for seed role). Idempotence provided by `prisma.featureFlag.upsert({ where: { key } })`.
 
-**Files modified (1 file — frozen allowlist):**
+**Files modified (1 file â€” frozen allowlist):**
 
 | File | Change |
 |---|---|
-| `server/prisma/seed.ts` | MODIFY — added 2 entries to `flags` array in Section 7 |
+| `server/prisma/seed.ts` | MODIFY â€” added 2 entries to `flags` array in Section 7 |
 
 **Flags seeded:**
 
 | Key | Default | Doctrine Ref | Meaning |
 |---|---|---|---|
-| `OP_PLATFORM_READ_ONLY` | `false` | Doctrine v1.4 §2; v1.3 ops table | Activates global read-only mode; blocks all tenant state-changing operations when `true` |
-| `OP_AI_AUTOMATION_ENABLED` | `false` | Doctrine v1.4 §8; v1.3 ops table | Enables AI guardrails and automation pipelines; must be explicitly enabled by control plane |
+| `OP_PLATFORM_READ_ONLY` | `false` | Doctrine v1.4 Â§2; v1.3 ops table | Activates global read-only mode; blocks all tenant state-changing operations when `true` |
+| `OP_AI_AUTOMATION_ENABLED` | `false` | Doctrine v1.4 Â§8; v1.3 ops table | Enables AI guardrails and automation pipelines; must be explicitly enabled by control plane |
 
 Both default to `false` (safe; control plane enables at runtime).
 
@@ -738,19 +738,19 @@ Both default to `false` (safe; control plane enables at runtime).
 
 | Constraint | Status |
 |---|---|
-| No schema change / migration | ✅ |
-| No RLS policy change | ✅ |
-| No tenant scoping / `app.org_id` writes in seed | ✅ — feature_flags is global |
-| No `set_config(..., false)` introduced | ✅ |
-| Seed is idempotent (upsert on PK) | ✅ |
+| No schema change / migration | âœ… |
+| No RLS policy change | âœ… |
+| No tenant scoping / `app.org_id` writes in seed | âœ… â€” feature_flags is global |
+| No `set_config(..., false)` introduced | âœ… |
+| Seed is idempotent (upsert on PK) | âœ… |
 
 **Static gates:**
 
-- `pnpm exec tsc --noEmit` → EXIT 0 ✅
-- `grep set_config.*false \| app.tenant_id` in `seed.ts` → 0 matches ✅
-- `git diff --name-only` → `server/prisma/seed.ts` only ✅
+- `pnpm exec tsc --noEmit` â†’ EXIT 0 âœ…
+- `grep set_config.*false \| app.tenant_id` in `seed.ts` â†’ 0 matches âœ…
+- `git diff --name-only` â†’ `server/prisma/seed.ts` only âœ…
 
-**Proof run — 2026-02-22:**
+**Proof run â€” 2026-02-22:**
 
 ```
 === G-009 Proof ===
@@ -762,15 +762,15 @@ OP_* query result count: 2 (expected: 2)
 === Idempotence ===
 Second query count: 2 (must equal 2)
 
-PASS ✅ G-009 acceptance criterion met
+PASS âœ… G-009 acceptance criterion met
 ```
 
-Seed re-run also confirmed `6 feature flags` (unchanged — no duplication).
+Seed re-run also confirmed `6 feature flags` (unchanged â€” no duplication).
 
 **Acceptance criterion (wave-2-board):**
 ```sql
 SELECT key FROM feature_flags WHERE key IN ('OP_PLATFORM_READ_ONLY','OP_AI_AUTOMATION_ENABLED');
--- Returns 2 rows ✅
+-- Returns 2 rows âœ…
 ```
 
 **Commits:**
@@ -780,47 +780,47 @@ SELECT key FROM feature_flags WHERE key IN ('OP_PLATFORM_READ_ONLY','OP_AI_AUTOM
 | `380fde7` | `fix(G-009)`: seed OP_* flags deterministically |
 | (this commit) | `governance(G-009)`: proof + validation outputs |
 
-**Validation status: VALIDATED ✅ — 2026-02-22**
+**Validation status: VALIDATED âœ… â€” 2026-02-22**
 
 ---
 
-#### G-011 — VALIDATED 2026-02-22 (impersonation session routes missing)
+#### G-011 â€” VALIDATED 2026-02-22 (impersonation session routes missing)
 
 **Gap:** No impersonation endpoints existed in any route file.
 
 **Fix:** Added dedicated plugin `server/src/routes/admin/impersonation.ts` with:
-- `POST /api/control/impersonation/start` — creates `ImpersonationSession`, returns time-bounded tenant JWT (30-min `exp` in payload)
-- `POST /api/control/impersonation/stop` — sets `endedAt`, writes IMPERSONATION_STOP audit
-- `GET /api/control/impersonation/status/:impersonationId` — returns active/ended state
+- `POST /api/control/impersonation/start` â€” creates `ImpersonationSession`, returns time-bounded tenant JWT (30-min `exp` in payload)
+- `POST /api/control/impersonation/stop` â€” sets `endedAt`, writes IMPERSONATION_STOP audit
+- `GET /api/control/impersonation/status/:impersonationId` â€” returns active/ended state
 
 **Revocation strategy:** JWT TTL (exp-based) + `endedAt` DB marker. `tenantAuthMiddleware` untouched per allowlist constraint; revocation is exp-based only, documented.
 
 **Static gates:**
 ```
-tsc --noEmit → EXIT 0 (0 errors)
-eslint → 0 errors (only .eslintignore deprecation warning)
-git diff --name-only → only allowlist files
-app.tenant_id match → line 22 JSDoc comment only (no code usage)
-$transaction in route file → 0 matches
+tsc --noEmit â†’ EXIT 0 (0 errors)
+eslint â†’ 0 errors (only .eslintignore deprecation warning)
+git diff --name-only â†’ only allowlist files
+app.tenant_id match â†’ line 22 JSDoc comment only (no code usage)
+$transaction in route file â†’ 0 matches
 ```
 
 **Functional validation:**
 ```
 POST /api/control/impersonation/start
-  → 201 OK — impersonationId=69ec58c8-...; expiresAt=2026-02-22T14:52:06Z; token present=True ✅
+  â†’ 201 OK â€” impersonationId=69ec58c8-...; expiresAt=2026-02-22T14:52:06Z; token present=True âœ…
 
 GET /api/control/impersonation/status/69ec58c8-...
-  → 200 — active=true; endedAt=null ✅
+  â†’ 200 â€” active=true; endedAt=null âœ…
 
 POST /api/control/impersonation/stop
-  → 200 OK ✅
+  â†’ 200 OK âœ…
 
 GET /api/control/impersonation/status/69ec58c8-... (after stop)
-  → 200 — active=false; endedAt=2026-02-22T14:22:27Z ✅
+  â†’ 200 â€” active=false; endedAt=2026-02-22T14:22:27Z âœ…
 
-Neg-1 (tenant JWT on admin route) → 401 ✅
-Neg-2 (missing reason field)      → 400 ✅
-Neg-3 (userId not a member)       → 404 ✅
+Neg-1 (tenant JWT on admin route) â†’ 401 âœ…
+Neg-2 (missing reason field)      â†’ 400 âœ…
+Neg-3 (userId not a member)       â†’ 404 âœ…
 ```
 
 **Commits:**
@@ -830,17 +830,17 @@ Neg-3 (userId not a member)       → 404 ✅
 | `3860447` | `feat(G-011)`: control-plane impersonation routes with auditable, time-bounded tokens |
 | (this commit) | `governance(G-011)`: proof + validation outputs |
 
-**Validation status: VALIDATED ✅ — 2026-02-22**
+**Validation status: VALIDATED âœ… â€” 2026-02-22**
 
 ---
 
-#### G-010 — VALIDATED 2026-02-22 (Tax/fee stub in checkout)
+#### G-010 â€” VALIDATED 2026-02-22 (Tax/fee stub in checkout)
 
 **Gap:** `POST /api/tenant/checkout` had an inline stub: `const total = subtotal; // stub: no tax/fees`. No canonical computation existed.
 
 **Discovery:**
 - Single call site: `server/src/routes/tenant.ts` checkout handler
-- Line items sourced from `cart.items[].catalogItem.price` (Decimal) × `item.quantity` (Int)
+- Line items sourced from `cart.items[].catalogItem.price` (Decimal) Ã— `item.quantity` (Int)
 - Persistence schema: `Order.subtotal` + `Order.total` only (no taxTotal/feeTotal/discountTotal columns)
 - No existing pricing service, no discount field on CartItem
 
@@ -854,7 +854,7 @@ and rewired the checkout handler to use it.
 | fees | 0 (no platform fee config) |
 | discount | 0 (no discount engine; CartItem has no discount field) |
 | rounding | `round2()` = `Math.round((n + Number.EPSILON) * 100) / 100` applied once per component |
-| grandTotal | subtotal − discountTotal + taxTotal + feeTotal |
+| grandTotal | subtotal âˆ’ discountTotal + taxTotal + feeTotal |
 | Order.total | stores grandTotal |
 
 **Checkout response shape (new):**
@@ -878,29 +878,29 @@ and rewired the checkout handler to use it.
 
 **Static gates:**
 ```
-tsc --noEmit → EXIT 0 (0 errors)
-eslint → 0 errors (1 pre-existing warning on userId!)
-git diff --name-only → M server/src/routes/tenant.ts + ?? server/src/services/pricing/
-set_config.*false / app.tenant_id → 0 code matches
-nested $transaction in new files → 0 matches
-stub 'stub.*no tax' → 0 matches (confirmed removed)
+tsc --noEmit â†’ EXIT 0 (0 errors)
+eslint â†’ 0 errors (1 pre-existing warning on userId!)
+git diff --name-only â†’ M server/src/routes/tenant.ts + ?? server/src/services/pricing/
+set_config.*false / app.tenant_id â†’ 0 code matches
+nested $transaction in new files â†’ 0 matches
+stub 'stub.*no tax' â†’ 0 matches (confirmed removed)
 ```
 
 **Functional validation:**
 ```
-Scenario: SKU-A (9.99) × qty 100
-Manual recompute: round2(9.99 × 100) = 999.00
+Scenario: SKU-A (9.99) Ã— qty 100
+Manual recompute: round2(9.99 Ã— 100) = 999.00
 
-Run 1 → POST /api/tenant/checkout:
-  grandTotal=999 subtotal=999 taxTotal=0 feeTotal=0 ✅
+Run 1 â†’ POST /api/tenant/checkout:
+  grandTotal=999 subtotal=999 taxTotal=0 feeTotal=0 âœ…
 
-Run 2 (new cart, same item/qty) → POST /api/tenant/checkout:
-  grandTotal=999 subtotal=999 taxTotal=0 feeTotal=0 ✅ (deterministic)
+Run 2 (new cart, same item/qty) â†’ POST /api/tenant/checkout:
+  grandTotal=999 subtotal=999 taxTotal=0 feeTotal=0 âœ… (deterministic)
 
 Stop-loss tests (via tsx):
-  Neg-1: unitPrice=-1, qty=1  → TotalsInputError code=INVALID_UNIT_PRICE ✅
-  Neg-2: unitPrice=9.99, qty=0 → TotalsInputError code=INVALID_QUANTITY ✅
-  Neg-3: unitPrice=NaN, qty=1 → TotalsInputError code=INVALID_UNIT_PRICE ✅
+  Neg-1: unitPrice=-1, qty=1  â†’ TotalsInputError code=INVALID_UNIT_PRICE âœ…
+  Neg-2: unitPrice=9.99, qty=0 â†’ TotalsInputError code=INVALID_QUANTITY âœ…
+  Neg-3: unitPrice=NaN, qty=1 â†’ TotalsInputError code=INVALID_UNIT_PRICE âœ…
 ```
 
 **Commits:**
@@ -910,11 +910,11 @@ Stop-loss tests (via tsx):
 | `39f0720` | `fix(G-010)`: replace tax/fee stub with deterministic Phase-1 totals computation |
 | (this commit) | `governance(G-010)`: totals rules documented + validation evidence |
 
-**Validation status: VALIDATED ✅ — 2026-02-22**
+**Validation status: VALIDATED âœ… â€” 2026-02-22**
 
 ---
 
-#### G-012 — VALIDATED 2026-02-22 (Email notifications are stubs — no real delivery)
+#### G-012 â€” VALIDATED 2026-02-22 (Email notifications are stubs â€” no real delivery)
 
 **Gap:** `server/src/lib/emailStubs.ts` provided two stub functions (`sendPasswordResetEmail`, `sendEmailVerificationEmail`) that only called `fastify.log.info()`. No real email delivery existed for any flow.
 
@@ -941,17 +941,17 @@ Stop-loss tests (via tsx):
 
 **Static gates:**
 ```
-tsc --noEmit → EXIT 0 (0 errors)
-eslint → 0 errors; 0 new warnings (2 pre-existing: auth.ts:48 any, tenant.ts:702 !)
-git diff --name-only → only allowlisted files; email.service.ts as new untracked
-Select-String emailStubs in auth.ts, tenant.ts → 0 matches
+tsc --noEmit â†’ EXIT 0 (0 errors)
+eslint â†’ 0 errors; 0 new warnings (2 pre-existing: auth.ts:48 any, tenant.ts:702 !)
+git diff --name-only â†’ only allowlisted files; email.service.ts as new untracked
+Select-String emailStubs in auth.ts, tenant.ts â†’ 0 matches
 ```
 
 **Functional validation:**
 ```
 Stop-loss: EmailValidationError.code=MISSING_TO on empty to= confirmed via tsc type-check
 Dev-mode gate: NODE_ENV=development path returns before nodemailer createTransport call
-Prod-no-SMTP gate: isSmtpConfigured()=false → console.warn, no send, no throw
+Prod-no-SMTP gate: isSmtpConfigured()=false â†’ console.warn, no send, no throw
 Fire-and-forget: invite email errors caught; never propagate to invite creation response
 ```
 
@@ -962,60 +962,60 @@ Fire-and-forget: invite email errors caught; never propagate to invite creation 
 | `1fe96e1` | `feat(G-012)`: canonical Phase-1 email service (env-gated, stop-loss, audited) |
 | (this commit) | `governance(G-012)`: email service behavior documented + validation evidence |
 
-**Validation status: VALIDATED ✅ — 2026-02-22**
+**Validation status: VALIDATED âœ… â€” 2026-02-22**
 
 ---
 
-### Wave DB-RLS-0001 — RLS Context Model Foundation
+### Wave DB-RLS-0001 â€” RLS Context Model Foundation
 
 Start Date: 2026-02-12
 End Date: 2026-02-21 (ongoing / Phase-1 baseline)
 Branch: main
-Tag: —
+Tag: â€”
 
 #### Objective
 
-Establish constitutional RLS enforcement via transaction-local context. Implement `withDbContext` (canonical), `buildContextFromRequest`, `databaseContextMiddleware`. Validate commerce flow (auth → cart → checkout → orders) as Phase-1 baseline.
+Establish constitutional RLS enforcement via transaction-local context. Implement `withDbContext` (canonical), `buildContextFromRequest`, `databaseContextMiddleware`. Validate commerce flow (auth â†’ cart â†’ checkout â†’ orders) as Phase-1 baseline.
 
 #### Gaps Included
 
-- G-001 (partially — new context model implemented; policy migration pending)
-- G-003 (partially — `orders`/`order_items` policies confirmed missing)
+- G-001 (partially â€” new context model implemented; policy migration pending)
+- G-003 (partially â€” `orders`/`order_items` policies confirmed missing)
 
 #### Commits
 
-- (See git log — Phase-1 commerce flow implementation)
+- (See git log â€” Phase-1 commerce flow implementation)
 
 #### Validation Evidence
 
-- RLS Proof: `server/prisma/verify-rls-data.ts` — manual; not CI-gated
+- RLS Proof: `server/prisma/verify-rls-data.ts` â€” manual; not CI-gated
 - Cross-Tenant Test: Manual psql verification on `orders`/`order_items`
 - Regression Flow: Phase-1 commerce flow validated end-to-end
 
 #### Coverage Matrix Impact
 
-- Commerce Core: Cart lifecycle → **Implemented**
-- Commerce Core: Checkout → **Implemented**
-- Commerce Core: Orders + OrderItems → **Implemented**
-- Auth / JWT claims → **Implemented**
-- Realm guard → **Implemented**
-- AI budget enforcement → **Implemented**
-- Audit log (commerce + admin) → **Implemented**
+- Commerce Core: Cart lifecycle â†’ **Implemented**
+- Commerce Core: Checkout â†’ **Implemented**
+- Commerce Core: Orders + OrderItems â†’ **Implemented**
+- Auth / JWT claims â†’ **Implemented**
+- Realm guard â†’ **Implemented**
+- AI budget enforcement â†’ **Implemented**
+- Audit log (commerce + admin) â†’ **Implemented**
 
 #### Governance Notes
 
-- Critical divergence found: `app.tenant_id` (old policies) vs `app.org_id` (new context) — G-001 must be Priority 1 in Wave 2
-- Two `withDbContext` implementations exist — G-004 must be resolved before Wave 2 tests are meaningful
-- `orders`/`order_items` RLS policies appear absent — G-003 is 🔴 Critical
+- Critical divergence found: `app.tenant_id` (old policies) vs `app.org_id` (new context) â€” G-001 must be Priority 1 in Wave 2
+- Two `withDbContext` implementations exist â€” G-004 must be resolved before Wave 2 tests are meaningful
+- `orders`/`order_items` RLS policies appear absent â€” G-003 is ðŸ”´ Critical
 
 ---
 
-### Wave 2 — Monolith Stabilization
+### Wave 2 â€” Monolith Stabilization
 
 Start Date: 2026-02-22
 End Date: 2026-02-22
 Branch: main
-Tag: —
+Tag: â€”
 
 #### Objective
 
@@ -1029,14 +1029,14 @@ Unify RLS context variable (`app.org_id`), add missing policies for `orders`/`or
 
 | Commit | Gap | Description |
 |---|---|---|
-| `1389ed7` | G-001 | RLS context unification app.tenant_id → app.org_id |
+| `1389ed7` | G-001 | RLS context unification app.tenant_id â†’ app.org_id |
 | `2d16e73` | G-002 | FORCE RLS on all tenant commerce tables |
-| G-003 | — | No-code (live policies already correct) |
+| G-003 | â€” | No-code (live policies already correct) |
 | `a19f30b` | G-004 | Remove dual withDbContext; unify control.ts |
 | `830c0c4` | G-005 | Standardize middleware across tenant + AI routes |
 | `4971731` | G-006 | Remove legacy withDbContext in admin login |
-| `09365b2` + `80d4501` + `80a6971` | G-007 | Fix set_config false→true; restore app.org_id canonical key |
-| `1eb5a46`…`009150d` | G-008 | Canonical provisioning endpoint; GR-007 proof |
+| `09365b2` + `80d4501` + `80a6971` | G-007 | Fix set_config falseâ†’true; restore app.org_id canonical key |
+| `1eb5a46`â€¦`009150d` | G-008 | Canonical provisioning endpoint; GR-007 proof |
 | `380fde7` | G-009 | Seed OP_* feature flags deterministically |
 | `39f0720` | G-010 | Phase-1 deterministic totals (tax=0, fee=0) |
 | `3860447` | G-011 | Control-plane impersonation routes |
@@ -1054,11 +1054,11 @@ Unify RLS context variable (`app.org_id`), add missing policies for `orders`/`or
 
 #### Coverage Matrix Impact
 
-- Tax/fee computation: ❌ Missing → ✅ Implemented (G-010)
-- Feature flags OP_*: ⚠ Partial → ✅ Implemented (G-009)
-- Admin impersonation routes: ⚠ Partial → ✅ Implemented (G-011)
-- Email notifications: ⚠ Partial (stub) → ✅ Implemented (G-012)
-- Tenant provisioning: ⚠ Partial → ✅ Implemented (G-008)
+- Tax/fee computation: âŒ Missing â†’ âœ… Implemented (G-010)
+- Feature flags OP_*: âš  Partial â†’ âœ… Implemented (G-009)
+- Admin impersonation routes: âš  Partial â†’ âœ… Implemented (G-011)
+- Email notifications: âš  Partial (stub) â†’ âœ… Implemented (G-012)
+- Tenant provisioning: âš  Partial â†’ âœ… Implemented (G-008)
 - Activation single-tx: fixed (G-014)
 
 #### Governance Notes
@@ -1068,11 +1068,11 @@ Unify RLS context variable (`app.org_id`), add missing policies for `orders`/`or
 
 ---
 
-### Wave-2 Post-Closure Hotfix: G-BCR-001 — bcrypt native binding replacement
+### Wave-2 Post-Closure Hotfix: G-BCR-001 â€” bcrypt native binding replacement
 
-**Triggered by:** Wave-2 runtime validation on Node 24.13.0 — `bcrypt@5.1.1` native binding (`bcrypt_lib.node`) could not load, blocking server startup entirely.
+**Triggered by:** Wave-2 runtime validation on Node 24.13.0 â€” `bcrypt@5.1.1` native binding (`bcrypt_lib.node`) could not load, blocking server startup entirely.
 
-**Root cause:** `bcrypt` uses a native C++ addon compiled for a specific Node ABI. When Node version changes (v22 → v24), pre-built binaries are incompatible and `pnpm rebuild bcrypt` may fail.
+**Root cause:** `bcrypt` uses a native C++ addon compiled for a specific Node ABI. When Node version changes (v22 â†’ v24), pre-built binaries are incompatible and `pnpm rebuild bcrypt` may fail.
 
 **Fix:** Replace with `bcryptjs@3.0.3` (pure JavaScript implementation). API is 100% identical (`hash`, `compare`, async-only). Ships its own TypeScript types. No security parameter changes.
 
@@ -1081,21 +1081,21 @@ Unify RLS context variable (`app.org_id`), add missing policies for `orders`/`or
 |---|---|---|
 | `src/lib/authTokens.ts` | `bcrypt.hash(token, 10)`, `bcrypt.compare()` | 10 |
 | `src/routes/auth.ts` | `bcrypt.compare()`, `bcrypt.hash(pw, 10)` | 10 |
-| `src/routes/tenant.ts` | dynamic `await import('bcrypt')` → static import | 10 |
+| `src/routes/tenant.ts` | dynamic `await import('bcrypt')` â†’ static import | 10 |
 | `src/services/tenantProvision.service.ts` | `bcrypt.hash(pw, BCRYPT_ROUNDS)` | 12 |
 | `prisma/seed.ts` | `bcrypt.hash('Password123!', 10)` | 10 |
-| 7 test files | hash/compare in test fixture setup | 4–10 |
+| 7 test files | hash/compare in test fixture setup | 4â€“10 |
 
 **Changes:**
 - `package.json`: remove `bcrypt@5.1.1` + `@types/bcrypt@5.0.2`; add `bcryptjs@3.0.3`
-- All `import bcrypt from 'bcrypt'` → `import bcrypt from 'bcryptjs'`
-- `tenant.ts`: dynamic `await import('bcrypt')` → top-level static import
+- All `import bcrypt from 'bcrypt'` â†’ `import bcrypt from 'bcryptjs'`
+- `tenant.ts`: dynamic `await import('bcrypt')` â†’ top-level static import
 
 **Static gates:**
 ```
-tsc --noEmit → EXIT 0 (0 errors)
-eslint (touched files) → EXIT 0 (0 errors, 3 pre-existing warnings)
-Select-String 'from .bcrypt\'' → 0 matches (all imports migrated)
+tsc --noEmit â†’ EXIT 0 (0 errors)
+eslint (touched files) â†’ EXIT 0 (0 errors, 3 pre-existing warnings)
+Select-String 'from .bcrypt\'' â†’ 0 matches (all imports migrated)
 ```
 
 **Functional validation:**
@@ -1109,8 +1109,8 @@ bcryptjs hash/compare proof (scripts/bcrypt-proof.ts, deleted post-run):
   rounds=12 wrong match:   false
   ALL ASSERTIONS PASSED
 
-Server startup proof (Node 24.13.0 — previously failing):
-  GET http://localhost:3001/health → 200 {"status":"ok"}
+Server startup proof (Node 24.13.0 â€” previously failing):
+  GET http://localhost:3001/health â†’ 200 {"status":"ok"}
   No native binding errors in startup log.
 ```
 
@@ -1120,11 +1120,11 @@ Server startup proof (Node 24.13.0 — previously failing):
 | `3f16bf6` | `fix(G-015): replace bcrypt with bcryptjs...` (commit message used G-015 placeholder; registered as G-BCR-001 in governance) |
 | (this commit) | `governance(G-BCR-001)`: evidence + static gates |
 
-**Validation status: VALIDATED ✅ — 2026-02-22**
+**Validation status: VALIDATED âœ… â€” 2026-02-22**
 
 ---
 
-## ✅ Wave-2 Closure Certificate (TECS v1.6) — 2026-02-22
+## âœ… Wave-2 Closure Certificate (TECS v1.6) â€” 2026-02-22
 
 Validated gaps:
 - G-008 (tenant provisioning endpoint, canonical /api/control realm, GR-007 proof recorded)
@@ -1143,28 +1143,28 @@ Repo gates:
 - grep: PASS (no set_config(..., false); no executable app.tenant_id reliance; emailStubs absent from all routes; activation path has no nested $transaction)
 
 Runtime probes:
-- CONFIRMED — Node.js v24.13.0; bcrypt native binding replaced with bcryptjs@3.0.3 (pure-JS); server starts cleanly; GET /health → 200. See G-BCR-001 section above.
-- GR-007 production proof: PASS (recorded in G-008 governance commit `009150d`; set_tenant_context uses app.org_id; app.tenant_id defensive blank clear accepted as conditional pass per Doctrine v1.4 §11.3)
+- CONFIRMED â€” Node.js v24.13.0; bcrypt native binding replaced with bcryptjs@3.0.3 (pure-JS); server starts cleanly; GET /health â†’ 200. See G-BCR-001 section above.
+- GR-007 production proof: PASS (recorded in G-008 governance commit `009150d`; set_tenant_context uses app.org_id; app.tenant_id defensive blank clear accepted as conditional pass per Doctrine v1.4 Â§11.3)
 
 Conclusion:
 Wave-2 is CLOSED under TECS v1.6. All six targeted gaps validated. Repo gates clean. GR-007 proof on record.
 
 ---
 
-# Wave 3 � Canonical Doctrine Buildout (In Progress)
+# Wave 3 ï¿½ Canonical Doctrine Buildout (In Progress)
 
 Start Date: 2026-02-23
-End Date: �
+End Date: ï¿½
 Branch: main
-Tag: �
+Tag: ï¿½
 
 ## Objective
 
-Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-024. The entropy elimination step is a prerequisite: adding G-016�G-023 domain tables on top of policy sprawl compounds complexity exponentially.
+Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-024. The entropy elimination step is a prerequisite: adding G-016ï¿½G-023 domain tables on top of policy sprawl compounds complexity exponentially.
 
 ---
 
-## G-006C (RLS Consolidation) � IN PROGRESS 2026-02-23
+## G-006C (RLS Consolidation) ï¿½ IN PROGRESS 2026-02-23
 
 **Task:** Replace N permissive RLS policies per (table, command) with exactly 1 unified permissive policy per command. No functional access change allowed.
 
@@ -1174,7 +1174,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 
 **Security fix (audit_logs INSERT):** WITH CHECK tightened from require_org_context() IS NOT NULL (always-true boolean) to explicit require_org_context() AND tenant_id = app.current_org_id().
 
-### Migration Files Created (deploy in strict order � one commit per table)
+### Migration Files Created (deploy in strict order ï¿½ one commit per table)
 
 | Order | Timestamp      | Table                  | Migration Dir                                               |
 | ----- | -------------- | ---------------------- | ----------------------------------------------------------- |
@@ -1190,7 +1190,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 | 10    | 20260223100000 | event_logs             | 20260223100000_g006c_rls_event_logs_consolidation           |
 | 11    | 20260223110000 | impersonation_sessions | 20260223110000_g006c_rls_impersonation_sessions_consolidation |
 
-### RESTRICTIVE Guard Policies � NOT Touched
+### RESTRICTIVE Guard Policies ï¿½ NOT Touched
 
 | Table                  | RESTRICTIVE Policy Name               |
 | ---------------------- | ------------------------------------- |
@@ -1204,7 +1204,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 | tenant_domains         | tenant_domains_guard_policy           |
 | impersonation_sessions | restrictive_guard                     |
 
-### Deploy Command (per table � requires explicit approval per doctrine)
+### Deploy Command (per table ï¿½ requires explicit approval per doctrine)
 
   pnpm -C server exec prisma migrate deploy
 
@@ -1233,7 +1233,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 1. Re-run Supabase Security Advisor
 2. Re-run Supabase Performance Advisor
 3. Update Coverage Matrix snapshot
-4. Mark G-006C (RLS) closed in Gap Register � status: VALIDATED
+4. Mark G-006C (RLS) closed in Gap Register ï¿½ status: VALIDATED
 
 
 ---
@@ -1305,7 +1305,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 
 ---
 
-### G-020 Day 3 — Constitutional Review Note (2026-02-24)
+### G-020 Day 3 â€” Constitutional Review Note (2026-02-24)
 
 **Gate:** PASS / CLOSED
 
@@ -1315,7 +1315,7 @@ Eliminate RLS policy entropy (G-006C), then build domain tables G-015 through G-
 > (APPROVED, ORDER_CONFIRMED, SETTLEMENT_ACKNOWLEDGED, RELEASED, CLOSED, CANCELLED, REFUNDED, VOIDED).
 > This is encoded in stateMachine.guardrails.ts (SYSTEM_AUTOMATION_FORBIDDEN_TO_STATES set)
 > and mirrored in seed llowed_actor_type[] arrays.
-> No code change required — doctrine is already enforced; this entry closes the governance record.
+> No code change required â€” doctrine is already enforced; this entry closes the governance record.
 
 **Week 2 Progress:**
 | Day | Deliverable | Status |
@@ -1328,51 +1328,51 @@ Commit: 9c3ca28
 
 ---
 
-### G-021 — Maker-Checker Governance (Days 1–3) — Constitutional Review Note (2026-02-24)
+### G-021 â€” Maker-Checker Governance (Days 1â€“3) â€” Constitutional Review Note (2026-02-24)
 
 **Gate:** PASS / CLOSED
 
 | Day | Deliverable | Status |
 |-----|-------------|--------|
 | Day 1 | G-021 Design v1.1 + D-021-A/B/C constitutional directives | PASS |
-| Day 2 | Schema (pending_approvals, approval_signatures) + RLS + DB triggers (D-021-B uniqueness, D-021-C maker≠checker, D-021-D immutability) + MakerCheckerService (createApprovalRequest, signApproval, verifyAndReplay, getPendingQueue) + 14 tests | PASS |
+| Day 2 | Schema (pending_approvals, approval_signatures) + RLS + DB triggers (D-021-B uniqueness, D-021-C makerâ‰ checker, D-021-D immutability) + MakerCheckerService (createApprovalRequest, signApproval, verifyAndReplay, getPendingQueue) + 14 tests | PASS |
 | Day 3 | verifyAndReplay upgraded (hash+expiry+idempotency+caller guard) + internal queue APIs (8 endpoints, X-Texqtic-Internal guard) + 15 Day 3 tests + evidence doc | PASS |
 
 Commits: 407013a (Day 2), de3be8f (Day 3)
 
 **Governance Notes:**
 
-- D-021-A: Payload hash computed at request creation, verified before replay. Mismatch → PAYLOAD_INTEGRITY_VIOLATION (replay permanently blocked).
+- D-021-A: Payload hash computed at request creation, verified before replay. Mismatch â†’ PAYLOAD_INTEGRITY_VIOLATION (replay permanently blocked).
 - D-021-B: Duplicate active requests caught as ACTIVE_REQUEST_EXISTS via DB unique partial index (P2002 backstop).
-- D-021-C: Maker≠Checker enforced at service layer (fingerprint comparison) AND by DB trigger `check_maker_checker_separation` (AFTER INSERT on approval_signatures).
+- D-021-C: Makerâ‰ Checker enforced at service layer (fingerprint comparison) AND by DB trigger `check_maker_checker_separation` (AFTER INSERT on approval_signatures).
 - D-021-D: Approval signatures are append-only; UPDATE/DELETE raise P0001 via trigger.
 - Idempotency: `SELECT FOR UPDATE NOWAIT` + lifecycle log marker (`APPROVAL_ID:{id}` in reason) prevents double-replay.
-- `aiTriggered` forced `false` unconditionally in replay — AI has no replay authority.
+- `aiTriggered` forced `false` unconditionally in replay â€” AI has no replay authority.
 - Internal endpoints require `X-Texqtic-Internal: true` header (enforced before auth middleware).
-- Realm split: tenant routes at `/api/internal/gov/*`, admin routes at `/api/control/internal/gov/*` — no realmGuard edit required.
+- Realm split: tenant routes at `/api/internal/gov/*`, admin routes at `/api/control/internal/gov/*` â€” no realmGuard edit required.
 
-**Compatibility patch note:** Day 3 introduced `$transaction` in `verifyAndReplay`. Day 2 unit mocks (`tests/makerChecker.g021.test.ts`) were extended with `$transaction` / `$queryRaw` / `tradeLifecycleLog.findFirst` to restore P-04 (mock surface parity only — no assertions changed). This was a governance-approved allowlist addendum, not scope creep.
+**Compatibility patch note:** Day 3 introduced `$transaction` in `verifyAndReplay`. Day 2 unit mocks (`tests/makerChecker.g021.test.ts`) were extended with `$transaction` / `$queryRaw` / `tradeLifecycleLog.findFirst` to restore P-04 (mock surface parity only â€” no assertions changed). This was a governance-approved allowlist addendum, not scope creep.
 
 ---
 
-## 📅 Week 2 Status — Governance Backbone Complete (2026-02-24)
+## ðŸ“… Week 2 Status â€” Governance Backbone Complete (2026-02-24)
 
 **Status: GOVERNANCE BACKBONE COMPLETE**
 
 | Gap | Description | Status |
 |-----|-------------|--------|
-| G-020 | State Machine (Schema + Service + Seed + 43-edge graph + 20 tests) | ✅ CLOSED |
-| G-021 | Maker-Checker (Schema + Service + Replay Integrity + Internal Queues + 29 tests) | ✅ CLOSED |
+| G-020 | State Machine (Schema + Service + Seed + 43-edge graph + 20 tests) | âœ… CLOSED |
+| G-021 | Maker-Checker (Schema + Service + Replay Integrity + Internal Queues + 29 tests) | âœ… CLOSED |
 
-**Gates (A–C) — All Green:**
+**Gates (Aâ€“C) â€” All Green:**
 
 | Gate | Description | Status |
 |------|-------------|--------|
-| Gate A — Canonical Identity | `org_id` single authority, no `app.tenant_id`, RLS intact | ✅ PASSED |
-| Gate B — Lifecycle Enforcement | All transitions validated, no shortcut paths, SYSTEM_AUTOMATION guardrail enforced | ✅ PASSED |
-| Gate C — Approval Enforcement | DB-level Maker≠Checker, active uniqueness constraint, replay integrity hash, idempotency enforced | ✅ PASSED |
+| Gate A â€” Canonical Identity | `org_id` single authority, no `app.tenant_id`, RLS intact | âœ… PASSED |
+| Gate B â€” Lifecycle Enforcement | All transitions validated, no shortcut paths, SYSTEM_AUTOMATION guardrail enforced | âœ… PASSED |
+| Gate C â€” Approval Enforcement | DB-level Makerâ‰ Checker, active uniqueness constraint, replay integrity hash, idempotency enforced | âœ… PASSED |
 
-**Next Gate: Gate D — Escalation Control**
+**Next Gate: Gate D â€” Escalation Control**
 
 Blocked until G-022 complete. Requirements:
 - Escalation record required for override
@@ -1382,34 +1382,34 @@ Blocked until G-022 complete. Requirements:
 
 **Next Action: G-022 Escalation Design + Schema**
 
-Proceeding to Week 3 — Governance Hardening + AI Traceability.
+Proceeding to Week 3 â€” Governance Hardening + AI Traceability.
 
 ---
 
-## 📅 Updated 6-Week Execution Timeline (Recalibrated 2026-02-24)
+## ðŸ“… Updated 6-Week Execution Timeline (Recalibrated 2026-02-24)
 
 | Week | Focus | Gaps | Status |
 |------|-------|------|--------|
-| Week 1 | Canonical Integrity | G-015 Phase C | ✅ IMPLEMENTED (GOVERNANCE-SYNC-004, 2026-02-27) via Option C admin-context: `withOrgAdminContext` + `getOrganizationIdentity` added to `database-context.ts`; GET /me + invite-email wired; NO RLS change; organizations RESTRICTIVE guard intact; commit `790d0e6` |
-| Week 2 | Governance Backbone | G-020, G-021 | ✅ Complete (ahead of schedule) — G-020: `aec967f` `9c3ca28`; G-021: `407013a` `de3be8f` |
-| Week 3 | Governance Hardening + AI Traceability | G-022 (impl), G-023 reasoning_hash + reasoning_logs, escalation event emission hooks | ✅ Complete (delivered out-of-order) — G-022: `e138ff0` `5d8e43c`; G-023: `48a7fd3` `2f432ad` |
-| Week 4 | Trade Domain Core | G-017 trades table, hard FKs from G-020 logs, Maker-Checker replay to real trade state | ✅ Complete (delivered out-of-order) — G-017: `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3`; ⚠️ buyer/seller org FK gap documented |
-| Week 5 | Escrow Domain (Non-Fintech Mode) | G-018 escrow_accounts, hard FK for escrow lifecycle logs, neutral settlement acknowledgment | ✅ Complete (delivered out-of-order) — G-018: `7c1d3a3` `efeb752` `8d7d2ee` |
-| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | ⏳ Pending — G-016 NOT STARTED; G-015 Phase C ✅ CLOSED (GOVERNANCE-SYNC-004) |
+| Week 1 | Canonical Integrity | G-015 Phase C | âœ… IMPLEMENTED (GOVERNANCE-SYNC-004, 2026-02-27) via Option C admin-context: `withOrgAdminContext` + `getOrganizationIdentity` added to `database-context.ts`; GET /me + invite-email wired; NO RLS change; organizations RESTRICTIVE guard intact; commit `790d0e6` |
+| Week 2 | Governance Backbone | G-020, G-021 | âœ… Complete (ahead of schedule) â€” G-020: `aec967f` `9c3ca28`; G-021: `407013a` `de3be8f` |
+| Week 3 | Governance Hardening + AI Traceability | G-022 (impl), G-023 reasoning_hash + reasoning_logs, escalation event emission hooks | âœ… Complete (delivered out-of-order) â€” G-022: `e138ff0` `5d8e43c`; G-023: `48a7fd3` `2f432ad` |
+| Week 4 | Trade Domain Core | G-017 trades table, hard FKs from G-020 logs, Maker-Checker replay to real trade state | âœ… Complete (delivered out-of-order) â€” G-017: `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3`; âš ï¸ buyer/seller org FK gap documented |
+| Week 5 | Escrow Domain (Non-Fintech Mode) | G-018 escrow_accounts, hard FK for escrow lifecycle logs, neutral settlement acknowledgment | âœ… Complete (delivered out-of-order) â€” G-018: `7c1d3a3` `efeb752` `8d7d2ee` |
+| Week 6 | Structural Extensions | G-016 traceability graph, DPP foundation (G-025), domain routing hardening (G-026 pre-work) | â³ Pending â€” G-016 NOT STARTED; G-015 Phase C âœ… CLOSED (GOVERNANCE-SYNC-004) |
 
 **Drift Risk Assessment (2026-02-24):**
 
 | Category | Status |
 |----------|--------|
-| Security | 🟢 Strong |
-| Governance | 🟢 Strong |
-| Drift Risk | 🟡 Controlled |
-| Feature Creep | 🟢 None |
-| Fintech Creep | 🟢 None |
-| AI Autonomy Creep | 🟢 Blocked |
+| Security | ðŸŸ¢ Strong |
+| Governance | ðŸŸ¢ Strong |
+| Drift Risk | ðŸŸ¡ Controlled |
+| Feature Creep | ðŸŸ¢ None |
+| Fintech Creep | ðŸŸ¢ None |
+| AI Autonomy Creep | ðŸŸ¢ Blocked |
 ---
 
-### G-022 Day 3 — Escalation Routes + Audit Emission + Integration Tests
+### G-022 Day 3 â€” Escalation Routes + Audit Emission + Integration Tests
 
 **Date:** 2026-02-24  
 **Task ID:** G-022-DAY3-ROUTES-AUDIT  
@@ -1420,16 +1420,16 @@ Proceeding to Week 3 — Governance Hardening + AI Traceability.
 - Control plane routes: `POST /api/control/escalations`, `POST /:id/upgrade`, `POST /:id/resolve`, `GET /api/control/escalations`
 - Tenant plane routes: `GET /api/tenant/escalations`, `POST /api/tenant/escalations` (LEVEL_0/1 only)
 - G-022 audit factory helpers in `server/src/utils/audit.ts`
-- 5-test integration suite (`escalation.g022.integration.test.ts`) — all mocked, no DB required
+- 5-test integration suite (`escalation.g022.integration.test.ts`) â€” all mocked, no DB required
 
 #### Validation Evidence
 
-- `tsc --noEmit`: ✅ CLEAN (0 errors)
-- `vitest run` (G-022 suites): ✅ 28/28 passed (23 Day 2 + 5 Day 3)
-- D-022-A/B/C/D: ✅ all constitutional directives enforced in routes + service
-- Audit in same Prisma tx as escalation INSERT: ✅ enforced in `withDbContext` callback pattern
-- orgId never from client body in tenant routes: ✅ derived from JWT only
-- Kill switch not auto-toggled: ✅ D-022-C compliant
+- `tsc --noEmit`: âœ… CLEAN (0 errors)
+- `vitest run` (G-022 suites): âœ… 28/28 passed (23 Day 2 + 5 Day 3)
+- D-022-A/B/C/D: âœ… all constitutional directives enforced in routes + service
+- Audit in same Prisma tx as escalation INSERT: âœ… enforced in `withDbContext` callback pattern
+- orgId never from client body in tenant routes: âœ… derived from JWT only
+- Kill switch not auto-toggled: âœ… D-022-C compliant
 
 #### Files Changed
 
@@ -1438,7 +1438,7 @@ New: `server/src/routes/control/escalation.g022.ts`, `server/src/routes/tenant/e
 
 ---
 
-### GATE-TEST-001 — Vitest dist Exclusion + gate-e-4-audit MVCC Fix
+### GATE-TEST-001 â€” Vitest dist Exclusion + gate-e-4-audit MVCC Fix
 
 **Date:** 2026-02-24  
 **Task ID:** GATE-TEST-001  
@@ -1450,29 +1450,29 @@ New: `server/src/routes/control/escalation.g022.ts`, `server/src/routes/tenant/e
 | Change | File | Description |
 |---|---|---|
 | **New** | `server/vitest.config.ts` | Excludes `**/dist/**` from Vitest test discovery |
-| **Modified** | `server/src/__tests__/gate-e-4-audit.integration.test.ts` | 6 MVCC fixes: `withDbContext` moved inside `queryFn`; timeout 1000→5000ms; interval 50→100ms |
+| **Modified** | `server/src/__tests__/gate-e-4-audit.integration.test.ts` | 6 MVCC fixes: `withDbContext` moved inside `queryFn`; timeout 1000â†’5000ms; interval 50â†’100ms |
 
 No production code changed. No migrations. No schema changes.
 
 #### Validation Evidence
 
-- `tsc --noEmit`: ✅ exit 0 (clean)
-- `gate-e-4-audit` isolated: `2 failed | 4 passed (6)` — MVCC fix resolved AUTH_LOGIN_FAILED; 2 remain (non-MVCC pre-existing auth route issue, outside allowlist)
+- `tsc --noEmit`: âœ… exit 0 (clean)
+- `gate-e-4-audit` isolated: `2 failed | 4 passed (6)` â€” MVCC fix resolved AUTH_LOGIN_FAILED; 2 remain (non-MVCC pre-existing auth route issue, outside allowlist)
 - **Tier B before:** `14 failed / 31 passed (45 files)`, `1016s`
 - **Tier B after:** `5 failed / 20 passed (25 files)`, `700s`
 - dist exclusion eliminated **20 duplicate compiled test files** from discovery
-- **Net failing file reduction: 14 → 5 (−9 files)**
-- Zero G-022 Day 3 files in any failure line ✅
+- **Net failing file reduction: 14 â†’ 5 (âˆ’9 files)**
+- Zero G-022 Day 3 files in any failure line âœ…
 
 #### Governance Notes
 
 Tests 2 (admin login audit) and 5 (replay detection audit) in `gate-e-4-audit` remain failing.  
 Root cause: auth routes (`server/src/routes/auth/**`) do not emit these events with the field values the tests expect (or do not emit them at all). This is outside GATE-TEST-001 allowlist and requires a separate prompt targeting `server/src/routes/auth/**`.  
-STOP condition triggered per governance rules — no speculative fix applied.
+STOP condition triggered per governance rules â€” no speculative fix applied.
 
 ---
 
-### GATE-TEST-002 — gate-e-4-audit Replay Detection tenantId Fix
+### GATE-TEST-002 â€” gate-e-4-audit Replay Detection tenantId Fix
 
 **Date:** 2026-02-24  
 **Task ID:** GATE-TEST-002  
@@ -1482,8 +1482,8 @@ STOP condition triggered per governance rules — no speculative fix applied.
 
 | Test | Failure mode | Root cause |
 |---|---|---|
-| Test 2 — admin login audit | Timeout polling withDbContext({ isAdmin: true }) | RLS GAP: audit_logs_guard RESTRICTIVE requires require_org_context() OR bypass_enabled() — both FALSE for admin context. Requires migration. |
-| Test 5 — replay detection audit | tenant_id = NULL row invisible to { tenantId: testTenantId } context | auth.ts wrote tenantId: null for replay audit; SELECT policy tenant_id = app.current_org_id() evaluates NULL = UUID -> FALSE. Fix: look up membership. |
+| Test 2 â€” admin login audit | Timeout polling withDbContext({ isAdmin: true }) | RLS GAP: audit_logs_guard RESTRICTIVE requires require_org_context() OR bypass_enabled() â€” both FALSE for admin context. Requires migration. |
+| Test 5 â€” replay detection audit | tenant_id = NULL row invisible to { tenantId: testTenantId } context | auth.ts wrote tenantId: null for replay audit; SELECT policy tenant_id = app.current_org_id() evaluates NULL = UUID -> FALSE. Fix: look up membership. |
 
 #### Changes Applied
 
@@ -1506,13 +1506,13 @@ No production auth behavior changed. No migrations. No schema changes.
   - Test Files: 1 failed (1) | Tests: 1 failed | 5 passed (6)
 - Net improvement: gate-e-4-audit 4/6 -> 5/6
 
-#### Governance Notes — Test 2 STOP Condition
+#### Governance Notes â€” Test 2 STOP Condition
 
 Test 2 (should emit audit log for successful admin login) cannot be fixed without a new RLS migration.
 withDbContext({ isAdmin: true }) sets app.org_id = '', making require_org_context() = FALSE and bypass_enabled() = FALSE.
 The RESTRICTIVE audit_logs_guard policy blocks ALL audit_logs access for admin context.
 Required next action: New migration adding OR current_setting('app.is_admin', true) = 'true' to audit_logs_guard AND a matching PERMISSIVE SELECT policy for is_admin = 'true'.
-This is a Gate D.3 RLS addition — separate prompt + migration allowlist required.
+This is a Gate D.3 RLS addition â€” separate prompt + migration allowlist required.
 
 ---
 
@@ -1601,7 +1601,7 @@ Tenant isolation guarantee upheld:
 
 #### Verification Evidence (Applied 2026-02-25)
 
-- Migration applied via psql stdin — NOTICE: GATE-TEST-003 PASS + COMMIT confirmed
+- Migration applied via psql stdin â€” NOTICE: GATE-TEST-003 PASS + COMMIT confirmed
 - prisma db pull + prisma generate: clean
 - gate-e-4-audit result:
   - PASS: should emit audit log for successful tenant login (10972ms)
@@ -1615,7 +1615,7 @@ Tenant isolation guarantee upheld:
 
 #### Verification Evidence (Applied 2026-02-25)
 
-- Migration: NOTICE GATE-TEST-003 PASS + COMMIT — no ERROR/ROLLBACK
+- Migration: NOTICE GATE-TEST-003 PASS + COMMIT â€” no ERROR/ROLLBACK
 - gate-e-4-audit: Tests 6 passed (6) | exit code 0 -- ALL 6/6 PASS
   - PASS: successful tenant login (10972ms)
   - PASS: successful admin login (6401ms) <-- Test 2 FIXED
@@ -1626,10 +1626,10 @@ Tenant isolation guarantee upheld:
 
 ---
 
-### G-023 � Reasoning Hash + Reasoning Logs FK (2026-02-25)
+### G-023 ï¿½ Reasoning Hash + Reasoning Logs FK (2026-02-25)
 
 **Commits:** `48a7fd3` (feat(db))  `2f432ad` (feat(ai))
-**Migration:** `20260305000000_g023_reasoning_logs` � applied, BEGIN/COMMIT, NOTICE G-023 PASS
+**Migration:** `20260305000000_g023_reasoning_logs` ï¿½ applied, BEGIN/COMMIT, NOTICE G-023 PASS
 
 #### Changes
 
@@ -1643,7 +1643,7 @@ Tenant isolation guarantee upheld:
 
 #### Verification Evidence (Applied 2026-02-25)
 
-- Migration: NOTICE G-023 PASS � RLS: t, FORCE: t, guard: 1, SELECT: 1, INSERT: 1, trigger: 1, audit_logs.reasoning_log_id: t + COMMIT
+- Migration: NOTICE G-023 PASS ï¿½ RLS: t, FORCE: t, guard: 1, SELECT: 1, INSERT: 1, trigger: 1, audit_logs.reasoning_log_id: t + COMMIT
 - pnpm -C server exec tsc --noEmit  exit 0
 - gate-g023-reasoning-logs: Tests 6 passed (6) | exit 0
   - PASS: RL-01 tenant A sees only own reasoning_logs row
@@ -1656,10 +1656,10 @@ Tenant isolation guarantee upheld:
 
 ---
 
-### G-017 Day 1 � Trades Domain: Schema + RLS (2026-02-25)
+### G-017 Day 1 ï¿½ Trades Domain: Schema + RLS (2026-02-25)
 
 **Commit:** `96b9a1c` (feat(db): introduce trades domain + RLS (G-017 Day 1))
-**Migration:** `20260306000000_g017_trades_domain` � applied, BEGIN/COMMIT, NOTICE G-017 PASS
+**Migration:** `20260306000000_g017_trades_domain` ï¿½ applied, BEGIN/COMMIT, NOTICE G-017 PASS
 
 #### Changes
 
@@ -1674,23 +1674,23 @@ Tenant isolation guarantee upheld:
 
 #### Governance Notes
 
-- No new lifecycle states created � reuses lifecycle_states (G-020)
-- No escrow FK in Day 1 � deferred to G-018
+- No new lifecycle states created ï¿½ reuses lifecycle_states (G-020)
+- No escrow FK in Day 1 ï¿½ deferred to G-018
 - freeze_recommended is informational only (D-022-C); canonical freeze truth remains escalation_events
-- reasoning_log_id ON DELETE RESTRICT � reasoning_logs is append-only anyway
-- No superadmin policy in Day 1 � explicitly deferred
+- reasoning_log_id ON DELETE RESTRICT ï¿½ reasoning_logs is append-only anyway
+- No superadmin policy in Day 1 ï¿½ explicitly deferred
 - trade_lifecycle_logs.trade_id soft FK wiring deferred (follow-up migration)
 
 #### Verification Evidence (Applied 2026-02-25)
 
-- Migration: NOTICE G-017 PASS � lifecycle_states: t, trades RLS: t/t, trade_events RLS: t/t, trades_guard: 1, events_guard: 1, lifecycle_fk: 1 + COMMIT
+- Migration: NOTICE G-017 PASS ï¿½ lifecycle_states: t, trades RLS: t/t, trade_events RLS: t/t, trades_guard: 1, events_guard: 1, lifecycle_fk: 1 + COMMIT
 - pnpm exec prisma db pull  clean
 - pnpm exec prisma generate  exit 0 (Prisma Client v6.1.0)
 - pnpm exec tsc --noEmit  exit 0
 
 ---
 
-### G-017 Day 2 — Trade Service + Lifecycle Enforcement
+### G-017 Day 2 â€” Trade Service + Lifecycle Enforcement
 
 **Task:** G-017-DAY2-TRADE-SERVICE-LIFECYCLE  
 **Date:** 2026-02-25  
@@ -1698,16 +1698,16 @@ Tenant isolation guarantee upheld:
 
 #### Files Touched (Allowlist)
 
-- `server/src/services/trade.g017.types.ts` — CREATED
-- `server/src/services/trade.g017.service.ts` — CREATED
-- `server/src/services/trade.g017.test.ts` — CREATED (14 unit tests, Prisma mocked)
-- `docs/governance/G-017_DAY2_EVIDENCE.md` — CREATED
-- `governance/wave-execution-log.md` — MODIFIED (this entry)
+- `server/src/services/trade.g017.types.ts` â€” CREATED
+- `server/src/services/trade.g017.service.ts` â€” CREATED
+- `server/src/services/trade.g017.test.ts` â€” CREATED (14 unit tests, Prisma mocked)
+- `docs/governance/G-017_DAY2_EVIDENCE.md` â€” CREATED
+- `governance/wave-execution-log.md` â€” MODIFIED (this entry)
 
 #### Gates Run
 
-- `pnpm -C server exec tsc --noEmit` → exit 0
-- `pnpm -C server exec vitest run src/services/trade.g017.test.ts` → exit 0
+- `pnpm -C server exec tsc --noEmit` â†’ exit 0
+- `pnpm -C server exec vitest run src/services/trade.g017.test.ts` â†’ exit 0
 
 #### Result Counts
 
@@ -1717,21 +1717,21 @@ Tenant isolation guarantee upheld:
 
 #### Notes: No schema, no migrations, no routes
 
-### G-017 Day 3 � Trade Routes + Audit Emission + Integration Tests
+### G-017 Day 3 ï¿½ Trade Routes + Audit Emission + Integration Tests
 
 **Task:** G-017-DAY3-ROUTES-INTEGRATION  
 **Branch:** main
 
 #### Files Touched (Allowlist)
 
-- `server/src/routes/tenant/trades.g017.ts` � CREATED (POST / createTrade, POST /:id/transition)
-- `server/src/routes/control/trades.g017.ts` � CREATED (GET / listTrades, POST /:id/transition)
-- `server/src/routes/tenant.ts` � MODIFIED (import + plugin register)
-- `server/src/routes/control.ts` � MODIFIED (import + plugin register)
-- `server/src/utils/audit.ts` � MODIFIED (4 trade audit factories appended)
-- `server/src/__tests__/trades.g017.integration.test.ts` � CREATED (17 mocked integration tests)
-- `docs/governance/G-017_DAY3_EVIDENCE.md` � CREATED
-- `governance/wave-execution-log.md` � MODIFIED (this entry)
+- `server/src/routes/tenant/trades.g017.ts` ï¿½ CREATED (POST / createTrade, POST /:id/transition)
+- `server/src/routes/control/trades.g017.ts` ï¿½ CREATED (GET / listTrades, POST /:id/transition)
+- `server/src/routes/tenant.ts` ï¿½ MODIFIED (import + plugin register)
+- `server/src/routes/control.ts` ï¿½ MODIFIED (import + plugin register)
+- `server/src/utils/audit.ts` ï¿½ MODIFIED (4 trade audit factories appended)
+- `server/src/__tests__/trades.g017.integration.test.ts` ï¿½ CREATED (17 mocked integration tests)
+- `docs/governance/G-017_DAY3_EVIDENCE.md` ï¿½ CREATED
+- `governance/wave-execution-log.md` ï¿½ MODIFIED (this entry)
 
 #### Gates Run
 
@@ -1754,7 +1754,7 @@ Tenant isolation guarantee upheld:
 
 ---
 
-### INF-TEST-GATES-004 — Auth Gate: Category D Product Bug Fixes
+### INF-TEST-GATES-004 â€” Auth Gate: Category D Product Bug Fixes
 
 **Task:** INF-TEST-GATES-004  
 **Date:** 2026-02-27  
@@ -1763,22 +1763,22 @@ Tenant isolation guarantee upheld:
 
 #### Files Touched (Allowlist)
 
-- `server/src/routes/auth.ts` — D1, D2, D4
-- `server/src/lib/auditLog.ts` — D3
-- `server/src/__tests__/auth-wave2-readiness.integration.test.ts` — D1 test fix (cross-realm cookie craft)
+- `server/src/routes/auth.ts` â€” D1, D2, D4
+- `server/src/lib/auditLog.ts` â€” D3
+- `server/src/__tests__/auth-wave2-readiness.integration.test.ts` â€” D1 test fix (cross-realm cookie craft)
 
 #### Fixes
 
 - **D1 (cross-realm cookie reuse):** Realm mismatch check returns 401 without revoking token family; test now crafts genuine cross-realm cookies (admin token value in tenant cookie name and vice versa) so realm-integrity check fires while original tokens remain valid
-- **D2 (logout cookie clearing):** Logout clears only cookies present in the request (two independent `if` guards); single-realm logout produces one `Set-Cookie` header; both-realm logout clears both — no unconditional double-clear
+- **D2 (logout cookie clearing):** Logout clears only cookies present in the request (two independent `if` guards); single-realm logout produces one `Set-Cookie` header; both-realm logout clears both â€” no unconditional double-clear
 - **D3 (email PII in audit metadata):** `createAuthAudit` now stores `email_hash` (SHA-256 of `lower(trim(email))`) instead of plaintext `email`; `createHash` imported from `node:crypto` alongside existing `randomUUID`
 - **D4 (unverified-email audit actorId):** `NOT_VERIFIED` branch in both login handlers returns `{ error, userId }` from `withDbContext` callback; audit call uses `actorId: result.userId ?? null` so event is queryable by `actorId`
 
 #### Gates Run
 
-- `pnpm -C server exec tsc --noEmit` → exit 0
-- `vitest run auth-wave2-readiness` → **7/7 pass** (was 3/7; 4 Category D bugs fixed)
-- `vitest run --no-file-parallelism` (full suite) → **23 passed | 9 skipped | 0 failed**
+- `pnpm -C server exec tsc --noEmit` â†’ exit 0
+- `vitest run auth-wave2-readiness` â†’ **7/7 pass** (was 3/7; 4 Category D bugs fixed)
+- `vitest run --no-file-parallelism` (full suite) â†’ **23 passed | 9 skipped | 0 failed**
 
 #### Result Counts
 
@@ -1793,49 +1793,49 @@ Tenant isolation guarantee upheld:
 
 ---
 
-## GOVERNANCE-SYNC-001 — Gap Register Reconciliation (TECS v1.6 Governance Law)
+## GOVERNANCE-SYNC-001 â€” Gap Register Reconciliation (TECS v1.6 Governance Law)
 
 **Task:** GOVERNANCE-SYNC-001  
 **Date:** 2026-02-27  
 **Type:** Governance-only (no runtime code changes)  
 **Trigger:** Drift-detection audit `2066313` (`docs/audits/GAP-015-016-017-019-VALIDATION-REPORT.md`)  
-**TECS v1.6 basis:** Governance Law — a gap cannot be marked VALIDATED unless governance entries include proof artifacts; two-commit protocol; gap lifecycle requires governance updates before close.
+**TECS v1.6 basis:** Governance Law â€” a gap cannot be marked VALIDATED unless governance entries include proof artifacts; two-commit protocol; gap lifecycle requires governance updates before close.
 
 ### Root Cause
 
 TECS v1.6 two-commit protocol was not enforced in Wave 3 implementation prompts. Implementation commits for G-017/G-018/G-019-settlement/G-020/G-021/G-022/G-023 were made without corresponding governance commits updating `gap-register.md`. This caused:
 
-1. `gap-register.md` Schema Domain Buildout table showing all G-015–G-023 as `NOT STARTED` despite most being implemented or partially implemented.
-2. Wave execution log 6-Week Timeline (entry dated 2026-02-24) falsely marking `G-015 Phase C | ✅ Complete` with no implementation evidence, no migration, and no read-path changes.
-3. Contradiction between gap register (NOT STARTED for G-015) and wave log (✅ Complete for G-015 Phase C).
+1. `gap-register.md` Schema Domain Buildout table showing all G-015â€“G-023 as `NOT STARTED` despite most being implemented or partially implemented.
+2. Wave execution log 6-Week Timeline (entry dated 2026-02-24) falsely marking `G-015 Phase C | âœ… Complete` with no implementation evidence, no migration, and no read-path changes.
+3. Contradiction between gap register (NOT STARTED for G-015) and wave log (âœ… Complete for G-015 Phase C).
 
 ### Actions Taken (Governance Files Only)
 
 | File | Change |
 |------|--------|
 | `governance/gap-register.md` | Header updated; Schema Domain Buildout table expanded with Commit + Validation Proof columns; G-015 through G-023 statuses corrected |
-| `governance/wave-execution-log.md` | False G-015 Phase C ✅ Complete entry **RETRACTED** and replaced with ❌ NOT IMPLEMENTED; Weeks 2–5 updated with actual commit hashes |
+| `governance/wave-execution-log.md` | False G-015 Phase C âœ… Complete entry **RETRACTED** and replaced with âŒ NOT IMPLEMENTED; Weeks 2â€“5 updated with actual commit hashes |
 
 ### Corrected Status Summary
 
 | Gap | Old Status (incorrect) | Corrected Status | Key Commits |
 |-----|------------------------|------------------|-------------|
-| G-015 | NOT STARTED (gap register) / ✅ Complete (wave log — FALSE) | VALIDATED — Phase A ✅ Phase B ✅ Phase C ✅ Option C (GOVERNANCE-SYNC-004) | `bb9a898` `a838bd8` `790d0e6` |
-| G-016 | NOT STARTED | NOT STARTED (accurate) | — |
-| G-017 | NOT STARTED | VALIDATED ⚠️ (buyer/seller org FK gap documented) | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` |
+| G-015 | NOT STARTED (gap register) / âœ… Complete (wave log â€” FALSE) | VALIDATED â€” Phase A âœ… Phase B âœ… Phase C âœ… Option C (GOVERNANCE-SYNC-004) | `bb9a898` `a838bd8` `790d0e6` |
+| G-016 | NOT STARTED | NOT STARTED (accurate) | â€” |
+| G-017 | NOT STARTED | VALIDATED âš ï¸ (buyer/seller org FK gap documented) | `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` |
 | G-018 | NOT STARTED | VALIDATED | `7c1d3a3` `efeb752` `8d7d2ee` |
-| G-019 | NOT STARTED | FAIL / LABEL MISUSE — certifications absent; settlement mislabeled | `2dc6217` `57e91ce` (settlement only) |
+| G-019 | NOT STARTED | FAIL / LABEL MISUSE â€” certifications absent; settlement mislabeled | `2dc6217` `57e91ce` (settlement only) |
 | G-020 | NOT STARTED | VALIDATED / CLOSED | `aec967f` `9c3ca28` |
 | G-021 | NOT STARTED | VALIDATED / CLOSED | `407013a` `de3be8f` |
 | G-022 | NOT STARTED | VALIDATED | `e138ff0` `5d8e43c` |
 | G-023 | NOT STARTED | VALIDATED | `48a7fd3` `2f432ad` |
 
-### Outstanding Issues (NOT fixed here — governance record only)
+### Outstanding Issues (NOT fixed here â€” governance record only)
 
-1. **G-015 Phase C** — ~~not implemented; requires migration + read-path service changes~~ **CLOSED (GOVERNANCE-SYNC-004, 2026-02-27)**: implemented via Option C admin-context (`withOrgAdminContext` + `getOrganizationIdentity`); no migration, no RLS changes; commit `790d0e6`
-2. **G-019 certifications** — not implemented; `settlement.g019.ts` label corrected — **FIXED `6e94a9a` (GOVERNANCE-SYNC-003)**: renamed to `settlement.ts` (tenant + control planes); G-019 certifications domain remains unimplemented
-3. **G-017 FK gap** — `buyer_org_id` / `seller_org_id` have no FK to `organizations`; requires follow-on hardening migration
-4. **G-017 admin-plane RLS** — no cross-tenant admin RLS on `trades`; explicitly deferred in Day 1 migration comment
+1. **G-015 Phase C** â€” ~~not implemented; requires migration + read-path service changes~~ **CLOSED (GOVERNANCE-SYNC-004, 2026-02-27)**: implemented via Option C admin-context (`withOrgAdminContext` + `getOrganizationIdentity`); no migration, no RLS changes; commit `790d0e6`
+2. **G-019 certifications** â€” not implemented; `settlement.g019.ts` label corrected â€” **FIXED `6e94a9a` (GOVERNANCE-SYNC-003)**: renamed to `settlement.ts` (tenant + control planes); G-019 certifications domain remains unimplemented
+3. **G-017 FK gap** â€” `buyer_org_id` / `seller_org_id` have no FK to `organizations`; requires follow-on hardening migration
+4. **G-017 admin-plane RLS** â€” no cross-tenant admin RLS on `trades`; explicitly deferred in Day 1 migration comment
 
 ### Prevention (TECS v1.6 Governance-Sync enforcement)
 
@@ -1843,11 +1843,11 @@ Every future implementation prompt must hard-require a governance commit. Templa
 
 ---
 
-## GOVERNANCE-SYNC-003 — G-019 Label-Misuse Fix
+## GOVERNANCE-SYNC-003 â€” G-019 Label-Misuse Fix
 
 **Task:** GOVERNANCE-SYNC-003  
 **Date:** 2026-02-27  
-**Type:** Governance + label fix (server route rename — no behavior change)  
+**Type:** Governance + label fix (server route rename â€” no behavior change)  
 **Implementation commit:** `6e94a9a`  
 **Triggered by:** GOVERNANCE-SYNC-001 outstanding issue #2; audit `2066313`
 
@@ -1859,37 +1859,37 @@ Every future implementation prompt must hard-require a governance commit. Templa
 
 | Change | Files | Type |
 |--------|-------|------|
-| `git mv` tenant route file | `settlement.g019.ts` → `settlement.ts` | Rename (99% similarity) |
-| `git mv` control route file | `settlement.g019.ts` → `settlement.ts` | Rename (99% similarity) |
+| `git mv` tenant route file | `settlement.g019.ts` â†’ `settlement.ts` | Rename (99% similarity) |
+| `git mv` control route file | `settlement.g019.ts` â†’ `settlement.ts` | Rename (99% similarity) |
 | Fix JSDoc `G-019 Day 2` header | Both renamed files | Label correction |
-| Update import in `tenant.ts` | `./tenant/settlement.g019.js` → `./tenant/settlement.js` | Import path |
-| Update import in `control.ts` | `./control/settlement.g019.js` → `./control/settlement.js` | Import path |
+| Update import in `tenant.ts` | `./tenant/settlement.g019.js` â†’ `./tenant/settlement.js` | Import path |
+| Update import in `control.ts` | `./control/settlement.g019.js` â†’ `./control/settlement.js` | Import path |
 | Fix integration test import paths | `settlement.g019.integration.test.ts` | Required for typecheck (tsconfig includes `src/**/*`) |
 
-**Allowlist expansion note:** `server/src/__tests__/settlement.g019.integration.test.ts` was not in the original prompt allowlist but is required for `tsc --noEmit` EXIT 0 because it directly imports the renamed route files. Only import paths were changed — zero test behavior change.
+**Allowlist expansion note:** `server/src/__tests__/settlement.g019.integration.test.ts` was not in the original prompt allowlist but is required for `tsc --noEmit` EXIT 0 because it directly imports the renamed route files. Only import paths were changed â€” zero test behavior change.
 
 ### Gates
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅
-- `pnpm -C server run lint` → EXIT 0 ✅ (0 errors, 91 warnings — pre-existing; no new errors from rename)
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+- `pnpm -C server run lint` â†’ EXIT 0 âœ… (0 errors, 91 warnings â€” pre-existing; no new errors from rename)
 
 ### Gap Register Update
 
-G-019 row updated: FAIL / LABEL MISUSE → FAIL (label fixed, certifications still NOT IMPLEMENTED). Commit `6e94a9a` recorded.
+G-019 row updated: FAIL / LABEL MISUSE â†’ FAIL (label fixed, certifications still NOT IMPLEMENTED). Commit `6e94a9a` recorded.
 
 ---
 
-## GOVERNANCE-SYNC-004 — G-015 Phase C Implemented via Option C (Admin-Context)
+## GOVERNANCE-SYNC-004 â€” G-015 Phase C Implemented via Option C (Admin-Context)
 
 **Task:** TECS v1.6 G-015 Phase C  
 **Date:** 2026-02-27  
 **Type:** Implementation + governance close  
 **Implementation commit:** `790d0e6`  
-**Pattern:** Option C — admin-context read cutover (no RLS change, no migration)
+**Pattern:** Option C â€” admin-context read cutover (no RLS change, no migration)
 
 ### Context
 
-G-015 Phase C required `organizations` to become the canonical identity source for org metadata reads. The `organizations` table has a RESTRICTIVE guard that blocks all tenant-realm reads (admin-realm or bypass only). Option C was selected: all org identity reads go through a new `withOrgAdminContext` helper that elevates to admin realm inside a tx-local context — identical to the `withAdminContext` pattern established in `control.ts` (G-004).
+G-015 Phase C required `organizations` to become the canonical identity source for org metadata reads. The `organizations` table has a RESTRICTIVE guard that blocks all tenant-realm reads (admin-realm or bypass only). Option C was selected: all org identity reads go through a new `withOrgAdminContext` helper that elevates to admin realm inside a tx-local context â€” identical to the `withAdminContext` pattern established in `control.ts` (G-004).
 
 **No migration, no RLS policy changes, no SECURITY DEFINER functions.**
 
@@ -1898,11 +1898,11 @@ G-015 Phase C required `organizations` to become the canonical identity source f
 | File | Change |
 |------|--------|
 | `server/src/lib/database-context.ts` | Added `OrganizationNotFoundError`, `OrganizationIdentity` interface, `withOrgAdminContext`, `getOrganizationIdentity` |
-| `server/src/routes/tenant.ts` | GET /me: replaced `prisma.tenant.findUnique` → `getOrganizationIdentity`; invite-email: replaced `prisma.tenant.findUnique` → `getOrganizationIdentity`; response shape preserved (legal_name→name, org_type→type mapping) |
+| `server/src/routes/tenant.ts` | GET /me: replaced `prisma.tenant.findUnique` â†’ `getOrganizationIdentity`; invite-email: replaced `prisma.tenant.findUnique` â†’ `getOrganizationIdentity`; response shape preserved (legal_nameâ†’name, org_typeâ†’type mapping) |
 
 ### Stop-Loss Compliance
 
-- `organizations` RESTRICTIVE guard policy: **INTACT — NO CHANGE**
+- `organizations` RESTRICTIVE guard policy: **INTACT â€” NO CHANGE**
 - Tenant-realm reads of organizations: **REMAIN BLOCKED by guard policy**
 - No prisma/migrations touched
 - No RLS SQL written
@@ -1910,16 +1910,16 @@ G-015 Phase C required `organizations` to become the canonical identity source f
 
 ### Gates
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅
-- `pnpm -C server run lint` → 0 errors, 92 warnings (all pre-existing) ✅
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+- `pnpm -C server run lint` â†’ 0 errors, 92 warnings (all pre-existing) âœ…
 
 ### Gap Register Update
 
-G-015 row updated: PARTIAL → VALIDATED. Phase C ✅ Option C. Commit `790d0e6` recorded.
+G-015 row updated: PARTIAL â†’ VALIDATED. Phase C âœ… Option C. Commit `790d0e6` recorded.
 
 ---
 
-## GOVERNANCE-SYNC-005 — G-017 FK Hardening Closed
+## GOVERNANCE-SYNC-005 â€” G-017 FK Hardening Closed
 
 **Task:** TECS v1.6 G-017 FK Hardening  
 **Date:** 2026-03-09  
@@ -1929,7 +1929,7 @@ G-015 row updated: PARTIAL → VALIDATED. Phase C ✅ Option C. Commit `790d0e6`
 
 ### Context
 
-G-017 originally left `trades.buyer_org_id` and `trades.seller_org_id` as bare `UUID` columns with no FK constraint to `organizations(id)`. Indexes existed (`trades_buyer_org_id_idx`, `trades_seller_org_id_idx`), but referential integrity was unenforceable at the DB layer, leaving unvalidated UUIDs as a ⚠️ CAVEAT on the gap register.
+G-017 originally left `trades.buyer_org_id` and `trades.seller_org_id` as bare `UUID` columns with no FK constraint to `organizations(id)`. Indexes existed (`trades_buyer_org_id_idx`, `trades_seller_org_id_idx`), but referential integrity was unenforceable at the DB layer, leaving unvalidated UUIDs as a âš ï¸ CAVEAT on the gap register.
 
 G-017 FK Hardening adds full referential integrity via two named FK constraints, with an embedded atomic preflight stop-loss in the migration body.
 
@@ -1937,7 +1937,7 @@ G-017 FK Hardening adds full referential integrity via two named FK constraints,
 
 | File | Change |
 |------|--------|
-| `server/prisma/migrations/20260309000000_g017_fk_buyer_seller_orgs/migration.sql` | §1 preflight DO block (rollback if invalid buyer/seller UUID); §2 ADD CONSTRAINT fk_trades_buyer_org_id; §3 ADD CONSTRAINT fk_trades_seller_org_id; §4 post-add verification DO block |
+| `server/prisma/migrations/20260309000000_g017_fk_buyer_seller_orgs/migration.sql` | Â§1 preflight DO block (rollback if invalid buyer/seller UUID); Â§2 ADD CONSTRAINT fk_trades_buyer_org_id; Â§3 ADD CONSTRAINT fk_trades_seller_org_id; Â§4 post-add verification DO block |
 | `server/prisma/schema.prisma` | `Trade` model: added `buyerOrg @relation("TradeBuyer")` + `sellerOrg @relation("TradeSeller")`; `organizations` model: added `tradesBuyer[] @relation("TradeBuyer")` + `tradesSeller[] @relation("TradeSeller")` |
 
 ### Constraint Specification
@@ -1951,25 +1951,25 @@ ON DELETE RESTRICT chosen: trades are immutable governance artefacts; CASCADE wo
 
 ### Stop-Loss Compliance
 
-- Migration wraps all DDL in `BEGIN; ... COMMIT;` — atomic rollback on any failure
-- Preflight DO block raises `EXCEPTION` with count + sample IDs if any `buyer_org_id` or `seller_org_id` does not exist in `organizations` — failsafe hard stop
-- Post-add verification DO block confirms both constraints in `information_schema.table_constraints` — hard stop if missing
+- Migration wraps all DDL in `BEGIN; ... COMMIT;` â€” atomic rollback on any failure
+- Preflight DO block raises `EXCEPTION` with count + sample IDs if any `buyer_org_id` or `seller_org_id` does not exist in `organizations` â€” failsafe hard stop
+- Post-add verification DO block confirms both constraints in `information_schema.table_constraints` â€” hard stop if missing
 - No RLS changes made
 - No routes or services modified
 - Files touched: 2 implementation + 2 governance = 4 total
 
 ### Gates
 
-- `pnpm -C server run typecheck` → EXIT 0 ✅
-- `pnpm -C server run lint` → 0 errors, 92 warnings (all pre-existing) ✅
+- `pnpm -C server run typecheck` â†’ EXIT 0 âœ…
+- `pnpm -C server run lint` â†’ 0 errors, 92 warnings (all pre-existing) âœ…
 
 ### Gap Register Update
 
-G-017 row updated: VALIDATED ⚠️ → **VALIDATED** (⚠️ FK CAVEAT CLOSED). Commits `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` `8069d48` recorded.
+G-017 row updated: VALIDATED âš ï¸ â†’ **VALIDATED** (âš ï¸ FK CAVEAT CLOSED). Commits `96b9a1c` `3bc0c0f` `b557cb5` `0bb9cf3` `8069d48` recorded.
 
 ---
 
-## GOVERNANCE-SYNC-006 — G-017 FK Hardening DB-Applied Proof
+## GOVERNANCE-SYNC-006 â€” G-017 FK Hardening DB-Applied Proof
 
 **Task:** TECS v1.6 G-017 DB Deployment Verification (Option B1)  
 **Date:** 2026-02-27  
@@ -1979,7 +1979,7 @@ G-017 row updated: VALIDATED ⚠️ → **VALIDATED** (⚠️ FK CAVEAT CLOSED).
 
 ### Why a Hotfix Was Needed
 
-Migration `20260309000000_g017_fk_buyer_seller_orgs` was committed (commit `8069d48`) with a `RAISE EXCEPTION` format string split across adjacent string literals — valid in some contexts but rejected by the PostgreSQL RAISE statement parser. Additionally, the em dash character (`—`) was encoded as UTF-8 but rendered as `ÔÇö` under Windows codepage 850/1252 with psql 16 connecting to server 17, causing a parse error at line 101.
+Migration `20260309000000_g017_fk_buyer_seller_orgs` was committed (commit `8069d48`) with a `RAISE EXCEPTION` format string split across adjacent string literals â€” valid in some contexts but rejected by the PostgreSQL RAISE statement parser. Additionally, the em dash character (`â€”`) was encoded as UTF-8 but rendered as `Ã”Ã‡Ã¶` under Windows codepage 850/1252 with psql 16 connecting to server 17, causing a parse error at line 101.
 
 **Hotfix (commit `2512508`):** collapsed the multi-literal format string into a single `RAISE EXCEPTION USING MESSAGE = format(...)` call; replaced em dash with ASCII `--`. **Logic and placeholders unchanged.**
 
@@ -1987,16 +1987,16 @@ Migration `20260309000000_g017_fk_buyer_seller_orgs` was committed (commit `8069
 
 | Step | Command | Result |
 |------|---------|--------|
-| 1A — tables exist | `SELECT to_regclass('public.trades'), to_regclass('public.organizations')` | `trades \| organizations` — both non-null ✅ |
-| 1B — constraints absent | `pg_constraint` query for both FK names | 0 rows (not yet applied) ✅ |
-| 2 — apply migration | `psql --dbname=$DATABASE_URL --set=ON_ERROR_STOP=1 -f migration.sql` (with `PGCLIENTENCODING=UTF8`) | EXIT:0 ✅ |
-| 3 — preflight PASS | RAISE NOTICE `[G-017-FK-PREFLIGHT] PASS — 0 invalid buyer_org_id, 0 invalid seller_org_id` | ✅ |
-| 4 — ALTER TABLE ×2 | `ALTER TABLE` (buyer FK) + `ALTER TABLE` (seller FK) | ✅ |
-| 5 — verify PASS | RAISE NOTICE `[G-017-FK-VERIFY] PASS — fk_trades_buyer_org_id: ✓, fk_trades_seller_org_id: ✓` | ✅ |
-| 6 — COMMIT | `COMMIT` | ✅ |
-| 7 — pg_constraint proof | 2-row proof query | ✅ (see below) |
-| 8 — ledger sync | `prisma migrate resolve --applied 20260309000000_g017_fk_buyer_seller_orgs` | `Migration marked as applied` ✅ |
-| 9 — status confirm | `prisma migrate status` | `20260309000000_g017_fk_buyer_seller_orgs` no longer in pending list ✅ |
+| 1A â€” tables exist | `SELECT to_regclass('public.trades'), to_regclass('public.organizations')` | `trades \| organizations` â€” both non-null âœ… |
+| 1B â€” constraints absent | `pg_constraint` query for both FK names | 0 rows (not yet applied) âœ… |
+| 2 â€” apply migration | `psql --dbname=$DATABASE_URL --set=ON_ERROR_STOP=1 -f migration.sql` (with `PGCLIENTENCODING=UTF8`) | EXIT:0 âœ… |
+| 3 â€” preflight PASS | RAISE NOTICE `[G-017-FK-PREFLIGHT] PASS â€” 0 invalid buyer_org_id, 0 invalid seller_org_id` | âœ… |
+| 4 â€” ALTER TABLE Ã—2 | `ALTER TABLE` (buyer FK) + `ALTER TABLE` (seller FK) | âœ… |
+| 5 â€” verify PASS | RAISE NOTICE `[G-017-FK-VERIFY] PASS â€” fk_trades_buyer_org_id: âœ“, fk_trades_seller_org_id: âœ“` | âœ… |
+| 6 â€” COMMIT | `COMMIT` | âœ… |
+| 7 â€” pg_constraint proof | 2-row proof query | âœ… (see below) |
+| 8 â€” ledger sync | `prisma migrate resolve --applied 20260309000000_g017_fk_buyer_seller_orgs` | `Migration marked as applied` âœ… |
+| 9 â€” status confirm | `prisma migrate status` | `20260309000000_g017_fk_buyer_seller_orgs` no longer in pending list âœ… |
 
 ### Constraint Proof (pg_constraint query output)
 
@@ -2008,15 +2008,15 @@ Migration `20260309000000_g017_fk_buyer_seller_orgs` was committed (commit `8069
 (2 rows)
 ```
 
-Both constraints reference `public.organizations(id)` with `ON DELETE RESTRICT`. ✅
+Both constraints reference `public.organizations(id)` with `ON DELETE RESTRICT`. âœ…
 
 ### Gap Register Update
 
-G-017 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-006, 2026-02-27, env: Supabase dev)**. Hotfix commit `2512508` added to commit list.
+G-017 row updated: added **DB Applied âœ… (GOVERNANCE-SYNC-006, 2026-02-27, env: Supabase dev)**. Hotfix commit `2512508` added to commit list.
 
 ---
 
-## GOVERNANCE-SYNC-007 — G-017 Admin-Plane SELECT RLS Implemented + DB Applied
+## GOVERNANCE-SYNC-007 â€” G-017 Admin-Plane SELECT RLS Implemented + DB Applied
 
 **Task:** TECS v1.6 G-017 Admin-Plane RLS (deferred caveat closed)
 **Date:** 2026-02-27
@@ -2038,20 +2038,20 @@ G-017 Day 1 (20260306000000) explicitly deferred admin-plane RLS policies. The R
 | Add PERMISSIVE SELECT | `trades_admin_select` USING `is_admin = 'true'` (cross-tenant) | trades |
 | Add PERMISSIVE SELECT | `trade_events_admin_select` USING `is_admin = 'true'` (cross-tenant) | trade_events |
 
-Tenant SELECT/INSERT policies **unchanged** — `trades_tenant_select` and `trade_events_tenant_select` still use `tenant_id = app.current_org_id()`. Isolation preserved.
+Tenant SELECT/INSERT policies **unchanged** â€” `trades_tenant_select` and `trade_events_tenant_select` still use `tenant_id = app.current_org_id()`. Isolation preserved.
 
 ### Apply Sequence
 
 | Command | Result |
 |---------|--------|
-| `psql --dbname=$DATABASE_URL --set=ON_ERROR_STOP=1 -f migration.sql` (PGCLIENTENCODING=UTF8) | EXIT:0 ✅ |
-| Migration DO block notice | `[G-017-ADMIN-RLS] PASS -- trades_guard: RESTRICTIVE+admin t, trade_events_guard: RESTRICTIVE+admin t, trades_admin_select: 1, trade_events_admin_select: 1, tenant isolation policies intact: trades=1, events=1` ✅ |
-| `prisma migrate resolve --applied 20260310000000_g017_trades_admin_rls` | `Migration marked as applied` ✅ |
-| `prisma migrate status` | `20260310000000_g017_trades_admin_rls` no longer in pending list ✅ |
+| `psql --dbname=$DATABASE_URL --set=ON_ERROR_STOP=1 -f migration.sql` (PGCLIENTENCODING=UTF8) | EXIT:0 âœ… |
+| Migration DO block notice | `[G-017-ADMIN-RLS] PASS -- trades_guard: RESTRICTIVE+admin t, trade_events_guard: RESTRICTIVE+admin t, trades_admin_select: 1, trade_events_admin_select: 1, tenant isolation policies intact: trades=1, events=1` âœ… |
+| `prisma migrate resolve --applied 20260310000000_g017_trades_admin_rls` | `Migration marked as applied` âœ… |
+| `prisma migrate status` | `20260310000000_g017_trades_admin_rls` no longer in pending list âœ… |
 
 ### Proof Outputs
 
-**Proof 1 — pg_policies (6 rows):**
+**Proof 1 â€” pg_policies (6 rows):**
 ```
 trade_events | trade_events_admin_select  | PERMISSIVE  | SELECT | current_setting('app.is_admin', true) = 'true'
 trade_events | trade_events_guard         | RESTRICTIVE | ALL    | require_org_context() OR bypass_enabled() OR current_setting('app.is_admin'...)
@@ -2061,7 +2061,7 @@ trades       | trades_guard               | RESTRICTIVE | ALL    | require_org_c
 trades       | trades_tenant_select       | PERMISSIVE  | SELECT | tenant_id = app.current_org_id() OR bypass_enabled()
 ```
 
-**Proof 2 — Tenant isolation unchanged:**
+**Proof 2 â€” Tenant isolation unchanged:**
 ```
 trades_guard               | guard_has_admin_pred: TRUE  | tenant_policy_scoped: FALSE
 trades_tenant_select       | guard_has_admin_pred: FALSE | tenant_policy_scoped: TRUE
@@ -2069,16 +2069,16 @@ trade_events_guard         | guard_has_admin_pred: TRUE  | tenant_policy_scoped:
 trade_events_tenant_select | guard_has_admin_pred: FALSE | tenant_policy_scoped: TRUE
 ```
 
-**Proof 3 — Data (vacuous):** trades: 0 rows, trade_events: 0 rows in dev. Tables are empty. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until dev/staging seeded.
+**Proof 3 â€” Data (vacuous):** trades: 0 rows, trade_events: 0 rows in dev. Tables are empty. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until dev/staging seeded.
 
-**Gates:** typecheck EXIT 0 ✅ | lint 0 errors / 92 warnings (all pre-existing) ✅
+**Gates:** typecheck EXIT 0 âœ… | lint 0 errors / 92 warnings (all pre-existing) âœ…
 
 ### Gap Register Update
 
 G-017 row updated: scope expanded to include admin-plane SELECT RLS; commit `7350164` added; **deferred admin RLS caveat CLOSED**.
 ---
 
-## GOVERNANCE-SYNC-008 — G-019 Certifications Domain CLOSED (2026-02-27)
+## GOVERNANCE-SYNC-008 â€” G-019 Certifications Domain CLOSED (2026-02-27)
 
 | Field | Value |
 |-------|-------|
@@ -2086,7 +2086,7 @@ G-017 row updated: scope expanded to include admin-plane SELECT RLS; commit `735
 | Date | 2026-02-27 |
 | Migration | `20260311000000_g019_certifications_domain` (commit `3c7dae7`) |
 | Apply method | `psql -f migration.sql --set=ON_ERROR_STOP=1` (PGCLIENTENCODING=UTF8) |
-| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260311000000_g019_certifications_domain` → EXIT:0 |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260311000000_g019_certifications_domain` â†’ EXIT:0 |
 
 ### Migration DO Block Output
 
@@ -2094,7 +2094,7 @@ G-017 row updated: scope expanded to include admin-plane SELECT RLS; commit `735
 NOTICE: [G-019] PASS -- certifications: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, tenant_select=1, tenant_insert=1, tenant_update=1, admin_select=1
 ```
 
-### Proof 1 — pg_policies (5 rows)
+### Proof 1 â€” pg_policies (5 rows)
 
 | policyname | permissive | cmd | qual |
 |------------|-----------|-----|------|
@@ -2104,7 +2104,7 @@ NOTICE: [G-019] PASS -- certifications: ENABLE/FORCE RLS t, guard RESTRICTIVE+ad
 | certifications_tenant_select | PERMISSIVE | SELECT | org_id = app.current_org_id() OR bypass_enabled() |
 | certifications_tenant_update | PERMISSIVE | UPDATE | org_id = app.current_org_id() OR bypass_enabled() |
 
-### Proof 2 — RLS flags + constraints
+### Proof 2 â€” RLS flags + constraints
 
 ```
 relname        | relrowsecurity | relforcerowsecurity
@@ -2117,21 +2117,21 @@ certifications_org_id_fkey             | f (FK)
 certifications_pkey                    | p (PK)
 ```
 
-### Proof 3 — Data (vacuous)
+### Proof 3 â€” Data (vacuous)
 
 0 rows in public.certifications. Dev is unseeded. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until dev/staging seeded.
 
 ### Gates
 
-**Gates:** typecheck EXIT 0 ✅ | lint 0 errors / 92 warnings (all pre-existing) ✅
+**Gates:** typecheck EXIT 0 âœ… | lint 0 errors / 92 warnings (all pre-existing) âœ…
 
 ### Gap Register Update
 
-G-019 row updated: FAIL → VALIDATED; commit `3c7dae7` added; **G-019 certifications domain CLOSED**.
+G-019 row updated: FAIL â†’ VALIDATED; commit `3c7dae7` added; **G-019 certifications domain CLOSED**.
 
 ---
 
-## GOVERNANCE-SYNC-009 — G-016 Traceability Graph Phase A CLOSED (2026-02-27)
+## GOVERNANCE-SYNC-009 â€” G-016 Traceability Graph Phase A CLOSED (2026-02-27)
 
 | Field | Value |
 |-------|-------|
@@ -2139,7 +2139,7 @@ G-019 row updated: FAIL → VALIDATED; commit `3c7dae7` added; **G-019 certifica
 | Date | 2026-02-27 |
 | Migration | `20260312000000_g016_traceability_graph_phase_a` (commit `44ab6d6`) |
 | Apply method | `psql -d "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migration.sql` (PGCLIENTENCODING=UTF8) |
-| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260312000000_g016_traceability_graph_phase_a` → EXIT:0 |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260312000000_g016_traceability_graph_phase_a` â†’ EXIT:0 |
 
 ### Migration DO Block Output
 
@@ -2147,7 +2147,7 @@ G-019 row updated: FAIL → VALIDATED; commit `3c7dae7` added; **G-019 certifica
 NOTICE: [G-016] PASS -- nodes: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, tenant_select=1, tenant_insert=1, tenant_update=1, admin_select=1 | edges: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, tenant_select=1, tenant_insert=1, tenant_update=1, admin_select=1
 ```
 
-### Proof 1a — pg_policies: traceability_nodes (5 rows)
+### Proof 1a â€” pg_policies: traceability_nodes (5 rows)
 
 | policyname | permissive | cmd | qual |
 |------------|-----------|-----|------|
@@ -2157,7 +2157,7 @@ NOTICE: [G-016] PASS -- nodes: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, te
 | traceability_nodes_tenant_select | PERMISSIVE | SELECT | org_id = app.current_org_id() OR bypass_enabled() |
 | traceability_nodes_tenant_update | PERMISSIVE | UPDATE | org_id = app.current_org_id() OR bypass_enabled() |
 
-### Proof 1b — pg_policies: traceability_edges (5 rows)
+### Proof 1b â€” pg_policies: traceability_edges (5 rows)
 
 | policyname | permissive | cmd | qual |
 |------------|-----------|-----|------|
@@ -2167,7 +2167,7 @@ NOTICE: [G-016] PASS -- nodes: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, te
 | traceability_edges_tenant_select | PERMISSIVE | SELECT | org_id = app.current_org_id() OR bypass_enabled() |
 | traceability_edges_tenant_update | PERMISSIVE | UPDATE | org_id = app.current_org_id() OR bypass_enabled() |
 
-### Proof 2 — RLS flags + constraints
+### Proof 2 â€” RLS flags + constraints
 
 ```
       relname       | relrowsecurity | relforcerowsecurity
@@ -2185,68 +2185,68 @@ NOTICE: [G-016] PASS -- nodes: ENABLE/FORCE RLS t, guard RESTRICTIVE+admin t, te
  traceability_edges_pkey              | p (PK)
 ```
 
-### Proof 3 — Data (vacuous)
+### Proof 3 â€” Data (vacuous)
 
 0 rows in public.traceability_nodes, 0 rows in public.traceability_edges. Dev is unseeded. Policy structure proven correct via migration verification DO block (PASS notice above). Non-vacuous data proof deferred until tenant routes used with valid JWT in dev/staging (safe method: POST /api/tenant/traceability/nodes via curl with tenant JWT, then verify admin SELECT returns rows via /api/control/traceability/nodes).
 
 ### Gates
 
-**Gates:** typecheck EXIT 0 ✅ | lint 0 errors / 92 warnings (all pre-existing) ✅
+**Gates:** typecheck EXIT 0 âœ… | lint 0 errors / 92 warnings (all pre-existing) âœ…
 
 ### Gap Register Update
 
-G-016 row updated: NOT STARTED → VALIDATED; commit `44ab6d6` added; **G-016 Phase A traceability graph CLOSED**.
+G-016 row updated: NOT STARTED â†’ VALIDATED; commit `44ab6d6` added; **G-016 Phase A traceability graph CLOSED**.
 
 ---
 
-## GOVERNANCE-SYNC-010 — G-007C VALIDATED — /api/me Explicit Errors + Tenant Spinner Fix (2026-02-28)
+## GOVERNANCE-SYNC-010 â€” G-007C VALIDATED â€” /api/me Explicit Errors + Tenant Spinner Fix (2026-02-28)
 
 | Field | Value |
 |-------|-------|
 | Date | 2026-02-28 |
-| Type | Hotfix / Regression — auth/login stability |
+| Type | Hotfix / Regression â€” auth/login stability |
 | Gap ID | G-007C |
 | Backend commit | `be66f41` (`feat(auth): restore /api/me tenant payload to prevent workspace spinner`) |
 | Frontend commit | `7bacd80` (`fix(app): prevent tenant workspace hang when /api/me fails`) |
 | Governance commit | this commit (governance-only) |
-| No migration | ✅ No schema, RLS, or migration changes |
+| No migration | âœ… No schema, RLS, or migration changes |
 
 ### Context / Symptom
 
 After tenant login, `GET /api/me` was called by `handleAuthSuccess` in `App.tsx`. Two silent failure paths caused `tenant: null` to be returned to the frontend:
 
-1. **Missing `tenantId` in JWT context** — no guard; the `if (tenantId)` branch was simply not entered → `tenant` remained null
-2. **`OrganizationNotFoundError`** — caught silently → `tenant = null`
+1. **Missing `tenantId` in JWT context** â€” no guard; the `if (tenantId)` branch was simply not entered â†’ `tenant` remained null
+2. **`OrganizationNotFoundError`** â€” caught silently â†’ `tenant = null`
 
-The frontend `handleAuthSuccess` gated `tenants[]` seeding on `if (me.tenant)`. When `tenant` was null, `tenants[]` was never populated. Since `currentTenant` is derived from `tenants.find(t => t.id === currentTenantId)`, it remained null. The EXPERIENCE render path returned the "Loading workspace…" spinner (`if (!currentTenant)`) indefinitely.
+The frontend `handleAuthSuccess` gated `tenants[]` seeding on `if (me.tenant)`. When `tenant` was null, `tenants[]` was never populated. Since `currentTenant` is derived from `tenants.find(t => t.id === currentTenantId)`, it remained null. The EXPERIENCE render path returned the "Loading workspaceâ€¦" spinner (`if (!currentTenant)`) indefinitely.
 
 ### Root Cause
 
 Before `be66f41`, `/api/me` in `server/src/routes/tenant.ts`:
 - `tenant` typed `{ ... } | null`, initialised to `null`
-- `if (tenantId)` block skipped entirely when JWT lacked tenantId → null passed through silently
+- `if (tenantId)` block skipped entirely when JWT lacked tenantId â†’ null passed through silently
 - `OrganizationNotFoundError` caught and swallowed: `tenant = null`
 - `sendSuccess(reply, { user, tenant, ... })` forwarded the null to the frontend
 
 Before `7bacd80`, `App.tsx` `handleAuthSuccess`:
-- `else` branch (null `me.tenant`): only `setCurrentTenantId(tenantId)` — never seeded `tenants[]`
-- `catch` block: only `setCurrentTenantId(tenantId)` — never seeded `tenants[]`
-- Both paths left `tenants[]` empty → `currentTenant = null` → infinite spinner
+- `else` branch (null `me.tenant`): only `setCurrentTenantId(tenantId)` â€” never seeded `tenants[]`
+- `catch` block: only `setCurrentTenantId(tenantId)` â€” never seeded `tenants[]`
+- Both paths left `tenants[]` empty â†’ `currentTenant = null` â†’ infinite spinner
 
 ### Fix
 
-#### Backend (`be66f41` — `server/src/routes/tenant.ts`)
+#### Backend (`be66f41` â€” `server/src/routes/tenant.ts`)
 
 - Guard added: `if (!tenantId) return sendError(reply, 'UNAUTHORIZED', 'Tenant context missing from token', 401)`
-- `OrganizationNotFoundError` → `return sendError(reply, 'NOT_FOUND', 'Organisation not yet provisioned for this tenant', 404)` (explicit, not swallowed)
+- `OrganizationNotFoundError` â†’ `return sendError(reply, 'NOT_FOUND', 'Organisation not yet provisioned for this tenant', 404)` (explicit, not swallowed)
 - `tenant` field typed non-nullable; `sendSuccess` always provides the full object on success
 
-#### Frontend (`7bacd80` — `App.tsx`)
+#### Frontend (`7bacd80` â€” `App.tsx`)
 
 - `catch` block seeds stub `Tenant` into `tenants[]`: `{ id: tenantId, slug: tenantId, name: 'Workspace', type: 'B2B', status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' }`
 - `else` branch (null `me.tenant`) also seeds same stub (was: only `setCurrentTenantId`)
-- `tenantProvisionError` state added: `APIError.status === 404` + message includes "Organisation not yet provisioned" → amber fixed banner "Tenant not provisioned yet…" (dismissible via Dismiss button)
-- Banner rendered as fixed overlay inside `CartProvider` in EXPERIENCE — non-blocking, app renders normally
+- `tenantProvisionError` state added: `APIError.status === 404` + message includes "Organisation not yet provisioned" â†’ amber fixed banner "Tenant not provisioned yetâ€¦" (dismissible via Dismiss button)
+- Banner rendered as fixed overlay inside `CartProvider` in EXPERIENCE â€” non-blocking, app renders normally
 - `APIError` imported from `services/apiClient`
 - Pre-existing lint fixes collocated (0 logic change): `_tenantsLoading`/`_tenantsError` prefixed; impersonation `label` given `htmlFor`/`id`
 
@@ -2254,11 +2254,11 @@ Before `7bacd80`, `App.tsx` `handleAuthSuccess`:
 
 | Scenario | Before | After |
 |----------|--------|-------|
-| ACME tenant login (org provisioned) | workspace loads OR spinner | workspace loads ✅ |
-| WL tenant login (org provisioned) | workspace loads OR spinner | workspace loads ✅ |
-| Tenant login — org NOT yet provisioned (404 from /api/me) | infinite spinner | EXPERIENCE renders + amber banner ✅ |
-| Tenant login — tenantId missing in JWT (401 from /api/me) | silent null, spinner | 401 propagated; frontend stub seeds tenants[] ✅ |
-| `currentTenant` after any login path | can be null → spinner | always non-null (stub minimum) ✅ |
+| ACME tenant login (org provisioned) | workspace loads OR spinner | workspace loads âœ… |
+| WL tenant login (org provisioned) | workspace loads OR spinner | workspace loads âœ… |
+| Tenant login â€” org NOT yet provisioned (404 from /api/me) | infinite spinner | EXPERIENCE renders + amber banner âœ… |
+| Tenant login â€” tenantId missing in JWT (401 from /api/me) | silent null, spinner | 401 propagated; frontend stub seeds tenants[] âœ… |
+| `currentTenant` after any login path | can be null â†’ spinner | always non-null (stub minimum) âœ… |
 
 ### Dependency Chain
 
@@ -2268,15 +2268,15 @@ Before `7bacd80`, `App.tsx` `handleAuthSuccess`:
 
 ### Follow-ons
 
-- **G-WL-TYPE-MISMATCH (NOT STARTED)** — WL tenant stub uses hardcoded `type: 'B2B'`; if a WL org is not yet provisioned the stub is used and may render the wrong shell. Fix: pass `type`/`plan` from login payload if available.
+- **G-WL-TYPE-MISMATCH (NOT STARTED)** â€” WL tenant stub uses hardcoded `type: 'B2B'`; if a WL org is not yet provisioned the stub is used and may render the wrong shell. Fix: pass `type`/`plan` from login payload if available.
 
 ### Gates
 
-**Backend gates (`be66f41`):** `pnpm -C server run typecheck` EXIT 0 ✅ | `pnpm -C server run lint` 0 errors / 92 warnings ✅
+**Backend gates (`be66f41`):** `pnpm -C server run typecheck` EXIT 0 âœ… | `pnpm -C server run lint` 0 errors / 92 warnings âœ…
 
-**Frontend gates (`7bacd80`):** `tsc --noEmit` EXIT 0 ✅ | `eslint App.tsx` 0 errors / 1 warning (pre-existing `react-hooks/exhaustive-deps`) ✅
+**Frontend gates (`7bacd80`):** `tsc --noEmit` EXIT 0 âœ… | `eslint App.tsx` 0 errors / 1 warning (pre-existing `react-hooks/exhaustive-deps`) âœ…
 
-**Governance gates:** No typecheck/lint required (governance-only files). `git status --short` clean before commit ✅.
+**Governance gates:** No typecheck/lint required (governance-only files). `git status --short` clean before commit âœ….
 
 ### Gap Register Update
 
@@ -2284,20 +2284,20 @@ G-007C row added to Wave 2 Stabilization table: VALIDATED; commits `be66f41` + `
 
 ---
 
-## Wave 4 — White Label Surfaces + Store Admin (In Progress)
+## Wave 4 â€” White Label Surfaces + Store Admin (In Progress)
 
 Start Date: 2026-02-28
-End Date: —
+End Date: â€”
 Branch: main
-Tag: —
+Tag: â€”
 
 ### Objective
 
-Implement deterministic WL tenant routing and the WL Store Admin back-office entry point. Ensure WHITE_LABEL tenants with OWNER/ADMIN roles land in a dedicated back-office console (not the storefront shell) on login — both when provisioned and during the provisioning gap window.
+Implement deterministic WL tenant routing and the WL Store Admin back-office entry point. Ensure WHITE_LABEL tenants with OWNER/ADMIN roles land in a dedicated back-office console (not the storefront shell) on login â€” both when provisioned and during the provisioning gap window.
 
 ---
 
-### G-WL-TYPE-MISMATCH — VALIDATED 2026-02-28
+### G-WL-TYPE-MISMATCH â€” VALIDATED 2026-02-28
 
 #### Summary
 
@@ -2305,50 +2305,50 @@ WL stub tenant in `handleAuthSuccess` hardcoded `type: 'B2B'`, causing WL tenant
 
 #### Commits
 
-- `65ab907` — `feat(auth): include tenantType in login response (G-WL-TYPE-MISMATCH)`
-- `ef46214` — `fix(wl): seed stub tenant type from login payload (G-WL-TYPE-MISMATCH)`
+- `65ab907` â€” `feat(auth): include tenantType in login response (G-WL-TYPE-MISMATCH)`
+- `ef46214` â€” `fix(wl): seed stub tenant type from login payload (G-WL-TYPE-MISMATCH)`
 
 #### Backend (`65ab907`)
 
 - `server/src/routes/auth.ts`: imports `getOrganizationIdentity` + `OrganizationNotFoundError` from `database-context.ts`
 - After JWT issuance, fail-open `getOrganizationIdentity(tenantId, prisma)` call: reads `organizations.org_type` via `withOrgAdminContext` (admin-realm elevation)
-- `OrganizationNotFoundError` → `tenantType: null` (provisioning gap — do NOT block login)
-- Unexpected DB errors → `fastify.log.warn` + `tenantType: null`
+- `OrganizationNotFoundError` â†’ `tenantType: null` (provisioning gap â€” do NOT block login)
+- Unexpected DB errors â†’ `fastify.log.warn` + `tenantType: null`
 - `tenantType` included in `sendSuccess` response alongside existing `token`/`user`/`tenantId`
 - Backward compatible: all existing fields unchanged
-- Pre-existing test failures (`auth-email-verification` FK drift + 38-min timeout) confirmed unrelated — `gate-e-4-audit` login test PASS ✅
+- Pre-existing test failures (`auth-email-verification` FK drift + 38-min timeout) confirmed unrelated â€” `gate-e-4-audit` login test PASS âœ…
 
 #### Frontend (`ef46214`)
 
-- `services/authService.ts`: `LoginResponse.tenantType?: string | null` added (canonical per Doctrine v1.4 — organizations.org_type)
+- `services/authService.ts`: `LoginResponse.tenantType?: string | null` added (canonical per Doctrine v1.4 â€” organizations.org_type)
 - `App.tsx`: `handleAuthSuccess` extracts `rawTenantType` from `data.tenantType`; enum-validates against `Object.values(TenantType)`; falls back to `TenantType.AGGREGATOR` if absent/unrecognized
-- Both stub paths (`else` branch + `catch` block) now use `stubType` — never hardcodes `'B2B'`
+- Both stub paths (`else` branch + `catch` block) now use `stubType` â€” never hardcodes `'B2B'`
 - Happy path (`me.tenant.type`) unchanged
 
 #### Proof Table
 
 | Login user | `data.tenantType` | `currentTenant.type` | Shell |
 |---|---|---|---|
-| WL owner (provisioned) | — | `WHITE_LABEL` (from `/api/me`) | `WhiteLabelShell` |
-| WL owner (provisioning window) | `'WHITE_LABEL'` | `WHITE_LABEL` (stub) | `WhiteLabelShell` ✅ |
-| B2B owner (provisioned) | — | `B2B` (from `/api/me`) | `B2BShell` ✅ |
+| WL owner (provisioned) | â€” | `WHITE_LABEL` (from `/api/me`) | `WhiteLabelShell` |
+| WL owner (provisioning window) | `'WHITE_LABEL'` | `WHITE_LABEL` (stub) | `WhiteLabelShell` âœ… |
+| B2B owner (provisioned) | â€” | `B2B` (from `/api/me`) | `B2BShell` âœ… |
 | Any user (tenantType null) | `null` | `AGGREGATOR` (stub) | AggregatorShell + banner |
 
 #### Gates
 
-`tsc --noEmit` EXIT 0 ✅ · `eslint` 0 errors ✅ · `gate-e-4-audit` tenant login PASS ✅
+`tsc --noEmit` EXIT 0 âœ… Â· `eslint` 0 errors âœ… Â· `gate-e-4-audit` tenant login PASS âœ…
 
 ---
 
-### G-WL-ADMIN — VALIDATED 2026-02-28
+### G-WL-ADMIN â€” VALIDATED 2026-02-28
 
 #### Summary
 
-Wave 4 P1: WL OWNER/ADMIN had no back-office surface — they landed on the storefront shell (WhiteLabelShell) which is consumer-facing. Implemented `WL_ADMIN` app state, deterministic post-login router rule, and `WhiteLabelAdminShell` with 6 nav panels.
+Wave 4 P1: WL OWNER/ADMIN had no back-office surface â€” they landed on the storefront shell (WhiteLabelShell) which is consumer-facing. Implemented `WL_ADMIN` app state, deterministic post-login router rule, and `WhiteLabelAdminShell` with 6 nav panels.
 
 #### Commits
 
-- `46a60e4` — `feat(wl): add Store Admin entry point + WL admin shell (Wave4-P1)`
+- `46a60e4` â€” `feat(wl): add Store Admin entry point + WL admin shell (Wave4-P1)`
 
 #### Changes
 
@@ -2356,15 +2356,15 @@ Wave 4 P1: WL OWNER/ADMIN had no back-office surface — they landed on the stor
 - `'WL_ADMIN'` added to appState union type
 - `WLAdminView` type: `'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS'`
 - `wlAdminView` state (defaults `'BRANDING'` on each login)
-- Router rule in `handleAuthSuccess` (all 3 paths — me.tenant, stub-else, stub-catch):
+- Router rule in `handleAuthSuccess` (all 3 paths â€” me.tenant, stub-else, stub-catch):
   - `WL_ADMIN_ROLES = {TENANT_OWNER, TENANT_ADMIN, OWNER, ADMIN}`
-  - `WHITE_LABEL + WL_ADMIN_ROLES` → `nextState = 'WL_ADMIN'`; else → `EXPERIENCE`
-- `renderWLAdminContent()`: BRANDING→`WhiteLabelSettings`, STAFF→`TeamManagement`, PRODUCTS/COLLECTIONS/ORDERS/DOMAINS→`WLStubPanel`
+  - `WHITE_LABEL + WL_ADMIN_ROLES` â†’ `nextState = 'WL_ADMIN'`; else â†’ `EXPERIENCE`
+- `renderWLAdminContent()`: BRANDINGâ†’`WhiteLabelSettings`, STAFFâ†’`TeamManagement`, PRODUCTS/COLLECTIONS/ORDERS/DOMAINSâ†’`WLStubPanel`
 - `WL_ADMIN` case in `renderCurrentState()`: renders `WhiteLabelAdminShell` inside `CartProvider`; banner compatible
 - Impersonation banner updated to include `WL_ADMIN` check
 
 **`layouts/Shells.tsx`**
-- `WhiteLabelAdminShell` added: sidebar with 6 nav items (🎨 Store Profile, 👥 Staff, 📦 Products, 🗂️ Collections, 🛍️ Orders, 🌐 Domains); no B2B/Enterprise chrome; "← Storefront" link routes to `EXPERIENCE`
+- `WhiteLabelAdminShell` added: sidebar with 6 nav items (ðŸŽ¨ Store Profile, ðŸ‘¥ Staff, ðŸ“¦ Products, ðŸ—‚ï¸ Collections, ðŸ›ï¸ Orders, ðŸŒ Domains); no B2B/Enterprise chrome; "â† Storefront" link routes to `EXPERIENCE`
 
 **`components/WhiteLabelAdmin/WLStubPanel.tsx`** (new)
 - Reusable coming-soon stub panel for Products, Collections, Orders, Domains
@@ -2373,67 +2373,67 @@ Wave 4 P1: WL OWNER/ADMIN had no back-office surface — they landed on the stor
 
 | Actor | Tenant Type | Role | Post-login state |
 |---|---|---|---|
-| WL owner | WHITE_LABEL | TENANT_OWNER / ADMIN | `WL_ADMIN` → `WhiteLabelAdminShell` |
-| WL buyer | WHITE_LABEL | BUYER | `EXPERIENCE` → `WhiteLabelShell` |
-| B2B owner | B2B | any | `EXPERIENCE` → `B2BShell` |
-| B2C owner | B2C | any | `EXPERIENCE` → `B2CShell` |
+| WL owner | WHITE_LABEL | TENANT_OWNER / ADMIN | `WL_ADMIN` â†’ `WhiteLabelAdminShell` |
+| WL buyer | WHITE_LABEL | BUYER | `EXPERIENCE` â†’ `WhiteLabelShell` |
+| B2B owner | B2B | any | `EXPERIENCE` â†’ `B2BShell` |
+| B2C owner | B2C | any | `EXPERIENCE` â†’ `B2CShell` |
 | WL (provisioning gap) | WHITE_LABEL stub | OWNER | `WL_ADMIN` + banner |
 
 #### Gates
 
-`tsc --noEmit` EXIT 0 ✅ · `eslint` 0 errors / 1 pre-existing warning ✅
+`tsc --noEmit` EXIT 0 âœ… Â· `eslint` 0 errors / 1 pre-existing warning âœ…
 
 #### Follow-ons (Wave 4 subsequent)
 
 | Panel | Status | Notes |
 |---|---|---|
-| Products | STUB | Full product management — catalog variants, pricing rules |
+| Products | STUB | Full product management â€” catalog variants, pricing rules |
 | Collections | STUB | Curated collection grouping for WL storefronts |
 | Orders | STUB | Order management, fulfillment, returns |
 | Domains | STUB | Custom domain connection, DNS configuration (G-026 prerequisite) |
 
 ---
 
-## GOVERNANCE-SYNC-011 — G-018 Day 1 DB Applied (2026-02-28)
+## GOVERNANCE-SYNC-011 â€” G-018 Day 1 DB Applied (2026-02-28)
 
 | Field | Value |
 |-------|-------|
 | Date | 2026-02-28 |
-| Type | DB Apply — Schema-only migration |
+| Type | DB Apply â€” Schema-only migration |
 | Gap ID | G-018 |
 | Migration | `20260308000000_g018_day1_escrow_schema` |
 | Impl commit | `7c1d3a3` |
 | Apply method | `psql "--dbname=$DATABASE_URL" "--variable=ON_ERROR_STOP=1" -f migration.sql` (URL redacted) |
 | Environment | Supabase dev |
-| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260308000000_g018_day1_escrow_schema` → `Migration marked as applied.` |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260308000000_g018_day1_escrow_schema` â†’ `Migration marked as applied.` |
 | Scope | Day 1 schema-only; no routes, no services, no tests |
 
-### §16 PASS Notice (captured from psql output)
+### Â§16 PASS Notice (captured from psql output)
 
 ```
 NOTICE:  G-018 pre-flight OK: trades, pending_approvals, escrow_lifecycle_logs, lifecycle_states present; escrow_accounts absent. Proceeding.
-NOTICE:  G-018 §13: escrow_lifecycle_logs_escrow_id_fk added — escrow_lifecycle_logs.escrow_id now a hard FK to escrow_accounts.id.
-NOTICE:  G-018 VERIFY: escrow_accounts EXISTS — OK
-NOTICE:  G-018 VERIFY: escrow_transactions EXISTS — OK
-NOTICE:  G-018 VERIFY: escrow_accounts RLS: t/t — OK
-NOTICE:  G-018 VERIFY: escrow_transactions RLS: t/t — OK
-NOTICE:  G-018 VERIFY: escrow_accounts_guard RESTRICTIVE EXISTS — OK
-NOTICE:  G-018 VERIFY: escrow_transactions_guard RESTRICTIVE EXISTS — OK
-NOTICE:  G-018 VERIFY: trades.escrow_id column EXISTS — OK
-NOTICE:  G-018 VERIFY: trades_escrow_id_fk FK EXISTS — OK
-NOTICE:  G-018 VERIFY: escrow_lifecycle_logs_escrow_id_fk FK EXISTS — OK
-NOTICE:  G-018 VERIFY: trg_g018_pending_approvals_escrow_entity_fk EXISTS — OK
-NOTICE:  G-018 VERIFY: escrow maker-checker trigger tgenabled='O' — OK
-NOTICE:  G-018 VERIFY: trg_immutable_escrow_transaction EXISTS — OK
-NOTICE:  G-018 PASS: escrow schema created — escrow_accounts RLS: t/t, escrow_transactions RLS: t/t, trades.escrow_id: ok, escrow_lifecycle_logs FK: ok, pending_approvals ESCROW enforcement: ok, escrow_transactions immutable: ok
+NOTICE:  G-018 Â§13: escrow_lifecycle_logs_escrow_id_fk added â€” escrow_lifecycle_logs.escrow_id now a hard FK to escrow_accounts.id.
+NOTICE:  G-018 VERIFY: escrow_accounts EXISTS â€” OK
+NOTICE:  G-018 VERIFY: escrow_transactions EXISTS â€” OK
+NOTICE:  G-018 VERIFY: escrow_accounts RLS: t/t â€” OK
+NOTICE:  G-018 VERIFY: escrow_transactions RLS: t/t â€” OK
+NOTICE:  G-018 VERIFY: escrow_accounts_guard RESTRICTIVE EXISTS â€” OK
+NOTICE:  G-018 VERIFY: escrow_transactions_guard RESTRICTIVE EXISTS â€” OK
+NOTICE:  G-018 VERIFY: trades.escrow_id column EXISTS â€” OK
+NOTICE:  G-018 VERIFY: trades_escrow_id_fk FK EXISTS â€” OK
+NOTICE:  G-018 VERIFY: escrow_lifecycle_logs_escrow_id_fk FK EXISTS â€” OK
+NOTICE:  G-018 VERIFY: trg_g018_pending_approvals_escrow_entity_fk EXISTS â€” OK
+NOTICE:  G-018 VERIFY: escrow maker-checker trigger tgenabled='O' â€” OK
+NOTICE:  G-018 VERIFY: trg_immutable_escrow_transaction EXISTS â€” OK
+NOTICE:  G-018 PASS: escrow schema created â€” escrow_accounts RLS: t/t, escrow_transactions RLS: t/t, trades.escrow_id: ok, escrow_lifecycle_logs FK: ok, pending_approvals ESCROW enforcement: ok, escrow_transactions immutable: ok
 COMMIT
 ```
 
-Note: psql emits NOTICE lines to stderr; PowerShell reported exit code 1 (NativeCommandError) even on clean COMMIT — expected Windows psql behaviour. No SQL `ERROR:` present in output. COMMIT was the final line.
+Note: psql emits NOTICE lines to stderr; PowerShell reported exit code 1 (NativeCommandError) even on clean COMMIT â€” expected Windows psql behaviour. No SQL `ERROR:` present in output. COMMIT was the final line.
 
 ### Proof Queries
 
-#### 3a) pg_policies — escrow_accounts (3 rows)
+#### 3a) pg_policies â€” escrow_accounts (3 rows)
 
 | policyname | permissive | cmd |
 |---|---|---|
@@ -2441,7 +2441,7 @@ Note: psql emits NOTICE lines to stderr; PowerShell reported exit code 1 (Native
 | escrow_accounts_tenant_insert | PERMISSIVE | INSERT |
 | escrow_accounts_tenant_select | PERMISSIVE | SELECT |
 
-#### 3b) pg_policies — escrow_transactions (5 rows)
+#### 3b) pg_policies â€” escrow_transactions (5 rows)
 
 | policyname | permissive | cmd |
 |---|---|---|
@@ -2451,7 +2451,7 @@ Note: psql emits NOTICE lines to stderr; PowerShell reported exit code 1 (Native
 | escrow_transactions_tenant_insert | PERMISSIVE | INSERT |
 | escrow_transactions_tenant_select | PERMISSIVE | SELECT |
 
-`no_update` and `no_delete` use `USING (false)` — Layer 3 append-only enforcement confirmed.
+`no_update` and `no_delete` use `USING (false)` â€” Layer 3 append-only enforcement confirmed.
 
 #### 3c) FORCE RLS flags
 
@@ -2473,24 +2473,9 @@ Note: psql emits NOTICE lines to stderr; PowerShell reported exit code 1 (Native
 |---|---|
 | 0 | 0 |
 
-Vacuous — Day 1 is schema-only. Policy/trigger/FK structure proven via §16 DO block PASS notice.
+Vacuous â€” Day 1 is schema-only. Policy/trigger/FK structure proven via Â§16 DO block PASS notice.
 
-### Migration Status (before ledger sync) — Pending list
-
-```
-20260212000000_gw3_db_roles_bootstrap
-20260301000000_g020_lifecycle_state_machine_core
-20260302000000_g021_maker_checker_core
-20260303000000_g022_escalation_core
-20260304000000_gatetest003_audit_logs_admin_select
-20260305000000_g023_reasoning_logs
-20260306000000_g017_trades_domain
-20260307000000_g017_day4_pending_approvals_trade_fk_hardening
-20260308000000_g018_day1_escrow_schema          ← TARGET (applied in this sync)
-20260308010000_g018_day1_escrow_schema_cycle_fix
-```
-
-### Migration Status (after ledger sync) — Pending list
+### Migration Status (before ledger sync) â€” Pending list
 
 ```
 20260212000000_gw3_db_roles_bootstrap
@@ -2501,50 +2486,65 @@ Vacuous — Day 1 is schema-only. Policy/trigger/FK structure proven via §16 DO
 20260305000000_g023_reasoning_logs
 20260306000000_g017_trades_domain
 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+20260308000000_g018_day1_escrow_schema          â† TARGET (applied in this sync)
 20260308010000_g018_day1_escrow_schema_cycle_fix
 ```
 
-`20260308000000_g018_day1_escrow_schema` removed from pending list ✅
+### Migration Status (after ledger sync) â€” Pending list
+
+```
+20260212000000_gw3_db_roles_bootstrap
+20260301000000_g020_lifecycle_state_machine_core
+20260302000000_g021_maker_checker_core
+20260303000000_g022_escalation_core
+20260304000000_gatetest003_audit_logs_admin_select
+20260305000000_g023_reasoning_logs
+20260306000000_g017_trades_domain
+20260307000000_g017_day4_pending_approvals_trade_fk_hardening
+20260308010000_g018_day1_escrow_schema_cycle_fix
+```
+
+`20260308000000_g018_day1_escrow_schema` removed from pending list âœ…
 
 ### Governance Notes
 
 - Day 1 schema-only boundary maintained: no API routes, no service logic, no tests added or modified.
 - No balance fields on `escrow_accounts` or `escrow_transactions` (D-020-B constitutionally binding).
-- `escrow_transactions` append-only: 3-layer enforcement confirmed (trigger P0005 §10/§15, RLS deny via `no_update`/`no_delete` USING false, service boundary documented in README).
+- `escrow_transactions` append-only: 3-layer enforcement confirmed (trigger P0005 Â§10/Â§15, RLS deny via `no_update`/`no_delete` USING false, service boundary documented in README).
 - Remaining pending migrations not touched in this sync.
 
 ### Gap Register Update
 
-G-018 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-011, 2026-02-28, env: Supabase dev)**. Apply method: psql. Commit: `7c1d3a3`. Ledger sync: resolve --applied. Proof: §16 PASS notice + pg_policies/rls flags/constraints verified.
+G-018 row updated: added **DB Applied âœ… (GOVERNANCE-SYNC-011, 2026-02-28, env: Supabase dev)**. Apply method: psql. Commit: `7c1d3a3`. Ledger sync: resolve --applied. Proof: Â§16 PASS notice + pg_policies/rls flags/constraints verified.
 
 ---
 
-## GOVERNANCE-SYNC-012 — G-018 Cycle Fix DB Applied (2026-02-28)
+## GOVERNANCE-SYNC-012 â€” G-018 Cycle Fix DB Applied (2026-02-28)
 
 | Field | Value |
 |-------|-------|
 | Date | 2026-02-28 |
-| Type | DB Apply — Schema fix (circular FK elimination) |
+| Type | DB Apply â€” Schema fix (circular FK elimination) |
 | Gap ID | G-018 |
 | Migration | `20260308010000_g018_day1_escrow_schema_cycle_fix` |
 | Apply method | `psql "--dbname=$DATABASE_URL" "--variable=ON_ERROR_STOP=1"` (URL redacted) |
 | Environment | Supabase dev |
-| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260308010000_g018_day1_escrow_schema_cycle_fix` → `Migration marked as applied.` |
+| Ledger sync | `pnpm exec prisma migrate resolve --applied 20260308010000_g018_day1_escrow_schema_cycle_fix` â†’ `Migration marked as applied.` |
 
 ### Purpose
 
 The G-018 Day 1 migration created a circular FK graph:
 
 ```
-trades.escrow_id      → escrow_accounts.id  (KEEP — canonical owner)
-escrow_accounts.trade_id → trades.id         (REMOVE — creates cycle)
+trades.escrow_id      â†’ escrow_accounts.id  (KEEP â€” canonical owner)
+escrow_accounts.trade_id â†’ trades.id         (REMOVE â€” creates cycle)
 ```
 
-The cycle makes it impossible to INSERT either a trade or an escrow account "first" without a two-step write requiring a governed UPDATE path that doesn't exist in Day 1. This migration removes `escrow_accounts.trade_id` + its 2 dependent indexes, leaving only the unidirectional canonical link `trades.escrow_id → escrow_accounts.id`.
+The cycle makes it impossible to INSERT either a trade or an escrow account "first" without a two-step write requiring a governed UPDATE path that doesn't exist in Day 1. This migration removes `escrow_accounts.trade_id` + its 2 dependent indexes, leaving only the unidirectional canonical link `trades.escrow_id â†’ escrow_accounts.id`.
 
 ### Migration File Note (documented for audit trail)
 
-The migration file's pre-flight `DO` block contains a PL/pgSQL syntax bug: adjacent string literals (`'str1' 'str2'`) in a `RAISE NOTICE` statement. PostgreSQL parses the entire PL/pgSQL block at compile time — the syntax error fires even though the branch is unreachable at runtime (the `IF NOT EXISTS trade_id` branch is false since `trade_id` exists at apply time).
+The migration file's pre-flight `DO` block contains a PL/pgSQL syntax bug: adjacent string literals (`'str1' 'str2'`) in a `RAISE NOTICE` statement. PostgreSQL parses the entire PL/pgSQL block at compile time â€” the syntax error fires even though the branch is unreachable at runtime (the `IF NOT EXISTS trade_id` branch is false since `trade_id` exists at apply time).
 
 **Resolution:** The operational SQL and the migration's own verification logic were extracted and executed directly via `psql -c` in a single transaction, producing identical operational and verification results. The migration file on disk is unchanged.
 
@@ -2552,58 +2552,58 @@ The migration file's pre-flight `DO` block contains a PL/pgSQL syntax bug: adjac
 
 ```
 BEGIN
-DROP INDEX IF EXISTS public.escrow_accounts_tenant_trade_unique  → DROP INDEX
-DROP INDEX IF EXISTS public.escrow_accounts_trade_id_idx          → DROP INDEX
-ALTER TABLE public.escrow_accounts DROP COLUMN IF EXISTS trade_id  → ALTER TABLE
+DROP INDEX IF EXISTS public.escrow_accounts_tenant_trade_unique  â†’ DROP INDEX
+DROP INDEX IF EXISTS public.escrow_accounts_trade_id_idx          â†’ DROP INDEX
+ALTER TABLE public.escrow_accounts DROP COLUMN IF EXISTS trade_id  â†’ ALTER TABLE
 COMMIT
 ```
 
-No `ERROR:` in output. `COMMIT` was the final line. ✅
+No `ERROR:` in output. `COMMIT` was the final line. âœ…
 
 ### Verification PASS (migration's own verification logic, executed via psql here-string)
 
 ```
 G-018 FIX PASS: Circular FK broken. Canonical link remains:
-trades.escrow_id → escrow_accounts.id. escrow_accounts.trade_id removed.
+trades.escrow_id â†’ escrow_accounts.id. escrow_accounts.trade_id removed.
 ```
 
 ### Proof Queries
 
-#### escrow_accounts.trade_id column — GONE (0 rows)
+#### escrow_accounts.trade_id column â€” GONE (0 rows)
 
 ```sql
 SELECT column_name FROM information_schema.columns
 WHERE table_schema='public' AND table_name='escrow_accounts' AND column_name='trade_id';
--- (0 rows) ✅
+-- (0 rows) âœ…
 ```
 
-#### trades.escrow_id column — STILL EXISTS (canonical link)
+#### trades.escrow_id column â€” STILL EXISTS (canonical link)
 
 ```
 column_name | is_nullable | data_type
 -------------+-------------+-----------
 escrow_id   | YES         | uuid
-(1 row) ✅
+(1 row) âœ…
 ```
 
-#### trades_escrow_id_fk FK — INTACT
+#### trades_escrow_id_fk FK â€” INTACT
 
 ```
 conname             | contype | def
 --------------------+---------+----------------------------------------------------------
 trades_escrow_id_fk | f       | FOREIGN KEY (escrow_id) REFERENCES escrow_accounts(id) ON DELETE RESTRICT
-(1 row) ✅
+(1 row) âœ…
 ```
 
-#### Dropped indexes — CONFIRMED GONE (0 rows)
+#### Dropped indexes â€” CONFIRMED GONE (0 rows)
 
 ```sql
 SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename='escrow_accounts'
 AND indexname IN ('escrow_accounts_trade_id_idx','escrow_accounts_tenant_trade_unique');
--- (0 rows) ✅
+-- (0 rows) âœ…
 ```
 
-#### Remaining escrow_accounts indexes (3 — expected)
+#### Remaining escrow_accounts indexes (3 â€” expected)
 
 ```
 escrow_accounts_lifecycle_state_id_idx
@@ -2611,14 +2611,14 @@ escrow_accounts_pkey
 escrow_accounts_tenant_id_idx
 ```
 
-#### FORCE RLS flags — UNCHANGED
+#### FORCE RLS flags â€” UNCHANGED
 
 | relname | relrowsecurity | relforcerowsecurity |
 |---|---|---|
 | escrow_accounts | t | t |
 | escrow_transactions | t | t |
 
-### Migration Status (before ledger sync) — 9 pending
+### Migration Status (before ledger sync) â€” 9 pending
 
 ```
 20260212000000_gw3_db_roles_bootstrap
@@ -2629,10 +2629,10 @@ escrow_accounts_tenant_id_idx
 20260305000000_g023_reasoning_logs
 20260306000000_g017_trades_domain
 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
-20260308010000_g018_day1_escrow_schema_cycle_fix   ← TARGET (applied in this sync)
+20260308010000_g018_day1_escrow_schema_cycle_fix   â† TARGET (applied in this sync)
 ```
 
-### Migration Status (after ledger sync) — 8 pending
+### Migration Status (after ledger sync) â€” 8 pending
 
 ```
 20260212000000_gw3_db_roles_bootstrap
@@ -2645,15 +2645,15 @@ escrow_accounts_tenant_id_idx
 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
 ```
 
-`20260308010000_g018_day1_escrow_schema_cycle_fix` removed from pending list ✅
+`20260308010000_g018_day1_escrow_schema_cycle_fix` removed from pending list âœ…
 
 ### Gap Register Update
 
-G-018 row updated: added **Cycle Fix DB Applied ✅ (GOVERNANCE-SYNC-012, 2026-02-28, env: Supabase dev)**. Apply method: psql (operational SQL extracted due to migration file pre-flight syntax bug). Ledger sync: resolve --applied. Proof: column/index/FK/RLS queries all verified.
+G-018 row updated: added **Cycle Fix DB Applied âœ… (GOVERNANCE-SYNC-012, 2026-02-28, env: Supabase dev)**. Apply method: psql (operational SQL extracted due to migration file pre-flight syntax bug). Ledger sync: resolve --applied. Proof: column/index/FK/RLS queries all verified.
 
 ---
 
-## GOVERNANCE-SYNC-013 — G-018 cycle-fix migration file repaired (parse-safe) (2026-02-28)
+## GOVERNANCE-SYNC-013 â€” G-018 cycle-fix migration file repaired (parse-safe) (2026-02-28)
 
 ### Scope
 
@@ -2661,25 +2661,25 @@ File-only patch to `server/prisma/migrations/20260308010000_g018_day1_escrow_sch
 
 ### Problem
 
-Two `RAISE NOTICE` statements in the migration file had PL/pgSQL-invalid adjacent string literals (`'str1' 'str2'`). PostgreSQL parses the entire DO block at plan time — even branches that will never execute — so the adjacent literal in the pre-flight guard caused:
+Two `RAISE NOTICE` statements in the migration file had PL/pgSQL-invalid adjacent string literals (`'str1' 'str2'`). PostgreSQL parses the entire DO block at plan time â€” even branches that will never execute â€” so the adjacent literal in the pre-flight guard caused:
 
 ```
 ERROR: syntax error at or near "'migration may already be applied. Skipping.'"
 ```
 
-Additionally, non-ASCII characters were present: em dash `—` (U+2014) and Unicode arrow `→` (U+2192). These had been worked around in GOVERNANCE-SYNC-012 by applying the operational SQL manually via `psql -c`, but the file itself remained parse-unsafe.
+Additionally, non-ASCII characters were present: em dash `â€”` (U+2014) and Unicode arrow `â†’` (U+2192). These had been worked around in GOVERNANCE-SYNC-012 by applying the operational SQL manually via `psql -c`, but the file itself remained parse-unsafe.
 
-### Fix — 2 minimal replacements
+### Fix â€” 2 minimal replacements
 
-**Change 1** (pre-flight DO block — idempotency guard):
-- OLD: `RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist — ' 'migration may already be applied. Skipping.';`
+**Change 1** (pre-flight DO block â€” idempotency guard):
+- OLD: `RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist â€” ' 'migration may already be applied. Skipping.';`
 - NEW: `RAISE NOTICE 'G-018 FIX: escrow_accounts.trade_id does not exist -- migration may already be applied. Skipping.';`
 
-**Change 2** (verification DO block — PASS notice):
-- OLD: `RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. ' 'Canonical link remains: trades.escrow_id → escrow_accounts.id. ' 'escrow_accounts.trade_id removed.';`
+**Change 2** (verification DO block â€” PASS notice):
+- OLD: `RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. ' 'Canonical link remains: trades.escrow_id â†’ escrow_accounts.id. ' 'escrow_accounts.trade_id removed.';`
 - NEW: `RAISE NOTICE 'G-018 FIX PASS: Circular FK broken. Canonical link remains: trades.escrow_id -> escrow_accounts.id. escrow_accounts.trade_id removed.';`
 
-No operational SQL changed (DROP INDEX IF EXISTS ×2, ALTER TABLE DROP COLUMN IF EXISTS, RAISE EXCEPTION statements all untouched).
+No operational SQL changed (DROP INDEX IF EXISTS Ã—2, ALTER TABLE DROP COLUMN IF EXISTS, RAISE EXCEPTION statements all untouched).
 
 ### psql Parse Proof
 
@@ -2699,27 +2699,27 @@ No ERROR. File is now parse-safe and can be applied cleanly via `prisma migrate 
 
 ### Implementation Commit
 
-- `98eb08d` — `fix(migrations): make g018 cycle-fix migration parse-safe (no behavior change)` — 1 file changed, 2 insertions(+), 2 deletions(-)
+- `98eb08d` â€” `fix(migrations): make g018 cycle-fix migration parse-safe (no behavior change)` â€” 1 file changed, 2 insertions(+), 2 deletions(-)
 
 ### Gap Register Update
 
-G-018 row updated: added commit `98eb08d` to commit refs + **Migration File Repaired ✅ (GOVERNANCE-SYNC-013, 2026-02-28)** note with patch description, parse proof summary, and impl commit.
+G-018 row updated: added commit `98eb08d` to commit refs + **Migration File Repaired âœ… (GOVERNANCE-SYNC-013, 2026-02-28)** note with patch description, parse proof summary, and impl commit.
 
 ---
 
-## GOVERNANCE-SYNC-014 — G-020 Lifecycle State Machine DB Applied (2026-02-28)
+## GOVERNANCE-SYNC-014 â€” G-020 Lifecycle State Machine DB Applied (2026-02-28)
 
 ### Scope
 
-Ledger sync for `20260301000000_g020_lifecycle_state_machine_core`. G-020 was found fully present in DB (applied out-of-band as a prerequisite for G-017 trades domain). No psql apply executed — pre-flight guard would raise EXCEPTION (`lifecycle_states` already exists). Also ledger-synced `20260212000000_gw3_db_roles_bootstrap` in the same session.
+Ledger sync for `20260301000000_g020_lifecycle_state_machine_core`. G-020 was found fully present in DB (applied out-of-band as a prerequisite for G-017 trades domain). No psql apply executed â€” pre-flight guard would raise EXCEPTION (`lifecycle_states` already exists). Also ledger-synced `20260212000000_gw3_db_roles_bootstrap` in the same session.
 
-### Precondition Check — A/B/C Existence Proofs
+### Precondition Check â€” A/B/C Existence Proofs
 
 | Label | Migration | In DB? | Evidence | Action |
 |-------|-----------|--------|----------|--------|
-| A | `20260212000000_gw3_db_roles_bootstrap` | ✅ Present | `texqtic_app: 1`, `texqtic_admin: 1` in pg_roles | Ledger-sync only |
-| B | `20260306000000_g017_trades_domain` | ✅ Present | `trades: trades`, `trade_events: trade_events` via to_regclass | Note for next TECS |
-| C | `20260307000000_g017_day4_pending_approvals_trade_fk_hardening` | ❌ Absent | `trg_g017_pending_approvals_trade_entity_fk: 0`, fn `g017_enforce_pending_approvals_trade_entity_fk: 0` | Separate TECS needed |
+| A | `20260212000000_gw3_db_roles_bootstrap` | âœ… Present | `texqtic_app: 1`, `texqtic_admin: 1` in pg_roles | Ledger-sync only |
+| B | `20260306000000_g017_trades_domain` | âœ… Present | `trades: trades`, `trade_events: trade_events` via to_regclass | Note for next TECS |
+| C | `20260307000000_g017_day4_pending_approvals_trade_fk_hardening` | âŒ Absent | `trg_g017_pending_approvals_trade_entity_fk: 0`, fn `g017_enforce_pending_approvals_trade_entity_fk: 0` | Separate TECS needed |
 
 **Stop-loss note:** C is absent from DB. G-020 was already in DB (not newly applied), so stop-loss for C does not block ledger-sync of G-020. C requires its own TECS DB-apply prompt (20260307 timestamp) before B can be ledger-synced.
 
@@ -2728,16 +2728,16 @@ Ledger sync for `20260301000000_g020_lifecycle_state_machine_core`. G-020 was fo
 All 7 G-020 objects verified present before ledger-sync:
 
 ```
-lifecycle_states:          PRESENT (to_regclass → 'lifecycle_states')
-allowed_transitions:       PRESENT (to_regclass → 'allowed_transitions')
-trade_lifecycle_logs:      PRESENT (to_regclass → 'trade_lifecycle_logs')
-escrow_lifecycle_logs:     PRESENT (to_regclass → 'escrow_lifecycle_logs')
+lifecycle_states:          PRESENT (to_regclass â†’ 'lifecycle_states')
+allowed_transitions:       PRESENT (to_regclass â†’ 'allowed_transitions')
+trade_lifecycle_logs:      PRESENT (to_regclass â†’ 'trade_lifecycle_logs')
+escrow_lifecycle_logs:     PRESENT (to_regclass â†’ 'escrow_lifecycle_logs')
 prevent_lifecycle_log_update_delete fn:  PRESENT (pg_proc count: 1)
 trg_immutable_trade_lifecycle_log:       PRESENT (pg_trigger count: 1)
 trg_immutable_escrow_lifecycle_log:      PRESENT (pg_trigger count: 1)
 ```
 
-Pre-flight guard in migration.sql: `RAISE EXCEPTION 'G-020 PRE-FLIGHT BLOCKED: public.lifecycle_states already exists.'` → confirms out-of-band apply; psql -f NOT executed.
+Pre-flight guard in migration.sql: `RAISE EXCEPTION 'G-020 PRE-FLIGHT BLOCKED: public.lifecycle_states already exists.'` â†’ confirms out-of-band apply; psql -f NOT executed.
 
 ### Apply Method
 
@@ -2745,7 +2745,7 @@ psql -f NOT run (pre-flight guard would block). G-020 was applied out-of-band as
 
 ### Post-Apply Proof Queries
 
-**Proof 1 — FORCE RLS flags (all 4 G-020 tables):**
+**Proof 1 â€” FORCE RLS flags (all 4 G-020 tables):**
 
 ```
        relname        | relrowsecurity | relforcerowsecurity
@@ -2757,7 +2757,7 @@ psql -f NOT run (pre-flight guard would block). G-020 was applied out-of-band as
 (4 rows)
 ```
 
-**Proof 2 — RLS policies (14 total):**
+**Proof 2 â€” RLS policies (14 total):**
 
 ```
  allowed_transitions   | allowed_transitions_admin_select    | SELECT | PERMISSIVE
@@ -2777,7 +2777,7 @@ psql -f NOT run (pre-flight guard would block). G-020 was applied out-of-band as
 (14 rows)
 ```
 
-**Proof 3 — Key constraints (representative):**
+**Proof 3 â€” Key constraints (representative):**
 
 ```
 lifecycle_states:      pkey + unique(entity_type, state_key) + 3 CHECK constraints
@@ -2786,10 +2786,10 @@ escrow_lifecycle_logs: pkey + escrow_id_fk + org_id_fk + 4 CHECK constraints
 trade_lifecycle_logs:  pkey + org_id_fk + 4+ CHECK constraints
 ```
 
-**Proof 4 — Row counts (dev env):**
+**Proof 4 â€” Row counts (dev env):**
 
 ```
-lifecycle_states:    0 rows (vacuous — schema proven by constraints/policies)
+lifecycle_states:    0 rows (vacuous â€” schema proven by constraints/policies)
 allowed_transitions: 0 rows
 trade_lifecycle_logs: 0 rows
 escrow_lifecycle_logs: 0 rows
@@ -2799,13 +2799,13 @@ escrow_lifecycle_logs: 0 rows
 
 ```
 pnpm exec prisma migrate resolve --applied 20260212000000_gw3_db_roles_bootstrap
-→ Migration 20260212000000_gw3_db_roles_bootstrap marked as applied.
+â†’ Migration 20260212000000_gw3_db_roles_bootstrap marked as applied.
 
 pnpm exec prisma migrate resolve --applied 20260301000000_g020_lifecycle_state_machine_core
-→ Migration 20260301000000_g020_lifecycle_state_machine_core marked as applied.
+â†’ Migration 20260301000000_g020_lifecycle_state_machine_core marked as applied.
 ```
 
-### Migration Status (before ledger sync) — 8 pending
+### Migration Status (before ledger sync) â€” 8 pending
 
 ```
 20260212000000_gw3_db_roles_bootstrap
@@ -2818,7 +2818,7 @@ pnpm exec prisma migrate resolve --applied 20260301000000_g020_lifecycle_state_m
 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
 ```
 
-### Migration Status (after ledger sync) — 6 pending
+### Migration Status (after ledger sync) â€” 6 pending
 
 ```
 20260302000000_g021_maker_checker_core
@@ -2829,28 +2829,28 @@ pnpm exec prisma migrate resolve --applied 20260301000000_g020_lifecycle_state_m
 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
 ```
 
-`20260212000000_gw3_db_roles_bootstrap` removed from pending ✅  
-`20260301000000_g020_lifecycle_state_machine_core` removed from pending ✅
+`20260212000000_gw3_db_roles_bootstrap` removed from pending âœ…  
+`20260301000000_g020_lifecycle_state_machine_core` removed from pending âœ…
 
 ### Next Steps (planning)
 
-- C (20260307_g017_day4_pending_approvals_trade_fk_hardening): NOT in DB — requires dedicated TECS DB-apply prompt
-- B (20260306_g017_trades_domain): IN DB, ledger pending — after C is applied, ledger-sync B in a subsequent TECS
+- C (20260307_g017_day4_pending_approvals_trade_fk_hardening): NOT in DB â€” requires dedicated TECS DB-apply prompt
+- B (20260306_g017_trades_domain): IN DB, ledger pending â€” after C is applied, ledger-sync B in a subsequent TECS
 - G-021 (20260302), G-022 (20260303), GATE-003 (20260304), G-023 (20260305): all need existence proofs + apply/sync per TECS
 
 ### Gap Register Update
 
-G-020 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-014, 2026-02-28)** with full proof note (all objects in DB, FORCE RLS t/t on all 4 tables, 14 policies, constraints verified, row counts 0 vacuous, ledger-synced).
+G-020 row updated: added **DB Applied âœ… (GOVERNANCE-SYNC-014, 2026-02-28)** with full proof note (all objects in DB, FORCE RLS t/t on all 4 tables, 14 policies, constraints verified, row counts 0 vacuous, ledger-synced).
 
 ---
 
-## GOVERNANCE-SYNC-015 — G-017 Day4 Pending Approvals FK Hardening DB Applied (2026-02-28)
+## GOVERNANCE-SYNC-015 â€” G-017 Day4 Pending Approvals FK Hardening DB Applied (2026-02-28)
 
 ### Scope
 
 Applied `20260307000000_g017_day4_pending_approvals_trade_fk_hardening` via psql. This migration installs the DB-level referential integrity guard on `public.pending_approvals`: when `entity_type = 'TRADE'`, `entity_id` must reference an existing `public.trades(id)`. Enforced via `BEFORE INSERT OR UPDATE` trigger with SECURITY DEFINER + `search_path=public` to bypass session RLS on trades.
 
-### Pending Migrations BEFORE — 6 pending
+### Pending Migrations BEFORE â€” 6 pending
 
 ```
 20260302000000_g021_maker_checker_core
@@ -2868,7 +2868,7 @@ trigger_count (trg_g017_pending_approvals_trade_entity_fk):          0
 function_count (g017_enforce_pending_approvals_trade_entity_fk):     0
 ```
 
-Stop-loss decision: both absent → proceed with psql apply.
+Stop-loss decision: both absent â†’ proceed with psql apply.
 
 ### Migration File Patch (parse-safe, no behavior change)
 
@@ -2887,7 +2887,7 @@ RAISE NOTICE
 RAISE NOTICE 'G-017 Day4 PASS: pending_approvals TRADE FK hardening installed -- function: g017_enforce_pending_approvals_trade_entity_fk, trigger: trg_g017_pending_approvals_trade_entity_fk (BEFORE INSERT OR UPDATE), SQLSTATE: P0003, SECURITY DEFINER, search_path=public';
 ```
 
-Impl commit: `bdb9ab7` — `fix(migrations): make g017 day4 trade-fk-hardening migration parse-safe (no behavior change)` — 1 file
+Impl commit: `bdb9ab7` â€” `fix(migrations): make g017 day4 trade-fk-hardening migration parse-safe (no behavior change)` â€” 1 file
 
 ### Apply Command
 
@@ -2920,22 +2920,22 @@ No ERROR lines. Exit code 1 is PowerShell stderr-NOTICE artifact (expected).
 
 ### Post-Apply Proof Queries
 
-**Proof A — Object counts:**
+**Proof A â€” Object counts:**
 ```
 trigger_count (trg_g017_pending_approvals_trade_entity_fk):          1
 function_count (g017_enforce_pending_approvals_trade_entity_fk):     1
 ```
 
-**Proof B — Trigger attachment + enabled status:**
+**Proof B â€” Trigger attachment + enabled status:**
 ```
                   tgname                    |      tgrelid      | tgenabled
 --------------------------------------------+-------------------+-----------
  trg_g017_pending_approvals_trade_entity_fk | pending_approvals | O
 (1 row)
 ```
-tgrelid = `pending_approvals` ✅, tgenabled = `O` (enabled for origin + replica) ✅
+tgrelid = `pending_approvals` âœ…, tgenabled = `O` (enabled for origin + replica) âœ…
 
-**Proof C — Function definition excerpt:**
+**Proof C â€” Function definition excerpt:**
 ```
 CREATE OR REPLACE FUNCTION public.g017_enforce_pending_approvals_trade_entity_fk()
   RETURNS trigger
@@ -2948,16 +2948,16 @@ DECLARE
 BEGIN
   -- Guard 1: Only validate when entity_type is 'TRADE'.
 ```
-SECURITY DEFINER ✅, search_path=public ✅, RETURNS trigger ✅
+SECURITY DEFINER âœ…, search_path=public âœ…, RETURNS trigger âœ…
 
 ### Ledger Sync
 
 ```
 pnpm -C server exec prisma migrate resolve --applied 20260307000000_g017_day4_pending_approvals_trade_fk_hardening
-→ Migration 20260307000000_g017_day4_pending_approvals_trade_fk_hardening marked as applied.
+â†’ Migration 20260307000000_g017_day4_pending_approvals_trade_fk_hardening marked as applied.
 ```
 
-### Pending Migrations AFTER — 5 pending
+### Pending Migrations AFTER â€” 5 pending
 
 ```
 20260302000000_g021_maker_checker_core
@@ -2967,26 +2967,26 @@ pnpm -C server exec prisma migrate resolve --applied 20260307000000_g017_day4_pe
 20260306000000_g017_trades_domain
 ```
 
-`20260307000000_g017_day4_pending_approvals_trade_fk_hardening` removed from pending ✅
+`20260307000000_g017_day4_pending_approvals_trade_fk_hardening` removed from pending âœ…
 
 ### Next Steps (planning)
 
-- `20260306000000_g017_trades_domain`: trades + trade_events tables confirmed present in DB (GOVERNANCE-SYNC-014 existence proof); only ledger-sync needed — next TECS
+- `20260306000000_g017_trades_domain`: trades + trade_events tables confirmed present in DB (GOVERNANCE-SYNC-014 existence proof); only ledger-sync needed â€” next TECS
 - `20260302000000_g021_maker_checker_core`, `20260303000000_g022_escalation_core`, `20260304000000_gatetest003_audit_logs_admin_select`, `20260305000000_g023_reasoning_logs`: each needs existence proof + apply/sync per TECS in timestamp order
 
 ### Gap Register Update
 
-G-017 row updated: added commit `bdb9ab7` + **Day4 FK Hardening DB Applied ✅ (GOVERNANCE-SYNC-015, 2026-02-28)** with function/trigger proof, tgrelid, tgenabled, DO block PASS note, ledger sync confirmation.
+G-017 row updated: added commit `bdb9ab7` + **Day4 FK Hardening DB Applied âœ… (GOVERNANCE-SYNC-015, 2026-02-28)** with function/trigger proof, tgrelid, tgenabled, DO block PASS note, ledger sync confirmation.
 
 ---
 
-## GOVERNANCE-SYNC-016 — G-017 trades_domain ledger-sync only (resolve-only) (2026-02-28)
+## GOVERNANCE-SYNC-016 â€” G-017 trades_domain ledger-sync only (resolve-only) (2026-02-28)
 
 ### Scope
 
 Ledger-sync only for `20260306000000_g017_trades_domain`. Tables `public.trades` and `public.trade_events` confirmed present in Supabase dev DB (applied out-of-band previously as the G-017 Day1 domain schema). No psql apply executed. No SQL changes. Only `prisma migrate resolve --applied`.
 
-### Pending Migrations BEFORE — 5 pending
+### Pending Migrations BEFORE â€” 5 pending
 
 ```
 20260302000000_g021_maker_checker_core
@@ -2998,7 +2998,7 @@ Ledger-sync only for `20260306000000_g017_trades_domain`. Tables `public.trades`
 
 ### DB Existence Proof (BEFORE resolve)
 
-**Proof A — to_regclass:**
+**Proof A â€” to_regclass:**
 ```
  trades_table | trade_events_table
 --------------+--------------------
@@ -3006,9 +3006,9 @@ Ledger-sync only for `20260306000000_g017_trades_domain`. Tables `public.trades`
 (1 row)
 ```
 
-Both tables present ✅ — stop-loss passed; proceed with resolve.
+Both tables present âœ… â€” stop-loss passed; proceed with resolve.
 
-**Proof B — row counts (dev env):**
+**Proof B â€” row counts (dev env):**
 ```
  trades_count | trade_events_count
 --------------+--------------------
@@ -3016,16 +3016,16 @@ Both tables present ✅ — stop-loss passed; proceed with resolve.
 (1 row)
 ```
 
-Row counts 0 — vacuous data proof (structure proven by prior existence proofs and constraints).
+Row counts 0 â€” vacuous data proof (structure proven by prior existence proofs and constraints).
 
 ### Ledger Sync
 
 ```
 pnpm -C server exec prisma migrate resolve --applied 20260306000000_g017_trades_domain
-→ Migration 20260306000000_g017_trades_domain marked as applied.
+â†’ Migration 20260306000000_g017_trades_domain marked as applied.
 ```
 
-### Pending Migrations AFTER — 4 pending
+### Pending Migrations AFTER â€” 4 pending
 
 ```
 20260302000000_g021_maker_checker_core
@@ -3034,7 +3034,7 @@ pnpm -C server exec prisma migrate resolve --applied 20260306000000_g017_trades_
 20260305000000_g023_reasoning_logs
 ```
 
-`20260306000000_g017_trades_domain` removed from pending ✅
+`20260306000000_g017_trades_domain` removed from pending âœ…
 
 ### Next Steps (planning)
 
@@ -3045,11 +3045,11 @@ pnpm -C server exec prisma migrate resolve --applied 20260306000000_g017_trades_
 
 ### Gap Register Update
 
-G-017 row updated: added **trades_domain Ledger-Sync ✅ (GOVERNANCE-SYNC-016, 2026-02-28)** noting resolve-only, to_regclass proof, out-of-band apply origin.
+G-017 row updated: added **trades_domain Ledger-Sync âœ… (GOVERNANCE-SYNC-016, 2026-02-28)** noting resolve-only, to_regclass proof, out-of-band apply origin.
 
 ---
 
-## GOVERNANCE-SYNC-017 — G-021 Maker-Checker Core Ledger Sync (Resolve-Only)
+## GOVERNANCE-SYNC-017 â€” G-021 Maker-Checker Core Ledger Sync (Resolve-Only)
 
 **Date:** 2026-03-01
 **Migration:** `20260302000000_g021_maker_checker_core`
@@ -3060,14 +3060,14 @@ G-017 row updated: added **trades_domain Ledger-Sync ✅ (GOVERNANCE-SYNC-016, 2
 
 Migration file `server/prisma/migrations/20260302000000_g021_maker_checker_core/migration.sql` (513 lines) fully read.
 
-- §4 `prevent_approval_signature_modification()`: single-line `RAISE EXCEPTION` — **parse-safe ✅**
-- §6 `check_maker_checker_separation()`: format-string `RAISE EXCEPTION 'msg', var USING ERRCODE` — **parse-safe ✅**
-- §10 VERIFY DO block: all `RAISE EXCEPTION`/`RAISE NOTICE` use single string literals — **no adjacent-literal hazards ✅**
-- Non-ASCII box-drawing chars in RAISE NOTICE: safe with `PGCLIENTENCODING=UTF8` ✅
+- Â§4 `prevent_approval_signature_modification()`: single-line `RAISE EXCEPTION` â€” **parse-safe âœ…**
+- Â§6 `check_maker_checker_separation()`: format-string `RAISE EXCEPTION 'msg', var USING ERRCODE` â€” **parse-safe âœ…**
+- Â§10 VERIFY DO block: all `RAISE EXCEPTION`/`RAISE NOTICE` use single string literals â€” **no adjacent-literal hazards âœ…**
+- Non-ASCII box-drawing chars in RAISE NOTICE: safe with `PGCLIENTENCODING=UTF8` âœ…
 
-**No parse hazards found. Migration parse-safe — no file patch required.**
+**No parse hazards found. Migration parse-safe â€” no file patch required.**
 
-### Pending Migrations BEFORE — 4 pending
+### Pending Migrations BEFORE â€” 4 pending
 
 ```
 20260302000000_g021_maker_checker_core
@@ -3078,7 +3078,7 @@ Migration file `server/prisma/migrations/20260302000000_g021_maker_checker_core/
 
 ### DB Existence Proof (BEFORE resolve)
 
-**Proof — to_regclass + fn + tg counts:**
+**Proof â€” to_regclass + fn + tg counts:**
 ```
         pa         |         as2
 -------------------+---------------------
@@ -3096,14 +3096,14 @@ Migration file `server/prisma/migrations/20260302000000_g021_maker_checker_core/
 (1 row)
 ```
 
-Both tables present ✅ — fn_count=2 ✅ — tg_count=2 ✅  
-Pre-flight guard blocks re-apply (pending_approvals already exists) → resolve-only path.
+Both tables present âœ… â€” fn_count=2 âœ… â€” tg_count=2 âœ…  
+Pre-flight guard blocks re-apply (pending_approvals already exists) â†’ resolve-only path.
 
 ### Ledger Sync
 
 ```
 pnpm exec prisma migrate resolve --applied 20260302000000_g021_maker_checker_core
-→ Migration 20260302000000_g021_maker_checker_core marked as applied.
+â†’ Migration 20260302000000_g021_maker_checker_core marked as applied.
 ```
 
 ### Post-Apply Proofs
@@ -3120,7 +3120,7 @@ pnpm exec prisma migrate resolve --applied 20260302000000_g021_maker_checker_cor
  pending_approvals   | t      | t
 (2 rows)
 
-            indexname            | (indexdef — partial unique on REQUESTED+ESCALATED)
+            indexname            | (indexdef â€” partial unique on REQUESTED+ESCALATED)
 ---------------------------------+-----------------------------------------------------
  pending_approvals_active_unique | CREATE UNIQUE INDEX ... WHERE status = ANY (ARRAY['REQUESTED','ESCALATED'])
 (1 row)
@@ -3132,14 +3132,14 @@ pnpm exec prisma migrate resolve --applied 20260302000000_g021_maker_checker_cor
 (2 rows)
 ```
 
-- 10 RLS policies ✅ (5 pending_approvals + 5 approval_signatures)
-- ENABLE+FORCE RLS: t/t on both tables ✅
-- `pending_approvals_active_unique` partial index ✅ (D-021-B)
-- Row counts: 0/0 ✅ (vacuous — structure proven by constraints/triggers/RLS)
-- 2 trigger functions confirmed ✅ (`prevent_approval_signature_modification`, `check_maker_checker_separation`)
-- 2 triggers on `approval_signatures` confirmed ✅ (immutability + D-021-C)
+- 10 RLS policies âœ… (5 pending_approvals + 5 approval_signatures)
+- ENABLE+FORCE RLS: t/t on both tables âœ…
+- `pending_approvals_active_unique` partial index âœ… (D-021-B)
+- Row counts: 0/0 âœ… (vacuous â€” structure proven by constraints/triggers/RLS)
+- 2 trigger functions confirmed âœ… (`prevent_approval_signature_modification`, `check_maker_checker_separation`)
+- 2 triggers on `approval_signatures` confirmed âœ… (immutability + D-021-C)
 
-### Pending Migrations AFTER — 3 pending
+### Pending Migrations AFTER â€” 3 pending
 
 ```
 20260303000000_g022_escalation_core
@@ -3147,15 +3147,15 @@ pnpm exec prisma migrate resolve --applied 20260302000000_g021_maker_checker_cor
 20260305000000_g023_reasoning_logs
 ```
 
-`20260302000000_g021_maker_checker_core` removed from pending ✅
+`20260302000000_g021_maker_checker_core` removed from pending âœ…
 
 ### Gap Register Update
 
-G-021 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-017, 2026-03-01)** noting resolve-only path, 10 RLS policies, FORCE RLS t/t, 2 triggers, D-021-B partial index, D-021-C maker≠checker enforcement.
+G-021 row updated: added **DB Applied âœ… (GOVERNANCE-SYNC-017, 2026-03-01)** noting resolve-only path, 10 RLS policies, FORCE RLS t/t, 2 triggers, D-021-B partial index, D-021-C makerâ‰ checker enforcement.
 
 ---
 
-## GOVERNANCE-SYNC-018 — G-022 Escalation Core Ledger Sync (Resolve-Only)
+## GOVERNANCE-SYNC-018 â€” G-022 Escalation Core Ledger Sync (Resolve-Only)
 
 **Date:** 2026-02-28
 **Migration:** `20260303000000_g022_escalation_core`
@@ -3166,14 +3166,14 @@ G-021 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-017, 2026-03-01)** no
 
 Migration file `server/prisma/migrations/20260303000000_g022_escalation_core/migration.sql` (383 lines) fully read.
 
-- §1 Pre-flight guard: raises EXCEPTION if `escalation_events` already exists — confirms idempotency guard ✅
-- §3 fn `escalation_events_immutability()`: `RAISE EXCEPTION 'msg', OLD.id` — format string + var — **parse-safe ✅**
-- §5 fn `escalation_severity_upgrade_check()`: all `RAISE EXCEPTION` use format string + var pattern — **parse-safe ✅**
-- §8 GRANTS DO block: RAISE NOTICE strings contain em dash `—` (U+2014) — NOT a PL/pgSQL parse error; safe with `PGCLIENTENCODING=UTF8` ✅
-- §9 VERIFY DO block: single-literal ASCII RAISE NOTICE — **parse-safe ✅**
-- **No adjacent string literal `RAISE NOTICE 'a' 'b'` hazards found. Migration parse-safe — no file patch required.**
+- Â§1 Pre-flight guard: raises EXCEPTION if `escalation_events` already exists â€” confirms idempotency guard âœ…
+- Â§3 fn `escalation_events_immutability()`: `RAISE EXCEPTION 'msg', OLD.id` â€” format string + var â€” **parse-safe âœ…**
+- Â§5 fn `escalation_severity_upgrade_check()`: all `RAISE EXCEPTION` use format string + var pattern â€” **parse-safe âœ…**
+- Â§8 GRANTS DO block: RAISE NOTICE strings contain em dash `â€”` (U+2014) â€” NOT a PL/pgSQL parse error; safe with `PGCLIENTENCODING=UTF8` âœ…
+- Â§9 VERIFY DO block: single-literal ASCII RAISE NOTICE â€” **parse-safe âœ…**
+- **No adjacent string literal `RAISE NOTICE 'a' 'b'` hazards found. Migration parse-safe â€” no file patch required.**
 
-### Pending Migrations BEFORE — 3 pending
+### Pending Migrations BEFORE â€” 3 pending
 
 ```
 20260303000000_g022_escalation_core
@@ -3183,7 +3183,7 @@ Migration file `server/prisma/migrations/20260303000000_g022_escalation_core/mig
 
 ### DB Existence Proof (BEFORE resolve)
 
-**Proof — to_regclass + fn + tg counts:**
+**Proof â€” to_regclass + fn + tg counts:**
 ```
  escalation_events_table
 -------------------------
@@ -3201,14 +3201,14 @@ Migration file `server/prisma/migrations/20260303000000_g022_escalation_core/mig
 (1 row)
 ```
 
-`escalation_events` present ✅ — fn_count=2 ✅ — tg_count=2 ✅
-Pre-flight guard blocks re-apply (escalation_events already exists) → resolve-only path.
+`escalation_events` present âœ… â€” fn_count=2 âœ… â€” tg_count=2 âœ…
+Pre-flight guard blocks re-apply (escalation_events already exists) â†’ resolve-only path.
 
 ### Ledger Sync
 
 ```
 pnpm exec prisma migrate resolve --applied 20260303000000_g022_escalation_core
-→ Migration 20260303000000_g022_escalation_core marked as applied.
+â†’ Migration 20260303000000_g022_escalation_core marked as applied.
 ```
 
 ### Post-Apply Proofs
@@ -3262,28 +3262,28 @@ pnpm exec prisma migrate resolve --applied 20260303000000_g022_escalation_core
 ```
 
 All proofs GREEN:
-- ENABLE+FORCE RLS: t/t ✅
-- 4 RLS policies ✅ (tenant_select, admin_select, tenant_insert, admin_insert)
-- 5 indexes ✅ (pkey + entity_freeze + org_freeze + org_id + parent chain)
-- 2 triggers enabled=O ✅ (immutability BEFORE UPDATE/DELETE + D-022-A severity upgrade BEFORE INSERT)
-- Row count: 0 ✅ (vacuous — structure proven by RLS + triggers + indexes + constraints)
+- ENABLE+FORCE RLS: t/t âœ…
+- 4 RLS policies âœ… (tenant_select, admin_select, tenant_insert, admin_insert)
+- 5 indexes âœ… (pkey + entity_freeze + org_freeze + org_id + parent chain)
+- 2 triggers enabled=O âœ… (immutability BEFORE UPDATE/DELETE + D-022-A severity upgrade BEFORE INSERT)
+- Row count: 0 âœ… (vacuous â€” structure proven by RLS + triggers + indexes + constraints)
 
-### Pending Migrations AFTER — 2 pending
+### Pending Migrations AFTER â€” 2 pending
 
 ```
 20260304000000_gatetest003_audit_logs_admin_select
 20260305000000_g023_reasoning_logs
 ```
 
-`20260303000000_g022_escalation_core` removed from pending ✅
+`20260303000000_g022_escalation_core` removed from pending âœ…
 
 ### Gap Register Update
 
-G-022 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-018, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 4 RLS policies, 4 explicit indexes, D-022-A severity upgrade trigger, D-022-B org freeze via entity_type=ORG design confirmed.
+G-022 row updated: added **DB Applied âœ… (GOVERNANCE-SYNC-018, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 4 RLS policies, 4 explicit indexes, D-022-A severity upgrade trigger, D-022-B org freeze via entity_type=ORG design confirmed.
 
 ---
 
-## GOVERNANCE-SYNC-019 — GATE-TEST-003 audit_logs Admin Select Ledger Sync (Resolve-Only)
+## GOVERNANCE-SYNC-019 â€” GATE-TEST-003 audit_logs Admin Select Ledger Sync (Resolve-Only)
 
 **Date:** 2026-02-28
 **Migration:** `20260304000000_gatetest003_audit_logs_admin_select`
@@ -3295,13 +3295,13 @@ G-022 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-018, 2026-02-28)** no
 Migration file `server/prisma/migrations/20260304000000_gatetest003_audit_logs_admin_select/migration.sql` (183 lines) fully read.
 
 - Wrapped in explicit `BEGIN; ... COMMIT;` (not Prisma auto-transaction)
-- **No pre-flight EXCEPTION guard** — uses `DROP POLICY IF EXISTS` + `CREATE POLICY` (idempotent DDL)
+- **No pre-flight EXCEPTION guard** â€” uses `DROP POLICY IF EXISTS` + `CREATE POLICY` (idempotent DDL)
 - STEP 1: Drops + recreates `audit_logs_guard` RESTRICTIVE policy adding `OR current_setting('app.is_admin', true) = 'true'` predicate
 - STEP 2: Drops + recreates `audit_logs_admin_select` PERMISSIVE SELECT policy (`tenant_id IS NULL` rows, admin context only)
-- STEP 3 VERIFY DO block: all `RAISE EXCEPTION` use format-string + var pattern — **parse-safe ✅**; final `RAISE NOTICE` has single format string with `%` params — **parse-safe ✅**
-- **No adjacent string literal `RAISE NOTICE 'a' 'b'` hazards. No non-ASCII in RAISE strings. Migration parse-safe — no file patch required.**
+- STEP 3 VERIFY DO block: all `RAISE EXCEPTION` use format-string + var pattern â€” **parse-safe âœ…**; final `RAISE NOTICE` has single format string with `%` params â€” **parse-safe âœ…**
+- **No adjacent string literal `RAISE NOTICE 'a' 'b'` hazards. No non-ASCII in RAISE strings. Migration parse-safe â€” no file patch required.**
 
-### Pending Migrations BEFORE — 2 pending
+### Pending Migrations BEFORE â€” 2 pending
 
 ```
 20260304000000_gatetest003_audit_logs_admin_select
@@ -3310,7 +3310,7 @@ Migration file `server/prisma/migrations/20260304000000_gatetest003_audit_logs_a
 
 ### DB Existence Proof (BEFORE resolve)
 
-**Proof — audit_logs RLS flags + policies + guard is_admin predicate + admin_select count:**
+**Proof â€” audit_logs RLS flags + policies + guard is_admin predicate + admin_select count:**
 ```
   relname   | rls_on | force_rls
 ------------+--------+-----------
@@ -3338,10 +3338,10 @@ Migration file `server/prisma/migrations/20260304000000_gatetest003_audit_logs_a
 (1 row)
 ```
 
-- `audit_logs_admin_select` PERMISSIVE SELECT ✅ present
-- `audit_logs_guard` RESTRICTIVE with `has_admin_predicate=t` ✅
-- `admin_select_cnt = 1` ✅
-- 2 PERMISSIVE SELECT policies (`audit_logs_select_unified` + `audit_logs_admin_select`) ✅ matches VERIFY DO check 5
+- `audit_logs_admin_select` PERMISSIVE SELECT âœ… present
+- `audit_logs_guard` RESTRICTIVE with `has_admin_predicate=t` âœ…
+- `admin_select_cnt = 1` âœ…
+- 2 PERMISSIVE SELECT policies (`audit_logs_select_unified` + `audit_logs_admin_select`) âœ… matches VERIFY DO check 5
 
 **Decision: resolve-only (all policy objects present and correct).**
 
@@ -3349,20 +3349,20 @@ Migration file `server/prisma/migrations/20260304000000_gatetest003_audit_logs_a
 
 ```
 pnpm exec prisma migrate resolve --applied 20260304000000_gatetest003_audit_logs_admin_select
-→ Migration 20260304000000_gatetest003_audit_logs_admin_select marked as applied.
+â†’ Migration 20260304000000_gatetest003_audit_logs_admin_select marked as applied.
 ```
 
 ### Post-Apply Proofs
 
-**RLS flags (from existence proof above):** `rls_on=t, force_rls=t` ✅
+**RLS flags (from existence proof above):** `rls_on=t, force_rls=t` âœ…
 
 **Policies:** 6 total on `audit_logs`:
-- `audit_logs_guard` — RESTRICTIVE ALL (incl. is_admin predicate) ✅
-- `audit_logs_select_unified` — PERMISSIVE SELECT ✅
-- `audit_logs_admin_select` — PERMISSIVE SELECT (admin, tenant_id IS NULL) ✅
-- `audit_logs_insert_unified` — PERMISSIVE INSERT ✅
-- `audit_logs_no_update` — PERMISSIVE UPDATE ✅
-- `audit_logs_no_delete` — PERMISSIVE DELETE ✅
+- `audit_logs_guard` â€” RESTRICTIVE ALL (incl. is_admin predicate) âœ…
+- `audit_logs_select_unified` â€” PERMISSIVE SELECT âœ…
+- `audit_logs_admin_select` â€” PERMISSIVE SELECT (admin, tenant_id IS NULL) âœ…
+- `audit_logs_insert_unified` â€” PERMISSIVE INSERT âœ…
+- `audit_logs_no_update` â€” PERMISSIVE UPDATE âœ…
+- `audit_logs_no_delete` â€” PERMISSIVE DELETE âœ…
 
 **Row count:**
 ```
@@ -3371,23 +3371,23 @@ pnpm exec prisma migrate resolve --applied 20260304000000_gatetest003_audit_logs
  55
 (1 row)
 ```
-55 live rows ✅ (non-vacuous — audit events have been generated in dev environment)
+55 live rows âœ… (non-vacuous â€” audit events have been generated in dev environment)
 
-### Pending Migrations AFTER — 1 pending
+### Pending Migrations AFTER â€” 1 pending
 
 ```
 20260305000000_g023_reasoning_logs
 ```
 
-`20260304000000_gatetest003_audit_logs_admin_select` removed from pending ✅
+`20260304000000_gatetest003_audit_logs_admin_select` removed from pending âœ…
 
 ### Gap Register Update
 
-GATE-TEST-003 new row added to gap-register.md (between G-022 and G-023 in Schema Domain Buildout section): **DB Applied ✅ (GOVERNANCE-SYNC-019, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 6 policies on audit_logs, has_admin_predicate=t, 2 PERMISSIVE SELECT policies matching VERIFY check, 55 live audit rows.
+GATE-TEST-003 new row added to gap-register.md (between G-022 and G-023 in Schema Domain Buildout section): **DB Applied âœ… (GOVERNANCE-SYNC-019, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 6 policies on audit_logs, has_admin_predicate=t, 2 PERMISSIVE SELECT policies matching VERIFY check, 55 live audit rows.
 
 ---
 
-## GOVERNANCE-SYNC-020 — G-023 Reasoning Logs Ledger Sync (Resolve-Only)
+## GOVERNANCE-SYNC-020 â€” G-023 Reasoning Logs Ledger Sync (Resolve-Only)
 
 **Date:** 2026-02-28
 **Migration:** `20260305000000_g023_reasoning_logs`
@@ -3399,12 +3399,12 @@ GATE-TEST-003 new row added to gap-register.md (between G-022 and G-023 in Schem
 Migration file `server/prisma/migrations/20260305000000_g023_reasoning_logs/migration.sql` (300 lines) fully read.
 
 - Wrapped in explicit `BEGIN; ... COMMIT;`
-- **No EXCEPTION pre-flight guard** — all DDL uses `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `DROP TRIGGER IF EXISTS`, `DROP POLICY IF EXISTS` (fully idempotent)
-- §5 fn `reasoning_logs_immutability()`: `RAISE EXCEPTION '[E-023-IMMUTABLE] reasoning_logs rows are append-only...', OLD.id` — format string + var — **parse-safe ✅**
-- §8 VERIFY DO block: all `RAISE EXCEPTION 'G-023 FAIL: ...', var` — format string + var — **parse-safe ✅**; final `RAISE NOTICE` single format string with `%` params — **parse-safe ✅**
-- **No adjacent string literal hazards. No non-ASCII in RAISE strings. Migration parse-safe — no file patch required.**
+- **No EXCEPTION pre-flight guard** â€” all DDL uses `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `DROP TRIGGER IF EXISTS`, `DROP POLICY IF EXISTS` (fully idempotent)
+- Â§5 fn `reasoning_logs_immutability()`: `RAISE EXCEPTION '[E-023-IMMUTABLE] reasoning_logs rows are append-only...', OLD.id` â€” format string + var â€” **parse-safe âœ…**
+- Â§8 VERIFY DO block: all `RAISE EXCEPTION 'G-023 FAIL: ...', var` â€” format string + var â€” **parse-safe âœ…**; final `RAISE NOTICE` single format string with `%` params â€” **parse-safe âœ…**
+- **No adjacent string literal hazards. No non-ASCII in RAISE strings. Migration parse-safe â€” no file patch required.**
 
-### Pending Migrations BEFORE — 1 pending
+### Pending Migrations BEFORE â€” 1 pending
 
 ```
 20260305000000_g023_reasoning_logs
@@ -3412,7 +3412,7 @@ Migration file `server/prisma/migrations/20260305000000_g023_reasoning_logs/migr
 
 ### DB Existence Proof (BEFORE resolve)
 
-**Proof — table, column, RLS, policies, indexes, trigger:**
+**Proof â€” table, column, RLS, policies, indexes, trigger:**
 ```
  reasoning_logs_table
 ----------------------
@@ -3450,33 +3450,33 @@ Migration file `server/prisma/migrations/20260305000000_g023_reasoning_logs/migr
 (1 row)
 ```
 
-All objects present ✅ — Decision: **resolve-only**.
+All objects present âœ… â€” Decision: **resolve-only**.
 
 ### Ledger Sync
 
 ```
 pnpm exec prisma migrate resolve --applied 20260305000000_g023_reasoning_logs
-→ Migration 20260305000000_g023_reasoning_logs marked as applied.
+â†’ Migration 20260305000000_g023_reasoning_logs marked as applied.
 ```
 
 ### Post-Apply Proofs
 
-**RLS flags:** `rls_on=t, force_rls=t` ✅
+**RLS flags:** `rls_on=t, force_rls=t` âœ…
 
 **Policies (3 rows):**
-- `reasoning_logs_guard` — RESTRICTIVE ALL (fail-closed baseline: require_org_context OR bypass) ✅
-- `reasoning_logs_tenant_select` — PERMISSIVE SELECT (tenant_id = current_org_id OR bypass) ✅
-- `reasoning_logs_tenant_insert` — PERMISSIVE INSERT (require_org_context AND org match OR bypass) ✅
+- `reasoning_logs_guard` â€” RESTRICTIVE ALL (fail-closed baseline: require_org_context OR bypass) âœ…
+- `reasoning_logs_tenant_select` â€” PERMISSIVE SELECT (tenant_id = current_org_id OR bypass) âœ…
+- `reasoning_logs_tenant_insert` â€” PERMISSIVE INSERT (require_org_context AND org match OR bypass) âœ…
 
 **Indexes (4 on reasoning_logs):**
-- `reasoning_logs_pkey` ✅
-- `reasoning_logs_created_at_idx` ✅
-- `reasoning_logs_request_id_idx` ✅
-- `reasoning_logs_tenant_id_idx` ✅
+- `reasoning_logs_pkey` âœ…
+- `reasoning_logs_created_at_idx` âœ…
+- `reasoning_logs_request_id_idx` âœ…
+- `reasoning_logs_tenant_id_idx` âœ…
 
-**Trigger:** `trg_reasoning_logs_immutability` count=1 ✅ (BEFORE UPDATE OR DELETE; append-only; bypass_rls DELETE escape for test seed)
+**Trigger:** `trg_reasoning_logs_immutability` count=1 âœ… (BEFORE UPDATE OR DELETE; append-only; bypass_rls DELETE escape for test seed)
 
-**audit_logs.reasoning_log_id column:** col_exists=1 ✅ (nullable FK → reasoning_logs.id ON DELETE SET NULL)
+**audit_logs.reasoning_log_id column:** col_exists=1 âœ… (nullable FK â†’ reasoning_logs.id ON DELETE SET NULL)
 
 **Row counts:**
 ```
@@ -3490,20 +3490,20 @@ pnpm exec prisma migrate resolve --applied 20260305000000_g023_reasoning_logs
  5
 (1 row)
 ```
-23 live AI reasoning log entries ✅ (non-vacuous — AI events actively generated in dev)
-5 audit_log rows referencing reasoning_log_id ✅ (FK live and in use)
+23 live AI reasoning log entries âœ… (non-vacuous â€” AI events actively generated in dev)
+5 audit_log rows referencing reasoning_log_id âœ… (FK live and in use)
 
-### Pending Migrations AFTER — ZERO PENDING
+### Pending Migrations AFTER â€” ZERO PENDING
 
 ```
 Database schema is up to date!
 ```
 
-**🎉 MILESTONE: All 57 Prisma migrations are now ledger-synced. Zero pending migrations remain.**
+**ðŸŽ‰ MILESTONE: All 57 Prisma migrations are now ledger-synced. Zero pending migrations remain.**
 
-`20260305000000_g023_reasoning_logs` removed from pending ✅
+`20260305000000_g023_reasoning_logs` removed from pending âœ…
 
-### Ledger Sync Backlog Summary (GOVERNANCE-SYNC-011 → 020)
+### Ledger Sync Backlog Summary (GOVERNANCE-SYNC-011 â†’ 020)
 
 | GOVERNANCE-SYNC | Migration | Method |
 |---|---|---|
@@ -3521,11 +3521,11 @@ Database schema is up to date!
 
 ### Gap Register Update
 
-G-023 row updated: added **DB Applied ✅ (GOVERNANCE-SYNC-020, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 3 RLS policies, 4 indexes, immutability trigger, `audit_logs.reasoning_log_id` FK column live, 23 reasoning_logs rows + 5 audit_logs FK references. **MILESTONE: All 57 migrations ledger-synced.**
+G-023 row updated: added **DB Applied âœ… (GOVERNANCE-SYNC-020, 2026-02-28)** noting resolve-only path, FORCE RLS t/t, 3 RLS policies, 4 indexes, immutability trigger, `audit_logs.reasoning_log_id` FK column live, 23 reasoning_logs rows + 5 audit_logs FK references. **MILESTONE: All 57 migrations ledger-synced.**
 
 ---
 
-## GOVERNANCE-SYNC-021 — G-020 Runtime Enforcement Atomicity VALIDATED (2026-02-28)
+## GOVERNANCE-SYNC-021 â€” G-020 Runtime Enforcement Atomicity VALIDATED (2026-02-28)
 
 **Task:** G-020 Runtime Enforcement Atomicity Hardening  
 **Date:** 2026-02-28  
@@ -3540,7 +3540,7 @@ G-020 shipped a two-phase atomicity gap between `StateMachineService.transition(
 1. SM `transition()` wrote the lifecycle log inside its own internal `$transaction`
 2. Caller (TradeService / EscrowService) then wrote `entity.lifecycleStateId` in a **separate** `$transaction`
 
-If step 2 failed after step 1 succeeded, the audit log recorded the transition as APPLIED but the entity's `lifecycleStateId` remained at the old state — an inconsistent invariant visible to any downstream read.
+If step 2 failed after step 1 succeeded, the audit log recorded the transition as APPLIED but the entity's `lifecycleStateId` remained at the old state â€” an inconsistent invariant visible to any downstream read.
 
 ### Solution Architecture
 
@@ -3550,41 +3550,41 @@ If step 2 failed after step 1 succeeded, the audit log recorded the transition a
 | Atomic trade transition | `trade.g017.service.ts` | SM log INSERT + `trade.lifecycleStateId` UPDATE + `tradeEvent` INSERT all in ONE `this.db.$transaction` |
 | Atomic escrow transition | `escrow.service.ts` | SM log INSERT + `$executeRaw UPDATE escrow_accounts.lifecycle_state_id` all in ONE `this.db.$transaction` |
 | Dead code removal | `certification.g019.service.ts` | Permanently unreachable APPLIED branch removed (SM always returns `CERTIFICATION_LOG_DEFERRED` for entityType='CERTIFICATION'); G-023 will add handler |
-| Regression test T-15 | `trade.g017.test.ts` | When `trade.update` throws inside `$transaction`, `transitionTrade()` returns `DB_ERROR` — proves SM log + entity update share same tx boundary |
-| Regression test E-09 | `escrow.g018.day2.test.ts` | When `$executeRaw` throws inside `$transaction`, `transitionEscrow()` returns `DB_ERROR` — proves SM log + UPDATE share same tx boundary |
+| Regression test T-15 | `trade.g017.test.ts` | When `trade.update` throws inside `$transaction`, `transitionTrade()` returns `DB_ERROR` â€” proves SM log + entity update share same tx boundary |
+| Regression test E-09 | `escrow.g018.day2.test.ts` | When `$executeRaw` throws inside `$transaction`, `transitionEscrow()` returns `DB_ERROR` â€” proves SM log + UPDATE share same tx boundary |
 
 ### Files Changed (Allowlist)
 
 | File | Type |
 |------|------|
-| `server/src/services/stateMachine.service.ts` | MODIFIED — `opts?: { db?: PrismaClient }` param added; conditional log write |
-| `server/src/services/trade.g017.service.ts` | MODIFIED — Steps 6+7 atomicified |
-| `server/src/services/escrow.service.ts` | MODIFIED — Steps 6+7 atomicified |
-| `server/src/services/certification.g019.service.ts` | MODIFIED — dead APPLIED branch removed |
-| `server/src/services/trade.g017.test.ts` | MODIFIED — T-09 second arg added; T-15 added |
-| `server/src/services/escrow.g018.day2.test.ts` | MODIFIED — MockDb `$transaction` added; E-09 added |
+| `server/src/services/stateMachine.service.ts` | MODIFIED â€” `opts?: { db?: PrismaClient }` param added; conditional log write |
+| `server/src/services/trade.g017.service.ts` | MODIFIED â€” Steps 6+7 atomicified |
+| `server/src/services/escrow.service.ts` | MODIFIED â€” Steps 6+7 atomicified |
+| `server/src/services/certification.g019.service.ts` | MODIFIED â€” dead APPLIED branch removed |
+| `server/src/services/trade.g017.test.ts` | MODIFIED â€” T-09 second arg added; T-15 added |
+| `server/src/services/escrow.g018.day2.test.ts` | MODIFIED â€” MockDb `$transaction` added; E-09 added |
 
 ### Gates
 
 | Gate | Result |
 |------|--------|
-| `pnpm -C server run typecheck` | EXIT 0 ✅ |
-| `pnpm -C server run lint` | 0 errors (89 warnings, all pre-existing) ✅ |
-| `vitest run trade.g017.test.ts escrow.g018.day2.test.ts` | 24/24 passed (14+T-15 trade, 8+E-09 escrow) ✅ |
-| `vitest run tests/stateMachine.g020.test.ts` | 20/20 passed (no regressions) ✅ |
+| `pnpm -C server run typecheck` | EXIT 0 âœ… |
+| `pnpm -C server run lint` | 0 errors (89 warnings, all pre-existing) âœ… |
+| `vitest run trade.g017.test.ts escrow.g018.day2.test.ts` | 24/24 passed (14+T-15 trade, 8+E-09 escrow) âœ… |
+| `vitest run tests/stateMachine.g020.test.ts` | 20/20 passed (no regressions) âœ… |
 
 ### What Did NOT Change
 
-- Guardrails ordering (A/B/C) — unmodified
-- SM validation semantics (fromState, allowedTransition, escalation freeze) — `this.db` reads unchanged
-- PENDING_APPROVAL / DENIED / ESCALATION_REQUIRED behavior — unmodified
-- Prisma schema — no changes
-- Migrations — no new migrations
-- Certification SM behavior — SM still returns `CERTIFICATION_LOG_DEFERRED` (no functional change; dead code removed only)
+- Guardrails ordering (A/B/C) â€” unmodified
+- SM validation semantics (fromState, allowedTransition, escalation freeze) â€” `this.db` reads unchanged
+- PENDING_APPROVAL / DENIED / ESCALATION_REQUIRED behavior â€” unmodified
+- Prisma schema â€” no changes
+- Migrations â€” no new migrations
+- Certification SM behavior â€” SM still returns `CERTIFICATION_LOG_DEFERRED` (no functional change; dead code removed only)
 
 ### Gap Register Update
 
-G-020 row updated: commit `61d1a96` added; description expanded to include **Runtime Enforcement Atomicity CLOSED ✅ (GOVERNANCE-SYNC-021, 2026-02-28)**; two-phase atomicity gap, solution pattern, and gate results documented.
+G-020 row updated: commit `61d1a96` added; description expanded to include **Runtime Enforcement Atomicity CLOSED âœ… (GOVERNANCE-SYNC-021, 2026-02-28)**; two-phase atomicity gap, solution pattern, and gate results documented.
 
 | Sync # | Gap / Area | Type |
 |--------|-----------|------|
@@ -3593,35 +3593,35 @@ G-020 row updated: commit `61d1a96` added; description expanded to include **Run
 
 ---
 
-## GOVERNANCE-SYNC-022 � G-021 Runtime Enforcement CLOSED (2026-02-28)
+## GOVERNANCE-SYNC-022 ï¿½ G-021 Runtime Enforcement CLOSED (2026-02-28)
 
 ### Context / Symptom
 
 Three runtime enforcement gaps identified post-G-021 schema closure:
 
-1. **Trade PENDING_APPROVAL dead-end**: _makerChecker underscore param in TradeService discarded injection � no pending_approvals row written on PENDING_APPROVAL.
+1. **Trade PENDING_APPROVAL dead-end**: _makerChecker underscore param in TradeService discarded injection ï¿½ no pending_approvals row written on PENDING_APPROVAL.
 2. **Control-plane Escrow dead-end**: Control-plane escrow route had only GET endpoints; no transition endpoint existed to create pending_approvals rows via admin path.
-3. **Replay freeze skipped**: uildService() in internal makerChecker route omitted EscalationService � erifyAndReplay() freeze checks never ran (guarded by if (this.escalationService)).
+3. **Replay freeze skipped**: uildService() in internal makerChecker route omitted EscalationService ï¿½ erifyAndReplay() freeze checks never ran (guarded by if (this.escalationService)).
 
 ### Root Cause Summary
 
 | Gap | Root Cause |
 |-----|-----------|
 | Fix A (Trade MC) | _makerChecker underscore pattern discarded; no createApprovalRequest() call in PENDING_APPROVAL block |
-| Fix A2 (Trade routes) | Tenant + control trade routes passed only 3 args to TradeService � no MC 4th arg |
+| Fix A2 (Trade routes) | Tenant + control trade routes passed only 3 args to TradeService ï¿½ no MC 4th arg |
 | Fix B (CP Escrow) | Control-plane escrow route had no transition endpoint at all |
-| Fix C (Replay route) | uildService() omitted EscalationService � erifyAndReplay() freeze guard never activated |
+| Fix C (Replay route) | uildService() omitted EscalationService ï¿½ erifyAndReplay() freeze guard never activated |
 
 ### Fix Summary
 
-**Fix A** � TradeService constructor: _makerChecker renamed to private readonly makerChecker; PENDING_APPROVAL block calls createApprovalRequest(); pprovalId returned in result; 	rade.g017.types.ts gains pprovalId?: string.
+**Fix A** ï¿½ TradeService constructor: _makerChecker renamed to private readonly makerChecker; PENDING_APPROVAL block calls createApprovalRequest(); pprovalId returned in result; 	rade.g017.types.ts gains pprovalId?: string.
 
-**Fix A2** � Both trade routes (tenant + control) now construct MakerCheckerService and pass as 4th arg to TradeService; PENDING_APPROVAL response surfaces pprovalId.
+**Fix A2** ï¿½ Both trade routes (tenant + control) now construct MakerCheckerService and pass as 4th arg to TradeService; PENDING_APPROVAL response surfaces pprovalId.
 
-**Fix B** � 
+**Fix B** ï¿½ 
 outes/control/escrow.g018.ts gains POST /:escrowId/transition endpoint with MakerCheckerService injected into EscrowService; mirrors tenant escrow pattern; typed audit emitted atomically.
 
-**Fix C** � 
+**Fix C** ï¿½ 
 outes/internal/makerChecker.ts uildService() now constructs EscalationService and injects into both StateMachineService and MakerCheckerService.
 
 ### Proof Table
@@ -3646,8 +3646,8 @@ outes/internal/makerChecker.ts uildService() now constructs EscalationService a
 
 | Checkpoint | Status |
 |-----------|--------|
-| BEFORE (preflight) | 57 migrations, "Database schema is up to date!" � 0 pending ? |
-| AFTER (post-impl) | 57 migrations, "Database schema is up to date!" � 0 pending ? |
+| BEFORE (preflight) | 57 migrations, "Database schema is up to date!" ï¿½ 0 pending ? |
+| AFTER (post-impl) | 57 migrations, "Database schema is up to date!" ï¿½ 0 pending ? |
 
 No schema changes. No migrations added.
 
@@ -3655,14 +3655,14 @@ No schema changes. No migrations added.
 
 | File | Change Type |
 |------|------------|
-| server/src/services/trade.g017.service.ts | MODIFIED � Fix A |
-| server/src/services/trade.g017.types.ts | MODIFIED � approvalId? added |
-| server/src/routes/tenant/trades.g017.ts | MODIFIED � Fix A2 |
-| server/src/routes/control/trades.g017.ts | MODIFIED � Fix A2 |
-| server/src/routes/control/escrow.g018.ts | MODIFIED � Fix B |
-| server/src/routes/internal/makerChecker.ts | MODIFIED � Fix C |
-| server/src/services/trade.g017.test.ts | MODIFIED � T-G021-1 + T-G021-2 |
-| server/src/services/makerChecker.g021.test.ts | CREATED � T-G021-3 + T-G021-3b |
+| server/src/services/trade.g017.service.ts | MODIFIED ï¿½ Fix A |
+| server/src/services/trade.g017.types.ts | MODIFIED ï¿½ approvalId? added |
+| server/src/routes/tenant/trades.g017.ts | MODIFIED ï¿½ Fix A2 |
+| server/src/routes/control/trades.g017.ts | MODIFIED ï¿½ Fix A2 |
+| server/src/routes/control/escrow.g018.ts | MODIFIED ï¿½ Fix B |
+| server/src/routes/internal/makerChecker.ts | MODIFIED ï¿½ Fix C |
+| server/src/services/trade.g017.test.ts | MODIFIED ï¿½ T-G021-1 + T-G021-2 |
+| server/src/services/makerChecker.g021.test.ts | CREATED ï¿½ T-G021-3 + T-G021-3b |
 
 ### Gap Register Update
 
@@ -3720,7 +3720,7 @@ trade creation, state transitions, escrow operations, or maker-checker replays f
 sanctioned organisations. `gap-register.md` line 120: status `NOT STARTED`.
 
 ### Fix Summary
-**Step A — DB Migration**: `20260313000000_g024_sanctions_domain/migration.sql` adds
+**Step A â€” DB Migration**: `20260313000000_g024_sanctions_domain/migration.sql` adds
 `public.sanctions` table (13 columns, 4 CHECK constraints), 3 indexes (2 partial
 WHERE status='ACTIVE', 1 general), ENABLE+FORCE RLS, `sanctions_set_updated_at()`
 trigger, 2 RLS policies (RESTRICTIVE guard + admin SELECT), GRANT
@@ -3728,16 +3728,16 @@ SELECT/INSERT/UPDATE to texqtic_app, and two SECURITY DEFINER enforcement functi
 `public.is_org_sanctioned(UUID, SMALLINT)` and `public.is_entity_sanctioned(TEXT,
 UUID, SMALLINT)` with GRANT EXECUTE. DO-block verification confirms all objects present.
 
-**Step B — Prisma / access path**: `Sanction` model added to `schema.prisma` with
+**Step B â€” Prisma / access path**: `Sanction` model added to `schema.prisma` with
 FK to `organizations` and optional FK to `EscalationEvent`. Back-refs added.
 
-**Step C — SanctionsService** (`sanctions.service.ts`): `SanctionBlockError`
+**Step C â€” SanctionsService** (`sanctions.service.ts`): `SanctionBlockError`
 (code=`SANCTION_BLOCKED`) and `SanctionsService` with `checkOrgSanction` /
 `checkEntitySanction`. Both call SECURITY DEFINER functions via `$queryRaw`,
-bypassing tenant RLS — required for cross-tenant buyer/seller enforcement.
+bypassing tenant RLS â€” required for cross-tenant buyer/seller enforcement.
 Blocking threshold: severity >= 2. severity=1 (FRICTION) is non-blocking (G-024-A).
 
-**Step D — Injection at enforce points**:
+**Step D â€” Injection at enforce points**:
 | Service | Method | Enforcement |
 |---------|--------|-------------|
 | StateMachineService | transition() step 3.5a | checkOrgSanction + checkEntitySanction BEFORE G-022 freeze check |
@@ -3750,13 +3750,13 @@ Blocking threshold: severity >= 2. severity=1 (FRICTION) is non-blocking (G-024-
 MakerCheckerService.verifyAndReplay() calls transition() internally, any sanction
 imposed after the MAKER step will block the CHECKER replay. No special case needed.
 
-**Step E — Route wiring** (7 route files, all construction sites updated):
+**Step E â€” Route wiring** (7 route files, all construction sites updated):
 | File | Sites Updated |
 |------|--------------|
 | control/escrow.g018.ts | 3 |
 | control/settlement.ts | 2 |
 | control/trades.g017.ts | 1 |
-| internal/makerChecker.ts | 1 (buildService — replay-safe path) |
+| internal/makerChecker.ts | 1 (buildService â€” replay-safe path) |
 | tenant/certifications.g019.ts | 5 |
 | tenant/escrow.g018.ts | 5 |
 | tenant/trades.g017.ts | 2 |
@@ -3776,34 +3776,34 @@ imposed after the MAKER step will block the CHECKER replay. No special case need
 
 ### Pending Migrations
 | BEFORE | 0 (57 migrations applied, "Database schema is up to date!") |
-| AFTER  | 1 pending (20260313000000_g024_sanctions_domain — requires `pnpm -C server exec prisma migrate deploy` in prod with DIRECT_DATABASE_URL) |
+| AFTER  | 1 pending (20260313000000_g024_sanctions_domain â€” requires `pnpm -C server exec prisma migrate deploy` in prod with DIRECT_DATABASE_URL) |
 
 ### Files Changed
 | server/prisma/migrations/20260313000000_g024_sanctions_domain/migration.sql | CREATED |
-| server/prisma/schema.prisma | MODIFIED — Sanction model + back-refs |
+| server/prisma/schema.prisma | MODIFIED â€” Sanction model + back-refs |
 | server/src/services/sanctions.service.ts | CREATED |
-| server/src/services/sanctions.g024.test.ts | CREATED — T-G024-01..06 |
-| server/src/services/stateMachine.service.ts | MODIFIED — step 3.5a/b |
-| server/src/services/trade.g017.service.ts | MODIFIED — buyer+seller check |
-| server/src/services/certification.g019.service.ts | MODIFIED — org check |
-| server/src/services/escrow.service.ts | MODIFIED — create + RELEASE check |
-| server/src/routes/control/escrow.g018.ts | MODIFIED — 3 sites |
-| server/src/routes/control/settlement.ts | MODIFIED — 2 sites |
-| server/src/routes/control/trades.g017.ts | MODIFIED — 1 site |
-| server/src/routes/internal/makerChecker.ts | MODIFIED — buildService |
-| server/src/routes/tenant/certifications.g019.ts | MODIFIED — 5 sites |
-| server/src/routes/tenant/escrow.g018.ts | MODIFIED — 5 sites |
-| server/src/routes/tenant/trades.g017.ts | MODIFIED — 2 sites |
+| server/src/services/sanctions.g024.test.ts | CREATED â€” T-G024-01..06 |
+| server/src/services/stateMachine.service.ts | MODIFIED â€” step 3.5a/b |
+| server/src/services/trade.g017.service.ts | MODIFIED â€” buyer+seller check |
+| server/src/services/certification.g019.service.ts | MODIFIED â€” org check |
+| server/src/services/escrow.service.ts | MODIFIED â€” create + RELEASE check |
+| server/src/routes/control/escrow.g018.ts | MODIFIED â€” 3 sites |
+| server/src/routes/control/settlement.ts | MODIFIED â€” 2 sites |
+| server/src/routes/control/trades.g017.ts | MODIFIED â€” 1 site |
+| server/src/routes/internal/makerChecker.ts | MODIFIED â€” buildService |
+| server/src/routes/tenant/certifications.g019.ts | MODIFIED â€” 5 sites |
+| server/src/routes/tenant/escrow.g018.ts | MODIFIED â€” 5 sites |
+| server/src/routes/tenant/trades.g017.ts | MODIFIED â€” 2 sites |
 
 ### Gap Register Update
-G-024 row updated: status `NOT STARTED` → `VALIDATED`; commit `a133123` added;
+G-024 row updated: status `NOT STARTED` â†’ `VALIDATED`; commit `a133123` added;
 sanctions domain CLOSED (GOVERNANCE-SYNC-024, 2026-03-13).
 
 | 024 | G-024 Sanctions Domain | impl commit a133123 |
 
 ---
 
-## GOVERNANCE-SYNC-025 — OPS-ENV-001 Prisma Migration Env Hardening
+## GOVERNANCE-SYNC-025 â€” OPS-ENV-001 Prisma Migration Env Hardening
 
 Date: 2026-03-14
 Task ID: OPS-ENV-001
@@ -3816,74 +3816,74 @@ mismatch caused three consecutive production deploy blocks across the G-024
 migration cycle.
 
 ### Decision
-Option A — Standardize on `DIRECT_DATABASE_URL` (Prisma community convention).
+Option A â€” Standardize on `DIRECT_DATABASE_URL` (Prisma community convention).
 `MIGRATION_DATABASE_URL` retained as backward-compat alias in scripts only (with
 deprecation warning); it is NOT read by Prisma anymore.
 
 ### Files Changed
 | File | Change |
 | ---- | ------ |
-| server/prisma/schema.prisma | `directUrl = env("MIGRATION_DATABASE_URL")` → `env("DIRECT_DATABASE_URL")` |
+| server/prisma/schema.prisma | `directUrl = env("MIGRATION_DATABASE_URL")` â†’ `env("DIRECT_DATABASE_URL")` |
 | server/.env.example | Database section rewritten; two-URL pattern + endpoint type table documented |
-| server/scripts/prisma-env-preflight.ts | CREATED — validates DIRECT_DATABASE_URL, classifies endpoint, blocks TX_POOLER (exit 1) |
-| server/scripts/migrate-deploy.ts | CREATED — wrapper: loads .env, validates, injects env, runs `prisma migrate deploy` |
+| server/scripts/prisma-env-preflight.ts | CREATED â€” validates DIRECT_DATABASE_URL, classifies endpoint, blocks TX_POOLER (exit 1) |
+| server/scripts/migrate-deploy.ts | CREATED â€” wrapper: loads .env, validates, injects env, runs `prisma migrate deploy` |
 | server/package.json | Added `prisma:preflight` and `migrate:deploy:prod` scripts |
-| docs/ops/prisma-migrations.md | CREATED — canonical ops guide for Prisma migrations |
+| docs/ops/prisma-migrations.md | CREATED â€” canonical ops guide for Prisma migrations |
 
-### Proof (Phase 4 — All EXIT Codes Verified)
+### Proof (Phase 4 â€” All EXIT Codes Verified)
 | Scenario | Expected | Actual |
 | -------- | -------- | ------ |
-| DIRECT_DATABASE_URL missing | EXIT 1 | EXIT 1 ✅ |
-| TX pooler (aws-0-*:6543) | EXIT 1 | EXIT 1 ✅ |
-| Session pooler (aws-1-*:5432) | EXIT 0 | EXIT 0 ✅ |
-| Direct host (db.*.supabase.co:5432) | EXIT 0 | EXIT 0 ✅ |
+| DIRECT_DATABASE_URL missing | EXIT 1 | EXIT 1 âœ… |
+| TX pooler (aws-0-*:6543) | EXIT 1 | EXIT 1 âœ… |
+| Session pooler (aws-1-*:5432) | EXIT 0 | EXIT 0 âœ… |
+| Direct host (db.*.supabase.co:5432) | EXIT 0 | EXIT 0 âœ… |
 
-Typecheck: EXIT 0 ✅  
+Typecheck: EXIT 0 âœ…  
 No business logic changes. No migrations applied. No RLS change.
 
 ### Notes
-- `server/.env` (gitignored) key renamed: `MIGRATION_DATABASE_URL` → `DIRECT_DATABASE_URL` (OPS-ENV-002, 2026-03-01). One-cycle grace period in `migrate-deploy.ts` has expired.
-- G-024 production migration (`20260313000000_g024_sanctions_domain`) **APPLIED ✅** via `pnpm -C server migrate:deploy:prod` after OPS-ENV-002 key rename + OPS-DB-RECOVER-001 ledger fix (g006c stuck row, Path B). See GOVERNANCE-SYNC-026.
+- `server/.env` (gitignored) key renamed: `MIGRATION_DATABASE_URL` â†’ `DIRECT_DATABASE_URL` (OPS-ENV-002, 2026-03-01). One-cycle grace period in `migrate-deploy.ts` has expired.
+- G-024 production migration (`20260313000000_g024_sanctions_domain`) **APPLIED âœ…** via `pnpm -C server migrate:deploy:prod` after OPS-ENV-002 key rename + OPS-DB-RECOVER-001 ledger fix (g006c stuck row, Path B). See GOVERNANCE-SYNC-026.
 
 | OPS-ENV-001 | Prisma env var hardening | impl commits below |
 
 ---
 
-## GOVERNANCE-SYNC-026 — OPS-ENV-002 + OPS-DB-RECOVER-001: G-024 Production Deploy APPLIED
+## GOVERNANCE-SYNC-026 â€” OPS-ENV-002 + OPS-DB-RECOVER-001: G-024 Production Deploy APPLIED
 
 Date: 2026-03-01 (UTC)  
 Task IDs: OPS-ENV-002, OPS-DB-RECOVER-001  
 Status: VALIDATED
 
 ### Actions
-1. **OPS-ENV-002**: Renamed `MIGRATION_DATABASE_URL` → `DIRECT_DATABASE_URL` in `server/.env` (gitignored). Preflight: `DIRECT_DATABASE_URL`, SESSION_POOLER (aws-1-*:5432), EXIT 0.
-2. **OPS-DB-RECOVER-001**: Discovered stuck `_prisma_migrations` row for `20260223020000_g006c_rls_carts_consolidation` (`finished_at=NULL`, `applied_steps_count=0` from Mar-1 failed deploy). DB investigation confirmed all carts unified policies present in DB out-of-band → Path B. SQL: `UPDATE _prisma_migrations SET finished_at=NOW(), applied_steps_count=1 WHERE migration_name='20260223020000_g006c_rls_carts_consolidation' AND finished_at IS NULL AND rolled_back_at IS NULL` — 1 row affected.
-3. **Deploy**: `pnpm -C server migrate:deploy:prod` → SUCCESS. "Applying migration `20260313000000_g024_sanctions_domain`". "All migrations have been successfully applied."
+1. **OPS-ENV-002**: Renamed `MIGRATION_DATABASE_URL` â†’ `DIRECT_DATABASE_URL` in `server/.env` (gitignored). Preflight: `DIRECT_DATABASE_URL`, SESSION_POOLER (aws-1-*:5432), EXIT 0.
+2. **OPS-DB-RECOVER-001**: Discovered stuck `_prisma_migrations` row for `20260223020000_g006c_rls_carts_consolidation` (`finished_at=NULL`, `applied_steps_count=0` from Mar-1 failed deploy). DB investigation confirmed all carts unified policies present in DB out-of-band â†’ Path B. SQL: `UPDATE _prisma_migrations SET finished_at=NOW(), applied_steps_count=1 WHERE migration_name='20260223020000_g006c_rls_carts_consolidation' AND finished_at IS NULL AND rolled_back_at IS NULL` â€” 1 row affected.
+3. **Deploy**: `pnpm -C server migrate:deploy:prod` â†’ SUCCESS. "Applying migration `20260313000000_g024_sanctions_domain`". "All migrations have been successfully applied."
 4. **Post-deploy**: "Database schema is up to date!" (0 pending, 58 total migrations).
 
 ### Verification
 | Check | Result |
 | ----- | ------ |
-| `public.sanctions` table | EXISTS ✅ |
-| `relrowsecurity` + `relforcerowsecurity` | true / true ✅ |
-| `sanctions_guard` (RESTRICTIVE ALL) | present ✅ |
-| `sanctions_admin_select` (PERMISSIVE SELECT) | present ✅ |
-| `sanctions_pkey` | present ✅ |
-| `sanctions_active_org_severity_idx` | present ✅ |
-| `sanctions_active_entity_severity_idx` | present ✅ |
-| `sanctions_org_id_created_idx` | present ✅ |
-| `is_entity_sanctioned()` fn | present ✅ |
-| `is_org_sanctioned()` fn | present ✅ |
-| `sanctions_set_updated_at()` fn | present ✅ |
-| Row count | 0 (vacuous — structure proven by RLS + indexes + functions) |
-| `/health` | HTTP 200 ✅ |
+| `public.sanctions` table | EXISTS âœ… |
+| `relrowsecurity` + `relforcerowsecurity` | true / true âœ… |
+| `sanctions_guard` (RESTRICTIVE ALL) | present âœ… |
+| `sanctions_admin_select` (PERMISSIVE SELECT) | present âœ… |
+| `sanctions_pkey` | present âœ… |
+| `sanctions_active_org_severity_idx` | present âœ… |
+| `sanctions_active_entity_severity_idx` | present âœ… |
+| `sanctions_org_id_created_idx` | present âœ… |
+| `is_entity_sanctioned()` fn | present âœ… |
+| `is_org_sanctioned()` fn | present âœ… |
+| `sanctions_set_updated_at()` fn | present âœ… |
+| Row count | 0 (vacuous â€” structure proven by RLS + indexes + functions) |
+| `/health` | HTTP 200 âœ… |
 
 ### Notes
 - No tracked files modified. No new commits for OPS-ENV-002/OPS-DB-RECOVER-001 (env key rename is gitignored; ledger fix is DB-only).
-- `server/.env` key rename is gitignored — no repo trace. One-cycle grace period (legacy key fallback in `migrate-deploy.ts`) has now expired.
+- `server/.env` key rename is gitignored â€” no repo trace. One-cycle grace period (legacy key fallback in `migrate-deploy.ts`) has now expired.
 - g006c (`20260223020000_g006c_rls_carts_consolidation`) ledger-synced via Path B. All 4 carts unified policies + FORCE RLS already present in DB out-of-band, consistent with Wave 3 pattern.
-- G-024 full cycle COMPLETE: impl (`a133123`) → governance sync GOVERNANCE-SYNC-024 (`71cbc4b`) → OPS-ENV-001 GOVERNANCE-SYNC-025 (`6951c9f`, `a38644e`) → OPS-ENV-002 + OPS-DB-RECOVER-001 (this entry, no new commit).
-- gap-register.md updated: G-024 row — DB Migration APPLIED ✅; OPS-ENV-002 + OPS-DB-RECOVER-001 rows added to Ops section.
+- G-024 full cycle COMPLETE: impl (`a133123`) â†’ governance sync GOVERNANCE-SYNC-024 (`71cbc4b`) â†’ OPS-ENV-001 GOVERNANCE-SYNC-025 (`6951c9f`, `a38644e`) â†’ OPS-ENV-002 + OPS-DB-RECOVER-001 (this entry, no new commit).
+- gap-register.md updated: G-024 row â€” DB Migration APPLIED âœ…; OPS-ENV-002 + OPS-DB-RECOVER-001 rows added to Ops section.
 
 | OPS-ENV-002 | G-024 prod deploy complete | no commit (gitignored + ledger-only) |
 | OPS-DB-RECOVER-001 | g006c ledger recovery + G-024 deploy unblocked | no commit |
@@ -4012,7 +4012,8 @@ Wave 3 Tail Sprint -- PHASE B of G-006D/G-006C/RLS Consolidation driver.
 
 - pp.require_admin_context() repaired: realm mismatch fixed
 - Was: current_realm() = 'admin' (permanently FALSE in production)
-- Now: ealm='control' AND actor_id NOT NULL AND is_admin='true'
+- Now: 
+ealm='control' AND actor_id NOT NULL AND is_admin='true'
 - Realm vocabulary aligned: realm is plane identifier only, not capability grant
 - impersonation_sessions RLS is no longer dead-code
 - Migration: 20260301120000_ops_rls_admin_realm_fix -- applied via psql DIRECT_DATABASE_URL
@@ -4023,3 +4024,28 @@ Wave 3 Tail Sprint -- PHASE B of G-006D/G-006C/RLS Consolidation driver.
 - Commit 1: feat(ops): fix require_admin_context realm mismatch
 - Commit 2: governance: sync OPS-RLS-ADMIN-REALM-001 validation
 - Gap D-1: VALIDATED
+
+---
+
+## GOVERNANCE-SYNC-028 -- OPS-IMPERSONATION-RLS-001
+
+**Date:** 2026-03-01
+**Status:** COMPLETE
+
+- impersonation.service.ts now RLS-enforced via withAdminContext
+- raw BYPASSRLS path removed from all 3 functions:
+  - startImpersonation(): prisma. -> withAdminContext
+  - stopImpersonation(): prisma. -> withAdminContext
+  - getImpersonationStatus(): direct prisma.findUnique -> withAdminContext
+- All queries inside callbacks use tx (not direct prisma)
+- No nested transactions
+- No schema changes, no SQL changes, no policy changes
+- withAdminContext import added from lib/database-context.js
+- typecheck: EXIT 0
+- lint: 0 errors (104 pre-existing warnings, unchanged)
+- RLS verification (3 simulations):
+  - TestA: control+admin -> admin_ctx=t, bypass=f -> SELECT succeeds -> PASS
+  - TestB: tenant+nonadmin -> admin_ctx=f, bypass=f -> 0 rows (RESTRICTIVE guard filters) -> PASS
+  - TestC: control+nonadmin -> admin_ctx=f, bypass=f -> 0 rows (RESTRICTIVE guard filters) -> PASS
+  Note: PostgreSQL SELECT+RLS returns 0 rows (not 'permission denied') when RESTRICTIVE policy evaluates false. Correct behavior.
+- Gap D-4: VALIDATED
