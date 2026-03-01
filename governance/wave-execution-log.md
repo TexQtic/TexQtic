@@ -4002,3 +4002,24 @@ Wave 3 Tail Sprint -- PHASE B of G-006D/G-006C/RLS Consolidation driver.
 - The +1 lint warning (104 vs 103) is the `(tx: any)` parameter in `withAdminContext` -- identical to the pre-existing pattern for all other helpers in the file.
 
 | G-006C | Admin cart summaries canonical context + admin RLS select CLOSED | impl `6f673ad` | migration `20260314000000_g006c_admin_cart_summaries_admin_rls` |
+
+---
+
+## GOVERNANCE-SYNC-027 -- OPS-RLS-ADMIN-REALM-001
+
+**Date:** 2026-03-01
+**Status:** COMPLETE
+
+- pp.require_admin_context() repaired: realm mismatch fixed
+- Was: current_realm() = 'admin' (permanently FALSE in production)
+- Now: ealm='control' AND actor_id NOT NULL AND is_admin='true'
+- Realm vocabulary aligned: realm is plane identifier only, not capability grant
+- impersonation_sessions RLS is no longer dead-code
+- Migration: 20260301120000_ops_rls_admin_realm_fix -- applied via psql DIRECT_DATABASE_URL
+- Prisma ledger: synced via prisma migrate resolve --applied
+- Verification queries: all 3 simulations PASS (control+admin=true, tenant=false, nonadmin=false)
+- No policy surface changed beyond the function body
+- No TypeScript files modified
+- Commit 1: feat(ops): fix require_admin_context realm mismatch
+- Commit 2: governance: sync OPS-RLS-ADMIN-REALM-001 validation
+- Gap D-1: VALIDATED

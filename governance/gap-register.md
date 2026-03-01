@@ -187,7 +187,9 @@ Doctrine Version: v1.4
 
 ## 2. CRITICAL DB Vocabulary Mismatch — D-1 — MUST FIX BEFORE CONTINUING
 
-**Status: CRITICAL / BLOCKING — impersonation_sessions RLS permanently fail-closed**
+**Status: VALIDATED (realm mismatch fixed) — GOVERNANCE-SYNC-027**
+
+> ✅ Fixed 2026-03-01 via OPS-RLS-ADMIN-REALM-001. `app.require_admin_context()` now checks `realm='control'` + `is_admin='true'` + `actor_id NOT NULL`. impersonation_sessions RLS is no longer dead-code.
 
 ### The Mismatch
 | Layer | Value set | Source |
@@ -298,8 +300,40 @@ P2 — Remaining G-006C RLS consolidation waves
 
 | TECS ID | Title | Priority | Blocks | Notes |
 |---------|-------|---------|--------|-------|
-| **OPS-RLS-ADMIN-REALM-001** | Fix admin realm mismatch — `require_admin_context()` dead function | P0 | All control-plane RLS correctness; impersonation.service refactor | Aligns `realm` vocabulary with code; repairs impersonation session RLS |
+| **OPS-RLS-ADMIN-REALM-001** | Fix admin realm mismatch — `require_admin_context()` dead function | ✅ COMPLETE | All control-plane RLS correctness; impersonation.service refactor | Migration `20260301120000_ops_rls_admin_realm_fix` applied. GOVERNANCE-SYNC-027. |
 | **G-006C-AUDIT-LOGS-UNIFY-001** | audit_logs Option B consolidation + admin-view audit logging | P1 | D-3, D-6, D-7 | Single `audit_logs_select_unified` policy; fold admin arm; drop extra policy; add `writeAuditLog` to all GET /api/control/* read endpoints |
 | **OPS-IMPERSONATION-RLS-001** | Wire `impersonation.service` through `withAdminContext` (fix D-4) | P1 (after OPS-RLS-ADMIN-REALM-001) | Impersonation security correctness | Replace raw `prisma.$transaction` with RLS-enforced context in `startImpersonation` + `stopImpersonation` |
 | **G-006C-WAVE3-REMAINING** | Remaining Wave 3 RLS consolidation (carts, memberships, other tables) | P2 | — | Resume per wave-2-board.md after P0 + P1 complete |
 | **OPS-RLS-SUPERADMIN-001** | Introduce `app.is_superadmin` GUC + superadmin-specific policies | Future / Wave 4+ | Console planning | Distinct runtime capability for SuperAdmin beyond Platform Admin |
+
+---
+
+## 7. Validation Proof — OPS-RLS-ADMIN-REALM-001 (GOVERNANCE-SYNC-027)
+
+**Date:** 2026-03-01
+**Migration:** 20260301120000_ops_rls_admin_realm_fix
+**Prisma ledger:** marked applied via prisma migrate resolve --applied
+
+### Pre-apply function body (recorded)
+```sql
+SELECT app.current_realm() = 'admin'
+  AND app.current_actor_id() IS NOT NULL;
+```
+
+### Post-apply function body (confirmed)
+```sql
+SELECT
+    current_setting('app.realm', true) = 'control'
+    AND NULLIF(current_setting('app.actor_id', true), '') IS NOT NULL
+    AND current_setting('app.is_admin', true) = 'true';
+```
+
+### Simulation Results
+
+| Test | Realm | actor_id | is_admin | Expected | Result |
+|------|-------|----------|----------|----------|--------|
+| TEST2_control_admin | control | set | true | 	rue | ✅ 	 |
+| TEST3_tenant_admin | tenant | set | true | alse | ✅  |
+| TEST4_control_nonadmin | control | set | false | alse | ✅  |
+
+All 3 simulations PASS. D-1 closed.
