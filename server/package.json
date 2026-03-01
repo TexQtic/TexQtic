@@ -24,7 +24,9 @@
     "db:harden": "tsx prisma/apply-hardening.ts",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "ci:rls-proof": "tsx scripts/ci/rls-proof.ts"
+    "ci:rls-proof": "tsx scripts/ci/rls-proof.ts",
+    "prisma:preflight": "tsx scripts/prisma-env-preflight.ts",
+    "migrate:deploy:prod": "tsx scripts/migrate-deploy.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^10.0.1",
