@@ -4755,3 +4755,65 @@ Guard correctly passes when:
 - [x] CI workflow valid (on: pull_request + push to main)
 - [x] artifact artifacts/control-plane-manifest.json generated correctly
 - [x] Two atomic commits (impl + governance)
+
+---
+
+## GOVERNANCE-SYNC-036 — OPS-TENANT-ROLE-DIFFERENTIATION-B1-RECORD-001
+
+**Date:** 2026-03-02
+**Type:** Governance-only (no code changes, no migrations, no RLS changes)
+**TECS ID:** OPS-TENANT-ROLE-DIFFERENTIATION-B1-RECORD-001
+
+### Decision
+
+D-5 resolved by architectural decision **B1 — DB role-agnostic**.
+
+`app.roles` GUC is intentionally dormant for live requests. Role enforcement remains app-layer only. No database-level role differentiation will be introduced at this time.
+
+### Rationale
+
+| Factor | Assessment |
+|---|---|
+| App-layer chain fail-closed? | Yes — JWT verify → `getUserMembership()` (live DB hit) → `request.userRole` → route guard; no bypass path |
+| `app.roles` GUC plumbing exists? | Yes — `withDbContext` sets it when `context.roles` provided; `buildContextFromRequest` deliberately does not populate it |
+| Active threat model that B2 uniquely closes? | None identified |
+| RLS complexity cost of B2 | 3-4 weeks; new `WITH CHECK` per table x operation x role; full sim coverage required; permanent schema contract |
+| Option C guardrails in place (GOVERNANCE-SYNC-035)? | Yes — control-plane CI guard enforces write-audit coverage mechanically on every PR |
+
+### B2 Re-entry Condition
+
+Revisit B2 only if:
+1. A new write path is added that a `MEMBER` or `VIEWER` could reach at the DB layer without passing through the app-layer role guard, **AND**
+2. The gap cannot be closed by tightening the app-layer guard alone.
+
+### Gate Outcomes
+
+| Gate | Result |
+|---|---|
+| Gate 0 — Pre-implementation preflight | N/A — governance-only TECS |
+| Gate 1 — Plan confirmed (B1 decision) | Accepted by user 2026-03-02 |
+| Gate 2 — File allowlist respected | Only `gap-register.md` + `wave-execution-log.md` modified |
+| Gate 3 — No code / no migration / no RLS | Confirmed |
+| Gate 4 — D-5 status updated truthfully | MEDIUM -> RESOLVED (B1 — app-layer only) |
+| Gate 5 — B2 re-entry condition recorded | Documented in Role Model section + D-5 row |
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `governance/gap-register.md` | GOVERNANCE-SYNC-036 header prepended; D-5 row status -> RESOLVED (B1 — app-layer only) with B2 re-entry condition and decision rationale; Role Model Note expanded with architectural decision anchor and B2 re-entry trigger |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-036) |
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed (gap-register.md, wave-execution-log.md)
+- [x] No route files changed
+- [x] No middleware changed
+- [x] No database-context.ts changes
+- [x] No migrations / SQL / RLS changes
+- [x] No schema.prisma changes
+- [x] No new dependencies
+- [x] D-5 status updated: MEDIUM -> RESOLVED (B1 — app-layer only)
+- [x] B2 re-entry condition documented in both gap register and wave log
+- [x] app.roles dormancy explicitly recorded as architectural decision
+- [x] Single governance commit
