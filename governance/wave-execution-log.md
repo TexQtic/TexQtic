@@ -4477,3 +4477,96 @@ TypeScript typecheck: pnpm run typecheck EXIT 0 (zero errors)
 - [x] TypeScript typecheck EXIT 0
 - [ ] No schema.prisma changes
 - [ ] No middleware logic changes (logging calls only)
+
+
+---
+
+## GOVERNANCE-SYNC-033 — OPS-SUPERADMIN-CAPABILITY-001
+
+**Date:** 2026-03-02
+**Branch:** main
+**Commits:** feat(ops): add superadmin capability context helper / governance: sync OPS-SUPERADMIN-CAPABILITY-001 validation
+
+---
+
+### Gate 1 — Investigation Notes
+
+**Files examined (read-only):**
+
+| File | Finding |
+|------|---------|
+| server/src/types/index.ts:74 | AdminRole = 'SUPER_ADMIN' \| 'SUPPORT' \| 'ANALYST' — SUPER_ADMIN exists |
+| server/src/middleware/auth.ts:72-74 | dminAuthMiddleware sets equest.isAdmin, equest.adminId, equest.adminRole |
+| server/src/middleware/auth.ts:90 | equireAdminRole() exists but zero SUPER_ADMIN usages in control routes |
+| server/src/lib/database-context.ts | withAdminContext sets only pp.is_admin='true' (no superadmin flag) |
+| server/src/routes/control.ts:24-37 | Local withAdminContext wrapper (module-level, same pattern as db-context export) |
+
+**GUC audit (1B):**
+- pp.is_admin set ONLY in withAdminContext, withOrgAdminContext — never in tenant realm ✅
+- No code sets pp.is_admin outside admin context helpers ✅
+
+---
+
+### Gate 2 — Plan
+
+**New helper:** withSuperAdminContext(prismaClient, callback) in database-context.ts
+- Reuses ADMIN_SENTINEL_ID (no separate superadmin sentinel)
+- Builds DatabaseContext { orgId: sentinel, actorId: sentinel, realm: 'control' }
+- Calls withDbContext(...) which sets role + standard GUCs
+- Inside tx: sets pp.is_admin='true' AND pp.is_superadmin='true' (tx-local)
+- withDbContext unchanged; withAdminContext unchanged
+
+**Proof endpoint:** GET /api/control/whoami
+- Behind dminAuthMiddleware (inherited from parent addHook)
+- Returns: { adminId, adminRole, isSuperAdmin, dbFlagsPreview: { contextMode } }
+- No DB access; pure request data
+
+---
+
+### Gate 3 — Allowlist Diff
+
+| File | Change |
+|------|--------|
+| server/src/lib/database-context.ts | Added export async function withSuperAdminContext<T>(...) after withAdminContext |
+| server/src/routes/control.ts | Added GET /api/control/whoami proof endpoint before /system/health |
+| server/scripts/sim-superadmin-guc.sql | Verification sim script (not committed) |
+
+**Typecheck:** EXIT 0
+
+---
+
+### Gate 4 — DB Verification Sims
+
+All sims used: BEGIN; SET LOCAL ROLE texqtic_app; ... ROLLBACK; (no persistent writes)
+
+| Sim | realm | is_admin_true | is_superadmin_true | Result |
+|-----|-------|---------------|-------------------|--------|
+| A — Superadmin context | control | t | t | ✅ PASS |
+| B — Platform admin (no superadmin) | control | t | f | ✅ PASS |
+| C — Tenant context | tenant | f | f | ✅ PASS |
+
+psql EXIT:0
+
+---
+
+### Gate 5 — Governance
+
+- governance/gap-register.md: D-2 status updated HIGH → VALIDATED; OPS-SUPERADMIN-CAPABILITY-001 added to TECS sequence; Capability Vocabulary Anchor (Section 8) added
+- governance/wave-execution-log.md: this entry (GOVERNANCE-SYNC-033)
+
+---
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed (database-context.ts, control.ts, governance docs)
+- [x] No migrations / no SQL changes committed
+- [x] No RLS policy changes
+- [x] No renaming of pp.is_admin
+- [x] withDbContext unchanged
+- [x] withAdminContext does NOT set pp.is_superadmin
+- [x] Typecheck EXIT 0
+- [x] Lint EXIT 0 (warnings baseline)
+- [x] DB sims A/B/C recorded and PASS
+- [x] Two atomic commits (impl + governance)
+- [x] Pushed to origin/main
+- [x] Working tree clean

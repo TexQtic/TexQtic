@@ -258,7 +258,7 @@ Any policy that uses `app.require_admin_context()` as a predicate is permanently
 | ID | Gap | Severity | First identified |
 |----|-----|---------|-----------------|
 | D-1 | `app.require_admin_context()` always returns FALSE in production; `realm = 'admin'` never set; impersonation RLS dead-code | **CRITICAL** | 2026-03-01 investigation |
-| D-2 | `AdminRole.SUPER_ADMIN` exists in schema/seed but zero runtime differentiation from SUPPORT/ANALYST at RLS level | **HIGH** | 2026-03-01 investigation |
+| D-2 | `AdminRole.SUPER_ADMIN` exists in schema/seed but zero runtime differentiation from SUPPORT/ANALYST at RLS level | **VALIDATED — OPS-SUPERADMIN-CAPABILITY-001 / GOVERNANCE-SYNC-033** | 2026-03-01 investigation |
 | D-3 | All admin READ endpoints (`GET /api/control/*`) are unlogged — no `writeAuditLog` call on any of 9 GET handlers | **VALIDATED — OPS-CONTROL-READ-AUDIT-001 / GOVERNANCE-SYNC-032** | 2026-03-01 investigation |
 | D-4 | `impersonation.service` uses raw `prisma.$transaction` without `SET LOCAL ROLE texqtic_app` — operates as postgres BYPASSRLS superuser; RLS not enforced for impersonation writes | **VALIDATED (BYPASSRLS path removed) — GOVERNANCE-SYNC-028** | 2026-03-01 investigation |
 | D-5 | `MembershipRole` (OWNER/ADMIN/MEMBER/VIEWER) never flows to `app.roles` GUC; RLS treats all tenant users identically — role boundary is app-layer only | **MEDIUM** | 2026-03-01 investigation |
@@ -308,6 +308,7 @@ P2 — Remaining G-006C RLS consolidation waves
 | **G006C-ORDERS-GUARD-001** | orders + order_items: RESTRICTIVE guard (FOR ALL TO texqtic_app) + role normalization {public} → texqtic_app + admin arm preserved as `current_setting('app.is_admin')` (NOT bypass_enabled — confirmed non-equivalent in Gate 1) | ✅ COMPLETE | P0 gate | Migration `20260302000000_g006c_orders_guard_normalize` applied psql EXIT:0; DO block VERIFIER PASS; SIM1 tenant=org-scoped ✅; SIM2 control+nonadmin=0 rows ✅; SIM3 control+admin=4 rows cross-tenant ✅; Prisma ledger synced; GOVERNANCE-SYNC-030 |
 | **G006C-EVENT-LOGS-CLEANUP-001** | event_logs: DROP 2 orphan PERMISSIVE ALL deny policies (anon + authenticated) | ✅ COMPLETE | Pre-req: G006C-ORDERS-GUARD-001 COMPLETE ✅ | Migration `20260302010000_g006c_event_logs_cleanup` applied psql EXIT:0; DO block VERIFIER PASS; 0 PERMISSIVE ALL remain; guard {texqtic_app} intact; select+insert_unified intact; Prisma ledger synced; GOVERNANCE-SYNC-031 |
 | **OPS-CONTROL-READ-AUDIT-001** | Control-plane GET read auditing coverage (no SQL) — 14 GET handlers across 6 route files now emit `writeAuditLog(prisma, createAdminAudit(...))` on 200 success; action strings: `control.tenants.read`, `control.tenants.read_one`, `control.feature_flags.read`, `control.events.read`, `control.finance.payouts.read`, `control.compliance.requests.read`, `control.disputes.read`, `control.trades.read`, `control.escrows.read`, `control.escrows.read_one`, `control.certifications.read`, `control.certifications.read_one`, `control.escalations.read`, `control.traceability.nodes.read`, `control.traceability.edges.read`; audit_logs.read (`ADMIN_AUDIT_LOG_VIEW`) pre-existing; `/system/health` excluded (infrastructure) | ✅ COMPLETE | D-3 | Files: `control.ts`, `control/trades.g017.ts`, `control/escrow.g018.ts`, `control/certifications.g019.ts`, `control/escalation.g022.ts`, `admin/traceability.g016.ts`. Typecheck EXIT 0. Sim A: 2 rows confirmed. Sims B+C: 0 rows. GOVERNANCE-SYNC-032. |
+| **OPS-SUPERADMIN-CAPABILITY-001** | Superadmin capability flag + canonical DB context helper — `withSuperAdminContext` exported from `database-context.ts`; sets `app.is_admin='true'` + `app.is_superadmin='true'` (tx-local); no RLS policy changes; no renaming of `app.is_admin`; proof endpoint `GET /api/control/whoami` returns `adminRole`, `isSuperAdmin`, `contextMode` | ✅ COMPLETE | D-2 | Files: `server/src/lib/database-context.ts`, `server/src/routes/control.ts`. Typecheck EXIT 0. Lint EXIT 0. DB Sims A/B/C PASS. GOVERNANCE-SYNC-033. |
 | **G-006C-WAVE3-REMAINING** | Remaining Wave 3 RLS consolidation (carts, memberships, other tables) | P2 | — | Resume per wave-2-board.md after P0 + P1 complete |
 | **OPS-RLS-SUPERADMIN-001** | Introduce `app.is_superadmin` GUC + superadmin-specific policies | Future / Wave 4+ | Console planning | Distinct runtime capability for SuperAdmin beyond Platform Admin |
 
@@ -342,3 +343,24 @@ SELECT
 | TEST4_control_nonadmin | control | set | false | alse | ✅  |
 
 All 3 simulations PASS. D-1 closed.
+
+---
+
+## 8. Capability Vocabulary Anchor (OPS-SUPERADMIN-CAPABILITY-001 / GOVERNANCE-SYNC-033)
+
+**Established:** 2026-03-02
+
+Canonical vocabulary for TexQtic runtime authorization context:
+
+| Concept | GUC / field | Values | Notes |
+|---------|-------------|--------|-------|
+| **Plane / Realm** | `app.realm` | `tenant` \| `control` \| `system` \| `test` | Set by `withDbContext` via `DatabaseContext.realm` |
+| **Platform Admin flag** | `app.is_admin` | `'true'` only | Set by `withAdminContext` and `withSuperAdminContext`; checked by `_admin_all` RLS policies |
+| **Superadmin capability flag** | `app.is_superadmin` | `'true'` only | Set ONLY by `withSuperAdminContext`; tx-local; no RLS policies use this yet (future wave) |
+
+**Rules (non-negotiable):**
+- `withDbContext` MUST NOT set or clear `app.is_superadmin`
+- `withAdminContext` MUST NOT set `app.is_superadmin`
+- `app.is_admin` is NOT renamed in this TECS (rename deferred to future wave)
+- Superadmin is always a strict superset of Platform Admin (`is_admin=true AND is_superadmin=true`)
+
