@@ -5096,3 +5096,97 @@ GAP-RUV-004 (WL_ADMIN catalog stubs) and GAP-RUV-006 (order SM integration) rema
 - [x] GAP-RUV-001/002/003/005 rows added as new Revenue Unblock section in gap-register.md
 - [x] This entry (GOVERNANCE-SYNC-038) appended to wave-execution-log.md
 - [x] Single atomic governance commit
+
+---
+
+## GOVERNANCE-SYNC-039 — OPS-ORDER-LIFECYCLE-AUDIT-001 (2026-03-02)
+
+### Objective
+
+Deliver an order lifecycle audit trail at checkout without using the G-020 state machine, which is DB-constrained to `entity_type IN ('TRADE', 'ESCROW', 'CERTIFICATION')`. A structured lifecycle audit event is written to `audit_logs` via the existing `writeAuditLog` helper, providing operators with an explicit "order entered PAYMENT_PENDING" record.
+
+### Rationale for Partial Implementation
+
+G-020 `StateMachineService` cannot accept ORDER as an entity type:
+- `EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION'` — TypeScript type
+- `LifecycleState` schema has a DB-level `CHECK entity_type IN ('TRADE', 'ESCROW', 'CERTIFICATION')` constraint
+- No `order_lifecycle_logs` table exists
+- No ORDER lifecycle states exist in seed
+
+Full G-020 wiring requires a dedicated schema wave (OPS-ORDER-LIFECYCLE-SCHEMA-001). This TECS delivers operability within current guardrails.
+
+### Implementation
+
+**File changed:** `server/src/routes/tenant.ts`  
+**Impl commit:** `5e13fe5`
+
+Second `writeAuditLog` call added inside the `POST /tenant/checkout` `withDbContext` transaction, immediately after the existing `order.CHECKOUT_COMPLETED` audit log:
+
+```typescript
+await writeAuditLog(tx, {
+  realm: 'TENANT',
+  tenantId: dbContext.orgId,
+  actorType: 'USER',
+  actorId: userId ?? null,
+  action: 'order.lifecycle.PAYMENT_PENDING',
+  entity: 'order',
+  entityId: order.id,
+  metadataJson: {
+    fromState: null,
+    toState: 'PAYMENT_PENDING',
+    trigger: 'checkout.completed',
+    orderId: order.id,
+    cartId: cart.id,
+  },
+});
+```
+
+### Quality Gates
+
+- `pnpm -C server run typecheck` → EXIT 0 ✅
+- `pnpm -C server run lint` → EXIT 0 (0 errors, 105 warnings — all pre-existing) ✅
+- `git diff --name-only` (impl commit): `server/src/routes/tenant.ts` only ✅
+
+### Manual Validation Checklist
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Add catalog item, add to cart, POST /tenant/checkout | 201 response with orderId, status=PAYMENT_PENDING |
+| 2 | Query audit_logs WHERE action = 'order.CHECKOUT_COMPLETED' AND entity_id = orderId | 1 row present |
+| 3 | Query audit_logs WHERE action = 'order.lifecycle.PAYMENT_PENDING' AND entity_id = orderId | 1 row present |
+| 4 | Inspect metadataJson of lifecycle row | fromState=null, toState='PAYMENT_PENDING', trigger='checkout.completed', orderId= cartId= present |
+| 5 | Confirm existing order.CHECKOUT_COMPLETED row still present | Not replaced — two distinct audit rows per checkout |
+
+### Gap Register Updates
+
+| Gap ID | Previous Status | New Status | Notes |
+|--------|-----------------|------------|-------|
+| GAP-RUV-006 | NOT STARTED | PARTIAL (audit-only) | G-020 ORDER blocked by DB CHECK constraint; lifecycle event logged via audit_logs; re-entry: OPS-ORDER-LIFECYCLE-SCHEMA-001 |
+
+### Re-entry Condition
+
+GAP-RUV-006 may be promoted to VALIDATED only after OPS-ORDER-LIFECYCLE-SCHEMA-001 delivers:
+1. DB migration removing ORDER from LifecycleState CHECK exclusion (or adding a separate order_lifecycle_states pattern)
+2. `order_lifecycle_logs` table + RLS + Prisma model
+3. ORDER lifecycle states seeded (PAYMENT_PENDING, PAYMENT_RECEIVED, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+4. ORDER branch added to `StateMachineService.transition()`
+5. Checkout handler updated to call `stateMachineService.transition()` with entityType: 'ORDER'
+
+### Stop Condition
+
+✅ Both commits pushed. No further order SM or schema work without explicit new instruction.
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed: `server/src/routes/tenant.ts` (impl) + `governance/gap-register.md` + `governance/wave-execution-log.md` (governance)
+- [x] No stateMachine edits
+- [x] No schema / migrations / SQL / RLS changes
+- [x] No auth middleware changes
+- [x] No new dependencies
+- [x] No refactors
+- [x] Typecheck EXIT 0 · lint EXIT 0
+- [x] impl commit `5e13fe5` (tenant.ts only)
+- [x] GOVERNANCE-SYNC-039 header prepended to gap-register.md Last Updated line
+- [x] GAP-RUV-006 PARTIAL row added to gap-register.md in new OPS-ORDER-LIFECYCLE-AUDIT-001 section
+- [x] This entry (GOVERNANCE-SYNC-039) appended to wave-execution-log.md
+- [x] Single atomic governance commit
