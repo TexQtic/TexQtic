@@ -22,6 +22,7 @@ import { randomUUID } from 'node:crypto';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
+import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,7 @@ const adminTraceabilityRoutes: FastifyPluginAsync = async fastify => {
           },
         );
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.traceability.nodes.read', 'traceability_node', { filterOrgId: query.orgId ?? null, filterNodeType: query.nodeType ?? null, limit: query.limit, offset: query.offset }));
         return sendSuccess(reply, {
           rows,
           limit:  query.limit,
@@ -161,6 +163,7 @@ const adminTraceabilityRoutes: FastifyPluginAsync = async fastify => {
           },
         );
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.traceability.edges.read', 'traceability_edge', { filterOrgId: query.orgId ?? null, filterEdgeType: query.edgeType ?? null, filterFromNodeId: query.fromNodeId ?? null, filterToNodeId: query.toNodeId ?? null, limit: query.limit, offset: query.offset }));
         return sendSuccess(reply, {
           rows,
           limit:  query.limit,

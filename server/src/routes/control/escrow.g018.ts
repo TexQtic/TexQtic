@@ -21,7 +21,7 @@ import { randomUUID } from 'node:crypto';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
-import { writeAuditLog } from '../../lib/auditLog.js';
+import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 import { EscrowService } from '../../services/escrow.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
@@ -145,6 +145,7 @@ const controlEscrowRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, result.code, result.message, statusCode);
         }
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.escrows.read', 'escrow_account', { filterTenantId: query.tenantId ?? null, limit: query.limit, offset: query.offset, count: result.count }));
         return sendSuccess(reply, {
           escrows: result.escrows,
           count:   result.count,
@@ -197,6 +198,7 @@ const controlEscrowRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, result.code, result.message, statusCode);
         }
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.escrows.read_one', 'escrow_account', { escrowId }));
         return sendSuccess(reply, {
           escrow:             result.escrow,
           balance:            result.balance,

@@ -23,7 +23,7 @@ import { randomUUID } from 'node:crypto';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
-import { writeAuditLog } from '../../lib/auditLog.js';
+import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 import { TradeService } from '../../services/trade.g017.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
@@ -142,6 +142,7 @@ const controlTradesRoutes: FastifyPluginAsync = async fastify => {
           },
         );
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.trades.read', 'trade', { filterTenantId: query.tenantId ?? null, limit: query.limit, offset: query.offset, count: rows.length }));
         return sendSuccess(reply, { trades: rows, count: rows.length });
       } catch (err) {
         fastify.log.error({ err }, '[G-017] GET /control/trades error');

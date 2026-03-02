@@ -43,7 +43,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/control/tenants
    * List all tenants (admin only)
    */
-  fastify.get('/tenants', async (_request, reply) => {
+  fastify.get('/tenants', async (request, reply) => {
+    const adminId = request.adminId ?? 'unknown';
     const tenants = await withAdminContext(async tx => {
       return await tx.tenant.findMany({
         include: {
@@ -60,6 +61,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     });
 
+    await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read', 'tenant', { count: tenants.length }));
     return sendSuccess(reply, { tenants });
   });
 
@@ -69,6 +71,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/tenants/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const adminId = request.adminId ?? 'unknown';
 
     const tenant = await withAdminContext(async tx => {
       return await tx.tenant.findUnique({
@@ -99,6 +102,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     }
 
+    await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));
     return sendSuccess(reply, { tenant });
   });
 
@@ -157,11 +161,13 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * GET /api/control/feature-flags
    * List all feature flags (admin only)
    */
-  fastify.get('/feature-flags', async (_request, reply) => {
+  fastify.get('/feature-flags', async (request, reply) => {
+    const adminId = request.adminId ?? 'unknown';
     const flags = await prisma.featureFlag.findMany({
       orderBy: { key: 'asc' },
     });
 
+    await writeAuditLog(prisma, createAdminAudit(adminId, 'control.feature_flags.read', 'feature_flag', { count: flags.length }));
     return sendSuccess(reply, { flags });
   });
 
@@ -241,6 +247,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * Doctrine v1.4 Event Backbone read surface
    */
   fastify.get('/events', async (request, reply) => {
+    const adminId = request.adminId ?? 'unknown';
     try {
       // Query parameter validation
       const querySchema = z.object({
@@ -302,6 +309,14 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       // Compute next cursor (if more results exist)
       const nextCursor = events.length === limit ? events[events.length - 1].id : null;
 
+      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.events.read', 'event_log', {
+        filterTenantId: tenant_id ?? null,
+        filterEventName: event_name ?? null,
+        from: from ?? null,
+        to: to ?? null,
+        limit,
+        count: events.length,
+      }));
       return sendSuccess(reply, {
         events,
         count: events.length,
@@ -322,7 +337,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * List finance payout authority intents (admin only)
    * Backed by EventLog - returns payout-related authority decisions
    */
-  fastify.get('/finance/payouts', async (_request, reply) => {
+  fastify.get('/finance/payouts', async (request, reply) => {
+    const adminId = request.adminId ?? 'unknown';
     try {
       const payoutEvents: EventLog[] = await withAdminContext(async tx => {
         return await tx.eventLog.findMany({
@@ -348,6 +364,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         metadata: event.metadataJson,
       }));
 
+      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.finance.payouts.read', 'event_log', { count: payouts.length }));
       return sendSuccess(reply, { payouts });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Finance Payouts List] Error');
@@ -360,7 +377,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * List compliance request authority intents (admin only)
    * Backed by EventLog - returns compliance-related authority decisions
    */
-  fastify.get('/compliance/requests', async (_request, reply) => {
+  fastify.get('/compliance/requests', async (request, reply) => {
+    const adminId = request.adminId ?? 'unknown';
     try {
       const complianceEvents: EventLog[] = await withAdminContext(async tx => {
         return await tx.eventLog.findMany({
@@ -386,6 +404,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         metadata: event.metadataJson,
       }));
 
+      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.compliance.requests.read', 'event_log', { count: requests.length }));
       return sendSuccess(reply, { requests });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Compliance Requests List] Error');
@@ -398,7 +417,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * List dispute authority intents (admin only)
    * Backed by EventLog - returns dispute-related authority decisions
    */
-  fastify.get('/disputes', async (_request, reply) => {
+  fastify.get('/disputes', async (request, reply) => {
+    const adminId = request.adminId ?? 'unknown';
     try {
       const disputeEvents: EventLog[] = await withAdminContext(async tx => {
         return await tx.eventLog.findMany({
@@ -425,6 +445,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         metadata: event.metadataJson,
       }));
 
+      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.disputes.read', 'event_log', { count: disputes.length }));
       return sendSuccess(reply, { disputes });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Disputes List] Error');

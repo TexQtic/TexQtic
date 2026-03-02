@@ -33,7 +33,7 @@ import { sendSuccess, sendError, sendValidationError } from '../../utils/respons
 import { randomUUID } from 'node:crypto';
 import { withDbContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
-import { writeAuditLog } from '../../lib/auditLog.js';
+import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import type { PrismaClient } from '@prisma/client';
 
@@ -461,6 +461,7 @@ const controlEscalationRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, result.code, result.message, 500);
       }
 
+      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.escalations.read', 'escalation', { orgId: query.orgId, limit: query.limit, count: result.count }));
       return sendSuccess(reply, { escalations: result.rows, count: result.count });
     } catch (err) {
       fastify.log.error({ err }, '[G-022] GET /escalations error');

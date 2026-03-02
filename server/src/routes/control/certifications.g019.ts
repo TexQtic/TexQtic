@@ -20,6 +20,7 @@ import { randomUUID } from 'node:crypto';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import { prisma } from '../../db/prisma.js';
+import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -114,6 +115,7 @@ const controlCertificationRoutes: FastifyPluginAsync = async fastify => {
           },
         );
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.certifications.read', 'certification', { filterOrgId: query.orgId ?? null, filterStateKey: query.stateKey ?? null, limit: query.limit, offset: query.offset, count: rows.length }));
         return sendSuccess(reply, {
           certifications: rows.map(c => ({
             id:                c.id,
@@ -170,6 +172,7 @@ const controlCertificationRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, 'NOT_FOUND', `Certification ${id} not found`, 404);
         }
 
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.certifications.read_one', 'certification', { certId: id }));
         return sendSuccess(reply, {
           id:                cert.id,
           orgId:             cert.orgId,
