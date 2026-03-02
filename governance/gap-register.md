@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-02 (GOVERNANCE-SYNC-032 — OPS-CONTROL-READ-AUDIT-001 VALIDATED: 14 control-plane GET route handlers now emit exactly one `writeAuditLog` read-audit entry on 200 success; action strings follow `control.<domain>.read[_one]` convention; `ADMIN` realm, `actor_type=ADMIN`; Sim A: 2 audit rows confirmed in DB; Sims B+C: 0 rows on rejected auth; typecheck EXIT 0; no SQL changes; no migrations; 2 atomic commits)
+Last Updated: 2026-03-02 (GOVERNANCE-SYNC-035 — OPS-CONTROL-HARDENING-PHASE-2-001 VALIDATED: control-plane CI guardrails implemented; `scripts/control-plane-manifest.ts` + `scripts/control-plane-guard.ts` added; `.github/workflows/control-plane-guard.yml` added; `package.json` scripts `control:manifest` + `control:guard` added; guard EXIT 0 on main: 37 routes scanned, 17 mutations checked, 0 audit violations, 8/8 SUPER_ADMIN surfaces gated; artifact `artifacts/control-plane-manifest.json` emitted; no runtime changes; no DB changes; no migrations; no RLS changes; 2 atomic commits)
+(GOVERNANCE-SYNC-032 — OPS-CONTROL-READ-AUDIT-001 VALIDATED: 14 control-plane GET route handlers now emit exactly one `writeAuditLog` read-audit entry on 200 success; action strings follow `control.<domain>.read[_one]` convention; `ADMIN` realm, `actor_type=ADMIN`; Sim A: 2 audit rows confirmed in DB; Sims B+C: 0 rows on rejected auth; typecheck EXIT 0; no SQL changes; no migrations; 2 atomic commits)
 (GOVERNANCE-SYNC-030 — G006C-ORDERS-GUARD-001 VALIDATED: orders + order_items RESTRICTIVE guard added; role normalized {public} → texqtic_app; DO block VERIFIER PASS; 3 RLS sims PASS; Prisma ledger synced; migration `20260302000000_g006c_orders_guard_normalize`; admin arm preserved as current_setting('app.is_admin') — NOT replaced by bypass_enabled() per Gate 1 investigation)
 (GOVERNANCE-SYNC-021 — G-020 Runtime Enforcement Atomicity CLOSED; two-phase atomicity gap eliminated: SM lifecycle log INSERT + entity state UPDATE now share a single Prisma $transaction; opts.db shared-tx pattern added to StateMachineService.transition(); TradeService + EscrowService wired; dead CERTIFICATION APPLIED branch removed; atomicity regression tests T-15 + E-09 added; typecheck EXIT 0, lint 0 errors, 44/44 tests pass; impl commit 61d1a96)
 (GOVERNANCE-SYNC-015 — G-017 Day4 Pending Approvals FK Hardening DB Applied (env: Supabase dev); migration `20260307000000_g017_day4_pending_approvals_trade_fk_hardening` applied via psql (with parse-safe patch to adjacent-literal RAISE NOTICE); function `g017_enforce_pending_approvals_trade_entity_fk` + trigger `trg_g017_pending_approvals_trade_entity_fk` (BEFORE INSERT OR UPDATE ON pending_approvals, SECURITY DEFINER, tgenabled=O) both confirmed present; DO block 5-check VERIFY PASS; Prisma ledger synced via resolve --applied; migration file also patched for parse-safety (impl commit `bdb9ab7`); pending after: 5 migrations)
@@ -311,6 +312,7 @@ P2 — Remaining G-006C RLS consolidation waves
 | **OPS-CONTROL-READ-AUDIT-001** | Control-plane GET read auditing coverage (no SQL) — 14 GET handlers across 6 route files now emit `writeAuditLog(prisma, createAdminAudit(...))` on 200 success; action strings: `control.tenants.read`, `control.tenants.read_one`, `control.feature_flags.read`, `control.events.read`, `control.finance.payouts.read`, `control.compliance.requests.read`, `control.disputes.read`, `control.trades.read`, `control.escrows.read`, `control.escrows.read_one`, `control.certifications.read`, `control.certifications.read_one`, `control.escalations.read`, `control.traceability.nodes.read`, `control.traceability.edges.read`; audit_logs.read (`ADMIN_AUDIT_LOG_VIEW`) pre-existing; `/system/health` excluded (infrastructure) | ✅ COMPLETE | D-3 | Files: `control.ts`, `control/trades.g017.ts`, `control/escrow.g018.ts`, `control/certifications.g019.ts`, `control/escalation.g022.ts`, `admin/traceability.g016.ts`. Typecheck EXIT 0. Sim A: 2 rows confirmed. Sims B+C: 0 rows. GOVERNANCE-SYNC-032. |
 | **OPS-SUPERADMIN-CAPABILITY-001** | Superadmin capability flag + canonical DB context helper — `withSuperAdminContext` exported from `database-context.ts`; sets `app.is_admin='true'` + `app.is_superadmin='true'` (tx-local); no RLS policy changes; no renaming of `app.is_admin`; proof endpoint `GET /api/control/whoami` returns `adminRole`, `isSuperAdmin`, `contextMode` | ✅ COMPLETE | D-2A (plumbing) | Files: `server/src/lib/database-context.ts`, `server/src/routes/control.ts`. Typecheck EXIT 0. Lint EXIT 0. DB Sims A/B/C PASS. GOVERNANCE-SYNC-033. D-2B (enforcement) remains OPEN — see OPS-SUPERADMIN-ENFORCEMENT-PLAN-001. |
 | **OPS-SUPERADMIN-ENFORCEMENT-001** | SUPER_ADMIN route-layer enforcement — `requireAdminRole('SUPER_ADMIN')` preHandler on 9 route registrations across 5 high-risk surfaces: impersonation start+stop, tenant provision, payout approve+reject, escalation upgrade+resolve, feature-flag PUT. Also closes tenant provision audit gap (Tier B: `control.tenants.provisioned`). No RLS changes. No schema changes. | ✅ COMPLETE | D-2B (enforcement) | Files: `admin/impersonation.ts`, `admin/tenantProvision.ts`, `control.ts`, `control/escalation.g022.ts`. Typecheck EXIT 0. Lint EXIT 0. GOVERNANCE-SYNC-034. |
+| **OPS-CONTROL-HARDENING-PHASE-2-001** | Control Plane Hardening Phase 2 — drift & audit CI guardrails. Static scan of all 10 control-plane route files; Guard 1: write-side audit enforcement (17 mutation routes, 0 violations); Guard 2: SUPER_ADMIN surface lock (8/8 surfaces confirmed gated); CI artifact `artifacts/control-plane-manifest.json` (37 routes). No runtime logic changes. No DB changes. No auth changes. No migrations. | ✅ COMPLETE | — | Files: `scripts/control-plane-manifest.ts`, `scripts/control-plane-guard.ts`, `.github/workflows/control-plane-guard.yml`, `package.json` (scripts only). Guard EXIT 0 on main. GOVERNANCE-SYNC-035. |
 | **G-006C-WAVE3-REMAINING** | Remaining Wave 3 RLS consolidation (carts, memberships, other tables) | P2 | — | Resume per wave-2-board.md after P0 + P1 complete |
 | **OPS-RLS-SUPERADMIN-001** | Introduce `app.is_superadmin` GUC + superadmin-specific policies | Future / Wave 4+ | Console planning | Distinct runtime capability for SuperAdmin beyond Platform Admin |
 
@@ -365,4 +367,71 @@ Canonical vocabulary for TexQtic runtime authorization context:
 - `withAdminContext` MUST NOT set `app.is_superadmin`
 - `app.is_admin` is NOT renamed in this TECS (rename deferred to future wave)
 - Superadmin is always a strict superset of Platform Admin (`is_admin=true AND is_superadmin=true`)
+
+---
+
+## 9. CI Guardrail Proof — OPS-CONTROL-HARDENING-PHASE-2-001 (GOVERNANCE-SYNC-035)
+
+**Date:** 2026-03-02  
+**Files added:** `scripts/control-plane-manifest.ts`, `scripts/control-plane-guard.ts`, `.github/workflows/control-plane-guard.yml`  
+**Runtime impact:** None — CI static analysis only. No route files changed. No auth middleware changed. No schema changed.
+
+### Guard 1 — Write-side Audit Enforcement
+
+Scans all mutation routes (POST|PUT|PATCH|DELETE) under `/api/control` for file-level audit token presence.
+
+| Route | Audit Evidence | Result |
+|-------|---------------|--------|
+| PUT /api/control/feature-flags/:param | writeAuditLog | ✅ |
+| POST /api/control/finance/payouts/:param/approve | writeAuthorityIntent | ✅ |
+| POST /api/control/finance/payouts/:param/reject | writeAuthorityIntent | ✅ |
+| POST /api/control/compliance/requests/:param/approve | writeAuthorityIntent | ✅ |
+| POST /api/control/compliance/requests/:param/reject | writeAuthorityIntent | ✅ |
+| POST /api/control/disputes/:param/resolve | writeAuthorityIntent | ✅ |
+| POST /api/control/disputes/:param/escalate | writeAuthorityIntent | ✅ |
+| POST /api/control/escalations | writeAuditLog | ✅ |
+| POST /api/control/escalations/:param/upgrade | writeAuditLog | ✅ |
+| POST /api/control/escalations/:param/resolve | writeAuditLog | ✅ |
+| POST /api/control/trades/:param/transition | writeAuditLog | ✅ |
+| POST /api/control/escrows/:param/transition | writeAuditLog | ✅ |
+| POST /api/control/settlements/preview | allowlisted (D-020-B: read-only POST) | ✅ |
+| POST /api/control/settlements | writeAuditLog | ✅ |
+| POST /api/control/impersonation/start | service-delegation (confirmed in impersonation.service) | ✅ |
+| POST /api/control/impersonation/stop | service-delegation (confirmed in impersonation.service) | ✅ |
+| POST /api/control/tenants/provision | writeAuditLog | ✅ |
+
+**Mutation routes checked: 17. Violations: 0.**
+
+### Guard 2 — SUPER_ADMIN Surface Lock
+
+| Surface | Source File | preHandler Guard | Result |
+|---------|-------------|-----------------|--------|
+| POST /api/control/impersonation/start | admin/impersonation.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| POST /api/control/impersonation/stop | admin/impersonation.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| POST /api/control/tenants/provision | admin/tenantProvision.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| POST /api/control/finance/payouts/:param/approve | control.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| POST /api/control/finance/payouts/:param/reject | control.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| POST /api/control/escalations/:param/upgrade | control/escalation.g022.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| POST /api/control/escalations/:param/resolve | control/escalation.g022.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+| PUT /api/control/feature-flags/:param | control.ts | requireAdminRole('SUPER_ADMIN') | ✅ |
+
+**Required surfaces: 8. Gated: 8. Violations: 0.**
+
+### Guard Run Output (on main)
+
+```
+guard EXIT 0
+Routes scanned: 37 across 10 files
+Mutation routes checked: 17
+Audit violations: 0
+SUPER_ADMIN violations: 0
+Artifact: artifacts/control-plane-manifest.json
+```
+
+### Allowlist Design Decisions
+
+| Category | Entry | Rationale |
+|----------|-------|----------|
+| Write-audit allowlist | `POST /api/control/settlements/preview` | D-020-B: balance derived from ledger SUM; zero DB mutations; zero state changes; POST used only for request body (not mutation semantics) |
+| Service-delegation | `server/src/routes/admin/impersonation.ts` | Audit written by `startImpersonation()` / `stopImpersonation()` service functions; confirmed at Phase 2 Review 2026-03-02 |
 

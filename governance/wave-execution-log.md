@@ -4496,8 +4496,12 @@ TypeScript typecheck: pnpm run typecheck EXIT 0 (zero errors)
 | File | Finding |
 |------|---------|
 | server/src/types/index.ts:74 | AdminRole = 'SUPER_ADMIN' \| 'SUPPORT' \| 'ANALYST' — SUPER_ADMIN exists |
-| server/src/middleware/auth.ts:72-74 | dminAuthMiddleware sets equest.isAdmin, equest.adminId, equest.adminRole |
-| server/src/middleware/auth.ts:90 | equireAdminRole() exists but zero SUPER_ADMIN usages in control routes |
+| server/src/middleware/auth.ts:72-74 | dminAuthMiddleware sets 
+equest.isAdmin, 
+equest.adminId, 
+equest.adminRole |
+| server/src/middleware/auth.ts:90 | 
+equireAdminRole() exists but zero SUPER_ADMIN usages in control routes |
 | server/src/lib/database-context.ts | withAdminContext sets only pp.is_admin='true' (no superadmin flag) |
 | server/src/routes/control.ts:24-37 | Local withAdminContext wrapper (module-level, same pattern as db-context export) |
 
@@ -4609,10 +4613,14 @@ Enforcement added as route-level preHandler: requireAdminRole('SUPER_ADMIN') —
 
 | File | Changes |
 |------|---------|
-| server/src/routes/admin/impersonation.ts | Import equireAdminRole; preHandler on start + stop |
-| server/src/routes/admin/tenantProvision.ts | Import equireAdminRole, prisma, writeAuditLog, createAdminAudit; preHandler on provision; added control.tenants.provisioned audit call (Tier B gap closure) |
-| server/src/routes/control.ts | Import equireAdminRole; preHandler on PUT /feature-flags/:key, POST /finance/payouts/:id/approve, POST /finance/payouts/:id/reject |
-| server/src/routes/control/escalation.g022.ts | Import equireAdminRole; preHandler on POST /:id/upgrade, POST /:id/resolve |
+| server/src/routes/admin/impersonation.ts | Import 
+equireAdminRole; preHandler on start + stop |
+| server/src/routes/admin/tenantProvision.ts | Import 
+equireAdminRole, prisma, writeAuditLog, createAdminAudit; preHandler on provision; added control.tenants.provisioned audit call (Tier B gap closure) |
+| server/src/routes/control.ts | Import 
+equireAdminRole; preHandler on PUT /feature-flags/:key, POST /finance/payouts/:id/approve, POST /finance/payouts/:id/reject |
+| server/src/routes/control/escalation.g022.ts | Import 
+equireAdminRole; preHandler on POST /:id/upgrade, POST /:id/resolve |
 | governance/gap-register.md | D-2B OPEN → VALIDATED; OPS-SUPERADMIN-ENFORCEMENT-001 added to TECS sequence |
 | governance/wave-execution-log.md | GOVERNANCE-SYNC-034 (this entry) |
 
@@ -4643,3 +4651,107 @@ o-non-null-assertion warnings; 0 errors; 0 new issues)
 - [x] Two atomic commits (impl + governance)
 - [x] Pushed to origin/main
 - [x] Working tree clean
+
+---
+
+## GOVERNANCE-SYNC-035 — OPS-CONTROL-HARDENING-PHASE-2-001
+
+**Date:** 2026-03-02
+**Branch:** main
+**TECS:** OPS-CONTROL-HARDENING-PHASE-2-001 — Control Plane Hardening Phase 2: Drift & Audit Guardrails
+
+---
+
+### Gate 0 — Preconditions
+
+- Branch: main
+- Working tree: clean (pre-existing unstaged `.vscode/settings.json` excluded; not allowlisted)
+- No DB access required (CI static analysis only)
+- TS runner: `tsx` via `pnpm --dir server exec tsx` (server devDependency `^4.19.2`, no new deps)
+
+---
+
+### Gate 1 — Phase 2 Review (Accepted)
+
+Phase 2 Review performed before implementation. Key findings confirmed:
+
+- **37 routes** scanned across 10 control-plane route files
+- **17 mutation routes** identified
+- **0 audit violations** (all mutations have writeAuditLog / writeAuthorityIntent / service-delegation)
+- **8/8 SUPER_ADMIN surfaces** confirmed gated with `requireAdminRole('SUPER_ADMIN')`
+- One known "POST-but-read-only" edge (`/settlements/preview`) correctly categorized for allowlist
+- One service-delegation case (`impersonation.ts`) correctly documented for bounded exemption
+
+---
+
+### Gate 2 — Allowlist Diff (confirmed)
+
+| File | Type | Change |
+|------|------|--------|
+| `scripts/control-plane-manifest.ts` | NEW | Route file scanner; exports `buildManifest()`; standalone prints JSON |
+| `scripts/control-plane-guard.ts` | NEW | CI entry point; runs Guard 1 + Guard 2; writes artifact; exits 0/1 |
+| `.github/workflows/control-plane-guard.yml` | NEW | CI workflow: `on: pull_request + push to main`; runs guard; uploads artifact |
+| `package.json` | MODIFIED | Scripts section only: `control:manifest` + `control:guard` added |
+| `governance/gap-register.md` | MODIFIED | GOVERNANCE-SYNC-035 header; OPS-CONTROL-HARDENING-PHASE-2-001 TECS row; Section 9 proof |
+| `governance/wave-execution-log.md` | MODIFIED | This entry (GOVERNANCE-SYNC-035) |
+
+No changes to: route files, auth middleware, database-context.ts, Prisma schema, SQL / migrations / RLS.
+
+---
+
+### Gate 3 — Guard Execution Proof
+
+```
+Command: pnpm --dir server exec tsx ../scripts/control-plane-guard.ts
+Exit code: 0
+
+Routes scanned: 37 across 10 files
+Mutation routes checked: 17
+  Audit violations: 0 ✅
+  SUPER_ADMIN violations: 0 ✅
+
+Artifact: artifacts/control-plane-manifest.json
+  _meta.guardResult: "PASS"
+  _meta.routeCount: 37
+  _meta.mutationRouteCount: 17
+  _meta.violationCount: 0
+```
+
+---
+
+### Gate 4 — Guard Invariant Verification
+
+Guard correctly fails (verified by code analysis) when:
+- `requireAdminRole('SUPER_ADMIN')` is removed from any of the 8 required preHandler blocks
+- `writeAuditLog` / `writeAuthorityIntent` token is removed from any non-allowlisted mutation route file
+- Any required SUPER_ADMIN surface is removed or path-renamed (not found in manifest → violation)
+
+Guard correctly passes when:
+- Audit confirmed via service delegation (impersonation.ts — bounded allowlist entry)
+- POST is semantically read-only (/settlements/preview — D-020-B documented allowlist)
+- GET/read routes (no write-audit requirement)
+
+---
+
+### Gate 5 — Governance
+
+- `governance/gap-register.md`: GOVERNANCE-SYNC-035 header; OPS-CONTROL-HARDENING-PHASE-2-001 added to TECS sequence (✅ COMPLETE); Section 9 — CI Guardrail Proof table added
+- `governance/wave-execution-log.md`: this entry (GOVERNANCE-SYNC-035)
+
+---
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed
+- [x] No route files changed
+- [x] No auth middleware changed
+- [x] No database-context.ts changes
+- [x] No migrations / SQL / RLS changes
+- [x] No schema.prisma changes
+- [x] No new runtime dependencies (tsx from existing server devDep)
+- [x] Guard EXIT 0 on current main
+- [x] Guard would EXIT 1 if SUPER_ADMIN preHandler removed (verified by code logic)
+- [x] Guard would EXIT 1 if audit token removed from mutation route file (verified by code logic)
+- [x] CI workflow valid (on: pull_request + push to main)
+- [x] artifact artifacts/control-plane-manifest.json generated correctly
+- [x] Two atomic commits (impl + governance)
