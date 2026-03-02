@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-02 (GOVERNANCE-SYNC-039 — OPS-ORDER-LIFECYCLE-AUDIT-001: GAP-RUV-006 PARTIAL — lifecycle audit trail added via audit_logs; G-020 ORDER blocked by DB CHECK constraint; commit 5e13fe5 · typecheck EXIT 0 · lint EXIT 0 · 1 file only)
+Last Updated: 2026-03-02 (GOVERNANCE-SYNC-040 — OPS-WLADMIN-PRODUCTS-MVP-001: G-WL-ADMIN Products panel VALIDATED — real catalog list + create form replacing WLStubPanel; catalog fetch useEffect extended to WL_ADMIN; commit 6a7bf41 · typecheck EXIT 0 · 0 new lint errors · App.tsx only)
+(GOVERNANCE-SYNC-039 — OPS-ORDER-LIFECYCLE-AUDIT-001: GAP-RUV-006 PARTIAL — lifecycle audit trail added via audit_logs; G-020 ORDER blocked by DB CHECK constraint; commit 5e13fe5 · typecheck EXIT 0 · lint EXIT 0 · 1 file only)
 (GOVERNANCE-SYNC-038 — OPS-ACTIVATE-JWT-FIX-001: GAP-RUV-001 invite URL action=invite param VALIDATED · GAP-RUV-002 /activate JWT issuance VALIDATED · GAP-RUV-003 tenant.type from response VALIDATED · GAP-RUV-005 industry onChange wired VALIDATED · commit 43ef9c6 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · 4 files only)
 (GOVERNANCE-SYNC-037 — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001: RU-001 invite activation wiring VALIDATED · RU-002 provision UI enablement VALIDATED · RU-003 catalog create API+service+frontend VALIDATED · S1 end-to-end happy path A–F confirmed · 5 commits: 3923069 fc66637 5d4c3bf 2cda383 739f6d8 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · no schema/RLS/auth changes)
 (GOVERNANCE-SYNC-036 — OPS-TENANT-ROLE-DIFFERENTIATION-B1-RECORD-001: D-5 resolved by architectural decision B1; DB role-agnostic by design; `app.roles` intentionally dormant for live requests; role enforcement remains app-layer only; no code changes; no migrations; no RLS changes; single governance commit)
@@ -209,6 +210,26 @@ Doctrine Version: v1.4
 | Gap ID | Description | Affected Files | Risk | Status | Commit(s) | Validation Proof |
 | ------ | ----------- | -------------- | ---- | ------ | --------- | ---------------- |
 | GAP-RUV-006 | **Order lifecycle audit trail — PARTIAL** — G-020 `StateMachineService` supports only `EntityType = 'TRADE' \| 'ESCROW' \| 'CERTIFICATION'`; `LifecycleState` schema has DB-level `CHECK entity_type IN ('TRADE', 'ESCROW', 'CERTIFICATION')` constraint; wiring ORDER into G-020 requires schema migration + new log table + seed data (all out-of-scope). **Interim:** structured lifecycle audit event `action: 'order.lifecycle.PAYMENT_PENDING'` added to checkout tx via existing `writeAuditLog`; recorded inside `withDbContext` transaction (rolls back atomically on failure); `metadataJson` contains `{ fromState: null, toState: 'PAYMENT_PENDING', trigger: 'checkout.completed', orderId, cartId }`. **Re-entry condition:** OPS-ORDER-LIFECYCLE-SCHEMA-001 (separate schema/migration wave) must add `ORDER` to `LifecycleState` CHECK constraint, create `order_lifecycle_logs` table, add ORDER lifecycle seed states, and extend `StateMachineService` before full G-020 wiring is possible. | `server/src/routes/tenant.ts` | 🟡 Operability | PARTIAL (audit-only) | `5e13fe5` | `audit_logs` row with `action='order.lifecycle.PAYMENT_PENDING'`, `entity='order'`, `entityId=<orderId>`, `metadataJson.fromState=null`, `metadataJson.toState='PAYMENT_PENDING'`, `metadataJson.trigger='checkout.completed'` ✅ · `order.CHECKOUT_COMPLETED` audit preserved ✅ · checkout tx rolls back atomically if lifecycle audit insert fails ✅ · typecheck EXIT 0 · lint EXIT 0 |
+
+---
+
+# WL ADMIN — OPS-WLADMIN-PRODUCTS-MVP-001
+
+**TECS:** OPS-WLADMIN-PRODUCTS-MVP-001  
+**Date:** 2026-03-02  
+**Commit:** `6a7bf41`  
+**Scope:** G-WL-ADMIN Products panel — VALIDATED  
+**Gates:** typecheck EXIT 0 (frontend) · lint: 0 new errors (pre-existing G-QG-001 debt in non-allowlisted files unchanged)  
+**Non-goals preserved:** No server/src changes · No schema/migrations/RLS changes · No new dependencies · Collections/Orders/Domains remain stub
+
+| Gap ID | Description | Affected Files | Risk | Status | Commit(s) | Validation Proof |
+| ------ | ----------- | -------------- | ---- | ------ | --------- | ---------------- |
+| G-WL-ADMIN (Products panel) | **WL_ADMIN Products panel was WLStubPanel** — OWNER/ADMIN WL users could not manage inventory from the Store Admin console; Products nav item rendered a "Coming Soon" stub. **Fix:** `case 'PRODUCTS'` in `renderWLAdminContent()` replaced with a real panel reusing shared catalog state (`products`, `catalogLoading`, `catalogError`), shared form state (`showAddItemForm`, `addItemFormData`, `addItemLoading`, `addItemError`), shared handler (`handleCreateItem`) and existing services (`getCatalogItems`, `createCatalogItem`). Catalog `useEffect` extended to fire on `appState === 'WL_ADMIN'`. Labels prefixed `wl-` to avoid DOM `id` conflicts with B2B panel inputs. 403 from API surfaced via `addItemError`. Collections/Orders/Domains remain WLStubPanel. | `App.tsx` | 🟡 Operability | **VALIDATED** | `6a7bf41` | A) WL OWNER → Products → Add Item form visible → create item → item appears in grid → `catalog.item.created` audit row written ✅ · B) Catalog loads on enter (useEffect fires for WL_ADMIN) ✅ · C) Empty state: "No products yet" message shown ✅ · D) Error state: API error text displayed ✅ · typecheck EXIT 0 · 0 new lint errors |
+
+**Re-entry conditions:**
+- Collections panel: OPS-WLADMIN-COLLECTIONS-001
+- Orders panel: OPS-WLADMIN-ORDERS-001
+- Domains panel: OPS-WLADMIN-DOMAINS-001
 
 ---
 

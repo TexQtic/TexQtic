@@ -5190,3 +5190,75 @@ GAP-RUV-006 may be promoted to VALIDATED only after OPS-ORDER-LIFECYCLE-SCHEMA-0
 - [x] GAP-RUV-006 PARTIAL row added to gap-register.md in new OPS-ORDER-LIFECYCLE-AUDIT-001 section
 - [x] This entry (GOVERNANCE-SYNC-039) appended to wave-execution-log.md
 - [x] Single atomic governance commit
+
+---
+
+## GOVERNANCE-SYNC-040 — OPS-WLADMIN-PRODUCTS-MVP-001 (2026-03-02)
+
+### Objective
+
+Replace the WLStubPanel for the "Products" nav item in the WL Store Admin console with a functional catalog panel. WL OWNER/ADMIN users can now view their catalog inventory and create new items directly from the Store Admin back-office, reusing existing validated API (`POST /api/tenant/catalog/items`) and shared frontend state/handlers.
+
+### Implementation
+
+**File changed:** `App.tsx`  
+**Impl commit:** `6a7bf41`
+
+**Change 1 — Catalog fetch useEffect extended:**
+
+```typescript
+// Before:
+if (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS') {
+// After:
+if (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS' || appState === 'WL_ADMIN') {
+```
+
+**Change 2 — PRODUCTS case in `renderWLAdminContent()`:**  
+Replaced `<WLStubPanel title="Products" ... />` with a full inline panel:
+- Header with panel title + "+ Add Item" toggle button
+- Inline create form (reuses `addItemFormData`, `handleCreateItem`, `addItemLoading`, `addItemError`); field ids prefixed `wl-` to prevent DOM id conflicts with B2B panel
+- Loading spinner, error banner, empty state message
+- Product grid (name, SKU, price, MOQ) for non-empty catalog
+
+**Reused without modification:**
+- `getCatalogItems` / `createCatalogItem` (catalogService.ts — already imported)
+- `products`, `catalogLoading`, `catalogError`, `showAddItemForm`, `addItemFormData`, `addItemLoading`, `addItemError` (shared state)
+- `handleCreateItem` (shared handler — validates input, calls API, updates `products[]`, surfaces errors)
+
+Collections, Orders, Domains remain WLStubPanel.
+
+### Quality Gates
+
+- `pnpm run typecheck` → EXIT 0 ✅
+- `pnpm run lint` → 0 new errors (pre-existing G-QG-001 debt in Auth components, Cart, apiClient.ts unchanged) ✅
+- `git diff --name-only` (impl commit): `App.tsx` only ✅
+
+### Manual Validation Checklist
+
+| Step | Action | Expected |
+|------|--------|----------|
+| A | WL OWNER login → WL_ADMIN → Products nav | Products panel renders (not stub), catalog list loads |
+| B | Empty catalog → Products panel | "No products yet. Add your first item above." message shown |
+| C | Click + Add Item → fill name + price → Save Item | Item appears in product grid; `catalog.item.created` audit row written |
+| D | Navigate away and back to Products | Catalog list persists in `products[]` state |
+| E | Collections / Orders / Domains | WLStubPanel still shown (not affected) |
+
+### Gap Register Updates
+
+| Gap ID | Previous Status | New Status | Notes |
+|--------|-----------------|------------|-------|
+| G-WL-ADMIN (Products) | VALIDATED (stub) | VALIDATED (real panel) | Products panel functional; Collections/Orders/Domains remain stub — require separate OPS-WLADMIN-* TECS |
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed: `App.tsx` (impl) + `governance/gap-register.md` + `governance/wave-execution-log.md` (governance)
+- [x] No server/src changes
+- [x] No schema / migrations / SQL / RLS changes
+- [x] No new dependencies
+- [x] No refactors outside WL admin Products case
+- [x] Typecheck EXIT 0 · 0 new lint errors
+- [x] impl commit `6a7bf41` (App.tsx only)
+- [x] GOVERNANCE-SYNC-040 header prepended to gap-register.md Last Updated line
+- [x] G-WL-ADMIN Products row added in new OPS-WLADMIN-PRODUCTS-MVP-001 section in gap-register.md
+- [x] This entry (GOVERNANCE-SYNC-040) appended to wave-execution-log.md
+- [x] Single atomic governance commit
