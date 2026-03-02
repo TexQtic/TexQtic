@@ -4086,3 +4086,162 @@ ealm='control' AND actor_id NOT NULL AND is_admin='true'
 ### Gap Close
 - D-6: VALIDATED (policy naming conflict resolved; single canonical policy)
 - D-7: VALIDATED (admin_select tenant_id IS NULL restriction removed; admin sees all rows)
+
+---
+
+## G006C-ORDERS-GUARD-001 — ORDERS + ORDER_ITEMS RESTRICTIVE GUARD + ROLE NORMALIZATION
+
+**Date:** 2026-03-02
+**TECS:** G006C-ORDERS-GUARD-001
+**Mode:** Investigate → Plan → Implement
+**Migration:** `20260302000000_g006c_orders_guard_normalize`
+**Status:** COMPLETE ✅
+
+---
+
+### GATE 0 — Preconditions
+
+- Branch: `main` ✅
+- `git status --short`: clean (stashed: `wip: pre-tecs scratch + wave log`) ✅
+- `DIRECT_DATABASE_URL`: present (URL_LEN=126, redacted) ✅
+
+---
+
+### GATE 1 — Investigation (Read-Only)
+
+**Table RLS flags (live DB 2026-03-02):**
+
+| Table | ENABLE RLS | FORCE RLS |
+|---|---|---|
+| `orders` | t | t |
+| `order_items` | t | t |
+
+**Policies confirmed — orders (4 PERMISSIVE, 0 RESTRICTIVE):**
+
+| Policy | CMD | Roles | Key Logic |
+|---|---|---|---|
+| `orders_select_unified` | SELECT | {public} | `(require_org_context() AND tenant_id=current_org_id()) OR is_admin='true'` |
+| `orders_insert_unified` | INSERT | {public} | WITH CHECK: same pattern |
+| `orders_update_unified` | UPDATE | {public} | `is_admin='true'` USING + WITH CHECK |
+| `orders_delete_unified` | DELETE | {public} | `is_admin='true'` USING |
+
+**order_items:** identical pattern (4 PERMISSIVE {public}, 0 RESTRICTIVE).
+
+**`app.bypass_enabled()` function body (Gate 1 investigation — key finding):**
+`sql
+SELECT current_setting('app.bypass_rls', TRUE) = 'on'
+  AND current_setting('app.realm', TRUE) IN ('test', 'service')
+  AND app.has_role('TEST_SEED');
+`
+**Finding:** `bypass_enabled()` is NOT equivalent to `is_admin='true'`. It is a test/seed bypass only (requires realm='test'|'service' AND TEST_SEED role). Admin arm preserved as `current_setting('app.is_admin'::text, true) = 'true'::text` per TECS doctrine.
+
+**Gate 1 pass matrix:**
+- Duplicate permissive policies: ❌ (none — 1 per cmd per table) ✅
+- Missing unified policies: ❌ (all 4 present per table) ✅
+- Guard already exists: ❌ (confirmed absent) ✅
+- Role targets consistent: ✅ (all {public}) ✅
+- bypass_enabled() ≡ is_admin: ❌ — confirms admin arm must NOT be replaced ✅
+
+**GATE 1: PASS**
+
+---
+
+### GATE 2 — Migration Authoring
+
+**File created:** `server/prisma/migrations/20260302000000_g006c_orders_guard_normalize/migration.sql`
+
+**Structure:**
+- Step A: DROP 4 existing {public} permissive policies on orders (IF EXISTS)
+- Step B: CREATE `orders_guard` RESTRICTIVE FOR ALL TO texqtic_app USING (require_org_context() OR is_admin='true' OR bypass_enabled())
+- Step C: RECREATE 4 permissive policies TO texqtic_app — logic preserved, admin arm unchanged
+- Steps D–F: Same for order_items (DROP, guard, recreate)
+- Step G: DO block verifier — RAISE EXCEPTION on any invariant failure
+
+**Diff check:** `git status --short` showed only `server/prisma/migrations/20260302000000_g006c_orders_guard_normalize/` (allowlisted) + temp inspect files (deleted before commit). ✅
+
+**GATE 2: PASS**
+
+---
+
+### GATE 3 — PROD Apply
+
+**Command:** `psql -v ON_ERROR_STOP=1 -f server\prisma\migrations\20260302000000_g006c_orders_guard_normalize\migration.sql`
+
+**Output (key lines):**
+`
+BEGIN
+DROP POLICY (×4 orders)
+CREATE POLICY (×5 orders: guard + 4 permissive)
+DROP POLICY (×4 order_items)
+CREATE POLICY (×5 order_items: guard + 4 permissive)
+NOTICE: VERIFIER PASS — orders + order_items: guards present, policies normalized, no {public} policies remain
+DO
+COMMIT
+APPLY_EXIT:0
+`
+
+**GATE 3: PASS — Exit 0, DO block VERIFIER PASS**
+
+---
+
+### GATE 4 — RLS Simulation Verification
+
+All sims run within BEGIN/ROLLBACK (no data change):
+
+| SIM | realm | is\_admin | org\_ctx | orders count | Result |
+|---|---|---|---|---|---|
+| SIM1 Tenant | tenant | false | **t** | 0 (no rows for test UUID org) | Guard passes via require\_org\_context() ✅ |
+| SIM2 Control Non-Admin | control | false | **f** | **0** | Guard blocks — require\_org\_context=f, is\_admin=false, bypass=f ✅ |
+| SIM3 Control Admin | control | **true** | f | **4** | Guard passes via is\_admin=true; sees cross-tenant rows ✅ |
+
+**Post-migration policy structure confirmed:**
+
+| Table | Policy | Permissive | CMD | Roles |
+|---|---|---|---|---|
+| order\_items | order\_items\_guard | RESTRICTIVE | ALL | {texqtic\_app} |
+| order\_items | order\_items\_delete\_unified | PERMISSIVE | DELETE | {texqtic\_app} |
+| order\_items | order\_items\_insert\_unified | PERMISSIVE | INSERT | {texqtic\_app} |
+| order\_items | order\_items\_select\_unified | PERMISSIVE | SELECT | {texqtic\_app} |
+| order\_items | order\_items\_update\_unified | PERMISSIVE | UPDATE | {texqtic\_app} |
+| orders | orders\_guard | RESTRICTIVE | ALL | {texqtic\_app} |
+| orders | orders\_delete\_unified | PERMISSIVE | DELETE | {texqtic\_app} |
+| orders | orders\_insert\_unified | PERMISSIVE | INSERT | {texqtic\_app} |
+| orders | orders\_select\_unified | PERMISSIVE | SELECT | {texqtic\_app} |
+| orders | orders\_update\_unified | PERMISSIVE | UPDATE | {texqtic\_app} |
+
+No {public} policies remain on either table. ✅
+
+**GATE 4: PASS**
+
+---
+
+### GATE 5 — Prisma Ledger Sync
+
+**Command:** `pnpm exec prisma migrate resolve --applied 20260302000000_g006c_orders_guard_normalize`
+
+**Output:** `Migration 20260302000000_g006c_orders_guard_normalize marked as applied.` RESOLVE_EXIT:0 ✅
+
+**Post-resolve status:** `Database schema is up to date!` (62 migrations) ✅
+
+**GATE 5: PASS**
+
+---
+
+### GATE 6 — Governance Commits
+
+- `governance/gap-register.md` updated: GOVERNANCE-SYNC-030 header; G006C-ORDERS-GUARD-001 row COMPLETE; G006C-EVENT-LOGS-CLEANUP-001 row UNLOCKED (pre-req now satisfied)
+- `governance/wave-execution-log.md` (this entry) appended with full execution record
+- Temp files (`tmp_g1_inspect.sql`, `tmp_g4_sims.sql`) deleted before commit
+- Commit message: `feat(g006c): orders/order_items restrictive guard + role normalization`
+
+---
+
+### STOP CONFIRMATION
+
+- ✅ Migration `20260302000000_g006c_orders_guard_normalize` applied to PROD (EXIT:0)
+- ✅ DO block VERIFIER PASS (self-asserted guard count=1, permissive=4 per table, no {public})
+- ✅ 3 RLS sims PASS (tenant isolated, control non-admin blocked, control admin cross-tenant)
+- ✅ Prisma ledger synced (Database schema is up to date!)
+- ✅ GATE 1 finding documented: bypass_enabled() ≠ is_admin; admin arm preserved unchanged
+- ✅ Governance files updated (GOVERNANCE-SYNC-030)
+- ❌ G006C-EVENT-LOGS-CLEANUP-001 NOT started (pre-req satisfied; awaiting separate TECS)
