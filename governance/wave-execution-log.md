@@ -4570,3 +4570,76 @@ psql EXIT:0
 - [x] Two atomic commits (impl + governance)
 - [x] Pushed to origin/main
 - [x] Working tree clean
+
+
+---
+
+## GOVERNANCE-SYNC-034 — OPS-SUPERADMIN-ENFORCEMENT-001
+
+**Date:** 2026-03-02
+**Branch:** main
+**Commits:** feat(ops): enforce SUPER_ADMIN role on 5 high-risk control-plane surfaces / governance: sync OPS-SUPERADMIN-ENFORCEMENT-001 validation
+
+---
+
+### Gate 0 — Preconditions
+
+- Branch: main
+- Working tree: clean (pre-existing unstaged .vscode/settings.json excluded)
+- DIRECT_DATABASE_URL: present
+
+---
+
+### Gate 1 — Enforcement Inventory (source-of-truth from investigation)
+
+| Priority | Endpoint(s) | Mutation | Audit before | Enforcement tier |
+|----------|------------|----------|--------------|-----------------|
+| P1 | POST /impersonation/start + stop | W | Yes (service) | Tier A |
+| P2 | POST /tenants/provision | W | **NO** — gap | Tier A + Tier B |
+| P3 | POST /finance/payouts/:id/approve + reject | W | Yes (writeAuthorityIntent) | Tier A |
+| P4 | POST /escalations/:id/upgrade + resolve | W | Yes (writeAuditLog in tx) | Tier A |
+| P5 | PUT /feature-flags/:key | W | Yes (writeAuditLog) | Tier A |
+
+Guard mechanism: all surfaces used plugin-level ddHook('onRequest', adminAuthMiddleware).
+Enforcement added as route-level preHandler: requireAdminRole('SUPER_ADMIN') — layered on top, no plugin hook changes.
+
+---
+
+### Gate 2 — Allowlist Diff (confirmed)
+
+| File | Changes |
+|------|---------|
+| server/src/routes/admin/impersonation.ts | Import equireAdminRole; preHandler on start + stop |
+| server/src/routes/admin/tenantProvision.ts | Import equireAdminRole, prisma, writeAuditLog, createAdminAudit; preHandler on provision; added control.tenants.provisioned audit call (Tier B gap closure) |
+| server/src/routes/control.ts | Import equireAdminRole; preHandler on PUT /feature-flags/:key, POST /finance/payouts/:id/approve, POST /finance/payouts/:id/reject |
+| server/src/routes/control/escalation.g022.ts | Import equireAdminRole; preHandler on POST /:id/upgrade, POST /:id/resolve |
+| governance/gap-register.md | D-2B OPEN → VALIDATED; OPS-SUPERADMIN-ENFORCEMENT-001 added to TECS sequence |
+| governance/wave-execution-log.md | GOVERNANCE-SYNC-034 (this entry) |
+
+No migrations. No SQL. No RLS changes. No schema.prisma changes.
+
+---
+
+### Gate 3 — Quality Gates
+
+- typecheck: EXIT 0
+- lint: EXIT 0 (8 pre-existing 
+o-explicit-any / 
+o-non-null-assertion warnings; 0 errors; 0 new issues)
+
+---
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed (git diff --name-only confirms 4 route files)
+- [x] No migrations / no SQL changes committed
+- [x] No RLS policy changes
+- [x] No schema.prisma changes
+- [x] No database-context.ts changes
+- [x] Typecheck EXIT 0
+- [x] Lint EXIT 0 (baseline warnings)
+- [x] 5 surfaces now gate on requireAdminRole('SUPER_ADMIN') — 401/403 for non-superadmin
+- [x] Tenant provision audit gap closed (control.tenants.provisioned)
+- [x] Two atomic commits (impl + governance)
+- [x] Pushed to origin/main
+- [x] Working tree clean
