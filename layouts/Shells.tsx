@@ -7,9 +7,10 @@ interface ShellProps {
   children: React.ReactNode;
   onNavigateTeam?: () => void;
   onNavigateHome?: () => void;
+  onNavigateOrders?: () => void;
 }
 
-export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome }) => (
+export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders }) => (
   <div className="min-h-screen flex flex-col font-sans">
     <header className="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -20,6 +21,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
         <nav className="hidden md:flex gap-6 text-sm font-medium">
           <button onClick={onNavigateHome} className="text-blue-400">Companies</button>
           <button type="button" className="hover:text-blue-400 transition">Certifications</button>
+          {onNavigateOrders && <button onClick={onNavigateOrders} className="hover:text-blue-400 transition text-slate-300">Orders</button>}
           <button onClick={onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
         </nav>
         <button className="bg-blue-600 px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition">Post RFQ</button>
@@ -29,7 +31,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
   </div>
 );
 
-export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome }) => (
+export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders }) => (
   <div className="min-h-screen flex bg-slate-100 font-sans">
     <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
       <button type="button" className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={onNavigateHome}>
@@ -38,6 +40,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
       <nav className="flex-1 space-y-4">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
         <button onClick={onNavigateHome} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
+        {onNavigateOrders && <button onClick={onNavigateOrders} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
         <button className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Negotiations</button>
         <button className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📄 Invoices</button>
         <button onClick={onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
@@ -62,7 +65,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome }) => (
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders }) => (
   <div className="min-h-screen bg-white font-sans">
     <div className="bg-indigo-600 text-white text-center py-2 text-[10px] font-bold uppercase tracking-widest">
       Free worldwide shipping on orders over $500
@@ -76,6 +79,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
           <input title="search" type="text" placeholder="Search our collection..." className="w-full bg-slate-100 border-none rounded-full px-6 py-2.5 focus:ring-2 focus:ring-indigo-500 text-sm" />
         </div>
         <div className="flex gap-6 items-center">
+          {onNavigateOrders && <button onClick={onNavigateOrders} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}
           <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
           <div className="relative cursor-pointer">
             <span className="text-2xl">🛒</span>
@@ -88,7 +92,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome }) => (
+export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders }) => (
   <div className="min-h-screen font-sans" style={{ backgroundColor: '#ffffff' }}>
      <header className="p-12 text-center" style={{ borderBottom: `1px solid #eee` }}>
        <button type="button" className="text-5xl font-serif italic mb-2 cursor-pointer transition-opacity hover:opacity-80" style={{ color: tenant.theme.primaryColor }} onClick={onNavigateHome}>
@@ -99,6 +103,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavi
      <nav className="flex justify-center gap-12 py-6 text-[10px] font-bold uppercase tracking-[0.2em] border-b border-slate-100 sticky top-0 bg-white/90 backdrop-blur-sm z-10">
         <button onClick={onNavigateHome} className="hover:opacity-40 transition-opacity">Portfolio</button>
         <button onClick={onNavigateTeam} className="hover:opacity-40 transition-opacity">Access Control</button>
+        {onNavigateOrders && <button onClick={onNavigateOrders} className="hover:opacity-40 transition-opacity">Orders</button>}
         <button className="hover:opacity-40 transition-opacity underline decoration-rose-500 underline-offset-4">Collections</button>
         <button className="hover:opacity-40 transition-opacity">The Journal</button>
      </nav>

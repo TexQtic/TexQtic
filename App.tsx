@@ -12,6 +12,7 @@ import { InviteMemberForm } from './components/Tenant/InviteMemberForm';
 import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
 import { WLStubPanel } from './components/WhiteLabelAdmin/WLStubPanel';
 import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
+import { EXPOrdersPanel } from './components/Tenant/EXPOrdersPanel';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -57,6 +58,8 @@ const App: React.FC = () => {
   // Wave 4 P1: active panel in the WL Store Admin console
   type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
+  // RCP-1 TECS 3: sub-view for EXPERIENCE Orders panel (OPS-EXPERIENCE-ORDERS-UX-001)
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -521,6 +524,9 @@ const App: React.FC = () => {
     if (appState === 'INVITE_MEMBER')
       return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;
     if (appState === 'SETTINGS') return <WhiteLabelSettings tenant={currentTenant} />;
+    // RCP-1 TECS 3: Orders panel — rendered before the tenant-type switch so it
+    // overlays any tenant type's home view. Reset to HOME via onBack / onNavigateHome.
+    if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -1139,7 +1145,8 @@ const App: React.FC = () => {
           tenant: currentTenant,
           children: renderExperienceContent(),
           onNavigateTeam: () => setAppState('TEAM_MGMT'),
-          onNavigateHome: () => setAppState('EXPERIENCE'),
+          onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
+          onNavigateOrders: () => setExpView('ORDERS'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {
