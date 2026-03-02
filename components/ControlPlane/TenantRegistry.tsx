@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getTenants, Tenant } from '../../services/controlPlaneService';
+import { getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
 import { TenantStatus, TenantConfig } from '../../types';
 import { LoadingState, EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
@@ -16,6 +16,46 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<APIError | null>(null);
+
+  // RU-002: Provision modal state
+  const [showProvisionModal, setShowProvisionModal] = useState(false);
+  const [provisionForm, setProvisionForm] = useState({
+    orgName: '',
+    primaryAdminEmail: '',
+    primaryAdminPassword: '',
+  });
+  const [provisionLoading, setProvisionLoading] = useState(false);
+  const [provisionError, setProvisionError] = useState<string | null>(null);
+  const [provisionResult, setProvisionResult] = useState<{ orgId: string; slug: string; inviteToken?: string } | null>(null);
+
+  // RU-002: Handle provision form submission
+  const handleProvision = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProvisionLoading(true);
+    setProvisionError(null);
+    setProvisionResult(null);
+    try {
+      const slug = provisionForm.orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      const result = await provisionTenant({
+        name: provisionForm.orgName,
+        slug,
+        type: 'B2B',
+        ownerEmail: provisionForm.primaryAdminEmail,
+        ownerPassword: provisionForm.primaryAdminPassword,
+      });
+      setProvisionResult({ orgId: result.tenant.id, slug: result.tenant.slug });
+      setProvisionForm({ orgName: '', primaryAdminEmail: '', primaryAdminPassword: '' });
+      // Refresh tenant list to include newly provisioned tenant
+      await fetchTenants();
+    } catch (err: any) {
+      setProvisionError(err?.message || 'Provisioning failed.');
+    } finally {
+      setProvisionLoading(false);
+    }
+  };
 
   const fetchTenants = async () => {
     setLoading(true);
@@ -119,9 +159,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
           <p className="text-slate-400 text-sm">Manage global tenant lifecycle and governance.</p>
         </div>
         <button
-          disabled
-          className="bg-slate-100 text-slate-900 px-4 py-2 rounded font-bold text-xs uppercase tracking-tight opacity-50 cursor-not-allowed"
-          title="Provision actions will be enabled in Wave 5"
+          onClick={() => { setShowProvisionModal(true); setProvisionResult(null); setProvisionError(null); }}
+          className="bg-indigo-600 text-white px-4 py-2 rounded font-bold text-xs uppercase tracking-tight hover:bg-indigo-700 transition"
         >
           Provision New Tenant
         </button>
@@ -259,6 +298,97 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* RU-002: Provision New Tenant Modal */}
+      {showProvisionModal && (
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 space-y-6 shadow-2xl">
+            <div>
+              <h2 className="text-lg font-bold">Provision New Tenant</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Creates a new tenant organisation and owner account. The owner will receive an invite link.
+              </p>
+            </div>
+
+            {provisionResult ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
+                  <div className="text-emerald-800 font-bold text-sm">✓ Tenant provisioned</div>
+                  <div className="text-xs text-slate-600 font-mono">Org ID: {provisionResult.orgId}</div>
+                  <div className="text-xs text-slate-600 font-mono">Slug: {provisionResult.slug}.texqtic.com</div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800">
+                  <strong>Next step:</strong> Use the Invite Member flow within the tenant to generate an invite link for the owner. Share the link:
+                  <br /><code className="font-mono">?token={"<invite_token>"}&action=invite</code>
+                </div>
+                <button
+                  onClick={() => { setShowProvisionModal(false); setProvisionResult(null); }}
+                  className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleProvision} className="space-y-4">
+                {provisionError && (
+                  <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
+                    {provisionError}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Org Name *</label>
+                  <input
+                    required
+                    value={provisionForm.orgName}
+                    onChange={e => setProvisionForm(f => ({ ...f, orgName: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Acme Global Inc."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Email *</label>
+                  <input
+                    required
+                    type="email"
+                    value={provisionForm.primaryAdminEmail}
+                    onChange={e => setProvisionForm(f => ({ ...f, primaryAdminEmail: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="owner@acme.com"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Password *</label>
+                  <input
+                    required
+                    type="password"
+                    minLength={6}
+                    value={provisionForm.primaryAdminPassword}
+                    onChange={e => setProvisionForm(f => ({ ...f, primaryAdminPassword: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Min 6 characters"
+                  />
+                </div>
+                <div className="flex gap-4 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowProvisionModal(false); setProvisionError(null); }}
+                    className="flex-1 py-3 font-bold text-slate-500 text-xs uppercase tracking-widest hover:text-slate-900 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={provisionLoading}
+                    className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {provisionLoading ? 'Provisioning...' : 'Provision Tenant'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>
