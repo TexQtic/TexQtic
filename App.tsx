@@ -11,6 +11,7 @@ import { TeamManagement } from './components/Tenant/TeamManagement';
 import { InviteMemberForm } from './components/Tenant/InviteMemberForm';
 import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
 import { WLStubPanel } from './components/WhiteLabelAdmin/WLStubPanel';
+import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -498,7 +499,7 @@ const App: React.FC = () => {
         </div>
       );
       case 'COLLECTIONS': return <WLStubPanel title="Collections" icon="🗂️" description="Group products into curated storefront collections for your buyers." />;
-      case 'ORDERS':      return <WLStubPanel title="Orders" icon="🛍️" description="View and manage customer orders, fulfillment, and returns." />;
+      case 'ORDERS':      return <WLOrdersPanel />;
       case 'DOMAINS':     return <WLStubPanel title="Domains" icon="🌐" description="Connect a custom domain and configure DNS for your white-label store." />;
       default:            return <WLStubPanel title="Coming Soon" description="This panel is under construction." />;
     }
