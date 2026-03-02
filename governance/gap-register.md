@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-02 (GOVERNANCE-SYNC-040 — OPS-WLADMIN-PRODUCTS-MVP-001: G-WL-ADMIN Products panel VALIDATED — real catalog list + create form replacing WLStubPanel; catalog fetch useEffect extended to WL_ADMIN; commit 6a7bf41 · typecheck EXIT 0 · 0 new lint errors · App.tsx only)
+Last Updated: 2026-03-02 (GOVERNANCE-SYNC-041 — OPS-RCP1-GAP-RECONCILIATION-001: RCP-1 anchored as PLANNED roadmap; 5 new gap entries registered (GAP-ORDER-LC-001, GAP-ORDER-TRANSITIONS-001, GAP-WL-ORDERS-001, GAP-EXP-ORDERS-001, GAP-REVENUE-VALIDATE-002); GAP-RUV-006 schema re-entry linked to GAP-ORDER-LC-001; drift analysis recorded; no implementation begun; B1/D-5/control-plane posture affirmed unchanged)
+(GOVERNANCE-SYNC-040 — OPS-WLADMIN-PRODUCTS-MVP-001: G-WL-ADMIN Products panel VALIDATED — real catalog list + create form replacing WLStubPanel; catalog fetch useEffect extended to WL_ADMIN; commit 6a7bf41 · typecheck EXIT 0 · 0 new lint errors · App.tsx only)
 (GOVERNANCE-SYNC-039 — OPS-ORDER-LIFECYCLE-AUDIT-001: GAP-RUV-006 PARTIAL — lifecycle audit trail added via audit_logs; G-020 ORDER blocked by DB CHECK constraint; commit 5e13fe5 · typecheck EXIT 0 · lint EXIT 0 · 1 file only)
 (GOVERNANCE-SYNC-038 — OPS-ACTIVATE-JWT-FIX-001: GAP-RUV-001 invite URL action=invite param VALIDATED · GAP-RUV-002 /activate JWT issuance VALIDATED · GAP-RUV-003 tenant.type from response VALIDATED · GAP-RUV-005 industry onChange wired VALIDATED · commit 43ef9c6 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · 4 files only)
 (GOVERNANCE-SYNC-037 — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001: RU-001 invite activation wiring VALIDATED · RU-002 provision UI enablement VALIDATED · RU-003 catalog create API+service+frontend VALIDATED · S1 end-to-end happy path A–F confirmed · 5 commits: 3923069 fc66637 5d4c3bf 2cda383 739f6d8 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · no schema/RLS/auth changes)
@@ -230,6 +231,62 @@ Doctrine Version: v1.4
 - Collections panel: OPS-WLADMIN-COLLECTIONS-001
 - Orders panel: OPS-WLADMIN-ORDERS-001
 - Domains panel: OPS-WLADMIN-DOMAINS-001
+
+---
+
+# RCP-1 — Revenue Domain Completion Plan (Phase 1)
+
+**Anchored:** 2026-03-02  
+**Governance Sync:** GOVERNANCE-SYNC-041  
+**Reconciliation TECS:** OPS-RCP1-GAP-RECONCILIATION-001  
+**Scope:** Tenant Commerce Domain (revenue readiness) across Enterprise + White-label tenants, without shell drift.
+
+## Objective
+Complete the minimal revenue-operational loop so that:
+- Tenants can sell (catalog present + manageable)
+- Buyers can purchase (cart + checkout)
+- Orders can be operationally managed (status progression + audit)
+- WL_ADMIN and EXPERIENCE shells expose the same *capability set* (not merged planes)
+- Governance and audit invariants remain enforced
+
+## Explicit Non-Goals (Hard Stops)
+- DOES NOT extend G-020 StateMachineService to ORDER (blocked by schema prerequisite)
+- DOES NOT introduce new DB tables, migrations, schema changes, or RLS policy changes
+- DOES NOT reopen D-5 (B1) — `app.roles` remains dormant for live requests; no DB-level role gates
+- DOES NOT merge WL_ADMIN and EXPERIENCE shells; no cross-shell routing changes that erode appState boundaries
+- DOES NOT implement payment gateway / PSP integration
+- DOES NOT refactor components "for cleanliness" unless required by revenue correctness
+
+## Canonical Drift Correction
+The earlier draft notion of "OPS-ORDER-DOMAIN-STATE-GUARD-001 (lifecycle)" is corrected:
+- Phase 1 implements **app-layer order status progression + audit**, not G-020 lifecycle.
+- Full ORDER lifecycle state machine wiring requires a separate schema wave (see GAP-ORDER-LC-001).
+
+## RCP-1 — Ordered TECS Sequence (Phase 1)
+1. **OPS-ORDER-STATUS-TRANSITIONS-001**
+   - Add app-layer guarded order status transitions with audit (no schema, no SM).
+2. **OPS-WLADMIN-ORDERS-PANEL-001**
+   - Replace WL_ADMIN Orders stub with real orders list + actions; consumes existing tenant APIs + transitions endpoint.
+3. **OPS-EXPERIENCE-ORDERS-UX-001**
+   - Ensure EXPERIENCE shell order management UX reaches parity with WL_ADMIN (capability parity, not shared plane).
+4. **OPS-REVENUE-FLOW-VALIDATION-002**
+   - E2E validation with explicit ceiling: PAYMENT_PENDING + app-layer transitions; verify audit trail.
+
+## RCP-1 Commerce Gaps / Work Items (Formal Entries)
+
+| Gap / Work ID | Description | Domain | Severity | Status | Dependencies | Notes / Stop Conditions |
+|---|---|---|---|---|---|---|
+| GAP-ORDER-LC-001 | ORDER lifecycle schema prerequisite (Future Wave): add ORDER to LifecycleState CHECK constraint; add order lifecycle log table + RLS; seed ORDER states; extend SM EntityType union | Backend / DB | 🔴 HIGH | PLANNED (RCP-1) — **BLOCKED (schema approval required)** | — | Non-goals: does not implement UI/route guards. This is a prerequisite for "true" ORDER state machine wiring. |
+| GAP-ORDER-TRANSITIONS-001 | App-layer order status transitions (Phase 1): PAYMENT_PENDING→CONFIRMED; CONFIRMED→FULFILLED/CANCELLED; OWNER/ADMIN only; audit `order.lifecycle.<state>` | Backend | 🟠 MED | PLANNED (RCP-1) | Existing orders APIs + audit infra | Must not touch G-020 SM. Must not add schema. Must use existing audit_logs. |
+| GAP-WL-ORDERS-001 | WL_ADMIN Orders panel: replace WLStubPanel; render orders list + status actions; consume transitions endpoint | Frontend / WL_ADMIN | 🟠 MED | PLANNED (RCP-1) | GAP-ORDER-TRANSITIONS-001 | Must not merge shells. May reuse presentational components only if shell-local state remains distinct. |
+| GAP-EXP-ORDERS-001 | EXPERIENCE Orders UX parity: ensure order list + details + status actions exist and match WL_ADMIN capabilities | Frontend / EXPERIENCE | 🟡 LOW-MED | PLANNED (RCP-1) | GAP-ORDER-TRANSITIONS-001 | Must not create a second backend path. Use same transition endpoint. |
+| GAP-REVENUE-VALIDATE-002 | Revenue flow validation pass: provision → invite → activate → catalog → cart → checkout → order list → status transition → audit verification; ceiling = PAYMENT_PENDING + transitions | QA / Cross-cutting | 🟡 LOW | PLANNED (RCP-1) | Completion of above TECS | Must not fail RCP-1 due to blocked G-020 ORDER lifecycle. Explicit ceiling is binding. |
+
+## Linkages to Existing Gaps
+- **GAP-RUV-006 (Order lifecycle audit)** remains the canonical record:
+  - Current: audit-only lifecycle entry at checkout (PAYMENT_PENDING)
+  - Full lifecycle (G-020 style) is blocked until **GAP-ORDER-LC-001**
+  - RCP-1 Phase 1 proceeds via **GAP-ORDER-TRANSITIONS-001** (app-layer transitions + audit) without schema changes.
 
 ---
 

@@ -5262,3 +5262,75 @@ Collections, Orders, Domains remain WLStubPanel.
 - [x] G-WL-ADMIN Products row added in new OPS-WLADMIN-PRODUCTS-MVP-001 section in gap-register.md
 - [x] This entry (GOVERNANCE-SYNC-040) appended to wave-execution-log.md
 - [x] Single atomic governance commit
+
+---
+
+### GOVERNANCE-SYNC-041 — OPS-RCP1-GAP-RECONCILIATION-001 (2026-03-02)
+
+**Mode:** INVESTIGATE → REVIEW → PLAN (no implementation)  
+**Purpose:** Reconcile proposed RCP-1 plan against canonical gap register; prevent drift and legacy-style roadmap divergence.
+
+#### Inputs Reviewed
+- governance/gap-register.md (full)
+- governance/wave-execution-log.md (latest entries)
+- TECS.md
+- governance/coverage-matrix.md
+- governance/wave-2-board.md
+
+#### Alignment Verdict
+**RCP-1 = Partially aligned (requires governance anchoring + resequence before implementation).**  
+No outright conflicts detected, but multiple drift vectors existed due to under-specified assumptions.
+
+#### Drift Vectors Detected (and neutralized by plan rewrite)
+1) **Schema creep risk via "ORDER lifecycle / G-020"**
+   - Canonical: GAP-RUV-006 documents ORDER lifecycle SM is blocked by DB CHECK constraint + missing tables/seeds.
+   - Resolution: RCP-1 Phase 1 uses app-layer status transitions + audit only; schema prerequisite isolated as GAP-ORDER-LC-001 (BLOCKED).
+
+2) **Shell boundary erosion risk via "shared UI across WL_ADMIN + EXPERIENCE"**
+   - Canonical: WL_ADMIN shell separation is a documented architectural anchor.
+   - Resolution: RCP-1 reframed to **capability parity**, not merged planes. WL_ADMIN Orders panel is shell-local.
+
+3) **Refactor disguised as revenue work**
+   - Catalog "consolidation" is not a revenue dependency given both catalog paths are already VALIDATED.
+   - Resolution: RCP-1 excludes refactor-as-work; only correctness-driven parity work is included.
+
+4) **Governance dilution**
+   - Several re-entry conditions existed without formal gap rows.
+   - Resolution: New formal RCP-1 gap/work entries added to gap-register with explicit non-goals and stop conditions.
+
+#### Decisions Explicitly Affirmed Unchanged
+- D-5 / B1 remains binding: app-layer role enforcement only; `app.roles` remains dormant for live requests.
+- Control-plane hardening (GOVERNANCE-SYNC-035) unaffected.
+- RLS posture unchanged; no new tables/policies without a dedicated schema TECS.
+- G-020 StateMachineService entity types remain closed to ORDER pending schema wave.
+
+#### Governance Updates Recorded
+Added/anchored section: **RCP-1 — Revenue Domain Completion Plan (Phase 1)** with:
+- Objective statement
+- Explicit non-goals (hard stops)
+- Canonical drift correction note (ORDER lifecycle vs app-layer transitions)
+- Ordered TECS sequence (Phase 1)
+- Formal gap/work rows with dependencies + stop conditions
+- Explicit validation ceiling (PAYMENT_PENDING + transitions only)
+
+#### RCP-1 Corrected Ordered TECS Sequence (Phase 1)
+1) OPS-ORDER-STATUS-TRANSITIONS-001 (app-layer transitions + audit; no schema; no SM)
+2) OPS-WLADMIN-ORDERS-PANEL-001 (replace stub; consume transitions endpoint)
+3) OPS-EXPERIENCE-ORDERS-UX-001 (capability parity in EXPERIENCE)
+4) OPS-REVENUE-FLOW-VALIDATION-002 (ceiling binding: PAYMENT_PENDING + transitions)
+
+#### New / Formalized Gap & Work Entries
+- GAP-ORDER-LC-001 — PLANNED (RCP-1) — **BLOCKED** (schema approval required)
+- GAP-ORDER-TRANSITIONS-001 — PLANNED (RCP-1)
+- GAP-WL-ORDERS-001 — PLANNED (RCP-1)
+- GAP-EXP-ORDERS-001 — PLANNED (RCP-1)
+- GAP-REVENUE-VALIDATE-002 — PLANNED (RCP-1)
+
+#### Stop Conditions (Enforced)
+- Any attempt to extend G-020 to ORDER inside Phase 1 → HALT (requires GAP-ORDER-LC-001 explicit schema wave)
+- Any attempt to activate `app.roles` for live requests or add DB-level role guards → HALT (would reopen D-5)
+- Any new schema/migration/RLS policy inside Phase 1 TECS → HALT
+- Any change that merges WL_ADMIN and EXPERIENCE plane routing → HALT
+- Any validation that expects lifecycle beyond PAYMENT_PENDING + transitions → HALT
+
+**Result:** RCP-1 anchored and drift-neutralized. No implementation begun.
