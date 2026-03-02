@@ -838,6 +838,26 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       });
 
+      // G-020 ORDER entity type is DB-constrained to (TRADE, ESCROW, CERTIFICATION).
+      // Until OPS-ORDER-LIFECYCLE-SCHEMA-001 adds ORDER support to the SM,
+      // we record the lifecycle transition via the existing audit_logs table.
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: dbContext.orgId,
+        actorType: 'USER',
+        actorId: userId ?? null,
+        action: 'order.lifecycle.PAYMENT_PENDING',
+        entity: 'order',
+        entityId: order.id,
+        metadataJson: {
+          fromState: null,
+          toState: 'PAYMENT_PENDING',
+          trigger: 'checkout.completed',
+          orderId: order.id,
+          cartId: cart.id,
+        },
+      });
+
       return {
         orderId: order.id,
         status: order.status,
