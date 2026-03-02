@@ -18,9 +18,11 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
-import { adminAuthMiddleware } from '../../middleware/auth.js';
+import { adminAuthMiddleware, requireAdminRole } from '../../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { provisionTenant } from '../../services/tenantProvision.service.js';
+import { prisma } from '../../db/prisma.js';
+import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 
 /**
  * Request body schema — validated before service invocation.
@@ -80,7 +82,7 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
    *   409 — slug or user constraint conflict
    *   500 — internal / DB error
    */
-  fastify.post('/tenants/provision', async (request, reply) => {
+  fastify.post('/tenants/provision', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     // ── Route-level admin enforcement (defense-in-depth) ──────────────────────
     // adminAuthMiddleware guards the plugin, but we assert isAdmin explicitly
     // before touching any service logic (fail-closed posture).
@@ -109,6 +111,21 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
           requestId:    request.id ?? randomUUID(),
           adminActorId: request.adminId,
         }
+      );
+
+      // Audit log — Tier B: tenant provisioning had no prior audit trail (OPS-SUPERADMIN-ENFORCEMENT-001)
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(
+          request.adminId,
+          'control.tenants.provisioned',
+          'tenant',
+          {
+            orgId:   result.orgId,
+            slug:    result.slug,
+            orgName,
+          }
+        )
       );
 
       // Return 201 Created with canonical org_id

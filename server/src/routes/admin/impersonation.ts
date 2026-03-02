@@ -25,7 +25,7 @@
 
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { adminAuthMiddleware } from '../../middleware/auth.js';
+import { adminAuthMiddleware, requireAdminRole } from '../../middleware/auth.js';
 import { prisma } from '../../db/prisma.js';
 import { sendSuccess, sendError } from '../../utils/response.js';
 import {
@@ -56,7 +56,7 @@ const impersonationRoutes: FastifyPluginAsync = async fastify => {
    * Start a time-bounded impersonation session for a tenant user.
    * Returns a tenant-shaped JWT with explicit isImpersonation marker.
    */
-  fastify.post('/impersonation/start', async (request, reply) => {
+  fastify.post('/impersonation/start', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     try {
       const parseResult = startBodySchema.safeParse(request.body);
       if (!parseResult.success) {
@@ -115,7 +115,7 @@ const impersonationRoutes: FastifyPluginAsync = async fastify => {
    * Sets endedAt in DB and writes IMPERSONATION_STOP audit event.
    * Stop reason is persisted to the audit log (not to the session row — schema constraint).
    */
-  fastify.post('/impersonation/stop', async (request, reply) => {
+  fastify.post('/impersonation/stop', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     try {
       const parseResult = stopBodySchema.safeParse(request.body);
       if (!parseResult.success) {

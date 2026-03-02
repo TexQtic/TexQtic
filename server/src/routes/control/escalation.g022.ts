@@ -28,7 +28,7 @@
 
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { adminAuthMiddleware } from '../../middleware/auth.js';
+import { adminAuthMiddleware, requireAdminRole } from '../../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { randomUUID } from 'node:crypto';
 import { withDbContext } from '../../lib/database-context.js';
@@ -213,7 +213,7 @@ const controlEscalationRoutes: FastifyPluginAsync = async fastify => {
    * D-022-A: new severity must be strictly > parent severity.
    * Audit written in same transaction.
    */
-  fastify.post('/:id/upgrade', async (request, reply) => {
+  fastify.post('/:id/upgrade', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     if (!request.adminId) {
       return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
     }
@@ -304,7 +304,7 @@ const controlEscalationRoutes: FastifyPluginAsync = async fastify => {
    * D-022-D: OVERRIDDEN path requires severity >= 2 (enforced by service).
    * Audit event (ESCALATION_RESOLVED or ESCALATION_OVERRIDDEN) written in same tx.
    */
-  fastify.post('/:id/resolve', async (request, reply) => {
+  fastify.post('/:id/resolve', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     if (!request.adminId) {
       return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
     }

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { Prisma, type EventLog } from '@prisma/client';
-import { adminAuthMiddleware } from '../middleware/auth.js';
+import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
 import { randomUUID } from 'node:crypto';
 import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
@@ -176,7 +176,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * Upsert a feature flag (admin only)
    * Wave 5A: Stateful mutation using existing FeatureFlag model
    */
-  fastify.put('/feature-flags/:key', async (request, reply) => {
+  fastify.put('/feature-flags/:key', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     try {
       // Early guard for adminId (guaranteed by middleware)
       if (!request.adminId) {
@@ -519,7 +519,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    * POST /api/control/finance/payouts/:payout_id/approve
    * POST /api/control/finance/payouts/:payout_id/reject
    */
-  fastify.post('/finance/payouts/:payout_id/approve', async (request, reply) => {
+  fastify.post('/finance/payouts/:payout_id/approve', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     try {
       // Early guard for adminId (guaranteed by middleware)
       if (!request.adminId) {
@@ -565,7 +565,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     }
   });
 
-  fastify.post('/finance/payouts/:payout_id/reject', async (request, reply) => {
+  fastify.post('/finance/payouts/:payout_id/reject', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
     try {
       // Early guard for adminId (guaranteed by middleware)
       if (!request.adminId) {
