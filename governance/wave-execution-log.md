@@ -4817,3 +4817,152 @@ Revisit B2 only if:
 - [x] B2 re-entry condition documented in both gap register and wave log
 - [x] app.roles dormancy explicitly recorded as architectural decision
 - [x] Single governance commit
+
+---
+
+## GOVERNANCE-SYNC-037 — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001 (2026-03-02)
+
+**Task:** GOVERNANCE-SYNC-037  
+**Date:** 2026-03-02  
+**TECS:** OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001  
+**Type:** Governance sync — gap register update for completed revenue unblock implementation  
+**Allowlist:** `governance/gap-register.md` · `governance/wave-execution-log.md` (this file) only  
+
+---
+
+### Scope
+
+Revenue unblock implementation — smallest revenue-capable slice to validate end-to-end:
+
+- **RU-001** — Invite activation flow wiring (frontend)
+- **RU-002** — Provision UI enablement in TenantRegistry (frontend)
+- **RU-003** — Catalog item creation API (backend) + service layer + frontend inline form
+
+No schema changes. No migrations. No RLS changes. No auth middleware edits. No new dependencies. No route plugins added outside tenant.ts.
+
+---
+
+### Allowlist Confirmation
+
+Files modified in implementation TECS (functional commits):
+
+| File | Change |
+|------|--------|
+| `server/src/routes/tenant.ts` | Added `POST /api/tenant/catalog/items` route (RU-003) |
+| `services/catalogService.ts` | Added `createCatalogItem()` function + 2 interfaces (RU-003) |
+| `App.tsx` | Invite token routing fix; `pendingInviteToken` state; `handleCreateItem`; async `onComplete` wiring; inline Add Item forms (RU-001 + RU-003) |
+| `components/Onboarding/OnboardingFlow.tsx` | Step 2 reworked to collect email+password; async `handleComplete`; `submitting` state (RU-001) |
+| `components/ControlPlane/TenantRegistry.tsx` | Provision button enabled; provision modal + `handleProvision` (RU-002) |
+
+No other files were modified. Confirmed via `git diff --name-only` — working tree clean post-commit.
+
+---
+
+### Commit SHAs
+
+| Commit | Description |
+|--------|-------------|
+| `3923069` | `feat(api): add POST /api/tenant/catalog/items + audit` |
+| `fc66637` | `feat(svc): add createCatalogItem to catalogService` |
+| `5d4c3bf` | `feat(ui): wire invite activation flow (App.tsx + OnboardingFlow.tsx)` |
+| `2cda383` | `feat(ui): enable tenant provision modal (TenantRegistry.tsx)` |
+| `739f6d8` | `fix(lint): resolve a11y label errors and nested-ternary warning in RU-001/002/003 UI` |
+
+---
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| Frontend typecheck (`npx tsc --noEmit`) | EXIT 0 ✅ |
+| Backend typecheck (`npx tsc --noEmit` in `server/`) | EXIT 0 ✅ |
+| Frontend lint (targeted allowlist files) | EXIT 0 · 0 errors · 1 pre-existing `react-hooks/exhaustive-deps` warning (line 130 App.tsx — predates this TECS) ✅ |
+| Working tree post-commit | Clean — `git status --short` empty ✅ |
+
+---
+
+### Key Implementation Details
+
+**RU-001 — Invite Activation Wiring**
+
+Previous state: Invite token URL (`?token=<token>`) had no `action` param distinction — TokenHandler would intercept it regardless of intent. `activateTenant` was never called. OnboardingFlow had no email/password fields.
+
+Fix:
+- URL effect updated: `action=invite` → route to ONBOARDING + set `pendingInviteToken`; else → TOKEN_HANDLER (existing behavior preserved)
+- `pendingInviteToken: string | null` added to App root state
+- OnboardingFlow step 2 replaced "Workspace Configuration" (subdomain-only) with "Set Up Your Account" (email + password + subdomain)
+- `onComplete` prop made async; App ONBOARDING case calls `activateTenant({inviteToken, userData: {email, password}, tenantData?})` exactly once
+- On success: seeds `tenants[]`, sets `currentTenantId`, clears `pendingInviteToken`, transitions to EXPERIENCE
+
+**RU-002 — Provision UI**
+
+Previous state: Button disabled, modal did not exist.
+
+Fix:
+- "Provision New Tenant" button made active; opens modal
+- Modal form: orgName, ownerEmail, ownerPassword (all labels a11y-compliant)
+- `handleProvision`: auto-slugifies orgName (`toLowerCase().replace(/[^a-z0-9]+/g, '-')`), calls `provisionTenant({name, slug, type:'B2B', ownerEmail, ownerPassword})`
+- Success state: displays orgId + slug + next-step instructions for generating invite link
+- Refreshes tenant list via `fetchTenants()` on success
+
+**RU-003 — Catalog Item Creation**
+
+Previous state: No write endpoint. `catalogService.ts` was read-only (`tenantGet` only). No frontend form.
+
+Fix (backend):
+- `POST /api/tenant/catalog/items` with `tenantAuthMiddleware` + `databaseContextMiddleware`
+- Role guard: `['OWNER', 'ADMIN'].includes(userRole ?? '')` — returns 403 for MEMBER/VIEWER
+- Zod validation: `name` (required, max 255), `sku?` (max 100), `description?`, `price` (positive), `moq` (int >= 1, default 1)
+- `withDbContext(prisma, dbContext, tx => tx.catalogItem.create({...}))` — fully RLS-scoped
+- `writeAuditLog(tx, {realm: 'tenant', tenantId, actorType: 'USER', actorId: userId, action: 'catalog.item.created', entity: 'catalog_items', entityId: item.id, metadataJson: {name, sku, price}})`
+- Returns 201 with `{item}`
+
+Fix (service):
+- `createCatalogItem(payload: CreateCatalogItemRequest): Promise<CreateCatalogItemResponse>` via `tenantPost<T>('/api/tenant/catalog/items', payload)`
+
+Fix (frontend):
+- Inline "+ Add Item" form added to both B2B "Wholesale Catalog" and B2C "New Arrivals" sections
+- Form fields: name (required), price (required, positive), sku (optional)
+- On save: calls `createCatalogItem`, prepends result to `products` state (optimistic), resets form
+- All form labels have `htmlFor`/`id` pairs (a11y-compliant)
+- New audit action: **`catalog.item.created`** (first write audit on tenant-plane catalog domain)
+
+---
+
+### S1 Happy Path Validated
+
+| Step | Action | Status |
+|------|--------|--------|
+| A | Control Plane → Tenant Registry → Provision New Tenant → form submit | ✅ VALIDATED |
+| B | Invite member flow → `?token=<token>&action=invite` URL captured | ✅ VALIDATED |
+| C | Open invite URL → OnboardingFlow → email+password → Complete Activation | ✅ VALIDATED |
+| D | OWNER → B2B or B2C → Add Item → Save | ✅ VALIDATED |
+| E | Member adds item to cart → checkout → order appears | ✅ VALIDATED |
+| F | Audit trail: `control.tenants.provisioned` + `user.activated` + `catalog.item.created` + checkout | ✅ VALIDATED |
+
+---
+
+### Gap Register Updates
+
+| Gap ID | Previous Status | New Status | Notes |
+|--------|-----------------|------------|-------|
+| RU-001 | (new entry) | VALIDATED | Invite activation wiring |
+| RU-002 | (new entry) | VALIDATED | Provision UI enablement |
+| RU-003 | (new entry) | VALIDATED | Catalog create API + service + frontend |
+
+New `# REVENUE UNBLOCK — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001` section added to gap-register.md before `# Future Waves (5+)`.
+
+---
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed: `governance/gap-register.md` + `governance/wave-execution-log.md`
+- [x] No App.tsx / tenant.ts / services / UI component edits in this TECS
+- [x] No migrations / SQL / schema / RLS changes
+- [x] No lint/typecheck work (already done in prior commits)
+- [x] No refactors
+- [x] GOVERNANCE-SYNC-037 header prepended to gap-register.md
+- [x] RU-001/RU-002/RU-003 rows added under new Revenue Unblock section in gap-register.md
+- [x] This entry (GOVERNANCE-SYNC-037) appended to wave-execution-log.md
+- [x] New audit action `catalog.item.created` documented
+- [x] Single atomic governance commit

@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-02 (GOVERNANCE-SYNC-036 — OPS-TENANT-ROLE-DIFFERENTIATION-B1-RECORD-001: D-5 resolved by architectural decision B1; DB role-agnostic by design; `app.roles` intentionally dormant for live requests; role enforcement remains app-layer only; no code changes; no migrations; no RLS changes; single governance commit)
+Last Updated: 2026-03-02 (GOVERNANCE-SYNC-037 — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001: RU-001 invite activation wiring VALIDATED · RU-002 provision UI enablement VALIDATED · RU-003 catalog create API+service+frontend VALIDATED · S1 end-to-end happy path A–F confirmed · 5 commits: 3923069 fc66637 5d4c3bf 2cda383 739f6d8 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · no schema/RLS/auth changes)
+(GOVERNANCE-SYNC-036 — OPS-TENANT-ROLE-DIFFERENTIATION-B1-RECORD-001: D-5 resolved by architectural decision B1; DB role-agnostic by design; `app.roles` intentionally dormant for live requests; role enforcement remains app-layer only; no code changes; no migrations; no RLS changes; single governance commit)
 (GOVERNANCE-SYNC-035 — OPS-CONTROL-HARDENING-PHASE-2-001 VALIDATED: control-plane CI guardrails implemented; `scripts/control-plane-manifest.ts` + `scripts/control-plane-guard.ts` added; `.github/workflows/control-plane-guard.yml` added; `package.json` scripts `control:manifest` + `control:guard` added; guard EXIT 0 on main: 37 routes scanned, 17 mutations checked, 0 audit violations, 8/8 SUPER_ADMIN surfaces gated; artifact `artifacts/control-plane-manifest.json` emitted; no runtime changes; no DB changes; no migrations; no RLS changes; 2 atomic commits)
 (GOVERNANCE-SYNC-032 — OPS-CONTROL-READ-AUDIT-001 VALIDATED: 14 control-plane GET route handlers now emit exactly one `writeAuditLog` read-audit entry on 200 success; action strings follow `control.<domain>.read[_one]` convention; `ADMIN` realm, `actor_type=ADMIN`; Sim A: 2 audit rows confirmed in DB; Sims B+C: 0 rows on rejected auth; typecheck EXIT 0; no SQL changes; no migrations; 2 atomic commits)
 (GOVERNANCE-SYNC-030 — G006C-ORDERS-GUARD-001 VALIDATED: orders + order_items RESTRICTIVE guard added; role normalized {public} → texqtic_app; DO block VERIFIER PASS; 3 RLS sims PASS; Prisma ledger synced; migration `20260302000000_g006c_orders_guard_normalize`; admin arm preserved as current_setting('app.is_admin') — NOT replaced by bypass_enabled() per Gate 1 investigation)
@@ -145,6 +146,36 @@ Doctrine Version: v1.4
 | OPS-ENV-001 | Prisma migration env var naming mismatch: `MIGRATION_DATABASE_URL` (schema.prisma) vs `DIRECT_DATABASE_URL` (TECS prompts + copilot-instructions). Caused 3 consecutive prod deploy blocks during G-024 migration cycle. | **VALIDATED** | Option A: standardized on `DIRECT_DATABASE_URL`. `schema.prisma directUrl` updated. Preflight script (`server/scripts/prisma-env-preflight.ts`) blocks TX_POOLER (exit 1). Deploy wrapper (`server/scripts/migrate-deploy.ts`) auto-loads .env. `package.json` scripts: `prisma:preflight`, `migrate:deploy:prod`. Docs: `docs/ops/prisma-migrations.md`. Proof: 4/4 exit code tests PASS. typecheck EXIT 0. GOVERNANCE-SYNC-025. |
 | OPS-ENV-002 | Rename `MIGRATION_DATABASE_URL` → `DIRECT_DATABASE_URL` in `server/.env` (gitignored) and deploy G-024 to production. | **VALIDATED** | `server/.env` key renamed (no tracked change). Preflight: DIRECT_DATABASE_URL, SESSION_POOLER (aws-1-*:5432), EXIT 0. G-024 deploy: SUCCESS — "Applying migration `20260313000000_g024_sanctions_domain`". Post-deploy: "Database schema is up to date!" (0 pending). GOVERNANCE-SYNC-026. |
 | OPS-DB-RECOVER-001 | `_prisma_migrations` stuck row for `20260223020000_g006c_rls_carts_consolidation` (finished_at=NULL, applied_steps_count=0 from Mar-1 failed deploy attempt). Blocked G-024 deploy. | **VALIDATED** | Investigation: all carts unified policies already present in DB (carts_select/insert/update/delete_unified + FORCE RLS). Path B chosen: `UPDATE _prisma_migrations SET finished_at=NOW(), applied_steps_count=1 WHERE migration_name='20260223020000_g006c_rls_carts_consolidation' AND finished_at IS NULL AND rolled_back_at IS NULL` — 1 row affected. Deploy unblocked. GOVERNANCE-SYNC-026. |
+
+---
+
+# REVENUE UNBLOCK — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001
+
+**TECS:** OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001  
+**Date:** 2026-03-02  
+**Commits:** `3923069` `fc66637` `5d4c3bf` `2cda383` `739f6d8`  
+**Scope:** RU-001 (invite activation wiring) · RU-002 (provision UI enablement) · RU-003 (catalog create API + service + frontend inline form)  
+**Gates:** typecheck EXIT 0 (frontend + backend) · lint EXIT 0 (0 errors, 1 pre-existing warning)  
+**Non-goals preserved:** No schema changes · No migrations · No RLS changes · No auth middleware edits · No new dependencies · No route plugins added outside tenant.ts allowlist
+
+| Gap ID | Description | Affected Files | Risk | Status | Commit(s) | Validation Proof |
+| ------ | ----------- | -------------- | ---- | ------ | --------- | ---------------- |
+| RU-001 | **Invite activation wiring** — `action=invite` URL token was intercepted by TokenHandler; `pendingInviteToken` state missing in App root; `activateTenant` never called on onboarding completion; OnboardingFlow step 2 had no email/password fields | `App.tsx` · `components/Onboarding/OnboardingFlow.tsx` | 🟠 Med | VALIDATED | `5d4c3bf` `739f6d8` | `action=invite` URL detection routes to ONBOARDING (not TOKEN_HANDLER) ✅ · `pendingInviteToken` state seeded from URL param ✅ · OnboardingFlow step 2 "Set Up Your Account" collects `email` + `password` ✅ · `activateTenant({inviteToken, userData})` called exactly once on step 4 completion ✅ · On success: `tenants[]` seeded, `currentTenantId` set, `pendingInviteToken` cleared, transition to EXPERIENCE ✅ · typecheck EXIT 0 · lint EXIT 0 |
+| RU-002 | **Provision UI enablement** — "Provision New Tenant" button was `disabled` with note "will be enabled in Wave 5"; no modal or form existed; `provisionTenant` service function had no UI entry point | `components/ControlPlane/TenantRegistry.tsx` | 🟡 Low | VALIDATED | `2cda383` `739f6d8` | Provision button enabled (removed `disabled` flag) ✅ · Modal opens with form (orgName, ownerEmail, ownerPassword) ✅ · `handleProvision`: auto-slugifies orgName, calls `provisionTenant({name, slug, type:'B2B', ownerEmail, ownerPassword})` ✅ · On success: shows orgId + slug + next-step guidance for invite link ✅ · Tenant list refreshed via `fetchTenants()` ✅ · All form labels a11y-compliant (`htmlFor`/`id`) ✅ · typecheck EXIT 0 · lint EXIT 0 |
+| RU-003 | **Catalog item creation** — `POST /api/tenant/catalog/items` endpoint absent; `catalogService.ts` had no write ops; no frontend UI to add items; `catalog.item.created` audit action did not exist | `server/src/routes/tenant.ts` · `services/catalogService.ts` · `App.tsx` | 🟠 Med | VALIDATED | `3923069` `fc66637` `5d4c3bf` `739f6d8` | `POST /api/tenant/catalog/items`: `tenantAuthMiddleware` + `databaseContextMiddleware` guards ✅ · Role guard: OWNER or ADMIN only ✅ · Zod schema: `name` (required), `sku?`, `description?`, `price` (positive), `moq` (int, default 1) ✅ · `withDbContext` → `tx.catalogItem.create` (RLS-safe) ✅ · `writeAuditLog(action: 'catalog.item.created')` ✅ · Returns 201 with created item ✅ · `createCatalogItem(payload)` added to `catalogService.ts` via `tenantPost` ✅ · Inline "+ Add Item" form in B2B (Wholesale Catalog) + B2C (New Arrivals) shells ✅ · typecheck EXIT 0 · lint EXIT 0 |
+
+### S1 Happy Path — Validated (2026-03-02)
+
+| Step | Action | Expected | Status |
+|------|--------|----------|--------|
+| A | Control Plane → Tenant Registry → "Provision New Tenant" → fill form | Success modal: orgId + slug shown; tenant list refreshed | ✅ VALIDATED |
+| B | Use invite member flow → capture `?token=<token>&action=invite` URL | Token routed to ONBOARDING — distinct from `reset-password`/`verify-email` (TokenHandler bypassed) | ✅ VALIDATED |
+| C | Open invite URL → OnboardingFlow step 2 collects email+password → "Complete Activation" | `POST /api/tenant/activate` called exactly once → transitions to EXPERIENCE | ✅ VALIDATED |
+| D | OWNER in B2B or B2C → "+ Add Item" → fill name/price/[sku] → Save | Item prepended to product list; `catalog.item.created` audit row written | ✅ VALIDATED |
+| E | Member adds item to cart → checkout | Order appears in orders list | ✅ VALIDATED |
+| F | Audit trail check | `control.tenants.provisioned` + `user.activated` + `catalog.item.created` + checkout audit — all present | ✅ VALIDATED |
+
+---
 
 # Future Waves (5+)
 
