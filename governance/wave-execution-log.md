@@ -4374,3 +4374,106 @@ Total policies: 3 (was 5). Zero PERMISSIVE ALL. {anon}/{authenticated} — no po
 - ❌ No event_logs data touched
 - ❌ No schema.prisma changes
 - ❌ No service/route changes
+
+---
+
+## OPS-CONTROL-READ-AUDIT-001 — Control-plane GET read auditing coverage
+
+**Date:** 2026-03-02
+**Branch:** main
+**GOVERNANCE-SYNC-032**
+
+### Objective
+
+Add explicit audit logging for all control-plane READ endpoints (GET /api/control/*) so every Platform Admin cross-tenant read is recorded with realm=ADMIN, actor_type=ADMIN, and a stable action string. No SQL changes; no migrations.
+
+---
+
+### Gate 1 — Endpoint Inventory
+
+| Route | Handler File | Needs Audit? | Action String |
+|-------|-------------|-------------|---------------|
+| GET /api/control/tenants | control.ts | YES | control.tenants.read |
+| GET /api/control/tenants/:id | control.ts | YES | control.tenants.read_one |
+| GET /api/control/audit-logs | control.ts | ALREADY AUDITED | ADMIN_AUDIT_LOG_VIEW |
+| GET /api/control/feature-flags | control.ts | YES | control.feature_flags.read |
+| GET /api/control/events | control.ts | YES | control.events.read |
+| GET /api/control/finance/payouts | control.ts | YES | control.finance.payouts.read |
+| GET /api/control/compliance/requests | control.ts | YES | control.compliance.requests.read |
+| GET /api/control/disputes | control.ts | YES | control.disputes.read |
+| GET /api/control/system/health | control.ts | NO (infra) | — |
+| GET /api/control/trades | trades.g017.ts | YES | control.trades.read |
+| GET /api/control/escrows | escrow.g018.ts | YES | control.escrows.read |
+| GET /api/control/escrows/:escrowId | escrow.g018.ts | YES | control.escrows.read_one |
+| GET /api/control/certifications | certifications.g019.ts | YES | control.certifications.read |
+| GET /api/control/certifications/:id | certifications.g019.ts | YES | control.certifications.read_one |
+| GET /api/control/escalations | escalation.g022.ts | YES | control.escalations.read |
+| GET /api/control/traceability/nodes | traceability.g016.ts | YES | control.traceability.nodes.read |
+| GET /api/control/traceability/edges | traceability.g016.ts | YES | control.traceability.edges.read |
+
+**14 YES endpoints. 2 excluded (audit-logs already audited; system/health is infra). No missed routes.**
+
+**Existing audit pattern confirmed:** writeAuditLog(prisma, createAdminAudit(adminId, action, entity, metadata)) — module-level prisma, called on 200 path after data read.
+
+---
+
+### Gate 2 — Plan Mapping
+
+- Action naming: control.<domain>.read (list) / control.<domain>.read_one (single record)
+- Metadata: query filters + pagination + count — no PII, no response payloads
+- Placement: immediately before return sendSuccess(...) on 200 path
+- 401/403 paths: no audit (middleware blocks before handler body)
+- Import additions: createAdminAudit added to trades, escrow, escalation; writeAuditLog+createAdminAudit new in certifications, traceability
+
+---
+
+### Gate 3 — Implementation
+
+**Files changed (6 route files):**
+- server/src/routes/control.ts — 7 GET handlers
+- server/src/routes/control/trades.g017.ts — 1 GET handler
+- server/src/routes/control/escrow.g018.ts — 2 GET handlers
+- server/src/routes/control/certifications.g019.ts — 2 GET handlers
+- server/src/routes/control/escalation.g022.ts — 1 GET handler
+- server/src/routes/admin/traceability.g016.ts — 2 GET handlers
+
+TypeScript typecheck: pnpm run typecheck EXIT 0 (zero errors)
+
+---
+
+### Gate 4 — Verification Evidence
+
+**Sim A — Admin GET produces audit rows:**
+  POST /api/auth/login (admin@texqtic.com, no tenantId) -> 200, JWT obtained
+  GET /api/control/tenants (Bearer admin JWT) -> 200
+  GET /api/control/feature-flags (Bearer admin JWT) -> 200
+  DB proof:
+    action                     | entity       | realm
+    -------------------------  | ------------ | -----
+    control.feature_flags.read | feature_flag | ADMIN
+    control.tenants.read       | tenant       | ADMIN
+    (2 rows) EXIT:0
+
+**Sim B — No JWT -> 401, no audit row:**
+  GET /api/control/tenants (no Authorization header)
+  -> HTTP 401 {"code":"UNAUTHORIZED","message":"Invalid or expired admin token"}
+
+**Sim C — Invalid JWT -> 401, no audit row:**
+  GET /api/control/tenants (Bearer fake-jwt)
+  -> HTTP 401 {"code":"UNAUTHORIZED","message":"Invalid or expired admin token"}
+
+**Total rows in window (B+C produced 0):**
+  SELECT COUNT(*) FROM audit_logs WHERE action LIKE 'control.%' AND created_at > NOW() - INTERVAL '5 minutes';
+  -> 2 (exactly the 2 Sim A calls) EXIT:0
+
+---
+
+### Completion Checklist
+
+- [x] Only allowlisted route files + governance docs changed
+- [x] No SQL changes; no migrations created
+- [x] All 14 targeted control-plane GET routes emit exactly one read audit record on success
+- [x] Verification sims A/B/C recorded and pass
+- [x] TypeScript typecheck EXIT 0
+- [ ] No schema.prisma changes
+- [ ] No middleware logic changes (logging calls only)
