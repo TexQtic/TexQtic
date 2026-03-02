@@ -1046,7 +1046,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return { user, membership };
       });
 
+      // Issue tenant JWT — same claims as POST /api/auth/login tenant path
+      const token = await reply.tenantJwtSign({
+        userId: result.user.id,
+        tenantId: invite.tenantId,
+        role: result.membership.role,
+      });
+
       return sendSuccess(reply, {
+        token,
         user: {
           id: result.user.id,
           email: result.user.email,
@@ -1055,6 +1063,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           id: invite.tenant.id,
           name: invite.tenant.name,
           slug: invite.tenant.slug,
+          type: invite.tenant.type,
         },
         membership: {
           role: result.membership.role,

@@ -98,6 +98,8 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
                   type="text"
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Manufacturing / Logistics / Consumer Goods"
+                  value={formData.industry}
+                  onChange={e => setFormData({ ...formData, industry: e.target.value })}
                 />
               </div>
             </div>

@@ -35,7 +35,7 @@ import { Cart } from './components/Cart/Cart';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
-import { setImpersonationToken, APIError } from './services/apiClient';
+import { setImpersonationToken, setToken, APIError } from './services/apiClient';
 
 const App: React.FC = () => {
   // Production-grade State Machine
@@ -936,7 +936,7 @@ const App: React.FC = () => {
               inviteToken={pendingInviteToken ?? undefined}
               onComplete={async (formData: any) => {
                 if (pendingInviteToken) {
-                  const result = await activateTenant({
+                  const raw = await activateTenant({
                       inviteToken: pendingInviteToken,
                       userData: {
                         email: formData.email,
@@ -946,19 +946,21 @@ const App: React.FC = () => {
                         name: formData.orgName || undefined,
                         industry: formData.industry || undefined,
                       },
-                    });
-                    // Seed tenant state from activation response
+                    }) as any;
+                    // Store JWT so all subsequent tenant API calls are authenticated
+                    setToken(raw.token, 'TENANT');
+                    // Seed tenant state from activation response (use server-returned type)
                     setTenants([{
-                      id: result.tenant.id,
-                      slug: result.tenant.slug,
-                      name: result.tenant.name,
-                      type: 'B2B',
+                      id: raw.tenant.id,
+                      slug: raw.tenant.slug,
+                      name: raw.tenant.name,
+                      type: (raw.tenant.type ?? 'B2B') as TenantType,
                       status: 'ACTIVE',
                       plan: 'TRIAL',
                       createdAt: '',
                       updatedAt: '',
                     } as Tenant]);
-                    setCurrentTenantId(result.tenant.id);
+                    setCurrentTenantId(raw.tenant.id);
                     setPendingInviteToken(null);
                     setAppState('EXPERIENCE');
                 } else {

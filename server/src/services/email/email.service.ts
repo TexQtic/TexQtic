@@ -253,7 +253,7 @@ export async function sendInviteMemberEmail(
   orgName: string,
   context: EmailContext = {}
 ): Promise<void> {
-  const inviteLink = `${FRONTEND_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}`;
+  const inviteLink = `${FRONTEND_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}&action=invite`;
   await sendEmail(
     {
       to,
