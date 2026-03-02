@@ -1,0 +1,80 @@
+# Control Plane Guard — CI Invariant Enforcement
+#
+# TECS: OPS-CONTROL-HARDENING-PHASE-2-001
+# Control Plane Hardening Phase 2 — Drift & Audit Guardrails
+#
+# Enforces two architectural invariants on every PR and push to main:
+#   1. Write-side audit enforcement: every mutation route under /api/control
+#      must have writeAuditLog / writeAuthorityIntent / boundAudit evidence
+#      in its source file (unless explicitly allowlisted).
+#   2. SUPER_ADMIN surface lock: the 8 required high-risk routes must have
+#      requireAdminRole('SUPER_ADMIN') in their preHandler declaration.
+#
+# NO DB access. NO secrets required. Pure static file analysis.
+# Fails fast if either invariant is violated.
+#
+# Emits CI artifact: artifacts/control-plane-manifest.json
+
+name: Control Plane Guard (Phase 2)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  control-plane-guard:
+    name: Control Plane Invariant Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-server-${{ hashFiles('server/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-server-
+
+      - name: Install server dependencies (provides tsx)
+        working-directory: server
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (server)
+        working-directory: server
+        run: pnpm run typecheck
+
+      - name: Run control-plane guard
+        # tsx resolved from server/node_modules via pnpm --dir server exec.
+        # pnpm --dir changes CWD to server/, so the script path is ../scripts/.
+        # __dirname in the script resolves correctly via import.meta.url regardless of CWD.
+        run: pnpm --dir server exec tsx ../scripts/control-plane-guard.ts
+
+      - name: Upload manifest artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: control-plane-manifest
+          path: artifacts/control-plane-manifest.json
+          # Upload even on failure so violations can be inspected
+          if-no-files-found: warn
+          retention-days: 30
