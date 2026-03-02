@@ -4245,3 +4245,132 @@ No {public} policies remain on either table. ✅
 - ✅ GATE 1 finding documented: bypass_enabled() ≠ is_admin; admin arm preserved unchanged
 - ✅ Governance files updated (GOVERNANCE-SYNC-030)
 - ❌ G006C-EVENT-LOGS-CLEANUP-001 NOT started (pre-req satisfied; awaiting separate TECS)
+
+---
+
+## G006C-EVENT-LOGS-CLEANUP-001 — EVENT_LOGS ORPHAN DENY POLICY REMOVAL
+
+**Date:** 2026-03-02
+**TECS:** G006C-EVENT-LOGS-CLEANUP-001
+**Mode:** Investigate → Plan → Implement
+**Migration:** `20260302010000_g006c_event_logs_cleanup`
+**Pre-req:** G006C-ORDERS-GUARD-001 COMPLETE (confirmed)
+**Status:** COMPLETE ✅
+
+---
+
+### GATE 0 — Preconditions
+
+- Branch: `main` ✅
+- `git status --short`: clean (formatter-modified prior migration file restored via `git checkout --`) ✅
+- `DIRECT_DATABASE_URL`: present (PG env vars initialized from prior session) ✅
+
+---
+
+### GATE 1 — Pre-inspection (Read-Only)
+
+**All policies on `event_logs` (live DB 2026-03-02, pre-migration):**
+
+| Policy | Permissive | CMD | Roles | QUAL |
+|---|---|---|---|---|
+| `event_logs_guard` | RESTRICTIVE | ALL | `{texqtic_app}` | `require_org_context() OR bypass_enabled()` |
+| `event_logs_deny_anon_all` | PERMISSIVE | ALL | `{anon}` | `false` |
+| `event_logs_deny_authenticated_all` | PERMISSIVE | ALL | `{authenticated}` | `false` |
+| `event_logs_insert_unified` | PERMISSIVE | INSERT | `{texqtic_app}` | tenant-scoped + bypass |
+| `event_logs_select_unified` | PERMISSIVE | SELECT | `{texqtic_app}` | tenant-scoped + bypass |
+
+**Orphan policies confirmed with exact names:** ✅
+- `event_logs_deny_anon_all` — PERMISSIVE ALL {anon} USING false ✅
+- `event_logs_deny_authenticated_all` — PERMISSIVE ALL {authenticated} USING false ✅
+
+**Compensating control confirmed:** `event_logs_guard` roles = `{texqtic_app}` only (NOT {anon}/{authenticated}). After DROP, anon/authenticated remain blocked by FORCE RLS + zero permissive policies. ✅
+
+**RLS flags:** ENABLE RLS = t, FORCE RLS = t ✅
+
+**GATE 1: PASS**
+
+---
+
+### GATE 2 — Migration Authoring
+
+**File created:** `server/prisma/migrations/20260302010000_g006c_event_logs_cleanup/migration.sql`
+
+**Structure:**
+- Step 1: `DROP POLICY IF EXISTS event_logs_deny_anon_all ON public.event_logs`
+- Step 2: `DROP POLICY IF EXISTS event_logs_deny_authenticated_all ON public.event_logs`
+- Step 3: DO block verifier — asserts: FORCE RLS = true; 1 RESTRICTIVE guard; guard roles = {texqtic_app}; 0 PERMISSIVE ALL; select_unified present; insert_unified present
+
+**Diff check:** `git status --short` showed only allowlisted migration directory + temp file (deleted before commit). ✅
+
+**GATE 2: PASS**
+
+---
+
+### GATE 3 — PROD Apply
+
+**Command:** `psql -v ON_ERROR_STOP=1 -f server\prisma\migrations\20260302010000_g006c_event_logs_cleanup\migration.sql`
+
+**Output:**
+`
+BEGIN
+DROP POLICY
+DROP POLICY
+NOTICE: VERIFIER PASS — event_logs: orphan deny policies removed; guard intact (texqtic_app only); unified select+insert intact; 0 PERMISSIVE ALL remain
+DO
+COMMIT
+APPLY_EXIT:0
+`
+
+**GATE 3: PASS — Exit 0, VERIFIER PASS**
+
+---
+
+### GATE 4 — Post-Apply Verification
+
+**Final policy state on `event_logs` (live, post-migration):**
+
+| Policy | Permissive | CMD | Roles |
+|---|---|---|---|
+| `event_logs_guard` | RESTRICTIVE | ALL | `{texqtic_app}` ✅ |
+| `event_logs_insert_unified` | PERMISSIVE | INSERT | `{texqtic_app}` ✅ |
+| `event_logs_select_unified` | PERMISSIVE | SELECT | `{texqtic_app}` ✅ |
+
+Total policies: 3 (was 5). Zero PERMISSIVE ALL. {anon}/{authenticated} — no policies, fully blocked by FORCE RLS. texqtic_app behavior unchanged. ✅
+
+**GATE 4: PASS**
+
+---
+
+### GATE 5 — Prisma Ledger Sync
+
+**Command:** `pnpm exec prisma migrate resolve --applied 20260302010000_g006c_event_logs_cleanup`
+
+**Output:** `Migration 20260302010000_g006c_event_logs_cleanup marked as applied.` RESOLVE_EXIT:0 ✅
+
+**Post-resolve status:** `Database schema is up to date!` (63 migrations) ✅
+
+**GATE 5: PASS**
+
+---
+
+### GATE 6 — Governance Commits
+
+- `governance/gap-register.md`: GOVERNANCE-SYNC-031 header; G006C-EVENT-LOGS-CLEANUP-001 row → COMPLETE
+- `governance/wave-execution-log.md` (this entry): full execution record appended
+- Temp file (`tmp_g1_el.sql`) deleted before commit
+- Commit message: `fix(g006c): event_logs orphan deny policy cleanup`
+
+---
+
+### STOP CONFIRMATION
+
+- ✅ Migration `20260302010000_g006c_event_logs_cleanup` applied to PROD (EXIT:0)
+- ✅ DO block VERIFIER PASS (guard intact, 0 PERMISSIVE ALL, select+insert_unified present)
+- ✅ {anon}/{authenticated} remain blocked (FORCE RLS + no permissive = denied)
+- ✅ texqtic_app behavior unchanged (guard + select_unified + insert_unified all intact)
+- ✅ Prisma ledger synced (Database schema is up to date! — 63 migrations)
+- ✅ Governance files updated (GOVERNANCE-SYNC-031)
+- ✅ All G006C post-consolidation work complete: P0 (orders guard) + P1 (event_logs cleanup) DONE
+- ❌ No event_logs data touched
+- ❌ No schema.prisma changes
+- ❌ No service/route changes
