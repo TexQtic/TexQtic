@@ -188,9 +188,9 @@ const App: React.FC = () => {
     }
   }, [currentTenant, appState]);
 
-  // Fetch catalog items when entering experience mode
+  // Fetch catalog items when entering experience mode (or WL_ADMIN Products panel)
   useEffect(() => {
-    if (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS') {
+    if (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS' || appState === 'WL_ADMIN') {
       const fetchCatalog = async () => {
         setCatalogLoading(true);
         setCatalogError(null);
@@ -388,7 +388,115 @@ const App: React.FC = () => {
     switch (wlAdminView) {
       case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} />;
       case 'STAFF':       return <TeamManagement />;
-      case 'PRODUCTS':    return <WLStubPanel title="Products" icon="📦" description="Manage your store catalog, variants, and pricing. Full product management coming in Wave 4." />;
+      case 'PRODUCTS': return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex justify-between items-end">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Product Catalog</h2>
+              <p className="text-slate-500 text-sm mt-0.5">Manage your store inventory.</p>
+            </div>
+            <button
+              onClick={() => setShowAddItemForm(v => !v)}
+              className="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-slate-700 transition"
+            >
+              + Add Item
+            </button>
+          </div>
+
+          {showAddItemForm && (
+            <form onSubmit={handleCreateItem} className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
+              <h3 className="font-bold text-slate-800">New Catalog Item</h3>
+              {addItemError && (
+                <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label htmlFor="wl-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                  <input
+                    id="wl-add-name"
+                    required
+                    value={addItemFormData.name}
+                    onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
+                    placeholder="Product name"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="wl-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                  <input
+                    id="wl-add-price"
+                    required
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={addItemFormData.price}
+                    onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="wl-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                  <input
+                    id="wl-add-sku"
+                    value={addItemFormData.sku}
+                    onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
+                    placeholder="Optional SKU"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={addItemLoading}
+                  className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-700 transition disabled:opacity-50"
+                >
+                  {addItemLoading ? 'Saving...' : 'Save Item'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                  className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {catalogLoading && (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-800 mx-auto"></div>
+              <p className="mt-4 text-slate-500 text-sm">Loading catalog...</p>
+            </div>
+          )}
+
+          {catalogError && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">{catalogError}</div>
+          )}
+
+          {!catalogLoading && !catalogError && products.length === 0 && (
+            <div className="text-center py-16 text-slate-400 text-sm">No products yet. Add your first item above.</div>
+          )}
+
+          {!catalogLoading && !catalogError && products.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {products.map(p => (
+                <div key={p.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-1">
+                  <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{p.category || 'General'}</div>
+                  <div className="font-semibold text-slate-800">{p.name}</div>
+                  {p.sku && <div className="text-xs text-slate-400">SKU: {p.sku}</div>}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-emerald-700 font-bold text-sm">${p.basePrice}</span>
+                    <span className="text-xs text-slate-400">MOQ: {p.moq || 1}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
       case 'COLLECTIONS': return <WLStubPanel title="Collections" icon="🗂️" description="Group products into curated storefront collections for your buyers." />;
       case 'ORDERS':      return <WLStubPanel title="Orders" icon="🛍️" description="View and manage customer orders, fulfillment, and returns." />;
       case 'DOMAINS':     return <WLStubPanel title="Domains" icon="🌐" description="Connect a custom domain and configure DNS for your white-label store." />;
