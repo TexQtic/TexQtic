@@ -115,7 +115,7 @@
   // governance files that look like content changes but are whitespace-only.
   "[markdown]": {
     "editor.formatOnSave": false,
-    "editor.defaultFormatter": null
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "files.trimTrailingWhitespace": false
 }
