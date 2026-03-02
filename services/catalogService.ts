@@ -6,7 +6,7 @@
  * - Search catalog
  */
 
-import { tenantGet } from './tenantApiClient';
+import { tenantGet, tenantPost } from './tenantApiClient';
 
 export interface CatalogItem {
   id: string;
@@ -77,4 +77,30 @@ export async function searchCatalog(
   limit: number = 20
 ): Promise<CatalogResponse> {
   return getCatalogItems({ q: searchQuery, limit });
+}
+
+// ==================== WRITE OPERATIONS ====================
+
+export interface CreateCatalogItemRequest {
+  name: string;
+  sku?: string;
+  description?: string;
+  price: number;
+  moq?: number;
+}
+
+export interface CreateCatalogItemResponse {
+  item: CatalogItem;
+}
+
+/**
+ * Create a catalog item (OWNER/ADMIN only)
+ *
+ * @param payload - Item fields (name, price required; sku, description, moq optional)
+ * @returns Created catalog item
+ */
+export async function createCatalogItem(
+  payload: CreateCatalogItemRequest
+): Promise<CreateCatalogItemResponse> {
+  return tenantPost<CreateCatalogItemResponse>('/api/tenant/catalog/items', payload);
 }
