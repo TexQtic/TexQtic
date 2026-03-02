@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-02 (GOVERNANCE-SYNC-037 — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001: RU-001 invite activation wiring VALIDATED · RU-002 provision UI enablement VALIDATED · RU-003 catalog create API+service+frontend VALIDATED · S1 end-to-end happy path A–F confirmed · 5 commits: 3923069 fc66637 5d4c3bf 2cda383 739f6d8 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · no schema/RLS/auth changes)
+Last Updated: 2026-03-02 (GOVERNANCE-SYNC-038 — OPS-ACTIVATE-JWT-FIX-001: GAP-RUV-001 invite URL action=invite param VALIDATED · GAP-RUV-002 /activate JWT issuance VALIDATED · GAP-RUV-003 tenant.type from response VALIDATED · GAP-RUV-005 industry onChange wired VALIDATED · commit 43ef9c6 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · 4 files only)
+(GOVERNANCE-SYNC-037 — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001: RU-001 invite activation wiring VALIDATED · RU-002 provision UI enablement VALIDATED · RU-003 catalog create API+service+frontend VALIDATED · S1 end-to-end happy path A–F confirmed · 5 commits: 3923069 fc66637 5d4c3bf 2cda383 739f6d8 · typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · no schema/RLS/auth changes)
 (GOVERNANCE-SYNC-036 — OPS-TENANT-ROLE-DIFFERENTIATION-B1-RECORD-001: D-5 resolved by architectural decision B1; DB role-agnostic by design; `app.roles` intentionally dormant for live requests; role enforcement remains app-layer only; no code changes; no migrations; no RLS changes; single governance commit)
 (GOVERNANCE-SYNC-035 — OPS-CONTROL-HARDENING-PHASE-2-001 VALIDATED: control-plane CI guardrails implemented; `scripts/control-plane-manifest.ts` + `scripts/control-plane-guard.ts` added; `.github/workflows/control-plane-guard.yml` added; `package.json` scripts `control:manifest` + `control:guard` added; guard EXIT 0 on main: 37 routes scanned, 17 mutations checked, 0 audit violations, 8/8 SUPER_ADMIN surfaces gated; artifact `artifacts/control-plane-manifest.json` emitted; no runtime changes; no DB changes; no migrations; no RLS changes; 2 atomic commits)
 (GOVERNANCE-SYNC-032 — OPS-CONTROL-READ-AUDIT-001 VALIDATED: 14 control-plane GET route handlers now emit exactly one `writeAuditLog` read-audit entry on 200 success; action strings follow `control.<domain>.read[_one]` convention; `ADMIN` realm, `actor_type=ADMIN`; Sim A: 2 audit rows confirmed in DB; Sims B+C: 0 rows on rejected auth; typecheck EXIT 0; no SQL changes; no migrations; 2 atomic commits)
@@ -174,6 +175,24 @@ Doctrine Version: v1.4
 | D | OWNER in B2B or B2C → "+ Add Item" → fill name/price/[sku] → Save | Item prepended to product list; `catalog.item.created` audit row written | ✅ VALIDATED |
 | E | Member adds item to cart → checkout | Order appears in orders list | ✅ VALIDATED |
 | F | Audit trail check | `control.tenants.provisioned` + `user.activated` + `catalog.item.created` + checkout audit — all present | ✅ VALIDATED |
+
+---
+
+# REVENUE UNBLOCK — OPS-ACTIVATE-JWT-FIX-001
+
+**TECS:** OPS-ACTIVATE-JWT-FIX-001  
+**Date:** 2026-03-02  
+**Commit:** `43ef9c6`  
+**Scope:** GAP-RUV-001 (invite URL action param) · GAP-RUV-002 (activate JWT issuance) · GAP-RUV-003 (tenant type from response) · GAP-RUV-005 (industry field data integrity)  
+**Gates:** typecheck EXIT 0 (frontend + backend) · lint EXIT 0 (0 errors, pre-existing warnings only)  
+**Non-goals preserved:** No schema changes · No migrations · No RLS changes · No auth middleware edits · No new dependencies · No new routes
+
+| Gap ID | Description | Affected Files | Risk | Status | Commit(s) | Validation Proof |
+| ------ | ----------- | -------------- | ---- | ------ | --------- | ---------------- |
+| GAP-RUV-001 | **Invite email URL missing `action=invite` param** — invite link generated as `?token=<tok>` only; `App.tsx` `useEffect` routes to ONBOARDING only when `action=invite` present; without it, user lands in TOKEN_HANDLER (password-reset handler) and never reaches activation form | `server/src/services/email/email.service.ts` | 🔴 Revenue Blocker | VALIDATED | `43ef9c6` | `sendInviteMemberEmail` URL now `?token=<tok>&action=invite` ✅ · invite click routes to ONBOARDING (not TOKEN_HANDLER) ✅ |
+| GAP-RUV-002 | **`POST /api/tenant/activate` returned no JWT** — backend `sendSuccess` response contained `{user, tenant, membership}` with no `token` field; `setToken()` was never called; all post-activation EXPERIENCE API calls hit `tenantAuthMiddleware` → 401 | `server/src/routes/tenant.ts` | 🔴 Revenue Blocker | VALIDATED | `43ef9c6` | `/activate` calls `reply.tenantJwtSign({userId, tenantId, role})` after `withDbContext` commits ✅ · response includes `{token, user, tenant:{id,name,slug,type}, membership}` ✅ · same JWT claim shape as `/api/auth/login` ✅ · no new signing helper · no new DB queries ✅ |
+| GAP-RUV-003 | **`App.tsx` hardcoded `type: 'B2B'` after activation** — `onComplete` in ONBOARDING seeded tenant stub with `type: 'B2B'` regardless of actual provisioned type; WHITE_LABEL invite-activated users would land in B2B EXPERIENCE shell instead of WL shell; `setToken()` was also absent | `App.tsx` | 🟠 User abandonment | VALIDATED | `43ef9c6` | `setToken(raw.token, 'TENANT')` called before `setAppState('EXPERIENCE')` ✅ · `type: (raw.tenant.type ?? 'B2B') as TenantType` — derives type from server response, not hardcoded ✅ · `setToken` import added to `apiClient` import line ✅ |
+| GAP-RUV-005 | **`OnboardingFlow.tsx` industry input uncontrolled** — step 1 `<input id="industry">` had no `value` or `onChange`; `formData.industry` was always `''`; data silently dropped on submit; `tenantData.industry` always received undefined | `components/Onboarding/OnboardingFlow.tsx` | 🟡 Data integrity | VALIDATED | `43ef9c6` | `value={formData.industry}` + `onChange={e => setFormData({...formData, industry: e.target.value})}` wired ✅ · field now controlled; data flows into `tenantData.industry` on activate ✅ |
 
 ---
 

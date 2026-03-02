@@ -4966,3 +4966,133 @@ New `# REVENUE UNBLOCK — OPS-REVENUE-UNBLOCK-IMPLEMENTATION-001` section added
 - [x] This entry (GOVERNANCE-SYNC-037) appended to wave-execution-log.md
 - [x] New audit action `catalog.item.created` documented
 - [x] Single atomic governance commit
+
+---
+
+## GOVERNANCE-SYNC-038 — OPS-ACTIVATE-JWT-FIX-001 (2026-03-02)
+
+**Task:** GOVERNANCE-SYNC-038  
+**Date:** 2026-03-02  
+**TECS:** OPS-ACTIVATE-JWT-FIX-001  
+**Type:** Governance sync — gap register update for completed activation JWT fix  
+**Allowlist:** `governance/gap-register.md` · `governance/wave-execution-log.md` (this file) only  
+
+---
+
+### Scope
+
+Invite → Activation → Authenticated Session unblock — four surgical fixes to make the invite-activated revenue path work end-to-end:
+
+- **GAP-RUV-001** — Invite email URL missing `action=invite` param (invite link routed to TOKEN_HANDLER)
+- **GAP-RUV-002** — `POST /api/tenant/activate` returned no JWT; post-activation API calls all returned 401
+- **GAP-RUV-003** — `App.tsx` hardcoded `type: 'B2B'` after activation; `setToken()` absent
+- **GAP-RUV-005** — `OnboardingFlow.tsx` industry input uncontrolled; data always `''`
+
+No schema changes. No migrations. No RLS changes. No auth middleware edits. No new dependencies. No new routes.
+
+---
+
+### Allowlist Confirmation
+
+Files modified in implementation TECS (commit `43ef9c6`):
+
+| File | Change |
+|------|--------|
+| `server/src/services/email/email.service.ts` | Appended `&action=invite` to invite URL (GAP-RUV-001) |
+| `server/src/routes/tenant.ts` | `POST /activate`: calls `reply.tenantJwtSign({userId, tenantId, role})` after `withDbContext` commits; adds `token` + `tenant.type` to response (GAP-RUV-002) |
+| `App.tsx` | Added `setToken` to `apiClient` import; calls `setToken(raw.token, 'TENANT')` before `setAppState('EXPERIENCE')`; derives `type` from `raw.tenant.type` (GAP-RUV-003) |
+| `components/Onboarding/OnboardingFlow.tsx` | Added `value={formData.industry}` + `onChange` handler to industry input (GAP-RUV-005) |
+
+No other files were modified. Confirmed via `git diff --name-only` — exactly 4 allowlisted files. Working tree clean post-commit.
+
+---
+
+### Commit SHA
+
+| Commit | Description |
+|--------|-------------|
+| `43ef9c6` | `feat(activation): issue JWT on activate + invite action param + token wiring` |
+
+---
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| Frontend typecheck (`pnpm exec tsc --noEmit`) | EXIT 0 ✅ |
+| Backend typecheck (`pnpm exec tsc --noEmit` in `server/`) | EXIT 0 ✅ |
+| Frontend lint (targeted allowlist files) | EXIT 0 · 0 errors · 1 pre-existing `react-hooks/exhaustive-deps` warning (line 130 App.tsx — predates this TECS) ✅ |
+| Backend lint (targeted allowlist files) | EXIT 0 · 0 errors · 1 pre-existing `@typescript-eslint/no-non-null-assertion` warning (tenant.ts line 799 — predates this TECS) ✅ |
+| `git diff --name-only` | Exactly 4 allowlisted files ✅ |
+| Working tree post-commit | Clean ✅ |
+
+---
+
+### Key Implementation Details
+
+**GAP-RUV-001 — Invite Email URL Fix**
+
+Previous state: `sendInviteMemberEmail` generated `${FRONTEND_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}`. `App.tsx` `useEffect` at mount only routes to ONBOARDING when `action=invite` is present — otherwise falls through to `TOKEN_HANDLER` (password-reset/email-verify path). Invited users were permanently misdirected.
+
+Fix: URL now `${FRONTEND_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}&action=invite`. One-character change, maximum leverage.
+
+**GAP-RUV-002 — JWT Issuance on Activate**
+
+Previous state: `/activate` handler completed `withDbContext` atomic transaction (user create + membership create + invite.acceptedAt mark + audit log) and returned `{user, tenant, membership}` — no token. `ActivateTenantResponse` interface had no `token` field. `setToken()` was never called. `isAuthenticated()` returned false. Every EXPERIENCE API call included no Authorization header → 401.
+
+Fix: After the `withDbContext` tx returns, handler calls `reply.tenantJwtSign({ userId: result.user.id, tenantId: invite.tenantId, role: result.membership.role })`. This is the identical helper and claim shape used by `POST /api/auth/login` in `auth.ts`. Token issuance happens post-transaction-commit (same pattern as login). `tenant.type` is included in response — already available on `invite.tenant` (loaded via `include: { tenant: { include: { memberships: true } } }`). No new DB queries. No new signing helper. No auth middleware changes.
+
+**GAP-RUV-003 — Token Storage + Tenant Type Routing**
+
+Previous state: `App.tsx` ONBOARDING `onComplete` did not import `setToken`; hardcoded `type: 'B2B'` in post-activation tenant stub; transition to EXPERIENCE happened before any auth state was stored.
+
+Fix: `setToken` added to `apiClient` import line. After `activateTenant()` resolves, `setToken(raw.token, 'TENANT')` stores JWT in `localStorage` under `texqtic_tenant_token`. Tenant stub seeded with `type: (raw.tenant.type ?? 'B2B') as TenantType` — WHITE_LABEL-provisioned tenants now route to WL shell. `setAppState('EXPERIENCE')` called only after token is stored.
+
+**GAP-RUV-005 — Industry Input Data Integrity**
+
+Previous state: `<input id="industry">` in OnboardingFlow step 1 had no `value` prop (uncontrolled) and no `onChange` handler. User could type — visible in DOM — but `formData.industry` was always `''`. `tenantData.industry` always sent as `undefined` to backend.
+
+Fix: `value={formData.industry}` and `onChange={e => setFormData({ ...formData, industry: e.target.value })}` wired. Pattern mirrors existing `orgName`, `email`, `password`, `domain` inputs. Field is now fully controlled.
+
+---
+
+### Manual Happy Path Checklist (to be run post-deploy)
+
+| Step | Action | Expected | Status |
+|------|--------|----------|--------|
+| 1 | Create invite for a test member email | Invite email generated | — |
+| 2 | Inspect emailed link | URL contains `?token=<tok>&action=invite` | — |
+| 3 | Open invite URL in fresh browser session (no stored token) | App routes to ONBOARDING (not TOKEN_HANDLER or AUTH) | — |
+| 4 | Complete onboarding: fill industry, then email+password in step 2 | `formData.industry` non-empty; step 2 accepted | — |
+| 5 | Submit activation | `POST /api/tenant/activate` called exactly once; response contains `token` field | — |
+| 6 | Inspect `localStorage` after activation | `texqtic_tenant_token` populated with JWT | — |
+| 7 | Navigate EXPERIENCE — attempt catalog fetch | `GET /api/tenant/catalog/items` returns 200 (not 401) | — |
+| 8 | Confirm tenant type | Shell rendered matches provisioned type (B2B or WHITE_LABEL) | — |
+
+---
+
+### Gap Register Updates
+
+| Gap ID | Previous Status | New Status | Notes |
+|--------|-----------------|------------|-------|
+| GAP-RUV-001 | (new entry) | VALIDATED | Invite URL action=invite param added |
+| GAP-RUV-002 | (new entry) | VALIDATED | /activate JWT issuance via tenantJwtSign |
+| GAP-RUV-003 | (new entry) | VALIDATED | setToken called; type from response |
+| GAP-RUV-005 | (new entry) | VALIDATED | Industry onChange wired |
+
+New `# REVENUE UNBLOCK — OPS-ACTIVATE-JWT-FIX-001` section added to gap-register.md before `# Future Waves (5+)`.  
+GAP-RUV-004 (WL_ADMIN catalog stubs) and GAP-RUV-006 (order SM integration) remain NOT STARTED — out of scope for this TECS.
+
+---
+
+### Completion Checklist
+
+- [x] Only allowlisted files changed: `governance/gap-register.md` + `governance/wave-execution-log.md`
+- [x] No tenant.ts / email.service.ts / App.tsx / OnboardingFlow.tsx edits in this TECS
+- [x] No migrations / SQL / schema / RLS changes
+- [x] No lint/typecheck work (already EXIT 0 in impl commit `43ef9c6`)
+- [x] No refactors
+- [x] GOVERNANCE-SYNC-038 header prepended to gap-register.md Last Updated line
+- [x] GAP-RUV-001/002/003/005 rows added as new Revenue Unblock section in gap-register.md
+- [x] This entry (GOVERNANCE-SYNC-038) appended to wave-execution-log.md
+- [x] Single atomic governance commit
