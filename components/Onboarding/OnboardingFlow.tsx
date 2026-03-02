@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TenantType } from '../../types';
 
 interface ActivationFlowProps {
-  onComplete: (_data: any) => void;
+  onComplete: (_data: any) => void | Promise<void>;
   inviteToken?: string;
   prefilledData?: {
     orgName?: string;
@@ -16,15 +16,30 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
   prefilledData,
 }) => {
   const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     orgName: prefilledData?.orgName || '',
     type: TenantType.B2B,
     industry: '',
     domain: prefilledData?.domain || '',
     inviteToken: inviteToken || '',
+    email: '',
+    password: '',
   });
 
   const next = () => setStep(s => s + 1);
+
+  const handleComplete = async () => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await onComplete(formData);
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Activation failed. Please try again.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200 p-12 space-y-12 animate-in zoom-in-95 duration-500">
@@ -91,8 +106,43 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
 
         {step === 2 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-            <h2 className="text-3xl font-bold">Workspace Configuration</h2>
+            <h2 className="text-3xl font-bold">Set Up Your Account</h2>
             <div className="space-y-4">
+              <div className="space-y-1">
+                <label
+                  htmlFor="email"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
+                  Work Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="you@company.com"
+                />
+              </div>
+              <div className="space-y-1">
+                <label
+                  htmlFor="password"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
+                  Create Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={formData.password}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Min 6 characters"
+                />
+              </div>
               <div className="space-y-1">
                 <label
                   htmlFor="subdomain"
@@ -193,16 +243,25 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
             <button
               onClick={() => setStep(s => s - 1)}
               className="px-8 py-4 font-bold text-slate-500 hover:text-slate-800 transition"
+              disabled={submitting}
             >
               Back
             </button>
           )}
-          <button
-            onClick={step === 4 ? () => onComplete(formData) : next}
-            className="ml-auto px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest"
-          >
-            {step === 4 ? 'Complete Activation' : 'Continue'}
-          </button>
+          <div className="ml-auto space-y-3">
+            {submitError && (
+              <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg text-right">
+                {submitError}
+              </div>
+            )}
+            <button
+              onClick={step === 4 ? handleComplete : next}
+              disabled={submitting}
+              className="px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {step === 4 ? (submitting ? 'Activating...' : 'Complete Activation') : 'Continue'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

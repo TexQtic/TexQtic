@@ -29,10 +29,11 @@ import { BackendSkeleton } from './components/ControlPlane/BackendSkeleton';
 import { MiddlewareScaffold } from './components/ControlPlane/MiddlewareScaffold';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
-import { getCatalogItems, CatalogItem } from './services/catalogService';
+import { getCatalogItems, CatalogItem, createCatalogItem } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
+import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
 import { setImpersonationToken, APIError } from './services/apiClient';
 
@@ -90,6 +91,15 @@ const App: React.FC = () => {
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [showCart, setShowCart] = useState(false);
+
+  // RU-001: pending invite token (set when ?action=invite is detected in URL)
+  const [pendingInviteToken, setPendingInviteToken] = useState<string | null>(null);
+
+  // RU-003: inline add-item form toggle (B2B/B2C catalog)
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '' });
+  const [addItemLoading, setAddItemLoading] = useState(false);
+  const [addItemError, setAddItemError] = useState<string | null>(null);
 
   // Fetch tenants from backend (for tenant picker in bottom-right)
   // GUARD: Only load control-plane tenants when in Staff Control Plane view
@@ -151,11 +161,16 @@ const App: React.FC = () => {
     };
   }, [tenants, currentTenantId]);
 
-  // Check URL for token-based actions on mount (password reset, email verification)
+  // Check URL for token-based actions on mount (password reset, email verification, invite)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    if (token) {
+    const action = params.get('action');
+    if (token && action === 'invite') {
+      // Invite activation: preserve token and go directly to onboarding
+      setPendingInviteToken(token);
+      setAppState('ONBOARDING');
+    } else if (token) {
       setAppState('TOKEN_HANDLER');
     }
   }, []);
@@ -343,6 +358,30 @@ const App: React.FC = () => {
     setAppState('CONTROL_PLANE');
   };
 
+  /** RU-003: Handle inline catalog item creation */
+  const handleCreateItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddItemLoading(true);
+    setAddItemError(null);
+    try {
+      const priceVal = parseFloat(addItemFormData.price);
+      if (isNaN(priceVal) || priceVal <= 0) throw new Error('Price must be a positive number.');
+      if (!addItemFormData.name.trim()) throw new Error('Name is required.');
+      const result = await createCatalogItem({
+        name: addItemFormData.name.trim(),
+        sku: addItemFormData.sku.trim() || undefined,
+        price: priceVal,
+      });
+      setProducts(prev => [result.item, ...prev]);
+      setAddItemFormData({ name: '', price: '', sku: '' });
+      setShowAddItemForm(false);
+    } catch (err: any) {
+      setAddItemError(err?.message || 'Failed to create item.');
+    } finally {
+      setAddItemLoading(false);
+    }
+  };
+
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
   const renderWLAdminContent = () => {
     if (!currentTenant) return null;
@@ -437,10 +476,78 @@ const App: React.FC = () => {
                 <h1 className="text-2xl font-bold">Wholesale Catalog</h1>
                 <p className="text-slate-500">Tiered pricing and MOQ enforcement active.</p>
               </div>
-              <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-emerald-700 transition">
-                Create RFQ
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAddItemForm(v => !v)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition text-sm"
+                >
+                  + Add Item
+                </button>
+                <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-emerald-700 transition">
+                  Create RFQ
+                </button>
+              </div>
             </div>
+
+            {/* RU-003: Inline Add Item form */}
+            {showAddItemForm && (
+              <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+                <h3 className="font-bold text-slate-800">New Catalog Item</h3>
+                {addItemError && (
+                  <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                    <input
+                      required
+                      value={addItemFormData.name}
+                      onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Product name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                    <input
+                      required
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={addItemFormData.price}
+                      onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                    <input
+                      value={addItemFormData.sku}
+                      onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Optional SKU"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={addItemLoading}
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-50"
+                  >
+                    {addItemLoading ? 'Saving...' : 'Save Item'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                    className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
 
             {catalogLoading && (
               <div className="text-center py-12">
@@ -511,13 +618,81 @@ const App: React.FC = () => {
             <section>
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-bold">New Arrivals</h2>
-                <button
-                  type="button"
-                  className="text-indigo-600 font-semibold underline underline-offset-4"
-                >
-                  See All
-                </button>
+                <div className="flex gap-3 items-center">
+                  <button
+                    onClick={() => setShowAddItemForm(v => !v)}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-indigo-700 transition"
+                  >
+                    + Add Item
+                  </button>
+                  <button
+                    type="button"
+                    className="text-indigo-600 font-semibold underline underline-offset-4"
+                  >
+                    See All
+                  </button>
+                </div>
               </div>
+
+              {/* RU-003: Inline Add Item form */}
+              {showAddItemForm && (
+                <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4 mb-8">
+                  <h3 className="font-bold text-slate-800">New Catalog Item</h3>
+                  {addItemError && (
+                    <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                      <input
+                        required
+                        value={addItemFormData.name}
+                        onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Product name"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                      <input
+                        required
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={addItemFormData.price}
+                        onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                      <input
+                        value={addItemFormData.sku}
+                        onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Optional SKU"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={addItemLoading}
+                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-50"
+                    >
+                      {addItemLoading ? 'Saving...' : 'Save Item'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                      className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {catalogLoading && (
                 <div className="text-center py-12">
@@ -751,7 +926,45 @@ const App: React.FC = () => {
       case 'ONBOARDING':
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-            <OnboardingFlow onComplete={() => setAppState('EXPERIENCE')} />
+            <OnboardingFlow
+              inviteToken={pendingInviteToken ?? undefined}
+              onComplete={async (formData: any) => {
+                if (pendingInviteToken) {
+                  try {
+                    const result = await activateTenant({
+                      inviteToken: pendingInviteToken,
+                      userData: {
+                        email: formData.email,
+                        password: formData.password,
+                      },
+                      tenantData: {
+                        name: formData.orgName || undefined,
+                        industry: formData.industry || undefined,
+                      },
+                    });
+                    // Seed tenant state from activation response
+                    setTenants([{
+                      id: result.tenant.id,
+                      slug: result.tenant.slug,
+                      name: result.tenant.name,
+                      type: 'B2B',
+                      status: 'ACTIVE',
+                      plan: 'TRIAL',
+                      createdAt: '',
+                      updatedAt: '',
+                    } as Tenant]);
+                    setCurrentTenantId(result.tenant.id);
+                    setPendingInviteToken(null);
+                    setAppState('EXPERIENCE');
+                  } catch (err: any) {
+                    // OnboardingFlow shows its own error — surface it when called back
+                    throw err;
+                  }
+                } else {
+                  setAppState('EXPERIENCE');
+                }
+              }}
+            />
           </div>
         );
       case 'CONTROL_PLANE':
