@@ -454,6 +454,28 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
+   * GET /api/control/whoami
+   * Superadmin capability proof surface (OPS-SUPERADMIN-CAPABILITY-001)
+   *
+   * Returns the calling admin's identity and capability context.
+   * No DB access — purely derived from the verified JWT (adminAuthMiddleware).
+   * contextMode indicates which DB helper would be used for this admin tier.
+   */
+  fastify.get('/whoami', async (request, reply) => {
+    const adminId   = request.adminId   ?? 'unknown';
+    const adminRole = request.adminRole ?? 'unknown';
+    const isSuperAdmin = adminRole === 'SUPER_ADMIN';
+    return sendSuccess(reply, {
+      adminId,
+      adminRole,
+      isSuperAdmin,
+      dbFlagsPreview: {
+        contextMode: isSuperAdmin ? 'superadmin' : 'admin',
+      },
+    });
+  });
+
+  /**
    * GET /api/control/system/health
    * System health overview (admin only)
    * Returns computed health based on available telemetry (minimal implementation)

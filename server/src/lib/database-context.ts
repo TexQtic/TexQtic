@@ -648,3 +648,53 @@ export async function withAdminContext<T>(
     return callback(tx);
   });
 }
+
+// ── OPS-SUPERADMIN-CAPABILITY-001: Superadmin Context Helper ─────────────────────────────────────
+//
+// RATIONALE:
+// - Superadmin is a privilege tier above Platform Admin.
+// - Runtime-distinguishable from Platform Admin via two transaction-local GUCs:
+//     app.is_admin = 'true'      (shared with Platform Admin — no RLS changes needed)
+//     app.is_superadmin = 'true' (superadmin-only; NOT set by withAdminContext)
+// - withDbContext MUST NOT set/clear app.is_superadmin (left tx-local only).
+// - withAdminContext MUST NOT set app.is_superadmin.
+// - No RLS policies use app.is_superadmin yet (future wave).
+// - No renaming of app.is_admin in this TECS.
+
+/**
+ * withSuperAdminContext — Execute DB operations in superadmin realm.
+ *
+ * Sets BOTH transaction-local GUCs:
+ *   app.is_admin = 'true'       — satisfies existing admin_select policies
+ *   app.is_superadmin = 'true'  — superadmin capability flag (future RLS use)
+ *
+ * Reuses ADMIN_SENTINEL_ID (no separate superadmin sentinel needed).
+ * realm = 'control' (same plane as Platform Admin).
+ *
+ * CONSTRAINTS:
+ * - withDbContext does NOT set/clear app.is_superadmin (tx-local only here)
+ * - withAdminContext does NOT set app.is_superadmin
+ * - No existing RLS policies are modified by this helper
+ *
+ * @param prismaClient - Prisma client instance (module-level singleton)
+ * @param callback - Async DB operation (must use tx, not outer prisma)
+ * @returns Result from callback
+ */
+export async function withSuperAdminContext<T>(
+  prismaClient: PrismaClient,
+  callback: (tx: any) => Promise<T>
+): Promise<T> {
+  const ctx: DatabaseContext = {
+    orgId:     ADMIN_SENTINEL_ID,
+    actorId:   ADMIN_SENTINEL_ID,
+    realm:     'control',
+    requestId: randomUUID(),
+  };
+  return withDbContext(prismaClient, ctx, async tx => {
+    // Platform Admin flag (satisfies existing _admin_all RLS policies)
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+    // Superadmin capability flag (tx-local; no RLS policies use this yet)
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_superadmin', 'true', true)`);
+    return callback(tx);
+  });
+}
