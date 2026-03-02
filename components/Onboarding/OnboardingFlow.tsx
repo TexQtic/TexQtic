@@ -259,7 +259,9 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
               disabled={submitting}
               className="px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {step === 4 ? (submitting ? 'Activating...' : 'Complete Activation') : 'Continue'}
+              {step < 4 && 'Continue'}
+              {step === 4 && !submitting && 'Complete Activation'}
+              {step === 4 && submitting && 'Activating...'}
             </button>
           </div>
         </div>

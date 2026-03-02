@@ -498,8 +498,9 @@ const App: React.FC = () => {
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                    <label htmlFor="b2b-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
                     <input
+                      id="b2b-add-name"
                       required
                       value={addItemFormData.name}
                       onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
@@ -508,8 +509,9 @@ const App: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                    <label htmlFor="b2b-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
                     <input
+                      id="b2b-add-price"
                       required
                       type="number"
                       step="0.01"
@@ -521,8 +523,9 @@ const App: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                    <label htmlFor="b2b-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
                     <input
+                      id="b2b-add-sku"
                       value={addItemFormData.sku}
                       onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
@@ -643,8 +646,9 @@ const App: React.FC = () => {
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                      <label htmlFor="b2c-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
                       <input
+                        id="b2c-add-name"
                         required
                         value={addItemFormData.name}
                         onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
@@ -653,8 +657,9 @@ const App: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                      <label htmlFor="b2c-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
                       <input
+                        id="b2c-add-price"
                         required
                         type="number"
                         step="0.01"
@@ -666,8 +671,9 @@ const App: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                      <label htmlFor="b2c-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
                       <input
+                        id="b2c-add-sku"
                         value={addItemFormData.sku}
                         onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
@@ -930,8 +936,7 @@ const App: React.FC = () => {
               inviteToken={pendingInviteToken ?? undefined}
               onComplete={async (formData: any) => {
                 if (pendingInviteToken) {
-                  try {
-                    const result = await activateTenant({
+                  const result = await activateTenant({
                       inviteToken: pendingInviteToken,
                       userData: {
                         email: formData.email,
@@ -956,10 +961,6 @@ const App: React.FC = () => {
                     setCurrentTenantId(result.tenant.id);
                     setPendingInviteToken(null);
                     setAppState('EXPERIENCE');
-                  } catch (err: any) {
-                    // OnboardingFlow shows its own error — surface it when called back
-                    throw err;
-                  }
                 } else {
                   setAppState('EXPERIENCE');
                 }

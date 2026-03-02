@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
 import { TenantStatus, TenantConfig } from '../../types';
-import { LoadingState, EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
+import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
 interface TenantRegistryProps {
@@ -338,8 +338,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Org Name *</label>
+                  <label htmlFor="prov-org-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Org Name *</label>
                   <input
+                    id="prov-org-name"
                     required
                     value={provisionForm.orgName}
                     onChange={e => setProvisionForm(f => ({ ...f, orgName: e.target.value }))}
@@ -348,8 +349,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Email *</label>
+                  <label htmlFor="prov-owner-email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Email *</label>
                   <input
+                    id="prov-owner-email"
                     required
                     type="email"
                     value={provisionForm.primaryAdminEmail}
@@ -359,8 +361,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Password *</label>
+                  <label htmlFor="prov-owner-pwd" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Password *</label>
                   <input
+                    id="prov-owner-pwd"
                     required
                     type="password"
                     minLength={6}
