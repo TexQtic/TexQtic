@@ -938,6 +938,134 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
+   * PATCH /api/tenant/orders/:id/status
+   * App-layer order status transitions (OPS-ORDER-STATUS-TRANSITIONS-001 / GAP-ORDER-TRANSITIONS-001)
+   *
+   * Transition rules (B1 app-layer enforcement — no G-020 SM; no schema changes):
+   *   PAYMENT_PENDING → CONFIRMED  → stored as DB PLACED
+   *   PLACED          → FULFILLED  → stored as DB PLACED (audit is semantic source of truth)
+   *   PAYMENT_PENDING → CANCELLED  → stored as DB CANCELLED
+   *   PLACED          → CANCELLED  → stored as DB CANCELLED
+   *   CANCELLED       → *          → REJECTED (terminal state)
+   *
+   * Schema mismatch note (TODO GAP-ORDER-LC-001):
+   *   OrderStatus enum only has: PAYMENT_PENDING | PLACED | CANCELLED.
+   *   CONFIRMED maps to DB PLACED. FULFILLED has no terminal-success enum value —
+   *   it is stored as PLACED with the audit log record as the canonical semantic event.
+   *   When GAP-ORDER-LC-001 adds CONFIRMED + FULFILLED to OrderStatus, replace the
+   *   dbStatusUpdate mapping below with direct enum values and remove this note.
+   *
+   * Role gate: OWNER / ADMIN only (app-layer; D-5 / B1 preserved — app.roles GUC remains dormant).
+   * Audit: writes order.lifecycle.CONFIRMED / order.lifecycle.FULFILLED / order.lifecycle.CANCELLED
+   *        to existing audit_logs table (no new tables, no new audit infrastructure).
+   */
+  fastify.patch(
+    '/tenant/orders/:id/status',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // B1 role gate: OWNER / ADMIN only (D-5 preserved — app-layer enforcement, no DB GUC role check)
+      if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can update order status', 403);
+      }
+
+      // Validate path param
+      const paramsSchema = z.object({ id: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+      // Validate request body
+      const bodySchema = z.object({
+        status: z.enum(['CONFIRMED', 'FULFILLED', 'CANCELLED']),
+      });
+      const bodyResult = bodySchema.safeParse(request.body);
+      if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+
+      const { id: orderId } = paramsResult.data;
+      const { status: requestedStatus } = bodyResult.data;
+
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        // Load order in tenant scope — RLS-enforced by withDbContext (org_id scoped)
+        const order = await tx.order.findUnique({ where: { id: orderId } });
+        if (!order) return { error: 'NOT_FOUND' as const };
+
+        const currentDbStatus = order.status; // PAYMENT_PENDING | PLACED | CANCELLED
+
+        // ──────────────────────────────────────────────────────────────────────────
+        // Transition validation (TECS OPS-ORDER-STATUS-TRANSITIONS-001 rules)
+        // Semantic status → DB status mapping:
+        //   CONFIRMED = PAYMENT_PENDING → PLACED  (intermediate operational state)
+        //   FULFILLED = PLACED          → PLACED  (terminal success; DB can't distinguish from PLACED)
+        //   CANCELLED = *               → CANCELLED
+        // ──────────────────────────────────────────────────────────────────────────
+        const allowed = (() => {
+          if (currentDbStatus === 'CANCELLED') return false; // terminal — no further transitions
+          if (requestedStatus === 'CONFIRMED') return currentDbStatus === 'PAYMENT_PENDING';
+          if (requestedStatus === 'FULFILLED') return currentDbStatus === 'PLACED';
+          if (requestedStatus === 'CANCELLED') return currentDbStatus === 'PAYMENT_PENDING' || currentDbStatus === 'PLACED';
+          return false;
+        })();
+
+        if (!allowed) {
+          return {
+            error: 'INVALID_TRANSITION' as const,
+            currentStatus: currentDbStatus,
+            requestedStatus,
+          };
+        }
+
+        // Map semantic requested status → DB OrderStatus enum value
+        // TODO(GAP-ORDER-LC-001): replace with direct CONFIRMED / FULFILLED enum values once schema wave completes.
+        const dbStatusUpdate: 'PLACED' | 'CANCELLED' =
+          requestedStatus === 'CANCELLED' ? 'CANCELLED' : 'PLACED';
+
+        const auditAction = `order.lifecycle.${requestedStatus}` as const;
+
+        // Update order status + write audit log in the same transaction (atomic)
+        const updated = await tx.order.update({
+          where: { id: orderId },
+          data: { status: dbStatusUpdate },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: auditAction,
+          entity: 'order',
+          entityId: orderId,
+          metadataJson: {
+            orderId,
+            fromStatus: currentDbStatus,
+            toStatus: requestedStatus,
+            dbStatusStored: dbStatusUpdate,
+          },
+        });
+
+        return { order: updated };
+      });
+
+      if (result.error === 'NOT_FOUND') return sendNotFound(reply, 'Order not found');
+      if (result.error === 'INVALID_TRANSITION') {
+        return sendError(
+          reply,
+          'ORDER_STATUS_INVALID_TRANSITION',
+          `Cannot transition order from ${result.currentStatus} to ${result.requestedStatus}`,
+          409
+        );
+      }
+
+      return sendSuccess(reply, { order: result.order });
+    }
+  );
+
+  /**
    * POST /api/tenant/activate
    * User-assisted activation flow
    * Allows a user with an invite to activate their pre-provisioned tenant
