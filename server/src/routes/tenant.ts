@@ -203,6 +203,75 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * POST /api/tenant/catalog/items
+   * Create a catalog item (OWNER or ADMIN only)
+   *
+   * RU-003: Revenue-unblock — catalog item creation
+   * Writes audit entry: catalog.item.created
+   */
+  fastify.post(
+    '/tenant/catalog/items',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Role guard: only OWNER or ADMIN may create catalog items
+      if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can create catalog items', 403);
+      }
+
+      const bodySchema = z.object({
+        name: z.string().min(1).max(255),
+        sku: z.string().min(1).max(100).optional(),
+        description: z.string().optional(),
+        price: z.number().positive(),
+        moq: z.number().int().min(1).default(1),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { name, sku, description, price, moq } = parseResult.data;
+
+      const item = await withDbContext(prisma, dbContext, async tx => {
+        const created = await tx.catalogItem.create({
+          data: {
+            tenantId: dbContext.orgId,
+            name,
+            sku: sku ?? null,
+            description: description ?? null,
+            price,
+            moq,
+            active: true,
+          },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'catalog.item.created',
+          entity: 'catalog_item',
+          entityId: created.id,
+          metadataJson: { name, sku: sku ?? null, price, moq },
+        });
+
+        return created;
+      });
+
+      return sendSuccess(reply, { item }, 201);
+    }
+  );
+
+  /**
    * POST /api/tenant/cart
    * Create or return active cart for authenticated tenant user (idempotent)
    * Gate D.2: RLS-enforced, manual tenant filters removed
