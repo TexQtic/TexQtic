@@ -47,9 +47,12 @@
 
 | Item | Status | Blocker | Target |
 |------|--------|---------|--------|
-| G-QG-001 — 23 ESLint errors across 11 files | ⏳ Pending | None | Day 3 |
+| G-QG-001 — 23 ESLint errors across 11 files | ✅ Complete — 2026-03-03 | lint EXIT 0 · 0 errors · 0 warnings; typecheck EXIT 0 | Day 1 |
 
-**Files in scope (23 errors):**
+> **Exit condition achieved — 2026-03-03 (GOVERNANCE-SYNC-050 / OPS-LINT-CLEANUP-001)**  
+> `pnpm run lint` EXIT 0 (0 errors, 0 warnings) · `pnpm run typecheck` EXIT 0 · 23→0 root lint errors cleared
+
+**Files in scope (23 errors cleared):**
 
 | File | Error Type |
 |------|-----------|
