@@ -898,6 +898,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     return sendSuccess(reply, result, 201);
   });
 
+  // B6a: explicit select shape for order_lifecycle_logs rows.
+  // withDbContext types its callback tx as 'any' (RLS proxy; see database-context.ts).
+  // The Prisma select is deterministic — these are the only 4 fields requested.
+  type OLLSelectRow = { from_state: string | null; to_state: string; realm: string; created_at: Date };
+
   /**
    * GET /api/tenant/orders
    * List orders for current tenant user (RLS-enforced)
@@ -910,13 +915,38 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
-    const orders = await withDbContext(prisma, dbContext, async tx => {
+    const rawOrders = await withDbContext(prisma, dbContext, async tx => {
       return tx.order.findMany({
         where: { userId },
-        include: { items: true },
+        include: {
+          items: true,
+          // GAP-ORDER-LC-001 B6a: expose canonical lifecycle state + recent log history.
+          // RLS SELECT policy on order_lifecycle_logs allows tenant to read own rows.
+          // take: 5 bounds payload; select minimises data transfer (no actor_id / request_id).
+          order_lifecycle_logs: {
+            orderBy: { created_at: 'desc' },
+            take: 5,
+            select: { from_state: true, to_state: true, realm: true, created_at: true },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         take: 20,
-      });
+      }) as Array<Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }>;
+    });
+
+    // Map to camelCase lifecycle shape; preserve all existing fields unchanged.
+    const orders = rawOrders.map(rawOrder => {
+      const { order_lifecycle_logs, ...order } = rawOrder;
+      return {
+        ...order,
+        lifecycleState: order_lifecycle_logs[0]?.to_state ?? null,
+        lifecycleLogs: order_lifecycle_logs.map(l => ({
+          fromState: l.from_state,
+          toState: l.to_state,
+          realm: l.realm,
+          createdAt: l.created_at.toISOString(),
+        })),
+      };
     });
 
     return sendSuccess(reply, { orders, count: orders.length });
@@ -938,14 +968,35 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
-    const order = await withDbContext(prisma, dbContext, async tx => {
+    const rawOrder = await withDbContext(prisma, dbContext, async tx => {
       return tx.order.findUnique({
         where: { id: orderId },
-        include: { items: true },
-      });
+        include: {
+          items: true,
+          // GAP-ORDER-LC-001 B6a: expose canonical lifecycle state + recent log history.
+          order_lifecycle_logs: {
+            orderBy: { created_at: 'desc' },
+            take: 5,
+            select: { from_state: true, to_state: true, realm: true, created_at: true },
+          },
+        },
+      }) as (Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }) | null;
     });
 
-    if (!order) return sendNotFound(reply, 'Order not found');
+    if (!rawOrder) return sendNotFound(reply, 'Order not found');
+
+    const { order_lifecycle_logs, ...orderFields } = rawOrder;
+    const order = {
+      ...orderFields,
+      lifecycleState: order_lifecycle_logs[0]?.to_state ?? null,
+      lifecycleLogs: order_lifecycle_logs.map(l => ({
+        fromState: l.from_state,
+        toState: l.to_state,
+        realm: l.realm,
+        createdAt: l.created_at.toISOString(),
+      })),
+    };
+
     return sendSuccess(reply, { order });
   });
 

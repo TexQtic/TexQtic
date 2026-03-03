@@ -6044,3 +6044,53 @@ Note: UPDATE + DELETE intentionally NOT granted (append-only table; RLS UPDATE/D
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (B5 proof row ✅ + STOP CONDITION row)
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `feat(validation): canonical ORDER lifecycle proof Phase 0-5 (GAP-ORDER-LC-001)`
+
+---
+
+### GOVERNANCE-SYNC-062 - GAP-ORDER-LC-001-API-LIFECYCLE-001
+
+**Date:** 2026-03-03  
+**TECS ID:** GAP-ORDER-LC-001-API-LIFECYCLE-001  
+**Title:** Expose ORDER lifecycle state + recent lifecycle logs via tenant orders GET endpoints (B6a)  
+**Risk:** 🟡 LOW/MED — backend route change only; no schema/RLS change; backward-compatible (new fields appended)  
+**Allowlist (Modify):** `server/src/routes/tenant.ts`, `governance/gap-register.md`, `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md`, `governance/wave-execution-log.md`
+
+**Scope:**
+- `server/src/routes/tenant.ts`:
+  - Added `type OLLSelectRow = { from_state: string | null; to_state: string; realm: string; created_at: Date }` before orders handlers (resolves `noImplicitAny` from `withDbContext` proxy typing `tx: any`)
+  - `GET /api/tenant/orders` (`findMany`): added `order_lifecycle_logs: { orderBy: { created_at: 'desc' }, take: 5, select: { from_state, to_state, realm, created_at } }` to `include`; mapped result to append `lifecycleState: string | null` (latest `to_state`) + `lifecycleLogs: { fromState, toState, realm, createdAt }[]`; existing fields unchanged
+  - `GET /api/tenant/orders/:id` (`findUnique`): same include + same mapping for single-order response
+  - Both results cast `as` `OLLSelectRow[]` to satisfy TS strict mode
+
+**API response shape (new fields, backward-compatible):**
+```json
+{
+  "orders": [
+    {
+      "id": "...",
+      "status": "PLACED",
+      "items": [...],
+      "lifecycleState": "FULFILLED",
+      "lifecycleLogs": [
+        { "fromState": "CONFIRMED", "toState": "FULFILLED", "realm": "tenant", "createdAt": "..." },
+        { "fromState": "PAYMENT_PENDING", "toState": "CONFIRMED", "realm": "tenant", "createdAt": "..." },
+        { "fromState": null, "toState": "PAYMENT_PENDING", "realm": "tenant", "createdAt": "..." }
+      ]
+    }
+  ],
+  "count": 1
+}
+```
+
+**RLS posture:** `order_lifecycle_logs` SELECT policy allows tenant to read own rows. Grants applied in GOVERNANCE-SYNC-060A. No UPDATE/DELETE attempted (append-only table, immutability enforced at both RLS and grant levels).
+
+**Unblocks:** B6b — `WLOrdersPanel` + `EXPOrdersPanel` can now read `order.lifecycleState ?? order.status` instead of `deriveStatus(order, auditLogs)` and display `order.lifecycleLogs` as transition history.
+
+**Quality gates:**
+- [x] TYPECHECK_EXIT:0
+- [x] LINT_EXIT:0 (0 errors; 105 pre-existing warnings unchanged)
+- [x] `git diff --name-only` → `server/src/routes/tenant.ts` + governance only
+- [x] gap-register.md updated (GOVERNANCE-SYNC-062 B6a ✅; GAP-ORDER-LC-001 B6b pending)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (STOP CONDITION → UNBLOCKED; B6a row ✅)
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `feat(api): expose order lifecycle state/logs in orders GET (GAP-ORDER-LC-001)`
