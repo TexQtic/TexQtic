@@ -6231,3 +6231,61 @@ Wave 4 opening pair (per tracker Section 4, no shared schema — can run paralle
 - [x] gap-register.md G-006C → ✅ VALIDATED
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md: 71/71, 4.5/5, Phase A/B complete, Section 9 updated
 - [x] Atomic commit: `docs(governance): pre-wave4 integrity audit PASS (OPS-PRE-WAVE4-INTEGRITY-AUDIT-001)`
+
+---
+
+## Wave 4 — G-027 The Morgue — Schema Foundation
+
+**TECS ID:** G-027-MORGUE-TABLE-RLS-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 065  
+**Migration:** `20260315000006_g027_morgue_table_rls_001`  
+**Risk:** 🔴 HIGH — schema governance, new table + canonical RLS
+
+### Objective
+
+Introduce `public.morgue_entries` — an append-only terminal resolution ledger for finalized lifecycle entities (ORDER, TRADE, ESCROW, CERTIFICATION). Enables post-mortem analysis and regulator-facing audit trails without modifying any existing table.
+
+### Schema Actions
+
+- **Table created:** `public.morgue_entries` (id, entity_type, entity_id, tenant_id, final_state, resolved_by, resolution_reason, snapshot jsonb, created_at)
+- **Indexes:** `idx_morgue_entries_tenant_created` (tenant_id, created_at DESC); `idx_morgue_entries_entity_type_id` (entity_type, entity_id)
+- **Immutability:** No UPDATE / No DELETE at RLS and grant level
+- **FORCE ROW LEVEL SECURITY:** enabled
+
+### RLS Applied (Doctrine v1.4 canonical shape)
+
+| Policy | Type | Command | Predicate |
+|--------|------|---------|----------|
+| `morgue_entries_guard` | RESTRICTIVE | ALL | `app.require_org_context() OR app.is_admin='true'` |
+| `morgue_entries_select_unified` | PERMISSIVE | SELECT | `(require_org_context AND tenant_id = org_id) OR is_admin` |
+| `morgue_entries_insert_unified` | PERMISSIVE | INSERT | `(require_org_context AND tenant_id = org_id) OR is_admin` |
+| `morgue_entries_update_unified` | PERMISSIVE | UPDATE | `false` (permanently blocked) |
+| `morgue_entries_delete_unified` | PERMISSIVE | DELETE | `false` (permanently blocked) |
+
+### Grants
+
+- `texqtic_app`: SELECT, INSERT
+- `app_user`: SELECT
+
+### Evidence
+
+- **APPLY_EXIT:0** — psql apply via stdin pipe; verifier DO block ran in same transaction
+- **VERIFIER PASS:** `NOTICE: VERIFIER PASS: morgue_entries created (table + 2 indexes + FORCE RLS=t + 1 RESTRICTIVE guard + 4 PERMISSIVE policies [SELECT/INSERT tenant+admin arms + UPDATE/DELETE immutability blocks=false] + 0 {public} policies)`
+- **RESOLVE_EXIT:0** — `pnpm -C server exec prisma migrate resolve --applied 20260315000006_g027_morgue_table_rls_001` → `Migration 20260315000006_g027_morgue_table_rls_001 marked as applied.`
+- **typecheck EXIT 0** — `pnpm -C server run typecheck` → 0 errors
+- **lint EXIT 0** — `pnpm -C server run lint` → 0 errors, 105 pre-existing warnings
+
+### Quality Gates
+
+- [x] Migration created: `server/prisma/migrations/20260315000006_g027_morgue_table_rls_001/migration.sql`
+- [x] psql APPLY_EXIT:0
+- [x] Verifier PASS (DO block raised NOTICE, no exception)
+- [x] `prisma migrate resolve --applied` RESOLVE_EXIT:0
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0 (0 errors)
+- [x] gap-register.md G-027 → IN PROGRESS (schema foundation)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md Section 4: G-027 row updated → 🔄 IN PROGRESS
+- [x] REMOTE-MIGRATION-APPLY-LOG.md: GOVERNANCE-SYNC-065 appended
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `feat(db): create morgue_entries table + canonical RLS (G-027)`

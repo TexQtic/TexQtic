@@ -178,7 +178,7 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 |-----|--------|-----------|-----------------|-----------|--------|
 | G-025 | DPP Snapshot Views | XL | Views / materialized views over `traceability_nodes` + `certifications` | G-016 ✅ | ⏳ |
 | G-026 | Custom Domain Routing | L | `tenant_domains` constraints + edge config | G-006C `tenant_domains` consolidated | ⏳ |
-| G-027 | The Morgue | L | New table + RLS | G-022 ✅ | ⏳ |
+| G-027 | The Morgue | L | New table + RLS — `morgue_entries` schema foundation applied 2026-03-03 (GOVERNANCE-SYNC-065, migration `20260315000006`) | G-022 ✅ | 🔄 IN PROGRESS |
 | G-028 | AI Vector / Inference Separation | XL | Vector schema + infra | G-023 ✅ | ⏳ |
 | WL Collections Panel | WL Admin | Low | None | G-WL-ADMIN ✅ | ⏳ |
 | WL Domains Panel | WL Admin | Medium | None | G-026 + G-WL-ADMIN ✅ | ⏳ |

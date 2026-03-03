@@ -456,3 +456,12 @@ ORDER BY grantee, privilege_type;
 
 **Note:** UPDATE + DELETE intentionally NOT granted (append-only table; RLS immutability blocks `USING(false)` already enforced at policy level).
 **typecheck EXIT 0 / lint EXIT 0**
+
+---
+
+## G-027-MORGUE-TABLE-RLS-001
+**Date:** 2026-03-03 | **Migration:** `20260315000006_g027_morgue_table_rls_001` | **Risk:** 🔴 HIGH | **GOVERNANCE-SYNC:** 065  
+**Remote target confirmed:** `aws-1-ap-northeast-1.pooler.supabase.com:5432` ✅  
+**Schema actions:** Created `public.morgue_entries` (id UUID PK, entity_type text, entity_id uuid, tenant_id uuid, final_state text, resolved_by uuid nullable, resolution_reason text nullable, snapshot jsonb, created_at timestamptz) + 2 indexes (idx_morgue_entries_tenant_created: tenant_id/created_at DESC; idx_morgue_entries_entity_type_id: entity_type/entity_id) + FORCE RLS + 1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT (tenant+admin arms) + UPDATE/DELETE permanently blocked (`USING(false)` — immutability). No changes to existing tables.  
+**VERIFIER PASS:** table exists + FORCE RLS=t + 1 RESTRICTIVE guard + 4 PERMISSIVE (SELECT/INSERT with tenant+admin arms + UPDATE/DELETE immutability blocks=false) + 0 {public} policies + 2 required indexes  
+**APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**
