@@ -20,7 +20,8 @@ export type EscalationEntityType =
   | 'APPROVAL'
   | 'LIFECYCLE_LOG'
   | 'ORG'
-  | 'GLOBAL';
+  | 'GLOBAL'
+  | 'CERTIFICATION';
 
 /**
  * Who may initiate an escalation event.

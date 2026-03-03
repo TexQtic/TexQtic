@@ -194,24 +194,56 @@ describe('G-022 Certification Freeze Enforcement (GAP-G022-01)', () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // STOP-LOSS: GAP-G022-02 (documented, not implemented here)
+  // T-G022-CERT-ENTITY-FROZEN  (GAP-G022-02 — GOVERNANCE-SYNC-047)
   // ═══════════════════════════════════════════════════════════════════════════
+  it('T-G022-CERT-ENTITY-FROZEN: entity-level freeze for CERTIFICATION blocks SM transition', async () => {
+    /**
+     * Arrange:
+     *   - checkOrgFreeze returns void (no org freeze)
+     *   - checkEntityFreeze throws GovError('ENTITY_FROZEN') for CERTIFICATION
+     *     (simulates a CERTIFICATION escalation_events row: entity_type='CERTIFICATION',
+     *      entity_id=certId, severity=3, status='OPEN', no resolution child)
+     *   - GAP-G022-02 is now closed: 'CERTIFICATION' is in EscalationEntityType
+     *     and in the DB CHECK constraint — entity-level freeze is production-reachable.
+     */
+    const db  = makeDb();
+    const esc = makeEscalationService();
 
-  /**
-   * T-G022-CERT-ENTITY-FROZEN is intentionally absent.
-   *
-   * STOP-LOSS TRIGGERED: 'CERTIFICATION' is NOT in EscalationEntityType union and
-   * NOT in the DB escalation_events CHECK constraint (which allows only:
-   * TRADE, ESCROW, APPROVAL, LIFECYCLE_LOG, ORG, GLOBAL).
-   *
-   * Entity-level freeze for individual CERTIFICATION rows cannot be created in the
-   * current DB schema. Testing a mocked entity-level freeze for CERTIFICATION would
-   * not represent a production-reachable scenario.
-   *
-   * GAP-G022-02 is registered for a follow-up TECS prompt to:
-   *   - Add 'CERTIFICATION' to EscalationEntityType in escalation.types.ts
-   *   - Add 'CERTIFICATION' to the DB escalation_events.entity_type CHECK constraint
-   *   - Wire checkEntityFreeze('CERTIFICATION', certId) in CertificationService.transitionCertification()
-   *   - Add T-G022-CERT-ENTITY-FROZEN test
-   */
+    // Org check passes; entity check throws entity freeze
+    (esc.checkEntityFreeze as Mock).mockRejectedValueOnce(
+      new GovError(
+        'ENTITY_FROZEN',
+        `Entity CERTIFICATION/${CERT_ID} is frozen — open entity-level escalation [${ESC_ID}] ` +
+        'at severity LEVEL_3. No transitions are permitted for this entity. ' +
+        'Resolve or override the entity freeze escalation to resume. [E-022-ENTITY-FREEZE]',
+        ESC_ID,
+      ),
+    );
+
+    const sm = new StateMachineService(
+      db as unknown as PrismaClient,
+      esc as unknown as EscalationService,
+    );
+
+    // Act: transition attempt on a frozen CERTIFICATION entity
+    const result = await sm.transition(makeCertTransitionReq());
+
+    // Assert: SM returns DENIED with TRANSITION_NOT_PERMITTED + G-022 freeze message
+    expect(result.status).toBe('DENIED');
+    expect((result as { code?: string }).code).toBe('TRANSITION_NOT_PERMITTED');
+    expect((result as { message?: string }).message).toMatch(/G-022 Freeze/);
+    expect((result as { message?: string }).message).toMatch(/frozen/i);
+
+    // Assert: org check was called first (and passed)
+    expect(esc.checkOrgFreeze).toHaveBeenCalledOnce();
+    expect(esc.checkOrgFreeze).toHaveBeenCalledWith(ORG_ID);
+
+    // Assert: entity check was called with CERTIFICATION entity type (GAP-G022-02 wiring)
+    expect(esc.checkEntityFreeze).toHaveBeenCalledOnce();
+    expect(esc.checkEntityFreeze).toHaveBeenCalledWith('CERTIFICATION', CERT_ID);
+
+    // Assert: DB was NOT reached (freeze blocked before any DB query)
+    expect(db.lifecycleState.findUnique).not.toHaveBeenCalled();
+    expect(db.lifecycleState.findFirst).not.toHaveBeenCalled();
+  });
 });
