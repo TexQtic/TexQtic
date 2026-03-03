@@ -5995,3 +5995,52 @@ Note: UPDATE + DELETE intentionally NOT granted (append-only table; RLS UPDATE/D
 - [x] wave-execution-log.md updated (this entry)
 - [x] REMOTE-MIGRATION-APPLY-LOG.md updated
 - [x] Atomic commit: `ops(db): grant order_lifecycle_logs base privileges (OPS-ORDER-LC-LOGS-GRANT-001)`
+
+---
+
+### GOVERNANCE-SYNC-060 - GAP-ORDER-LC-001-UX-VALIDATION-001
+
+**Date:** 2026-03-03  
+**TECS ID:** GAP-ORDER-LC-001-UX-VALIDATION-001  
+**Title:** Replace audit-seam in `validate-rcp1-flow.ts` with canonical `order_lifecycle_logs` Prisma checks; full RCP-1 Phase 0–5 proof; STOP CONDITION declared for UI panels  
+**Risk:** 🟡 LOW/MED — script changes only (no server/src, no schema, no RLS); STOP CONDITION for UI panels  
+**Allowlist (Modify):** `server/scripts/validate-rcp1-flow.ts`, `governance/gap-register.md`, `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md`, `governance/wave-execution-log.md`
+
+**Scope:**
+- `server/scripts/validate-rcp1-flow.ts` — 5 sections updated:
+  - Step 3.2: audit-log `order.lifecycle.PAYMENT_PENDING` check → `prisma.order_lifecycle_logs.findFirst({ where: { order_id, to_state: 'PAYMENT_PENDING' } })`
+  - Step 4A.2: `order.lifecycle.CONFIRMED` → `findFirst({ to_state: 'CONFIRMED' })` 
+  - Step 4B.2: `order.lifecycle.FULFILLED` → `findFirst({ to_state: 'FULFILLED' })`
+  - Step 4C.2: `order.lifecycle.CANCELLED` → `findFirst({ to_state: 'CANCELLED' })`
+  - Phase 5: entire section rebuilt — audit-log derivation → Prisma `findMany({ orderBy: created_at asc })` + Step 5.2 full chain integrity check `PAYMENT_PENDING → CONFIRMED → FULFILLED`
+
+**STOP CONDITION (UI panels):**
+- `WLOrdersPanel.tsx` and `EXPOrdersPanel.tsx` NOT modified
+- Root cause: B4 removed `writeAuditLog(action: 'order.lifecycle.*')` for checkout + PATCH transitions. Both panels still call `GET /api/tenant/audit-logs` and filter for `order.lifecycle.*` to derive CONFIRMED/FULFILLED display states via `deriveStatus()`. Without those audit entries, new orders regress to showing “Placed”.
+- `GET /api/tenant/orders` does NOT expose `order_lifecycle_logs` data — no `lifecycleState` field in response.
+- Fix deferred to B6: `server/src/routes/tenant.ts` must add `include: { order_lifecycle_logs: { orderBy: { created_at: 'desc' }, take: 1 } }` and expose `lifecycleState: string | null`. Then UI panels can replace `deriveStatus()` with direct `order.lifecycleState ?? order.status`.
+
+**Live proof results (2026-03-03T08:31:43Z):**
+- Proof: `pnpm exec tsx scripts/validate-rcp1-flow.ts`
+- **PASS: 22 / FAIL: 0**
+- Order1 (CONFIRM+FULFILL path): `97c29b24-9ede-4e14-88dc-46345c819f7c`
+- Order2 (CANCEL path): `b88d8124-96a6-4303-adde-dc245a7c5fa7`
+- Key checks:
+  - Step 3.2 ✅ PAYMENT_PENDING lifecycle log found (log.id: `df84ba41-bc03-4277-bc21-f712ae0dd312`)
+  - Step 4A.2 ✅ CONFIRMED log: PAYMENT_PENDING→CONFIRMED (log.id: `3d0ed964-ce39-48aa-b031-ecca44830658`)
+  - Step 4B.2 ✅ FULFILLED log: CONFIRMED→FULFILLED (log.id: `215c1848-cada-45dd-801f-6057e180edcf`)
+  - Step 4C.2 ✅ CANCELLED log: PAYMENT_PENDING→CANCELLED (log.id: `8e1b88ef-195e-4641-be54-52525ce54290`)
+  - Step 4C.3 ✅ Terminal state enforced: HTTP 409 `ORDER_STATUS_INVALID_TRANSITION`
+  - Step 5.1 ✅ Order1 canonical state=FULFILLED (DB=PLACED — lifecycle log is semantic truth)
+  - Step 5.1 ✅ Order2 canonical state=CANCELLED
+  - Step 5.2 ✅ Full chain: PAYMENT_PENDING → CONFIRMED → FULFILLED verified
+
+**Quality gates:**
+- [x] TYPECHECK_EXIT:0
+- [x] LINT_EXIT:0
+- [x] PROOF: 22 PASS / 0 FAIL
+- [x] `git diff --name-only` → `server/scripts/validate-rcp1-flow.ts` + governance only
+- [x] gap-register.md updated (GOVERNANCE-SYNC-060 B5 STOP CONDITION + proof ✅)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (B5 proof row ✅ + STOP CONDITION row)
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `feat(validation): canonical ORDER lifecycle proof Phase 0-5 (GAP-ORDER-LC-001)`

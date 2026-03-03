@@ -1,8 +1,11 @@
 /**
- * RCP-1 Revenue Flow Validation — OPS-REVENUE-FLOW-VALIDATION-002
+ * RCP-1 Revenue Flow Validation — OPS-REVENUE-FLOW-VALIDATION-002 / GAP-ORDER-LC-001-UX-VALIDATION-001 (B5)
  *
- * Validation ceiling: PAYMENT_PENDING + app-layer transitions (CONFIRMED / FULFILLED / CANCELLED).
- * Non-goals (LOCKED): payment gateway, G-020 SM, schema migrations, RLS, new endpoints.
+ * Validation ceiling: PAYMENT_PENDING + SM-driven transitions (CONFIRMED / FULFILLED / CANCELLED).
+ * Lifecycle proof: order_lifecycle_logs (Prisma direct) replaces audit_logs lifecycle seam check.
+ *   order.lifecycle.* audit writes were REMOVED in B4 (GAP-ORDER-LC-001-BACKEND-INTEGRATION-001).
+ *   Canonical state is now: latest order_lifecycle_logs.to_state (written by StateMachineService).
+ * Non-goals (LOCKED): payment gateway, new endpoints, schema migrations, RLS, UI display changes.
  *
  * Pattern: same as proof-g001/002/003.ts — Prisma for DB reads, HTTP for API calls,
  * JWT signed with JWT_ACCESS_SECRET (same approach as integration tests).
@@ -190,16 +193,16 @@ async function main() {
     fail('Order not found in orders list', { orderId: ORDER_ID, firstFew: ordersList.data.orders?.slice(0, 2) });
   }
 
-  step('3.2', 'GET /api/tenant/audit-logs (check PAYMENT_PENDING audit entry)');
-  const auditBefore = await api<{ logs?: { action: string; entityId: string }[]; count?: number }>(
-    'GET', '/api/tenant/audit-logs', TOKEN,
-  );
-  console.log(`  → HTTP ${auditBefore.status} | total log count=${auditBefore.data.count}`);
-  const ppAudit = auditBefore.data.logs?.find(l => l.entityId === ORDER_ID && l.action === 'order.lifecycle.PAYMENT_PENDING');
-  if (ppAudit) {
-    pass(`Audit: order.lifecycle.PAYMENT_PENDING found for orderId: ${ORDER_ID}`);
+  step('3.2', 'Prisma: order_lifecycle_logs — verify PAYMENT_PENDING lifecycle entry for checkout');
+  // GAP-ORDER-LC-001 B4: checkout now writes to order_lifecycle_logs (not audit_logs).
+  // Verify via direct Prisma query (DB-layer proof — no HTTP round-trip needed).
+  const ppLifecycleLog = await prisma.order_lifecycle_logs.findFirst({
+    where: { order_id: ORDER_ID, to_state: 'PAYMENT_PENDING' },
+  });
+  if (ppLifecycleLog) {
+    pass(`lifecycle log: PAYMENT_PENDING found | order_id: ${ORDER_ID} | log.id: ${ppLifecycleLog.id} | from: ${ppLifecycleLog.from_state ?? 'null'} → PAYMENT_PENDING`);
   } else {
-    fail(`Audit: order.lifecycle.PAYMENT_PENDING NOT found for orderId: ${ORDER_ID}`);
+    fail(`lifecycle log: PAYMENT_PENDING NOT found in order_lifecycle_logs for order_id: ${ORDER_ID}`);
   }
 
   } // end if (!ONLY_TRANSITIONS)
@@ -238,7 +241,7 @@ async function main() {
   console.log(`  → HTTP ${confirmResp.status} | DB status=${confirmResp.data.order?.status}`);
   if (confirmResp.status === 200) {
     pass(`CONFIRM transition accepted | DB status: ${confirmResp.data.order?.status}`);
-    console.log('  NOTE: DB status maps CONFIRMED→PLACED (schema mismatch; TODO(GAP-ORDER-LC-001))');
+    console.log('  NOTE: DB status maps CONFIRMED→PLACED (schema enum limitation; lifecycle log holds canonical CONFIRMED state)');
     if (confirmResp.data.order?.status !== 'PLACED') {
       fail(`Expected DB status PLACED (CONFIRMED alias) but got: ${confirmResp.data.order?.status}`);
     }
@@ -246,17 +249,15 @@ async function main() {
     fail(`CONFIRM transition failed | HTTP ${confirmResp.status}`, confirmResp.data);
   }
 
-  step('4A.2', 'Verify audit: order.lifecycle.CONFIRMED for orderId');
-  const auditAfterConfirm = await api<{ logs?: { action: string; entityId: string | null }[] }>(
-    'GET', '/api/tenant/audit-logs', TOKEN,
-  );
-  const confirmAudit = auditAfterConfirm.data.logs?.find(
-    l => l.entityId === ORDER_ID && l.action === 'order.lifecycle.CONFIRMED',
-  );
-  if (confirmAudit) {
-    pass(`Audit: order.lifecycle.CONFIRMED ✓ | entityId: ${ORDER_ID}`);
+  step('4A.2', 'Prisma: order_lifecycle_logs — verify CONFIRMED lifecycle entry');
+  // GAP-ORDER-LC-001 B4: SM transition writes to order_lifecycle_logs (not audit_logs).
+  const confirmLog = await prisma.order_lifecycle_logs.findFirst({
+    where: { order_id: ORDER_ID, to_state: 'CONFIRMED' },
+  });
+  if (confirmLog) {
+    pass(`lifecycle log: CONFIRMED ✓ | order_id: ${ORDER_ID} | from: ${confirmLog.from_state} → CONFIRMED | log.id: ${confirmLog.id}`);
   } else {
-    fail(`Audit: order.lifecycle.CONFIRMED NOT found for orderId: ${ORDER_ID}`);
+    fail(`lifecycle log: CONFIRMED NOT found in order_lifecycle_logs for order_id: ${ORDER_ID}`);
   }
 
   // ── 4B: FULFILL (CONFIRMED/PLACED → FULFILLED) ────────────────────
@@ -268,22 +269,19 @@ async function main() {
   console.log(`  → HTTP ${fulfillResp.status} | DB status=${fulfillResp.data.order?.status}`);
   if (fulfillResp.status === 200) {
     pass(`FULFILL transition accepted | DB status: ${fulfillResp.data.order?.status}`);
-    console.log('  NOTE: DB status remains PLACED after FULFILLED (audit-only; TODO(GAP-ORDER-LC-001))');
+    console.log('  NOTE: DB status remains PLACED after FULFILLED (enum limitation; order_lifecycle_logs.to_state is canonical source)');
   } else {
     fail(`FULFILL transition failed | HTTP ${fulfillResp.status}`, fulfillResp.data);
   }
 
-  step('4B.2', 'Verify audit: order.lifecycle.FULFILLED for orderId');
-  const auditAfterFulfill = await api<{ logs?: { action: string; entityId: string | null }[] }>(
-    'GET', '/api/tenant/audit-logs', TOKEN,
-  );
-  const fulfillAudit = auditAfterFulfill.data.logs?.find(
-    l => l.entityId === ORDER_ID && l.action === 'order.lifecycle.FULFILLED',
-  );
-  if (fulfillAudit) {
-    pass(`Audit: order.lifecycle.FULFILLED ✓ | entityId: ${ORDER_ID} (semantic truth — DB stays PLACED)`);
+  step('4B.2', 'Prisma: order_lifecycle_logs — verify FULFILLED lifecycle entry');
+  const fulfillLog = await prisma.order_lifecycle_logs.findFirst({
+    where: { order_id: ORDER_ID, to_state: 'FULFILLED' },
+  });
+  if (fulfillLog) {
+    pass(`lifecycle log: FULFILLED ✓ | order_id: ${ORDER_ID} | from: ${fulfillLog.from_state} → FULFILLED | log.id: ${fulfillLog.id} | DB status stays PLACED`);
   } else {
-    fail(`Audit: order.lifecycle.FULFILLED NOT found for orderId: ${ORDER_ID}`);
+    fail(`lifecycle log: FULFILLED NOT found in order_lifecycle_logs for order_id: ${ORDER_ID}`);
   }
 
   // ── 4C: CANCEL validation on a SECOND fresh order ────────────────────────
@@ -319,17 +317,14 @@ async function main() {
     fail(`CANCEL transition failed | HTTP ${cancelResp.status}`, cancelResp.data);
   }
 
-  step('4C.2', 'Verify audit: order.lifecycle.CANCELLED for orderId2');
-  const auditAfterCancel = await api<{ logs?: { action: string; entityId: string | null }[] }>(
-    'GET', '/api/tenant/audit-logs', TOKEN,
-  );
-  const cancelAudit = auditAfterCancel.data.logs?.find(
-    l => l.entityId === ORDER2_ID && l.action === 'order.lifecycle.CANCELLED',
-  );
-  if (cancelAudit) {
-    pass(`Audit: order.lifecycle.CANCELLED ✓ | entityId: ${ORDER2_ID}`);
+  step('4C.2', 'Prisma: order_lifecycle_logs — verify CANCELLED lifecycle entry');
+  const cancelLog = await prisma.order_lifecycle_logs.findFirst({
+    where: { order_id: ORDER2_ID, to_state: 'CANCELLED' },
+  });
+  if (cancelLog) {
+    pass(`lifecycle log: CANCELLED ✓ | order_id: ${ORDER2_ID} | from: ${cancelLog.from_state} → CANCELLED | log.id: ${cancelLog.id}`);
   } else {
-    fail(`Audit: order.lifecycle.CANCELLED NOT found for orderId: ${ORDER2_ID}`);
+    fail(`lifecycle log: CANCELLED NOT found in order_lifecycle_logs for order_id: ${ORDER2_ID}`);
   }
 
   step('4C.3', 'Verify CANCEL is terminal — attempt second transition should fail');
@@ -344,47 +339,70 @@ async function main() {
     fail(`Expected 409 CANCELLED terminal; got HTTP ${cancelAgain.status}`, cancelAgain.data);
   }
 
-  // ── Phase 5: Derived status seam verification ─────────────────────────────
-  phase(5, 'RCP-1 audit-seam stability — derived status verification');
+  // ── Phase 5: Canonical lifecycle log seam verification ───────────────────
+  // GAP-ORDER-LC-001 B4/B5: order_lifecycle_logs is now the canonical semantic source.
+  // Audit-log derivation removed — lifecycle state verified via direct Prisma query.
+  //
+  // STOP CONDITION NOTE (B5 / GOVERNANCE-SYNC-060):
+  //   WLOrdersPanel + EXPOrdersPanel still derive status from audit_logs (GET /api/tenant/audit-logs).
+  //   B4 removed order.lifecycle.* audit writes — those entries no longer exist for new orders.
+  //   UI display of CONFIRMED/FULFILLED is now BROKEN for new orders (regresses to 'Placed').
+  //   Required fix: GET /api/tenant/orders must include `lifecycleState: string | null` per order
+  //   (query order_lifecycle_logs ORDER BY created_at DESC LIMIT 1 per order_id).
+  //   server/src/routes/tenant.ts is NOT in B5 allowlist — backend fix deferred to TECS B6.
+  phase(5, 'Canonical lifecycle log seam (order_lifecycle_logs) — state chain verification');
 
-  step('5.1', 'Fetch order list + audit logs to verify derived status for ORDER_ID');
+  step('5.1', 'Fetch order list + Prisma lifecycle logs to verify state chain for ORDER_ID');
   const finalOrders = await api<{ orders?: { id: string; status: string }[] }>(
     'GET', '/api/tenant/orders', TOKEN,
-  );
-  const finalAudit = await api<{ logs?: { action: string; entityId: string | null }[] }>(
-    'GET', '/api/tenant/audit-logs', TOKEN,
   );
 
   const o1 = finalOrders.data.orders?.find(o => o.id === ORDER_ID);
   const o2 = finalOrders.data.orders?.find(o => o.id === ORDER2_ID);
-  const o1Audits = finalAudit.data.logs?.filter(l => l.entityId === ORDER_ID) ?? [];
-  const o2Audits = finalAudit.data.logs?.filter(l => l.entityId === ORDER2_ID) ?? [];
 
+  // Canonical state: latest order_lifecycle_logs.to_state (written by SM in B4).
+  const o1LifecycleLogs = await prisma.order_lifecycle_logs.findMany({
+    where: { order_id: ORDER_ID },
+    orderBy: { created_at: 'asc' },
+  });
+  const o2LifecycleLogs = await prisma.order_lifecycle_logs.findMany({
+    where: { order_id: ORDER2_ID },
+    orderBy: { created_at: 'asc' },
+  });
+
+  const o1CanonicalState = o1LifecycleLogs.at(-1)?.to_state ?? 'NO_LOG';
+  const o1StateChain = o1LifecycleLogs.map(l => `${l.from_state ?? 'null'}→${l.to_state}`).join(' | ');
   console.log(`\n  Order1 (CONFIRM→FULFILL path):`);
-  console.log(`    DB status       : ${o1?.status}`);
-  console.log(`    Audit actions   : ${o1Audits.map(l => l.action).join(' | ')}`);
-  const o1HasFulfilled = o1Audits.some(l => l.action === 'order.lifecycle.FULFILLED');
-  const o1Derived = o1?.status === 'CANCELLED' ? 'CANCELLED'
-    : o1HasFulfilled ? 'FULFILLED'
-    : o1Audits.some(l => l.action === 'order.lifecycle.CONFIRMED') ? 'CONFIRMED'
-    : o1?.status === 'PAYMENT_PENDING' ? 'PAYMENT_PENDING'
-    : 'PLACED';
-  console.log(`    Derived status  : ${o1Derived} (DB=${o1?.status}, audit wins)`);
-  if (o1Derived === 'FULFILLED') {
-    pass('Order1 derived status = FULFILLED ✓ (DB=PLACED — audit-seam stable)');
+  console.log(`    DB status         : ${o1?.status}`);
+  console.log(`    Lifecycle chain   : ${o1StateChain || '(no log entries)'}`);
+  console.log(`    Canonical state   : ${o1CanonicalState}`);
+  if (o1CanonicalState === 'FULFILLED') {
+    pass(`Order1 canonical state = FULFILLED ✓ (DB=PLACED — lifecycle log is semantic truth)`);
   } else {
-    fail(`Order1 derived status should be FULFILLED, got ${o1Derived}`);
+    fail(`Order1 canonical state should be FULFILLED, got ${o1CanonicalState}`);
   }
 
+  const o2CanonicalState = o2LifecycleLogs.at(-1)?.to_state ?? 'NO_LOG';
+  const o2StateChain = o2LifecycleLogs.map(l => `${l.from_state ?? 'null'}→${l.to_state}`).join(' | ');
   console.log(`\n  Order2 (CANCEL path):`);
-  console.log(`    DB status       : ${o2?.status}`);
-  console.log(`    Audit actions   : ${o2Audits.map(l => l.action).join(' | ')}`);
-  const o2Derived = o2?.status === 'CANCELLED' ? 'CANCELLED' : 'OTHER';
-  console.log(`    Derived status  : ${o2Derived}`);
-  if (o2Derived === 'CANCELLED') {
-    pass('Order2 derived status = CANCELLED ✓ (DB=CANCELLED — direct mapping stable)');
+  console.log(`    DB status         : ${o2?.status}`);
+  console.log(`    Lifecycle chain   : ${o2StateChain || '(no log entries)'}`);
+  console.log(`    Canonical state   : ${o2CanonicalState}`);
+  if (o2CanonicalState === 'CANCELLED') {
+    pass(`Order2 canonical state = CANCELLED ✓ (DB=CANCELLED — direct mapping ✓)`);
   } else {
-    fail(`Order2 derived status should be CANCELLED, got ${o2Derived}`);
+    fail(`Order2 canonical state should be CANCELLED, got ${o2CanonicalState}`);
+  }
+
+  step('5.2', 'Verify full state chain integrity for ORDER_ID (PAYMENT_PENDING → CONFIRMED → FULFILLED)');
+  const expectedChain = ['PAYMENT_PENDING', 'CONFIRMED', 'FULFILLED'];
+  const actualChain = o1LifecycleLogs.map(l => l.to_state);
+  console.log(`    Expected chain  : ${expectedChain.join(' → ')}`);
+  console.log(`    Actual chain    : ${actualChain.join(' → ')}`);
+  if (JSON.stringify(actualChain) === JSON.stringify(expectedChain)) {
+    pass(`Full lifecycle chain verified ✓ | PAYMENT_PENDING → CONFIRMED → FULFILLED`);
+  } else {
+    fail(`Lifecycle chain mismatch | expected ${expectedChain.join('→')} | got ${actualChain.join('→')}`);
   }
 
   // ── Summary ───────────────────────────────────────────────────────────────
