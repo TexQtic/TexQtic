@@ -30,13 +30,16 @@
 
 | Item | Status | Blocker | Target |
 |------|--------|---------|--------|
-| Apply `rcp1_orders_update_unified_tenant_arm.sql` via `psql "$DATABASE_URL" -f …` | ⏳ Pending Apply | Manual psql invocation required | Day 1 |
-| Re-run RCP-1 Phases 4–5: `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions` | ⏳ Pending | Above apply | Day 1 |
+| Apply `rcp1_orders_update_unified_tenant_arm.sql` via `psql "$DATABASE_URL" -f …` | ✅ Complete — 2026-03-03 | APPLY_EXIT:0 · DO-block VERIFY PASS | Day 1 |
+| Re-run RCP-1 Phases 4–5: `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions` | ✅ Complete — 2026-03-03 | 16/16 PASS · VALIDATE_EXIT:0 | Day 1 |
 
 **Exit Condition:**  
 - RCP-1 Phases 4–5 PASS (CONFIRMED → FULFILLED / CANCELLED + derivedStatus + audit trail).  
 - GAP-RLS-ORDERS-UPDATE-001 operationally closed.  
 - Gap register updated with psql apply evidence.
+
+> **Exit condition achieved — 2026-03-03 (GOVERNANCE-SYNC-049 / OPS-APPLY-ORDERS-RLS-001)**  
+> psql apply: APPLY_EXIT:0 · DO-block VERIFY PASS · 16/16 RCP-1 Phases 4–5 PASS · typecheck EXIT 0 · lint EXIT 0 (0 errors)
 
 ---
 

@@ -213,3 +213,79 @@ SELECT DISTINCT migration_name FROM _prisma_migrations WHERE finished_at IS NOT 
 - âœ… lint EXIT 0
 - âœ… Pre-existing `rolled_back_at` anomaly documented (historical only, not new)
 - âœ… No secrets committed
+
+---
+
+## OPS-APPLY-ORDERS-RLS-001 — orders_update_unified Tenant Arm
+
+**Timestamp:** 2026-03-03T04:48:00Z (approx)
+**Sync ID:** GOVERNANCE-SYNC-049
+**Executor:** psql (local) via PowerShell `--key=value` form
+**Target DB:** Supabase session pooler — `aws-1-ap-northeast-1.pooler.supabase.com` (redacted DATABASE_URL)
+
+### Apply Command
+
+```powershell
+$u = (Get-Content server/.env | Where-Object { $_ -match '^DATABASE_URL=' }) -replace '^DATABASE_URL=', ''
+psql "--dbname=$u" "--variable=ON_ERROR_STOP=1" "--file=server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql"
+```
+
+> Note: Short flags (`-v`, `-f`) cause argument splitting in PowerShell when the URL contains `?sslmode=require`.
+> Use `--key=value` form exclusively. This is the confirmed working pattern for this repo.
+
+### Terminal Evidence
+
+```
+BEGIN
+DROP POLICY
+CREATE POLICY
+DO
+NOTICE:  VERIFY PASS: orders_update_unified has tenant + admin arms in USING and WITH CHECK
+COMMIT
+APPLY_EXIT:0
+```
+
+### Policy Applied
+
+**Policy name:** `orders_update_unified`
+**Table:** `public.orders`
+**Command:** FOR UPDATE TO `texqtic_app`
+**USING + WITH CHECK (after apply):**
+
+```sql
+(app.require_org_context() AND tenant_id = app.current_org_id())
+OR
+(current_setting('app.is_admin', true) = 'true')
+```
+
+**B1/D-5 posture:** Preserved — no server code changed; `app.is_admin` continues to NOT be set for tenant actors.
+
+### RCP-1 Phases 4–5 Validation
+
+**Command:** `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions`
+
+| Phase | Step | Result |
+|-------|------|--------|
+| 4A | PATCH status CONFIRMED + audit verify | PASS |
+| 4B | PATCH status FULFILLED + audit verify | PASS |
+| 4C | CANCEL path + terminal state 409 enforced | PASS |
+| 5 | derivedStatus FULFILLED + CANCELLED stable | PASS |
+| **TOTAL** | | **16/16 PASS, VALIDATE_EXIT:0** |
+
+```
+OUTCOME: ALL PASS — GAP-REVENUE-VALIDATE-002 VALIDATED
+```
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+### Governance Outcomes
+
+| Gap | Before | After |
+|-----|--------|-------|
+| GAP-RLS-ORDERS-UPDATE-001 | VALIDATED (pending psql apply) | OPERATIONALLY CLOSED (applied + VERIFY PASS) |
+| GAP-REVENUE-VALIDATE-002 | Phases 0-3 PASS; Phases 4-5 blocked | Phases 0-5 PASS — 16/16 |
