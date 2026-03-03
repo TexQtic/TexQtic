@@ -5887,3 +5887,35 @@ SEED_EXIT:0
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (seed row extended with transitions)
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: feat(sm): seed ORDER lifecycle states (GAP-ORDER-LC-001)
+
+---
+
+### GOVERNANCE-SYNC-058 - GAP-ORDER-LC-001-SM-SERVICE-001
+
+**Date:** 2026-03-03  
+**TECS ID:** GAP-ORDER-LC-001-SM-SERVICE-001  
+**Title:** Extend StateMachineService to support ORDER lifecycle transitions (enforced + audited)  
+**Risk:** 🟡 LOW/MED — server/src changes only; no schema migration; no DB write outside Prisma client  
+**Allowlist:** `server/src/services/stateMachine.types.ts`, `server/src/services/stateMachine.service.ts`, `server/src/services/stateMachine.guardrails.ts`, `server/prisma/schema.prisma` (via `db pull`/`generate`)
+
+**Scope:**
+- `stateMachine.types.ts`: Added `'ORDER'` to `EntityType` union; updated JSDoc in `TransitionRequest.entityType`
+- `stateMachine.guardrails.ts`: Extended `SYSTEM_AUTOMATION_ALLOWED_TERMINAL_TARGETS` with `'FULFILLED'` (ORDER terminal; non-decisional mechanical fulfillment; consistent with B2/SEED-001 `CONFIRMED→FULFILLED` SYSTEM_AUTOMATION actor type)
+- `stateMachine.service.ts`: Added ORDER branch in `transition()` Step 15 write section; maps `actor_id` (consolidated: `actorAdminId ?? actorUserId ?? null`), derives `realm` (`'admin'|'system'|'tenant'`), writes to `order_lifecycle_logs` using shared-tx pattern (opts.db when inside caller tx)
+- `server/prisma/schema.prisma`: Updated via `prisma db pull` (added `order_lifecycle_logs` model with raw snake_case fields) + `prisma generate` (client regenerated)
+
+**Key design decisions:**
+- `order_lifecycle_logs` schema is simplified vs trade/escrow logs: no `reason`, `actorType`, `actorRole`, `escalationLevel`, `makerUserId`, `checkerUserId`, `aiTriggered` columns. Only: `order_id`, `tenant_id`, `from_state`, `to_state`, `actor_id` (single UUID), `realm` (string), `request_id`
+- `realm` derivation: `PLATFORM_ADMIN`/`actorAdminId` → `'admin'`; `SYSTEM_AUTOMATION` → `'system'`; all others → `'tenant'`
+- `actor_id`: `actorAdminId` takes priority over `actorUserId`; null for SYSTEM_AUTOMATION (schema allows null)
+- `from_state`: passed as `normalizedFromState` (always non-empty at write point — STATE_KEY_NOT_FOUND guards before)
+- CERTIFICATION deferral at Step 5 unchanged — still correctly short-circuits before ORDER branch
+- orders.status enum extension (ALTER TYPE ADD VALUE CONFIRMED/FULFILLED): NOT in scope of this TECS (deferred — irreversible DDL requires dedicated migration TECS)
+
+**Quality gates:**
+- [x] TYPECHECK_EXIT:0
+- [x] LINT_EXIT:0
+- [x] gap-register.md updated (GOVERNANCE-SYNC-058 — GAP-ORDER-LC-001 B3 ✅, EntityType ✅, SM enforcement ✅)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (EntityType row ✅; SM enforcement row ✅)
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: feat(sm): enforce ORDER lifecycle transitions (GAP-ORDER-LC-001)

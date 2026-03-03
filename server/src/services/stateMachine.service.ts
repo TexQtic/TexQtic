@@ -8,9 +8,11 @@
  * Principles:
  *   - No transition is valid without a row in allowed_transitions. No exceptions.
  *   - All guardrails run before any DB write.
- *   - The log tables (trade_lifecycle_logs, escrow_lifecycle_logs) are append-only.
- *     This service exposes NO update or delete methods — Layer 1 of D-020-D immutability.
+ *   - The log tables (trade_lifecycle_logs, escrow_lifecycle_logs, order_lifecycle_logs)
+ *     are append-only. This service exposes NO update or delete methods — Layer 1 of D-020-D.
  *   - CERTIFICATION log writes are deferred to G-023 (no schema table in Phase 3).
+ *   - ORDER log writes use simplified schema (order_lifecycle_logs): actor_id (single field),
+ *     realm ('tenant'|'admin'|'system'), tenant_id (denormalised from orgId). See B1 design.
  *   - This service does NOT update entity tables (trades, escrow_accounts) — those
  *     tables don't exist yet (G-017, G-018). The log records the INTENT of the
  *     transition; entity state updates are a G-017/G-018 Day N concern.
@@ -388,7 +390,56 @@ export class StateMachineService {
         };
       }
 
-      // Should be unreachable (CERTIFICATION handled at step 5)
+      if (normalizedEntityType === 'ORDER') {
+        // ORDER lifecycle log — order_lifecycle_logs (created by GAP-ORDER-LC-001 B1 migration).
+        // Schema: simplified vs trade/escrow — (order_id, tenant_id, from_state, to_state,
+        // actor_id, realm, request_id). No reason/actorType/escalationLevel/makerUserId etc.
+        //
+        // tenant_id = orgId: denormalised for RLS canonical arm (B1 design decision).
+        // actor_id: single consolidated UUID — actorAdminId takes priority over actorUserId;
+        //   both null for SYSTEM_AUTOMATION (schema allows null).
+        // realm: 'admin'  → PLATFORM_ADMIN actor or actorAdminId set
+        //        'system' → SYSTEM_AUTOMATION
+        //        'tenant' → all other actor types (TENANT_USER, TENANT_ADMIN, MAKER, CHECKER)
+        // from_state: always a non-empty normalised string at this point (STATE_KEY_NOT_FOUND
+        //   would have short-circuited before here if fromStateKey was missing/unknown).
+        // opts.db shared-tx pattern: same as TRADE/ESCROW — use caller tx when provided.
+        const realm =
+          req.actorType === 'PLATFORM_ADMIN' || req.actorAdminId != null
+            ? 'admin'
+            : req.actorType === 'SYSTEM_AUTOMATION'
+              ? 'system'
+              : 'tenant';
+
+        const logData = {
+          order_id: req.entityId,
+          tenant_id: req.orgId,
+          from_state: normalizedFromState,
+          to_state: normalizedToState,
+          actor_id: req.actorAdminId ?? req.actorUserId ?? null,
+          realm,
+          request_id: req.requestId ?? null,
+        };
+
+        const log = opts?.db
+          ? await opts.db.order_lifecycle_logs.create({ data: logData })
+          : await this.db.$transaction(async tx =>
+              tx.order_lifecycle_logs.create({ data: logData })
+            );
+
+        return {
+          status: 'APPLIED',
+          transitionId: log.id,
+          entityType: req.entityType,
+          entityId: req.entityId,
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          createdAt: log.created_at,
+        };
+      }
+
+      // Unreachable — CERTIFICATION blocked at step 5; all known entity types handled above.
+      // Guard against future entity type skeletons that skip the write branch.
       return denied(
         'CERTIFICATION_LOG_DEFERRED',
         `Unhandled entityType: '${normalizedEntityType}'. This is an implementation gap.`

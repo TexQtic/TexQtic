@@ -65,14 +65,17 @@ export const SYSTEM_AUTOMATION_FORBIDDEN_TO_STATES = new Set<string>([
 /**
  * Terminal states SYSTEM_AUTOMATION IS permitted to target.
  * These are mechanical, non-decisional outcomes:
- *   ESCALATED — timeout or SLA breach triggers escalation (no value judgment)
- *   EXPIRED   — certification validity window elapsed (calendar/cron)
+ *   ESCALATED     — timeout or SLA breach triggers escalation (no value judgment)
+ *   EXPIRED       — certification validity window elapsed (calendar/cron)
  *   PENDING_REVIEW — reserved for future SLA-triggered review routing
+ *   FULFILLED     — ORDER fulfillment completion (non-decisional; triggered by shipping/fulfilment
+ *                   system automation; seeded in ORDER transitions: CONFIRMED → FULFILLED)
  */
 export const SYSTEM_AUTOMATION_ALLOWED_TERMINAL_TARGETS = new Set<string>([
   'ESCALATED',
   'EXPIRED',
   'PENDING_REVIEW',
+  'FULFILLED', // ORDER: non-decisional mechanical fulfillment completion (GAP-ORDER-LC-001)
 ]);
 
 // ─── Actor Types for AI Boundary ──────────────────────────────────────────────

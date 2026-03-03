@@ -141,8 +141,8 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 | Extend `LifecycleState` CHECK constraint to include `'ORDER'` | Yes | ✅ (`lifecycle_states_entity_type_check` + `allowed_transitions_entity_type_check` extended — GOVERNANCE-SYNC-056) | Migration `20260315000005` applied |
 | Create `order_lifecycle_logs` table + RLS (5-policy canonical pattern) | Yes | ✅ (GOVERNANCE-SYNC-056: table + FK + 3 indexes + FORCE RLS + 1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT + UPDATE/DELETE immutability blocks) | VERIFIER PASS (2026-03-03) |
 | Seed ORDER lifecycle states into `lifecycle_states` + seed `allowed_transitions` ORDER edges | Yes | ✅ States: GOVERNANCE-SYNC-056 (4 states seeded via migration). ✅ Transitions: GOVERNANCE-SYNC-057 (4 edges seeded via `seed_state_machine.ts`: PAYMENT_PENDING→CONFIRMED, CONFIRMED→FULFILLED, CONFIRMED→CANCELLED, PAYMENT_PENDING→CANCELLED; SEED_EXIT:0; VERIFIER PASS) | `seed_state_machine.ts` now canonical 47-edge graph |
-| Extend `StateMachineService.EntityType` union to include `'ORDER'` | Yes | ❌ | B2 — backend code (server/src change) |
-| Replace app-layer `GAP-ORDER-TRANSITIONS-001` workaround with SM-driven transitions | Yes | ❌ | B3 — backend routes |
+| Extend `StateMachineService.EntityType` union to include `'ORDER'` | Yes | ✅ (GOVERNANCE-SYNC-058: `stateMachine.types.ts` line 15 extended; `stateMachine.guardrails.ts` SYSTEM_AUTOMATION FULFILLED unlocked; `prisma db pull` + `generate` run) | `'TRADE' \| 'ESCROW' \| 'CERTIFICATION' \| 'ORDER'` |
+| Extend `StateMachineService.transition()` to enforce ORDER transitions + write `order_lifecycle_logs` | Yes | ✅ (GOVERNANCE-SYNC-058: ORDER branch added to SM service; actor_id consolidated; realm derived from actorType; shared-tx opts.db pattern preserved) | typecheck EXIT 0 |
 | Frontend order detail — lifecycle state badge + transition history | Yes | ❌ | B4 — frontend |
 
 **Governance gate:** A dedicated design anchor TECS must be committed before any schema migration is authored. That TECS must document:

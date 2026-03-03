@@ -415,20 +415,21 @@ model OrderItem {
 }
 
 model Order {
-  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId  String      @map("tenant_id") @db.Uuid
-  userId    String      @map("user_id") @db.Uuid
-  cartId    String?     @map("cart_id") @db.Uuid
-  status    OrderStatus @default(PAYMENT_PENDING)
-  currency  String      @default("USD") @db.VarChar(3)
-  subtotal  Decimal     @default(0) @db.Decimal(12, 2)
-  total     Decimal     @default(0) @db.Decimal(12, 2)
-  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
-  items     OrderItem[]
-  cart      Cart?       @relation(fields: [cartId], references: [id], onUpdate: NoAction)
-  tenant    Tenant      @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
-  user      User        @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String                 @map("tenant_id") @db.Uuid
+  userId               String                 @map("user_id") @db.Uuid
+  cartId               String?                @map("cart_id") @db.Uuid
+  status               OrderStatus            @default(PAYMENT_PENDING)
+  currency             String                 @default("USD") @db.VarChar(3)
+  subtotal             Decimal                @default(0) @db.Decimal(12, 2)
+  total                Decimal                @default(0) @db.Decimal(12, 2)
+  createdAt            DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
+  items                OrderItem[]
+  order_lifecycle_logs order_lifecycle_logs[]
+  cart                 Cart?                  @relation(fields: [cartId], references: [id], onUpdate: NoAction)
+  tenant               Tenant                 @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  user                 User                   @relation(fields: [userId], references: [id], onUpdate: NoAction)
 
   @@index([cartId], map: "idx_orders_cart_id")
   @@index([tenantId, createdAt(sort: Desc)], map: "idx_orders_tenant_created")
@@ -460,6 +461,7 @@ model LifecycleState {
   allowed_transitions_allowed_transitions_entity_type_from_state_keyTolifecycle_states AllowedTransition[] @relation("allowed_transitions_entity_type_from_state_keyTolifecycle_states")
   allowed_transitions_allowed_transitions_entity_type_to_state_keyTolifecycle_states   AllowedTransition[] @relation("allowed_transitions_entity_type_to_state_keyTolifecycle_states")
   certifications                                                                       Certification[]
+  escrow_accounts                                                                      escrow_accounts[]
   trades                                                                               Trade[]
 
   @@unique([entityType, stateKey])
@@ -555,41 +557,42 @@ model TradeLifecycleLog {
 /// G-020 D-020-D: Three-layer immutability (same as TradeLifecycleLog).
 /// escrowId is a SOFT REFERENCE — no FK to escrow_accounts (G-018 will add FK).
 model EscrowLifecycleLog {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Live FK → organizations.id (G-015). RLS boundary: current_setting('app.org_id', true)
-  orgId           String        @map("org_id") @db.Uuid
+  orgId           String          @map("org_id") @db.Uuid
   /// SOFT REFERENCE: UUID of the escrow record. No FK yet — deferred to G-018.
-  escrowId        String        @map("escrow_id") @db.Uuid
+  escrowId        String          @map("escrow_id") @db.Uuid
   /// Prior state key (matches lifecycle_states.state_key for ESCROW entity_type)
-  fromStateKey    String        @map("from_state_key")
+  fromStateKey    String          @map("from_state_key")
   /// New state key (matches lifecycle_states.state_key for ESCROW entity_type)
-  toStateKey      String        @map("to_state_key")
+  toStateKey      String          @map("to_state_key")
   /// D-020-A: UUID of the user who triggered this transition (null for SYSTEM_AUTOMATION)
-  actorUserId     String?       @map("actor_user_id") @db.Uuid
+  actorUserId     String?         @map("actor_user_id") @db.Uuid
   /// D-020-A: UUID of the admin who triggered this transition (null for user/system)
-  actorAdminId    String?       @map("actor_admin_id") @db.Uuid
+  actorAdminId    String?         @map("actor_admin_id") @db.Uuid
   /// D-020-A: TENANT_USER | TENANT_ADMIN | PLATFORM_ADMIN | SYSTEM_AUTOMATION | MAKER | CHECKER
-  actorType       String        @map("actor_type")
+  actorType       String          @map("actor_type")
   /// Role snapshot at time of transition (not a live FK)
-  actorRole       String        @map("actor_role")
+  actorRole       String          @map("actor_role")
   /// G-022: escalation severity level if triggered (1–4), null if not
-  escalationLevel Int?          @map("escalation_level")
+  escalationLevel Int?            @map("escalation_level")
   /// G-021: UUID of the Maker user in a Maker-Checker flow (null if no MC)
-  makerUserId     String?       @map("maker_user_id") @db.Uuid
+  makerUserId     String?         @map("maker_user_id") @db.Uuid
   /// G-021: UUID of the Checker user in a Maker-Checker flow (null if no MC)
-  checkerUserId   String?       @map("checker_user_id") @db.Uuid
+  checkerUserId   String?         @map("checker_user_id") @db.Uuid
   /// D-020-C: true if AI recommendation preceded this human-confirmed transition.
   /// AI has zero direct authority over escrow state. Human confirmation is mandatory.
-  aiTriggered     Boolean       @default(false) @map("ai_triggered")
+  aiTriggered     Boolean         @default(false) @map("ai_triggered")
   /// UUID of the ImpersonationSession if transition occurred during platform impersonation
-  impersonationId String?       @map("impersonation_id") @db.Uuid
+  impersonationId String?         @map("impersonation_id") @db.Uuid
   /// D-020-D: Mandatory justification. Non-empty enforced by DB CHECK.
   reason          String
   /// Fastify request ID for correlation (null for background job transitions)
-  requestId       String?       @map("request_id")
+  requestId       String?         @map("request_id")
   /// Wall-clock timestamp set by DB at commit time — not caller-supplied
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  organizations   organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "escrow_lifecycle_logs_org_id_fk")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  escrow_accounts escrow_accounts @relation(fields: [escrowId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "escrow_lifecycle_logs_escrow_id_fk")
+  organizations   organizations   @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "escrow_lifecycle_logs_org_id_fk")
 
   @@index([escrowId], map: "idx_escrow_lifecycle_logs_escrow_id")
   @@index([orgId, escrowId], map: "idx_escrow_lifecycle_logs_org_escrow")
@@ -727,7 +730,6 @@ model EscalationEvent {
   organizations        organizations     @relation(fields: [orgId], references: [id], onUpdate: NoAction)
   parent               EscalationEvent?  @relation("EscalationUpgradeChain", fields: [parentEscalationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   children             EscalationEvent[] @relation("EscalationUpgradeChain")
-  /// G-024: back-reference for sanctions triggered by this escalation event.
   sanctions            Sanction[]
 
   @@index([entityType, entityId, status, severityLevel], map: "escalation_events_entity_freeze_idx")
@@ -746,34 +748,34 @@ model EscalationEvent {
 /// RLS: RESTRICTIVE guard + PERMISSIVE SELECT/INSERT for texqtic_app.
 /// No superadmin policy in Day 1 — deferred.
 model Trade {
-  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId          String         @map("tenant_id") @db.Uuid
-  buyerOrgId        String         @map("buyer_org_id") @db.Uuid
-  sellerOrgId       String         @map("seller_org_id") @db.Uuid
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String           @map("tenant_id") @db.Uuid
+  buyerOrgId        String           @map("buyer_org_id") @db.Uuid
+  sellerOrgId       String           @map("seller_org_id") @db.Uuid
   /// G-020: Current lifecycle state. Reuses lifecycle_states registry.
-  lifecycleStateId  String         @map("lifecycle_state_id") @db.Uuid
+  lifecycleStateId  String           @map("lifecycle_state_id") @db.Uuid
   /// Human-readable external reference. Unique per tenant.
-  tradeReference    String         @map("trade_reference")
+  tradeReference    String           @map("trade_reference")
   currency          String
   /// DB CHECK: gross_amount > 0
-  grossAmount       Decimal        @map("gross_amount") @db.Decimal(18, 6)
+  grossAmount       Decimal          @map("gross_amount") @db.Decimal(18, 6)
   /// G-022 compatibility: informational flag. Never auto-toggles any config (D-022-C).
-  freezeRecommended Boolean        @default(false) @map("freeze_recommended")
+  freezeRecommended Boolean          @default(false) @map("freeze_recommended")
   /// G-023: optional link to the reasoning_logs row that informed this trade.
   /// ON DELETE RESTRICT — reasoning_logs is immutable anyway.
-  reasoningLogId    String?        @map("reasoning_log_id") @db.Uuid
-  createdByUserId   String?        @map("created_by_user_id") @db.Uuid
-  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  reasoningLogId    String?          @map("reasoning_log_id") @db.Uuid
+  createdByUserId   String?          @map("created_by_user_id") @db.Uuid
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_trades_set_updated_at on BEFORE UPDATE.
-  updatedAt         DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt         DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  escrow_id         String?          @db.Uuid
   events            TradeEvent[]
-  /// G-017 Hardening: FK to organizations(id). Buyer org must exist.
-  buyerOrg          organizations  @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  /// G-017 Hardening: FK to organizations(id). Seller org must exist.
-  sellerOrg         organizations  @relation("TradeSeller", fields: [sellerOrgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  lifecycleState    LifecycleState @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
-  reasoningLog      ReasoningLog?  @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  tenant            Tenant         @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  buyerOrg          organizations    @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_buyer_org_id")
+  sellerOrg         organizations    @relation("TradeSeller", fields: [sellerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_seller_org_id")
+  escrow_accounts   escrow_accounts? @relation(fields: [escrow_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_escrow_id_fk")
+  lifecycleState    LifecycleState   @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
+  reasoningLog      ReasoningLog?    @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
 
   @@unique([tenantId, tradeReference], map: "trades_tenant_ref_unique")
   @@index([tenantId])
@@ -824,65 +826,63 @@ model Certification {
   /// Maintained by DB trigger trg_certifications_set_updated_at on BEFORE UPDATE.
   updatedAt         DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
   lifecycleState    LifecycleState @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
-  org               organizations  @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  org               organizations  @relation(fields: [orgId], references: [id], onUpdate: NoAction)
 
   @@index([orgId])
   @@index([lifecycleStateId])
-  @@index([orgId, certificationType])
+  @@index([orgId, certificationType], map: "certifications_org_type_idx")
   @@map("certifications")
 }
 
 /// G-016 Phase A — Supply-chain traceability node (one per batch per org).
 model TraceabilityNode {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// RLS boundary: scopes row to one organization. FK to organizations(id).
-  orgId      String   @map("org_id") @db.Uuid
+  orgId      String             @map("org_id") @db.Uuid
   /// Human-readable supply-chain batch identifier (e.g., SKU-LOT-2026-001).
-  batchId    String   @map("batch_id")
+  batchId    String             @map("batch_id")
   /// Node type classification (RAW_MATERIAL, PROCESSING, DISTRIBUTION, RETAIL, …).
-  nodeType   String   @map("node_type")
+  nodeType   String             @map("node_type")
   /// Extensible metadata blob. Application layer enforces size stop-loss.
-  meta       Json     @default("{}") @db.JsonB
+  meta       Json               @default("{}")
   /// Visibility scope: TENANT (default) or SHARED (future cross-org sharing).
-  visibility String   @default("TENANT")
+  visibility String             @default("TENANT")
   /// Optional geospatial hash (geohash / H3) for location-aware queries.
-  geoHash    String?  @map("geo_hash")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  geoHash    String?            @map("geo_hash")
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_traceability_nodes_set_updated_at on BEFORE UPDATE.
-  updatedAt  DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
-
-  org        organizations    @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  updatedAt  DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
   edgesFrom  TraceabilityEdge[] @relation("EdgeFrom")
   edgesTo    TraceabilityEdge[] @relation("EdgeTo")
+  org        organizations      @relation(fields: [orgId], references: [id], onUpdate: NoAction)
 
-  @@unique([orgId, batchId])
-  @@index([orgId, nodeType])
+  @@unique([orgId, batchId], map: "traceability_nodes_org_batch_unique")
+  @@index([orgId, nodeType], map: "traceability_nodes_org_type_idx")
   @@map("traceability_nodes")
 }
 
 /// G-016 Phase A — Directed edge between two traceability nodes.
 model TraceabilityEdge {
-  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// RLS boundary: scopes edge to one organization.
-  orgId            String  @map("org_id") @db.Uuid
+  orgId            String           @map("org_id") @db.Uuid
   /// Source node (directed graph: from_node_id → to_node_id).
-  fromNodeId       String  @map("from_node_id") @db.Uuid
+  fromNodeId       String           @map("from_node_id") @db.Uuid
   /// Target node.
-  toNodeId         String  @map("to_node_id") @db.Uuid
+  toNodeId         String           @map("to_node_id") @db.Uuid
   /// Edge classification (SOURCED_FROM, PROCESSED_INTO, SHIPPED_TO, …).
-  edgeType         String  @map("edge_type")
+  edgeType         String           @map("edge_type")
   /// Optional transformation reference (processing batch, recipe ID, etc.).
-  transformationId String? @map("transformation_id")
+  transformationId String?          @map("transformation_id")
   /// Extensible metadata blob.
-  meta             Json    @default("{}") @db.JsonB
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  meta             Json             @default("{}")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  fromNode         TraceabilityNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  org              organizations    @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  toNode           TraceabilityNode @relation("EdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  org      organizations   @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  fromNode TraceabilityNode @relation("EdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  toNode   TraceabilityNode @relation("EdgeTo",   fields: [toNodeId],   references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([orgId, fromNodeId])
-  @@index([orgId, toNodeId])
+  @@index([orgId, fromNodeId], map: "traceability_edges_org_from_idx")
+  @@index([orgId, toNodeId], map: "traceability_edges_org_to_idx")
   @@map("traceability_edges")
 }
 
@@ -901,19 +901,16 @@ model organizations {
   created_at            DateTime             @default(now()) @db.Timestamptz(6)
   updated_at            DateTime             @default(now()) @db.Timestamptz(6)
   certifications        Certification[]
-  traceabilityNodes     TraceabilityNode[]
-  traceabilityEdges     TraceabilityEdge[]
   escalation_events     EscalationEvent[]
   escrow_lifecycle_logs EscrowLifecycleLog[]
   tenants               Tenant               @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pending_approvals     PendingApproval[]
-  /// G-017 Hardening: back-reference for trades where this org is the buyer.
-  tradesBuyer           Trade[]              @relation("TradeBuyer")
-  /// G-017 Hardening: back-reference for trades where this org is the seller.
-  tradesSeller          Trade[]              @relation("TradeSeller")
-  trade_lifecycle_logs  TradeLifecycleLog[]
-  /// G-024: back-reference for sanctions imposed on this organization.
   sanctions             Sanction[]
+  traceabilityEdges     TraceabilityEdge[]
+  traceabilityNodes     TraceabilityNode[]
+  trade_lifecycle_logs  TradeLifecycleLog[]
+  tradesBuyer           Trade[]              @relation("TradeBuyer")
+  tradesSeller          Trade[]              @relation("TradeSeller")
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
   @@index([jurisdiction], map: "idx_organizations_jurisdiction")
@@ -954,11 +951,70 @@ model Sanction {
   liftedByPrincipal  String?          @map("lifted_by_principal")
   createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
-  organizations      organizations    @relation(fields: [orgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   escalationEvent    EscalationEvent? @relation(fields: [escalationEventId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  organizations      organizations    @relation(fields: [orgId], references: [id], onUpdate: NoAction)
 
   @@index([orgId, createdAt(sort: Desc)], map: "sanctions_org_id_created_idx")
   @@map("sanctions")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model escrow_accounts {
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id             String                @db.Uuid
+  lifecycle_state_id    String                @db.Uuid
+  currency              String
+  created_by_user_id    String?               @db.Uuid
+  created_at            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime              @default(now()) @db.Timestamptz(6)
+  lifecycle_states      LifecycleState        @relation(fields: [lifecycle_state_id], references: [id], onUpdate: NoAction)
+  escrow_lifecycle_logs EscrowLifecycleLog[]
+  escrow_transactions   escrow_transactions[]
+  trades                Trade[]
+
+  @@index([lifecycle_state_id])
+  @@index([tenant_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model escrow_transactions {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id          String          @db.Uuid
+  escrow_id          String          @db.Uuid
+  entry_type         String
+  direction          String
+  amount             Decimal         @db.Decimal(18, 6)
+  currency           String
+  reference_id       String?
+  metadata           Json            @default("{}")
+  created_by_user_id String?         @db.Uuid
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  escrow_accounts    escrow_accounts @relation(fields: [escrow_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([escrow_id])
+  @@index([tenant_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model order_lifecycle_logs {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id   String   @db.Uuid
+  tenant_id  String   @db.Uuid
+  from_state String?
+  to_state   String
+  actor_id   String?  @db.Uuid
+  realm      String
+  request_id String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  orders     Order    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_lifecycle_logs_order_fk")
+
+  @@index([order_id, created_at(sort: Desc)], map: "idx_order_lifecycle_logs_order_created")
+  @@index([tenant_id, created_at(sort: Desc)], map: "idx_order_lifecycle_logs_tenant_created")
+  @@index([to_state, created_at(sort: Desc)], map: "idx_order_lifecycle_logs_to_state_created")
 }
 
 enum TenantType {

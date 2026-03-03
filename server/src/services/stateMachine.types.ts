@@ -11,8 +11,9 @@
 /**
  * Canonical domain discriminant. Matches entity_type column in lifecycle_states
  * and allowed_transitions tables.
+ * GAP-ORDER-LC-001-SM-SERVICE-001: ORDER added (B3) — log table order_lifecycle_logs live.
  */
-export type EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION';
+export type EntityType = 'TRADE' | 'ESCROW' | 'CERTIFICATION' | 'ORDER';
 
 /**
  * D-020-A: Actor type classification.
@@ -46,7 +47,7 @@ export type ActorType =
  *   reason must contain the marker "HUMAN_CONFIRMED:" to prove a human confirmed the AI suggestion.
  */
 export type TransitionRequest = {
-  /** Domain discriminant: TRADE | ESCROW | CERTIFICATION */
+  /** Domain discriminant: TRADE | ESCROW | CERTIFICATION | ORDER */
   entityType: EntityType;
   /** UUID of the entity being transitioned. Soft reference for TRADE (G-017) and ESCROW (G-018). */
   entityId: string;
