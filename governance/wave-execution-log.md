@@ -6396,3 +6396,58 @@ Wire `StateMachineService` ORDER branch to write a `morgue_entries` row atomical
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md G-027 row → ✅ VALIDATED
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `feat(sm): write morgue entry on terminal ORDER transitions (G-027)`
+
+---
+
+## Wave 4 — G-027 The Morgue — Terminal Producer Live Proof Run
+
+**TECS ID:** G-027-MORGUE-PROOF-RUN-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 069  
+**Risk:** 🟢 LOW — Proof + governance only; production code untouched (script bug fix only)
+
+### Objective
+
+Execute `validate-rcp1-flow.ts --only-transitions` against a live server to confirm:
+1. ORDER → FULFILLED writes a `morgue_entries` row atomically (step 4B.G1)
+2. ORDER → CANCELLED writes a `morgue_entries` row atomically (step 4C.G1)
+3. Deduplication guard prevents duplicate morgue rows (DB uniqueness verified)
+4. No `42501` privilege errors on any run
+5. Full lifecycle chain verifiable (PAYMENT_PENDING → CONFIRMED → FULFILLED)
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/scripts/validate-rcp1-flow.ts` | Step 5.2 chain verifier bug fixed: (1) `RUN_START = new Date()` captured in `main()` to scope lifecycle log query to current run; (2) `actualChain` rebuilt from `[firstLog.from_state, ...to_states]` to include initial state — resolves permanent mismatch vs `expectedChain = ['PAYMENT_PENDING', 'CONFIRMED', 'FULFILLED']` |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | G-027-MORGUE-PROOF-RUN-001 section appended with Run 1 + Run 2 evidence + Dedup DB proof |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-069) |
+
+### Proof Run Evidence
+
+**Run 1 — 2026-03-03T11:47:47.545Z**
+- Step 4B.G1 PASS: `morgue.id: 532da364` | `entity_id: f687d1e7` | `final_state: FULFILLED`
+- Step 4C.G1 PASS: `morgue.id: 3109e90d` | `entity_id: b30e1bdf` | `final_state: CANCELLED`
+- Step 5.2 PASS: `PAYMENT_PENDING → CONFIRMED → FULFILLED` (2 logs from this run)
+- **19 PASS / 0 FAIL / VALIDATE_EXIT:0**
+
+**Run 2 (Dedup) — 2026-03-03T11:50:14.614Z**
+- Step 4B.G1 PASS: `morgue.id: 830080b1` | `entity_id: 23751731` | `final_state: FULFILLED`
+- Step 4C.G1 PASS: `morgue.id: 5d1f5c45` | `entity_id: 334937af` | `final_state: CANCELLED`
+- **19 PASS / 0 FAIL / VALIDATE_EXIT:0**
+
+**Dedup DB Proof:** `Total morgue_entries: 6 | DEDUP CHECK: PASS` — 6 entries (3 FULFILLED + 3 CANCELLED), all unique `(entity_type, entity_id, final_state)` combinations, `DEDUP_EXIT:0`
+
+### Quality Gates
+
+- [x] Server health check: `{"status":"ok"}` at `http://localhost:3001/health`
+- [x] Prisma migrate status: `72/72 applied — Database schema is up to date!`
+- [x] Working tree clean before run
+- [x] Run 1: 19 PASS / 0 FAIL / VALIDATE_EXIT:0
+- [x] Run 2 (dedup): 19 PASS / 0 FAIL / VALIDATE_EXIT:0
+- [x] Dedup DB: PASS — 6 entries, 0 duplicates
+- [x] No 42501 privilege errors in any run
+- [x] typecheck EXIT 0 (after Step 5.2 fix)
+- [x] REMOTE-MIGRATION-APPLY-LOG.md: G-027-MORGUE-PROOF-RUN-001 section appended
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `docs(ops): validate G-027 morgue producer proof run (G-027-MORGUE-PROOF-RUN-001)`

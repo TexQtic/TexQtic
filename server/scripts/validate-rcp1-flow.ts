@@ -78,6 +78,7 @@ function mintToken(userId: string, tenantId: string): string {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
+  const RUN_START = new Date();
   console.log('\n╔══════════════════════════════════════════════════════════════╗');
   console.log('║  OPS-REVENUE-FLOW-VALIDATION-002 — RCP-1 Live Evidence Run   ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
@@ -417,10 +418,21 @@ async function main() {
   }
 
   step('5.2', 'Verify full state chain integrity for ORDER_ID (PAYMENT_PENDING → CONFIRMED → FULFILLED)');
+  // In --only-transitions mode the reused order may have accumulated lifecycle logs from prior
+  // test runs. Scope to only entries created in THIS run (created_at >= RUN_START) so the chain
+  // reflects the transitions executed in this script session only.
+  const thisRunLogs = await prisma.order_lifecycle_logs.findMany({
+    where: { order_id: ORDER_ID, created_at: { gte: RUN_START } },
+    orderBy: { created_at: 'asc' },
+  });
+  // Build full state sequence: [from_state of first log, ...all to_state values].
+  // expectedChain = ['PAYMENT_PENDING', 'CONFIRMED', 'FULFILLED'] (3 states visited)
   const expectedChain = ['PAYMENT_PENDING', 'CONFIRMED', 'FULFILLED'];
-  const actualChain = o1LifecycleLogs.map(l => l.to_state);
+  const actualChain = thisRunLogs.length > 0
+    ? [thisRunLogs[0].from_state, ...thisRunLogs.map(l => l.to_state)]
+    : [];
   console.log(`    Expected chain  : ${expectedChain.join(' → ')}`);
-  console.log(`    Actual chain    : ${actualChain.join(' → ')}`);
+  console.log(`    Actual chain    : ${actualChain.join(' → ')} (${thisRunLogs.length} log(s) from this run)`);
   if (JSON.stringify(actualChain) === JSON.stringify(expectedChain)) {
     pass(`Full lifecycle chain verified ✓ | PAYMENT_PENDING → CONFIRMED → FULFILLED`);
   } else {

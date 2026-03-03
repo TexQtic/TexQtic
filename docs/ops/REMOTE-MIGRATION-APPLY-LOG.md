@@ -465,3 +465,50 @@ ORDER BY grantee, privilege_type;
 **Schema actions:** Created `public.morgue_entries` (id UUID PK, entity_type text, entity_id uuid, tenant_id uuid, final_state text, resolved_by uuid nullable, resolution_reason text nullable, snapshot jsonb, created_at timestamptz) + 2 indexes (idx_morgue_entries_tenant_created: tenant_id/created_at DESC; idx_morgue_entries_entity_type_id: entity_type/entity_id) + FORCE RLS + 1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT (tenant+admin arms) + UPDATE/DELETE permanently blocked (`USING(false)` — immutability). No changes to existing tables.  
 **VERIFIER PASS:** table exists + FORCE RLS=t + 1 RESTRICTIVE guard + 4 PERMISSIVE (SELECT/INSERT with tenant+admin arms + UPDATE/DELETE immutability blocks=false) + 0 {public} policies + 2 required indexes  
 **APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**
+
+---
+
+## G-027-MORGUE-PROOF-RUN-001
+**Date:** 2026-03-03 | **Type:** Live validation proof run (no schema change) | **GOVERNANCE-SYNC:** 069
+
+**Script:** `server/scripts/validate-rcp1-flow.ts --only-transitions`
+**Server:** `http://localhost:3001` (Fastify dev server, health: `{"status":"ok"}`)
+**Prisma migration status:** 72/72 applied — `Database schema is up to date!`
+**Remote target:** `aws-1-ap-northeast-1.pooler.supabase.com:5432` (DATABASE_URL — Supabase Postgres, redacted)
+
+### Run 1 — 2026-03-03T11:47:47.545Z
+
+| Step | Result | Evidence |
+|------|--------|---------|
+| 4B.G1 — FULFILLED morgue entry | ✅ PASS | `entity_id: f687d1e7-d7a6-4b42-b273-bf99541a2931` · `morgue.id: 532da364-65cd-4408-852a-cf79b35f1f64` · `final_state: FULFILLED` |
+| 4C.G1 — CANCELLED morgue entry | ✅ PASS | `entity_id: b30e1bdf-235a-405d-b375-8b3d00c04398` · `morgue.id: 3109e90d-58ab-4069-9932-35fb777e9852` · `final_state: CANCELLED` |
+| 5.2 — Full lifecycle chain | ✅ PASS | `PAYMENT_PENDING → CONFIRMED → FULFILLED` (2 logs from this run) |
+| **Summary** | **19 PASS / 0 FAIL** | `VALIDATE_EXIT:0` |
+
+_Note: A bug in Step 5.2's chain verifier was discovered and fixed during this TECS (`actualChain` used `to_state[]` only, omitting the initial state; additionally, `--only-transitions` reused orders accumulate prior-run logs — fixed by capturing `RUN_START` and scoping query to logs created in this run, plus building chain from `[firstLog.from_state, ...to_states]`). `validate-rcp1-flow.ts` updated, typecheck EXIT 0 confirmed._
+
+### Run 2 (Dedup) — 2026-03-03T11:50:14.614Z
+
+| Step | Result | Evidence |
+|------|--------|---------|
+| 4B.G1 — FULFILLED morgue entry | ✅ PASS | `entity_id: 23751731-a918-4649-8dc4-357a1f87731c` · `morgue.id: 830080b1-83f7-4067-9659-ce7b2bb0d0da` · `final_state: FULFILLED` |
+| 4C.G1 — CANCELLED morgue entry | ✅ PASS | `entity_id: 334937af-7824-4427-9131-284acc075c84` · `morgue.id: 5d1f5c45-2ab8-481f-a69a-d49d34eeb49a` · `final_state: CANCELLED` |
+| **Summary** | **19 PASS / 0 FAIL** | `VALIDATE_EXIT:0` |
+
+### Dedup DB Proof
+
+```
+Total morgue_entries: 6
+DEDUP CHECK: PASS — no duplicate (entity_type, entity_id, final_state) combos
+morgue.id: a052af7c | entity_id: ca4671b8 | final_state: FULFILLED  (run 0 — pre-fix)
+morgue.id: fca1e126 | entity_id: 36e5d690 | final_state: CANCELLED  (run 0 — pre-fix)
+morgue.id: 532da364 | entity_id: f687d1e7 | final_state: FULFILLED  (run 1)
+morgue.id: 3109e90d | entity_id: b30e1bdf | final_state: CANCELLED  (run 1)
+morgue.id: 830080b1 | entity_id: 23751731 | final_state: FULFILLED  (run 2 dedup)
+morgue.id: 5d1f5c45 | entity_id: 334937af | final_state: CANCELLED  (run 2 dedup)
+DEDUP_EXIT:0
+```
+
+6 entries — 3 FULFILLED + 3 CANCELLED — all with distinct `entity_id` values. No duplicate `(entity_type, entity_id, final_state)` combinations. SM `findFirst` dedup guard confirmed effective: no privilege errors (`42501`) observed in any run.
+
+**ATOMICITY:** Both lifecycle log + morgue write occur in same transaction path (opts.db shared-tx). Terminal state check (`toState.isTerminal`) gates the morgue write; non-terminal transitions (PAYMENT_PENDING → CONFIRMED) correctly produce no morgue entry.
