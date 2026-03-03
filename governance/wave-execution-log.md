@@ -5334,3 +5334,139 @@ Added/anchored section: **RCP-1 — Revenue Domain Completion Plan (Phase 1)** w
 - Any validation that expects lifecycle beyond PAYMENT_PENDING + transitions → HALT
 
 **Result:** RCP-1 anchored and drift-neutralized. No implementation begun.
+
+---
+
+## GOVERNANCE-SYNC-049 — OPS-APPLY-ORDERS-RLS-001 (2026-03-03)
+
+### Objective
+
+Apply the governed ops SQL file `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` to the remote Supabase database, extending the `orders_update_unified` PERMISSIVE UPDATE policy with a tenant arm so that tenant actors (OWNER/ADMIN via `withDbContext`) can perform order status transitions without requiring `app.is_admin = 'true'`. Re-run RCP-1 Phases 4–5 validation to confirm full end-to-end revenue flow PASS.
+
+### Gaps Closed
+
+- **GAP-RLS-ORDERS-UPDATE-001** — OPERATIONALLY CLOSED (tenant arm applied + DO-block VERIFY PASS)
+- **GAP-REVENUE-VALIDATE-002** — FULLY VALIDATED (Phases 0–5 PASS, 16/16)
+
+### Implementation
+
+**No source files changed.**  
+**Ops SQL file applied:** `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql`  
+**Commit (governance):** `0a5b0a7`
+
+**Policy applied to remote Supabase:**
+
+```sql
+-- orders_update_unified (PERMISSIVE, FOR UPDATE TO texqtic_app)
+USING (
+  (app.require_org_context() AND tenant_id = app.current_org_id())
+  OR (current_setting('app.is_admin', true) = 'true')
+)
+WITH CHECK (same)
+```
+
+**B1/D-5 posture preserved:** `app.is_admin` is NOT set for tenant actors; admin arm reserved for control-plane context only.
+
+**Apply method (PowerShell — confirmed working pattern for this repo):**
+
+```powershell
+$u = (Get-Content server/.env | Where-Object { $_ -match '^DATABASE_URL=' }) -replace '^DATABASE_URL=', ''
+psql "--dbname=$u" "--variable=ON_ERROR_STOP=1" "--file=server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql"
+```
+
+> Note: Short flags (`-v`, `-f`) cause argument splitting in PowerShell on URLs with `?sslmode=require`. Must use `--key=value` form.
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| psql apply | APPLY_EXIT:0 |
+| DO-block verifier | VERIFY PASS: `orders_update_unified has tenant + admin arms in USING and WITH CHECK` |
+| `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions` | VALIDATE_EXIT:0 — 16/16 PASS |
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+### RCP-1 Phases 4–5 Result
+
+| Phase | Step | Result |
+|-------|------|--------|
+| 4A | PATCH status CONFIRMED + audit verify | PASS |
+| 4B | PATCH status FULFILLED + audit verify | PASS |
+| 4C | CANCEL path + terminal 409 enforced | PASS |
+| 5 | derivedStatus FULFILLED + CANCELLED stable | PASS |
+| **TOTAL** | | **16/16 PASS** |
+
+### Governance Outputs
+
+- `governance/gap-register.md` — GOVERNANCE-SYNC-049 prepended; GAP-RLS-ORDERS-UPDATE-001 → OPERATIONALLY CLOSED; GAP-REVENUE-VALIDATE-002 → Phases 0–5 PASS
+- `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` — Section 1A rows → ✅ Complete; exit condition achieved
+- `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` — new section appended with apply evidence + RCP-1 results
+
+### Completion Checklist
+
+- [x] Ops SQL applied to remote Supabase — APPLY_EXIT:0
+- [x] DO-block VERIFY PASS confirmed
+- [x] RCP-1 Phases 4–5: 16/16 PASS
+- [x] typecheck EXIT 0 · lint EXIT 0
+- [x] GAP-RLS-ORDERS-UPDATE-001 operationally closed
+- [x] GAP-REVENUE-VALIDATE-002 fully validated
+- [x] 3 governance files updated (gap-register + tracker + ops log)
+- [x] Atomic commit `0a5b0a7` (3 governance files only, no source changes)
+
+---
+
+## GOVERNANCE-SYNC-050 — OPS-LINT-CLEANUP-001 (2026-03-03)
+
+### Objective
+
+Formally close the root lint gate G-QG-001. Confirm `pnpm run lint` exits 0 with 0 errors and 0 warnings. Update governance register and tracker accordingly.
+
+### Gaps Closed
+
+- **G-QG-001** — VALIDATED (23→0 root ESLint errors; root lint gate fully closed)
+
+### Implementation
+
+**No source files changed.**  
+**Commit (governance):** `793e524`
+
+The 23 ESLint errors across 11 frontend files (unused vars, `React` not defined, `AbortController` global, setState-in-effect) had been cleared in a prior session. `pnpm run lint` was confirmed EXIT 0 with 0 errors and 0 warnings. Governance documentation updated to reflect the validated state.
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm run lint` | EXIT 0 — 0 errors, 0 warnings |
+| `pnpm run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 — 0 errors (105 pre-existing warnings) |
+| `pnpm -C server run typecheck` | EXIT 0 |
+
+### Files Previously in Scope (G-QG-001 — all cleared)
+
+| File | Errors Cleared |
+|------|----------------|
+| `App.tsx` | Unused vars |
+| `Auth/ForgotPassword.tsx` | `React` not defined, unused vars |
+| `Auth/TokenHandler.tsx` | `React` not defined, unused vars |
+| `Auth/VerifyEmail.tsx` | `React` not defined, unused vars |
+| `Auth/AuthFlows.tsx` | Unused var (`AUTH_DEBUG`) |
+| `Cart/Cart.tsx` | Unused vars (`LoadingState`, `currentQuantity`) |
+| `ControlPlane/AuditLogs.tsx` | Unused var (`LoadingState`) |
+| `ControlPlane/TenantRegistry.tsx` | Unused var (`LoadingState`) |
+| `ControlPlane/EventStream.tsx` | `EmptyState` unused, setState-in-effect |
+| `constants.tsx` | Unused imports |
+| `services/apiClient.ts` | `AbortController` not defined (2 occurrences) |
+
+### Governance Outputs
+
+- `governance/gap-register.md` — GOVERNANCE-SYNC-050 prepended; G-QG-001 → ✅ VALIDATED; gating policy updated
+- `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` — Section 1B G-QG-001 → ✅ Complete; exit condition achieved
+
+### Completion Checklist
+
+- [x] `pnpm run lint` EXIT 0 — 0 errors, 0 warnings confirmed
+- [x] `pnpm run typecheck` EXIT 0 confirmed
+- [x] G-QG-001 VALIDATED in gap-register.md (GOVERNANCE-SYNC-050)
+- [x] Tracker Section 1B marked complete
+- [x] Root lint gate policy note updated in gap-register
+- [x] Atomic commit `793e524` (2 governance files only, no source changes)
