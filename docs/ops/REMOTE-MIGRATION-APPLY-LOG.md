@@ -568,7 +568,8 @@ RESOLVE_EXIT:0 — `Migration 20260315000007_ops_orders_status_enum_001 marked a
 **TECS ID:** OPS-RLS-SUPERADMIN-001-DB-APPROVAL-001  
 **GOVERNANCE-SYNC:** 073  
 **Date approved:** 2026-03-03  
-**Date executed:** PENDING (TECS 2B + 2C)  
+**Date SQL authored:** 2026-03-15 (GOVERNANCE-SYNC-074)  
+**Date executed:** PENDING (psql remote apply)  
 **Prerequisite:** `1f211d6` — service write paths migrated to `withSuperAdminContext`  
 **Target:** Remote Supabase PostgreSQL (`aws-1-ap-northeast-1.pooler.supabase.com`)
 

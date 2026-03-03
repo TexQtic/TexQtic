@@ -6660,3 +6660,72 @@ Record explicit governance sign-off authorizing remote apply of SUPER_ADMIN RLS 
 - [x] TECS 2B/2C execution clearly separated from this approval record
 - [x] Atomic commit: `docs(governance): approve superadmin RLS DB apply (OPS-RLS-SUPERADMIN-001)`
 - [x] Commit hash: `8d436d1`
+
+---
+
+## Wave 4 — OPS-RLS-SUPERADMIN-001: TECS 2B — impersonation_sessions RLS Narrowing
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-IMPERSONATION-001  
+**Date:** 2026-03-15  
+**GOVERNANCE-SYNC:** 074  
+**Risk:** 🟡 MEDIUM — Remote RLS policy swap on `impersonation_sessions` (write paths narrowed; no DDL)
+
+### Objective
+
+Author and prepare `20260315000008_ops_rls_superadmin_impersonation_sessions/migration.sql`.  
+Narrows INSERT / UPDATE / DELETE on `impersonation_sessions` to require BOTH `app.is_admin='true'` AND `app.is_superadmin='true'`. GUARD and SELECT are unchanged (SUPPORT/ANALYST read path unaffected).  
+Service prerequisite `1f211d6` (commit GOVERNANCE-SYNC-072) confirmed: `startImpersonation` + `stopImpersonation` already use `withSuperAdminContext`.
+
+### Migration: 20260315000008_ops_rls_superadmin_impersonation_sessions
+
+**File authored:** `server/prisma/migrations/20260315000008_ops_rls_superadmin_impersonation_sessions/migration.sql`  
+**Apply status:** PENDING psql remote apply  
+**Verifier:** Inline DO-block (9 invariants: FORCE RLS, 1 RESTRICTIVE guard, 4 PERMISSIVE, 0 {public}, is_superadmin in INSERT/UPDATE/DELETE, is_admin in SELECT)
+
+**Policy deltas:**
+
+| Policy | Before | After |
+|---|---|---|
+| `impersonation_sessions_guard` | `require_admin_context OR is_admin OR bypass_enabled` | UNCHANGED |
+| `impersonation_sessions_select_unified` | `(require_admin_context AND actor_match) OR is_admin` | UNCHANGED |
+| `impersonation_sessions_insert_unified` | `(require_admin_context AND actor_match) OR is_admin` | `(require_admin_context AND actor_match AND is_superadmin) OR (is_admin AND is_superadmin)` |
+| `impersonation_sessions_update_unified` | `(require_admin_context AND actor_match) OR is_admin` | `(require_admin_context AND actor_match AND is_superadmin) OR (is_admin AND is_superadmin)` |
+| `impersonation_sessions_delete_unified` | `(require_admin_context AND actor_match) OR is_admin` | `(require_admin_context AND actor_match AND is_superadmin) OR (is_admin AND is_superadmin)` |
+
+### TECS 2C Status: BLOCKED — Spec Mismatch
+
+**Finding:** `SUPERADMIN-RLS-PLAN.md` Section C.2 references a GUARD policy and UPDATE RLS policy on `escalation_events`, but inspection of the actual migration (`20260303000000_g022_escalation_core/migration.sql`) reveals:
+
+- **NO GUARD** policy exists on `escalation_events` (only PERMISSIVE SELECT + INSERT policies)
+- **NO UPDATE** RLS policy exists (the table has an immutability BEFORE trigger that blocks all UPDATEs unconditionally)
+- `texqtic_app` role has only `SELECT + INSERT` grants — no UPDATE privilege granted at all
+- The "upgrade/resolve" operations (EscalationService) are actually **INSERTs** (append-only pattern), not UPDATEs
+
+The SUPERADMIN-RLS-PLAN.md C.2 was authored based on incorrect discovery data. Narrowing the UPDATE policy as written is incoherent because: (a) there is no UPDATE policy to narrow, and (b) adding one would create a new path that never existed, which triggers Stop-Loss.
+
+**Blocker report issued.** Awaiting user decision on TECS 2C revised scope.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/prisma/migrations/20260315000008_ops_rls_superadmin_impersonation_sessions/migration.sql` | NEW — TECS 2B migration SQL with pre-flight + 5 policies + 9-invariant verifier |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-074 prepended |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | Row 20260315000008 → ✅ SQL authored; row 20260315000009 → 🛑 BLOCKED |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | "Date SQL authored: 2026-03-15" added |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-074) |
+
+### Quality Gates
+
+- [x] git preflight: clean working tree before start
+- [x] Allowlist: only 5 files modified (migration.sql + 4 governance docs)
+- [x] No server/src code modified
+- [x] No unrelated refactors
+- [x] Migration SQL: BEGIN/pre-flight/DROP/CREATE/VERIFIER/COMMIT structure ✅
+- [x] Guard and SELECT predicates are byte-for-byte identical to 20260315000004 baseline ✅
+- [x] INSERT/UPDATE/DELETE predicates both arms require is_superadmin ✅
+- [x] TECS 2C BLOCKER issued — execution halted, awaiting spec clarification
+- [ ] APPLY_EXIT: PENDING (psql remote)
+- [ ] VERIFIER PASS: PENDING
+- [ ] RESOLVE_EXIT: PENDING
+- [ ] Commit pending TECS 2C decision
