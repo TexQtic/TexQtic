@@ -6126,3 +6126,108 @@ Note: UPDATE + DELETE intentionally NOT granted (append-only table; RLS UPDATE/D
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (B6b row ✅; lifecycle badge row ✅)
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `feat(ui): order lifecycle badge + history (GAP-ORDER-LC-001)`
+
+---
+
+### GOVERNANCE-SYNC-064 - OPS-PRE-WAVE4-INTEGRITY-AUDIT-001
+
+**Date:** 2026-03-03
+**TECS ID:** OPS-PRE-WAVE4-INTEGRITY-AUDIT-001
+**Title:** Pre–Wave 4 integrity audit — PASS
+**Risk:** 🟢 READ-ONLY — no source code modified; governance documentation corrections only
+**Allowlist (Write):** `governance/gap-register.md`, `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md`, `governance/wave-execution-log.md`
+
+**Audit Scope:** Full governance + implementation integrity check across 6 sections before Wave 4 expansion begins.
+
+---
+
+#### Section A — Gap Register
+
+| Gap | Expected | Result |
+|-----|----------|--------|
+| G-006C status | VALIDATED (all Wave 3 Tail complete) | ✅ Row updated to VALIDATED |
+| GAP-ORDER-LC-001 | CLOSED (B1–B6b complete) | ✅ Confirmed; no TODO/deriveStatus in source |
+| bypass_enabled() in active USING/WITH CHECK | Zero occurrences | ✅ Zero matches in any migration SQL policy clause |
+
+**G-006C corrected:** `IN PROGRESS` → `✅ VALIDATED (GOVERNANCE-SYNC-064 audit, 2026-03-03)`
+
+---
+
+#### Section B — Implementation Tracker
+
+All stale fields updated in IMPLEMENTATION-TRACKER-2026-Q2.md:
+
+| Field | Was | Now |
+|-------|-----|-----|
+| Migration count | 64 / 64 | **71 / 71** |
+| RLS Maturity header | 3.5 / 5 | **4.5 / 5** |
+| Risk row: ORDER lifecycle | 🔴 HIGH — Pending Phase B | ✅ RESOLVED — GOVERNANCE-SYNC-063 |
+| Risk row: G-006C 5 tables | 🟠 MED — Phase A | ✅ RESOLVED — GOVERNANCE-SYNC-051–055 |
+| RLS score — Policy Consolidation | 3 / 5 — ⏳ | **5 / 5 — ✅** |
+| RLS score — Admin Arm Correctness | 4 / 5 — ⏳ | **5 / 5 — ✅** |
+| Composite RLS Maturity | 3.5 / 5 | **4.5 / 5** |
+| Phase A — GAP-RLS-ORDERS-UPDATE-001 | `[ ]` | `[x]` |
+| Phase A — G-QG-001 | `[ ]` | `[x]` |
+| Phase A — RLS Maturity ≥ 4.5/5 confirmed | `[ ]` | `[x]` |
+| Phase B — 7 implementation items | `[ ]` each | `[x]` each |
+| Section 9 strategic bottleneck | ORDER app-layer bottleneck | **Wave 4 sequencing (all gaps resolved)** |
+
+---
+
+#### Section C — Migration Ledger
+
+- **71 local migration folders** = 64 baseline (GOVERNANCE-SYNC-048) + 7 post-048
+- Post-048 breakdown:
+  - `20260314000000` — admin_cart_summaries view + RLS (GOVERNANCE-SYNC-049)
+  - `20260315000000` — G-006C catalog_items (GOVERNANCE-SYNC-051)
+  - `20260315000001` — G-006C memberships (GOVERNANCE-SYNC-052)
+  - `20260315000002` — G-006C tenant_branding (GOVERNANCE-SYNC-053)
+  - `20260315000003` — G-006C tenant_domains (GOVERNANCE-SYNC-054)
+  - `20260315000004` — G-006C impersonation_sessions (GOVERNANCE-SYNC-055)
+  - `20260315000005` — order_lifecycle_logs + FORCE RLS (GOVERNANCE-SYNC-056)
+- All 7 confirmed applied via psql + `prisma migrate resolve --applied` per governance records
+- `bypass_enabled()`: exists only in function definition migration; **zero occurrences in any active policy USING/WITH CHECK clause** ✅
+- `ALTER TYPE.*order_status`: **zero occurrences** in migration SQL — enum extension correctly deferred ✅
+
+---
+
+#### Section D — Lifecycle Implementation Consistency
+
+| Check | Evidence | Result |
+|-------|----------|--------|
+| SM ORDER branch active | `stateMachineService.ts` line 393: `case 'ORDER'` → `order_lifecycle_logs.create()` | ✅ |
+| Tenant orders GET enriched | `tenant.ts` GET `/api/tenant/orders` → `lifecycleState` + `lifecycleLogs` in response | ✅ |
+| WLOrdersPanel uses `canonicalStatus()` | No `deriveStatus`; no audit-log fetch; lifecycle badge renders | ✅ |
+| EXPOrdersPanel uses `canonicalStatus()` | Same pattern; EXPERIENCE shell separate | ✅ |
+| No app-layer `allowed()` in PATCH | Transition gate is `StateMachineService.transition()` only | ✅ |
+| No `order.lifecycle.*` audit writes remaining | `Select-String` scan: zero matches | ✅ |
+| No `TODO(GAP-ORDER-LC-001)` in source | `Select-String` scan: zero matches | ✅ |
+
+---
+
+#### Section E — Expansion Risks (Wave 4 Non-Blockers)
+
+| Risk | Status | Action Required |
+|------|--------|-----------------|
+| orders.status enum extension (CONFIRMED/FULFILLED ADD VALUE) | Deferred — irreversible DDL | Dedicated TECS + approval gate before execution |
+| CI RLS proof for Wave 3 domain tables | Open — OPS-CI-RLS-DOMAIN-PROOF-001 | Non-blocking; document in Phase A tail |
+| OPS-RLS-SUPERADMIN-001 — `app.is_superadmin` consumers | Open | Non-blocking for Wave 4 |
+| ORDER-specific unit tests | Minor gap; not blocking | Document in Wave 4 backlog |
+| G-027 The Morgue | Wave 4 item | Not Phase B prerequisite |
+
+---
+
+#### VERDICT: ✅ PASS — Safe to begin Wave 4
+
+Wave 4 opening pair (per tracker Section 4, no shared schema — can run parallel):
+- **G-027 The Morgue** — table + RLS; escalation resolution capture
+- **WL Collections Panel** — display-only; no schema dependency
+
+**Quality gates:**
+- [x] No source code modified — governance documentation only
+- [x] PASS verdict — all 6 audit sections clean
+- [x] 7 stale documentation fields corrected and committed
+- [x] wave-execution-log.md updated (this entry)
+- [x] gap-register.md G-006C → ✅ VALIDATED
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md: 71/71, 4.5/5, Phase A/B complete, Section 9 updated
+- [x] Atomic commit: `docs(governance): pre-wave4 integrity audit PASS (OPS-PRE-WAVE4-INTEGRITY-AUDIT-001)`

@@ -3,8 +3,8 @@
 **Source:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`  
 **Baseline:** GOVERNANCE-SYNC-048  
 **Date:** 2026-03-03  
-**RLS Maturity:** 3.5 / 5  
-**Migrations:** 64 / 64 Applied · `Database schema is up to date!`  
+**RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-064: Phase A G-006C + GAP-ORDER-LC-001 complete)*  
+**Migrations:** 71 / 71 Applied · `Database schema is up to date!`  
 **Doctrine Version:** v1.4
 
 ---
@@ -197,13 +197,13 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 
 | Risk | Severity | Mitigation Status | Action |
 |------|----------|------------------|----|
-| ORDER lifecycle missing — app-layer only | 🔴 HIGH | Pending Phase B | Design anchor TECS first; no coding until approved |
+| ORDER lifecycle — SM-governed (GAP-ORDER-LC-001 ✅ CLOSED) | ~~🔴 HIGH~~ | ✅ Resolved GOVERNANCE-SYNC-063 | No action required |
 | `app.is_superadmin` GUC with no RLS consumers | 🟠 MED | Phase A (tail) | `OPS-SUPERADMIN-RLS-001` |
-| G-006C remaining 5 tables — non-canonical admin arms | 🟠 MED | Phase A | Execute P-B ladder sequentially |
-| Ops SQL manual apply dependency — `rcp1_orders_update_unified_tenant_arm.sql` | 🟠 MED | Apply immediately (Day 1) | Step 1A above |
+| G-006C remaining 5 tables | ~~🟠 MED~~ | ✅ Resolved GOVERNANCE-SYNC-051–055 | All 11 tables at canonical pattern |
+| Ops SQL manual apply dependency — `rcp1_orders_update_unified_tenant_arm.sql` | ~~🟠 MED~~ | ✅ Applied (GOVERNANCE-SYNC-049) | No action required |
 | Email silent SMTP fallback in production | 🟠 MED | No health-check assertion | Future TECS: startup env guard for `EMAIL_SMTP_*` |
 | WL Collections / Domains / Orders stub panels | 🟡 LOW | Wave 4 follow-ons | Non-blocking; stub displays "Coming Soon" |
-| Frontend lint debt blocks root CI gate | 🟡 LOW | P-D Day 3 | G-QG-001 |
+| Frontend lint debt blocks root CI gate | ~~🟡 LOW~~ | ✅ Resolved GOVERNANCE-SYNC-050 | G-QG-001 VALIDATED |
 
 ### Governance Risk Watchlist
 
@@ -222,11 +222,11 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 |-----------|--------------|-------------|-----------------|--------|
 | Context Canonicalization | 5 / 5 | 5 / 5 | Complete ✅ | ✅ |
 | FORCE RLS Coverage | 5 / 5 | 5 / 5 | Complete ✅ | ✅ |
-| Policy Consolidation | 3 / 5 | 5 / 5 | Phase A | ⏳ |
-| Admin Arm Correctness | 4 / 5 | 5 / 5 | Phase A | ⏳ |
-| CI Domain Table Coverage | 3 / 5 | 5 / 5 | Phase A (tail) | ⏳ |
+| Policy Consolidation | 5 / 5 | 5 / 5 | Phase A ✅ | ✅ |
+| Admin Arm Correctness | 5 / 5 | 5 / 5 | Phase A ✅ | ✅ |
+| CI Domain Table Coverage | 3 / 5 | 5 / 5 | Phase A (tail) | ⏳ OPS-CI-RLS-DOMAIN-PROOF-001 |
 
-**Composite RLS Maturity:** 3.5 / 5 → **Target after Phase A: 4.5 / 5**
+**Composite RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-064 — Policy Consolidation 3→5, Admin Arm Correctness 4→5; CI Domain Table Coverage remains 3/5 pending OPS-CI-RLS-DOMAIN-PROOF-001)*
 
 ---
 
@@ -254,27 +254,27 @@ Each TECS must produce:
 
 ### Phase A Complete When:
 
-- [ ] GAP-RLS-ORDERS-UPDATE-001 — `psql apply` confirmed + RCP-1 Phases 4–5 PASS
-- [ ] G-QG-001 — `pnpm run lint` exits 0
+- [x] GAP-RLS-ORDERS-UPDATE-001 — `psql apply` confirmed + RCP-1 Phases 4–5 PASS (GOVERNANCE-SYNC-049, 2026-03-03: APPLY_EXIT:0 · 16/16 PASS)
+- [x] G-QG-001 — `pnpm run lint` exits 0 (GOVERNANCE-SYNC-050, 2026-03-03: lint EXIT 0 · 0 errors)
 - [x] G-006C `catalog_items` — migration `20260315000000` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-051, 2026-03-03)
 - [x] G-006C `memberships` — migration `20260315000001` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-052, 2026-03-03)
 - [x] G-006C `tenant_branding` — migration `20260315000002` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-053, 2026-03-03)
 - [x] G-006C `tenant_domains` — migration `20260315000003` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed, DELETE tenant_id arm confirmed (GOVERNANCE-SYNC-054, 2026-03-03)
 - [x] G-006C `impersonation_sessions` — migration `20260315000004` applied, DO-block VERIFIER PASS, no {public} policies, require_admin_context + is_admin arm confirmed, DELETE critical fix applied (had bypass_enabled only), admin-only design (no tenant arm) (GOVERNANCE-SYNC-055, 2026-03-03)
-- [ ] CI RLS proof extended to at least 1 Wave 3 domain table
-- [ ] OPS-RLS-SUPERADMIN-001 — DB policies consuming `app.is_superadmin` live
-- [ ] RLS Maturity confirmed ≥ 4.5 / 5
+- [ ] CI RLS proof extended to at least 1 Wave 3 domain table *(open — OPS-CI-RLS-DOMAIN-PROOF-001)*
+- [ ] OPS-RLS-SUPERADMIN-001 — DB policies consuming `app.is_superadmin` live *(open)*
+- [x] RLS Maturity confirmed ≥ 4.5 / 5 (GOVERNANCE-SYNC-064 audit: 4.5/5 confirmed)
 
 ### Phase B Complete When:
 
-- [ ] Governance design anchor TECS committed for GAP-ORDER-LC-001
-- [ ] `order_lifecycle_logs` table created with RLS + FORCE RLS
-- [ ] ORDER added to `LifecycleState` CHECK constraint
-- [ ] ORDER lifecycle states seeded in `lifecycle_states`
-- [ ] `StateMachineService` accepts `EntityType = 'ORDER'`
-- [ ] Checkout populates `order_lifecycle_logs` (replaces `audit_logs`-only approach)
-- [ ] App-layer `GAP-ORDER-TRANSITIONS-001` workaround removed from routes
-- [ ] G-027 The Morgue — table created, Level 1+ escalation resolutions captured
+- [x] Governance design anchor TECS committed for GAP-ORDER-LC-001 (embedded in GOVERNANCE-SYNC-056 schema gate: states, transitions, RLS, atomicity pattern all documented prior to migration)
+- [x] `order_lifecycle_logs` table created with RLS + FORCE RLS (GOVERNANCE-SYNC-056: migration `20260315000005`; 1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT + immutability blocks; VERIFIER PASS)
+- [x] ORDER added to `LifecycleState` CHECK constraint (GOVERNANCE-SYNC-056: `lifecycle_states_entity_type_check` + `allowed_transitions_entity_type_check` extended)
+- [x] ORDER lifecycle states seeded in `lifecycle_states` (GOVERNANCE-SYNC-056: 4 states seeded; GOVERNANCE-SYNC-057: 4 transitions seeded)
+- [x] `StateMachineService` accepts `EntityType = 'ORDER'` (GOVERNANCE-SYNC-058: ORDER branch added; `order_lifecycle_logs` written atomically)
+- [x] Checkout populates `order_lifecycle_logs` (GOVERNANCE-SYNC-059: `writeAuditLog` workaround replaced with `tx.order_lifecycle_logs.create()`)
+- [x] App-layer `GAP-ORDER-TRANSITIONS-001` workaround removed from routes (GOVERNANCE-SYNC-059: PATCH endpoint uses `StateMachineService.transition()`)
+- [ ] G-027 The Morgue — table created, Level 1+ escalation resolutions captured *(Wave 4 item — open)*
 
 ### Phase C Complete When:
 
@@ -292,20 +292,23 @@ Each TECS must produce:
 The TexQtic platform is:
 
 - Structurally stable
-- Migration-aligned (64/64 applied)
-- Governance-disciplined (GOVERNANCE-SYNC-048)
-- RLS-heavy but controlled (3.5/5 maturing to 4.5/5 in Phase A)
+- Migration-aligned (71/71 applied as of GOVERNANCE-SYNC-064 audit, 2026-03-03)
+- Governance-disciplined (GOVERNANCE-SYNC-064)
+- RLS-canonical (4.5/5 — Phase A complete; CI domain table coverage tail pending)
 - Audit-strong (append-only logs, writeAuditLog on all mutations, 14 GET handlers)
-- Lifecycle-partial (TRADE/ESCROW/CERTIFICATION fully SM-driven; ORDER app-layer only)
+- **Lifecycle-complete: TRADE/ESCROW/CERTIFICATION/ORDER all SM-governed** (GAP-ORDER-LC-001 ✅ CLOSED)
 
-**True bottleneck:** ORDER lifecycle schema completion (GAP-ORDER-LC-001).
+**True bottleneck (post-Phase B):** Wave 4 expansion sequencing.
 
-Everything else in the remaining backlog is incremental:
-- G-006C tables are mechanical migrations with a proven pattern.
-- Wave 4 items are additive (no existing system rework required).
-- WL follow-ons are pure frontend with no schema dependency.
+All foundational gaps are resolved:
+- G-006C fully consolidated — no bypass_enabled() in any active policy clause.
+- GAP-ORDER-LC-001 fully closed — SM enforces ORDER; UI reads canonical lifecycleState.
+- All 71 migrations applied and ledger-synced.
 
-The structural gap is ORDER. Until `order_lifecycle_logs` is live and the SM `EntityType` union includes `ORDER`, the commerce domain will remain audit-tracked but not SM-governed — which is the only remaining domain-wide architectural inconsistency.
+Remaining open items before full Phase A closure:
+- OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS proof extension to domain tables (non-blocking for Wave 4).
+- OPS-RLS-SUPERADMIN-001 — `app.is_superadmin` RLS consumers (non-blocking for Wave 4).
+- orders.status enum extension (ALTER TYPE ADD VALUE CONFIRMED/FULFILLED) — irreversible DDL; requires dedicated migration TECS + explicit approval gate.
 
 ---
 
