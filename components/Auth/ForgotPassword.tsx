@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { LoadingState, ErrorState, EmptyState } from '../shared';
 import type { ApiError } from '../../services/apiClient';
 import { forgotPassword } from '../../services/authService';

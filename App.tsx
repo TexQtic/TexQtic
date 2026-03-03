@@ -119,8 +119,8 @@ const App: React.FC = () => {
       try {
         const response = await getTenants();
         setTenants(response.tenants);
-        if (response.tenants.length > 0 && !currentTenantId) {
-          setCurrentTenantId(response.tenants[0].id);
+        if (response.tenants.length > 0) {
+          setCurrentTenantId(prev => prev ?? response.tenants[0].id);
         }
       } catch (error) {
         console.error('Failed to load tenants:', error);

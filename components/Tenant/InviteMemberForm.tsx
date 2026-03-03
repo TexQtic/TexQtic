@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { UserRole } from '../../types';
 import { createMembership } from '../../services/tenantService';
 import { APIError } from '../../services/apiClient';
 

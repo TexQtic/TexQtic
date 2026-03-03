@@ -1,5 +1,3 @@
-import { TenantType, TenantConfig, TenantStatus } from './types';
-
 export const EXAMPLE_PRODUCTS = [
   {
     id: 'p1',

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getEvents, EventLog } from '../../services/controlPlaneService';
-import { LoadingState, EmptyState, ErrorState } from '../shared';
+import { LoadingState, ErrorState } from '../shared';
 import { APIError } from '../../services/apiClient';
 
 export const EventStream: React.FC = () => {
@@ -54,8 +54,9 @@ export const EventStream: React.FC = () => {
   }, [loading, failedAttempts]);
 
   useEffect(() => {
-    // Initial fetch
-    fetchEvents();
+    // Initial fetch — deferred via setTimeout so setState runs in a callback,
+    // not synchronously in the effect body (satisfies react-hooks/set-state-in-effect)
+    const initialFetch = setTimeout(fetchEvents, 0);
 
     // Poll for new events every 5 seconds
     const interval = setInterval(fetchEvents, 5000);
@@ -74,6 +75,7 @@ export const EventStream: React.FC = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      clearTimeout(initialFetch);
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LoadingState, ErrorState, EmptyState } from '../shared';
 import type { ApiError } from '../../services/apiClient';
-import { verifyEmail, resetPassword, resendVerification } from '../../services/authService';
+import { resendVerification } from '../../services/authService';
 
 /**
  * Verify Email Component

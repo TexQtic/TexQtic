@@ -1,3 +1,4 @@
+/* global process */
 /**
  * control-plane-manifest.ts
  *

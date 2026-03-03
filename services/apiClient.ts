@@ -57,6 +57,7 @@ export function setImpersonationToken(token: string | null): void {
 const AUTH_DEBUG = false;
 
 // Wave 0-A: AbortController for in-flight request cancellation
+/* global AbortController */
 let currentAbortController = new AbortController();
 
 export type AuthRealm = 'TENANT' | 'CONTROL_PLANE';

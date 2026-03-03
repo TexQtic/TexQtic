@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
-import { LoadingState, EmptyState, ErrorState, CartItemSkeleton } from '../shared';
+import { EmptyState, ErrorState, CartItemSkeleton } from '../shared';
 import { APIError, type ApiError } from '../../services/apiClient';
 import { checkout, type CheckoutResult } from '../../services/cartService';
 
@@ -21,7 +21,7 @@ export const Cart: React.FC = () => {
   const handleQuantityChange = async (
     itemId: string,
     newQuantity: number,
-    currentQuantity: number
+    _currentQuantity: number
   ) => {
     if (newQuantity < 0) return;
 

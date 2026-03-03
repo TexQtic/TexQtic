@@ -19,7 +19,7 @@
  * Static type-check: tsc --noEmit (root tsconfig must include this file).
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // ─── Inline Types (mirrors server/src/services/stateMachine.types.ts) ─────────
 // Inlined to avoid cross-package import complexity. Keep in sync with source.

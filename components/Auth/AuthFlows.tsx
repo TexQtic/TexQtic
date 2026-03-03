@@ -3,7 +3,7 @@ import { login } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
 
 // Flip to true locally to inspect login payloads without exposing tokens
-const AUTH_DEBUG = false;
+const _AUTH_DEBUG = false;
 
 // TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
 const SEEDED_TENANTS = [

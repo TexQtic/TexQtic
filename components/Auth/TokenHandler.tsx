@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoadingState, ErrorState, EmptyState } from '../shared';
 import type { ApiError } from '../../services/apiClient';
 import { resetPassword, verifyEmail } from '../../services/authService';

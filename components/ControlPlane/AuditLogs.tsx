@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAuditLogs, AuditLog } from '../../services/controlPlaneService';
-import { LoadingState, EmptyState, ErrorState, AuditLogSkeleton } from '../shared';
+import { EmptyState, ErrorState, AuditLogSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
 export const AuditLogs: React.FC = () => {

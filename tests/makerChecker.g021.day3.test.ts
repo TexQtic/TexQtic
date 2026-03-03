@@ -20,7 +20,7 @@
  *   Q-04  getApprovalById returns row when orgId matches
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { MakerCheckerService } from '../server/src/services/makerChecker.service.js';
 import type { VerifyAndReplayInput, ApprovalQueueQuery } from '../server/src/services/makerChecker.types.js';
 import {
