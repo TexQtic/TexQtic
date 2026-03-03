@@ -7,7 +7,8 @@
  *     - 14 TRADE states
  *     -  7 ESCROW states
  *     -  6 CERTIFICATION states
- *   allowed_transitions: 43 directed edges (29 TRADE + 8 ESCROW + 6 CERTIFICATION)
+ *     -  4 ORDER states  (GAP-ORDER-LC-001-SEED-001)
+ *   allowed_transitions: 47 directed edges (29 TRADE + 8 ESCROW + 6 CERTIFICATION + 4 ORDER)
  *
  * Idempotency:
  *   All writes use upsert keyed on (entity_type, state_key) and
@@ -684,6 +685,88 @@ const CERTIFICATION_TRANSITIONS: TransitionRow[] = [
   },
 ];
 
+// ─── 7. ORDER States (4) — GAP-ORDER-LC-001-SEED-001 ─────────────────────────
+// Mirrors the four states seeded via B1 SQL migration (idempotent upsert).
+// is_terminal / is_irreversible are NOT updated on re-run (see seedStates note).
+
+const ORDER_STATES: StateRow[] = [
+  {
+    entityType: 'ORDER',
+    stateKey: 'PAYMENT_PENDING',
+    isTerminal: false,
+    isIrreversible: false,
+    severityLevel: 0,
+    requiresMakerChecker: false,
+    description: 'Order created; awaiting payment confirmation.',
+  },
+  {
+    entityType: 'ORDER',
+    stateKey: 'CONFIRMED',
+    isTerminal: false,
+    isIrreversible: false,
+    severityLevel: 0,
+    requiresMakerChecker: false,
+    description: 'Payment received; order confirmed and in fulfilment.',
+  },
+  {
+    entityType: 'ORDER',
+    stateKey: 'FULFILLED',
+    isTerminal: true,
+    isIrreversible: true,
+    severityLevel: 0,
+    requiresMakerChecker: false,
+    description: 'Order fully fulfilled and delivered. Terminal state.',
+  },
+  {
+    entityType: 'ORDER',
+    stateKey: 'CANCELLED',
+    isTerminal: true,
+    isIrreversible: true,
+    severityLevel: 1,
+    requiresMakerChecker: false,
+    description: 'Order cancelled. Terminal state. Irreversible.',
+  },
+];
+
+// ─── 8. ORDER Transitions (4) — GAP-ORDER-LC-001-SEED-001 ────────────────────
+// Canonical directed edges for the ORDER lifecycle state graph.
+// PAYMENT_PENDING → CANCELLED is explicitly allowed (TECS contract).
+
+const ORDER_TRANSITIONS: TransitionRow[] = [
+  {
+    entityType: 'ORDER',
+    fromStateKey: 'PAYMENT_PENDING',
+    toStateKey: 'CONFIRMED',
+    allowedActorType: ['SYSTEM_AUTOMATION', 'TENANT_ADMIN'],
+    requiresMakerChecker: false,
+    requiresEscalation: false,
+  },
+  {
+    entityType: 'ORDER',
+    fromStateKey: 'CONFIRMED',
+    toStateKey: 'FULFILLED',
+    allowedActorType: ['SYSTEM_AUTOMATION', 'TENANT_ADMIN', 'PLATFORM_ADMIN'],
+    requiresMakerChecker: false,
+    requiresEscalation: false,
+  },
+  {
+    entityType: 'ORDER',
+    fromStateKey: 'CONFIRMED',
+    toStateKey: 'CANCELLED',
+    allowedActorType: ['TENANT_USER', 'TENANT_ADMIN', 'PLATFORM_ADMIN'],
+    requiresMakerChecker: false,
+    requiresEscalation: false,
+  },
+  {
+    entityType: 'ORDER',
+    fromStateKey: 'PAYMENT_PENDING',
+    toStateKey: 'CANCELLED',
+    allowedActorType: ['TENANT_USER', 'TENANT_ADMIN', 'PLATFORM_ADMIN'],
+    requiresMakerChecker: false,
+    requiresEscalation: false,
+  },
+];
+
 // ─── Seed Runner ──────────────────────────────────────────────────────────────
 
 async function seedStates(states: StateRow[], label: string): Promise<void> {
@@ -771,9 +854,10 @@ async function main(): Promise<void> {
   await seedStates(TRADE_STATES, 'TRADE');
   await seedStates(ESCROW_STATES, 'ESCROW');
   await seedStates(CERTIFICATION_STATES, 'CERTIFICATION');
+  await seedStates(ORDER_STATES, 'ORDER');
 
-  const totalStates = TRADE_STATES.length + ESCROW_STATES.length + CERTIFICATION_STATES.length;
-  console.log(`  Total: ${totalStates} states (14 TRADE + 7 ESCROW + 6 CERTIFICATION)`);
+  const totalStates = TRADE_STATES.length + ESCROW_STATES.length + CERTIFICATION_STATES.length + ORDER_STATES.length;
+  console.log(`  Total: ${totalStates} states (14 TRADE + 7 ESCROW + 6 CERTIFICATION + 4 ORDER)`);
   console.log('');
 
   // ── Transitions ───────────────────────────────────────────────────────────
@@ -781,11 +865,12 @@ async function main(): Promise<void> {
   await seedTransitions(TRADE_TRANSITIONS, 'TRADE');
   await seedTransitions(ESCROW_TRANSITIONS, 'ESCROW');
   await seedTransitions(CERTIFICATION_TRANSITIONS, 'CERTIFICATION');
+  await seedTransitions(ORDER_TRANSITIONS, 'ORDER');
 
   const totalTransitions =
-    TRADE_TRANSITIONS.length + ESCROW_TRANSITIONS.length + CERTIFICATION_TRANSITIONS.length;
+    TRADE_TRANSITIONS.length + ESCROW_TRANSITIONS.length + CERTIFICATION_TRANSITIONS.length + ORDER_TRANSITIONS.length;
   console.log(
-    `  Total: ${totalTransitions} transitions (${TRADE_TRANSITIONS.length} TRADE + ${ESCROW_TRANSITIONS.length} ESCROW + ${CERTIFICATION_TRANSITIONS.length} CERTIFICATION)`
+    `  Total: ${totalTransitions} transitions (${TRADE_TRANSITIONS.length} TRADE + ${ESCROW_TRANSITIONS.length} ESCROW + ${CERTIFICATION_TRANSITIONS.length} CERTIFICATION + ${ORDER_TRANSITIONS.length} ORDER)`
   );
   console.log('');
 
@@ -798,12 +883,20 @@ async function main(): Promise<void> {
   const certStates = await prisma.lifecycleState.count({
     where: { entityType: 'CERTIFICATION' },
   });
+  const orderStates = await prisma.lifecycleState.count({ where: { entityType: 'ORDER' } });
+  const orderTransitions = await prisma.allowedTransition.count({
+    where: { entityType: 'ORDER' },
+  });
 
   console.log(`  lifecycle_states rows: ${stateCount}`);
   console.log(`    TRADE: ${tradeStates} (expected 14)`);
   console.log(`    ESCROW: ${escrowStates} (expected 7)`);
   console.log(`    CERTIFICATION: ${certStates} (expected 6)`);
+  console.log(`    ORDER: ${orderStates} (expected 4)`);
   console.log(`  allowed_transitions rows: ${transitionCount}`);
+  console.log(`    ORDER: ${orderTransitions} (expected 4)`);
+  if (orderStates !== 4) throw new Error(`VERIFIER FAIL: lifecycle_states ORDER expected 4, got ${orderStates}`);
+  if (orderTransitions !== 4) throw new Error(`VERIFIER FAIL: allowed_transitions ORDER expected 4, got ${orderTransitions}`);
   console.log('');
   console.log('✅ G-020 seed complete — idempotent (re-run is safe)');
 }

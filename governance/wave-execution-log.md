@@ -5844,3 +5844,46 @@ APPLY_EXIT:0
 - [x] wave-execution-log.md updated (this entry)
 - [x] REMOTE-MIGRATION-APPLY-LOG.md updated
 - [x] Atomic commit: feat(db): order lifecycle logs schema foundation (GAP-ORDER-LC-001)
+
+---
+
+### GOVERNANCE-SYNC-057 - GAP-ORDER-LC-001-SEED-001
+
+**Date:** 2026-03-03  
+**TECS ID:** GAP-ORDER-LC-001-SEED-001  
+**Title:** Seed ORDER lifecycle states — StateMachine seed + verifier  
+**Risk:** 🟡 LOW — seed script only; no schema migration; Prisma upsert idempotent  
+**Approach:** `server/scripts/seed_state_machine.ts` (canonical seed system — seed script, NOT SQL migration)  
+
+**Scope:**
+- Extended `seed_state_machine.ts` with `ORDER_STATES` (4 rows — idempotent upsert, no-op since B1 migration already seeded them)
+- Added `ORDER_TRANSITIONS` (4 rows — **new data**): PAYMENT_PENDING→CONFIRMED, CONFIRMED→FULFILLED, CONFIRMED→CANCELLED, PAYMENT_PENDING→CANCELLED
+- Updated `main()`: seedStates + seedTransitions calls for ORDER; totals updated to 31 states / 47 transitions
+- Updated VERIFIER section: ORDER state count (expected 4) + ORDER transition count (expected 4) with `throw` on mismatch
+- Updated header comment: 4 ORDER states + 4 ORDER transitions in doc counts
+
+**Execution:**
+- `pnpm exec tsx scripts/seed_state_machine.ts` → SEED_EXIT:0
+
+**VERIFIER PASS (from seed script output):**
+```
+lifecycle_states rows: 31
+  TRADE: 14 (expected 14)
+  ESCROW: 7 (expected 7)
+  CERTIFICATION: 6 (expected 6)
+  ORDER: 4 (expected 4)
+allowed_transitions rows: 47
+  ORDER: 4 (expected 4)
+✅ G-020 seed complete — idempotent (re-run is safe)
+SEED_EXIT:0
+```
+
+**Quality gates:**
+- [x] SEED_EXIT:0
+- [x] VERIFIER PASS (lifecycle_states ORDER=4, allowed_transitions ORDER=4)
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0
+- [x] gap-register.md updated (GOVERNANCE-SYNC-057 — GAP-ORDER-LC-001 B2/SEED-001 ✅)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (seed row extended with transitions)
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: feat(sm): seed ORDER lifecycle states (GAP-ORDER-LC-001)
