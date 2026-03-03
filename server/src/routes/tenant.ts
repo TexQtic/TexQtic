@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import { StateMachineService } from '../services/stateMachine.service.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
 import tenantEscalationRoutes from './tenant/escalation.g022.js';
@@ -27,6 +29,23 @@ import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
 import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
+
+// ─── SM Transaction Helper ────────────────────────────────────────────────────
+/**
+ * Wraps a Prisma TransactionClient as PrismaClient for services that require
+ * the full client type. Redirects $transaction() to execute the callback
+ * immediately in the current tx (Prisma does not support nested transactions).
+ */
+function makeTxBoundPrisma(tx: Prisma.TransactionClient): PrismaClient {
+  return new Proxy(tx as unknown as PrismaClient, {
+    get(target, prop) {
+      if (prop === '$transaction') {
+        return (cb: (client: Prisma.TransactionClient) => Promise<unknown>) => cb(tx);
+      }
+      return (target as unknown as Record<string | symbol, unknown>)[prop];
+    },
+  });
+}
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
@@ -838,23 +857,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       });
 
-      // G-020 ORDER entity type is DB-constrained to (TRADE, ESCROW, CERTIFICATION).
-      // Until OPS-ORDER-LIFECYCLE-SCHEMA-001 adds ORDER support to the SM,
-      // we record the lifecycle transition via the existing audit_logs table.
-      await writeAuditLog(tx, {
-        realm: 'TENANT',
-        tenantId: dbContext.orgId,
-        actorType: 'USER',
-        actorId: userId ?? null,
-        action: 'order.lifecycle.PAYMENT_PENDING',
-        entity: 'order',
-        entityId: order.id,
-        metadataJson: {
-          fromState: null,
-          toState: 'PAYMENT_PENDING',
-          trigger: 'checkout.completed',
-          orderId: order.id,
-          cartId: cart.id,
+      // GAP-ORDER-LC-001: Record initial lifecycle transition in order_lifecycle_logs (SM canonical table).
+      await tx.order_lifecycle_logs.create({
+        data: {
+          order_id: order.id,
+          tenant_id: dbContext.orgId,
+          from_state: null,
+          to_state: 'PAYMENT_PENDING',
+          actor_id: userId ?? null,
+          realm: 'tenant',
+          request_id: null,
         },
       });
 
@@ -939,25 +951,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * PATCH /api/tenant/orders/:id/status
-   * App-layer order status transitions (OPS-ORDER-STATUS-TRANSITIONS-001 / GAP-ORDER-TRANSITIONS-001)
+   * SM-driven order status transitions (GAP-ORDER-LC-001-BACKEND-INTEGRATION-001)
    *
-   * Transition rules (B1 app-layer enforcement — no G-020 SM; no schema changes):
+   * Transition rules (enforced by StateMachineService via allowed_transitions table):
    *   PAYMENT_PENDING → CONFIRMED  → stored as DB PLACED
-   *   PLACED          → FULFILLED  → stored as DB PLACED (audit is semantic source of truth)
+   *   PLACED          → FULFILLED  → stored as DB PLACED (order_lifecycle_logs is semantic source of truth)
    *   PAYMENT_PENDING → CANCELLED  → stored as DB CANCELLED
    *   PLACED          → CANCELLED  → stored as DB CANCELLED
    *   CANCELLED       → *          → REJECTED (terminal state)
    *
-   * Schema mismatch note (TODO GAP-ORDER-LC-001):
-   *   OrderStatus enum only has: PAYMENT_PENDING | PLACED | CANCELLED.
-   *   CONFIRMED maps to DB PLACED. FULFILLED has no terminal-success enum value —
-   *   it is stored as PLACED with the audit log record as the canonical semantic event.
-   *   When GAP-ORDER-LC-001 adds CONFIRMED + FULFILLED to OrderStatus, replace the
-   *   dbStatusUpdate mapping below with direct enum values and remove this note.
+   * Schema note: orders.status enum only has PAYMENT_PENDING | PLACED | CANCELLED.
+   * CONFIRMED and FULFILLED map to PLACED at the DB level; order_lifecycle_logs holds
+   * the canonical semantic state. This mapping will be removed when the enum is extended.
    *
    * Role gate: OWNER / ADMIN only (app-layer; D-5 / B1 preserved — app.roles GUC remains dormant).
-   * Audit: writes order.lifecycle.CONFIRMED / order.lifecycle.FULFILLED / order.lifecycle.CANCELLED
-   *        to existing audit_logs table (no new tables, no new audit infrastructure).
+   * Lifecycle log: written atomically by StateMachineService into order_lifecycle_logs.
    */
   fastify.patch(
     '/tenant/orders/:id/status',
@@ -982,12 +990,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       // Validate request body
       const bodySchema = z.object({
         status: z.enum(['CONFIRMED', 'FULFILLED', 'CANCELLED']),
+        reason: z.string().min(1).max(2000).trim().optional(),
       });
       const bodyResult = bodySchema.safeParse(request.body);
       if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
 
       const { id: orderId } = paramsResult.data;
-      const { status: requestedStatus } = bodyResult.data;
+      const { status: requestedStatus, reason } = bodyResult.data;
 
       const result = await withDbContext(prisma, dbContext, async tx => {
         // Load order in tenant scope — RLS-enforced by withDbContext (org_id scoped)
@@ -996,56 +1005,56 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         const currentDbStatus = order.status; // PAYMENT_PENDING | PLACED | CANCELLED
 
-        // ──────────────────────────────────────────────────────────────────────────
-        // Transition validation (TECS OPS-ORDER-STATUS-TRANSITIONS-001 rules)
-        // Semantic status → DB status mapping:
-        //   CONFIRMED = PAYMENT_PENDING → PLACED  (intermediate operational state)
-        //   FULFILLED = PLACED          → PLACED  (terminal success; DB can't distinguish from PLACED)
-        //   CANCELLED = *               → CANCELLED
-        // ──────────────────────────────────────────────────────────────────────────
-        const allowed = (() => {
-          if (currentDbStatus === 'CANCELLED') return false; // terminal — no further transitions
-          if (requestedStatus === 'CONFIRMED') return currentDbStatus === 'PAYMENT_PENDING';
-          if (requestedStatus === 'FULFILLED') return currentDbStatus === 'PLACED';
-          if (requestedStatus === 'CANCELLED') return currentDbStatus === 'PAYMENT_PENDING' || currentDbStatus === 'PLACED';
-          return false;
-        })();
+        // Derive canonical from-state from order_lifecycle_logs (semantic source of truth).
+        // The DB status PLACED is ambiguous (CONFIRMED or FULFILLED), so the latest log
+        // record is the authoritative SM state. Fall back to DB status if no log exists.
+        const latestLog = await tx.order_lifecycle_logs.findFirst({
+          where: { order_id: orderId },
+          orderBy: { created_at: 'desc' },
+        });
+        const canonicalFromState: string = latestLog?.to_state ?? currentDbStatus;
 
-        if (!allowed) {
-          return {
-            error: 'INVALID_TRANSITION' as const,
-            currentStatus: currentDbStatus,
-            requestedStatus,
-          };
+        // SM-driven transition (GAP-ORDER-LC-001): validates permitted path + writes order_lifecycle_logs atomically.
+        const txBound = makeTxBoundPrisma(tx);
+        const smSvc = new StateMachineService(txBound);
+        const smResult = await smSvc.transition({
+          entityType: 'ORDER',
+          entityId: orderId,
+          orgId: dbContext.orgId,
+          fromStateKey: canonicalFromState,
+          toStateKey: requestedStatus,
+          actorType: 'TENANT_ADMIN',
+          actorUserId: userId ?? null,
+          actorRole: userRole ?? 'ADMIN',
+          reason: reason ?? `Tenant transition: ${requestedStatus}`,
+          requestId: null,
+        }, { db: txBound });
+
+        if (smResult.status !== 'APPLIED') {
+          const smStatus = smResult.status;
+          if (smStatus === 'DENIED') {
+            const code = smResult.code;
+            if (code === 'TRANSITION_NOT_PERMITTED' || code === 'TRANSITION_FROM_TERMINAL' || code === 'TRANSITION_FROM_IRREVERSIBLE') {
+              return { error: 'INVALID_TRANSITION' as const, canonicalFromState, requestedStatus, smStatus: code };
+            }
+            if (code === 'ACTOR_ROLE_NOT_PERMITTED') {
+              return { error: 'FORBIDDEN' as const };
+            }
+            return { error: 'SM_ERROR' as const, smStatus: code };
+          }
+          // PENDING_APPROVAL / ESCALATION_REQUIRED — not configured for ORDER in current seed
+          return { error: 'SM_ERROR' as const, smStatus };
         }
 
-        // Map semantic requested status → DB OrderStatus enum value
-        // TODO(GAP-ORDER-LC-001): replace with direct CONFIRMED / FULFILLED enum values once schema wave completes.
+        // Map semantic requested status → DB OrderStatus enum value.
+        // Schema limitation: orders.status enum only has PAYMENT_PENDING | PLACED | CANCELLED.
+        // CONFIRMED and FULFILLED map to PLACED; order_lifecycle_logs holds the canonical state.
         const dbStatusUpdate: 'PLACED' | 'CANCELLED' =
           requestedStatus === 'CANCELLED' ? 'CANCELLED' : 'PLACED';
 
-        const auditAction = `order.lifecycle.${requestedStatus}` as const;
-
-        // Update order status + write audit log in the same transaction (atomic)
         const updated = await tx.order.update({
           where: { id: orderId },
           data: { status: dbStatusUpdate },
-        });
-
-        await writeAuditLog(tx, {
-          realm: 'TENANT',
-          tenantId: dbContext.orgId,
-          actorType: 'USER',
-          actorId: userId ?? null,
-          action: auditAction,
-          entity: 'order',
-          entityId: orderId,
-          metadataJson: {
-            orderId,
-            fromStatus: currentDbStatus,
-            toStatus: requestedStatus,
-            dbStatusStored: dbStatusUpdate,
-          },
         });
 
         return { order: updated };
@@ -1056,9 +1065,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(
           reply,
           'ORDER_STATUS_INVALID_TRANSITION',
-          `Cannot transition order from ${result.currentStatus} to ${result.requestedStatus}`,
+          `Transition not permitted: ${result.canonicalFromState} → ${result.requestedStatus} (SM: ${result.smStatus})`,
           409
         );
+      }
+      if (result.error === 'FORBIDDEN') {
+        return sendError(reply, 'FORBIDDEN', 'Actor role not permitted for this transition', 403);
+      }
+      if (result.error === 'SM_ERROR') {
+        return sendError(reply, 'INTERNAL_SERVER_ERROR', `State machine error: ${result.smStatus}`, 500);
       }
 
       return sendSuccess(reply, { order: result.order });

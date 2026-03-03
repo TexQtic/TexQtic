@@ -5919,3 +5919,37 @@ SEED_EXIT:0
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (EntityType row ✅; SM enforcement row ✅)
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: feat(sm): enforce ORDER lifecycle transitions (GAP-ORDER-LC-001)
+
+---
+
+### GOVERNANCE-SYNC-059 - GAP-ORDER-LC-001-BACKEND-INTEGRATION-001
+
+**Date:** 2026-03-03  
+**TECS ID:** GAP-ORDER-LC-001-BACKEND-INTEGRATION-001  
+**Title:** Replace app-layer ORDER lifecycle workaround with SM-driven transitions in tenant.ts  
+**Risk:** 🟡 LOW/MED — server/src route changes only; no schema migration; no DB write outside Prisma client  
+**Allowlist (Modify):** `server/src/routes/tenant.ts`, `governance/gap-register.md`, `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md`, `governance/wave-execution-log.md`
+
+**Scope:**
+- `server/src/routes/tenant.ts`:
+  - Added `import { PrismaClient } from '@prisma/client'` and `import { StateMachineService } from '../services/stateMachine.service.js'`
+  - Added `makeTxBoundPrisma(tx: Prisma.TransactionClient): PrismaClient` helper (Proxy pattern; redirects `$transaction` to current tx — identical to trades.g017.ts pattern)
+  - **Checkout endpoint:** removed G-020 workaround comment + `writeAuditLog(action: 'order.lifecycle.PAYMENT_PENDING')`; replaced with `tx.order_lifecycle_logs.create({ data: { order_id, tenant_id, from_state: null, to_state: 'PAYMENT_PENDING', actor_id, realm: 'tenant', request_id: null } })` (direct insert in same tx — atomic)
+  - **PATCH `/tenant/orders/:id/status`:** updated JSDoc (removed TODO/B1-app-layer notes); added optional `reason?: z.string()` to body schema; replaced app-layer `allowed()` closure + `writeAuditLog` lifecycle call with: (1) `tx.order_lifecycle_logs.findFirst({ orderBy: created_at desc })` to derive canonical from-state, (2) `StateMachineService.transition({ entityType: 'ORDER', actorType: 'TENANT_ADMIN', reason, ... }, { db: txBound })`, (3) `DENIED` code → HTTP error mapping, (4) DB enum mapping preserved (CONFIRMED/FULFILLED → PLACED)
+  - Removed all `TODO(GAP-ORDER-LC-001)` comments (3 removed)
+  - Error handling: `INVALID_TRANSITION` → 409; `FORBIDDEN` → 403; `SM_ERROR` → 500
+
+**Key design decisions:**
+- DB enum mapping (`orders.status` = `PAYMENT_PENDING|PLACED|CANCELLED`) preserved — CONFIRMED and FULFILLED still map to PLACED at DB level; `order_lifecycle_logs` is the canonical semantic source of truth; enum extension deferred to separate migration TECS
+- `canonicalFromState` derived from latest `order_lifecycle_logs.to_state` (semantic truth) rather than DB status (ambiguous — PLACED = CONFIRMED or FULFILLED); fallback to DB status if no log exists
+- SM called with `opts: { db: txBound }` to share caller's transaction — SM INSERT and `orders.status` UPDATE are atomic
+- `reason` field: optional in request; auto-filled as `"Tenant transition: ${requestedStatus}"` if absent (satisfies SM `REASON_REQUIRED` guard)
+
+**Quality gates:**
+- [x] TYPECHECK_EXIT:0
+- [x] LINT_EXIT:0 (0 errors; 1 pre-existing warning at checkout `userId!` — not introduced by this TECS)
+- [x] `git diff --name-only` → `server/src/routes/tenant.ts` only (preflight: no drift)
+- [x] gap-register.md updated (GOVERNANCE-SYNC-059 — GAP-ORDER-LC-001 B4 ✅, backend integration ✅)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (B4 backend row ✅; frontend renamed to B5)
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: feat(orders): SM-driven lifecycle replaces app-layer transitions (GAP-ORDER-LC-001)
