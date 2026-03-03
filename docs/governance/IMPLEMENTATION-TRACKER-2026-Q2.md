@@ -180,7 +180,7 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 | G-026 | Custom Domain Routing | L | `tenant_domains` constraints + edge config | G-006C `tenant_domains` consolidated | ⏳ |
 | G-027 | The Morgue | L | New table + RLS — `morgue_entries` schema foundation applied 2026-03-03 (GOVERNANCE-SYNC-065, migration `20260315000006`) | G-022 ✅ | 🔄 IN PROGRESS |
 | G-028 | AI Vector / Inference Separation | XL | Vector schema + infra | G-023 ✅ | ⏳ |
-| WL Collections Panel | WL Admin | Low | `WLCollectionsPanel.tsx` created — display-only, groups catalog items by category, self-contained fetch (GOVERNANCE-SYNC-066) | G-WL-ADMIN ✅ | 🔄 IN PROGRESS |
+| WL Collections Panel | WL Admin | Low | `WLCollectionsPanel.tsx` — display-only, groups catalog items by category (GOVERNANCE-SYNC-066/067); commit `3d67f4c`. Scope complete as designed (display-only); model-backed collections is a new gap. | G-WL-ADMIN ✅ | ✅ VALIDATED |
 | WL Domains Panel | WL Admin | Medium | None | G-026 + G-WL-ADMIN ✅ | ⏳ |
 
 **Concurrency Rule:**  
