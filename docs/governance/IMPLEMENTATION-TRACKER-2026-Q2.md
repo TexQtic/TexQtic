@@ -3,7 +3,7 @@
 **Source:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`  
 **Baseline:** GOVERNANCE-SYNC-048  
 **Date:** 2026-03-03  
-**RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-064: Phase A G-006C + GAP-ORDER-LC-001 complete)*  
+**RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-064: Phase A G-006C + GAP-ORDER-LC-001 complete; OPS-RLS-SUPERADMIN-001 discovery complete GOVERNANCE-SYNC-071)*  
 **Migrations:** 73 / 73 Applied · `Database schema is up to date!` *(updated GOVERNANCE-SYNC-070: migration 20260315000007 applied)*  
 **Doctrine Version:** v1.4
 
@@ -307,7 +307,7 @@ All foundational gaps are resolved:
 
 Remaining open items before full Phase A closure:
 - OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS proof extension to domain tables (non-blocking for Wave 4).
-- OPS-RLS-SUPERADMIN-001 — `app.is_superadmin` RLS consumers (non-blocking for Wave 4).
+- ~~OPS-RLS-SUPERADMIN-001~~ 🔄 **Discovery complete** (GOVERNANCE-SYNC-071): target tables identified (`impersonation_sessions` + `escalation_events`); plan at `docs/security/SUPERADMIN-RLS-PLAN.md`; execution blocked pending user sign-off (Section F). Migrations `20260315000008` + `20260315000009` proposed.
 - ~~orders.status enum extension~~ ✅ **DONE** — OPS-ORDERS-STATUS-ENUM-001 (GOVERNANCE-SYNC-070): CONFIRMED + FULFILLED added; CANCELLED verified present; migration `20260315000007` applied; PREFLIGHT PASS + VERIFIER PASS.
 
 ---

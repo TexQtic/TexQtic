@@ -6501,3 +6501,68 @@ APPLY_EXIT:0
 - [x] typecheck: EXIT 0
 - [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
 - [x] Atomic commit: `feat(db): extend order_status enum for lifecycle parity (OPS-ORDERS-STATUS-ENUM-001)`
+
+---
+
+## Wave 4 — OPS-RLS-SUPERADMIN-001: SUPER_ADMIN DB Enforcement Discovery
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-DISCOVERY-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 071  
+**Risk:** 🟢 LOW — Discovery + governance only; no migrations; no code changes
+
+### Objective
+
+Produce a deterministic, repo-backed inventory of all RLS-protected high-risk tables where SUPER_ADMIN must have explicit DB-level access control via the `app.is_superadmin` GUC — distinct from the `app.is_admin` arm shared with SUPPORT and ANALYST roles.
+
+### Discovery Method
+
+Full migration SQL grep for all policy predicates using `is_admin`, `require_admin_context()`, and `admin_id = current_actor_id()`. Cross-referenced with `requireAdminRole('SUPER_ADMIN')` route scan across 5 route files. Confirmed GUC plumbing in `database-context.ts`. Traced service-layer DB context calls for each SUPER_ADMIN-gated route.
+
+### Key Findings
+
+| Finding | Evidence |
+|---------|---------|
+| Zero RLS policies consume `app.is_superadmin` | grep across all `server/prisma/migrations/**/*.sql` — 0 policy matches |
+| `withSuperAdminContext` sets both `is_admin` + `is_superadmin` GUCs | `database-context.ts` lines 695–697 |
+| 8 SUPER_ADMIN-gated routes confirmed | grep for `requireAdminRole('SUPER_ADMIN')` — 8 matches in 5 files |
+| `impersonation.service.ts` uses `withAdminContext` (NOT `withSuperAdminContext`) for write paths | `stopImpersonation` line 150; `startImpersonation` call pattern |
+| `feature_flags` upsert uses bare `prisma` (postgres BYPASSRLS — no GUC context) | `control.ts` lines 204–218 |
+| `escalation.g022.ts` upgrade/resolve uses tenant-scoped `withDbContext` | escalation route file import + comment lines 24–26 |
+
+### Target Tables (Priority Order)
+
+| Priority | Tables | Gap |
+|----------|--------|-----|
+| CRITICAL | `impersonation_sessions` — INSERT/UPDATE/DELETE | Any admin with `is_admin='true'` can write at DB layer; SUPER_ADMIN-only at app layer |
+| HIGH | `escalation_events` — UPDATE (upgrade/resolve) | SUPER_ADMIN-only at app layer; `is_admin='true'` arm is too broad at DB layer |
+| KNOWN LIMITATION | `feature_flags` | Postgres BYPASSRLS path; RLS enforcement not feasible without service refactor |
+| DEFERRED | `tenants`, `memberships` provision path | Low attack surface; future sub-TECS |
+
+### Proposed Execution Plan
+
+Documented in `docs/security/SUPERADMIN-RLS-PLAN.md`:  
+- Migration 1: `20260315000008` — `impersonation_sessions` INSERT/UPDATE/DELETE narrowed to `is_superadmin='true'`  
+- Migration 2: `20260315000009` — `escalation_events` UPDATE narrowed to `is_superadmin='true'`  
+- Service-layer prerequisite: `startImpersonation` + `stopImpersonation` → `withSuperAdminContext`  
+- Execution BLOCKED pending user sign-off per SUPERADMIN-RLS-PLAN.md Section F
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `docs/security/SUPERADMIN-RLS-PLAN.md` | NEW — full discovery plan (Sections A–F + Appendix) |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-071 prepended; OPS-RLS-SUPERADMIN-001 → IN PROGRESS; superadmin section text updated |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | RLS Maturity note updated |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-071) |
+
+### Quality Gates
+
+- [x] No migrations created or modified
+- [x] No server/src code modified
+- [x] Full policy grep completed (0 `is_superadmin` policy matches confirmed)
+- [x] 8 SUPER_ADMIN route surfaces identified and mapped to DB tables
+- [x] Service-layer dependency chain documented (blocking before migration apply)
+- [x] `docs/security/SUPERADMIN-RLS-PLAN.md` created with table-by-table deltas (Sections A–F)
+- [x] gap-register + tracker + wave-log updated
+- [x] Atomic commit: `docs(security): superadmin RLS enforcement plan (OPS-RLS-SUPERADMIN-001)`
