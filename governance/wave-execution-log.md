@@ -5470,3 +5470,76 @@ The 23 ESLint errors across 11 frontend files (unused vars, `React` not defined,
 - [x] Tracker Section 1B marked complete
 - [x] Root lint gate policy note updated in gap-register
 - [x] Atomic commit `793e524` (2 governance files only, no source changes)
+
+---
+
+## GOVERNANCE-SYNC-051 — G-006C-P2-CATALOG_ITEMS-RLS-UNIFY-001 (2026-03-03)
+
+### Objective
+
+Unify RLS policies for `public.catalog_items` to canonical Wave 3 Tail pattern. Replace all `bypass_enabled()` admin arms with `current_setting('app.is_admin', true) = 'true'`. Rebuild RESTRICTIVE guard as FOR ALL TO texqtic_app. Apply to remote Supabase + resolve in Prisma ledger.
+
+### Schema Finding
+
+`catalog_items` has a direct `tenant_id` UUID column — no JOIN required.
+Tenant arm: `app.require_org_context() AND tenant_id = app.current_org_id()`
+
+### Existing Policies (Before)
+
+| Policy | Type | Cmd | Role | Admin Arm |
+|--------|------|-----|------|-----------|
+| catalog_items_guard | RESTRICTIVE | SELECT only | {public} | bypass_enabled() |
+| catalog_items_select_unified | PERMISSIVE | SELECT | texqtic_app | bypass_enabled() |
+| catalog_items_insert_unified | PERMISSIVE | INSERT | texqtic_app | none |
+| catalog_items_update_unified | PERMISSIVE | UPDATE | texqtic_app | bypass_enabled() |
+| catalog_items_delete_unified | PERMISSIVE | DELETE | texqtic_app | bypass_enabled() |
+
+### Migration
+
+**Migration folder:** `20260315000000_g006c_p2_catalog_items_rls_unify`
+
+**Policies after apply:**
+
+| Policy | Type | Cmd | To | Admin Arm |
+|--------|------|-----|----|-----------|
+| catalog_items_guard | RESTRICTIVE | ALL | texqtic_app | is_admin='true' |
+| catalog_items_select_unified | PERMISSIVE | SELECT | texqtic_app | is_admin='true' |
+| catalog_items_insert_unified | PERMISSIVE | INSERT | texqtic_app | is_admin='true' |
+| catalog_items_update_unified | PERMISSIVE | UPDATE | texqtic_app | is_admin='true' |
+| catalog_items_delete_unified | PERMISSIVE | DELETE | texqtic_app | is_admin='true' |
+
+### Apply Evidence
+
+```
+BEGIN
+DROP POLICY (x5 real + legacy NOTICEs for non-existent variants)
+ALTER TABLE (ENABLE + FORCE RLS)
+CREATE POLICY (x5)
+DO
+NOTICE: VERIFIER PASS: catalog_items - guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each (is_admin arm present), FORCE RLS=t, no {public} policies
+COMMIT
+APPLY_EXIT:0
+```
+
+**Prisma resolve:** `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as applied.` RESOLVE_EXIT:0
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+### Completion Checklist
+
+- [x] Migration created: `server/prisma/migrations/20260315000000_g006c_p2_catalog_items_rls_unify/migration.sql`
+- [x] Only catalog_items policies touched
+- [x] DO-block VERIFIER PASS
+- [x] psql apply APPLY_EXIT:0
+- [x] prisma migrate resolve --applied RESOLVE_EXIT:0
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0
+- [x] gap-register.md updated (GOVERNANCE-SYNC-051)
+- [x] IMPLEMENTATION-TRACKER updated (catalog_items row marked Complete)
+- [x] REMOTE-MIGRATION-APPLY-LOG appended
+- [x] This wave-execution-log entry added

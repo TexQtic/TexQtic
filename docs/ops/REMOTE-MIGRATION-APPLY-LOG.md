@@ -289,3 +289,48 @@ OUTCOME: ALL PASS — GAP-REVENUE-VALIDATE-002 VALIDATED
 |-----|--------|-------|
 | GAP-RLS-ORDERS-UPDATE-001 | VALIDATED (pending psql apply) | OPERATIONALLY CLOSED (applied + VERIFY PASS) |
 | GAP-REVENUE-VALIDATE-002 | Phases 0-3 PASS; Phases 4-5 blocked | Phases 0-5 PASS — 16/16 |
+
+---
+
+## G-006C-P2-CATALOG_ITEMS-RLS-UNIFY-001 — catalog_items RLS Unify
+
+**Timestamp:** 2026-03-03T~10:45:00Z
+**Sync ID:** GOVERNANCE-SYNC-051
+**Migration:** `20260315000000_g006c_p2_catalog_items_rls_unify`
+**Target DB:** Supabase session pooler — `aws-1-ap-northeast-1.pooler.supabase.com` (redacted DATABASE_URL)
+
+### Apply Command
+
+```powershell
+$u = (Get-Content server/.env | Where-Object { $_ -match '^DATABASE_URL=' }) -replace '^DATABASE_URL=', ''
+psql "--dbname=$u" "--variable=ON_ERROR_STOP=1" "--file=server/prisma/migrations/20260315000000_g006c_p2_catalog_items_rls_unify/migration.sql"
+```
+
+### Terminal Evidence
+
+```
+BEGIN
+DROP POLICY (x5) + NOTICE skips for non-existent legacy variants
+ALTER TABLE (ENABLE ROW LEVEL SECURITY)
+ALTER TABLE (FORCE ROW LEVEL SECURITY)
+CREATE POLICY (x5: guard + select + insert + update + delete)
+DO
+NOTICE: VERIFIER PASS: catalog_items - guard=1 RESTRICTIVE FOR ALL (is_admin arm present),
+        SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each (is_admin arm present), FORCE RLS=t, no {public} policies
+COMMIT
+APPLY_EXIT:0
+```
+
+### Prisma Resolve
+
+```
+pnpm -C server exec prisma migrate resolve --applied 20260315000000_g006c_p2_catalog_items_rls_unify
+```
+Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as applied.` RESOLVE_EXIT:0
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 105 pre-existing warnings) |
