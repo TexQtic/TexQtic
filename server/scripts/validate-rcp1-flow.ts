@@ -23,6 +23,16 @@ const ACME_TENANT_ID = 'faf2e4a7-5d79-4b00-811b-8d0dce4f4d80';
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 if (!JWT_ACCESS_SECRET) { console.error('FATAL: JWT_ACCESS_SECRET not set'); process.exit(1); }
 
+/**
+ * --only-transitions: skip Phases 1–3 (data-setup) and run Phases 4–5 only.
+ * Requires the server to be running and at least one PAYMENT_PENDING order in
+ * the ACME tenant DB. Resolves ORDER_ID and CATALOG_ITEM_ID from DB automatically.
+ *
+ * Usage:
+ *   pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions
+ */
+const ONLY_TRANSITIONS = process.argv.includes('--only-transitions');
+
 const prisma = new PrismaClient();
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -91,6 +101,12 @@ async function main() {
   const TOKEN = mintToken(OWNER_USER_ID, ACME_TENANT_ID);
   pass('Tenant JWT minted (JWT_ACCESS_SECRET from env, 30m TTL, token: <REDACTED>)');
 
+  // CATALOG_ITEM_ID / ORDER_ID are set inside Phases 1–2, or resolved from DB
+  // when --only-transitions is used (checked after Phase 3 block below).
+  let CATALOG_ITEM_ID = '';
+  let ORDER_ID = '';
+
+  if (!ONLY_TRANSITIONS) {
   // ── Phase 1: Catalog create ───────────────────────────────────────────────
   phase(1, 'Catalog — create test item');
   step('1.1', 'POST /api/tenant/catalog/items');
@@ -106,7 +122,7 @@ async function main() {
     fail(`Catalog create failed`, createItem.data);
     process.exit(1);
   }
-  const CATALOG_ITEM_ID = createItem.data.item!.id;
+  CATALOG_ITEM_ID = createItem.data.item!.id;
 
   step('1.2', 'GET /api/tenant/catalog/items (verify item is visible)');
   const listItems = await api<{ items?: { id: string }[] }>(
@@ -158,7 +174,7 @@ async function main() {
   } else {
     fail('Checkout failed', checkout.data); process.exit(1);
   }
-  const ORDER_ID = ckOrderId!;
+  ORDER_ID = ckOrderId!;
 
   // ── Phase 3: Orders visible in WL_ADMIN + EXPERIENCE (same endpoint) ─────
   phase(3, 'Orders list — WL_ADMIN + EXPERIENCE parity');
@@ -185,6 +201,30 @@ async function main() {
   } else {
     fail(`Audit: order.lifecycle.PAYMENT_PENDING NOT found for orderId: ${ORDER_ID}`);
   }
+
+  } // end if (!ONLY_TRANSITIONS)
+  else {
+  // --only-transitions: Phases 1–3 skipped. Resolve ORDER_ID + CATALOG_ITEM_ID from DB.
+  console.log('\n─── ONLY-TRANSITIONS MODE: resolving test data from DB ──────────────────────');
+  const existingOrder = await prisma.order.findFirst({
+    where: { tenantId: ACME_TENANT_ID, status: 'PAYMENT_PENDING' },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!existingOrder) {
+    fail('No PAYMENT_PENDING order found for ACME tenant — run without --only-transitions first to create one');
+    await prisma.$disconnect(); process.exit(1);
+  }
+  ORDER_ID = existingOrder.id;
+  pass(`Resolved ORDER_ID (PAYMENT_PENDING) | id: ${ORDER_ID}`);
+
+  const existingItem = await prisma.catalogItem.findFirst({ where: { tenantId: ACME_TENANT_ID } });
+  if (!existingItem) {
+    fail('No catalog item found for ACME tenant — run without --only-transitions first to create one');
+    await prisma.$disconnect(); process.exit(1);
+  }
+  CATALOG_ITEM_ID = existingItem.id;
+  pass(`Resolved CATALOG_ITEM_ID | id: ${CATALOG_ITEM_ID}`);
+  } // end else (ONLY_TRANSITIONS)
 
   // ── Phase 4: Status transitions + audit verification ─────────────────────
   phase(4, 'Status transitions (TECS 1 endpoint) + audit verification');

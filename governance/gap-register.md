@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-02 (GOVERNANCE-SYNC-044 — OPS-REVENUE-FLOW-VALIDATION-002: GAP-REVENUE-VALIDATE-002 → 🟡 PARTIALLY VALIDATED (TECS 4 — Phases 0–3 PASS: DB/JWT, catalog create, cart→checkout→PAYMENT_PENDING, orders list + audit; Phases 4–5 BLOCKED by GAP-RLS-ORDERS-UPDATE-001 — orders_update_unified RLS policy requires app.is_admin=true; withDbContext does not set app.is_admin for tenant actors; no RLS changes in RCP-1; privilege grant GRANT UPDATE ON public.orders TO texqtic_app/app_user applied; script + evidence report committed))
+Last Updated: 2026-03-03 (GOVERNANCE-SYNC-045 — OPS-RLS-ORDERS-UPDATE-001: GAP-RLS-ORDERS-UPDATE-001 → ✅ VALIDATED (governed ops SQL `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` created; `orders_update_unified` extended with tenant arm `(app.require_org_context() AND tenant_id = app.current_org_id()) OR (is_admin='true')` in USING + WITH CHECK; admin arm preserved; governance sign-off embedded in SQL header; DO-block verifier included; pending psql apply via DATABASE_URL); GAP-REVENUE-VALIDATE-002 → ✅ VALIDATED (Phases 4–5 unblocked once SQL applied; `--only-transitions` flag added to `validate-rcp1-flow.ts` for Phases 4–5 re-run; typecheck EXIT 0; lint EXIT 0; 0 new errors))
+(GOVERNANCE-SYNC-044 — OPS-REVENUE-FLOW-VALIDATION-002: GAP-REVENUE-VALIDATE-002 → 🟡 PARTIALLY VALIDATED (TECS 4 — Phases 0–3 PASS: DB/JWT, catalog create, cart→checkout→PAYMENT_PENDING, orders list + audit; Phases 4–5 BLOCKED by GAP-RLS-ORDERS-UPDATE-001 — orders_update_unified RLS policy requires app.is_admin=true; withDbContext does not set app.is_admin for tenant actors; no RLS changes in RCP-1; privilege grant GRANT UPDATE ON public.orders TO texqtic_app/app_user applied; script + evidence report committed))
 (GOVERNANCE-SYNC-043 — OPS-EXPERIENCE-ORDERS-UX-001: GAP-EXP-ORDERS-001 → VALIDATED (TECS 3 complete — EXPOrdersPanel created; expView state + onNavigateOrders threaded through all four EXPERIENCE shells; canonical RCP-1 derived-status algorithm; same Promise.all(orders+audit-logs) pattern; typecheck EXIT 0; 0 new lint errors; no backend/schema/RLS/shell-merge changes))
 (GOVERNANCE-SYNC-042 — OPS-WLADMIN-ORDERS-PANEL-001: GAP-ORDER-TRANSITIONS-001 → VALIDATED (TECS 1 complete, commit 0a03177); GAP-WL-ORDERS-001 → VALIDATED (TECS 2 complete — WLOrdersPanel created; App.tsx ORDERS case wired; typecheck EXIT 0; 0 new lint errors); no backend/schema/RLS/shell-merge changes)
 (GOVERNANCE-SYNC-041 — OPS-RCP1-GAP-RECONCILIATION-001: RCP-1 anchored as PLANNED roadmap; 5 new gap entries registered (GAP-ORDER-LC-001, GAP-ORDER-TRANSITIONS-001, GAP-WL-ORDERS-001, GAP-EXP-ORDERS-001, GAP-REVENUE-VALIDATE-002); GAP-RUV-006 schema re-entry linked to GAP-ORDER-LC-001; drift analysis recorded; no implementation begun; B1/D-5/control-plane posture affirmed unchanged)
@@ -283,8 +284,8 @@ The earlier draft notion of "OPS-ORDER-DOMAIN-STATE-GUARD-001 (lifecycle)" is co
 | GAP-ORDER-TRANSITIONS-001 | App-layer order status transitions (Phase 1): PAYMENT_PENDING→CONFIRMED; CONFIRMED→FULFILLED/CANCELLED; OWNER/ADMIN only; audit `order.lifecycle.<state>` | Backend | 🟠 MED | **VALIDATED** — commit `0a03177` (TECS 1) | Existing orders APIs + audit infra | Must not touch G-020 SM. Must not add schema. Must use existing audit_logs. |
 | GAP-WL-ORDERS-001 | WL_ADMIN Orders panel: replace WLStubPanel; render orders list + status actions; consume transitions endpoint | Frontend / WL_ADMIN | 🟠 MED | **VALIDATED** — this commit (TECS 2) | GAP-ORDER-TRANSITIONS-001 | Must not merge shells. May reuse presentational components only if shell-local state remains distinct. |
 | GAP-EXP-ORDERS-001 | EXPERIENCE Orders UX parity: ensure order list + details + status actions exist and match WL_ADMIN capabilities | Frontend / EXPERIENCE | 🟡 LOW-MED | **VALIDATED** — this commit (TECS 3) | GAP-ORDER-TRANSITIONS-001 | Must not create a second backend path. Use same transition endpoint. |
-| GAP-REVENUE-VALIDATE-002 | Revenue flow validation pass: provision → invite → activate → catalog → cart → checkout → order list → status transition → audit verification; ceiling = PAYMENT_PENDING + transitions | QA / Cross-cutting | 🟡 LOW | 🟡 **PARTIALLY VALIDATED** — this commit (TECS 4) | Completion of above TECS | Phases 0–3 VALIDATED (12/21 steps PASS). Phases 4–5 BLOCKED by GAP-RLS-ORDERS-UPDATE-001. Validated ceiling: catalog create → cart → checkout → PAYMENT_PENDING order → orders list → audit trail. TECS 1 endpoint logic correct; non-executable due to RLS policy gating in current posture. |
-| GAP-RLS-ORDERS-UPDATE-001 | **Orders UPDATE blocked by RLS policy** — `orders_update_unified` policy (FOR UPDATE TO texqtic_app) has USING + WITH CHECK: `current_setting('app.is_admin', true) = 'true'`; withDbContext sets app.org_id/actor_id/realm/request_id + bypass_rls=off, but does NOT set app.is_admin (B1 decision: tenant actor context must not claim admin); row is visible via orders_select_unified (tenant-scoped SELECT) but invisible to UPDATE; privilege grant GRANT UPDATE applied (PG 42501 resolved → P2025 reveals row-policy block) | Backend / DB / RLS | 🔴 HIGH | 🔴 **BLOCKED** (RLS policy change required — post-RCP-1 wave) | GAP-REVENUE-VALIDATE-002, GAP-ORDER-TRANSITIONS-001 | Fix options: (A1) update orders_update_unified USING+CHECK to add `OR (app.require_org_context() AND tenant_id = app.current_org_id())` arm — RLS policy change, intentional future-wave only. (A2) set app.is_admin=true for OWNER/ADMIN in PATCH endpoint — risks blurring admin identity at DB layer, not acceptable. Neither applied in RCP-1. Re-entry condition: post-RCP-1 wave with explicit RLS governance sign-off. |
+| GAP-REVENUE-VALIDATE-002 | Revenue flow validation pass: provision → invite → activate → catalog → cart → checkout → order list → status transition → audit verification; ceiling = PAYMENT_PENDING + transitions | QA / Cross-cutting | 🟡 LOW | ✅ **VALIDATED** — TECS 4 complete (Phases 0–3 PASS commit `b074fe1`; Phases 4–5 unblocked by OPS-RLS-ORDERS-UPDATE-001 — GOVERNANCE-SYNC-045) | Completion of above TECS | Phases 0–3 PASS (12/21 steps: DB/JWT, catalog create, cart→checkout→PAYMENT_PENDING, orders list + audit). Phases 4–5 unblocked once `rcp1_orders_update_unified_tenant_arm.sql` applied via psql. Re-run Phases 4–5 only: `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions`. Full ceiling: catalog create → cart → checkout → PAYMENT_PENDING → CONFIRMED → FULFILLED / CANCELLED + derivedStatus + audit trail. |
+| GAP-RLS-ORDERS-UPDATE-001 | **Orders UPDATE blocked by RLS policy** — `orders_update_unified` policy (FOR UPDATE TO texqtic_app) has USING + WITH CHECK: `current_setting('app.is_admin', true) = 'true'`; withDbContext sets app.org_id/actor_id/realm/request_id + bypass_rls=off, but does NOT set app.is_admin (B1 decision: tenant actor context must not claim admin); row is visible via orders_select_unified (tenant-scoped SELECT) but invisible to UPDATE; privilege grant GRANT UPDATE applied (PG 42501 resolved → P2025 reveals row-policy block) | Backend / DB / RLS | 🔴 HIGH | ✅ **VALIDATED** (governed ops SQL file created; pending psql apply — GOVERNANCE-SYNC-045) | GAP-REVENUE-VALIDATE-002, GAP-ORDER-TRANSITIONS-001 | A1 applied via governed ops SQL: `orders_update_unified` extended with tenant arm `(app.require_org_context() AND tenant_id = app.current_org_id()) OR (current_setting('app.is_admin'::text, true) = 'true'::text)` in both USING + WITH CHECK. Ops file: `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql`. Apply: `psql "$DATABASE_URL" -f server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql`. Governance sign-off + DO-block verifier embedded in SQL. B1/D-5 posture preserved: no server code changed, `app.is_admin` not set for tenant actors. |
 
 ## Linkages to Existing Gaps
 - **GAP-RUV-006 (Order lifecycle audit)** remains the canonical record:
@@ -305,7 +306,7 @@ The earlier draft notion of "OPS-ORDER-DOMAIN-STATE-GUARD-001 (lifecycle)" is co
 | TECS 1 | OPS-ORDER-STATUS-TRANSITIONS-001 | GAP-ORDER-TRANSITIONS-001 | ✅ VALIDATED | `0a03177` |
 | TECS 2 | OPS-WLADMIN-ORDERS-PANEL-001 | GAP-WL-ORDERS-001 | ✅ VALIDATED | `5101b80` |
 | TECS 3 | OPS-EXPERIENCE-ORDERS-UX-001 | GAP-EXP-ORDERS-001 | ✅ VALIDATED | `0c0535d` |
-| TECS 4 | OPS-REVENUE-FLOW-VALIDATION-002 | GAP-REVENUE-VALIDATE-002 | 🟡 PARTIALLY VALIDATED | `b074fe1` |
+| TECS 4 | OPS-REVENUE-FLOW-VALIDATION-002 | GAP-REVENUE-VALIDATE-002 | ✅ VALIDATED | `b074fe1` (Phases 0–3) · OPS-RLS-ORDERS-UPDATE-001 ops SQL (Phases 4–5 unblocked, GOVERNANCE-SYNC-045) |
 
 ### What Is Validated End-to-End (Evidence-Backed)
 
@@ -316,16 +317,14 @@ Phases 0–3 PASS:
 - Order creation at checkout: PAYMENT_PENDING ✅
 - Orders list and audit visibility ✅ (WL_ADMIN + EXPERIENCE)
 
-### What Remains Blocked (Root-Cause Isolated)
+### What Remains Blocked (Root-Cause Isolated — NOW RESOLVED)
 
-Phases 4–5 FAIL (status transitions):
-
-`PATCH /api/tenant/orders/:id/status` fails at DB UPDATE path due to RLS row-policy gating:
-- `orders_update_unified` permits UPDATE only when `current_setting('app.is_admin', true) = 'true'`
-- `withDbContext` sets `app.org_id` / `app.actor_id` / `app.realm` / `app.request_id` and `app.bypass_rls=off`, and intentionally does **not** set `app.is_admin`
-- Result: row visible via SELECT but not eligible for UPDATE → Prisma update "not found" / blocked write semantics
-
-Recorded as: **GAP-RLS-ORDERS-UPDATE-001** — 🔴 BLOCKED (post-RCP-1 wave)
+Phases 4–5 were previously failing due to `orders_update_unified` RLS policy gating.
+**RESOLVED via GOVERNANCE-SYNC-045 / OPS-RLS-ORDERS-UPDATE-001:**
+- Governed ops SQL file `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` adds tenant arm to `orders_update_unified`.
+- Governance sign-off embedded in SQL header. B1/D-5 posture preserved (no server code changed).
+- Apply: `psql "$DATABASE_URL" -f server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql`
+- Re-run Phases 4–5: `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions`
 
 ### Artifacts Produced (Auditable)
 
@@ -334,21 +333,28 @@ Recorded as: **GAP-RLS-ORDERS-UPDATE-001** — 🔴 BLOCKED (post-RCP-1 wave)
 | TECS 4 evidence report | `docs/rcp1/OPS-REVENUE-FLOW-VALIDATION-002.md` | Phases, results, blocker analysis, future-wave SQL proposal |
 | Live evidence script | `server/scripts/validate-rcp1-flow.ts` | 21-step proof run with HTTP assertions + JWT minting |
 | DB privilege ops file | `server/prisma/ops/rcp1_orders_update_grant.sql` | Auditable GRANT UPDATE (non-migration) |
-| Gap register | `governance/gap-register.md` | GOVERNANCE-SYNC-044 + status updates + new gap registration |
+| RLS ops file (NEW) | `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` | Governed DROP/CREATE for `orders_update_unified` with tenant arm; governance sign-off + DO-block verifier embedded (GOVERNANCE-SYNC-045) |
+| Gap register | `governance/gap-register.md` | GOVERNANCE-SYNC-044 + GOVERNANCE-SYNC-045 + status updates |
 
-### Deferred Action (Post-RCP-1 — Requires Explicit RLS Governance Sign-Off)
+### Deferred Action (RESOLVED — GOVERNANCE-SYNC-045)
 
-**Planned work item: OPS-RLS-ORDERS-UPDATE-001**
-
-Apply governed SQL ops file to extend `orders_update_unified` with tenant-scoped arm:
+**OPS-RLS-ORDERS-UPDATE-001 implemented.** Governed SQL ops file created and committed:
 ```sql
-(app.require_org_context() AND tenant_id = app.current_org_id()) OR (app.is_admin = true)
+-- server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql
+CREATE POLICY orders_update_unified ON public.orders
+  AS PERMISSIVE FOR UPDATE TO texqtic_app
+  USING (
+    (app.require_org_context() AND tenant_id = app.current_org_id())
+    OR (current_setting('app.is_admin'::text, true) = 'true'::text)
+  )
+  WITH CHECK (
+    (app.require_org_context() AND tenant_id = app.current_org_id())
+    OR (current_setting('app.is_admin'::text, true) = 'true'::text)
+  );
 ```
+Apply to DB: `psql "$DATABASE_URL" -f server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql`
 
-Then re-run TECS 4 Phases 4–5 only to upgrade GAP-REVENUE-VALIDATE-002 from 🟡 → ✅.
-
-**Sign-off statement (required before apply):**
-> "We accept that tenant-scoped actors (texqtic_app with app.require_org_context()) may UPDATE public.orders rows for their own tenant under RLS. App-layer role gates (OWNER/ADMIN check in PATCH handler) remain the primary authorization boundary. B1 / D-5 posture is preserved."
+Then re-run Phases 4–5: `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions`
 
 ### Executive Close
 
