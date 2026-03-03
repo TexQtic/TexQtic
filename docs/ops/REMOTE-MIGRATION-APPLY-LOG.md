@@ -216,12 +216,12 @@ SELECT DISTINCT migration_name FROM _prisma_migrations WHERE finished_at IS NOT 
 
 ---
 
-## OPS-APPLY-ORDERS-RLS-001 — orders_update_unified Tenant Arm
+## OPS-APPLY-ORDERS-RLS-001 ï¿½ orders_update_unified Tenant Arm
 
 **Timestamp:** 2026-03-03T04:48:00Z (approx)
 **Sync ID:** GOVERNANCE-SYNC-049
 **Executor:** psql (local) via PowerShell `--key=value` form
-**Target DB:** Supabase session pooler — `aws-1-ap-northeast-1.pooler.supabase.com` (redacted DATABASE_URL)
+**Target DB:** Supabase session pooler ï¿½ `aws-1-ap-northeast-1.pooler.supabase.com` (redacted DATABASE_URL)
 
 ### Apply Command
 
@@ -258,9 +258,9 @@ OR
 (current_setting('app.is_admin', true) = 'true')
 ```
 
-**B1/D-5 posture:** Preserved — no server code changed; `app.is_admin` continues to NOT be set for tenant actors.
+**B1/D-5 posture:** Preserved ï¿½ no server code changed; `app.is_admin` continues to NOT be set for tenant actors.
 
-### RCP-1 Phases 4–5 Validation
+### RCP-1 Phases 4ï¿½5 Validation
 
 **Command:** `pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions`
 
@@ -273,7 +273,7 @@ OR
 | **TOTAL** | | **16/16 PASS, VALIDATE_EXIT:0** |
 
 ```
-OUTCOME: ALL PASS — GAP-REVENUE-VALIDATE-002 VALIDATED
+OUTCOME: ALL PASS ï¿½ GAP-REVENUE-VALIDATE-002 VALIDATED
 ```
 
 ### Quality Gates
@@ -288,16 +288,16 @@ OUTCOME: ALL PASS — GAP-REVENUE-VALIDATE-002 VALIDATED
 | Gap | Before | After |
 |-----|--------|-------|
 | GAP-RLS-ORDERS-UPDATE-001 | VALIDATED (pending psql apply) | OPERATIONALLY CLOSED (applied + VERIFY PASS) |
-| GAP-REVENUE-VALIDATE-002 | Phases 0-3 PASS; Phases 4-5 blocked | Phases 0-5 PASS — 16/16 |
+| GAP-REVENUE-VALIDATE-002 | Phases 0-3 PASS; Phases 4-5 blocked | Phases 0-5 PASS ï¿½ 16/16 |
 
 ---
 
-## G-006C-P2-CATALOG_ITEMS-RLS-UNIFY-001 — catalog_items RLS Unify
+## G-006C-P2-CATALOG_ITEMS-RLS-UNIFY-001 ï¿½ catalog_items RLS Unify
 
 **Timestamp:** 2026-03-03T~10:45:00Z
 **Sync ID:** GOVERNANCE-SYNC-051
 **Migration:** `20260315000000_g006c_p2_catalog_items_rls_unify`
-**Target DB:** Supabase session pooler — `aws-1-ap-northeast-1.pooler.supabase.com` (redacted DATABASE_URL)
+**Target DB:** Supabase session pooler ï¿½ `aws-1-ap-northeast-1.pooler.supabase.com` (redacted DATABASE_URL)
 
 ### Apply Command
 
@@ -412,6 +412,15 @@ Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as app
 ## G-006C-P2-TENANT_DOMAINS-RLS-UNIFY-001
 **Date:** 2026-03-03 | **Migration:** `20260315000003_g006c_p2_tenant_domains_rls_unify` | **Table:** `public.tenant_domains` | **GOVERNANCE-SYNC:** 054
 
-**Critical defects fixed:** Guard promoted from {public} to texqtic_app (is_admin arm added). DELETE had NO tenant arm (bypass_enabled only) — rebuilt with full tenant + is_admin arms. All PERMISSIVE: require_org_context added, bypass_enabled replaced. Enhanced verifier: DELETE tenant_id arm + {public}=0 explicitly checked.
+**Critical defects fixed:** Guard promoted from {public} to texqtic_app (is_admin arm added). DELETE had NO tenant arm (bypass_enabled only) ï¿½ rebuilt with full tenant + is_admin arms. All PERMISSIVE: require_org_context added, bypass_enabled replaced. Enhanced verifier: DELETE tenant_id arm + {public}=0 explicitly checked.
 **VERIFIER PASS:** guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each, DELETE tenant_id arm present, FORCE RLS=t, no {public} policies
+**APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**
+
+---
+
+## G-006C-P2-IMPERSONATION_SESSIONS-RLS-UNIFY-001
+**Date:** 2026-03-03 | **Migration:** `20260315000004_g006c_p2_impersonation_sessions_rls_unify` | **Table:** `public.impersonation_sessions` | **GOVERNANCE-SYNC:** 055
+
+**Critical defects fixed:** Guard renamed from non-standard `restrictive_guard` ({public} role, WITH CHECK clause) â†’ `impersonation_sessions_guard` (texqtic_app, USING only, is_admin arm added). DELETE had NO admin arm (bypass_enabled only â€” CRITICAL) â†’ rebuilt with require_admin_context + admin_id actor arm + is_admin. All PERMISSIVE: bypass_enabled replaced with is_admin='true'. Admin-only design: tenant_id is metadata (not a RLS predicate); no tenant arm in any policy. G-006C-WAVE3-REMAINING â†’ âœ… COMPLETE (all tables done).
+**VERIFIER PASS:** guard=1 RESTRICTIVE FOR ALL (require_admin_context + is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each (is_admin arm present), DELETE critical fix applied (had bypass_enabled only), FORCE RLS=t, no {public} policies
 **APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**

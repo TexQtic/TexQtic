@@ -5715,3 +5715,70 @@ APPLY_EXIT:0
 - [x] wave-execution-log.md updated (this entry)
 - [x] REMOTE-MIGRATION-APPLY-LOG.md updated
 - [x] Atomic commit: G-006C P2: unify RLS for tenant_domains (G-006C-P2-TENANT_DOMAINS-RLS-UNIFY-001)
+
+---
+
+### GOVERNANCE-SYNC-055 - G-006C-P2-IMPERSONATION_SESSIONS-RLS-UNIFY-001
+**Date:** 2026-03-03
+**Task:** Unify RLS policies for `impersonation_sessions` (control-plane admin-only table)
+
+#### Schema Finding
+- `impersonation_sessions` is **admin-only** — tenant JWTs are rejected by the RESTRICTIVE guard
+- Actor arm: `admin_id = app.current_actor_id()` (tenant_id records the impersonated tenant but is metadata, NOT a RLS predicate)
+- Guard function: `require_admin_context()` (NOT `require_org_context()`)
+- FORCE RLS + RLS already ON prior to migration
+- CRITICAL: DELETE policy had NO admin arm at all (bypass_enabled only) — any bypass-enabled actor could delete sessions
+- Guard was named `restrictive_guard` (non-standard name, applied to {public}, had non-standard WITH CHECK clause)
+
+#### Before (5 policies, non-canonical)
+| Policy Name | Type | Cmd | Role | Qual/Check |
+|---|---|---|---|---|
+| `restrictive_guard` | RESTRICTIVE | ALL | {public} | require_admin_context() OR bypass_enabled() — WITH CHECK same (non-standard; missing is_admin) |
+| `impersonation_sessions_select_unified` | PERMISSIVE | SELECT | texqtic_app | (require_admin_context() AND admin_id=current_actor_id()) OR bypass_enabled() |
+| `impersonation_sessions_insert_unified` | PERMISSIVE | INSERT | texqtic_app | WITH CHECK same pattern |
+| `impersonation_sessions_update_unified` | PERMISSIVE | UPDATE | texqtic_app | USING + WITH CHECK same |
+| `impersonation_sessions_delete_unified` | PERMISSIVE | DELETE | texqtic_app | bypass_enabled() ONLY — NO admin arm — CRITICAL |
+
+#### After (5 policies, canonical admin-only Wave 3 Tail)
+| Policy Name | Type | Cmd | Role | Admin Arm |
+|---|---|---|---|---|
+| `impersonation_sessions_guard` | RESTRICTIVE | ALL | texqtic_app | require_admin_context() OR is_admin=''true'' OR bypass_enabled() |
+| `impersonation_sessions_select_unified` | PERMISSIVE | SELECT | texqtic_app | (require_admin_context() AND admin_id=current_actor_id()) OR is_admin=''true'' |
+| `impersonation_sessions_insert_unified` | PERMISSIVE | INSERT | texqtic_app | (require_admin_context() AND admin_id=current_actor_id()) OR is_admin=''true'' |
+| `impersonation_sessions_update_unified` | PERMISSIVE | UPDATE | texqtic_app | (require_admin_context() AND admin_id=current_actor_id()) OR is_admin=''true'' |
+| `impersonation_sessions_delete_unified` | PERMISSIVE | DELETE | texqtic_app | (require_admin_context() AND admin_id=current_actor_id()) OR is_admin=''true'' |
+
+#### Verifier Design (Admin-Only Variant)
+- Guard checks: is_admin arm + require_admin_context (NOT require_org_context)
+- SELECT checks: is_admin arm present
+- DELETE checks: is_admin arm present — does NOT check tenant_id (admin-only design; tenant_id is metadata)
+- {public} policy check: 0 {public} policies as hard failure
+
+#### Apply Evidence
+- Migration: `20260315000004_g006c_p2_impersonation_sessions_rls_unify`
+- psql VERIFIER PASS: impersonation_sessions — guard=1 RESTRICTIVE FOR ALL (require_admin_context + is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each (is_admin arm present), DELETE critical fix applied (had bypass_enabled only), FORCE RLS=t, no {public} policies
+- APPLY_EXIT:0
+- prisma migrate resolve --applied RESOLVE_EXIT:0
+
+#### Quality Gates
+| Gate | Result |
+|---|---|
+| typecheck | EXIT 0 |
+| lint | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+#### Completion Checklist
+- [x] Schema inspected — admin_id actor arm confirmed; tenant_id is metadata (not RLS predicate)
+- [x] Design intent confirmed — admin-only (test: gate-d7 "Impersonation start is admin-only; tenant JWT must be rejected")
+- [x] Critical defect found: DELETE had no admin arm (bypass_enabled only) — fixed
+- [x] Non-standard guard (`restrictive_guard`, {public} role, WITH CHECK) — dropped and renamed
+- [x] Migration created: 20260315000004_g006c_p2_impersonation_sessions_rls_unify/migration.sql
+- [x] Admin-only verifier: DELETE is_admin arm + {public}=0 + require_admin_context in guard explicitly checked
+- [x] Applied to remote Supabase — VERIFIER PASS
+- [x] Prisma ledger resolved — RESOLVE_EXIT:0
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0
+- [x] gap-register.md updated (GOVERNANCE-SYNC-055 — G-006C-WAVE3-REMAINING → ✅ COMPLETE)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (impersonation_sessions Complete)
+- [x] wave-execution-log.md updated (this entry)
+- [x] REMOTE-MIGRATION-APPLY-LOG.md updated
+- [x] Atomic commit: G-006C P2: unify RLS for impersonation_sessions (G-006C-P2-IMPERSONATION_SESSIONS-RLS-UNIFY-001)
