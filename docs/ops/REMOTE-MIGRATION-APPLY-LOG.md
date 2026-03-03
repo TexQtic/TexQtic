@@ -424,3 +424,13 @@ Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as app
 **Critical defects fixed:** Guard renamed from non-standard `restrictive_guard` ({public} role, WITH CHECK clause) → `impersonation_sessions_guard` (texqtic_app, USING only, is_admin arm added). DELETE had NO admin arm (bypass_enabled only — CRITICAL) → rebuilt with require_admin_context + admin_id actor arm + is_admin. All PERMISSIVE: bypass_enabled replaced with is_admin='true'. Admin-only design: tenant_id is metadata (not a RLS predicate); no tenant arm in any policy. G-006C-WAVE3-REMAINING → ✅ COMPLETE (all tables done).
 **VERIFIER PASS:** guard=1 RESTRICTIVE FOR ALL (require_admin_context + is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each (is_admin arm present), DELETE critical fix applied (had bypass_enabled only), FORCE RLS=t, no {public} policies
 **APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**
+
+---
+
+## GAP-ORDER-LC-001-SCHEMA-FOUNDATION-001
+**Date:** 2026-03-03 | **Migration:** `20260315000005_gap_order_lc_001_schema_foundation` | **Risk:** 🔴 HIGH | **GOVERNANCE-SYNC:** 056
+
+**Remote target confirmed:** `aws-1-ap-northeast-1.pooler.supabase.com:5432` ✅
+**Schema actions:** (1) Extended `lifecycle_states.entity_type` CHECK + `allowed_transitions.entity_type` CHECK to include 'ORDER' (DROP + recreate — reversible). (2) Seeded 4 ORDER lifecycle states (PAYMENT_PENDING, CONFIRMED, FULFILLED, CANCELLED). (3) Created `public.order_lifecycle_logs` (id, order_id FK→orders CASCADE, tenant_id denorm for RLS, from_state, to_state, actor_id, realm, request_id, created_at) + 3 indexes + FORCE RLS + 1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT (tenant+admin arms) + UPDATE/DELETE permanently blocked (immutability). orders.status enum NOT touched (ALTER TYPE ADD VALUE deferred to B3 per STOP CONDITION).
+**VERIFIER PASS:** table + FK + 3 indexes (order_created, tenant_created, to_state_created) + FORCE RLS=t + 1 RESTRICTIVE guard + 4 PERMISSIVE (SELECT/INSERT + immutability UPDATE/DELETE blocks) + 0 {public} policies + 4 ORDER lifecycle states seeded
+**APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**

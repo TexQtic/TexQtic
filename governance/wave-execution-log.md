@@ -5782,3 +5782,65 @@ APPLY_EXIT:0
 - [x] wave-execution-log.md updated (this entry)
 - [x] REMOTE-MIGRATION-APPLY-LOG.md updated
 - [x] Atomic commit: G-006C P2: unify RLS for impersonation_sessions (G-006C-P2-IMPERSONATION_SESSIONS-RLS-UNIFY-001)
+
+---
+
+### GOVERNANCE-SYNC-056 - GAP-ORDER-LC-001-SCHEMA-FOUNDATION-001
+**Date:** 2026-03-03
+**Task:** ORDER Lifecycle Schema Foundation — create order_lifecycle_logs + extend CHECK constraints + seed ORDER states
+
+#### Remote Target Confirmation (🔴 High Risk gate)
+- Remote host: `aws-1-ap-northeast-1.pooler.supabase.com:5432` ✅ confirmed before apply
+
+#### Schema Changes Applied
+1. **lifecycle_states.entity_type CHECK extended:** `lifecycle_states_entity_type_check` dropped + recreated with ARRAY['TRADE','ESCROW','CERTIFICATION','ORDER'] (reversible DROP + ADD)
+2. **allowed_transitions.entity_type CHECK extended:** `allowed_transitions_entity_type_check` same approach
+3. **ORDER lifecycle states seeded:** 4 rows in lifecycle_states (PAYMENT_PENDING: initial; CONFIRMED: in-progress; FULFILLED: terminal+irreversible; CANCELLED: terminal+irreversible+severity=1)
+4. **public.order_lifecycle_logs created:**
+   - Columns: id (pk), order_id (FK→orders CASCADE), tenant_id (denorm for RLS), from_state (nullable), to_state (NOT NULL), actor_id (nullable), realm (NOT NULL), request_id (nullable), created_at
+   - Indexes: idx_order_lifecycle_logs_order_created, idx_order_lifecycle_logs_tenant_created, idx_order_lifecycle_logs_to_state_created
+   - FORCE RLS + canonical Wave 3 Tail policies (1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT with tenant+admin arms + UPDATE/DELETE permanently false for immutability)
+
+#### STOP CONDITION Applied
+- `orders.status` is a USER-DEFINED enum (`order_status`: PAYMENT_PENDING, PLACED, CANCELLED)
+- SM states (CONFIRMED, FULFILLED) not in current enum → would require `ALTER TYPE ADD VALUE` (IRREVERSIBLE)
+- **Decision:** orders.status enum extension DEFERRED to B3 (SM wiring TECS). B1 uses TEXT columns in order_lifecycle_logs — no enum dependency.
+
+#### Before / After
+
+| Item | Before | After |
+|---|---|---|
+| `order_lifecycle_logs` | does not exist | ✅ Created (7 cols + 3 idx + FORCE RLS) |
+| `lifecycle_states` ORDER rows | 0 | ✅ 4 rows seeded |
+| `lifecycle_states_entity_type_check` | TRADE/ESCROW/CERTIFICATION | ✅ + ORDER |
+| `allowed_transitions_entity_type_check` | TRADE/ESCROW/CERTIFICATION | ✅ + ORDER |
+| `order_lifecycle_logs` RLS | — | ✅ 1 RESTRICTIVE + 4 PERMISSIVE |
+
+#### Apply Evidence
+- Migration: `20260315000005_gap_order_lc_001_schema_foundation`
+- psql VERIFIER PASS: order_lifecycle_logs created (table + FK + 3 indexes + FORCE RLS=t + 1 RESTRICTIVE guard + 4 PERMISSIVE policies + no {public} policies + UPDATE/DELETE immutability blocks); lifecycle_states CHECK extended to include ORDER; allowed_transitions CHECK extended to include ORDER; 4 ORDER lifecycle states seeded
+- APPLY_EXIT:0
+- prisma migrate resolve --applied RESOLVE_EXIT:0
+
+#### Quality Gates
+| Gate | Result |
+|---|---|
+| typecheck | EXIT 0 |
+| lint | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+#### Completion Checklist
+- [x] Remote DB target confirmed: aws-1-ap-northeast-1.pooler.supabase.com ✅ (🔴 High Risk gate)
+- [x] Schema introspection: orders.status is enum (order_status) — STOP CONDITION documented: ALTER TYPE ADD VALUE deferred to B3
+- [x] lifecycle_states + allowed_transitions CHECK constraints inspected
+- [x] order_lifecycle_logs does NOT exist (confirmed pre-apply)
+- [x] Migration created: 20260315000005_gap_order_lc_001_schema_foundation/migration.sql
+- [x] tenant_id denorm column added (justified: needed for canonical RLS arm; avoids EXISTS join STOP condition)
+- [x] Applied to remote Supabase — VERIFIER PASS
+- [x] Prisma ledger resolved — RESOLVE_EXIT:0
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0
+- [x] gap-register.md updated (GOVERNANCE-SYNC-056 — GAP-ORDER-LC-001 → ⏳ IN PROGRESS, B1 ✅)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (Phase B: CHECK ✅, table ✅, seed ✅)
+- [x] wave-execution-log.md updated (this entry)
+- [x] REMOTE-MIGRATION-APPLY-LOG.md updated
+- [x] Atomic commit: feat(db): order lifecycle logs schema foundation (GAP-ORDER-LC-001)
