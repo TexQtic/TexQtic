@@ -421,11 +421,66 @@ export class StateMachineService {
           request_id: req.requestId ?? null,
         };
 
+        // G-027: morgue entry data — prepared unconditionally, written only when
+        // toState.isTerminal === true (FULFILLED or CANCELLED for ORDER).
+        // snapshot is jsonb NOT NULL in DB; always pass a complete object.
+        const morgueCreate = {
+          entity_type: req.entityType,
+          entity_id: req.entityId,
+          tenant_id: req.orgId,
+          final_state: normalizedToState,
+          resolved_by: req.actorAdminId ?? req.actorUserId ?? null,
+          resolution_reason: req.reason ?? null,
+          snapshot: {
+            entityType: req.entityType,
+            entityId: req.entityId,
+            fromState: normalizedFromState,
+            toState: normalizedToState,
+            realm,
+            requestId: req.requestId ?? null,
+            occurredAt: new Date().toISOString(),
+            notes: 'canonical terminal resolution ledger',
+          },
+        };
+
+        // Both paths (opts.db shared-tx and standalone $transaction) write:
+        //   1. order_lifecycle_logs row (always)
+        //   2. morgue_entries row (only when terminal, deduplicated by entity+finalState)
         const log = opts?.db
-          ? await opts.db.order_lifecycle_logs.create({ data: logData })
-          : await this.db.$transaction(async tx =>
-              tx.order_lifecycle_logs.create({ data: logData })
-            );
+          ? await (async () => {
+              const _log = await opts.db!.order_lifecycle_logs.create({ data: logData });
+              if (toState.isTerminal) {
+                const existing = await opts.db!.morgue_entries.findFirst({
+                  where: {
+                    entity_type: req.entityType,
+                    entity_id: req.entityId,
+                    final_state: normalizedToState,
+                  },
+                  select: { id: true },
+                });
+                if (!existing) {
+                  await opts.db!.morgue_entries.create({ data: morgueCreate });
+                }
+              }
+              return _log;
+            })()
+          : await this.db.$transaction(async tx => {
+              const _log = await tx.order_lifecycle_logs.create({ data: logData });
+              if (toState.isTerminal) {
+                const existing = await tx.morgue_entries.findFirst({
+                  where: {
+                    entity_type: req.entityType,
+                    entity_id: req.entityId,
+                    final_state: normalizedToState,
+                  },
+                  select: { id: true },
+                });
+                if (!existing) {
+                  await tx.morgue_entries.create({ data: morgueCreate });
+                }
+              }
+              return _log;
+            });
 
         return {
           status: 'APPLIED',

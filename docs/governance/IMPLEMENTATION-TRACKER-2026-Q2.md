@@ -178,7 +178,7 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 |-----|--------|-----------|-----------------|-----------|--------|
 | G-025 | DPP Snapshot Views | XL | Views / materialized views over `traceability_nodes` + `certifications` | G-016 ✅ | ⏳ |
 | G-026 | Custom Domain Routing | L | `tenant_domains` constraints + edge config | G-006C `tenant_domains` consolidated | ⏳ |
-| G-027 | The Morgue | L | New table + RLS — `morgue_entries` schema foundation applied 2026-03-03 (GOVERNANCE-SYNC-065, migration `20260315000006`) | G-022 ✅ | 🔄 IN PROGRESS |
+| G-027 | The Morgue | L | Schema foundation (GOVERNANCE-SYNC-065, migration `20260315000006`) + canonical producer in `StateMachineService` ORDER branch — writes `morgue_entries` row atomically when ORDER reaches FULFILLED or CANCELLED, with entity+finalState dedup guard. typecheck EXIT 0, lint EXIT 0 (GOVERNANCE-SYNC-068). | G-022 ✅ | ✅ VALIDATED |
 | G-028 | AI Vector / Inference Separation | XL | Vector schema + infra | G-023 ✅ | ⏳ |
 | WL Collections Panel | WL Admin | Low | `WLCollectionsPanel.tsx` — display-only, groups catalog items by category (GOVERNANCE-SYNC-066/067); commit `3d67f4c`. Scope complete as designed (display-only); model-backed collections is a new gap. | G-WL-ADMIN ✅ | ✅ VALIDATED |
 | WL Domains Panel | WL Admin | Medium | None | G-026 + G-WL-ADMIN ✅ | ⏳ |
@@ -274,11 +274,11 @@ Each TECS must produce:
 - [x] `StateMachineService` accepts `EntityType = 'ORDER'` (GOVERNANCE-SYNC-058: ORDER branch added; `order_lifecycle_logs` written atomically)
 - [x] Checkout populates `order_lifecycle_logs` (GOVERNANCE-SYNC-059: `writeAuditLog` workaround replaced with `tx.order_lifecycle_logs.create()`)
 - [x] App-layer `GAP-ORDER-TRANSITIONS-001` workaround removed from routes (GOVERNANCE-SYNC-059: PATCH endpoint uses `StateMachineService.transition()`)
-- [ ] G-027 The Morgue — table created, Level 1+ escalation resolutions captured *(Wave 4 item — open)*
+- [x] G-027 The Morgue — table created, Level 1+ escalation resolutions captured *(Wave 4 item — ✅ VALIDATED GOVERNANCE-SYNC-068)*
 
 ### Phase C Complete When:
 
-- [ ] At least one Wave 4 feature fully shipped with evidence (G-025, G-026, G-027, or G-028)
+- [x] At least one Wave 4 feature fully shipped with evidence (G-025, G-026, G-027, or G-028)
 - [ ] Zero open P-A gaps
 - [ ] Zero open P-B gaps
 - [ ] WL Collections panel functional (OPS-WLADMIN-COLLECTIONS-001)

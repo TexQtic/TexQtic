@@ -284,6 +284,17 @@ async function main() {
     fail(`lifecycle log: FULFILLED NOT found in order_lifecycle_logs for order_id: ${ORDER_ID}`);
   }
 
+  // G-027: morgue_entries verification — FULFILLED terminal state
+  step('4B.G1', 'G-027: morgue_entries — verify FULFILLED morgue entry written atomically');
+  const fulfillMorgue = await prisma.morgue_entries.findFirst({
+    where: { entity_type: 'ORDER', entity_id: ORDER_ID, final_state: 'FULFILLED' },
+  });
+  if (fulfillMorgue) {
+    pass(`morgue entry: FULFILLED ✓ | entity_id: ${ORDER_ID} | final_state: FULFILLED | morgue.id: ${fulfillMorgue.id}`);
+  } else {
+    fail(`morgue entry: FULFILLED NOT found in morgue_entries for entity_id: ${ORDER_ID}`);
+  }
+
   // ── 4C: CANCEL validation on a SECOND fresh order ────────────────────────
   phase(4, '(cont.) CANCEL path — fresh order at PAYMENT_PENDING');
   step('4C.0', 'Create a second order for CANCEL validation');
@@ -325,6 +336,17 @@ async function main() {
     pass(`lifecycle log: CANCELLED ✓ | order_id: ${ORDER2_ID} | from: ${cancelLog.from_state} → CANCELLED | log.id: ${cancelLog.id}`);
   } else {
     fail(`lifecycle log: CANCELLED NOT found in order_lifecycle_logs for order_id: ${ORDER2_ID}`);
+  }
+
+  // G-027: morgue_entries verification — CANCELLED terminal state
+  step('4C.G1', 'G-027: morgue_entries — verify CANCELLED morgue entry written atomically');
+  const cancelMorgue = await prisma.morgue_entries.findFirst({
+    where: { entity_type: 'ORDER', entity_id: ORDER2_ID, final_state: 'CANCELLED' },
+  });
+  if (cancelMorgue) {
+    pass(`morgue entry: CANCELLED ✓ | entity_id: ${ORDER2_ID} | final_state: CANCELLED | morgue.id: ${cancelMorgue.id}`);
+  } else {
+    fail(`morgue entry: CANCELLED NOT found in morgue_entries for entity_id: ${ORDER2_ID}`);
   }
 
   step('4C.3', 'Verify CANCEL is terminal — attempt second transition should fail');

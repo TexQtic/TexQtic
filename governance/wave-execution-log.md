@@ -6361,3 +6361,38 @@ WL Collections Panel scope was defined as display-only (no backend, no schema, n
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md: WL Collections Panel → ✅ VALIDATED
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `docs(governance): validate WL Collections panel (W4-WL-COLLECTIONS-VALIDATE-001)`
+
+---
+
+## Wave 4 — G-027 The Morgue — Canonical Producer Integration
+
+**TECS ID:** G-027-MORGUE-PRODUCER-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 068  
+**Risk:** 🟡 MEDIUM — SM service write path extension; no schema changes beyond db pull + generate
+
+### Objective
+
+Wire `StateMachineService` ORDER branch to write a `morgue_entries` row atomically whenever an ORDER transitions to a terminal state (FULFILLED or CANCELLED). Deduplicate by `(entity_type, entity_id, final_state)`. Both the `opts.db` shared-transaction path and the standalone `$transaction` path are covered.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/src/services/stateMachine.service.ts` | ORDER branch extended: `morgueCreate` prepared unconditionally; IIFE + `$transaction` paths each write lifecycle log then conditionally write `morgue_entries` on `toState.isTerminal === true` with `findFirst` dedup guard |
+| `server/scripts/validate-rcp1-flow.ts` | Steps `4B.G1` and `4C.G1` added: verify `morgue_entries` row exists for FULFILLED and CANCELLED ORDER IDs respectively |
+| `server/prisma/schema.prisma` | `morgue_entries` model added via `prisma db pull` (table was applied in G-027-MORGUE-TABLE-RLS-001) |
+| `governance/gap-register.md` | G-027 → ✅ VALIDATED; GOVERNANCE-SYNC-068 referenced |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | G-027 row → ✅ VALIDATED; Wave 4 checklist items checked |
+| `governance/wave-execution-log.md` | This entry |
+
+### Quality Gates
+
+- [x] `prisma db pull` — `morgue_entries` model added to schema.prisma at line 1021
+- [x] `prisma generate` — Prisma Client regenerated; `db.morgue_entries` typed
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0 (0 errors, 108 pre-existing warnings including 3 `no-non-null-assertion` from `opts.db!`)
+- [x] gap-register.md G-027 → ✅ VALIDATED (GOVERNANCE-SYNC-068)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md G-027 row → ✅ VALIDATED
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `feat(sm): write morgue entry on terminal ORDER transitions (G-027)`

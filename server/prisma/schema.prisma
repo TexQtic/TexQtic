@@ -1017,6 +1017,22 @@ model order_lifecycle_logs {
   @@index([to_state, created_at(sort: Desc)], map: "idx_order_lifecycle_logs_to_state_created")
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model morgue_entries {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entity_type       String
+  entity_id         String   @db.Uuid
+  tenant_id         String   @db.Uuid
+  final_state       String
+  resolved_by       String?  @db.Uuid
+  resolution_reason String?
+  snapshot          Json
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([entity_type, entity_id], map: "idx_morgue_entries_entity_type_id")
+  @@index([tenant_id, created_at(sort: Desc)], map: "idx_morgue_entries_tenant_created")
+}
+
 enum TenantType {
   B2B
   B2C
