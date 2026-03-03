@@ -434,3 +434,25 @@ Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as app
 **Schema actions:** (1) Extended `lifecycle_states.entity_type` CHECK + `allowed_transitions.entity_type` CHECK to include 'ORDER' (DROP + recreate — reversible). (2) Seeded 4 ORDER lifecycle states (PAYMENT_PENDING, CONFIRMED, FULFILLED, CANCELLED). (3) Created `public.order_lifecycle_logs` (id, order_id FK→orders CASCADE, tenant_id denorm for RLS, from_state, to_state, actor_id, realm, request_id, created_at) + 3 indexes + FORCE RLS + 1 RESTRICTIVE guard + PERMISSIVE SELECT/INSERT (tenant+admin arms) + UPDATE/DELETE permanently blocked (immutability). orders.status enum NOT touched (ALTER TYPE ADD VALUE deferred to B3 per STOP CONDITION).
 **VERIFIER PASS:** table + FK + 3 indexes (order_created, tenant_created, to_state_created) + FORCE RLS=t + 1 RESTRICTIVE guard + 4 PERMISSIVE (SELECT/INSERT + immutability UPDATE/DELETE blocks) + 0 {public} policies + 4 ORDER lifecycle states seeded
 **APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**
+
+---
+
+## OPS-ORDER-LC-LOGS-GRANT-001
+**Date:** 2026-03-03 | **File:** `server/prisma/ops/order_lifecycle_logs_grants.sql` | **Risk:** 🟢 LOW | **GOVERNANCE-SYNC:** 060A
+
+**Purpose:** Grant base SELECT + INSERT privileges on `public.order_lifecycle_logs` to `texqtic_app` and `app_user`. RLS policies existed (from B1 migration) but base table privileges were never granted, causing PostgresError `42501 "permission denied for table order_lifecycle_logs"` on every SM checkout write. Same class of failure as `rcp1_orders_update_grant.sql` (orders UPDATE, previously resolved).
+
+**Apply command:** `$sql | & psql "$dbUrl"` (stdin pipe; DATABASE_URL from server/.env)
+**Remote target:** `aws-1-ap-northeast-1.pooler.supabase.com:5432` (Supabase Postgres)
+**Output:** `BEGIN` / `GRANT` / `GRANT` / `COMMIT` — **APPLY_EXIT:0**
+
+**Verification query:**
+```sql
+SELECT grantee, privilege_type FROM information_schema.role_table_grants
+WHERE table_name = 'order_lifecycle_logs' AND grantee IN ('texqtic_app','app_user')
+ORDER BY grantee, privilege_type;
+```
+**Result:** 4 rows — `app_user: INSERT, SELECT` + `texqtic_app: INSERT, SELECT` ✅
+
+**Note:** UPDATE + DELETE intentionally NOT granted (append-only table; RLS immutability blocks `USING(false)` already enforced at policy level).
+**typecheck EXIT 0 / lint EXIT 0**

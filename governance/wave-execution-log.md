@@ -5953,3 +5953,45 @@ SEED_EXIT:0
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (B4 backend row ✅; frontend renamed to B5)
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: feat(orders): SM-driven lifecycle replaces app-layer transitions (GAP-ORDER-LC-001)
+
+---
+
+### GOVERNANCE-SYNC-060A - OPS-ORDER-LC-LOGS-GRANT-001
+
+**Date:** 2026-03-03  
+**TECS ID:** OPS-ORDER-LC-LOGS-GRANT-001  
+**Title:** Grant base SELECT/INSERT privileges on `order_lifecycle_logs` to `texqtic_app` + `app_user` (unblock 42501)  
+**Risk:** 🟢 LOW — privilege-only change; no schema change; no RLS policy change; no server/src change  
+**Allowlist (Modify):** `server/prisma/ops/order_lifecycle_logs_grants.sql` (new), `governance/gap-register.md`, `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md`, `governance/wave-execution-log.md`, `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md`
+
+**Root cause:** B1 migration (`20260315000005_gap_order_lc_001_schema_foundation`) created `order_lifecycle_logs` with RLS policies targeting `texqtic_app` but contained no `GRANT SELECT, INSERT` statement. Postgres requires base table privilege before evaluating RLS — same class of failure resolved previously via `rcp1_orders_update_grant.sql` for the `orders` table. Symptom: `code: 42501 "permission denied for table order_lifecycle_logs"` on checkout `tx.order_lifecycle_logs.create()`.
+
+**SQL applied (`server/prisma/ops/order_lifecycle_logs_grants.sql`):**
+```sql
+BEGIN;
+GRANT SELECT, INSERT ON TABLE public.order_lifecycle_logs TO texqtic_app;
+GRANT SELECT, INSERT ON TABLE public.order_lifecycle_logs TO app_user;
+COMMIT;
+```
+Note: UPDATE + DELETE intentionally NOT granted (append-only table; RLS UPDATE/DELETE blocks already `USING (false)`).
+
+**Apply evidence:**
+- Command: `$sql | & psql "$dbUrl"` (stdin pipe; DATABASE_URL from server/.env, Supabase Postgres)
+- Output: `BEGIN` / `GRANT` / `GRANT` / `COMMIT`
+- **APPLY_EXIT:0**
+
+**Verification:**
+- Query: `SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_name = 'order_lifecycle_logs' AND grantee IN ('texqtic_app','app_user') ORDER BY grantee, privilege_type;`
+- Result: 4 rows — `app_user: INSERT, SELECT` + `texqtic_app: INSERT, SELECT` ✅
+
+**Quality gates:**
+- [x] APPLY_EXIT:0
+- [x] Verification: 4 grant rows confirmed in `information_schema.role_table_grants`
+- [x] TYPECHECK_EXIT:0
+- [x] LINT_EXIT:0
+- [x] `git diff --name-only` → allowlisted files only
+- [x] gap-register.md updated (GOVERNANCE-SYNC-060A — 42501 blocker resolved)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (GRANTs row ✅)
+- [x] wave-execution-log.md updated (this entry)
+- [x] REMOTE-MIGRATION-APPLY-LOG.md updated
+- [x] Atomic commit: `ops(db): grant order_lifecycle_logs base privileges (OPS-ORDER-LC-LOGS-GRANT-001)`
