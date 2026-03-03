@@ -294,6 +294,68 @@ The earlier draft notion of "OPS-ORDER-DOMAIN-STATE-GUARD-001 (lifecycle)" is co
 
 ---
 
+## RCP-1 Phase 1 — Closeout (Revenue Domain Completion)
+
+**Scope boundary (unchanged):** RCP-1 Phase 1 validates the Revenue Domain loop up to the ceiling of Order creation at PAYMENT_PENDING plus app-layer operational status actions (TECS 1), without schema migrations, RLS posture changes, lifecycle/G-020 integration, payment gateway work, or shell merges.
+
+### Execution Ledger (Final)
+
+| TECS | Work Item | Gap | Status | Commit |
+|------|-----------|-----|--------|--------|
+| TECS 1 | OPS-ORDER-STATUS-TRANSITIONS-001 | GAP-ORDER-TRANSITIONS-001 | ✅ VALIDATED | `0a03177` |
+| TECS 2 | OPS-WLADMIN-ORDERS-PANEL-001 | GAP-WL-ORDERS-001 | ✅ VALIDATED | `5101b80` |
+| TECS 3 | OPS-EXPERIENCE-ORDERS-UX-001 | GAP-EXP-ORDERS-001 | ✅ VALIDATED | `0c0535d` |
+| TECS 4 | OPS-REVENUE-FLOW-VALIDATION-002 | GAP-REVENUE-VALIDATE-002 | 🟡 PARTIALLY VALIDATED | `b074fe1` |
+
+### What Is Validated End-to-End (Evidence-Backed)
+
+Phases 0–3 PASS:
+- Provision / Invite / Activate (JWT issuance and tenant-realm access) ✅
+- Catalog create ✅
+- Cart → Checkout ✅
+- Order creation at checkout: PAYMENT_PENDING ✅
+- Orders list and audit visibility ✅ (WL_ADMIN + EXPERIENCE)
+
+### What Remains Blocked (Root-Cause Isolated)
+
+Phases 4–5 FAIL (status transitions):
+
+`PATCH /api/tenant/orders/:id/status` fails at DB UPDATE path due to RLS row-policy gating:
+- `orders_update_unified` permits UPDATE only when `current_setting('app.is_admin', true) = 'true'`
+- `withDbContext` sets `app.org_id` / `app.actor_id` / `app.realm` / `app.request_id` and `app.bypass_rls=off`, and intentionally does **not** set `app.is_admin`
+- Result: row visible via SELECT but not eligible for UPDATE → Prisma update "not found" / blocked write semantics
+
+Recorded as: **GAP-RLS-ORDERS-UPDATE-001** — 🔴 BLOCKED (post-RCP-1 wave)
+
+### Artifacts Produced (Auditable)
+
+| Artifact | Path | Purpose |
+|----------|------|---------|
+| TECS 4 evidence report | `docs/rcp1/OPS-REVENUE-FLOW-VALIDATION-002.md` | Phases, results, blocker analysis, future-wave SQL proposal |
+| Live evidence script | `server/scripts/validate-rcp1-flow.ts` | 21-step proof run with HTTP assertions + JWT minting |
+| DB privilege ops file | `server/prisma/ops/rcp1_orders_update_grant.sql` | Auditable GRANT UPDATE (non-migration) |
+| Gap register | `governance/gap-register.md` | GOVERNANCE-SYNC-044 + status updates + new gap registration |
+
+### Deferred Action (Post-RCP-1 — Requires Explicit RLS Governance Sign-Off)
+
+**Planned work item: OPS-RLS-ORDERS-UPDATE-001**
+
+Apply governed SQL ops file to extend `orders_update_unified` with tenant-scoped arm:
+```sql
+(app.require_org_context() AND tenant_id = app.current_org_id()) OR (app.is_admin = true)
+```
+
+Then re-run TECS 4 Phases 4–5 only to upgrade GAP-REVENUE-VALIDATE-002 from 🟡 → ✅.
+
+**Sign-off statement (required before apply):**
+> "We accept that tenant-scoped actors (texqtic_app with app.require_org_context()) may UPDATE public.orders rows for their own tenant under RLS. App-layer role gates (OWNER/ADMIN check in PATCH handler) remain the primary authorization boundary. B1 / D-5 posture is preserved."
+
+### Executive Close
+
+RCP-1 Phase 1 is functionally complete and drift-neutral: revenue loop executes through checkout and order visibility across shells; remaining status-action validation is blocked only by DB RLS update gating and is isolated into a post-RCP-1 governed change (GAP-RLS-ORDERS-UPDATE-001).
+
+---
+
 # Future Waves (5+)
 
 | Proposed Gap                           | Rationale                              | Assigned Wave |
