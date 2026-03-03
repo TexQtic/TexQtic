@@ -512,3 +512,50 @@ DEDUP_EXIT:0
 6 entries — 3 FULFILLED + 3 CANCELLED — all with distinct `entity_id` values. No duplicate `(entity_type, entity_id, final_state)` combinations. SM `findFirst` dedup guard confirmed effective: no privilege errors (`42501`) observed in any run.
 
 **ATOMICITY:** Both lifecycle log + morgue write occur in same transaction path (opts.db shared-tx). Terminal state check (`toState.isTerminal`) gates the morgue write; non-terminal transitions (PAYMENT_PENDING → CONFIRMED) correctly produce no morgue entry.
+
+---
+
+## OPS-ORDERS-STATUS-ENUM-001
+
+**Date:** 2026-03-03  
+**Migration:** `20260315000007_ops_orders_status_enum_001`  
+**GOVERNANCE-SYNC:** 070  
+**Scope:** Extend `public.order_status` Postgres enum — ADD CONFIRMED + FULFILLED (CANCELLED verified present, not re-added). Deferred item from GAP-ORDER-LC-001 B6b (GOVERNANCE-SYNC-063).
+
+**Apply command:**
+```
+psql --dbname=$DATABASE_URL "--variable=ON_ERROR_STOP=1" --file=server/prisma/migrations/20260315000007_ops_orders_status_enum_001/migration.sql
+```
+APPLY_EXIT:0
+
+**PREFLIGHT DO output:**
+```
+NOTICE:  PREFLIGHT PASS: order_status enum and orders.status confirmed; CANCELLED is present
+```
+
+**ALTER TYPE output:**
+```
+ALTER TYPE
+ALTER TYPE
+```
+(×2: CONFIRMED added, FULFILLED added)
+
+**VERIFIER DO output:**
+```
+NOTICE:  VERIFIER PASS: order_status includes all required lifecycle labels: PAYMENT_PENDING, PLACED, CANCELLED, CONFIRMED, FULFILLED
+```
+
+**Prisma ledger sync:**
+```
+pnpm -C server exec prisma migrate resolve --applied 20260315000007_ops_orders_status_enum_001
+```
+RESOLVE_EXIT:0 — `Migration 20260315000007_ops_orders_status_enum_001 marked as applied`
+
+**prisma db pull:** PULL_EXIT:0 — Introspected 42 models. git diff confirms only `+ CONFIRMED` + `+ FULFILLED` in `order_status` enum. Zero unrelated churn.  
+**prisma generate:** GENERATE_EXIT:0 — Generated Prisma Client (v6.1.0) (Node processes stopped first to release locked DLL)
+
+**Quality Gates:**
+- PREFLIGHT DO: CANCELLED confirmed present — PASS
+- VERIFIER DO: all 5 lifecycle labels confirmed — PASS
+- typecheck: EXIT 0
+- lint: EXIT 0 (0 errors, 108 pre-existing warnings)

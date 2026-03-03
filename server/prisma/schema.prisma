@@ -1102,6 +1102,8 @@ enum OrderStatus {
   PAYMENT_PENDING
   PLACED
   CANCELLED
+  CONFIRMED
+  FULFILLED
 
   @@map("order_status")
 }

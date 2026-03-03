@@ -6451,3 +6451,53 @@ Execute `validate-rcp1-flow.ts --only-transitions` against a live server to conf
 - [x] REMOTE-MIGRATION-APPLY-LOG.md: G-027-MORGUE-PROOF-RUN-001 section appended
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `docs(ops): validate G-027 morgue producer proof run (G-027-MORGUE-PROOF-RUN-001)`
+
+---
+
+## Wave 4 — OPS-ORDERS-STATUS-ENUM-001
+
+**TECS ID:** OPS-ORDERS-STATUS-ENUM-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 070  
+**Risk:** 🟢 LOW — DB enum extension only; no backend code changes; no RLS changes; no new tables
+
+### Objective
+
+Formally close the deferred item from GAP-ORDER-LC-001 B6b (GOVERNANCE-SYNC-063): extend `public.order_status` Postgres enum with `CONFIRMED` and `FULFILLED` for lifecycle parity with `order_lifecycle_logs.to_state`. CANCELLED already present — verified by PREFLIGHT DO block, not re-added.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/prisma/migrations/20260315000007_ops_orders_status_enum_001/migration.sql` | NEW — 3-section migration: PREFLIGHT DO block (asserts enum + orders.status column + CANCELLED present) / ALTER TYPE x2 (CONFIRMED + FULFILLED, IF NOT EXISTS) / VERIFIER DO block (asserts all 5 labels) |
+| `server/prisma/schema.prisma` | `order_status` enum: `+ CONFIRMED` + `+ FULFILLED` added (minimal diff — 2 enum values only) |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-070 prepended; OPS-ORDERS-STATUS-ENUM-001 gap entry added |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | Migrations counter 71→73; orders.status enum bottleneck item marked resolved |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-070) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | OPS-ORDERS-STATUS-ENUM-001 section appended |
+
+### Execution Evidence
+
+**psql apply:** `psql --dbname=$DATABASE_URL "--variable=ON_ERROR_STOP=1" --file=...migration.sql`  
+APPLY_EXIT:0
+
+**PREFLIGHT DO:** `NOTICE: PREFLIGHT PASS: order_status enum and orders.status confirmed; CANCELLED is present`  
+**ALTER TYPE:** `ALTER TYPE` ×2 (CONFIRMED, FULFILLED)  
+**VERIFIER DO:** `NOTICE: VERIFIER PASS: order_status includes all required lifecycle labels: PAYMENT_PENDING, PLACED, CANCELLED, CONFIRMED, FULFILLED`
+
+**prisma migrate resolve:** RESOLVE_EXIT:0 — `Migration 20260315000007_ops_orders_status_enum_001 marked as applied`  
+**prisma db pull:** PULL_EXIT:0 — git diff: only `+ CONFIRMED` + `+ FULFILLED` in `order_status` enum; zero unrelated churn  
+**prisma generate:** GENERATE_EXIT:0 — Generated Prisma Client (v6.1.0)
+
+### Quality Gates
+
+- [x] Migration pre-flight: 72/72 `Database schema is up to date!` (pre-migration)
+- [x] PREFLIGHT DO: CANCELLED verified present — PASS
+- [x] Remote apply: APPLY_EXIT:0
+- [x] VERIFIER DO: all 5 lifecycle labels — PASS
+- [x] `prisma migrate resolve --applied`: RESOLVE_EXIT:0
+- [x] `prisma db pull`: minimal diff (2 enum values only), PULL_EXIT:0
+- [x] `prisma generate`: GENERATE_EXIT:0 (Prisma Client v6.1.0)
+- [x] typecheck: EXIT 0
+- [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
+- [x] Atomic commit: `feat(db): extend order_status enum for lifecycle parity (OPS-ORDERS-STATUS-ENUM-001)`
