@@ -6659,4 +6659,4 @@ Record explicit governance sign-off authorizing remote apply of SUPER_ADMIN RLS 
 - [x] Runbook contains exact psql commands + stop conditions
 - [x] TECS 2B/2C execution clearly separated from this approval record
 - [x] Atomic commit: `docs(governance): approve superadmin RLS DB apply (OPS-RLS-SUPERADMIN-001)`
-- [ ] Commit hash: PENDING
+- [x] Commit hash: `8d436d1`
