@@ -361,3 +361,48 @@ Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as app
 |---|---|
 | typecheck | EXIT 0 |
 | lint | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+---
+
+## G-006C-P2-TENANT_BRANDING-RLS-UNIFY-001
+**Date:** 2026-03-03
+**Migration:** `20260315000002_g006c_p2_tenant_branding_rls_unify`
+**Table:** `public.tenant_branding`
+**GOVERNANCE-SYNC:** 053
+
+**Defects fixed:**
+- Guard promoted from {public} to texqtic_app, is_admin arm added
+- DELETE policy had NO tenant arm (bypass_enabled only) - rebuilt with full tenant + is_admin arms
+- All PERMISSIVE policies: require_org_context added to tenant conjunction, bypass_enabled replaced with is_admin arm
+
+**Apply command:**
+`psql --dbname=DATABASE_URL(redacted) --variable=ON_ERROR_STOP=1 --file=server/prisma/migrations/20260315000002_g006c_p2_tenant_branding_rls_unify/migration.sql`
+
+**Terminal evidence:**
+- BEGIN / DROP POLICY (x6 real + x16 NOTICE skips) / ALTER TABLE (x2) / CREATE POLICY (x5) / DO / COMMIT
+- VERIFIER PASS: tenant_branding - guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each, FORCE RLS=t, no {public} policies
+- APPLY_EXIT:0
+
+**Prisma resolve:**
+`pnpm -C server exec prisma migrate resolve --applied 20260315000002_g006c_p2_tenant_branding_rls_unify`
+- Migration 20260315000002_g006c_p2_tenant_branding_rls_unify marked as applied.
+- RESOLVE_EXIT:0
+
+**Quality gates:**
+| Gate | Result |
+|---|---|
+| typecheck | EXIT 0 |
+| lint | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+---
+
+## G-006C-P2-TENANT_BRANDING-RLS-UNIFY-001
+**Date:** 2026-03-03
+**Migration:** `20260315000002_g006c_p2_tenant_branding_rls_unify`
+**Table:** `public.tenant_branding`
+**GOVERNANCE-SYNC:** 053
+
+**Defects fixed:** Guard promoted from {public} to texqtic_app; DELETE policy had NO tenant arm (rebuild with full arms); all PERMISSIVE: require_org_context added, bypass_enabled replaced.
+**VERIFIER PASS:** guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each, FORCE RLS=t, no {public} policies
+**APPLY_EXIT:0 / RESOLVE_EXIT:0**
+**Quality gates:** typecheck EXIT 0 | lint EXIT 0 (0 errors, 105 pre-existing warnings)

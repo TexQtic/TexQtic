@@ -5597,3 +5597,59 @@ APPLY_EXIT:0
 - [x] wave-execution-log.md updated (this entry)
 - [x] REMOTE-MIGRATION-APPLY-LOG.md updated
 - [x] Atomic commit: G-006C P2: unify RLS for memberships (G-006C-P2-MEMBERSHIPS-RLS-UNIFY-001)
+
+
+---
+
+### GOVERNANCE-SYNC-053 - G-006C-P2-TENANT_BRANDING-RLS-UNIFY-001
+**Date:** 2026-03-03
+**Task:** Unify RLS policies for `tenant_branding` - add is_admin arm, promote guard to texqtic_app FOR ALL, fix broken DELETE policy
+
+#### Schema Finding
+- `tenant_branding` has a **direct `tenant_id UUID` column** - tenant isolation via `tenant_id = app.current_org_id()` (no JOIN required)
+- FORCE RLS + RLS already ON prior to migration
+- CRITICAL: DELETE policy had NO tenant arm at all (only `bypass_enabled()`) - fixed in this migration
+
+#### Before (5 policies, non-canonical)
+| Policy Name | Type | Cmd | Role | Admin Arm | Notes |
+|---|---|---|---|---|---|
+| `tenant_branding_guard_policy` | RESTRICTIVE | ALL | {public} | missing | wrong role, no is_admin |
+| `tenant_branding_select_unified` | PERMISSIVE | SELECT | texqtic_app | bypass_enabled() | missing require_org_context |
+| `tenant_branding_insert_unified` | PERMISSIVE | INSERT | texqtic_app | bypass_enabled() | missing require_org_context |
+| `tenant_branding_update_unified` | PERMISSIVE | UPDATE | texqtic_app | bypass_enabled() | missing require_org_context |
+| `tenant_branding_delete_unified` | PERMISSIVE | DELETE | texqtic_app | bypass_enabled() ONLY | NO tenant arm at all |
+
+#### After (5 policies, canonical Wave 3 Tail)
+| Policy Name | Type | Cmd | Role | Admin Arm |
+|---|---|---|---|---|
+| `tenant_branding_guard` | RESTRICTIVE | ALL | texqtic_app | is_admin=''true'' |
+| `tenant_branding_select_unified` | PERMISSIVE | SELECT | texqtic_app | is_admin=''true'' |
+| `tenant_branding_insert_unified` | PERMISSIVE | INSERT | texqtic_app | is_admin=''true'' |
+| `tenant_branding_update_unified` | PERMISSIVE | UPDATE | texqtic_app | is_admin=''true'' |
+| `tenant_branding_delete_unified` | PERMISSIVE | DELETE | texqtic_app | is_admin=''true'' |
+
+#### Apply Evidence
+- Migration: `20260315000002_g006c_p2_tenant_branding_rls_unify`
+- psql VERIFIER PASS: tenant_branding - guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each, FORCE RLS=t, no {public} policies
+- APPLY_EXIT:0
+- prisma migrate resolve --applied RESOLVE_EXIT:0
+
+#### Quality Gates
+| Gate | Result |
+|---|---|
+| typecheck | EXIT 0 |
+| lint | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+#### Completion Checklist
+- [x] Schema inspected - direct tenant_id column confirmed
+- [x] Critical defect found: DELETE had no tenant arm (bypass_enabled only) - fixed
+- [x] Migration created: 20260315000002_g006c_p2_tenant_branding_rls_unify/migration.sql
+- [x] Applied to remote Supabase - VERIFIER PASS
+- [x] Prisma ledger resolved - RESOLVE_EXIT:0
+- [x] typecheck EXIT 0
+- [x] lint EXIT 0
+- [x] gap-register.md updated (GOVERNANCE-SYNC-053)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (tenant_branding Complete)
+- [x] wave-execution-log.md updated (this entry)
+- [x] REMOTE-MIGRATION-APPLY-LOG.md updated
+- [x] Atomic commit: G-006C P2: unify RLS for tenant_branding (G-006C-P2-TENANT_BRANDING-RLS-UNIFY-001)
