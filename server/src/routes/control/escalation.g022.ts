@@ -125,6 +125,33 @@ async function withEscalationAdminContext<T>(
   );
 }
 
+/**
+ * OPS-RLS-SUPERADMIN-001-SERVICE-001: Superadmin escalation context.
+ * Sets BOTH app.is_admin='true' AND app.is_superadmin='true' (tx-local).
+ * Required for upgrade/resolve write paths once escalation_events UPDATE
+ * policy is narrowed to require is_superadmin (Migration 20260315000009).
+ */
+async function withSuperAdminEscalationContext<T>(
+  orgId: string,
+  adminId: string,
+  callback: (tx: Parameters<typeof withDbContext>[2] extends (tx: infer TX) => unknown ? TX : never) => Promise<T>,
+): Promise<T> {
+  return withDbContext(
+    prisma,
+    {
+      orgId,
+      actorId:   adminId,
+      realm:     'control',
+      requestId: randomUUID(),
+    },
+    async tx => {
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+      await tx.$executeRawUnsafe(`SELECT set_config('app.is_superadmin', 'true', true)`);
+      return callback(tx);
+    },
+  );
+}
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 const controlEscalationRoutes: FastifyPluginAsync = async fastify => {
@@ -243,7 +270,8 @@ const controlEscalationRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Step 2: Upgrade + audit in same transaction, RLS context = parent org
-      const result = await withEscalationAdminContext(parent.orgId, adminId, async tx => {
+      // OPS-RLS-SUPERADMIN-001-SERVICE-001: superadmin context required (sets is_superadmin='true')
+      const result = await withSuperAdminEscalationContext(parent.orgId, adminId, async tx => {
         const svc = new EscalationService(tx as unknown as PrismaClient);
         const upgradeResult = await svc.upgradeEscalation({
           parentEscalationId,
@@ -333,7 +361,8 @@ const controlEscalationRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'ESCALATION_NOT_FOUND', `Escalation ${escalationEventId} not found`, 404);
       }
 
-      const result = await withEscalationAdminContext(original.orgId, adminId, async tx => {
+      // OPS-RLS-SUPERADMIN-001-SERVICE-001: superadmin context required (sets is_superadmin='true')
+      const result = await withSuperAdminEscalationContext(original.orgId, adminId, async tx => {
         const svc = new EscalationService(tx as unknown as PrismaClient);
 
         if (body.resolutionStatus === 'RESOLVED') {

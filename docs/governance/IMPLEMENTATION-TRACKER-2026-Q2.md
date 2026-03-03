@@ -3,7 +3,7 @@
 **Source:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`  
 **Baseline:** GOVERNANCE-SYNC-048  
 **Date:** 2026-03-03  
-**RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-064: Phase A G-006C + GAP-ORDER-LC-001 complete; OPS-RLS-SUPERADMIN-001 discovery complete GOVERNANCE-SYNC-071)*  
+**RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-072: OPS-RLS-SUPERADMIN-001 service layer complete; DB policies pending)*  
 **Migrations:** 73 / 73 Applied · `Database schema is up to date!` *(updated GOVERNANCE-SYNC-070: migration 20260315000007 applied)*  
 **Doctrine Version:** v1.4
 
@@ -121,11 +121,13 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 |-----------|--------|
 | `app.is_superadmin` GUC plumbing | ✅ Complete (GOVERNANCE-SYNC-033) |
 | `withSuperAdminContext` exported from `database-context.ts` | ✅ Complete |
-| DB-level RLS policies consuming `app.is_superadmin` | ❌ Not implemented |
+| `startImpersonation` + `stopImpersonation` → `withSuperAdminContext` | ✅ Complete (GOVERNANCE-SYNC-072) |
+| `withSuperAdminEscalationContext` for upgrade/resolve write paths | ✅ Complete (GOVERNANCE-SYNC-072) |
+| DB-level RLS policies consuming `app.is_superadmin` | ❌ Not implemented (migrations `20260315000008` + `20260315000009` pending) |
 
-**Dependency:** G-006C consolidation complete (admin arm pattern stable).  
-**Risk:** Low — GUC plumbing is in place; only policy extension required.  
-**TECS:** `OPS-SUPERADMIN-RLS-001`
+**Dependency:** Service-layer changes complete (GOVERNANCE-SYNC-072). DB migrations require explicit sign-off per SUPERADMIN-RLS-PLAN.md Section F.  
+**Risk:** Low — GUC plumbing + service paths are in place; only policy application remains.  
+**TECS:** `OPS-RLS-SUPERADMIN-001` — IN PROGRESS (Service complete; DB apply pending)
 
 ---
 
@@ -307,7 +309,7 @@ All foundational gaps are resolved:
 
 Remaining open items before full Phase A closure:
 - OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS proof extension to domain tables (non-blocking for Wave 4).
-- ~~OPS-RLS-SUPERADMIN-001~~ 🔄 **Discovery complete** (GOVERNANCE-SYNC-071): target tables identified (`impersonation_sessions` + `escalation_events`); plan at `docs/security/SUPERADMIN-RLS-PLAN.md`; execution blocked pending user sign-off (Section F). Migrations `20260315000008` + `20260315000009` proposed.
+- ~~OPS-RLS-SUPERADMIN-001~~ 🔄 **IN PROGRESS (Service complete; DB apply pending)** (GOVERNANCE-SYNC-072): service write paths migrated to `withSuperAdminContext` (`startImpersonation`, `stopImpersonation`, `withSuperAdminEscalationContext` for escalation upgrade/resolve); DB policy migrations `20260315000008` + `20260315000009` pending explicit sign-off per `docs/security/SUPERADMIN-RLS-PLAN.md` Section F. Feature flags: KNOWN LIMITATION (postgres BYPASSRLS path; route-level guard only).
 - ~~orders.status enum extension~~ ✅ **DONE** — OPS-ORDERS-STATUS-ENUM-001 (GOVERNANCE-SYNC-070): CONFIRMED + FULFILLED added; CANCELLED verified present; migration `20260315000007` applied; PREFLIGHT PASS + VERIFIER PASS.
 
 ---

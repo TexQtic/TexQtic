@@ -18,7 +18,7 @@ import type {
   ImpersonationSessionStatus,
 } from '../types/impersonation.types.js';
 import { writeAuditLog } from '../lib/auditLog.js';
-import { withAdminContext } from '../lib/database-context.js';
+import { withAdminContext, withSuperAdminContext } from '../lib/database-context.js';
 
 /** TTL in minutes for impersonation tokens */
 const IMPERSONATION_TTL_MINUTES = 30;
@@ -53,7 +53,7 @@ export async function startImpersonation(
 ): Promise<StartImpersonationResult> {
   const { orgId, userId, reason } = req;
 
-  return withAdminContext(prisma, async tx => {
+  return withSuperAdminContext(prisma, async tx => {
     // Stop-loss: verify tenant exists and is ACTIVE
     const tenant = await tx.tenant.findUnique({
       where: { id: orgId },
@@ -148,7 +148,7 @@ export async function stopImpersonation(
   impersonationId: string,
   stopReason: string
 ): Promise<void> {
-  await withAdminContext(prisma, async tx => {
+  await withSuperAdminContext(prisma, async tx => {
     const session = await tx.impersonationSession.findUnique({
       where: { id: impersonationId },
       select: {

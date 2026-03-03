@@ -6566,3 +6566,46 @@ Documented in `docs/security/SUPERADMIN-RLS-PLAN.md`:
 - [x] `docs/security/SUPERADMIN-RLS-PLAN.md` created with table-by-table deltas (Sections A–F)
 - [x] gap-register + tracker + wave-log updated
 - [x] Atomic commit: `docs(security): superadmin RLS enforcement plan (OPS-RLS-SUPERADMIN-001)`
+
+---
+
+## Wave 4 — OPS-RLS-SUPERADMIN-001: Service Layer Migration
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-SERVICE-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 072  
+**Risk:** 🟡 LOW-MEDIUM — Service code change; no DB migrations; no RLS policy changes in this TECS
+
+### Objective
+
+Migrate SUPER_ADMIN write paths to use `withSuperAdminContext` (sets both `app.is_admin='true'` AND `app.is_superadmin='true'` tx-local) BEFORE DB policies are narrowed. This is the mandatory service-layer prerequisite for migrations `20260315000008` + `20260315000009` per SUPERADMIN-RLS-PLAN.md Section D execution order.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/src/services/impersonation.service.ts` | Import `withSuperAdminContext`; `startImpersonation()` + `stopImpersonation()` migrated from `withAdminContext` → `withSuperAdminContext`; `getImpersonationStatus()` unchanged (read path, remains `withAdminContext`) |
+| `server/src/routes/control/escalation.g022.ts` | `withSuperAdminEscalationContext` helper added (sets `is_admin='true'` + `is_superadmin='true'`); upgrade (`/:id/upgrade`) + resolve (`/:id/resolve`) handlers wired to `withSuperAdminEscalationContext`; create + list handlers unchanged (remain `withEscalationAdminContext`) |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-072 prepended |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | OPS-RLS-SUPERADMIN-001 table updated; RLS Maturity note updated; Strategic Bottleneck section updated |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-072) |
+
+### Design Notes
+
+- `withSuperAdminEscalationContext` mirrors `withEscalationAdminContext` exactly but additionally sets `app.is_superadmin='true'` (tx-local GUC). This is the minimal-diff approach — no import changes, no helper consolidation.
+- `getImpersonationStatus()` intentionally retains `withAdminContext` — SELECT policy is not being narrowed (SUPPORT/ANALYST may legitimately read session status for audit purposes per SUPERADMIN-RLS-PLAN.md Section C.1).
+- Feature flags remain a KNOWN LIMITATION: route uses postgres-superuser/bare prisma upsert (BYPASSRLS); enforcement remains route-level `requireAdminRole('SUPER_ADMIN')` only.
+- Provisioning tables (`tenants`, `memberships`) deferred to future sub-TECS. No change in this TECS.
+
+### Quality Gates
+
+- [x] typecheck: EXIT 0
+- [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
+- [x] git preflight: clean working tree before start
+- [x] Allowlist confirmed: only 5 files modified (impersonation.service.ts, escalation.g022.ts, gap-register.md, IMPLEMENTATION-TRACKER-2026-Q2.md, wave-execution-log.md)
+- [x] No migrations created or modified
+- [x] No RLS policy SQL changes
+- [x] No unrelated refactors
+- [x] Read paths unchanged (getImpersonationStatus, list/create escalation — verified)
+- [x] Atomic commit: `feat(security): superadmin contexts for impersonation+escalations (OPS-RLS-SUPERADMIN-001-SERVICE-001)`
+- [ ] Commit hash: PENDING
