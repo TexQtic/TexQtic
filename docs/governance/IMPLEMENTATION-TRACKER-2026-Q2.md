@@ -83,7 +83,7 @@ Each table requires: 1 migration · DO-block verifier PASS · psql apply + `pris
 | `catalog_items` | Yes | ✅ (`is_admin='true'` arm applied — GOVERNANCE-SYNC-051) | ✅ | ✅ PASS (2026-03-03) | ✅ Complete |
 | `memberships` | Yes | ✅ (`is_admin='true'` arm applied — GOVERNANCE-SYNC-052) | ✅ | ✅ PASS (2026-03-03) | ✅ Complete |
 | `tenant_branding` | Yes | ✅ (`is_admin='true'` arm applied — GOVERNANCE-SYNC-053) | ✅ | ✅ PASS (2026-03-03) | ✅ Complete |
-| `tenant_domains` | Yes | ❌ | ✅ | Required | ⏳ |
+| `tenant_domains` | Yes | ✅ (`is_admin='true'` arm applied — GOVERNANCE-SYNC-054) | ✅ | ✅ PASS (2026-03-03) | ✅ Complete |
 | `impersonation_sessions` | Yes | ❌ | ✅ | Required | ⏳ |
 
 **Canonical end state per table:**
@@ -254,7 +254,7 @@ Each TECS must produce:
 - [x] G-006C `catalog_items` — migration `20260315000000` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-051, 2026-03-03)
 - [x] G-006C `memberships` — migration `20260315000001` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-052, 2026-03-03)
 - [x] G-006C `tenant_branding` — migration `20260315000002` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-053, 2026-03-03)
-- [ ] G-006C `tenant_domains` — migration applied, DO-block PASS
+- [x] G-006C `tenant_domains` — migration `20260315000003` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed, DELETE tenant_id arm confirmed (GOVERNANCE-SYNC-054, 2026-03-03)
 - [ ] G-006C `impersonation_sessions` — migration applied, DO-block PASS
 - [ ] CI RLS proof extended to at least 1 Wave 3 domain table
 - [ ] OPS-RLS-SUPERADMIN-001 — DB policies consuming `app.is_superadmin` live

@@ -406,3 +406,12 @@ Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as app
 **VERIFIER PASS:** guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each, FORCE RLS=t, no {public} policies
 **APPLY_EXIT:0 / RESOLVE_EXIT:0**
 **Quality gates:** typecheck EXIT 0 | lint EXIT 0 (0 errors, 105 pre-existing warnings)
+
+---
+
+## G-006C-P2-TENANT_DOMAINS-RLS-UNIFY-001
+**Date:** 2026-03-03 | **Migration:** `20260315000003_g006c_p2_tenant_domains_rls_unify` | **Table:** `public.tenant_domains` | **GOVERNANCE-SYNC:** 054
+
+**Critical defects fixed:** Guard promoted from {public} to texqtic_app (is_admin arm added). DELETE had NO tenant arm (bypass_enabled only) — rebuilt with full tenant + is_admin arms. All PERMISSIVE: require_org_context added, bypass_enabled replaced. Enhanced verifier: DELETE tenant_id arm + {public}=0 explicitly checked.
+**VERIFIER PASS:** guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each, DELETE tenant_id arm present, FORCE RLS=t, no {public} policies
+**APPLY_EXIT:0 / RESOLVE_EXIT:0 / typecheck EXIT 0 / lint EXIT 0 (0 errors, 105 pre-existing warnings)**
