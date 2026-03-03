@@ -81,7 +81,7 @@ Each table requires: 1 migration · DO-block verifier PASS · psql apply + `pris
 | Table | Migration Needed | Admin Arm Canonicalized? | FORCE RLS | DO-Block Verifier | Status |
 |-------|-----------------|--------------------------|-----------|-------------------|--------|
 | `catalog_items` | Yes | ✅ (`is_admin='true'` arm applied — GOVERNANCE-SYNC-051) | ✅ | ✅ PASS (2026-03-03) | ✅ Complete |
-| `memberships` | Yes | ❌ | ✅ | Required | ⏳ |
+| `memberships` | Yes | ✅ (`is_admin='true'` arm applied — GOVERNANCE-SYNC-052) | ✅ | ✅ PASS (2026-03-03) | ✅ Complete |
 | `tenant_branding` | Yes | ❌ | ✅ | Required | ⏳ |
 | `tenant_domains` | Yes | ❌ | ✅ | Required | ⏳ |
 | `impersonation_sessions` | Yes | ❌ | ✅ | Required | ⏳ |
@@ -252,7 +252,7 @@ Each TECS must produce:
 - [ ] GAP-RLS-ORDERS-UPDATE-001 — `psql apply` confirmed + RCP-1 Phases 4–5 PASS
 - [ ] G-QG-001 — `pnpm run lint` exits 0
 - [x] G-006C `catalog_items` — migration `20260315000000` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-051, 2026-03-03)
-- [ ] G-006C `memberships` — migration applied, DO-block PASS, cross-tenant 0-row confirmed
+- [x] G-006C `memberships` — migration `20260315000001` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-052, 2026-03-03)
 - [ ] G-006C `tenant_branding` — migration applied, DO-block PASS
 - [ ] G-006C `tenant_domains` — migration applied, DO-block PASS
 - [ ] G-006C `impersonation_sessions` — migration applied, DO-block PASS

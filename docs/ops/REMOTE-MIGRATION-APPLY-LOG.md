@@ -334,3 +334,30 @@ Output: `Migration 20260315000000_g006c_p2_catalog_items_rls_unify marked as app
 |------|--------|
 | `pnpm -C server run typecheck` | EXIT 0 |
 | `pnpm -C server run lint` | EXIT 0 (0 errors, 105 pre-existing warnings) |
+
+---
+
+## G-006C-P2-MEMBERSHIPS-RLS-UNIFY-001
+**Date:** 2026-03-03
+**Migration:** `20260315000001_g006c_p2_memberships_rls_unify`
+**Table:** `public.memberships`
+**GOVERNANCE-SYNC:** 052
+
+**Apply command:**
+`psql --dbname=DATABASE_URL(redacted) --variable=ON_ERROR_STOP=1 --file=server/prisma/migrations/20260315000001_g006c_p2_memberships_rls_unify/migration.sql`
+
+**Terminal evidence:**
+- BEGIN / DROP POLICY (x5 real + x16 NOTICE skips) / ALTER TABLE (x2) / CREATE POLICY (x5) / DO / COMMIT
+- VERIFIER PASS: memberships - guard=1 RESTRICTIVE FOR ALL (is_admin arm present), SELECT/INSERT/UPDATE/DELETE=1 PERMISSIVE each (is_admin arm present), FORCE RLS=t, no {public} policies
+- APPLY_EXIT:0
+
+**Prisma resolve:**
+`pnpm -C server exec prisma migrate resolve --applied 20260315000001_g006c_p2_memberships_rls_unify`
+- Migration 20260315000001_g006c_p2_memberships_rls_unify marked as applied.
+- RESOLVE_EXIT:0
+
+**Quality gates:**
+| Gate | Result |
+|---|---|
+| typecheck | EXIT 0 |
+| lint | EXIT 0 (0 errors, 105 pre-existing warnings) |
