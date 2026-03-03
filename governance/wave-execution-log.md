@@ -6608,4 +6608,4 @@ Migrate SUPER_ADMIN write paths to use `withSuperAdminContext` (sets both `app.i
 - [x] No unrelated refactors
 - [x] Read paths unchanged (getImpersonationStatus, list/create escalation — verified)
 - [x] Atomic commit: `feat(security): superadmin contexts for impersonation+escalations (OPS-RLS-SUPERADMIN-001-SERVICE-001)`
-- [ ] Commit hash: PENDING
+- [x] Commit hash: `1f211d6`
