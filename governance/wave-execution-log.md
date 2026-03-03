@@ -6289,3 +6289,46 @@ Introduce `public.morgue_entries` — an append-only terminal resolution ledger 
 - [x] REMOTE-MIGRATION-APPLY-LOG.md: GOVERNANCE-SYNC-065 appended
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `feat(db): create morgue_entries table + canonical RLS (G-027)`
+
+---
+
+## Wave 4 — W4-B WL Collections Panel
+
+**TECS ID:** WL-COLLECTIONS-PANEL-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 066  
+**Risk:** 🟢 LOW — UI-only, no schema, no RLS, no backend changes
+
+### Objective
+
+Replace the `WLStubPanel` placeholder for the COLLECTIONS view in `WhiteLabelAdminShell` with a fully functional display-only panel that reads catalog items via the existing `GET /api/tenant/catalog/items` endpoint and groups them by `category`.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `components/WhiteLabelAdmin/WLCollectionsPanel.tsx` | NEW — self-contained panel: fetch via `getCatalogItems({ limit: 100 })`, group by `category` (fallback: `Uncategorised`), sorted alpha with Uncategorised last, `CollectionSection` + `ItemCard` sub-components, loading / error / empty states |
+| `App.tsx` | Import `WLCollectionsPanel`; replace `case 'COLLECTIONS': WLStubPanel` with `<WLCollectionsPanel />` |
+
+### Shell Boundary
+
+- WL_ADMIN only — import confined to `App.tsx` `renderWLAdminContent()` COLLECTIONS case
+- Not imported by EXPERIENCE shell or any other surface
+- Navigation already present in `WL_ADMIN_NAV` in `Shells.tsx` (`{ key: 'COLLECTIONS', label: 'Collections', icon: '🗂️' }`) — no navigation changes needed
+
+### Data Flow
+
+- `useCallback` fetch pattern (same as `WLOrdersPanel`) — no setState-in-effect lint violation
+- Read-only: no `tenantPost`, no `tenantPatch`, no mutations of any kind
+- Groups items by `CatalogItem.category` field (optional); items without category fall into `Uncategorised` group
+
+### Quality Gates
+
+- [x] `WLCollectionsPanel.tsx` created — panel renders collections grouped by category
+- [x] Navigation wired — `case 'COLLECTIONS'` in `renderWLAdminContent()` → `<WLCollectionsPanel />`
+- [x] **lint EXIT 0** — `pnpm run lint` → 0 errors, 0 warnings
+- [x] **typecheck EXIT 0** — `pnpm run typecheck` → 0 errors
+- [x] gap-register.md: OPS-WLADMIN-COLLECTIONS-001 → IN PROGRESS
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md Section 4: WL Collections Panel → 🔄 IN PROGRESS
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `feat(wl-admin): collections panel (Wave 4)`

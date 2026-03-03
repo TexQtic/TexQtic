@@ -249,7 +249,7 @@ Doctrine Version: v1.4
 | G-WL-ADMIN (Products panel) | **WL_ADMIN Products panel was WLStubPanel** — OWNER/ADMIN WL users could not manage inventory from the Store Admin console; Products nav item rendered a "Coming Soon" stub. **Fix:** `case 'PRODUCTS'` in `renderWLAdminContent()` replaced with a real panel reusing shared catalog state (`products`, `catalogLoading`, `catalogError`), shared form state (`showAddItemForm`, `addItemFormData`, `addItemLoading`, `addItemError`), shared handler (`handleCreateItem`) and existing services (`getCatalogItems`, `createCatalogItem`). Catalog `useEffect` extended to fire on `appState === 'WL_ADMIN'`. Labels prefixed `wl-` to avoid DOM `id` conflicts with B2B panel inputs. 403 from API surfaced via `addItemError`. Collections/Orders/Domains remain WLStubPanel. | `App.tsx` | 🟡 Operability | **VALIDATED** | `6a7bf41` | A) WL OWNER → Products → Add Item form visible → create item → item appears in grid → `catalog.item.created` audit row written ✅ · B) Catalog loads on enter (useEffect fires for WL_ADMIN) ✅ · C) Empty state: "No products yet" message shown ✅ · D) Error state: API error text displayed ✅ · typecheck EXIT 0 · 0 new lint errors |
 
 **Re-entry conditions:**
-- Collections panel: OPS-WLADMIN-COLLECTIONS-001
+- Collections panel: OPS-WLADMIN-COLLECTIONS-001 — **IN PROGRESS** (GOVERNANCE-SYNC-066: `WLCollectionsPanel.tsx` created, catalog grouping by category, lint EXIT 0, typecheck EXIT 0)
 - Orders panel: OPS-WLADMIN-ORDERS-001
 - Domains panel: OPS-WLADMIN-DOMAINS-001
 
