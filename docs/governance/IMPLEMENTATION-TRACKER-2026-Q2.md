@@ -123,11 +123,13 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 | `withSuperAdminContext` exported from `database-context.ts` | ✅ Complete |
 | `startImpersonation` + `stopImpersonation` → `withSuperAdminContext` | ✅ Complete (GOVERNANCE-SYNC-072) |
 | `withSuperAdminEscalationContext` for upgrade/resolve write paths | ✅ Complete (GOVERNANCE-SYNC-072) |
-| DB-level RLS policies consuming `app.is_superadmin` | ❌ Not implemented (migrations `20260315000008` + `20260315000009` pending) |
+| DB apply approved (sign-off + runbook recorded) | ✅ Approved (GOVERNANCE-SYNC-073) |
+| DB-level RLS policies consuming `app.is_superadmin` — 20260315000008 applied | ⏳ Pending (TECS 2B) |
+| DB-level RLS policies consuming `app.is_superadmin` — 20260315000009 applied | ⏳ Pending (TECS 2C) |
 
-**Dependency:** Service-layer changes complete (GOVERNANCE-SYNC-072). DB migrations require explicit sign-off per SUPERADMIN-RLS-PLAN.md Section F.  
-**Risk:** Low — GUC plumbing + service paths are in place; only policy application remains.  
-**TECS:** `OPS-RLS-SUPERADMIN-001` — IN PROGRESS (Service complete; DB apply pending)
+**Dependency:** DB apply authorized (GOVERNANCE-SYNC-073). Runbook at `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md`.  
+**Risk:** Low — GUC plumbing + service paths complete; policy apply is the final step.  
+**TECS:** `OPS-RLS-SUPERADMIN-001` — IN PROGRESS (Service complete; DB apply APPROVED; execution pending TECS 2B/2C)
 
 ---
 

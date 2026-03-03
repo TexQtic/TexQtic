@@ -559,3 +559,73 @@ RESOLVE_EXIT:0 — `Migration 20260315000007_ops_orders_status_enum_001 marked a
 - VERIFIER DO: all 5 lifecycle labels confirmed — PASS
 - typecheck: EXIT 0
 - lint: EXIT 0 (0 errors, 108 pre-existing warnings)
+
+
+---
+
+## OPS-RLS-SUPERADMIN-001 — Remote Apply (Approved)
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-DB-APPROVAL-001  
+**GOVERNANCE-SYNC:** 073  
+**Date approved:** 2026-03-03  
+**Date executed:** PENDING (TECS 2B + 2C)  
+**Prerequisite:** `1f211d6` — service write paths migrated to `withSuperAdminContext`  
+**Target:** Remote Supabase PostgreSQL (`aws-1-ap-northeast-1.pooler.supabase.com`)
+
+### Sign-Off
+
+Approved per SUPERADMIN-RLS-PLAN.md Section F.1 (GOVERNANCE-SYNC-073). Execute only after confirming service prerequisite commit `1f211d6` is on the deployed branch.
+
+### Exact Apply Commands
+
+```bash
+# --- 0) Pre-flight -----------------------------------------------------------
+pnpm -C server exec prisma migrate status
+echo "$DATABASE_URL" | sed 's|:.*@|:***@|'
+
+# --- 1) Apply impersonation_sessions migration (TECS 2B) ---------------------
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f server/prisma/migrations/20260315000008_ops_rls_superadmin_impersonation_sessions/migration.sql
+# Expected: APPLY_EXIT:0 + inline VERIFIER PASS notice
+
+pnpm -C server exec prisma migrate resolve \
+  --applied 20260315000008_ops_rls_superadmin_impersonation_sessions
+# Expected: RESOLVE_EXIT:0
+
+# --- 2) Apply escalation_events migration (TECS 2C) --------------------------
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f server/prisma/migrations/20260315000009_ops_rls_superadmin_escalation_events/migration.sql
+# Expected: APPLY_EXIT:0 + inline VERIFIER PASS notice
+
+pnpm -C server exec prisma migrate resolve \
+  --applied 20260315000009_ops_rls_superadmin_escalation_events
+# Expected: RESOLVE_EXIT:0
+
+# --- 3) Quality gates (after BOTH migrations applied) ------------------------
+pnpm -C server run typecheck
+pnpm -C server run lint
+```
+
+### Stop Conditions
+
+| Condition | Action |
+|-----------|--------|
+| `DATABASE_URL` host does not match `supabase.com` | **STOP** — wrong environment |
+| Verifier DO-block does not print `VERIFIER PASS` | **STOP** — policy not applied correctly |
+| Any `ERROR:` line in psql output | **STOP** — `ON_ERROR_STOP=1` will abort; do not retry without investigation |
+| Policy diff touches tables other than `impersonation_sessions` / `escalation_events` | **STOP** — scope violation |
+| Any `42501` (insufficient privilege) error post-apply | **STOP** — GUC context mismatch; investigate `withSuperAdminContext` path |
+| `prisma migrate status` shows unexpected pending migrations | **STOP** — resolve ledger before applying |
+
+### Expected Evidence (TECS 2B / 2C)
+
+After each migration, record and paste into wave-execution-log:
+- `APPLY_EXIT: 0`
+- `VERIFIER PASS` notice (exact text from psql output)
+- `RESOLVE_EXIT: 0`
+- `pnpm -C server run typecheck`: EXIT 0
+- `pnpm -C server run lint`: EXIT 0 (0 errors, N pre-existing warnings)
+
+### Rollback
+
+Policy changes are NOT DDL — rollback via DROP + recreate policies (see SUPERADMIN-RLS-PLAN.md Sections C.1 and C.2 for original predicate SQL). Also remove corresponding `_prisma_migrations` rows if rolling back after `prisma migrate resolve --applied`.

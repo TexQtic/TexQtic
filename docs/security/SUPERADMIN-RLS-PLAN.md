@@ -285,6 +285,49 @@ Before committing any of the execution sub-TECS, the following must be explicitl
 
 ---
 
+### F.1 — APPROVED — Ready to Apply
+
+**GOVERNANCE-SYNC:** 073  
+**Date:** 2026-03-03  
+**Prerequisite commit:** `1f211d6` (OPS-RLS-SUPERADMIN-001-SERVICE-001 — service write paths migrated)  
+**Status:** ✅ APPROVED — DB policy migrations authorized for remote apply
+
+#### Sign-Off Statement (verbatim)
+
+> "We approve tightening DB-level RLS such that:
+> 1. `impersonation_sessions` INSERT/UPDATE/DELETE require BOTH `app.is_admin='true'` AND `app.is_superadmin='true'`;
+>    SELECT remains unchanged for admin roles.
+> 2. `escalation_events` UPDATE requires BOTH `app.is_admin='true'` AND `app.is_superadmin='true'`;
+>    SELECT/INSERT remain unchanged.
+> Service write paths already use `withSuperAdminContext` (`1f211d6`).
+> Feature flags remain a KNOWN LIMITATION (BYPASSRLS path); no change in this wave."
+
+#### Approved Migrations
+
+| Migration Folder | Table | Operation Narrowed |
+|-----------------|-------|--------------------|
+| `20260315000008_ops_rls_superadmin_impersonation_sessions` | `impersonation_sessions` | INSERT / UPDATE / DELETE require `is_superadmin='true'` |
+| `20260315000009_ops_rls_superadmin_escalation_events` | `escalation_events` | UPDATE requires `is_superadmin='true'` |
+
+#### Prerequisites Satisfied
+
+| Prerequisite | Status |
+|-------------|--------|
+| `withSuperAdminContext` exported from `database-context.ts` | ✅ (GOVERNANCE-SYNC-033) |
+| `startImpersonation()` + `stopImpersonation()` → `withSuperAdminContext` | ✅ (commit `1f211d6`) |
+| `withSuperAdminEscalationContext` wired to upgrade + resolve handlers | ✅ (commit `1f211d6`) |
+| Service-layer typecheck EXIT 0 + lint EXIT 0 confirmed | ✅ (commit `1f211d6`) |
+
+#### Execution Authorized
+
+Apply via psql per runbook in `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` section
+`OPS-RLS-SUPERADMIN-001 — Remote Apply (Approved)`.
+
+TECS 2B executes `20260315000008` + records APPLY_EXIT + VERIFIER PASS evidence.  
+TECS 2C executes `20260315000009` + records APPLY_EXIT + VERIFIER PASS evidence + closes OPS-RLS-SUPERADMIN-001.
+
+---
+
 ## Appendix — Evidence Basis
 
 | Finding | Source |

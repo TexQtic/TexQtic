@@ -6609,3 +6609,54 @@ Migrate SUPER_ADMIN write paths to use `withSuperAdminContext` (sets both `app.i
 - [x] Read paths unchanged (getImpersonationStatus, list/create escalation — verified)
 - [x] Atomic commit: `feat(security): superadmin contexts for impersonation+escalations (OPS-RLS-SUPERADMIN-001-SERVICE-001)`
 - [x] Commit hash: `1f211d6`
+
+---
+
+## Wave 4 — OPS-RLS-SUPERADMIN-001: DB Apply Sign-Off (Governance)
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-DB-APPROVAL-001  
+**Date:** 2026-03-03  
+**GOVERNANCE-SYNC:** 073  
+**Risk:** 🟢 LOW — Governance documentation only; no migrations applied; no code changes
+
+### Objective
+
+Record explicit governance sign-off authorizing remote apply of SUPER_ADMIN RLS policy migrations (`20260315000008` + `20260315000009`) per SUPERADMIN-RLS-PLAN.md Section F. Service-layer prerequisite (commit `1f211d6`) is confirmed complete.
+
+### Sign-Off Statement (verbatim)
+
+> "We approve tightening DB-level RLS such that:
+> 1. `impersonation_sessions` INSERT/UPDATE/DELETE require BOTH `app.is_admin='true'` AND `app.is_superadmin='true'`;
+>    SELECT remains unchanged for admin roles.
+> 2. `escalation_events` UPDATE requires BOTH `app.is_admin='true'` AND `app.is_superadmin='true'`;
+>    SELECT/INSERT remain unchanged.
+> Service write paths already use `withSuperAdminContext` (`1f211d6`).
+> Feature flags remain a KNOWN LIMITATION (BYPASSRLS path); no change in this wave."
+
+### Approved Migrations
+
+| Migration | Table | Narrowing |
+|-----------|-------|----------|
+| `20260315000008_ops_rls_superadmin_impersonation_sessions` | `impersonation_sessions` | INSERT/UPDATE/DELETE require `is_superadmin='true'` |
+| `20260315000009_ops_rls_superadmin_escalation_events` | `escalation_events` | UPDATE requires `is_superadmin='true'` |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `docs/security/SUPERADMIN-RLS-PLAN.md` | Section F.1 added — sign-off statement + approved migrations table + prerequisites table |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-073 prepended |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | OPS-RLS-SUPERADMIN-001 table: 2 new rows (DB apply approved, 2 execution rows pending) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | Runbook section appended: exact psql commands + stop conditions |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-073) |
+
+### Quality Gates
+
+- [x] No migrations created or modified
+- [x] No server/src code modified
+- [x] Allowlist confirmed: only 5 governance docs modified
+- [x] Sign-off statement recorded verbatim per OPS-RLS-SUPERADMIN-001-DB-APPROVAL-001
+- [x] Runbook contains exact psql commands + stop conditions
+- [x] TECS 2B/2C execution clearly separated from this approval record
+- [x] Atomic commit: `docs(governance): approve superadmin RLS DB apply (OPS-RLS-SUPERADMIN-001)`
+- [ ] Commit hash: PENDING
