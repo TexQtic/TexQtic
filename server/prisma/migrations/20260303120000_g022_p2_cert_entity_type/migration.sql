@@ -24,91 +24,74 @@
 --   ALTER TABLE … ADD CONSTRAINT … CHECK (…)
 --   DO $$ … $$
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 -- ─────────────────────────────────────────────────────────────────────────────
 -- §0  PRE-FLIGHT
 -- ─────────────────────────────────────────────────────────────────────────────
-DO $$
-BEGIN
-  -- Verify escalation_events table exists (G-022 must be applied)
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public'
-      AND table_name   = 'escalation_events'
-  ) THEN
-    RAISE EXCEPTION '[G-022-P2 FAIL] public.escalation_events does not exist. Apply 20260303000000_g022_escalation_core first.';
-  END IF;
-
-  -- Verify CERTIFICATION is not already in the constraint (idempotency guard)
-  IF EXISTS (
-    SELECT 1 FROM information_schema.check_constraints
-    WHERE constraint_schema = 'public'
-      AND constraint_name   = 'escalation_events_entity_type_check'
-      AND check_clause LIKE '%CERTIFICATION%'
-  ) THEN
-    RAISE NOTICE '[G-022-P2] CERTIFICATION already present in entity_type constraint -- migration may be a replay. Skipping.';
-    -- Do NOT raise exception: allow idempotent replay
-  END IF;
-
-  RAISE NOTICE '[G-022-P2] Pre-flight OK: escalation_events present, CERTIFICATION absent from constraint. Proceeding.';
+DO $$ BEGIN -- Verify escalation_events table exists (G-022 must be applied)
+IF NOT EXISTS (
+  SELECT 1
+  FROM information_schema.tables
+  WHERE table_schema = 'public'
+    AND table_name = 'escalation_events'
+) THEN RAISE EXCEPTION '[G-022-P2 FAIL] public.escalation_events does not exist. Apply 20260303000000_g022_escalation_core first.';
+END IF;
+-- Verify CERTIFICATION is not already in the constraint (idempotency guard)
+IF EXISTS (
+  SELECT 1
+  FROM information_schema.check_constraints
+  WHERE constraint_schema = 'public'
+    AND constraint_name = 'escalation_events_entity_type_check'
+    AND check_clause LIKE '%CERTIFICATION%'
+) THEN RAISE NOTICE '[G-022-P2] CERTIFICATION already present in entity_type constraint -- migration may be a replay. Skipping.';
+-- Do NOT raise exception: allow idempotent replay
+END IF;
+RAISE NOTICE '[G-022-P2] Pre-flight OK: escalation_events present, CERTIFICATION absent from constraint. Proceeding.';
 END;
 $$;
-
 -- ─────────────────────────────────────────────────────────────────────────────
 -- §1  ALTER TABLE: extend entity_type CHECK to include CERTIFICATION
 -- ─────────────────────────────────────────────────────────────────────────────
-
 -- Drop old auto-named CHECK constraint (present since 20260303000000_g022_escalation_core)
-ALTER TABLE public.escalation_events
-  DROP CONSTRAINT IF EXISTS escalation_events_entity_type_check;
-
+ALTER TABLE public.escalation_events DROP CONSTRAINT IF EXISTS escalation_events_entity_type_check;
 -- Re-add with CERTIFICATION included.
 -- Values mirror EscalationEntityType union in server/src/services/escalation.types.ts.
 ALTER TABLE public.escalation_events
-  ADD CONSTRAINT escalation_events_entity_type_check
-    CHECK (
-      entity_type IN (
-        'TRADE',
-        'ESCROW',
-        'APPROVAL',
-        'LIFECYCLE_LOG',
-        'ORG',
-        'GLOBAL',
-        'CERTIFICATION'
-      )
-    );
-
+ADD CONSTRAINT escalation_events_entity_type_check CHECK (
+    entity_type IN (
+      'TRADE',
+      'ESCROW',
+      'APPROVAL',
+      'LIFECYCLE_LOG',
+      'ORG',
+      'GLOBAL',
+      'CERTIFICATION'
+    )
+  );
 -- ─────────────────────────────────────────────────────────────────────────────
 -- §2  VERIFIER DO-BLOCK (asserts schema correctness at migration time)
 -- ─────────────────────────────────────────────────────────────────────────────
 DO $$
-DECLARE
-  v_constraint_present  BOOLEAN;
-  v_cert_in_constraint  BOOLEAN;
-BEGIN
-  -- Verify constraint exists in pg_catalog
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.check_constraints
+DECLARE v_constraint_present BOOLEAN;
+v_cert_in_constraint BOOLEAN;
+BEGIN -- Verify constraint exists in pg_catalog
+SELECT EXISTS (
+    SELECT 1
+    FROM information_schema.check_constraints
     WHERE constraint_schema = 'public'
-      AND constraint_name   = 'escalation_events_entity_type_check'
+      AND constraint_name = 'escalation_events_entity_type_check'
   ) INTO v_constraint_present;
-
-  IF NOT v_constraint_present THEN
-    RAISE EXCEPTION '[G-022-P2 VERIFIER FAIL] escalation_events_entity_type_check constraint not found after ALTER.';
-  END IF;
-
-  -- Verify CERTIFICATION is in the constraint expression
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.check_constraints
+IF NOT v_constraint_present THEN RAISE EXCEPTION '[G-022-P2 VERIFIER FAIL] escalation_events_entity_type_check constraint not found after ALTER.';
+END IF;
+-- Verify CERTIFICATION is in the constraint expression
+SELECT EXISTS (
+    SELECT 1
+    FROM information_schema.check_constraints
     WHERE constraint_schema = 'public'
-      AND constraint_name   = 'escalation_events_entity_type_check'
+      AND constraint_name = 'escalation_events_entity_type_check'
       AND check_clause LIKE '%CERTIFICATION%'
   ) INTO v_cert_in_constraint;
-
-  IF NOT v_cert_in_constraint THEN
-    RAISE EXCEPTION '[G-022-P2 VERIFIER FAIL] CERTIFICATION not present in escalation_events_entity_type_check after ALTER.';
-  END IF;
-
-  RAISE NOTICE '[G-022-P2 VERIFIER OK] escalation_events_entity_type_check present and includes CERTIFICATION.';
+IF NOT v_cert_in_constraint THEN RAISE EXCEPTION '[G-022-P2 VERIFIER FAIL] CERTIFICATION not present in escalation_events_entity_type_check after ALTER.';
+END IF;
+RAISE NOTICE '[G-022-P2 VERIFIER OK] escalation_events_entity_type_check present and includes CERTIFICATION.';
 END;
 $$;

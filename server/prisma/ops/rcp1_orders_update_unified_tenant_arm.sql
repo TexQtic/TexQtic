@@ -38,55 +38,49 @@
 --  may UPDATE public.orders rows for their own tenant under RLS.
 --  App-layer role gates (OWNER/ADMIN check in PATCH handler) remain the primary
 --  authorization boundary. B1 / D-5 posture is preserved."
-
 BEGIN;
-
 -- Drop and recreate orders_update_unified only.
 -- No other policies on this table are touched.
 DROP POLICY IF EXISTS orders_update_unified ON public.orders;
-
-CREATE POLICY orders_update_unified ON public.orders
-  AS PERMISSIVE FOR UPDATE TO texqtic_app
-  USING (
-    (app.require_org_context() AND tenant_id = app.current_org_id())
-    OR (current_setting('app.is_admin'::text, true) = 'true'::text)
-  )
-  WITH CHECK (
-    (app.require_org_context() AND tenant_id = app.current_org_id())
-    OR (current_setting('app.is_admin'::text, true) = 'true'::text)
+CREATE POLICY orders_update_unified ON public.orders AS PERMISSIVE FOR
+UPDATE TO texqtic_app USING (
+    (
+      app.require_org_context()
+      AND tenant_id = app.current_org_id()
+    )
+    OR (
+      current_setting('app.is_admin'::text, true) = 'true'::text
+    )
+  ) WITH CHECK (
+    (
+      app.require_org_context()
+      AND tenant_id = app.current_org_id()
+    )
+    OR (
+      current_setting('app.is_admin'::text, true) = 'true'::text
+    )
   );
-
 -- VERIFY: confirm policy exists with the expected arms
 DO $$
-DECLARE
-  v_qual       text;
-  v_with_check text;
+DECLARE v_qual text;
+v_with_check text;
 BEGIN
-  SELECT qual, with_check
-    INTO v_qual, v_with_check
-    FROM pg_policies
-   WHERE schemaname = 'public'
-     AND tablename  = 'orders'
-     AND policyname = 'orders_update_unified';
-
-  IF v_qual IS NULL THEN
-    RAISE EXCEPTION 'VERIFY FAIL: orders_update_unified not found in pg_policies';
-  END IF;
-
-  IF v_qual NOT LIKE '%require_org_context%' THEN
-    RAISE EXCEPTION 'VERIFY FAIL: tenant arm (require_org_context) missing from USING';
-  END IF;
-
-  IF v_with_check NOT LIKE '%require_org_context%' THEN
-    RAISE EXCEPTION 'VERIFY FAIL: tenant arm (require_org_context) missing from WITH CHECK';
-  END IF;
-
-  IF v_qual NOT LIKE '%is_admin%' THEN
-    RAISE EXCEPTION 'VERIFY FAIL: admin arm (is_admin) missing from USING';
-  END IF;
-
-  RAISE NOTICE 'VERIFY PASS: orders_update_unified has tenant + admin arms in USING and WITH CHECK';
+SELECT qual,
+  with_check INTO v_qual,
+  v_with_check
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename = 'orders'
+  AND policyname = 'orders_update_unified';
+IF v_qual IS NULL THEN RAISE EXCEPTION 'VERIFY FAIL: orders_update_unified not found in pg_policies';
+END IF;
+IF v_qual NOT LIKE '%require_org_context%' THEN RAISE EXCEPTION 'VERIFY FAIL: tenant arm (require_org_context) missing from USING';
+END IF;
+IF v_with_check NOT LIKE '%require_org_context%' THEN RAISE EXCEPTION 'VERIFY FAIL: tenant arm (require_org_context) missing from WITH CHECK';
+END IF;
+IF v_qual NOT LIKE '%is_admin%' THEN RAISE EXCEPTION 'VERIFY FAIL: admin arm (is_admin) missing from USING';
+END IF;
+RAISE NOTICE 'VERIFY PASS: orders_update_unified has tenant + admin arms in USING and WITH CHECK';
 END;
 $$;
-
 COMMIT;
