@@ -6094,3 +6094,35 @@ Note: UPDATE + DELETE intentionally NOT granted (append-only table; RLS UPDATE/D
 - [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (STOP CONDITION → UNBLOCKED; B6a row ✅)
 - [x] wave-execution-log.md updated (this entry)
 - [x] Atomic commit: `feat(api): expose order lifecycle state/logs in orders GET (GAP-ORDER-LC-001)`
+---
+
+### GOVERNANCE-SYNC-063 - GAP-ORDER-LC-001-UX-B6B-001
+
+**Date:** 2026-03-03  
+**TECS ID:** GAP-ORDER-LC-001-UX-B6B-001  
+**Title:** Remove audit-log derivation from WLOrdersPanel + EXPOrdersPanel; replace with canonical lifecycle-log approach (B6b)  
+**Risk:** 🟢 LOW — frontend-only; no backend/schema/RLS changes; API shape already proven (B6a)  
+**Allowlist (Modify):** `components/WhiteLabelAdmin/WLOrdersPanel.tsx`, `components/Tenant/EXPOrdersPanel.tsx`, `governance/gap-register.md`, `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md`, `governance/wave-execution-log.md`
+
+**Scope:**
+
+`WLOrdersPanel.tsx` + `EXPOrdersPanel.tsx` (independent, shell-separated implementations):
+
+- **File header:** removed audit-log derivation documentation; replaced with lifecycle-log fetch docs; removed all `TODO(GAP-ORDER-LC-001)` comments
+- **`Order` interface:** added `lifecycleState: string | null` + `lifecycleLogs: LifecycleLogEntry[]` fields; `LifecycleLogEntry` interface added (`fromState`, `toState`, `realm`, `createdAt`)
+- **Removed:** `BackendAuditEntry` interface, `AuditResponse` type, `auditLogs` state + `setAuditLogs`, `deriveStatus()` function
+- **`fetchData`:** replaced `Promise.all([orders, audit-logs])` with single `tenantGet<OrdersResponse>('/api/tenant/orders')`; audit-log fetch eliminated
+- **`canonicalStatus(order)`:** new deterministic function — CANCELLED (DB enum) → FULFILLED/CONFIRMED/PAYMENT_PENDING (`order.lifecycleState`) → PLACED (fallback)
+- **`LifecycleHistory` component:** renders `order.lifecycleLogs` as newest-first `from → to · date` micro-audit strip inline below `StatusBadge` in the Status table column; empty list = null (renders nothing)
+- **Table rows:** `deriveStatus(order, auditLogs)` → `canonicalStatus(order)`; status `<td>` gains `<LifecycleHistory logs={order.lifecycleLogs} />`
+
+**Shell separation:** WLOrdersPanel (WL_ADMIN) and EXPOrdersPanel (EXPERIENCE) modified independently. No cross-shell imports. No shared state. Shell boundary constraint D-5 preserved.
+
+**Quality gates:**
+- [x] TYPECHECK_EXIT:0
+- [x] LINT_EXIT:0 (0 errors; 0 warnings in the two changed files)
+- [x] `git diff --name-only` → `components/WhiteLabelAdmin/WLOrdersPanel.tsx` + `components/Tenant/EXPOrdersPanel.tsx` + governance only
+- [x] gap-register.md updated (GOVERNANCE-SYNC-063 header + GAP-ORDER-LC-001 → ✅ CLOSED)
+- [x] IMPLEMENTATION-TRACKER-2026-Q2.md updated (B6b row ✅; lifecycle badge row ✅)
+- [x] wave-execution-log.md updated (this entry)
+- [x] Atomic commit: `feat(ui): order lifecycle badge + history (GAP-ORDER-LC-001)`

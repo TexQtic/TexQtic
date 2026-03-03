@@ -5,20 +5,22 @@
  * Equivalent capability to WLOrdersPanel (TECS 2 / GAP-WL-ORDERS-001).
  * Do NOT merge or cross-import between shells — intentional separation (B1/D-5).
  *
- * Derived status semantics (canonical RCP-1 algorithm — MUST NOT be reinterpreted):
- *   The DB OrderStatus enum only has PAYMENT_PENDING | PLACED | CANCELLED.
- *   Derivation order (semantic source of truth = audit_logs):
+ * Status semantics (GAP-ORDER-LC-001 canonical):
+ *   `order.lifecycleState` from `order_lifecycle_logs` is the semantic source of truth.
+ *   `order.status` (DB enum) remains PAYMENT_PENDING | PLACED | CANCELLED.
+ *   Derivation order via canonicalStatus():
  *     1) CANCELLED  — order.status === 'CANCELLED'
- *     2) FULFILLED  — audit contains 'order.lifecycle.FULFILLED' for orderId
- *     3) CONFIRMED  — audit contains 'order.lifecycle.CONFIRMED' for orderId
- *     4) PAYMENT_PENDING — order.status === 'PAYMENT_PENDING'
- *     5) PLACED     — order.status === 'PLACED' (no lifecycle audit yet)
- *   TODO(GAP-ORDER-LC-001): Replace derivation with direct CONFIRMED/FULFILLED enum
- *   values once the schema wave adds those to OrderStatus.
+ *     2) FULFILLED  — order.lifecycleState === 'FULFILLED'
+ *     3) CONFIRMED  — order.lifecycleState === 'CONFIRMED'
+ *     4) PAYMENT_PENDING — lifecycleState === 'PAYMENT_PENDING' or order.status === 'PAYMENT_PENDING'
+ *     5) PLACED     — fallback
  *
  * Role gate: EXPERIENCE users may manage orders through this panel.
  *   The server-side PATCH /api/tenant/orders/:id/status enforces OWNER/ADMIN role (B1/D-5).
  *   Client-side we show actions to all users and rely on the server gate.
+ *
+ * Data fetch: single GET /api/tenant/orders — orders enriched with lifecycleState +
+ *   lifecycleLogs (newest-first, up to 5) by the B6a backend change.
  *
  * Non-goals: no new backend routes, no schema/RLS changes, no G-020 SM references,
  *   no shell merge with WL_ADMIN. Uses exactly the TECS 1 endpoint.
@@ -27,7 +29,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { tenantGet, tenantPatch } from '../../services/tenantApiClient';
 
-// ─── Local types (tenant API shapes — NOT the control-plane AuditLogEntry in types.ts) ──
+// ─── Local types (tenant API shapes) ────────────────────────────────────────────────────
 
 interface OrderItem {
   id: string;
@@ -37,23 +39,25 @@ interface OrderItem {
   lineTotal: number;
 }
 
+interface LifecycleLogEntry {
+  fromState: string | null;
+  toState: string;
+  realm: string;
+  createdAt: string;
+}
+
 interface Order {
   id: string;
   status: 'PAYMENT_PENDING' | 'PLACED' | 'CANCELLED';
   grandTotal?: number | null;
   createdAt: string;
   items?: OrderItem[];
-}
-
-interface BackendAuditEntry {
-  id: string;
-  action: string;
-  entityId?: string | null;
-  createdAt: string;
+  // B6a: enriched by GET /api/tenant/orders (GAP-ORDER-LC-001)
+  lifecycleState: string | null;
+  lifecycleLogs: LifecycleLogEntry[];
 }
 
 type OrdersResponse = { orders: Order[]; count: number };
-type AuditResponse  = { logs: BackendAuditEntry[]; count: number };
 
 // Semantic status — superset of DB enum; displayed in UI
 type DerivedStatus   = 'PAYMENT_PENDING' | 'CONFIRMED' | 'PLACED' | 'FULFILLED' | 'CANCELLED';
@@ -69,16 +73,15 @@ interface Props {
   onBack: () => void;
 }
 
-// ─── Canonical RCP-1 derived-status algorithm ────────────────────────────────
-// TODO(GAP-ORDER-LC-001): remove this derivation once CONFIRMED/FULFILLED are
-// first-class OrderStatus enum values; replace with direct order.status read.
+// ─── Canonical status (GAP-ORDER-LC-001) ────────────────────────────────────
+// Uses order_lifecycle_logs via enriched API — no audit-log fetch required.
 
-function deriveStatus(order: Order, auditLogs: BackendAuditEntry[]): DerivedStatus {
+function canonicalStatus(order: Order): DerivedStatus {
   if (order.status === 'CANCELLED') return 'CANCELLED';
-  const orderAudits = auditLogs.filter(l => l.entityId === order.id);
-  if (orderAudits.some(l => l.action === 'order.lifecycle.FULFILLED')) return 'FULFILLED';
-  if (orderAudits.some(l => l.action === 'order.lifecycle.CONFIRMED')) return 'CONFIRMED';
-  if (order.status === 'PAYMENT_PENDING') return 'PAYMENT_PENDING';
+  const ls = order.lifecycleState;
+  if (ls === 'FULFILLED') return 'FULFILLED';
+  if (ls === 'CONFIRMED') return 'CONFIRMED';
+  if (ls === 'PAYMENT_PENDING' || order.status === 'PAYMENT_PENDING') return 'PAYMENT_PENDING';
   return 'PLACED';
 }
 
@@ -107,6 +110,25 @@ function StatusBadge({ status }: { status: DerivedStatus }) {
     >
       {STATUS_LABELS[status]}
     </span>
+  );
+}
+
+// ─── Lifecycle history (newest-first, up to 5 entries from API) ──────────────
+
+function LifecycleHistory({ logs }: { logs: LifecycleLogEntry[] }) {
+  if (logs.length === 0) return null;
+  return (
+    <div className="mt-1.5 space-y-0.5">
+      {logs.map((l, i) => (
+        <div key={i} className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
+          <span>{l.fromState ?? '—'}</span>
+          <span className="text-slate-300">→</span>
+          <span className="font-semibold text-slate-500">{l.toState}</span>
+          <span className="text-slate-300">·</span>
+          <span>{new Date(l.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -190,7 +212,6 @@ function ConfirmDialogModal({
 
 export function EXPOrdersPanel({ onBack }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [auditLogs, setAuditLogs] = useState<BackendAuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
@@ -202,19 +223,14 @@ export function EXPOrdersPanel({ onBack }: Props) {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Fetch orders + order lifecycle audit entries in parallel (both tenant-realm)
-  // EXPERIENCE must fetch audit-logs because FULFILLED/CONFIRMED are audit-only
-  // (see TODO(GAP-ORDER-LC-001) — no new backend routes per RCP-1 ceiling).
+  // Fetch orders — lifecycle state + logs are embedded in the response (B6a)
+  // EXPERIENCE must not fetch audit-logs; canonical state comes from lifecycleState.
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [ordersRes, auditRes] = await Promise.all([
-        tenantGet<OrdersResponse>('/api/tenant/orders'),
-        tenantGet<AuditResponse>('/api/tenant/audit-logs'),
-      ]);
+      const ordersRes = await tenantGet<OrdersResponse>('/api/tenant/orders');
       setOrders(ordersRes.orders);
-      setAuditLogs(auditRes.logs.filter(l => l.action.startsWith('order.lifecycle.')));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
@@ -310,7 +326,7 @@ export function EXPOrdersPanel({ onBack }: Props) {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {orders.map(order => {
-                const derived = deriveStatus(order, auditLogs);
+                const derived = canonicalStatus(order);
                 const actions = getActions(derived);
                 const isActing = actionLoading[order.id] ?? false;
 
@@ -331,6 +347,7 @@ export function EXPOrdersPanel({ onBack }: Props) {
                     </td>
                     <td className="px-5 py-3.5">
                       <StatusBadge status={derived} />
+                      <LifecycleHistory logs={order.lifecycleLogs} />
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       {(() => {

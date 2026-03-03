@@ -3,28 +3,23 @@
  *
  * Shell constraint: WL_ADMIN only. This component must never be imported by EXPERIENCE shell.
  *
- * Derived status semantics (RCP-1 canonical algorithm):
- *   audit_logs is the semantic source of truth for CONFIRMED / FULFILLED because
- *   the DB OrderStatus enum only has PAYMENT_PENDING | PLACED | CANCELLED.
- *   Derivation order:
+ * Status semantics (GAP-ORDER-LC-001 canonical):
+ *   `order.lifecycleState` from `order_lifecycle_logs` is the semantic source of truth.
+ *   `order.status` (DB enum) remains PAYMENT_PENDING | PLACED | CANCELLED.
+ *   Derivation order via canonicalStatus():
  *     1) CANCELLED  — order.status === 'CANCELLED'
- *     2) FULFILLED  — audit contains 'order.lifecycle.FULFILLED'
- *     3) CONFIRMED  — audit contains 'order.lifecycle.CONFIRMED'
- *     4) PAYMENT_PENDING — order.status === 'PAYMENT_PENDING'
- *     5) PLACED     — order.status === 'PLACED' (no CONFIRMED/FULFILLED audit yet)
- *   TODO(GAP-ORDER-LC-001): Replace derivation with direct CONFIRMED/FULFILLED enum
- *   values once the schema wave adds those to OrderStatus.
+ *     2) FULFILLED  — order.lifecycleState === 'FULFILLED'
+ *     3) CONFIRMED  — order.lifecycleState === 'CONFIRMED'
+ *     4) PAYMENT_PENDING — lifecycleState === 'PAYMENT_PENDING' or order.status === 'PAYMENT_PENDING'
+ *     5) PLACED     — fallback
  *
  * Role gate: All users in WL_ADMIN appState are already OWNER/ADMIN — the routing gate
  *   in App.tsx handleAuthSuccess enforces WL_ADMIN_ROLES (OWNER | ADMIN) before
  *   setting appState = 'WL_ADMIN'. No separate role state variable is needed here.
  *   Server-side PATCH /api/tenant/orders/:id/status also enforces the role gate (B1/D-5).
  *
- * Data fetch strategy: two parallel tenant-realm requests — orders + audit-logs.
- *   The order lifecycle audit entries (action prefix 'order.lifecycle.') are filtered
- *   client-side and matched to orders by entityId.
- *   TODO(future): if audit-log volume grows, the backend should expose a
- *   filtered /api/tenant/orders/:id/audit endpoint to avoid full-log fetch.
+ * Data fetch: single GET /api/tenant/orders — orders enriched with lifecycleState +
+ *   lifecycleLogs (newest-first, up to 5) by the B6a backend change.
  *
  * Non-goals: no backend changes, no schema/RLS changes, no G-020 SM references,
  *   no shell merge with EXPERIENCE.
@@ -43,23 +38,25 @@ interface OrderItem {
   lineTotal: number;
 }
 
+interface LifecycleLogEntry {
+  fromState: string | null;
+  toState: string;
+  realm: string;
+  createdAt: string;
+}
+
 interface Order {
   id: string;
   status: 'PAYMENT_PENDING' | 'PLACED' | 'CANCELLED';
   grandTotal?: number | null;
   createdAt: string;
   items?: OrderItem[];
-}
-
-interface BackendAuditEntry {
-  id: string;
-  action: string;
-  entityId?: string | null;
-  createdAt: string;
+  // B6a: enriched by GET /api/tenant/orders (GAP-ORDER-LC-001)
+  lifecycleState: string | null;
+  lifecycleLogs: LifecycleLogEntry[];
 }
 
 type OrdersResponse = { orders: Order[]; count: number };
-type AuditResponse = { logs: BackendAuditEntry[]; count: number };
 
 // Semantic status — what we show in the UI (superset of DB enum)
 type DerivedStatus = 'PAYMENT_PENDING' | 'CONFIRMED' | 'PLACED' | 'FULFILLED' | 'CANCELLED';
@@ -70,19 +67,15 @@ interface ConfirmDialog {
   target: TransitionTarget;
 }
 
-// ─── Derived status algorithm (canonical RCP-1 rule) ────────────────────────
+// ─── Canonical status (GAP-ORDER-LC-001) ────────────────────────────────────
+// Uses order_lifecycle_logs via enriched API — no audit-log fetch required.
 
-function deriveStatus(order: Order, auditLogs: BackendAuditEntry[]): DerivedStatus {
-  // Rule 1: CANCELLED is a terminal DB state — always wins
+function canonicalStatus(order: Order): DerivedStatus {
   if (order.status === 'CANCELLED') return 'CANCELLED';
-
-  // Rules 2–3: semantic states live in audit_logs (schema mismatch — see file header)
-  const orderAudits = auditLogs.filter(l => l.entityId === order.id);
-  if (orderAudits.some(l => l.action === 'order.lifecycle.FULFILLED')) return 'FULFILLED';
-  if (orderAudits.some(l => l.action === 'order.lifecycle.CONFIRMED')) return 'CONFIRMED';
-
-  // Rules 4–5: fallback to raw DB status
-  if (order.status === 'PAYMENT_PENDING') return 'PAYMENT_PENDING';
+  const ls = order.lifecycleState;
+  if (ls === 'FULFILLED') return 'FULFILLED';
+  if (ls === 'CONFIRMED') return 'CONFIRMED';
+  if (ls === 'PAYMENT_PENDING' || order.status === 'PAYMENT_PENDING') return 'PAYMENT_PENDING';
   return 'PLACED';
 }
 
@@ -109,6 +102,25 @@ function StatusBadge({ status }: { status: DerivedStatus }) {
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLES[status]}`}>
       {STATUS_LABELS[status]}
     </span>
+  );
+}
+
+// ─── Lifecycle history (newest-first, up to 5 entries from API) ──────────────
+
+function LifecycleHistory({ logs }: { logs: LifecycleLogEntry[] }) {
+  if (logs.length === 0) return null;
+  return (
+    <div className="mt-1.5 space-y-0.5">
+      {logs.map((l, i) => (
+        <div key={i} className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
+          <span>{l.fromState ?? '—'}</span>
+          <span className="text-slate-300">→</span>
+          <span className="font-semibold text-slate-500">{l.toState}</span>
+          <span className="text-slate-300">·</span>
+          <span>{new Date(l.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -192,7 +204,6 @@ function ConfirmDialogModal({
 
 export function WLOrdersPanel() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [auditLogs, setAuditLogs] = useState<BackendAuditEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
@@ -205,18 +216,13 @@ export function WLOrdersPanel() {
     return () => clearTimeout(t);
   };
 
-  // Fetch orders + order lifecycle audit entries in parallel (both use tenant JWT)
+  // Fetch orders — lifecycle state + logs are embedded in the response (B6a)
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [ordersRes, auditRes] = await Promise.all([
-        tenantGet<OrdersResponse>('/api/tenant/orders'),
-        tenantGet<AuditResponse>('/api/tenant/audit-logs'),
-      ]);
+      const ordersRes = await tenantGet<OrdersResponse>('/api/tenant/orders');
       setOrders(ordersRes.orders);
-      // Filter to order lifecycle events only to minimise client-side work
-      setAuditLogs(auditRes.logs.filter(l => l.action.startsWith('order.lifecycle.')));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
@@ -307,7 +313,7 @@ export function WLOrdersPanel() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {orders.map(order => {
-                const derived = deriveStatus(order, auditLogs);
+                const derived = canonicalStatus(order);
                 const actions = getActions(derived);
                 const isActing = actionLoading[order.id] ?? false;
 
@@ -328,6 +334,7 @@ export function WLOrdersPanel() {
                     </td>
                     <td className="px-5 py-3.5">
                       <StatusBadge status={derived} />
+                      <LifecycleHistory logs={order.lifecycleLogs} />
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       {(() => {
