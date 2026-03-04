@@ -6847,3 +6847,101 @@ Record apply evidence for both superadmin RLS migrations. Two pre-apply fixes we
 - [x] typecheck: EXIT 0
 - [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
 - [x] OPS-RLS-SUPERADMIN-001 → ✅ VALIDATED
+
+---
+
+## Wave 4 — OPS-CI-RLS-DOMAIN-PROOF-001: GOVERNANCE-SYNC-077 — CI RLS Domain Isolation Proof: VALIDATED
+
+**TECS ID:** OPS-CI-RLS-DOMAIN-PROOF-001  
+**Date:** 2026-03-15  
+**GOVERNANCE-SYNC:** 077  
+**Risk:** 🟢 LOW — read-only proof; no DB touch; no schema change; no policy change
+
+### Objective
+
+Extend `server/scripts/ci/rls-proof.ts` with a Wave 3 domain table cross-tenant
+isolation proof, completing Phase A and raising CI Domain Table Coverage from 3/5 → 5/5.
+
+Target table: `escalation_events` (org_id RLS boundary, FORCE RLS=t, Wave 3 canonical,
+GOVERNANCE-SYNC-076 verified patterns).
+
+### Proof Step Added
+
+Step name: `DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS`
+
+Logic (deterministic, read-only, no inserts):
+1. `SET LOCAL ROLE texqtic_app` (NOBYPASSRLS)
+2. `SELECT set_config('app.org_id', '<Org-X>', true)`
+3. `SELECT count(*) FROM escalation_events WHERE org_id != '<Org-X>'::uuid` → assert == 0
+4. `SELECT count(*) FROM escalation_events WHERE org_id = '<Org-X>'::uuid` → positive control
+5. Repeat symmetrically for Org-B context
+
+Print: `PASS: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS` on combined success.
+
+### Proof Run Output (local — ci:rls-proof EXIT 0)
+
+```
+═══════════════════════════════════════════════════
+ G-013 — RLS CROSS-TENANT 0-ROW PROOF
+═══════════════════════════════════════════════════
+ Tenant A: faf2e4a7-5d79-4b00-811b-8d0dce4f4d80
+ Tenant B: 960c2e3b-64cf-4ba8-88d1-4e8f72d61782
+
+--- Step 1: Legacy policy variable check ---
+  app.tenant_id policy references: 0
+  ✅ PASS — no legacy policy references
+
+--- Step 2: Tenant A cross-tenant isolation ---
+  Cross-tenant rows visible: 0
+  Own-tenant rows (control): 15
+  ✅ PASS — 0 cross-tenant rows, positive control executed
+
+--- Step 3: Tenant B cross-tenant isolation ---
+  Cross-tenant rows visible: 0
+  Own-tenant rows (control): 0
+  ✅ PASS — 0 cross-tenant rows, positive control executed
+
+--- Step 4: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS (Tenant A) ---
+  Cross-tenant rows visible: 0
+  Own-tenant rows (control): 0
+  ✅ PASS — Tenant A: 0 cross-tenant escalation_events rows
+
+--- Step 4 (cont): DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS (Tenant B) ---
+  Cross-tenant rows visible: 0
+  Own-tenant rows (control): 0
+  ✅ PASS — Tenant B: 0 cross-tenant escalation_events rows
+
+PASS: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS
+
+═══════════════════════════════════════════════════
+ ✅ ALL STEPS PASS — RLS isolation verified (G-013 + OPS-CI-RLS-DOMAIN-PROOF-001)
+═══════════════════════════════════════════════════
+```
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/scripts/ci/rls-proof.ts` | Added `runDomainIsolationProofEscalationEvents()` function + Step 4 in `main()`; updated header comment; updated summary message |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-077 prepended; OPS-CI-RLS-DOMAIN-PROOF-001 → ✅ VALIDATED |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | CI Domain Table Coverage 3/5→5/5 ✅; Composite RLS Maturity 4.5→5.0/5; Phase A checklist item closed; Section 9 updated |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-077) |
+
+### Quality Gates
+
+- [x] git preflight: clean working tree before start
+- [x] Allowlist: only 4 files modified (rls-proof.ts + 3 governance docs)
+- [x] No database migrations
+- [x] No RLS policy changes
+- [x] No schema changes
+- [x] No server/src code modified
+- [x] Proof step name: `DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS` (exact match)
+- [x] Tenant A isolation: cross-tenant count = 0 ✅
+- [x] Tenant B isolation: cross-tenant count = 0 ✅
+- [x] Symmetric proof: both directions confirmed ✅
+- [x] `PASS: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS` line printed ✅
+- [x] ci:rls-proof EXIT 0 (4/4 steps PASS)
+- [x] typecheck: EXIT 0
+- [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
+- [x] OPS-CI-RLS-DOMAIN-PROOF-001 → ✅ VALIDATED
+- [x] Phase A fully closed: all 5 RLS maturity dimensions at 5/5

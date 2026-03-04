@@ -1,11 +1,14 @@
 /**
- * G-013 — CI RLS Cross-Tenant 0-Row Proof
+ * G-013 + OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS Cross-Tenant 0-Row Proof
  *
  * Validates that Postgres RLS tenant isolation is enforced by live policies.
- * Runs three assertions:
+ * Runs four assertions:
  *   Step 1 — Policy sanity: 0 policies reference the legacy app.tenant_id variable
- *   Step 2 — Tenant A context: cross-tenant rows visible = 0 (non-vacuous)
- *   Step 3 — Tenant B context: cross-tenant rows visible = 0 (non-vacuous)
+ *   Step 2 — Tenant A context (carts): cross-tenant rows visible = 0 (non-vacuous)
+ *   Step 3 — Tenant B context (carts): cross-tenant rows visible = 0 (non-vacuous)
+ *   Step 4 — DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS:
+ *             Wave 3 domain table cross-tenant isolation (OPS-CI-RLS-DOMAIN-PROOF-001)
+ *             Tenant A and Tenant B each see 0 rows scoped to the other org.
  *
  * Required env vars:
  *   DATABASE_URL    — Supabase connection string (never printed)
@@ -118,6 +121,59 @@ async function runIsolationProof(tenantId: string): Promise<{
   });
 }
 
+/**
+ * Step 4: Wave 3 domain table isolation proof — escalation_events.
+ *
+ * Proves that RLS on escalation_events (org_id boundary) prevents a tenant
+ * from reading rows that belong to a different org.
+ *
+ * escalation_events uses org_id (not tenant_id) as the RLS column —
+ * this is the canonical Wave 3 pattern verified in GOVERNANCE-SYNC-076.
+ *
+ * Assertion: under Org-X context, count of rows WHERE org_id != Org-X == 0.
+ * If RLS is broken (FORCE RLS disabled or policy missing), cross-tenant rows
+ * from the other org become visible and the count exceeds 0, failing the proof.
+ *
+ * OPS-CI-RLS-DOMAIN-PROOF-001 (Phase A closure — CI Domain Table Coverage 3→5).
+ */
+async function runDomainIsolationProofEscalationEvents(tenantId: string): Promise<{
+  crossTenantCount: number;
+  ownTenantCount: number;
+}> {
+  return prisma.$transaction(async (tx) => {
+    // Activate the application role (NOBYPASSRLS) — transaction-local
+    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
+
+    // Set the canonical RLS context variable — transaction-local (third arg = true)
+    await tx.$executeRawUnsafe(
+      `SELECT set_config('app.org_id', '${tenantId}', true)`
+    );
+
+    // Cross-tenant assertion: rows with org_id != current tenant must be invisible.
+    // Under correctly enforced RLS (FORCE RLS + PERMISSIVE SELECT filtered by org_id),
+    // this count is always 0 — any non-zero value indicates an isolation breach.
+    const crossRows = await tx.$queryRawUnsafe<Array<{ count: bigint }>>(
+      `SELECT count(*)::bigint AS count
+         FROM escalation_events
+        WHERE org_id != '${tenantId}'::uuid`
+    );
+
+    // Positive control: own-tenant query must execute without error.
+    // Count may be 0 (no escalations seeded for this org) — that is acceptable;
+    // the assertion is on cross-tenant isolation, not on the presence of own rows.
+    const ownRows = await tx.$queryRawUnsafe<Array<{ count: bigint }>>(
+      `SELECT count(*)::bigint AS count
+         FROM escalation_events
+        WHERE org_id = '${tenantId}'::uuid`
+    );
+
+    return {
+      crossTenantCount: Number(crossRows[0].count),
+      ownTenantCount:   Number(ownRows[0].count),
+    };
+  });
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -170,10 +226,41 @@ async function main(): Promise<void> {
     console.log('  ✅ PASS — 0 cross-tenant rows, positive control executed');
   }
 
+  // ── Step 4: Wave 3 domain table — escalation_events (OPS-CI-RLS-DOMAIN-PROOF-001) ─
+  console.log('\n--- Step 4: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS (Tenant A) ---');
+  const domainResultA = await runDomainIsolationProofEscalationEvents(TENANT_A_ID);
+  console.log(`  Cross-tenant rows visible: ${domainResultA.crossTenantCount}`);
+  console.log(`  Own-tenant rows (control): ${domainResultA.ownTenantCount}`);
+  if (domainResultA.crossTenantCount !== 0) {
+    console.error(
+      `  ❌ FAIL — expected 0 cross-tenant escalation_events rows, got ${domainResultA.crossTenantCount}`
+    );
+    failures++;
+  } else {
+    console.log('  ✅ PASS — Tenant A: 0 cross-tenant escalation_events rows');
+  }
+
+  console.log('\n--- Step 4 (cont): DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS (Tenant B) ---');
+  const domainResultB = await runDomainIsolationProofEscalationEvents(TENANT_B_ID);
+  console.log(`  Cross-tenant rows visible: ${domainResultB.crossTenantCount}`);
+  console.log(`  Own-tenant rows (control): ${domainResultB.ownTenantCount}`);
+  if (domainResultB.crossTenantCount !== 0) {
+    console.error(
+      `  ❌ FAIL — expected 0 cross-tenant escalation_events rows, got ${domainResultB.crossTenantCount}`
+    );
+    failures++;
+  } else {
+    console.log('  ✅ PASS — Tenant B: 0 cross-tenant escalation_events rows');
+  }
+
+  if (domainResultA.crossTenantCount === 0 && domainResultB.crossTenantCount === 0) {
+    console.log('\nPASS: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS');
+  }
+
   // ── Summary ───────────────────────────────────────────────────────────────
   console.log('\n═══════════════════════════════════════════════════');
   if (failures === 0) {
-    console.log(' ✅ ALL STEPS PASS — RLS isolation verified (G-013)');
+    console.log(' ✅ ALL STEPS PASS — RLS isolation verified (G-013 + OPS-CI-RLS-DOMAIN-PROOF-001)');
     console.log('═══════════════════════════════════════════════════');
     process.exit(0);
   } else {

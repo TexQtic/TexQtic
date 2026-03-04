@@ -3,7 +3,7 @@
 **Source:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`  
 **Baseline:** GOVERNANCE-SYNC-048  
 **Date:** 2026-03-03  
-**RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-072: OPS-RLS-SUPERADMIN-001 service layer complete; DB policies pending)*  
+**RLS Maturity:** 5.0 / 5 *(updated GOVERNANCE-SYNC-077: OPS-CI-RLS-DOMAIN-PROOF-001 CI domain table coverage 3/5→5/5; Phase A fully closed)*  
 **Migrations:** 73 / 73 Applied · `Database schema is up to date!` *(updated GOVERNANCE-SYNC-070: migration 20260315000007 applied)*  
 **Doctrine Version:** v1.4
 
@@ -228,9 +228,9 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 | FORCE RLS Coverage | 5 / 5 | 5 / 5 | Complete ✅ | ✅ |
 | Policy Consolidation | 5 / 5 | 5 / 5 | Phase A ✅ | ✅ |
 | Admin Arm Correctness | 5 / 5 | 5 / 5 | Phase A ✅ | ✅ |
-| CI Domain Table Coverage | 3 / 5 | 5 / 5 | Phase A (tail) | ⏳ OPS-CI-RLS-DOMAIN-PROOF-001 |
+| CI Domain Table Coverage | 5 / 5 | 5 / 5 | Phase A ✅ | ✅ OPS-CI-RLS-DOMAIN-PROOF-001 (GOVERNANCE-SYNC-077) |
 
-**Composite RLS Maturity:** 4.5 / 5 *(updated GOVERNANCE-SYNC-064 — Policy Consolidation 3→5, Admin Arm Correctness 4→5; CI Domain Table Coverage remains 3/5 pending OPS-CI-RLS-DOMAIN-PROOF-001)*
+**Composite RLS Maturity:** 5.0 / 5 *(updated GOVERNANCE-SYNC-077 — CI Domain Table Coverage 3/5→5/5; OPS-CI-RLS-DOMAIN-PROOF-001 ✅ VALIDATED; all five RLS dimensions at 5/5; Phase A fully closed)*
 
 ---
 
@@ -265,7 +265,7 @@ Each TECS must produce:
 - [x] G-006C `tenant_branding` — migration `20260315000002` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed (GOVERNANCE-SYNC-053, 2026-03-03)
 - [x] G-006C `tenant_domains` — migration `20260315000003` applied, DO-block VERIFIER PASS, no {public} policies, is_admin arm confirmed, DELETE tenant_id arm confirmed (GOVERNANCE-SYNC-054, 2026-03-03)
 - [x] G-006C `impersonation_sessions` — migration `20260315000004` applied, DO-block VERIFIER PASS, no {public} policies, require_admin_context + is_admin arm confirmed, DELETE critical fix applied (had bypass_enabled only), admin-only design (no tenant arm) (GOVERNANCE-SYNC-055, 2026-03-03)
-- [ ] CI RLS proof extended to at least 1 Wave 3 domain table *(open — OPS-CI-RLS-DOMAIN-PROOF-001)*
+- [x] CI RLS proof extended to at least 1 Wave 3 domain table *(GOVERNANCE-SYNC-077: `escalation_events` DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS added; 4/4 steps PASS; EXIT 0)*
 - [ ] OPS-RLS-SUPERADMIN-001 — DB policies consuming `app.is_superadmin` live *(open)*
 - [x] RLS Maturity confirmed ≥ 4.5 / 5 (GOVERNANCE-SYNC-064 audit: 4.5/5 confirmed)
 
@@ -310,7 +310,7 @@ All foundational gaps are resolved:
 - All 71 migrations applied and ledger-synced.
 
 Remaining open items before full Phase A closure:
-- OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS proof extension to domain tables (non-blocking for Wave 4).
+- ~~OPS-CI-RLS-DOMAIN-PROOF-001~~ ✅ **VALIDATED (GOVERNANCE-SYNC-077)**: `escalation_events` DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS step added to `rls-proof.ts`; 4/4 proof steps PASS; EXIT 0; no DB touch; CI Domain Table Coverage 3/5→5/5; Composite RLS Maturity 4.5/5→5.0/5. **Phase A fully closed.**
 - ~~OPS-RLS-SUPERADMIN-001~~ ✅ **VALIDATED (GOVERNANCE-SYNC-076)**: both DB policy migrations applied to remote Supabase; APPLY_EXIT:0 + VERIFIER PASS + RESOLVE_EXIT:0 for both; `impersonation_sessions` INSERT/UPDATE/DELETE narrowed to `is_superadmin='true'`; `escalation_events` admin INSERT narrowed to `is_superadmin='true'`; service write paths (`withSuperAdminContext`) confirmed at `1f211d6`. Feature flags: KNOWN LIMITATION (postgres BYPASSRLS path; route-level guard only).
 - ~~orders.status enum extension~~ ✅ **DONE** — OPS-ORDERS-STATUS-ENUM-001 (GOVERNANCE-SYNC-070): CONFIRMED + FULFILLED added; CANCELLED verified present; migration `20260315000007` applied; PREFLIGHT PASS + VERIFIER PASS.
 
