@@ -203,6 +203,34 @@ The escalation upgrade/resolve route uses `withDbContext` with orgId context (te
 
 ---
 
+**⚠️ AMENDMENT — GOVERNANCE-SYNC-074/075 (2026-03-15):**
+
+The UPDATE delta described above in C.2 is **incorrect**. During TECS 2C authoring, inspection of the live baseline migration (`20260303000000_g022_escalation_core`) revealed:
+
+1. `escalation_events` has **no UPDATE RLS policy** (none was ever created).
+2. `escalation_events` has **no UPDATE grant** for `texqtic_app` (SELECT + INSERT only).
+3. UPDATE/DELETE are blocked unconditionally by the `escalation_events_immutability()` BEFORE trigger (`[E-022-IMMUTABLE]`), which fires before RLS is evaluated.
+4. The "upgrade/resolve" operations in `EscalationService` are **INSERTs** (append-only: child rows with `parent_escalation_id`), not UPDATEs.
+
+**Corrected delta (executed in migration `20260315000009`):**
+
+Instead of narrowing a non-existent UPDATE policy, migration `20260315000009` narrows the **admin INSERT arm**:
+
+```sql
+-- escalation_events_admin_insert: NARROWED from is_admin to is_admin AND is_superadmin
+CREATE POLICY escalation_events_admin_insert ON public.escalation_events
+  FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    AND current_setting('app.is_superadmin', true) = 'true'
+  );
+```
+
+This is the appropriate hardening because the admin INSERT arm is the only real admin write surface on this table. The tenant INSERT arm (`org_id`-scoped) remains unchanged. No UPDATE/DELETE policies are added.
+
+TECS ID for executed scope: `OPS-RLS-SUPERADMIN-001-ESCALATION-INSERT-001`.
+
+---
+
 ### C.3 — `feature_flags`
 
 **Current behavior:**

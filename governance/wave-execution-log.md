@@ -6711,7 +6711,7 @@ The SUPERADMIN-RLS-PLAN.md C.2 was authored based on incorrect discovery data. N
 |------|--------|
 | `server/prisma/migrations/20260315000008_ops_rls_superadmin_impersonation_sessions/migration.sql` | NEW — TECS 2B migration SQL with pre-flight + 5 policies + 9-invariant verifier |
 | `governance/gap-register.md` | GOVERNANCE-SYNC-074 prepended |
-| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | Row 20260315000008 → ✅ SQL authored; row 20260315000009 → 🛑 BLOCKED |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | Row 20260315000008 → ✅ SQL authored; row 20260315000009 → 🛑 BLOCKED (resolved in GOVERNANCE-SYNC-075) |
 | `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | "Date SQL authored: 2026-03-15" added |
 | `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-074) |
 
@@ -6724,8 +6724,70 @@ The SUPERADMIN-RLS-PLAN.md C.2 was authored based on incorrect discovery data. N
 - [x] Migration SQL: BEGIN/pre-flight/DROP/CREATE/VERIFIER/COMMIT structure ✅
 - [x] Guard and SELECT predicates are byte-for-byte identical to 20260315000004 baseline ✅
 - [x] INSERT/UPDATE/DELETE predicates both arms require is_superadmin ✅
-- [x] TECS 2C BLOCKER issued — execution halted, awaiting spec clarification
+- [x] TECS 2C spec mismatch detected + BLOCKER issued → resolved by user (Option A: narrow admin INSERT)
+- [x] Commit hash: `8abe96b`
 - [ ] APPLY_EXIT: PENDING (psql remote)
 - [ ] VERIFIER PASS: PENDING
 - [ ] RESOLVE_EXIT: PENDING
-- [ ] Commit pending TECS 2C decision
+
+---
+
+## Wave 4 — OPS-RLS-SUPERADMIN-001: TECS 2C (Revised) — escalation_events Admin INSERT Narrowing
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-ESCALATION-INSERT-001  
+**Date:** 2026-03-15  
+**GOVERNANCE-SYNC:** 075  
+**Risk:** 🟡 MEDIUM — Remote RLS policy swap on `escalation_events` (admin INSERT arm narrowed; no DDL)
+
+### Objective
+
+Revised scope from original TECS 2C (which incorrectly targeted a non-existent UPDATE policy). The actual admin write surface on `escalation_events` is the admin INSERT arm. This migration narrows it to require BOTH `app.is_admin='true'` AND `app.is_superadmin='true'`.
+
+**SUPERADMIN-RLS-PLAN.md C.2 amendment:** Original plan referenced a GUARD + UPDATE policy that never existed. Correct surface is admin INSERT only. Amendment added to C.2 in this sync.
+
+Service prerequisite `1f211d6` confirmed: `withSuperAdminEscalationContext` already sets both GUCs for upgrade/resolve INSERT paths.
+
+### Migration: 20260315000009_ops_rls_superadmin_escalation_events
+
+**File authored:** `server/prisma/migrations/20260315000009_ops_rls_superadmin_escalation_events/migration.sql`  
+**Apply status:** PENDING psql remote apply  
+**Verifier:** Inline DO-block (9 invariants: FORCE RLS, 0 {public}, admin INSERT is_superadmin confirmed, tenant INSERT org_id intact, no UPDATE/DELETE grants, 2 SELECT + 2 INSERT policies, 0 UPDATE policies)
+
+**Policy deltas:**
+
+| Policy | Before | After |
+|---|---|---|
+| `escalation_events_tenant_select` | `org_id = current_org_id()` | UNCHANGED |
+| `escalation_events_admin_select` | `is_admin='true'` | UNCHANGED |
+| `escalation_events_tenant_insert` | `org_id = current_org_id()` | UNCHANGED |
+| `escalation_events_admin_insert` | `is_admin='true'` | `is_admin='true' AND is_superadmin='true'` |
+
+No UPDATE/DELETE policies added. Immutability remains at trigger layer (Layer 2). texqtic_app grants remain SELECT + INSERT only.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/prisma/migrations/20260315000009_ops_rls_superadmin_escalation_events/migration.sql` | NEW — TECS 2C (revised) migration SQL with pre-flight + 4 policies + 9-invariant verifier |
+| `docs/security/SUPERADMIN-RLS-PLAN.md` | C.2 amended: correction block + revised delta SQL |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-075 prepended |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | Row 20260315000009 → ✅ SQL authored (pending apply) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | 20260315000009 runbook section added |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-075) |
+
+### Quality Gates
+
+- [x] git preflight: clean working tree before start
+- [x] Allowlist: only 6 files modified (migration.sql + 5 governance docs)
+- [x] No server/src code modified
+- [x] No unrelated refactors
+- [x] Migration SQL: BEGIN/pre-flight/DROP/CREATE/VERIFIER/COMMIT structure ✅
+- [x] Tenant INSERT arm preserved (org_id scoping intact) ✅
+- [x] Admin INSERT narrowed to is_superadmin ✅
+- [x] No UPDATE/DELETE policies added ✅
+- [x] Verifier asserts no UPDATE/DELETE grants for texqtic_app ✅
+- [x] SUPERADMIN-RLS-PLAN.md C.2 corrected ✅
+- [ ] APPLY_EXIT: PENDING (psql remote — apply 20260315000008 FIRST, then this)
+- [ ] VERIFIER PASS: PENDING
+- [ ] RESOLVE_EXIT: PENDING
+- [ ] OPS-RLS-SUPERADMIN-001 → ✅ VALIDATED (only after both migrations applied)

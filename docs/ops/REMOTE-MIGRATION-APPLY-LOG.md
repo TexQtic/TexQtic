@@ -630,3 +630,16 @@ After each migration, record and paste into wave-execution-log:
 ### Rollback
 
 Policy changes are NOT DDL — rollback via DROP + recreate policies (see SUPERADMIN-RLS-PLAN.md Sections C.1 and C.2 for original predicate SQL). Also remove corresponding `_prisma_migrations` rows if rolling back after `prisma migrate resolve --applied`.
+
+### Scope Correction — 20260315000009 (GOVERNANCE-SYNC-075)
+
+**Original plan (SUPERADMIN-RLS-PLAN.md C.2):** Narrow `escalation_events` UPDATE policy to require `is_superadmin`.  
+**Actual scope executed:** Narrow `escalation_events_admin_insert` to require BOTH `is_admin='true'` AND `is_superadmin='true'`.
+
+**Reason:** `escalation_events` has no UPDATE policy, no UPDATE grant, and UPDATE/DELETE are blocked by an immutability trigger (`[E-022-IMMUTABLE]`) that fires before RLS. The admin INSERT arm was the only actual admin write surface requiring hardening. The plan doc (C.2) has been amended (GOVERNANCE-SYNC-075).
+
+**Verifier for 20260315000009 confirms:**
+- 0 UPDATE policies on `escalation_events` (append-only invariant)
+- `texqtic_app` has no UPDATE/DELETE grants
+- `escalation_events_admin_insert` WITH CHECK contains `is_superadmin`
+- Tenant INSERT arm (`escalation_events_tenant_insert`) org_id scoping intact

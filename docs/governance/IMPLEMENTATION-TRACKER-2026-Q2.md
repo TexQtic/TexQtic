@@ -125,11 +125,11 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 | `withSuperAdminEscalationContext` for upgrade/resolve write paths | ✅ Complete (GOVERNANCE-SYNC-072) |
 | DB apply approved (sign-off + runbook recorded) | ✅ Approved (GOVERNANCE-SYNC-073) |
 | DB-level RLS policies consuming `app.is_superadmin` — 20260315000008 authored | ✅ SQL authored (GOVERNANCE-SYNC-074) — ready for psql apply |
-| DB-level RLS policies consuming `app.is_superadmin` — 20260315000009 applied | 🛑 BLOCKED (TECS 2C) — spec mismatch: no UPDATE policy on escalation_events |
+| DB-level RLS policies consuming `app.is_superadmin` — 20260315000009 authored | ✅ SQL authored (GOVERNANCE-SYNC-075) — escalation admin INSERT narrowed; apply pending |
 
 **Dependency:** DB apply authorized (GOVERNANCE-SYNC-073). Runbook at `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md`.  
 **Risk:** Low — GUC plumbing + service paths complete; policy apply is the final step.  
-**TECS:** `OPS-RLS-SUPERADMIN-001` — IN PROGRESS (TECS 2B SQL authored; TECS 2C awaiting spec clarification per blocker report GOVERNANCE-SYNC-074)
+**TECS:** `OPS-RLS-SUPERADMIN-001` — IN PROGRESS (both SQL files authored; neither yet applied to remote Supabase; mark VALIDATED after both APPLY_EXIT:0 + RESOLVE_EXIT:0 evidence recorded)
 
 ---
 
