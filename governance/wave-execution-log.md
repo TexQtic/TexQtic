@@ -7382,3 +7382,84 @@ Add DPP Passport read-only UI panel consuming `GET /api/tenant/dpp/:nodeId` (TEC
 | governance/gap-register.md | GOVERNANCE-SYNC-083 prepended; G-025 → ✅ VALIDATED v1 |
 | docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 4D row → ✅ Validated (2026-03-04) |
 | governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-083) |
+
+---
+
+## Wave 4 — G-025-ORGS-RLS-DISCOVERY-001: GOVERNANCE-SYNC-084 — Organizations RLS Discovery: ✅ COMPLETE
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-ORGS-RLS-DISCOVERY-001 |
+| Sync ID | GOVERNANCE-SYNC-084 |
+| Status | ✅ Discovery Complete — TECS 5B pending |
+| Date | 2026-03-04 |
+| Commit | docs(security): organizations RLS discovery (G-025-ORGS-RLS-001) |
+
+### Objective
+
+Audit `public.organizations` RLS posture to determine why manufacturer fields cannot be served
+from SECURITY INVOKER DPP views (D4 Gate FAIL, registered as G-025-ORGS-RLS-001). Identify
+the minimal policy change to enable tenant-scoped self-org read. Produce discovery document.
+
+### Captured Query Outputs (Summary)
+
+| Query | Result |
+|-------|--------|
+| `relrowsecurity` | `t` — RLS enabled |
+| `relforcerowsecurity` | `t` — FORCE RLS on |
+| Policy count | 4 policies |
+| Guard type | RESTRICTIVE FOR ALL TO {public} |
+| Guard predicate | `app.bypass_enabled() OR (app.current_realm() = 'admin'::text)` |
+| Tenant arm in guard | **NONE** — confirmed D4 Gate FAIL cause |
+| Tenant SELECT policy | **NONE** |
+| texqtic_app grants | SELECT only |
+| Tenancy key | `id` (UUID PK) = `app.current_org_id()` |
+| STOP CONDITION | NOT triggered — no schema change required |
+
+### Consumer Map
+
+| Surface | Current Access Method |
+|---------|-----------------------|
+| `GET /api/me` (tenant.ts l.81) | `withOrgAdminContext` / `getOrganizationIdentity` |
+| `/api/tenant/orders` display name (tenant.ts l.1370) | `withOrgAdminContext` / `getOrganizationIdentity` |
+| Login flow org_type (auth.ts l.379) | `withOrgAdminContext` / `getOrganizationIdentity` |
+| DPP SECURITY INVOKER views | **BLOCKED** — guard hard-blocks tenant realm → zero rows |
+| Admin dashboard (control.ts) | Admin context / bypass — unaffected |
+
+### Proposed Target Policy (TECS 5B)
+
+```sql
+-- 1. DROP + RECREATE guard with tenant arm
+DROP POLICY organizations_guard_policy ON public.organizations;
+CREATE POLICY organizations_guard_policy ON public.organizations
+  AS RESTRICTIVE FOR ALL TO texqtic_app
+  USING (app.bypass_enabled() OR (app.current_realm() = 'admin'::text) OR app.require_org_context());
+
+-- 2. NEW: tenant-scoped SELECT (own row only)
+CREATE POLICY organizations_tenant_select ON public.organizations
+  AS PERMISSIVE FOR SELECT TO texqtic_app
+  USING (id = app.current_org_id());
+```
+
+### Gate Outputs
+
+| Gate | Result |
+|------|--------|
+| DB connected | PASS |
+| RLS flags captured | PASS (relrowsecurity=t, relforcerowsecurity=t) |
+| Policy inventory captured | PASS (4 policies listed) |
+| No tenant arm found | CONFIRMED (D4 Gate FAIL validated) |
+| Tenancy key identified | PASS (id = app.current_org_id()) |
+| STOP CONDITION check | NOT triggered — no schema change needed |
+| Consumer map complete | PASS (3 server callers identified) |
+| Discovery doc created | PASS (docs/security/ORGANIZATIONS-RLS-DISCOVERY.md) |
+| No schema/code/RLS changes made | PASS |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| docs/security/ORGANIZATIONS-RLS-DISCOVERY.md | NEW — full RLS audit, consumer map, proposal for TECS 5B |
+| governance/gap-register.md | GOVERNANCE-SYNC-084 prepended; G-025-ORGS-RLS-001 → IN PROGRESS |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | G-025-ORGS-RLS-001 Discovery row added |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-084) |
