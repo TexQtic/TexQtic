@@ -7339,3 +7339,46 @@ curl -i -H "Authorization: Bearer <TOKEN>" \
 | governance/gap-register.md | GOVERNANCE-SYNC-082 prepended; TECS 4C validated; G-025-ORGS-RLS-001 enforcement noted |
 | docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 4C row -> Validated (2026-03-04) |
 | governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-082) |
+
+---
+
+## Wave 4 — G-025-DPP-SNAPSHOT-UI-EXPORT-001: GOVERNANCE-SYNC-083 — DPP Passport UI + Export: ✅ TECS 4D VALIDATED
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-DPP-SNAPSHOT-UI-EXPORT-001 |
+| Sync ID | GOVERNANCE-SYNC-083 |
+| Status | ✅ TECS 4D VALIDATED |
+| Date | 2026-03-04 |
+| Commit | feat(ui): add DPP passport view + export (G-025) |
+
+### Objective
+
+Add DPP Passport read-only UI panel consuming `GET /api/tenant/dpp/:nodeId` (TECS 4C). Covers: UUID input, fetch, render (Product / Certifications / Lineage), and client-side JSON export (Copy + Download). Wires `expView='DPP'` into App.tsx and `onNavigateDpp` into all 4 experience shells.
+
+### Gate Outputs
+
+| Gate | Result |
+|------|--------|
+| lint EXIT 0 | PASS (0 errors) |
+| typecheck EXIT 0 | PASS |
+| G-025-ORGS-RLS-001 banner always shown | PASS (amber banner rendered unconditionally, manufacturer fields omitted) |
+| No organizations JOIN in new component | PASS (tenantGet reads DPP API only; manufacturer fields omitted at API layer) |
+| Lineage cap=200 rows enforced | PASS (slice(0,200) + truncation notice) |
+| UUID client-side validation | PASS (regex /^[0-9a-f]{8}-...-$/i) |
+| Export: Copy JSON | PASS (window.navigator.clipboard) |
+| Export: Download JSON | PASS (dpp_<nodeId>.json Blob anchor) |
+| App.tsx expView union | PASS ('HOME'|'ORDERS'|'DPP') |
+| All 4 shells wired | PASS (AggregatorShell/B2BShell/B2CShell/WhiteLabelShell) |
+| Atomic commit | feat(ui): add DPP passport view + export (G-025) |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| components/Tenant/DPPPassport.tsx | NEW — DPP passport read-only UI panel + JSON export (G-025 TECS 4D) |
+| App.tsx | expView union → 'HOME'\|'ORDERS'\|'DPP'; DPPPassport import + render guard; onNavigateDpp prop passed to shells |
+| layouts/Shells.tsx | onNavigateDpp? added to ShellProps; DPP Passport nav button in all 4 experience shells |
+| governance/gap-register.md | GOVERNANCE-SYNC-083 prepended; G-025 → ✅ VALIDATED v1 |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 4D row → ✅ Validated (2026-03-04) |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-083) |

@@ -340,7 +340,7 @@ Remaining open items before full Phase A closure:
 | **D4 Gate — organizations RLS verification** | 🔴 FAIL — 2026-03-04 | organizations SELECT policy admin/bypass-only; no tenant org_id arm; Gap G-025-ORGS-RLS-001 registered; manufacturer_* removed from v1 scope | 2026-03-04 |
 | TECS 4B — DPP view creation (SQL DDL) | ✅ Validated | D2 ✅ Approved; D4 🔴 FAIL (orgs excluded); 3 views: dpp_snapshot_products_v1/lineage_v1/certifications_v1; SECURITY INVOKER; recursive CTE depth=20; cycle-guard; VERIFIER PASS; RESOLVE_EXIT:0; PULL_EXIT:0; GENERATE_EXIT:0; typecheck EXIT 0; lint EXIT 0; migration 20260316000001_g025_dpp_snapshot_views; GOVERNANCE-SYNC-081 | 2026-03-04 |
 | TECS 4C — API route exposure (`GET /api/tenant/dpp/:nodeId`) | ✅ Validated | TECS 4B ✅; `GET /api/tenant/dpp/:nodeId` added; $queryRaw (3 views); 404 on empty row; no organizations JOIN; writeAuditLog read-audit; typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-082 | 2026-03-04 |
-| TECS 4D — UI / export surfaces (DPPPassport.tsx) | ⏳ Planned | Gate: TECS 4C complete | — |
+| TECS 4D — UI / export surfaces (DPPPassport.tsx) | ✅ Validated | TECS 4C ✅; DPPPassport.tsx added (components/Tenant/); UUID input + client-side validation; tenantGet fetch; loading/error/404 states; always-visible G-025-ORGS-RLS-001 banner; Product/Certifications/Lineage sections; lineage cap=200; Copy JSON + Download JSON export; App.tsx: expView 'DPP' added, guard + onNavigateDpp prop; Shells.tsx: onNavigateDpp? in ShellProps + nav buttons in all 4 shells; typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-083; G-025 → ✅ VALIDATED v1 | 2026-03-04 |
 
 **Exit Condition for Discovery Phase:**  
 Discovery document written, governance updated, no schema/code/RLS changes.

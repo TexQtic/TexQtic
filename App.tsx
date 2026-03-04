@@ -14,6 +14,7 @@ import { WLStubPanel } from './components/WhiteLabelAdmin/WLStubPanel';
 import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
 import { WLCollectionsPanel } from './components/WhiteLabelAdmin/WLCollectionsPanel';
 import { EXPOrdersPanel } from './components/Tenant/EXPOrdersPanel';
+import { DPPPassport } from './components/Tenant/DPPPassport';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -60,7 +61,8 @@ const App: React.FC = () => {
   type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
   // RCP-1 TECS 3: sub-view for EXPERIENCE Orders panel (OPS-EXPERIENCE-ORDERS-UX-001)
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS'>('HOME');
+  // G-025 TECS 4D: 'DPP' added for DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -527,6 +529,8 @@ const App: React.FC = () => {
     if (appState === 'SETTINGS') return <WhiteLabelSettings tenant={currentTenant} />;
     // RCP-1 TECS 3: Orders panel — rendered before the tenant-type switch so it
     // overlays any tenant type's home view. Reset to HOME via onBack / onNavigateHome.
+    // G-025 TECS 4D: DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
+    if (expView === 'DPP') return <DPPPassport onBack={() => setExpView('HOME')} />;
     if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
@@ -1148,6 +1152,7 @@ const App: React.FC = () => {
           onNavigateTeam: () => setAppState('TEAM_MGMT'),
           onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
           onNavigateOrders: () => setExpView('ORDERS'),
+          onNavigateDpp: () => setExpView('DPP'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {
