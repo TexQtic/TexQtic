@@ -330,11 +330,14 @@ Remaining open items before full Phase A closure:
 | G-025 Discovery — STOP CONDITION documented | ✅ Complete | certifications has no FK to traceability_nodes; org-level join only (Gap G-025-B) | 2026-03-04 |
 | G-025 Discovery document written | ✅ Complete | `docs/architecture/DPP-SNAPSHOT-VIEWS-DISCOVERY.md` | 2026-03-04 |
 | G-025 Regulatory DPP field mapping | ✅ Complete | 5 available, 6 partial, 5 absent; gaps G-025-A through G-025-H registered | 2026-03-04 |
-| G-025 Design TECS — Cert-to-node linkage decision | ⏳ Pending | Requires Design TECS approval | — |
-| G-025 Design TECS — Supplier/facility model decision | ⏳ Pending | Requires Design TECS approval | — |
-| G-025 Design TECS — Snapshot strategy selection | ⏳ Pending | Requires Design TECS approval | — |
-| G-025 Schema changes (if Design TECS approved) | ⏳ Pending | No schema change in discovery phase | — |
-| G-025 View / snapshot implementation | ⏳ Pending | Awaiting Design TECS completion | — |
+| G-025 Design TECS — Cert-to-node linkage decision | ✅ Complete | D1: Option C (join table `node_certifications`); pending Paresh approval before TECS 4A | 2026-03-04 |
+| G-025 Design TECS — Supplier/facility model decision | ✅ Complete | v1 Deferred (G-025-A); v2 scope | 2026-03-04 |
+| G-025 Design TECS — Snapshot strategy selection | ✅ Complete | D3: Option A Live SQL Views (mandatory; RLS inherited) | 2026-03-04 |
+| G-025 Design Anchor → ✅ Complete | ✅ Complete | `docs/architecture/DPP-SNAPSHOT-VIEWS-DESIGN.md`; D1–D6 locked | 2026-03-04 |
+| TECS 4A — `node_certifications` join table (schema migration) | ⏳ Planned | Gate: D1 approval; allowlist: schema.prisma + migration SQL | — |
+| TECS 4B — DPP view creation (SQL DDL) | ⏳ Planned | Gate: D2 + D4 approval; prerequisite: TECS 4A (or views proceed without node_id) | — |
+| TECS 4C — API route exposure (`GET /api/tenant/dpp/*`) | ⏳ Planned | Gate: TECS 4B complete | — |
+| TECS 4D — UI / export surfaces (DPPPassport.tsx) | ⏳ Planned | Gate: TECS 4C complete | — |
 
 **Exit Condition for Discovery Phase:**  
 Discovery document written, governance updated, no schema/code/RLS changes.

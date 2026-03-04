@@ -7035,3 +7035,101 @@ Design decision deferred to Design TECS.
 - [x] Schema gap register G-025-A through G-025-H documented
 - [x] Discovery document written: `docs/architecture/DPP-SNAPSHOT-VIEWS-DISCOVERY.md`
 - [x] G-025 → IN PROGRESS (Discovery phase)
+
+---
+
+## Wave 4 — G-025-DPP-SNAPSHOT-VIEWS-DESIGN-001: GOVERNANCE-SYNC-079 — DPP Snapshot Views Design Anchor: Complete (Pending Approval)
+
+### Metadata
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-DPP-SNAPSHOT-VIEWS-DESIGN-001 |
+| Governance Sync | GOVERNANCE-SYNC-079 |
+| Date | 2026-03-04 |
+| Wave | 4 — DPP Snapshot Views |
+| Phase | Design Anchor (Docs Only) |
+| Status | ✅ Design Anchor Complete — D1/D2/D4 pending Paresh approval |
+| Branch | main |
+| Schema changes | None |
+| Migrations | None |
+| RLS changes | None |
+| server/src changes | None |
+
+### Objective
+
+Lock key structural decisions for G-025 DPP Snapshot Views before implementation begins,
+resolving all discovery phase unknowns (GOVERNANCE-SYNC-078) into specific, approvable
+design choices. Produce the view contract, TECS sequence, and gap disposition map.
+
+### Decision Summary (D1–D6)
+
+| Decision | Outcome | Approval Required |
+|----------|---------|-------------------|
+| D1 — Cert-to-lineage linkage | Option C: join table `node_certifications` (M:N, FORCE RLS, no existing table modification) | ✅ Pending Paresh |
+| D2 — v1 regulatory field surface | batch_id + node_type + meta + geo_hash + org manufacturer fields (D4 gated) + lineage chain + org-level certs | ✅ Pending Paresh |
+| D3 — Snapshot strategy | Option A: Live SQL Views only (RLS-safe; mandatory per doctrine) | Locked — no gate |
+| D4 — `organizations` RLS gate | Explicit verification query must PASS before TECS 4B; FAIL → register G-025-ORGS-RLS-001 | ✅ Pending verification |
+| D5 — Vocabulary enforcement | Opaque strings for v1 (no enum/CHECK constraint); defer enforcement to v2+ | Locked — no gate |
+| D6 — Traversal spec | depth cap 20; cycle guard = visited UUID array; order = depth ASC + created_at ASC | Locked — no gate |
+
+### View Contracts Defined
+
+| View | Scope | Key columns |
+|------|-------|-------------|
+| `dpp_snapshot_products_v1` | One row per `traceability_node` | `node_id`, `batch_id`, `node_type`, `meta`, `geo_hash`, `manufacturer_name`\* |
+| `dpp_snapshot_lineage_v1` | One row per edge in recursive traversal | `root_node_id`, `depth`, `from_node_id`, `to_node_id`, `edge_type`, `visited_path` |
+| `dpp_snapshot_certifications_v1` | Org-level certs until TECS 4A | `certification_id`, `certification_type`, `lifecycle_state_name`, `is_active`, `issued_at`, `expires_at`, `node_id`\*\* |
+
+\* Conditional on D4 gate PASS  
+\*\* NULL until TECS 4A (`node_certifications` join table) implemented
+
+### TECS Sequence
+
+| TECS | Title | Type | Gate |
+|------|-------|------|------|
+| 4A | `node_certifications` join table | Migration | D1 approval |
+| 4B | DPP view creation (SQL DDL) | Migration | D2 + D4 + optional 4A |
+| 4C | API route exposure | server/src | TECS 4B |
+| 4D | UI / export surfaces | Frontend | TECS 4C |
+
+### Gap Disposition
+
+| Gap | v1 Status | Closing TECS |
+|-----|-----------|--------------|
+| G-025-A (suppliers/facilities) | v1 Deferred | v2 scope |
+| G-025-B (cert-to-node FK) | v1 Required — TECS 4A | TECS 4A |
+| G-025-B-2 (issuing_body/cert_number) | v1 Deferred | Separate certifications extension TECS |
+| G-025-C (lineage hash) | v1 Deferred | v2 cryptographic model |
+| G-025-D (vocabulary enforcement) | v1 Resolved (opaque strings) | TECS 4B by design |
+| G-025-E (edge ordering) | v1 Resolved (D6 traversal spec) | TECS 4B |
+| G-025-F (organizations RLS) | D4 Gate — verify before TECS 4B | TECS 4B preflight |
+| G-025-G (SHARED visibility) | v1 Deferred | v2 scope |
+| G-025-H (catalog_items FK) | v1 Deferred | v2 scope |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `docs/architecture/DPP-SNAPSHOT-VIEWS-DESIGN.md` | Created — 8-section design anchor with D1–D6 decisions, view contracts, TECS sequence, gap disposition |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-079 prepended; G-025 state updated to "Design Anchor complete; Implementation pending" |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | G-025 Design Anchor → ✅ Complete; TECS 4A/4B/4C/4D rows added as PLANNED |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-079) |
+
+### Quality Gates
+
+- [x] git preflight: clean working tree before start
+- [x] Allowlist: only 4 docs modified — no code, no schema, no migrations
+- [x] No database migrations
+- [x] No RLS policy changes
+- [x] No schema changes
+- [x] No server/src code modified
+- [x] No SQL view creation
+- [x] Single D1 recommendation produced (Option C — no STOP condition triggered)
+- [x] Option A (Live Views) confirmed for v1 — no materialized view without RLS strategy
+- [x] No schema touches in this TECS (design is docs-only)
+- [x] D1–D6 all documented with recommendation + approval checkbox
+- [x] View contracts defined (column names + types, no SQL)
+- [x] TECS 4A/4B/4C/4D structured with allowlists + gates + stop conditions
+- [x] G-025-A through G-025-H all mapped to v1 status + closing TECS
+- [x] G-025 → Design Anchor complete; Implementation pending D1/D2/D4 approvals
