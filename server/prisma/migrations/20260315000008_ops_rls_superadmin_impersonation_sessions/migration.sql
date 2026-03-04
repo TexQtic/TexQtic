@@ -49,7 +49,7 @@ DO $$ BEGIN IF NOT EXISTS (
   WHERE schemaname = 'public'
     AND tablename = 'impersonation_sessions'
     AND policyname = 'impersonation_sessions_insert_unified'
-) THEN RAISE EXCEPTION '20260315000008 PRE-FLIGHT BLOCKED: policy impersonation_sessions_insert_unified not found. ' 'Baseline migration 20260315000004 may not have been applied, or policies were already dropped. Aborting.';
+) THEN RAISE EXCEPTION '20260315000008 PRE-FLIGHT BLOCKED: policy impersonation_sessions_insert_unified not found. Baseline migration 20260315000004 may not have been applied, or policies were already dropped. Aborting.';
 END IF;
 -- Confirm superadmin narrowing has NOT already been applied.
 -- If is_superadmin already appears in the INSERT predicate, this migration was
@@ -61,7 +61,7 @@ IF EXISTS (
     AND tablename = 'impersonation_sessions'
     AND policyname = 'impersonation_sessions_insert_unified'
     AND qual LIKE '%is_superadmin%'
-) THEN RAISE EXCEPTION '20260315000008 PRE-FLIGHT BLOCKED: is_superadmin already present in impersonation_sessions_insert_unified. ' 'Migration may have been applied already. Check _prisma_migrations ledger and investigate.';
+) THEN RAISE EXCEPTION '20260315000008 PRE-FLIGHT BLOCKED: is_superadmin already present in impersonation_sessions_insert_unified. Migration may have been applied already. Check _prisma_migrations ledger and investigate.';
 END IF;
 RAISE NOTICE '20260315000008 pre-flight OK: impersonation_sessions policies present, superadmin narrowing not yet applied. Proceeding.';
 END;
@@ -277,7 +277,7 @@ WHERE tablename = 'impersonation_sessions'
 IF v_public_count <> 0 THEN RAISE EXCEPTION 'VERIFIER FAIL [20260315000008]: found % {public} policies on impersonation_sessions — admin-only security violation',
 v_public_count;
 END IF;
-RAISE NOTICE 'VERIFIER PASS [20260315000008]: impersonation_sessions — ' 'FORCE RLS=%, 1 RESTRICTIVE guard FOR ALL (require_admin_context + is_admin), ' '4 PERMISSIVE (SELECT: is_admin unchanged | INSERT/UPDATE/DELETE: is_superadmin narrowing CONFIRMED), ' '0 {public} policies.',
+RAISE NOTICE 'VERIFIER PASS [20260315000008]: impersonation_sessions — FORCE RLS=%, 1 RESTRICTIVE guard FOR ALL (require_admin_context + is_admin), 4 PERMISSIVE (SELECT: is_admin unchanged | INSERT/UPDATE/DELETE: is_superadmin narrowing CONFIRMED), 0 {public} policies.',
 v_force_rls;
 END;
 $$;

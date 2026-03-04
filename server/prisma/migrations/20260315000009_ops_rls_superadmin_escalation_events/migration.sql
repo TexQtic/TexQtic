@@ -46,7 +46,7 @@ IF NOT EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'escalation_events'
-) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: public.escalation_events table not found. ' 'Baseline migration 20260303000000_g022_escalation_core may not have been applied.';
+) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: public.escalation_events table not found. Baseline migration 20260303000000_g022_escalation_core may not have been applied.';
 END IF;
 -- Baseline admin INSERT policy must exist before we drop + recreate
 IF NOT EXISTS (
@@ -55,7 +55,7 @@ IF NOT EXISTS (
   WHERE schemaname = 'public'
     AND tablename = 'escalation_events'
     AND policyname = 'escalation_events_admin_insert'
-) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: escalation_events_admin_insert not found. ' 'Baseline migration may not be applied, or policy was renamed. Investigate and abort.';
+) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: escalation_events_admin_insert not found. Baseline migration may not be applied, or policy was renamed. Investigate and abort.';
 END IF;
 -- Tenant INSERT policy must exist (must not be damaged by a partial prior run)
 IF NOT EXISTS (
@@ -64,7 +64,7 @@ IF NOT EXISTS (
   WHERE schemaname = 'public'
     AND tablename = 'escalation_events'
     AND policyname = 'escalation_events_tenant_insert'
-) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: escalation_events_tenant_insert not found. ' 'Baseline integrity check failed — tenant INSERT arm missing. Abort immediately.';
+) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: escalation_events_tenant_insert not found. Baseline integrity check failed — tenant INSERT arm missing. Abort immediately.';
 END IF;
 -- Idempotency guard: abort if narrowing already applied
 IF EXISTS (
@@ -74,7 +74,7 @@ IF EXISTS (
     AND tablename = 'escalation_events'
     AND policyname = 'escalation_events_admin_insert'
     AND with_check LIKE '%is_superadmin%'
-) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: is_superadmin already present in ' 'escalation_events_admin_insert WITH CHECK. Migration appears already applied. ' 'Check _prisma_migrations ledger and investigate before proceeding.';
+) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: is_superadmin already present in escalation_events_admin_insert WITH CHECK. Migration appears already applied. Check _prisma_migrations ledger and investigate before proceeding.';
 END IF;
 -- No UPDATE policies should exist (belt-and-suspenders: immutability is at trigger layer)
 IF EXISTS (
@@ -83,9 +83,9 @@ IF EXISTS (
   WHERE schemaname = 'public'
     AND tablename = 'escalation_events'
     AND cmd = 'UPDATE'
-) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: unexpected UPDATE policy found on ' 'escalation_events. This is outside the known baseline — do not proceed without investigation. ' '[E-2C-UNEXPECTED-UPDATE-POLICY]';
+) THEN RAISE EXCEPTION '20260315000009 PRE-FLIGHT BLOCKED: unexpected UPDATE policy found on escalation_events. This is outside the known baseline — do not proceed without investigation. [E-2C-UNEXPECTED-UPDATE-POLICY]';
 END IF;
-RAISE NOTICE '20260315000009 pre-flight OK: escalation_events present, all 4 baseline policies ' 'intact, admin INSERT not yet narrowed, no unexpected UPDATE policies. Proceeding.';
+RAISE NOTICE '20260315000009 pre-flight OK: escalation_events present, all 4 baseline policies intact, admin INSERT not yet narrowed, no unexpected UPDATE policies. Proceeding.';
 END;
 $$;
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -241,7 +241,7 @@ WHERE schemaname = 'public'
 IF v_update_policy_cnt <> 0 THEN RAISE EXCEPTION 'VERIFIER FAIL [20260315000009]: found % UPDATE policies on escalation_events — append-only invariant violated',
 v_update_policy_cnt;
 END IF;
-RAISE NOTICE 'VERIFIER PASS [20260315000009]: escalation_events — ' 'FORCE RLS=%, 0 {public}, ' 'admin INSERT narrowed (is_superadmin CONFIRMED in WITH CHECK), ' 'tenant INSERT arm preserved (org_id scoping intact), ' '2 SELECT + 2 INSERT policies, ' '0 UPDATE policies (append-only), ' 'no UPDATE/DELETE grants for texqtic_app.',
+RAISE NOTICE 'VERIFIER PASS [20260315000009]: escalation_events — FORCE RLS=%, 0 {public}, admin INSERT narrowed (is_superadmin CONFIRMED in WITH CHECK), tenant INSERT arm preserved (org_id scoping intact), 2 SELECT + 2 INSERT policies, 0 UPDATE policies (append-only), no UPDATE/DELETE grants for texqtic_app.',
 v_force_rls;
 END;
 $$;
