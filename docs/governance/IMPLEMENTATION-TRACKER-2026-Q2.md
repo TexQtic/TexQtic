@@ -334,7 +334,8 @@ Remaining open items before full Phase A closure:
 | G-025 Design TECS — Supplier/facility model decision | ✅ Complete | v1 Deferred (G-025-A); v2 scope | 2026-03-04 |
 | G-025 Design TECS — Snapshot strategy selection | ✅ Complete | D3: Option A Live SQL Views (mandatory; RLS inherited) | 2026-03-04 |
 | G-025 Design Anchor → ✅ Complete | ✅ Complete | `docs/architecture/DPP-SNAPSHOT-VIEWS-DESIGN.md`; D1–D6 locked | 2026-03-04 |
-| TECS 4A — `node_certifications` join table (schema migration) | ⏳ Planned | Gate: D1 approval; allowlist: schema.prisma + migration SQL | — |
+| **D1 Approval — Option C (join table `node_certifications`)** | ✅ Approved — 2026-03-04 | Paresh explicit approval; GOVERNANCE-SYNC-080; TECS 4A unblocked | 2026-03-04 |
+| TECS 4A — `node_certifications` join table (schema migration) | ✅ Validated | D1 ✅ Approved; migration `20260316000000_g025_node_certifications` applied to Supabase; PREFLIGHT PASS; FORCE RLS=t; 5 RLS policies (1 RESTRICTIVE + 4 PERMISSIVE); GRANT SELECT,INSERT texqtic_app; RESOLVE_EXIT:0; PULL_EXIT:0; GENERATE_EXIT:0; typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-080 | 2026-03-04 |
 | TECS 4B — DPP view creation (SQL DDL) | ⏳ Planned | Gate: D2 + D4 approval; prerequisite: TECS 4A (or views proceed without node_id) | — |
 | TECS 4C — API route exposure (`GET /api/tenant/dpp/*`) | ⏳ Planned | Gate: TECS 4B complete | — |
 | TECS 4D — UI / export surfaces (DPPPassport.tsx) | ⏳ Planned | Gate: TECS 4C complete | — |

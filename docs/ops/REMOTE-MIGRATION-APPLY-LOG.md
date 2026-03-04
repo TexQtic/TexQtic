@@ -663,3 +663,59 @@ Policy changes are NOT DDL — rollback via DROP + recreate policies (see SUPERA
 - `texqtic_app` has no UPDATE/DELETE grants
 - `escalation_events_admin_insert` WITH CHECK contains `is_superadmin`
 - Tenant INSERT arm (`escalation_events_tenant_insert`) org_id scoping intact
+
+---
+
+## TECS 4A — node_certifications Join Table (G-025-DPP-NODE-CERTIFICATIONS-001)
+
+**Date:** 2026-03-04
+**Operator:** GitHub Copilot (automated TECS)
+**Migration:** `20260316000000_g025_node_certifications`
+**Governance Sync:** GOVERNANCE-SYNC-080
+**Design Anchor:** G-025-DPP-SNAPSHOT-VIEWS-DESIGN-001 D1 — Option C (APPROVED Paresh)
+
+### Apply Evidence
+
+**Method:** `Get-Content migration.sql -Raw | psql "$env:DATABASE_URL"` (stdin pipe — Windows PowerShell)
+
+**PREFLIGHT PASS (from NOTICE output):**
+`[G-025 PREFLIGHT] PASS -- orgs.id=1, nodes.id=1, nodes.org_id=1, certs.id=1, certs.org_id=1`
+
+**APPLY_EXIT:0** — No ERRORs. No ROLLBACK. COMMIT confirmed.
+
+**Table verification (pg_class query):**
+`node_certifications | relrowsecurity=t | relforcerowsecurity=t`
+
+**Policies verified (pg_policies query):**
+
+| Policy Name | Type | Cmd |
+|---|---|---|
+| node_certifications_guard | RESTRICTIVE | ALL |
+| node_certifications_select_unified | PERMISSIVE | SELECT |
+| node_certifications_insert_unified | PERMISSIVE | INSERT |
+| node_certifications_update_unified | PERMISSIVE | UPDATE |
+| node_certifications_delete_unified | PERMISSIVE | DELETE |
+
+**RESOLVE_EXIT:0** — `Migration 20260316000000_g025_node_certifications marked as applied.`
+
+**PULL:** `prisma db pull` — 43 models introspected. `PULL_EXIT:0`
+
+**GENERATE_EXIT:0** — Prisma Client v6.1.0 generated successfully.
+
+### Quality Gates
+
+- `typecheck: TYPECHECK_EXIT:0`
+- `lint: LINT_EXIT:0 (warnings only, 0 errors)`
+
+### Rollback
+
+Drop table via: `DROP TABLE public.node_certifications CASCADE;` and remove `20260316000000_g025_node_certifications` row from `_prisma_migrations`.
+
+### RLS Summary
+
+- `ENABLE ROW LEVEL SECURITY` + `FORCE ROW LEVEL SECURITY` — confirmed
+- 1 RESTRICTIVE guard (FOR ALL TO texqtic_app): requires `app.require_org_context()` OR `is_admin='true'` OR `app.bypass_enabled()`
+- SELECT/INSERT: tenant arm (`org_id = app.current_org_id()`) OR admin arm
+- UPDATE: `USING (false) WITH CHECK (false)` — join table immutable in v1
+- DELETE: `USING (false)` — no detach semantics approved in v1
+- GRANT: `SELECT, INSERT TO texqtic_app`

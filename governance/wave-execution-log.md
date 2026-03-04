@@ -7133,3 +7133,64 @@ design choices. Produce the view contract, TECS sequence, and gap disposition ma
 - [x] TECS 4A/4B/4C/4D structured with allowlists + gates + stop conditions
 - [x] G-025-A through G-025-H all mapped to v1 status + closing TECS
 - [x] G-025 → Design Anchor complete; Implementation pending D1/D2/D4 approvals
+
+---
+
+## Wave 4 -- G-025-DPP-NODE-CERTIFICATIONS-001: GOVERNANCE-SYNC-080 -- D1 Approval Recorded + TECS 4A VALIDATED
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-03-04 |
+| Governance Sync | GOVERNANCE-SYNC-080 |
+| TECS ID | G-025-DPP-NODE-CERTIFICATIONS-001 |
+| Status | VALIDATED -- D1 approved; migration applied; all gates PASS |
+| Operator | GitHub Copilot |
+
+### Objective
+
+Record Paresh's explicit approval of Decision D1 from G-025-DPP-SNAPSHOT-VIEWS-DESIGN-001 and unblock TECS 4A implementation.
+
+### D1 Approval Statement
+
+D1 APPROVED (Paresh, 2026-03-04): Decision D1 -- Option C: Create join table node_certifications (M:N between traceability_nodes and certifications, with org_id RLS boundary, FORCE RLS, canonical Doctrine v1.4 policy shape). No modification to existing verified tables. Proceed with TECS 4A.
+
+### TECS 4A Plan Summary
+
+| Item | Detail |
+|------|--------|
+| Migration folder | server/prisma/migrations/20260316000000_g025_node_certifications/ |
+| Table created | public.node_certifications |
+| Columns | id UUID PK, org_id UUID FK->organizations, node_id UUID FK->traceability_nodes, certification_id UUID FK->certifications, created_at TIMESTAMPTZ |
+| Unique constraint | (org_id, node_id, certification_id) |
+| Additional indexes | (org_id, node_id), (org_id, certification_id) |
+| FORCE RLS | Enabled |
+| RLS pattern | 1 RESTRICTIVE guard + 4 PERMISSIVE (select/insert/update-false/delete-false) |
+| Grants | SELECT, INSERT TO texqtic_app |
+| Verifier | DO block -- asserts FORCE RLS, guard count, policy counts, grants |
+
+### Gate Status (at time of governance recording)
+
+| Gate | Status |
+|------|--------|
+| D1 Approval | APPROVED (Paresh, 2026-03-04) |
+| Migration SQL authored | PASS -- 20260316000000_g025_node_certifications/migration.sql |
+| psql apply to remote DB | PASS -- APPLY_EXIT:0; no ROLLBACK; COMMIT confirmed |
+| FORCE RLS + Table | PASS -- relrowsecurity=t relforcerowsecurity=t |
+| 5 RLS policies | PASS -- 1 RESTRICTIVE (guard) + 4 PERMISSIVE (SELECT/INSERT/UPDATE-false/DELETE-false) |
+| GRANT SELECT,INSERT texqtic_app | PASS -- confirmed via information_schema |
+| prisma migrate resolve | PASS -- RESOLVE_EXIT:0; marked applied |
+| prisma db pull | PASS -- 43 models introspected; PULL_EXIT:0 |
+| prisma generate | PASS -- Prisma Client v6.1.0; GENERATE_EXIT:0 |
+| typecheck EXIT 0 | PASS |
+| lint EXIT 0 | PASS (0 errors, warnings only) |
+
+### Files Changed (this governance sync)
+
+| File | Change |
+|------|--------|
+| governance/gap-register.md | GOVERNANCE-SYNC-080 updated: TECS 4A IN PROGRESS → VALIDATED; post-apply evidence recorded |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 4A row updated: In Progress → Validated; all gate exits recorded |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-080) — gate status updated to all PASS |
+| server/prisma/migrations/20260316000000_g025_node_certifications/migration.sql | Rewritten with clean dollar-quoted DO blocks (no COMMENT ON statements); applied to remote Supabase |
+| server/prisma/schema.prisma | Updated via prisma db pull -- NodeCertification model added (43 models total) |
+| docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | TECS 4A apply evidence section appended |

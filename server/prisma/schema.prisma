@@ -810,23 +810,24 @@ model TradeEvent {
 /// RLS: RESTRICTIVE guard (incl. admin pass-through) + PERMISSIVE tenant/admin policies.
 /// No DELETE — use lifecycle transitions to REVOKED/EXPIRED instead.
 model Certification {
-  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// RLS boundary: scopes row to one organization. FK to organizations(id).
-  orgId             String         @map("org_id") @db.Uuid
+  orgId               String                @map("org_id") @db.Uuid
   /// Open-coded cert category text (GOTS, OEKO_TEX, ISO_9001, ...). Not an enum.
-  certificationType String         @map("certification_type")
+  certificationType   String                @map("certification_type")
   /// G-020: Current lifecycle state (entity_type='CERTIFICATION').
-  lifecycleStateId  String         @map("lifecycle_state_id") @db.Uuid
+  lifecycleStateId    String                @map("lifecycle_state_id") @db.Uuid
   /// Nullable: not set at SUBMITTED/UNDER_REVIEW; set on APPROVED.
-  issuedAt          DateTime?      @map("issued_at") @db.Timestamptz(6)
+  issuedAt            DateTime?             @map("issued_at") @db.Timestamptz(6)
   /// Nullable: some certifications do not expire.
-  expiresAt         DateTime?      @map("expires_at") @db.Timestamptz(6)
-  createdByUserId   String?        @map("created_by_user_id") @db.Uuid
-  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt           DateTime?             @map("expires_at") @db.Timestamptz(6)
+  createdByUserId     String?               @map("created_by_user_id") @db.Uuid
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_certifications_set_updated_at on BEFORE UPDATE.
-  updatedAt         DateTime       @default(now()) @map("updated_at") @db.Timestamptz(6)
-  lifecycleState    LifecycleState @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
-  org               organizations  @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  updatedAt           DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  lifecycleState      LifecycleState        @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
+  org                 organizations         @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  node_certifications node_certifications[]
 
   @@index([orgId])
   @@index([lifecycleStateId])
@@ -836,25 +837,26 @@ model Certification {
 
 /// G-016 Phase A — Supply-chain traceability node (one per batch per org).
 model TraceabilityNode {
-  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// RLS boundary: scopes row to one organization. FK to organizations(id).
-  orgId      String             @map("org_id") @db.Uuid
+  orgId               String                @map("org_id") @db.Uuid
   /// Human-readable supply-chain batch identifier (e.g., SKU-LOT-2026-001).
-  batchId    String             @map("batch_id")
+  batchId             String                @map("batch_id")
   /// Node type classification (RAW_MATERIAL, PROCESSING, DISTRIBUTION, RETAIL, …).
-  nodeType   String             @map("node_type")
+  nodeType            String                @map("node_type")
   /// Extensible metadata blob. Application layer enforces size stop-loss.
-  meta       Json               @default("{}")
+  meta                Json                  @default("{}")
   /// Visibility scope: TENANT (default) or SHARED (future cross-org sharing).
-  visibility String             @default("TENANT")
+  visibility          String                @default("TENANT")
   /// Optional geospatial hash (geohash / H3) for location-aware queries.
-  geoHash    String?            @map("geo_hash")
-  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  geoHash             String?               @map("geo_hash")
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_traceability_nodes_set_updated_at on BEFORE UPDATE.
-  updatedAt  DateTime           @default(now()) @map("updated_at") @db.Timestamptz(6)
-  edgesFrom  TraceabilityEdge[] @relation("EdgeFrom")
-  edgesTo    TraceabilityEdge[] @relation("EdgeTo")
-  org        organizations      @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  updatedAt           DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  node_certifications node_certifications[]
+  edgesFrom           TraceabilityEdge[]    @relation("EdgeFrom")
+  edgesTo             TraceabilityEdge[]    @relation("EdgeTo")
+  org                 organizations         @relation(fields: [orgId], references: [id], onUpdate: NoAction)
 
   @@unique([orgId, batchId], map: "traceability_nodes_org_batch_unique")
   @@index([orgId, nodeType], map: "traceability_nodes_org_type_idx")
@@ -887,30 +889,31 @@ model TraceabilityEdge {
 }
 
 model organizations {
-  id                    String               @id @db.Uuid
-  slug                  String               @unique @db.VarChar(100)
-  legal_name            String               @db.VarChar(500)
-  jurisdiction          String               @default("UNKNOWN") @db.VarChar(100)
-  registration_no       String?              @db.VarChar(200)
-  org_type              String               @default("B2B") @db.VarChar(50)
-  risk_score            Int                  @default(0) @db.SmallInt
-  status                String               @default("ACTIVE") @db.VarChar(30)
-  plan                  String               @default("FREE") @db.VarChar(30)
-  effective_at          DateTime             @default(now()) @db.Timestamptz(6)
-  superseded_at         DateTime?            @db.Timestamptz(6)
-  created_at            DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime             @default(now()) @db.Timestamptz(6)
+  id                    String                @id @db.Uuid
+  slug                  String                @unique @db.VarChar(100)
+  legal_name            String                @db.VarChar(500)
+  jurisdiction          String                @default("UNKNOWN") @db.VarChar(100)
+  registration_no       String?               @db.VarChar(200)
+  org_type              String                @default("B2B") @db.VarChar(50)
+  risk_score            Int                   @default(0) @db.SmallInt
+  status                String                @default("ACTIVE") @db.VarChar(30)
+  plan                  String                @default("FREE") @db.VarChar(30)
+  effective_at          DateTime              @default(now()) @db.Timestamptz(6)
+  superseded_at         DateTime?             @db.Timestamptz(6)
+  created_at            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime              @default(now()) @db.Timestamptz(6)
   certifications        Certification[]
   escalation_events     EscalationEvent[]
   escrow_lifecycle_logs EscrowLifecycleLog[]
-  tenants               Tenant               @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  node_certifications   node_certifications[]
+  tenants               Tenant                @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pending_approvals     PendingApproval[]
   sanctions             Sanction[]
   traceabilityEdges     TraceabilityEdge[]
   traceabilityNodes     TraceabilityNode[]
   trade_lifecycle_logs  TradeLifecycleLog[]
-  tradesBuyer           Trade[]              @relation("TradeBuyer")
-  tradesSeller          Trade[]              @relation("TradeSeller")
+  tradesBuyer           Trade[]               @relation("TradeBuyer")
+  tradesSeller          Trade[]               @relation("TradeSeller")
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
   @@index([jurisdiction], map: "idx_organizations_jurisdiction")
@@ -1031,6 +1034,22 @@ model morgue_entries {
 
   @@index([entity_type, entity_id], map: "idx_morgue_entries_entity_type_id")
   @@index([tenant_id, created_at(sort: Desc)], map: "idx_morgue_entries_tenant_created")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model node_certifications {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id             String           @db.Uuid
+  node_id            String           @db.Uuid
+  certification_id   String           @db.Uuid
+  created_at         DateTime         @default(now()) @db.Timestamptz(6)
+  certifications     Certification    @relation(fields: [certification_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  traceability_nodes TraceabilityNode @relation(fields: [node_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations      organizations    @relation(fields: [org_id], references: [id], onUpdate: NoAction)
+
+  @@unique([org_id, node_id, certification_id], map: "node_certifications_unique_per_org_node_cert")
+  @@index([org_id, certification_id], map: "node_certifications_org_cert_idx")
+  @@index([org_id, node_id], map: "node_certifications_org_node_idx")
 }
 
 enum TenantType {
