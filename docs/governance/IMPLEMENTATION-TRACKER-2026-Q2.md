@@ -124,12 +124,12 @@ After all tables consolidated, extend `server/scripts/ci/rls-proof.ts` to includ
 | `startImpersonation` + `stopImpersonation` → `withSuperAdminContext` | ✅ Complete (GOVERNANCE-SYNC-072) |
 | `withSuperAdminEscalationContext` for upgrade/resolve write paths | ✅ Complete (GOVERNANCE-SYNC-072) |
 | DB apply approved (sign-off + runbook recorded) | ✅ Approved (GOVERNANCE-SYNC-073) |
-| DB-level RLS policies consuming `app.is_superadmin` — 20260315000008 authored | ✅ SQL authored (GOVERNANCE-SYNC-074) — ready for psql apply |
-| DB-level RLS policies consuming `app.is_superadmin` — 20260315000009 authored | ✅ SQL authored (GOVERNANCE-SYNC-075) — escalation admin INSERT narrowed; apply pending |
+| DB-level RLS policies consuming `app.is_superadmin` — 20260315000008 applied | ✅ APPLIED (GOVERNANCE-SYNC-076) — APPLY_EXIT:0, VERIFIER PASS [20260315000008], RESOLVE_EXIT:0 |
+| DB-level RLS policies consuming `app.is_superadmin` — 20260315000009 applied | ✅ APPLIED (GOVERNANCE-SYNC-076) — APPLY_EXIT:0, VERIFIER PASS [20260315000009], RESOLVE_EXIT:0 |
 
 **Dependency:** DB apply authorized (GOVERNANCE-SYNC-073). Runbook at `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md`.  
 **Risk:** Low — GUC plumbing + service paths complete; policy apply is the final step.  
-**TECS:** `OPS-RLS-SUPERADMIN-001` — IN PROGRESS (both SQL files authored; neither yet applied to remote Supabase; mark VALIDATED after both APPLY_EXIT:0 + RESOLVE_EXIT:0 evidence recorded)
+**TECS:** `OPS-RLS-SUPERADMIN-001` — ✅ VALIDATED (GOVERNANCE-SYNC-076): both migrations applied; APPLY_EXIT:0 + VERIFIER PASS + RESOLVE_EXIT:0 for both 20260315000008 + 20260315000009
 
 ---
 
@@ -311,7 +311,7 @@ All foundational gaps are resolved:
 
 Remaining open items before full Phase A closure:
 - OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS proof extension to domain tables (non-blocking for Wave 4).
-- ~~OPS-RLS-SUPERADMIN-001~~ 🔄 **IN PROGRESS (Service complete; DB apply pending)** (GOVERNANCE-SYNC-072): service write paths migrated to `withSuperAdminContext` (`startImpersonation`, `stopImpersonation`, `withSuperAdminEscalationContext` for escalation upgrade/resolve); DB policy migrations `20260315000008` + `20260315000009` pending explicit sign-off per `docs/security/SUPERADMIN-RLS-PLAN.md` Section F. Feature flags: KNOWN LIMITATION (postgres BYPASSRLS path; route-level guard only).
+- ~~OPS-RLS-SUPERADMIN-001~~ ✅ **VALIDATED (GOVERNANCE-SYNC-076)**: both DB policy migrations applied to remote Supabase; APPLY_EXIT:0 + VERIFIER PASS + RESOLVE_EXIT:0 for both; `impersonation_sessions` INSERT/UPDATE/DELETE narrowed to `is_superadmin='true'`; `escalation_events` admin INSERT narrowed to `is_superadmin='true'`; service write paths (`withSuperAdminContext`) confirmed at `1f211d6`. Feature flags: KNOWN LIMITATION (postgres BYPASSRLS path; route-level guard only).
 - ~~orders.status enum extension~~ ✅ **DONE** — OPS-ORDERS-STATUS-ENUM-001 (GOVERNANCE-SYNC-070): CONFIRMED + FULFILLED added; CANCELLED verified present; migration `20260315000007` applied; PREFLIGHT PASS + VERIFIER PASS.
 
 ---

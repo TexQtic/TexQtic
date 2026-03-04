@@ -6726,9 +6726,9 @@ The SUPERADMIN-RLS-PLAN.md C.2 was authored based on incorrect discovery data. N
 - [x] INSERT/UPDATE/DELETE predicates both arms require is_superadmin ✅
 - [x] TECS 2C spec mismatch detected + BLOCKER issued → resolved by user (Option A: narrow admin INSERT)
 - [x] Commit hash: `8abe96b`
-- [ ] APPLY_EXIT: PENDING (psql remote)
-- [ ] VERIFIER PASS: PENDING
-- [ ] RESOLVE_EXIT: PENDING
+- [x] APPLY_EXIT_008: 0
+- [x] VERIFIER PASS [20260315000008]: impersonation_sessions — FORCE RLS=t, 1 RESTRICTIVE guard FOR ALL (require_admin_context + is_admin), 4 PERMISSIVE (SELECT: is_admin unchanged | INSERT/UPDATE/DELETE: is_superadmin narrowing CONFIRMED), 0 {public} policies.
+- [x] RESOLVE_EXIT_008: 0
 
 ---
 
@@ -6787,7 +6787,63 @@ No UPDATE/DELETE policies added. Immutability remains at trigger layer (Layer 2)
 - [x] No UPDATE/DELETE policies added ✅
 - [x] Verifier asserts no UPDATE/DELETE grants for texqtic_app ✅
 - [x] SUPERADMIN-RLS-PLAN.md C.2 corrected ✅
-- [ ] APPLY_EXIT: PENDING (psql remote — apply 20260315000008 FIRST, then this)
-- [ ] VERIFIER PASS: PENDING
-- [ ] RESOLVE_EXIT: PENDING
-- [ ] OPS-RLS-SUPERADMIN-001 → ✅ VALIDATED (only after both migrations applied)
+- [x] APPLY_EXIT_009: 0 (after RAISE string fix `82ae0b3` + verifier fix `9e155f9` — removed invalid {public}=0 check; escalation_events policies are public-role scoped per G-022 baseline)
+- [x] VERIFIER PASS [20260315000009]: escalation_events — FORCE RLS=t, admin INSERT narrowed (is_superadmin CONFIRMED in WITH CHECK), tenant INSERT arm preserved (org_id scoping intact), 2 SELECT + 2 INSERT policies, 0 UPDATE policies (append-only), no UPDATE/DELETE grants for texqtic_app.
+- [x] RESOLVE_EXIT_009: 0
+- [x] OPS-RLS-SUPERADMIN-001 → ✅ VALIDATED (GOVERNANCE-SYNC-076)
+
+---
+
+## Wave 4 — OPS-RLS-SUPERADMIN-001: GOVERNANCE-SYNC-076 — Remote Apply Evidence + VALIDATED
+
+**TECS ID:** OPS-RLS-SUPERADMIN-001-REMOTE-APPLY-001  
+**Date:** 2026-03-15  
+**GOVERNANCE-SYNC:** 076  
+**Risk:** 🟢 LOW — documentation + ledger sync only; DB state confirmed correct via VERIFIER PASS
+
+### Objective
+
+Record apply evidence for both superadmin RLS migrations. Two pre-apply fixes were required:
+1. RAISE string fix (`82ae0b3`): formatter-split adjacent RAISE literals merged in both migration DO blocks
+2. Verifier fix (`9e155f9`): removed incorrect `{public}=0` invariant from migration 009 verifier (escalation_events policies are public-role scoped by G-022 baseline design — no `TO texqtic_app` clause)
+
+### Apply Evidence
+
+**Migration 20260315000008 — impersonation_sessions:**
+| Evidence | Value |
+|---|---|
+| APPLY_EXIT_008 | `0` |
+| VERIFIER PASS | `VERIFIER PASS [20260315000008]: impersonation_sessions — FORCE RLS=t, 1 RESTRICTIVE guard FOR ALL (require_admin_context + is_admin), 4 PERMISSIVE (SELECT: is_admin unchanged | INSERT/UPDATE/DELETE: is_superadmin narrowing CONFIRMED), 0 {public} policies.` |
+| RESOLVE_EXIT_008 | `0` |
+
+**Migration 20260315000009 — escalation_events:**
+| Evidence | Value |
+|---|---|
+| APPLY_EXIT_009 | `0` |
+| VERIFIER PASS | `VERIFIER PASS [20260315000009]: escalation_events — FORCE RLS=t, admin INSERT narrowed (is_superadmin CONFIRMED in WITH CHECK), tenant INSERT arm preserved (org_id scoping intact), 2 SELECT + 2 INSERT policies, 0 UPDATE policies (append-only), no UPDATE/DELETE grants for texqtic_app.` |
+| RESOLVE_EXIT_009 | `0` |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `server/prisma/migrations/20260315000008_.../migration.sql` | RAISE string fix (commit `82ae0b3`) |
+| `server/prisma/migrations/20260315000009_.../migration.sql` | RAISE string fix + verifier {public} check removed (commits `82ae0b3`, `9e155f9`) |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-076 prepended; OPS-RLS-SUPERADMIN-001 → ✅ VALIDATED |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | Both migration rows → ✅ APPLIED; overall status → ✅ VALIDATED |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | Date executed filled; apply evidence section added |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-076) |
+
+### Quality Gates
+
+- [x] git preflight: only allowlisted files modified
+- [x] RAISE string grep: zero adjacent literals in both migration files
+- [x] APPLY_EXIT_008: 0
+- [x] VERIFIER PASS [20260315000008] confirmed
+- [x] RESOLVE_EXIT_008: 0
+- [x] APPLY_EXIT_009: 0
+- [x] VERIFIER PASS [20260315000009] confirmed
+- [x] RESOLVE_EXIT_009: 0
+- [x] typecheck: EXIT 0
+- [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
+- [x] OPS-RLS-SUPERADMIN-001 → ✅ VALIDATED

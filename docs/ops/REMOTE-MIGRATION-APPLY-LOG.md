@@ -569,7 +569,7 @@ RESOLVE_EXIT:0 — `Migration 20260315000007_ops_orders_status_enum_001 marked a
 **GOVERNANCE-SYNC:** 073  
 **Date approved:** 2026-03-03  
 **Date SQL authored:** 2026-03-15 (GOVERNANCE-SYNC-074)  
-**Date executed:** PENDING (psql remote apply)  
+**Date executed:** 2026-03-15 (GOVERNANCE-SYNC-076 — both migrations applied; APPLY_EXIT:0 + VERIFIER PASS for both)  
 **Prerequisite:** `1f211d6` — service write paths migrated to `withSuperAdminContext`  
 **Target:** Remote Supabase PostgreSQL (`aws-1-ap-northeast-1.pooler.supabase.com`)
 
@@ -626,6 +626,26 @@ After each migration, record and paste into wave-execution-log:
 - `RESOLVE_EXIT: 0`
 - `pnpm -C server run typecheck`: EXIT 0
 - `pnpm -C server run lint`: EXIT 0 (0 errors, N pre-existing warnings)
+
+### Apply Evidence (GOVERNANCE-SYNC-076)
+
+**Migration 20260315000008 — impersonation_sessions:**
+- `APPLY_EXIT_008: 0`
+- `VERIFIER PASS [20260315000008]: impersonation_sessions — FORCE RLS=t, 1 RESTRICTIVE guard FOR ALL (require_admin_context + is_admin), 4 PERMISSIVE (SELECT: is_admin unchanged | INSERT/UPDATE/DELETE: is_superadmin narrowing CONFIRMED), 0 {public} policies.`
+- `RESOLVE_EXIT_008: 0` — `Migration 20260315000008_ops_rls_superadmin_impersonation_sessions marked as applied.`
+
+**Migration 20260315000009 — escalation_events:**
+- Fix applied: removed invalid `{public}=0` verifier invariant (escalation_events uses public-role-scoped policies by G-022 baseline design); commit `9e155f9`
+- `APPLY_EXIT_009: 0`
+- `VERIFIER PASS [20260315000009]: escalation_events — FORCE RLS=t, admin INSERT narrowed (is_superadmin CONFIRMED in WITH CHECK), tenant INSERT arm preserved (org_id scoping intact), 2 SELECT + 2 INSERT policies, 0 UPDATE policies (append-only), no UPDATE/DELETE grants for texqtic_app. (Policies are public-role scoped per G-022 baseline design.)`
+- `RESOLVE_EXIT_009: 0` — `Migration 20260315000009_ops_rls_superadmin_escalation_events marked as applied.`
+
+**Quality gates:**
+- `typecheck: TYPECHECK_EXIT:0`
+- `lint: LINT_EXIT:0 (0 errors, 108 pre-existing warnings)`
+
+**RAISE string fix commit:** `82ae0b3` — `fix(db): repair RAISE strings in superadmin RLS migrations (OPS-RLS-SUPERADMIN-001)`  
+**Verifier fix commit:** `9e155f9` — `fix(db): remove invalid public-role verifier check from migration 009 (OPS-RLS-SUPERADMIN-001)`
 
 ### Rollback
 
