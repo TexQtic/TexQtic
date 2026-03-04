@@ -7194,3 +7194,73 @@ D1 APPROVED (Paresh, 2026-03-04): Decision D1 -- Option C: Create join table nod
 | server/prisma/migrations/20260316000000_g025_node_certifications/migration.sql | Rewritten with clean dollar-quoted DO blocks (no COMMENT ON statements); applied to remote Supabase |
 | server/prisma/schema.prisma | Updated via prisma db pull -- NodeCertification model added (43 models total) |
 | docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | TECS 4A apply evidence section appended |
+
+---
+
+## Wave 4 -- G-025-DPP-SNAPSHOT-VIEWS-IMPLEMENT-001: GOVERNANCE-SYNC-081 -- TECS 4B DPP Snapshot Views VALIDATED
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-03-04 |
+| Governance Sync | GOVERNANCE-SYNC-081 |
+| TECS ID | G-025-DPP-SNAPSHOT-VIEWS-IMPLEMENT-001 |
+| Status | VALIDATED -- D2 approved; D4 gate FAIL (orgs excluded); 3 views applied |
+| Operator | GitHub Copilot |
+
+### Approvals Recorded
+
+| Decision | Result |
+|----------|--------|
+| D2 -- v1 regulatory field surface | APPROVED (Paresh, 2026-03-04) |
+| D4 -- organizations RLS gate | FAIL -- SELECT policy admin/bypass-only, no tenant arm |
+
+### D4 Gate Evidence
+
+organizations pg_policies SELECT arm (as verified by preflight query):
+
+- Policy: organizations_control_plane_select / PERMISSIVE / SELECT
+- USING: app.bypass_enabled() OR (app.current_realm() = 'admin')
+- No org_id = app.current_org_id() tenant predicate
+- relrowsecurity=t, relforcerowsecurity=t but NO tenant-scoped SELECT
+
+Gap registered: G-025-ORGS-RLS-001 (organizations needs canonical Wave 3 Tail RLS canonicalization before manufacturer fields can be included in DPP views)
+
+manufacturer_name / manufacturer_jurisdiction / manufacturer_registration_no removed from dpp_snapshot_products_v1 for v1.
+
+### Views Created
+
+| View | Columns | Strategy |
+|------|---------|----------|
+| dpp_snapshot_products_v1 | node_id, org_id, batch_id, node_type, meta, geo_hash, visibility, created_at, updated_at | Simple SELECT from traceability_nodes (no orgs JOIN) |
+| dpp_snapshot_lineage_v1 | root_node_id, node_id, parent_node_id, depth, edge_type, org_id, created_at | Recursive CTE; depth cap 20; cycle guard: next_node.id != ALL(visited_path) |
+| dpp_snapshot_certifications_v1 | node_id, certification_id, certification_type, lifecycle_state_id, expiry_date, org_id | LEFT JOIN node_certifications -> certifications (NULL cert for unlinked nodes) |
+
+### Gate Status
+
+| Gate | Status |
+|------|--------|
+| D2 Approval | APPROVED (Paresh, 2026-03-04) |
+| D4 Gate | FAIL -- G-025-ORGS-RLS-001 registered -- views proceed without organizations JOIN |
+| PREFLIGHT PASS | PASS -- all base columns confirmed (traceability_nodes/edges, node_certifications, certifications) |
+| CREATE VIEW x3 | PASS -- all 3 views created |
+| SECURITY INVOKER (security_invoker=true in pg_class.reloptions) | PASS |
+| GRANT SELECT TO texqtic_app x3 | PASS |
+| VERIFIER PASS | PASS: products=1, lineage=1, certifications=1, all security_invoker=on |
+| APPLY_EXIT | 0 -- COMMIT confirmed |
+| prisma migrate resolve | PASS -- RESOLVE_EXIT:0 |
+| prisma db pull | PASS -- 43 models (views not Prisma models -- expected) -- PULL_EXIT:0 |
+| prisma generate | PASS -- GENERATE_EXIT:0 |
+| typecheck EXIT 0 | PASS |
+| lint EXIT 0 | PASS (0 errors, warnings only) |
+| Atomic commit | feat(db): implement DPP snapshot views (G-025) |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| server/prisma/migrations/20260316000001_g025_dpp_snapshot_views/migration.sql | Created -- 3 views, SECURITY INVOKER, recursive CTE, verifier DO block |
+| server/prisma/schema.prisma | Updated via prisma db pull (43 models, no view models added -- expected) |
+| governance/gap-register.md | GOVERNANCE-SYNC-081 prepended; D2 approved; D4 FAIL; G-025-ORGS-RLS-001 registered; TECS 4B validated |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | D2/D4 rows added; TECS 4B -> Validated |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-081) |
+| docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | TECS 4B apply evidence appended |

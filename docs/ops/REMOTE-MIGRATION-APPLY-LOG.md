@@ -719,3 +719,76 @@ Drop table via: `DROP TABLE public.node_certifications CASCADE;` and remove `202
 - UPDATE: `USING (false) WITH CHECK (false)` — join table immutable in v1
 - DELETE: `USING (false)` — no detach semantics approved in v1
 - GRANT: `SELECT, INSERT TO texqtic_app`
+
+---
+
+## TECS 4B -- DPP Snapshot Views (G-025-DPP-SNAPSHOT-VIEWS-IMPLEMENT-001)
+
+**Date:** 2026-03-04
+**Operator:** GitHub Copilot (automated TECS)
+**Migration:** `20260316000001_g025_dpp_snapshot_views`
+**Governance Sync:** GOVERNANCE-SYNC-081
+
+### D4 Gate Result: FAIL
+
+organizations SELECT policy USING = `app.bypass_enabled() OR (app.current_realm() = 'admin'::text)`
+No tenant-scoped predicate (org_id). Gap G-025-ORGS-RLS-001 registered.
+manufacturer_* columns removed from dpp_snapshot_products_v1.
+Views proceed without organizations JOIN.
+
+### Apply Evidence
+
+**Method:** `Get-Content migration.sql -Raw | psql "$env:DATABASE_URL"` (stdin pipe)
+
+**PREFLIGHT PASS (from NOTICE output):**
+`[G-025 PREFLIGHT] PASS -- all required base columns confirmed (traceability_nodes, traceability_edges, node_certifications, certifications)`
+
+**D4 Gate NOTICE:**
+`[G-025 D4 GATE] FAIL: organizations.SELECT policies found=1, but none are tenant-scoped`
+
+**3 CREATE VIEW statements executed:** dpp_snapshot_products_v1, dpp_snapshot_lineage_v1, dpp_snapshot_certifications_v1
+
+**3 GRANT statements executed:** SELECT TO texqtic_app on all 3 views
+
+**VERIFIER PASS (from NOTICE output):**
+`[G-025] VERIFIER PASS: DPP snapshot views created -- products=1, lineage=1, certifications=1, all security_invoker=on`
+
+**APPLY_EXIT:0** -- COMMIT confirmed. No ROLLBACK.
+
+**Views confirmed in DB (information_schema.views query):**
+
+| View | Exists |
+|------|--------|
+| dpp_snapshot_certifications_v1 | Yes |
+| dpp_snapshot_lineage_v1 | Yes |
+| dpp_snapshot_products_v1 | Yes |
+
+**RESOLVE_EXIT:0** -- `Migration 20260316000001_g025_dpp_snapshot_views marked as applied.`
+
+**PULL:** `prisma db pull` -- 43 models (views not introspected as Prisma models -- expected). PULL_EXIT:0
+
+**GENERATE_EXIT:0** -- Prisma Client v6.1.0 regenerated.
+
+### Quality Gates
+
+- `typecheck: TYPECHECK_EXIT:0`
+- `lint: LINT_EXIT:0 (warnings only, 0 errors)`
+
+### View Specifications
+
+| View | Security | RLS Inheritance |
+|------|----------|-----------------|
+| dpp_snapshot_products_v1 | SECURITY INVOKER (security_invoker=true) | traceability_nodes FORCE RLS fires |
+| dpp_snapshot_lineage_v1 | SECURITY INVOKER (security_invoker=true) | traceability_nodes + traceability_edges FORCE RLS fires |
+| dpp_snapshot_certifications_v1 | SECURITY INVOKER (security_invoker=true) | traceability_nodes + node_certifications + certifications FORCE RLS fires |
+
+### Rollback
+
+`DROP VIEW IF EXISTS public.dpp_snapshot_products_v1;`
+`DROP VIEW IF EXISTS public.dpp_snapshot_lineage_v1;`
+`DROP VIEW IF EXISTS public.dpp_snapshot_certifications_v1;`
+Remove 20260316000001_g025_dpp_snapshot_views from _prisma_migrations.
+
+### Open Gap Registered This TECS
+
+- G-025-ORGS-RLS-001: organizations needs canonical Wave 3 Tail RLS (tenant SELECT arm) before manufacturer fields can be included in DPP views
