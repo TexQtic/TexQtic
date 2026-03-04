@@ -316,6 +316,35 @@ Remaining open items before full Phase A closure:
 
 ---
 
+## Section 10 — Wave 4 Execution (G-025 — DPP Snapshot Views)
+
+> **Baseline:** GOVERNANCE-SYNC-078 — 2026-03-04  
+> **Wave 4 opens:** Phase A hardening closed (GOVERNANCE-SYNC-077; RLS Maturity 5.0/5).
+
+| Item | Status | Notes | Date |
+|------|--------|-------|------|
+| G-025 Discovery — Schema inventory (traceability_nodes, edges, certifications) | ✅ Complete | 3 tables analyzed; Wave 3 Tail RLS confirmed; FORCE RLS=t on all | 2026-03-04 |
+| G-025 Discovery — Graph traversal pattern documented | ✅ Complete | Forward + reverse CTE pattern; edge directionality confirmed; no cycle guard at DB level | 2026-03-04 |
+| G-025 Discovery — RLS inheritance analysis | ✅ Complete | Live SQL views safe; mat-view RLS risk documented | 2026-03-04 |
+| G-025 Discovery — Snapshot strategies compared (A/B/C) | ✅ Complete | No recommendation yet; tradeoffs documented | 2026-03-04 |
+| G-025 Discovery — STOP CONDITION documented | ✅ Complete | certifications has no FK to traceability_nodes; org-level join only (Gap G-025-B) | 2026-03-04 |
+| G-025 Discovery document written | ✅ Complete | `docs/architecture/DPP-SNAPSHOT-VIEWS-DISCOVERY.md` | 2026-03-04 |
+| G-025 Regulatory DPP field mapping | ✅ Complete | 5 available, 6 partial, 5 absent; gaps G-025-A through G-025-H registered | 2026-03-04 |
+| G-025 Design TECS — Cert-to-node linkage decision | ⏳ Pending | Requires Design TECS approval | — |
+| G-025 Design TECS — Supplier/facility model decision | ⏳ Pending | Requires Design TECS approval | — |
+| G-025 Design TECS — Snapshot strategy selection | ⏳ Pending | Requires Design TECS approval | — |
+| G-025 Schema changes (if Design TECS approved) | ⏳ Pending | No schema change in discovery phase | — |
+| G-025 View / snapshot implementation | ⏳ Pending | Awaiting Design TECS completion | — |
+
+**Exit Condition for Discovery Phase:**  
+Discovery document written, governance updated, no schema/code/RLS changes.
+
+> **Exit condition achieved — 2026-03-04 (GOVERNANCE-SYNC-078)**  
+> Discovery complete. G-025 → IN PROGRESS (Design TECS pending).
+
+---
+
 *Tracker produced by: GitHub Copilot — OPS-IMPLEMENTATION-PLAN-AUDIT-001 (follow-on)*  
 *Source of truth: `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`*  
 *No application code was modified in the production of this document.*
+

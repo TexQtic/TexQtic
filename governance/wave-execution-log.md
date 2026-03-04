@@ -6945,3 +6945,93 @@ PASS: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS
 - [x] lint: EXIT 0 (0 errors, 108 pre-existing warnings)
 - [x] OPS-CI-RLS-DOMAIN-PROOF-001 → ✅ VALIDATED
 - [x] Phase A fully closed: all 5 RLS maturity dimensions at 5/5
+
+---
+
+## Wave 4 — G-025-DPP-SNAPSHOT-VIEWS-INVESTIGATION-001: GOVERNANCE-SYNC-078 — DPP Snapshot Views Discovery: IN PROGRESS (Discovery Complete)
+
+### Metadata
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-DPP-SNAPSHOT-VIEWS-INVESTIGATION-001 |
+| Governance Sync | GOVERNANCE-SYNC-078 |
+| Date | 2026-03-04 |
+| Wave | 4 — DPP Snapshot Views |
+| Phase | Discovery (Investigation Only) |
+| Status | 🔄 IN PROGRESS — Discovery complete; pending Design TECS |
+| Branch | main |
+| Schema changes | None |
+| Migrations | None |
+| RLS changes | None |
+| server/src changes | None |
+
+### Objective
+
+Investigate the existing Wave 3 traceability schema (`traceability_nodes`,
+`traceability_edges`, `certifications`) to design a regulator-facing Digital Product
+Passport (DPP) read model. This entry is investigation-only.
+
+### Discovery Summary
+
+**Source tables analysed:**
+- `traceability_nodes` (G-016 Phase A, GOVERNANCE-SYNC-009): directed graph nodes with `org_id` RLS,
+  open-coded `node_type`, JSONB `meta`, optional `geo_hash`. UNIQUE `(org_id, batch_id)`.
+  FORCE RLS=t. 5 canonical Wave 3 Tail policies.
+
+- `traceability_edges` (G-016 Phase A, GOVERNANCE-SYNC-009): directed edges `from_node_id → to_node_id`
+  with `org_id` RLS, open-coded `edge_type`, optional `transformation_id`. No `updated_at` (append-only).
+  Forward + reverse traversal indexes. Partial UNIQUE indexes (with / without transformation_id).
+  FORCE RLS=t. 5 canonical Wave 3 Tail policies.
+
+- `certifications` (G-019, GOVERNANCE-SYNC-008): `certification_type` (open TEXT), `lifecycle_state_id` FK
+  (entity_type=CERTIFICATION), `issued_at` / `expires_at` (nullable), `created_by_user_id`.
+  Revocation via lifecycle transition to REVOKED (no DELETE). FORCE RLS=t. 5 canonical Wave 3 Tail policies.
+
+**RLS inheritance conclusion:** Live SQL views on all three tables will safely inherit RLS (FORCE RLS
+fires on base tables). Materialised views exempt from RLS — critical risk documented.
+
+**STOP CONDITION triggered (per TECS):** `certifications` has no FK to `traceability_nodes` or any
+product identifier. Node-level cert join is not directly derivable. Documented as Schema Gap G-025-B.
+Design decision deferred to Design TECS.
+
+**Schema gaps identified:**
+- G-025-A: No `suppliers`, `facilities`, or `product_batches` tables
+- G-025-B: No cert-to-node FK; no `issuing_body` / `cert_number` columns on `certifications`
+- G-025-C: No lineage hash column
+- G-025-D: No DB enum enforcement on `node_type` / `edge_type`
+- G-025-E: No ordinal column on `traceability_edges`
+- G-025-F: `organizations` RLS shape not confirmed for view inclusion
+- G-025-G: `visibility='SHARED'` cross-org traversal not implemented
+- G-025-H: `catalog_items` uses `tenant_id` → `tenants` while traceability uses `org_id` → `organizations`
+
+**Snapshot strategies evaluated (no recommendation made):**
+- Option A: Live SQL Views — RLS ✅ safe; freshness ✅ real-time; scale 🔴 recursive CTE cost
+- Option B: Materialised Views — RLS 🔴 broken (requires separate ACL); freshness 🟡 lagged; scale ✅
+- Option C: Hybrid live lineage + cached cert join — RLS ✅ partial; complexity 🔴 high
+
+**DPP regulatory field mapping:** 5/16 fields fully available; 6/16 partially available; 5/16 absent.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `docs/architecture/DPP-SNAPSHOT-VIEWS-DISCOVERY.md` | Created — full discovery document (9 sections) |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-078 prepended; G-025 → IN PROGRESS (Discovery phase) |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | G-025 Discovery row added → ✅ Complete |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-078) |
+
+### Quality Gates
+
+- [x] git preflight: clean working tree before start
+- [x] Allowlist: only 4 allowlisted docs modified — no code, no schema, no migrations
+- [x] No database migrations
+- [x] No RLS policy changes
+- [x] No schema changes
+- [x] No server/src code modified
+- [x] STOP CONDITION documented (cert-to-node linkage gap)
+- [x] All 3 snapshot strategies evaluated without recommendation
+- [x] RLS inheritance analysis complete for all 3 source tables
+- [x] Schema gap register G-025-A through G-025-H documented
+- [x] Discovery document written: `docs/architecture/DPP-SNAPSHOT-VIEWS-DISCOVERY.md`
+- [x] G-025 → IN PROGRESS (Discovery phase)
