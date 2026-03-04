@@ -7264,3 +7264,78 @@ manufacturer_name / manufacturer_jurisdiction / manufacturer_registration_no rem
 | docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | D2/D4 rows added; TECS 4B -> Validated |
 | governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-081) |
 | docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | TECS 4B apply evidence appended |
+
+---
+
+## Wave 4 -- G-025-DPP-SNAPSHOT-API-001: GOVERNANCE-SYNC-082 -- TECS 4C DPP Snapshot API VALIDATED
+
+| Field | Value |
+|-------|-------|
+| Date | 2026-03-04 |
+| Governance Sync | GOVERNANCE-SYNC-082 |
+| TECS ID | G-025-DPP-SNAPSHOT-API-001|
+| Status | VALIDATED -- GET /api/tenant/dpp/:nodeId added; 3 view queries; no organizations usage |
+| Operator | GitHub Copilot |
+
+### Route Added
+
+`GET /api/tenant/dpp/:nodeId` — registered in `server/src/routes/tenant.ts`
+
+### Query Method
+
+`$queryRaw` tagged template literals (Prisma parameterized; no string interpolation).
+
+All three views queried inside a single `withDbContext` transaction:
+- `dpp_snapshot_products_v1` — node identity (WHERE node_id = $1::uuid)
+- `dpp_snapshot_lineage_v1` — supply-chain lineage (WHERE root_node_id = $1::uuid)
+- `dpp_snapshot_certifications_v1` — certifications (WHERE node_id = $1::uuid OR org_id fallback)
+
+### Security Assertions
+
+| Assertion | Status |
+|-----------|--------|
+| SECURITY INVOKER views (inherited) | PASS -- views created with security_invoker=true in TECS 4B; no SECURITY DEFINER used anywhere in this route |
+| withDbContext tenant context | PASS -- SET LOCAL ROLE texqtic_app + app.org_id set per request |
+| No organizations JOIN | PASS -- G-025-ORGS-RLS-001 enforced; manufacturer fields OMITTED from all queries and response |
+| 404 on RLS-hidden node | PASS -- productRows.length === 0 returns sendNotFound |
+| Parameterized queries only | PASS -- all $queryRaw use tagged template literal binding; no string interpolation |
+
+### No Organizations Usage
+
+organizations table NOT referenced anywhere in this route or its view queries. G-025-ORGS-RLS-001 remains open. Response includes `meta.manufacturerFields = 'omitted_due_to_G-025-ORGS-RLS-001'` to make the omission explicit and machine-readable.
+
+### Audit Trail
+
+`writeAuditLog` called on successful read: action=`tenant.dpp.read`, entity=`traceability_node`, entityId=nodeId, realm=TENANT.
+
+### Manual Curl Snippet (for smoke test)
+
+```sh
+# Replace <TOKEN> and <NODE_ID> with real values
+curl -i -H "Authorization: Bearer <TOKEN>" \
+  http://localhost:3001/api/tenant/dpp/<NODE_ID>
+
+# Expected: 200 with product/lineage/certifications JSON
+# Expected: 404 for unknown/cross-tenant nodeId
+```
+
+### Gate Status
+
+| Gate | Status |
+|------|--------|
+| typecheck EXIT 0 | PASS |
+| lint EXIT 0 | PASS (0 errors, 108 pre-existing warnings) |
+| No organizations JOIN | PASS |
+| Parameterized $queryRaw | PASS |
+| 404 on missing/hidden node | PASS (code gate) |
+| writeAuditLog read-audit | PASS |
+| Atomic commit | feat(api): expose DPP snapshot views in tenant API (G-025) |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| server/src/routes/tenant.ts | GET /api/tenant/dpp/:nodeId added (G-025 TECS 4C) -- 3 $queryRaw view queries; withDbContext; 404 guard; writeAuditLog; no organizations usage |
+| governance/gap-register.md | GOVERNANCE-SYNC-082 prepended; TECS 4C validated; G-025-ORGS-RLS-001 enforcement noted |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 4C row -> Validated (2026-03-04) |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-082) |

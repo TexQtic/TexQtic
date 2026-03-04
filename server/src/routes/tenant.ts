@@ -1478,6 +1478,166 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
   });
 
+  // ─── G-025: DPP Snapshot API ─────────────────────────────────────────────────
+  // GET /api/tenant/dpp/:nodeId
+  // Read-only. Queries 3 SQL views created in TECS 4B (G-025-DPP-SNAPSHOT-VIEWS-IMPLEMENT-001).
+  // RLS inheritance: views are SECURITY INVOKER; tenant context set by withDbContext; no SECURITY DEFINER allowed.
+  // CONSTRAINT: no organizations table usage (G-025-ORGS-RLS-001 — D4 gate FAIL; manufacturer fields omitted).
+
+  // --- Row type interfaces for $queryRaw ---
+  interface DppProductRow {
+    node_id: string;
+    org_id: string;
+    batch_id: string | null;
+    node_type: string | null;
+    meta: unknown;
+    geo_hash: string | null;
+    visibility: string | null;
+    created_at: Date;
+    updated_at: Date;
+  }
+
+  interface DppLineageRow {
+    root_node_id: string;
+    node_id: string;
+    parent_node_id: string | null;
+    depth: number;
+    edge_type: string | null;
+    org_id: string;
+    created_at: Date;
+  }
+
+  interface DppCertRow {
+    node_id: string | null;
+    certification_id: string | null;
+    certification_type: string | null;
+    lifecycle_state_id: string | null;
+    expiry_date: Date | null;
+    org_id: string;
+  }
+
+  /**
+   * GET /api/tenant/dpp/:nodeId
+   *
+   * Returns a Digital Product Passport snapshot for a given traceability node.
+   * Data comes from three SECURITY INVOKER views created in TECS 4B:
+   *   - dpp_snapshot_products_v1       (node identity)
+   *   - dpp_snapshot_lineage_v1        (supply-chain lineage graph via recursive CTE)
+   *   - dpp_snapshot_certifications_v1 (org → node cert linkages via node_certifications)
+   *
+   * v1 constraints:
+   *   - manufacturer_* fields OMITTED (G-025-ORGS-RLS-001; D4 gate FAIL)
+   *   - no organizations JOIN anywhere in this route
+   */
+  fastify.get(
+    '/tenant/dpp/:nodeId',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const paramsSchema = z.object({ nodeId: z.string().uuid('nodeId must be a valid UUID') });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+      const { nodeId } = paramsResult.data;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // ── 1. Query all three views inside a single tenant-scoped $transaction ──
+      const [productRows, lineageRows, certRows] = await withDbContext(
+        prisma,
+        dbContext,
+        async tx => {
+          // RLS inheritance: views are SECURITY INVOKER; tenant context set by withDbContext; no SECURITY DEFINER allowed.
+          // All queries are parameterized — no string interpolation.
+          const products = await tx.$queryRaw<DppProductRow[]>`
+            SELECT
+              node_id, org_id, batch_id, node_type, meta,
+              geo_hash, visibility, created_at, updated_at
+            FROM dpp_snapshot_products_v1
+            WHERE node_id = ${nodeId}::uuid
+          `;
+
+          const lineage = await tx.$queryRaw<DppLineageRow[]>`
+            SELECT
+              root_node_id, node_id, parent_node_id,
+              depth, edge_type, org_id, created_at
+            FROM dpp_snapshot_lineage_v1
+            WHERE root_node_id = ${nodeId}::uuid
+          `;
+
+          const certs = await tx.$queryRaw<DppCertRow[]>`
+            SELECT
+              node_id, certification_id, certification_type,
+              lifecycle_state_id, expiry_date, org_id
+            FROM dpp_snapshot_certifications_v1
+            WHERE node_id = ${nodeId}::uuid
+               OR (node_id IS NULL AND org_id = (
+                 SELECT org_id FROM dpp_snapshot_products_v1 WHERE node_id = ${nodeId}::uuid LIMIT 1
+               ))
+          `;
+
+          return [products, lineage, certs] as [DppProductRow[], DppLineageRow[], DppCertRow[]];
+        },
+      );
+
+      // ── 2. 404 if no product row — RLS may hide the node from this tenant ──
+      if (productRows.length === 0) {
+        return sendNotFound(reply, 'DPP snapshot not found or access denied');
+      }
+
+      const product = productRows[0];
+
+      // ── 3. Write read-audit entry ──────────────────────────────────────────
+      await writeAuditLog(prisma, {
+        tenantId: request.tenantId ?? null,
+        realm: 'TENANT',
+        actorType: 'USER',
+        actorId: request.userId ?? null,
+        action: 'tenant.dpp.read',
+        entity: 'traceability_node',
+        entityId: nodeId,
+        metadataJson: { nodeId, orgId: dbContext.orgId },
+      });
+
+      // ── 4. Shape response ──────────────────────────────────────────────────
+      return sendSuccess(reply, {
+        nodeId,
+        product: {
+          nodeId: product.node_id,
+          orgId: product.org_id,
+          batchId: product.batch_id,
+          nodeType: product.node_type,
+          meta: product.meta,
+          geoHash: product.geo_hash,
+          visibility: product.visibility,
+          createdAt: product.created_at,
+          updatedAt: product.updated_at,
+        },
+        lineage: lineageRows.map(row => ({
+          rootNodeId: row.root_node_id,
+          nodeId: row.node_id,
+          parentNodeId: row.parent_node_id,
+          depth: row.depth,
+          edgeType: row.edge_type,
+          createdAt: row.created_at,
+        })),
+        certifications: certRows.map(row => ({
+          nodeId: row.node_id,
+          certificationId: row.certification_id,
+          certificationType: row.certification_type,
+          lifecycleStateId: row.lifecycle_state_id,
+          expiryDate: row.expiry_date,
+          orgId: row.org_id,
+        })),
+        meta: {
+          manufacturerFields: 'omitted_due_to_G-025-ORGS-RLS-001',
+        },
+      });
+    },
+  );
+
   // ─── G-022: Tenant escalation routes ────────────────────────────────────────
   // GET  /api/tenant/escalations
   // POST /api/tenant/escalations
