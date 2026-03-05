@@ -11,7 +11,7 @@
  *
  *   1. Strip inbound x-texqtic-* headers (anti-spoofing — D7)
  *   2. Normalize the HTTP Host header
- *   3. Passthrough: platform hosts + localhost (no resolution needed)
+ *   3. Passthrough: platform hosts + localhost + *.vercel.app (no resolution needed)
  *   4. Cache check (in-memory, TTL=60s, max 1,000 entries) — D5
  *   5. Cache miss: call GET /api/internal/resolve-domain with HMAC auth
  *   6. Resolved → inject x-texqtic-* headers via Vercel x-middleware-request-* — D7
@@ -236,9 +236,21 @@ export default async function middleware(request: Request): Promise<Response> {
   }
   const normalizedHost = hostResult.host;
 
-  // 3. Passthrough: dev hosts + platform domains.
+  // 3. Passthrough: dev hosts + platform domains + *.vercel.app deployment URLs.
+  //
+  //   *.vercel.app hosts are Vercel's own deployment/preview URLs
+  //   (e.g. texqtic-cc54b2jv7-tex-qtic.vercel.app). They are not custom tenant
+  //   domains, so they never need resolver resolution — pass straight through.
+  //   This check runs before the resolver call; it does NOT affect custom domain
+  //   routing (those still go through the resolver and remain fail-closed — D8).
+  //
+  //   OPS-EDGE-VERCELAPP-PASSTHROUGH-001
   const platformHosts = buildPassthroughSet();
-  if (isDevHost(normalizedHost) || platformHosts.has(normalizedHost)) {
+  if (
+    isDevHost(normalizedHost) ||
+    platformHosts.has(normalizedHost) ||
+    normalizedHost.endsWith('.vercel.app')
+  ) {
     return new Response(null, {
       status: 200,
       headers: { 'x-middleware-next': '1' },
