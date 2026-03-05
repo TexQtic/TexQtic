@@ -202,6 +202,19 @@ function ConfirmDialogModal({
 
 // ─── Main panel ──────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 25;
+
+type FilterStatus = DerivedStatus | 'ALL';
+
+const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
+  { value: 'ALL',             label: 'All statuses' },
+  { value: 'PAYMENT_PENDING', label: 'Pending' },
+  { value: 'PLACED',          label: 'Placed' },
+  { value: 'CONFIRMED',       label: 'Confirmed' },
+  { value: 'FULFILLED',       label: 'Fulfilled' },
+  { value: 'CANCELLED',       label: 'Cancelled' },
+];
+
 export function WLOrdersPanel() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -209,6 +222,11 @@ export function WLOrdersPanel() {
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
+
+  // ── Filter / search / pagination ─────────────────────────────────────────────
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -254,6 +272,23 @@ export function WLOrdersPanel() {
     }
   };
 
+  // ── Derived: filtered + paged ────────────────────────────────────────────────
+  const filteredOrders = orders.filter(order => {
+    const derived = canonicalStatus(order);
+    if (statusFilter !== 'ALL' && derived !== statusFilter) return false;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      return order.id.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const handleStatusFilter = (v: FilterStatus) => { setStatusFilter(v); setPage(0); };
+  const handleSearch = (v: string) => { setSearch(v); setPage(0); };
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -275,6 +310,34 @@ export function WLOrdersPanel() {
         </button>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <select
+          value={statusFilter}
+          onChange={e => handleStatusFilter(e.target.value as FilterStatus)}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300"
+        >
+          {FILTER_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Search by order ID…"
+          value={search}
+          onChange={e => handleSearch(e.target.value)}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 w-52"
+        />
+        {(statusFilter !== 'ALL' || search) && (
+          <button
+            onClick={() => { handleStatusFilter('ALL'); handleSearch(''); }}
+            className="text-xs text-slate-400 hover:text-slate-700 transition"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
       {/* Loading */}
       {loading && orders.length === 0 && (
         <div className="text-center py-12">
@@ -290,15 +353,22 @@ export function WLOrdersPanel() {
         </div>
       )}
 
-      {/* Empty */}
+      {/* Empty — no orders at all */}
       {!loading && !error && orders.length === 0 && (
         <div className="text-center py-16 text-slate-400 text-sm">
           No orders yet. Orders placed by your buyers will appear here.
         </div>
       )}
 
+      {/* Empty — filters yielded no results */}
+      {!loading && !error && orders.length > 0 && filteredOrders.length === 0 && (
+        <div className="text-center py-12 text-slate-400 text-sm">
+          No orders match the current filters.
+        </div>
+      )}
+
       {/* Orders table */}
-      {orders.length > 0 && (
+      {pagedOrders.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -312,7 +382,7 @@ export function WLOrdersPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {orders.map(order => {
+              {pagedOrders.map(order => {
                 const derived = canonicalStatus(order);
                 const actions = getActions(derived);
                 const isActing = actionLoading[order.id] ?? false;
@@ -364,6 +434,31 @@ export function WLOrdersPanel() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredOrders.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-slate-400">
+            Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition"
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition"
+            >
+              Next →
+            </button>
+          </div>
         </div>
       )}
 
