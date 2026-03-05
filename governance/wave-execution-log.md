@@ -7463,3 +7463,76 @@ CREATE POLICY organizations_tenant_select ON public.organizations
 | governance/gap-register.md | GOVERNANCE-SYNC-084 prepended; G-025-ORGS-RLS-001 → IN PROGRESS |
 | docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | G-025-ORGS-RLS-001 Discovery row added |
 | governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-084) |
+
+---
+
+## Wave 4 — G-025-ORGS-RLS-TENANT-SELECT-001: GOVERNANCE-SYNC-085 — Organizations Tenant SELECT Apply: ✅ VALIDATED
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-ORGS-RLS-TENANT-SELECT-001 |
+| Sync ID | GOVERNANCE-SYNC-085 |
+| Status | ✅ Validated |
+| Date | 2026-03-05 |
+| Migration | 20260316000002_g025_orgs_rls_tenant_select |
+| Commit | feat(rls): enable tenant self-read for organizations (G-025-ORGS-RLS-001) |
+
+### Objective
+
+Apply minimal RLS policy delta to `public.organizations` enabling tenant sessions to
+SELECT their own row (`id = app.current_org_id()`). Preserve all admin/bypass-only
+INSERT/UPDATE posture unchanged. Unblock manufacturer fields restoration in DPP views.
+
+### Pre-flight Results
+
+| Check | Result |
+|-------|--------|
+| A — Host | PASS — `aws-1-ap-northeast-1.pooler.supabase.com` |
+| B — Migrate status | PASS — 77 migrations applied, schema up to date |
+| C — Baseline policies | PASS — 4 policies: guard (RESTRICTIVE ALL, bypass/admin only), control_plane SELECT/INSERT/UPDATE (PERMISSIVE, admin/bypass); no `organizations_tenant_select` |
+| D — FORCE RLS | PASS — `relrowsecurity=t, relforcerowsecurity=t` |
+| E — Grants | PASS — `texqtic_app SELECT` present |
+| F — App functions | PASS — all 4 present: `bypass_enabled`, `current_org_id`, `current_realm`, `require_org_context` |
+
+### Policy Delta Applied
+
+| Policy | Action | Result |
+|--------|--------|--------|
+| `organizations_guard_policy` | DROP + RECREATE as RESTRICTIVE ALL TO texqtic_app — added 3rd arm: `app.require_org_context()` | ✅ Applied |
+| `organizations_tenant_select` | NEW — PERMISSIVE SELECT TO texqtic_app USING `(id = app.current_org_id())` | ✅ Applied |
+| `organizations_control_plane_select/insert/update` | NO CHANGE — verified intact via verifier DO block | ✅ Unchanged |
+
+### Apply Evidence
+
+| Step | Command | Result |
+|------|---------|--------|
+| psql apply | `psql -v ON_ERROR_STOP=1 --file=migration.sql "$DATABASE_URL"` | APPLY_EXIT:0 |
+| VERIFIER PASS | `NOTICE: VERIFIER PASS: organizations tenant select enabled (G-025-ORGS-RLS-001)` | ✅ |
+| prisma resolve | `pnpm -C server exec prisma migrate resolve --applied 20260316000002_g025_orgs_rls_tenant_select` | RESOLVE_EXIT:0 |
+| prisma status | `78 migrations found; Database schema is up to date!` | ✅ |
+| typecheck | `pnpm -C server run typecheck` | TYPECHECK_EXIT:0 |
+| lint | `pnpm run lint` | LINT_EXIT:0 (0 errors) |
+
+### Verifier Assertions (DO Block)
+
+| Assertion | Result |
+|-----------|--------|
+| FORCE RLS: relrowsecurity=t AND relforcerowsecurity=t | ✅ |
+| `organizations_guard_policy` RESTRICTIVE ALL — count=1 | ✅ |
+| Guard USING has 3 arms (bypass_enabled + current_realm + require_org_context) | ✅ |
+| `organizations_tenant_select` PERMISSIVE SELECT — count=1 | ✅ |
+| Tenant SELECT USING contains `current_org_id` | ✅ |
+| `organizations_control_plane_select` intact | ✅ |
+| `organizations_control_plane_insert` intact | ✅ |
+| `organizations_control_plane_update` intact | ✅ |
+| `texqtic_app` SELECT grant present | ✅ |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| server/prisma/migrations/20260316000002_g025_orgs_rls_tenant_select/migration.sql | NEW — guard DROP+CREATE (3 arms) + tenant SELECT policy + verifier DO block |
+| governance/gap-register.md | GOVERNANCE-SYNC-085 prepended; G-025-ORGS-RLS-001 → ✅ VALIDATED |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | G-025-ORGS-RLS-001 Apply row added |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-085) |
+| docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | Apply log entry added |

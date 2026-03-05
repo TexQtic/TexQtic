@@ -792,3 +792,70 @@ Remove 20260316000001_g025_dpp_snapshot_views from _prisma_migrations.
 ### Open Gap Registered This TECS
 
 - G-025-ORGS-RLS-001: organizations needs canonical Wave 3 Tail RLS (tenant SELECT arm) before manufacturer fields can be included in DPP views
+
+---
+
+## Migration: 20260316000002_g025_orgs_rls_tenant_select
+
+**TECS:** G-025-ORGS-RLS-TENANT-SELECT-001  
+**Date:** 2026-03-05  
+**GOVERNANCE-SYNC:** 085  
+**Target DB:** Remote Supabase Postgres (`aws-1-ap-northeast-1.pooler.supabase.com`)  
+**Change:** Enable tenant self-read on `public.organizations` — guard DROP+RECREATE (3 arms) + new `organizations_tenant_select` PERMISSIVE SELECT policy
+
+### Pre-flight Summary
+
+| Check | Result |
+|-------|--------|
+| A — Host | PASS — `aws-1-ap-northeast-1.pooler.supabase.com` |
+| B — Migrate status | PASS — 77 migrations, schema up to date |
+| C — Baseline policies | PASS — 4 policies; no `organizations_tenant_select` |
+| D — FORCE RLS | PASS — `relrowsecurity=t, relforcerowsecurity=t` |
+| E — Grants | PASS — `texqtic_app SELECT` present |
+| F — App functions | PASS — `bypass_enabled`, `current_org_id`, `current_realm`, `require_org_context` all confirmed |
+
+### Apply Command
+
+```powershell
+$dbLine = (Get-Content .env | Where-Object { $_ -match '^DATABASE_URL=' } | Select-Object -First 1)
+$db = $dbLine.Substring('DATABASE_URL='.Length).Trim('"')
+psql -v ON_ERROR_STOP=1 --file="prisma\migrations\20260316000002_g025_orgs_rls_tenant_select\migration.sql" "$db"
+```
+
+### Apply Output (Evidence)
+
+```
+ALTER TABLE
+ALTER TABLE
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "organizations_tenant_select" for relation "public.organizations" does not exist, skipping
+CREATE POLICY
+DO
+NOTICE:  VERIFIER PASS: organizations tenant select enabled (G-025-ORGS-RLS-001)
+APPLY_EXIT: 0
+```
+
+### Post-Apply
+
+| Step | Command | Result |
+|------|---------|--------|
+| prisma resolve | `pnpm -C server exec prisma migrate resolve --applied 20260316000002_g025_orgs_rls_tenant_select` | RESOLVE_EXIT:0 — `Migration marked as applied.` |
+| prisma status | `pnpm -C server exec prisma migrate status` | 78 migrations found; `Database schema is up to date!` |
+| typecheck | `pnpm -C server run typecheck` | EXIT:0 (no errors) |
+| lint | `pnpm run lint` | EXIT:0 (0 errors) |
+
+### Rollback
+
+```sql
+DROP POLICY IF EXISTS organizations_tenant_select ON public.organizations;
+DROP POLICY IF EXISTS organizations_guard_policy ON public.organizations;
+CREATE POLICY organizations_guard_policy ON public.organizations
+  AS RESTRICTIVE FOR ALL TO texqtic_app
+  USING (app.bypass_enabled() OR (app.current_realm() = 'admin'::text));
+```
+Remove `20260316000002_g025_orgs_rls_tenant_select` from `_prisma_migrations`.
+
+### Gap Closed
+
+- G-025-ORGS-RLS-001 → ✅ VALIDATED
