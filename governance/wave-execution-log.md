@@ -7611,3 +7611,46 @@ changes. Seals G-025 DPP v1 as fully complete.
 | docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 5C1 row added |
 | governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-086) |
 | docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | Apply log entry added |
+
+---
+
+## Wave 4 — G-025-DPP-API-UI-MANUFACTURER-ENABLE-001: GOVERNANCE-SYNC-087 — DPP API/UI Manufacturer Fields Enabled: ✅ VALIDATED
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-DPP-API-UI-MANUFACTURER-ENABLE-001 |
+| Sync ID | GOVERNANCE-SYNC-087 |
+| Status | ✅ Validated |
+| Date | 2026-03-05 |
+| Commit | feat(dpp): enable manufacturer fields in passport (G-025) |
+
+### Objective
+
+Update the DPP route handler and UI to surface manufacturer fields now available
+from `dpp_snapshot_products_v1` (TECS 5C1). Remove the G-025-ORGS-RLS-001 omission
+sentinel from the API response and the amber banner from the UI. G-025 fully closed.
+
+### Changes
+
+| File | Change |
+|------|--------|
+| server/src/routes/tenant.ts | `DppProductRow` + SELECT + response: added manufacturer_name/jurisdiction/registration_no; removed meta.manufacturerFields sentinel |
+| components/Tenant/DPPPassport.tsx | Updated interfaces; removed amber banner + omission note; added manufacturer sub-section to Product Identity card |
+| governance/gap-register.md | GOVERNANCE-SYNC-087 prepended |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 5C2 row added |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-087) |
+
+### Gate Outputs
+
+| Gate | Result |
+|------|--------|
+| server typecheck (`pnpm -C server run typecheck`) | TYPECHECK_EXIT:0 |
+| lint (`pnpm run lint`) | LINT_EXIT:0 (0 errors) |
+
+### Behavioral Confirmation
+
+- API: `GET /api/tenant/dpp/:nodeId` now returns `product.manufacturerName`, `product.manufacturerJurisdiction`, `product.manufacturerRegistrationNo` (null if org row null, e.g. no data)
+- API: `meta` no longer contains `manufacturerFields` sentinel
+- UI: amber G-025-ORGS-RLS-001 banner removed from DPPPassport header
+- UI: Product Identity section renders manufacturer name (or ‘Manufacturer details unavailable’ if null), jurisdiction, and registration number
+- No DB migrations, no RLS changes in this TECS

@@ -1482,7 +1482,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // GET /api/tenant/dpp/:nodeId
   // Read-only. Queries 3 SQL views created in TECS 4B (G-025-DPP-SNAPSHOT-VIEWS-IMPLEMENT-001).
   // RLS inheritance: views are SECURITY INVOKER; tenant context set by withDbContext; no SECURITY DEFINER allowed.
-  // CONSTRAINT: no organizations table usage (G-025-ORGS-RLS-001 — D4 gate FAIL; manufacturer fields omitted).
+  // G-025-ORGS-RLS-001 ✅ VALIDATED (commit afcf47e) — manufacturer fields restored (TECS 5C1/5C2).
 
   // --- Row type interfaces for $queryRaw ---
   interface DppProductRow {
@@ -1495,6 +1495,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     visibility: string | null;
     created_at: Date;
     updated_at: Date;
+    manufacturer_name: string | null;
+    manufacturer_jurisdiction: string | null;
+    manufacturer_registration_no: string | null;
   }
 
   interface DppLineageRow {
@@ -1521,13 +1524,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    *
    * Returns a Digital Product Passport snapshot for a given traceability node.
    * Data comes from three SECURITY INVOKER views created in TECS 4B:
-   *   - dpp_snapshot_products_v1       (node identity)
+   *   - dpp_snapshot_products_v1       (node identity + manufacturer fields via organizations LEFT JOIN)
    *   - dpp_snapshot_lineage_v1        (supply-chain lineage graph via recursive CTE)
    *   - dpp_snapshot_certifications_v1 (org → node cert linkages via node_certifications)
    *
-   * v1 constraints:
-   *   - manufacturer_* fields OMITTED (G-025-ORGS-RLS-001; D4 gate FAIL)
-   *   - no organizations JOIN anywhere in this route
+   * G-025-ORGS-RLS-001 ✅ VALIDATED — manufacturer_* fields now returned from view (TECS 5C1).
+   * organizations JOIN is in the view only; this route queries the view, not organizations directly.
    */
   fastify.get(
     '/tenant/dpp/:nodeId',
@@ -1554,7 +1556,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           const products = await tx.$queryRaw<DppProductRow[]>`
             SELECT
               node_id, org_id, batch_id, node_type, meta,
-              geo_hash, visibility, created_at, updated_at
+              geo_hash, visibility, created_at, updated_at,
+              manufacturer_name, manufacturer_jurisdiction, manufacturer_registration_no
             FROM dpp_snapshot_products_v1
             WHERE node_id = ${nodeId}::uuid
           `;
@@ -1614,6 +1617,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           visibility: product.visibility,
           createdAt: product.created_at,
           updatedAt: product.updated_at,
+          manufacturerName: product.manufacturer_name,
+          manufacturerJurisdiction: product.manufacturer_jurisdiction,
+          manufacturerRegistrationNo: product.manufacturer_registration_no,
         },
         lineage: lineageRows.map(row => ({
           rootNodeId: row.root_node_id,
@@ -1631,9 +1637,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           expiryDate: row.expiry_date,
           orgId: row.org_id,
         })),
-        meta: {
-          manufacturerFields: 'omitted_due_to_G-025-ORGS-RLS-001',
-        },
+        meta: {},
       });
     },
   );

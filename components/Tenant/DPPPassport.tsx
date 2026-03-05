@@ -1,16 +1,15 @@
 /**
- * DPPPassport — Digital Product Passport read-only UI (G-025 TECS 4D)
+ * DPPPassport — Digital Product Passport read-only UI (G-025 TECS 4D + 5C2)
  *
- * TECS ID: G-025-DPP-SNAPSHOT-UI-EXPORT-001
- * GOVERNANCE-SYNC-083
+ * TECS ID: G-025-DPP-SNAPSHOT-UI-EXPORT-001 / G-025-DPP-API-UI-MANUFACTURER-ENABLE-001
+ * GOVERNANCE-SYNC-083 / GOVERNANCE-SYNC-087
  *
  * Consumes: GET /api/tenant/dpp/:nodeId (TECS 4C)
  * Views backing the API: dpp_snapshot_products_v1 / lineage_v1 / certifications_v1 (TECS 4B)
  *
  * Hard constraints:
  *   - No backend routes added (read-only consumer of TECS 4C route)
- *   - No organizations JOIN / no manufacturer fields displayed
- *   - Manufacturer fields bannerred as omitted (G-025-ORGS-RLS-001 blocker)
+ *   - G-025-ORGS-RLS-001 ✅ VALIDATED (commit afcf47e) — manufacturer fields now returned
  *   - Export: Copy JSON + Download JSON (client-side only; no new server endpoints)
  *   - UUID validation client-side before fetch
  *   - Lineage rendering capped at 200 rows (safety)
@@ -32,6 +31,9 @@ interface DppProduct {
   visibility: string | null;
   createdAt: string;
   updatedAt: string;
+  manufacturerName: string | null;
+  manufacturerJurisdiction: string | null;
+  manufacturerRegistrationNo: string | null;
 }
 
 interface DppLineageRow {
@@ -57,9 +59,7 @@ interface DppSnapshot {
   product: DppProduct;
   lineage: DppLineageRow[];
   certifications: DppCertRow[];
-  meta: {
-    manufacturerFields: string;
-  };
+  meta: Record<string, unknown>;
 }
 
 // ─── UUID validation ──────────────────────────────────────────────────────────
@@ -168,15 +168,6 @@ export function DPPPassport({ onBack }: Props) {
         </div>
       </div>
 
-      {/* ── G-025-ORGS-RLS-001 banner (always shown) ── */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-amber-800 text-sm flex items-start gap-2">
-        <span className="mt-0.5 shrink-0">⚠️</span>
-        <span>
-          <strong>Manufacturer fields omitted</strong> due to <code className="font-mono text-xs bg-amber-100 px-1 rounded">G-025-ORGS-RLS-001</code>.
-          {' '}Organization RLS canonicalization is required before manufacturer name, jurisdiction, and registration number can be included.
-        </span>
-      </div>
-
       {/* ── Node ID input ── */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
         <label htmlFor="dpp-node-id-input" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block">
@@ -264,6 +255,25 @@ export function DPPPassport({ onBack }: Props) {
                 <dt className="text-slate-400 font-medium">Updated At</dt>
                 <dd className="text-slate-700 text-xs">{new Date(snapshot.product.updatedAt).toLocaleString()}</dd>
               </div>
+              {/* Manufacturer fields (G-025-ORGS-RLS-001 ✅ VALIDATED) */}
+              <div className="sm:col-span-2">
+                <dt className="text-slate-400 font-medium">Manufacturer</dt>
+                <dd className="text-slate-700">
+                  {snapshot.product.manufacturerName ?? <span className="text-slate-400 italic">Manufacturer details unavailable</span>}
+                </dd>
+              </div>
+              {snapshot.product.manufacturerJurisdiction && (
+                <div>
+                  <dt className="text-slate-400 font-medium">Jurisdiction</dt>
+                  <dd className="text-slate-700">{snapshot.product.manufacturerJurisdiction}</dd>
+                </div>
+              )}
+              {snapshot.product.manufacturerRegistrationNo && (
+                <div>
+                  <dt className="text-slate-400 font-medium">Registration No.</dt>
+                  <dd className="text-slate-700 font-mono text-xs">{snapshot.product.manufacturerRegistrationNo}</dd>
+                </div>
+              )}
             </dl>
             {/* Meta (JSONB passthrough) */}
             {!!snapshot.product.meta && Object.keys(snapshot.product.meta as object).length > 0 && (
@@ -274,10 +284,6 @@ export function DPPPassport({ onBack }: Props) {
                 </pre>
               </details>
             )}
-            {/* Manufacturer omission note */}
-            <div className="text-[11px] text-slate-400 border-t border-slate-100 pt-2">
-              Manufacturer fields: <code className="font-mono">{snapshot.meta.manufacturerFields}</code>
-            </div>
           </section>
 
           {/* ── Certifications section ── */}
