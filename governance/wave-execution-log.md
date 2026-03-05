@@ -7654,3 +7654,73 @@ sentinel from the API response and the amber banner from the UI. G-025 fully clo
 - UI: amber G-025-ORGS-RLS-001 banner removed from DPPPassport header
 - UI: Product Identity section renders manufacturer name (or ‘Manufacturer details unavailable’ if null), jurisdiction, and registration number
 - No DB migrations, no RLS changes in this TECS
+
+---
+
+## Wave 4 — G-026-CUSTOM-DOMAIN-ROUTING-DISCOVERY-001: GOVERNANCE-SYNC-088 — Custom Domain Routing Discovery: ✅ COMPLETE
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-026-CUSTOM-DOMAIN-ROUTING-DISCOVERY-001 |
+| Sync ID | GOVERNANCE-SYNC-088 |
+| Status | ✅ Discovery Complete — Pending Design TECS |
+| Date | 2026-03-05 |
+| Commit | docs(architecture): custom domain routing discovery (G-026) |
+
+### Objective
+
+Investigate the feasibility of custom domain routing (white-label) for TexQtic tenants.
+Research the existing `tenant_domains` schema, RLS posture, current tenant resolution
+code path, deployment/routing stack, and DNS architecture patterns. Produce a discovery
+document and register all implementation gaps. No schema, code, or RLS changes in this TECS.
+
+### Key Findings
+
+| Finding | Detail |
+|---------|--------|
+| `tenant_domains` schema | 6 columns confirmed: id (UUID PK), tenant_id (UUID FK → tenants CASCADE), domain (VARCHAR 255 UNIQUE), verified (bool), primary (bool), created_at (TIMESTAMPTZ). UNIQUE domain constraint enables domain→tenant_id lookup. |
+| Missing DNS verification columns | No `txt_record`, `verified_at`, `status`, `updated_at` → Schema Gap G-026-A (non-blocking for v1 routing) |
+| RLS posture | ENABLE + FORCE RLS confirmed; G-006C Wave 3 Tail canonical (GOVERNANCE-SYNC-054); RESTRICTIVE guard requires `app.require_org_context()` — blocks pre-auth domain lookup |
+| No host-header routing | Confirmed zero matches for host/hostname/domain in all middleware files; `tenantAuthMiddleware` JWT-only; X-Tenant-Id header REMOVED (G-W3-A1) |
+| No edge middleware | No `middleware.ts` at repo root; `vercel.json` routes `/api/*` → Fastify serverless; no Edge Config provisioned |
+| MiddlewareScaffold.tsx | Control-plane UI component displaying aspirational code — NOT routing middleware |
+| Frontend tenant selection | `SEEDED_TENANTS` hardcoded dropdown; `GET /api/public/tenants/resolve` not implemented (known TODO) |
+| STOP CONDITION | NOT TRIGGERED — tenant_domains supports domain→tenant_id mapping; routing v1 feasible without schema extension |
+
+### Gaps Registered
+
+| Gap | Category | Blocking |
+|-----|----------|----------|
+| G-026-A | Missing DNS verification columns (txt_record, verified_at, status) | Non-blocking for v1 |
+| G-026-B | No public domain resolver endpoint | 🔴 Yes |
+| G-026-C | No Edge Middleware file (middleware.ts) | 🔴 Yes for Option A |
+| G-026-D | No slug-based subdomain routing | 🔴 Yes for subdomain v1 |
+| G-026-E | RLS bypass for pre-auth domain lookup | 🔴 Yes for Option B |
+| G-026-F | No cache infrastructure (Edge Config / KV) | 🔴 Yes for Option A/C |
+| G-026-G | WL Domains management panel not implemented | Medium |
+
+### Routing Insertion Candidates Documented
+
+- **Option A:** Vercel Edge Middleware (`middleware.ts` at root) — resolves host via Edge Config cache, injects `X-Texqtic-Tenant-Id` header
+- **Option B:** Fastify pre-auth `onRequest` hook — DB lookup (bypass-context), in-process LRU cache
+- **Option C:** Hybrid — Edge resolves + backend validates (double-validated, highest security)
+
+### Changes
+
+| File | Change |
+|------|--------|
+| docs/architecture/CUSTOM-DOMAIN-ROUTING-DISCOVERY.md | NEW — Full discovery document (11 sections: schema, RLS, current resolution, insertion options, DNS, security, gaps) |
+| governance/gap-register.md | GOVERNANCE-SYNC-088 prepended; G-026 → IN PROGRESS (Discovery) |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | G-026 discovery row added after TECS 5C2 row |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-088) |
+
+### Behavioral Confirmation
+
+- No schema changes — `tenant_domains` model in schema.prisma NOT modified
+- No SQL applied — no migrations, no psql commands
+- No server/src code changes — middleware untouched
+- No RLS policy changes — supabase_hardening.sql untouched
+- Discovery document created at docs/architecture/CUSTOM-DOMAIN-ROUTING-DISCOVERY.md
+- G-026 status in gap-register.md updated: NOT STARTED → IN PROGRESS (Discovery — GOVERNANCE-SYNC-088)
+- 8 decisions captured for Design TECS (D1–D8)
+- Recommended TECS sequence defined: Design Anchor → TECS 2A/2B/2C/2D
