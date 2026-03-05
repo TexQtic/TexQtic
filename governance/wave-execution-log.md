@@ -7724,3 +7724,81 @@ document and register all implementation gaps. No schema, code, or RLS changes i
 - G-026 status in gap-register.md updated: NOT STARTED → IN PROGRESS (Discovery — GOVERNANCE-SYNC-088)
 - 8 decisions captured for Design TECS (D1–D8)
 - Recommended TECS sequence defined: Design Anchor → TECS 2A/2B/2C/2D
+
+---
+
+## Wave 4 — G-026-CUSTOM-DOMAIN-ROUTING-DESIGN-001: GOVERNANCE-SYNC-089 — Custom Domain Routing Design Anchor: ✅ COMPLETE
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-026-CUSTOM-DOMAIN-ROUTING-DESIGN-001 |
+| Sync ID | GOVERNANCE-SYNC-089 |
+| Status | ✅ Design Anchor Complete — Implementation pending (TECS 6C1/6C2/6C3/6D) |
+| Date | 2026-03-05 |
+| Commit | docs(architecture): design anchor for custom domain routing (G-026) |
+
+### Objective
+
+Lock the v1 architecture and security model for domain-based tenant resolution.
+Define the exact resolver contract, integration points, cache strategy, deactivation
+behavior, threat model, and follow-on TECS sequence. Plan-only TECS — no code, no schema,
+no migrations, no RLS changes.
+
+### Decisions Locked (D1–D8)
+
+| Decision | Choice |
+|----------|--------|
+| D1 — Routing insertion point | **Hybrid** — Vercel Edge Middleware (`middleware.ts`) resolves + Fastify backend validates HMAC |
+| D2 — v1 routing scope | **Platform subdomains** (`<slug>.texqtic.app`); custom apex/subdomain domains deferred to v1.1 |
+| D3 — Resolver lookup strategy | **Backend resolver endpoint** (`GET /api/internal/resolve-domain`) called from Edge; HMAC-SHA256 auth |
+| D4 — RLS bypass strategy | **Narrow BYPASSRLS resolver endpoint** — `texqtic_service` DB role with SELECT on `tenants(id,slug)` only; output: `{tenantId, tenantSlug}` only; RLS doctrine intact for all application data |
+| D5 — Cache strategy | **Edge in-memory TTL cache 60 s** + `POST /api/internal/cache-invalidate` webhook on domain CRUD |
+| D6 — Resolver contract | `GET /api/internal/resolve-domain?host=<host>` → `{tenantId, tenantSlug, canonicalHost, status}`; identical `404` for all non-resolved; 30 s replay window; HMAC-SHA256 auth header |
+| D7 — Header signing | `x-texqtic-tenant-id` + `x-texqtic-tenant-source` + `x-texqtic-resolver-sig` + `x-texqtic-resolver-ts`; Edge strips inbound `x-texqtic-*` before injecting own; Fastify validates HMAC before trusting headers |
+| D8 — Deactivation/safety | Fail-closed (resolver error → platform redirect); domain removal → cache-invalidate webhook; `tenants.active=false` → not_found; identical 404 for all unresolved; platform domain passthrough allowlist |
+
+### New Sub-Gap Registered
+
+**G-026-H:** `texqtic_service` DB role with BYPASSRLS not yet created. SQL-only migration
+required (SELECT on `tenants(id,slug)` only). Blocking gate for TECS 6C1 deploy.
+
+### Sub-Gap Status After This TECS
+
+| Gap | Status |
+|-----|--------|
+| G-026-A | 🔵 Deferred v1.1 (DNS verification columns) |
+| G-026-B | ✅ Resolved (internal resolver endpoint, D6) |
+| G-026-C | ✅ Resolved (middleware.ts in TECS 6C2, D1) |
+| G-026-D | ✅ Resolved (slug-subdomain routing, D2 + TECS 6C2) |
+| G-026-E | ✅ Resolved (narrow BYPASSRLS resolver, D4) |
+| G-026-F | ✅ Resolved (Edge in-memory cache, D5 + TECS 6C3) |
+| G-026-G | ✅ Unblocked (WL Domains panel, TECS 6D) |
+| G-026-H | 🔴 Open — blocking TECS 6C1 deploy |
+
+### TECS Sequence
+
+```
+6C1: Backend resolver endpoint + texqtic_service role migration
+6C2: middleware.ts + tenantResolutionHook (requires 6C1 validated)
+6C3: Cache + invalidation webhook (requires 6C2 validated)
+6D:  WL Domains management panel (parallel with 6C3)
+```
+
+### Changes
+
+| File | Change |
+|------|--------|
+| docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md | NEW — design anchor (sections §1–§8; D1–D8 locked; threat model; operational runbook; TECS plan) |
+| governance/gap-register.md | GOVERNANCE-SYNC-089 prepended; G-026 → Design Anchor ✅; G-026-H registered |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | Design Anchor row added; TECS 6C1/6C2/6C3/6D planned rows added |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-089) |
+
+### Behavioral Confirmation
+
+- No middleware.ts created
+- No routes added or modified
+- No columns added to tenant_domains
+- No RLS policies modified
+- No migrations created
+- RLS doctrine: unchanged — "tenant RLS remains primary for application data access" upheld by D4 narrow bypass
+- STOP CONDITIONS: Not triggered — no schema change required for platform subdomain v1; narrow output preserved in D4
