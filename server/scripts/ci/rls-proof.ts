@@ -1,14 +1,19 @@
 /**
- * G-013 + OPS-CI-RLS-DOMAIN-PROOF-001 — CI RLS Cross-Tenant 0-Row Proof
+ * G-013 + OPS-CI-RLS-DOMAIN-PROOF-001 + OPS-G028-A1 — CI RLS Cross-Tenant 0-Row Proof
  *
  * Validates that Postgres RLS tenant isolation is enforced by live policies.
- * Runs four assertions:
+ * Runs five assertions:
  *   Step 1 — Policy sanity: 0 policies reference the legacy app.tenant_id variable
  *   Step 2 — Tenant A context (carts): cross-tenant rows visible = 0 (non-vacuous)
  *   Step 3 — Tenant B context (carts): cross-tenant rows visible = 0 (non-vacuous)
  *   Step 4 — DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS:
  *             Wave 3 domain table cross-tenant isolation (OPS-CI-RLS-DOMAIN-PROOF-001)
  *             Tenant A and Tenant B each see 0 rows scoped to the other org.
+ *   Step 5 — DOMAIN_ISOLATION_PROOF_DOCUMENT_EMBEDDINGS (OPS-G028-A1):
+ *             Inserts 1 real row per tenant (as texqtic_app + org context),
+ *             asserts cross-tenant count = 0 from each tenant's perspective,
+ *             then cleans up proof rows via postgres BYPASSRLS connection.
+ *             Fails loudly if the migration has not been applied.
  *
  * Required env vars:
  *   DATABASE_URL    — Supabase connection string (never printed)
@@ -174,6 +179,119 @@ async function runDomainIsolationProofEscalationEvents(tenantId: string): Promis
   });
 }
 
+/**
+ * Step 5: G-028 A1 — document_embeddings cross-tenant isolation proof.
+ *
+ * This step INSERTS real test rows (one per tenant) and then asserts that
+ * each tenant sees only its own rows under texqtic_app + org context.
+ * Inserted rows are cleaned up after all assertions, using the postgres
+ * superuser connection (BYPASSRLS) to avoid needing a DELETE policy.
+ *
+ * source_type='G028_CI_PROOF' is a reserved sentinel value — never emitted
+ * by production code. Any production system that creates rows with this
+ * source_type violates the proof's isolation invariant.
+ *
+ * OPS-G028-A1-PGVECTOR-ENABLE (CI isolation gate).
+ */
+const G028_CI_SOURCE_TYPE = 'G028_CI_PROOF';
+
+// Build a 768-dimensional dummy vector string literal (all values = 0.1).
+// pgvector accepts '[0.1,0.1,...,0.1]'::vector(768) syntax.
+// We generate this once; it is used for both org A and org B proof rows.
+function buildDummyVectorLiteral(): string {
+  return '[' + Array(768).fill('0.1').join(',') + ']';
+}
+
+async function insertProofRow(tenantId: string, dummyVec: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
+    await tx.$executeRawUnsafe(
+      `SELECT set_config('app.org_id', '${tenantId}', true)`
+    );
+    await tx.$executeRawUnsafe(`
+      INSERT INTO document_embeddings
+        (org_id, source_type, source_id, chunk_index, content, content_hash, embedding, metadata)
+      VALUES (
+        '${tenantId}'::uuid,
+        '${G028_CI_SOURCE_TYPE}',
+        gen_random_uuid(),
+        0,
+        'G028 CI proof row — RLS cross-tenant isolation test',
+        md5('G028_CI_PROOF_' || '${tenantId}'),
+        '${dummyVec}'::vector(768),
+        '{}'::jsonb
+      )
+      ON CONFLICT (org_id, source_type, source_id, chunk_index, content_hash) DO NOTHING
+    `);
+  });
+}
+
+async function assertDocumentEmbeddingIsolation(tenantId: string): Promise<{
+  crossTenantCount: number;
+  ownTenantCount: number;
+}> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
+    await tx.$executeRawUnsafe(
+      `SELECT set_config('app.org_id', '${tenantId}', true)`
+    );
+
+    // Cross-tenant assertion: other tenants' rows must be invisible under RLS.
+    const crossRows = await tx.$queryRawUnsafe<Array<{ count: bigint }>>(
+      `SELECT count(*)::bigint AS count
+         FROM document_embeddings
+        WHERE org_id != '${tenantId}'::uuid
+          AND source_type = '${G028_CI_SOURCE_TYPE}'`
+    );
+
+    // Positive control: own rows must be visible (non-vacuous proof).
+    const ownRows = await tx.$queryRawUnsafe<Array<{ count: bigint }>>(
+      `SELECT count(*)::bigint AS count
+         FROM document_embeddings
+        WHERE org_id = '${tenantId}'::uuid
+          AND source_type = '${G028_CI_SOURCE_TYPE}'`
+    );
+
+    return {
+      crossTenantCount: Number(crossRows[0].count),
+      ownTenantCount:   Number(ownRows[0].count),
+    };
+  });
+}
+
+async function cleanupProofRows(): Promise<void> {
+  // Runs as postgres (BYPASSRLS superuser) — no role switch required.
+  // Removes all CI proof rows regardless of org_id.
+  await prisma.$executeRawUnsafe(
+    `DELETE FROM document_embeddings WHERE source_type = '${G028_CI_SOURCE_TYPE}'`
+  );
+}
+
+async function runDocumentEmbeddingsIsolationProof(
+  tenantAId: string,
+  tenantBId: string,
+): Promise<{
+  resultA: { crossTenantCount: number; ownTenantCount: number };
+  resultB: { crossTenantCount: number; ownTenantCount: number };
+}> {
+  const dummyVec = buildDummyVectorLiteral();
+
+  // Insert proof row for org A (committed — real row for assertion)
+  await insertProofRow(tenantAId, dummyVec);
+  // Insert proof row for org B (committed — real row for assertion)
+  await insertProofRow(tenantBId, dummyVec);
+
+  // Assert from org A's perspective
+  const resultA = await assertDocumentEmbeddingIsolation(tenantAId);
+  // Assert from org B's perspective
+  const resultB = await assertDocumentEmbeddingIsolation(tenantBId);
+
+  // Cleanup: delete all G028_CI_PROOF rows as postgres (BYPASSRLS).
+  await cleanupProofRows();
+
+  return { resultA, resultB };
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -257,10 +375,69 @@ async function main(): Promise<void> {
     console.log('\nPASS: DOMAIN_ISOLATION_PROOF_ESCALATION_EVENTS');
   }
 
+  // ── Step 5: G-028 A1 — document_embeddings cross-tenant isolation ─────────
+  // Inserts 1 real row per tenant, asserts 0 cross-tenant visibility, cleans up.
+  // Fails loudly if document_embeddings table does not exist (migration not applied).
+  console.log('\n--- Step 5: DOMAIN_ISOLATION_PROOF_DOCUMENT_EMBEDDINGS (OPS-G028-A1) ---');
+  let step5Failed = false;
+  try {
+    const { resultA: embeddingResultA, resultB: embeddingResultB } =
+      await runDocumentEmbeddingsIsolationProof(TENANT_A_ID, TENANT_B_ID);
+
+    console.log('  [Tenant A context]');
+    console.log(`    Cross-tenant rows visible: ${embeddingResultA.crossTenantCount}`);
+    console.log(`    Own-tenant rows (control): ${embeddingResultA.ownTenantCount}`);
+    if (embeddingResultA.crossTenantCount !== 0) {
+      console.error(
+        `  ❌ FAIL — Tenant A sees ${embeddingResultA.crossTenantCount} cross-tenant document_embeddings rows (expected 0)`
+      );
+      failures++;
+      step5Failed = true;
+    }
+    if (embeddingResultA.ownTenantCount < 1) {
+      console.error(
+        `  ❌ FAIL — Tenant A own-tenant count is ${embeddingResultA.ownTenantCount} (expected >= 1, non-vacuous proof required)`
+      );
+      failures++;
+      step5Failed = true;
+    }
+
+    console.log('  [Tenant B context]');
+    console.log(`    Cross-tenant rows visible: ${embeddingResultB.crossTenantCount}`);
+    console.log(`    Own-tenant rows (control): ${embeddingResultB.ownTenantCount}`);
+    if (embeddingResultB.crossTenantCount !== 0) {
+      console.error(
+        `  ❌ FAIL — Tenant B sees ${embeddingResultB.crossTenantCount} cross-tenant document_embeddings rows (expected 0)`
+      );
+      failures++;
+      step5Failed = true;
+    }
+    if (embeddingResultB.ownTenantCount < 1) {
+      console.error(
+        `  ❌ FAIL — Tenant B own-tenant count is ${embeddingResultB.ownTenantCount} (expected >= 1, non-vacuous proof required)`
+      );
+      failures++;
+      step5Failed = true;
+    }
+
+    if (!step5Failed) {
+      console.log('  ✅ PASS — Tenant A: 0 cross-tenant document_embeddings rows (non-vacuous)');
+      console.log('  ✅ PASS — Tenant B: 0 cross-tenant document_embeddings rows (non-vacuous)');
+      console.log('\nPASS: DOMAIN_ISOLATION_PROOF_DOCUMENT_EMBEDDINGS');
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`  ❌ FAIL — Step 5 threw an error: ${msg}`);
+    console.error(
+      '     Likely cause: document_embeddings table does not exist (migration OPS-G028-A1 not applied).'
+    );
+    failures++;
+  }
+
   // ── Summary ───────────────────────────────────────────────────────────────
   console.log('\n═══════════════════════════════════════════════════');
   if (failures === 0) {
-    console.log(' ✅ ALL STEPS PASS — RLS isolation verified (G-013 + OPS-CI-RLS-DOMAIN-PROOF-001)');
+    console.log(' ✅ ALL STEPS PASS — RLS isolation verified (G-013 + OPS-CI-RLS-DOMAIN-PROOF-001 + OPS-G028-A1)');
     console.log('═══════════════════════════════════════════════════');
     process.exit(0);
   } else {
