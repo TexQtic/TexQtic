@@ -7896,3 +7896,99 @@ no schema change required.
 - No prisma migrate dev / db push run — migration applied manually via psql
 - Route only reachable at `/api/internal/resolve-domain` — no public path
 - STOP CONDITION: tenants.active boolean absent — documented as preflight deviation; used status=ACTIVE; intent preserved; NOT a blocker
+
+---
+
+## Wave 4 — G-026-CUSTOM-DOMAIN-ROUTING-MIDDLEWARE-001: GOVERNANCE-SYNC-091 — Vercel Edge Middleware + Fastify Tenant Header Validation: ✅ VALIDATED
+
+### Summary
+
+| Field | Value |
+|-------|-------|
+| Sync ID | GOVERNANCE-SYNC-091 |
+| Status | ✅ TECS 6C2 Validated |
+| Gap | G-026 Custom Domain Routing |
+| Commit | feat(domain): edge routing + tenant header validation (G-026 / TECS-6C2) |
+
+### What Was Implemented
+
+**Vercel Edge Middleware (`middleware.ts` — NEW at repo root):**
+- Runs on every matched request (matcher excludes `/api/internal/*`, static assets)
+- Strips all inbound `x-texqtic-*` headers before processing (anti-spoofing D7)
+- Normalizes HTTP Host header (RFC 1123; rejects bare IP, invalid chars)
+- Passthrough — platform hosts (texqtic.app, texqtic.com, www.*) + dev/localhost
+- In-memory cache: TTL=60s, max 1,000 entries (evict oldest on overflow) — D5
+- Cache miss → `GET /api/internal/resolve-domain` with HMAC auth (resolver HMAC: `resolve:{host}:{tsMs}`)
+- Resolved → inject `x-texqtic-*` headers via `x-middleware-request-*` (infra-level header forwarding)
+- Edge injection HMAC: `edge:{host}:{tenantId}:{tsSeconds}` signed with `TEXQTIC_RESOLVER_SECRET`
+- Not found / resolver error → 404 with generic `{"status":"not_found"}` (fail-closed D8)
+- Uses Web Crypto API only (no Node.js `crypto`) — Edge Runtime compatible
+- `process.env.TEXQTIC_RESOLVER_SECRET` required in Vercel Edge env vars (already exists from 6C1)
+
+**`server/src/lib/tenantHeaders.ts` (NEW):**
+- Header name constants: `TENANT_ID_HEADER`, `TENANT_SLUG_HEADER`, `TENANT_SOURCE_HEADER`, `RESOLVER_SIG_HEADER`, `RESOLVER_TS_HEADER`
+- `edgeCanonicalMessage(host, tenantId, tsSeconds)` — canonical string shared with hook
+- `EDGE_REPLAY_WINDOW_MS = 30_000`
+
+**`server/src/hooks/tenantResolutionHook.ts` (NEW):**
+- Fastify `onRequest` hook — validates HMAC on Edge-injected headers
+- Augments `FastifyRequest` with `resolvedTenantId?`, `tenantSource?`, `resolvedTenantSlug?`
+- Skips routes under `/api/internal/*` (those validate via resolver HMAC)
+- If `x-texqtic-tenant-id` absent → no-op (JWT path unchanged)
+- If present: normalizes host → verifies HMAC via Node.js `createHmac('sha256', secret)` → 401 on fail
+- 30s replay window check: `Math.abs(Date.now() - tsSeconds * 1000) > EDGE_REPLAY_WINDOW_MS`
+
+**`server/src/index.ts` (MODIFIED):**
+- `tenantResolutionHook` registered via `fastify.addHook('onRequest', ...)` BEFORE `realmHintGuardOnRequest`
+
+**`api/index.ts` (MODIFIED):**
+- Same hook registration (Vercel serverless Fastify entry)
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 (no errors) |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 108 pre-existing warnings) |
+| No DB migration | ✅ Confirmed — TECS 6C2 is code-only |
+
+### Sub-gap Status
+
+| Gap | Status |
+|-----|--------|
+| G-026-C | ✅ Resolved — `middleware.ts` created (TECS 6C2) |
+| G-026-D | ✅ Resolved — slug-subdomain routing via middleware.ts platform passthrough + resolver |
+| G-026-A | Deferred v1.1 (DNS verification columns) |
+| G-026-F | Deferred TECS 6C3 (cache invalidation webhook) |
+| G-026-G | Deferred TECS 6D (WL Domains panel) |
+
+### Next TECS
+
+```
+6C3: POST /api/internal/cache-invalidate webhook (triggered by domain CRUD events)
+6D:  WL Domains Panel UI
+```
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `middleware.ts` | NEW — Vercel Edge Middleware (host→tenant resolution + signed header injection) |
+| `server/src/lib/tenantHeaders.ts` | NEW — header constants + edgeCanonicalMessage |
+| `server/src/hooks/tenantResolutionHook.ts` | NEW — Fastify onRequest anti-spoofing hook |
+| `server/src/index.ts` | MODIFIED — tenantResolutionHook registered |
+| `api/index.ts` | MODIFIED — tenantResolutionHook registered |
+| `governance/gap-register.md` | G-026 → TECS 6C2 ✅ Validated; G-026-C/D → ✅ Resolved |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | TECS 6C2 row → ✅ Validated with evidence |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-091) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | No-migration entry for TECS 6C2 |
+
+### Behavioral Confirmation
+
+- No DB migration (TECS 6C2 is pure code — middleware + hook + hook registration)
+- No schema or RLS changes
+- No `prisma migrate dev` / `db push` run
+- No `@vercel/edge` package installed — middleware uses native Web APIs only
+- JWT auth path completely unchanged (hook is a no-op when `x-texqtic-tenant-id` absent)
+- Cache invalidation webhook NOT implemented (TECS 6C3 scope)
+- WL Domains UI panel NOT implemented (TECS 6D scope)

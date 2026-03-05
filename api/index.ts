@@ -20,6 +20,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import { config } from '../server/src/config/index.js';
 import { realmHintGuardOnRequest } from '../server/src/middleware/realmGuard.js';
+import { tenantResolutionHook } from '../server/src/hooks/tenantResolutionHook.js';
 import authRoutes from '../server/src/routes/auth.js';
 import controlRoutes from '../server/src/routes/control.js';
 import tenantRoutes from '../server/src/routes/tenant.js';
@@ -125,6 +126,10 @@ fastify.get('/api', async () => {
     status: 'running',
   };
 });
+
+// G-026 TECS 6C2: Edge-injected tenant header validation (runs before all auth).
+// Verifies HMAC on x-texqtic-tenant-id headers injected by Vercel Edge Middleware.
+fastify.addHook('onRequest', tenantResolutionHook);
 
 // Wave 0-B-FIX-V3: Realm hint header guard (runs before auth)
 fastify.addHook('onRequest', realmHintGuardOnRequest);

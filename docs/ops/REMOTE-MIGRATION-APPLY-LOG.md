@@ -922,3 +922,49 @@ Remove `20260316000003_g025_dpp_views_manufacturer_restore` from `_prisma_migrat
 ### Gap Status
 
 - G-025 DPP v1 → ✅ FULLY SEALED (manufacturer fields restored after G-025-ORGS-RLS-001 fix)
+
+
+---
+
+## TECS 6C2 — Vercel Edge Middleware + Fastify Tenant Header Validation (G-026 / GOVERNANCE-SYNC-091)
+
+**Date:** 2026-03-17
+**Operator:** GitHub Copilot (automated TECS)
+**TECS ID:** G-026-CUSTOM-DOMAIN-ROUTING-MIDDLEWARE-001
+
+### Migration Status: NO MIGRATION
+
+TECS 6C2 is **code-only**. No database schema changes were made.
+
+| Item | Status |
+|------|--------|
+| DB migration applied | Not applicable |
+| `prisma migrate dev` run | Never run |
+| `prisma db push` run | Never run |
+| `prisma db pull` run | Not needed (no schema change) |
+| `prisma generate` run | Not needed (no schema change) |
+
+### Files Created / Modified (code only)
+
+| File | Action |
+|------|--------|
+| `middleware.ts` | NEW — Vercel Edge Middleware (host-to-tenant resolution + signed header injection) |
+| `server/src/lib/tenantHeaders.ts` | NEW — header constants + edgeCanonicalMessage |
+| `server/src/hooks/tenantResolutionHook.ts` | NEW — Fastify onRequest anti-spoofing hook |
+| `server/src/index.ts` | MODIFIED — tenantResolutionHook registered |
+| `api/index.ts` | MODIFIED — tenantResolutionHook registered |
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| typecheck | EXIT 0 (no errors) |
+| lint | EXIT 0 (0 errors, 108 pre-existing warnings) |
+
+### Gap Status
+
+- G-026 TECS 6C2 -> Validated (GOVERNANCE-SYNC-091)
+- G-026-C (middleware.ts) -> Resolved
+- G-026-D (slug-subdomain routing) -> Resolved
+- TECS 6C3 (cache invalidation webhook) -> Queued
+- TECS 6D (WL Domains panel) -> Queued
