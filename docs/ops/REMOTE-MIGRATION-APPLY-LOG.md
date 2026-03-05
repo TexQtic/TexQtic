@@ -1020,3 +1020,46 @@ TECS 6C3 is **code-only**. No database schema changes were made.
 - G-026-F (cache invalidation webhook) -> Resolved
 - Emitters -> Deferred to TECS 6D (no tenant_domains CRUD routes exist yet)
 - TECS 6D (WL Domains panel + emitters) -> Queued
+---
+
+## TECS 6D — WL Admin Domains Panel + Cache Invalidation Emitters (G-026 / GOVERNANCE-SYNC-093)
+
+**Date:** 2026-03-17
+**Operator:** GitHub Copilot (automated TECS)
+**TECS ID:** OPS-WLADMIN-DOMAINS-001
+
+### Migration Status: NO MIGRATION
+
+TECS 6D is **code-only**. The `tenant_domains` table was already provisioned and RLS-enforced (GOVERNANCE-SYNC-054). No database schema changes were made.
+
+| Item | Status |
+|------|--------|
+| DB migration applied | Not applicable |
+| `prisma migrate dev` run | Never run |
+| `prisma db push` run | Never run |
+| `prisma db pull` run | Not needed (no schema change) |
+| Schema drift introduced | None |
+
+### Files Created / Modified
+
+| File | Action |
+|------|--------|
+| `components/WhiteLabelAdmin/WLDomainsPanel.tsx` | NEW |
+| `server/src/lib/cacheInvalidateEmitter.ts` | NEW |
+| `server/src/routes/tenant.ts` | MODIFIED — 3 domain routes added |
+| `App.tsx` | MODIFIED — import + case 'DOMAINS' stub replaced |
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| server typecheck | EXIT 0 |
+| server lint | EXIT 0 (0 errors, 108 pre-existing warnings) |
+| frontend typecheck | EXIT 0 |
+
+### Gap Status
+
+- G-026 TECS 6D -> Validated (GOVERNANCE-SYNC-093)
+- G-026-G (WL Domains panel) -> Validated ✅
+- G-026-F (cache invalidation emitters) -> Resolved ✅ (wired via direct-call emitter)
+- G-026 saga -> COMPLETE (all four TECS: 6C1 + 6C2 + 6C3 + 6D)

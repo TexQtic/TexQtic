@@ -29,6 +29,7 @@ import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
 import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
+import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
 
 // ─── SM Transaction Helper ────────────────────────────────────────────────────
 /**
@@ -1680,6 +1681,186 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // POST  /api/tenant/traceability/edges
   // GET   /api/tenant/traceability/edges
   await fastify.register(tenantTraceabilityRoutes, { prefix: '/tenant/traceability' });
+
+  // ─── G-026 TECS 6D: Domain CRUD (OPS-WLADMIN-DOMAINS-001) ────────────────
+  // GET    /api/tenant/domains        — list custom domains for current tenant
+  // POST   /api/tenant/domains        — add a custom domain (OWNER/ADMIN)
+  // DELETE /api/tenant/domains/:id    — remove a custom domain (OWNER/ADMIN)
+  // Governance: GOVERNANCE-SYNC-093
+
+  /**
+   * GET /api/tenant/domains
+   * List custom domains registered for the current tenant.
+   */
+  fastify.get(
+    '/tenant/domains',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const domains = await withDbContext(prisma, dbContext, async tx => {
+        return tx.tenantDomain.findMany({
+          where: { tenantId: dbContext.orgId },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            domain: true,
+            verified: true,
+            primary: true,
+            createdAt: true,
+          },
+        });
+      });
+
+      return sendSuccess(reply, { domains });
+    },
+  );
+
+  /**
+   * POST /api/tenant/domains
+   * Add a custom domain for the current tenant (OWNER or ADMIN only).
+   * Emits cache invalidation after commit.
+   */
+  fastify.post(
+    '/tenant/domains',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Role guard: OWNER or ADMIN only
+      if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can add domains', 403);
+      }
+
+      const bodySchema = z.object({
+        domain: z
+          .string()
+          .min(1)
+          .max(255)
+          .regex(
+            /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/,
+            'Invalid domain format — must be lowercase, no scheme, no path, no port',
+          ),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { domain } = parseResult.data;
+
+      let created: { id: string; domain: string; verified: boolean; primary: boolean; createdAt: Date };
+      try {
+        created = await withDbContext(prisma, dbContext, async tx => {
+          const row = await tx.tenantDomain.create({
+            data: {
+              tenantId: dbContext.orgId,
+              domain,
+              verified: false,
+              primary: false,
+            },
+            select: {
+              id: true,
+              domain: true,
+              verified: true,
+              primary: true,
+              createdAt: true,
+            },
+          });
+
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+            actorType: 'USER',
+            actorId: userId ?? null,
+            action: 'domain.added',
+            entity: 'tenant_domain',
+            entityId: row.id,
+            metadataJson: { domain },
+          });
+
+          return row;
+        });
+      } catch (err: unknown) {
+        // Unique constraint violation — domain already claimed (possibly by another tenant).
+        // Return generic 409 to avoid information leakage.
+        const e = err as { code?: string };
+        if (e?.code === 'P2002') {
+          return sendError(reply, 'CONFLICT', 'Domain is already registered', 409);
+        }
+        throw err;
+      }
+
+      // Emit cache invalidation — best-effort, direct function call (no HTTP).
+      emitCacheInvalidate([domain], 'domain_crud', request.log);
+
+      return sendSuccess(reply, { domain: created }, 201);
+    },
+  );
+
+  /**
+   * DELETE /api/tenant/domains/:id
+   * Remove a custom domain (OWNER or ADMIN only, tenantId-scoped).
+   * Emits cache invalidation after commit.
+   */
+  fastify.delete(
+    '/tenant/domains/:id',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Role guard: OWNER or ADMIN only
+      if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can remove domains', 403);
+      }
+
+      const { id } = request.params as { id: string };
+
+      // Find domain — must belong to this tenant (RLS + explicit tenantId guard).
+      const existing = await withDbContext(prisma, dbContext, async tx => {
+        return tx.tenantDomain.findFirst({
+          where: { id, tenantId: dbContext.orgId },
+          select: { id: true, domain: true },
+        });
+      });
+
+      if (!existing) {
+        return sendNotFound(reply, 'Domain not found');
+      }
+
+      await withDbContext(prisma, dbContext, async tx => {
+        await tx.tenantDomain.delete({ where: { id: existing.id } });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'domain.removed',
+          entity: 'tenant_domain',
+          entityId: existing.id,
+          metadataJson: { domain: existing.domain },
+        });
+      });
+
+      // Emit cache invalidation — best-effort, direct function call (no HTTP).
+      emitCacheInvalidate([existing.domain], 'domain_crud', request.log);
+
+      return sendSuccess(reply, { deleted: existing.id });
+    },
+  );
 };
 
 export default tenantRoutes;

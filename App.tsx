@@ -13,6 +13,7 @@ import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
 import { WLStubPanel } from './components/WhiteLabelAdmin/WLStubPanel';
 import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
 import { WLCollectionsPanel } from './components/WhiteLabelAdmin/WLCollectionsPanel';
+import { WLDomainsPanel } from './components/WhiteLabelAdmin/WLDomainsPanel';
 import { EXPOrdersPanel } from './components/Tenant/EXPOrdersPanel';
 import { DPPPassport } from './components/Tenant/DPPPassport';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
@@ -506,7 +507,7 @@ const App: React.FC = () => {
       );
       case 'COLLECTIONS': return <WLCollectionsPanel />;
       case 'ORDERS':      return <WLOrdersPanel />;
-      case 'DOMAINS':     return <WLStubPanel title="Domains" icon="🌐" description="Connect a custom domain and configure DNS for your white-label store." />;
+      case 'DOMAINS':     return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
       default:            return <WLStubPanel title="Coming Soon" description="This panel is under construction." />;
     }
   };

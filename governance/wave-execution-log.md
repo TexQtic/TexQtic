@@ -8213,3 +8213,99 @@ curl -s -X POST http://localhost:3001/api/internal/cache-invalidate \
 - Edge invalidation is TTL-only for this TECS (best-effort, 60 s max)
 - JWT auth path unchanged
 - WL Domains UI panel NOT implemented (TECS 6D scope)
+
+---
+
+## G-026 TECS 6D — WL Admin Domains Panel + Cache Invalidation Emitters (OPS-WLADMIN-DOMAINS-001 / GOVERNANCE-SYNC-093)
+
+| Field | Value |
+|-------|-------|
+| TECS ID | OPS-WLADMIN-DOMAINS-001 |
+| Gap | G-026 Custom Domain Routing |
+| TECS | 6D — WL Domains CRUD UI + emitters |
+| Path | D6D-A (CRUD-lite: add + remove) |
+| Status | ✅ TECS 6D Validated |
+| Governance | GOVERNANCE-SYNC-093 |
+| Commit message | feat(wl-admin): domains panel + cache invalidation emitters (OPS-WLADMIN-DOMAINS-001) |
+
+### Objective
+
+- Implement WL Admin Domains panel replacing the stub
+- Add `GET /api/tenant/domains`, `POST /api/tenant/domains`, `DELETE /api/tenant/domains/:id` backend routes
+- Wire `emitCacheInvalidate()` direct calls after each CRUD mutation
+- Close G-026-G (WL Domains panel) and finalize G-026-F emitter wiring
+
+### Gap Status After This TECS
+
+| Gap | Status |
+|-----|--------|
+| G-026-G | ✅ Validated — WL Domains panel shipped (Path D6D-A) |
+| G-026-F | ✅ Resolved — cache invalidation emitters wired (direct call) |
+| G-026-H | ✅ Closed (texqtic_service role — TECS 6C1) |
+| G-026-C | ✅ Closed (Edge middleware — TECS 6C2) |
+| G-026-D | ✅ Closed (slug-subdomain routing — TECS 6C2) |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `components/WhiteLabelAdmin/WLDomainsPanel.tsx` | NEW — Path D6D-A CRUD-lite panel |
+| `server/src/routes/tenant.ts` | MODIFIED — 3 domain routes + emitter calls |
+| `server/src/lib/cacheInvalidateEmitter.ts` | NEW — direct-call emitter (no HTTP round-trip) |
+| `App.tsx` | MODIFIED — WLDomainsPanel import + case 'DOMAINS' stub replaced |
+| `governance/gap-register.md` | GOVERNANCE-SYNC-093 prepended |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | TECS 6D row added ✅ Validated |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-093) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | No-migration entry for TECS 6D |
+
+### Backend Routes Added
+
+| Method | Path | Role Gate | Auth Pattern |
+|--------|------|-----------|--------------|
+| GET | /api/tenant/domains | Any authenticated tenant | tenantAuthMiddleware + databaseContextMiddleware |
+| POST | /api/tenant/domains | OWNER or ADMIN only | same + role guard |
+| DELETE | /api/tenant/domains/:id | OWNER or ADMIN only | same + role guard + tenantId scope |
+
+- Body validation (POST): Zod regex `/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/`
+- Unique conflict: P2002 → 409 generic (no tenant info leakage)
+- Missing on DELETE: 404 if `id + tenantId` not found
+- Audit log: `domain.added` / `domain.removed` via `writeAuditLog`
+- Cache emitter: `emitCacheInvalidate([domain], 'domain_crud', request.log)` after commit
+
+### Frontend Panel (WLDomainsPanel.tsx)
+
+- Props: `{ tenantSlug: string }`
+- Platform domain badge: `<slug>.texqtic.app` — read-only, always shown
+- Custom domains list: fetched on mount, each with verified/primary/pending badges
+- Add form: input + RFC1123 client-side validation + POST → refetch
+- Delete flow: remove button → confirmation dialog → DELETE → refetch
+- Toast notifications: 3.5s auto-dismiss (same pattern as WLOrdersPanel)
+- Error / loading states with retry
+
+### Emitter Architecture
+
+- `server/src/lib/cacheInvalidateEmitter.ts` — direct function call (no HTTP self-call)
+- Effect: `normalizeHost` + `request.log.info` (mirrors route handler steps 4-5)
+- Edge invalidation remains TTL-bounded (60s max) — documented best-effort
+- Source tag: `'emitter:direct-call'` in log for audit traceability
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| server typecheck | EXIT 0 |
+| server lint | EXIT 0 (0 errors, 108 pre-existing warnings) |
+| frontend typecheck | EXIT 0 |
+| No DB migration | ✅ Confirmed — TECS 6D is code-only |
+| No schema/RLS change | ✅ Confirmed |
+| No `prisma migrate dev` / `db push` | ✅ Confirmed |
+| Shells.tsx unchanged | ✅ Confirmed — DOMAINS nav was already present |
+
+### Behavioral Confirmation
+
+- No DB migration (TECS 6D is code-only — tenant_domains table was already provisioned)
+- No schema or RLS changes
+- No `prisma migrate dev` / `db push` run
+- Shells.tsx NOT modified (DOMAINS nav item pre-existing from whichever prior TECS wired it)
+- JWT auth path unchanged
+- G-026 saga fully complete after this TECS: 6C1 ✅ + 6C2 ✅ + 6C3 ✅ + 6D ✅
