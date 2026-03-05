@@ -7992,3 +7992,224 @@ no schema change required.
 - JWT auth path completely unchanged (hook is a no-op when `x-texqtic-tenant-id` absent)
 - Cache invalidation webhook NOT implemented (TECS 6C3 scope)
 - WL Domains UI panel NOT implemented (TECS 6D scope)
+
+
+---
+
+## Wave 4 — G-026-CUSTOM-DOMAIN-ROUTING-CACHE-INVALIDATE-001: GOVERNANCE-SYNC-092 — Cache Invalidation Webhook: ✅ VALIDATED
+
+### Summary
+
+| Field | Value |
+|-------|-------|
+| Sync ID | GOVERNANCE-SYNC-092 |
+| Status | ✅ TECS 6C3 Validated |
+| Gap | G-026 Custom Domain Routing |
+| Commit | feat(domain): cache invalidation webhook (G-026 / TECS-6C3) |
+
+### What Was Implemented
+
+**`server/src/routes/internal/cacheInvalidate.ts` (NEW):**
+- POST /api/internal/cache-invalidate
+- HMAC-SHA256 auth (no JWT): headers x-texqtic-resolver-ts + x-texqtic-resolver-hmac
+- Canonical HMAC message: `"invalidate:" + tsMs + ":" + sha256Hex(canonicalBodyJson)`
+- canonicalBodyJson: `JSON.stringify({ hosts, reason [, requestId] })` — keys in fixed order
+- Replay window: 30 000 ms (same as resolver endpoint)
+- Body schema (Zod): `{ hosts: string[1..100], reason: "domain_crud"|"tenant_status_change"|"manual", requestId?: string }`
+- Host normalization: each host passed through normalizeHost(); invalid hosts silently skipped
+- 200 response: `{ "status": "ok", "invalidated": <n> }`
+- 401 response: opaque (no body) for all auth failures — no oracle behaviour
+
+**`server/src/lib/resolverHmac.ts` (MODIFIED):**
+- Added `verifyInvalidateHmac(hmacHeader, tsHeader, bodyHash, secret)`
+- Reuses HmacVerifyResult type and same replay-window constant
+- Same timing-safe comparison pattern as verifyResolverHmac
+
+**`server/src/routes/internal/index.ts` (MODIFIED):**
+- cacheInvalidateRoutes registered at `/api/internal` prefix
+
+### Edge Invalidation — Best-Effort TTL
+
+Edge middleware (middleware.ts) runs in Vercel Edge Runtime V8 isolates (one per region/instance).
+Fastify webhook runs in Node.js serverless — separate process, NO shared memory.
+
+Architectural reality: Cross-instance invalidation requires a shared external store (Redis, KV, etc.)
+which is NOT in scope for v1. Edge invalidation is therefore TTL-bounded: stale entries expire
+naturally within 60 s (CACHE_TTL_MS). This is acceptable for v1 custom domain routing.
+
+The webhook provides:
+1. An authoritative invalidation contract for TECS 6D emitters to call.
+2. An audit trail (reason + requestId logged via Fastify logger).
+3. Immediate effect in theoretical same-instance cache (no shared state in current architecture).
+
+Documented in gap-register.md G-026 notes and IMPLEMENTATION-TRACKER-2026-Q2.md.
+
+### Smoke Example (redacted)
+
+`ash
+# Caller constructs:
+BODY='{"hosts":["example.texqtic.app"],"reason":"manual"}'
+TS=
+BODY_HASH=
+MSG="invalidate::"
+HMAC=
+
+curl -s -X POST http://localhost:3001/api/internal/cache-invalidate \
+  -H "Content-Type: application/json" \
+  -H "x-texqtic-resolver-ts: " \
+  -H "x-texqtic-resolver-hmac: " \
+  -d ""
+# Expected: { "status": "ok", "invalidated": 1 }
+`
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 108 pre-existing warnings) |
+| No DB migration | ✅ Confirmed — TECS 6C3 is code-only |
+
+### Sub-gap Status
+
+| Gap | Status |
+|-----|--------|
+| G-026-F | ✅ Resolved — cache invalidation webhook contract established (TECS 6C3); emitters wired in TECS 6D |
+| G-026-G | Deferred TECS 6D (WL Domains panel) |
+| G-026-A | Deferred v1.1 (DNS verification columns) |
+
+### Next TECS
+
+`
+6D: WL Domains Panel UI + tenant_domains CRUD routes + cache-invalidate emitters
+`
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `server/src/routes/internal/cacheInvalidate.ts` | NEW — cache invalidation webhook |
+| `server/src/lib/resolverHmac.ts` | MODIFIED — verifyInvalidateHmac() added |
+| `server/src/routes/internal/index.ts` | MODIFIED — cacheInvalidateRoutes registered |
+| `governance/gap-register.md` | G-026 → TECS 6C3 ✅ Validated; G-026-F → ✅ Resolved |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | TECS 6C3 row added |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-092) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | No-migration entry for TECS 6C3 |
+
+### Behavioral Confirmation
+
+- No DB migration (TECS 6C3 is code-only)
+- No schema or RLS changes
+- No `prisma migrate dev` / `db push` run
+- No tenant_domains CRUD routes created (emitters deferred to TECS 6D)
+- Edge invalidation is TTL-only for this TECS (best-effort, 60s max)
+- JWT auth path unchanged
+- WL Domains UI panel NOT implemented (TECS 6D scope)
+
+
+---
+
+## Wave 4 — G-026-CUSTOM-DOMAIN-ROUTING-CACHE-INVALIDATE-001: GOVERNANCE-SYNC-092 — Cache Invalidation Webhook: ✅ VALIDATED
+
+### Summary
+
+| Field | Value |
+|-------|-------|
+| Sync ID | GOVERNANCE-SYNC-092 |
+| Status | ✅ TECS 6C3 Validated |
+| Gap | G-026 Custom Domain Routing |
+| Commit | feat(domain): cache invalidation webhook (G-026 / TECS-6C3) |
+
+### What Was Implemented
+
+**`server/src/routes/internal/cacheInvalidate.ts` (NEW):**
+- POST /api/internal/cache-invalidate
+- HMAC-SHA256 auth (no JWT); headers: x-texqtic-resolver-ts + x-texqtic-resolver-hmac
+- Canonical HMAC message: `"invalidate:" + tsMs + ":" + sha256Hex(canonicalBodyJson)`
+- canonicalBodyJson: `JSON.stringify({ hosts, reason [, requestId] })` — keys in fixed order
+- Replay window: 30 000 ms
+- Body schema (Zod): `{ hosts: string[1..100], reason: "domain_crud"|"tenant_status_change"|"manual", requestId?: string }`
+- Host normalization: each host passed through normalizeHost(); invalid hosts silently skipped
+- 200 response: `{ "status": "ok", "invalidated": <n> }`
+- 401 response: opaque (no body) for all auth failures
+
+**`server/src/lib/resolverHmac.ts` (MODIFIED):**
+- Added `verifyInvalidateHmac(hmacHeader, tsHeader, bodyHash, secret)`
+- Reuses HmacVerifyResult type + REPLAY_WINDOW_MS constant
+- Same timing-safe comparison pattern as verifyResolverHmac
+
+**`server/src/routes/internal/index.ts` (MODIFIED):**
+- cacheInvalidateRoutes registered at `/api/internal` prefix
+
+### Edge Invalidation — Best-Effort TTL
+
+Edge middleware (middleware.ts) runs in Vercel Edge Runtime V8 isolates (one per region/instance).
+Fastify webhook runs in Node.js serverless — separate process, NO shared memory.
+
+Cross-instance invalidation requires a shared external store (Redis, KV) which is NOT in v1 scope.
+Edge invalidation is therefore TTL-bounded: stale entries expire within 60 s (CACHE_TTL_MS).
+
+The webhook provides:
+1. An authoritative invalidation contract for TECS 6D emitters to call.
+2. An audit trail (reason + requestId logged via Fastify logger).
+
+### Smoke Example — bash (illustrative, not run in this TECS)
+
+```bash
+BODY='{"hosts":["example.texqtic.app"],"reason":"manual"}'
+TS=1741431600000
+BODY_HASH=$(echo -n "$BODY" | sha256sum | cut -d' ' -f1)
+MSG="invalidate:${TS}:${BODY_HASH}"
+HMAC=$(echo -n "$MSG" | openssl dgst -sha256 -hmac "<REDACTED>" | awk '{print $2}')
+
+curl -s -X POST http://localhost:3001/api/internal/cache-invalidate \
+  -H "Content-Type: application/json" \
+  -H "x-texqtic-resolver-ts: $TS" \
+  -H "x-texqtic-resolver-hmac: $HMAC" \
+  -d "$BODY"
+# Expected: { "status": "ok", "invalidated": 1 }
+```
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm -C server run typecheck` | EXIT 0 |
+| `pnpm -C server run lint` | EXIT 0 (0 errors, 108 pre-existing warnings) |
+| No DB migration | ✅ Confirmed — TECS 6C3 is code-only |
+
+### Sub-gap Status
+
+| Gap | Status |
+|-----|--------|
+| G-026-F | ✅ Resolved — cache invalidation webhook contract established; emitters wired in TECS 6D |
+| G-026-G | Deferred TECS 6D (WL Domains panel) |
+| G-026-A | Deferred v1.1 (DNS verification columns) |
+
+### Next TECS
+
+```
+6D: WL Domains Panel UI + tenant_domains CRUD routes + cache-invalidate emitters
+```
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `server/src/routes/internal/cacheInvalidate.ts` | NEW |
+| `server/src/lib/resolverHmac.ts` | MODIFIED — verifyInvalidateHmac() added |
+| `server/src/routes/internal/index.ts` | MODIFIED — cacheInvalidateRoutes registered |
+| `governance/gap-register.md` | G-026 → TECS 6C3 ✅ Validated; G-026-F → ✅ Resolved |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | TECS 6C3 row added |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-092) |
+| `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md` | No-migration entry for TECS 6C3 |
+
+### Behavioral Confirmation
+
+- No DB migration (TECS 6C3 is code-only)
+- No schema or RLS changes
+- No `prisma migrate dev` / `db push` run
+- No tenant_domains CRUD routes created (emitters deferred to TECS 6D)
+- Edge invalidation is TTL-only for this TECS (best-effort, 60 s max)
+- JWT auth path unchanged
+- WL Domains UI panel NOT implemented (TECS 6D scope)

@@ -80,3 +80,63 @@ export function verifyResolverHmac(
     return { valid: false, reason: 'INVALID_HMAC' };
   }
 }
+
+/**
+ * Verify the HMAC-SHA256 signature on an incoming cache-invalidate request.
+ *
+ * G-026 TECS 6C3 — Cache Invalidation Webhook Auth
+ *
+ * Canonical message: "invalidate:" + tsMs + ":" + bodyHash
+ *
+ *   bodyHash = sha256Hex(canonicalBody) where canonicalBody is computed by
+ *   `JSON.stringify({ hosts, reason [, requestId] })` with keys in that fixed
+ *   order — callers MUST use the same key ordering to produce a matching sig.
+ *
+ * @param hmacHeader  Value of x-texqtic-resolver-hmac (hex string).
+ * @param tsHeader    Value of x-texqtic-resolver-ts  (ms timestamp string).
+ * @param bodyHash    SHA-256 hex of the canonical body JSON string.
+ * @param secret      Value of TEXQTIC_RESOLVER_SECRET env var.
+ */
+export function verifyInvalidateHmac(
+  hmacHeader: string | undefined,
+  tsHeader: string | undefined,
+  bodyHash: string,
+  secret: string,
+): HmacVerifyResult {
+  // 1. Headers must both be present.
+  if (!hmacHeader || !tsHeader) {
+    return { valid: false, reason: 'MISSING_HEADERS' };
+  }
+
+  // 2. Timestamp must be a finite integer.
+  const tsMs = parseInt(tsHeader, 10);
+  if (!Number.isFinite(tsMs)) {
+    return { valid: false, reason: 'INVALID_TS' };
+  }
+
+  // 3. Replay-window check.
+  if (Math.abs(Date.now() - tsMs) > REPLAY_WINDOW_MS) {
+    return { valid: false, reason: 'REPLAY_WINDOW_EXCEEDED' };
+  }
+
+  // 4. Compute expected MAC.
+  //    Canonical: "invalidate:" + tsMs + ":" + sha256Hex(canonicalBody)
+  const message = `invalidate:${tsMs}:${bodyHash}`;
+  const expectedHex = createHmac('sha256', secret).update(message, 'utf8').digest('hex');
+
+  // 5. Timing-safe comparison.
+  try {
+    const expectedBuf = Buffer.from(expectedHex, 'hex');
+    const actualBuf = Buffer.from(hmacHeader, 'hex');
+
+    if (expectedBuf.length !== actualBuf.length) {
+      return { valid: false, reason: 'INVALID_HMAC' };
+    }
+
+    return timingSafeEqual(expectedBuf, actualBuf)
+      ? { valid: true }
+      : { valid: false, reason: 'INVALID_HMAC' };
+  } catch {
+    return { valid: false, reason: 'INVALID_HMAC' };
+  }
+}

@@ -30,6 +30,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { tenantApprovalRoutes, adminApprovalRoutes } from './makerChecker.js';
 import resolveDomainRoutes from './resolveDomain.js';
+import cacheInvalidateRoutes from './cacheInvalidate.js';
 
 /**
  * Combined internal governance routes plugin.
@@ -53,6 +54,11 @@ const internalGovRoutes: FastifyPluginAsync = async fastify => {
   // GET /api/internal/resolve-domain?host=<raw-host>
   // Called by the Vercel Edge function for custom-domain routing.
   await fastify.register(resolveDomainRoutes, { prefix: '/api/internal' });
+
+  // G-026 TECS 6C3 — Cache invalidation webhook (HMAC-only, no JWT).
+  // POST /api/internal/cache-invalidate
+  // Called by domain CRUD emitters (TECS 6D) and manual ops tooling.
+  await fastify.register(cacheInvalidateRoutes, { prefix: '/api/internal' });
 };
 
 export default internalGovRoutes;

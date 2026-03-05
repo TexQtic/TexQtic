@@ -968,3 +968,55 @@ TECS 6C2 is **code-only**. No database schema changes were made.
 - G-026-D (slug-subdomain routing) -> Resolved
 - TECS 6C3 (cache invalidation webhook) -> Queued
 - TECS 6D (WL Domains panel) -> Queued
+
+
+---
+
+## TECS 6C3 — Cache Invalidation Webhook (G-026 / GOVERNANCE-SYNC-092)
+
+**Date:** 2026-03-17
+**Operator:** GitHub Copilot (automated TECS)
+**TECS ID:** G-026-CUSTOM-DOMAIN-ROUTING-CACHE-INVALIDATE-001
+
+### Migration Status: NO MIGRATION
+
+TECS 6C3 is **code-only**. No database schema changes were made.
+
+| Item | Status |
+|------|--------|
+| DB migration applied | Not applicable |
+| `prisma migrate dev` run | Never run |
+| `prisma db push` run | Never run |
+| `prisma db pull` run | Not needed (no schema change) |
+| Schema drift introduced | None |
+
+### New Endpoint
+
+`POST /api/internal/cache-invalidate`
+
+- Auth: HMAC-SHA256 (x-texqtic-resolver-hmac + x-texqtic-resolver-ts), replay window 30s
+- Canonical: `"invalidate:" + tsMs + ":" + sha256Hex(bodyJson)`
+- Body: `{ hosts: string[1..100], reason, requestId? }`
+- Response: `{ "status": "ok", "invalidated": <n> }`
+
+### Files Created / Modified
+
+| File | Action |
+|------|--------|
+| `server/src/routes/internal/cacheInvalidate.ts` | NEW |
+| `server/src/lib/resolverHmac.ts` | MODIFIED — verifyInvalidateHmac() added |
+| `server/src/routes/internal/index.ts` | MODIFIED |
+
+### Quality Gates
+
+| Gate | Result |
+|------|--------|
+| typecheck | EXIT 0 |
+| lint | EXIT 0 (0 errors, 108 pre-existing warnings) |
+
+### Gap Status
+
+- G-026 TECS 6C3 -> Validated (GOVERNANCE-SYNC-092)
+- G-026-F (cache invalidation webhook) -> Resolved
+- Emitters -> Deferred to TECS 6D (no tenant_domains CRUD routes exist yet)
+- TECS 6D (WL Domains panel + emitters) -> Queued
