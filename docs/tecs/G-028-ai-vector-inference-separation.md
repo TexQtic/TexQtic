@@ -499,8 +499,10 @@ orgId flow (mandatory):
 | Step | Action | Gate |
 |---|---|---|
 | A1 | Enable pgvector on Supabase (one SQL command) | Verify `CREATE EXTENSION vector` without error |
-| A2 | Add `document_embeddings` table with RLS (TECS) | Migration applied, RLS proof CI passes |
-| A3 | Implement TVS module in Core Backend (TypeScript) | Unit tests green, typecheck passes |
+| A1-GATE | **Embedding model dimension confirmed** — see ADR-028 §5.1 checklist | All 6 items checked; `EMBEDDING_DIM` constant committed; smoke test `embedding.length === 768` passes in CI |
+| A2 | Add `document_embeddings` table with RLS (TECS) | Migration applied; `embedding vector(768)` matches confirmed dim; RLS proof CI passes |
+| A3 | Implement TVS module in Core Backend (TypeScript) — locked to `$queryRaw` pattern (ADR-028 §5.2) | Unit tests green; typecheck passes; `querySimilar()` dimension guard verified |
+| A3-GATE | **Prisma raw query perf baseline** — see ADR-028 §5.2 guardrails | P95 query < 200ms at 10K docs/tenant; HNSW `ef_search=40` set; similarity floor 0.3 enforced |
 | A4 | Wire `GET /api/ai/vector/query` — read path only | Integration test: orgId isolation |
 | A5 | Shadow mode — log query responses; do NOT inject into inference | Monitor for 1 week |
 | A6 | Gate review — check retrieval quality metrics | P@5 ≥ 0.6 on test queries |
@@ -566,8 +568,8 @@ orgId flow (mandatory):
 
 | TECS ID | Title | Size | Depends on |
 |---|---|---|---|
-| `OPS-G028-A1-PGVECTOR-ENABLE` | Enable pgvector on Supabase + add `document_embeddings` table + RLS | M | G-028 anchor approved |
-| `OPS-G028-A2-TVS-MODULE` | Implement TVS module in Core Backend (UpsertDocuments + Query + Delete) | L | A1 |
+| `OPS-G028-A1-PGVECTOR-ENABLE` | Enable pgvector + confirm embedding dim (ADR-028 §5.1 gate) + add `document_embeddings` table + RLS | M | G-028 anchor approved |
+| `OPS-G028-A2-TVS-MODULE` | Implement TVS module using locked `$queryRaw` pattern (ADR-028 §5.2) — UpsertDocuments, Query, Delete; perf guardrails in CI | L | A1 + dim gate closed |
 | `OPS-G028-A3-SHADOW-QUERY` | Wire shadow vector query to `/api/ai/insights` (log only, no injection) | S | A2 |
 | `OPS-G028-B1-CATALOG-INDEXER` | Async catalog item indexer (event-driven, Phase B write path) | L | A2 |
 | `OPS-G028-B2-DELETE-REINDEX` | Delete + reindex endpoints + MakerChecker gate for bulk ops | M | B1 |

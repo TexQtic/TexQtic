@@ -116,6 +116,9 @@ TexQtic needs a vector store to support semantic search, RAG-enriched AI respons
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- document_embeddings table (design sketch — not yet migrated)
+-- ⚠️ HARD GATE: embedding column dimension MUST be confirmed (see §5.1) before
+-- this migration is authored. Running the wrong dim is a destructive, non-trivial
+-- migration; changing it requires DROP + recreate of the column and full reindex.
 CREATE TABLE document_embeddings (
   id             uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id         uuid        NOT NULL REFERENCES tenants(id),
@@ -124,7 +127,7 @@ CREATE TABLE document_embeddings (
   content_type   text        NOT NULL,   -- 'CATALOG_ITEM' | 'DPP_SNAPSHOT' | ...
   chunk_index    int         NOT NULL DEFAULT 0,
   text_content   text        NOT NULL,
-  embedding      vector(768) NOT NULL,   -- 768-dim for text-embedding-004; confirm at impl time
+  embedding      vector(???) NOT NULL,   -- ⚠️ DIMENSION TBD — see §5.1 gate
   version        int         NOT NULL DEFAULT 1,
   deleted_at     timestamptz,
   created_at     timestamptz NOT NULL DEFAULT now(),
@@ -153,6 +156,130 @@ ALTER TABLE document_embeddings FORCE ROW LEVEL SECURITY;
 ```
 
 > ⚠️ This schema is a design sketch only. The actual migration will be created and applied as part of TECS `OPS-G028-A1-PGVECTOR-ENABLE`. It must go through the full governance review (db-naming-rules, schema-budget, RLS policy review) before being migrated.
+
+---
+
+### 5.1 Dimensionality Confirmation Gate (HARD GATE for A1)
+
+> **This gate must be closed before the migration in TECS `OPS-G028-A1-PGVECTOR-ENABLE` is authored.**  
+> Changing vector dimensions later requires a destructive column DROP + recreate + full reindex of all tenant data.
+
+Known output dimensions by model:
+
+| Model | Provider | Output dims | Notes |
+|---|---|---|---|
+| `text-embedding-004` | Google Gemini | **768** | Default output dimension; also supports 256 and 1536 via `outputDimensionality` param |
+| `embedding-001` (legacy) | Google Gemini | 768 | Legacy; do not use for new deployments |
+| `text-embedding-3-small` | OpenAI | **1536** (default) | Also supports 256, 512, 1536 via `dimensions` param |
+| `text-embedding-3-large` | OpenAI | **3072** (default) | Supports truncation but expensive |
+| `nomic-embed-text` | Nomic / Ollama | **768** | Fixed; local model |
+
+**Decision checklist (must all be checked before A1 migration is written):**
+
+- [ ] Embedding model selected and pinned (e.g., `text-embedding-004` at 768 dims)
+- [ ] `outputDimensionality` parameter (if Gemini) explicitly set in code — not relying on API default
+- [ ] A smoke test embeds one document and asserts `embedding.length === EXPECTED_DIM` in CI
+- [ ] HNSW index `CREATE INDEX` statement uses the confirmed integer (e.g., `vector(768)`, not a variable)
+- [ ] The dimension value is exported as a typed constant (`EMBEDDING_DIM = 768 as const`) used by both TVS module and the migration — never duplicated as a magic number
+- [ ] Prisma schema `embedding Unsupported("vector(768)")` matches the confirmed value
+
+**Proposed confirmation:** `text-embedding-004` at **768 dimensions**. This aligns with the§6 cost analysis and the Nomic fallback model (same dim). To be verified by running `embedContent()` and measuring `embedding.values.length` in a local test before authoring migration.
+
+---
+
+### 5.2 Prisma Raw Query Strategy + Performance Guardrails (HARD GATE for A2)
+
+Prisma ORM does not natively support the `<=>` (cosine distance) pgvector operator. Two patterns are viable; this ADR locks one.
+
+#### Locked approach: `prisma.$queryRaw` with typed tagged template
+
+```typescript
+// LOCKED PATTERN — do not deviate without ADR amendment
+// File: server/src/lib/vectorQuery.ts (to be created in OPS-G028-A2-TVS-MODULE)
+
+import { Prisma } from '@prisma/client';
+
+const EMBEDDING_DIM = 768 as const; // Must match migration
+const MAX_TOP_K = 50 as const;
+const SIMILARITY_FLOOR = 0.3 as const; // Chunks below this score never enter context
+
+export async function querySimilar(
+  db: Prisma.TransactionClient,
+  orgId: string,       // UUID — already validated from tenant context
+  embedding: number[], // Must be length === EMBEDDING_DIM
+  topK: number,        // Clamped to MAX_TOP_K
+  contentType?: string,
+): Promise<SimilarityResult[]> {
+  // Guard: dimension check (fail-fast before hitting DB)
+  if (embedding.length !== EMBEDDING_DIM) {
+    throw new Error(`[G-028] embedding dimension mismatch: got ${embedding.length}, expected ${EMBEDDING_DIM}`);
+  }
+  const k = Math.min(Math.max(1, topK), MAX_TOP_K);
+
+  // pgvector <=> is cosine distance (lower = more similar); 1 - distance = similarity score
+  const rows = await db.$queryRaw<RawRow[]>(Prisma.sql`
+    SELECT
+      id,
+      source_id,
+      source_table,
+      content_type,
+      text_content,
+      (1 - (embedding <=> ${embedding}::vector)) AS score
+    FROM document_embeddings
+    WHERE org_id        = ${orgId}::uuid
+      AND deleted_at    IS NULL
+      ${contentType ? Prisma.sql`AND content_type = ${contentType}` : Prisma.empty}
+      AND (1 - (embedding <=> ${embedding}::vector)) >= ${SIMILARITY_FLOOR}
+    ORDER BY embedding <=> ${embedding}::vector
+    LIMIT ${k}
+  `);
+
+  return rows.map(r => ({ ...r, score: Number(r.score) }));
+}
+```
+
+**Why this pattern (not `prisma-client-extensions`):**
+- Extensions are still experimental for raw operator injection in Prisma 5.x.
+- Tagged template `$queryRaw` is type-safe, parameterized (no SQL injection), and auditable.
+- The function is the ONLY place in the codebase that calls `<=>` — centralizes the operator usage.
+
+#### Performance guardrails (must be verified in A2 integration test)
+
+| Guardrail | Value | Enforcement |
+|---|---|---|
+| HNSW index params | `m=16`, `ef_construction=64` (defined in A1 migration) | Verify via `\d+ document_embeddings` in CI |
+| Query `ef_search` | Set `SET hnsw.ef_search = 40` per session for recall/speed balance | Set in TVS query path before `$queryRaw` |
+| Similarity floor | `score >= 0.3` — hardcoded in query | Chunks below floor excluded from context window |
+| topK ceiling | `k ≤ 50` — clamped in code | `Math.min(topK, MAX_TOP_K)` |
+| Embedding param binding | `${embedding}::vector` cast — prevents type coercion ambiguity | In `$queryRaw` template as shown above |
+| Query timeout | 3000ms (separate from the 8s inference timeout) | Fastify route-level timeout config on TVS endpoints |
+| Dimension guard | `embedding.length !== EMBEDDING_DIM` → throw before DB call | In `querySimilar()` as shown above |
+| EXPLAIN ANALYZE baseline | P95 < 200ms at 10K docs per tenant | Measured in A2 integration test; fail gate if exceeded |
+
+#### Prisma schema entry (design — must match confirmed dim)
+
+```prisma
+// In schema.prisma — to be added in OPS-G028-A1-PGVECTOR-ENABLE
+model DocumentEmbedding {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId       String   @db.Uuid
+  sourceTable String
+  sourceId    String   @db.Uuid
+  contentType String
+  chunkIndex  Int      @default(0)
+  textContent String
+  embedding   Unsupported("vector(768)")  // ⚠️ Dimension must match §5.1 gate
+  version     Int      @default(1)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([orgId, sourceId, chunkIndex])
+  @@map("document_embeddings")
+}
+```
+
+> ⚠️ `Unsupported("vector(768)")` means Prisma treats the column as opaque — all similarity queries MUST use `$queryRaw`. Prisma will not generate typed accessors for this column. This is expected and intentional.
 
 ---
 
