@@ -29,6 +29,7 @@
 
 import type { FastifyPluginAsync } from 'fastify';
 import { tenantApprovalRoutes, adminApprovalRoutes } from './makerChecker.js';
+import resolveDomainRoutes from './resolveDomain.js';
 
 /**
  * Combined internal governance routes plugin.
@@ -47,6 +48,11 @@ const internalGovRoutes: FastifyPluginAsync = async fastify => {
   // Admin-scoped routes → /api/control/internal/gov/*
   // realmGuard maps /api/control/* → 'admin' (explicit ENDPOINT_REALM_MAP entry).
   await fastify.register(adminApprovalRoutes, { prefix: '/api/control/internal/gov' });
+
+  // G-026 — Resolver endpoint (HMAC-only, no JWT).
+  // GET /api/internal/resolve-domain?host=<raw-host>
+  // Called by the Vercel Edge function for custom-domain routing.
+  await fastify.register(resolveDomainRoutes, { prefix: '/api/internal' });
 };
 
 export default internalGovRoutes;

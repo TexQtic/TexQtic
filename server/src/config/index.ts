@@ -34,6 +34,10 @@ const envSchema = z.object({
     .string()
     .default('http://localhost:5173,https://www.texqtic.com,https://texqtic.com'),
 
+  // G-026 — Domain resolver HMAC secret (≥ 32 chars).
+  // Must be set in all environments. Shared with the Vercel Edge function.
+  TEXQTIC_RESOLVER_SECRET: z.string().min(32),
+
   // Feature Flags
   KILL_SWITCH_ALL: z
     .string()

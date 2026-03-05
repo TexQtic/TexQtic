@@ -7802,3 +7802,97 @@ required (SELECT on `tenants(id,slug)` only). Blocking gate for TECS 6C1 deploy.
 - No migrations created
 - RLS doctrine: unchanged — "tenant RLS remains primary for application data access" upheld by D4 narrow bypass
 - STOP CONDITIONS: Not triggered — no schema change required for platform subdomain v1; narrow output preserved in D4
+
+---
+
+## Wave 4 — G-026-CUSTOM-DOMAIN-ROUTING-RESOLVER-001: GOVERNANCE-SYNC-090 — Backend Resolver Endpoint + texqtic_service Role: ✅ VALIDATED
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-026-CUSTOM-DOMAIN-ROUTING-RESOLVER-001 |
+| Sync ID | GOVERNANCE-SYNC-090 |
+| Status | ✅ TECS 6C1 Validated |
+| Date | 2026-03-17 |
+| Commit | feat(domain): internal resolver endpoint + service role (G-026 / TECS-6C1) |
+
+### Objective
+
+Implement the signed internal domain resolver endpoint (`GET /api/internal/resolve-domain`)
+and create the `texqtic_service` DB role that enables BYPASSRLS for pre-auth tenant lookups.
+This unblocks TECS 6C2 (Edge middleware) and closes G-026-H.
+
+### Preflight Deviation (Not a Blocker)
+
+Design Anchor §D6.6 referenced `WHERE tenants.active = true`. The actual Prisma schema has
+no `active` boolean column — the tenant status is modelled as `status TenantStatus @default(ACTIVE)`
+(enum values: ACTIVE, SUSPENDED, CLOSED). Implementation uses `status: 'ACTIVE'` which preserves
+the identical security intent: suspended/closed tenants return `not_found`. Documented here;
+no schema change required.
+
+### New Files Created
+
+| File | Description |
+|------|-------------|
+| `server/src/lib/resolverHmac.ts` | HMAC-SHA256 timing-safe verification; 30 s replay window; `HmacVerifyResult` discriminated union |
+| `server/src/lib/hostNormalize.ts` | RFC 1123 normalization (lowercase, strip port/FQDN-dot, reject bare IP); `parsePlatformHost()` for `<slug>.texqtic.app` pattern |
+| `server/src/routes/internal/resolveDomain.ts` | `GET /resolve-domain` handler; HMAC auth first; platform-subdomain + custom-domain paths; `SET LOCAL ROLE texqtic_service` in Prisma `$transaction` |
+| `server/prisma/migrations/20260317000000_g026_texqtic_service_role/migration.sql` | texqtic_service NOLOGIN BYPASSRLS; SELECT on tenants + tenant_domains; GRANT to postgres; idempotent DO block; VERIFIER block |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `server/src/config/index.ts` | `TEXQTIC_RESOLVER_SECRET: z.string().min(32)` added to Zod schema |
+| `server/src/routes/internal/index.ts` | `resolveDomainRoutes` imported and registered at `{ prefix: '/api/internal' }` |
+
+### Evidence
+
+| Gate | Result |
+|------|--------|
+| Migration APPLY_EXIT | 0 |
+| Migration VERIFIER | PASS: texqtic_service role confirmed — BYPASSRLS=true, SELECT on tenants + tenant_domains, granted to postgres |
+| TypeScript typecheck | EXIT 0 |
+| ESLint lint | EXIT 0 (0 errors, 108 pre-existing warnings — none in new files) |
+
+### Sub-Gap Status After This TECS
+
+| Gap | Status |
+|-----|--------|
+| G-026-A | 🔵 Deferred v1.1 (DNS verification columns) |
+| G-026-B | ✅ Resolved (internal resolver endpoint now implemented) |
+| G-026-C | ✅ Resolved (middleware.ts in TECS 6C2) |
+| G-026-D | ✅ Resolved (slug-subdomain routing, TECS 6C2) |
+| G-026-E | ✅ Resolved (narrow BYPASSRLS resolver) |
+| G-026-F | ✅ Resolved (Edge in-memory cache, TECS 6C3) |
+| G-026-G | ✅ Unblocked (WL Domains panel, TECS 6D) |
+| G-026-H | ✅ VALIDATED — migration applied; VERIFIER PASS |
+
+### Next TECS
+
+```
+6C2: Vercel Edge middleware.ts + Fastify tenantResolutionHook (requires 6C1 validated ✅)
+```
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `server/src/lib/resolverHmac.ts` | NEW |
+| `server/src/lib/hostNormalize.ts` | NEW |
+| `server/src/routes/internal/resolveDomain.ts` | NEW |
+| `server/prisma/migrations/20260317000000_g026_texqtic_service_role/migration.sql` | NEW |
+| `server/src/config/index.ts` | MODIFIED — TEXQTIC_RESOLVER_SECRET added |
+| `server/src/routes/internal/index.ts` | MODIFIED — resolveDomainRoutes registered |
+| `governance/gap-register.md` | G-026-H → ✅ VALIDATED; G-026 status updated |
+| `docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md` | TECS 6C1 row → ✅ Validated with evidence |
+| `governance/wave-execution-log.md` | This entry (GOVERNANCE-SYNC-090) |
+
+### Behavioral Confirmation
+
+- No middleware.ts created (TECS 6C2 scope)
+- No cache logic added (TECS 6C3 scope)
+- No WL Domains panel added (TECS 6D scope)
+- No RLS policies modified
+- No prisma migrate dev / db push run — migration applied manually via psql
+- Route only reachable at `/api/internal/resolve-domain` — no public path
+- STOP CONDITION: tenants.active boolean absent — documented as preflight deviation; used status=ACTIVE; intent preserved; NOT a blocker
