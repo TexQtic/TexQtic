@@ -859,3 +859,66 @@ Remove `20260316000002_g025_orgs_rls_tenant_select` from `_prisma_migrations`.
 ### Gap Closed
 
 - G-025-ORGS-RLS-001 → ✅ VALIDATED
+
+---
+
+## Migration: 20260316000003_g025_dpp_views_manufacturer_restore
+
+**TECS:** G-025-DPP-VIEWS-MANUFACTURER-RESTORE-001  
+**Date:** 2026-03-05  
+**GOVERNANCE-SYNC:** 086  
+**Target DB:** Remote Supabase Postgres (`aws-1-ap-northeast-1.pooler.supabase.com`)  
+**Change:** `CREATE OR REPLACE VIEW public.dpp_snapshot_products_v1` — add LEFT JOIN on `organizations` to restore manufacturer_name, manufacturer_jurisdiction, manufacturer_registration_no columns
+
+### Pre-flight Summary
+
+| Check | Result |
+|-------|--------|
+| A — Host | PASS — `aws-1-ap-northeast-1.pooler.supabase.com` |
+| B — View baseline | PASS — 9 columns, no manufacturer_* |
+| C — security_invoker | PASS — `{security_invoker=true}` |
+| D — texqtic_app grant | PASS — SELECT grant present |
+
+### Apply Command
+
+```powershell
+$dbLine = (Get-Content .env | Where-Object { $_ -match '^DATABASE_URL=' } | Select-Object -First 1)
+$db = $dbLine.Substring('DATABASE_URL='.Length).Trim('"')
+psql -v ON_ERROR_STOP=1 --file="prisma\migrations\20260316000003_g025_dpp_views_manufacturer_restore\migration.sql" "$db"
+```
+
+### Apply Output (Evidence)
+
+```
+BEGIN
+CREATE VIEW
+GRANT
+DO
+NOTICE:  VERIFIER PASS: dpp_snapshot_products_v1 manufacturer fields restored (G-025)
+COMMIT
+APPLY_EXIT: 0
+```
+
+### Post-Apply
+
+| Step | Command | Result |
+|------|---------|--------|
+| prisma resolve | `pnpm -C server exec prisma migrate resolve --applied 20260316000003_g025_dpp_views_manufacturer_restore` | RESOLVE_EXIT:0 — `Migration marked as applied.` |
+| prisma status | `pnpm -C server exec prisma migrate status` | 79 migrations found; `Database schema is up to date!` |
+| typecheck | `pnpm -C server run typecheck` | EXIT:0 (no errors) |
+| lint | `pnpm run lint` | EXIT:0 (0 errors) |
+
+### Rollback
+
+```sql
+CREATE OR REPLACE VIEW public.dpp_snapshot_products_v1
+WITH (security_invoker = true)
+AS
+SELECT n.id AS node_id, n.org_id, n.batch_id, n.node_type, n.meta, n.geo_hash, n.visibility, n.created_at, n.updated_at
+FROM public.traceability_nodes n;
+```
+Remove `20260316000003_g025_dpp_views_manufacturer_restore` from `_prisma_migrations`.
+
+### Gap Status
+
+- G-025 DPP v1 → ✅ FULLY SEALED (manufacturer fields restored after G-025-ORGS-RLS-001 fix)

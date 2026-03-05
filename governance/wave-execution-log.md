@@ -7536,3 +7536,78 @@ INSERT/UPDATE posture unchanged. Unblock manufacturer fields restoration in DPP 
 | docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | G-025-ORGS-RLS-001 Apply row added |
 | governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-085) |
 | docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | Apply log entry added |
+
+---
+
+## Wave 4 — G-025-DPP-VIEWS-MANUFACTURER-RESTORE-001: GOVERNANCE-SYNC-086 — DPP Manufacturer Fields Restored: ✅ VALIDATED
+
+| Field | Value |
+|-------|-------|
+| TECS ID | G-025-DPP-VIEWS-MANUFACTURER-RESTORE-001 |
+| Sync ID | GOVERNANCE-SYNC-086 |
+| Status | ✅ Validated |
+| Date | 2026-03-05 |
+| Migration | 20260316000003_g025_dpp_views_manufacturer_restore |
+| Commit | feat(db): restore DPP manufacturer fields in snapshot view (G-025) |
+
+### Objective
+
+Restore `manufacturer_name`, `manufacturer_jurisdiction`, and `manufacturer_registration_no`
+columns to `dpp_snapshot_products_v1` by adding a LEFT JOIN on `public.organizations`
+(join key: `organizations.id = traceability_nodes.org_id`). Unblocked by G-025-ORGS-RLS-001
+✅ VALIDATED in TECS 5B (commit afcf47e). Minimal delta — view only, no RLS/schema/code
+changes. Seals G-025 DPP v1 as fully complete.
+
+### Pre-flight Results
+
+| Check | Result |
+|-------|--------|
+| A — Host | PASS — `aws-1-ap-northeast-1.pooler.supabase.com` |
+| B — View baseline | PASS — `dpp_snapshot_products_v1` exists, 9 columns, no `manufacturer_*` columns |
+| C — security_invoker | PASS — reloptions = `{security_invoker=true}` |
+| D — texqtic_app grant | PASS — SELECT grant present on view |
+
+### View Delta Applied
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| organizations JOIN | None | `LEFT JOIN public.organizations o ON o.id = n.org_id` |
+| `manufacturer_name` | absent | `o.legal_name AS manufacturer_name` |
+| `manufacturer_jurisdiction` | absent | `o.jurisdiction AS manufacturer_jurisdiction` |
+| `manufacturer_registration_no` | absent | `o.registration_no AS manufacturer_registration_no` |
+| security_invoker | true | true (preserved) |
+| texqtic_app SELECT grant | present | present (re-granted, idempotent) |
+| dpp_snapshot_lineage_v1 | unchanged | unchanged |
+| dpp_snapshot_certifications_v1 | unchanged | unchanged |
+
+### Apply Evidence
+
+| Step | Command | Result |
+|------|---------|--------|
+| psql apply | `psql -v ON_ERROR_STOP=1 --file=migration.sql "$DATABASE_URL"` | APPLY_EXIT:0 |
+| VERIFIER PASS | `NOTICE: VERIFIER PASS: dpp_snapshot_products_v1 manufacturer fields restored (G-025)` | ✅ |
+| prisma resolve | `pnpm -C server exec prisma migrate resolve --applied 20260316000003_g025_dpp_views_manufacturer_restore` | RESOLVE_EXIT:0 |
+| prisma status | `79 migrations found; Database schema is up to date!` | ✅ |
+| typecheck | `pnpm -C server run typecheck` | TYPECHECK_EXIT:0 |
+| lint | `pnpm run lint` | LINT_EXIT:0 (0 errors) |
+
+### Verifier Assertions (DO Block)
+
+| Assertion | Result |
+|-----------|--------|
+| View exists in information_schema.views | ✅ |
+| `manufacturer_name` column present | ✅ |
+| `manufacturer_jurisdiction` column present | ✅ |
+| `manufacturer_registration_no` column present | ✅ |
+| `security_invoker` in reloptions | ✅ |
+| `texqtic_app` SELECT grant present | ✅ |
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| server/prisma/migrations/20260316000003_g025_dpp_views_manufacturer_restore/migration.sql | NEW — CREATE OR REPLACE VIEW with LEFT JOIN organizations + verifier DO block |
+| governance/gap-register.md | GOVERNANCE-SYNC-086 prepended |
+| docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md | TECS 5C1 row added |
+| governance/wave-execution-log.md | This entry (GOVERNANCE-SYNC-086) |
+| docs/ops/REMOTE-MIGRATION-APPLY-LOG.md | Apply log entry added |
