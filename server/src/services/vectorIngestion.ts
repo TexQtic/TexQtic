@@ -1,21 +1,25 @@
 /**
- * vectorIngestion.ts — G-028 A4: Embedding ingestion pipeline
+ * vectorIngestion.ts — G-028 A4/A6: Embedding ingestion pipeline
  *
- * Task ID: OPS-G028-A4-EMBEDDING-INGESTION
+ * Task IDs: OPS-G028-A4-EMBEDDING-INGESTION, OPS-G028-A6-SOURCE-EXPANSION-ASYNC-INDEXING
  * Doctrine: v1.4 — fail-safe-silent, idempotent, no prompt injection
  *
- * Provides:
- *   chunkText()          — deterministic sliding-window chunker (pure, no I/O)
- *   generateEmbedding()  — Gemini text-embedding-004, 1 retry, dim guard
- *   ingestSourceText()   — full pipeline: chunk → embed → upsert
- *   reindexSource()      — delete-all + re-ingest (safe for content updates)
- *   ingestCatalogItem()  — CatalogItem adapter (name + description)
- *   ingestCertification()— Certification adapter (certificationType)
+ * Provides (sync — direct pipeline):
+ *   chunkText()            — re-exported from vectorChunker (deterministic)
+ *   generateEmbedding()    — re-exported from vectorEmbeddingClient
+ *   ingestSourceText()     — full pipeline: chunk → embed → upsert (sync)
+ *   reindexSource()        — delete-all + re-ingest (sync, for backward compat)
+ *   ingestCatalogItem()    — CatalogItem adapter (name + description)
+ *   ingestCertification()  — Certification adapter (certificationType)
+ *   ingestDppSnapshot()    — DPP snapshot adapter (traceabilityText)   [A6]
+ *   ingestSupplierProfile()— Supplier profile adapter (capabilities)   [A6]
+ *
+ * Provides (async — queue-based, A6):
+ *   enqueueSourceIngestion() — enqueue job for async worker (non-blocking)
  *
  * CONSTITUTIONAL CONSTRAINTS:
  *   - All DB writes run under RLS (tx from withDbContext — no BYPASSRLS)
  *   - orgId MUST come from req.dbContext.orgId (JWT-derived, never request body)
- *   - Embedding generation is SYNCHRONOUS (no queue in A4 — see known limitations)
  *   - Chunk content is NEVER logged (PII prevention)
  *   - Ingestion errors are caught and returned as error results — never thrown
  *
@@ -24,59 +28,35 @@
  * @module vectorIngestion
  */
 
-import { createHash } from 'node:crypto';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { config } from '../config/index.js';
-import { upsertDocumentEmbeddings, deleteBySource, EMBEDDING_DIM } from '../lib/vectorStore.js';
+import { upsertDocumentEmbeddings, deleteBySource } from '../lib/vectorStore.js';
 import type { VectorStoreClient, DocumentChunkInput } from '../lib/vectorStore.js';
+import { enqueueVectorIndexJob } from './vectorIndexQueue.js';
+import type { EnqueueResult } from './vectorIndexQueue.js';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Re-exports from extracted modules (A6) — backward compatibility ─────────
+// All public symbols that tests and callers import from vectorIngestion are
+// preserved here as re-exports so no import paths need to change.
 
-/** Maximum characters per chunk (TECS A4 §4). */
-export const MAX_CHUNK_LENGTH = 800 as const;
+export {
+  chunkText,
+  MAX_CHUNK_LENGTH,
+  CHUNK_OVERLAP,
+  MAX_CHUNKS_PER_DOC,
+  MAX_DOC_SIZE,
+} from './vectorChunker.js';
+export type { TextChunk } from './vectorChunker.js';
 
-/** Overlap between consecutive chunks (TECS A4 §4). */
-export const CHUNK_OVERLAP = 100 as const;
+export {
+  generateEmbedding,
+  _overrideGenAIForTests,
+  EMBEDDING_MODEL,
+} from './vectorEmbeddingClient.js';
 
-/** Hard cap on chunks per source document (TECS A4 §10). */
-export const MAX_CHUNKS_PER_DOC = 20 as const;
-
-/** Hard cap on source document size before chunking (TECS A4 §10). */
-export const MAX_DOC_SIZE = 20_000 as const;
-
-/** Embedding model pinned per ADR-028 §5.1. */
-const EMBEDDING_MODEL = 'text-embedding-004' as const;
-
-/** Max embedding retry attempts (TECS A4 §5). */
-const EMBEDDING_MAX_RETRIES = 1 as const;
-
-// ─── Gemini client (lazy, module-level, same pattern as ai.ts) ───────────────
-
-let _genAI: GoogleGenerativeAI | null = null;
-
-function getGenAI(): GoogleGenerativeAI {
-  if (!_genAI) {
-    _genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
-  }
-  return _genAI;
-}
-
-/**
- * Override the Gemini client instance (test-only dependency injection).
- * Call with `null` to reset to lazy default.
- */
-export function _overrideGenAIForTests(instance: GoogleGenerativeAI | null): void {
-  _genAI = instance;
-}
+// ─── Local imports (used by ingestSourceText internals) ───────────────────────
+import { chunkText, MAX_CHUNKS_PER_DOC, MAX_DOC_SIZE } from './vectorChunker.js';
+import { generateEmbedding } from './vectorEmbeddingClient.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-/** One text chunk produced by chunkText(). */
-export interface TextChunk {
-  chunkIndex: number;
-  content: string;
-  contentHash: string;
-}
 
 /** Ingestion result returned by ingestSourceText() and reindexSource(). */
 export interface IngestionResult {
@@ -97,104 +77,11 @@ export interface IngestionError {
   message: string;
 }
 
-// ─── chunkText ────────────────────────────────────────────────────────────────
-
-/**
- * Split text into deterministic sliding-window chunks.
- *
- * - Splits are word-boundary-safe (no mid-word cuts) where possible.
- * - Each chunk is at most MAX_CHUNK_LENGTH characters.
- * - Consecutive chunks share CHUNK_OVERLAP characters of context.
- * - At most MAX_CHUNKS_PER_DOC chunks are produced (remaining text silently dropped
- *   with a warning — callers should enforce MAX_DOC_SIZE before calling).
- *
- * @param text      Source text to chunk.
- * @param maxLen    Max characters per chunk (default MAX_CHUNK_LENGTH = 800).
- * @param overlap   Overlap characters between chunks (default CHUNK_OVERLAP = 100).
- * @param maxChunks Max chunks to produce (default MAX_CHUNKS_PER_DOC = 20).
- * @returns         Array of TextChunk, in order.
- */
-export function chunkText(
-  text: string,
-  maxLen: number = MAX_CHUNK_LENGTH,
-  overlap: number = CHUNK_OVERLAP,
-  maxChunks: number = MAX_CHUNKS_PER_DOC,
-): TextChunk[] {
-  const chunks: TextChunk[] = [];
-  let start = 0;
-  const stride = Math.max(1, maxLen - overlap);
-
-  while (start < text.length && chunks.length < maxChunks) {
-    let end = start + maxLen;
-
-    if (end < text.length) {
-      // Prefer cutting at a word boundary (space or newline) within last 20% of chunk
-      const searchFrom = start + Math.floor(maxLen * 0.8);
-      const breakAt = text.lastIndexOf(' ', end);
-      if (breakAt >= searchFrom) {
-        end = breakAt;
-      }
-    } else {
-      end = text.length;
-    }
-
-    const content = text.slice(start, end).trim();
-    if (content.length > 0) {
-      const contentHash = createHash('sha256').update(content).digest('hex');
-      chunks.push({ chunkIndex: chunks.length, content, contentHash });
-    }
-
-    start += stride;
-  }
-
-  return chunks;
-}
-
-// ─── generateEmbedding ────────────────────────────────────────────────────────
-
-/**
- * Generate a 768-dimension embedding using Gemini text-embedding-004.
- *
- * - Validates output length === EMBEDDING_DIM (fail-fast if Gemini changes dims).
- * - Retries once on transient failure (TECS A4 §5).
- * - Throws on persistent failure after 1 retry — callers must handle.
- *
- * @param text        Content to embed (should be ≤ MAX_CHUNK_LENGTH chars for quality).
- * @param genAIClient Optional override for dependency injection in tests.
- * @returns           Float array of length EMBEDDING_DIM (768).
- */
-export async function generateEmbedding(
-  text: string,
-  genAIClient?: GoogleGenerativeAI,
-): Promise<number[]> {
-  const client = genAIClient ?? getGenAI();
-  const model = client.getGenerativeModel({ model: EMBEDDING_MODEL });
-
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt <= EMBEDDING_MAX_RETRIES; attempt++) {
-    try {
-      const result = await model.embedContent(text);
-      const values = result.embedding.values;
-
-      if (!values || values.length !== EMBEDDING_DIM) {
-        throw new Error(
-          `[G028-A4] Embedding dimension mismatch: expected ${EMBEDDING_DIM}, got ${values?.length ?? 0}`,
-        );
-      }
-
-      // Spread Float32Array (or number[]) into plain number[]
-      return Array.from(values);
-    } catch (err) {
-      lastError = err;
-      if (attempt < EMBEDDING_MAX_RETRIES) {
-        // Small delay before retry (100ms)
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-  }
-
-  throw lastError;
+/** Result of enqueueSourceIngestion(). */
+export interface EnqueueIngestionResult {
+  accepted: boolean;
+  jobId?: string;
+  reason?: 'QUEUE_FULL' | 'DOC_TOO_LARGE';
 }
 
 // ─── ingestSourceText ─────────────────────────────────────────────────────────
@@ -411,4 +298,118 @@ export async function ingestCertification(
   return ingestSourceText(db, orgId, 'CERTIFICATION', cert.id, cert.certificationType, {
     certificationType: cert.certificationType,
   });
+}
+
+// ─── A6: New entity adapters ──────────────────────────────────────────────────
+
+/**
+ * Ingest a DPP snapshot. [A6 — new source]
+ *
+ * Indexes traceability text for use in DPP compliance RAG queries.
+ * sourceType = 'DPP_SNAPSHOT'.
+ *
+ * The traceabilityText field aggregates supply-chain node data from
+ * dpp_snapshot_products_v1, dpp_snapshot_lineage_v1, and
+ * dpp_snapshot_certifications_v1 (per ADR-028 §1).
+ *
+ * @param db               Prisma tx client (from withDbContext — RLS active)
+ * @param orgId            JWT-derived org UUID
+ * @param snapshot         { id: string; traceabilityText: string; nodeId?: string }
+ */
+export async function ingestDppSnapshot(
+  db: VectorStoreClient,
+  orgId: string,
+  snapshot: { id: string; traceabilityText: string; nodeId?: string | null },
+): Promise<IngestionResult | IngestionError> {
+  return ingestSourceText(
+    db,
+    orgId,
+    'DPP_SNAPSHOT',
+    snapshot.id,
+    snapshot.traceabilityText,
+    {
+      nodeId: snapshot.nodeId ?? null,
+    },
+  );
+}
+
+/**
+ * Ingest a Supplier Profile. [A6 — new source]
+ *
+ * Indexes supplier capabilities text for use in supplier matching RAG.
+ * sourceType = 'SUPPLIER_PROFILE'.
+ *
+ * @param db       Prisma tx client (from withDbContext — RLS active)
+ * @param orgId    JWT-derived org UUID
+ * @param supplier { id: string; capabilities: string; name?: string | null }
+ */
+export async function ingestSupplierProfile(
+  db: VectorStoreClient,
+  orgId: string,
+  supplier: { id: string; capabilities: string; name?: string | null },
+): Promise<IngestionResult | IngestionError> {
+  const parts = [supplier.capabilities];
+  if (supplier.name) {
+    parts.unshift(supplier.name);
+  }
+  const text = parts.join('\n\n');
+
+  return ingestSourceText(db, orgId, 'SUPPLIER_PROFILE', supplier.id, text, {
+    name: supplier.name ?? null,
+  });
+}
+
+// ─── A6: Async queue entry point ──────────────────────────────────────────────
+
+/**
+ * Enqueue a source document for async embedding (non-blocking).
+ *
+ * This is the A6 preferred entry point for new indexing calls on mutation paths.
+ * Instead of blocking the request with embedding generation, the job is queued
+ * and processed by the background worker (startVectorIndexWorker).
+ *
+ * - Enforces MAX_DOC_SIZE before enqueueing (fast rejection, no Gemini call).
+ * - Caller MUST pass orgId from req.dbContext.orgId (JWT-derived).
+ * - Returns { accepted: false, reason: 'QUEUE_FULL' } if the queue is full —
+ *   the caller should log this but need not fail the HTTP response.
+ *
+ * @param orgId      JWT-derived org UUID (from req.dbContext.orgId)
+ * @param sourceType Domain discriminator
+ * @param sourceId   UUID of the originating entity
+ * @param text       Full text to embed (max MAX_DOC_SIZE chars)
+ * @param metadata   Optional metadata forwarded to each chunk
+ * @returns          EnqueueIngestionResult (never throws)
+ */
+export function enqueueSourceIngestion(
+  orgId: string,
+  sourceType: string,
+  sourceId: string,
+  text: string,
+  metadata: Record<string, unknown> = {},
+): EnqueueIngestionResult {
+  // Fast guard: reject oversized docs before they enter the queue
+  if (text.length > MAX_DOC_SIZE) {
+    console.warn('[G028-A6][enqueue_doc_too_large]', {
+      stage:      'vector_async_index',
+      sourceType,
+      sourceId,
+      textLength: text.length,
+      maxDocSize: MAX_DOC_SIZE,
+    });
+    return { accepted: false, reason: 'DOC_TOO_LARGE' };
+  }
+
+  const result: EnqueueResult = enqueueVectorIndexJob({
+    orgId,
+    sourceType,
+    sourceId,
+    textContent: text,
+    metadata,
+  });
+
+  if (!result.accepted) {
+    return { accepted: false, reason: 'QUEUE_FULL' };
+  }
+
+  return { accepted: true, jobId: result.jobId };
 }
