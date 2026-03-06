@@ -128,12 +128,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/tenant/memberships
    * Get memberships for current tenant (Gate D.1: RLS-enforced)
-   * Manual tenant filter removed; RLS policies handle tenant boundary
+   * Authorization: OWNER, ADMIN, MEMBER only. VIEWER is explicitly denied.
+   * Tenant boundary additionally enforced by RLS via app.org_id.
+   * Manual tenant filter removed; RLS policies handle tenant boundary.
    */
   fastify.get(
     '/tenant/memberships',
     { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
+      const { userRole } = request;
+
+      // Enforce read-role policy: OWNER, ADMIN, MEMBER allowed; VIEWER denied.
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN' && userRole !== 'MEMBER') {
+        return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+      }
+
       const dbContext = request.dbContext;
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);

@@ -385,6 +385,75 @@ A1–A7 all validated. pgvector schema live in Supabase; RLS enforced (`require_
 
 ---
 
+## Section 12 — Tenant Membership Governance Notes
+
+> **Recorded:** 2026-03-06 — P-6 Membership Authorization Alignment  
+> **Corrected:** 2026-03-06 — P-6A VIEWER policy drift removed  
+> **Enforced:** 2026-03-06 — P-6B Explicit runtime role guard added to GET route  
+> **TECS:** TECS-P6-MEMBERSHIP-AUTHZ-001 / TECS-P6A-VIEWER-DRIFT-CORRECTION / TECS-P6B-GET-ROLE-GUARD  
+> **Governance Sync:** Post-G-028 alignment pass
+
+This section records the authoritative decisions governing the tenant membership domain as clarified and aligned during the P-6 implementation cycle.
+
+---
+
+### 12.1 Membership Authorization Model
+
+| Endpoint | Allowed Roles | Enforcement Mechanism |
+|----------|--------------|----------------------|
+| `GET /api/tenant/memberships` | OWNER, ADMIN, MEMBER | Explicit route-level role guard (VIEWER → 403) + `tenantAuthMiddleware` + RLS via `app.org_id` |
+| `POST /api/tenant/memberships` | OWNER, ADMIN only | Explicit route-level role guard (`userRole !== 'OWNER' && userRole !== 'ADMIN'` → 403) |
+
+**Key rule:** Membership list reads are accessible to authenticated tenant members with role OWNER, ADMIN, or MEMBER. VIEWER is explicitly excluded from the membership list read. Tenant boundary is additionally enforced by Supabase RLS (`app.org_id` GUC context), which prevents cross-tenant data access at the DB layer.
+
+Invite creation (POST) is intentionally restricted to privileged roles to prevent unauthorized member provisioning. This is enforced at the route level (Fastify handler), not in RLS.
+
+---
+
+### 12.2 Frontend / Backend Contract Assumptions
+
+| Decision | Detail |
+|---|---|
+| `status` field removed from frontend `Membership` interface | Backend schema (`schema.prisma`) does not include a `status` column on the `memberships` table. Frontend contract was aligned to remove the field dependency. |
+| `tenantId` is a legacy alias | The canonical tenancy key throughout the system is `org_id`. `tenantId` appears in some middleware and route handler destructuring as a legacy alias; it maps to the same `org_id` concept and is normalized by `tenantAuthMiddleware`. |
+| Membership reads rely on RLS | `GET /api/tenant/memberships` does not apply a manual `where: { tenantId }` filter. RLS policies on the `memberships` table enforce tenant isolation via `app.org_id`. Defense in depth remains intact. |
+
+---
+
+### 12.3 Intentionally Incomplete Features
+
+| Feature | Status | Notes |
+|---|---|---|
+| Membership edit (role update) | ❌ Not implemented | No `PUT /api/tenant/memberships/:id` endpoint exists. The `TeamManagement.tsx` component does not expose edit actions. Deferred to a future prompt cycle. |
+| Membership deletion / offboarding | ❌ Not implemented | No offboarding endpoint exists as of P-6. Out of scope. |
+| Invite status tracking | ❌ Not surfaced | Invite records exist in the `invites` table but invite `status` is not currently surfaced on the membership list response. |
+
+---
+
+### 12.4 Invite Member UI Wiring Fix
+
+During the P-5 / P-6 cycle, the Invite Member UI in `TeamManagement.tsx` was confirmed wired and functional. The fix connected the `InviteMemberForm.tsx` form submission to the `createMembership()` service call, closing the gap where the invite form existed in the UI but did not trigger a backend request.
+
+---
+
+### 12.5 Authorization Test Coverage
+
+A targeted contract test was added at `tests/membership-authz.test.ts` (P-6, corrected P-6A, runtime-aligned P-6B). It:
+- Verifies OWNER, ADMIN, and MEMBER roles are permitted for `GET /api/tenant/memberships` reads.
+- Verifies VIEWER is explicitly denied for `GET /api/tenant/memberships` reads.
+- Verifies MEMBER and VIEWER roles are denied for `POST /api/tenant/memberships` (invite creation).
+- Documents the authorization invariant: all invite-permitted roles can also read; VIEWER is excluded from both read and invite.
+
+This test is a pure-logic unit test — no live server required. Run with:  
+`pnpm exec vitest run tests/membership-authz.test.ts`
+
+---
+
+*Section produced by: GitHub Copilot — TECS-P6-MEMBERSHIP-AUTHZ-001*  
+*Date: 2026-03-06*
+
+---
+
 *Tracker produced by: GitHub Copilot — OPS-IMPLEMENTATION-PLAN-AUDIT-001 (follow-on)*  
 *Source of truth: `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`*  
 *No application code was modified in the production of this document.*

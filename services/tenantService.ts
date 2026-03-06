@@ -74,7 +74,8 @@ export interface MembershipsResponse {
 
 /**
  * Fetch all memberships for the current tenant (G-W3-ROUTING-001)
- * Requires OWNER or ADMIN role; RLS-enforced.
+ * Accessible to authenticated tenant members with role OWNER, ADMIN, or MEMBER.
+ * VIEWER is denied (403). Tenant boundary additionally enforced by RLS via app.org_id.
  */
 export async function getMemberships(): Promise<MembershipsResponse> {
   return tenantGet<MembershipsResponse>('/api/tenant/memberships');
