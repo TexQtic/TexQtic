@@ -402,7 +402,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-017 | CatalogItem.category Grouping | WL Collections | Not identified | CM-002 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | |
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | Tenant provisioning | Not identified | CM-003 | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 0/verify | Intentional mapping per code comment |
 | TECS-FBW-019 | lifecycleState vs status | Orders | Not inspected | CM-004 handled | NEW_IN_COPILOT | DEFERRED | HIGH | — | GAP-ORDER-LC-001 closed (GOVERNANCE-SYNC-063) |
-| TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | VALIDATED (VER-002 · 2026-03-06) | MEDIUM | Wave 1 | Codex confirmed correct; INVITE_MEMBER falls into EXPERIENCE case group; WhiteLabelShell rendered instead of WhiteLabelAdminShell |
+| TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | ✅ CLOSED (GOVERNANCE-SYNC-101 · 2026-03-06) | MEDIUM | Wave 1 | App.tsx only; wlAdminInviting bool substate; typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | G-028 B1+ deferred |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend | Admin access | S-001 implied | F-010 / S-001 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | |
 | TECS-FBW-MOQ | MOQ_NOT_MET UX Gap | Cart | Not identified | §11 P4.4 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | 422 response not surfaced to user |

@@ -61,6 +61,9 @@ const App: React.FC = () => {
   // Wave 4 P1: active panel in the WL Store Admin console
   type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
+  // TECS-FBW-020: WL-admin-local invite substate — keeps invite inside WhiteLabelAdminShell;
+  // prevents INVITE_MEMBER appState from falling into the EXPERIENCE case group.
+  const [wlAdminInviting, setWlAdminInviting] = useState(false);
   // RCP-1 TECS 3: sub-view for EXPERIENCE Orders panel (OPS-EXPERIENCE-ORDERS-UX-001)
   // G-025 TECS 4D: 'DPP' added for DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
   const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP'>('HOME');
@@ -393,9 +396,11 @@ const App: React.FC = () => {
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
   const renderWLAdminContent = () => {
     if (!currentTenant) return null;
+    // TECS-FBW-020: render InviteMemberForm in-shell; onBack returns to STAFF without leaving WL_ADMIN.
+    if (wlAdminInviting) return <InviteMemberForm onBack={() => setWlAdminInviting(false)} />;
     switch (wlAdminView) {
       case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} />;
-      case 'STAFF':       return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
+      case 'STAFF':       return <TeamManagement onInvite={() => setWlAdminInviting(true)} />;
       case 'PRODUCTS': return (
         <div className="space-y-6 animate-in fade-in duration-500">
           <div className="flex justify-between items-end">
@@ -1124,7 +1129,7 @@ const App: React.FC = () => {
             <WhiteLabelAdminShell
               tenant={currentTenant}
               activeView={wlAdminView}
-              onViewChange={(v) => setWlAdminView(v as WLAdminView)}
+              onViewChange={(v) => { setWlAdminView(v as WLAdminView); setWlAdminInviting(false); }}
               onNavigateStorefront={() => setAppState('EXPERIENCE')}
             >
               {renderWLAdminContent()}
