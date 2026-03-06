@@ -3,7 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { getMemberships, type Membership } from '../../services/tenantService';
 import { APIError } from '../../services/apiClient';
 
-export const TeamManagement: React.FC = () => {
+interface TeamManagementProps {
+  onInvite?: () => void;
+}
+
+export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
   const [members, setMembers] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +39,10 @@ export const TeamManagement: React.FC = () => {
           <h1 className="text-2xl font-bold">Team Management</h1>
           <p className="text-slate-500 text-sm">Manage your organization's members and their access levels.</p>
         </div>
-        <button className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-900/10">Invite Member</button>
+        <button
+          className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-900/10"
+          onClick={onInvite}
+        >Invite Member</button>
       </div>
 
       {loading && (

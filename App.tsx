@@ -395,7 +395,7 @@ const App: React.FC = () => {
     if (!currentTenant) return null;
     switch (wlAdminView) {
       case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} />;
-      case 'STAFF':       return <TeamManagement />;
+      case 'STAFF':       return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
       case 'PRODUCTS': return (
         <div className="space-y-6 animate-in fade-in duration-500">
           <div className="flex justify-between items-end">
@@ -524,7 +524,7 @@ const App: React.FC = () => {
       );
     }
 
-    if (appState === 'TEAM_MGMT') return <TeamManagement />;
+    if (appState === 'TEAM_MGMT') return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
     if (appState === 'INVITE_MEMBER')
       return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;
     if (appState === 'SETTINGS') return <WhiteLabelSettings tenant={currentTenant} />;
