@@ -1,0 +1,3 @@
+interface:
+  display_name: "Tenant Safety Check"
+  short_description: "Review-only inspection of multi-tenant boundary and authorization risks"
