@@ -21,6 +21,7 @@ import {
   buildAiInsightsReasoningAudit,
   buildAiNegotiationReasoningAudit,
 } from '../utils/audit.js';
+import { runVectorShadowQuery } from '../lib/vectorShadowQuery.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -175,6 +176,12 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         const systemInstruction =
           'You are a strategic AI advisor for a multi-tenant global commerce platform. ' +
           'Provide architectural and market insights concisely in 2-3 sentences.';
+
+        // 4.5 G-028 A3: Vector shadow retrieval (shadow mode — results NOT injected into prompt)
+        // Gated by feature flag OP_G028_VECTOR_ENABLED. Fail-safe-silent: errors do not break inference.
+        // Metadata is logged to reasoning_logs as a separate row (model="vector-shadow/g028-a3").
+        // TODO(G028-A4): swap placeholder embedding for real Gemini text-embedding-004 pipeline.
+        await runVectorShadowQuery(tx, contextTenantId, prompt);
 
         // 5. Generate content (AI call)
         const { text: insightText, tokensUsed } = await generateContent(prompt, systemInstruction);

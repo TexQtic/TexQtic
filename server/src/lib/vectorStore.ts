@@ -29,6 +29,15 @@
 
 import { Prisma, PrismaClient } from '@prisma/client';
 
+// ─── Client duck-type ─────────────────────────────────────────────────────────
+
+/**
+ * Minimal client interface accepted by all vectorStore functions.
+ * Satisfied by both PrismaClient and Prisma transaction clients.
+ * Allows callers inside withDbContext() to pass tx directly.
+ */
+export type VectorStoreClient = Pick<PrismaClient, '$queryRaw' | '$executeRaw' | '$executeRawUnsafe'>;
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /** Locked embedding dimension (text-embedding-004 / nomic-embed-text). ADR-028 §5.1. */
@@ -167,7 +176,7 @@ function toVectorLiteral(embedding: number[]): Prisma.Sql {
  * @returns      Count of inserted vs skipped rows
  */
 export async function upsertDocumentEmbeddings(
-  db: PrismaClient,
+  db: VectorStoreClient,
   orgId: string,
   chunks: DocumentChunkInput[],
 ): Promise<{ inserted: number; skipped: number }> {
@@ -258,7 +267,7 @@ export async function upsertDocumentEmbeddings(
  * @returns         Ranked results with similarity scores
  */
 export async function querySimilar(
-  db: PrismaClient,
+  db: VectorStoreClient,
   orgId: string,
   embedding: number[],
   opts: QuerySimilarOptions = {},
@@ -350,7 +359,7 @@ export async function querySimilar(
  * @returns          Count of deleted rows
  */
 export async function deleteBySource(
-  db: PrismaClient,
+  db: VectorStoreClient,
   orgId: string,
   sourceType: string,
   sourceId: string,
