@@ -22,6 +22,14 @@ import {
   buildAiNegotiationReasoningAudit,
 } from '../utils/audit.js';
 import { runRagRetrieval } from '../services/ai/ragContextBuilder.js';
+import {
+  startTimer,
+  markRetrievalStart,
+  recordRetrievalLatency,
+  markInferenceStart,
+  recordInferenceLatency,
+  recordTotalLatency,
+} from '../services/ai/ragMetrics.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -181,7 +189,16 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         // Gated by feature flag OP_G028_VECTOR_ENABLED. Fail-safe: errors fall back to zero-shot.
         // Builds a real Gemini embedding, queries document_embeddings, injects context block.
         // Metadata (no chunk content) logged to reasoning_logs as model="vector-rag/g028-a5".
+        //
+        // G-028 A7: Latency instrumentation (read-only; logged to console; not persisted).
+        const metricsHandle = startTimer();
+        markRetrievalStart(metricsHandle);
         const ragResult = await runRagRetrieval(tx, contextTenantId, prompt);
+        recordRetrievalLatency(
+          metricsHandle,
+          ragResult.meta?.chunksInjected ?? 0,
+          ragResult.meta?.topScore ?? null,
+        );
 
         // Augment prompt: inject retrieved context block before the original user prompt.
         // Falls back to the original prompt if retrieval is skipped or returns no results.
@@ -190,7 +207,10 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           : prompt;
 
         // 5. Generate content (AI call — uses augmented prompt when RAG is active)
+        markInferenceStart(metricsHandle);
         const { text: insightText, tokensUsed } = await generateContent(finalPrompt, systemInstruction);
+        recordInferenceLatency(metricsHandle);
+        recordTotalLatency(metricsHandle);
 
         // 6. Calculate actual cost
         const actualCost = estimateCostUSD(tokensUsed, model);
