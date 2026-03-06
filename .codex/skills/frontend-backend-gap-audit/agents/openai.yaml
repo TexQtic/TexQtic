@@ -1,0 +1,3 @@
+interface:
+  display_name: "Frontend Backend Gap Audit"
+  short_description: "Audit-only tracing and classification for frontend-backend integration gaps"
