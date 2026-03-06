@@ -1,6 +1,6 @@
 # G-028 — AI Vector / Inference Separation — Design Anchor
 
-**Status:** DESIGN ANCHOR — Not yet implemented  
+**Status:** ✅ IMPLEMENTED — A1–A6 Complete (GOVERNANCE-SYNC-094)  
 **Gap ref:** G-028 (`governance/gap-register.md` line 182)  
 **Wave:** 4 XL (depends on G-023 ✅ complete)  
 **Author:** TexQtic AI Architecture  
@@ -590,3 +590,26 @@ orgId flow (mandatory):
 - [x] Rollout plan with gates + kill switch included (§7)
 - [x] Risks & mitigations documented (§8)
 - [x] Follow-on TECS breakdown (§9)
+
+---
+
+## 11. Implementation Status (GOVERNANCE-SYNC-094)
+
+**All A-series TECS completed — 2026-03-28**
+
+| Stage | TECS ID | What Was Delivered | Commits |
+|---|---|---|---|
+| A1 | `OPS-G028-A1-PGVECTOR-ENABLE` | `document_embeddings` table · pgvector extension · HNSW index (cosine, ef=64, m=16) · RESTRICTIVE guard + 4 PERMISSIVE policies · FORCE RLS=t · DO-block VERIFIER PASS | `c07af57`, `b90245a` |
+| A2 | `OPS-G028-A2-TVS-MODULE` | `vectorStore.ts` · `upsertDocumentEmbeddings` / `queryByVector` / `deleteBySource` · `$queryRaw` cosine search · ON CONFLICT idempotency · 16 passing tests | `5fb4b8a`, `8ee0e31` |
+| A3 | `OPS-G028-A3-SHADOW-QUERY` | Shadow retrieval wired to `/api/ai/insights` (log-only) · latency logged · 4 passing tests | `59b6f26`, `a4c867d` |
+| A4 | `OPS-G028-A4-INGESTION` | `vectorIngestion.ts` · `chunkText` (sliding-window, SHA-256 hash) · `generateEmbedding` (Gemini `text-embedding-004`, 768-dim) · `ingestCatalogItem` / `ingestCertification` · `ai.vector.ingestion.completed` audit event | `10bda3e`, `d9292df` |
+| A5 | `OPS-G028-A5-RAG-INJECTION` | `vectorContextService` · topK=5 RAG context injected into insights inference path · `ai.vector.query` audit event | `dad08f7`, `858714b` |
+| A6 | `OPS-G028-A6-SOURCE-EXPANSION-ASYNC-INDEXING` | `vectorChunker.ts` (pure, no I/O) · `vectorEmbeddingClient.ts` (lazy singleton, test override) · `vectorIndexQueue.ts` (FIFO, QUEUE_SIZE_MAX=1000, JOBS_PER_SECOND=5, `.unref()`) · `vectorReindexService.ts` (sentinel actor `00000000-0000-0000-0000-000000000010`) · `ingestDppSnapshot` / `ingestSupplierProfile` / `enqueueSourceIngestion` in `vectorIngestion.ts` · 18 passing tests | `ad5bf72`, `d31a8d8` |
+
+**Quality gates at completion:**
+- `pnpm -C server exec tsc --noEmit` EXIT 0
+- `pnpm -C server run lint` EXIT 0 (0 errors)
+- `pnpm -C server exec vitest run` — all A-series tests pass (A2: 16, A3: 4, A6: 18 + A4 regression: 13)
+
+**Deferred (Wave 5+):**  
+`OPS-G028-B1-CATALOG-INDEXER`, `OPS-G028-B2-DELETE-REINDEX`, `OPS-G028-C1-TIS-REFACTOR`, `OPS-G028-C2-RAG-INSIGHTS`, `OPS-G028-C3-DPP-ASSIST` — not in scope for Wave 4 delivery.

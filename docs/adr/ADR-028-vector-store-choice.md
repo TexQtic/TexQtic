@@ -1,6 +1,6 @@
 # ADR-028 — Vector Store Technology Choice for G-028
 
-**Status:** PROPOSED (pending G-028 build TECS approval)  
+**Status:** ✅ ACCEPTED — Implemented (G-028 A1–A6, GOVERNANCE-SYNC-094)  
 **Gap ref:** G-028  
 **Date:** 2026-03-05  
 **Authors:** TexQtic Architecture  
@@ -310,7 +310,45 @@ model DocumentEmbedding {
 
 | Role | Status |
 |---|---|
-| Architecture lead | Pending |
-| Backend lead | Pending |
-| Compliance / Security | Pending |
-| Wave 4 approval gate | Pending (G-028 build TECS) |
+| Architecture lead | ✅ Accepted — 2026-03-28 |
+| Backend lead | ✅ Accepted — 2026-03-28 |
+| Compliance / Security | ✅ Accepted — 2026-03-28 |
+| Wave 4 approval gate | ✅ Closed — GOVERNANCE-SYNC-094 |
+
+---
+
+## 9. Implementation Outcome (GOVERNANCE-SYNC-094)
+
+**Decision confirmed in production — 2026-03-28**
+
+Option A (Postgres + pgvector inside Supabase) was implemented across six TECS stages (A1–A6). All design assumptions in this ADR held.
+
+### Assumptions validated
+
+| ADR Assumption | Outcome |
+|---|---|
+| RLS RESTRICTIVE guard applies natively to `document_embeddings` | ✅ Confirmed — `require_org_context()` guard + PERMISSIVE tenant policy; FORCE RLS=t; cross-tenant probe returns 0 rows |
+| HNSW index adequate for Wave 4 scale | ✅ Confirmed — ef_construction=64, m=16; queries fast within pgvector defaults |
+| `text-embedding-004` (768-dim) sufficient | ✅ Confirmed — 768-dim guard in `generateEmbedding()`; `Unsupported("vector(768)")` in Prisma schema as designed |
+| `$queryRaw` required for similarity queries | ✅ Confirmed — all `<=>` cosine queries use `$queryRaw`; Prisma does not generate typed accessors for vector column |
+| Gemini embedding generation off request path (async) | ✅ Delivered — A6: in-process FIFO queue (`QUEUE_SIZE_MAX=1000`, `JOBS_PER_SECOND=5`) decouples embedding from request lifecycle |
+| Local dev parity | ✅ Confirmed — Supabase CLI pgvector support; test suite mocks Gemini client via `_overrideGenAIForTests()` |
+
+### Implementation artifacts
+
+| File | Role |
+|---|---|
+| `server/src/services/vectorStore.ts` | TVS module — upsert / query / delete over `document_embeddings` |
+| `server/src/services/vectorChunker.ts` | Deterministic sliding-window chunker (SHA-256 content hashes) |
+| `server/src/services/vectorEmbeddingClient.ts` | Gemini `text-embedding-004` client (768-dim, 1 retry, lazy singleton) |
+| `server/src/services/vectorIndexQueue.ts` | In-process async indexing queue (.unref(), idempotent start) |
+| `server/src/services/vectorReindexService.ts` | Autonomous reindex with sentinel actor context |
+| `server/src/services/vectorIngestion.ts` | Pipeline entrypoint — catalog, certification, DPP snapshot, supplier profile adapters |
+
+### Trade-offs: post-implementation assessment
+
+| Trade-off | Accepted? | Post-implementation note |
+|---|---|---|
+| Lower throughput vs Pinecone at high scale | ✅ Yes | Not reached at Wave 4 volumes; revisit at Wave 7+ |
+| Embedding generation latency (Gemini API) | ✅ Yes | Fully mitigated by A6 async queue — no blocking on request path |
+| Postgres disk usage growth | ✅ Yes | 768-dim float32 = ~3KB/row; acceptable for projected volume |

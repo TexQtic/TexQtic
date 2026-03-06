@@ -360,6 +360,30 @@ Discovery document written, governance updated, no schema/code/RLS changes.
 
 ---
 
+---
+
+## Section 11 — Wave 4 Execution (G-028 — AI Vector / Inference Separation)
+
+> **Baseline:** GOVERNANCE-SYNC-094 — 2026-03-28  
+> **Wave 4 G-028 opens:** Design Anchor confirmed; ADR-028 Option A (pgvector) approved; A1–A6 delivered.
+
+| Item | Status | Notes | Date |
+|------|--------|-------|------|
+| **G-028 A1 — pgvector schema + RLS** | ✅ Validated | `document_embeddings` table; `vector` extension enabled; HNSW index (cosine, ef_construction=64, m=16); RESTRICTIVE guard (`require_org_context()`) + PERMISSIVE tenant SELECT/INSERT/UPDATE + admin SELECT; FORCE RLS=t; APPLY_EXIT:0; VERIFIER PASS; typecheck EXIT 0; lint EXIT 0; commits: `c07af57`, `b90245a` | 2026-03-28 |
+| **G-028 A2 — Vector store module** | ✅ Validated | `server/src/services/vectorStore.ts`; `upsertDocumentEmbeddings` / `queryByVector` / `deleteBySource`; `$queryRaw` pattern (HNSW cosine `<=>` operator); idempotency via `ON CONFLICT(org_id,source_id,chunk_index) DO UPDATE`; 16 passing tests; typecheck EXIT 0; lint EXIT 0; commits: `5fb4b8a`, `8ee0e31` | 2026-03-28 |
+| **G-028 A3 — Shadow retrieval** | ✅ Validated | Shadow vector query wired to `GET /api/ai/insights` (log-only, no context injection); retrieval latency median logged; 4 passing tests; typecheck EXIT 0; lint EXIT 0; commits: `59b6f26`, `a4c867d` | 2026-03-28 |
+| **G-028 A4 — Embedding ingestion pipeline** | ✅ Validated | `server/src/services/vectorIngestion.ts`; `chunkText` (sliding-window, MAX_CHUNK_LENGTH=800, CHUNK_OVERLAP=100, MAX_CHUNKS_PER_DOC=20); `generateEmbedding` (Gemini `text-embedding-004`, 768-dim guard, 1 retry 100ms backoff); `ingestCatalogItem` / `ingestCertification`; delete-before-upsert idempotency; `ai.vector.ingestion.completed` audit event; tests passing; commits: `10bda3e`, `d9292df` | 2026-03-28 |
+| **G-028 A5 — RAG context injection** | ✅ Validated | `vectorContextService`; RAG context assembled (topK=5 chunks, score threshold) and injected into `/api/ai/insights` inference path; `ai.vector.query` audit event; tests passing; commits: `dad08f7`, `858714b` | 2026-03-28 |
+| **G-028 A6 — Async indexing pipeline + source expansion** | ✅ Validated | `vectorChunker.ts` extracted (pure deterministic, SHA-256 hashes, no I/O); `vectorEmbeddingClient.ts` extracted (lazy Gemini singleton, `_overrideGenAIForTests()`); `vectorIndexQueue.ts` (in-process FIFO, `QUEUE_SIZE_MAX=1000`, `JOBS_PER_SECOND=5`, 1s interval, `.unref()` for clean exit, idempotent start); `vectorReindexService.ts` (sentinel actor `00000000-0000-0000-0000-000000000010`, `withDbContext`, delete-before-enqueue); `vectorIngestion.ts` refactored — `ingestDppSnapshot` (sourceType='DPP_SNAPSHOT') + `ingestSupplierProfile` (sourceType='SUPPLIER_PROFILE') + `enqueueSourceIngestion` (non-blocking async entry point) added; all A4 symbols re-exported for backward compat; 18 passing tests (A6-TEST-01..04); typecheck EXIT 0; lint EXIT 0; commits: `ad5bf72`, `d31a8d8`; **GOVERNANCE-SYNC-094** | 2026-03-28 |
+
+**G-028 Exit Condition:**  
+A1–A6 all validated. pgvector schema live in Supabase; RLS enforced (`require_org_context()` RESTRICTIVE); Gemini `text-embedding-004` (768-dim) integrated; embedding generation off the request path (async queue); DPP_SNAPSHOT + SUPPLIER_PROFILE source types registered; all quality gates passed (tsc + eslint + vitest).
+
+> **Exit condition achieved — GOVERNANCE-SYNC-094**  
+> G-028 A1–A6 complete. Vector infrastructure operational. TECS B1/B2/C1/C2/C3 remain deferred to Wave 5+.
+
+---
+
 *Tracker produced by: GitHub Copilot — OPS-IMPLEMENTATION-PLAN-AUDIT-001 (follow-on)*  
 *Source of truth: `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`*  
 *No application code was modified in the production of this document.*
