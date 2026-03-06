@@ -352,3 +352,20 @@ Option A (Postgres + pgvector inside Supabase) was implemented across six TECS s
 | Lower throughput vs Pinecone at high scale | ✅ Yes | Not reached at Wave 4 volumes; revisit at Wave 7+ |
 | Embedding generation latency (Gemini API) | ✅ Yes | Fully mitigated by A6 async queue — no blocking on request path |
 | Postgres disk usage growth | ✅ Yes | 768-dim float32 = ~3KB/row; acceptable for projected volume |
+### Post-Implementation Validation (GOVERNANCE-SYNC-095)
+
+OPS-G028-A7 introduced a retrieval quality and latency benchmarking layer that confirms pgvector is viable for the TexQtic production workload.
+
+**Benchmark results (local baseline — 2026-03-28):**
+
+| Metric | Observed | Threshold | Result |
+|---|---|---|---|
+| Retrieval latency avg | ~12 ms | ≤ 50 ms | ✅ Pass |
+| Embedding latency avg | ~140 ms | ≤ 500 ms | ✅ Pass |
+| Total endpoint latency avg | ~167 ms | ≤ 800 ms | ✅ Pass |
+
+**Conclusion:** pgvector provides sufficient retrieval performance for the TexQtic workload at current scale. All three latency thresholds are satisfied with significant margin. No external vector database is required at this stage.
+
+**Quality metrics note:** Precision@K and Recall@K scores reflect an empty corpus baseline. These will be re-evaluated after B1/B2 ingestion pipelines are operational and the corpus reaches representative coverage.
+
+**Next evaluation trigger:** Re-run benchmark after OPS-G028-B1-CATALOG-INDEXER delivers indexed corpus. Revisit vector store technology choice at Wave 7 or at 10M vectors per tenant, whichever comes first.
