@@ -1,6 +1,6 @@
 ---
 name: tenant-safety-check
-description: review tenant-isolation and authorization-boundary safety in multi-tenant systems. use when code touches org or tenant scoping, admin access, role checks, rls-sensitive paths, exports, reports, dashboards, search/list endpoints, joins, or any potentially cross-tenant read/write flow, including missing org filters, over-broad admin access, unsafe fallback queries, rls-only reliance, tenantid/org_id alias confusion, and cross-tenant exposure risk. review-only: inspect, classify, and report without implementing fixes.
+description: "review tenant-isolation and authorization-boundary safety in multi-tenant systems. use when code touches org or tenant scoping, admin access, role checks, rls-sensitive paths, exports, reports, dashboards, search/list endpoints, joins, or any potentially cross-tenant read/write flow, including missing org filters, over-broad admin access, unsafe fallback queries, rls-only reliance, tenantid/org_id alias confusion, and cross-tenant exposure risk. review-only: inspect, classify, and report without implementing fixes."
 ---
 
 # Tenant Safety Check

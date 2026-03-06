@@ -1,6 +1,6 @@
 ---
 name: frontend-backend-gap-audit
-description: audit frontend-backend integration gaps by tracing ui to data access in full-stack applications. use when behavior is mismatched, incomplete, stubbed, or unclear across component, client, api, route, service, and database boundaries, including contract mismatch, missing implementation, broken wiring, response-shape mismatch, auth/tenant mismatch, and incomplete product surfaces. audit-only: inspect, classify, and report without implementing fixes.
+description: "audit frontend-backend integration gaps by tracing ui to data access in full-stack applications. use when behavior is mismatched, incomplete, stubbed, or unclear across component, client, api, route, service, and database boundaries, including contract mismatch, missing implementation, broken wiring, response-shape mismatch, auth/tenant mismatch, and incomplete product surfaces. audit-only: inspect, classify, and report without implementing fixes."
 ---
 
 # Frontend-Backend Gap Audit
