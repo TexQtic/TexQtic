@@ -374,10 +374,10 @@ Evidence references are quoted from the source document using section + short an
 | Source section | §4.1 "Control-plane tenant provisioning" | §3 table row "Tenant provision" |
 | Codex verdict | "contract mismatch — request validation will fail; frontend success parsing incompatible" — fields: {name,slug,type,ownerEmail,ownerPassword} vs backend {orgName,primaryAdminEmail,primaryAdminPassword} | "✅ Wired" — provisionTenant() listed as wired in feature area table |
 | Conflict type | Codex inspected the field-level contract and found a mismatch. Copilot inspected the service wiring path (call exists) and marked it wired. Both can be simultaneously true: a call path exists but transmits wrong fields. |
-| Merged classification | `CROSS_REPORT_CONFLICT` |
-| Merged status | `VERIFY_REQUIRED` |
-| Confidence | HIGH — conflict requires targeted verification |
-| Action required | Read TenantRegistry.tsx + controlPlaneService.ts provisionTenant() body + tenantProvision.ts request schema validation side-by-side. Determine if request body fields actually match. Do not classify as fixed or broken until verified. |
+| Merged classification | ~~`CROSS_REPORT_CONFLICT`~~ → **RESOLVED (VER-001 · 2026-03-06)** |
+| Merged status | ~~`VERIFY_REQUIRED`~~ → **`VALIDATED`** |
+| Confidence | HIGH — confirmed by direct file inspection |
+| Resolution | VER-001 executed 2026-03-06 (read-only). **Codex §4.1 confirmed correct.** Copilot §3 "✅ Wired" classification superseded — call path exists but all 5 request fields are wrong and the response shape is incompatible. Deterministic HTTP 400 on every invocation. TECS-FBW-PROV-001 promoted to Wave 1 implementation. |
 
 ---
 
@@ -411,7 +411,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-AT-006 | Order Status UI Role Gating | Auth/UX | §8.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Non-admin sees PATCH buttons they'll be 403'd on |
 | TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | Auth discovery | §9.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 5 | TODO refs /api/public/tenants/resolve |
 | TECS-FBW-RLS-001 | RLS-Only Posture Governance | Tenancy doctrine | §8.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Intentional per Q2 §12.2; system-wide clarification needed |
-| TECS-FBW-PROV-001 | Tenant Provisioning Contract | Control-plane | §4.1 MISMATCH | §3 ✅ Wired | CROSS_REPORT_CONFLICT | VERIFY_REQUIRED | HIGH | Wave 0 | Call path exists but field-level contract unverified |
+| TECS-FBW-PROV-001 | Tenant Provisioning Contract | Control-plane | §4.1 MISMATCH | §3 ✅ Wired | CROSS_REPORT_CONFLICT → RESOLVED | VALIDATED (VER-001 · 2026-03-06) | HIGH | Wave 1 | Codex confirmed correct; all 5 request fields wrong; HTTP 400 on every call |
 
 ---
 
@@ -419,9 +419,9 @@ Evidence references are quoted from the source document using section + short an
 
 | Status | Count | IDs |
 |---|---|---|
-| VALIDATED | 12 | FBW-001/002/003/004/005/006/007/008/011/012/015 + STUB-001 |
+| VALIDATED | 13 | FBW-001/002/003/004/005/006/007/008/011/012/015/PROV-001 + STUB-001 |
 | PROVISIONAL | 6 | FBW-014/016/017/018/MOQ + implicitly FBW-013 before product decision |
-| VERIFY_REQUIRED | 8 | FBW-020/OA-001/OA-002/AT-006/AUTH-001/RLS-001/PROV-001 + FBW-018 |
+| VERIFY_REQUIRED | 7 | FBW-020/OA-001/OA-002/AT-006/AUTH-001/RLS-001 + FBW-018 (VER-001 ✅ CLOSED) |
 | DEFERRED | 3 | FBW-013/019/STUB-001 |
 | REQUIRES_BACKEND_DESIGN | 2 | FBW-AIGOVERNANCE/ADMINRBAC |
 
@@ -429,12 +429,12 @@ Evidence references are quoted from the source document using section + short an
 
 ## 5. Conflicts Explicitly Preserved
 
-### TECS-FBW-PROV-001 (CROSS_REPORT_CONFLICT — Tenant Provisioning)
+### TECS-FBW-PROV-001 (CROSS_REPORT_CONFLICT — RESOLVED 2026-03-06)
 
 **Codex:** "frontend provisioning request/response contract does not match the active backend route contract" — field names differ: `{name,slug,type,ownerEmail,ownerPassword}` vs `{orgName,primaryAdminEmail,primaryAdminPassword}`  
 **Copilot:** `TenantRegistry` → `provisionTenant()` listed as "✅ Wired" in §3 feature table without field-level inspection  
-**Risk of treating as closed:** If Codex is correct, provisioning silently fails request validation despite the call path existing.  
-**Action:** Read `controlPlaneService.ts` `provisionTenant()` body field-by-field against `admin/tenantProvision.ts` Zod schema. Must be resolved before Wave 1.
+**Resolution (VER-001 · 2026-03-06):** Codex confirmed correct. Direct inspection of `services/controlPlaneService.ts` `ProvisionTenantRequest` vs `admin/tenantProvision.ts` `provisionBodySchema` — all 5 request fields mismatched; response shape also incompatible (backend flat `{orgId,slug,userId,membershipId}` vs frontend nested `{tenant,owner}`). Runtime: HTTP 400 on every call. Copilot "Wired" classification superseded — call path exists but contract has never been correct. Historical conflict record preserved above for traceability.  
+**Promotion:** TECS-FBW-PROV-001 → VALIDATED · Wave 1 implementation unit (services/controlPlaneService.ts).
 
 ---
 
@@ -444,7 +444,7 @@ Items that cannot proceed to implementation without targeted inspection:
 
 | ID | Surface | Verification Target | Evidence Gap |
 |---|---|---|---|
-| VER-001 | TECS-FBW-PROV-001 | Compare provisionTenant() request body field names vs tenantProvision.ts Zod schema | Codex vs Copilot conflict |
+| VER-001 | TECS-FBW-PROV-001 | Compare provisionTenant() request body field names vs tenantProvision.ts Zod schema | ✅ CLOSED · 2026-03-06 · Verdict: FAIL · TECS-FBW-PROV-001 → VALIDATED + Wave 1 |
 | VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing — does WL_ADMIN context correctly branch? | Codex flagged; Q2 §12.4 only confirms InviteMemberForm wiring |
 | VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts route list | Codex found drift; Copilot did not inspect |
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts route list | Codex found drift; Copilot did not inspect |
@@ -461,8 +461,8 @@ Items that cannot proceed to implementation without targeted inspection:
 
 | Wave | Items | Priority basis |
 |---|---|---|
-| Wave 0 — Reconciliation + Verification | VER-001 through VER-010; TECS-FBW-PROV-001; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001; TECS-FBW-020 | All VERIFY_REQUIRED items + VER backlog; governance-only; no product code |
-| Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice — SHIP BLOCKER); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
+| Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001; TECS-FBW-020 | VER-001 closed (FAIL · PROV-001 promoted); remaining VER items pending; governance-only; no product code |
+| Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice ✅ CLOSED · GOVERNANCE-SYNC-096); TECS-FBW-PROV-001 (promoted from Wave 0 · VER-001 FAIL · **NEXT UNIT**); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
 | Wave 2 — Backend-Complete Ops Mutations | TECS-FBW-001 (finance/compliance/dispute mutations) | RECONFIRMED; backend verified; additive frontend only |
 | Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002 (trades); TECS-FBW-003 (escrow); TECS-FBW-006 (escalations + control-plane misrouting) | RECONFIRMED; high governance impact |
 | Wave 4 — Extended Exposure | TECS-FBW-004 (settlements); TECS-FBW-005 (certifications); TECS-FBW-015 (traceability CRUD); TECS-FBW-007 (cart summaries); TECS-FBW-016 (tenant audit logs) | RECONFIRMED/PROVISIONAL; lower urgency |
