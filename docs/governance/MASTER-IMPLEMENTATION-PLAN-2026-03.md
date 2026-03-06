@@ -546,7 +546,7 @@ Two AI audits (Codex + VS Code Copilot, March 2026) independently evaluated the 
 
 | Lane | Description | Gap IDs |
 |---|---|---|
-| Lane A — Runtime/Contract Fixes | Symptoms visible to end users; block demo or production use | TECS-FBW-011 (SHIP BLOCKER ✅ CLOSED), TECS-FBW-PROV-001 (VER-001 FAIL confirmed · VALIDATED · NEXT UNIT), TECS-FBW-014, TECS-FBW-MOQ, TECS-FBW-008, TECS-FBW-017 |
+| Lane A — Runtime/Contract Fixes | Symptoms visible to end users; block demo or production use | TECS-FBW-011 (SHIP BLOCKER ✅ CLOSED), TECS-FBW-PROV-001 (✅ CLOSED · GOVERNANCE-SYNC-099 · 2026-03-06), TECS-FBW-014, TECS-FBW-MOQ, TECS-FBW-008, TECS-FBW-017 |
 | Lane B — Authority Mutations | Additive control-plane ops mutations; backend-complete/frontend-absent | TECS-FBW-001, TECS-FBW-006 (partial) |
 | Lane C — Backend-Complete/Frontend-Absent | Full new feature surface; backend implemented; frontend is zero | TECS-FBW-002, TECS-FBW-003, TECS-FBW-004, TECS-FBW-005, TECS-FBW-006, TECS-FBW-007, TECS-FBW-015, TECS-FBW-016 |
 | Lane D — Deferred / Requires Design | No backend route; product decision pending; intentional stubs | TECS-FBW-012, TECS-FBW-013, TECS-FBW-ADMINRBAC, TECS-FBW-AIGOVERNANCE, TECS-FBW-AUTH-001 |
@@ -558,7 +558,7 @@ Two AI audits (Codex + VS Code Copilot, March 2026) independently evaluated the 
 | Wave | Focus | Key Gap IDs | Gate |
 |---|---|---|---|
 | Wave 0 | Verification pass — read-only; no product code | VER-001 through VER-010; TECS-FBW-OA-001/OA-002 inventory | All VER items resolved (PASS/FAIL/DEFER) |
-| Wave 1 | Ship-blocking runtime fixes + Lane A | TECS-FBW-011 (CRITICAL ✅ CLOSED), TECS-FBW-PROV-001 (VER-001 FAIL confirmed · **NEXT UNIT**), TECS-FBW-014, TECS-FBW-008, TECS-FBW-MOQ, TECS-FBW-017 | No $undefined price renders; tenant provisioning contract aligned; cart MOQ error visible to user |
+| Wave 1 | Ship-blocking runtime fixes + Lane A | TECS-FBW-011 (CRITICAL ✅ CLOSED), TECS-FBW-PROV-001 (✅ CLOSED · GOVERNANCE-SYNC-099 · 2026-03-06), TECS-FBW-014, TECS-FBW-008, TECS-FBW-MOQ, TECS-FBW-017 | No $undefined price renders; tenant provisioning contract aligned; cart MOQ error visible to user |
 | Wave 2 | Finance/Compliance/Dispute authority mutations | TECS-FBW-001 | Approve/reject/resolve/escalate wired + confirm-before-submit UI |
 | Wave 3 | G-017/G-018/G-022 tenant panel suite | TECS-FBW-002, TECS-FBW-003, TECS-FBW-004, TECS-FBW-006 | Trade, Escrow, Settlement, Escalation panels navigable from expView; D-017-A, D-020-B constraints respected |
 | Wave 4 | G-016/G-019/G-022 + supplementary panels | TECS-FBW-005, TECS-FBW-015, TECS-FBW-007, TECS-FBW-016 | Certifications, Traceability, CartSummaries, Tenant AuditLogs reachable |

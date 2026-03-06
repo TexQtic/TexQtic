@@ -1,7 +1,7 @@
 /**
  * Admin Tenant Provisioning Route — G-008
  *
- * POST /api/admin/tenants/provision
+ * POST /api/control/tenants/provision
  *
  * Doctrine v1.4 Constitutional Tenancy
  * TECS v1.6 compliant
@@ -50,8 +50,8 @@ const provisionBodySchema = z.object({
 /**
  * tenantProvisionRoutes — Fastify plugin for admin tenant provisioning
  *
- * Registered at prefix /api/admin (see server/src/index.ts)
- * Full route: POST /api/admin/tenants/provision
+ * Registered at prefix /api/control (see server/src/index.ts)
+ * Full route: POST /api/control/tenants/provision
  *
  * Authentication gate: adminAuthMiddleware (JWT admin realm, mandatory)
  * Authorization gate: request.isAdmin check (defense-in-depth)

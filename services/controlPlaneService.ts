@@ -281,26 +281,28 @@ export async function getCartSummaryByCartId(
 
 // ==================== TENANT PROVISIONING ====================
 
+/**
+ * TECS-FBW-PROV-001 (2026-03-06): aligned to backend Zod schema.
+ * Backend: POST /api/control/tenants/provision — admin/tenantProvision.ts
+ * Schema fields: orgName, primaryAdminEmail, primaryAdminPassword
+ * Removed: name, slug, type, ownerEmail, ownerPassword (wrong names; slug/type are backend-derived)
+ */
 export interface ProvisionTenantRequest {
-  name: string;
-  slug: string;
-  type: 'B2B' | 'B2C' | 'INTERNAL';
-  ownerEmail: string;
-  ownerPassword: string;
+  orgName: string;
+  primaryAdminEmail: string;
+  primaryAdminPassword: string;
 }
 
+/**
+ * TECS-FBW-PROV-001 (2026-03-06): aligned to actual backend response.
+ * Backend returns flat shape from sendSuccess(): { orgId, slug, userId, membershipId }
+ * Removed: nested tenant/owner model (never matched backend response)
+ */
 export interface ProvisionTenantResponse {
-  tenant: {
-    id: string;
-    name: string;
-    slug: string;
-    type: string;
-    status: string;
-  };
-  owner: {
-    id: string;
-    email: string;
-  };
+  orgId: string;
+  slug: string;
+  userId: string;
+  membershipId: string;
 }
 
 /**

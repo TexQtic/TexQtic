@@ -411,7 +411,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-AT-006 | Order Status UI Role Gating | Auth/UX | §8.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Non-admin sees PATCH buttons they'll be 403'd on |
 | TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | Auth discovery | §9.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 5 | TODO refs /api/public/tenants/resolve |
 | TECS-FBW-RLS-001 | RLS-Only Posture Governance | Tenancy doctrine | §8.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Intentional per Q2 §12.2; system-wide clarification needed |
-| TECS-FBW-PROV-001 | Tenant Provisioning Contract | Control-plane | §4.1 MISMATCH | §3 ✅ Wired | CROSS_REPORT_CONFLICT → RESOLVED | VALIDATED (VER-001 · 2026-03-06) | HIGH | Wave 1 | Codex confirmed correct; all 5 request fields wrong; HTTP 400 on every call |
+| TECS-FBW-PROV-001 | Tenant Provisioning Contract | Control-plane | §4.1 MISMATCH | §3 ✅ Wired | CROSS_REPORT_CONFLICT → RESOLVED | ✅ CLOSED (GOVERNANCE-SYNC-099 · 2026-03-06) | HIGH | Wave 1 | Implemented: request {orgName,primaryAdminEmail,primaryAdminPassword}; response flat {orgId,slug,userId,membershipId}; typecheck+lint EXIT 0 |
 
 ---
 
@@ -462,7 +462,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | Wave | Items | Priority basis |
 |---|---|---|
 | Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001; TECS-FBW-020 | VER-001 closed (FAIL · PROV-001 promoted); remaining VER items pending; governance-only; no product code |
-| Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice ✅ CLOSED · GOVERNANCE-SYNC-096); TECS-FBW-PROV-001 (promoted from Wave 0 · VER-001 FAIL · **NEXT UNIT**); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
+| Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice ✅ CLOSED · GOVERNANCE-SYNC-096); TECS-FBW-PROV-001 (✅ CLOSED · GOVERNANCE-SYNC-099 · 2026-03-06); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
 | Wave 2 — Backend-Complete Ops Mutations | TECS-FBW-001 (finance/compliance/dispute mutations) | RECONFIRMED; backend verified; additive frontend only |
 | Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002 (trades); TECS-FBW-003 (escrow); TECS-FBW-006 (escalations + control-plane misrouting) | RECONFIRMED; high governance impact |
 | Wave 4 — Extended Exposure | TECS-FBW-004 (settlements); TECS-FBW-005 (certifications); TECS-FBW-015 (traceability CRUD); TECS-FBW-007 (cart summaries); TECS-FBW-016 (tenant audit logs) | RECONFIRMED/PROVISIONAL; lower urgency |

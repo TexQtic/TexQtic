@@ -35,18 +35,13 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     setProvisionError(null);
     setProvisionResult(null);
     try {
-      const slug = provisionForm.orgName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+      // Backend derives slug server-side from orgName via slugify() — no client slug needed.
       const result = await provisionTenant({
-        name: provisionForm.orgName,
-        slug,
-        type: 'B2B',
-        ownerEmail: provisionForm.primaryAdminEmail,
-        ownerPassword: provisionForm.primaryAdminPassword,
+        orgName: provisionForm.orgName,
+        primaryAdminEmail: provisionForm.primaryAdminEmail,
+        primaryAdminPassword: provisionForm.primaryAdminPassword,
       });
-      setProvisionResult({ orgId: result.tenant.id, slug: result.tenant.slug });
+      setProvisionResult({ orgId: result.orgId, slug: result.slug });
       setProvisionForm({ orgName: '', primaryAdminEmail: '', primaryAdminPassword: '' });
       // Refresh tenant list to include newly provisioned tenant
       await fetchTenants();

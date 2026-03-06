@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-06 (GOVERNANCE-SYNC-098 — VER-001 → ✅ CLOSED (read-only verification; TECS-FBW-PROV-001 confirmed FAIL — field-level contract mismatch: frontend sends {name,slug,type,ownerEmail,ownerPassword}, backend Zod expects {orgName,primaryAdminEmail,primaryAdminPassword}; backend returns flat {orgId,slug,userId,membershipId}, frontend ProvisionTenantResponse expects nested {tenant:{id,name,slug,type,status},owner:{id,email}}; runtime: deterministic HTTP 400 on every provisionTenant() call; Codex §4.1 confirmed correct; Copilot §3 "Wired" superseded by field-level inspection; TECS-FBW-PROV-001 → VALIDATED + Wave 1; no code modified; GOVERNANCE-SYNC-098)
+Last Updated: 2026-03-06 (GOVERNANCE-SYNC-099 — TECS-FBW-PROV-001 → ✅ CLOSED (implemented: ProvisionTenantRequest {orgName,primaryAdminEmail,primaryAdminPassword}; ProvisionTenantResponse flat {orgId,slug,userId,membershipId}; TenantRegistry.tsx call site + response consumption aligned; tenantProvision.ts stale /api/admin → /api/control comments fixed (doc-only); typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-099)
+(GOVERNANCE-SYNC-098 — VER-001 → ✅ CLOSED (read-only verification; TECS-FBW-PROV-001 confirmed FAIL — field-level contract mismatch: frontend sends {name,slug,type,ownerEmail,ownerPassword}, backend Zod expects {orgName,primaryAdminEmail,primaryAdminPassword}; backend returns flat {orgId,slug,userId,membershipId}, frontend ProvisionTenantResponse expects nested {tenant:{id,name,slug,type,status},owner:{id,email}}; runtime: deterministic HTTP 400 on every provisionTenant() call; Codex §4.1 confirmed correct; Copilot §3 "Wired" superseded by field-level inspection; TECS-FBW-PROV-001 → VALIDATED + Wave 1; no code modified; GOVERNANCE-SYNC-098)
 (GOVERNANCE-SYNC-097 — TECS-FBW-LINT-001 → ✅ CLOSED (repo-gate remediation; discovered during TECS-FBW-011 closeout): eslint.config.js (MODIFIED — targeted override block for middleware.ts Vercel Edge Runtime globals only: TextEncoder, crypto, Response, Request, Headers, URL, process readonly; no middleware.ts change; no blanket disable suppressions); pnpm run lint EXIT 0; typecheck EXIT 0; git diff --name-only: eslint.config.js only; GOVERNANCE-SYNC-097)
 (GOVERNANCE-SYNC-096 — TECS-FBW-011 → ✅ CLOSED (parallel-safe ship-blocker override, Wave 1): services/catalogService.ts (MODIFIED — removed basePrice?: number from CatalogItem interface; canonical field price: number confirmed); App.tsx (MODIFIED — 3 p.basePrice render sites → p.price: lines 499, 711, 854); components/WhiteLabelAdmin/WLCollectionsPanel.tsx (MODIFIED — 4th render site discovered during typecheck: displayPrice = item.basePrice ?? item.price → item.price); no backend change; no schema/RLS/migration change; typecheck EXIT 0; lint EXIT 0 (scoped to 3 changed files); git diff --name-only: 3 files only; GOVERNANCE-SYNC-096)
 (GOVERNANCE-SYNC-093 — OPS-WLADMIN-DOMAINS-001 → ✅ TECS 6D VALIDATED: WLDomainsPanel.tsx (NEW — Path D6D-A CRUD-lite: GET+POST+DELETE /api/tenant/domains; platform domain badge <slug>.texqtic.app read-only; custom domains list with add/remove; delete confirmation dialog; toast feedback; RFC1123 input validation); server/src/routes/tenant.ts (MODIFIED — GET /api/tenant/domains, POST /api/tenant/domains body:{domain:string} Zod regex lowercase, DELETE /api/tenant/domains/:id; role guard OWNER|ADMIN; withDbContext RLS-enforced; writeAuditLog domain.added/domain.removed; P2002 → 409 generic conflict; emitCacheInvalidate after each mutation); server/src/lib/cacheInvalidateEmitter.ts (NEW — direct-call emitter: normalize+log, no HTTP round-trip); App.tsx (MODIFIED — WLDomainsPanel import + case 'DOMAINS' stub replaced); Shells.tsx — NO CHANGE (DOMAINS nav already present); no DB migration; no schema/RLS change; G-026-G ✅ VALIDATED (WL Domains panel shipped); G-026-F ✅ Resolved (cache invalidation emitters wired); typecheck EXIT 0; lint EXIT 0 (0 errors, 108 pre-existing warnings); GOVERNANCE-SYNC-093)
@@ -778,7 +779,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-AT-006 | Order Status UI Role Gating | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
 | TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 5 |
 | TECS-FBW-RLS-001 | RLS-Only Posture Governance | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
-| TECS-FBW-PROV-001 | Tenant Provisioning Contract Mismatch | CONFLICT | HIGH | VALIDATED (VER-001 CLOSED · 2026-03-06) | Wave 1 |
+| TECS-FBW-PROV-001 | Tenant Provisioning Contract Mismatch | CONFLICT | HIGH | ✅ CLOSED (GOVERNANCE-SYNC-099 · 2026-03-06) | Wave 1 |
 
 ---
 
@@ -965,7 +966,9 @@ Response shape mismatch: backend returns flat `{orgId,slug,userId,membershipId}`
 Runtime consequence: deterministic HTTP 400 on every call — `provisionBodySchema.safeParse()` always returns `success: false`.  
 Codex §4.1 assessment: CONFIRMED CORRECT. Copilot §3 "✅ Wired" superseded by field-level inspection (call path exists; contract was never correct).  
 Additional finding (doc-only): stale comment in tenantProvision.ts header says `/api/admin/tenants/provision`; actual registration is `/api/control/tenants/provision` — no runtime impact.  
-Next action: Fix `ProvisionTenantRequest` and `ProvisionTenantResponse` in services/controlPlaneService.ts — Wave 1 implementation unit (TECS-FBW-PROV-001).
+Implementation: ✅ CLOSED — GOVERNANCE-SYNC-099 · 2026-03-06 · typecheck EXIT 0 · lint EXIT 0  
+Files changed: `services/controlPlaneService.ts` (interfaces aligned), `components/ControlPlane/TenantRegistry.tsx` (call site + response), `server/src/routes/admin/tenantProvision.ts` (doc-only stale comment fix).  
+Next: VER-002 (TECS-FBW-020 — WL Admin invite shell routing).
 
 ---
 
