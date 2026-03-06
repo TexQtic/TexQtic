@@ -74,7 +74,32 @@ export default [
       },
     },
   },
+  // Vercel Edge Runtime globals — scoped to middleware.ts only.
+  // middleware.ts runs in a V8 isolate (not Node.js, not the browser).
+  // The Web API globals below are available in the Vercel Edge Runtime;
+  // process.env is used defensively with typeof-guards for Vercel compile-time env injection.
   {
-    ignores: ['dist', 'node_modules', 'server', 'vendor', '*.config.js', '*.config.ts'],
+    files: ['middleware.ts'],
+    languageOptions: {
+      globals: {
+        TextEncoder: 'readonly',
+        crypto: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        Headers: 'readonly',
+        URL: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
+  {
+    ignores: [
+      'dist',
+      'node_modules',
+      'server',
+      'vendor',
+      '*.config.js',
+      '*.config.ts',
+    ],
   },
 ];
