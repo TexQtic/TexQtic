@@ -21,7 +21,7 @@ import {
   buildAiInsightsReasoningAudit,
   buildAiNegotiationReasoningAudit,
 } from '../utils/audit.js';
-import { runVectorShadowQuery } from '../lib/vectorShadowQuery.js';
+import { runRagRetrieval } from '../services/ai/ragContextBuilder.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -177,14 +177,20 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           'You are a strategic AI advisor for a multi-tenant global commerce platform. ' +
           'Provide architectural and market insights concisely in 2-3 sentences.';
 
-        // 4.5 G-028 A3: Vector shadow retrieval (shadow mode — results NOT injected into prompt)
-        // Gated by feature flag OP_G028_VECTOR_ENABLED. Fail-safe-silent: errors do not break inference.
-        // Metadata is logged to reasoning_logs as a separate row (model="vector-shadow/g028-a3").
-        // TODO(G028-A4): swap placeholder embedding for real Gemini text-embedding-004 pipeline.
-        await runVectorShadowQuery(tx, contextTenantId, prompt);
+        // 4.5 G-028 A5: RAG retrieval + prompt injection
+        // Gated by feature flag OP_G028_VECTOR_ENABLED. Fail-safe: errors fall back to zero-shot.
+        // Builds a real Gemini embedding, queries document_embeddings, injects context block.
+        // Metadata (no chunk content) logged to reasoning_logs as model="vector-rag/g028-a5".
+        const ragResult = await runRagRetrieval(tx, contextTenantId, prompt);
 
-        // 5. Generate content (AI call)
-        const { text: insightText, tokensUsed } = await generateContent(prompt, systemInstruction);
+        // Augment prompt: inject retrieved context block before the original user prompt.
+        // Falls back to the original prompt if retrieval is skipped or returns no results.
+        const finalPrompt = ragResult.contextBlock
+          ? `${ragResult.contextBlock}\n\n${prompt}`
+          : prompt;
+
+        // 5. Generate content (AI call — uses augmented prompt when RAG is active)
+        const { text: insightText, tokensUsed } = await generateContent(finalPrompt, systemInstruction);
 
         // 6. Calculate actual cost
         const actualCost = estimateCostUSD(tokensUsed, model);
@@ -195,7 +201,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
         const auditUserId = userId ?? null;
         const reasoningHash = createHash('sha256')
-          .update(prompt + insightText)
+          .update(finalPrompt + insightText)
           .digest('hex');
         const reasoningLog = await tx.reasoningLog.create({
           data: {
@@ -203,7 +209,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
             requestId,
             reasoningHash,
             model,
-            promptSummary: prompt.slice(0, 200),
+            promptSummary: finalPrompt.slice(0, 200),
             responseSummary: insightText.slice(0, 200),
             tokensUsed,
           },
