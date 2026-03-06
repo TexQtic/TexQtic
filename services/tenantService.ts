@@ -60,7 +60,6 @@ export interface MemberUser {
 export interface Membership {
   id: string;
   role: string;
-  status: string;
   userId: string;
   tenantId: string;
   createdAt?: string;

@@ -69,7 +69,6 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
               <tr>
                 <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Member</th>
                 <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Role</th>
-                <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider">Status</th>
                 <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-wider text-right">Actions</th>
               </tr>
             </thead>
@@ -88,14 +87,6 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
                     }`}>
                       {m.role}
                     </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${
-                        m.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}></div>
-                      <span className="text-xs text-slate-600 capitalize">{m.status.toLowerCase()}</span>
-                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-indigo-600 font-bold text-[10px] uppercase hover:underline">Edit Access</button>
