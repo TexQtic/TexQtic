@@ -21,7 +21,6 @@ export interface CatalogItem {
   // Optional display properties
   imageUrl?: string;
   category?: string;
-  basePrice?: number;
   moq?: number;
 }
 

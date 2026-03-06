@@ -496,7 +496,7 @@ const App: React.FC = () => {
                   <div className="font-semibold text-slate-800">{p.name}</div>
                   {p.sku && <div className="text-xs text-slate-400">SKU: {p.sku}</div>}
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-emerald-700 font-bold text-sm">${p.basePrice}</span>
+                    <span className="text-emerald-700 font-bold text-sm">${p.price}</span>
                     <span className="text-xs text-slate-400">MOQ: {p.moq || 1}</span>
                   </div>
                 </div>
@@ -708,7 +708,7 @@ const App: React.FC = () => {
                       </div>
                       <h3 className="font-bold">{p.name}</h3>
                       <div className="flex justify-between items-center mt-4">
-                        <div className="text-emerald-600 font-bold">${p.basePrice}/unit</div>
+                        <div className="text-emerald-600 font-bold">${p.price}/unit</div>
                         <div className="text-xs text-slate-400">MOQ: {p.moq || 1}</div>
                       </div>
                       <B2BAddToCartButton product={p} />
@@ -851,7 +851,7 @@ const App: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-medium text-slate-800">{p.name}</h4>
-                        <div className="text-slate-500 font-bold">${p.basePrice}.00</div>
+                        <div className="text-slate-500 font-bold">${p.price}.00</div>
                       </div>
                       <B2CAddToCartButton product={p} />
                     </div>

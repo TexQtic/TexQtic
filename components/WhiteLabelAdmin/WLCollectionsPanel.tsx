@@ -47,7 +47,7 @@ function groupByCategory(items: CatalogItem[]): CollectionGroup[] {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function ItemCard({ item }: { item: CatalogItem }) {
-  const displayPrice = item.basePrice ?? item.price;
+  const displayPrice = item.price;
   return (
     <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm space-y-1.5 hover:shadow-md transition-shadow">
       <div className="font-semibold text-slate-800 text-sm leading-tight">{item.name}</div>
