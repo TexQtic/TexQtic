@@ -526,3 +526,82 @@ mindmap
 *Document produced by: GitHub Copilot — OPS-IMPLEMENTATION-PLAN-AUDIT-001*  
 *Source of truth: `governance/gap-register.md` as of GOVERNANCE-SYNC-048 (2026-03-03)*  
 *No application code was modified in the production of this document.*
+
+---
+
+## Section 8 — Cross-Audit Frontend-Backend Reachability Recovery Program (March 2026)
+
+**Added:** 2026-03-06 · **Basis:** `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**Governance protocol:** All merged statuses are derived from cross-audit reconciliation; single-report claims do not flow directly to implementation. See VER-001 through VER-010 for open verification items.
+
+---
+
+### 8.1 Why Reconciliation Before Implementation Was Required
+
+Two AI audits (Codex + VS Code Copilot, March 2026) independently evaluated the TexQtic frontend-backend wiring surface. They produced one CROSS_REPORT_CONFLICT (TECS-FBW-PROV-001: tenant provisioning field-level contract), several new findings not in the other audit, and overlapping coverage for the corroborated core set (TECS-FBW-001 through TECS-FBW-015). Reconciliation before implementation was required to avoid applying contradictory fixes and to prevent treating single-audit VERIFY_REQUIRED items as confirmed defects.
+
+---
+
+### 8.2 Lane Model
+
+| Lane | Description | Gap IDs |
+|---|---|---|
+| Lane A — Runtime/Contract Fixes | Symptoms visible to end users; block demo or production use | TECS-FBW-011 (SHIP BLOCKER), TECS-FBW-PROV-001 (pending verify), TECS-FBW-014, TECS-FBW-MOQ, TECS-FBW-008, TECS-FBW-017 |
+| Lane B — Authority Mutations | Additive control-plane ops mutations; backend-complete/frontend-absent | TECS-FBW-001, TECS-FBW-006 (partial) |
+| Lane C — Backend-Complete/Frontend-Absent | Full new feature surface; backend implemented; frontend is zero | TECS-FBW-002, TECS-FBW-003, TECS-FBW-004, TECS-FBW-005, TECS-FBW-006, TECS-FBW-007, TECS-FBW-015, TECS-FBW-016 |
+| Lane D — Deferred / Requires Design | No backend route; product decision pending; intentional stubs | TECS-FBW-012, TECS-FBW-013, TECS-FBW-ADMINRBAC, TECS-FBW-AIGOVERNANCE, TECS-FBW-AUTH-001 |
+
+---
+
+### 8.3 Wave Sequencing — Merged Status Basis
+
+| Wave | Focus | Key Gap IDs | Gate |
+|---|---|---|---|
+| Wave 0 | Verification pass — read-only; no product code | VER-001 through VER-010; TECS-FBW-OA-001/OA-002 inventory | All VER items resolved (PASS/FAIL/DEFER) |
+| Wave 1 | Ship-blocking runtime fixes + Lane A | TECS-FBW-011 (CRITICAL), TECS-FBW-014, TECS-FBW-008, TECS-FBW-MOQ, TECS-FBW-017; PROV-001 if VER-001 confirms broken | No $undefined price renders; cart MOQ error visible to user |
+| Wave 2 | Finance/Compliance/Dispute authority mutations | TECS-FBW-001 | Approve/reject/resolve/escalate wired + confirm-before-submit UI |
+| Wave 3 | G-017/G-018/G-022 tenant panel suite | TECS-FBW-002, TECS-FBW-003, TECS-FBW-004, TECS-FBW-006 | Trade, Escrow, Settlement, Escalation panels navigable from expView; D-017-A, D-020-B constraints respected |
+| Wave 4 | G-016/G-019/G-022 + supplementary panels | TECS-FBW-005, TECS-FBW-015, TECS-FBW-007, TECS-FBW-016 | Certifications, Traceability, CartSummaries, Tenant AuditLogs reachable |
+| Wave 5 | Backend-design-required items | TECS-FBW-012, TECS-FBW-ADMINRBAC, TECS-FBW-AIGOVERNANCE, TECS-FBW-013, TECS-FBW-AUTH-001 | Requires backend route design approval before frontend work begins |
+
+---
+
+### 8.4 Tenant Safety Constraints (Non-Negotiable)
+
+1. `org_id` boundary is preserved across all waves. Every new service method that touches tenant data must use `tenantApiClient`; never bypass through `adminApiClient`.
+2. RLS enforcement is not weakened. Do not add explicit `where: { org_id }` in a way that contradicts existing RLS posture — add defense-in-depth only when the route pattern already uses it.
+3. D-017-A: Trades — tenantId must NOT be sent from client. Server enforces from JWT claims. Any tradeService.ts implementation must omit tenantId from the request body.
+4. D-020-B: Escrow balance must be derived from ledger SUM — never assume a stored balance field.
+5. D-020-B preview pattern: Settlement frontend must implement a preview-before-commit step.
+6. Auth posture is not changed. No new unauthenticated routes. No new patterns bypassing `tenantApiClient`/`adminApiClient` realms.
+
+---
+
+### 8.5 Explicit Exclusions for Wave 0 and Wave 1
+
+- No product code changes in Wave 0 (verification only).
+- B2B Request Quote (TECS-FBW-013), AdminRBAC backend (TECS-FBW-ADMINRBAC), AI Governance authority routes (TECS-FBW-AIGOVERNANCE) — deferred until backend route design is approved.
+- OpenAPI spec files (`openapi.tenant.json`, `openapi.control-plane.json`) — update only in the implementing wave of the corresponding gap fix, not as Wave 0 targets.
+
+---
+
+### 8.6 Governance Closure Rule
+
+A gap is closed for governance when:
+1. Implementation merged to main
+2. Server health check passes (`GET /health` 200)
+3. The gap register entry status updated to `CLOSED`
+4. The implementing GOVERNANCE-SYNC entry recorded in gap register
+5. IMPLEMENTATION-TRACKER-2026-03.md row status updated to ✅
+
+PROVISIONAL and VERIFY_REQUIRED items may be closed only after the corresponding VER item resolves to PASS or DEFER.
+
+---
+
+### 8.7 References
+
+- Reconciliation matrix: `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`
+- Execution tracker: `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md`
+- Gap register section: `governance/gap-register.md` → "Frontend-Backend Wiring Gap Audit — March 2026"
+- Codex audit: `docs/governance/audits/2026-03-codex-frontend-backend-audit.md`
+- Copilot audit: `docs/governance/audits/2026-03-copilot-frontend-backend-audit.md`

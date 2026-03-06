@@ -160,4 +160,33 @@ All canonical data must be exportable in DPP-compatible formats.
 
 ---
 
+## 11. Product-Boundary Classification — March 2026 Audit Reconciliation
+
+**Added:** 2026-03-06 · **Reference:** `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**Scope:** Classifications below apply to frontend surface gaps discovered in the March 2026 cross-audit. These are not implementation instructions; they record where the platform boundary sits between "wiring gap" and "product decision pending."
+
+### REQUIRES_BACKEND_DESIGN — Not a Wiring Gap
+
+These gaps cannot be closed by frontend wiring work alone. They require explicit backend route design and product approval before any frontend implementation begins.
+
+| Gap ID | Surface | Classification Reason |
+|---|---|---|
+| TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke actions | No `/api/control/admin-users` route exists in control.ts. This is also a security posture concern: auditable admin provisioning requires a designed, gated backend surface, not just UI wiring. |
+| TECS-FBW-AIGOVERNANCE | AI Governance authority actions (cap, kill switch, registry) | No `PUT /api/control/ai-budget/:tenantId` route exists. G-028 B1/B2/C1/C2/C3 are Deferred Wave 5+ (GOVERNANCE-SYNC-095). AI authority actions in the platform doctrine (§8 AI Doctrine) require explainability and auditability — these cannot be implemented as ad-hoc calls to non-existent routes. |
+
+### DEFERRED_BY_DOCTRINE — Product Decision Required
+
+These gaps represent intentional product placeholders. The platform doctrine requires that no product action surface be implemented without a clear product intent and a supported backend contract.
+
+| Gap ID | Surface | Classification Reason |
+|---|---|---|
+| TECS-FBW-013 | B2B "Request Quote" CTA | No backend quote endpoint exists. B2B quote flow is a future phase item. UI button may remain in disabled state as a product placeholder. |
+| WL skeleton panels (general) | WhiteLabelAdmin and ControlPlane panels marked as BackendSkeleton | These are intentional placeholders, consistent with the phase model. They do not represent broken wiring; they represent features not yet in scope. No implementation work is authorized without explicit product scope approval. |
+
+### Implication for Implementation Waves
+
+Items classified REQUIRES_BACKEND_DESIGN or DEFERRED_BY_DOCTRINE are excluded from Waves 0–4. They are gated in Wave 5 behind explicit product/backend design approval. Any prompt or ticket that attempts to wire frontend actions to non-existent backend routes for these items is out of scope and must be blocked.
+
+---
+
 **End of Document — TEXQTIC PLATFORM DOCTRINE v1.4 (Part 1)**

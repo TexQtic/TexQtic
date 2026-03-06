@@ -7,6 +7,10 @@
 **Migrations:** 73 / 73 Applied · `Database schema is up to date!` *(updated GOVERNANCE-SYNC-070: migration 20260315000007 applied)*  
 **Doctrine Version:** v1.4
 
+> **Cross-reference:** Frontend-backend reachability recovery and cross-audit reconciliation for March 2026 is governed in
+> `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` (Section 8) and
+> `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md`. This Q2 tracker remains active for its original scope (G-001 through G-028 + membership governance).
+
 ---
 
 ## Status Legend

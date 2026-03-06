@@ -731,3 +731,234 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | OPS-G028-C1 | TIS refactor (`ai.ts` → dedicated module) | Deferred Wave 5+ |
 | OPS-G028-C2 | RAG expansion to all INSIGHTS inference requests | Deferred Wave 5+ |
 | OPS-G028-C3 | DPP_ASSIST taskType with RAG over DPP snapshots | Deferred Wave 5+ |
+
+---
+
+## Frontend-Backend Wiring Gap Audit — March 2026 Cross-Audit Reconciliation
+
+**Recorded:** 2026-03-06  
+**Source audits:** `docs/governance/audits/2026-03-codex-frontend-backend-audit.md` + `docs/governance/audits/2026-03-copilot-frontend-backend-audit.md`  
+**Reconciliation artifact:** `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**Governance baseline:** GOVERNANCE-SYNC-095 · 73/73 migrations · RLS Maturity 5.0/5 · Doctrine v1.4  
+**Note:** All entries derive from the cross-audit reconciliation. Merged statuses only — single-report claims are not used directly.
+
+---
+
+### Summary Table — All TECS-FBW Findings
+
+| Gap ID | Short Title | Source | Severity | Merged Status | Wave |
+|---|---|---|---|---|---|
+| TECS-FBW-001 | Finance/Compliance/Dispute Mutations | BOTH | HIGH | VALIDATED | Wave 2 |
+| TECS-FBW-002 | G-017 Trades Frontend Absent | BOTH | HIGH | VALIDATED | Wave 3 |
+| TECS-FBW-003 | G-018 Escrow Frontend Absent | BOTH | HIGH | VALIDATED | Wave 3 |
+| TECS-FBW-004 | G-019 Settlements Frontend Absent | BOTH | HIGH | VALIDATED | Wave 3 |
+| TECS-FBW-005 | G-019 Certifications Frontend Absent | BOTH | HIGH | VALIDATED | Wave 4 |
+| TECS-FBW-006 | G-022 Escalations Frontend Absent + Misrouted | BOTH | HIGH | VALIDATED | Wave 3 |
+| TECS-FBW-007 | Cart Summaries Dead Service | BOTH | MEDIUM | VALIDATED | Wave 4 |
+| TECS-FBW-008 | WL Settings Custom Domain Dead | BOTH | MEDIUM | VALIDATED | Wave 1 |
+| TECS-FBW-011 | Catalog basePrice vs price — CRITICAL runtime | COPILOT | CRITICAL | VALIDATED | Wave 1 |
+| TECS-FBW-012 | TeamManagement Edit Access Dead Button | BOTH | MEDIUM | VALIDATED | Wave 5 |
+| TECS-FBW-013 | B2B Request Quote Dead | COPILOT | LOW | DEFERRED | Wave 5 |
+| TECS-FBW-014 | Post-Checkout No Confirmation State | COPILOT | MEDIUM | PROVISIONAL | Wave 1 |
+| TECS-FBW-015 | G-016 Traceability CRUD Frontend Absent | BOTH | HIGH | VALIDATED | Wave 4 |
+| TECS-FBW-016 | Tenant Audit Logs UI Absent | COPILOT | MEDIUM | PROVISIONAL | Wave 4 |
+| TECS-FBW-017 | CatalogItem.category Grouping May Fail | COPILOT | LOW | PROVISIONAL | Wave 1 |
+| TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | COPILOT | LOW | PROVISIONAL | Wave 0 |
+| TECS-FBW-019 | lifecycleState vs status (handled) | COPILOT | CLOSED | DEFERRED | — |
+| TECS-FBW-020 | WL Admin Invite Shell Routing | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
+| TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
+| TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
+| TECS-FBW-MOQ | MOQ_NOT_MET 422 UX Gap | COPILOT | MEDIUM | PROVISIONAL | Wave 1 |
+| TECS-FBW-OA-001 | OpenAPI Tenant Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
+| TECS-FBW-OA-002 | OpenAPI Control-Plane Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
+| TECS-FBW-AT-006 | Order Status UI Role Gating | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
+| TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 5 |
+| TECS-FBW-RLS-001 | RLS-Only Posture Governance | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
+| TECS-FBW-PROV-001 | Tenant Provisioning Contract Conflict | CONFLICT | HIGH | VERIFY_REQUIRED (CROSS_REPORT_CONFLICT) | Wave 0 |
+
+---
+
+### Detail Entries
+
+**TECS-FBW-001 — Finance/Compliance/Dispute Authority Mutations**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 2  
+Backend confirmed: POST /api/control/finance/payouts/:id/{approve,reject}; POST /api/control/compliance/requests/:id/{approve,reject}; POST /api/control/disputes/:id/{resolve,escalate} — SUPER_ADMIN gated (GOVERNANCE-SYNC-035 CI guard).  
+Frontend status: FinanceOps.tsx, ComplianceQueue.tsx, DisputeCases.tsx are pure read-only; no mutation service methods; no action buttons.  
+Affected: components/ControlPlane/FinanceOps.tsx, ComplianceQueue.tsx, DisputeCases.tsx; services/controlPlaneService.ts  
+Next action: Add approve/reject/resolve/escalate methods to controlPlaneService.ts + confirm-before-submit UI in each panel.
+
+**TECS-FBW-002 — G-017 Trades Frontend Absent**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 3  
+Backend confirmed: POST/GET /api/tenant/trades; POST .../transition (SM+MakerChecker+Sanctions); admin equivalents — implemented (GOVERNANCE-SYNC-005/015).  
+Frontend status: Zero service functions; zero components; not referenced in App.tsx.  
+Safety constraint (D-017-A): Do NOT send tenantId from client — server enforces from JWT claims.  
+Next action: Create services/tradeService.ts; components/Tenant/TradesPanel.tsx; add TRADES to expView union; ControlPlane/TradeOversight.tsx.
+
+**TECS-FBW-003 — G-018 Escrow Frontend Absent**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 3  
+Backend confirmed: Full CRUD + transitions (GOVERNANCE-SYNC-011/012).  
+Safety constraint (D-020-B): Balance derived from ledger SUM — frontend must not assume a balance field.  
+Next action: Create services/escrowService.ts; components/Tenant/EscrowPanel.tsx.
+
+**TECS-FBW-004 — G-019 Settlements Frontend Absent**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 3  
+Backend confirmed: POST /api/tenant/settlements/preview + /api/tenant/settlements; admin equivalents (GOVERNANCE-SYNC-004).  
+Safety constraint (D-020-B): Frontend must implement preview step before commit submit.  
+Next action: Create services/settlementService.ts; components/Tenant/SettlementPreview.tsx with preview-confirm flow.
+
+**TECS-FBW-005 — G-019 Certifications Frontend Absent**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 4  
+Backend confirmed: Full CRUD + lifecycle transitions (GOVERNANCE-SYNC-008).  
+Note: DPPPassport.tsx reads certification data from DPP snapshot view (pre-computed) — NOT from certification lifecycle endpoints.  
+Next action: Create services/certificationService.ts; add CERTIFICATIONS expView; ControlPlane admin view.
+
+**TECS-FBW-006 — G-022 Escalations Frontend Absent + Misrouted**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 3  
+Backend confirmed: GET/POST /api/tenant/escalations; GET/POST/upgrade/resolve /api/control/escalations (GOVERNANCE-SYNC-047).  
+Frontend status — tenant: Zero service functions; zero components.  
+Frontend status — control (MISROUTED): DisputeCases.tsx calls GET /api/control/disputes — a different entity. Disputes are event-log records; escalations are structured lifecycle entities with severity upgrade + resolve transitions. Admin users cannot see, upgrade, or resolve G-022 escalations.  
+Next action: Add escalation service methods; create EscalationsPanel.tsx; add separate ESCALATIONS adminView (do NOT repurpose DisputeCases.tsx).
+
+**TECS-FBW-007 — Cart Summaries Dead Service Code**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: MEDIUM · Status: VALIDATED · Wave: 4  
+Backend confirmed: GET /api/control/marketplace/cart-summaries + /:cartId implemented.  
+Frontend status: getCartSummaries() + getCartSummaryByCartId() defined in controlPlaneService.ts; no component imports or calls them; no AdminView state maps to a panel.  
+Next action: Create components/ControlPlane/CartSummariesPanel.tsx; add CART_SUMMARIES AdminView state.
+
+**TECS-FBW-008 — WL Settings Custom Domain Dead (EXPERIENCE Shell)**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: MEDIUM · Status: VALIDATED · Wave: 1  
+Context: WLDomainsPanel.tsx in WL_ADMIN shell is fully wired (GOVERNANCE-SYNC-093). Gap is in EXPERIENCE shell WhiteLabelSettings.tsx domain card only.  
+Affected: components/Tenant/WhiteLabelSettings.tsx  
+Next action: Wire Connect button to POST /api/tenant/domains OR remove dead card with explicit redirect note to WL_ADMIN Domains panel.
+
+**TECS-FBW-011 — Catalog basePrice vs price — CRITICAL Runtime Bug**  
+Source: NEW_IN_COPILOT · Severity: CRITICAL · Status: VALIDATED · Wave: 1 — SHIP BLOCKER  
+Runtime impact: Every catalog item renders as `$undefined.00` across all shells.  
+Root cause: CatalogItem interface declares `basePrice?: number`; backend Prisma uses `price` field; App.tsx renders `p.basePrice` at 3 sites.  
+Affected: App.tsx (3 render sites); services/catalogService.ts (CatalogItem interface).  
+Fix: Update interface to `price: number`; update all `p.basePrice` references to `p.price` — frontend only, no backend change.
+
+**TECS-FBW-012 — TeamManagement Edit Access Dead Button**  
+Source: RECONFIRMED; confirmed by Q2 tracker §12.3 "Membership edit ❌ Not implemented" · Severity: MEDIUM · Status: VALIDATED · Wave: 5  
+Frontend status: `<button>Edit Access</button>` has no onClick; no role-change service method.  
+Backend status: No PATCH /api/tenant/memberships/:id route exists.  
+Next action: Backend route design required first; then wire UI with role-change modal.
+
+**TECS-FBW-013 — B2B Request Quote Dead Button**  
+Source: NEW_IN_COPILOT · Severity: LOW · Status: DEFERRED (DEFERRED_BY_DOCTRINE) · Wave: 5  
+No backend quote endpoint; B2B quote flow is a future phase item. Keep UI in disabled/hidden state pending product decision.
+
+**TECS-FBW-014 — Post-Checkout No Order Confirmation State**  
+Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: PROVISIONAL · Wave: 1  
+Root cause: checkout() POSTs to /api/tenant/checkout and receives {orderId, message}; App.tsx closes cart and returns to EXPERIENCE view; orderId is discarded; no ORDER_CONFIRMATION AppState exists.  
+Next action: Add ORDER_CONFIRMED to AppState; render orderId on success; navigation path to orders panel.
+
+**TECS-FBW-015 — G-016 Traceability CRUD Frontend Absent**  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 4  
+Backend confirmed: POST/GET nodes; GET neighbors; POST/GET edges; admin plane equivalents (GOVERNANCE-SYNC-009).  
+Note: DPPPassport.tsx consumes GET /api/tenant/dpp/:nodeId (snapshot view) — different endpoint; traceability data creation is dark.  
+Next action: Create services/traceabilityService.ts; add node/edge creation forms; extend DPPPassport.tsx or create TraceabilityPanel.tsx.
+
+**TECS-FBW-016 — Tenant Audit Logs UI Absent**  
+Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: PROVISIONAL · Wave: 4  
+Backend confirmed: GET /api/tenant/audit-logs implemented; control-plane equivalent wired.  
+Frontend status: No tenant-facing audit log component; no expView entry.  
+Next action: Create read-only audit trail component in EXPERIENCE shell.
+
+**TECS-FBW-017 — CatalogItem.category Grouping May Fail**  
+Source: NEW_IN_COPILOT · Severity: LOW · Status: PROVISIONAL · Wave: 1  
+Root cause: WLCollectionsPanel.tsx groups items by item.category; category typed optional; if null/undefined, grouping degrades silently.  
+Next action: Add defensive default grouping in WLCollectionsPanel.tsx.
+
+**TECS-FBW-018 — Plan BASIC→TRIAL Enum Mapping**  
+Source: NEW_IN_COPILOT · Severity: LOW · Status: PROVISIONAL · Wave: 0 (verify)  
+Root cause: Backend returns plan: 'BASIC'; frontend type uses 'TRIAL' | 'PAID' | 'ENTERPRISE'; explicit mapping in TenantRegistry.tsx.  
+Next action: Confirm if 'BASIC' is canonical or legacy alias; align enum if needed.
+
+**TECS-FBW-019 — lifecycleState vs status (Handled)**  
+Source: NEW_IN_COPILOT · Status: DEFERRED  
+GAP-ORDER-LC-001 formally closed (GOVERNANCE-SYNC-063). No further action.
+
+**TECS-FBW-020 — WL Admin Invite Shell Routing**  
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 0  
+Finding: WL admin STAFF tab → TeamManagement.onInvite → setAppState('INVITE_MEMBER') — may render in EXPERIENCE shell context, not WL_ADMIN.  
+Context: Q2 tracker §12.4 confirms invite form-to-API wiring fixed in P-5/P-6; shell routing correctness unconfirmed.  
+Verification target: Inspect App.tsx INVITE_MEMBER state rendering for WL_ADMIN context.
+
+**TECS-FBW-AIGOVERNANCE — AI Governance Dead Authority Actions**  
+Source: NEW_IN_COPILOT · Severity: HIGH · Status: REQUIRES_BACKEND_DESIGN · Wave: 5  
+Finding: AiGovernance.tsx action buttons have no onClick; no PUT /api/control/ai-budget/:tenantId route exists.  
+Backend gap: G-028 B1/B2/C1/C2/C3 all Deferred Wave 5+ (GOVERNANCE-SYNC-095). Not a wiring gap — backend route does not exist.
+
+**TECS-FBW-ADMINRBAC — AdminRBAC No Backend Route**  
+Source: NEW_IN_COPILOT · Severity: HIGH · Status: REQUIRES_BACKEND_DESIGN · Wave: 5  
+Finding: AdminRBAC.tsx "Invite Admin" and "Revoke" buttons have no onClick; no /api/control/admin-users route in control.ts.  
+Security note: Absence of auditable admin provisioning is a product gap and security posture concern. Not a wiring gap — requires backend route design.
+
+**TECS-FBW-MOQ — MOQ_NOT_MET 422 UX Gap**  
+Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: PROVISIONAL · Wave: 1  
+Finding: POST /api/tenant/cart/items returns 422 MOQ_NOT_MET; frontend has no error toast or inline message.  
+Next action: Add error handling for 422 MOQ_NOT_MET in cart service; surface user-facing message.
+
+**TECS-FBW-OA-001 — OpenAPI Tenant Contract Drift**  
+Source: NEW_IN_CODEX · Severity: HIGH · Status: VERIFY_REQUIRED · Wave: 0 (inventory); fix per implementing wave  
+Finding: openapi.tenant.json missing checkout, orders, orders/:id/status, domains, dpp, and other active endpoints.  
+Next action: Enumerate paths in tenant.ts vs openapi.tenant.json; produce delta list; register as governance debt; update OpenAPI in same wave as corresponding gap fix.
+
+**TECS-FBW-OA-002 — OpenAPI Control-Plane Contract Drift**  
+Source: NEW_IN_CODEX · Severity: HIGH · Status: VERIFY_REQUIRED · Wave: 0 (inventory); fix per implementing wave  
+Finding: openapi.control-plane.json missing /finance/payouts, /compliance/requests, /disputes, /system/health, /whoami, impersonation routes.  
+Next action: Enumerate paths in control.ts vs openapi.control-plane.json; produce delta list.
+
+**TECS-FBW-AT-006 — Order Status Transition UI Role Gating**  
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 0 (verify), Wave 1 (fix if confirmed)  
+Finding: EXPOrdersPanel.tsx may display PATCH status-transition action buttons to all authenticated tenant users; backend enforces OWNER/ADMIN gate and returns 403 for MEMBER/VIEWER roles.  
+Note: Order status PATCH route is wired (Copilot confirmed); this finding is about UX role-gating, not API wiring.  
+Next action: Read EXPOrdersPanel.tsx role-gating logic; add conditional render using auth context role if not present.
+
+**TECS-FBW-AUTH-001 — Tenant Login Hardcoded Seeded Picker**  
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 5 (if backend route design required)  
+Finding: AuthFlows.tsx tenant picker uses seeded/hardcoded tenant IDs; TODO comment references non-existent /api/public/tenants/resolve endpoint.  
+Next action: Confirm seeded picker still present; determine if resolver endpoint is planned.
+
+**TECS-FBW-RLS-001 — RLS-Only Posture Governance Clarification**  
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 0 (governance statement only; no code change)  
+Finding: Multiple tenant routes rely on RLS (withDbContext/app.org_id GUC) for boundary enforcement without explicit `where: { org_id }` app-layer filters.  
+Context: Q2 tracker §12.2 documents the intentional decision for memberships specifically.  
+Required: A system-level governance statement extending the §12.2 decision to all relevant routes; or a per-route exception register.
+
+**TECS-FBW-PROV-001 — Tenant Provisioning Contract (CROSS_REPORT_CONFLICT)**  
+Source: CROSS_REPORT_CONFLICT · Severity: HIGH · Status: VERIFY_REQUIRED · Wave: 0 (verify), Wave 1 (fix if confirmed)  
+Codex finding (§4.1): Frontend sends {name,slug,type,ownerEmail,ownerPassword}; backend expects {orgName,primaryAdminEmail,primaryAdminPassword}; response parsing also incompatible — classified user-blocking.  
+Copilot finding (§3 table): provisionTenant() → TenantRegistry modal → ✅ Wired (no field-level inspection).  
+Conflict nature: A wired call path and a correct field-level contract are not mutually exclusive. Both can be simultaneously true (call exists, fields incorrect).  
+Action: Read controlPlaneService.ts provisionTenant() request body fields side-by-side with admin/tenantProvision.ts Zod schema before any implementation acts on this surface.
+
+---
+
+### Verification Backlog
+
+| ID | Surface | Target | Status |
+|---|---|---|---|
+| VER-001 | TECS-FBW-PROV-001 | Compare provisionTenant() body fields vs Zod schema field by field | ⏳ Pending |
+| VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing for WL_ADMIN context | ⏳ Pending |
+| VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts actual routes | ⏳ Pending |
+| VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts actual routes | ⏳ Pending |
+| VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx role-gating on status transition buttons | ⏳ Pending |
+| VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx — confirm seeded picker + TODO resolver ref | ⏳ Pending |
+| VER-007 | TECS-FBW-RLS-001 | Draft system-level governance statement on RLS-only posture | ⏳ Pending |
+| VER-008 | U-001 (Copilot) | Locate /api/ai/* route file; confirm registration + auth posture | ⏳ Pending |
+| VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard in full | ⏳ Pending |
+| VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 for role-gating evidence | ⏳ Pending |
+
+---
+
+### Auth/Tenancy Confirmations (No Action Required)
+
+| ID | Finding | Evidence |
+|---|---|---|
+| AT-001 | Realm enforcement end-to-end | Dual-realm token flow correctly threaded: apiClient.ts → tenantApiClient.ts/adminApiClient.ts → middleware → backend |
+| AT-002 | G-017 Trade tenantId D-017-A enforced server-side | Server enforces tenantId from JWT claims; do NOT send from client |
+| AT-003 | G-018 Escrow org_id RLS | escrow.g018.ts sets app.org_id GUC; cross-tenant isolation confirmed |
+| AT-004 | Control-plane provisioning auth posture | GOVERNANCE-SYNC-035 CI guard: 8/8 SUPER_ADMIN surfaces gated; 0 violations |
+| AT-005 | Impersonation token on realm switch | VERIFY_REQUIRED — clearImpersonationToken() called on explicit exit; accidental logout-during-impersonation path not verified (VER-009 adjacent) |
