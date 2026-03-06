@@ -55,3 +55,44 @@ No business-domain tables allowed in Phase 2.
 - If root lint fails at closeout time, a TECS-FBW-LINT-* gap is opened immediately with Immediate priority.
 - The failing gap must be resolved in the same session or in the very next prompt before any Wave N implementation resumes.
 - No `@ts-ignore`, `eslint-disable`, or blanket suppression comments are permitted as a lint-gate workaround without explicit per-line justification in the gap register.
+
+## Atomic Change Envelope Rule
+
+Established: 2026-03-06 · GOVERNANCE-SYNC-100
+
+Every implementation unit must declare an Atomic Change Envelope before editing any code. The envelope must state:
+
+- **Gap ID** — exact tracked unit identifier
+- **Objective** — exact defect or gap being resolved
+- **Files allowed to change** — explicit allowlist; no implicit expansion permitted
+- **Files explicitly out of scope** — named exclusions where ambiguity exists
+- **Acceptance criteria** — observable, verifiable exit conditions
+- **Validation gates** — the exact commands that must exit 0 before closeout
+
+Execution must remain inside this envelope. If implementation reveals that additional files are required:
+
+1. Stop and identify the newly required files.
+2. Classify the expansion as **SAME-UNIT NECESSARY EXPANSION** or **OUT-OF-SCOPE EXPANSION**.
+3. **SAME-UNIT NECESSARY EXPANSION** is allowed only if:
+   - It is directly caused by compile/runtime closure of the same defect.
+   - It does not cross domain boundaries.
+   - It does not alter architecture, auth, or RLS behavior.
+   - It remains auditable in one atomic commit.
+4. **OUT-OF-SCOPE EXPANSION** must not be implemented in the current unit. Instead: stop, update governance docs, and create or recommend the next tracked unit.
+
+No prompt may silently widen from:
+- Verification into implementation
+- Frontend fix into backend refactor
+- Contract fix into feature redesign
+- Local UI fix into shell/navigation overhaul beyond the approved boundary
+
+Every completion report must include:
+- Whether the envelope was preserved
+- Whether any expansion occurred
+- Why the expansion was allowed or rejected
+
+## Envelope Precedence Rule
+
+Established: 2026-03-06 · GOVERNANCE-SYNC-100
+
+When there is tension between "while we are here" cleanup and envelope discipline, the envelope wins. Prefer a second tracked unit over opportunistic expansion.

@@ -402,7 +402,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-017 | CatalogItem.category Grouping | WL Collections | Not identified | CM-002 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | |
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | Tenant provisioning | Not identified | CM-003 | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 0/verify | Intentional mapping per code comment |
 | TECS-FBW-019 | lifecycleState vs status | Orders | Not inspected | CM-004 handled | NEW_IN_COPILOT | DEFERRED | HIGH | — | GAP-ORDER-LC-001 closed (GOVERNANCE-SYNC-063) |
-| TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Q2 §12.4 wired invite form but shell context not confirmed |
+| TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | VALIDATED (VER-002 · 2026-03-06) | MEDIUM | Wave 1 | Codex confirmed correct; INVITE_MEMBER falls into EXPERIENCE case group; WhiteLabelShell rendered instead of WhiteLabelAdminShell |
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | G-028 B1+ deferred |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend | Admin access | S-001 implied | F-010 / S-001 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | |
 | TECS-FBW-MOQ | MOQ_NOT_MET UX Gap | Cart | Not identified | §11 P4.4 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | 422 response not surfaced to user |
@@ -445,7 +445,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | ID | Surface | Verification Target | Evidence Gap |
 |---|---|---|---|
 | VER-001 | TECS-FBW-PROV-001 | Compare provisionTenant() request body field names vs tenantProvision.ts Zod schema | ✅ CLOSED · 2026-03-06 · Verdict: FAIL · TECS-FBW-PROV-001 → VALIDATED + Wave 1 |
-| VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing — does WL_ADMIN context correctly branch? | Codex flagged; Q2 §12.4 only confirms InviteMemberForm wiring |
+| VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing — does WL_ADMIN context correctly branch? | ✅ CLOSED · 2026-03-06 · Verdict: FAIL · TECS-FBW-020 → VALIDATED + Wave 1 |
 | VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts route list | Codex found drift; Copilot did not inspect |
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts route list | Codex found drift; Copilot did not inspect |
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx — are status-transition action buttons gated by user role from auth context? | Codex found UX exposure; Copilot confirmed backend PATCH wiring |
@@ -461,7 +461,7 @@ Items that cannot proceed to implementation without targeted inspection:
 
 | Wave | Items | Priority basis |
 |---|---|---|
-| Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001; TECS-FBW-020 | VER-001 closed (FAIL · PROV-001 promoted); remaining VER items pending; governance-only; no product code |
+| Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 (✅ CLOSED · 2026-03-06 · FAIL); VER-003 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001 | VER-001 closed (FAIL · PROV-001 promoted); VER-002 closed (FAIL · FBW-020 promoted); remaining VER items pending; governance-only; no product code |
 | Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice ✅ CLOSED · GOVERNANCE-SYNC-096); TECS-FBW-PROV-001 (✅ CLOSED · GOVERNANCE-SYNC-099 · 2026-03-06); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
 | Wave 2 — Backend-Complete Ops Mutations | TECS-FBW-001 (finance/compliance/dispute mutations) | RECONFIRMED; backend verified; additive frontend only |
 | Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002 (trades); TECS-FBW-003 (escrow); TECS-FBW-006 (escalations + control-plane misrouting) | RECONFIRMED; high governance impact |

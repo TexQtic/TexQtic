@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-06 (GOVERNANCE-SYNC-099 — TECS-FBW-PROV-001 → ✅ CLOSED (implemented: ProvisionTenantRequest {orgName,primaryAdminEmail,primaryAdminPassword}; ProvisionTenantResponse flat {orgId,slug,userId,membershipId}; TenantRegistry.tsx call site + response consumption aligned; tenantProvision.ts stale /api/admin → /api/control comments fixed (doc-only); typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-099)
+Last Updated: 2026-03-06 (GOVERNANCE-SYNC-100 — VER-002 → ✅ CLOSED (read-only verification; TECS-FBW-020 confirmed FAIL — INVITE_MEMBER appState set from WL_ADMIN STAFF panel routes into EXPERIENCE case group in App.tsx main switch; WhiteLabelShell renders instead of WhiteLabelAdminShell; onBack sets TEAM_MGMT which also routes through EXPERIENCE group — WL Admin chrome permanently lost; no code modified; VER-002 evidence: App.tsx lines 1100/1143; renderWLAdminContent line 398; renderExperienceContent lines 528-529; TECS-FBW-020 → VALIDATED + Wave 1; ARCHITECTURE-GOVERNANCE.md updated with Atomic Change Envelope Rule + Envelope Precedence Rule; GOVERNANCE-SYNC-100)
+(GOVERNANCE-SYNC-099 — TECS-FBW-PROV-001 → ✅ CLOSED (implemented: ProvisionTenantRequest {orgName,primaryAdminEmail,primaryAdminPassword}; ProvisionTenantResponse flat {orgId,slug,userId,membershipId}; TenantRegistry.tsx call site + response consumption aligned; tenantProvision.ts stale /api/admin → /api/control comments fixed (doc-only); typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-099)
 (GOVERNANCE-SYNC-098 — VER-001 → ✅ CLOSED (read-only verification; TECS-FBW-PROV-001 confirmed FAIL — field-level contract mismatch: frontend sends {name,slug,type,ownerEmail,ownerPassword}, backend Zod expects {orgName,primaryAdminEmail,primaryAdminPassword}; backend returns flat {orgId,slug,userId,membershipId}, frontend ProvisionTenantResponse expects nested {tenant:{id,name,slug,type,status},owner:{id,email}}; runtime: deterministic HTTP 400 on every provisionTenant() call; Codex §4.1 confirmed correct; Copilot §3 "Wired" superseded by field-level inspection; TECS-FBW-PROV-001 → VALIDATED + Wave 1; no code modified; GOVERNANCE-SYNC-098)
 (GOVERNANCE-SYNC-097 — TECS-FBW-LINT-001 → ✅ CLOSED (repo-gate remediation; discovered during TECS-FBW-011 closeout): eslint.config.js (MODIFIED — targeted override block for middleware.ts Vercel Edge Runtime globals only: TextEncoder, crypto, Response, Request, Headers, URL, process readonly; no middleware.ts change; no blanket disable suppressions); pnpm run lint EXIT 0; typecheck EXIT 0; git diff --name-only: eslint.config.js only; GOVERNANCE-SYNC-097)
 (GOVERNANCE-SYNC-096 — TECS-FBW-011 → ✅ CLOSED (parallel-safe ship-blocker override, Wave 1): services/catalogService.ts (MODIFIED — removed basePrice?: number from CatalogItem interface; canonical field price: number confirmed); App.tsx (MODIFIED — 3 p.basePrice render sites → p.price: lines 499, 711, 854); components/WhiteLabelAdmin/WLCollectionsPanel.tsx (MODIFIED — 4th render site discovered during typecheck: displayPrice = item.basePrice ?? item.price → item.price); no backend change; no schema/RLS/migration change; typecheck EXIT 0; lint EXIT 0 (scoped to 3 changed files); git diff --name-only: 3 files only; GOVERNANCE-SYNC-096)
@@ -770,7 +771,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-017 | CatalogItem.category Grouping May Fail | COPILOT | LOW | PROVISIONAL | Wave 1 |
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | COPILOT | LOW | PROVISIONAL | Wave 0 |
 | TECS-FBW-019 | lifecycleState vs status (handled) | COPILOT | CLOSED | DEFERRED | — |
-| TECS-FBW-020 | WL Admin Invite Shell Routing | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
+| TECS-FBW-020 | WL Admin Invite Shell Routing | CODEX | MEDIUM | VALIDATED (VER-002 CLOSED · 2026-03-06) | Wave 1 |
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
 | TECS-FBW-MOQ | MOQ_NOT_MET 422 UX Gap | COPILOT | MEDIUM | PROVISIONAL | Wave 1 |
@@ -906,10 +907,17 @@ Source: NEW_IN_COPILOT · Status: DEFERRED
 GAP-ORDER-LC-001 formally closed (GOVERNANCE-SYNC-063). No further action.
 
 **TECS-FBW-020 — WL Admin Invite Shell Routing**  
-Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 0  
-Finding: WL admin STAFF tab → TeamManagement.onInvite → setAppState('INVITE_MEMBER') — may render in EXPERIENCE shell context, not WL_ADMIN.  
-Context: Q2 tracker §12.4 confirms invite form-to-API wiring fixed in P-5/P-6; shell routing correctness unconfirmed.  
-Verification target: Inspect App.tsx INVITE_MEMBER state rendering for WL_ADMIN context.
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VALIDATED · Wave: 1  
+VER-002 executed: 2026-03-06 · Verdict: FAIL · Evidence: direct file inspection (read-only; no code modified)  
+Shell routing mismatch confirmed:  
+  - `renderWLAdminContent()` (App.tsx L398): `case 'STAFF': return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;` — sets global appState  
+  - App.tsx main switch L1143: `case 'INVITE_MEMBER'` falls into the `case 'EXPERIENCE'` group — NOT handled inside `case 'WL_ADMIN':`  
+  - Shell selected at L1155-1174: `TenantType.WHITE_LABEL → WhiteLabelShell` — storefront, not back-office  
+  - `renderExperienceContent()` L528-529: `if (appState === 'INVITE_MEMBER') return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;`  
+  - `onBack` sets `'TEAM_MGMT'` which also routes through EXPERIENCE group — WL Admin chrome permanently lost  
+Runtime consequence: InviteMemberForm renders inside WhiteLabelShell (storefront), not WhiteLabelAdminShell (back-office). WL Admin nav/header chrome disappears. Back navigation does not restore WL Admin context.  
+Codex §6.1 assessment: CONFIRMED CORRECT — misrouted.  
+Next action: Fix App.tsx — handle INVITE_MEMBER within WL_ADMIN shell context; preserve back navigation continuity — Wave 1 implementation unit (TECS-FBW-020).
 
 **TECS-FBW-AIGOVERNANCE — AI Governance Dead Authority Actions**  
 Source: NEW_IN_COPILOT · Severity: HIGH · Status: REQUIRES_BACKEND_DESIGN · Wave: 5  
@@ -977,7 +985,7 @@ Next: VER-002 (TECS-FBW-020 — WL Admin invite shell routing).
 | ID | Surface | Target | Status |
 |---|---|---|---|
 | VER-001 | TECS-FBW-PROV-001 | Compare provisionTenant() body fields vs Zod schema field by field | ✅ CLOSED — 2026-03-06 · Verdict: FAIL · All 5 request fields mismatched; response shape incompatible · TECS-FBW-PROV-001 → VALIDATED + Wave 1 |
-| VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing for WL_ADMIN context | ⏳ Pending |
+| VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing for WL_ADMIN context | ✅ CLOSED — 2026-03-06 · Verdict: FAIL · INVITE_MEMBER routes into EXPERIENCE case group; WhiteLabelShell rendered instead of WhiteLabelAdminShell; WL Admin context lost · TECS-FBW-020 → VALIDATED + Wave 1 |
 | VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts actual routes | ⏳ Pending |
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts actual routes | ⏳ Pending |
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx role-gating on status transition buttons | ⏳ Pending |
