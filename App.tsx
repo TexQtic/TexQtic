@@ -22,6 +22,9 @@ import { EscalationsPanel } from './components/Tenant/EscalationsPanel';
 import { EscalationOversight } from './components/ControlPlane/EscalationOversight';
 // TECS-FBW-004: G-019 tenant settlement preview-confirm flow
 import { SettlementPreview } from './components/Tenant/SettlementPreview';
+// TECS-FBW-005: G-019 certification lifecycle panel (tenant) + admin view (control-plane)
+import { CertificationsPanel } from './components/Tenant/CertificationsPanel';
+import { CertificationsAdmin } from './components/ControlPlane/CertificationsAdmin';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -78,7 +81,8 @@ const App: React.FC = () => {
   // TECS-FBW-003-A: 'ESCROW' added for tenant escrow read panel (G-018)
   // TECS-FBW-006-A: 'ESCALATIONS' added for tenant escalation read panel (G-022)
   // TECS-FBW-004: 'SETTLEMENT' added for G-019 tenant settlement preview-confirm flow
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT'>('HOME');
+  // TECS-FBW-005: 'CERTIFICATIONS' added for G-019 tenant certification lifecycle panel
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -559,6 +563,8 @@ const App: React.FC = () => {
     if (expView === 'ESCALATIONS') return <EscalationsPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-004: G-019 tenant settlement preview-confirm flow (D-017-A / D-020-B compliant)
     if (expView === 'SETTLEMENT') return <SettlementPreview onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-005: G-019 tenant certification lifecycle panel (D-017-A / D-020-C / D-020-D compliant)
+    if (expView === 'CERTIFICATIONS') return <CertificationsPanel onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -962,6 +968,9 @@ const App: React.FC = () => {
       // TECS-FBW-006-A: G-022 control-plane escalation oversight (read-only; orgId-gated)
       case 'ESCALATIONS':
         return <EscalationOversight />;
+      // TECS-FBW-005: G-019 cross-tenant certification read surface (D-022-C: read-only)
+      case 'CERTIFICATIONS':
+        return <CertificationsAdmin />;
       case 'RBAC':
         return <AdminRBAC />;
       case 'API_DOCS':
@@ -1203,6 +1212,8 @@ const App: React.FC = () => {
           onNavigateEscalations: () => setExpView('ESCALATIONS'),
           // TECS-FBW-004: G-019 tenant settlement panel navigation
           onNavigateSettlement: () => setExpView('SETTLEMENT'),
+          // TECS-FBW-005: G-019 tenant certification lifecycle panel navigation
+          onNavigateCertifications: () => setExpView('CERTIFICATIONS'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {

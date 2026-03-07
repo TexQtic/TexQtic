@@ -1058,6 +1058,100 @@
           }
         }
       }
+    },
+    "/api/control/certifications": {
+      "get": {
+        "summary": "List certifications across tenants (admin read-only — D-022-C)",
+        "tags": ["Control Plane - Certifications"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "orgId",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "in": "query", "name": "stateKey", "schema": { "type": "string" } },
+          { "in": "query", "name": "limit", "schema": { "type": "integer" } },
+          { "in": "query", "name": "offset", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cross-tenant certification list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "certifications": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    },
+                    "count": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "offset": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN" }
+        }
+      }
+    },
+    "/api/control/certifications/{id}": {
+      "get": {
+        "summary": "Get single certification by ID (admin read-only — D-022-C)",
+        "tags": ["Control Plane - Certifications"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin certification detail including isTerminal flag",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "certification": {
+                      "type": "object",
+                      "properties": {
+                        "certificationId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "orgId": { "type": "string", "format": "uuid" },
+                        "certificationType": { "type": "string" },
+                        "stateKey": { "type": "string" },
+                        "isTerminal": { "type": "boolean" },
+                        "reason": { "type": "string" },
+                        "issuedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN" },
+          "404": { "description": "NOT_FOUND" }
+        }
+      }
     }
   }
 }
