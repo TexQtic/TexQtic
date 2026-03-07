@@ -49,7 +49,7 @@ Evidence references are quoted from the source document using section + short an
 | Finding type | frontend pending / backend complete | BACKEND_COMPLETE / FRONTEND_ABSENT |
 | Overlap status | Same issue — identical characterisation |
 | Merged classification | `RECONFIRMED_BY_CODEX_AND_COPILOT` |
-| Merged status | `VALIDATED` |
+| Merged status | ~~`VALIDATED`~~ → **`IMPLEMENTED — FULLY CLOSED`** · Compliance: GOVERNANCE-SYNC-107 · Finance: GOVERNANCE-SYNC-108 · Disputes: GOVERNANCE-SYNC-109 (2026-03-07) |
 | Confidence | HIGH |
 
 ---

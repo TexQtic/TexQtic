@@ -546,6 +546,57 @@ export async function getDisputes(): Promise<DisputesResponse> {
   return adminGet<DisputesResponse>('/api/control/disputes');
 }
 
+/**
+ * Request body for dispute resolve / escalate authority actions.
+ * Field names must match backend Zod schema exactly: resolution, notes.
+ * TECS-FBW-001 Disputes sub-unit (2026-03-07)
+ */
+export interface DisputeAuthorityBody {
+  resolution?: string;
+  notes?: string;
+}
+
+export interface DisputeAuthorityResponse {
+  success: boolean;
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Record a dispute resolution decision.
+ * POST /api/control/disputes/:disputeId/resolve
+ * Requires Idempotency-Key header — generated at click time in the UI.
+ * Returns 201 (new write) or 200 (replay); both treated as success.
+ */
+export async function resolveDispute(
+  disputeId: string,
+  body: DisputeAuthorityBody,
+  idempotencyKey: string
+): Promise<DisputeAuthorityResponse> {
+  return adminPostWithHeaders<DisputeAuthorityResponse>(
+    `/api/control/disputes/${disputeId}/resolve`,
+    body,
+    { 'Idempotency-Key': idempotencyKey }
+  );
+}
+
+/**
+ * Record a dispute escalation decision.
+ * POST /api/control/disputes/:disputeId/escalate
+ * Requires Idempotency-Key header — generated at click time in the UI.
+ * Returns 201 (new write) or 200 (replay); both treated as success.
+ */
+export async function escalateDispute(
+  disputeId: string,
+  body: DisputeAuthorityBody,
+  idempotencyKey: string
+): Promise<DisputeAuthorityResponse> {
+  return adminPostWithHeaders<DisputeAuthorityResponse>(
+    `/api/control/disputes/${disputeId}/escalate`,
+    body,
+    { 'Idempotency-Key': idempotencyKey }
+  );
+}
+
 // ==================== SYSTEM HEALTH ====================
 
 export interface HealthService {
