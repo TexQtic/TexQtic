@@ -25,6 +25,9 @@ import { SettlementPreview } from './components/Tenant/SettlementPreview';
 // TECS-FBW-005: G-019 certification lifecycle panel (tenant) + admin view (control-plane)
 import { CertificationsPanel } from './components/Tenant/CertificationsPanel';
 import { CertificationsAdmin } from './components/ControlPlane/CertificationsAdmin';
+// TECS-FBW-015: G-016 traceability CRUD panel (tenant) + admin read-only view (control-plane)
+import { TraceabilityPanel } from './components/Tenant/TraceabilityPanel';
+import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -82,7 +85,8 @@ const App: React.FC = () => {
   // TECS-FBW-006-A: 'ESCALATIONS' added for tenant escalation read panel (G-022)
   // TECS-FBW-004: 'SETTLEMENT' added for G-019 tenant settlement preview-confirm flow
   // TECS-FBW-005: 'CERTIFICATIONS' added for G-019 tenant certification lifecycle panel
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS'>('HOME');
+  // TECS-FBW-015: 'TRACEABILITY' added for G-016 traceability CRUD panel
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -565,6 +569,8 @@ const App: React.FC = () => {
     if (expView === 'SETTLEMENT') return <SettlementPreview onBack={() => setExpView('HOME')} />;
     // TECS-FBW-005: G-019 tenant certification lifecycle panel (D-017-A / D-020-C / D-020-D compliant)
     if (expView === 'CERTIFICATIONS') return <CertificationsPanel onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-015: G-016 traceability CRUD panel (D-017-A compliant; Phase A: create+read only)
+    if (expView === 'TRACEABILITY') return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -971,6 +977,9 @@ const App: React.FC = () => {
       // TECS-FBW-005: G-019 cross-tenant certification read surface (D-022-C: read-only)
       case 'CERTIFICATIONS':
         return <CertificationsAdmin />;
+      // TECS-FBW-015: G-016 cross-tenant traceability inspection (Phase A: read-only)
+      case 'TRACEABILITY':
+        return <TraceabilityAdmin />;
       case 'RBAC':
         return <AdminRBAC />;
       case 'API_DOCS':
@@ -1214,6 +1223,8 @@ const App: React.FC = () => {
           onNavigateSettlement: () => setExpView('SETTLEMENT'),
           // TECS-FBW-005: G-019 tenant certification lifecycle panel navigation
           onNavigateCertifications: () => setExpView('CERTIFICATIONS'),
+          // TECS-FBW-015: G-016 traceability CRUD panel navigation
+          onNavigateTraceability: () => setExpView('TRACEABILITY'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {

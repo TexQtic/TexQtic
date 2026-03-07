@@ -1152,6 +1152,143 @@
           "404": { "description": "NOT_FOUND" }
         }
       }
+    },
+    "/api/control/traceability/nodes": {
+      "get": {
+        "summary": "Cross-tenant node list — admin read-only (TECS-FBW-015 / G-016 / Phase A)",
+        "tags": ["Control Plane - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "orgId",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Optional org filter (D-017-A: filter only, not identity assertion)"
+          },
+          { "in": "query", "name": "nodeType", "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cross-tenant traceability node list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "orgId": { "type": "string", "format": "uuid" },
+                          "batchId": { "type": "string" },
+                          "nodeType": { "type": "string" },
+                          "visibility": { "type": "string" },
+                          "geoHash": { "type": "string", "nullable": true },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "limit": { "type": "integer" },
+                    "offset": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN" }
+        }
+      }
+    },
+    "/api/control/traceability/edges": {
+      "get": {
+        "summary": "Cross-tenant edge list — admin read-only (TECS-FBW-015 / G-016 / Phase A)",
+        "tags": ["Control Plane - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "orgId",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Optional org filter (D-017-A: filter only, not identity assertion)"
+          },
+          { "in": "query", "name": "edgeType", "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "fromNodeId",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "toNodeId",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cross-tenant traceability edge list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "orgId": { "type": "string", "format": "uuid" },
+                          "fromNodeId": { "type": "string", "format": "uuid" },
+                          "toNodeId": { "type": "string", "format": "uuid" },
+                          "edgeType": { "type": "string" },
+                          "transformationId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "limit": { "type": "integer" },
+                    "offset": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN" }
+        }
+      }
     }
   }
 }

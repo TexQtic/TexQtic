@@ -1245,6 +1245,259 @@
           }
         }
       }
+    },
+    "/api/tenant/traceability/nodes": {
+      "post": {
+        "summary": "Create a traceability node (TECS-FBW-015 / G-016 / D-017-A)",
+        "tags": ["Tenant - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["batchId", "nodeType"],
+                "properties": {
+                  "batchId": {
+                    "type": "string",
+                    "description": "Unique batch identifier within the org"
+                  },
+                  "nodeType": {
+                    "type": "string",
+                    "description": "Node type string (normalised to UPPERCASE by server)"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "description": "Arbitrary JSON metadata (max 16 KB)"
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": ["TENANT", "SHARED"],
+                    "default": "TENANT"
+                  },
+                  "geoHash": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Node created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nodeId": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "INVALID_INPUT" },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN" },
+          "409": { "description": "CONFLICT — duplicate batchId within org" },
+          "500": { "description": "DB_ERROR" }
+        }
+      },
+      "get": {
+        "summary": "List traceability nodes for authenticated tenant",
+        "tags": ["Tenant - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "nodeType", "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated node list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TraceabilityNode"
+                      }
+                    },
+                    "total": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "offset": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "500": { "description": "DB_ERROR" }
+        }
+      }
+    },
+    "/api/tenant/traceability/nodes/{id}/neighbors": {
+      "get": {
+        "summary": "Get 1-hop graph neighbors for a traceability node",
+        "tags": ["Tenant - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node with outgoing and incoming edges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "node": { "$ref": "#/components/schemas/TraceabilityNode" },
+                    "edgesFrom": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TraceabilityEdge"
+                      }
+                    },
+                    "edgesTo": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TraceabilityEdge"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "404": { "description": "NOT_FOUND" },
+          "500": { "description": "DB_ERROR" }
+        }
+      }
+    },
+    "/api/tenant/traceability/edges": {
+      "post": {
+        "summary": "Create a traceability edge linking two nodes (TECS-FBW-015 / G-016 / D-017-A)",
+        "tags": ["Tenant - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fromNodeId", "toNodeId", "edgeType"],
+                "properties": {
+                  "fromNodeId": { "type": "string", "format": "uuid" },
+                  "toNodeId": { "type": "string", "format": "uuid" },
+                  "edgeType": {
+                    "type": "string",
+                    "description": "Edge type string (normalised to UPPERCASE by server)"
+                  },
+                  "transformationId": { "type": "string", "nullable": true },
+                  "meta": {
+                    "type": "object",
+                    "description": "Arbitrary JSON metadata (max 16 KB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Edge created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "edgeId": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "INVALID_INPUT" },
+          "401": { "description": "UNAUTHORIZED" },
+          "403": { "description": "FORBIDDEN" },
+          "404": {
+            "description": "NOT_FOUND — one or both referenced nodes not found in org"
+          },
+          "409": { "description": "CONFLICT — duplicate edge combination" },
+          "500": { "description": "DB_ERROR" }
+        }
+      },
+      "get": {
+        "summary": "List traceability edges for authenticated tenant",
+        "tags": ["Tenant - Traceability"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "in": "query", "name": "edgeType", "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "fromNodeId",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "toNodeId",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated edge list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TraceabilityEdge"
+                      }
+                    },
+                    "total": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "offset": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "UNAUTHORIZED" },
+          "500": { "description": "DB_ERROR" }
+        }
+      }
     }
   }
 }

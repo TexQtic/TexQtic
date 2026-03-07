@@ -9,6 +9,8 @@ export type AdminView =
   | 'ESCALATIONS'
   /** TECS-FBW-005: G-019 certification lifecycle admin view (D-022-C: read-only) */
   | 'CERTIFICATIONS'
+  /** TECS-FBW-015: G-016 traceability cross-tenant inspection (Phase A: read-only) */
+  | 'TRACEABILITY'
   | 'TRADES'
   | 'AI'
   | 'LOGS'
@@ -108,6 +110,13 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             onClick={() => onViewChange('CERTIFICATIONS')}
             icon="📋"
             label="Cert Lifecycle"
+          />
+          {/* TECS-FBW-015: G-016 traceability cross-tenant inspection (Phase A: read-only) */}
+          <NavLink
+            active={activeView === 'TRACEABILITY'}
+            onClick={() => onViewChange('TRACEABILITY')}
+            icon="🔗"
+            label="Traceability"
           />
           <NavLink
             active={activeView === 'AI'}
