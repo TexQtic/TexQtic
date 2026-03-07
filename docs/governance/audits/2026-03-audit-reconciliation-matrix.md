@@ -450,7 +450,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | VER-002 | TECS-FBW-020 | Inspect App.tsx INVITE_MEMBER state routing — does WL_ADMIN context correctly branch? | ✅ CLOSED · 2026-03-06 · Verdict: FAIL · TECS-FBW-020 → VALIDATED + Wave 1 |
 | VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts route list | Codex found drift; Copilot did not inspect |
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts route list | Codex found drift; Copilot did not inspect |
-| VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx — are status-transition action buttons gated by user role from auth context? | Codex found UX exposure; Copilot confirmed backend PATCH wiring |
+| VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx — are status-transition action buttons gated by user role from auth context? | Codex found UX exposure; Copilot confirmed backend PATCH wiring | ✅ CLOSED — 2026-03-07 · Verdict: FAIL · All 3 buttons shown to all users; no role source in Props; server-gate-only design confirmed in file header · TECS-FBW-AT-006 → CLOSED (GOVERNANCE-SYNC-106 · commit b01fcd3) |
 | VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx tenant picker — is there a TODOref to /api/public/tenants/resolve? Is seeding still present? | Codex found; Copilot did not inspect |
 | VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | Q2 §12.2 documents decision for memberships; needs system-level statement |
 | VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | Copilot §10 U-001: not found in tenant.ts or control.ts |
