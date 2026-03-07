@@ -8,7 +8,7 @@
  * Wave 4 Scope: Admin tenant provisioning added
  */
 
-import { adminGet, adminPost, adminPut } from './adminApiClient';
+import { adminGet, adminPost, adminPostWithHeaders, adminPut } from './adminApiClient';
 
 // ==================== TENANT MANAGEMENT ====================
 
@@ -404,6 +404,61 @@ export interface ComplianceRequestsResponse {
  */
 export async function getComplianceRequests(): Promise<ComplianceRequestsResponse> {
   return adminGet<ComplianceRequestsResponse>('/api/control/compliance/requests');
+}
+
+// ==================== COMPLIANCE AUTHORITY MUTATIONS ====================
+
+/**
+ * Request body for compliance authority actions (approve or reject).
+ * TECS-FBW-001 (Compliance sub-unit, 2026-03-07):
+ * Aligned to backend Zod schema { reason?: string; notes?: string }.
+ */
+export interface ComplianceAuthorityBody {
+  reason?: string;
+  notes?: string;
+}
+
+export interface ComplianceAuthorityResponse {
+  id: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Approve a compliance request.
+ * TECS-FBW-001 (Compliance sub-unit, 2026-03-07)
+ * Route: POST /api/control/compliance/requests/:request_id/approve
+ * Requires Idempotency-Key — caller generates UUID before opening dialog.
+ * Both 200 (replay) and 201 (created) are treated as success.
+ */
+export async function approveComplianceRequest(
+  requestId: string,
+  body: ComplianceAuthorityBody,
+  idempotencyKey: string
+): Promise<ComplianceAuthorityResponse> {
+  return adminPostWithHeaders<ComplianceAuthorityResponse>(
+    `/api/control/compliance/requests/${requestId}/approve`,
+    body,
+    { 'Idempotency-Key': idempotencyKey }
+  );
+}
+
+/**
+ * Reject a compliance request.
+ * TECS-FBW-001 (Compliance sub-unit, 2026-03-07)
+ * Route: POST /api/control/compliance/requests/:request_id/reject
+ * Requires Idempotency-Key — caller generates UUID before opening dialog.
+ * Both 200 (replay) and 201 (created) are treated as success.
+ */
+export async function rejectComplianceRequest(
+  requestId: string,
+  body: ComplianceAuthorityBody,
+  idempotencyKey: string
+): Promise<ComplianceAuthorityResponse> {
+  return adminPostWithHeaders<ComplianceAuthorityResponse>(
+    `/api/control/compliance/requests/${requestId}/reject`,
+    body,
+    { 'Idempotency-Key': idempotencyKey }
+  );
 }
 
 // ==================== DISPUTE OPERATIONS ====================

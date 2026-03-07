@@ -43,6 +43,21 @@ export function adminPost<T>(endpoint: string, data?: any): Promise<T> {
 }
 
 /**
+ * POST request with admin realm guard + merged hint + extra headers.
+ * TECS-FBW-001 (2026-03-07): required for per-call headers (e.g., Idempotency-Key)
+ * on compliance authority mutations. ADMIN_REALM_HEADER is always included;
+ * callers only supply the additional keys.
+ */
+export function adminPostWithHeaders<T>(
+  endpoint: string,
+  data?: any,
+  extraHeaders?: Record<string, string>
+): Promise<T> {
+  requireAdminRealm();
+  return post<T>(endpoint, data, { ...ADMIN_REALM_HEADER, ...extraHeaders });
+}
+
+/**
  * PUT request with admin realm guard + hint header
  */
 export function adminPut<T>(endpoint: string, data?: any): Promise<T> {
