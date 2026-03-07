@@ -17,6 +17,9 @@ import { WLDomainsPanel } from './components/WhiteLabelAdmin/WLDomainsPanel';
 import { EXPOrdersPanel } from './components/Tenant/EXPOrdersPanel';
 import { DPPPassport } from './components/Tenant/DPPPassport';
 import { EscrowPanel } from './components/Tenant/EscrowPanel';
+// TECS-FBW-006-A: G-022 read-only escalation surfaces (tenant + control-plane)
+import { EscalationsPanel } from './components/Tenant/EscalationsPanel';
+import { EscalationOversight } from './components/ControlPlane/EscalationOversight';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -71,7 +74,8 @@ const App: React.FC = () => {
   // RCP-1 TECS 3: sub-view for EXPERIENCE Orders panel (OPS-EXPERIENCE-ORDERS-UX-001)
   // G-025 TECS 4D: 'DPP' added for DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
   // TECS-FBW-003-A: 'ESCROW' added for tenant escrow read panel (G-018)
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW'>('HOME');
+  // TECS-FBW-006-A: 'ESCALATIONS' added for tenant escalation read panel (G-022)
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -548,6 +552,8 @@ const App: React.FC = () => {
     if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-003-A: G-018 tenant escrow read surface (D-020-B: no balance; D-017-A: no tenantId in body)
     if (expView === 'ESCROW') return <EscrowPanel onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-006-A: G-022 tenant escalation read surface (read-only; D-017-A compliant)
+    if (expView === 'ESCALATIONS') return <EscalationsPanel onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -948,6 +954,9 @@ const App: React.FC = () => {
         return <DisputeCases />;
       case 'TRADES':
         return <TradeOversight />;
+      // TECS-FBW-006-A: G-022 control-plane escalation oversight (read-only; orgId-gated)
+      case 'ESCALATIONS':
+        return <EscalationOversight />;
       case 'RBAC':
         return <AdminRBAC />;
       case 'API_DOCS':
@@ -1185,6 +1194,8 @@ const App: React.FC = () => {
           onNavigateOrders: () => setExpView('ORDERS'),
           onNavigateDpp: () => setExpView('DPP'),
           onNavigateEscrow: () => setExpView('ESCROW'),
+          // TECS-FBW-006-A: G-022 tenant escalation read panel (read-only)
+          onNavigateEscalations: () => setExpView('ESCALATIONS'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {

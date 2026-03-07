@@ -676,6 +676,73 @@ export async function listTrades(params?: TradesQueryParams): Promise<TradesResp
   return adminGet<TradesResponse>(endpoint);
 }
 
+// ==================== G-022 ESCALATIONS (TECS-FBW-006-A) ====================
+
+/**
+ * Control-plane escalation event as returned by GET /api/control/escalations.
+ * Fields mirror EscalationEventRow from server/src/services/escalation.types.ts.
+ * Dates are serialised as ISO 8601 strings over JSON.
+ *
+ * GET requires mandatory orgId query param — admin must specify the target org.
+ * D-022-C: freezeRecommendation is informational only; no kill-switch auto-toggle.
+ */
+export interface ControlPlaneEscalationEvent {
+  id: string;
+  orgId: string;
+  entityType: string;
+  entityId: string;
+  parentEscalationId: string | null;
+  source: string;
+  /** Severity 0–4. D-022-A: strictly monotonic via service + DB trigger. */
+  severityLevel: number;
+  /** Informational flag — does NOT auto-toggle kill switch (D-022-C). */
+  freezeRecommendation: boolean;
+  triggeredByActorType: string;
+  triggeredByPrincipal: string;
+  reason: string;
+  /** 'OPEN' | 'RESOLVED' | 'OVERRIDDEN' */
+  status: string;
+  resolvedByPrincipal: string | null;
+  resolutionReason: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+export interface EscalationsQueryParams {
+  entityType?: string;
+  entityId?: string;
+  status?: string;
+  limit?: number;
+}
+
+export interface EscalationsListResponse {
+  escalations: ControlPlaneEscalationEvent[];
+  count: number;
+}
+
+/**
+ * List G-022 escalation events for a specified organisation (admin cross-org read).
+ * Route: GET /api/control/escalations
+ *
+ * orgId is mandatory — the endpoint returns 400 if absent (RLS scope boundary).
+ * All other params are optional filters passed as URL query parameters.
+ *
+ * Read-only in TECS-FBW-006-A. Mutation endpoints (create, upgrade, resolve,
+ * override) are out of scope for this unit.
+ */
+export async function getEscalations(
+  orgId: string,
+  params?: EscalationsQueryParams,
+): Promise<EscalationsListResponse> {
+  const queryParams = new URLSearchParams({ orgId });
+  if (params?.entityType) queryParams.set('entityType', params.entityType);
+  if (params?.entityId)   queryParams.set('entityId',   params.entityId);
+  if (params?.status)     queryParams.set('status',     params.status);
+  if (params?.limit !== undefined) queryParams.set('limit', String(params.limit));
+
+  return adminGet<EscalationsListResponse>(`/api/control/escalations?${queryParams.toString()}`);
+}
+
 // ==================== SYSTEM HEALTH ====================
 
 export interface HealthService {

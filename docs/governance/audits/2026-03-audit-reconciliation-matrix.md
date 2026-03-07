@@ -101,15 +101,15 @@ Evidence references are quoted from the source document using section + short an
 
 ---
 
-**TECS-FBW-006 — G-022 Escalations Frontend Absent + Control Plane Misrouted**
+**TECS-FBW-006 — G-022 Escalations Frontend Absent [control-plane misrouting claim disproved]**
 
 | Attribute | Codex Evidence | Copilot Evidence |
 |---|---|---|
 | Source section | §5.2 "escalations/traceability" | §4 F-006 "G-022 Escalation — Backend Complete, Zero Tenant Frontend; Control Plane Wired to Wrong Endpoint" |
 | Key anchor | "no frontend consumers found" | "DisputeCases.tsx is wired to getDisputes() → GET /api/control/disputes … not /api/control/escalations" |
-| Overlap notes | Copilot adds specific misrouting detail (disputes≠escalations) not explicitly stated by Codex; substance is the same gap |
+| Overlap notes | Copilot adds specific misrouting detail (disputes≠escalations) not explicitly stated by Codex; substance is the same gap. **CORRECTION (GOVERNANCE-SYNC-112, 2026-03-07): The "misrouting" claim was disproved during pre-implementation verification. DisputeCases.tsx correctly calls GET /api/control/disputes (event-log domain); disputes and escalation_events are structurally separate entities. DisputeCases.tsx was not misrouted and remained untouched throughout TECS-FBW-006-A.** |
 | Merged classification | `RECONFIRMED_BY_CODEX_AND_COPILOT` |
-| Merged status | `VALIDATED` |
+| Merged status | `TECS-FBW-006-A: ✅ CLOSED (GOVERNANCE-SYNC-112 · 2026-03-07); TECS-FBW-006-B: 🔵 FUTURE SCOPE (mutations: upgrade/resolve/override)` |
 | Confidence | HIGH |
 
 ---
@@ -392,7 +392,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-003 | G-018 Escrow Frontend | Escrow | §5.2 absent | F-002 absent | RECONFIRMED | TECS-FBW-003-A: ✅ CLOSED (GOVERNANCE-SYNC-111 · 2026-03-07); TECS-FBW-003-B: 🔵 FUTURE SCOPE (mutations + detail view) | HIGH | Wave 3 | Tenant read surface shipped; mutations + detail deferred to TECS-FBW-003-B |
 | TECS-FBW-004 | G-019 Settlements Frontend | Settlement | §5.2 absent | F-003 absent | RECONFIRMED | VALIDATED | HIGH | Wave 3 | |
 | TECS-FBW-005 | G-019 Certifications Frontend | Certification | §5.2 absent | F-004 absent | RECONFIRMED | VALIDATED | HIGH | Wave 4 | |
-| TECS-FBW-006 | G-022 Escalations Frontend + Misrouted | Escalation | §5.2 absent | F-006 absent+misrouted | RECONFIRMED | VALIDATED | HIGH | Wave 3 | Control plane uses disputes≠escalations |
+| TECS-FBW-006 | G-022 Escalations Frontend [misrouting disproved] | Escalation | §5.2 absent | F-006 absent+misrouted | RECONFIRMED | TECS-FBW-006-A: ✅ CLOSED (GOVERNANCE-SYNC-112 · 2026-03-07); TECS-FBW-006-B: 🔵 FUTURE SCOPE (mutations) | HIGH | Wave 3 | Read-only surfaces on both planes shipped; DisputeCases.tsx misrouting claim disproved — correctly calls disputes domain, unmodified |
 | TECS-FBW-007 | Cart Summaries Dead Service | Marketplace ops | §5.3 dead | F-007 dead | RECONFIRMED | VALIDATED | HIGH | Wave 4 | |
 | TECS-FBW-008 | WL Custom Domain Dead (EXPERIENCE) | White-label | §6.3 dead | F-013 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | HIGH | Wave 1 | Dead input+Connect removed; onNavigateDomains prop routes to WLDomainsPanel; WLDomainsPanel unchanged |
 | TECS-FBW-011 | Catalog basePrice vs price | Catalog display | §3 contract mismatch (low specificity) | F-012/CM-001 CRITICAL | NEW_IN_COPILOT | VALIDATED | HIGH | Wave 1 | $undefined.00 runtime bug — ship blocker |

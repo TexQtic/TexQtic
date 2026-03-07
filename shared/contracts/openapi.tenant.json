@@ -735,6 +735,120 @@
           }
         }
       }
+    },
+    "/api/tenant/escalations": {
+      "get": {
+        "summary": "List G-022 escalation events for the authenticated tenant (read-only)",
+        "description": "Returns escalation_events rows scoped to the authenticated tenant org. Tenant scope is derived from JWT claims (D-017-A — orgId never sent by client). Optional filters: entityType, entityId, status, limit. Read-only in TECS-FBW-006-A.",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["OPEN", "RESOLVED", "OVERRIDDEN"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Escalation list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "escalations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "orgId": { "type": "string", "format": "uuid" },
+                          "entityType": { "type": "string" },
+                          "entityId": { "type": "string", "format": "uuid" },
+                          "parentEscalationId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          },
+                          "source": { "type": "string" },
+                          "severityLevel": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4
+                          },
+                          "freezeRecommendation": { "type": "boolean" },
+                          "triggeredByActorType": { "type": "string" },
+                          "triggeredByPrincipal": { "type": "string" },
+                          "reason": { "type": "string" },
+                          "status": {
+                            "type": "string",
+                            "enum": ["OPEN", "RESOLVED", "OVERRIDDEN"]
+                          },
+                          "resolvedByPrincipal": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "resolutionReason": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "resolvedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing tenant JWT"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
