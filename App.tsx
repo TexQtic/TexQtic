@@ -16,6 +16,7 @@ import { WLCollectionsPanel } from './components/WhiteLabelAdmin/WLCollectionsPa
 import { WLDomainsPanel } from './components/WhiteLabelAdmin/WLDomainsPanel';
 import { EXPOrdersPanel } from './components/Tenant/EXPOrdersPanel';
 import { DPPPassport } from './components/Tenant/DPPPassport';
+import { EscrowPanel } from './components/Tenant/EscrowPanel';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -69,7 +70,8 @@ const App: React.FC = () => {
   const [wlAdminInviting, setWlAdminInviting] = useState(false);
   // RCP-1 TECS 3: sub-view for EXPERIENCE Orders panel (OPS-EXPERIENCE-ORDERS-UX-001)
   // G-025 TECS 4D: 'DPP' added for DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP'>('HOME');
+  // TECS-FBW-003-A: 'ESCROW' added for tenant escrow read panel (G-018)
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -544,6 +546,8 @@ const App: React.FC = () => {
     // G-025 TECS 4D: DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
     if (expView === 'DPP') return <DPPPassport onBack={() => setExpView('HOME')} />;
     if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-003-A: G-018 tenant escrow read surface (D-020-B: no balance; D-017-A: no tenantId in body)
+    if (expView === 'ESCROW') return <EscrowPanel onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -1180,6 +1184,7 @@ const App: React.FC = () => {
           onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
           onNavigateOrders: () => setExpView('ORDERS'),
           onNavigateDpp: () => setExpView('DPP'),
+          onNavigateEscrow: () => setExpView('ESCROW'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {

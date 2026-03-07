@@ -74,7 +74,7 @@ Evidence references are quoted from the source document using section + short an
 | Source section | §5.2 | §4 F-002 "G-018 Escrow — Backend Complete, Zero Frontend" |
 | Key anchor | "escrow.g018.ts … no frontend consumers" | "7 endpoints confirmed … Zero functions in services. Zero components" |
 | Merged classification | `RECONFIRMED_BY_CODEX_AND_COPILOT` |
-| Merged status | `VALIDATED` |
+| Merged status | `TECS-FBW-003-A: CLOSED (GOVERNANCE-SYNC-111 · 2026-03-07); TECS-FBW-003-B: FUTURE SCOPE (mutations + detail view)` |
 | Confidence | HIGH |
 
 ---
@@ -389,7 +389,7 @@ Evidence references are quoted from the source document using section + short an
 |---|---|---|---|---|---|---|---|---|---|
 | TECS-FBW-001 | Finance/Compliance/Dispute Mutations | Admin authority | §5.1 pending | F-009 absent | RECONFIRMED | Compliance: ✅ CLOSED (GOVERNANCE-SYNC-107 · 2026-03-07); Finance: ✅ CLOSED (GOVERNANCE-SYNC-108 · 2026-03-07); Disputes: ⏳ Pending | HIGH | Wave 2 | Finance slice: approvePayoutDecision+rejectPayoutDecision in controlPlaneService.ts; per-call Idempotency-Key via already-present adminPostWithHeaders; confirm dialog (reason-only, no notes) + per-row Actions column in FinanceOps.tsx; dialog copy 'Record Approval/Rejection Decision' — no money movement implied; typecheck+lint EXIT 0; DisputeCases remains pending |
 | TECS-FBW-002 | G-017 Trades Frontend | Trade lifecycle | §5.2 absent | F-001 absent | RECONFIRMED | TECS-FBW-002-A: ✅ CLOSED (GOVERNANCE-SYNC-110 · 2026-03-07); TECS-FBW-002-B: 🚫 BLOCKED (no GET /api/tenant/trades) | HIGH | Wave 3 | Control-plane read surface shipped; tenant panel blocked pending backend route |
-| TECS-FBW-003 | G-018 Escrow Frontend | Escrow | §5.2 absent | F-002 absent | RECONFIRMED | VALIDATED | HIGH | Wave 3 | |
+| TECS-FBW-003 | G-018 Escrow Frontend | Escrow | §5.2 absent | F-002 absent | RECONFIRMED | TECS-FBW-003-A: ✅ CLOSED (GOVERNANCE-SYNC-111 · 2026-03-07); TECS-FBW-003-B: 🔵 FUTURE SCOPE (mutations + detail view) | HIGH | Wave 3 | Tenant read surface shipped; mutations + detail deferred to TECS-FBW-003-B |
 | TECS-FBW-004 | G-019 Settlements Frontend | Settlement | §5.2 absent | F-003 absent | RECONFIRMED | VALIDATED | HIGH | Wave 3 | |
 | TECS-FBW-005 | G-019 Certifications Frontend | Certification | §5.2 absent | F-004 absent | RECONFIRMED | VALIDATED | HIGH | Wave 4 | |
 | TECS-FBW-006 | G-022 Escalations Frontend + Misrouted | Escalation | §5.2 absent | F-006 absent+misrouted | RECONFIRMED | VALIDATED | HIGH | Wave 3 | Control plane uses disputes≠escalations |
@@ -466,7 +466,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 (✅ CLOSED · 2026-03-06 · FAIL); VER-003 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001 | VER-001 closed (FAIL · PROV-001 promoted); VER-002 closed (FAIL · FBW-020 promoted); remaining VER items pending; governance-only; no product code |
 | Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice ✅ CLOSED · GOVERNANCE-SYNC-096); TECS-FBW-PROV-001 (✅ CLOSED · GOVERNANCE-SYNC-099 · 2026-03-06); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
 | Wave 2 — Backend-Complete Ops Mutations | TECS-FBW-001 (finance/compliance/dispute mutations) | RECONFIRMED; backend verified; additive frontend only |
-| Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002-A (trades control-plane ✅ CLOSED · GOVERNANCE-SYNC-110); TECS-FBW-002-B (trades tenant 🚫 BLOCKED — no GET /api/tenant/trades backend route); TECS-FBW-003 (escrow); TECS-FBW-006 (escalations + control-plane misrouting) | RECONFIRMED; high governance impact |
+| Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002-A (trades control-plane ✅ CLOSED · GOVERNANCE-SYNC-110); TECS-FBW-002-B (trades tenant 🚫 BLOCKED — no GET /api/tenant/trades backend route); TECS-FBW-003-A (escrow tenant read ✅ CLOSED · GOVERNANCE-SYNC-111); TECS-FBW-003-B (escrow mutations 🔵 FUTURE SCOPE); TECS-FBW-006 (escalations + control-plane misrouting) | RECONFIRMED; high governance impact |
 | Wave 4 — Extended Exposure | TECS-FBW-004 (settlements); TECS-FBW-005 (certifications); TECS-FBW-015 (traceability CRUD); TECS-FBW-007 (cart summaries); TECS-FBW-016 (tenant audit logs) | RECONFIRMED/PROVISIONAL; lower urgency |
 | Wave 5 — Design-Required | TECS-FBW-012 (edit access); TECS-FBW-ADMINRBAC; TECS-FBW-AIGOVERNANCE; TECS-FBW-013 (B2B quote); TECS-FBW-AUTH-001 (if confirmed as backend design need) | REQUIRES_BACKEND_DESIGN or DEFERRED |
 

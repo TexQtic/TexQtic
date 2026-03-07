@@ -636,6 +636,105 @@
           "200": { "description": "AI service status" }
         }
       }
+    },
+    "/api/tenant/escrows": {
+      "get": {
+        "summary": "List tenant escrow accounts (read-only)",
+        "description": "Returns the authenticated tenant's escrow accounts. Tenant scope is derived from JWT claims (orgId) — tenantId is never sent by the client (D-017-A). Balance is NOT included in the list response; use GET /api/tenant/escrows/:escrowId for derived balance (D-020-B). TECS-FBW-003-A (2026-03-07).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Maximum number of escrow accounts to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 0, "default": 0 },
+            "description": "Pagination offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Escrow accounts list. No balance field (D-020-B).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "escrows": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "tenantId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "currency": {
+                                "type": "string",
+                                "description": "ISO 4217 3-letter currency code"
+                              },
+                              "lifecycleStateId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "lifecycleStateKey": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Human-readable state key e.g. DRAFT | ACTIVE | SETTLED | CLOSED | DISPUTED"
+                              },
+                              "createdByUserId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        },
+                        "count": { "type": "integer" },
+                        "limit": { "type": "integer" },
+                        "offset": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing tenant JWT"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
