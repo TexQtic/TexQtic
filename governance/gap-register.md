@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-06 (GOVERNANCE-SYNC-101 — TECS-FBW-020 → ✅ CLOSED (implemented: wlAdminInviting bool substate in App.tsx; renderWLAdminContent() early-returns InviteMemberForm in-shell when wlAdminInviting=true; STAFF case calls setWlAdminInviting(true) instead of setAppState('INVITE_MEMBER'); onViewChange resets wlAdminInviting on nav; appState===WL_ADMIN preserved throughout — WhiteLabelAdminShell never drops; EXPERIENCE invite flow unchanged; Shells.tsx untouched; typecheck EXIT 0; lint EXIT 0; App.tsx only; all acceptance criteria met; GOVERNANCE-SYNC-101)
+Last Updated: 2026-03-07 (GOVERNANCE-SYNC-102 — TECS-FBW-014 → ✅ CLOSED (implemented: ORDER_CONFIRMED appState added to App.tsx union; confirmedOrderId state stores orderId from checkout result; Cart.tsx onCheckoutSuccess optional prop propagates CheckoutResult to App-level; on checkout success setConfirmedOrderId(result.orderId) + setShowCart(false) + setAppState('ORDER_CONFIRMED'); ORDER_CONFIRMED case renders full-screen confirmation with orderId, View My Orders → expView='ORDERS' + EXPERIENCE, Continue Shopping → expView='HOME' + EXPERIENCE; in-cart local confirmation preserved as fallback (backward-compat); typecheck EXIT 0; lint EXIT 0; App.tsx + components/Cart/Cart.tsx; GOVERNANCE-SYNC-102)
+(GOVERNANCE-SYNC-101 — TECS-FBW-020 → ✅ CLOSED (implemented: wlAdminInviting bool substate in App.tsx; renderWLAdminContent() early-returns InviteMemberForm in-shell when wlAdminInviting=true; STAFF case calls setWlAdminInviting(true) instead of setAppState('INVITE_MEMBER'); onViewChange resets wlAdminInviting on nav; appState===WL_ADMIN preserved throughout — WhiteLabelAdminShell never drops; EXPERIENCE invite flow unchanged; Shells.tsx untouched; typecheck EXIT 0; lint EXIT 0; App.tsx only; all acceptance criteria met; GOVERNANCE-SYNC-101)
 (GOVERNANCE-SYNC-100 — VER-002 → ✅ CLOSED (read-only verification; TECS-FBW-020 confirmed FAIL — INVITE_MEMBER appState set from WL_ADMIN STAFF panel routes into EXPERIENCE case group in App.tsx main switch; WhiteLabelShell renders instead of WhiteLabelAdminShell; onBack sets TEAM_MGMT which also routes through EXPERIENCE group — WL Admin chrome permanently lost; no code modified; VER-002 evidence: App.tsx lines 1100/1143; renderWLAdminContent line 398; renderExperienceContent lines 528-529; TECS-FBW-020 → VALIDATED + Wave 1; ARCHITECTURE-GOVERNANCE.md updated with Atomic Change Envelope Rule + Envelope Precedence Rule; GOVERNANCE-SYNC-100)
 (GOVERNANCE-SYNC-099 — TECS-FBW-PROV-001 → ✅ CLOSED (implemented: ProvisionTenantRequest {orgName,primaryAdminEmail,primaryAdminPassword}; ProvisionTenantResponse flat {orgId,slug,userId,membershipId}; TenantRegistry.tsx call site + response consumption aligned; tenantProvision.ts stale /api/admin → /api/control comments fixed (doc-only); typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-099)
 (GOVERNANCE-SYNC-098 — VER-001 → ✅ CLOSED (read-only verification; TECS-FBW-PROV-001 confirmed FAIL — field-level contract mismatch: frontend sends {name,slug,type,ownerEmail,ownerPassword}, backend Zod expects {orgName,primaryAdminEmail,primaryAdminPassword}; backend returns flat {orgId,slug,userId,membershipId}, frontend ProvisionTenantResponse expects nested {tenant:{id,name,slug,type,status},owner:{id,email}}; runtime: deterministic HTTP 400 on every provisionTenant() call; Codex §4.1 confirmed correct; Copilot §3 "Wired" superseded by field-level inspection; TECS-FBW-PROV-001 → VALIDATED + Wave 1; no code modified; GOVERNANCE-SYNC-098)
@@ -766,7 +767,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-LINT-001 | middleware.ts Edge Runtime globals — root lint gate | N/A (repo-gate item) | LOW | CLOSED | Immediate |
 | TECS-FBW-012 | TeamManagement Edit Access Dead Button | BOTH | MEDIUM | VALIDATED | Wave 5 |
 | TECS-FBW-013 | B2B Request Quote Dead | COPILOT | LOW | DEFERRED | Wave 5 |
-| TECS-FBW-014 | Post-Checkout No Confirmation State | COPILOT | MEDIUM | PROVISIONAL | Wave 1 |
+| TECS-FBW-014 | Post-Checkout No Confirmation State | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | Wave 1 |
 | TECS-FBW-015 | G-016 Traceability CRUD Frontend Absent | BOTH | HIGH | VALIDATED | Wave 4 |
 | TECS-FBW-016 | Tenant Audit Logs UI Absent | COPILOT | MEDIUM | PROVISIONAL | Wave 4 |
 | TECS-FBW-017 | CatalogItem.category Grouping May Fail | COPILOT | LOW | PROVISIONAL | Wave 1 |
@@ -877,9 +878,22 @@ Source: NEW_IN_COPILOT · Severity: LOW · Status: DEFERRED (DEFERRED_BY_DOCTRIN
 No backend quote endpoint; B2B quote flow is a future phase item. Keep UI in disabled/hidden state pending product decision.
 
 **TECS-FBW-014 — Post-Checkout No Order Confirmation State**  
-Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: PROVISIONAL · Wave: 1  
-Root cause: checkout() POSTs to /api/tenant/checkout and receives {orderId, message}; App.tsx closes cart and returns to EXPERIENCE view; orderId is discarded; no ORDER_CONFIRMATION AppState exists.  
-Next action: Add ORDER_CONFIRMED to AppState; render orderId on success; navigation path to orders panel.
+Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: ✅ CLOSED · Wave: 1  
+Implementation: GOVERNANCE-SYNC-102 · 2026-03-07 · typecheck EXIT 0 · lint EXIT 0  
+Files changed: App.tsx + components/Cart/Cart.tsx (SAME-UNIT NECESSARY EXPANSION)  
+Fix: Added `ORDER_CONFIRMED` to `appState` union type in App.tsx. Added `confirmedOrderId: string | null` state. Cart.tsx gained optional `onCheckoutSuccess?: (result: CheckoutResult) => void` prop — when provided, checkout success is propagated to App-level instead of local in-cart confirmation (fallback behavior preserved when prop omitted). On checkout success, App.tsx stores `result.orderId` in `confirmedOrderId`, closes the cart overlay, and transitions `appState` to `ORDER_CONFIRMED`. `ORDER_CONFIRMED` case in `renderCurrentState()` renders a full-screen centered confirmation page (orderId first 8 chars, status note, grand total) with two navigation paths: “View My Orders” (→ setExpView(‘ORDERS’) + setAppState(‘EXPERIENCE’)) and “Continue Shopping” (→ setExpView(‘HOME’) + setAppState(‘EXPERIENCE’)).  
+Acceptance criteria: ALL MET  
+  ✅ Successful checkout no longer silently discards orderId  
+  ✅ ORDER_CONFIRMED state exists and is reachable from checkout success path  
+  ✅ Confirmation UI renders after successful checkout  
+  ✅ orderId preserved in confirmedOrderId state for display  
+  ✅ View My Orders and Continue Shopping navigation paths defined; user not stranded  
+  ✅ Existing non-WL and non-checkout flows compile and remain intact  
+  ✅ typecheck EXIT 0  
+  ✅ lint EXIT 0  
+  ✅ diff narrow and auditable (2 files only: App.tsx + Cart.tsx expansion)  
+  ✅ no unrelated checkout or order flow refactor occurred  
+Residual follow-up: None.
 
 **TECS-FBW-015 — G-016 Traceability CRUD Frontend Absent**  
 Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: HIGH · Status: VALIDATED · Wave: 4  

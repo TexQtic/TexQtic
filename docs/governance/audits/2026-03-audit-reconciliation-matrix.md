@@ -396,7 +396,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-011 | Catalog basePrice vs price | Catalog display | §3 contract mismatch (low specificity) | F-012/CM-001 CRITICAL | NEW_IN_COPILOT | VALIDATED | HIGH | Wave 1 | $undefined.00 runtime bug — ship blocker |
 | TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | VALIDATED | HIGH | Wave 5 | Confirmed by Q2 tracker §12.3 |
 | TECS-FBW-013 | B2B Request Quote Dead | B2B commerce | §10 uncertain | F-015 / S-003 | NEW_IN_COPILOT | DEFERRED | MEDIUM | Wave 5 | Product decision pending |
-| TECS-FBW-014 | Post-Checkout Missing Confirm | Commerce UX | Not inspected | F-016 | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 1 | |
+| TECS-FBW-014 | Post-Checkout Missing Confirm | Commerce UX | Not inspected | F-016 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | HIGH | Wave 1 | App.tsx ORDER_CONFIRMED appState; Cart.tsx onCheckoutSuccess prop (SAME-UNIT EXPANSION); typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-015 | G-016 Traceability CRUD | Supply chain | §5.2 absent | F-005 absent | RECONFIRMED | VALIDATED | HIGH | Wave 4 | DPP snapshot only ≠ CRUD surface |
 | TECS-FBW-016 | Tenant Audit Logs UI Absent | Audit | §3 table | Sect.5 table | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 4 | |
 | TECS-FBW-017 | CatalogItem.category Grouping | WL Collections | Not identified | CM-002 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | |

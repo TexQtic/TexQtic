@@ -56,6 +56,8 @@ const App: React.FC = () => {
     | 'SETTINGS'
     | 'CONTROL_PLANE'
     | 'WL_ADMIN'
+    // TECS-FBW-014: post-checkout confirmation state
+    | 'ORDER_CONFIRMED'
   >('AUTH');
   const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
   // Wave 4 P1: active panel in the WL Store Admin console
@@ -102,6 +104,8 @@ const App: React.FC = () => {
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [showCart, setShowCart] = useState(false);
+  // TECS-FBW-014: stores orderId from successful checkout for ORDER_CONFIRMED display
+  const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null);
 
   // RU-001: pending invite token (set when ?action=invite is detected in URL)
   const [pendingInviteToken, setPendingInviteToken] = useState<string | null>(null);
@@ -1216,7 +1220,12 @@ const App: React.FC = () => {
                     </button>
                   </div>
                   <div className="h-[calc(100%-5rem)] overflow-y-auto">
-                    <Cart />
+                    {/* TECS-FBW-014: propagate checkout success to App-level ORDER_CONFIRMED state */}
+                    <Cart onCheckoutSuccess={(result) => {
+                      setConfirmedOrderId(result.orderId);
+                      setShowCart(false);
+                      setAppState('ORDER_CONFIRMED');
+                    }} />
                   </div>
                 </div>
               </div>
@@ -1224,6 +1233,53 @@ const App: React.FC = () => {
           </CartProvider>
         );
       }
+      // TECS-FBW-014: post-checkout confirmation — rendered after successful checkout.
+      // appState stays ORDER_CONFIRMED until user navigates away; orderId preserved in confirmedOrderId.
+      case 'ORDER_CONFIRMED':
+        return (
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 max-w-md w-full text-center space-y-6">
+              <div className="text-5xl">✅</div>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-slate-900">Order Placed!</h1>
+                {confirmedOrderId && (
+                  <p className="text-sm text-slate-500">
+                    Order{' '}
+                    <span className="font-mono font-bold text-slate-700">
+                      {confirmedOrderId.slice(0, 8)}…
+                    </span>{' '}
+                    has been received.
+                  </p>
+                )}
+                <p className="text-xs text-slate-400">
+                  You’ll receive a confirmation once it’s confirmed.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setExpView('ORDERS');
+                    setConfirmedOrderId(null);
+                    setAppState('EXPERIENCE');
+                  }}
+                  className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition"
+                >
+                  View My Orders
+                </button>
+                <button
+                  onClick={() => {
+                    setExpView('HOME');
+                    setConfirmedOrderId(null);
+                    setAppState('EXPERIENCE');
+                  }}
+                  className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return <div>Invalid System State</div>;
     }

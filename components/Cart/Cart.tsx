@@ -11,7 +11,13 @@ import { EmptyState, ErrorState, CartItemSkeleton } from '../shared';
 import { APIError, type ApiError } from '../../services/apiClient';
 import { checkout, type CheckoutResult } from '../../services/cartService';
 
-export const Cart: React.FC = () => {
+export const Cart: React.FC<{
+  /** TECS-FBW-014: optional callback for App-level ORDER_CONFIRMED transition.
+   * When provided, checkout success is propagated to the caller instead of
+   * rendering the in-cart local confirmation. Falls back to local confirmation
+   * if omitted (preserves backward compatibility). */
+  onCheckoutSuccess?: (result: CheckoutResult) => void;
+}> = ({ onCheckoutSuccess }) => {
   const { cart, loading, error, itemCount, subtotal, updateQuantity, removeItem, refreshCart } = useCart();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -80,7 +86,13 @@ export const Cart: React.FC = () => {
     setErrorMessage(null);
     try {
       const result = await checkout();
-      setOrderConfirmation(result);
+      if (onCheckoutSuccess) {
+        // App-level handling: parent transitions to ORDER_CONFIRMED state.
+        onCheckoutSuccess(result);
+      } else {
+        // In-cart fallback: show local confirmation panel.
+        setOrderConfirmation(result);
+      }
       // Refresh cart so it reflects the CHECKED_OUT status (cart will be empty/null)
       await refreshCart();
     } catch (err) {
