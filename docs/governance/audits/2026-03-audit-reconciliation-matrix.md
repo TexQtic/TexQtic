@@ -235,8 +235,9 @@ Evidence references are quoted from the source document using section + short an
 | Source section | §7 CM-002 | Not identified |
 | Key anchor | "CatalogItem.category field is typed as category?: string (optional)" | Not inspected |
 | Merged classification | `NEW_IN_COPILOT` |
-| Merged status | `PROVISIONAL` |
-| Confidence | MEDIUM |
+| Merged status | `✅ CLOSED — GOVERNANCE-SYNC-105 · 2026-03-07` |
+| Confidence | HIGH |
+| Resolution | Governance-only closeout. Copilot-projected risk already satisfied by WLCollectionsPanel.tsx shipped in GOVERNANCE-SYNC-066: (item.category ?? ‘’).trim() \|\| UNCATEGORISED. No code change made. |
 
 ---
 
