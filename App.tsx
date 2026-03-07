@@ -403,7 +403,8 @@ const App: React.FC = () => {
     // TECS-FBW-020: render InviteMemberForm in-shell; onBack returns to STAFF without leaving WL_ADMIN.
     if (wlAdminInviting) return <InviteMemberForm onBack={() => setWlAdminInviting(false)} />;
     switch (wlAdminView) {
-      case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} />;
+      // TECS-FBW-008: pass onNavigateDomains so WL Settings routes to real Domains panel
+      case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
       case 'STAFF':       return <TeamManagement onInvite={() => setWlAdminInviting(true)} />;
       case 'PRODUCTS': return (
         <div className="space-y-6 animate-in fade-in duration-500">

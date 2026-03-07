@@ -3,7 +3,14 @@ import { TenantConfig } from '../../types';
 import { updateBranding } from '../../services/tenantService';
 import { APIError } from '../../services/apiClient';
 
-export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant }) => {
+export const WhiteLabelSettings: React.FC<{
+  tenant: TenantConfig;
+  /** TECS-FBW-008: optional callback to navigate to the real Domains panel.
+   * When provided (WL_ADMIN BRANDING context), a "Manage Custom Domains" button is shown.
+   * When absent (EXPERIENCE SETTINGS context), a static informational note is shown.
+   * In both cases the dead non-wired Connect input is removed. */
+  onNavigateDomains?: () => void;
+}> = ({ tenant, onNavigateDomains }) => {
   const [primaryColor, setPrimaryColor] = useState(tenant.theme.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState(tenant.theme.secondaryColor);
   const [logoUrl, setLogoUrl] = useState(
@@ -50,28 +57,30 @@ export const WhiteLabelSettings: React.FC<{ tenant: TenantConfig }> = ({ tenant 
         <div className="md:col-span-2 space-y-6">
           <section className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
             <h3 className="font-bold text-slate-900">Custom Domain</h3>
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
-                  placeholder="shop.yourbrand.com"
-                  aria-label="Custom domain"
-                />
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
-                  Connect
+            {onNavigateDomains ? (
+              /* WL_ADMIN BRANDING context: route to the real Domains panel */
+              <div className="space-y-3">
+                <p className="text-sm text-slate-500">
+                  Add and verify custom domains for your storefront. Manage DNS records and
+                  domain verification in the Domains panel.
+                </p>
+                <button
+                  onClick={onNavigateDomains}
+                  className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition"
+                >
+                  Manage Custom Domains →
                 </button>
               </div>
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Required DNS Records
-                </div>
-                <div className="font-mono text-[11px] text-slate-600 flex justify-between">
-                  <span>Type: CNAME</span>
-                  <span>Value: proxy.texqtic.com</span>
-                </div>
+            ) : (
+              /* EXPERIENCE SETTINGS context: informational only; no dead CTA */
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <p className="text-sm text-slate-500">
+                  Custom domain management is available in the{' '}
+                  <span className="font-semibold text-slate-700">White Label Admin</span> panel
+                  under Domains. Contact your account owner if you need access.
+                </p>
               </div>
-            </div>
+            )}
           </section>
 
           <section className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6">

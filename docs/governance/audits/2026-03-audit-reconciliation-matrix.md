@@ -393,7 +393,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-005 | G-019 Certifications Frontend | Certification | §5.2 absent | F-004 absent | RECONFIRMED | VALIDATED | HIGH | Wave 4 | |
 | TECS-FBW-006 | G-022 Escalations Frontend + Misrouted | Escalation | §5.2 absent | F-006 absent+misrouted | RECONFIRMED | VALIDATED | HIGH | Wave 3 | Control plane uses disputes≠escalations |
 | TECS-FBW-007 | Cart Summaries Dead Service | Marketplace ops | §5.3 dead | F-007 dead | RECONFIRMED | VALIDATED | HIGH | Wave 4 | |
-| TECS-FBW-008 | WL Custom Domain Dead (EXPERIENCE) | White-label | §6.3 dead | F-013 dead | RECONFIRMED | VALIDATED | HIGH | Wave 1 | WLDomainsPanel.tsx has real wiring (GOVERNANCE-SYNC-093); EXPERIENCE shell Settings card is the gap |
+| TECS-FBW-008 | WL Custom Domain Dead (EXPERIENCE) | White-label | §6.3 dead | F-013 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | HIGH | Wave 1 | Dead input+Connect removed; onNavigateDomains prop routes to WLDomainsPanel; WLDomainsPanel unchanged |
 | TECS-FBW-011 | Catalog basePrice vs price | Catalog display | §3 contract mismatch (low specificity) | F-012/CM-001 CRITICAL | NEW_IN_COPILOT | VALIDATED | HIGH | Wave 1 | $undefined.00 runtime bug — ship blocker |
 | TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | VALIDATED | HIGH | Wave 5 | Confirmed by Q2 tracker §12.3 |
 | TECS-FBW-013 | B2B Request Quote Dead | B2B commerce | §10 uncertain | F-015 / S-003 | NEW_IN_COPILOT | DEFERRED | MEDIUM | Wave 5 | Product decision pending |
