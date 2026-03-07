@@ -15,9 +15,9 @@
  *     4) PAYMENT_PENDING — lifecycleState === 'PAYMENT_PENDING' or order.status === 'PAYMENT_PENDING'
  *     5) PLACED     — fallback
  *
- * Role gate: EXPERIENCE users may manage orders through this panel.
- *   The server-side PATCH /api/tenant/orders/:id/status enforces OWNER/ADMIN role (B1/D-5).
- *   Client-side we show actions to all users and rely on the server gate.
+ * Role gate: OWNER / ADMIN only — matches PATCH /api/tenant/orders/:id/status backend gate (B1/D-5).
+ *   MEMBER / VIEWER users do not see status transition action buttons (TECS-FBW-AT-006).
+ *   `getCurrentUser()` is called alongside orders fetch; safe-fail defaults to null → buttons hidden.
  *
  * Data fetch: single GET /api/tenant/orders — orders enriched with lifecycleState +
  *   lifecycleLogs (newest-first, up to 5) by the B6a backend change.
@@ -28,6 +28,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { tenantGet, tenantPatch } from '../../services/tenantApiClient';
+import { getCurrentUser } from '../../services/authService';
 
 // ─── Local types (tenant API shapes) ────────────────────────────────────────────────────
 
@@ -212,6 +213,7 @@ function ConfirmDialogModal({
 
 export function EXPOrdersPanel({ onBack }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
@@ -225,12 +227,18 @@ export function EXPOrdersPanel({ onBack }: Props) {
 
   // Fetch orders — lifecycle state + logs are embedded in the response (B6a)
   // EXPERIENCE must not fetch audit-logs; canonical state comes from lifecycleState.
+  // TECS-FBW-AT-006: getCurrentUser() fetched in parallel for role-gating; safe-fail (.catch)
+  // ensures orders still load if /api/me is temporarily unavailable (role defaults to null → buttons hidden).
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const ordersRes = await tenantGet<OrdersResponse>('/api/tenant/orders');
+      const [ordersRes, meRes] = await Promise.all([
+        tenantGet<OrdersResponse>('/api/tenant/orders'),
+        getCurrentUser().catch(() => null),
+      ]);
       setOrders(ordersRes.orders);
+      setUserRole(meRes?.role ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
@@ -312,7 +320,10 @@ export function EXPOrdersPanel({ onBack }: Props) {
       )}
 
       {/* Orders table */}
-      {orders.length > 0 && (
+      {orders.length > 0 && (() => {
+        // TECS-FBW-AT-006: computed once per render; only OWNER / ADMIN may trigger transitions.
+        const canManageOrders = userRole === 'OWNER' || userRole === 'ADMIN';
+        return (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -354,7 +365,8 @@ export function EXPOrdersPanel({ onBack }: Props) {
                         if (isActing) {
                           return <span className="text-xs text-slate-400 italic">Processing…</span>;
                         }
-                        if (actions.length === 0) {
+                        // TECS-FBW-AT-006: terminal states or non-OWNER/ADMIN → no buttons.
+                        if (actions.length === 0 || !canManageOrders) {
                           return <span className="text-xs text-slate-300">—</span>;
                         }
                         return (
@@ -378,7 +390,8 @@ export function EXPOrdersPanel({ onBack }: Props) {
             </tbody>
           </table>
         </div>
-      )}
+        );
+      })()}
 
       {/* Confirmation dialog */}
       {confirmDialog && (
