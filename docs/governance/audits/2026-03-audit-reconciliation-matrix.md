@@ -283,8 +283,9 @@ Evidence references are quoted from the source document using section + short an
 | Source section | §11 P4.4 | Not identified |
 | Key anchor | "POST /api/tenant/cart/items returns 422 MOQ_NOT_MET. Add a user-facing error toast" | Not inspected |
 | Merged classification | `NEW_IN_COPILOT` |
-| Merged status | `PROVISIONAL` |
-| Confidence | MEDIUM |
+| Merged status | `✅ CLOSED — GOVERNANCE-SYNC-103 · 2026-03-07` |
+| Confidence | HIGH |
+| Resolution | B2CAddToCartButton (App.tsx): addError state; inline rose-600 error text; typecheck+lint EXIT 0 |
 
 ---
 
@@ -405,7 +406,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | ✅ CLOSED (GOVERNANCE-SYNC-101 · 2026-03-06) | MEDIUM | Wave 1 | App.tsx only; wlAdminInviting bool substate; typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | G-028 B1+ deferred |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend | Admin access | S-001 implied | F-010 / S-001 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | |
-| TECS-FBW-MOQ | MOQ_NOT_MET UX Gap | Cart | Not identified | §11 P4.4 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | 422 response not surfaced to user |
+| TECS-FBW-MOQ | MOQ_NOT_MET UX Gap | Cart | Not identified | §11 P4.4 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-103) | MEDIUM | Wave 1 | Inline error surfaced via addError state in B2CAddToCartButton |
 | TECS-FBW-OA-001 | OpenAPI Tenant Drift | Contract governance | §7.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
 | TECS-FBW-OA-002 | OpenAPI Control-Plane Drift | Contract governance | §7.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
 | TECS-FBW-AT-006 | Order Status UI Role Gating | Auth/UX | §8.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Non-admin sees PATCH buttons they'll be 403'd on |

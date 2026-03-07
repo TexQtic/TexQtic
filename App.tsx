@@ -990,26 +990,39 @@ const App: React.FC = () => {
   const B2CAddToCartButton: React.FC<{ product: CatalogItem }> = ({ product }) => {
     const { addToCart } = useCart();
     const [adding, setAdding] = useState(false);
+    // TECS-FBW-MOQ: surface add-to-cart errors (e.g. MOQ_NOT_MET 422) to user
+    const [addError, setAddError] = useState<string | null>(null);
 
     const handleAddToCart = async () => {
       setAdding(true);
+      setAddError(null);
       try {
         await addToCart(product.id, 1);
       } catch (error) {
         console.error('Failed to add to cart:', error);
+        if (error instanceof APIError) {
+          setAddError(error.message);
+        } else {
+          setAddError('Failed to add item. Please try again.');
+        }
       } finally {
         setAdding(false);
       }
     };
 
     return (
-      <button
-        onClick={handleAddToCart}
-        disabled={adding}
-        className="w-full mt-2 bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {adding ? 'Adding...' : 'Add to Cart'}
-      </button>
+      <div className="w-full">
+        <button
+          onClick={handleAddToCart}
+          disabled={adding}
+          className="w-full mt-2 bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {adding ? 'Adding...' : 'Add to Cart'}
+        </button>
+        {addError && (
+          <p className="mt-1 text-xs text-rose-600 font-medium">{addError}</p>
+        )}
+      </div>
     );
   };
 

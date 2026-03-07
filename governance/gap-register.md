@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-07 (GOVERNANCE-SYNC-102 — TECS-FBW-014 → ✅ CLOSED (implemented: ORDER_CONFIRMED appState added to App.tsx union; confirmedOrderId state stores orderId from checkout result; Cart.tsx onCheckoutSuccess optional prop propagates CheckoutResult to App-level; on checkout success setConfirmedOrderId(result.orderId) + setShowCart(false) + setAppState('ORDER_CONFIRMED'); ORDER_CONFIRMED case renders full-screen confirmation with orderId, View My Orders → expView='ORDERS' + EXPERIENCE, Continue Shopping → expView='HOME' + EXPERIENCE; in-cart local confirmation preserved as fallback (backward-compat); typecheck EXIT 0; lint EXIT 0; App.tsx + components/Cart/Cart.tsx; GOVERNANCE-SYNC-102)
+Last Updated: 2026-03-07 (GOVERNANCE-SYNC-103 — TECS-FBW-MOQ → ✅ CLOSED (implemented: B2CAddToCartButton in App.tsx — added addError: string|null state; setAddError(null) on each attempt; setAddError(err.message) on APIError catch, fallback message otherwise; inline <p> below button renders rose-600 error text to user; MOQ_NOT_MET 422 message surfaced directly from APIError.message (set by tenantPost 422 handler); success path unchanged; B2BAddToCartButton unchanged — shows Request Quote, no addToCart call; no CartContext.tsx change needed — context already re-throws; APIError already imported in App.tsx line 43; typecheck EXIT 0; lint EXIT 0; App.tsx only; GOVERNANCE-SYNC-103)
+(GOVERNANCE-SYNC-102 — TECS-FBW-014 → ✅ CLOSED (implemented: ORDER_CONFIRMED appState added to App.tsx union; confirmedOrderId state stores orderId from checkout result; Cart.tsx onCheckoutSuccess optional prop propagates CheckoutResult to App-level; on checkout success setConfirmedOrderId(result.orderId) + setShowCart(false) + setAppState('ORDER_CONFIRMED'); ORDER_CONFIRMED case renders full-screen confirmation with orderId, View My Orders → expView='ORDERS' + EXPERIENCE, Continue Shopping → expView='HOME' + EXPERIENCE; in-cart local confirmation preserved as fallback (backward-compat); typecheck EXIT 0; lint EXIT 0; App.tsx + components/Cart/Cart.tsx; GOVERNANCE-SYNC-102)
 (GOVERNANCE-SYNC-101 — TECS-FBW-020 → ✅ CLOSED (implemented: wlAdminInviting bool substate in App.tsx; renderWLAdminContent() early-returns InviteMemberForm in-shell when wlAdminInviting=true; STAFF case calls setWlAdminInviting(true) instead of setAppState('INVITE_MEMBER'); onViewChange resets wlAdminInviting on nav; appState===WL_ADMIN preserved throughout — WhiteLabelAdminShell never drops; EXPERIENCE invite flow unchanged; Shells.tsx untouched; typecheck EXIT 0; lint EXIT 0; App.tsx only; all acceptance criteria met; GOVERNANCE-SYNC-101)
 (GOVERNANCE-SYNC-100 — VER-002 → ✅ CLOSED (read-only verification; TECS-FBW-020 confirmed FAIL — INVITE_MEMBER appState set from WL_ADMIN STAFF panel routes into EXPERIENCE case group in App.tsx main switch; WhiteLabelShell renders instead of WhiteLabelAdminShell; onBack sets TEAM_MGMT which also routes through EXPERIENCE group — WL Admin chrome permanently lost; no code modified; VER-002 evidence: App.tsx lines 1100/1143; renderWLAdminContent line 398; renderExperienceContent lines 528-529; TECS-FBW-020 → VALIDATED + Wave 1; ARCHITECTURE-GOVERNANCE.md updated with Atomic Change Envelope Rule + Envelope Precedence Rule; GOVERNANCE-SYNC-100)
 (GOVERNANCE-SYNC-099 — TECS-FBW-PROV-001 → ✅ CLOSED (implemented: ProvisionTenantRequest {orgName,primaryAdminEmail,primaryAdminPassword}; ProvisionTenantResponse flat {orgId,slug,userId,membershipId}; TenantRegistry.tsx call site + response consumption aligned; tenantProvision.ts stale /api/admin → /api/control comments fixed (doc-only); typecheck EXIT 0; lint EXIT 0; GOVERNANCE-SYNC-099)
@@ -776,7 +777,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-020 | WL Admin Invite Shell Routing | CODEX | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-101 · 2026-03-06) | Wave 1 |
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
-| TECS-FBW-MOQ | MOQ_NOT_MET 422 UX Gap | COPILOT | MEDIUM | PROVISIONAL | Wave 1 |
+| TECS-FBW-MOQ | MOQ_NOT_MET 422 UX Gap | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-103 · 2026-03-07) | Wave 1 |
 | TECS-FBW-OA-001 | OpenAPI Tenant Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
 | TECS-FBW-OA-002 | OpenAPI Control-Plane Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
 | TECS-FBW-AT-006 | Order Status UI Role Gating | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
@@ -949,9 +950,9 @@ Finding: AdminRBAC.tsx "Invite Admin" and "Revoke" buttons have no onClick; no /
 Security note: Absence of auditable admin provisioning is a product gap and security posture concern. Not a wiring gap — requires backend route design.
 
 **TECS-FBW-MOQ — MOQ_NOT_MET 422 UX Gap**  
-Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: PROVISIONAL · Wave: 1  
-Finding: POST /api/tenant/cart/items returns 422 MOQ_NOT_MET; frontend has no error toast or inline message.  
-Next action: Add error handling for 422 MOQ_NOT_MET in cart service; surface user-facing message.
+Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: ✅ CLOSED (GOVERNANCE-SYNC-103 · 2026-03-07) · Wave: 1  
+Finding: POST /api/tenant/cart/items returns 422 MOQ_NOT_MET; frontend had no error toast or inline message.  
+Resolution: B2CAddToCartButton (App.tsx) — addError state added; APIError.message surfaced inline below button in rose-600 text; error cleared on each new attempt; success path unchanged. App.tsx only. typecheck EXIT 0; lint EXIT 0.
 
 **TECS-FBW-OA-001 — OpenAPI Tenant Contract Drift**  
 Source: NEW_IN_CODEX · Severity: HIGH · Status: VERIFY_REQUIRED · Wave: 0 (inventory); fix per implementing wave  
