@@ -381,6 +381,65 @@ export async function getPayouts(): Promise<PayoutsResponse> {
   return adminGet<PayoutsResponse>('/api/control/finance/payouts');
 }
 
+// ==================== FINANCE AUTHORITY MUTATIONS ====================
+
+/**
+ * Request body for finance payout authority actions (approve or reject).
+ * TECS-FBW-001 (Finance sub-unit, 2026-03-07):
+ * Aligned to backend Zod schema { reason?: string }.
+ * NOTE: Finance body is simpler than compliance — no notes field.
+ */
+export interface FinanceAuthorityBody {
+  reason?: string;
+}
+
+export interface FinanceAuthorityResponse {
+  id: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Record an approval decision for a payout.
+ * TECS-FBW-001 (Finance sub-unit, 2026-03-07)
+ * Route: POST /api/control/finance/payouts/:payout_id/approve
+ * Requires Idempotency-Key — caller generates UUID before opening dialog.
+ * Both 200 (replay) and 201 (created) are treated as success.
+ * SUPER_ADMIN-only — non-SUPER_ADMIN receives 403 surfaced as inline dialog error.
+ * Does NOT execute a payout — records an authority decision event only.
+ */
+export async function approvePayoutDecision(
+  payoutId: string,
+  body: FinanceAuthorityBody,
+  idempotencyKey: string
+): Promise<FinanceAuthorityResponse> {
+  return adminPostWithHeaders<FinanceAuthorityResponse>(
+    `/api/control/finance/payouts/${payoutId}/approve`,
+    body,
+    { 'Idempotency-Key': idempotencyKey }
+  );
+}
+
+/**
+ * Record a rejection decision for a payout.
+ * TECS-FBW-001 (Finance sub-unit, 2026-03-07)
+ * Route: POST /api/control/finance/payouts/:payout_id/reject
+ * Requires Idempotency-Key — caller generates UUID before opening dialog.
+ * Both 200 (replay) and 201 (created) are treated as success.
+ * SUPER_ADMIN-only — non-SUPER_ADMIN receives 403 surfaced as inline dialog error.
+ * Does NOT reverse or cancel a payout — records an authority decision event only.
+ */
+export async function rejectPayoutDecision(
+  payoutId: string,
+  body: FinanceAuthorityBody,
+  idempotencyKey: string
+): Promise<FinanceAuthorityResponse> {
+  return adminPostWithHeaders<FinanceAuthorityResponse>(
+    `/api/control/finance/payouts/${payoutId}/reject`,
+    body,
+    { 'Idempotency-Key': idempotencyKey }
+  );
+}
+
 // ==================== COMPLIANCE OPERATIONS ====================
 
 export interface ComplianceDecision {
