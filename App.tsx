@@ -20,6 +20,8 @@ import { EscrowPanel } from './components/Tenant/EscrowPanel';
 // TECS-FBW-006-A: G-022 read-only escalation surfaces (tenant + control-plane)
 import { EscalationsPanel } from './components/Tenant/EscalationsPanel';
 import { EscalationOversight } from './components/ControlPlane/EscalationOversight';
+// TECS-FBW-004: G-019 tenant settlement preview-confirm flow
+import { SettlementPreview } from './components/Tenant/SettlementPreview';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -75,7 +77,8 @@ const App: React.FC = () => {
   // G-025 TECS 4D: 'DPP' added for DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
   // TECS-FBW-003-A: 'ESCROW' added for tenant escrow read panel (G-018)
   // TECS-FBW-006-A: 'ESCALATIONS' added for tenant escalation read panel (G-022)
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS'>('HOME');
+  // TECS-FBW-004: 'SETTLEMENT' added for G-019 tenant settlement preview-confirm flow
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -554,6 +557,8 @@ const App: React.FC = () => {
     if (expView === 'ESCROW') return <EscrowPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-006-A: G-022 tenant escalation read surface (read-only; D-017-A compliant)
     if (expView === 'ESCALATIONS') return <EscalationsPanel onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-004: G-019 tenant settlement preview-confirm flow (D-017-A / D-020-B compliant)
+    if (expView === 'SETTLEMENT') return <SettlementPreview onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -1196,6 +1201,8 @@ const App: React.FC = () => {
           onNavigateEscrow: () => setExpView('ESCROW'),
           // TECS-FBW-006-A: G-022 tenant escalation read panel (read-only)
           onNavigateEscalations: () => setExpView('ESCALATIONS'),
+          // TECS-FBW-004: G-019 tenant settlement panel navigation
+          onNavigateSettlement: () => setExpView('SETTLEMENT'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {

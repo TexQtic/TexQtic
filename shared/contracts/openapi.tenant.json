@@ -849,6 +849,175 @@
           }
         }
       }
+    },
+    "/api/tenant/settlements/preview": {
+      "post": {
+        "summary": "Preview a settlement — non-mutating balance check (G-019)",
+        "description": "Checks current escrow ledger balance against the requested settlement amount. Non-mutating — no state changes occur. D-017-A: tenantId is never sent by the client; server derives tenant scope from JWT claims. D-020-B: currentBalance and projectedBalance are always ledger-derived SUM values, never stored server-side. TECS-FBW-004 (2026-03-07).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tradeId", "escrowId", "amount", "currency"],
+                "properties": {
+                  "tradeId": { "type": "string", "format": "uuid" },
+                  "escrowId": { "type": "string", "format": "uuid" },
+                  "amount": { "type": "number", "minimum": 0.01 },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview computed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "enum": ["OK"] },
+                    "currentBalance": { "type": "number" },
+                    "projectedBalance": { "type": "number" },
+                    "wouldSucceed": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "INVALID_AMOUNT — amount not positive" },
+          "404": { "description": "TRADE_NOT_FOUND or ESCROW_NOT_FOUND" },
+          "409": {
+            "description": "INSUFFICIENT_ESCROW_FUNDS, TRADE_DISPUTED, or STATE_MACHINE_DENIED"
+          },
+          "423": { "description": "ENTITY_FROZEN — trade or escrow is frozen" },
+          "500": {
+            "description": "DB_ERROR — server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/settlements": {
+      "post": {
+        "summary": "Execute a settlement (state-mutating) — G-019",
+        "description": "Applies a settlement debit to the escrow ledger and transitions trade/escrow state. State-mutating — a successful preview (wouldSucceed=true) is required before this is called (D-020-B). D-017-A: tenantId is never sent by the client; server derives tenant scope from JWT claims. actorType is TENANT_USER for the tenant-plane flow. aiTriggered and HUMAN_CONFIRMED path are excluded from TECS-FBW-004 scope. TECS-FBW-004 (2026-03-07).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "tradeId",
+                  "escrowId",
+                  "amount",
+                  "currency",
+                  "referenceId",
+                  "reason"
+                ],
+                "properties": {
+                  "tradeId": { "type": "string", "format": "uuid" },
+                  "escrowId": { "type": "string", "format": "uuid" },
+                  "amount": { "type": "number", "minimum": 0.01 },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "referenceId": {
+                    "type": "string",
+                    "description": "Idempotency key — DUPLICATE_REFERENCE returned if already used for this escrow"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Mandatory justification (D-020-D)"
+                  },
+                  "actorType": {
+                    "type": "string",
+                    "enum": [
+                      "TENANT_USER",
+                      "TENANT_ADMIN",
+                      "SYSTEM_AUTOMATION",
+                      "MAKER",
+                      "CHECKER"
+                    ],
+                    "description": "TENANT_USER for tenant-plane flow in TECS-FBW-004"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settlement applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "enum": ["APPLIED"] },
+                    "transactionId": { "type": "string", "format": "uuid" },
+                    "escrowReleased": { "type": "boolean" },
+                    "tradeClosed": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Pending maker-checker approval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["PENDING_APPROVAL"]
+                    },
+                    "requiredActors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["MAKER", "CHECKER"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_AMOUNT or AI_HUMAN_CONFIRMATION_REQUIRED"
+          },
+          "404": { "description": "TRADE_NOT_FOUND or ESCROW_NOT_FOUND" },
+          "409": {
+            "description": "INSUFFICIENT_ESCROW_FUNDS, DUPLICATE_REFERENCE, STATE_MACHINE_DENIED, MAKER_CHECKER_REQUIRED, or TRADE_DISPUTED"
+          },
+          "423": { "description": "ENTITY_FROZEN — trade or escrow is frozen" },
+          "500": {
+            "description": "DB_ERROR — server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
