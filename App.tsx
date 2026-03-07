@@ -25,6 +25,7 @@ import { SystemHealth } from './components/ControlPlane/SystemHealth';
 import { FeatureFlags } from './components/ControlPlane/FeatureFlags';
 import { ComplianceQueue } from './components/ControlPlane/ComplianceQueue';
 import { DisputeCases } from './components/ControlPlane/DisputeCases';
+import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { ApiDocs } from './components/ControlPlane/ApiDocs';
 import { DataModel } from './components/ControlPlane/DataModel';
@@ -941,6 +942,8 @@ const App: React.FC = () => {
         return <ComplianceQueue />;
       case 'CASES':
         return <DisputeCases />;
+      case 'TRADES':
+        return <TradeOversight />;
       case 'RBAC':
         return <AdminRBAC />;
       case 'API_DOCS':

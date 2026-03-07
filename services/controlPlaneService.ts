@@ -597,6 +597,85 @@ export async function escalateDispute(
   );
 }
 
+// ==================== G-017 TRADES (TECS-FBW-002-A) ====================
+
+/**
+ * Lifecycle state snapshot included on each trade row.
+ * Source: lifecycle_states table, joined via trade.lifecycleStateId.
+ */
+export interface TradeLifecycleState {
+  id: string;
+  entityType: string;
+  stateKey: string;
+  label: string;
+  isFinalState: boolean;
+}
+
+/**
+ * Admin-visible trade record returned by GET /api/control/trades.
+ * grossAmount is a Prisma Decimal — serialised to string over JSON.
+ * D-017-A: tenantId is READ from the trade row; never supplied by client in body.
+ */
+export interface Trade {
+  id: string;
+  tenantId: string;
+  buyerOrgId: string;
+  sellerOrgId: string;
+  tradeReference: string;
+  currency: string;
+  grossAmount: number | string;
+  lifecycleState: TradeLifecycleState | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Optional admin-side query filters for listTrades().
+ * All fields map to URL query parameters — no request body.
+ * D-017-A: tenantId here is an admin filter, NOT a client identity assertion.
+ */
+export interface TradesQueryParams {
+  tenantId?: string;
+  status?: 'DRAFT' | 'ACTIVE' | 'SETTLED' | 'DISPUTED' | 'CANCELLED';
+  limit?: number;
+  offset?: number;
+}
+
+export interface TradesResponse {
+  trades: Trade[];
+  count: number;
+}
+
+/**
+ * List trades across all tenants (admin only).
+ * TECS-FBW-002-A (2026-03-07): first frontend surface for G-017 Trades.
+ * Route: GET /api/control/trades
+ * Uses query parameters only — no request body.
+ * D-017-A: tenantId is an optional admin filter on the server query;
+ *           it is NEVER a client-supplied tenant identity in a request body.
+ */
+export async function listTrades(params?: TradesQueryParams): Promise<TradesResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.tenantId) {
+    queryParams.append('tenantId', params.tenantId);
+  }
+  if (params?.status) {
+    queryParams.append('status', params.status);
+  }
+  if (params?.limit !== undefined) {
+    queryParams.append('limit', params.limit.toString());
+  }
+  if (params?.offset !== undefined) {
+    queryParams.append('offset', params.offset.toString());
+  }
+
+  const queryString = queryParams.toString();
+  const endpoint = `/api/control/trades${queryString ? `?${queryString}` : ''}`;
+
+  return adminGet<TradesResponse>(endpoint);
+}
+
 // ==================== SYSTEM HEALTH ====================
 
 export interface HealthService {

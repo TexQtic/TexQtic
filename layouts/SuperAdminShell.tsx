@@ -6,6 +6,7 @@ export type AdminView =
   | 'FINANCE'
   | 'COMPLIANCE'
   | 'CASES'
+  | 'TRADES'
   | 'AI'
   | 'LOGS'
   | 'HEALTH'
@@ -70,6 +71,13 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             onClick={() => onViewChange('FINANCE')}
             icon="💰"
             label="Finance & Fees"
+          />
+
+          <NavLink
+            active={activeView === 'TRADES'}
+            onClick={() => onViewChange('TRADES')}
+            icon="🔁"
+            label="Trade Oversight"
           />
 
           <SectionTitle>Risk & Compliance</SectionTitle>

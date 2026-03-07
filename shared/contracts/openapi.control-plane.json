@@ -405,6 +405,23 @@
           "500": { "description": "Escalation failed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
+    },
+    "/api/control/trades": {
+      "get": {
+        "summary": "List trades (admin, cross-tenant, read-only)",
+        "description": "Returns platform trades across all tenants. Optional query filters: tenantId, status, limit, offset. D-017-A: tenantId is an admin filter on the server query — never a client-supplied tenant identity in a request body. TECS-FBW-002-A (2026-03-07).",
+        "parameters": [
+          { "name": "tenantId", "in": "query", "required": false, "schema": { "type": "string", "format": "uuid" }, "description": "Admin filter — restrict results to one tenant (D-017-A: admin query param only)" },
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string", "enum": ["DRAFT", "ACTIVE", "SETTLED", "DISPUTED", "CANCELLED"] } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 } },
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 0, "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Trade list returned successfully" },
+          "401": { "description": "Unauthorized", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
     }
   }
 }
