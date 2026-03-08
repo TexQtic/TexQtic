@@ -529,11 +529,15 @@ export interface OrganizationIdentity {
 /**
  * withOrgAdminContext — run a callback in admin realm to read the organizations table.
  *
- * CONSTITUTIONAL CONSTRAINT (G-015 Phase C):
- * - organizations has a RESTRICTIVE guard: SELECT only allowed when app.is_admin = 'true'
- *   OR the bypass RLS bypass context is on.
- * - This helper elevates to admin-realm (app.is_admin = true) inside a tx-local context.
- * - NO RLS policies are changed. The guard remains intact.
+ * CONSTITUTIONAL CONSTRAINT (G-015 Phase C / GAP-AUTH-ORG-RLS-REALM-001):
+ * - The live RLS policy organizations_control_plane_select requires:
+ *     app.current_realm() = 'admin'
+ *   Therefore realm MUST be set to 'admin', not 'control'.
+ *   Setting realm='control' causes 0 visible rows under texqtic_app (NOBYPASSRLS),
+ *   which makes getOrganizationIdentity() throw OrganizationNotFoundError.
+ * - app.is_admin = 'true' is also set in the callback below, but it is NOT currently
+ *   evaluated by any live organizations RLS policy. It is retained for forward-compat.
+ * - NO RLS policies are changed by this helper. The guard remains intact.
  * - Use ONLY for read operations on the organizations table.
  *
  * @param prismaClient - PrismaClient instance (module-level singleton)
@@ -547,7 +551,7 @@ export async function withOrgAdminContext<T>(
   const ctx: DatabaseContext = {
     orgId: ORG_ADMIN_SENTINEL_ID,
     actorId: ORG_ADMIN_SENTINEL_ID,
-    realm: 'control',
+    realm: 'admin',
     requestId: randomUUID(),
   };
   return withDbContext(prismaClient, ctx, async tx => {
