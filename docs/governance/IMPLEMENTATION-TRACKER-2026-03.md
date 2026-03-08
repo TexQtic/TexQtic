@@ -154,7 +154,7 @@ Two independent repo-truth audits were completed 2026-03-08. Together they produ
 | ID | Name | Verification Target | Status |
 |---|---|---|---|
 | PW5-V1 | DPP runtime verification | Confirm `GET /api/tenant/dpp/:nodeId` returns real data for a live tenant node; confirm manufacturer field omission per G-025-ORGS-RLS-001 state; do not claim runtime proof from typecheck/lint alone | ⏳ VERIFY FIRST |
-| PW5-V2 | Tenant Audit Logs runtime verification | Confirm `GET /api/tenant/audit-logs` returns real audit entries for a provisioned tenant; TenantAuditLogs.tsx renders correctly against live data; wired in GOVERNANCE-SYNC-117 but runtime call not recorded | ⏳ VERIFY FIRST |
+| PW5-V2 | Tenant Audit Logs runtime verification | Confirm `GET /api/tenant/audit-logs` returns real audit entries for a provisioned tenant; TenantAuditLogs.tsx renders correctly against live data; wired in GOVERNANCE-SYNC-117 but runtime call not recorded | ✅ VERIFIED + PW5-FIX-V2A CLOSED — 2026-03-08 (runtime: HTTP 401 unauth + HTTP 200 auth { logs:[], count:0 }; path mismatch '/tenant/audit-logs' → '/api/tenant/audit-logs' fixed in TenantAuditLogs.tsx; TSC_EXIT:0; Classification: WORKING) |
 | PW5-V3 | TenantType source-of-truth verification | Confirm canonical `tenantType` derivation path in App.tsx post-GOVERNANCE-SYNC-118; confirm shell-routing logic reads the correct field from the tenant session object | ⏳ VERIFY FIRST |
 | PW5-V4 | Shell action verification | Walk every nav item in all 6 shells; confirm each renders a non-stub component; record dead nav items and broken routes | ⏳ VERIFY FIRST |
 

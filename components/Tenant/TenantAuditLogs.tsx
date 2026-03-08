@@ -117,7 +117,7 @@ export function TenantAuditLogs({ onBack }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const data = await tenantGet<AuditLogsResponse>('/tenant/audit-logs');
+      const data = await tenantGet<AuditLogsResponse>('/api/tenant/audit-logs');
       setLogs(data.logs);
       setCount(data.count);
     } catch (err) {

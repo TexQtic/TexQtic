@@ -400,7 +400,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-013 | B2B Request Quote Dead | B2B commerce | §10 uncertain | F-015 / S-003 | NEW_IN_COPILOT | DEFERRED | MEDIUM | Wave 5 | Product decision pending |
 | TECS-FBW-014 | Post-Checkout Missing Confirm | Commerce UX | Not inspected | F-016 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | HIGH | Wave 1 | App.tsx ORDER_CONFIRMED appState; Cart.tsx onCheckoutSuccess prop (SAME-UNIT EXPANSION); typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-015 | G-016 Traceability CRUD | Supply chain | §5.2 absent | F-005 absent | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-115 · 2026-03-07) | HIGH | Wave 4 | commit df2cc638; typecheck EXIT 0; lint EXIT 0; 8 files: 3 NEW + 5 SUNE; tenant CRUD panel + admin read-only surface; D-017-A satisfied; DPPPassport.tsx untouched |
-| TECS-FBW-016 | Tenant Audit Logs UI Absent | Audit | §3 table | Sect.5 table | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-117 · 2026-03-08) | HIGH | Wave 4 | TenantAuditLogs.tsx NEW; App.tsx + Shells.tsx SUNE; tenantGet('/tenant/audit-logs'); createdAt/action/entity/entityId/actorType/realm displayed; no mutations; typecheck EXIT 0; lint EXIT 0; 3 files: 1 NEW + 2 SUNE |
+| TECS-FBW-016 | Tenant Audit Logs UI Absent | Audit | §3 table | Sect.5 table | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-117 · 2026-03-08) + PW5-FIX-V2A (2026-03-08) | HIGH | Wave 4 | TenantAuditLogs.tsx NEW; App.tsx + Shells.tsx SUNE; createdAt/action/entity/entityId/actorType/realm displayed; no mutations; typecheck EXIT 0; lint EXIT 0; 3 files: 1 NEW + 2 SUNE. Path fix (PW5-FIX-V2A): tenantGet('/tenant/audit-logs') corrected to tenantGet('/api/tenant/audit-logs'); post-fix runtime: HTTP 200 { logs:[], count:0 }; Classification: WORKING |
 | TECS-FBW-017 | CatalogItem.category Grouping | WL Collections | Not identified | CM-002 | NEW_IN_COPILOT | PROVISIONAL | MEDIUM | Wave 1 | |
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | Tenant provisioning | Not identified | CM-003 | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 0/verify | Intentional mapping per code comment |
 | TECS-FBW-019 | lifecycleState vs status | Orders | Not inspected | CM-004 handled | NEW_IN_COPILOT | DEFERRED | HIGH | — | GAP-ORDER-LC-001 closed (GOVERNANCE-SYNC-063) |
@@ -518,7 +518,7 @@ Both audits were repo-inspection only (not runtime). No application code was mod
 
 > **PW5-V1 (DPP):** Wired in GOVERNANCE-SYNC-083. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. Mark as VERIFY FIRST — do not claim implementation-complete without live API call evidence.
 
-> **PW5-V2 (Tenant Audit Logs):** Wired in GOVERNANCE-SYNC-117. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. Mark as VERIFY FIRST.
+> **PW5-V2 (Tenant Audit Logs):** ✅ VERIFIED + PW5-FIX-V2A CLOSED — 2026-03-08. Backend runtime-proven (HTTP 401 unauth + HTTP 200 auth). Frontend path mismatch found and fixed: TenantAuditLogs.tsx '/tenant/audit-logs' → '/api/tenant/audit-logs' (PW5-FIX-V2A). Post-fix runtime: HTTP 200 { logs:[], count:0 }. TSC_EXIT:0. Classification: WORKING. Audit conflict ("route/path mismatch concern") resolved — backend route was always correct; defect was frontend prefix omission only.
 
 > **PW5-W1 (Tenant Trades UI):** `TECS-FBW-002-B` remains 🚫 BLOCKED. `GET /api/tenant/trades` does not exist as a tenant-plane route. This is a BACKEND DESIGN GATE — no UI wiring is possible until the route is designed and implemented.
 

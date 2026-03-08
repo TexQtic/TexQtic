@@ -1099,7 +1099,7 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 | ID | Name | Gate Target | Status | Notes |
 |---|---|---|---|---|
 | PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ✅ VERIFIED — 2026-03-08 | HTTP 404 from GET /api/tenant/dpp/{uuid} — route live, DB query executed, RLS enforcement confirmed. "DPP snapshot not found or access denied." Auth: valid tenant JWT (impersonated session). Classification: DPP / Passport = WORKING. |
-| PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ⚠️ PARTIAL — 2026-03-08 | Backend route GET /api/tenant/audit-logs → HTTP 401 (unauth) + HTTP 200 (auth, logs=[], count=0) confirmed operational. Frontend path mismatch confirmed: TenantAuditLogs.tsx calls '/tenant/audit-logs' (missing /api prefix). No Vite proxy bridges gap. Classification: PARTIAL (backend working, frontend path broken). Follow-on fix required in separate atomic unit. |
+| PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ✅ VERIFIED — 2026-03-08 | Backend runtime-proven (HTTP 401 unauth + HTTP 200 auth). Frontend path mismatch fixed in PW5-FIX-V2A: TenantAuditLogs.tsx '/tenant/audit-logs' corrected to '/api/tenant/audit-logs'. Post-fix runtime: HTTP 200 { logs: [], count: 0, success: true }. TSC_EXIT:0. Classification: Tenant Audit Logs = WORKING. |
 | PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ⏳ VERIFY FIRST | Audit conflict on whether TenantType is stable; resolve by targeted read of authService + tenantService |
 | PW5-V4 | Shell action verification | PW5-U3 | ⏳ VERIFY FIRST | Required before UX correctness tranche; verify which shell actions have no backend route |
 
@@ -1126,8 +1126,18 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
   - Backend listens at `/api/tenant/audit-logs` (prefix `/api` from `tenantRoutes` registration)
   - `vite.config.ts` has no proxy — no bridge between the two paths
   - Runtime consequence: frontend request hits SPA router, not Fastify. Component will always error.
-- Classification: **Tenant Audit Logs = PARTIAL** (backend working and runtime-verified; frontend path broken)
-- Follow-on fix unit required: change `'/tenant/audit-logs'` → `'/api/tenant/audit-logs'` in `TenantAuditLogs.tsx`; must be a separate atomic unit with its own runtime verification
+- Classification at PW5-V2 close: **Tenant Audit Logs = PARTIAL** (backend working; frontend path broken)
+
+**PW5-FIX-V2A fix evidence (2026-03-08):**
+- Fix applied: `TenantAuditLogs.tsx` line 120 — `'/tenant/audit-logs'` → `'/api/tenant/audit-logs'`
+- Scope: one file, one line — `components/Tenant/TenantAuditLogs.tsx` only
+- `git diff --name-only` → `components/Tenant/TenantAuditLogs.tsx` only ✅
+- `tsc --noEmit` → TSC_EXIT:0 ✅
+- Post-fix runtime call: GET /api/tenant/audit-logs with valid tenant JWT → HTTP 200 ✅
+- Post-fix response: `{"data":{"logs":[],"count":0},"success":true}` — component no longer fails due to path mismatch
+- Call chain confirmed: `tenantGet('/api/tenant/audit-logs')` → `apiClient.get` → `fetch('' + '/api/tenant/audit-logs')` → Fastify route ✅
+- JWT: admin-issued impersonation token (tenant-scoped, realm=TENANT) — value not recorded
+- Reclassification: **Tenant Audit Logs = WORKING** (backend operational + frontend path corrected + post-fix runtime-verified)
 
 ---
 
