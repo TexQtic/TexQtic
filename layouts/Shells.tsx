@@ -19,9 +19,11 @@ interface ShellProps {
   onNavigateCertifications?: () => void;
   /** TECS-FBW-015: G-016 traceability CRUD panel navigation (Phase A: create+read) */
   onNavigateTraceability?: () => void;
+  /** TECS-FBW-016: tenant audit log read-only panel navigation (EXPERIENCE-only) */
+  onNavigateAuditLogs?: () => void;
 }
 
-export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability }) => (
+export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
   <div className="min-h-screen flex flex-col font-sans">
     <header className="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -38,6 +40,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
           {onNavigateEscrow && <button onClick={onNavigateEscrow} className="hover:text-blue-400 transition text-slate-300">Escrow</button>}
           {onNavigateEscalations && <button onClick={onNavigateEscalations} className="hover:text-blue-400 transition text-slate-300">Escalations</button>}
           {onNavigateSettlement && <button onClick={onNavigateSettlement} className="hover:text-blue-400 transition text-slate-300">Settlement</button>}
+          {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="hover:text-blue-400 transition text-slate-300">Audit Log</button>}
           <button onClick={onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
         </nav>
         <button className="bg-blue-600 px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition">Post RFQ</button>
@@ -47,7 +50,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
   </div>
 );
 
-export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability }) => (
+export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
   <div className="min-h-screen flex bg-slate-100 font-sans">
     <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
       <button type="button" className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={onNavigateHome}>
@@ -63,6 +66,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
         {onNavigateSettlement && <button onClick={onNavigateSettlement} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">💸 Settlement</button>}
         {onNavigateCertifications && <button onClick={onNavigateCertifications} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
         {onNavigateTraceability && <button onClick={onNavigateTraceability} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
+        {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
         <button className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Negotiations</button>
         <button className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📄 Invoices</button>
         <button onClick={onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
@@ -87,7 +91,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability }) => (
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
   <div className="min-h-screen bg-white font-sans">
     <div className="bg-indigo-600 text-white text-center py-2 text-[10px] font-bold uppercase tracking-widest">
       Free worldwide shipping on orders over $500
@@ -108,6 +112,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
           {onNavigateSettlement && <button onClick={onNavigateSettlement} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Settlement</button>}
           {onNavigateCertifications && <button onClick={onNavigateCertifications} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Certifications</button>}
           {onNavigateTraceability && <button onClick={onNavigateTraceability} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
+          {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
           <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
           <div className="relative cursor-pointer">
             <span className="text-2xl">🛒</span>
@@ -120,7 +125,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability }) => (
+export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
   <div className="min-h-screen font-sans" style={{ backgroundColor: '#ffffff' }}>
      <header className="p-12 text-center" style={{ borderBottom: `1px solid #eee` }}>
        <button type="button" className="text-5xl font-serif italic mb-2 cursor-pointer transition-opacity hover:opacity-80" style={{ color: tenant.theme.primaryColor }} onClick={onNavigateHome}>
@@ -138,6 +143,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavi
         {onNavigateSettlement && <button onClick={onNavigateSettlement} className="hover:opacity-40 transition-opacity">Settlement</button>}
         {onNavigateCertifications && <button onClick={onNavigateCertifications} className="hover:opacity-40 transition-opacity">Certifications</button>}
         {onNavigateTraceability && <button onClick={onNavigateTraceability} className="hover:opacity-40 transition-opacity">Traceability</button>}
+        {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="hover:opacity-40 transition-opacity">Audit Log</button>}
         <button className="hover:opacity-40 transition-opacity underline decoration-rose-500 underline-offset-4">Collections</button>
         <button className="hover:opacity-40 transition-opacity">The Journal</button>
      </nav>

@@ -27,6 +27,8 @@ import { CertificationsPanel } from './components/Tenant/CertificationsPanel';
 import { CertificationsAdmin } from './components/ControlPlane/CertificationsAdmin';
 // TECS-FBW-015: G-016 traceability CRUD panel (tenant) + admin read-only view (control-plane)
 import { TraceabilityPanel } from './components/Tenant/TraceabilityPanel';
+// TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only surface)
+import { TenantAuditLogs } from './components/Tenant/TenantAuditLogs';
 import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
 // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
@@ -88,7 +90,8 @@ const App: React.FC = () => {
   // TECS-FBW-004: 'SETTLEMENT' added for G-019 tenant settlement preview-confirm flow
   // TECS-FBW-005: 'CERTIFICATIONS' added for G-019 tenant certification lifecycle panel
   // TECS-FBW-015: 'TRACEABILITY' added for G-016 traceability CRUD panel
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY'>('HOME');
+  // TECS-FBW-016: 'AUDIT_LOGS' added for tenant audit log read-only panel
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -573,6 +576,8 @@ const App: React.FC = () => {
     if (expView === 'CERTIFICATIONS') return <CertificationsPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-015: G-016 traceability CRUD panel (D-017-A compliant; Phase A: create+read only)
     if (expView === 'TRACEABILITY') return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only; no filters/pagination; server take:50)
+    if (expView === 'AUDIT_LOGS') return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
 
     switch (currentTenant.type) {
       case TenantType.AGGREGATOR:
@@ -1230,6 +1235,8 @@ const App: React.FC = () => {
           onNavigateCertifications: () => setExpView('CERTIFICATIONS'),
           // TECS-FBW-015: G-016 traceability CRUD panel navigation
           onNavigateTraceability: () => setExpView('TRACEABILITY'),
+          // TECS-FBW-016: tenant audit log read-only panel navigation
+          onNavigateAuditLogs: () => setExpView('AUDIT_LOGS'),
         };
         let ExperienceShell;
         switch (currentTenant.type) {
