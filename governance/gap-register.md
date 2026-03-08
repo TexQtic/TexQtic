@@ -781,7 +781,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-013 | B2B Request Quote Dead | COPILOT | LOW | DEFERRED | Wave 5 |
 | TECS-FBW-014 | Post-Checkout No Confirmation State | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | Wave 1 |
 | TECS-FBW-015 | G-016 Traceability CRUD Frontend Absent | BOTH | HIGH | VALIDATED | Wave 4 |
-| TECS-FBW-016 | Tenant Audit Logs UI Absent | COPILOT | MEDIUM | PROVISIONAL | Wave 4 |
+| TECS-FBW-016 | Tenant Audit Logs UI Absent | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-117 · 2026-03-08) | Wave 4 |
 | TECS-FBW-017 | CatalogItem.category Grouping May Fail | COPILOT | LOW | ✅ CLOSED (GOVERNANCE-SYNC-105 · 2026-03-07) | Wave 1 |
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | COPILOT | LOW | PROVISIONAL | Wave 0 |
 | TECS-FBW-019 | lifecycleState vs status (handled) | COPILOT | CLOSED | DEFERRED | — |
@@ -929,10 +929,11 @@ Note: DPPPassport.tsx consumes GET /api/tenant/dpp/:nodeId (snapshot view) — d
 Next action: Create services/traceabilityService.ts; add node/edge creation forms; extend DPPPassport.tsx or create TraceabilityPanel.tsx.
 
 **TECS-FBW-016 — Tenant Audit Logs UI Absent**  
-Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: PROVISIONAL · Wave: 4  
-Backend confirmed: GET /api/tenant/audit-logs implemented; control-plane equivalent wired.  
-Frontend status: No tenant-facing audit log component; no expView entry.  
-Next action: Create read-only audit trail component in EXPERIENCE shell.
+Source: NEW_IN_COPILOT · Severity: MEDIUM · Status: ✅ CLOSED (GOVERNANCE-SYNC-117 · 2026-03-08) · Wave: 4  
+Backend confirmed: GET /api/tenant/audit-logs implemented (server/src/routes/tenant.ts line 112); tenantAuthMiddleware + databaseContextMiddleware; response `{ logs: AuditLog[], count: number }`; take: 50 hardcoded; newest-first; no pagination/filter params.  
+Frontend status: ✅ IMPLEMENTED — components/Tenant/TenantAuditLogs.tsx (NEW — EXPERIENCE-only read-only panel; tenantGet('/tenant/audit-logs') on mount; renders createdAt, action, entity, entityId, actorType, realm; beforeJson/afterJson/metadataJson intentionally excluded; LoadingState + ErrorState + EmptyState; Refresh button; footer: server limit 50 · read-only; no mutation controls; no filter/pagination UI; RealmBadge + ActorTypeBadge colour maps); App.tsx (SUNE — expView extended 'AUDIT_LOGS'; TenantAuditLogs import + renderExperienceContent branch + onNavigateAuditLogs shell prop); layouts/Shells.tsx (SUNE — onNavigateAuditLogs in ShellProps; conditional Audit Log button in AggregatorShell, B2BShell, B2CShell, WhiteLabelShell; WhiteLabelAdminShell untouched — different interface).  
+Validation: typecheck EXIT 0 · lint EXIT 0 (0 errors, 108 warnings — baseline unchanged) · git diff --name-only: App.tsx + layouts/Shells.tsx (3 files total: 1 NEW + 2 SUNE).  
+🏁 WAVE 4 COMPLETE — all units (FBW-005, FBW-015, FBW-007, FBW-016) closed.
 
 **TECS-FBW-017 — CatalogItem.category Grouping May Fail**  
 Source: NEW_IN_COPILOT · Severity: LOW · Status: ✅ CLOSED (GOVERNANCE-SYNC-105 · 2026-03-07) · Wave: 1  
