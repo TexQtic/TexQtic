@@ -28,6 +28,8 @@ import { CertificationsAdmin } from './components/ControlPlane/CertificationsAdm
 // TECS-FBW-015: G-016 traceability CRUD panel (tenant) + admin read-only view (control-plane)
 import { TraceabilityPanel } from './components/Tenant/TraceabilityPanel';
 import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
+// TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
+import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -980,6 +982,9 @@ const App: React.FC = () => {
       // TECS-FBW-015: G-016 cross-tenant traceability inspection (Phase A: read-only)
       case 'TRACEABILITY':
         return <TraceabilityAdmin />;
+      // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
+      case 'CART_SUMMARIES':
+        return <CartSummariesPanel />;
       case 'RBAC':
         return <AdminRBAC />;
       case 'API_DOCS':

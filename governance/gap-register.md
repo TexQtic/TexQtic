@@ -773,7 +773,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-004 | G-019 Settlements Frontend Absent | BOTH | HIGH | ✅ CLOSED (GOVERNANCE-SYNC-113 · 2026-03-07) | Wave 3 |
 | TECS-FBW-005 | G-019 Certifications Frontend Absent | BOTH | HIGH | ✅ CLOSED (GOVERNANCE-SYNC-114 · 2026-03-07) | Wave 4 |
 | TECS-FBW-006 | G-022 Escalations Frontend Absent [misrouting claim disproved] | BOTH | HIGH | TECS-FBW-006-A: ✅ CLOSED (GOVERNANCE-SYNC-112 · 2026-03-07); TECS-FBW-006-B: 🔵 FUTURE SCOPE (mutations: upgrade/resolve/override) | Wave 3 |
-| TECS-FBW-007 | Cart Summaries Dead Service | BOTH | MEDIUM | VALIDATED | Wave 4 |
+| TECS-FBW-007 | Cart Summaries Dead Service | BOTH | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-116 · 2026-03-08) | Wave 4 |
 | TECS-FBW-008 | WL Settings Custom Domain Dead | BOTH | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | Wave 1 |
 | TECS-FBW-011 | Catalog basePrice vs price — CRITICAL runtime | COPILOT | CRITICAL | CLOSED | Wave 1 |
 | TECS-FBW-LINT-001 | middleware.ts Edge Runtime globals — root lint gate | N/A (repo-gate item) | LOW | CLOSED | Immediate |
@@ -857,10 +857,9 @@ Misrouting claim DISPROVED: DisputeCases.tsx correctly calls GET /api/control/di
 TECS-FBW-006-B (escalation mutations: upgrade/resolve/override) remains future scope.
 
 **TECS-FBW-007 — Cart Summaries Dead Service Code**  
-Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: MEDIUM · Status: VALIDATED · Wave: 4  
+Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: MEDIUM · Status: ✅ CLOSED (GOVERNANCE-SYNC-116 · 2026-03-08) · Wave: 4  
 Backend confirmed: GET /api/control/marketplace/cart-summaries + /:cartId implemented.  
-Frontend status: getCartSummaries() + getCartSummaryByCartId() defined in controlPlaneService.ts; no component imports or calls them; no AdminView state maps to a panel.  
-Next action: Create components/ControlPlane/CartSummariesPanel.tsx; add CART_SUMMARIES AdminView state.
+Frontend status: ✅ IMPLEMENTED — components/ControlPlane/CartSummariesPanel.tsx (NEW — search-on-demand, tenant_id required before fetch, cursor pagination via next_cursor, row-selection detail via getCartSummaryByCartId, LoadingState/ErrorState/EmptyState, READ-ONLY badge, no mutation controls); layouts/SuperAdminShell.tsx (SUNE — CART_SUMMARIES added to AdminView union + NavLink under Governance section after Trade Oversight); App.tsx (SUNE — CartSummariesPanel import + case 'CART_SUMMARIES'); controlPlaneService.ts: untouched (getCartSummaries + getCartSummaryByCartId already implemented); no tenant-plane work; no OpenAPI changes; no server changes; 3 files total (1 NEW + 2 SUNE); typecheck EXIT 0; lint EXIT 0.
 
 **TECS-FBW-008 — WL Settings Custom Domain Dead (EXPERIENCE Shell)**  
 Source: RECONFIRMED_BY_CODEX_AND_COPILOT · Severity: MEDIUM · Status: ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) · Wave: 1  

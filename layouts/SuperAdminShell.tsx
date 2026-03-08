@@ -12,6 +12,8 @@ export type AdminView =
   /** TECS-FBW-015: G-016 traceability cross-tenant inspection (Phase A: read-only) */
   | 'TRACEABILITY'
   | 'TRADES'
+  /** TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only) */
+  | 'CART_SUMMARIES'
   | 'AI'
   | 'LOGS'
   | 'HEALTH'
@@ -83,6 +85,13 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             onClick={() => onViewChange('TRADES')}
             icon="🔁"
             label="Trade Oversight"
+          />
+          {/* TECS-FBW-007: marketplace_cart_summaries projection (read-only admin panel) */}
+          <NavLink
+            active={activeView === 'CART_SUMMARIES'}
+            onClick={() => onViewChange('CART_SUMMARIES')}
+            icon="🛒"
+            label="Cart Summaries"
           />
 
           <SectionTitle>Risk & Compliance</SectionTitle>
