@@ -1100,7 +1100,7 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 |---|---|---|---|---|
 | PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ✅ VERIFIED — 2026-03-08 | HTTP 404 from GET /api/tenant/dpp/{uuid} — route live, DB query executed, RLS enforcement confirmed. "DPP snapshot not found or access denied." Auth: valid tenant JWT (impersonated session). Classification: DPP / Passport = WORKING. |
 | PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ✅ VERIFIED — 2026-03-08 | Backend runtime-proven (HTTP 401 unauth + HTTP 200 auth). Frontend path mismatch fixed in PW5-FIX-V2A: TenantAuditLogs.tsx '/tenant/audit-logs' corrected to '/api/tenant/audit-logs'. Post-fix runtime: HTTP 200 { logs: [], count: 0, success: true }. TSC_EXIT:0. Classification: Tenant Audit Logs = WORKING. |
-| PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ⏳ VERIFY FIRST | Audit conflict on whether TenantType is stable; resolve by targeted read of authService + tenantService |
+| PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ✅ VERIFIED — 2026-03-08 | Canonical source: organizations.org_type via getOrganizationIdentity(). Login + /api/me read the same function/column. Frontend priority ladder deterministic. WL_ADMIN routing symmetric. All TenantType enum values have shell coverage. Classification: CONSISTENT. No implementation change required. |
 | PW5-V4 | Shell action verification | PW5-U3 | ⏳ VERIFY FIRST | Required before UX correctness tranche; verify which shell actions have no backend route |
 
 **PW5-V1 runtime evidence (2026-03-08):**
@@ -1138,6 +1138,19 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 - Call chain confirmed: `tenantGet('/api/tenant/audit-logs')` → `apiClient.get` → `fetch('' + '/api/tenant/audit-logs')` → Fastify route ✅
 - JWT: admin-issued impersonation token (tenant-scoped, realm=TENANT) — value not recorded
 - Reclassification: **Tenant Audit Logs = WORKING** (backend operational + frontend path corrected + post-fix runtime-verified)
+
+**PW5-V3 static analysis evidence (2026-03-08):**
+- Method: read-only static analysis — no runtime required; chain confirmed by source
+- Canonical source of truth: `organizations.org_type` column (DB) — single authoritative field
+- Server read function: `getOrganizationIdentity(orgId, prisma)` in `server/src/lib/database-context.ts` — reads `organizations.org_type` via `withOrgAdminContext` (admin-realm RLS elevation required by `organizations_control_plane_select` policy)
+- Login path (`server/src/routes/auth.ts` ~line 373): `tenantType = org.org_type` → emitted as `{ token, user, tenantType }` in login response. Fail-open: `null` if org not provisioned (does not block login)
+- `/api/me` path (`server/src/routes/tenant.ts` ~line 82): same `getOrganizationIdentity()` call → `type: org.org_type` → emitted as `tenant.type` in `{ user, tenant, role }`
+- Frontend priority ladder (App.tsx lines 262–330): (1) `/api/me` success → `me.tenant.type` stored in `tenants[]` — **primary**; (2) `/api/me` fails → `stubType` from login `tenantType` — **fallback**; (3) `tenantType === null` → `TenantType.AGGREGATOR` — **neutral last-resort** (explicitly documented in code comment)
+- WL_ADMIN routing (App.tsx lines 292–313): `t.type === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has(role)` — applied symmetrically on both /api/me success path and stub path
+- Shell switch (App.tsx lines 1241–1256): all four `TenantType` enum values (`AGGREGATOR`, `B2B`, `B2C`, `WHITE_LABEL`) have explicit shell assignments; explicit `default: AggregatorShell` covers any unknown value
+- No competing source found: no `tenant_type`, `workspace_type`, or frontend-derived remapping. No hardcoded type override. One intentional neutral default only.
+- `tsc --noEmit` → TSC_EXIT:0 (no implementation files changed)
+- Classification: **CONSISTENT** — single source, deterministic consumption chain, no drift
 
 ---
 
