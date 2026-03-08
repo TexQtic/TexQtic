@@ -1101,7 +1101,7 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 | PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ✅ VERIFIED — 2026-03-08 | HTTP 404 from GET /api/tenant/dpp/{uuid} — route live, DB query executed, RLS enforcement confirmed. "DPP snapshot not found or access denied." Auth: valid tenant JWT (impersonated session). Classification: DPP / Passport = WORKING. |
 | PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ✅ VERIFIED — 2026-03-08 | Backend runtime-proven (HTTP 401 unauth + HTTP 200 auth). Frontend path mismatch fixed in PW5-FIX-V2A: TenantAuditLogs.tsx '/tenant/audit-logs' corrected to '/api/tenant/audit-logs'. Post-fix runtime: HTTP 200 { logs: [], count: 0, success: true }. TSC_EXIT:0. Classification: Tenant Audit Logs = WORKING. |
 | PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ✅ VERIFIED — 2026-03-08 | Canonical source: organizations.org_type via getOrganizationIdentity(). Login + /api/me read the same function/column. Frontend priority ladder deterministic. WL_ADMIN routing symmetric. All TenantType enum values have shell coverage. Classification: CONSISTENT. No implementation change required. |
-| PW5-V4 | Shell action verification | PW5-U3 | ⏳ VERIFY FIRST | Required before UX correctness tranche; verify which shell actions have no backend route |
+| PW5-V4 | Shell action verification | PW5-U3 | ✅ VERIFIED — 2026-03-08 | All shell/global nav and action surfaces classified by static inspection. WORKING: 11 EXPERIENCE nav items, 6 WL_ADMIN views, 15 SuperAdmin views. DEAD NAV: B2B Negotiations, B2B Invoices, WL Collections, WL The Journal. DEAD ACTION: AdminRBAC Invite Admin/Revoke, AiGovernance Kill Switch + secondary buttons, Aggregator Post RFQ, B2B Create RFQ. STATIC/INCORRECT: B2C cart badge hardcoded "3". PLACEHOLDER_PANEL: Blueprints, BackendSkeleton, ApiDocs, DataModel, Middleware. STUB: AdminRBAC. PARTIAL: AiGovernance. Findings mapped to PW5-U1 through PW5-U4. No implementation change required. |
 
 **PW5-V1 runtime evidence (2026-03-08):**
 - Server health: GET /health → HTTP 200 ✅
@@ -1151,6 +1151,22 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 - No competing source found: no `tenant_type`, `workspace_type`, or frontend-derived remapping. No hardcoded type override. One intentional neutral default only.
 - `tsc --noEmit` → TSC_EXIT:0 (no implementation files changed)
 - Classification: **CONSISTENT** — single source, deterministic consumption chain, no drift
+
+**PW5-V4 static analysis evidence (2026-03-08):**
+- Method: read-only static inspection across all 6 shells — no runtime required
+- Files inspected: `layouts/Shells.tsx`, `layouts/SuperAdminShell.tsx`, `App.tsx` (`renderAdminView`, `renderExperienceContent`, WL admin switch), all `components/ControlPlane/` and `components/WhiteLabelAdmin/` panels
+- **WORKING (11 EXPERIENCE nav items):** Home, Certifications, Traceability, Orders, DPP Passport, Escrow, Escalations, Settlement, Audit Log, Team, Settings — all wired via `onNavigate*` props → `setExpView` / `setAppState`; all target real, data-connected components
+- **WORKING (6 WL_ADMIN views):** BRANDING (`WhiteLabelSettings`), STAFF (`TeamManagement`), PRODUCTS (inline catalog CRUD), COLLECTIONS (`WLCollectionsPanel` → GET `/api/tenant/catalog/items`), ORDERS (`WLOrdersPanel` → GET/PATCH `/api/tenant/orders`), DOMAINS (`WLDomainsPanel` → GET/POST/DELETE `/api/tenant/domains`) — all backend routes confirmed in `server/src/routes/tenant.ts`
+- **WORKING (15 SuperAdmin views):** TENANTS, FLAGS, FINANCE, TRADES, CART_SUMMARIES, COMPLIANCE, CASES, ESCALATIONS, CERTIFICATIONS, TRACEABILITY, AI (data), HEALTH, LOGS, EVENTS, RBAC — all render real components with live API calls
+- **DEAD NAV (4 items):** B2BShell sidebar: "🤝 Negotiations" (no onClick, no route), "📄 Invoices" (no onClick, no route); WhiteLabelShell nav: "Collections" (no onClick prop), "The Journal" (no onClick prop)
+- **DEAD ACTION (7 buttons):** `AdminRBAC` — "Invite Admin" button (no onClick), per-row "Revoke" button (no onClick); `AiGovernance` — "AI Kill Switch" (no onClick), secondary action button(s) (no onClick); `AggregatorShell` header — "Post RFQ" (no onClick); B2B catalog content — "Create RFQ" (no onClick)
+- **STATIC/INCORRECT (1):** B2CShell header cart `<span>3</span>` — hardcoded literal, not bound to `useCart().itemCount`; EXPERIENCE overlay `CartToggleButton` is correct but shell's own badge is static
+- **PLACEHOLDER_PANEL (5):** `ArchitectureBlueprints`, `BackendSkeleton`, `ApiDocs`, `DataModel`, `MiddlewareScaffold` — all render hardcoded static content; no `useEffect`, no API calls; registered as primary nav destinations in SuperAdminShell
+- **STUB (1):** `AdminRBAC` — reads `ADMIN_USERS` constant (hardcoded array from `constants.tsx`), not a live API; action buttons also dead (see above)
+- **PARTIAL (1):** `AiGovernance` — live data via `getTenants()` → GET `/api/control/tenants`; but header action buttons have no `onClick` handler
+- **UX tranche mapping:** PW5-U1 ← B2C cart badge fix; PW5-U2 ← dead tenant/storefront nav hide-gate (4 items); PW5-U3 ← dead control-plane action hide-gate (7 buttons + AdminRBAC stub); PW5-U4 ← collapse 5 PLACEHOLDER_PANEL nav destinations
+- `tsc --noEmit` → TSC_EXIT:0 (no implementation files changed)
+- Classification: **VERIFIED** — verification tranche complete (PW5-V1 through PW5-V4 all resolved)
 
 ---
 
