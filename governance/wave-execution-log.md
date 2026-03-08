@@ -8309,3 +8309,68 @@ curl -s -X POST http://localhost:3001/api/internal/cache-invalidate \
 - Shells.tsx NOT modified (DOMAINS nav item pre-existing from whichever prior TECS wired it)
 - JWT auth path unchanged
 - G-026 saga fully complete after this TECS: 6C1 ✅ + 6C2 ✅ + 6C3 ✅ + 6D ✅
+---
+
+## Runtime Fix — Organizations RLS Realm Mismatch (GAP-AUTH-ORG-RLS-REALM-001 / GOVERNANCE-SYNC-118)
+
+| Field | Value |
+|-------|-------|
+| Gap ID | GAP-AUTH-ORG-RLS-REALM-001 |
+| Status | ✅ CLOSED |
+| Governance | GOVERNANCE-SYNC-118 |
+| Date | 2026-03-08 |
+| Commit | `1dd40437040a95a8cdd5ace6002c3343d0528e24` |
+| Push | `ff6181e..1dd4043 main→main` |
+
+### Objective
+
+Eliminate false amber "Tenant not provisioned yet" banner appearing for all provisioned tenants after login.
+
+### Root Cause
+
+`withOrgAdminContext` (in `server/src/lib/database-context.ts`) set `realm: 'control'` in the database context object. The live Supabase RLS policy `organizations_control_plane_select` evaluates `app.current_realm() = 'admin'`. Under `texqtic_app` (NOBYPASSRLS), the realm mismatch produced 0 visible rows from `public.organizations`, causing `OrganizationNotFoundError` → `GET /api/me` responded 404 → frontend rendered amber banner for every provisioned tenant.
+
+The `app.is_admin = 'true'` GUC was also set in the context callback and is retained for forward-compatibility, but is not evaluated by any live organizations RLS policy.
+
+### Fix
+
+Single literal change in `withOrgAdminContext`:
+
+```
+realm: 'control'   →   realm: 'admin'
+```
+
+Docstring updated to document the live policy requirement and `app.is_admin` semantics.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `server/src/lib/database-context.ts` | `realm: 'control'` → `realm: 'admin'` in `withOrgAdminContext`; docstring updated |
+
+### Validation Gates
+
+| Gate | Result |
+|------|--------|
+| `pnpm --filter texqtic-platform-server typecheck` | EXIT 0 |
+| `pnpm --filter texqtic-platform-server lint` | EXIT 0 (0 errors, 108 pre-existing warnings) |
+| `git diff --name-only` | `server/src/lib/database-context.ts` only |
+| `GET /health` | HTTP 200 `{"status":"ok"}` |
+| `POST /api/auth/login` (seed creds) | HTTP 200, `tenantType: 'B2B'` (non-null) ✅ |
+| `GET /api/me` (with JWT) | HTTP 200 `{user, tenant:{id,slug:'acme-corp',name:'Acme Corporation',type:'B2B',status:'ACTIVE',plan:'PROFESSIONAL'}, role:'OWNER'}` ✅ |
+
+### Related Gap Invalidation
+
+**GAP-PROVISION-ORGS-BACKFILL-001 → INVALIDATED**
+
+Organizations parity was verified complete (388/388) during root cause investigation. The gap had been opened as a hypothesis that org records were missing from `public.organizations`. The actual root cause was the RLS realm mismatch. No backfill was needed or performed.
+
+### Behavioral Confirmation
+
+- No DB migration
+- No schema or RLS changes
+- No `prisma migrate dev` / `db push` run
+- Only `server/src/lib/database-context.ts` modified
+- All other context functions (`withLoginContext`, `withBypassForSeed`, `withBypassForProjector`, `withNoContext`) unchanged
+- `ORG_ADMIN_SENTINEL_ID` unchanged
+- G-015 Phase C `getOrganizationIdentity` call chain unaffected
