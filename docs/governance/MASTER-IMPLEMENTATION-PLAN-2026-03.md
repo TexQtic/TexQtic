@@ -605,3 +605,43 @@ PROVISIONAL and VERIFY_REQUIRED items may be closed only after the corresponding
 - Gap register section: `governance/gap-register.md` → "Frontend-Backend Wiring Gap Audit — March 2026"
 - Codex audit: `docs/governance/audits/2026-03-codex-frontend-backend-audit.md`
 - Copilot audit: `docs/governance/audits/2026-03-copilot-frontend-backend-audit.md`
+
+---
+
+## 9. Pre-Wave 5 Sequencing Lock (Post-GOVERNANCE-SYNC-118)
+
+**Locked: 2026-03-08 — Paresh (post-GOVERNANCE-SYNC-118)**
+
+### Anti-Drift Directive
+
+Do not begin Wave 5 feature expansion directly. No new architecture, no new routes, no new schema until the platform audit and navigation verification steps below are complete.
+
+**Rationale:** GOVERNANCE-SYNC-118 closed an RLS realm bug that was masking the true wired/unwired surface of the platform. The amber banner suppressed all post-login feedback, making it impossible to observe which features were actually working. Now that login returns a real tenant object, the full surface must be audited from repo truth — not from memory or prior plans — before Wave 5 architecture is finalized.
+
+### Required Execution Order Before Wave 5
+
+| Step | Name | Goal |
+|------|------|------|
+| 1 | **Platform wiring audit** | Enumerate every domain (API + DB + UI): what is fully wired, what is stub, what is partial, what is missing. Source of truth: repo files only. |
+| 2 | **Navigation verification** | Walk every shell nav item and every expView/adminView route in App.tsx. Confirm each renders a real component (not stub). Record dead nav, broken routes, missing panels. |
+| 3 | **Control plane expansion planning** | Based on audit findings, define what the control plane is missing vs what exists. Produce a ranked gap list. No implementation yet. |
+| 4 | **Tenant admin dashboard completion** | Close all stub/partial tenant panels identified in Step 1–2. Bottom-up: fix existing surfaces before adding new ones. |
+| 5 | **White-label store builder** | Close all stub/partial WL Admin panels. Ensure WL_ADMIN shell is feature-complete against existing backend routes. |
+| 6 | **AI / event backbone (Wave 5 architecture)** | Begin Wave 5 only after Steps 1–5 are complete and the Platform Map is produced. Architecture must be grounded in the audit output. |
+
+### Platform Map Deliverable (Gate for Wave 5)
+
+Before any Wave 5 architecture work begins, the following must be produced and recorded in governance:
+
+- All domains with implementation status per layer (DB model ✅/❌, API route ✅/❌, UI surface ✅/stub/❌)
+- All API routes enumerated against `openapi.tenant.json` + `openapi.control-plane.json` + actual route files
+- All UI routes enumerated (expView union values, adminView union values, WL admin panels)
+- All missing pieces: routes defined in OpenAPI but absent from route files; nav items pointing to stubs; DB models with no API exposure
+- All blocked / partial surfaces: VER items ⏳ Pending (VER-003, VER-004, VER-006, VER-007, VER-008, VER-009, VER-010)
+
+### Anti-Drift Rule (Binding)
+
+No agent, no prompt, and no implementation sprint may begin Wave 5 architecture sequencing until:
+1. Step 1 (platform wiring audit) output is recorded in governance
+2. Step 2 (navigation verification) output is recorded in governance
+3. The Platform Map deliverable is present in the repo

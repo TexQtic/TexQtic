@@ -8374,3 +8374,36 @@ Organizations parity was verified complete (388/388) during root cause investiga
 - All other context functions (`withLoginContext`, `withBypassForSeed`, `withBypassForProjector`, `withNoContext`) unchanged
 - `ORG_ADMIN_SENTINEL_ID` unchanged
 - G-015 Phase C `getOrganizationIdentity` call chain unaffected
+
+---
+
+## Pre-Wave 5 Sequencing Lock (Post-GOVERNANCE-SYNC-118)
+
+| Field | Value |
+|-------|-------|
+| Type | Carry-Forward Sequencing Lock |
+| Locked | 2026-03-08 |
+| Authority | Paresh (post-GOVERNANCE-SYNC-118 closure) |
+| Anti-drift rule | No Wave 5 architecture work until platform audit + navigation verification complete and Platform Map produced |
+
+### Rationale
+
+GOVERNANCE-SYNC-118 fixed an RLS realm bug that masked real platform state — the amber banner was suppressing all post-login feedback, making it impossible to observe which features were actually wired. Now that `/api/me` returns a real tenant object, the full surface must be audited from repo truth before any Wave 5 architecture is sequenced.
+
+### Required Execution Order
+
+1. **Platform wiring audit** — enumerate every domain (API + DB + UI): fully wired vs stub vs partial vs missing
+2. **Navigation verification** — walk every shell nav item and every expView/adminView in App.tsx; record dead nav, broken routes, missing panels
+3. **Control plane expansion planning** — define what control plane is missing vs what exists; produce ranked gap list (no implementation yet)
+4. **Tenant admin dashboard completion** — close all stub/partial tenant panels found in Steps 1–2
+5. **White-label store builder** — close all stub/partial WL Admin panels; ensure WL_ADMIN shell is feature-complete against existing backend
+6. **AI / event backbone (Wave 5 architecture)** — begin only after Steps 1–5 complete and Platform Map is produced
+
+### Gate for Wave 5 (Binding)
+
+Before Wave 5 architecture work begins, the Platform Map must be produced and recorded in governance:
+- All domains: DB model / API route / UI surface status per layer
+- All API routes enumerated vs `openapi.tenant.json` + `openapi.control-plane.json` + actual route files
+- All UI routes enumerated (expView union values, adminView union values, WL admin panels)
+- All missing / stub / partial / blocked surfaces identified
+- Pending VER items (VER-003, VER-004, VER-006, VER-007, VER-008, VER-009, VER-010) resolved or explicitly deferred
