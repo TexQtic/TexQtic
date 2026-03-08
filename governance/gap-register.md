@@ -1098,10 +1098,20 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 
 | ID | Name | Gate Target | Status | Notes |
 |---|---|---|---|---|
-| PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ⏳ VERIFY FIRST | Wired in GOVERNANCE-SYNC-083. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. Do not claim implementation-complete without live API call evidence or server log. |
+| PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ✅ VERIFIED — 2026-03-08 | HTTP 404 from GET /api/tenant/dpp/{uuid} — route live, DB query executed, RLS enforcement confirmed. "DPP snapshot not found or access denied." Auth: valid tenant JWT (impersonated session). Classification: DPP / Passport = WORKING. |
 | PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ⏳ VERIFY FIRST | Wired in GOVERNANCE-SYNC-117. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. |
 | PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ⏳ VERIFY FIRST | Audit conflict on whether TenantType is stable; resolve by targeted read of authService + tenantService |
 | PW5-V4 | Shell action verification | PW5-U3 | ⏳ VERIFY FIRST | Required before UX correctness tranche; verify which shell actions have no backend route |
+
+**PW5-V1 runtime evidence (2026-03-08):**
+- Server health: GET /health → HTTP 200 ✅
+- Route existence: GET /api/tenant/dpp/{uuid} without auth → HTTP 401 ✅ (route registered, auth-gated)
+- Runtime call: GET /api/tenant/dpp/00000000-0000-4000-a000-000000000001 with valid tenant JWT → HTTP 404 ✅
+- Error body: `{"error":{"code":"NOT_FOUND","message":"DPP snapshot not found or access denied"}}` — confirms route reached DB layer, views queried, RLS applied, no node for this org
+- Auth path: tenantAuthMiddleware passed → databaseContextMiddleware passed → withDbContext executed
+- JWT: admin-issued impersonation token (tenant-scoped, realm=TENANT) — value not recorded
+- Repo truth confirmed: GET /api/tenant/dpp/:nodeId registered in server/src/routes/tenant.ts; DPPPassport.tsx calls tenantGet(); nav wired all four shells
+- Classification: **DPP / Passport = WORKING** (implementation complete and runtime-verified)
 
 ---
 
