@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { TenantConfig } from '../types';
+import { useCart } from '../contexts/CartContext';
 
 interface ShellProps {
   tenant: TenantConfig;
@@ -91,7 +92,9 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => {
+  const { itemCount } = useCart();
+  return (
   <div className="min-h-screen bg-white font-sans">
     <div className="bg-indigo-600 text-white text-center py-2 text-[10px] font-bold uppercase tracking-widest">
       Free worldwide shipping on orders over $500
@@ -116,14 +119,19 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
           <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
           <div className="relative cursor-pointer">
             <span className="text-2xl">🛒</span>
-            <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                {itemCount}
+              </span>
+            )}
           </div>
         </div>
       </div>
     </header>
     <main className="max-w-7xl mx-auto p-6 relative">{children}</main>
   </div>
-);
+  );
+};
 
 export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
   <div className="min-h-screen font-sans" style={{ backgroundColor: '#ffffff' }}>
