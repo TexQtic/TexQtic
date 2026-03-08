@@ -1099,7 +1099,7 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 | ID | Name | Gate Target | Status | Notes |
 |---|---|---|---|---|
 | PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ✅ VERIFIED — 2026-03-08 | HTTP 404 from GET /api/tenant/dpp/{uuid} — route live, DB query executed, RLS enforcement confirmed. "DPP snapshot not found or access denied." Auth: valid tenant JWT (impersonated session). Classification: DPP / Passport = WORKING. |
-| PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ⏳ VERIFY FIRST | Wired in GOVERNANCE-SYNC-117. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. |
+| PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ⚠️ PARTIAL — 2026-03-08 | Backend route GET /api/tenant/audit-logs → HTTP 401 (unauth) + HTTP 200 (auth, logs=[], count=0) confirmed operational. Frontend path mismatch confirmed: TenantAuditLogs.tsx calls '/tenant/audit-logs' (missing /api prefix). No Vite proxy bridges gap. Classification: PARTIAL (backend working, frontend path broken). Follow-on fix required in separate atomic unit. |
 | PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ⏳ VERIFY FIRST | Audit conflict on whether TenantType is stable; resolve by targeted read of authService + tenantService |
 | PW5-V4 | Shell action verification | PW5-U3 | ⏳ VERIFY FIRST | Required before UX correctness tranche; verify which shell actions have no backend route |
 
@@ -1112,6 +1112,22 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 - JWT: admin-issued impersonation token (tenant-scoped, realm=TENANT) — value not recorded
 - Repo truth confirmed: GET /api/tenant/dpp/:nodeId registered in server/src/routes/tenant.ts; DPPPassport.tsx calls tenantGet(); nav wired all four shells
 - Classification: **DPP / Passport = WORKING** (implementation complete and runtime-verified)
+
+**PW5-V2 runtime evidence (2026-03-08):**
+- Server health: GET /health → HTTP 200 ✅
+- Route existence: GET /api/tenant/audit-logs without auth → HTTP 401 ✅ (route registered, auth-gated)
+- Runtime call: GET /api/tenant/audit-logs with valid tenant JWT (impersonated session) → HTTP 200 ✅
+- Response body: `{"data":{"logs":[],"count":0},"success":true}` — backend fully operational; empty array correct (RLS scopes to new test tenant with no audit events)
+- Auth path: tenantAuthMiddleware passed → databaseContextMiddleware passed → withDbContext executed → tx.auditLog.findMany returned
+- JWT: admin-issued impersonation token (tenant-scoped, realm=TENANT) — value not recorded
+- Frontend path mismatch confirmed by static analysis:
+  - `TenantAuditLogs.tsx` calls `tenantGet('/tenant/audit-logs')` (missing `/api` prefix)
+  - `tenantApiClient.ts` → `apiClient.ts` resolves to `API_BASE_URL + endpoint` = `'' + '/tenant/audit-logs'` = `/tenant/audit-logs`
+  - Backend listens at `/api/tenant/audit-logs` (prefix `/api` from `tenantRoutes` registration)
+  - `vite.config.ts` has no proxy — no bridge between the two paths
+  - Runtime consequence: frontend request hits SPA router, not Fastify. Component will always error.
+- Classification: **Tenant Audit Logs = PARTIAL** (backend working and runtime-verified; frontend path broken)
+- Follow-on fix unit required: change `'/tenant/audit-logs'` → `'/api/tenant/audit-logs'` in `TenantAuditLogs.tsx`; must be a separate atomic unit with its own runtime verification
 
 ---
 
