@@ -645,3 +645,116 @@ No agent, no prompt, and no implementation sprint may begin Wave 5 architecture 
 1. Step 1 (platform wiring audit) output is recorded in governance
 2. Step 2 (navigation verification) output is recorded in governance
 3. The Platform Map deliverable is present in the repo
+
+---
+
+## 10. Pre-Wave-5 Remediation Program (PRE-WAVE-5-REMEDIATION-001)
+
+**Registered:** 2026-03-08 — Post-audit registration  
+**Authority:** Paresh  
+**Status:** ACTIVE — Anti-drift. Wave 5 architecture sequencing blocked until gate conditions met.  
+**Detail registry:** `governance/gap-register.md` → `PRE-WAVE-5-REMEDIATION-001`  
+**Tracker:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` → Pre-Wave-5 Remediation Program section  
+**Reconciliation artifact:** `docs/governance/audits/2026-03-audit-reconciliation-matrix.md` → Section 9
+
+---
+
+### 10.1 Program Registration
+
+Two independent repo-truth audits were completed 2026-03-08 following GOVERNANCE-SYNC-118:
+
+1. **Full TexQtic Platform Map audit** — enumerated all domains by layer (DB model ✅/❌, API route ✅/❌, UI surface ✅/stub/❌); produced an agreed surface map across the full platform
+2. **Navigation verification audit** — walked every shell nav item and every expView/adminView route in App.tsx; recorded dead nav items, stub panels, backend-exists/UI-missing gaps, and placeholder control-plane panels
+
+Together the audits supersede all pre-GOVERNANCE-SYNC-118 expansion planning assumptions. The sequencing lock recorded in §9 (Steps 1 and 2) is now confirmed complete (both audits present in governance). Steps 3–6 remain blocked pending the remediation program sub-units.
+
+---
+
+### 10.2 Reconciled Conclusions
+
+| Finding Type | Count | Governance Action |
+|---|---|---|
+| Agreed findings (both audits consistent) | Multiple | Implementation-ready; assigned to wiring tranche sub-units |
+| Verification-required conflicts (audits differ) | Multiple | Must resolve by repo inspection before implementation — assigned to verification tranche |
+| Dead visible UI (nav/actions with no wiring) | Multiple | Must be hidden/gated before further expansion — assigned to UX correctness tranche |
+| Backend-exists/UI-missing | Multiple | Higher priority than net-new domains — assigned to wiring tranche |
+| Placeholder control-plane panels | Present | Do not count as wired; must not anchor Wave 5 planning — assigned to PW5-U4 |
+
+> **Anti-drift guidance:** Old expansion planning must not continue blindly from pre-audit assumptions. Only reconciled audit conclusions serve as the basis for implementation ordering.
+
+---
+
+### 10.3 Ordered Sub-Units
+
+Full sub-unit detail is in `governance/gap-register.md` → `PRE-WAVE-5-REMEDIATION-001`.
+
+**Verification tranche (gate for all implementation tranches):**
+
+| ID | Name | Status |
+|---|---|---|
+| PW5-V1 | DPP runtime verification | ⏳ VERIFY FIRST — no runtime proof in governance record |
+| PW5-V2 | Tenant Audit Logs runtime verification | ⏳ VERIFY FIRST — wired in GOVERNANCE-SYNC-117; runtime call not proven |
+| PW5-V3 | TenantType source-of-truth verification | ⏳ VERIFY FIRST |
+| PW5-V4 | Shell action verification | ⏳ VERIFY FIRST — gate for UX correctness tranche |
+
+> PW5-V1 and PW5-V2: do not claim implementation-complete status based on typecheck/lint EXIT 0 alone. Runtime call trace or server log evidence required.
+
+**UX correctness tranche (depends on PW5-V4):**
+
+| ID | Name | Status |
+|---|---|---|
+| PW5-U1 | B2C cart badge fix | ⏳ Pending |
+| PW5-U2 | Dead tenant/storefront nav hide-gate | ⏳ Pending |
+| PW5-U3 | Dead control-plane action hide-gate | ⏳ Pending |
+| PW5-U4 | Collapse static control-plane docs/spec panels | ⏳ Pending |
+
+**Wiring tranche (depends on verification tranche):**
+
+| ID | Name | Status |
+|---|---|---|
+| PW5-W1 | Tenant Trades UI | ⏳ BACKEND DESIGN GATE — GET /api/tenant/trades does not exist |
+| PW5-W2 | Control-plane Escrow inspection | ⏳ Pending |
+| PW5-W3 | Control-plane Settlement inspection | ⏳ Pending |
+| PW5-W4 | Maker-Checker review console | ⏳ Pending |
+
+**White-label tranche:**
+
+| ID | Name | Status |
+|---|---|---|
+| PW5-WL1 | WL storefront product grid | ⏳ Pending |
+| PW5-WL2 | WL storefront collections/category rendering | ⏳ Pending |
+| PW5-WL3 | WL builder requirements re-baseline | ⏳ Pending |
+
+**Planning tranche (depends on verification + UX tranches):**
+
+| ID | Name | Status |
+|---|---|---|
+| PW5-CP-PLAN | Control-plane re-baseline | ⏳ Pending — no planning until verification + UX tranches done |
+| PW5-AI-PLAN | AI/event backbone re-baseline | ⏳ Pending — no Wave 5 architecture until verification tranche + this plan complete |
+
+---
+
+### 10.4 Pre-Wave-5 Ordered Execution (Locked)
+
+Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order:
+
+| Step | Name | Status |
+|---|---|---|
+| 1 | Platform wiring audit | ✅ COMPLETE — 2026-03-08 |
+| 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 |
+| 3 | Control plane expansion planning | ⏳ Blocked — PW5-V4 + PW5-U3 + PW5-CP-PLAN prerequisites |
+| 4 | Tenant admin dashboard completion | ⏳ Blocked — verification + wiring tranches |
+| 5 | White-label store builder | ⏳ Blocked — PW5-WL1 + PW5-WL2 |
+| 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions required |
+
+---
+
+### 10.5 Wave 5 Architecture Block Conditions (Binding)
+
+Wave 5 architecture sequencing does not begin until all of the following are confirmed in governance:
+
+1. **Verification tranche complete** — PW5-V1 through PW5-V4 all resolved to ✅ with runtime evidence recorded
+2. **Dead UI gating tranche complete** — PW5-U2 and PW5-U3 at minimum resolved to ✅
+3. **Platform wiring truth reconciled in tracker** — `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` Pre-Wave-5 ordered sequence updated to reflect completions
+
+These conditions are non-waivable.

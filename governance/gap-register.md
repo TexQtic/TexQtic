@@ -1057,3 +1057,116 @@ Next: VER-002 (TECS-FBW-020 — WL Admin invite shell routing).
 | AT-003 | G-018 Escrow org_id RLS | escrow.g018.ts sets app.org_id GUC; cross-tenant isolation confirmed |
 | AT-004 | Control-plane provisioning auth posture | GOVERNANCE-SYNC-035 CI guard: 8/8 SUPER_ADMIN surfaces gated; 0 violations |
 | AT-005 | Impersonation token on realm switch | VERIFY_REQUIRED — clearImpersonationToken() called on explicit exit; accidental logout-during-impersonation path not verified (VER-009 adjacent) |
+
+---
+
+## PRE-WAVE-5-REMEDIATION-001 — Platform Wiring and Runtime Truth Reconciliation
+
+**Registered:** 2026-03-08  
+**Authority:** Paresh  
+**Classification:** Anti-drift — Pre-Wave-5  
+**Predecessor:** SEQUENCING-LOCK-PRE-WAVE-5 (2026-03-08) · GOVERNANCE-SYNC-118  
+**Source audits:** Full TexQtic Platform Map audit + Navigation verification audit (both completed 2026-03-08, repo inspection only)  
+**Detail tracker:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` → Pre-Wave-5 Remediation Program section  
+**Master plan:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` → Section 10  
+**Audit registration:** `docs/governance/audits/2026-03-audit-reconciliation-matrix.md` → Section 9  
+**Status:** REGISTERED — Verification tranche must complete before any implementation unit begins
+
+### Program Purpose
+
+Two independent repo-truth audits completed 2026-03-08 following GOVERNANCE-SYNC-118 produced a mixed set of findings: agreed wired surfaces, verified-dead UI, backend-exists/UI-missing gaps, and placeholder control-plane panels that must not anchor Wave 5 planning. This program establishes the ordered remediation sequence that governs all pre-Wave-5 execution. Old expansion planning assumptions are superseded by audit output. All implementation ordering is based only on reconciled conclusions.
+
+> **Anti-drift rule:** No sub-unit in an implementation tranche may begin until all sub-units in the verification tranche that gate it are resolved and recorded in governance. No agent or prompt may bypass this rule.
+
+---
+
+### Reconciled Audit Conclusions
+
+| # | Finding Type | Classification | Disposition |
+|---|---|---|---|
+| 1 | Both audits agree on wired-status of a surface | `AGREED` | Implementation-ready; assigned to wiring tranche sub-unit |
+| 2 | Audits differ on wire status | `VERIFY_REQUIRED` | Resolve by targeted repo inspection; assigned to verification tranche |
+| 3 | Nav item / action visible but no backend route or wiring | `DEAD_UI` | Must be hidden/gated before further expansion; assigned to UX correctness tranche |
+| 4 | Backend route exists; no UI surface wired | `BACKEND_EXISTS_UI_MISSING` | Higher priority than net-new domain work |
+| 5 | Static control-plane docs/spec/roadmap panel | `PLACEHOLDER_PANEL` | Does not count as a wired surface; must not anchor Wave 5 planning |
+
+---
+
+### Verification Tranche (Gate for All Implementation Tranches)
+
+All four verification sub-units must resolve to ✅ with evidence before any implementation tranche sub-unit begins.
+
+| ID | Name | Gate Target | Status | Notes |
+|---|---|---|---|---|
+| PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ⏳ VERIFY FIRST | Wired in GOVERNANCE-SYNC-083. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. Do not claim implementation-complete without live API call evidence or server log. |
+| PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ⏳ VERIFY FIRST | Wired in GOVERNANCE-SYNC-117. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. |
+| PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ⏳ VERIFY FIRST | Audit conflict on whether TenantType is stable; resolve by targeted read of authService + tenantService |
+| PW5-V4 | Shell action verification | PW5-U3 | ⏳ VERIFY FIRST | Required before UX correctness tranche; verify which shell actions have no backend route |
+
+---
+
+### UX Correctness Tranche (Depends on PW5-V4)
+
+| ID | Name | Status | Notes |
+|---|---|---|---|
+| PW5-U1 | B2C cart badge fix | ⏳ Pending | Cart badge appears for B2C-only contexts; should not be visible in tenant admin shell |
+| PW5-U2 | Dead tenant/storefront nav hide-gate | ⏳ Pending | Nav items visible with no backend route or wired component; must be conditionally hidden |
+| PW5-U3 | Dead control-plane action hide-gate | ⏳ Pending | Includes TECS-FBW-012 (edit access), TECS-FBW-ADMINRBAC, TECS-FBW-AIGOVERNANCE button surfaces |
+| PW5-U4 | Collapse static control-plane docs/spec panels | ⏳ Pending | Panels classified as PLACEHOLDER_PANEL must not persist as primary nav destinations |
+
+---
+
+### Wiring Tranche (Depends on Verification Tranche)
+
+| ID | Name | Status | Notes |
+|---|---|---|---|
+| PW5-W1 | Tenant Trades UI | ⏳ BACKEND DESIGN GATE | `TECS-FBW-002-B` remains 🚫 BLOCKED. `GET /api/tenant/trades` does not exist as a tenant-plane route. No UI wiring is possible until route is designed and implemented under tenant-plane auth. |
+| PW5-W2 | Control-plane Escrow inspection | ⏳ Pending | Backend route exists; audit flagged as BACKEND_EXISTS_UI_MISSING; verify and wire |
+| PW5-W3 | Control-plane Settlement inspection | ⏳ Pending | Backend route exists; audit flagged as BACKEND_EXISTS_UI_MISSING; verify and wire |
+| PW5-W4 | Maker-Checker review console | ⏳ Pending | State machine and backend logic implemented in Wave 4 area; UI console not wired |
+
+---
+
+### White-Label Tranche
+
+| ID | Name | Status | Notes |
+|---|---|---|---|
+| PW5-WL1 | WL storefront product grid | ⏳ Pending | White-label storefront product listing wiring |
+| PW5-WL2 | WL storefront collections/category rendering | ⏳ Pending | Collections and category filter wiring |
+| PW5-WL3 | WL builder requirements re-baseline | ⏳ Pending | Baseline requirements after audit — do not use pre-audit planning |
+
+---
+
+### Planning Tranche (Depends on Verification + UX Tranches)
+
+| ID | Name | Status | Notes |
+|---|---|---|---|
+| PW5-CP-PLAN | Control-plane re-baseline | ⏳ Pending | No control-plane expansion planning until verification tranche + PW5-U3 + PW5-U4 are done |
+| PW5-AI-PLAN | AI/event backbone re-baseline | ⏳ Pending | No Wave 5 AI architecture until verification tranche complete and this plan confirmed |
+
+---
+
+### Pre-Wave-5 Ordered Execution Sequence (Locked 2026-03-08)
+
+| Step | Name | Status |
+|---|---|---|
+| 1 | Platform wiring audit | ✅ COMPLETE — 2026-03-08 |
+| 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 |
+| 3 | Control-plane expansion planning | ⏳ BLOCKED — PW5-V4 + PW5-U3 + PW5-CP-PLAN prerequisites |
+| 4 | Tenant admin dashboard completion | ⏳ BLOCKED — verification + wiring tranches |
+| 5 | White-label store builder | ⏳ BLOCKED — PW5-WL1 + PW5-WL2 |
+| 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions required |
+
+Recommended immediate next unit: **PW5-V1** — DPP runtime verification.
+
+---
+
+### Wave 5 Architecture Block Conditions (Non-Waivable)
+
+Wave 5 architecture sequencing does not begin until all of the following are confirmed in governance:
+
+- [ ] **Verification tranche complete** — PW5-V1 through PW5-V4 all resolved to ✅ with runtime evidence or confirmed repo-inspection evidence recorded in governance
+- [ ] **Dead UI gating tranche complete** — PW5-U2 and PW5-U3 minimum resolved to ✅
+- [ ] **Platform wiring truth reconciled in tracker** — `IMPLEMENTATION-TRACKER-2026-03.md` Pre-Wave-5 ordered sequence updated to reflect tranche completions
+
+No agent, no prompt, and no implementation sprint may bypass these conditions.

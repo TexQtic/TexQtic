@@ -472,6 +472,68 @@ Items that cannot proceed to implementation without targeted inspection:
 
 ---
 
+## 9. Pre-Wave-5 Remediation Registration (2026-03-08)
+
+**Registered:** 2026-03-08 — following completion of two independent repo-truth audits  
+**Authority:** Paresh  
+**Trigger:** GOVERNANCE-SYNC-118 + Full TexQtic Platform Map audit + Navigation verification audit  
+**Program container:** `PRE-WAVE-5-REMEDIATION-001 — Platform Wiring and Runtime Truth Reconciliation`
+
+### Source Audits
+
+Two audits completed 2026-03-08 triggered this registration:
+
+1. **Full TexQtic Platform Map audit** — enumerated all platform domains by layer (DB model / API route / UI surface); classified each as wired, partially-wired, stub, or absent
+2. **Navigation verification audit** — walked every nav item in both shells and every route registered in App.tsx; recorded dead nav items, stub panels, backend-exists/UI-missing gaps, and placeholder control-plane panels
+
+Both audits were repo-inspection only (not runtime). No application code was modified during either audit.
+
+### Finding Type Classification
+
+| Finding Type | Classification | Action |
+|---|---|---|
+| Agreed findings (both audits consistent in wired status) | `AGREED` | Implementation-ready; may be assigned to wiring tranche sub-units |
+| Conflicting findings (audits differ on wire status) | `VERIFY_REQUIRED` | Must resolve by targeted repo inspection before implementation |
+| Dead visible UI with no backend route or wiring path | `DEAD_UI` | Must be hidden/gated before further expansion; UX correctness tranche |
+| Backend route exists but UI surface absent | `BACKEND_EXISTS_UI_MISSING` | Higher priority than net-new domains |
+| Placeholder control-plane panels (static docs/spec/roadmap views) | `PLACEHOLDER_PANEL` | Do not count as wired surfaces; must not anchor Wave 5 planning |
+
+### Program Registration Outcome
+
+**Program `PRE-WAVE-5-REMEDIATION-001`** is registered in:
+
+- `governance/gap-register.md` → `PRE-WAVE-5-REMEDIATION-001` section
+- `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` → Pre-Wave-5 Remediation Program section
+- `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` → Section 10
+
+**14 ordered sub-units** registered across 5 tranches:
+
+- **Verification (V):** PW5-V1 (DPP), PW5-V2 (Tenant Audit Logs), PW5-V3 (TenantType), PW5-V4 (Shell actions)
+- **UX Correctness (U):** PW5-U1 (B2C cart badge), PW5-U2 (dead tenant nav), PW5-U3 (dead CP actions), PW5-U4 (static CP panels)
+- **Wiring (W):** PW5-W1 (Tenant Trades — BACKEND DESIGN GATE), PW5-W2 (Escrow), PW5-W3 (Settlement), PW5-W4 (Maker-Checker)
+- **White-Label (WL):** PW5-WL1, PW5-WL2, PW5-WL3
+- **Planning (CP/AI):** PW5-CP-PLAN, PW5-AI-PLAN
+
+### Critical Flags from This Audit Registration
+
+> **PW5-V1 (DPP):** Wired in GOVERNANCE-SYNC-083. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. Mark as VERIFY FIRST — do not claim implementation-complete without live API call evidence.
+
+> **PW5-V2 (Tenant Audit Logs):** Wired in GOVERNANCE-SYNC-117. Typecheck/lint EXIT 0 recorded. No runtime call trace in governance. Mark as VERIFY FIRST.
+
+> **PW5-W1 (Tenant Trades UI):** `TECS-FBW-002-B` remains 🚫 BLOCKED. `GET /api/tenant/trades` does not exist as a tenant-plane route. This is a BACKEND DESIGN GATE — no UI wiring is possible until the route is designed and implemented.
+
+### Wave 5 Block Conditions (Recorded at Registration)
+
+Wave 5 architecture sequencing does not begin until:
+
+- [ ] Verification tranche (PW5-V1 through PW5-V4) fully resolved with evidence
+- [ ] Dead UI gating (PW5-U2 and PW5-U3 minimum) complete
+- [ ] IMPLEMENTATION-TRACKER Pre-Wave-5 ordered sequence updated to reflect completions
+
+These conditions are non-waivable. Recorded in MASTER-IMPLEMENTATION-PLAN §10.5.
+
+---
+
 ## 8. No-Change Confirmation
 
 This document was produced by read-only analysis of two audit reports and existing governance documents.  
