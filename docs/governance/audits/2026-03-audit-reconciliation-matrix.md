@@ -605,6 +605,92 @@ No backend routes were added or modified.
 
 ---
 
+## 9. B2-DESIGN — Canonical TenantType Decision Evidence (2026-03-09)
+
+**Unit:** B2-DESIGN (design-only) + B2-DESIGN-GOV (governance documentation)  
+**Date:** 2026-03-09  
+**Status:** ✅ COMPLETE — APPROVED FOR REMEDIATION SEQUENCING  
+**Verdict:** Architecture locked. Remediation path (B2-REM-1..5) approved. PW5-V3 defects remain OPEN until implementation complete.
+
+### 9.1 Root Cause Summary
+
+PW5-V3 FAIL was caused by a single `org_type` free-text String field carrying three distinct semantic responsibilities across the TexQtic platform:
+
+| Responsibility | Current carrier | Problem |
+|---|---|---|
+| Organizational identity | `org_type` String (free-text) | No DB enum constraint; any string accepted |
+| Deployment/capability mode | `org_type` String (value `WHITE_LABEL`) | White Label mixed with identity values |
+| Experience shell routing signal | `TenantType` frontend enum (raw pass-through) | Silent `default:` fallback when unknown value received |
+
+This caused enum divergence across five layers: DB (`tenant_type` PG enum), Prisma schema, backend type alias, auth serialization comment, and frontend enum.
+
+### 9.2 Final Canonical Model
+
+**Axis 1 — Canonical Organizational Identity**
+
+```
+tenant_category: AGGREGATOR | B2B | B2C | INTERNAL
+```
+
+- `AGGREGATOR` — first-class platform aggregator organization
+- `B2B` — business-to-business operating tenant
+- `B2C` — business-to-consumer operating tenant
+- `INTERNAL` — internal/operator/system organization category
+- `WHITE_LABEL` — **permanently removed from identity axis**
+
+**Axis 2 — Deployment/Capability Mode**
+
+```
+is_white_label: BOOLEAN NOT NULL DEFAULT false
+```
+
+- White Label is a deployment/capability flag, not an organizational identity type.
+- Chosen over `deployment_mode ENUM` for long-term extensibility (avoids repeating the overload problem).
+- Future modes (EMBEDDED, HEADLESS) can be added as independent boolean flags.
+
+**Axis 3 — Experience Shell Resolution**
+
+```
+resolveExperienceShell(tenant_category, is_white_label) → Shell
+```
+
+- Derived from axes 1 and 2 via an explicit policy function.
+- No raw `org_type` pass-through permitted.
+- Silent `default:` enum fallback FORBIDDEN.
+- Unknown `tenant_category` input → error state + amber banner; never silent routing.
+
+### 9.3 Approved Shell Resolution Matrix
+
+| `tenant_category` | `is_white_label` | Resolved shell | Policy note |
+|---|---|---|---|
+| `AGGREGATOR` | `false` | `AggregatorShell` | First-class aggregator identity |
+| `AGGREGATOR` | `true` | `AggregatorShell` | WL flag on aggregator; no distinct shell Phase 1 |
+| `B2B` | `false` | `B2BShell` | Standard B2B experience |
+| `B2B` | `true` | `WhiteLabelShell` | WL B2B; OWNER/ADMIN → WL Admin console |
+| `B2C` | `false` | `B2CShell` | Standard B2C storefront |
+| `B2C` | `true` | `WhiteLabelShell` | WL B2C; OWNER/ADMIN → WL Admin console |
+| `INTERNAL` | `false` | `AggregatorShell` | **Explicit named policy rule** — not default fallback |
+| `INTERNAL` | `true` | `AggregatorShell` | Same as INTERNAL/false in Phase 1 |
+| `null` / unknown | any | Error state + amber banner | Never silently falls through |
+
+### 9.4 Remediation Sequence
+
+| Unit | Scope |
+|---|---|
+| B2-REM-1 | Schema / enum / migration — add `AGGREGATOR` to Prisma `TenantType` enum; add `is_white_label BOOLEAN` to `tenants` and `organizations`; data migration to remap `WHITE_LABEL` `org_type` rows |
+| B2-REM-2 | Backend serialization / auth alignment — emit `tenant_category` + `is_white_label` in login response; deprecate freeform `org_type` pass-through |
+| B2-REM-3 | Frontend enum / routing alignment — add `INTERNAL` to frontend `TenantType`; implement `resolveExperienceShell()` policy function; remove silent `default:` fallback |
+| B2-REM-4 | OpenAPI / contract synchronization — update `openapi.tenant.json` + `openapi.control-plane.json` to reflect canonical model |
+| B2-REM-5 | Provisioning flow update — `tenant_category` + `is_white_label` in provisioning request body and `TenantRegistry.tsx` UI |
+
+### 9.5 Design Verdict
+
+**APPROVED FOR REMEDIATION SEQUENCING**
+
+All design questions answered. No implementation occurred in B2-DESIGN or B2-DESIGN-GOV. The canonical model is locked. The remediation sequence is governance-valid. B2-REM-1 may be sequenced next.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
-*Source of truth for next-action assignments: this matrix + governance/gap-register.md*  
-*No commit generated for this document alone — will be included in governance sync commit.*
+*Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
+*Source of truth for next-action assignments: this matrix + governance/gap-register.md*

@@ -163,10 +163,44 @@ Two independent repo-truth audits were completed 2026-03-08. Together they produ
 |---|---|---|---|
 | PW5-V1 | DPP runtime verification | Confirm `GET /api/tenant/dpp/:nodeId` returns real data for a live tenant node; confirm manufacturer field omission per G-025-ORGS-RLS-001 state; do not claim runtime proof from typecheck/lint alone | ✅ VERIFIED — TECS Unit B1 (2026-03-09) · Verdict: PASS · Full static path confirmed UI→DB · Route registered: GET /api/tenant/dpp/:nodeId · 3 snapshot views confirmed in migrations (dpp_snapshot_products_v1 · dpp_snapshot_lineage_v1 · dpp_snapshot_certifications_v1) · SECURITY INVOKER + withDbContext + FORCE RLS · manufacturer fields restored (TECS 5C1 / migration 20260316000003) · Defect registered: PW5-V1-DEF-001 (openapi.tenant.json contract drift — documentation only) |
 | PW5-V2 | Tenant Audit Logs runtime verification | Confirm `GET /api/tenant/audit-logs` returns real audit entries for a provisioned tenant; TenantAuditLogs.tsx renders correctly against live data; wired in GOVERNANCE-SYNC-117 but runtime call not recorded | ✅ VERIFIED + PW5-FIX-V2A CLOSED — 2026-03-08 (runtime: HTTP 401 unauth + HTTP 200 auth { logs:[], count:0 }; path mismatch '/tenant/audit-logs' → '/api/tenant/audit-logs' fixed in TenantAuditLogs.tsx; TSC_EXIT:0; Classification: WORKING) |
-| PW5-V3 | TenantType source-of-truth verification | Confirm canonical `tenantType` derivation path in App.tsx post-GOVERNANCE-SYNC-118; confirm shell-routing logic reads the correct field from the tenant session object | ❌ FAIL — TECS Unit B2 (2026-03-09) · Enum mismatch confirmed across DB/Prisma/backend type/frontend enum · DB+Prisma enum: {B2B, B2C, INTERNAL} · Frontend enum: {AGGREGATOR, B2B, B2C, WHITE_LABEL} · AGGREGATOR + WHITE_LABEL unreachable via Prisma schema · INTERNAL has no frontend shell · Backend TenantType alias stale · 3 defects registered: PW5-V3-DEF-001 / PW5-V3-DEF-002 / PW5-V3-DEF-003 · Remediation required before Wave-5 entry · Next: B2-DESIGN (TenantType canonicalization decision) |
+| PW5-V3 | TenantType source-of-truth verification | Confirm canonical `tenantType` derivation path in App.tsx post-GOVERNANCE-SYNC-118; confirm shell-routing logic reads the correct field from the tenant session object | ❌ FAIL — TECS Unit B2 (2026-03-09) · Enum mismatch confirmed across DB/Prisma/backend type/frontend enum · DB+Prisma enum: {B2B, B2C, INTERNAL} · Frontend enum: {AGGREGATOR, B2B, B2C, WHITE_LABEL} · AGGREGATOR + WHITE_LABEL unreachable via Prisma schema · INTERNAL has no frontend shell · Backend TenantType alias stale · 3 defects registered: PW5-V3-DEF-001 / PW5-V3-DEF-002 / PW5-V3-DEF-003 · Remediation required before Wave-5 entry · **B2-DESIGN COMPLETE (2026-03-09)** — Canonical model locked. Remediation path B2-REM-1..5 approved. PW5-V3 defects remain OPEN until B2-REM-1..5 implemented. |
 | PW5-V4 | Shell action verification | Walk every nav item in all 6 shells; confirm each renders a non-stub component; record dead nav items and broken routes | ⏳ VERIFY FIRST |
 
 > **PW5-V1 and PW5-V2 — VERIFY FIRST:** These surfaces were wired in earlier waves (DPP: GOVERNANCE-SYNC-083; Tenant Audit Logs: GOVERNANCE-SYNC-117). typecheck EXIT 0 and lint EXIT 0 are necessary but not sufficient. Runtime call trace or server log evidence is required to close these units. Do not mark as implementation-complete based on repo inspection alone.
+
+---
+
+#### Pre-Wave-5 TenantType Canonicalization — B2-DESIGN Series
+
+**B2-DESIGN — TenantType Canonicalization Decision — ✅ COMPLETE (2026-03-09)**
+
+| Unit | Status | Date | Scope |
+|---|---|---|---|
+| B2-DESIGN | ✅ COMPLETE | 2026-03-09 | Design decision — Canonical model approved. APPROVED FOR REMEDIATION SEQUENCING. |
+| B2-DESIGN-GOV | ✅ COMPLETE | 2026-03-09 | Governance documentation — Canonical model recorded in governance artifacts. |
+| B2-REM-1 | ⏳ Pending | — | Schema / enum / migration — Add `AGGREGATOR` to Prisma enum; add `is_white_label` column; data migration for `WHITE_LABEL` rows. |
+| B2-REM-2 | ⏳ Pending | — | Backend serialization / auth alignment — `tenant_category` + `is_white_label` in login response; deprecate freeform `org_type` pass-through. |
+| B2-REM-3 | ⏳ Pending | — | Frontend enum / routing alignment — Add `INTERNAL` to `TenantType`; implement `resolveExperienceShell()` policy function; remove silent `default:` fallback. |
+| B2-REM-4 | ⏳ Pending | — | OpenAPI / contract synchronization — Update `openapi.tenant.json` and `openapi.control-plane.json` to reflect canonical model. |
+| B2-REM-5 | ⏳ Pending | — | Provisioning flow update — `tenant_category` + `is_white_label` in provisioning request and UI. |
+
+**Approved Canonical Model:**
+
+| Axis | Field | Canonical Values | Rule |
+|---|---|---|---|
+| Identity | `tenant_category` | `AGGREGATOR` / `B2B` / `B2C` / `INTERNAL` | Sole canonical organizational identity. Replaces overloaded `org_type`. |
+| Capability | `is_white_label` | `BOOLEAN NOT NULL DEFAULT false` | White Label is a deployment/capability flag — NOT a tenant type. |
+| Experience | `resolveExperienceShell(tenant_category, is_white_label)` | Derived from axes 1 + 2 | Explicit policy function — no raw enum pass-through; silent `default:` fallback FORBIDDEN. |
+
+**INTERNAL routing policy (locked):** `INTERNAL` → `AggregatorShell` via explicit named rule in `resolveExperienceShell()`. Never via silent fallback.
+
+**Locked decision:** White Label cannot be elevated back to tenant category. This decision is permanent.
+
+**Remediates:** PW5-V3-DEF-001 / PW5-V3-DEF-002 / PW5-V3-DEF-003 — pending B2-REM-1 through B2-REM-5.
+
+**PW5-V3 state:** Remains ❌ FAIL until B2-REM-1..5 implementation complete. Design locked — implementation sequencing approved.
+
+---
 
 #### UX Correctness Tranche — Depends on PW5-V4
 
