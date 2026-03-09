@@ -1,5 +1,23 @@
 # TEXQTIC — DOCTRINE COVERAGE MATRIX
 
+> **⚠ HISTORICAL SNAPSHOT — NOT CURRENT PLATFORM COVERAGE**
+>
+> | Field | Value |
+> |---|---|
+> | Status | Historical Snapshot |
+> | Snapshot Date | 2026-02-21 |
+> | Program State at Snapshot | Wave-2 Entry |
+> | Recorded By | GOVERNANCE-SYNC-095 baseline |
+>
+> This matrix reflects platform coverage at the **start of Wave 2 (2026-02-21)**.
+> Many items marked `❌ Missing` or `🔴 Critical` have since been implemented during Waves 3 and 4.
+> Do **not** use this document to assess current platform state.
+>
+> **For current coverage status refer to:**
+> - `governance/gap-register.md` — authoritative gap-by-gap status with commit evidence
+> - `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` — Wave 0–5 implementation tracker
+> - Pre-Wave-5 Governance Audit Report (Section 4D) — documents specific drift examples
+
 Last Updated: 2026-02-21
 Branch: main
 Doctrine Version: v1.4
