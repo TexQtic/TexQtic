@@ -562,6 +562,37 @@ These conditions are non-waivable. Recorded in MASTER-IMPLEMENTATION-PLAN §10.5
 
 **Reclassification:** DPP / Passport = **VERIFIED** — TECS Unit B1 PASS closes the outstanding `⏳ VERIFY FIRST` flag from audit registration. Implementation confirmed complete and runtime-consistent.
 
+### PW5-V3 TECS Unit B2 — TenantType Enum Verification FAIL Evidence (2026-03-09)
+
+**Unit:** TECS Unit B2 — TenantType Enum Verification  
+**Date:** 2026-03-09  
+**Verdict:** FAIL  
+**Method:** Read-only multi-layer static inspection — Prisma schema, DB migration, backend type alias, API routes, frontend enum, OpenAPI spec. No files modified.
+
+**Enum comparison matrix:**
+
+| Layer | File | Values |
+|---|---|---|
+| DB type (enforced) | Init migration SQL | `B2B`, `B2C`, `INTERNAL` |
+| Prisma schema | `server/prisma/schema.prisma` | `B2B`, `B2C`, `INTERNAL` |
+| Backend type alias | `server/src/types/index.ts` | `'B2B' \| 'B2C' \| 'INTERNAL'` |
+| Runtime expectation | `server/src/routes/auth.ts` comment | `'B2B' \| 'WHITE_LABEL' \| 'AGGREGATOR' \| 'B2C'` |
+| Frontend enum | `types.ts` | `AGGREGATOR`, `B2B`, `B2C`, `WHITE_LABEL` |
+
+**Key findings:**
+- `AGGREGATOR` and `WHITE_LABEL` are required by frontend shell routing but cannot be produced by any current Prisma code path or active provision route
+- `INTERNAL` exists in DB/Prisma/backend but has no frontend shell — silently falls back to `AggregatorShell`
+- Active provision route (`POST /api/control/tenants/provision`) accepts no `type` field — all tenants provisioned as `B2B` (default)
+- `sync_tenants_to_organizations()` trigger copies `tenants.type::text` → `organizations.org_type`; only {B2B, B2C, INTERNAL} can flow through this path
+- OpenAPI specs do not define a `TenantType` schema component in either spec file
+- No mapping layer exists — API emits raw `org_type` string pass-through; frontend applies silent fallback guard only
+
+**Defects registered:** PW5-V3-DEF-001 (INTERNAL no frontend shell — Medium), PW5-V3-DEF-002 (AGGREGATOR/WHITE_LABEL schema gap — High), PW5-V3-DEF-003 (backend alias stale — Low). Full defect entries in `governance/gap-register.md`.
+
+**Git diff:** No files modified during inspection — `git diff --name-only` was empty during TECS Unit B2 session.
+
+**Next action:** B2-DESIGN unit — product decision required before any migration or code change.
+
 ---
 
 ## 8. No-Change Confirmation

@@ -1100,7 +1100,7 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 |---|---|---|---|---|
 | PW5-V1 | DPP runtime verification | PW5-U2, PW5-W1 area | ✅ VERIFIED — 2026-03-08 | HTTP 404 from GET /api/tenant/dpp/{uuid} — route live, DB query executed, RLS enforcement confirmed. "DPP snapshot not found or access denied." Auth: valid tenant JWT (impersonated session). Classification: DPP / Passport = WORKING. |
 | PW5-V2 | Tenant Audit Logs runtime verification | PW5-W3 area | ✅ VERIFIED — 2026-03-08 | Backend runtime-proven (HTTP 401 unauth + HTTP 200 auth). Frontend path mismatch fixed in PW5-FIX-V2A: TenantAuditLogs.tsx '/tenant/audit-logs' corrected to '/api/tenant/audit-logs'. Post-fix runtime: HTTP 200 { logs: [], count: 0, success: true }. TSC_EXIT:0. Classification: Tenant Audit Logs = WORKING. |
-| PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ✅ VERIFIED — 2026-03-08 | Canonical source: organizations.org_type via getOrganizationIdentity(). Login + /api/me read the same function/column. Frontend priority ladder deterministic. WL_ADMIN routing symmetric. All TenantType enum values have shell coverage. Classification: CONSISTENT. No implementation change required. |
+| PW5-V3 | TenantType source-of-truth verification | PW5-U1, PW5-U4 area | ❌ FAIL — TECS Unit B2 (2026-03-09) | Enum mismatch confirmed across 4 layers. DB+Prisma: {B2B, B2C, INTERNAL}. Frontend: {AGGREGATOR, B2B, B2C, WHITE_LABEL}. AGGREGATOR and WHITE_LABEL unreachable via active Prisma code path. INTERNAL has no frontend shell (silent AGGREGATOR fallback). Backend type alias stale. 3 defects registered: PW5-V3-DEF-001/002/003. Remediation required. Next: B2-DESIGN. |
 | PW5-V4 | Shell action verification | PW5-U3 | ✅ VERIFIED — 2026-03-08 | All shell/global nav and action surfaces classified by static inspection. WORKING: 11 EXPERIENCE nav items, 6 WL_ADMIN views, 15 SuperAdmin views. DEAD NAV: B2B Negotiations, B2B Invoices, WL Collections, WL The Journal. DEAD ACTION: AdminRBAC Invite Admin/Revoke, AiGovernance Kill Switch + secondary buttons, Aggregator Post RFQ, B2B Create RFQ. STATIC/INCORRECT: B2C cart badge hardcoded "3". PLACEHOLDER_PANEL: Blueprints, BackendSkeleton, ApiDocs, DataModel, Middleware. STUB: AdminRBAC. PARTIAL: AiGovernance. Findings mapped to PW5-U1 through PW5-U4. No implementation change required. |
 
 **PW5-V1 runtime evidence (2026-03-08):**
@@ -1162,18 +1162,56 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 - JWT: admin-issued impersonation token (tenant-scoped, realm=TENANT) — value not recorded
 - Reclassification: **Tenant Audit Logs = WORKING** (backend operational + frontend path corrected + post-fix runtime-verified)
 
-**PW5-V3 static analysis evidence (2026-03-08):**
-- Method: read-only static analysis — no runtime required; chain confirmed by source
-- Canonical source of truth: `organizations.org_type` column (DB) — single authoritative field
-- Server read function: `getOrganizationIdentity(orgId, prisma)` in `server/src/lib/database-context.ts` — reads `organizations.org_type` via `withOrgAdminContext` (admin-realm RLS elevation required by `organizations_control_plane_select` policy)
-- Login path (`server/src/routes/auth.ts` ~line 373): `tenantType = org.org_type` → emitted as `{ token, user, tenantType }` in login response. Fail-open: `null` if org not provisioned (does not block login)
-- `/api/me` path (`server/src/routes/tenant.ts` ~line 82): same `getOrganizationIdentity()` call → `type: org.org_type` → emitted as `tenant.type` in `{ user, tenant, role }`
-- Frontend priority ladder (App.tsx lines 262–330): (1) `/api/me` success → `me.tenant.type` stored in `tenants[]` — **primary**; (2) `/api/me` fails → `stubType` from login `tenantType` — **fallback**; (3) `tenantType === null` → `TenantType.AGGREGATOR` — **neutral last-resort** (explicitly documented in code comment)
-- WL_ADMIN routing (App.tsx lines 292–313): `t.type === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has(role)` — applied symmetrically on both /api/me success path and stub path
-- Shell switch (App.tsx lines 1241–1256): all four `TenantType` enum values (`AGGREGATOR`, `B2B`, `B2C`, `WHITE_LABEL`) have explicit shell assignments; explicit `default: AggregatorShell` covers any unknown value
-- No competing source found: no `tenant_type`, `workspace_type`, or frontend-derived remapping. No hardcoded type override. One intentional neutral default only.
-- `tsc --noEmit` → TSC_EXIT:0 (no implementation files changed)
-- Classification: **CONSISTENT** — single source, deterministic consumption chain, no drift
+**PW5-V3 static analysis evidence (2026-03-08) — SUPERSEDED by TECS Unit B2 (2026-03-09):**
+- Original classification: CONSISTENT (2026-03-08 static pass)
+- Superseded by: TECS Unit B2 deeper enum inspection — revealed schema-level mismatch not caught by routing-chain-only inspection
+- See TECS Unit B2 evidence below for full findings
+
+**PW5-V3 TECS Unit B2 — Full Enum Inspection Evidence (2026-03-09) — VERDICT: FAIL:**
+- Method: Read-only multi-layer static inspection — Prisma schema, DB migration, backend type alias, API routes, frontend enum, OpenAPI spec
+- **DB type (enforced):** Init migration line 2: `CREATE TYPE "tenant_type" AS ENUM ('B2B', 'B2C', 'INTERNAL')` — only these 3 values can ever be stored in `tenants.type`
+- **Prisma schema:** `enum TenantType { B2B; B2C; INTERNAL; @@map("tenant_type") }` — matches DB type exactly
+- **Backend type alias** (`server/src/types/index.ts` line 66): `export type TenantType = 'B2B' | 'B2C' | 'INTERNAL'` — matches schema
+- **Runtime expectation** (`server/src/routes/auth.ts` comment line 376): `Expected values: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null` — **diverges from both schema and type alias**
+- **Frontend enum** (`types.ts` lines 2–6): `{ AGGREGATOR, B2B, B2C, WHITE_LABEL }` — **no INTERNAL; has AGGREGATOR and WHITE_LABEL which cannot be produced by Prisma**
+- **Trigger path** (`sync_tenants_to_organizations()`): `org_type = NEW.type::text` — casts Prisma enum to text; only {B2B, B2C, INTERNAL} can flow into `organizations.org_type`
+- **Active provision route** (`POST /api/control/tenants/provision`): accepts no `type` field — all provisioned tenants default to B2B
+- **OpenAPI control-plane:** provision body `type` enum `["B2B", "B2C", "INTERNAL"]` — matches schema but belongs to deprecated path
+- **OpenAPI tenant:** `tenantType` mentioned only as untyped string query param for AI insights — no TenantType schema component defined in either spec
+- **Shell routing (App.tsx switch):** handles {AGGREGATOR, B2B, B2C, WHITE_LABEL}; `INTERNAL` hits `default: AggregatorShell` (silent fallback)
+- **Git diff:** no files modified — read-only inspection confirmed
+- Classification: **FAIL** — enum mismatch across layers; AGGREGATOR and WHITE_LABEL architecturally required but schema-unreachable; INTERNAL has no frontend representation
+
+**PW5-V3-DEF-001 — Defect Registration (2026-03-09):**
+- ID: PW5-V3-DEF-001
+- Title: INTERNAL tenant type lacks frontend representation
+- Type: Enum mismatch — backend-present, frontend-absent
+- Severity: Medium
+- Description: `INTERNAL` exists in the DB `tenant_type` PG enum, in `server/prisma/schema.prisma`, and in `server/src/types/index.ts`. It is absent from the frontend `TenantType` enum in `types.ts`.
+- Runtime behavior: If a tenant row has `type = 'INTERNAL'`, the value passes through `organizations.org_type` → API → frontend unmodified. The login validity guard in `App.tsx` treats it as unrecognized and silently falls back to `TenantType.AGGREGATOR`, routing the user to `AggregatorShell`.
+- Impact: Incorrect shell routing for any `INTERNAL` tenant — silent, no error surfaced
+- Action required: Product decision on `INTERNAL` disposition; either add to frontend enum with a dedicated shell, or deprecate and remove from DB/Prisma enum
+- Classification: Non-blocking at runtime (fallback prevents crash); blocking for correctness
+
+**PW5-V3-DEF-002 — Defect Registration (2026-03-09):**
+- ID: PW5-V3-DEF-002
+- Title: AGGREGATOR and WHITE_LABEL unreachable via Prisma schema or active provision route
+- Type: Schema gap — values required at runtime but absent from Prisma enum
+- Severity: High
+- Description: The frontend enum (`types.ts`), shell routing switch (`App.tsx`), WL_ADMIN routing logic, and auth route runtime comments all require `AGGREGATOR` and `WHITE_LABEL` as valid `tenantType` values. However: (1) the Prisma `TenantType` enum does not include these values; (2) the DB `tenant_type` PG type does not include them; (3) the `sync_tenants_to_organizations()` trigger can only copy values from `tenants.type` (Prisma-constrained enum) into `organizations.org_type`; (4) the active provision route (`POST /api/control/tenants/provision`) does not accept a `type` field at all.
+- Impact: No current code path can create an AGGREGATOR or WHITE_LABEL tenant through Prisma. Shell routing for these two types — which cover all white-label and aggregator market verticals — is architecturally broken at the data-creation layer.
+- Action required: `ALTER TYPE tenant_type ADD VALUE 'AGGREGATOR'; ALTER TYPE tenant_type ADD VALUE 'WHITE_LABEL'` migration, Prisma schema update, backend type alias update, provision route extension. Requires B2-DESIGN decision unit before implementation.
+- Classification: High-severity schema gap; core platform functionality (WL tenants) blocked at provisioning layer
+
+**PW5-V3-DEF-003 — Defect Registration (2026-03-09):**
+- ID: PW5-V3-DEF-003
+- Title: Backend TenantType alias stale
+- Type: Type drift — alias diverges from runtime expectation
+- Severity: Low
+- Description: `server/src/types/index.ts` declaration: `export type TenantType = 'B2B' | 'B2C' | 'INTERNAL'`. Runtime expectation comment in `server/src/routes/auth.ts` (line 376): `Expected values: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null`. The alias does not include `AGGREGATOR` or `WHITE_LABEL` and still includes `INTERNAL`.
+- Impact: TypeScript type-checking will not flag AGGREGATOR/WHITE_LABEL values as invalid even though they are not in the alias (they arrive as raw `string` from DB, bypassing the type at the assignment point). Potential future inconsistency when stricter typing is applied.
+- Action required: Update alias to match the canonical outcome of B2-DESIGN. Blocked on DEF-002 resolution.
+- Classification: Low-severity type drift; does not block runtime but degrades type safety
 
 **PW5-V4 static analysis evidence (2026-03-08):**
 - Method: read-only static inspection across all 6 shells — no runtime required
