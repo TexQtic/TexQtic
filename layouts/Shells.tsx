@@ -68,8 +68,6 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
         {onNavigateCertifications && <button onClick={onNavigateCertifications} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
         {onNavigateTraceability && <button onClick={onNavigateTraceability} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
         {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
-        <button className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Negotiations</button>
-        <button className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📄 Invoices</button>
         <button onClick={onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
       </nav>
       <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
@@ -152,8 +150,6 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavi
         {onNavigateCertifications && <button onClick={onNavigateCertifications} className="hover:opacity-40 transition-opacity">Certifications</button>}
         {onNavigateTraceability && <button onClick={onNavigateTraceability} className="hover:opacity-40 transition-opacity">Traceability</button>}
         {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="hover:opacity-40 transition-opacity">Audit Log</button>}
-        <button className="hover:opacity-40 transition-opacity underline decoration-rose-500 underline-offset-4">Collections</button>
-        <button className="hover:opacity-40 transition-opacity">The Journal</button>
      </nav>
      <main className="max-w-screen-xl mx-auto py-12 px-6 relative">
        {children}
