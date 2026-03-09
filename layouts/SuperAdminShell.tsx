@@ -18,12 +18,7 @@ export type AdminView =
   | 'LOGS'
   | 'HEALTH'
   | 'RBAC'
-  | 'API_DOCS'
-  | 'DATA_MODEL'
-  | 'BLUEPRINTS'
-  | 'EVENTS'
-  | 'BACKEND_SKELETON'
-  | 'MIDDLEWARE';
+  | 'EVENTS';
 
 interface SuperAdminShellProps {
   children: React.ReactNode;
@@ -132,38 +127,6 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             onClick={() => onViewChange('AI')}
             icon="🤖"
             label="AI Governance"
-          />
-
-          <SectionTitle>Architecture & Specs</SectionTitle>
-          <NavLink
-            active={activeView === 'BLUEPRINTS'}
-            onClick={() => onViewChange('BLUEPRINTS')}
-            icon="📐"
-            label="Platform Blueprints"
-          />
-          <NavLink
-            active={activeView === 'BACKEND_SKELETON'}
-            onClick={() => onViewChange('BACKEND_SKELETON')}
-            icon="🏗️"
-            label="Domain Skeletons"
-          />
-          <NavLink
-            active={activeView === 'MIDDLEWARE'}
-            onClick={() => onViewChange('MIDDLEWARE')}
-            icon="🧬"
-            label="Middleware Logic"
-          />
-          <NavLink
-            active={activeView === 'API_DOCS'}
-            onClick={() => onViewChange('API_DOCS')}
-            icon="🔌"
-            label="API Contracts"
-          />
-          <NavLink
-            active={activeView === 'DATA_MODEL'}
-            onClick={() => onViewChange('DATA_MODEL')}
-            icon="🗄️"
-            label="Data Schema"
           />
 
           <SectionTitle>Infrastructure</SectionTitle>

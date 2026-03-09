@@ -43,12 +43,7 @@ import { ComplianceQueue } from './components/ControlPlane/ComplianceQueue';
 import { DisputeCases } from './components/ControlPlane/DisputeCases';
 import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
-import { ApiDocs } from './components/ControlPlane/ApiDocs';
-import { DataModel } from './components/ControlPlane/DataModel';
-import { ArchitectureBlueprints } from './components/ControlPlane/ArchitectureBlueprints';
 import { EventStream } from './components/ControlPlane/EventStream';
-import { BackendSkeleton } from './components/ControlPlane/BackendSkeleton';
-import { MiddlewareScaffold } from './components/ControlPlane/MiddlewareScaffold';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
 import { getCatalogItems, CatalogItem, createCatalogItem } from './services/catalogService';
@@ -989,18 +984,10 @@ const App: React.FC = () => {
         return <CartSummariesPanel />;
       case 'RBAC':
         return <AdminRBAC />;
-      case 'API_DOCS':
-        return <ApiDocs />;
-      case 'DATA_MODEL':
-        return <DataModel />;
-      case 'BLUEPRINTS':
-        return <ArchitectureBlueprints />;
       case 'EVENTS':
         return <EventStream />;
-      case 'BACKEND_SKELETON':
-        return <BackendSkeleton />;
       default:
-        return <MiddlewareScaffold />;
+        return null;
     }
   };
 
