@@ -6,7 +6,7 @@
 **Baseline:** GOVERNANCE-SYNC-095 (last recorded high-water mark at tracker creation)  
 **Date created:** 2026-03-06  
 **RLS Maturity:** 5.0 / 5  
-**Migrations:** 73 / 73 Applied  
+**Migrations:** 82 / 82 Applied  
 **Doctrine Version:** v1.4  
 
 > **Scope:** This tracker governs the frontend-backend reachability recovery work only.
@@ -178,7 +178,7 @@ Two independent repo-truth audits were completed 2026-03-08. Together they produ
 |---|---|---|---|
 | B2-DESIGN | ✅ COMPLETE | 2026-03-09 | Design decision — Canonical model approved. APPROVED FOR REMEDIATION SEQUENCING. |
 | B2-DESIGN-GOV | ✅ COMPLETE | 2026-03-09 | Governance documentation — Canonical model recorded in governance artifacts. |
-| B2-REM-1 | ⏳ Pending | — | Schema / enum / migration — Add `AGGREGATOR` to Prisma enum; add `is_white_label` column; data migration for `WHITE_LABEL` rows. |
+| B2-REM-1 | ✅ CLOSED | 2026-03-09 | Schema / enum / migration — `AGGREGATOR` added to canonical `TenantType` Prisma enum; `is_white_label BOOLEAN NOT NULL DEFAULT false` added to `tenants` and `organizations`; legacy `WHITE_LABEL` `org_type` organization rows migrated to `B2B` + `is_white_label=true`; validation gates 1–5 PASS; one atomic commit d893524. **Audit annotation:** g026 + g028 syntax-only fixes applied as user-approved prerequisites to unblock `prisma migrate deploy` — zero functional change; these fixes are incidental to migration apply and are not part of B2-REM-1 design scope proper; no new gap row created. |
 | B2-REM-2 | ⏳ Pending | — | Backend serialization / auth alignment — `tenant_category` + `is_white_label` in login response; deprecate freeform `org_type` pass-through. |
 | B2-REM-3 | ⏳ Pending | — | Frontend enum / routing alignment — Add `INTERNAL` to `TenantType`; implement `resolveExperienceShell()` policy function; remove silent `default:` fallback. |
 | B2-REM-4 | ⏳ Pending | — | OpenAPI / contract synchronization — Update `openapi.tenant.json` and `openapi.control-plane.json` to reflect canonical model. |

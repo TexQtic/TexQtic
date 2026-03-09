@@ -691,6 +691,37 @@ All design questions answered. No implementation occurred in B2-DESIGN or B2-DES
 
 ---
 
+### 9.6 B2-REM-1 Closure Addendum (2026-03-09)
+
+**B2-REM-1 — ✅ CLOSED as of 2026-03-09**  
+**Commit:** d893524  
+**Scope:** Schema / enum / migration layer only.
+
+| Attribute | Detail |
+|---|---|
+| Schema changes applied | `AGGREGATOR` added to `TenantType` Prisma enum; `is_white_label BOOLEAN NOT NULL DEFAULT false` added to `tenants` and `organizations` tables |
+| Data migration | Legacy `WHITE_LABEL` `org_type` organization rows remapped to `B2B` + `is_white_label=true` |
+| Validation gates | Gates 1–5 PASS |
+| Atomicity | One atomic commit (d893524) |
+| org_id / RLS posture | Unchanged — no RLS policy or tenant isolation logic modified |
+| g026 / g028 treatment | Syntax-only fixes applied as user-approved prerequisites to unblock `prisma migrate deploy`; zero functional change; incidental to migration apply; not part of B2-REM-1 design scope proper; do not create a new gap row |
+
+**PW5-V3-DEF-002 — Partially Remediated at Schema Layer Only**  
+The schema layer deficit (AGGREGATOR and WHITE_LABEL unreachable via Prisma enum) is now resolved. Full defect closure is **not yet achieved**. Remaining layers still open:
+
+| Layer | Unit | Status |
+|---|---|---|
+| Backend serialization / auth alignment | B2-REM-2 | ⏳ Pending |
+| Frontend enum / routing alignment | B2-REM-3 | ⏳ Pending |
+| OpenAPI / contract synchronization | B2-REM-4 | ⏳ Pending |
+| Provisioning flow update | B2-REM-5 | ⏳ Pending |
+
+**PW5-V3 — ❌ FAIL Overall**  
+PW5-V3 remains ❌ FAIL overall. B2-REM-1 closes the schema layer only. B2-REM-2 through B2-REM-5 must be completed before PW5-V3 can be transitioned to PASS. This addendum records schema-layer progress only — it does not constitute full defect closure and must not be read as resolving the tranche.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
+*Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
