@@ -649,9 +649,6 @@ const App: React.FC = () => {
                 >
                   + Add Item
                 </button>
-                <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-emerald-700 transition">
-                  Create RFQ
-                </button>
               </div>
             </div>
 

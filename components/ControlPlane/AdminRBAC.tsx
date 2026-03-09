@@ -9,7 +9,6 @@ export const AdminRBAC: React.FC = () => (
         <h1 className="text-2xl font-bold text-white">Admin RBAC</h1>
         <p className="text-slate-400 text-sm">Manage internal access levels and platform administrators.</p>
       </div>
-      <button className="bg-slate-100 text-slate-900 px-4 py-2 rounded font-bold text-xs uppercase tracking-tight">Invite Admin</button>
     </div>
 
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -20,7 +19,6 @@ export const AdminRBAC: React.FC = () => (
             <th className="px-6 py-4 font-bold uppercase text-[10px]">Role</th>
             <th className="px-6 py-4 font-bold uppercase text-[10px]">Department</th>
             <th className="px-6 py-4 font-bold uppercase text-[10px]">Last Active</th>
-            <th className="px-6 py-4 font-bold uppercase text-[10px]">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800">
@@ -34,9 +32,6 @@ export const AdminRBAC: React.FC = () => (
               </td>
               <td className="px-6 py-4 text-slate-400 text-xs">{user.department}</td>
               <td className="px-6 py-4 text-slate-500 text-xs">{user.lastLogin}</td>
-              <td className="px-6 py-4">
-                <button className="text-blue-400 font-bold text-[10px] uppercase hover:underline">Revoke</button>
-              </td>
             </tr>
           ))}
         </tbody>

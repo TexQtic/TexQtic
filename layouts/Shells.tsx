@@ -44,7 +44,6 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
           {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="hover:text-blue-400 transition text-slate-300">Audit Log</button>}
           <button onClick={onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
         </nav>
-        <button className="bg-blue-600 px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition">Post RFQ</button>
       </div>
     </header>
     <main className="flex-1 bg-slate-50 relative">{children}</main>

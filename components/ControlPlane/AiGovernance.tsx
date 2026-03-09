@@ -38,14 +38,7 @@ export const AiGovernance: React.FC = () => {
             Monitor token usage, manage prompts, and enforce budgets.
           </p>
         </div>
-        <div className="flex gap-3">
-          <button className="bg-rose-600 text-white px-4 py-2 rounded font-bold text-xs uppercase">
-            AI Kill Switch
-          </button>
-          <button className="bg-slate-100 text-slate-900 px-4 py-2 rounded font-bold text-xs uppercase">
-            Registry
-          </button>
-        </div>
+
       </div>
 
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
@@ -80,7 +73,6 @@ export const AiGovernance: React.FC = () => {
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Tenant</th>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Monthly Limit</th>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Current Usage</th>
-                <th className="px-6 py-3 font-bold uppercase text-[10px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -92,11 +84,6 @@ export const AiGovernance: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 font-mono text-slate-400">
                     {t.aiBudget ? `${t.aiBudget.currentUsage.toLocaleString()} used` : '—'}
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="text-slate-400 hover:text-white text-xs uppercase font-bold">
-                      Adjust Cap
-                    </button>
                   </td>
                 </tr>
               ))}
