@@ -396,7 +396,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-007 | Cart Summaries Dead Service | Marketplace ops | §5.3 dead | F-007 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-116 · 2026-03-08) | HIGH | Wave 4 | CartSummariesPanel.tsx NEW; CART_SUMMARIES AdminView + NavLink; 3 files (1 NEW + 2 SUNE); search-on-demand; cursor pagination; controlPlaneService.ts untouched; typecheck+lint EXIT 0 |
 | TECS-FBW-008 | WL Custom Domain Dead (EXPERIENCE) | White-label | §6.3 dead | F-013 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | HIGH | Wave 1 | Dead input+Connect removed; onNavigateDomains prop routes to WLDomainsPanel; WLDomainsPanel unchanged |
 | TECS-FBW-011 | Catalog basePrice vs price | Catalog display | §3 contract mismatch (low specificity) | F-012/CM-001 CRITICAL | NEW_IN_COPILOT | VALIDATED | HIGH | Wave 1 | $undefined.00 runtime bug — ship blocker |
-| TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | VALIDATED | HIGH | Wave 5 | Confirmed by Q2 tracker §12.3 |
+| TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Dead button hidden via gating; TECS-FBW-012 backend design gate preserved |
 | TECS-FBW-013 | B2B Request Quote Dead | B2B commerce | §10 uncertain | F-015 / S-003 | NEW_IN_COPILOT | DEFERRED | MEDIUM | Wave 5 | Product decision pending |
 | TECS-FBW-014 | Post-Checkout Missing Confirm | Commerce UX | Not inspected | F-016 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | HIGH | Wave 1 | App.tsx ORDER_CONFIRMED appState; Cart.tsx onCheckoutSuccess prop (SAME-UNIT EXPANSION); typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-015 | G-016 Traceability CRUD | Supply chain | §5.2 absent | F-005 absent | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-115 · 2026-03-07) | HIGH | Wave 4 | commit df2cc638; typecheck EXIT 0; lint EXIT 0; 8 files: 3 NEW + 5 SUNE; tenant CRUD panel + admin read-only surface; D-017-A satisfied; DPPPassport.tsx untouched |
@@ -405,8 +405,9 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | Tenant provisioning | Not identified | CM-003 | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 0/verify | Intentional mapping per code comment |
 | TECS-FBW-019 | lifecycleState vs status | Orders | Not inspected | CM-004 handled | NEW_IN_COPILOT | DEFERRED | HIGH | — | GAP-ORDER-LC-001 closed (GOVERNANCE-SYNC-063) |
 | TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | ✅ CLOSED (GOVERNANCE-SYNC-101 · 2026-03-06) | MEDIUM | Wave 1 | App.tsx only; wlAdminInviting bool substate; typecheck EXIT 0; lint EXIT 0 |
-| TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | G-028 B1+ deferred |
-| TECS-FBW-ADMINRBAC | AdminRBAC No Backend | Admin access | S-001 implied | F-010 / S-001 | NEW_IN_COPILOT | REQUIRES_BACKEND_DESIGN | HIGH | Wave 5 | |
+| TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Kill switch and secondary buttons gated in AiGovernance component; no backend route wired; backend design gate preserved |
+| TECS-FBW-ADMINRBAC | AdminRBAC No Backend | Admin access | S-001 implied | F-010 / S-001 | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Invite Admin and Revoke buttons gated; no backend route wired; backend design gate preserved |
+| TECS-FBW-PLACEHOLDER-PANELS | Static control-plane spec panels removed from nav | SuperAdmin UX | — | — | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U4 (3e2e14d) · 2026-03-09 | MEDIUM | PW5-U4 | ArchitectureBlueprints, BackendSkeleton, ApiDocs, DataModel, MiddlewareScaffold removed from SuperAdmin nav; component files preserved on disk |
 | TECS-FBW-MOQ | MOQ_NOT_MET UX Gap | Cart | Not identified | §11 P4.4 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-103) | MEDIUM | Wave 1 | Inline error surfaced via addError state in B2CAddToCartButton |
 | TECS-FBW-OA-001 | OpenAPI Tenant Drift | Contract governance | §7.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
 | TECS-FBW-OA-002 | OpenAPI Control-Plane Drift | Contract governance | §7.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
@@ -531,6 +532,35 @@ Wave 5 architecture sequencing does not begin until:
 - [ ] IMPLEMENTATION-TRACKER Pre-Wave-5 ordered sequence updated to reflect completions
 
 These conditions are non-waivable. Recorded in MASTER-IMPLEMENTATION-PLAN §10.5.
+
+### PW5-V1 TECS Unit B1 — DPP Verification Closure Evidence (2026-03-09)
+
+**Unit:** TECS Unit B1 — DPP Runtime Verification  
+**Date:** 2026-03-09  
+**Verdict:** PASS  
+**Method:** Read-only static inspection — full call chain traced from UI entry point to DB snapshot views
+
+**Static path confirmation:**
+- UI entry: `DPPPassport` component navigable from all 4 tenant shells (AggregatorShell L40, B2BShell L63, B2CShell L109, WhiteLabelShell L145); `App.tsx` L562: `if (expView === 'DPP') return <DPPPassport onBack={() => setExpView('HOME')} />;`
+- API call: `tenantGet<DppSnapshot>(\`/api/tenant/dpp/${encodeURIComponent(trimmed)}\`)` — TENANT realm guard + `X-Texqtic-Realm: tenant` header enforced via `services/tenantApiClient.ts`
+- Backend route: `fastify.get('/tenant/dpp/:nodeId', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, ...)` — confirmed in `server/src/routes/tenant.ts`
+
+**DB snapshot views (all 3 confirmed in migrations):**
+- `dpp_snapshot_products_v1` — `SECURITY INVOKER`; manufacturer fields restored (migration `20260316000003_g025_dpp_views_manufacturer_restore`)
+- `dpp_snapshot_lineage_v1` — `SECURITY INVOKER`; recursive CTE depth cap 20 (migration `20260316000001_g025_dpp_snapshot_views`)
+- `dpp_snapshot_certifications_v1` — `SECURITY INVOKER` (migration `20260316000001_g025_dpp_snapshot_views`)
+
+**Tenant isolation:** `withDbContext(prisma, dbContext)` sets `app.org_id`; all 3 views `SECURITY INVOKER`; `FORCE RLS` fires; 404 fail-closed guard on empty product rows.  
+**Payload match:** All fields confirmed between backend response shape and frontend `DppSnapshot` interface.  
+**Git diff:** No files modified during verification — read-only inspection confirmed.
+
+**Defect registered: PW5-V1-DEF-001**
+- Type: Governance Contract Drift
+- Description: `GET /api/tenant/dpp/:nodeId` absent from `shared/contracts/openapi.tenant.json`
+- Impact: Documentation only — runtime not affected
+- Action: Future contract-sync TECS unit
+
+**Reclassification:** DPP / Passport = **VERIFIED** — TECS Unit B1 PASS closes the outstanding `⏳ VERIFY FIRST` flag from audit registration. Implementation confirmed complete and runtime-consistent.
 
 ---
 

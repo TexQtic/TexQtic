@@ -1113,6 +1113,29 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 - Repo truth confirmed: GET /api/tenant/dpp/:nodeId registered in server/src/routes/tenant.ts; DPPPassport.tsx calls tenantGet(); nav wired all four shells
 - Classification: **DPP / Passport = WORKING** (implementation complete and runtime-verified)
 
+**PW5-V1 TECS Unit B1 — Supplemental static inspection evidence (2026-03-09):**
+- Unit: TECS Unit B1 — DPP Runtime Verification · Date: 2026-03-09 · Verdict: PASS
+- Method: Read-only static inspection — full call chain traced UI→API→Backend→DB; no files modified
+- 3 snapshot views confirmed present in committed migrations:
+  - `dpp_snapshot_products_v1` — SECURITY INVOKER; manufacturer fields restored in migration `20260316000003_g025_dpp_views_manufacturer_restore`
+  - `dpp_snapshot_lineage_v1` — SECURITY INVOKER; recursive CTE depth cap 20 in migration `20260316000001_g025_dpp_snapshot_views`
+  - `dpp_snapshot_certifications_v1` — SECURITY INVOKER in migration `20260316000001_g025_dpp_snapshot_views`
+- Tenant isolation chain: `withDbContext(prisma, dbContext)` sets `app.org_id`; views SECURITY INVOKER; FORCE RLS fires; 404 fail-closed guard on empty product rows
+- Payload match: backend `DppSnapshot` response shape confirmed against frontend interface — all fields consistent
+- Git diff: no files modified — `git diff --name-only` was empty in TECS Unit B1 session
+- Reclassification: **DPP / Passport = VERIFIED** (TECS Unit B1 PASS · 2026-03-09)
+
+**PW5-V1-DEF-001 — Defect Registration (2026-03-09):**
+- ID: PW5-V1-DEF-001
+- Type: Governance Contract Drift
+- Discovered by: TECS Unit B1 (read-only static inspection)
+- Description: `GET /api/tenant/dpp/:nodeId` is absent from `shared/contracts/openapi.tenant.json`
+- Affected contract file: `shared/contracts/openapi.tenant.json`
+- Impact: Documentation only — runtime is not affected; route is registered, auth-gated, and functional
+- Severity: Low (documentation drift — non-blocking)
+- Action required: Future contract-sync TECS unit to add the missing path definition
+- Classification: Non-blocking defect; does not affect PW5-V1 PASS verdict
+
 **PW5-V2 runtime evidence (2026-03-08):**
 - Server health: GET /health → HTTP 200 ✅
 - Route existence: GET /api/tenant/audit-logs without auth → HTTP 401 ✅ (route registered, auth-gated)
@@ -1177,7 +1200,19 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 | PW5-U1 | B2C cart badge fix | ⏳ Pending | Cart badge appears for B2C-only contexts; should not be visible in tenant admin shell |
 | PW5-U2 | Dead tenant/storefront nav hide-gate | ⏳ Pending | Nav items visible with no backend route or wired component; must be conditionally hidden |
 | PW5-U3 | Dead control-plane action hide-gate | ⏳ Pending | Includes TECS-FBW-012 (edit access), TECS-FBW-ADMINRBAC, TECS-FBW-AIGOVERNANCE button surfaces |
-| PW5-U4 | Collapse static control-plane docs/spec panels | ⏳ Pending | Panels classified as PLACEHOLDER_PANEL must not persist as primary nav destinations |
+| PW5-U4 | Collapse placeholder SuperAdmin spec panels | ✅ COMPLETE — 2026-03-09 | Removed static "Architecture & Specs" admin section. Deleted AdminView enum variants and 5 NavLink entries from SuperAdminShell.tsx. Removed unused imports and switch cases from App.tsx. Component files preserved on disk. Commit 3e2e14d. |
+
+**PW5-U4 Evidence — Placeholder Panel Collapse**
+
+* Removed 5 AdminView variants: API_DOCS, DATA_MODEL, BLUEPRINTS, BACKEND_SKELETON, MIDDLEWARE
+* Removed Architecture & Specs sidebar section and all 5 NavLink entries
+* Removed unused imports in App.tsx
+* Removed dead switch cases in renderAdminView()
+* Default case changed to return null
+* Component files preserved on disk
+* TypeScript validation: TSC_EXIT:0
+* ESLint validation: LINT_EXIT:0
+* Commit: 3e2e14d
 
 ---
 
