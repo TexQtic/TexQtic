@@ -519,6 +519,7 @@ export interface OrganizationIdentity {
   legal_name: string;
   status: string;
   org_type: string;
+  is_white_label: boolean;
   jurisdiction: string;
   risk_score: number;
   plan: string;
@@ -591,8 +592,7 @@ export async function getOrganizationIdentity(
         slug: true,
         legal_name: true,
         status: true,
-        org_type: true,
-        jurisdiction: true,
+        org_type: true,        is_white_label: true,        jurisdiction: true,
         risk_score: true,
         plan: true,
         created_at: true,

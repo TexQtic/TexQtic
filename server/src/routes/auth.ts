@@ -375,9 +375,11 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         // Do NOT block login on this — provisioning window is a valid state.
         // Expected values: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null
         let tenantType: string | null = null;
+        let isWhiteLabel: boolean = false;
         try {
           const org = await getOrganizationIdentity(result.membership.tenantId, prisma);
           tenantType = org.org_type;
+          isWhiteLabel = org.is_white_label;
         } catch (err) {
           if (!(err instanceof OrganizationNotFoundError)) {
             // Unexpected DB error — log but still fail-open (do not block login)
@@ -398,6 +400,9 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           // Used by frontend for deterministic shell routing during /api/me fallback.
           // null when org not yet provisioned (G-WL-TYPE-MISMATCH follow-on fix).
           tenantType,
+          // B2-REM-2: canonical identity fields (tenant_category aliases tenantType; is_white_label from org)
+          tenant_category: tenantType,
+          is_white_label: isWhiteLabel,
         });
       }
 
@@ -1057,10 +1062,27 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         fastify.log.error({ err: error }, '[Refresh Token] Issuance failed - login continues');
       }
 
+      // B2-REM-2: fail-open org identity lookup for canonical tenant fields
+      let tenantCategory: string | null = null;
+      let tenantIsWhiteLabel: boolean = false;
+      try {
+        const org = await getOrganizationIdentity(result.membership.tenantId, prisma);
+        tenantCategory = org.org_type;
+        tenantIsWhiteLabel = org.is_white_label;
+      } catch (err) {
+        if (!(err instanceof OrganizationNotFoundError)) {
+          fastify.log.warn({ err }, '[Tenant Login] org identity lookup failed — tenant_category will be null');
+        }
+        // OrganizationNotFoundError: org not provisioned yet — canonical fields null/false is correct
+      }
+
       return sendSuccess(reply, {
         token,
         user: result.user,
         membership: result.membership,
+        // B2-REM-2: canonical identity fields
+        tenant_category: tenantCategory,
+        is_white_label: tenantIsWhiteLabel,
       });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Tenant Login] Error');

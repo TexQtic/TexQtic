@@ -77,7 +77,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     // Preserve response shape: legal_name → name, org_type → type.
     // MUST return a non-null tenant object — returning null causes the frontend
     // workspace spinner to hang indefinitely (tenants[] stays empty).
-    let tenant: { id: string; slug: string; name: string; type: string; status: string; plan: string };
+    let tenant: { id: string; slug: string; name: string; type: string; tenant_category: string; is_white_label: boolean; status: string; plan: string };
     try {
       const org = await getOrganizationIdentity(tenantId, prisma);
       tenant = {
@@ -85,6 +85,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         slug: org.slug,
         name: org.legal_name,
         type: org.org_type,
+        // B2-REM-2: canonical identity fields
+        tenant_category: org.org_type,
+        is_white_label: org.is_white_label,
         status: org.status,
         plan: org.plan,
       };
