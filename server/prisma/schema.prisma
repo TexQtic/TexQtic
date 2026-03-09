@@ -15,6 +15,7 @@ model Tenant {
   type                     TenantType               @default(B2B)
   status                   TenantStatus             @default(ACTIVE)
   plan                     TenantPlan               @default(FREE)
+  isWhiteLabel             Boolean                  @default(false) @map("is_white_label")
   createdAt                DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
   aiBudget                 AiBudget?
@@ -895,6 +896,7 @@ model organizations {
   jurisdiction          String                @default("UNKNOWN") @db.VarChar(100)
   registration_no       String?               @db.VarChar(200)
   org_type              String                @default("B2B") @db.VarChar(50)
+  is_white_label        Boolean               @default(false)
   risk_score            Int                   @default(0) @db.SmallInt
   status                String                @default("ACTIVE") @db.VarChar(30)
   plan                  String                @default("FREE") @db.VarChar(30)
@@ -1054,6 +1056,7 @@ model node_certifications {
 }
 
 enum TenantType {
+  AGGREGATOR
   B2B
   B2C
   INTERNAL

@@ -50,7 +50,7 @@ IF NOT EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'organizations'
-) THEN RAISE EXCEPTION 'G-028 PRE-FLIGHT BLOCKED: public.organizations does not exist. ' 'Apply G-015 Phase A migration (20260224000000_g015_phase_a_introduce_organizations) before this migration.';
+) THEN RAISE EXCEPTION 'G-028 PRE-FLIGHT BLOCKED: public.organizations does not exist. Apply G-015 Phase A migration (20260224000000_g015_phase_a_introduce_organizations) before this migration.';
 END IF;
 -- Idempotency guard: abort if already applied
 IF EXISTS (
@@ -58,7 +58,7 @@ IF EXISTS (
   FROM information_schema.tables
   WHERE table_schema = 'public'
     AND table_name = 'document_embeddings'
-) THEN RAISE EXCEPTION 'G-028 PRE-FLIGHT BLOCKED: public.document_embeddings already exists. ' 'Migration 20260318000000_g028_a1_pgvector_document_embeddings may already be applied.';
+) THEN RAISE EXCEPTION 'G-028 PRE-FLIGHT BLOCKED: public.document_embeddings already exists. Migration 20260318000000_g028_a1_pgvector_document_embeddings may already be applied.';
 END IF;
 RAISE NOTICE 'G-028 pre-flight OK: organizations present, document_embeddings absent. Proceeding.';
 END $$;
@@ -129,8 +129,8 @@ CREATE TABLE public.document_embeddings (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE public.document_embeddings IS 'G-028 A1: pgvector embedding storage for semantic search and RAG. ' 'One row per document chunk. Strictly org-scoped via FORCE RLS. ' 'embedding dim = 768 (text-embedding-004 / nomic-embed-text). ' 'All <=> similarity queries via $queryRaw only (Prisma Unsupported type).';
-COMMENT ON COLUMN public.document_embeddings.embedding IS 'pgvector(768). LOCKED dim. All similarity queries via $queryRaw. ' 'Changing dim = destructive migration (full reindex required).';
+COMMENT ON TABLE public.document_embeddings IS 'G-028 A1: pgvector embedding storage for semantic search and RAG. One row per document chunk. Strictly org-scoped via FORCE RLS. embedding dim = 768 (text-embedding-004 / nomic-embed-text). All <=> similarity queries via $queryRaw only (Prisma Unsupported type).';
+COMMENT ON COLUMN public.document_embeddings.embedding IS 'pgvector(768). LOCKED dim. All similarity queries via $queryRaw. Changing dim = destructive migration (full reindex required).';
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- §4  INDEXES
 --

@@ -45,7 +45,7 @@ GRANT SELECT ON public.tenant_domains TO texqtic_service;
 --    which established the same pattern for texqtic_app.
 GRANT texqtic_service TO postgres;
 -- 5. Human-readable comment for pg_roles catalogue.
-COMMENT ON ROLE texqtic_service IS 'G-026 domain resolver role. NOLOGIN, BYPASSRLS. ' 'SELECT on tenants + tenant_domains only. ' 'Reachable via SET LOCAL ROLE by postgres within resolver transactions.';
+COMMENT ON ROLE texqtic_service IS 'G-026 domain resolver role. NOLOGIN, BYPASSRLS. SELECT on tenants + tenant_domains only. Reachable via SET LOCAL ROLE by postgres within resolver transactions.';
 -- ── VERIFIER ────────────────────────────────────────────────────────────────
 -- Fails the transaction if any guarantee is not met.
 DO $$
