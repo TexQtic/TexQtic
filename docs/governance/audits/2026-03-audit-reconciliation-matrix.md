@@ -799,9 +799,49 @@ PW5-V3 remains ❌ FAIL overall. B2-REM-3 closes the frontend routing layer. B2-
 
 ---
 
+### 9.9 B2-REM-4 Closure Addendum (2026-03-10)
+
+**B2-REM-4 — ✅ CLOSED as of 2026-03-10**  
+**Commit:** d5d6f84  
+**Scope:** OpenAPI contract synchronization layer only.
+
+| Attribute | Detail |
+|---|---|
+| Files changed | `shared/contracts/openapi.tenant.json`; `shared/contracts/openapi.control-plane.json` |
+| Insertions / deletions | 171 insertions / 5 deletions |
+| `LoginSuccessResponse` (tenant contract) | Fields: `success`; `data.token`; `data.user`; `data.tenant_category` (enum: AGGREGATOR / B2B / B2C / INTERNAL); `data.is_white_label` (boolean); `data.tenantType` (string; `deprecated: true` — legacy compat) |
+| `MeSuccessResponse` (tenant contract) | Fields: `success`; `data.user`; `data.tenant` (containing `tenant_category`, `is_white_label`, `type` — `deprecated: true`, `status`, `plan`); `data.role` |
+| `TenantObject` (control-plane contract) | Fields: `id`; `slug`; `name`; `tenant_category` (enum: AGGREGATOR / B2B / B2C / INTERNAL); `is_white_label` (boolean); `status`; `plan` |
+| Tenant contract wiring | `POST /api/auth/login` 200 → `LoginSuccessResponse`; `POST /api/auth/tenant/login` 200 → `LoginSuccessResponse`; `GET /api/me` 200 → `MeSuccessResponse` |
+| Control-plane contract wiring | `GET /api/control/tenants` 200 → array of `TenantObject`; `GET /api/control/tenants/{id}` 200 → `TenantObject` |
+| Legacy compat preservation | `tenantType` retained in `LoginSuccessResponse` with `deprecated: true`; `type` retained in `MeSuccessResponse.data.tenant` with `deprecated: true` |
+| Provisioning endpoint | `/api/control/tenants/provision` intentionally excluded from this unit — stale `type` enum preserved as-is; full alignment is B2-REM-5 scope |
+| Validation | JSON parse PASS (both files); schema strings confirmed via grep; provision block confirmed untouched; `git diff --name-only`: 2 files only |
+| Atomicity | One atomic commit (d5d6f84) |
+| org_id / RLS posture | Unchanged — documentation-layer change only; no runtime, route, or query logic modified |
+
+**PW5-V3-DEF-001 — NO CHANGE — ✅ CLOSED**  
+Closed by B2-REM-3 (commit a198256). No change in this addendum.
+
+**PW5-V3-DEF-002 — Partially Remediated at Schema + Backend + Frontend + OpenAPI Layers**  
+Schema layer (B2-REM-1), backend serialization layer (B2-REM-2), frontend routing layer (B2-REM-3), and OpenAPI contract layer (B2-REM-4) are now complete. Full defect closure is **not yet achieved**. Remaining layer still open:
+
+| Layer | Unit | Status |
+|---|---|---|
+| Provisioning flow update | B2-REM-5 | ⏳ Pending |
+
+**PW5-V3-DEF-003 — NO CHANGE — ✅ CLOSED**  
+Closed by B2-REM-2 (commit efbce82). No change in this addendum.
+
+**PW5-V3 — ❌ FAIL Overall**  
+PW5-V3 remains ❌ FAIL overall. B2-REM-4 closes the OpenAPI contract layer. B2-REM-5 (provisioning alignment) must be completed before PW5-V3 can be transitioned to PASS. This addendum records OpenAPI-layer progress only.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
 *Updated: 2026-03-10 — B2-REM-2 backend serialization closure addendum appended (Section 9.7)*  
 *Updated: 2026-03-10 — B2-REM-3 frontend routing closure addendum appended (Section 9.8)*  
+*Updated: 2026-03-10 — B2-REM-4 OpenAPI contract closure addendum appended (Section 9.9)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
