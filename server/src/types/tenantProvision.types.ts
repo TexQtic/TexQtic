@@ -28,6 +28,20 @@ export interface TenantProvisionRequest {
    * NEVER logged, NEVER echoed in response.
    */
   primaryAdminPassword: string;
+
+  /**
+   * Canonical tenant identity category.
+   * Replaces legacy 'type' field — aligned to B2-DESIGN canonical model (B2-REM-5A).
+   * Maps to Prisma Tenant.type (DB column: type).
+   */
+  tenant_category: 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
+
+  /**
+   * White-label deployment flag.
+   * Optional — defaults to false at service layer if omitted.
+   * Maps to Prisma Tenant.isWhiteLabel (DB column: is_white_label).
+   */
+  is_white_label?: boolean;
 }
 
 /**

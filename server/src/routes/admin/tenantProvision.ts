@@ -45,6 +45,10 @@ const provisionBodySchema = z.object({
   primaryAdminPassword: z
     .string()
     .min(8, 'primaryAdminPassword must be at least 8 characters'),
+  tenant_category: z.enum(['AGGREGATOR', 'B2B', 'B2C', 'INTERNAL'], {
+    errorMap: () => ({ message: 'tenant_category must be one of: AGGREGATOR, B2B, B2C, INTERNAL' }),
+  }),
+  is_white_label: z.boolean().optional().default(false),
 });
 
 /**
@@ -101,12 +105,12 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
       return sendValidationError(reply, parseResult.error.errors);
     }
 
-    const { orgName, primaryAdminEmail, primaryAdminPassword } = parseResult.data;
+    const { orgName, primaryAdminEmail, primaryAdminPassword, tenant_category, is_white_label } = parseResult.data;
 
     // ── Invoke provisioning service ───────────────────────────────────────────
     try {
       const result = await provisionTenant(
-        { orgName, primaryAdminEmail, primaryAdminPassword },
+        { orgName, primaryAdminEmail, primaryAdminPassword, tenant_category, is_white_label },
         {
           requestId:    request.id ?? randomUUID(),
           adminActorId: request.adminId,

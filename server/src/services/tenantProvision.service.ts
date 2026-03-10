@@ -80,7 +80,7 @@ export async function provisionTenant(
   request: TenantProvisionRequest,
   ctx: ProvisionContext
 ): Promise<TenantProvisionResult> {
-  const { orgName, primaryAdminEmail, primaryAdminPassword } = request;
+  const { orgName, primaryAdminEmail, primaryAdminPassword, tenant_category, is_white_label } = request;
 
   // Hash password BEFORE opening transaction (CPU-bound; avoids tx timeout risk)
   const passwordHash = await bcrypt.hash(primaryAdminPassword, BCRYPT_ROUNDS);
@@ -155,6 +155,10 @@ export async function provisionTenant(
       data: {
         name: orgName,
         slug,
+        // B2-REM-5A: canonical identity fields wired from provisioning request
+        // type = Prisma field name for tenant_category API field
+        type: tenant_category as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL',
+        isWhiteLabel: is_white_label ?? false,
       },
       select: {
         id: true,

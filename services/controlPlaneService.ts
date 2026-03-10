@@ -295,6 +295,10 @@ export interface ProvisionTenantRequest {
   orgName: string;
   primaryAdminEmail: string;
   primaryAdminPassword: string;
+  /** Canonical tenant identity — B2-REM-5A */
+  tenant_category: 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
+  /** White-label deployment flag — optional; defaults to false */
+  is_white_label?: boolean;
 }
 
 /**

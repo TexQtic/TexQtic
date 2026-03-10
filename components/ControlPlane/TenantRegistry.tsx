@@ -23,6 +23,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     orgName: '',
     primaryAdminEmail: '',
     primaryAdminPassword: '',
+    tenant_category: 'B2B' as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL',
+    is_white_label: false,
   });
   const [provisionLoading, setProvisionLoading] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
@@ -40,9 +42,11 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         orgName: provisionForm.orgName,
         primaryAdminEmail: provisionForm.primaryAdminEmail,
         primaryAdminPassword: provisionForm.primaryAdminPassword,
+        tenant_category: provisionForm.tenant_category,
+        is_white_label: provisionForm.is_white_label,
       });
       setProvisionResult({ orgId: result.orgId, slug: result.slug });
-      setProvisionForm({ orgName: '', primaryAdminEmail: '', primaryAdminPassword: '' });
+      setProvisionForm({ orgName: '', primaryAdminEmail: '', primaryAdminPassword: '', tenant_category: 'B2B', is_white_label: false });
       // Refresh tenant list to include newly provisioned tenant
       await fetchTenants();
     } catch (err: any) {
@@ -367,6 +371,31 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Min 6 characters"
                   />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="prov-tenant-category" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Tenant Category *</label>
+                  <select
+                    id="prov-tenant-category"
+                    required
+                    value={provisionForm.tenant_category}
+                    onChange={e => setProvisionForm(f => ({ ...f, tenant_category: e.target.value as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL' }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="B2B">B2B</option>
+                    <option value="B2C">B2C</option>
+                    <option value="AGGREGATOR">AGGREGATOR</option>
+                    <option value="INTERNAL">INTERNAL</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="prov-is-white-label"
+                    type="checkbox"
+                    checked={provisionForm.is_white_label}
+                    onChange={e => setProvisionForm(f => ({ ...f, is_white_label: e.target.checked }))}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">White Label Deployment</label>
                 </div>
                 <div className="flex gap-4 pt-2">
                   <button
