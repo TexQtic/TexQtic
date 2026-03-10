@@ -928,6 +928,71 @@ Verification tranche complete. Next sequenced gate: Dead UI gating tranche (PW5-
 
 ---
 
+### 9.14 PW5-U2 / PW5-U3 Dead UI Gating and Runtime Truth Alignment (2026-03-10)
+
+**Purpose:** PW5-U2 — eliminate dead clickable-looking shell/nav affordances with no implementation path. PW5-U3 — align visible shell affordances with live runtime state.
+
+#### Unit-by-Unit Closure Table
+
+| Unit | Target | Action | Result |
+|---|---|---|---|
+| PW5-U2 / U2-REM-1 | B2BShell Negotiations + Invoices nav items | Repo inspection | NOT PRESENT in Shells.tsx — defect class absent; no code change needed |
+| PW5-U2 / U2-REM-2 | AggregatorShell Post RFQ CTA | Repo inspection | NOT PRESENT in Shells.tsx — defect class absent (Note: AggregatorShell dead Certifications button resolved in GOVERNANCE-SYNC-114); no code change needed |
+| PW5-U2 / U2-REM-3 | WhiteLabelShell Collections + The Journal nav items | Repo inspection | NOT PRESENT in Shells.tsx — defect class absent; no code change needed |
+| PW5-U2 / Dead storefront | App.tsx `case TenantType.WHITE_LABEL:` decorative block | REMOVED | Dead storefront eliminated — "Explore the Collection" button had no onClick, no implementation path, unreachable post B2-REM-3; 35 lines removed |
+| PW5-U3 / U3-REM-1 | B2CShell cart badge runtime wiring | Confirmed wired | B2CShell already uses `const { itemCount } = useCart()` — badge correctly reflects CartContext.itemCount; no code change required |
+| PW5-U1 (absorbed) | B2C cart badge fix | Confirmed wired | Same evidence as U3-REM-1; PW5-U1 satisfied by existing implementation |
+
+#### Evidence Summary
+
+| Check | Result |
+|---|---|
+| git diff --name-only (implementation) | App.tsx only |
+| App.tsx change | 5 insertions / 35 deletions — dead case WHITE_LABEL block removed |
+| Shells.tsx | Unchanged — named dead nav items verified absent |
+| B2CShell cart badge | `useCart().itemCount` confirmed in Shells.tsx |
+| typecheck (frontend + server) | EXIT 0 |
+| Backend changes | None |
+| Schema changes | None |
+| Auth/session changes | None |
+
+#### Validation Summary
+
+- Frontend typecheck: PASS (EXIT 0)
+- Server typecheck: PASS (EXIT 0)
+- No new providers, contexts, or backend routes introduced
+- No routing or state-machine changes
+- Existing cart open/checkout behavior unchanged
+- Named dead nav items (Negotiations, Invoices, Post RFQ, Collections, The Journal) NOT FOUND in current Shells.tsx — verified absent at implementation time
+
+#### Block Condition Decision
+
+| Condition | Status |
+|---|---|
+| Block Condition 1 — Verification tranche complete | ✅ MET (2026-03-10) |
+| Block Condition 2 — Dead UI gating tranche complete | ✅ MET (2026-03-10) |
+| Wave 5 Architecture sequencing | ✅ UNBLOCKED |
+
+#### Deferred Items (Remain Deferred — Non-Blocking)
+
+| Item | Disposition |
+|---|---|
+| Tenant logout path (DEF-003) | DEFERRED — separate UX scope |
+| B2B profile/avatar action (DEF-004) | DEFERRED — separate UX scope |
+| B2C search behavior (DEF-005) | DEFERRED — separate UX scope |
+| WL storefront home/catalog completion (PW5-WL1) | DEFERRED — storefront completion work, not dead-affordance fix |
+| DPP backend truth audit | DEFERRED — backend audit scope |
+| Control-plane AdminRBAC / AiGovernance actions | DEFERRED — backend design gate (PW5-U4 / Wave 5) |
+
+#### Follow-on Sequencing
+
+Block Condition 2 MET. Next sequenced units:
+- **PW5-U4** — static control-plane panel classification (ArchitectureBlueprints, non-operational label)
+- **PW5-CP-PLAN** — control-plane re-baseline (now unblocked)
+- **PW5-W series** — wiring tranche (PW5-W1..W4, backend-design-gated)
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
@@ -938,4 +1003,5 @@ Verification tranche complete. Next sequenced gate: Dead UI gating tranche (PW5-
 *Updated: 2026-03-10 — PW5-V3 tranche verification closure recorded (Section 9.11)*  
 *Updated: 2026-03-10 — PW5-V4 shell navigation defect remediation recorded (Section 9.12)*  
 *Updated: 2026-03-10 — Verification tranche completion (PW5-V1..V4 all ✅) and Wave 5 Condition 1 MET recorded (Section 9.13)*  
+*Updated: 2026-03-10 — PW5-U2 / PW5-U3 dead UI gating tranche closure and Wave 5 Condition 2 MET recorded (Section 9.14)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*

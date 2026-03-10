@@ -922,41 +922,11 @@ const App: React.FC = () => {
             </section>
           </div>
         );
-      case TenantType.WHITE_LABEL:
-        return (
-          <div className="space-y-16 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <h2 className="text-4xl font-serif">A Vision of Elegance</h2>
-                <p className="text-slate-600 leading-relaxed font-light text-lg">
-                  Every piece in our collection is selected for its architectural integrity and
-                  timeless aesthetic. Born from a commitment to craftsmanship, we bridge the gap
-                  between manufacturer and home.
-                </p>
-                <button
-                  className="px-12 py-4 text-white text-sm font-bold uppercase tracking-widest hover:opacity-90 transition"
-                  style={{ backgroundColor: currentTenant.theme.primaryColor }}
-                >
-                  Explore the Collection
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <img
-                  src="https://picsum.photos/seed/wl1/400/500"
-                  className="rounded shadow-sm"
-                  alt=""
-                  aria-hidden="true"
-                />
-                <img
-                  src="https://picsum.photos/seed/wl2/400/500"
-                  className="rounded shadow-sm translate-y-8"
-                  alt=""
-                  aria-hidden="true"
-                />
-              </div>
-            </div>
-          </div>
-        );
+        // PW5-U2: TenantType.WHITE_LABEL dead storefront case removed.
+        // WHITE_LABEL is a @deprecated enum value superseded by is_white_label boolean flag (B2-REM-3/B2-REM-5).
+        // No tenant has tenant_category='WHITE_LABEL' post-canonicalization; this case was unreachable
+        // and rendered a decorative "Explore the Collection" button with no onClick handler — a false affordance.
+        // Removed 2026-03-10 (PW5-U2 dead UI gating tranche).
       default:
         return <div>Invalid Tenant Configuration</div>;
     }
