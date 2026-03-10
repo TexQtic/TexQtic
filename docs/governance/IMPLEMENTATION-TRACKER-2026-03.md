@@ -74,17 +74,17 @@
 
 | ID | Objective | Affected Files | Risk | Merged Status | Exit Criteria | Status |
 |---|---|---|---|---|---|---|
-| TECS-FBW-001 | Add authority mutation methods + confirm UI — FinanceOps | services/controlPlaneService.ts; components/ControlPlane/FinanceOps.tsx | HIGH — payout approvals completely dark; SUPER_ADMIN cannot act | VALIDATED | approvePayoutMutation(), rejectPayoutMutation() in controlPlaneService; confirm-before-submit modal in FinanceOps.tsx; POST calls succeed | ⏳ PENDING — Finance sub-unit not yet implemented; `approvePayoutMutation()` / `rejectPayoutMutation()` absent from `services/controlPlaneService.ts`; confirm-before-submit UI absent from `components/ControlPlane/FinanceOps.tsx` · Audit Report §2A · gap-register TECS-FBW-001 detail |
+| TECS-FBW-001 | Add authority mutation methods + confirm UI — FinanceOps | services/controlPlaneService.ts; components/ControlPlane/FinanceOps.tsx | HIGH — payout approvals completely dark; SUPER_ADMIN cannot act | VALIDATED | approvePayoutMutation(), rejectPayoutMutation() in controlPlaneService; confirm-before-submit modal in FinanceOps.tsx; POST calls succeed | ✅ CLOSED — GOVERNANCE-SYNC-108 · 2026-03-07 · `approvePayoutDecision()` + `rejectPayoutDecision()` wired via `adminPostWithHeaders` with per-call Idempotency-Key; PendingAction state; confirm dialog (reason-only, no notes); Actions column per payout row; 200 replay = success; re-fetch on success; copy 'Record Approval/Rejection Decision — no funds moved'; typecheck EXIT 0 · lint EXIT 0 · git diff --name-only: 2 files (controlPlaneService.ts + FinanceOps.tsx) · GOV-SYNC-W2-TRACKER |
 | TECS-FBW-001 | Add authority mutation methods + confirm UI — ComplianceQueue | services/controlPlaneService.ts; components/ControlPlane/ComplianceQueue.tsx; services/adminApiClient.ts (SAME-UNIT NECESSARY EXPANSION — adminPost lacked per-call extra-header support; adminPostWithHeaders added; realm guard preserved) | HIGH — compliance approvals dark | VALIDATED | approveComplianceRequest(), rejectComplianceRequest() wired; confirm UI present | ✅ CLOSED — GOVERNANCE-SYNC-107 · 2026-03-07 · 3 files changed · adminApiClient.ts SAME-UNIT EXPANSION · ComplianceAuthorityBody {reason?,notes?}; window.crypto.randomUUID() per action click; PendingAction state; confirm dialog with reason/notes/error; success re-fetches list; 200 replay = success · typecheck EXIT 0 · lint EXIT 0 · git diff --name-only: 3 files only · openapi.control-plane.json NOT modified (routes already present) · next: TECS-FBW-001 Finance sub-unit |
-| TECS-FBW-001 | Add authority mutation methods + confirm UI — DisputeCases | services/controlPlaneService.ts; components/ControlPlane/DisputeCases.tsx | HIGH — dispute resolution dark | VALIDATED | resolveDispute(), escalateDispute() wired; confirm UI present | ⏳ PENDING — Disputes sub-unit not yet implemented; `resolveDispute()` / `escalateDispute()` absent from `services/controlPlaneService.ts`; confirm-before-submit UI absent from `components/ControlPlane/DisputeCases.tsx` · Audit Report §2A · gap-register TECS-FBW-001 detail |
+| TECS-FBW-001 | Add authority mutation methods + confirm UI — DisputeCases | services/controlPlaneService.ts; components/ControlPlane/DisputeCases.tsx | HIGH — dispute resolution dark | VALIDATED | resolveDispute(), escalateDispute() wired; confirm UI present | ✅ CLOSED — GOVERNANCE-SYNC-109 · 2026-03-07 · `resolveDispute()` + `escalateDispute()` wired via `adminPostWithHeaders` with per-call Idempotency-Key (UUID generated at click time, preserved through dialog); PendingAction state; resolve/escalate confirm dialog (resolution + notes optional); buttons suppressed for RESOLVED disputes; 200 replay = success; re-fetch on success; openapi.control-plane.json NOT modified (both routes already present); typecheck EXIT 0 · lint EXIT 0 · git diff --name-only: 2 files (controlPlaneService.ts + DisputeCases.tsx) · 🏁 WAVE 2 TECS-FBW-001 FULLY COMPLETE — all 3 sub-units closed · GOV-SYNC-W2-TRACKER |
 
 > **Wave 2 Sub-Unit Summary — corrected 2026-03-09 (Audit Report §2A · gap-register TECS-FBW-001 detail):**
 
 | TECS-FBW-001 Sub-Unit | Status | Evidence |
 |---|---|---|
 | Compliance | ✅ CLOSED | GOVERNANCE-SYNC-107 · 2026-03-07 |
-| Finance | ⏳ PENDING | Audit Report §2A · gap-register TECS-FBW-001 detail |
-| Disputes | ⏳ PENDING | Audit Report §2A · gap-register TECS-FBW-001 detail |
+| Finance | ✅ CLOSED | GOVERNANCE-SYNC-108 · 2026-03-07 |
+| Disputes | ✅ CLOSED | GOVERNANCE-SYNC-109 · 2026-03-07 |
 
 ---
 
@@ -276,8 +276,8 @@ Wave 5 architecture sequencing is **blocked** until all of the following are con
 
 ### Recommended Immediate Next Unit
 
-**PW5-U4** — Static control-plane panel classification (UX Correctness)  
-Reason: PW5-U2 ✅ and PW5-U3 ✅ closed 2026-03-10 (GOVERNANCE-SYNC-PW5-U2U3-GOV). Block Condition 2 MET. Control-plane expansion planning (Step 3) is now unblocked. PW5-U4 (ArchitectureBlueprints / static panel classification) is the remaining UX correctness unit. Wiring tranche (PW5-W1..W4) and control-plane re-baseline (PW5-CP-PLAN) may now begin sequencing. Deferred items remain deferred: tenant logout (DEF-003), B2B avatar (DEF-004), B2C search (DEF-005), WL storefront completion, DPP backend audit.
+**PW5-W2 / PW5-W3 / PW5-W4** — Control-plane wiring tranche (Escrow admin read · Settlement admin read · Maker-Checker console)  
+Reason: Wave 2 TECS-FBW-001 fully complete (all 3 sub-units closed — GOV-SYNC-W2-TRACKER). Wave 5 Block Conditions 1 ✅ + 2 ✅ both MET. PW5-U1..U4 all closed. Pattern: inspect `server/src/routes/control.ts` → confirm route exists → wire read-only admin UI. TECS-FBW-002-B (Tenant Trades) remains 🚫 BACKEND DESIGN GATE — do not begin. After W-series: PW5-CP-PLAN (control-plane re-baseline, design + governance only). Deferred items remain deferred: tenant logout (DEF-003), B2B avatar (DEF-004), B2C search (DEF-005), WL storefront completion (PW5-WL1..3), DPP backend audit, VER-003/004 OpenAPI drift delta.
 
 ---
 
