@@ -928,9 +928,9 @@ Verification tranche complete. Next sequenced gate: Dead UI gating tranche (PW5-
 
 ---
 
-### 9.14 PW5-U2 / PW5-U3 Dead UI Gating and Runtime Truth Alignment (2026-03-10)
+### 9.14 PW5-U2 WL Storefront Residual Cleanup + PW5-U1..U4 Retroactive Closure Verification (2026-03-10)
 
-**Purpose:** PW5-U2 — eliminate dead clickable-looking shell/nav affordances with no implementation path. PW5-U3 — align visible shell affordances with live runtime state.
+**Purpose:** This section records: (1) removal of the deprecated `case TenantType.WHITE_LABEL:` dead storefront content block from App.tsx — a PW5-V3 residual item deferred at time of canonicalization — supplementary to the PW5-U2 dead-affordance scope; (2) retroactive verification that PW5-U3 (dead CP action gating, commit **d5ee430**, 2026-03-09) and PW5-U4 (static CP panel removal, commit **3e2e14d**, 2026-03-09) were already resolved before this session and are confirmed closed; and (3) confirmation that PW5-U1 (B2C cart badge) is wired via the existing `useCart()` hook — no code change required. Block Condition 2 is met by the combination of d5ee430 + 3e2e14d + 024e5c5.
 
 #### Unit-by-Unit Closure Table
 
@@ -940,8 +940,9 @@ Verification tranche complete. Next sequenced gate: Dead UI gating tranche (PW5-
 | PW5-U2 / U2-REM-2 | AggregatorShell Post RFQ CTA | Repo inspection | NOT PRESENT in Shells.tsx — defect class absent (Note: AggregatorShell dead Certifications button resolved in GOVERNANCE-SYNC-114); no code change needed |
 | PW5-U2 / U2-REM-3 | WhiteLabelShell Collections + The Journal nav items | Repo inspection | NOT PRESENT in Shells.tsx — defect class absent; no code change needed |
 | PW5-U2 / Dead storefront | App.tsx `case TenantType.WHITE_LABEL:` decorative block | REMOVED | Dead storefront eliminated — "Explore the Collection" button had no onClick, no implementation path, unreachable post B2-REM-3; 35 lines removed |
-| PW5-U3 / U3-REM-1 | B2CShell cart badge runtime wiring | Confirmed wired | B2CShell already uses `const { itemCount } = useCart()` — badge correctly reflects CartContext.itemCount; no code change required |
-| PW5-U1 (absorbed) | B2C cart badge fix | Confirmed wired | Same evidence as U3-REM-1; PW5-U1 satisfied by existing implementation |
+| PW5-U1 / U1-VERIFY | B2CShell cart badge runtime wiring (PW5-U1 confirmation) | Confirmed wired | B2CShell already uses `const { itemCount } = useCart()` — badge correctly reflects CartContext.itemCount; no code change required; PW5-U1 satisfied by existing implementation |
+| PW5-U3 (pre-session) | Dead CP action gating — commit **d5ee430** (2026-03-09) | Already resolved | TECS-FBW-AIGOVERNANCE ✅ (AI Governance kill switch + secondary buttons gated) + TECS-FBW-ADMINRBAC ✅ (Invite Admin / Revoke buttons gated) + TECS-FBW-012 ✅ (Edit Access dead button hidden); all three resolved under d5ee430 (2026-03-09); retroactively recorded here |
+| PW5-U4 (pre-session) | Static CP panels removed from nav — commit **3e2e14d** (2026-03-09) | Already resolved | TECS-FBW-PLACEHOLDER-PANELS ✅ (ArchitectureBlueprints, BackendSkeleton, ApiDocs, DataModel, MiddlewareScaffold removed from SuperAdmin nav; component files preserved on disk); resolved under 3e2e14d (2026-03-09); retroactively recorded here |
 
 #### Evidence Summary
 
@@ -982,12 +983,11 @@ Verification tranche complete. Next sequenced gate: Dead UI gating tranche (PW5-
 | B2C search behavior (DEF-005) | DEFERRED — separate UX scope |
 | WL storefront home/catalog completion (PW5-WL1) | DEFERRED — storefront completion work, not dead-affordance fix |
 | DPP backend truth audit | DEFERRED — backend audit scope |
-| Control-plane AdminRBAC / AiGovernance actions | DEFERRED — backend design gate (PW5-U4 / Wave 5) |
+| Control-plane AdminRBAC / AiGovernance dead buttons | ✅ ALREADY RESOLVED — PW5-U3 (d5ee430, 2026-03-09); buttons gated/hidden in AiGovernance.tsx and AdminRBAC.tsx; backend design gate preserved; no further action needed in this unit |
 
 #### Follow-on Sequencing
 
-Block Condition 2 MET. Next sequenced units:
-- **PW5-U4** — static control-plane panel classification (ArchitectureBlueprints, non-operational label)
+Block Condition 2 MET. Note: PW5-U3 (dead CP action gating, d5ee430, 2026-03-09) and PW5-U4 (static CP panels removal, 3e2e14d, 2026-03-09) were already completed prior to this session and are retroactively confirmed. Next sequenced units:
 - **PW5-CP-PLAN** — control-plane re-baseline (now unblocked)
 - **PW5-W series** — wiring tranche (PW5-W1..W4, backend-design-gated)
 
@@ -1003,5 +1003,5 @@ Block Condition 2 MET. Next sequenced units:
 *Updated: 2026-03-10 — PW5-V3 tranche verification closure recorded (Section 9.11)*  
 *Updated: 2026-03-10 — PW5-V4 shell navigation defect remediation recorded (Section 9.12)*  
 *Updated: 2026-03-10 — Verification tranche completion (PW5-V1..V4 all ✅) and Wave 5 Condition 1 MET recorded (Section 9.13)*  
-*Updated: 2026-03-10 — PW5-U2 / PW5-U3 dead UI gating tranche closure and Wave 5 Condition 2 MET recorded (Section 9.14)*  
+*Updated: 2026-03-10 — PW5-U2 WL storefront residual cleanup + PW5-U1..U4 retroactive closure verification + Wave 5 Condition 2 MET recorded (Section 9.14); PW5-U3 (dead CP actions, d5ee430, 2026-03-09) + PW5-U4 (static CP panels, 3e2e14d, 2026-03-09) pre-session closures retroactively confirmed*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*

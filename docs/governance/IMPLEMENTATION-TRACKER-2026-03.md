@@ -220,8 +220,8 @@ Two independent repo-truth audits were completed 2026-03-08. Together they produ
 |---|---|---|---|
 | PW5-U1 | B2C cart badge fix | ✅ CLOSED — 2026-03-10 | B2CShell cart badge already wired to CartContext.itemCount via useCart() hook — confirmed at implementation of PW5-U2/U3 (B2CShell line 97); no code change required; PW5-U3-REM-1 satisfied by existing implementation; GOVERNANCE-SYNC-PW5-U2U3-GOV |
 | PW5-U2 | Dead storefront/nav hide-gate | ✅ CLOSED — 2026-03-10 | Repo inspection: B2BShell Negotiations/Invoices, AggregatorShell Post RFQ, WhiteLabelShell Collections/Journal nav items NOT PRESENT in current codebase (absent from Shells.tsx) — defect class verified absent; App.tsx dead `case TenantType.WHITE_LABEL:` storefront block removed — decorative "Explore the Collection" button (no onClick, no implementation path, unreachable post B2-REM-3 canonicalization) eliminated; GOVERNANCE-SYNC-PW5-U2U3-GOV |
-| PW5-U3 | Runtime truth alignment | ✅ CLOSED — 2026-03-10 | B2CShell cart badge wiring confirmed already correct (see PW5-U1); B2-REM-3/B3-REM canonicalization already eliminated all false WL routing; no additional implementation required; GOVERNANCE-SYNC-PW5-U2U3-GOV |
-| PW5-U4 | Collapse static control-plane docs/spec panels | ⏳ Pending | Label or collapse ArchitectureBlueprints and similar static panels as non-operational |
+| PW5-U3 | Dead CP action gating | ✅ CLOSED — 2026-03-09 | Dead buttons gated in AiGovernance.tsx, AdminRBAC.tsx, and MembershipManagement.tsx (Edit Access); TECS-FBW-012 ✅ + TECS-FBW-AIGOVERNANCE ✅ + TECS-FBW-ADMINRBAC ✅ — commit **d5ee430** (2026-03-09); pre-session closure; backend design gate preserved; retroactively recorded 2026-03-10 (GOVERNANCE-SYNC-PW5-U2U3-GOV) |
+| PW5-U4 | Static CP panels removed from nav | ✅ CLOSED — 2026-03-09 | ArchitectureBlueprints, BackendSkeleton, ApiDocs, DataModel, MiddlewareScaffold removed from SuperAdmin nav; TECS-FBW-PLACEHOLDER-PANELS ✅ — commit **3e2e14d** (2026-03-09); pre-session closure; component files preserved on disk; retroactively recorded 2026-03-10 (GOVERNANCE-SYNC-PW5-U2U3-GOV) |
 
 #### Wiring Tranche — Depends on verification tranche
 
@@ -257,7 +257,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 |---|---|---|
 | 1 | Platform wiring audit | ✅ COMPLETE — 2026-03-08 (Full TexQtic Platform Map audit) |
 | 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 (Navigation verification audit) |
-| 3 | Control plane expansion planning | ✅ UNBLOCKED — 2026-03-10 — Block Condition 2 MET (PW5-U2 ✅ · PW5-U3 ✅ · PW5-U1 ✅); PW5-CP-PLAN now sequenceable; GOVERNANCE-SYNC-PW5-U2U3-GOV |
+| 3 | Control plane expansion planning | ✅ UNBLOCKED — 2026-03-10 — Block Condition 2 MET (PW5-U3 ✅ d5ee430 2026-03-09 · PW5-U4 ✅ 3e2e14d 2026-03-09 · PW5-U2 ✅ 024e5c5 2026-03-10 · PW5-U1 ✅ confirmed 2026-03-10); PW5-CP-PLAN now sequenceable; GOVERNANCE-SYNC-PW5-U2U3-GOV |
 | 4 | Tenant admin dashboard completion | ⏳ Blocked — verification + wiring tranches must complete first |
 | 5 | White-label store builder | ⏳ Blocked — PW5-WL1 + PW5-WL2 prerequisites unmet |
 | 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions must be met |
@@ -267,7 +267,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 Wave 5 architecture sequencing is **blocked** until all of the following are confirmed in governance:
 
 1. **Verification tranche complete** — ✅ MET (2026-03-10) — PW5-V1 ✅ · PW5-V2 ✅ · PW5-V3 ✅ · PW5-V4 ✅ — all four verification units closed
-2. **Dead UI gating tranche complete** — ✅ MET (2026-03-10) — PW5-U2 ✅ (dead storefront case removed; named nav items verified absent) · PW5-U3 ✅ (cart badge confirmed wired) · PW5-U1 ✅ (absorbed; same evidence) — GOVERNANCE-SYNC-PW5-U2U3-GOV
+2. **Dead UI gating tranche complete** — ✅ MET — PW5-U3 ✅ (dead CP actions gated, d5ee430, 2026-03-09) · PW5-U4 ✅ (static CP panels removed, 3e2e14d, 2026-03-09) · PW5-U2 ✅ (dead WL storefront case removed + named nav items verified absent, 024e5c5, 2026-03-10) · PW5-U1 ✅ (cart badge wired, confirmed 2026-03-10) — retroactively verified — GOVERNANCE-SYNC-PW5-U2U3-GOV
 3. **Platform wiring truth reconciled in this tracker** — ordered sequence above updated to reflect ✅ completions
 
 **No agent, no prompt, and no implementation sprint may begin Wave 5 architecture sequencing until these conditions are met.**
