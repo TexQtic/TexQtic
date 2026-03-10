@@ -864,7 +864,27 @@ PW5-V3 remains ❌ FAIL overall. B2-REM-4 closes the OpenAPI contract layer. B2-
 
 **PW5-V3 — ❌ FAIL Overall**
 
-Although all remediation layers are complete, tranche status remains ❌ FAIL until the formal tranche closure verification sequence is executed.
+Although all remediation layers are complete, tranche status remains ❌ FAIL until the formal tranche closure verification sequence is executed. Tranche formally closed — see Section 9.11.
+
+---
+
+### 9.11 PW5-V3 Tranche Closure Record (2026-03-10)
+
+**PW5-V3 — ✅ PASS**
+
+| Attribute | Detail |
+|---|---|
+| Verification report | TECS Tranche Verification Report — PW5-V3 (2026-03-10) |
+| Verdict | PASS |
+| DEF-001 | CLOSED — INTERNAL routing explicitly covered via `resolveExperienceShell()`; silent `default:` fallback removed (B2-REM-3) |
+| DEF-002 | FULLY REMEDIATED — canonical identity model implemented across all 5 layers: schema (B2-REM-1), backend serialization (B2-REM-2), frontend routing (B2-REM-3), OpenAPI contracts (B2-REM-4), provisioning flow (B2-REM-5 + B2-REM-5A) |
+| DEF-003 | CLOSED — `tenant_category` + `is_white_label` emitted in auth response serialization (B2-REM-2) |
+| Residual items | Non-blocking: deprecated `TenantType.WHITE_LABEL` enum value (compat artifact); dead `case TenantType.WHITE_LABEL:` content block in App.tsx; logged for separate cleanup |
+| Canonical model | `tenant_category` (enum: AGGREGATOR / B2B / B2C / INTERNAL) + `is_white_label` (boolean) confirmed as sole active identity model |
+
+**PW5-V3 — ✅ PASS Overall**
+
+All defects resolved. Canonical tenant identity model confirmed as sole active model across the full stack. Tranche formally closed.
 
 ---
 
@@ -874,5 +894,6 @@ Although all remediation layers are complete, tranche status remains ❌ FAIL un
 *Updated: 2026-03-10 — B2-REM-2 backend serialization closure addendum appended (Section 9.7)*  
 *Updated: 2026-03-10 — B2-REM-3 frontend routing closure addendum appended (Section 9.8)*  
 *Updated: 2026-03-10 — B2-REM-4 OpenAPI contract closure addendum appended (Section 9.9)*  
-*Updated: 2026-03-10 — B2-REM-5 provisioning alignment closure addendum appended (Section 9.10)*
+*Updated: 2026-03-10 — B2-REM-5 provisioning alignment closure addendum appended (Section 9.10)*  
+*Updated: 2026-03-10 — PW5-V3 tranche verification closure recorded (Section 9.11)*
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
