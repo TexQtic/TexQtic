@@ -35,6 +35,20 @@ export function adminGet<T>(endpoint: string): Promise<T> {
 }
 
 /**
+ * GET request with admin realm guard + merged hint + extra headers.
+ * PW5-W4 (2026-03-10): required for internal-only endpoints that need
+ * X-Texqtic-Internal: true alongside the realm hint.
+ * ADMIN_REALM_HEADER is always included; callers supply only additional keys.
+ */
+export function adminGetWithHeaders<T>(
+  endpoint: string,
+  extraHeaders: Record<string, string>,
+): Promise<T> {
+  requireAdminRealm();
+  return get<T>(endpoint, { ...ADMIN_REALM_HEADER, ...extraHeaders });
+}
+
+/**
  * POST request with admin realm guard + hint header
  */
 export function adminPost<T>(endpoint: string, data?: any): Promise<T> {

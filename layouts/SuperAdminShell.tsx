@@ -14,6 +14,10 @@ export type AdminView =
   | 'TRADES'
   /** TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only) */
   | 'CART_SUMMARIES'
+  /** PW5-W2: G-018 cross-tenant escrow account read panel (D-020-B: no balance) */
+  | 'ESCROW_ADMIN'
+  /** PW5-W4: G-021 maker-checker approval queue console (read-only) */
+  | 'MAKER_CHECKER'
   | 'AI'
   | 'LOGS'
   | 'HEALTH'
@@ -88,6 +92,13 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             icon="🛒"
             label="Cart Summaries"
           />
+          {/* PW5-W2: G-018 cross-tenant escrow read panel (D-020-B: no balance) */}
+          <NavLink
+            active={activeView === 'ESCROW_ADMIN'}
+            onClick={() => onViewChange('ESCROW_ADMIN')}
+            icon="🔒"
+            label="Escrow Accounts"
+          />
 
           <SectionTitle>Risk & Compliance</SectionTitle>
           <NavLink
@@ -121,6 +132,13 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             onClick={() => onViewChange('TRACEABILITY')}
             icon="🔗"
             label="Traceability"
+          />
+          {/* PW5-W4: G-021 maker-checker approval queue console (read-only) */}
+          <NavLink
+            active={activeView === 'MAKER_CHECKER'}
+            onClick={() => onViewChange('MAKER_CHECKER')}
+            icon="✍️"
+            label="Maker-Checker"
           />
           <NavLink
             active={activeView === 'AI'}

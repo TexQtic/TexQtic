@@ -8,7 +8,7 @@
  * Wave 4 Scope: Admin tenant provisioning added
  */
 
-import { adminGet, adminPost, adminPostWithHeaders, adminPut } from './adminApiClient';
+import { adminGet, adminGetWithHeaders, adminPost, adminPostWithHeaders, adminPut } from './adminApiClient';
 
 // ==================== TENANT MANAGEMENT ====================
 
@@ -811,4 +811,134 @@ export async function stopImpersonationSession(
   request: StopImpersonationRequest
 ): Promise<{ ended: boolean }> {
   return adminPost<{ ended: boolean }>('/api/control/impersonation/stop', request);
+}
+
+// ==================== G-018 ESCROW ADMIN READ (PW5-W2) ====================
+//
+// Route: GET /api/control/escrows          — cross-tenant list (admin)
+// Route: GET /api/control/escrows/:id      — detail (cross-tenant, admin)
+// Constitutional:
+//   D-020-B  Balance is NOT derived from list — no balance field in response.
+//   D-017-A  tenantId is an optional admin query-param FILTER; never a body field.
+// Read-only — no mutations wired in this tranche.
+
+/**
+ * A single escrow account as returned by GET /api/control/escrows.
+ * D-020-B: No balance field — balance is always derived from ledger SUM; never stored.
+ */
+export interface AdminEscrowAccount {
+  id: string;
+  /** tenant that owns this escrow — visible to admin via cross-org RLS bypass. */
+  tenantId: string;
+  currency: string;
+  lifecycleStateId: string | null;
+  /** Human-readable lifecycle state key, e.g. DRAFT | ACTIVE | SETTLED | CLOSED | DISPUTED */
+  lifecycleStateKey: string | null;
+  createdByUserId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminEscrowListParams {
+  /** Optional — narrows result to a single tenant. D-017-A: admin filter only. */
+  tenantId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface AdminEscrowListResponse {
+  escrows: AdminEscrowAccount[];
+  count: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * List escrow accounts across all tenants (admin only).
+ * Route: GET /api/control/escrows
+ * D-017-A: tenantId is an optional admin filter, NOT a client identity assertion in the body.
+ * D-020-B: Response contains no balance field.
+ */
+export async function adminListEscrows(
+  params?: AdminEscrowListParams,
+): Promise<AdminEscrowListResponse> {
+  const q = new URLSearchParams();
+  if (params?.tenantId) q.set('tenantId', params.tenantId);
+  if (params?.limit !== undefined) q.set('limit', String(params.limit));
+  if (params?.offset !== undefined) q.set('offset', String(params.offset));
+  const qs = q.toString();
+  return adminGet<AdminEscrowListResponse>(`/api/control/escrows${qs ? `?${qs}` : ''}`);
+}
+
+// ==================== G-021 MAKER-CHECKER ADMIN READ (PW5-W4) ====================
+//
+// Route: GET /api/control/internal/gov/approvals       — cross-tenant queue (admin)
+// Route: GET /api/control/internal/gov/approvals/:id   — single approval (admin)
+// Constitutional:
+//   Requires X-Texqtic-Internal: true header (enforced by internalOnlyGuard) AND admin JWT.
+//   adminGetWithHeaders merges ADMIN_REALM_HEADER + INTERNAL_HEADER on every request.
+// Read-only in this tranche — no sign/replay wiring.
+
+/**
+ * Internal-only header required by internalOnlyGuard middleware.
+ * Must be sent on every /api/control/internal/gov/* request.
+ */
+const MAKER_CHECKER_INTERNAL_HEADER: Record<string, string> = {
+  'X-Texqtic-Internal': 'true',
+};
+
+/**
+ * A pending-approvals queue item as returned by GET /api/control/internal/gov/approvals.
+ * Dates are serialised as ISO 8601 strings over JSON.
+ */
+export interface AdminPendingApproval {
+  id: string;
+  /** Tenant that owns this approval request. */
+  orgId: string;
+  /** TRADE | ESCROW | CERTIFICATION */
+  entityType: string;
+  entityId: string;
+  fromStateKey: string;
+  toStateKey: string;
+  requestedByActorType: string;
+  requestedByRole: string;
+  requestReason: string;
+  /** REQUESTED | APPROVED | REJECTED | EXPIRED | CANCELLED | ESCALATED */
+  status: string;
+  expiresAt: string;
+  aiTriggered: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminApprovalsListResponse {
+  approvals: AdminPendingApproval[];
+  count: number;
+}
+
+export interface AdminApprovalsQueryParams {
+  /** Optional — narrows to a single tenant's approval queue. */
+  orgId?: string;
+  status?: 'REQUESTED' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'CANCELLED' | 'ESCALATED';
+  entityType?: 'TRADE' | 'ESCROW' | 'CERTIFICATION';
+}
+
+/**
+ * List pending approvals across all tenants (admin cross-plane read).
+ * Route: GET /api/control/internal/gov/approvals
+ * Requires X-Texqtic-Internal: true + admin JWT.
+ * Returns all REQUESTED + ESCALATED approvals by default (server default).
+ */
+export async function adminListApprovals(
+  params?: AdminApprovalsQueryParams,
+): Promise<AdminApprovalsListResponse> {
+  const q = new URLSearchParams();
+  if (params?.orgId)       q.set('orgId',       params.orgId);
+  if (params?.status)      q.set('status',      params.status);
+  if (params?.entityType)  q.set('entityType',  params.entityType);
+  const qs = q.toString();
+  return adminGetWithHeaders<AdminApprovalsListResponse>(
+    `/api/control/internal/gov/approvals${qs ? `?${qs}` : ''}`,
+    MAKER_CHECKER_INTERNAL_HEADER,
+  );
 }

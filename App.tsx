@@ -32,6 +32,10 @@ import { TenantAuditLogs } from './components/Tenant/TenantAuditLogs';
 import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
 // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
+// PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
+import { EscrowAdminPanel } from './components/ControlPlane/EscrowAdminPanel';
+// PW5-W4: G-021 maker-checker approval queue console (read-only)
+import { MakerCheckerConsole } from './components/ControlPlane/MakerCheckerConsole';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -976,6 +980,12 @@ const App: React.FC = () => {
       // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
       case 'CART_SUMMARIES':
         return <CartSummariesPanel />;
+      // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
+      case 'ESCROW_ADMIN':
+        return <EscrowAdminPanel />;
+      // PW5-W4: G-021 maker-checker approval queue console (read-only)
+      case 'MAKER_CHECKER':
+        return <MakerCheckerConsole />;
       case 'RBAC':
         return <AdminRBAC />;
       case 'EVENTS':
