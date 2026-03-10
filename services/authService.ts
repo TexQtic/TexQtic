@@ -26,6 +26,10 @@ export interface LoginResponse {
   };
   /** Canonical org_type from organizations table (Doctrine v1.4). null when org not yet provisioned. */
   tenantType?: string | null;
+  /** B2-REM-3: canonical tenant identity category (B2-REM-2). Preferred over tenantType for routing. */
+  tenant_category?: string | null;
+  /** B2-REM-3: white-label capability flag (B2-REM-2). Authoritative WL routing signal. */
+  is_white_label?: boolean;
 }
 
 export interface CurrentUserResponse {
@@ -40,6 +44,10 @@ export interface CurrentUserResponse {
     slug: string;
     name: string;
     type: string;
+    /** B2-REM-3: canonical tenant identity category (B2-REM-2). */
+    tenant_category?: string | null;
+    /** B2-REM-3: white-label capability flag (B2-REM-2). */
+    is_white_label?: boolean;
     status: string;
     plan: string;
   };

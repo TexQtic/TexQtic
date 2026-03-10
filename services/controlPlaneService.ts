@@ -17,6 +17,10 @@ export interface Tenant {
   slug: string;
   name: string;
   type: string;
+  /** B2-REM-3: canonical tenant identity category. Optional — control-plane list queries may not populate. */
+  tenant_category?: string | null;
+  /** B2-REM-3: white-label capability flag. Optional — control-plane list queries may not populate. */
+  is_white_label?: boolean;
   status: string;
   plan: string;
   createdAt: string;

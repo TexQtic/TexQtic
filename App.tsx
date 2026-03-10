@@ -54,6 +54,27 @@ import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
 import { setImpersonationToken, setToken, APIError } from './services/apiClient';
 
+// B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
+// Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
+function resolveExperienceShell(
+  tenantCategory: string | null | undefined,
+  isWhiteLabel: boolean | null | undefined
+) {
+  switch (tenantCategory) {
+    case 'AGGREGATOR':
+      return AggregatorShell;
+    case 'B2B':
+      return isWhiteLabel ? WhiteLabelShell : B2BShell;
+    case 'B2C':
+      return isWhiteLabel ? WhiteLabelShell : B2CShell;
+    case 'INTERNAL':
+      // Explicit named policy rule (B2-DESIGN locked): INTERNAL → AggregatorShell. Never via silent fallback.
+      return AggregatorShell;
+    default:
+      return null; // Unknown identity — caller renders explicit error; FORBIDDEN to fall back silently.
+  }
+}
+
 const App: React.FC = () => {
   // Production-grade State Machine
   const [appState, setAppState] = useState<
@@ -254,16 +275,11 @@ const App: React.FC = () => {
     // Clear any previous provision error from a prior login attempt.
     setTenantProvisionError(null);
 
-    // Parse tenantType from login payload — fallback to AGGREGATOR (non-Enterprise-safe) if absent.
-    // Values expected: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null
-    // AGGREGATOR default intentionally chosen: it renders a neutral console that does not
-    // mislead a WL tenant into thinking they are in an Enterprise (B2B) workspace.
-    const rawTenantType: string | null = (data?.tenantType as string) ?? null;
-    const stubType: TenantType = (
-      rawTenantType !== null && (Object.values(TenantType) as string[]).includes(rawTenantType)
-        ? (rawTenantType as TenantType)
-        : TenantType.AGGREGATOR
-    );
+    // B2-REM-3: Parse canonical identity fields first; fall back to legacy compat bridge.
+    // tenant_category is the authoritative routing identity (B2-REM-2 backend emits this).
+    // tenantType is retained as compatibility fallback only — NOT the canonical routing signal.
+    const rawCategory: string | null = (data?.tenant_category as string) ?? (data?.tenantType as string) ?? null;
+    const rawIsWhiteLabel: boolean = typeof data?.is_white_label === 'boolean' ? data.is_white_label : false;
 
     // G-WL-TYPE-MISMATCH Wave4-P1: roles that default to the WL Store Admin console.
     // Buyer/Seller/Staff continue to land in the storefront (EXPERIENCE).
@@ -279,25 +295,28 @@ const App: React.FC = () => {
           slug: t.slug,
           name: t.name,
           type: t.type,
+          // B2-REM-3: persist canonical identity fields; fall back to legacy type for compat
+          tenant_category: t.tenant_category ?? t.type,
+          is_white_label: t.is_white_label ?? false,
           status: t.status,
           plan: t.plan,
           createdAt: '',
           updatedAt: '',
         } as Tenant]);
         setCurrentTenantId(t.id);
-        // Deterministic WL routing: OWNER/ADMIN on a WL tenant -> Store Admin console.
-        if (t.type === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has(me.role ?? '')) {
+        // B2-REM-3: WL routing uses is_white_label boolean — not type === WHITE_LABEL
+        if ((t.is_white_label === true) && WL_ADMIN_ROLES.has(me.role ?? '')) {
           nextState = 'WL_ADMIN';
         }
       } else {
         // /api/me returned no tenant — seed stub so currentTenant is never null
         const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
         if (tenantId) {
-          setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: stubType, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
+          setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: rawCategory ?? 'AGGREGATOR', tenant_category: rawCategory, is_white_label: rawIsWhiteLabel, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
           setCurrentTenantId(tenantId);
         }
-        // WL admin routing applies in provisioning-stub window too.
-        if (stubType === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
+        // B2-REM-3: WL admin routing uses is_white_label boolean — not stubType === WHITE_LABEL
+        if (rawIsWhiteLabel === true && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
           nextState = 'WL_ADMIN';
         }
       }
@@ -305,11 +324,11 @@ const App: React.FC = () => {
       // /api/me failed — seed stub tenant so UI never hangs on Loading workspace spinner
       const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
       if (tenantId) {
-        setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: stubType, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
+        setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: rawCategory ?? 'AGGREGATOR', tenant_category: rawCategory, is_white_label: rawIsWhiteLabel, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
         setCurrentTenantId(tenantId);
       }
-      // WL admin routing applies even when /api/me fails (provisioning gap).
-      if (stubType === TenantType.WHITE_LABEL && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
+      // B2-REM-3: WL admin routing uses is_white_label boolean — not stubType === WHITE_LABEL
+      if (rawIsWhiteLabel === true && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
         nextState = 'WL_ADMIN';
       }
       // Show deterministic error banner for unprovisioned tenant (404)
@@ -574,7 +593,12 @@ const App: React.FC = () => {
     // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only; no filters/pagination; server take:50)
     if (expView === 'AUDIT_LOGS') return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
 
-    switch (currentTenant.type) {
+    // B2-REM-3: Content switch reads canonical tenant_category with legacy type as compat fallback.
+    switch (currentTenant.tenant_category ?? currentTenant.type) {
+      case TenantType.INTERNAL:
+        // B2-REM-3: INTERNAL → AggregatorShell content (explicit named policy rule, B2-DESIGN locked).
+        // Falls through to AGGREGATOR content intentionally.
+        // eslint-disable-next-line no-fallthrough
       case TenantType.AGGREGATOR:
         return (
           <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -1222,23 +1246,25 @@ const App: React.FC = () => {
           // TECS-FBW-016: tenant audit log read-only panel navigation
           onNavigateAuditLogs: () => setExpView('AUDIT_LOGS'),
         };
-        let ExperienceShell;
-        switch (currentTenant.type) {
-          case TenantType.AGGREGATOR:
-            ExperienceShell = AggregatorShell;
-            break;
-          case TenantType.B2B:
-            ExperienceShell = B2BShell;
-            break;
-          case TenantType.B2C:
-            ExperienceShell = B2CShell;
-            break;
-          case TenantType.WHITE_LABEL:
-            ExperienceShell = WhiteLabelShell;
-            break;
-          default:
-            ExperienceShell = AggregatorShell;
+        // B2-REM-3: Shell resolution via canonical policy function — no silent default fallback.
+        const resolvedShell = resolveExperienceShell(
+          currentTenant.tenant_category ?? currentTenant.type,
+          currentTenant.is_white_label
+        );
+        if (resolvedShell === null) {
+          return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+              <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
+                <div className="text-3xl">⚠️</div>
+                <h2 className="font-bold text-slate-900">Workspace Configuration Error</h2>
+                <p className="text-slate-600 text-sm">
+                  Unrecognized tenant identity type. Please contact platform support.
+                </p>
+              </div>
+            </div>
+          );
         }
+        const ExperienceShell = resolvedShell;
         return (
           <CartProvider>
             {tenantProvisionError && (

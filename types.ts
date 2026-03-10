@@ -3,6 +3,8 @@ export enum TenantType {
   AGGREGATOR = 'AGGREGATOR',
   B2B = 'B2B',
   B2C = 'B2C',
+  INTERNAL = 'INTERNAL',
+  // @deprecated — WHITE_LABEL is a capability flag replaced by is_white_label boolean. Will be removed post B2-REM-5.
   WHITE_LABEL = 'WHITE_LABEL'
 }
 
@@ -42,6 +44,10 @@ export interface TenantConfig {
   slug: string;
   name: string;
   type: TenantType;
+  /** B2-REM-3: canonical organizational identity (B2-REM-2). Authoritative routing signal. */
+  tenant_category?: string | null;
+  /** B2-REM-3: white-label capability flag (B2-REM-2). Authoritative WL routing signal. */
+  is_white_label?: boolean;
   status: TenantStatus;
   plan: 'TRIAL' | 'PAID' | 'ENTERPRISE';
   theme: {
