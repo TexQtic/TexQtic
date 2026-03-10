@@ -888,6 +888,27 @@ All defects resolved. Canonical tenant identity model confirmed as sole active m
 
 ---
 
+### 9.12 B3-REM Shell Navigation Remediation Closure (2026-03-10)
+
+**PW5-V4 — ✅ PASS**
+
+| Unit | DEF Closed | Scope |
+|---|---|---|
+| B3-REM-1 | PW5-V4-DEF-001 | B2CShell header cart icon wired — `onNavigateCart` prop added to `ShellProps`; cart icon `<button onClick={onNavigateCart}>` wires to `setShowCart(true)` in App.tsx |
+| B3-REM-2 | PW5-V4-DEF-002 | SuperAdminShell COMPLIANCE NavLink relabeled "Compliance Queue" — label now matches `ComplianceQueue` destination |
+| B3-REM-3 | — | Redundant `renderExperienceContent()` removed from App.tsx `props` — content renders once via JSX children only |
+| DEF-003 | DEFERRED | No logout in tenant shells — deferred to PW5-U tranche |
+| DEF-004 | DEFERRED | B2B avatar static — deferred to PW5-U tranche |
+| DEF-005 | DEFERRED | B2C search stub — deferred to PW5-U tranche |
+
+**Files modified:** `Shells.tsx` · `SuperAdminShell.tsx` · `App.tsx`
+
+**PW5-V4 — ✅ PASS Overall**
+
+All medium-severity defects remediated. Low-severity stubs deferred to UX tranche. PW5-V4 formally closed.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
@@ -896,4 +917,5 @@ All defects resolved. Canonical tenant identity model confirmed as sole active m
 *Updated: 2026-03-10 — B2-REM-4 OpenAPI contract closure addendum appended (Section 9.9)*  
 *Updated: 2026-03-10 — B2-REM-5 provisioning alignment closure addendum appended (Section 9.10)*  
 *Updated: 2026-03-10 — PW5-V3 tranche verification closure recorded (Section 9.11)*
+*Updated: 2026-03-10 — PW5-V4 shell navigation defect remediation recorded (Section 9.12)*
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*

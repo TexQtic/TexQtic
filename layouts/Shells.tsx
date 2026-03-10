@@ -22,6 +22,8 @@ interface ShellProps {
   onNavigateTraceability?: () => void;
   /** TECS-FBW-016: tenant audit log read-only panel navigation (EXPERIENCE-only) */
   onNavigateAuditLogs?: () => void;
+  /** B3-REM-1: wire B2CShell header cart icon (PW5-V4-DEF-001 fix) */
+  onNavigateCart?: () => void;
 }
 
 export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => (
@@ -89,7 +91,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs }) => {
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateCart }) => {
   const { itemCount } = useCart();
   return (
   <div className="min-h-screen bg-white font-sans">
@@ -114,14 +116,14 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
           {onNavigateTraceability && <button onClick={onNavigateTraceability} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
           {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
           <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
-          <div className="relative cursor-pointer">
+          <button onClick={onNavigateCart} className="relative cursor-pointer" title="Shopping Cart">
             <span className="text-2xl">🛒</span>
             {itemCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                 {itemCount}
               </span>
             )}
-          </div>
+          </button>
         </div>
       </div>
     </header>

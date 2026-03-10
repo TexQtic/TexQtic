@@ -94,7 +94,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             active={activeView === 'COMPLIANCE'}
             onClick={() => onViewChange('COMPLIANCE')}
             icon="✅"
-            label="Certifications"
+            label="Compliance Queue"
           />
           <NavLink
             active={activeView === 'CASES'}

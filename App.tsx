@@ -1229,7 +1229,6 @@ const App: React.FC = () => {
 
         const props = {
           tenant: currentTenant,
-          children: renderExperienceContent(),
           onNavigateTeam: () => setAppState('TEAM_MGMT'),
           onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
           onNavigateOrders: () => setExpView('ORDERS'),
@@ -1245,6 +1244,8 @@ const App: React.FC = () => {
           onNavigateTraceability: () => setExpView('TRACEABILITY'),
           // TECS-FBW-016: tenant audit log read-only panel navigation
           onNavigateAuditLogs: () => setExpView('AUDIT_LOGS'),
+          // B3-REM-1: wire B2CShell header cart icon to same cart-open action as CartToggleButton
+          onNavigateCart: () => setShowCart(true),
         };
         // B2-REM-3: Shell resolution via canonical policy function — no silent default fallback.
         const resolvedShell = resolveExperienceShell(
