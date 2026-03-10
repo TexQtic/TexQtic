@@ -909,6 +909,25 @@ All medium-severity defects remediated. Low-severity stubs deferred to UX tranch
 
 ---
 
+### 9.13 Verification Tranche Completion (2026-03-10)
+
+**PW5-V1 through PW5-V4 — ✅ ALL CLOSED**
+
+Following formal TECS Review acceptance of B3-REM-1/2/3 (2026-03-10), the full verification tranche is closed.
+
+| Unit | Status | Closed By | Date |
+|---|---|---|---|
+| PW5-V1 | ✅ PASS | TECS Unit B1 | 2026-03-09 |
+| PW5-V2 | ✅ PASS | PW5-FIX-V2A path fix | 2026-03-08 |
+| PW5-V3 | ✅ PASS | TECS Unit B2 (B2-REM-1..5) | 2026-03-10 |
+| PW5-V4 | ✅ PASS | TECS Unit B3 (B3-REM-1..3) | 2026-03-10 |
+
+**Wave 5 Architecture Block Condition 1 — ✅ MET**
+
+Verification tranche complete. Next sequenced gate: Dead UI gating tranche (PW5-U2 / PW5-U3).
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
@@ -916,6 +935,7 @@ All medium-severity defects remediated. Low-severity stubs deferred to UX tranch
 *Updated: 2026-03-10 — B2-REM-3 frontend routing closure addendum appended (Section 9.8)*  
 *Updated: 2026-03-10 — B2-REM-4 OpenAPI contract closure addendum appended (Section 9.9)*  
 *Updated: 2026-03-10 — B2-REM-5 provisioning alignment closure addendum appended (Section 9.10)*  
-*Updated: 2026-03-10 — PW5-V3 tranche verification closure recorded (Section 9.11)*
-*Updated: 2026-03-10 — PW5-V4 shell navigation defect remediation recorded (Section 9.12)*
+*Updated: 2026-03-10 — PW5-V3 tranche verification closure recorded (Section 9.11)*  
+*Updated: 2026-03-10 — PW5-V4 shell navigation defect remediation recorded (Section 9.12)*  
+*Updated: 2026-03-10 — Verification tranche completion (PW5-V1..V4 all ✅) and Wave 5 Condition 1 MET recorded (Section 9.13)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*

@@ -257,7 +257,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 |---|---|---|
 | 1 | Platform wiring audit | ✅ COMPLETE — 2026-03-08 (Full TexQtic Platform Map audit) |
 | 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 (Navigation verification audit) |
-| 3 | Control plane expansion planning | ⏳ Blocked — PW5-V4 + PW5-U3 + PW5-CP-PLAN prerequisites unmet |
+| 3 | Control plane expansion planning | ⏳ Blocked — PW5-U3 + PW5-CP-PLAN prerequisites unmet (PW5-V4 ✅ PASS 2026-03-10; verification tranche fully complete) |
 | 4 | Tenant admin dashboard completion | ⏳ Blocked — verification + wiring tranches must complete first |
 | 5 | White-label store builder | ⏳ Blocked — PW5-WL1 + PW5-WL2 prerequisites unmet |
 | 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions must be met |
@@ -266,7 +266,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 
 Wave 5 architecture sequencing is **blocked** until all of the following are confirmed in governance:
 
-1. **Verification tranche complete** — PW5-V1 through PW5-V4 all resolved to ✅ with runtime evidence recorded
+1. **Verification tranche complete** — ✅ MET (2026-03-10) — PW5-V1 ✅ · PW5-V2 ✅ · PW5-V3 ✅ · PW5-V4 ✅ — all four verification units closed
 2. **Dead UI gating tranche complete** — PW5-U2 (dead tenant nav) and PW5-U3 (dead control-plane actions) at minimum resolved to ✅
 3. **Platform wiring truth reconciled in this tracker** — ordered sequence above updated to reflect ✅ completions
 
@@ -274,8 +274,8 @@ Wave 5 architecture sequencing is **blocked** until all of the following are con
 
 ### Recommended Immediate Next Unit
 
-**PW5-V1** — DPP runtime verification  
-Reason: The DPP surface was wired earliest (GOVERNANCE-SYNC-083) and carries the most unresolved governance debt around manufacturer field omission (G-025-ORGS-RLS-001). Runtime confirmation of the current DPP snapshot response shape will unblock downstream planning decisions and establish the runtime-verification pattern for PW5-V2 through PW5-V4.
+**PW5-U2 / PW5-U3** — Dead UI gating tranche (UX Correctness)  
+Reason: Verification tranche fully complete as of 2026-03-10 (PW5-V1 ✅ · PW5-V2 ✅ · PW5-V3 ✅ · PW5-V4 ✅). Wave 5 Architecture Block Condition 1 is now MET. The next unblocked gate is the Dead UI gating tranche. PW5-U2 (dead tenant/storefront nav hide-gate) and PW5-U3 (dead control-plane action hide-gate) are the two minimum units required to satisfy Wave 5 Architecture Block Condition 2 and unblock control-plane expansion planning (Step 3). PW5-U1 (B2C cart badge) and PW5-U4 (static panel collapse) may be sequenced alongside or immediately after without creating further blocking dependencies.
 
 ---
 
