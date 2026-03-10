@@ -30,6 +30,28 @@
             }
           }
         }
+      },
+      "TenantObject": {
+        "type": "object",
+        "description": "Tenant identity object as returned by control-plane tenant endpoints.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "tenant_category": {
+            "type": "string",
+            "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"],
+            "description": "Canonical tenant identity category. Derived from organizations.org_type.",
+            "example": "B2B"
+          },
+          "is_white_label": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant operates as a white-label environment. Derived from organizations.is_white_label.",
+            "example": false
+          },
+          "status": { "type": "string" },
+          "plan": { "type": "string" }
+        }
       }
     }
   },
@@ -40,7 +62,30 @@
         "summary": "List all tenants",
         "description": "Returns all tenants with membership counts and related data",
         "responses": {
-          "200": { "description": "Tenants retrieved successfully" },
+          "200": {
+            "description": "Tenants retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tenants": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TenantObject"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
@@ -126,7 +171,20 @@
           }
         ],
         "responses": {
-          "200": { "description": "Tenant details retrieved" },
+          "200": {
+            "description": "Tenant details retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/TenantObject" }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
