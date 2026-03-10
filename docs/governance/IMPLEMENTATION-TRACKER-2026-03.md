@@ -244,7 +244,7 @@ Two independent repo-truth audits were completed 2026-03-08. Together they produ
 
 | ID | Name | Status | Note |
 |---|---|---|---|
-| PW5-CP-PLAN | Control-plane re-baseline | ⏳ Pending | No control-plane expansion planning until verification + UX tranches complete |
+| PW5-CP-PLAN | Control-plane re-baseline | ✅ COMPLETE — 2026-03-10 | Read-only architectural baseline established (PW5-CP-PLAN). 17 panels confirmed reachable. Route dependency map produced. Capability classification complete. 8 drift observations. 5 new gap entries. Governance sync filed: PW5-CP-PLAN-GOV. |
 | PW5-AI-PLAN | AI/event backbone re-baseline | ⏳ Pending | No Wave 5 AI architecture until verification tranche + this plan complete |
 
 ---
@@ -257,7 +257,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 |---|---|---|
 | 1 | Platform wiring audit | ✅ COMPLETE — 2026-03-08 (Full TexQtic Platform Map audit) |
 | 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 (Navigation verification audit) |
-| 3 | Control plane expansion planning | ✅ UNBLOCKED — 2026-03-10 — Block Condition 2 MET (PW5-U3 ✅ d5ee430 2026-03-09 · PW5-U4 ✅ 3e2e14d 2026-03-09 · PW5-U2 ✅ 024e5c5 2026-03-10 · PW5-U1 ✅ confirmed 2026-03-10); PW5-CP-PLAN now sequenceable; GOVERNANCE-SYNC-PW5-U2U3-GOV |
+| 3 | Control plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; governance sync PW5-CP-PLAN-GOV recorded 2026-03-10; 17 panels confirmed; route dependency map produced; classification established; drift findings recorded |
 | 4 | Tenant admin dashboard completion | ⏳ Blocked — verification + wiring tranches must complete first |
 | 5 | White-label store builder | ⏳ Blocked — PW5-WL1 + PW5-WL2 prerequisites unmet |
 | 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions must be met |
@@ -276,8 +276,8 @@ Wave 5 architecture sequencing is **blocked** until all of the following are con
 
 ### Recommended Immediate Next Unit
 
-**PW5-W2 / PW5-W3 / PW5-W4** — Control-plane wiring tranche (Escrow admin read · Settlement admin read · Maker-Checker console)  
-Reason: Wave 2 TECS-FBW-001 fully complete (all 3 sub-units closed — GOV-SYNC-W2-TRACKER). Wave 5 Block Conditions 1 ✅ + 2 ✅ both MET. PW5-U1..U4 all closed. Pattern: inspect `server/src/routes/control.ts` → confirm route exists → wire read-only admin UI. TECS-FBW-002-B (Tenant Trades) remains 🚫 BACKEND DESIGN GATE — do not begin. After W-series: PW5-CP-PLAN (control-plane re-baseline, design + governance only). Deferred items remain deferred: tenant logout (DEF-003), B2B avatar (DEF-004), B2C search (DEF-005), WL storefront completion (PW5-WL1..3), DPP backend audit, VER-003/004 OpenAPI drift delta.
+**VER-003 / VER-004** — OpenAPI drift delta enumeration (priority elevated by PW5-CP-PLAN; ≥12 control-plane routes introduced in Waves 3–5 are likely absent from `openapi.control-plane.json`)  
+Reason: PW5-CP-PLAN complete (2026-03-10). PW5-W2 ✅ CLOSED · PW5-W4 ✅ CLOSED · PW5-W3 🔴 BACKEND DESIGN GATE (no `GET /api/control/settlements`) · PW5-W1 🚫 BLOCKED (no tenant-plane trades route). 5 new architectural gap entries registered (AI_GOV-BACKEND-001 · RBAC-BACKEND-001 · ESCROW-POST-001 · TRADES-MUTATION-DEFERRED · MAKER-CHECKER-MUTATION-DEFERRED). Deferred items remain deferred: tenant logout (DEF-003), B2B avatar (DEF-004), B2C search (DEF-005), WL storefront completion (PW5-WL1..3), DPP backend audit.
 
 ---
 

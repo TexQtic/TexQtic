@@ -92,6 +92,7 @@ Last Updated: 2026-03-10 (GOV-SYNC-W2-TRACKER — TECS-FBW-001 Finance ✅ CLOSE
 (GOVERNANCE-SYNC-008 — G-019 certifications domain CLOSED; migration `20260311000000_g019_certifications_domain`: public.certifications table + 5 RLS policies (RESTRICTIVE guard incl. is_admin, PERMISSIVE tenant_select/insert/update, admin_select); applied via psql EXIT:0; DO block PASS; Prisma ledger synced; impl commit `3c7dae7`; typecheck EXIT 0, lint 0 errors/92 warnings; G-019 CLOSED)
 (GOVERNANCE-SYNC-005 — G-017 FK Hardening CLOSED; migration `20260309000000_g017_fk_buyer_seller_orgs` adds `fk_trades_buyer_org_id` + `fk_trades_seller_org_id` FK constraints (ON DELETE RESTRICT) with embedded preflight DO block; schema.prisma updated with `buyerOrg`/`sellerOrg` Prisma relations + `tradesBuyer[]`/`tradesSeller[]` back-refs on organizations; impl commit `8069d48`; typecheck EXIT 0, lint 0 errors/92 warnings; G-017 ⚠️ CAVEAT CLOSED)
 (GOVERNANCE-SYNC-004 — G-015 Phase C CLOSED via Option C admin-context; `withOrgAdminContext` + `getOrganizationIdentity` implemented in `database-context.ts`; GET /me + invite-email wired; no RLS change; no migration; commit `790d0e6`; gap-register G-015 row updated to VALIDATED; GOVERNANCE-SYNC-003 also on this date — G-019 label-misuse fix recorded; `settlement.g019.ts` renamed to `settlement.ts` (tenant + control planes), impl commit `6e94a9a`; gap-register G-019 row updated to reflect fix)
+(PW5-CP-PLAN-GOV — PW5-CP-PLAN ✅ COMPLETE — 2026-03-10; control-plane architecture re-baseline; read-only analysis; 17 AdminView panels confirmed reachable; all AdminView union tokens have switch cases in renderAdminView() (no orphans); route dependency map produced for all 17 panels; capability classification complete: 6 OPERATIONAL (read+mutation), 8 OPERATIONAL (read-only governance), 2 PARTIAL (no dedicated backend API), 1 BACKEND DESIGN GATE (Settlement Admin — three-layer absence: no AdminView token, no component, no GET route); 8 architectural drift observations recorded: (1) Cart-Summaries registered outside controlRoutes plugin (index.ts), (2) Maker-Checker dual-prefix bridge undocumented, (3) AI Governance derives data from tenants API (no dedicated route), (4) RBAC renders from ADMIN_USERS constant (no live API), (5) Settlement Admin three-layer absence confirmed, (6) POST /api/control/escrows exists undocumented in escrow.g018.ts line 222, (7) POST /api/control/trades/:id/transition backend-idle (intentional, undocumented), (8) VER-003/VER-004 OpenAPI drift elevated — ≥12 routes likely absent from openapi.control-plane.json; 5 new gap entries recorded: AI_GOV-BACKEND-001 · RBAC-BACKEND-001 · ESCROW-POST-001 · TRADES-MUTATION-DEFERRED · MAKER-CHECKER-MUTATION-DEFERRED; files modified: governance/gap-register.md + IMPLEMENTATION-TRACKER-2026-03.md + 2026-03-audit-reconciliation-matrix.md; PW5-CP-PLAN-GOV)
 Doctrine Version: v1.4
 
 ---
@@ -1270,9 +1271,9 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 | ID | Name | Status | Notes |
 |---|---|---|---|
 | PW5-W1 | Tenant Trades UI | ⏳ BACKEND DESIGN GATE | `TECS-FBW-002-B` remains 🚫 BLOCKED. `GET /api/tenant/trades` does not exist as a tenant-plane route. No UI wiring is possible until route is designed and implemented under tenant-plane auth. |
-| PW5-W2 | Control-plane Escrow inspection | ⏳ Pending | Backend route exists; audit flagged as BACKEND_EXISTS_UI_MISSING; verify and wire |
-| PW5-W3 | Control-plane Settlement inspection | ⏳ Pending | Backend route exists; audit flagged as BACKEND_EXISTS_UI_MISSING; verify and wire |
-| PW5-W4 | Maker-Checker review console | ⏳ Pending | State machine and backend logic implemented in Wave 4 area; UI console not wired |
+| PW5-W2 | Control-plane Escrow inspection | ✅ CLOSED — 2026-03-10 | `EscrowAdminPanel.tsx` wired to `GET /api/control/escrows`; D-020-B enforced; `adminListEscrows()` implemented; typecheck EXIT 0 · lint EXIT 0. PW5-CP-PLAN confirmed read backend depth. |
+| PW5-W3 | Control-plane Settlement inspection | 🔴 BACKEND DESIGN GATE — 2026-03-10 | No `GET /api/control/settlements` route exists. Only `POST /api/control/settlements/preview` + `POST /api/control/settlements` (mutation-only). No AdminView token (`SETTLEMENT_ADMIN`). No UI component. Full three-layer absence confirmed by PW5-CP-PLAN analysis. Do not begin wiring until backend read route is designed and implemented. |
+| PW5-W4 | Maker-Checker review console | ✅ CLOSED — 2026-03-10 | `MakerCheckerConsole.tsx` wired to `GET /api/control/internal/gov/approvals` (control-plane alias); read-only; sign/replay mutation wiring deferred (see MAKER-CHECKER-MUTATION-DEFERRED); typecheck EXIT 0 · lint EXIT 0. |
 
 ---
 
@@ -1290,8 +1291,54 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 
 | ID | Name | Status | Notes |
 |---|---|---|---|
-| PW5-CP-PLAN | Control-plane re-baseline | ⏳ Pending | No control-plane expansion planning until verification tranche + PW5-U3 + PW5-U4 are done |
+| PW5-CP-PLAN | Control-plane re-baseline | ✅ COMPLETE — 2026-03-10 | Read-only architectural baseline established. 17 panels reachable. Route map produced. Capability classification complete. 8 drift observations. 5 new gap entries. Governance sync: PW5-CP-PLAN-GOV. |
 | PW5-AI-PLAN | AI/event backbone re-baseline | ⏳ Pending | No Wave 5 AI architecture until verification tranche complete and this plan confirmed |
+
+---
+
+### PW5-CP-PLAN Architectural Drift Findings — Registered 2026-03-10
+
+Entries below were identified during the PW5-CP-PLAN control-plane architecture re-baseline (read-only analysis, 2026-03-10). All entries are OPEN or DEFERRED with no code change required to register them.
+
+---
+
+**AI_GOV-BACKEND-001**  
+Classification: PARTIAL — No Dedicated Backend Route  
+Detected: PW5-CP-PLAN · 2026-03-10  
+Description: `AiGovernance.tsx` derives AI budget data from `GET /api/control/tenants` (the shared tenants list endpoint) and displays a hardcoded static prompt registry array. No `/api/control/ai/*` route exists in `server/src/routes/`. The panel presents as an AI governance surface but its backend depth is a subset of the Tenants panel. Prompt registry is not persisted or configurable.  
+Status: OPEN — design gate; requires product decision on AI governance data model before a backend route can be specified.
+
+---
+
+**RBAC-BACKEND-001**  
+Classification: PARTIAL — No Live Backend API  
+Detected: PW5-CP-PLAN · 2026-03-10  
+Description: `AdminRBAC.tsx` renders exclusively from the `ADMIN_USERS` constant in `constants.tsx`. No `/api/control/rbac/*` or equivalent admin-user management route exists in the backend. Dead mutation buttons were gated in PW5-U3 (commit d5ee430, 2026-03-09) but the fundamental absence of live backend data was not documented in any governance artifact until this entry.  
+Status: OPEN — design gate; requires canonical admin-user model decision (Admin table vs JWT-derived) before API surface can be specified.
+
+---
+
+**ESCROW-POST-001**  
+Classification: INVESTIGATION REQUIRED — Undocumented Mutation Surface  
+Detected: PW5-CP-PLAN · 2026-03-10  
+Description: `server/src/routes/control/escrow.g018.ts` line 222 contains a `POST` handler in addition to the two confirmed GET routes (`GET /api/control/escrows` and `GET /api/control/escrows/:escrowId`). This mutation endpoint is not referenced in any frontend consumer, was not mentioned in the PW5-W2 governance closure, and is not documented in `openapi.control-plane.json`. Auth tier and idempotency posture are unverified.  
+Status: OPEN — requires inspection of POST handler body to determine: (a) what entity it creates, (b) auth tier (adminAuthMiddleware only vs SUPER_ADMIN preHandler), (c) whether Idempotency-Key enforcement is present.
+
+---
+
+**TRADES-MUTATION-DEFERRED**  
+Classification: INTENTIONAL DEFER — Backend-Ready, Frontend Not Wired  
+Detected: PW5-CP-PLAN · 2026-03-10  
+Description: `server/src/routes/control/trades.g017.ts` implements `POST /api/control/trades/:id/transition` but `TradeOversight.tsx` is strictly read-only per the PW5-W2 wiring tranche constraint. The transition mutation backend is idle from the user's perspective. This intentional deferral existed in code but was not documented in any governance artifact.  
+Status: DEFERRED — frontend trade transition UI not yet designed; backend route is implemented and ready. Prerequisite for future wiring: confirm transition body schema, define confirm-before-submit UX pattern consistent with Finance/Compliance/Disputes authority intent pattern.
+
+---
+
+**MAKER-CHECKER-MUTATION-DEFERRED**  
+Classification: INTENTIONAL DEFER — Backend-Ready, Frontend Not Wired  
+Detected: PW5-CP-PLAN · 2026-03-10  
+Description: `server/src/routes/internal/makerChecker.ts` implements `POST /api/control/internal/gov/approvals/:id/sign` and `POST /api/control/internal/gov/approvals/:id/replay` but `MakerCheckerConsole.tsx` exposes only the read surface per the PW5-W4 tranche constraint. Both mutation endpoints require `X-Texqtic-Internal: true` + admin JWT. This intentional deferral existed in code but was not documented in any governance artifact.  
+Status: DEFERRED — sign/replay UI wiring deferred to a future TECS unit; backend routes are implemented and ready. Prerequisite: confirm SUPER_ADMIN vs ADMIN role tier for sign/replay; design idempotency-key generation pattern (same as Finance/Compliance authority pattern).
 
 ---
 
@@ -1301,12 +1348,12 @@ All four verification sub-units must resolve to ✅ with evidence before any imp
 |---|---|---|
 | 1 | Platform wiring audit | ✅ COMPLETE — 2026-03-08 |
 | 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 |
-| 3 | Control-plane expansion planning | ⏳ BLOCKED — PW5-V4 + PW5-U3 + PW5-CP-PLAN prerequisites |
+| 3 | Control-plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; PW5-CP-PLAN-GOV governance sync recorded |
 | 4 | Tenant admin dashboard completion | ⏳ BLOCKED — verification + wiring tranches |
 | 5 | White-label store builder | ⏳ BLOCKED — PW5-WL1 + PW5-WL2 |
 | 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions required |
 
-Recommended immediate next unit: **PW5-V1** — DPP runtime verification.
+Recommended immediate next unit: **VER-003 / VER-004** — OpenAPI drift delta enumeration (elevated per PW5-CP-PLAN output; ≥12 control-plane routes likely absent from `openapi.control-plane.json`); and **Settlement Admin backend design (PW5-W3)** — define `GET /api/control/settlements` read route before any UI wiring begins. (PW5-W2 ✅ · PW5-W4 ✅ CLOSED · PW5-W3 🔴 BACKEND DESIGN GATE · PW5-CP-PLAN ✅ COMPLETE)
 
 ---
 
@@ -1314,8 +1361,8 @@ Recommended immediate next unit: **PW5-V1** — DPP runtime verification.
 
 Wave 5 architecture sequencing does not begin until all of the following are confirmed in governance:
 
-- [ ] **Verification tranche complete** — PW5-V1 through PW5-V4 all resolved to ✅ with runtime evidence or confirmed repo-inspection evidence recorded in governance
-- [ ] **Dead UI gating tranche complete** — PW5-U2 and PW5-U3 minimum resolved to ✅
-- [ ] **Platform wiring truth reconciled in tracker** — `IMPLEMENTATION-TRACKER-2026-03.md` Pre-Wave-5 ordered sequence updated to reflect tranche completions
+- [x] **Verification tranche complete** — ✅ MET (2026-03-10) — PW5-V1 ✅ · PW5-V2 ✅ · PW5-V3 ✅ · PW5-V4 ✅ — all four verification units closed with runtime evidence
+- [x] **Dead UI gating tranche complete** — ✅ MET (2026-03-10) — PW5-U1 ✅ · PW5-U2 ✅ · PW5-U3 ✅ · PW5-U4 ✅ — all four dead-UI gating units closed
+- [x] **Platform wiring truth reconciled in tracker** — ✅ MET (2026-03-10) — PW5-CP-PLAN-GOV governance sync recorded; IMPLEMENTATION-TRACKER-2026-03.md updated; gap-register wiring/planning tranches updated
 
 No agent, no prompt, and no implementation sprint may bypass these conditions.

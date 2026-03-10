@@ -993,6 +993,73 @@ Block Condition 2 MET. Note: PW5-U3 (dead CP action gating, d5ee430, 2026-03-09)
 
 ---
 
+## Section 9.15 — Control-Plane Architecture Baseline (PW5-CP-PLAN) — 2026-03-10
+
+**Unit:** PW5-CP-PLAN | **Type:** Architecture Re-Baseline (Read-Only Analysis) | **Date:** 2026-03-10  
+**Governance Sync:** PW5-CP-PLAN-GOV | **Files Modified:** `governance/gap-register.md` · `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`
+
+### Surface Inventory
+
+17 `AdminView` panels confirmed reachable. All tokens in the `AdminView` union type (defined in `layouts/SuperAdminShell.tsx`) have a corresponding `switch` case in `renderAdminView()` (`App.tsx`). No orphaned tokens found.
+
+| Panel | AdminView Token | Backend Route(s) | Component |
+|---|---|---|---|
+| Tenant Registry | TENANTS | GET /api/control/tenants · GET /api/control/tenants/:id | TenantRegistry / TenantDetails |
+| Feature Flags | FLAGS | GET /api/control/feature-flags · PATCH | FeatureFlags |
+| Finance & Fees | FINANCE | GET /api/control/finance/payouts · POST approve/reject | FinanceOps |
+| Trade Oversight | TRADES | GET /api/control/trades | TradeOversight |
+| Cart Summaries | CART_SUMMARIES | GET /api/control/marketplace/cart-summaries | CartSummariesPanel |
+| Escrow Accounts | ESCROW_ADMIN | GET /api/control/escrows · GET /api/control/escrows/:id | EscrowAdminPanel |
+| Compliance Queue | COMPLIANCE | GET /api/control/compliance/requests · POST approve/reject | ComplianceQueue |
+| Dispute Cases | CASES | GET /api/control/disputes · POST resolve/escalate | DisputeCases |
+| Escalation Oversight | ESCALATIONS | GET /api/control/escalations | EscalationOversight |
+| Cert Lifecycle | CERTIFICATIONS | GET /api/control/certifications · GET /:id | CertificationsAdmin |
+| Traceability | TRACEABILITY | GET /api/admin/traceability/nodes · GET /edges | TraceabilityAdmin |
+| Maker-Checker | MAKER_CHECKER | GET /api/control/internal/gov/approvals | MakerCheckerConsole |
+| AI Governance | AI | (proxies GET /api/control/tenants — no dedicated route) | AiGovernance |
+| Live Event Stream | EVENTS | GET /api/control/events | EventStream |
+| Audit Logs | LOGS | GET /api/control/audit-logs | AuditLogs |
+| RBAC / Access Control | RBAC | (ADMIN_USERS constant — no live API) | AdminRBAC |
+| System Health | HEALTH | GET /api/control/health | SystemHealth |
+
+### Capability Classification
+
+| Class | Count | Panels |
+|---|---|---|
+| OPERATIONAL — full read + mutation | 6 | Tenants · Feature Flags · Finance & Fees · Compliance Queue · Dispute Cases · Escalation Oversight |
+| OPERATIONAL — read-only governance | 8 | Cart Summaries · Escrow Accounts · Cert Lifecycle · Traceability · Maker-Checker · Live Event Stream · Audit Logs · System Health |
+| PARTIAL — no dedicated backend API | 2 | AI Governance · RBAC / Access Control |
+| BACKEND DESIGN GATE | 1 | Settlement Admin (three-layer absence: no AdminView token · no component · no GET route) |
+
+### Architectural Drift Observations
+
+| # | Observation | Location | Risk |
+|---|---|---|---|
+| 1 | Cart-Summaries route registered outside `controlRoutes` Fastify plugin — in `server/src/index.ts` directly | `server/src/index.ts` L148 | MEDIUM — future middleware additions to controlRoutes will not apply automatically |
+| 2 | Maker-Checker dual-prefix internal bridge (`/api/internal/gov/` + `/api/control/internal/gov/`) not documented in OpenAPI contract | `server/src/routes/internal/makerChecker.ts` | LOW — undocumented API surface |
+| 3 | AI Governance panel derives data from `GET /api/control/tenants`; no dedicated AI backend route; prompt registry is a hardcoded static array | `components/ControlPlane/AiGovernance.tsx` | MEDIUM — panel is cosmetic overlay of tenants data |
+| 4 | RBAC panel renders from `ADMIN_USERS` constant; no backend API; no live data | `components/ControlPlane/AdminRBAC.tsx` | HIGH — not live data; governance surface is inert |
+| 5 | Settlement Admin surface absent across all three layers: no AdminView token, no component, no GET route | (absent) | HIGH — tracker previously understated this as only "missing read route" |
+| 6 | `POST /api/control/escrows` (escrow.g018.ts L222) exists but is undocumented and not referenced by any frontend consumer | `server/src/routes/control/escrow.g018.ts` L222 | MEDIUM — auth tier and idempotency posture unverified |
+| 7 | `POST /api/control/trades/:id/transition` exists and is intentionally not wired in `TradeOversight.tsx` per wiring tranche constraint | `server/src/routes/control/trades.g017.ts` L161 | LOW — intentional; not documented as such in governance |
+| 8 | VER-003 / VER-004 OpenAPI drift — ≥12 Wave 3–5 control-plane routes are likely absent from `openapi.control-plane.json` | `shared/contracts/openapi.control-plane.json` | HIGH — governance documentation gap; priority elevated |
+
+### New Gap Register Entries Created
+
+Five new entries registered in `governance/gap-register.md` under "PW5-CP-PLAN Architectural Drift Findings":
+
+- **AI_GOV-BACKEND-001** — OPEN design gate; no dedicated AI governance backend route
+- **RBAC-BACKEND-001** — OPEN design gate; `AdminRBAC.tsx` renders from constant; no live API
+- **ESCROW-POST-001** — OPEN investigation; POST /api/control/escrows undocumented; auth/idempotency unverified
+- **TRADES-MUTATION-DEFERRED** — DEFERRED; `POST /api/control/trades/:id/transition` backend-ready; frontend not designed
+- **MAKER-CHECKER-MUTATION-DEFERRED** — DEFERRED; sign/replay mutation routes backend-ready; frontend not designed
+
+### Governance Impact
+
+VER-003 / VER-004 OpenAPI drift verification priority elevated to "recommended immediate next unit" in both tracker and gap register. Settlement Admin (PW5-W3) reclassified from "BACKEND_EXISTS_UI_MISSING" to three-layer absence (no token · no component · no GET route) — this is a more severe classification. PW5-W2 ✅ CLOSED · PW5-W4 ✅ CLOSED · PW5-W3 🔴 BACKEND DESIGN GATE.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
@@ -1004,4 +1071,5 @@ Block Condition 2 MET. Note: PW5-U3 (dead CP action gating, d5ee430, 2026-03-09)
 *Updated: 2026-03-10 — PW5-V4 shell navigation defect remediation recorded (Section 9.12)*  
 *Updated: 2026-03-10 — Verification tranche completion (PW5-V1..V4 all ✅) and Wave 5 Condition 1 MET recorded (Section 9.13)*  
 *Updated: 2026-03-10 — PW5-U2 WL storefront residual cleanup + PW5-U1..U4 retroactive closure verification + Wave 5 Condition 2 MET recorded (Section 9.14); PW5-U3 (dead CP actions, d5ee430, 2026-03-09) + PW5-U4 (static CP panels, 3e2e14d, 2026-03-09) pre-session closures retroactively confirmed*  
+*Updated: 2026-03-10 — PW5-CP-PLAN control-plane architecture baseline recorded (Section 9.15); 17 panels confirmed reachable; capability classification established; 8 drift observations; 5 new gap register entries (AI_GOV-BACKEND-001 · RBAC-BACKEND-001 · ESCROW-POST-001 · TRADES-MUTATION-DEFERRED · MAKER-CHECKER-MUTATION-DEFERRED); VER-003/VER-004 priority elevated; PW5-W2 ✅ · PW5-W4 ✅ CLOSED · PW5-W3 🔴 BACKEND DESIGN GATE (PW5-CP-PLAN-GOV)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
