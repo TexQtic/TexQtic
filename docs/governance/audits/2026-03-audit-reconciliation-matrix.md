@@ -721,7 +721,47 @@ PW5-V3 remains ❌ FAIL overall. B2-REM-1 closes the schema layer only. B2-REM-2
 
 ---
 
+### 9.7 B2-REM-2 Closure Addendum (2026-03-10)
+
+**B2-REM-2 — ✅ CLOSED as of 2026-03-10**  
+**Commit:** efbce82  
+**Scope:** Backend serialization / auth alignment layer only.
+
+| Attribute | Detail |
+|---|---|
+| Files changed | `server/src/lib/database-context.ts`; `server/src/routes/auth.ts`; `server/src/routes/tenant.ts` |
+| `database-context.ts` | `OrganizationIdentity` interface: `is_white_label: boolean` added; Prisma select clause: `is_white_label: true` added |
+| `auth.ts` — unified login | `isWhiteLabel` variable added; `tenant_category` + `is_white_label` included in `sendSuccess` response |
+| `auth.ts` — dedicated tenant login | Fail-open `getOrganizationIdentity()` block added; `tenant_category` + `is_white_label` included in `sendSuccess` response |
+| `tenant.ts` — GET /api/me | `tenant_category: string; is_white_label: boolean` added to inline type; `tenant_category: org.org_type` and `is_white_label: org.is_white_label` added to tenant object literal |
+| JWT payload | Unchanged — `{userId, tenantId, role}` — identity fields resolved at runtime via `getOrganizationIdentity()` |
+| Compat preservation | Legacy `tenantType` and `tenant.type` fields retained in all three serialization points |
+| Validation | typecheck 0 errors; `GET /health` HTTP 200; 7/7 integration tests PASS (315s) |
+| org_id / RLS posture | Unchanged — no RLS policy or tenant isolation logic modified |
+| Atomicity | One atomic commit (efbce82) |
+
+**PW5-V3-DEF-003 — ✅ CLOSED**  
+Backend alias stale defect resolved. `tenant_category` + `is_white_label` are now emitted at all three auth serialization points. The freeform `org_type` pass-through is superseded by canonical fields.
+
+**PW5-V3-DEF-002 — Partially Remediated at Schema + Backend Layers**  
+Schema layer (B2-REM-1) and backend serialization layer (B2-REM-2) are now complete. Full defect closure is **not yet achieved**. Remaining layers still open:
+
+| Layer | Unit | Status |
+|---|---|---|
+| Frontend enum / routing alignment | B2-REM-3 | ⏳ Pending |
+| OpenAPI / contract synchronization | B2-REM-4 | ⏳ Pending |
+| Provisioning flow update | B2-REM-5 | ⏳ Pending |
+
+**PW5-V3-DEF-001 — NO CHANGE — OPEN**  
+`INTERNAL` tenant category still has no frontend shell. No change from B2-REM-2. B2-REM-3 is the responsible unit.
+
+**PW5-V3 — ❌ FAIL Overall**  
+PW5-V3 remains ❌ FAIL overall. B2-REM-2 closes the backend serialization layer only. B2-REM-3 through B2-REM-5 must be completed before PW5-V3 can be transitioned to PASS. This addendum records backend-layer progress only.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
+*Updated: 2026-03-10 — B2-REM-2 backend serialization closure addendum appended (Section 9.7)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
