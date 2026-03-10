@@ -110,17 +110,18 @@
                 "required": [
                   "name",
                   "slug",
-                  "type",
+                  "tenant_category",
                   "ownerEmail",
                   "ownerPassword"
                 ],
                 "properties": {
                   "name": { "type": "string" },
                   "slug": { "type": "string" },
-                  "type": {
+                  "tenant_category": {
                     "type": "string",
-                    "enum": ["B2B", "B2C", "INTERNAL"]
+                    "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"]
                   },
+                  "is_white_label": { "type": "boolean" },
                   "ownerEmail": { "type": "string", "format": "email" },
                   "ownerPassword": { "type": "string", "minLength": 6 }
                 }
