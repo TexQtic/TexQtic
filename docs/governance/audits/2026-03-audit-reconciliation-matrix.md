@@ -838,10 +838,41 @@ PW5-V3 remains ❌ FAIL overall. B2-REM-4 closes the OpenAPI contract layer. B2-
 
 ---
 
+### 9.10 B2-REM-5 Closure Addendum (2026-03-10)
+
+**B2-REM-5 — ✅ CLOSED**
+
+| Attribute | Detail |
+|---|---|
+| Contract update commit | f53dd40 |
+| Runtime completion commit | 8f12b14 |
+| Runtime files modified | tenantProvision.types.ts; tenantProvision.ts; tenantProvision.service.ts; controlPlaneService.ts; TenantRegistry.tsx |
+| Canonical identity fields | tenant_category (enum: AGGREGATOR / B2B / B2C / INTERNAL); is_white_label (boolean) |
+| Runtime wiring | backend types → Zod validation → route pass-through → service layer → Prisma create (`type`, `isWhiteLabel`) → frontend service interface → TenantRegistry UI |
+| Provisioning UI update | TenantRegistry provisioning form now includes tenant_category select and white-label checkbox |
+| Persistence | Prisma create now sets `type` from tenant_category and `isWhiteLabel` from is_white_label |
+
+**PW5-V3-DEF-002 — FULLY REMEDIATED**
+
+| Layer | Unit | Status |
+|---|---|---|
+| Schema canonicalization | B2-REM-1 | COMPLETE |
+| Backend serialization | B2-REM-2 | COMPLETE |
+| Frontend routing | B2-REM-3 | COMPLETE |
+| OpenAPI contract | B2-REM-4 | COMPLETE |
+| Provisioning flow | B2-REM-5 + B2-REM-5A | COMPLETE |
+
+**PW5-V3 — ❌ FAIL Overall**
+
+Although all remediation layers are complete, tranche status remains ❌ FAIL until the formal tranche closure verification sequence is executed.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
 *Updated: 2026-03-10 — B2-REM-2 backend serialization closure addendum appended (Section 9.7)*  
 *Updated: 2026-03-10 — B2-REM-3 frontend routing closure addendum appended (Section 9.8)*  
 *Updated: 2026-03-10 — B2-REM-4 OpenAPI contract closure addendum appended (Section 9.9)*  
+*Updated: 2026-03-10 — B2-REM-5 provisioning alignment closure addendum appended (Section 9.10)*
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
