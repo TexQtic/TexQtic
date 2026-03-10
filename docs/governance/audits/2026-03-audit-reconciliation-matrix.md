@@ -760,8 +760,48 @@ PW5-V3 remains ❌ FAIL overall. B2-REM-2 closes the backend serialization layer
 
 ---
 
+### 9.8 B2-REM-3 Closure Addendum (2026-03-10)
+
+**B2-REM-3 — ✅ CLOSED as of 2026-03-10**  
+**Commit:** a198256  
+**Scope:** Frontend enum / routing alignment layer only.
+
+| Attribute | Detail |
+|---|---|
+| Files changed | `types.ts`; `services/authService.ts`; `services/controlPlaneService.ts`; `App.tsx` |
+| `types.ts` | `TenantType` enum: `INTERNAL` added; `WHITE_LABEL` removed; enum now canonical with `AGGREGATOR / B2B / B2C / INTERNAL` |
+| `authService.ts` | `currentTenant` construction updated: `tenant_category` + `is_white_label` consumed from login response; compat fields retained |
+| `controlPlaneService.ts` | Canonical identity fields consumed in control-plane service layer |
+| `App.tsx` — `resolveExperienceShell()` | Introduced as sole shell routing authority; takes `(tenant_category, is_white_label)` as inputs; `INTERNAL` → `AggregatorShell` via explicit named rule; `is_white_label === true` → `WhiteLabelShell`; `AGGREGATOR` → `AggregatorShell`; `B2B` → `B2BShell`; `B2C` → `B2CShell`; unknown → returns `null` (explicit error UI, no silent fallback) |
+| White-label routing fix | `t.is_white_label === true` replaces stale `TenantType.WHITE_LABEL` identity check — regression closed |
+| Silent fallback removal | `default:` fallback removed from shell routing; unknown identity now surfaces explicit ⚠️ error UI |
+| Compat preservation | Legacy `tenantType` / `tenant.type` compat bridge preserved — no breaking change to downstream consumers |
+| Validation | typecheck 0 errors; `GET /health` HTTP 200 |
+| Atomicity | One atomic commit (a198256); 79 insertions / 35 deletions |
+| org_id / RLS posture | Unchanged — no RLS policy or tenant isolation logic modified |
+
+**PW5-V3-DEF-001 — ✅ CLOSED**  
+`INTERNAL` tenant category now has an explicit frontend shell: `resolveExperienceShell('INTERNAL', false)` → `AggregatorShell` via named rule. Silent fallback was the prior risk; it is now removed. Defect fully resolved by B2-REM-3.
+
+**PW5-V3-DEF-002 — Partially Remediated at Schema + Backend + Frontend Layers**  
+Schema layer (B2-REM-1), backend serialization layer (B2-REM-2), and frontend routing layer (B2-REM-3) are now complete. Full defect closure is **not yet achieved**. Remaining layers still open:
+
+| Layer | Unit | Status |
+|---|---|---|
+| OpenAPI / contract synchronization | B2-REM-4 | ⏳ Pending |
+| Provisioning flow update | B2-REM-5 | ⏳ Pending |
+
+**PW5-V3-DEF-003 — NO CHANGE — ✅ CLOSED**  
+Closed by B2-REM-2 (commit efbce82). No change in this addendum.
+
+**PW5-V3 — ❌ FAIL Overall**  
+PW5-V3 remains ❌ FAIL overall. B2-REM-3 closes the frontend routing layer. B2-REM-4 and B2-REM-5 must be completed before PW5-V3 can be transitioned to PASS. This addendum records frontend-layer progress only.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
 *Updated: 2026-03-10 — B2-REM-2 backend serialization closure addendum appended (Section 9.7)*  
+*Updated: 2026-03-10 — B2-REM-3 frontend routing closure addendum appended (Section 9.8)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
