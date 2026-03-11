@@ -478,6 +478,40 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create a catalog item",
+        "description": "Create a new item in the tenant catalog. Tenant scope is derived from JWT claims (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "sku"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "sku": { "type": "string" },
+                  "description": { "type": "string" },
+                  "price": { "type": "number", "minimum": 0 },
+                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Catalog item created" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
       }
     },
     "/api/tenant/cart": {
@@ -842,6 +876,37 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create an escrow account",
+        "description": "Opens a new escrow account for the authenticated tenant. Tenant scope is derived from JWT claims (D-017-A). D-020-B: balance is always ledger-derived, never stored.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tradeId", "currency"],
+                "properties": {
+                  "tradeId": { "type": "string", "format": "uuid" },
+                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Escrow account created" },
+          "401": {
+            "description": "Unauthorized — invalid or missing tenant JWT",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
       }
     },
     "/api/tenant/escalations": {
@@ -954,6 +1019,39 @@
                 "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an escalation event",
+        "description": "Raise a new escalation event scoped to the authenticated tenant. Tenant scope is derived from JWT claims (D-017-A). TECS-FBW-006-A.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["entityType", "entityId", "reason"],
+                "properties": {
+                  "entityType": { "type": "string" },
+                  "entityId": { "type": "string", "format": "uuid" },
+                  "reason": { "type": "string" },
+                  "severityLevel": { "type": "integer", "minimum": 0, "maximum": 4 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Escalation event created" },
+          "401": {
+            "description": "Unauthorized — invalid or missing tenant JWT",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
@@ -1604,6 +1702,550 @@
           },
           "401": { "description": "UNAUTHORIZED" },
           "500": { "description": "DB_ERROR" }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "Initiate password reset",
+        "description": "Sends a password-reset email to the registered address.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Reset email sent" },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "summary": "Reset password using one-time token",
+        "description": "Consumes a one-time reset token and updates the user password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "password"],
+                "properties": {
+                  "token": { "type": "string" },
+                  "password": { "type": "string", "minLength": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password reset successful" },
+          "400": {
+            "description": "Invalid or expired token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "summary": "Verify email address",
+        "description": "Consumes a one-time email verification token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Email verified successfully" },
+          "400": {
+            "description": "Invalid or expired token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "summary": "Resend email verification",
+        "description": "Re-sends the email verification link. Requires an authenticated session.",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "Verification email resent" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token",
+        "description": "Issues a new access token using the HttpOnly refresh token cookie. No request body required.",
+        "responses": {
+          "200": { "description": "New access token issued" },
+          "401": {
+            "description": "Refresh token missing or expired",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "Clears the refresh token cookie and terminates the session.",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/api/tenant/checkout": {
+      "post": {
+        "summary": "Checkout active cart",
+        "description": "Converts the authenticated user's active cart into an order. Tenant scope is derived from JWT claims (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "201": { "description": "Order created successfully" },
+          "400": {
+            "description": "Cart empty or unavailable",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/orders": {
+      "get": {
+        "summary": "List orders",
+        "description": "Returns orders for the authenticated tenant user. Tenant scope is derived from JWT claims (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Pagination cursor (order ID)"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Order list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/orders/{id}": {
+      "get": {
+        "summary": "Get order detail",
+        "description": "Returns a single order by ID. Tenant scope enforced by RLS (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Order detail returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Order not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/orders/{id}/status": {
+      "patch": {
+        "summary": "Update order status",
+        "description": "Updates the status of an order. Tenant scope enforced by RLS (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order status updated" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Order not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/escrows/{escrowId}/transactions": {
+      "post": {
+        "summary": "Record an escrow transaction",
+        "description": "Records a debit or credit transaction against an escrow account. Tenant scope is derived from JWT claims (D-017-A). D-020-B: balance is ledger-derived.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "escrowId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount", "currency", "type"],
+                "properties": {
+                  "amount": { "type": "number", "minimum": 0.01 },
+                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "type": { "type": "string", "enum": ["DEBIT", "CREDIT"] },
+                  "referenceId": { "type": "string" },
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Transaction recorded" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Escrow account not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/escrows/{escrowId}/transition": {
+      "post": {
+        "summary": "Transition escrow state",
+        "description": "Triggers a lifecycle state transition for an escrow account. D-020-B: state machine enforces valid transitions. Tenant scope is derived from JWT claims (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "escrowId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["toStateKey", "reason"],
+                "properties": {
+                  "toStateKey": { "type": "string" },
+                  "reason": { "type": "string" },
+                  "actorType": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Transition applied" },
+          "202": { "description": "Pending maker-checker approval" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/escrows/{escrowId}": {
+      "get": {
+        "summary": "Get escrow account detail",
+        "description": "Returns detail and current ledger balance for an escrow account. D-020-B: balance is always a derived SUM, never stored. Tenant scope enforced by RLS (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "escrowId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Escrow detail returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Escrow account not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/trades": {
+      "post": {
+        "summary": "Create a trade",
+        "description": "Opens a new trade between parties. Tenant scope is derived from JWT claims (D-017-A). G-017.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["counterpartyOrgId", "tradeType"],
+                "properties": {
+                  "counterpartyOrgId": { "type": "string", "format": "uuid" },
+                  "tradeType": { "type": "string" },
+                  "metadata": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Trade created" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/trades/{id}/transition": {
+      "post": {
+        "summary": "Transition trade state",
+        "description": "Triggers a lifecycle state transition for a trade. State machine enforces valid transitions. Tenant scope is derived from JWT claims (D-017-A). G-017.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["toStateKey", "reason"],
+                "properties": {
+                  "toStateKey": { "type": "string" },
+                  "reason": { "type": "string" },
+                  "actorType": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Trade transition applied" },
+          "202": { "description": "Pending maker-checker approval" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/domains": {
+      "get": {
+        "summary": "List tenant domains",
+        "description": "Returns all custom domains registered for the authenticated tenant. Tenant scope is derived from JWT claims (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "responses": {
+          "200": { "description": "Domain list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a custom domain",
+        "description": "Registers a new custom domain for the authenticated tenant. Tenant scope is derived from JWT claims (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["domain"],
+                "properties": {
+                  "domain": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Domain registered" },
+          "400": {
+            "description": "Domain already in use",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/domains/{id}": {
+      "delete": {
+        "summary": "Remove a custom domain",
+        "description": "Removes a custom domain registration from the authenticated tenant. Tenant scope enforced by RLS (D-017-A).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Domain removed" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Domain not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/tenant/dpp/{nodeId}": {
+      "get": {
+        "summary": "Get Digital Product Passport",
+        "description": "Returns the Digital Product Passport (DPP) graph for a given traceability node. Tenant scope enforced by RLS (D-017-A). G-016.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "DPP graph returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Node not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     }

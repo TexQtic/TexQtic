@@ -1116,6 +1116,40 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create a control-plane escalation event",
+        "description": "Raises a new escalation event for a specified org. Admin provides orgId in the request body. D-022-C: freezeRecommendation is informational only. TECS-FBW-006-A.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["orgId", "entityType", "entityId", "reason"],
+                "properties": {
+                  "orgId": { "type": "string", "format": "uuid" },
+                  "entityType": { "type": "string" },
+                  "entityId": { "type": "string", "format": "uuid" },
+                  "reason": { "type": "string" },
+                  "severityLevel": { "type": "integer", "minimum": 0, "maximum": 4 },
+                  "freezeRecommendation": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Escalation event created" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
       }
     },
     "/api/control/certifications": {
@@ -1346,6 +1380,548 @@
           },
           "401": { "description": "UNAUTHORIZED" },
           "403": { "description": "FORBIDDEN" }
+        }
+      }
+    },
+    "/api/control/internal/gov/approvals": {
+      "get": {
+        "summary": "List pending maker-checker approvals (admin)",
+        "description": "Returns pending_approvals rows visible to the authenticated admin. G-021 maker-checker read surface.",
+        "responses": {
+          "200": { "description": "Approval list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/internal/gov/approvals/{id}": {
+      "get": {
+        "summary": "Get approval detail (admin)",
+        "description": "Returns a single pending_approvals record by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Approval detail returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Approval not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/internal/gov/approvals/{id}/sign": {
+      "post": {
+        "summary": "Sign a pending approval (admin)",
+        "description": "Records a MAKER or CHECKER signature on a pending_approvals record. G-021.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["decision"],
+                "properties": {
+                  "decision": { "type": "string", "enum": ["APPROVE", "REJECT"] },
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Signature recorded" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "ALREADY_SIGNED or INVALID_STATE",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/internal/gov/approvals/{id}/replay": {
+      "post": {
+        "summary": "Replay an approved operation (admin)",
+        "description": "Re-executes the underlying operation once all maker-checker signatures are collected. G-021.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Operation replayed successfully" },
+          "202": { "description": "Replay enqueued — awaiting further signatures" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "NOT_FULLY_APPROVED or ALREADY_REPLAYED",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/escrows": {
+      "get": {
+        "summary": "List escrow accounts (admin, cross-tenant)",
+        "description": "Returns escrow accounts across all tenants. Optional tenantId filter. Admin RLS bypass (is_admin=true). D-020-B: balance is ledger-derived.",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Escrow list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/escrows/{escrowId}": {
+      "get": {
+        "summary": "Get escrow detail (admin, cross-tenant)",
+        "description": "Returns escrow account detail and recent transactions. Admin RLS bypass allows cross-tenant read. D-020-B: balance is derived.",
+        "parameters": [
+          {
+            "name": "escrowId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Escrow detail returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Escrow not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/escrows/{escrowId}/transition": {
+      "post": {
+        "summary": "Admin escrow lifecycle transition (G-021 Fix B)",
+        "description": "Admin-initiated escrow state machine transition. orgId must be supplied in the body. MakerCheckerService injected — PENDING_APPROVAL transitions create pending_approvals rows. D-022-B: freeze gate enforced.",
+        "parameters": [
+          {
+            "name": "escrowId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["orgId", "toStateKey", "reason"],
+                "properties": {
+                  "orgId": { "type": "string", "format": "uuid" },
+                  "toStateKey": { "type": "string" },
+                  "reason": { "type": "string" },
+                  "actorRole": { "type": "string" },
+                  "aiTriggered": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Transition applied" },
+          "202": { "description": "Pending maker-checker approval" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/settlements/preview": {
+      "post": {
+        "summary": "Preview settlement — admin cross-tenant (G-019)",
+        "description": "Non-mutating balance check for a cross-tenant settlement. Admin provides tenantId in body. D-020-B: balance always derived from ledger SUM.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["escrowId", "amount", "currency"],
+                "properties": {
+                  "tenantId": { "type": "string", "format": "uuid" },
+                  "escrowId": { "type": "string", "format": "uuid" },
+                  "amount": { "type": "number", "minimum": 0.01 },
+                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Preview computed" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "INSUFFICIENT_ESCROW_FUNDS or STATE_MACHINE_DENIED",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/settlements": {
+      "post": {
+        "summary": "Execute settlement — admin cross-tenant (G-019)",
+        "description": "Applies a settlement debit to the escrow ledger and transitions trade/escrow state. Admin provides tenantId in body. D-020-B: preview (wouldSucceed=true) required first.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tenantId", "tradeId", "escrowId", "amount", "currency", "referenceId", "reason"],
+                "properties": {
+                  "tenantId": { "type": "string", "format": "uuid" },
+                  "tradeId": { "type": "string", "format": "uuid" },
+                  "escrowId": { "type": "string", "format": "uuid" },
+                  "amount": { "type": "number", "minimum": 0.01 },
+                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "referenceId": { "type": "string" },
+                  "reason": { "type": "string" },
+                  "actorType": { "type": "string" },
+                  "actorRole": { "type": "string" },
+                  "aiTriggered": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Settlement applied" },
+          "202": { "description": "Pending maker-checker approval" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "INSUFFICIENT_ESCROW_FUNDS, DUPLICATE_REFERENCE, or STATE_MACHINE_DENIED",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/escalations/{id}/upgrade": {
+      "post": {
+        "summary": "Upgrade escalation severity (SUPER_ADMIN)",
+        "description": "Increases the severity level of an existing escalation event. Requires SUPER_ADMIN role. G-022.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["severityLevel", "reason"],
+                "properties": {
+                  "severityLevel": { "type": "integer", "minimum": 0, "maximum": 4 },
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Escalation severity upgraded" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "403": {
+            "description": "Forbidden — SUPER_ADMIN required",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Escalation not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/escalations/{id}/resolve": {
+      "post": {
+        "summary": "Resolve an escalation event (SUPER_ADMIN)",
+        "description": "Marks an escalation as RESOLVED. Requires SUPER_ADMIN role. G-022.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Escalation resolved" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "403": {
+            "description": "Forbidden — SUPER_ADMIN required",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "404": {
+            "description": "Escalation not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/trades/{id}/transition": {
+      "post": {
+        "summary": "Admin trade lifecycle transition (G-021 Fix A2)",
+        "description": "Admin-initiated trade state machine transition. orgId must be supplied in body. MakerCheckerService injected. D-017-A: admin supplies tenantId explicitly; service re-validates.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["orgId", "toStateKey", "reason"],
+                "properties": {
+                  "orgId": { "type": "string", "format": "uuid" },
+                  "toStateKey": { "type": "string" },
+                  "reason": { "type": "string" },
+                  "actorRole": { "type": "string" },
+                  "aiTriggered": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Trade transition applied" },
+          "202": { "description": "Pending maker-checker approval" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "409": {
+            "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/finance/payouts": {
+      "get": {
+        "summary": "List finance payout authority intents (admin)",
+        "description": "Returns payout-related authority intent events from the event log. Backed by EventLog.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Payout list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/compliance/requests": {
+      "get": {
+        "summary": "List compliance request authority intents (admin)",
+        "description": "Returns compliance-related authority intent events from the event log. Backed by EventLog.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Compliance request list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/disputes": {
+      "get": {
+        "summary": "List dispute authority intents (admin)",
+        "description": "Returns dispute-related authority intent events from the event log. Backed by EventLog.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 100 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Dispute list returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/whoami": {
+      "get": {
+        "summary": "Admin identity proof (OPS-SUPERADMIN-CAPABILITY-001)",
+        "description": "Returns the calling admin's identity and capability context. No DB access — derived from verified JWT only.",
+        "responses": {
+          "200": {
+            "description": "Admin identity returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "adminId": { "type": "string" },
+                    "adminRole": { "type": "string" },
+                    "isSuperAdmin": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/api/control/system/health": {
+      "get": {
+        "summary": "Admin system health overview",
+        "description": "Returns computed system health including database connectivity. Admin-only endpoint.",
+        "responses": {
+          "200": {
+            "description": "System health returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "overall": { "type": "string", "enum": ["HEALTHY", "DEGRADED"] },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "status": { "type": "string", "enum": ["UP", "DOWN"] },
+                          "lastCheck": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
         }
       }
     }
