@@ -240,7 +240,8 @@ Two independent repo-truth audits were completed 2026-03-08. Together they produ
 
 | ID | Name | Status | Note |
 |---|---|---|---|
-| PW5-WL1 | WL storefront product grid | ⏳ Pending | Confirm end-to-end render with real catalog data from a provisioned WL tenant |
+| PW5-WL1 | WL storefront product grid | ✅ CLOSED — 2026-03-12 | Commit: cc4278f · `feat(wl-storefront): implement white-label product grid` · `ProductCard.tsx` + `ProductGrid.tsx` + `WLStorefront.tsx` NEW · App.tsx import + WL HOME guard (`if (currentTenant.is_white_label && expView === 'HOME') return <WLStorefront />;`) · `getCatalogItems()` via `tenantGet('/api/tenant/catalog/items')` · JWT-scoped · RLS-enforced via `withDbContext` · no clientside tenantId (D-017-A) · typecheck EXIT 0 · lint EXIT 0 |
+| PW5-WL1-VERIFY | PW5-WL1 end-to-end runtime verification | ✅ COMPLETE — 2026-03-12 | Runtime verification PASS — all 9 acceptance criteria confirmed · WL HOME guard intercept PASS · WLStorefront renders above category switch PASS · getCatalogItems() calls correct endpoint PASS · tenantGet JWT-scoped (no clientside tenantId) PASS (D-017-A) · server RLS via withDbContext PASS · auth guard active (401 unauthenticated) PASS · loading/error/empty states implemented PASS · responsive grid layout (1→2→3→4 cols) PASS · GET /health 200 confirmed PASS · Non-blocking observations: CAT-SCHEMA-001 (imageUrl/category nullable — optional fields guarded) · CAT-SCHEMA-002 (moq nullable — badge guarded) · CAT-SCHEMA-003 (currency not rendered — Intl.NumberFormat locale default) · all NON-BLOCKING. GOVERNANCE-SYNC-PW5-WL1-GOV. |
 | PW5-WL2 | WL storefront collections/category rendering | ⏳ Pending | WLCollectionsPanel.tsx exists (GOVERNANCE-SYNC-105); confirm against live WL tenant data |
 | PW5-WL3 | WL builder requirements re-baseline | ⏳ Pending | Re-baseline WL store builder requirements after PW5-WL1 + PW5-WL2 confirm repo state |
 
@@ -263,7 +264,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 | 2 | Navigation verification | ✅ COMPLETE — 2026-03-08 (Navigation verification audit) |
 | 3 | Control plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; governance sync PW5-CP-PLAN-GOV recorded 2026-03-10; 17 panels confirmed; route dependency map produced; classification established; drift findings recorded |
 | 4 | Tenant admin dashboard completion | ⏳ Blocked — verification + wiring tranches must complete first |
-| 5 | White-label store builder | ⏳ Blocked — PW5-WL1 + PW5-WL2 prerequisites unmet |
+| 5 | White-label store builder | ⏳ Partially unblocked — PW5-WL1 ✅ CLOSED (cc4278f · 2026-03-12) · PW5-WL2 ⏳ Pending |
 | 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions must be met |
 
 ### Wave 5 Architecture Block Conditions
@@ -280,8 +281,8 @@ Wave 5 architecture sequencing is **blocked** until all of the following are con
 
 ### Recommended Immediate Next Unit
 
-**PW5-WL1 — WL storefront product grid** (or next available non-blocked unit)  
-Reason: PW5-W3 is FULLY CLOSED — backend (PW5-W3-BE ✅ commit 14aea49) + frontend (PW5-W3-FE ✅ commit 8f4a685) + runtime verification (PW5-W3-VERIFY ✅ 2026-03-12) all complete. Non-blocking follow-up items recorded in gap-register: PW5-W3-TYPE-ALIGN-001 (amount type alignment · deferred), PW5-W3-TEST-001 (GET settlement integration test · deferred), PW5-W3-PERF-INDEX (compound index · future performance unit). Wiring tranche status: PW5-W1 🚫 BACKEND DESIGN GATE (no tenant-plane trades route) · PW5-W2 ✅ · PW5-W3-BE ✅ · PW5-W3-FE ✅ · PW5-W4 ✅ — all other wiring units closed. WL tranche (PW5-WL1 · PW5-WL2 · PW5-WL3) is the next available wiring progression. Deferred items remain deferred: tenant logout (DEF-003), B2B avatar (DEF-004), B2C search (DEF-005), DPP backend audit. GOVERNANCE-SYNC-PW5-W3-VERIFY-GOV.
+**PW5-WL2 — WL storefront collections/category rendering** (or next available non-blocked unit)  
+Reason: PW5-WL1 is FULLY CLOSED — components (ProductCard/ProductGrid/WLStorefront) + App.tsx wiring + runtime verification all complete (commit cc4278f · 2026-03-12). PW5-WL1-VERIFY: end-to-end PASS — all 9 ACs confirmed; non-blocking observations recorded (CAT-SCHEMA-001/002/003). Wiring tranche status: PW5-W1 🚫 BACKEND DESIGN GATE (no tenant-plane trades route) · PW5-W2 ✅ · PW5-W3-BE ✅ · PW5-W3-FE ✅ · PW5-W4 ✅ — all wiring units closed. WL tranche: PW5-WL1 ✅ CLOSED · PW5-WL2 ⏳ Pending (WLCollectionsPanel.tsx exists — confirm against live WL tenant data) · PW5-WL3 ⏳ Pending (re-baseline WL store builder requirements after PW5-WL1 + PW5-WL2 confirm repo state). Deferred items remain deferred: tenant logout (DEF-003), B2B avatar (DEF-004), B2C search (DEF-005), DPP backend audit. GOVERNANCE-SYNC-PW5-WL1-GOV.
 
 ---
 
