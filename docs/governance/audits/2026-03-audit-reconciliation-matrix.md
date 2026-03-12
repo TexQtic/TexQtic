@@ -1060,6 +1060,54 @@ VER-003 / VER-004 OpenAPI drift verification priority elevated to "recommended i
 
 ---
 
+## Section 9.16 — SPEC-SYNC OpenAPI Reconciliation — 2026-03-10
+
+**Unit:** SPEC-SYNC-TENANT / SPEC-SYNC-CONTROL | **Type:** GOVERNANCE-SYNC — Documentation Only | **Date:** 2026-03-10  
+**Governance Sync:** SPEC-SYNC-GOV | **Files Modified:** `shared/contracts/openapi.tenant.json` · `shared/contracts/openapi.control-plane.json` (no product code changes)
+
+### A — Inputs
+
+| Input | Status |
+|---|---|
+| VER-003 — OpenAPI tenant contract drift enumeration | ✅ COMPLETE — 22 runtime routes absent from openapi.tenant.json confirmed |
+| VER-004 — OpenAPI control-plane contract drift enumeration | ✅ COMPLETE — 20 runtime routes absent from openapi.control-plane.json confirmed |
+| SPEC-SYNC commit | 88ba3e7c1e02d6671a20b390325edec696b6cf23 |
+| Commit message | docs(openapi): synchronize tenant and control-plane OpenAPI specs with runtime routes (VER-003 / VER-004) |
+| Files changed | shared/contracts/openapi.tenant.json (+642 lines) · shared/contracts/openapi.control-plane.json (+576 lines) |
+| Total insertions | 1218 insertions(+), 0 deletions |
+
+### B — Result
+
+Tenant and control-plane OpenAPI documents updated to reflect deterministic runtime-route drift identified in VER-003 / VER-004. All non-decision routes confirmed in VER-003 and VER-004 are now represented in the respective OpenAPI contracts.
+
+| Contract | Before | After |
+|---|---|---|
+| openapi.tenant.json | 22 runtime routes absent | SYNCHRONIZED — deterministic drift remediated |
+| openapi.control-plane.json | 20 runtime routes absent | SYNCHRONIZED — deterministic drift remediated |
+
+### C — Residual Decisions (OPEN — DECISION REQUIRED)
+
+Two policy-class residuals were explicitly NOT resolved in this tranche and remain open pending governance decision:
+
+| ID | Classification | Description |
+|---|---|---|
+| OPENAPI-AI-SCOPE-001 | DECISION REQUIRED | `/api/ai/*` routes remain in `openapi.tenant.json`; no dedicated `openapi.ai.json` exists; contract ownership unresolved |
+| OPENAPI-IMPERSONATION-DOC-001 | DECISION REQUIRED | `POST /api/control/impersonation/start` + `/stop` are live SUPER_ADMIN endpoints; intentionally absent from `openapi.control-plane.json` pending governance decision on public documentation policy |
+
+### D — Validation Status
+
+| Check | Status |
+|---|---|
+| JSON syntax validation — openapi.tenant.json | ✅ CONFIRMED — `node JSON.parse`: TENANT_JSON:VALID |
+| JSON syntax validation — openapi.control-plane.json | ✅ CONFIRMED — `node JSON.parse`: CONTROL_JSON:VALID |
+| Semantic OpenAPI validation (schema correctness, $ref resolution, etc.) | ⚠️ PENDING — no OpenAPI-aware validator (e.g., Spectral, swagger-parser) was executed in this unit; only JSON syntax was verified |
+
+### E — Audit-Safe Conclusion
+
+Deterministic OpenAPI drift identified by VER-003 / VER-004 has been synchronized. Two policy-class residuals remain open pending governance decision. The contracts are syntactically valid JSON. Semantic OpenAPI correctness is unverified in this unit.
+
+---
+
 *Produced: 2026-03-06 — TECS GOVERNANCE RECONCILIATION*  
 *Updated: 2026-03-09 — B2-DESIGN / B2-DESIGN-GOV canonical TenantType decision recorded (Section 9)*  
 *Updated: 2026-03-09 — B2-REM-1 schema closure addendum appended (Section 9.6)*  
@@ -1072,4 +1120,5 @@ VER-003 / VER-004 OpenAPI drift verification priority elevated to "recommended i
 *Updated: 2026-03-10 — Verification tranche completion (PW5-V1..V4 all ✅) and Wave 5 Condition 1 MET recorded (Section 9.13)*  
 *Updated: 2026-03-10 — PW5-U2 WL storefront residual cleanup + PW5-U1..U4 retroactive closure verification + Wave 5 Condition 2 MET recorded (Section 9.14); PW5-U3 (dead CP actions, d5ee430, 2026-03-09) + PW5-U4 (static CP panels, 3e2e14d, 2026-03-09) pre-session closures retroactively confirmed*  
 *Updated: 2026-03-10 — PW5-CP-PLAN control-plane architecture baseline recorded (Section 9.15); 17 panels confirmed reachable; capability classification established; 8 drift observations; 5 new gap register entries (AI_GOV-BACKEND-001 · RBAC-BACKEND-001 · ESCROW-POST-001 · TRADES-MUTATION-DEFERRED · MAKER-CHECKER-MUTATION-DEFERRED); VER-003/VER-004 priority elevated; PW5-W2 ✅ · PW5-W4 ✅ CLOSED · PW5-W3 🔴 BACKEND DESIGN GATE (PW5-CP-PLAN-GOV)*  
+*Updated: 2026-03-10 — SPEC-SYNC OpenAPI reconciliation recorded (Section 9.16); VER-003 ✅ COMPLETE · VER-004 ✅ COMPLETE · SPEC-SYNC ✅ COMPLETE (commit 88ba3e7); deterministic OpenAPI drift synchronized; 2 policy-class residuals registered (OPENAPI-AI-SCOPE-001 · OPENAPI-IMPERSONATION-DOC-001); JSON syntax validated; semantic OpenAPI validation PENDING (SPEC-SYNC-GOV)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
