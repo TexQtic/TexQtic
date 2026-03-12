@@ -38,6 +38,8 @@ import { EscrowAdminPanel } from './components/ControlPlane/EscrowAdminPanel';
 import { SettlementAdminPanel } from './components/ControlPlane/SettlementAdminPanel';
 // PW5-W4: G-021 maker-checker approval queue console (read-only)
 import { MakerCheckerConsole } from './components/ControlPlane/MakerCheckerConsole';
+// PW5-WL1-WIRE: white-label storefront product grid
+import { WLStorefront } from './components/WL/WLStorefront';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
@@ -598,6 +600,11 @@ const App: React.FC = () => {
     if (expView === 'TRACEABILITY') return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only; no filters/pagination; server take:50)
     if (expView === 'AUDIT_LOGS') return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
+
+    // PW5-WL1-WIRE: WL storefront HOME — renders ProductGrid for is_white_label tenants.
+    // tenantId is NEVER passed by the client. Server resolves tenant scope from JWT (D-017-A compliant).
+    // Must stay above the category switch so WL tenants don't fall through to B2B/B2C content.
+    if (currentTenant.is_white_label && expView === 'HOME') return <WLStorefront />;
 
     // B2-REM-3: Content switch reads canonical tenant_category with legacy type as compat fallback.
     switch (currentTenant.tenant_category ?? currentTenant.type) {
