@@ -16,6 +16,8 @@ export type AdminView =
   | 'CART_SUMMARIES'
   /** PW5-W2: G-018 cross-tenant escrow account read panel (D-020-B: no balance) */
   | 'ESCROW_ADMIN'
+  /** PW5-W3-FE: Settlement admin read panel — backend route implemented in 14aea49 */
+  | 'SETTLEMENT_ADMIN'
   /** PW5-W4: G-021 maker-checker approval queue console (read-only) */
   | 'MAKER_CHECKER'
   | 'AI'
@@ -98,6 +100,13 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
             onClick={() => onViewChange('ESCROW_ADMIN')}
             icon="🔒"
             label="Escrow Accounts"
+          />
+          {/* PW5-W3-FE: Settlement admin read panel (backend: 14aea49) */}
+          <NavLink
+            active={activeView === 'SETTLEMENT_ADMIN'}
+            onClick={() => onViewChange('SETTLEMENT_ADMIN')}
+            icon="💸"
+            label="Settlement Admin"
           />
 
           <SectionTitle>Risk & Compliance</SectionTitle>

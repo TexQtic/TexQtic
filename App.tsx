@@ -34,6 +34,8 @@ import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
 // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
 import { EscrowAdminPanel } from './components/ControlPlane/EscrowAdminPanel';
+// PW5-W3-FE: Settlement admin read panel (backend route: 14aea49)
+import { SettlementAdminPanel } from './components/ControlPlane/SettlementAdminPanel';
 // PW5-W4: G-021 maker-checker approval queue console (read-only)
 import { MakerCheckerConsole } from './components/ControlPlane/MakerCheckerConsole';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
@@ -983,6 +985,9 @@ const App: React.FC = () => {
       // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
       case 'ESCROW_ADMIN':
         return <EscrowAdminPanel />;
+      // PW5-W3-FE: Settlement admin read panel (backend route: 14aea49)
+      case 'SETTLEMENT_ADMIN':
+        return <SettlementAdminPanel />;
       // PW5-W4: G-021 maker-checker approval queue console (read-only)
       case 'MAKER_CHECKER':
         return <MakerCheckerConsole />;

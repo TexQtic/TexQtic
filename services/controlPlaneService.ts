@@ -942,3 +942,75 @@ export async function adminListApprovals(
     MAKER_CHECKER_INTERNAL_HEADER,
   );
 }
+
+// ==================== PW5-W3 SETTLEMENT ADMIN READ (PW5-W3-FE) ====================
+//
+// Route: GET /api/control/settlements      — cross-tenant settlement list (admin)
+// Constitutional:
+//   D-017-A  tenantId is an optional admin query-param FILTER only.
+//   Read-only — no mutation wiring in this tranche.
+//   Cursor-based pagination (nextCursor / hasMore).
+// Implemented: 14aea49 — feat(control-plane): add settlement admin read route
+
+/**
+ * A single settlement record as returned by GET /api/control/settlements.
+ * Shape sourced from PW5-W3-FE contract (2026-03-12).
+ */
+export interface AdminSettlement {
+  id: string;
+  tenantId: string;
+  escrowId: string;
+  referenceId: string | null;
+  amount: number;
+  currency: string;
+  createdByUserId: string | null;
+  createdAt: string;
+}
+
+export interface AdminSettlementPagination {
+  nextCursor: string | null;
+  hasMore: boolean;
+  limit: number;
+}
+
+export interface AdminSettlementListData {
+  settlements: AdminSettlement[];
+  pagination: AdminSettlementPagination;
+}
+
+export interface AdminSettlementListResponse {
+  success: true;
+  data: AdminSettlementListData;
+}
+
+export interface AdminSettlementListParams {
+  /** Optional — narrows result to a single tenant. D-017-A: admin filter only. */
+  tenantId?: string;
+  escrowId?: string;
+  referenceId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+/**
+ * List settlement records across all tenants (admin only).
+ * Route: GET /api/control/settlements
+ * D-017-A: tenantId is an optional admin filter, NOT a client identity assertion in the body.
+ * Cursor-based pagination — use pagination.nextCursor for subsequent pages.
+ */
+export async function listSettlements(
+  params?: AdminSettlementListParams,
+): Promise<AdminSettlementListResponse> {
+  const q = new URLSearchParams();
+  if (params?.tenantId)    q.set('tenantId',    params.tenantId);
+  if (params?.escrowId)    q.set('escrowId',    params.escrowId);
+  if (params?.referenceId) q.set('referenceId', params.referenceId);
+  if (params?.dateFrom)    q.set('dateFrom',    params.dateFrom);
+  if (params?.dateTo)      q.set('dateTo',      params.dateTo);
+  if (params?.cursor)      q.set('cursor',      params.cursor);
+  if (params?.limit !== undefined) q.set('limit', String(params.limit));
+  const qs = q.toString();
+  return adminGet<AdminSettlementListResponse>(`/api/control/settlements${qs ? `?${qs}` : ''}`);
+}
