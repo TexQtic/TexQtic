@@ -137,6 +137,20 @@ const settleBodySchema = z.object({
   actorRole: z.string().min(1).max(100).trim().optional().default('PLATFORM_ADMIN'),
 });
 
+/**
+ * PW5-W3: Query parameters for GET /api/control/settlements.
+ * All filters are optional — admin reads cross-tenant by default.
+ */
+const listQuerySchema = z.object({
+  tenantId:    uuidSchema.optional(),
+  escrowId:    uuidSchema.optional(),
+  referenceId: z.string().min(1).max(500).trim().optional(),
+  dateFrom:    z.string().optional(),
+  dateTo:      z.string().optional(),
+  cursor:      z.string().optional(),
+  limit:       z.coerce.number().int().min(1).max(100).default(20),
+});
+
 // ─── HTTP error code → status helper ─────────────────────────────────────────
 
 function settlementErrorToStatus(code: string): number {
@@ -306,6 +320,134 @@ const controlSettlementRoutes: FastifyPluginAsync = async fastify => {
       } catch (err) {
         fastify.log.error({ err }, '[G-019] POST /control/settlements error');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to execute settlement', 500);
+      }
+    },
+  );
+
+  // ─── GET /api/control/settlements ────────────────────────────────────────
+  /**
+   * PW5-W3: Cross-tenant admin list of durable applied settlement ledger rows.
+   *
+   * Source of truth: escrow_transactions WHERE entry_type='RELEASE' AND direction='DEBIT'.
+   * TOGGLE_B = B1: monetary truth is the ledger; no settlement table exists.
+   *
+   * Auth: withSettlementAdminContext(ADMIN_SENTINEL_ID) — sets is_admin='true' so
+   * _admin_all RLS policies permit cross-tenant reads on escrow_transactions.
+   *
+   * Pagination: cursor-based, ordered by created_at DESC, id DESC.
+   * Cursor is an opaque base64url-encoded JSON token encoding { t: ISO string, i: UUID }.
+   * Compound predicate: (created_at < t) OR (created_at = t AND id < i).
+   *
+   * No metadata, no trade join, no status filter — MVP surface only.
+   */
+  fastify.get(
+    '/',
+    async (request, reply) => {
+      const adminId = (request as unknown as Record<string, string>).adminId ?? ADMIN_SENTINEL_ID;
+
+      const queryResult = listQuerySchema.safeParse(request.query);
+      if (!queryResult.success) {
+        return sendValidationError(reply, queryResult.error.errors);
+      }
+      const q = queryResult.data;
+
+      // Decode opaque cursor into { created_at, id } if provided
+      let cursorFilter: { created_at: Date; id: string } | null = null;
+      if (q.cursor) {
+        try {
+          const decoded = JSON.parse(Buffer.from(q.cursor, 'base64url').toString('utf-8')) as {
+            t: string;
+            i: string;
+          };
+          cursorFilter = { created_at: new Date(decoded.t), id: decoded.i };
+        } catch {
+          return sendError(reply, 'INVALID_CURSOR', 'Invalid pagination cursor', 400);
+        }
+      }
+
+      try {
+        const rows = await withSettlementAdminContext(ADMIN_SENTINEL_ID, adminId, async tx => {
+          // Build where clause incrementally to keep TypeScript types precise
+          const where: Prisma.escrow_transactionsWhereInput = {
+            entry_type: 'RELEASE',
+            direction:  'DEBIT',
+          };
+
+          if (q.tenantId)    where.tenant_id    = q.tenantId;
+          if (q.escrowId)    where.escrow_id    = q.escrowId;
+          if (q.referenceId) where.reference_id = q.referenceId;
+
+          if (q.dateFrom || q.dateTo) {
+            where.created_at = {
+              ...(q.dateFrom ? { gte: new Date(q.dateFrom) } : {}),
+              ...(q.dateTo   ? { lte: new Date(q.dateTo)   } : {}),
+            };
+          }
+
+          // Compound cursor: (created_at < t) OR (created_at = t AND id < i)
+          // Ensures stable pagination on created_at DESC, id DESC ordering.
+          if (cursorFilter) {
+            where.OR = [
+              { created_at: { lt: cursorFilter.created_at } },
+              {
+                AND: [
+                  { created_at: { equals: cursorFilter.created_at } },
+                  { id: { lt: cursorFilter.id } },
+                ],
+              },
+            ];
+          }
+
+          return (tx as unknown as PrismaClient).escrow_transactions.findMany({
+            where,
+            orderBy: [
+              { created_at: 'desc' },
+              { id:         'desc' },
+            ],
+            take: q.limit + 1,
+            select: {
+              id:                 true,
+              tenant_id:          true,
+              escrow_id:          true,
+              reference_id:       true,
+              amount:             true,
+              currency:           true,
+              created_by_user_id: true,
+              created_at:         true,
+            },
+          });
+        });
+
+        const hasMore = rows.length > q.limit;
+        const page    = hasMore ? rows.slice(0, q.limit) : rows;
+        const lastRow = page[page.length - 1];
+
+        const nextCursor = hasMore && lastRow
+          ? Buffer.from(
+              JSON.stringify({ t: lastRow.created_at.toISOString(), i: lastRow.id }),
+            ).toString('base64url')
+          : null;
+
+        return sendSuccess(reply, {
+          settlements: page.map(r => ({
+            id:              r.id,
+            tenantId:        r.tenant_id,
+            escrowId:        r.escrow_id,
+            referenceId:     r.reference_id,
+            amount:          r.amount.toString(),
+            currency:        r.currency,
+            createdByUserId: r.created_by_user_id,
+            createdAt:       r.created_at.toISOString(),
+          })),
+          pagination: {
+            nextCursor,
+            hasMore,
+            limit: q.limit,
+          },
+        });
+      } catch (err) {
+        fastify.log.error({ err }, '[PW5-W3] GET /control/settlements error');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list settlements', 500);
       }
     },
   );

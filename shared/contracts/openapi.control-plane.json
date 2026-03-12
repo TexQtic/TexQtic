@@ -1132,8 +1132,15 @@
                   "entityType": { "type": "string" },
                   "entityId": { "type": "string", "format": "uuid" },
                   "reason": { "type": "string" },
-                  "severityLevel": { "type": "integer", "minimum": 0, "maximum": 4 },
-                  "freezeRecommendation": { "type": "boolean", "default": false }
+                  "severityLevel": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4
+                  },
+                  "freezeRecommendation": {
+                    "type": "boolean",
+                    "default": false
+                  }
                 }
               }
             }
@@ -1143,11 +1150,19 @@
           "201": { "description": "Escalation event created" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1391,7 +1406,11 @@
           "200": { "description": "Approval list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1412,11 +1431,19 @@
           "200": { "description": "Approval detail returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Approval not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1441,7 +1468,10 @@
                 "type": "object",
                 "required": ["decision"],
                 "properties": {
-                  "decision": { "type": "string", "enum": ["APPROVE", "REJECT"] },
+                  "decision": {
+                    "type": "string",
+                    "enum": ["APPROVE", "REJECT"]
+                  },
                   "reason": { "type": "string" }
                 }
               }
@@ -1452,11 +1482,19 @@
           "200": { "description": "Signature recorded" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "ALREADY_SIGNED or INVALID_STATE",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1475,14 +1513,24 @@
         ],
         "responses": {
           "200": { "description": "Operation replayed successfully" },
-          "202": { "description": "Replay enqueued — awaiting further signatures" },
+          "202": {
+            "description": "Replay enqueued — awaiting further signatures"
+          },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "NOT_FULLY_APPROVED or ALREADY_REPLAYED",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1513,7 +1561,11 @@
           "200": { "description": "Escrow list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1534,11 +1586,19 @@
           "200": { "description": "Escrow detail returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Escrow not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1578,15 +1638,27 @@
           "202": { "description": "Pending maker-checker approval" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1606,7 +1678,11 @@
                   "tenantId": { "type": "string", "format": "uuid" },
                   "escrowId": { "type": "string", "format": "uuid" },
                   "amount": { "type": "number", "minimum": 0.01 },
-                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  }
                 }
               }
             }
@@ -1616,16 +1692,172 @@
           "200": { "description": "Preview computed" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "INSUFFICIENT_ESCROW_FUNDS or STATE_MACHINE_DENIED",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
     },
     "/api/control/settlements": {
+      "get": {
+        "summary": "List settlements (admin, cross-tenant, read-only)",
+        "description": "Returns durable applied settlement ledger rows (escrow_transactions where entry_type=RELEASE AND direction=DEBIT) across all tenants. Cursor-based pagination ordered by created_at DESC, id DESC. TOGGLE_B=B1: monetary truth is the escrow ledger; no settlement table exists. Optional filters: tenantId, escrowId, referenceId, dateFrom, dateTo. Admin RLS bypass (is_admin=true). PW5-W3 (2026-03-12).",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": false,
+            "description": "Admin filter — restrict results to one tenant (D-017-A: admin query param only, never a body identity claim)",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "escrowId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "referenceId",
+            "in": "query",
+            "required": false,
+            "description": "Exact match on idempotency/reconciliation key (e.g. SETTLEMENT:{batchId})",
+            "schema": { "type": "string", "minLength": 1, "maxLength": 500 }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "required": false,
+            "description": "ISO 8601 date-time — return rows with created_at >= dateFrom",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "required": false,
+            "description": "ISO 8601 date-time — return rows with created_at <= dateTo",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque pagination cursor. Obtain from pagination.nextCursor of a previous response.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settlement ledger rows returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "settlements": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "tenantId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "escrowId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "referenceId": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "amount": {
+                                "type": "string",
+                                "description": "Decimal string — full precision preserved"
+                              },
+                              "currency": { "type": "string" },
+                              "createdByUserId": {
+                                "type": "string",
+                                "format": "uuid",
+                                "nullable": true
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "nextCursor": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "hasMore": { "type": "boolean" },
+                            "limit": { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid cursor or query parameter",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "Execute settlement — admin cross-tenant (G-019)",
         "description": "Applies a settlement debit to the escrow ledger and transitions trade/escrow state. Admin provides tenantId in body. D-020-B: preview (wouldSucceed=true) required first.",
@@ -1635,13 +1867,25 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["tenantId", "tradeId", "escrowId", "amount", "currency", "referenceId", "reason"],
+                "required": [
+                  "tenantId",
+                  "tradeId",
+                  "escrowId",
+                  "amount",
+                  "currency",
+                  "referenceId",
+                  "reason"
+                ],
                 "properties": {
                   "tenantId": { "type": "string", "format": "uuid" },
                   "tradeId": { "type": "string", "format": "uuid" },
                   "escrowId": { "type": "string", "format": "uuid" },
                   "amount": { "type": "number", "minimum": 0.01 },
-                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
                   "referenceId": { "type": "string" },
                   "reason": { "type": "string" },
                   "actorType": { "type": "string" },
@@ -1657,11 +1901,19 @@
           "202": { "description": "Pending maker-checker approval" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "INSUFFICIENT_ESCROW_FUNDS, DUPLICATE_REFERENCE, or STATE_MACHINE_DENIED",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1686,7 +1938,11 @@
                 "type": "object",
                 "required": ["severityLevel", "reason"],
                 "properties": {
-                  "severityLevel": { "type": "integer", "minimum": 0, "maximum": 4 },
+                  "severityLevel": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4
+                  },
                   "reason": { "type": "string" }
                 }
               }
@@ -1697,15 +1953,27 @@
           "200": { "description": "Escalation severity upgraded" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "403": {
             "description": "Forbidden — SUPER_ADMIN required",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Escalation not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1740,15 +2008,27 @@
           "200": { "description": "Escalation resolved" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "403": {
             "description": "Forbidden — SUPER_ADMIN required",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Escalation not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1788,15 +2068,27 @@
           "202": { "description": "Pending maker-checker approval" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1816,7 +2108,11 @@
           "200": { "description": "Payout list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1836,7 +2132,11 @@
           "200": { "description": "Compliance request list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1856,7 +2156,11 @@
           "200": { "description": "Dispute list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1883,7 +2187,11 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1900,15 +2208,24 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "overall": { "type": "string", "enum": ["HEALTHY", "DEGRADED"] },
+                    "overall": {
+                      "type": "string",
+                      "enum": ["HEALTHY", "DEGRADED"]
+                    },
                     "services": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
                           "name": { "type": "string" },
-                          "status": { "type": "string", "enum": ["UP", "DOWN"] },
-                          "lastCheck": { "type": "string", "format": "date-time" }
+                          "status": {
+                            "type": "string",
+                            "enum": ["UP", "DOWN"]
+                          },
+                          "lastCheck": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
                         }
                       }
                     },
@@ -1920,7 +2237,11 @@
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
