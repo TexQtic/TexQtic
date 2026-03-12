@@ -1121,7 +1121,8 @@ Deterministic OpenAPI drift identified by VER-003 / VER-004 has been synchronize
 *Updated: 2026-03-10 — PW5-U2 WL storefront residual cleanup + PW5-U1..U4 retroactive closure verification + Wave 5 Condition 2 MET recorded (Section 9.14); PW5-U3 (dead CP actions, d5ee430, 2026-03-09) + PW5-U4 (static CP panels, 3e2e14d, 2026-03-09) pre-session closures retroactively confirmed*  
 *Updated: 2026-03-10 — PW5-CP-PLAN control-plane architecture baseline recorded (Section 9.15); 17 panels confirmed reachable; capability classification established; 8 drift observations; 5 new gap register entries (AI_GOV-BACKEND-001 · RBAC-BACKEND-001 · ESCROW-POST-001 · TRADES-MUTATION-DEFERRED · MAKER-CHECKER-MUTATION-DEFERRED); VER-003/VER-004 priority elevated; PW5-W2 ✅ · PW5-W4 ✅ CLOSED · PW5-W3 🔴 BACKEND DESIGN GATE (PW5-CP-PLAN-GOV)*  
 *Updated: 2026-03-10 — SPEC-SYNC OpenAPI reconciliation recorded (Section 9.16); VER-003 ✅ COMPLETE · VER-004 ✅ COMPLETE · SPEC-SYNC ✅ COMPLETE (commit 88ba3e7); deterministic OpenAPI drift synchronized; 2 policy-class residuals registered (OPENAPI-AI-SCOPE-001 · OPENAPI-IMPERSONATION-DOC-001); JSON syntax validated; semantic OpenAPI validation PENDING (SPEC-SYNC-GOV)*  
-*Updated: 2026-03-10 — OpenAPI policy decision closure recorded (Section 9.17); OPENAPI-AI-SCOPE-001 ✅ CLOSED (policy decision: AI routes retained in tenant OpenAPI scope) · OPENAPI-IMPERSONATION-DOC-001 ✅ CLOSED (policy decision: impersonation routes intentionally excluded); governance blocker removed; PW5-W3 backend design UNBLOCKED (OPENAPI-POLICY-DECISION-GOV)*  
+*Updated: 2026-03-10 — OpenAPI policy decision closure recorded (Section 9.17); OPENAPI-AI-SCOPE-001 ✅ CLOSED (policy decision: AI routes retained in tenant OpenAPI scope) · OPENAPI-IMPERSONATION-DOC-001 ✅ CLOSED (policy decision: impersonation routes intentionally excluded); governance blocker removed; PW5-W3 backend design UNBLOCKED (OPENAPI-POLICY-DECISION-GOV)*
+*Updated: 2026-03-12 — PW5-W3 backend read surface closure recorded (Section 9.18); backend design gate removed · commit 14aea49 · GET /api/control/settlements implemented · OpenAPI updated · frontend wiring pending · next unit: PW5-W3-FE (GOVERNANCE-SYNC-PW5-W3-GOV)*  
 *Source of truth for next-action assignments: this matrix + governance/gap-register.md*
 
 ---
@@ -1166,3 +1167,52 @@ Deterministic OpenAPI drift identified by VER-003 / VER-004 has been synchronize
 ### E — Audit-Safe Conclusion
 
 Two policy-class OpenAPI residuals identified after SPEC-SYNC were resolved by governance decision. No contract files or runtime files were modified in this decision-recording unit. The PW5-W3 backend design gate is now the sole remaining blocker for Settlement Admin sequencing.
+
+---
+
+## Section 9.18 — PW5-W3 Backend Read Surface Closure — 2026-03-12
+
+**Unit:** GOVERNANCE-SYNC-PW5-W3-GOV | **Type:** GOVERNANCE-SYNC — Documentation Only | **Date:** 2026-03-12
+**Files Modified:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md` (no product code; no OpenAPI files modified in this unit)
+
+### A — Inputs
+
+| Input | Status |
+|---|---|
+| PW5-W3 backend design report — Settlement Admin backend design gate | ✅ COMPLETE — 2026-03-10 (PW5-CP-PLAN; three-layer absence confirmed: no AdminView token · no component · no GET route) |
+| PW5-W3-IMPL — commit 14aea49 | ✅ COMPLETE — 2026-03-12 · `feat(control-plane): add settlement admin read route` |
+
+### B — Implementation Result
+
+| Item | Status |
+|---|---|
+| `GET /api/control/settlements` added in `server/src/routes/control/settlement.ts` | ✅ CONFIRMED |
+| Control-plane OpenAPI contract updated | ✅ CONFIRMED |
+| Backend-only tranche respected — no frontend wiring performed | ✅ CONFIRMED |
+| No schema changes | ✅ CONFIRMED |
+| No migration files | ✅ CONFIRMED |
+| No settlement detail route | ✅ CONFIRMED |
+
+### C — Remaining Scope
+
+| Item | Status |
+|---|---|
+| Frontend Settlement Admin component | ❌ Not yet implemented |
+| AdminView token (`SETTLEMENT_ADMIN`) | ❌ Not yet implemented |
+| Shell nav wiring for Settlement Admin | ❌ Not yet implemented |
+| Settlement detail endpoint | ❌ Not implemented — not in scope for PW5-W3-BE |
+
+### D — Sequencing Impact
+
+| Impact | Status |
+|---|---|
+| Backend design gate removed | ✅ GATE REMOVED — 2026-03-12 |
+| PW5-W3 row split into PW5-W3-BE + PW5-W3-FE | ✅ RECORDED |
+| Next sequenced unit | **PW5-W3-FE — Settlement Admin frontend wiring** |
+| Prior sequenced unit (PW5-W3 backend design) | ✅ RETIRED — superseded by PW5-W3-BE closure |
+
+### E — Audit-Safe Conclusion
+
+The Settlement Admin backend read surface was implemented and documented. The prior backend design gate is removed. `GET /api/control/settlements` now exists in the control-plane route surface. The control-plane OpenAPI contract has been updated. The backend-only tranche was respected throughout PW5-W3-IMPL — no frontend wiring, no schema changes, no migration files, and no settlement detail route were included. Remaining PW5-W3 work is frontend wiring only (PW5-W3-FE).
+
+*Updated: 2026-03-12 — PW5-W3 backend read surface closure recorded (Section 9.18); backend design gate removed · commit 14aea49 · GET /api/control/settlements implemented · OpenAPI updated · frontend wiring pending · next unit: PW5-W3-FE (GOVERNANCE-SYNC-PW5-W3-GOV)*
