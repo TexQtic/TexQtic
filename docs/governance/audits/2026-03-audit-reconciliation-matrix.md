@@ -1215,4 +1215,62 @@ Two policy-class OpenAPI residuals identified after SPEC-SYNC were resolved by g
 
 The Settlement Admin backend read surface was implemented and documented. The prior backend design gate is removed. `GET /api/control/settlements` now exists in the control-plane route surface. The control-plane OpenAPI contract has been updated. The backend-only tranche was respected throughout PW5-W3-IMPL — no frontend wiring, no schema changes, no migration files, and no settlement detail route were included. Remaining PW5-W3 work is frontend wiring only (PW5-W3-FE).
 
-*Updated: 2026-03-12 — PW5-W3 backend read surface closure recorded (Section 9.18); backend design gate removed · commit 14aea49 · GET /api/control/settlements implemented · OpenAPI updated · frontend wiring pending · next unit: PW5-W3-FE (GOVERNANCE-SYNC-PW5-W3-GOV)*
+*Updated: 2026-03-12 — PW5-W3 runtime verification closure recorded (Section 9.19); PW5-W3 FULLY CLOSED end-to-end; three non-blocking follow-ups recorded · commit 8f4a685 (PW5-W3-FE) · verification PASS · next unit: PW5-WL1 (GOVERNANCE-SYNC-PW5-W3-VERIFY-GOV)*
+
+---
+
+## Section 9.19 — PW5-W3 Runtime Verification Closure — 2026-03-12
+
+**Unit:** GOVERNANCE-SYNC-PW5-W3-VERIFY-GOV  
+**Date:** 2026-03-12  
+**Type:** Governance-only documentation update; no product code changed
+
+### A — Inputs
+
+| Input | Status |
+|---|---|
+| PW5-W3 backend design report (PW5-CP-PLAN · 2026-03-10) | ✅ COMPLETE — three-layer absence confirmed |
+| PW5-W3-IMPL — commit 14aea49 | ✅ COMPLETE — 2026-03-12 · `GET /api/control/settlements` implemented |
+| PW5-W3-GOV — commit de501e8 | ✅ COMPLETE — 2026-03-12 · 3 governance artifacts updated |
+| PW5-W3-FE — commit 8f4a685 | ✅ COMPLETE — 2026-03-12 · `SettlementAdminPanel.tsx` + `listSettlements()` + `SETTLEMENT_ADMIN` token + nav + routing wired |
+| PW5-W3-VERIFY report | ✅ COMPLETE — 2026-03-12 · all acceptance criteria confirmed |
+
+### B — Verification Result
+
+| Acceptance Criterion | Result |
+|---|---|
+| Settlement Admin navigable from control-plane shell | PASS |
+| API auth guard active — 401 on unauthenticated probe | PASS |
+| Response schema matches implemented contract | PASS |
+| 8-column table renders (Settlement ID · Tenant ID · Escrow ID · Reference ID · Amount · Currency · Created At · Created By) | PASS |
+| Cursor pagination logic correct (opaque base64url token · compound predicate) | PASS |
+| Cross-tenant admin read posture confirmed (withSettlementAdminContext RLS pattern) | PASS |
+| No blocking console / server / runtime errors | PASS |
+| 8/8 integration tests PASS (S-001–S-008) | PASS |
+| GET /health 200 confirmed | PASS |
+
+**End-to-end verdict: PASS**
+
+### C — Non-Blocking Observations
+
+| ID | Description | Classification |
+|---|---|---|
+| OBS-1 / PW5-W3-TYPE-ALIGN-001 | `amount: number` interface in `controlPlaneService.ts` vs `Decimal.toString()` server serialization — runtime-safe; `Intl.NumberFormat.format()` handles string input correctly | NON-BLOCKING FOLLOW-UP |
+| OBS-2 / PW5-W3-TEST-001 | No dedicated integration test for `GET /api/control/settlements`; existing suite covers S-001–S-008 (POST routes only) | NON-BLOCKING FOLLOW-UP |
+| PW5-W3-PERF-INDEX | Compound partial index `(created_at DESC, id DESC) WHERE entry_type='RELEASE' AND direction='DEBIT'` absent on `escrow_transactions`; non-blocking at current ledger volume | FUTURE PERFORMANCE UNIT |
+
+### D — Closure State
+
+| Item | Status |
+|---|---|
+| PW5-W3-BE | ✅ FULLY CLOSED — commit 14aea49 |
+| PW5-W3-FE | ✅ FULLY CLOSED — commit 8f4a685 |
+| PW5-W3-VERIFY | ✅ COMPLETE — 2026-03-12 |
+| PW5-W3 (overall) | ✅ FULLY CLOSED end-to-end — 2026-03-12 |
+| OBS-1 / PW5-W3-TYPE-ALIGN-001 | DEFERRED — non-blocking |
+| OBS-2 / PW5-W3-TEST-001 | DEFERRED — non-blocking |
+| PW5-W3-PERF-INDEX | DEFERRED — future performance unit; non-blocking |
+
+### E — Audit-Safe Conclusion
+
+PW5-W3 runtime verification passed. Settlement Admin is operational. Three non-blocking follow-up items were recorded separately and do not prevent tranche closure. The full PW5-W3 chain — backend design, backend implementation, OpenAPI contract, frontend panel, and runtime verification — is complete. Settlement Admin is navigable from the control-plane shell, auth-guarded, schema-compliant, and reads correctly across tenant boundaries using the `withSettlementAdminContext` pattern.
