@@ -10,10 +10,10 @@
  *   duplicate API calls, UI flicker, and inconsistent category counts.
  *   tenantId is NEVER passed from any client component.
  *
- * Scope (PW5-WL3 additions):
+ * Scope (PW5-WL3 / PW5-WL4 additions):
  *   ✅ Render items array as responsive grid of ProductCard components
  *   ✅ Responsive grid layout (1 → 2 → 3 → 4 columns)
- *   ✅ Empty state
+ *   ✅ Empty state with optional context message (PW5-WL4)
  *   ✅ onSelectItem — forwards product selection up to WLStorefront (PW5-WL3)
  *   ❌ Internal data fetching — owned exclusively by WLStorefront
  *   ❌ Pagination — out of scope
@@ -32,14 +32,20 @@ interface ProductGridProps {
    * Owned and handled by WLStorefront — no fetch occurs here.
    */
   onSelectItem?: (id: string) => void;
+  /**
+   * PW5-WL4: Optional message shown when items is empty.
+   * Allows WLStorefront to supply context-appropriate copy (e.g. search vs.
+   * catalogue empty). Falls back to generic copy when omitted.
+   */
+  emptyMessage?: string;
 }
 
-export function ProductGrid({ items, onSelectItem }: ProductGridProps) {
-  // ── Empty ────────────────────────────────────────────────────────────────
+export function ProductGrid({ items, onSelectItem, emptyMessage }: ProductGridProps) {
+  // ── Empty ──────────────────────────────────────────────────────────────────────
   if (items.length === 0) {
     return (
-      <div className="flex items-center justify-center py-24 text-slate-400 text-sm">
-        No products available
+      <div className="flex items-center justify-center py-24 text-slate-400 text-sm text-center px-4">
+        {emptyMessage ?? 'No products available'}
       </div>
     );
   }

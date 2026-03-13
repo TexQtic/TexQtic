@@ -10,16 +10,20 @@
  *   Tenant identity is resolved exclusively from the JWT on the server.
  *   getCatalogItems() → tenantGet() → requireTenantRealm() (JWT-scoped).
  *
- * Data flow (PW5-WL2 / PW5-WL3):
+ * Data flow (PW5-WL2 / PW5-WL3 / PW5-WL4):
  *   WLStorefront
  *    ├ fetches catalog items once via getCatalogItems()
  *    ├ stores items in state
  *    ├ derives CategoryCount[] from items
  *    ├ manages activeCategory state
  *    ├ manages selectedItemId state (PW5-WL3)
+ *    ├ manages searchQuery state (PW5-WL4)
  *    ├ derives selectedItem from items (PW5-WL3 — no secondary fetch)
+ *    ├ derives categoryFilteredItems from items + activeCategory
+ *    ├ derives searchFilteredItems from categoryFilteredItems + searchQuery (PW5-WL4)
  *    ├ passes categories + activeCategory + onSelectCategory to WLCollectionsPanel
- *    ├ passes filteredItems + onSelectItem to ProductGrid
+ *    ├ passes searchFilteredItems + onSelectItem to ProductGrid
+ *    ├ renders WLSearchBar (PW5-WL4 — client-side only; no fetch on keystroke)
  *    └ renders WLProductDetailPage when selectedItemId is set (PW5-WL3)
  *
  * Category fallback:
@@ -27,7 +31,7 @@
  *   This is expected while the catalog schema lacks a category column.
  *   All products will group under "Uncategorised" by default.
  *
- * Scope (PW5-WL3 additions):
+ * Scope (PW5-WL3 / PW5-WL4 additions):
  *   ✅ Single catalog fetch (unchanged)
  *   ✅ Category grouping derived client-side (unchanged)
  *   ✅ Category navigation via WLCollectionsPanel (unchanged)
@@ -35,8 +39,10 @@
  *   ✅ Loading / empty / error states owned here (unchanged)
  *   ✅ Product detail view via selectedItemId state (PW5-WL3)
  *   ✅ Selected item derived from existing items state — no new fetch
+ *   ✅ Product search via searchQuery state — client-side derived (PW5-WL4)
+ *   ✅ Search composes with category filtering via chained useMemo (PW5-WL4)
  *   ❌ Cart / checkout — out of scope
- *   ❌ Search — out of scope
+ *   ❌ Remote / debounced search — architectural guardrail; not implemented
  *
  * WLStorefront remains the only owner of catalog fetching.
  * No child component may independently fetch catalog data.
@@ -47,6 +53,7 @@ import { getCatalogItems, CatalogItem } from '../../services/catalogService';
 import { WLCollectionsPanel, CategoryCount } from './WLCollectionsPanel';
 import { ProductGrid } from './ProductGrid';
 import { WLProductDetailPage } from './WLProductDetailPage';
+import { WLSearchBar } from './WLSearchBar';
 
 // ─── Category helpers ────────────────────────────────────────────────────────
 
@@ -82,6 +89,9 @@ export function WLStorefront() {
   // PW5-WL3: selected product for detail view.
   // Derived item comes from already-fetched `items` — no secondary fetch occurs.
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  // PW5-WL4: search query — drives client-side derived filtering only.
+  // No API call is triggered by changes to this value.
+  const [searchQuery, setSearchQuery] = useState('');
 
   // ── Single catalog fetch ─────────────────────────────────────────────────
   // tenantId is NEVER passed — tenant scope resolved from JWT on the server.
@@ -111,6 +121,23 @@ export function WLStorefront() {
     if (activeCategory === null) return items;
     return items.filter((i) => resolveCategory(i) === activeCategory);
   }, [items, activeCategory]);
+
+  // PW5-WL4: search filtering — derived from category-filtered items.
+  // Client-side only. Never mutates `items` or `filteredItems`.
+  // Empty query short-circuits to return filteredItems unchanged.
+  const searchFilteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return filteredItems;
+    return filteredItems.filter((item) => {
+      const fields = [
+        item.name,
+        item.sku,
+        item.description ?? '',
+        item.category ?? '',
+      ];
+      return fields.some((f) => f.toLowerCase().includes(q));
+    });
+  }, [filteredItems, searchQuery]);
 
   // PW5-WL3: derive selected product from already-fetched items — no new fetch.
   // WLStorefront remains the exclusive owner of catalog data.
@@ -205,6 +232,9 @@ export function WLStorefront() {
         </p>
       </div>
 
+      {/* Search input — PW5-WL4. Client-side only; no fetch on keystroke. */}
+      <WLSearchBar value={searchQuery} onChange={setSearchQuery} />
+
       {/* Category navigation — no API calls; selection filters filteredItems client-side */}
       <WLCollectionsPanel
         categories={categories}
@@ -212,8 +242,16 @@ export function WLStorefront() {
         onSelectCategory={setActiveCategory}
       />
 
-      {/* Product grid — receives pre-filtered items + onSelectItem; no internal fetch */}
-      <ProductGrid items={filteredItems} onSelectItem={handleSelectItem} />
+      {/* Product grid — receives search+category-filtered items; no internal fetch */}
+      <ProductGrid
+        items={searchFilteredItems}
+        onSelectItem={handleSelectItem}
+        emptyMessage={
+          searchQuery.trim()
+            ? `No products match "${searchQuery.trim()}". Try a different term or clear the search.`
+            : undefined
+        }
+      />
     </div>
   );
 }
