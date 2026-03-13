@@ -167,7 +167,18 @@ export type KnownEventName =
   | 'marketplace.cart.item.added' // Item added to cart (Prompt #26)
   | 'marketplace.cart.item.updated' // Cart item quantity updated (Prompt #26)
   | 'marketplace.cart.item.removed' // Item removed from cart (Prompt #26)
-  | 'marketplace.cart.checked_out'; // Cart checked out (future)
+  | 'marketplace.cart.checked_out' // Cart checked out (future)
+  // PW5-AI-EVENT-DOMAIN: AI Inference domain (G-028 §3.3)
+  | 'ai.inference.generate' // AI inference request completed
+  | 'ai.inference.error' // AI inference request failed
+  | 'ai.inference.budget_exceeded' // Inference budget threshold crossed
+  | 'ai.inference.pii_redacted' // PII fields redacted before inference
+  | 'ai.inference.pii_leak_detected' // PII detected in inference output
+  | 'ai.inference.cache_hit' // Inference result served from cache
+  // PW5-AI-EVENT-DOMAIN: AI Vector domain (G-028 §3.3)
+  | 'ai.vector.upsert' // Vector document upserted
+  | 'ai.vector.delete' // Vector document deleted
+  | 'ai.vector.query'; // Vector similarity query executed
 
 /**
  * Event envelope with known event name (type-safe)
@@ -235,6 +246,17 @@ export const knownEventEnvelopeSchema = eventEnvelopeSchema.extend({
     'marketplace.cart.item.updated',
     'marketplace.cart.item.removed',
     'marketplace.cart.checked_out',
+    // PW5-AI-EVENT-DOMAIN: AI Inference domain (G-028 §3.3)
+    'ai.inference.generate',
+    'ai.inference.error',
+    'ai.inference.budget_exceeded',
+    'ai.inference.pii_redacted',
+    'ai.inference.pii_leak_detected',
+    'ai.inference.cache_hit',
+    // PW5-AI-EVENT-DOMAIN: AI Vector domain (G-028 §3.3)
+    'ai.vector.upsert',
+    'ai.vector.delete',
+    'ai.vector.query',
   ]),
 });
 
