@@ -1332,3 +1332,122 @@ All three observations (CAT-SCHEMA-001, CAT-SCHEMA-002, CAT-SCHEMA-003) are non-
 ### E — Audit-Safe Conclusion
 
 PW5-WL1 runtime verification passed. WL storefront product grid is operational. All nine acceptance criteria confirmed. Three non-blocking catalog schema observations recorded (CAT-SCHEMA-001/002/003) — none affect correctness or isolation. The full PW5-WL1 chain — component implementation (ProductCard/ProductGrid/WLStorefront), App.tsx wiring (WL HOME guard above category switch), and runtime verification — is complete. The WL storefront is navigable for `is_white_label` tenants, auth-guarded at the API layer, RLS-enforced at the database layer, and D-017-A compliant throughout. **PW5-WL1 FULLY CLOSED.**
+
+---
+
+## Section 9.21 — PW5-WL2 Category Browsing Verification — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-PW5-WL2-GOV  
+**Date:** 2026-03-13  
+**Type:** Governance-only documentation update; no product code changed in this unit
+
+### A — Inputs
+
+| Input | Status |
+|---|---|
+| PW5-WL2 implementation — commit 3070f80 | ✅ COMPLETE — 2026-03-13 · `feat(wl-storefront): implement category collections navigation` |
+| PW5-WL1 implementation (parent) — commit cc4278f | ✅ FULLY CLOSED — 2026-03-12 |
+| Components modified | ✅ `components/WL/WLCollectionsPanel.tsx` NEW · `components/WL/WLStorefront.tsx` rewritten · `components/WL/ProductGrid.tsx` converted to pure render |
+| No backend / schema / OpenAPI changes | ✅ Confirmed — 3 frontend WL files only |
+| PW5-WL2-VERIFY report | ✅ COMPLETE — 2026-03-13 · all 9 ACs confirmed |
+
+### B — Implementation Result
+
+| Component | Change | Architectural Role |
+|---|---|---|
+| `WLCollectionsPanel.tsx` | NEW | Pure prop-driven category nav — no `getCatalogItems` import; no internal fetch |
+| `WLStorefront.tsx` | Rewritten | Single data owner — fetches once via `getCatalogItems()`; owns `items`, `activeCategory`; derives `categories` + `filteredItems` via `useMemo` |
+| `ProductGrid.tsx` | Converted | Pure render component — receives `items: CatalogItem[]` prop; `getCatalogItems` removed entirely |
+
+No backend, schema, migration, OpenAPI, or governance files changed in the implementation commit.
+
+### C — Runtime Verification Outcome
+
+| Acceptance Criterion | Result |
+|---|---|
+| WLCollectionsPanel renders above ProductGrid | PASS |
+| Category grouping computed from items dataset (client-side) | PASS |
+| Fallback “Uncategorised” applied — all 14 items, no runtime category field | PASS |
+| Category click filters ProductGrid items | PASS — `setActiveCategory` triggers `filteredItems` useMemo recompute — no API call |
+| Default state (`activeCategory = null`) shows all products | PASS |
+| Catalog API called exactly once | PASS — single `getCatalogItems()` in `WLStorefront.loadItems` (useCallback deps `[]`) |
+| Category change triggers zero additional API calls | PASS — `onSelectCategory` mutates state only; no fetch in callback chain |
+| Tenant isolation preserved — no client-side tenantId | PASS — D-017-A compliant; JWT-scoped; server RLS active |
+| No console / server / runtime errors | PASS |
+| GET /health 200 | PASS |
+
+**End-to-end verdict: PASS**
+
+### D — Observations (Non-Blocking)
+
+| ID | Description | PW5-WL2 Status |
+|---|---|---|
+| CAT-SCHEMA-001 | `imageUrl?: string` and `category?: string` optional in `CatalogItem`; field guards in `ProductCard.tsx` confirmed effective | NON-BLOCKING — reaffirmed by PW5-WL2 runtime: `resolveCategory()` fallback handles `category: undefined` correctly |
+| CAT-SCHEMA-002 | `moq?: number` optional; MOQ badge guarded with `item.moq != null` | NON-BLOCKING — unchanged; no new risk introduced |
+| CAT-SCHEMA-003 | `currency` not rendered in ProductCard; `Intl.NumberFormat` locale default | NON-BLOCKING — unchanged; no new risk introduced |
+
+No new CAT-SCHEMA IDs introduced. PW5-WL2 runtime verification confirms the fallback design (`(item.category ?? '').trim() || 'Uncategorised'`) is correct and handles the zero-category schema state gracefully. When a `category` column is added to `catalog_items` in a future schema unit, the storefront will automatically display real category groups without any component changes.
+
+### E — Audit-Safe Conclusion
+
+PW5-WL2 runtime verification passed. WL storefront category browsing is operational. Single-fetch storefront architecture is confirmed: `WLStorefront` owns catalog data; `WLCollectionsPanel` and `ProductGrid` are prop-driven only; no duplicate-fetch path exists at the structural level. Existing catalog schema observations (CAT-SCHEMA-001/002/003) remain non-blocking and do not prevent tranche closure. The `resolveCategory()` fallback handles the current absent-category schema state correctly. **PW5-WL2 FULLY CLOSED.**
+
+---
+
+## Section 9.22 — PW5-WL3 Product Detail Page Verification — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-PW5-WL3-GOV  
+**Date:** 2026-03-13  
+**Type:** Governance-only documentation update; no product code changed in this unit
+
+### A — Inputs
+
+| Input | Status |
+|---|---|
+| PW5-WL3 implementation — commit 06fd294 | ✅ COMPLETE — 2026-03-13 · `feat(wl-storefront): implement PW5-WL3 product detail page` |
+| PW5-WL2 implementation (parent) — commit 3070f80 | ✅ FULLY CLOSED — 2026-03-13 |
+| Components modified | ✅ `components/WL/WLProductDetailPage.tsx` NEW · `components/WL/WLStorefront.tsx` extended · `components/WL/ProductGrid.tsx` extended · `components/WL/ProductCard.tsx` extended |
+| No backend / schema / OpenAPI changes | ✅ Confirmed — 4 frontend WL files only (git show --stat HEAD) |
+| PW5-WL3-VERIFY report | ✅ COMPLETE — 2026-03-13 · all 10 ACs confirmed |
+
+### B — Implementation Result
+
+| Component | Change | Architectural Role |
+|---|---|---|
+| `WLProductDetailPage.tsx` | NEW | Pure presentational detail view — no API import; no fetch; receives `item: CatalogItem` prop from WLStorefront + `onBack` callback |
+| `WLStorefront.tsx` | Extended | Added `selectedItemId` state; `selectedItem` derived via `useMemo(items.find)` from already-fetched state — no secondary fetch; `handleSelectItem`/`handleBackFromDetail` callbacks; detail-view and graceful not-found render paths |
+| `ProductGrid.tsx` | Extended | Optional `onSelectItem?: (id: string) => void` prop — forwarded to `ProductCard`; no fetch added |
+| `ProductCard.tsx` | Extended | Optional `onSelect?: () => void` prop — card becomes interactive; keyboard accessibility (Enter/Space + tabIndex); no fetch added |
+
+Data flow: `Catalog API → WLStorefront state → useMemo derived selectedItem → WLProductDetailPage`. No duplicate requests. No child component owns catalog data.
+
+No backend, schema, migration, OpenAPI, or governance files changed in the implementation commit.
+
+### C — Verification Outcome
+
+| Check | Detail | Result |
+|---|---|---|
+| Network | Single catalog request only; no per-item fetch; no duplicate request on selection or back navigation | PASS |
+| Runtime | Card → detail view correct; back navigation restores grid + preserves activeCategory; stale/invalid ID renders graceful not-found with back button | PASS |
+| Tenant safety | No `tenantId` reference in any of the 4 touched files; tenant scope resolved via server JWT (D-017-A) | PASS |
+| Architecture | `WLProductDetailPage`, `ProductGrid`, `ProductCard` are presentation-only; no API imports; no fetch calls; WLStorefront is sole catalog fetch owner | PASS |
+| Regression | WL category browsing and filtered grid intact; no UI flicker from repeated fetching; no `<img>` tags introduced; no app-wide style changes | PASS |
+| Build quality | `tsc --noEmit` EXIT 0; `eslint --max-warnings 0` EXIT 0 on all 4 touched files; no dead imports | PASS |
+
+**End-to-end verdict: PASS**
+
+### D — Observations (Non-Blocking)
+
+| ID | Description | PW5-WL3 Status |
+|---|---|---|
+| CAT-SCHEMA-001 | `imageUrl` absent from current schema; `WLProductDetailPage.tsx` deliberately excludes image rendering | NON-BLOCKING — reaffirmed; no broken-image placeholder introduced |
+| CAT-SCHEMA-002 | `moq?: number` optional; `WLProductDetailPage` renders MOQ row only when `item.moq != null` | NON-BLOCKING — unchanged |
+| CAT-SCHEMA-003 | `currency` not rendered; `formatPrice()` uses `Intl.NumberFormat` locale default | NON-BLOCKING — unchanged |
+
+No new CAT-SCHEMA IDs introduced. Cart stub is non-destructive: `disabled`, `aria-disabled="true"`, `cursor-not-allowed`, no `onClick` handler — no cart API behavior exists in this unit.
+
+### E — Audit-Safe Conclusion
+
+PW5-WL3 verification passed. WL storefront product detail page is operational. The single-fetch storefront architecture remains intact: `WLStorefront` is the exclusive owner of catalog fetching; `selectedItem` is derived from already-held state via `useMemo` — no secondary network request is introduced at any point in the selection or back-navigation flow. Existing catalog schema observations (CAT-SCHEMA-001/002/003) remain non-blocking. The cart-foundation stub is non-destructive and introduces no cart API behavior. **PW5-WL3 FULLY CLOSED.**
+
+*Updated: 2026-03-13 — PW5-WL3 product detail page verification closure recorded (Section 9.22); PW5-WL3 FULLY CLOSED; cart stub non-destructive confirmed; single-fetch architecture intact · commit 06fd294 · verification PASS · next unit: PW5-WL4 (GOVERNANCE-SYNC-PW5-WL3-GOV)*
