@@ -454,7 +454,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx — are status-transition action buttons gated by user role from auth context? | Codex found UX exposure; Copilot confirmed backend PATCH wiring | ✅ CLOSED — 2026-03-07 · Verdict: FAIL · All 3 buttons shown to all users; no role source in Props; server-gate-only design confirmed in file header · TECS-FBW-AT-006 → CLOSED (GOVERNANCE-SYNC-106 · commit b01fcd3) |
 | VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx tenant picker — is there a TODOref to /api/public/tenants/resolve? Is seeding still present? | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
 | VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (governance defect) → doctrine written (TECS-FBW-RLS-001-GOV) |
-| VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | Copilot §10 U-001: not found in tenant.ts or control.ts |
+| VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · DEF-VER008-001: `/api/ai/health` was public · DEF-VER008-002: `/api/ai` absent from `ENDPOINT_REALM_MAP` · TECS-VER008-REMEDIATION (commit 960b736) · re-verification PASS · GOVERNANCE-SYNC-U-001 |
 | VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard fully | Copilot §10 U-002: only 150 lines inspected; GOVERNANCE-SYNC-035 CI guard confirms SUPER_ADMIN gating as partial evidence |
 | VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 — do status-transition PATCH buttons exist? | Copilot §10 U-004: only first 200 lines read |
 
@@ -1731,3 +1731,73 @@ PW5-WL7 closes the WL storefront tranche with a bounded render-path optimization
 PW5-WL7 successfully closes the WL storefront tranche with a focused render-path optimization pass on four WL child components. `React.memo` is applied with correct prop-stability guarantees. The per-card inline selection closure is eliminated. The `Intl.NumberFormat` singleton removes per-render object construction. `WLStorefront` is intentionally unchanged. All verification gates pass. No tenant isolation, schema, backend, or governance boundaries were altered. **PW5-WL7 FULLY CLOSED. WL1–WL7 tranche complete. WL storefront tranche closed — await next approved roadmap sequence.**
 
 *Updated: 2026-03-13 — PW5-WL7 storefront performance optimizations closure recorded (Section 9.26); PW5-WL7 FULLY CLOSED; WL1–WL7 ALL COMPLETE; WL storefront tranche closed; no backend/schema/tenant-isolation changes · commit d860b6b · verification PASS · WL storefront tranche complete; await next approved sequence (GOVERNANCE-SYNC-PW5-WL7-GOV)*
+
+---
+
+## Section 9.27 — U-001 / VER-008 AI Route Auth Posture Remediation Closure — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-U-001 | **Type:** GOVERNANCE-SYNC — Remediation Closure | **Date:** 2026-03-13  
+**Implementation commit:** `960b736` — `fix(ai): remediate VER-008 auth posture defects`  
+**Files changed in implementation:** `server/src/middleware/realmGuard.ts` · `server/src/routes/ai.ts`  
+**Files modified in this governance sync:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/OpenAPI files changed)**
+
+### A — Inputs
+
+| Input | Value |
+|---|---|
+| Gap ID | U-001 |
+| Verification ID | VER-008 |
+| Implementation unit | TECS-VER008-REMEDIATION |
+| Implementation commit | `960b736` |
+| Re-verification result | PASS |
+| Gap decision | CLOSED |
+
+### B — Defect Closure Summary
+
+| Defect ID | Description | Status |
+|---|---|---|
+| DEF-VER008-001 | `GET /api/ai/health` was publicly exposed — returned provider name, model, and API key configuration state without authentication | CLOSED — `tenantAuthMiddleware` added to `onRequest` chain of `GET /health` in `server/src/routes/ai.ts` |
+| DEF-VER008-002 | `/api/ai` absent from `ENDPOINT_REALM_MAP` — realm posture was fallback-derived via generic `/api/*` rule; not explicit or auditable | CLOSED — `'/api/ai': 'tenant'` added to `ENDPOINT_REALM_MAP` in `server/src/middleware/realmGuard.ts` |
+
+### C — Rule → Evidence Mapping
+
+| Rule | Evidence |
+|---|---|
+| Explicit realm declaration | `'/api/ai': 'tenant'` present in `ENDPOINT_REALM_MAP` at `server/src/middleware/realmGuard.ts` line 24; posture explicit and auditable |
+| Health route protection | `fastify.get('/health', { onRequest: [tenantAuthMiddleware] }, ...)` confirmed in `server/src/routes/ai.ts`; no longer public |
+| Protected AI route continuity | `GET /api/ai/insights` — `onRequest: [tenantAuthMiddleware, databaseContextMiddleware]` unchanged; `POST /api/ai/negotiation-advice` — same pattern unchanged |
+| Schema stability | No Prisma schema, migration, seed, or RLS policy files in implementation commit |
+| Backend integrity | Only `realmGuard.ts` and `ai.ts` changed; diff: 3 insertions, 2 deletions |
+| Payload hygiene | `/api/ai/health` response shape unchanged; only auth gate added |
+| Scope discipline | No new routes added; no AI feature logic changed; no unrelated middleware touched |
+
+### D — Auth Posture Summary (Post-Remediation)
+
+| Route | Method | Auth Posture | Realm |
+|---|---|---|---|
+| `/api/ai/health` | GET | `tenantAuthMiddleware` (added by commit 960b736) | `tenant` (explicit) |
+| `/api/ai/insights` | GET | `tenantAuthMiddleware` + `databaseContextMiddleware` (unchanged) | `tenant` (explicit) |
+| `/api/ai/negotiation-advice` | POST | `tenantAuthMiddleware` + `databaseContextMiddleware` (unchanged) | `tenant` (explicit) |
+
+### E — Governance Narrative
+
+U-001 is now fully closed. The prior AI route auth posture defects identified by VER-008 — public exposure of `/api/ai/health` and lack of explicit `/api/ai` realm declaration — were remediated by commit `960b736`. Re-verification confirms that all `/api/ai/*` routes are now tenant-auth protected and that realm posture is explicit and auditable. No schema, migration, or broader AI feature changes were introduced.
+
+### F — Audit-Safe Conclusion
+
+| Gate | Result |
+|---|---|
+| Scope | PASS — only two allowlisted backend files changed |
+| Auth posture | PASS — all `/api/ai/*` routes tenant-auth protected; `/api/ai` explicitly mapped |
+| Runtime correctness | PASS — no route registration regressions; TypeScript EXIT 0 |
+| Build quality | PASS — `tsc --noEmit` EXIT 0; lint 0 errors on touched files |
+| Behavioral integrity | PASS — no unrelated AI route behavior changed; no new public exposure |
+| Schema / data integrity | PASS — no Prisma/schema/migration/seed/RLS changes |
+| Governance integrity | PASS — original VER-008 defects remediated and closed |
+
+**Overall audit conclusion: COMPLIANT**
+
+**U-001 / VER-008: CLOSED. Await next approved verification unit (VER-009 / U-002).**
+
+*Updated: 2026-03-13 — U-001/VER-008 AI route auth posture remediation closure recorded (Section 9.27); TECS-VER008-REMEDIATION CLOSED; implementation commit 960b736; re-verification PASS; GOVERNANCE-SYNC-U-001 complete; await VER-009*
