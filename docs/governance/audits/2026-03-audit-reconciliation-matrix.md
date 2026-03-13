@@ -1665,3 +1665,69 @@ No seller/admin/media-management boundary was widened. No finance/settlement/AI-
 PW5-WL6 successfully activates WL product imagery via minimal, targeted changes to exactly two WL component files. The unit reuses the existing `CatalogItem.imageUrl` field (CASE A), preserves the constitutional single-fetch storefront architecture, maintains D-017-A tenant isolation, and passes all seven verification gates. No tenant isolation, schema, backend, or governance boundaries were altered. **PW5-WL6 FULLY CLOSED. WL1–WL6 tranche complete. Next: PW5-WL7 (Storefront Performance Optimizations).**
 
 *Updated: 2026-03-13 — PW5-WL6 product images closure recorded (Section 9.25); PW5-WL6 FULLY CLOSED; WL1–WL6 all COMPLETE; CASE A CatalogItem.imageUrl reuse confirmed; no backend/schema/tenant-isolation changes · commit e8f5d55 · verification PASS · next unit: PW5-WL7 (GOVERNANCE-SYNC-PW5-WL6-GOV)*
+
+---
+
+## Section 9.26 — PW5-WL7 Storefront Performance Optimizations
+
+**Unit:** PW5-WL7  
+**Name:** Storefront Performance Optimizations  
+**Implementation commit:** d860b6bda9c7ae9e0670c6641c265e314e202109  
+**Verification:** PW5-WL7-VERIFY — PASS — 2026-03-13  
+**Governance sync:** GOVERNANCE-SYNC-PW5-WL7-GOV — 2026-03-13
+
+### A — Discovery Result
+
+Render-path performance opportunities were concentrated in memo boundaries and prop stability across the four WL child components. `WLStorefront` was already correctly optimized with stable `useCallback` handlers and a full `useMemo` derivation chain and was intentionally left unchanged.
+
+| Component | Finding |
+|---|---|
+| `ProductCard` | Not memoized; `Intl.NumberFormat` reconstructed on every render |
+| `ProductGrid` | Not memoized; created `() => onSelectItem(item.id)` inline closure per card per render |
+| `WLSearchBar` | Not memoized; re-rendered on `activeCategory`/`selectedItemId` changes unrelated to search |
+| `WLCollectionsPanel` | Not memoized; re-rendered on every `searchQuery` keystroke |
+| `WLStorefront` | Already fully optimized — intentionally unchanged |
+
+### B — Implementation Summary
+
+| File | Change |
+|---|---|
+| `components/WL/ProductCard.tsx` | `React.memo` applied; `onSelect` type changed `() => void` → `(id: string) => void`; module-level `priceFormatter` singleton replaces per-render `Intl.NumberFormat` construction |
+| `components/WL/ProductGrid.tsx` | `React.memo` applied; `() => onSelectItem(item.id)` per-card inline closure removed; `onSelect={onSelectItem}` direct stable-ref pass |
+| `components/WL/WLSearchBar.tsx` | `React.memo` applied — skips re-render on `activeCategory`/`selectedItemId` state changes |
+| `components/WL/WLCollectionsPanel.tsx` | `React.memo` applied — skips re-render on `searchQuery` keystrokes |
+
+All other WL, backend, schema, migration, seed, RLS, governance, and application files unchanged.
+
+### C — Rule → Evidence Mapping
+
+| Rule | Evidence |
+|---|---|
+| Single-fetch storefront | `getCatalogItems` imported and called in `WLStorefront` only; absent from all 4 modified files; render optimization introduces no additional network activity |
+| No duplicate requests | `onError` in `ProductCard` fires `setImgError(true)` — local state; no fetch; memo boundary does not change network behavior |
+| Tenant isolation (D-017-A) | No `tenantId` in functional code of any touched file; tenant context remains JWT/server-derived; `WLStorefront` auth path unchanged |
+| Schema stability | No Prisma/schema/migration/seed/RLS files in implementation commit |
+| Backend stability | No `server/` files in implementation commit; no API contracts changed |
+| Behavioral integrity | Category browsing, detail, search, cart, images, keyboard selection, back navigation all preserved; `handleSelectItem` still invoked correctly via `onSelect(item.id)` in `ProductCard` |
+| Performance integrity | Memo boundaries are prop-stable: `handleSelectItem` is `useCallback([], [])` (stable); `categories` is `useMemo` ref (stable); `setSearchQuery`/`setActiveCategory` are stable React state setters; `activeCategory` and `value` are primitives; no stale-prop or stale-callback risk introduced |
+| Build quality | `tsc --noEmit` EXIT 0; `eslint --max-warnings 0` EXIT 0 on all 4 files; `git show --stat d860b6b`: 4 files (50 insertions / 24 deletions) |
+
+### D — Gap Status
+
+| ID | Description | PW5-WL7 Status |
+|---|---|---|
+| CAT-SCHEMA-001 | `category` absent from schema; fallback grouping valid | NON-BLOCKING — unchanged |
+| CAT-SCHEMA-002 | `moq?: number` optional; guarded in existing implementation | NON-BLOCKING — unchanged |
+| CAT-SCHEMA-003 | `imageUrl` historical observation | NON-BLOCKING — unchanged; PW5-WL7 is optimization-only |
+
+No new CAT-SCHEMA IDs introduced. PW5-WL7 introduces no new gaps.
+
+### E — Doctrine Alignment Note
+
+PW5-WL7 closes the WL storefront tranche with a bounded render-path optimization pass. The unit preserves the constitutional single-fetch storefront architecture, keeps all data ownership in `WLStorefront`, leaves tenant identity exclusively server/JWT-derived, and improves rendering efficiency without widening backend or schema scope. White-label storefront remains the consumer-facing rendering surface. No seller/admin/finance/settlement/AI-governance/back-office doctrine was expanded. No new doctrine entries are introduced in this unit.
+
+### F — Audit-Safe Conclusion
+
+PW5-WL7 successfully closes the WL storefront tranche with a focused render-path optimization pass on four WL child components. `React.memo` is applied with correct prop-stability guarantees. The per-card inline selection closure is eliminated. The `Intl.NumberFormat` singleton removes per-render object construction. `WLStorefront` is intentionally unchanged. All verification gates pass. No tenant isolation, schema, backend, or governance boundaries were altered. **PW5-WL7 FULLY CLOSED. WL1–WL7 tranche complete. WL storefront tranche closed — await next approved roadmap sequence.**
+
+*Updated: 2026-03-13 — PW5-WL7 storefront performance optimizations closure recorded (Section 9.26); PW5-WL7 FULLY CLOSED; WL1–WL7 ALL COMPLETE; WL storefront tranche closed; no backend/schema/tenant-isolation changes · commit d860b6b · verification PASS · WL storefront tranche complete; await next approved sequence (GOVERNANCE-SYNC-PW5-WL7-GOV)*
