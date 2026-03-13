@@ -1038,11 +1038,21 @@ Implementation: commit 476b3d3 — 5 files, 151 insertions.
 Validation: typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · git diff --name-only: 5 files only (all allowlisted).  
 Admin realm flow: completely untouched.
 
-**TECS-FBW-RLS-001 — RLS-Only Posture Governance Clarification**  
-Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 0 (governance statement only; no code change)  
+**TECS-FBW-RLS-001 — RLS-Only Posture Governance Clarification (VER-007 PASS · TECS-FBW-RLS-001-GOV · 2026-03-13)**  
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: ✅ CLOSED · Wave: 0 (governance statement only; no code change)  
+VER-007 executed: 2026-03-13 · Verdict: FAIL (governance defect confirmed — no system-level doctrine; only memberships-specific Q2 §12.2 precedent; stale `app.tenant_id` GUC reference in contract file) → governance-writing unit authorized.  
 Finding: Multiple tenant routes rely on RLS (withDbContext/app.org_id GUC) for boundary enforcement without explicit `where: { org_id }` app-layer filters.  
 Context: Q2 tracker §12.2 documents the intentional decision for memberships specifically.  
-Required: A system-level governance statement extending the §12.2 decision to all relevant routes; or a per-route exception register.
+Secondary defect: `shared/contracts/rls-policy.md` listed `app.tenant_id` as the session GUC. Canonical implementation GUC is `app.org_id`. Corrected by this unit.  
+Closure: System-level RLS-only posture doctrine written in `shared/contracts/rls-policy.md` (§ System-Level RLS-Only Posture · TECS-FBW-RLS-001-GOV · 2026-03-13). Doctrine explicitly states:  
+  - FORCE RLS on `app.org_id` is the canonical tenant isolation enforcement boundary.  
+  - Tenant scope is bound from JWT/server context via `withDbContext`; client-supplied IDs are never trusted.  
+  - For tables with complete, governance-verified FORCE RLS coverage, app-layer `where: { org_id }` filters are optional defense-in-depth, not the enforcement source of truth.  
+  - Routes with incomplete/unverified RLS coverage, BYPASSRLS paths, or cross-tenant admin reads still require explicit app-layer filtering or a documented exception.  
+  - Exception recording protocol defined.  
+  - `app.org_id` is now the canonical GUC in all governance documents; `app.tenant_id` is stale and deprecated.  
+Files changed: `shared/contracts/rls-policy.md` only (governance contract — no runtime code).  
+No application code, schema, migration, or RLS policy was modified.
 
 **TECS-FBW-PROV-001 — Tenant Provisioning Contract Mismatch (VER-001 CLOSED · 2026-03-06)**  
 Source: CROSS_REPORT_CONFLICT → RESOLVED · Severity: HIGH · Status: VALIDATED · Wave: 1  
@@ -1073,7 +1083,7 @@ Next: VER-002 (TECS-FBW-020 — WL Admin invite shell routing).
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts actual routes | ⏳ Pending |
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx role-gating on status transition buttons | ✅ CLOSED — 2026-03-07 · Verdict: FAIL · All 3 action buttons visible to all roles; no canManageOrders gate; file header explicitly stated server-only gate · TECS-FBW-AT-006 → VALIDATED → implemented (GOVERNANCE-SYNC-106 · commit b01fcd3) |
 | VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx — confirm seeded picker + TODO resolver ref | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
-| VER-007 | TECS-FBW-RLS-001 | Draft system-level governance statement on RLS-only posture | ⏳ Pending |
+| VER-007 | TECS-FBW-RLS-001 | Draft system-level governance statement on RLS-only posture | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (governance defect confirmed) → doctrine written in shared/contracts/rls-policy.md · stale app.tenant_id corrected to app.org_id · TECS-FBW-RLS-001-GOV |}
 | VER-008 | U-001 (Copilot) | Locate /api/ai/* route file; confirm registration + auth posture | ⏳ Pending |
 | VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard in full | ⏳ Pending |
 | VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 for role-gating evidence | ⏳ Pending |

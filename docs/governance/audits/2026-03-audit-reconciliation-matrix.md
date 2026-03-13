@@ -413,7 +413,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-OA-002 | OpenAPI Control-Plane Drift | Contract governance | §7.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
 | TECS-FBW-AT-006 | Order Status UI Role Gating | Auth/UX | §8.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Non-admin sees PATCH buttons they'll be 403'd on |
 | TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | Auth discovery | §9.2 | Not inspected | NEW_IN_CODEX | ✅ CLOSED (GOVERNANCE-SYNC-TECS-FBW-AUTH-001 · 2026-03-13) | HIGH | Wave 5 | VER-006 FAIL → implemented commit 476b3d3 |
-| TECS-FBW-RLS-001 | RLS-Only Posture Governance | Tenancy doctrine | §8.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Intentional per Q2 §12.2; system-wide clarification needed |
+| TECS-FBW-RLS-001 | RLS-Only Posture Governance | Tenancy doctrine | §8.2 | Not inspected | NEW_IN_CODEX | ✅ CLOSED (TECS-FBW-RLS-001-GOV · 2026-03-13) | MEDIUM | Wave 0 | Doctrine written in shared/contracts/rls-policy.md; app.tenant_id → app.org_id corrected |
 | TECS-FBW-PROV-001 | Tenant Provisioning Contract | Control-plane | §4.1 MISMATCH | §3 ✅ Wired | CROSS_REPORT_CONFLICT → RESOLVED | ✅ CLOSED (GOVERNANCE-SYNC-099 · 2026-03-06) | HIGH | Wave 1 | Implemented: request {orgName,primaryAdminEmail,primaryAdminPassword}; response flat {orgId,slug,userId,membershipId}; typecheck+lint EXIT 0 |
 
 ---
@@ -453,7 +453,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts route list | Codex found drift; Copilot did not inspect |
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx — are status-transition action buttons gated by user role from auth context? | Codex found UX exposure; Copilot confirmed backend PATCH wiring | ✅ CLOSED — 2026-03-07 · Verdict: FAIL · All 3 buttons shown to all users; no role source in Props; server-gate-only design confirmed in file header · TECS-FBW-AT-006 → CLOSED (GOVERNANCE-SYNC-106 · commit b01fcd3) |
 | VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx tenant picker — is there a TODOref to /api/public/tenants/resolve? Is seeding still present? | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
-| VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | Q2 §12.2 documents decision for memberships; needs system-level statement |
+| VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (governance defect) → doctrine written (TECS-FBW-RLS-001-GOV) |
 | VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | Copilot §10 U-001: not found in tenant.ts or control.ts |
 | VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard fully | Copilot §10 U-002: only 150 lines inspected; GOVERNANCE-SYNC-035 CI guard confirms SUPER_ADMIN gating as partial evidence |
 | VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 — do status-transition PATCH buttons exist? | Copilot §10 U-004: only first 200 lines read |
