@@ -512,7 +512,7 @@ Both audits were repo-inspection only (not runtime). No application code was mod
 - **Verification (V):** PW5-V1 (DPP), PW5-V2 (Tenant Audit Logs), PW5-V3 (TenantType), PW5-V4 (Shell actions)
 - **UX Correctness (U):** PW5-U1 (B2C cart badge), PW5-U2 (dead tenant nav), PW5-U3 (dead CP actions), PW5-U4 (static CP panels)
 - **Wiring (W):** PW5-W1 (Tenant Trades — BACKEND DESIGN GATE), PW5-W2 (Escrow), PW5-W3 (Settlement), PW5-W4 (Maker-Checker)
-- **White-Label (WL):** PW5-WL1, PW5-WL2, PW5-WL3
+- **White-Label (WL):** PW5-WL1, PW5-WL2, PW5-WL3, PW5-WL4
 - **Planning (CP/AI):** PW5-CP-PLAN, PW5-AI-PLAN
 
 ### Critical Flags from This Audit Registration
@@ -1451,3 +1451,78 @@ No new CAT-SCHEMA IDs introduced. Cart stub is non-destructive: `disabled`, `ari
 PW5-WL3 verification passed. WL storefront product detail page is operational. The single-fetch storefront architecture remains intact: `WLStorefront` is the exclusive owner of catalog fetching; `selectedItem` is derived from already-held state via `useMemo` — no secondary network request is introduced at any point in the selection or back-navigation flow. Existing catalog schema observations (CAT-SCHEMA-001/002/003) remain non-blocking. The cart-foundation stub is non-destructive and introduces no cart API behavior. **PW5-WL3 FULLY CLOSED.**
 
 *Updated: 2026-03-13 — PW5-WL3 product detail page verification closure recorded (Section 9.22); PW5-WL3 FULLY CLOSED; cart stub non-destructive confirmed; single-fetch architecture intact · commit 06fd294 · verification PASS · next unit: PW5-WL4 (GOVERNANCE-SYNC-PW5-WL3-GOV)*
+
+---
+
+## Section 9.23 — PW5-WL4 Product Search Verification — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-PW5-WL4-GOV  
+**Date:** 2026-03-13  
+**Type:** Governance-only documentation update; no product code changed in this unit
+
+### A — Inputs
+
+| Input | Status |
+|---|---|
+| PW5-WL4 implementation — commit 25921ae | ✅ COMPLETE — 2026-03-13 · `feat(wl-storefront): implement PW5-WL4 product search` |
+| PW5-WL3 implementation (parent) — commit 06fd294 | ✅ FULLY CLOSED — 2026-03-13 |
+| Components modified | ✅ `components/WL/WLSearchBar.tsx` NEW · `components/WL/WLStorefront.tsx` extended · `components/WL/ProductGrid.tsx` extended |
+| No backend / schema / OpenAPI changes | ✅ Confirmed — 3 frontend WL files only (git show --stat HEAD) |
+| PW5-WL4-VERIFY report | ✅ COMPLETE — 2026-03-13 · all validation gates PASS |
+
+### B — Implementation Result
+
+| Component | Change | Architectural Role |
+|---|---|---|
+| `WLSearchBar.tsx` | NEW | Pure presentational controlled input — imports React only; no service clients; no useEffect; no API call on any user interaction; clear affordance; accessible sr-only label |
+| `WLStorefront.tsx` | Extended | Added `searchQuery: string` state; derived `searchFilteredItems` via `useMemo([filteredItems, searchQuery])` — chained after category filter; renders `WLSearchBar` above `WLCollectionsPanel`; passes `searchFilteredItems` to `ProductGrid`; passes context-aware `emptyMessage` when search query active |
+| `ProductGrid.tsx` | Extended | Optional `emptyMessage?: string` prop — backward-compatible; renders prop value when items empty; falls back to prior `'No products available'` copy when omitted |
+
+Derivation order: `Catalog API → WLStorefront items state → filteredItems (useMemo/category) → searchFilteredItems (useMemo/searchQuery) → ProductGrid render`. No duplicate requests. No child component owns catalog data. Search never mutates `items` or `filteredItems`.
+
+No backend, schema, migration, OpenAPI, or governance files changed in the implementation commit.
+
+### C — Verification Outcome
+
+| Check | Detail | Result |
+|---|---|---|
+| Network | Single catalog request only (`getCatalogItems()` once in `loadItems`/`useEffect`); no per-keystroke, per-category, per-selection, or per-back-navigation fetch; `WLSearchBar` imports React only — no service client; `ProductGrid` imports unchanged | PASS |
+| Runtime | Typing updates results synchronously (no async path in `useMemo`); case-insensitive `f.toLowerCase().includes(q)` matching; `?? ''` guards on optional fields; empty query short-circuits to `filteredItems` unchanged; category + search compose deterministically (chained memos); empty-result `emptyMessage` distinguishes search-empty from catalogue-empty; detail navigation path unchanged (`selectedItemId`/`WLProductDetailPage`); `searchQuery` state survives back navigation (`setSelectedItemId(null)` does not reset `searchQuery`) | PASS |
+| Tenant safety | No `tenantId` added to any component, prop, or request; `getCatalogItems()` called with no arguments; server resolves tenant scope exclusively from JWT via `requireTenantRealm()` (D-017-A) | PASS |
+| Architecture | `WLStorefront` sole catalog fetch owner; `WLSearchBar` presentational-only (React import only); `ProductGrid` presentational-only (no fetch added); `searchFilteredItems` is `useMemo` — not state; derivation order correct: items → category → search → render | PASS |
+| Regression | WL category browsing intact (`WLCollectionsPanel` props unchanged); WL detail page intact (selection/back path unchanged); no UI flicker from repeated fetching; no `<img>` tags or image assumptions introduced; no cart/checkout behavior added; `emptyMessage` prop on `ProductGrid` is optional with backward-compatible fallback | PASS |
+| Build quality | `tsc --noEmit` EXIT 0; `eslint` EXIT 0 on all three touched files; `git diff HEAD~1 HEAD --name-only`: 3 files (components/WL/ only — no backend/schema/governance files); no dead imports; no unused state | PASS |
+
+**End-to-end verdict: PASS**
+
+### D — Observations (Non-Blocking)
+
+| ID | Description | PW5-WL4 Status |
+|---|---|---|
+| CAT-SCHEMA-001 | `imageUrl` absent from current schema; `WLSearchBar` and search logic make no image assumptions | NON-BLOCKING — reaffirmed; unchanged |
+| CAT-SCHEMA-002 | `moq?: number` optional; search logic uses `?? ''` guard on optional fields; MOQ not added as a searchable field | NON-BLOCKING — unchanged |
+| CAT-SCHEMA-003 | `currency` not rendered; search does not reference currency field | NON-BLOCKING — unchanged |
+
+No new CAT-SCHEMA IDs introduced. PW5-WL4 introduces no new gaps.
+
+### E — Architectural Compliance Record
+
+| Rule | Evidence |
+|---|---|
+| Single-fetch storefront | `WLStorefront` remains sole fetch owner; `searchFilteredItems` is pure `useMemo` derivation — no API call on keystroke, category change, or navigation |
+| No duplicate requests | No per-keystroke fetch; no extra catalog requests on search/category/detail/back interactions |
+| Tenant isolation (D-017-A) | No `tenantId` in client; tenant context JWT/server-derived; unchanged |
+| Schema stability | No Prisma/schema/migration/seed/RLS files in implementation commit |
+| Backend stability | No backend files in implementation commit; no new API routes; no remote search path |
+| Behavioral integrity | Category browsing preserved; detail path preserved; empty search state graceful; no UI flicker |
+| Build quality | `tsc --noEmit` clean; ESLint clean; 3 WL-only files in commit |
+
+### F — Doctrine Alignment Note
+
+PW5-WL4 remains aligned with current TexQtic doctrine and dashboard separation. White-label tenants are brand operators running storefront + back-office on TexQtic infrastructure. The storefront consumer UX is a separate rendering surface from WL Store Admin modules. This unit belongs to the storefront-consumer-facing WL surface, not the tenant dashboard matrix. No anti-bazaar, settlement, or AI-governance boundary is widened by this unit.
+
+### G — Audit-Safe Conclusion
+
+PW5-WL4 successfully extends the WL storefront from browse/detail capability into search-driven discoverability without expanding backend scope. The unit preserves the constitutional single-fetch storefront architecture by keeping search entirely client-side and derived from existing catalog state. No tenant isolation, schema, or backend boundaries were altered. Verification passed across network, runtime, architecture, regression, and build-quality checks. **PW5-WL4 FULLY CLOSED.**
+
+*Updated: 2026-03-13 — PW5-WL4 product search verification closure recorded (Section 9.23); PW5-WL4 FULLY CLOSED; single-fetch architecture intact; no backend/schema/tenant-isolation changes · commit 25921ae · verification PASS · next unit: PW5-WL5 (GOVERNANCE-SYNC-PW5-WL4-GOV)*
