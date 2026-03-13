@@ -456,7 +456,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (governance defect) → doctrine written (TECS-FBW-RLS-001-GOV) |
 | VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · DEF-VER008-001: `/api/ai/health` was public · DEF-VER008-002: `/api/ai` absent from `ENDPOINT_REALM_MAP` · TECS-VER008-REMEDIATION (commit 960b736) · re-verification PASS · GOVERNANCE-SYNC-U-001 |
 | VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard fully | ✅ CLOSED — 2026-03-13 · Verdict: PASS · Full file read + direct dependency inspection completed · SUPER_ADMIN enforcement explicit · no bypass surface · GOVERNANCE-SYNC-U-002 |
-| VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 — do status-transition PATCH buttons exist? | Copilot §10 U-004: only first 200 lines read |
+| VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 — do status-transition PATCH buttons exist? | ✅ CLOSED — 2026-03-13 · Verdict: PASS · Full action area + App.tsx + backend PATCH inspected · routing gate + backend enforcement confirmed · intentional design · GOVERNANCE-SYNC-U-004 |
 
 ---
 
@@ -1858,3 +1858,62 @@ U-002 is now fully closed. The prior uncertainty around `admin/tenantProvision.t
 **U-002 / VER-009: CLOSED. Await next approved verification unit (VER-010 / U-004).**
 
 *Updated: 2026-03-13 — U-002/VER-009 `admin/tenantProvision.ts` auth guard closure recorded (Section 9.28); PASS; GOVERNANCE-SYNC-U-002 complete; await VER-010*
+
+---
+
+## Section 9.29 — U-004 / VER-010 `WLOrdersPanel.tsx` Role-Gating Closure — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-U-004 | **Type:** GOVERNANCE-SYNC — Verification Closure | **Date:** 2026-03-13  
+**Files inspected:** `components/WhiteLabelAdmin/WLOrdersPanel.tsx` · `App.tsx` · `server/src/routes/tenant.ts`  
+**Files modified in this governance sync:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/OpenAPI files changed)**
+
+### A — Inputs
+
+| Input | Value |
+|---|---|
+| Gap ID | U-004 |
+| Verification ID | VER-010 |
+| Files inspected | `WLOrdersPanel.tsx` (full 480 lines) · `App.tsx` (routing gate) · `server/src/routes/tenant.ts` (PATCH route) |
+| Verification result | PASS |
+| Gap decision | CLOSED |
+
+### B — Authorization Posture Summary (Verified)
+
+| Layer | Mechanism | Location | Behavior |
+|---|---|---|---|
+| 1 — UI admission | `WL_ADMIN_ROLES = {OWNER, ADMIN, TENANT_OWNER, TENANT_ADMIN}`; `appState = 'WL_ADMIN'` only if role matches | `App.tsx` lines 294, 316, 327, 339 | Non-admitted users never reach the panel |
+| 2 — Component design | No local role variable/prop/context; upstream gate relied upon intentionally | `WLOrdersPanel.tsx` header + table comment | Actions visible to all admitted WL_ADMIN users by design |
+| 3 — Backend enforcement | `if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) return 403` | `tenant.ts` line 1046–1048 | Independent role gate; enforces final barrier regardless of UI |
+
+### C — Rule → Evidence Mapping
+
+| Rule | Evidence |
+|---|---|
+| Upstream routing gate | `App.tsx` sets `appState = 'WL_ADMIN'` only when `is_white_label === true && WL_ADMIN_ROLES.has(me.role)` (lines 316, 327, 339) |
+| Intentional component design | `WLOrdersPanel.tsx` header (lines 16–19): “All users in WL_ADMIN appState are already OWNER/ADMIN — the routing gate enforces WL_ADMIN_ROLES before setting appState = ‘WL_ADMIN’. No separate role state variable is needed here.” |
+| Backend authorization | `PATCH /api/tenant/orders/:id/status` at `tenant.ts` line 1046: explicitly rejects non-OWNER/ADMIN with 403 FORBIDDEN |
+| No bypass | UI + backend combined posture: unauthorized users cannot enter `WL_ADMIN`, and even if they did, the backend PATCH would reject the transition |
+
+### D — Non-Blocking Governance Notation
+
+`WL_ADMIN_ROLES` in `App.tsx` includes `TENANT_OWNER` and `TENANT_ADMIN` alongside `OWNER` and `ADMIN`. The backend PATCH route enforces only `OWNER` and `ADMIN`. If any user holds a legacy `TENANT_OWNER` or `TENANT_ADMIN` role string and reaches `WL_ADMIN`, action buttons would be visible but the backend PATCH would return 403. This is recorded as a **non-blocking governance notation only** — it is not an open gap, does not constitute a data or authorization breach, and does not require an implementation unit at this time.
+
+### E — Governance Narrative
+
+U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role-gating was caused by incomplete inspection of the action area (only first 200 lines previously read). Full verification confirms that the component intentionally relies on upstream App-level `WL_ADMIN` admission control, while the backend status-transition PATCH route independently enforces authorized roles. No unauthorized order-state transition bypass exists. The minor legacy-role naming mismatch (`TENANT_OWNER`/`TENANT_ADMIN` in `WL_ADMIN_ROLES` vs. `OWNER`/`ADMIN` in PATCH gate) is recorded as non-blocking governance notation only.
+
+### F — Audit-Safe Conclusion
+
+| Gate | Result |
+|---|---|
+| Read completeness | PASS — full 480-line `WLOrdersPanel.tsx` read + `App.tsx` routing gate + backend PATCH route inspected |
+| Auth posture clarity | PASS — upstream routing gate confirmed real; backend independently enforces role; no bypass path |
+| Evidence quality | PASS — findings grounded in actual code from three files; no assumption |
+| Governance usefulness | PASS — gap closed with clear evidence; legacy-role note recorded non-blocking |
+
+**Overall audit conclusion: COMPLIANT**
+
+**U-004 / VER-010: CLOSED. Wave 0 verification pass (VER-001 through VER-010) is now complete — all items resolved (PASS / FAIL / IMPLEMENTED / CLOSED). Wave 1 gate was already closed (GOVERNANCE-SYNC-106). Await next approved roadmap sequence.**
+
+*Updated: 2026-03-13 — U-004/VER-010 `WLOrdersPanel.tsx` role-gating closure recorded (Section 9.29); PASS; GOVERNANCE-SYNC-U-004 complete; Wave 0 VER gate complete (VER-001–VER-010 all resolved)*
