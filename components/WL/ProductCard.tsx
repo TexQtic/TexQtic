@@ -1,5 +1,5 @@
 /**
- * ProductCard — WL Storefront (PW5-WL1 / PW5-WL3)
+ * ProductCard — WL Storefront (PW5-WL1 / PW5-WL3 / PW5-WL6)
  *
  * Renders a single tenant catalog item in the white-label storefront grid.
  *
@@ -9,16 +9,18 @@
  *   NO data fetching in this component — WLStorefront is the exclusive
  *   catalog data owner.
  *
- * Scope (PW5-WL1 / PW5-WL3):
+ * Scope (PW5-WL1 / PW5-WL3 / PW5-WL6):
  *   ✅ Display: name, SKU, price, MOQ, active status
  *   ✅ onSelect callback — triggers detail view in WLStorefront (PW5-WL3)
+ *   ✅ imageUrl  — rendered from existing CatalogItem field (PW5-WL6)
+ *              Graceful placeholder shown when field is absent or broken.
+ *              No additional fetch; field travels via existing catalog state.
  *   ❌ category  — missing in current schema; safely omitted from grid card
  *   ❌ currency  — missing in current schema; safely omitted
- *   ❌ imageUrl  — optional; safely omitted
  *   ❌ cart / checkout — out of scope (PW5-WL3+)
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CatalogItem } from '../../services/catalogService';
 
 interface ProductCardProps {
@@ -35,6 +37,10 @@ function formatPrice(price: number): string {
 }
 
 export function ProductCard({ item, onSelect }: ProductCardProps) {
+  // PW5-WL6: track broken image without additional fetching.
+  // imgError set true only if <img> fires onError (network/404/etc).
+  const [imgError, setImgError] = useState(false);
+
   return (
     <article
       className={`bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200 ${onSelect ? 'cursor-pointer' : ''}`}
@@ -44,6 +50,37 @@ export function ProductCard({ item, onSelect }: ProductCardProps) {
       onKeyDown={onSelect ? (e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(); } : undefined}
       aria-label={onSelect ? `View details for ${item.name}` : undefined}
     >
+      {/* PW5-WL6: Product image — sourced from existing CatalogItem.imageUrl field.
+           No additional fetch. WLStorefront remains sole catalog data owner.
+           Placeholder shown when imageUrl is absent or the image fails to load. */}
+      <div className="w-full h-40 rounded-md overflow-hidden bg-slate-100 flex items-center justify-center text-slate-300 -mx-0 mb-1">
+        {item.imageUrl && !imgError ? (
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+            loading="lazy"
+          />
+        ) : (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1}
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        )}
+      </div>
+
       {/* Active / Inactive badge */}
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-slate-900 font-semibold text-sm leading-snug flex-1 line-clamp-2">

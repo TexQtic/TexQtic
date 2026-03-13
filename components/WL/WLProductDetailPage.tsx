@@ -10,7 +10,7 @@
  *   tenantId is NEVER used or referenced from the client.
  *   Item is derived from WLStorefront's already-held catalog state.
  *
- * Scope (PW5-WL3 / PW5-WL5):
+ * Scope (PW5-WL3 / PW5-WL5 / PW5-WL6):
  *   ✅ Product name, SKU, category (fallback: Uncategorised)
  *   ✅ Description (if present in existing item shape)
  *   ✅ Price, MOQ, active status
@@ -18,8 +18,11 @@
  *   ✅ Quantity selector respecting MOQ if present (PW5-WL5)
  *   ✅ Brief success/error feedback on add (PW5-WL5)
  *   ✅ Back navigation to storefront grid/category context
- *   ❌ imageUrl rendering — not required (field absent in current schema)
+ *   ✅ imageUrl rendering — primary image from existing CatalogItem field (PW5-WL6)
+ *              Graceful placeholder shown when field absent or image fails to load.
+ *              No additional fetch; travels via item prop from WLStorefront state.
  *   ❌ Checkout — delegated to existing Cart drawer (CartProvider/EXPERIENCE)
+ *   ❌ Full gallery — out of scope; single primary image only
  */
 
 import React, { useState, useCallback } from 'react';
@@ -58,6 +61,8 @@ export function WLProductDetailPage({ item, onBack, onAddToCart }: WLProductDeta
   const minQty = item.moq != null && item.moq > 1 ? item.moq : 1;
   const [quantity, setQuantity] = useState(minQty);
   const [adding, setAdding] = useState(false);
+  // PW5-WL6: track broken image without additional fetching.
+  const [imgError, setImgError] = useState(false);
   // Brief success banner: auto-clears after 2 s
   const [addSuccess, setAddSuccess] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -98,6 +103,37 @@ export function WLProductDetailPage({ item, onBack, onAddToCart }: WLProductDeta
 
       {/* Detail card */}
       <article className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col gap-6 shadow-sm">
+        {/* PW5-WL6: Primary product image — sourced from existing CatalogItem.imageUrl field.
+             No additional fetch. Item prop is derived from WLStorefront's catalog state.
+             Placeholder shown when imageUrl is absent or the image fails to load. */}
+        <div className="w-full h-64 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center text-slate-300">
+          {item.imageUrl && !imgError ? (
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
+              loading="eager"
+            />
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-16 w-16"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={0.75}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          )}
+        </div>
+
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-xl font-bold text-slate-900 leading-snug">
