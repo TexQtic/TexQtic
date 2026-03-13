@@ -1917,3 +1917,127 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 **U-004 / VER-010: CLOSED. Wave 0 verification pass (VER-001 through VER-010) is now complete — all items resolved (PASS / FAIL / IMPLEMENTED / CLOSED). Wave 1 gate was already closed (GOVERNANCE-SYNC-106). Await next approved roadmap sequence.**
 
 *Updated: 2026-03-13 — U-004/VER-010 `WLOrdersPanel.tsx` role-gating closure recorded (Section 9.29); PASS; GOVERNANCE-SYNC-U-004 complete; Wave 0 VER gate complete (VER-001–VER-010 all resolved)*
+*Updated: 2026-03-13 — PW5-AI-PLAN Wave 5 AI/event backbone planning baseline recorded (Section 9.30); PLANNING COMPLETE / BASELINE ESTABLISHED; TECS-FBW-AIGOVERNANCE NOT closed; AI/event drift observations D-001–D-009 identified; follow-on units proposed; GOVERNANCE-SYNC-PW5-AI-PLAN*
+
+---
+
+## Section 9.30 — PW5-AI-PLAN Wave 5 AI/Event Backbone Re-Baseline — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-PW5-AI-PLAN | **Type:** GOVERNANCE-SYNC — Planning Baseline Recording | **Date:** 2026-03-13  
+**Execution type:** Planning Prompt — Read-Only  
+**Files modified in this governance sync:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/routes/UI/services/infrastructure files changed)**
+
+### A — Unit Outcome
+
+| Attribute | Value |
+|---|---|
+| Classification | PLANNING COMPLETE / BASELINE ESTABLISHED |
+| Execution mode | Read-only; no code, no schema, no routes, no governance-independent implementation |
+| Position in sequence | Follows PW5-WL tranche (WL1–WL7 closed) and PW5-CP-PLAN baseline |
+| TECS-FBW-AIGOVERNANCE | **NOT CLOSED** — backend design gate preserved |
+| G-028 B/C wave status | Not started; requires separate design/execution authorization |
+
+### B — Baseline Findings Summary
+
+#### Tenant-Plane AI Inference Surface
+
+| Item | Finding |
+|---|---|
+| Routes confirmed | `GET /api/ai/insights` · `POST /api/ai/negotiation-advice` · `GET /api/ai/health` |
+| Implementation file | `server/src/routes/ai.ts` (460 lines; monolithic — all orchestration in route handlers) |
+| Auth posture | All three routes tenant-auth protected (commit 960b736 resolves prior VER-008 defects) |
+| Budget enforcement | `aiBudget.ts` active on both inference routes; `BudgetExceededError` → HTTP 429 |
+| RAG | `ragContextBuilder.ts` (G-028 A5) wired into `insights` only; constants: TOP_K=5, MIN_SIM=0.30, MAX_CHUNKS=3 |
+| Reasoning audit | G-023 `reasoning_logs` table; SHA-256 hash; atomic write with `audit_logs` in same Prisma transaction |
+| Vector pipeline | `vectorIngestion.ts` + `vectorIndexQueue.ts` + `vectorChunker.ts` + `vectorStore.ts` (pgvector, dim=768) — G-028 A4/A6 complete |
+| Frontend path | `services/aiService.ts` (governance-compliant); `services/geminiService.ts` deprecated (throws on call) |
+
+#### Event Backbone
+
+| Item | Finding |
+|---|---|
+| Backbone status | Operational for tenancy/team/marketplace domains |
+| `KnownEventName` entries | 9 entries — zero AI domain entries present |
+| `AUDIT_ACTION_TO_EVENT_NAME` | No AI audit actions mapped |
+| Projection infrastructure | `projector.ts` engine complete; `registry.ts` functional; only `marketplace.projector.ts` handler registered |
+| AI event emission | No `ai.inference.*` or `ai.vector.*` events emitted anywhere in codebase |
+| G-028 AI event design | 11 AI event types designed in G-028 spec; none implemented in registry or emission map |
+
+#### Control-Plane AI Governance
+
+| Item | Finding |
+|---|---|
+| `AiGovernance.tsx` data source | Derives from `GET /api/control/tenants`; no dedicated AI backend route |
+| Authority buttons | Gated/hidden — PW5-U3 (commit d5ee430, 2026-03-09) |
+| `/api/control/ai/*` routes | None exist |
+| TECS-FBW-AIGOVERNANCE | REMAINS OPEN / `REQUIRES_BACKEND_DESIGN` |
+| G-028 C-wave | Not started; cannot begin without authorized design unit |
+
+### C — Drift Observations (D-001 through D-009)
+
+| ID | File/Location | Finding | Severity |
+|---|---|---|---|
+| D-001 | `server/src/routes/ai.ts` | TIS not extracted into dedicated inference service module; orchestration concentrated in route handler | Medium |
+| D-002 | `server/src/lib/events.ts` (`KnownEventName` · `AUDIT_ACTION_TO_EVENT_NAME`) | AI domain events entirely absent; prerequisite for downstream AI event consumers | High |
+| D-003 | `server/src/lib/vectorShadowQuery.ts` ~line 70 | `TODO(G028-A4): replace with real embedding pipeline` — placeholder; shadow results near-zero similarity | Low |
+| D-004 | `server/src/routes/ai.ts` | No per-tenant per-minute rate limiting (G-028 §6.3 specifies 60 req/min) | Medium |
+| D-005 | `server/src/routes/ai.ts` | PII redaction pipeline (pre-send + post-receive) not implemented | Medium |
+| D-006 | `server/prisma/schema.prisma` (`reasoning_logs` table) | `idempotency_key` column absent; G-028 §3.3 specifies it as required | Medium |
+| D-007 | `components/ControlPlane/AiGovernance.tsx` | Control-plane AI governance UI cosmetic; no dedicated AI backend; acknowledged design gate | Acknowledged |
+| D-008 | `server/src/routes/ai.ts` | Auth-plane ambiguity for `GET /api/ai/health` resolved by commit 960b736; notation retained | Low |
+| D-009 | `server/src/routes/ai.ts` | `negotiation-advice` has no RAG injection; diverges from `insights` without documented rationale | Medium |
+
+### D — Gap Disposition
+
+| ID | Description | Disposition |
+|---|---|---|
+| TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | NOT CLOSED — backend design gate preserved; no change in this unit |
+| AI_GOV-BACKEND-001 | AiGovernance.tsx derives from tenants endpoint; no dedicated AI route | OPEN — design gate; unchanged by this baseline |
+| D-002 | AI domain events absent from KnownEventName | OPEN — addressed by PW5-AI-EVENT-DOMAIN (proposed, not authorized) |
+| D-001, D-005 | TIS monolith + PII redaction | OPEN — addressed together by PW5-AI-TIS-EXTRACT (proposed, not authorized) |
+| D-004 | No per-tenant rate limiting | OPEN — addressed by PW5-AI-RATE-LIMIT (proposed, not authorized) |
+| D-006 | reasoning_logs idempotency_key absent | OPEN — addressed by PW5-AI-IDEMPOTENCY (proposed, not authorized; schema migration required) |
+| D-009 | negotiation-advice has no RAG | OPEN — addressed by PW5-AI-NEGOTIATION-RAG (proposed, not authorized) |
+| D-003, D-008 | Shadow query placeholder; health auth note | LOW — recorded; low urgency |
+
+### E — Follow-On Units (Proposed; Not Authorized)
+
+| Priority | Unit ID | Rationale |
+|---|---|---|
+| 1 | PW5-AI-EVENT-DOMAIN | Register AI domain events; prerequisite for all downstream AI event consumers; resolves D-002 |
+| 2 | PW5-AI-TIS-EXTRACT | Extract TIS from `ai.ts` monolith; resolves D-001 + D-005 together |
+| 3 | PW5-AI-RATE-LIMIT | Per-tenant per-minute rate limit on `/api/ai/*`; resolves D-004 |
+| 4 | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs`; schema migration required; resolves D-006 |
+| 5 | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
+| 6 | PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog mutations via vector queue; G-028 B1; depends on PW5-AI-EVENT-DOMAIN |
+| 7 | PW5-G028-C-CONTROL-PLANE-AI | Control-plane AI authority routes; requires TECS-FBW-AIGOVERNANCE gate + design unit |
+| 8 | PW5-SHADOW-QUERY-FIX | Replace placeholder embedding in `vectorShadowQuery.ts`; low urgency |
+
+### F — Explicit Prohibitions Confirmed
+
+The following were **NOT performed** in this unit:
+
+- ❌ No implementation of PW5-AI-EVENT-DOMAIN or any AI event registration  
+- ❌ No extraction of TIS from `ai.ts`  
+- ❌ No new AI routes added  
+- ❌ No event registry entries added  
+- ❌ No `reasoning_logs` schema fields added  
+- ❌ No runtime code, tests, frontend, or infrastructure modified  
+- ❌ TECS-FBW-AIGOVERNANCE was NOT closed  
+- ❌ G-028 B/C wave was NOT declared implementation-ready  
+
+### G — Audit-Safe Conclusion
+
+| Gate | Result |
+|---|---|
+| Unit scope | PASS — read-only planning; zero implementation files changed |
+| Governance accuracy | PASS — baseline reflects actual codebase state as of 2026-03-13 |
+| TECS-FBW-AIGOVERNANCE | PASS — design gate correctly preserved open; not falsely closed |
+| Evidence quality | PASS — all findings grounded in actual file reads (ai.ts, events.ts, projector.ts, ragContextBuilder.ts, aiBudget.ts, AiGovernance.tsx, aiService.ts, vectorShadowQuery.ts) |
+| Follow-on sequencing | PASS — proposed units are proposals only; none marked implemented |
+| Doctrine alignment | PASS — org_id/RLS posture unchanged; no routes added; no schema changed; no tenant isolation weakened |
+
+**Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
+
+**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. No implementation is authorized until separate execution units are approved. Next proposed unit: PW5-AI-EVENT-DOMAIN.**

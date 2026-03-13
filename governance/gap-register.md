@@ -1,6 +1,6 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-13 (GOVERNANCE-SYNC-PW5-WL7-GOV — PW5-WL7 ✅ VERIFIED AND CLOSED — commit d860b6b · WL Storefront Performance Optimizations complete · React.memo on ProductCard/ProductGrid/WLSearchBar/WLCollectionsPanel · per-card inline closure eliminated · Intl.NumberFormat singleton · PW5-WL7-VERIFY PASS · CAT-SCHEMA-001/002/003 remain non-blocking · WL storefront tranche complete)
+Last Updated: 2026-03-13 (GOVERNANCE-SYNC-PW5-AI-PLAN — PW5-AI-PLAN ✅ CLOSED AS PLANNING BASELINE — Wave 5 AI/event backbone architectural baseline established; tenant AI route surface confirmed (3 tenant-plane routes); event backbone confirmed for tenancy/team/marketplace; AI event domain absent (design gate open); control-plane AI governance backend remains REQUIRES_BACKEND_DESIGN; 9 drift observations D-001–D-009 registered; follow-on units proposed: PW5-AI-EVENT-DOMAIN · PW5-AI-TIS-EXTRACT · PW5-AI-RATE-LIMIT · PW5-AI-IDEMPOTENCY · PW5-AI-NEGOTIATION-RAG; no implementation occurred; TECS-FBW-AIGOVERNANCE NOT closed) — commit d860b6b · WL Storefront Performance Optimizations complete · React.memo on ProductCard/ProductGrid/WLSearchBar/WLCollectionsPanel · per-card inline closure eliminated · Intl.NumberFormat singleton · PW5-WL7-VERIFY PASS · CAT-SCHEMA-001/002/003 remain non-blocking · WL storefront tranche complete)
 (GOVERNANCE-SYNC-PW5-WL7-GOV — PW5-WL7 ✅ VERIFIED AND CLOSED — 2026-03-13; program: PW5-WL7 Storefront Performance Optimizations; tranche class: GOVERNANCE-SYNC — documentation-only, no product code changes in this unit; commit: d860b6b; commit message: feat(wl-storefront): implement PW5-WL7 performance optimizations; scope: ProductCard.tsx MODIFIED (React.memo applied; onSelect signature changed () => void → (id: string) => void enabling stable ref pass-through; module-level priceFormatter singleton replacing per-render Intl.NumberFormat construction) · ProductGrid.tsx MODIFIED (React.memo applied; per-card inline () => onSelectItem(item.id) closure removed; onSelect={onSelectItem} direct pass) · WLSearchBar.tsx MODIFIED (React.memo applied — skips re-render on activeCategory/selectedItemId state changes; onChange=setSearchQuery is stable useState setter) · WLCollectionsPanel.tsx MODIFIED (React.memo applied — skips re-render on searchQuery keystrokes; categories memoized in WLStorefront; onSelectCategory=setActiveCategory stable setter) · WLStorefront.tsx INTENTIONALLY UNCHANGED — already fully optimized with useCallback handlers and useMemo derivation chain; discovery result: optimization opportunities were render-boundary and prop-stability concentrated — WLStorefront data-ownership layer was already correct; no backend routes; no schema/migration/RLS/seed changes; WLProductDetailPage.tsx UNCHANGED; no tenantId added to any client file; no duplicate catalog requests introduced; architectural outcome confirmed: WLStorefront remains the sole catalog fetch owner; all derived filtering/search/detail ownership remains in WLStorefront; render optimization is boundary-only — no data ownership moved to child components; verification result: PW5-WL7-VERIFY PASS — all gates confirmed: Network (getCatalogItems in WLStorefront only; no child fetch; no backend routes in commit) PASS · Architecture (WLStorefront unchanged; all useMemo derivations intact; 4 WL-only files in commit) PASS · Tenant safety (tenantId JSDoc-only; zero functional occurrences; no RLS/auth changes) PASS · Performance integrity (React.memo prop-stable: handleSelectItem is useCallback([], []); categories is useMemo-ref; setSearchQuery/setActiveCategory are stable setters; no stale-prop risk; Intl.NumberFormat singleton confirmed) PASS · Build quality (tsc EXIT 0; eslint EXIT 0; d860b6b: 4 files 50 insertions / 24 deletions) PASS · Behavioral integrity (grid/search/category/detail/cart/images/keyboard/back all intact; no UX regression) PASS; existing schema observations: CAT-SCHEMA-001 · CAT-SCHEMA-002 · CAT-SCHEMA-003 remain NON-BLOCKING — PW5-WL7 is optimization-only; no schema obligations introduced; no new schema observations; gap register outcome: UNCHANGED; closure state: PW5-WL7 ✅ FULLY CLOSED — commit d860b6b; PW5-WL7-VERIFY ✅ COMPLETE 2026-03-13; WL storefront performance optimization operational; WL storefront tranche: WL1–WL7 ALL CLOSED; next: await next approved roadmap sequence; governance artifacts updated: docs/governance/IMPLEMENTATION-TRACKER-2026-03.md · governance/gap-register.md · docs/governance/audits/2026-03-audit-reconciliation-matrix.md; GOVERNANCE-SYNC-PW5-WL7-GOV)
 (GOVERNANCE-SYNC-PW5-WL6-GOV — PW5-WL6 ✅ VERIFIED AND CLOSED — 2026-03-13; program: PW5-WL6 WL Product Images; tranche class: GOVERNANCE-SYNC — documentation-only, no product code changes in this unit; commit: e8f5d55; commit message: feat(wl-storefront): implement PW5-WL6 product images; scope: ProductCard.tsx MODIFIED (useState import added; imgError local state tracks broken images via onError — no additional fetch; h-40 image container added; <img src={item.imageUrl} alt={item.name} loading="lazy" onError={() => setImgError(true)}> rendered when imageUrl present and not broken; inline SVG placeholder aria-hidden="true" shown when imageUrl absent or imgError=true) · WLProductDetailPage.tsx MODIFIED (imgError local state added; h-64 primary image surface added before existing header; <img loading="eager"> with same onError guard; SVG placeholder at h-16 w-16 for detail surface; JSDoc updated) · CASE A: CatalogItem.imageUrl?: string already present in catalogService.ts since commit c40eb64 — pre-existence confirmed via git show c40eb64:services/catalogService.ts; image data travels via existing item prop from WLStorefront catalog state; no new backend routes; no schema/migration/RLS/seed changes; architectural outcome confirmed: WLStorefront remains the only owner of catalog fetching — image rendering is purely presentational from existing item props; WLStorefront.tsx, catalogService.ts, WLCollectionsPanel.tsx, WLSearchBar.tsx, ProductGrid.tsx, WLStorefront.tsx, CartContext.tsx all UNCHANGED; verification result: PW5-WL6-VERIFY PASS — all 7 gates confirmed: Scope (no schema/migration/governance docs changed; existing CASE A contract reused) PASS · Data flow (getCatalogItems only in WLStorefront lines 52+107; absent from ProductCard/WLProductDetailPage/ProductGrid; onError = local imgError state only) PASS · Tenant safety (tenantId JSDoc-only in touched files; zero functional occurrences; no RLS/auth changes; D-017-A) PASS · Runtime (grid lazy-loads product image; detail eager-loads primary image; onError triggers SVG placeholder; absent imageUrl → immediate SVG placeholder; alt={item.name} on real images; aria-hidden="true" on decorative SVG; no CLS) PASS · Image integrity (CatalogItem.imageUrl pre-existed before PW5-WL6; no fabricated contract; placeholder bounded and explicit) PASS · Build quality (tsc EXIT 0; eslint EXIT 0; git show --stat e8f5d55: 2 files, 79 insertions, 6 deletions) PASS · Behavioral integrity (category browsing intact; detail page intact; search intact; cart foundation intact; card click/onSelect/onKeyDown preserved; back navigation preserved; no image rendering alters catalog/search/cart logic) PASS; existing schema observations: CAT-SCHEMA-001 · CAT-SCHEMA-002 · CAT-SCHEMA-003 remain NON-BLOCKING — CAT-SCHEMA-001 (imageUrl note) superseded in WL rendering context: CatalogItem.imageUrl was already_optional_ in the frontend type contract; its DB-column presence is irrelevant to WL6 which renders from API response only — observation retained as non-blocking historical record only; no new CAT-SCHEMA IDs introduced; no new gaps introduced; gap register outcome: UNCHANGED; closure state: PW5-WL6 ✅ FULLY CLOSED — commit e8f5d55; PW5-WL6-VERIFY ✅ COMPLETE 2026-03-13; WL Product Images operational; next sequenced unit: PW5-WL7 (Storefront Performance Optimizations); governance artifacts updated: docs/governance/IMPLEMENTATION-TRACKER-2026-03.md · governance/gap-register.md · docs/governance/audits/2026-03-audit-reconciliation-matrix.md; GOVERNANCE-SYNC-PW5-WL6-GOV)
 (GOVERNANCE-SYNC-PW5-WL5-GOV — PW5-WL5 ✅ VERIFIED AND CLOSED — 2026-03-13; program: PW5-WL5 WL Cart / Checkout Foundation; tranche class: GOVERNANCE-SYNC — documentation-only, no product code changes in this unit; commit: c40eb64; commit message: feat(wl-storefront): implement PW5-WL5 cart foundation; scope: WLProductDetailPage.tsx MODIFIED (converted disabled cart stub into live onAddToCart prop handler — quantity state defaulting to Math.max(item.moq ?? 1, 1); MOQ-floor decrement guard; adding/addSuccess/addError feedback states; handleAddToCart async callback; addButtonLabel pre-return let variable resolving no-nested-ternary lint rule; button disabled on adding || !item.active; onAddToCart absent → disabled placeholder) · WLStorefront.tsx MODIFIED (imports useCart from CartContext; destructures addToCart; passes onAddToCart={addToCart} to WLProductDetailPage in detail render branch) · CASE A: existing CartContext / cartService / Cart.tsx reused without modification — addToCart(catalogItemId: string, quantity: number): Promise<void>; AddToCartRequest = { catalogItemId, quantity } — no tenantId in body (D-017-A); CartProvider wraps EXPERIENCE case in App.tsx; architectural outcome confirmed: WLStorefront remains the only owner of catalog fetching — cart mutation wired from CartContext at WLStorefront level passed as prop; WLProductDetailPage remains presentational — no service import, no fetch, no direct API call; verification result: PW5-WL5-VERIFY PASS — all 7 gates confirmed: Commit scope (2 files — components/WL/ only; no server/prisma/governance files) PASS · Catalog fetch isolation (no getCatalogItems in WLProductDetailPage; WLStorefront sole fetch owner) PASS · Tenant isolation (AddToCartRequest = {catalogItemId,quantity} — no tenantId; D-017-A) PASS · CartContext contract (CASE A reuse; CartProvider wraps EXPERIENCE; addToCart signature correct) PASS · MOQ floor (Math.max(item.moq ?? 1, 1) init; decrement guard Math.max(minQty, q - 1)) PASS · Button states (disabled on adding || !item.active; absent prop → disabled placeholder) PASS · Build quality (tsc EXIT 0; eslint EXIT 0; 2 WL-only files; 105 insertions / 18 deletions) PASS; existing schema observations: CAT-SCHEMA-001 · CAT-SCHEMA-002 · CAT-SCHEMA-003 remain NON-BLOCKING — no new CAT-SCHEMA IDs introduced; no new gaps introduced; gap register outcome: UNCHANGED; closure state: PW5-WL5 ✅ FULLY CLOSED — commit c40eb64; PW5-WL5-VERIFY ✅ COMPLETE 2026-03-13; WL Cart / Checkout Foundation is operational; next sequenced unit: PW5-WL6 (Product Images); governance artifacts updated: docs/governance/IMPLEMENTATION-TRACKER-2026-03.md · governance/gap-register.md · docs/governance/audits/2026-03-audit-reconciliation-matrix.md; GOVERNANCE-SYNC-PW5-WL5-GOV)
@@ -1355,7 +1355,7 @@ Status: FUTURE PERFORMANCE UNIT — non-blocking at current ledger volume; recom
 | ID | Name | Status | Notes |
 |---|---|---|---|
 | PW5-CP-PLAN | Control-plane re-baseline | ✅ COMPLETE — 2026-03-10 | Read-only architectural baseline established. 17 panels reachable. Route map produced. Capability classification complete. 8 drift observations. 5 new gap entries. Governance sync: PW5-CP-PLAN-GOV. |
-| PW5-AI-PLAN | AI/event backbone re-baseline | ⏳ Pending | No Wave 5 AI architecture until verification tranche complete and this plan confirmed |
+| PW5-AI-PLAN | AI/event backbone re-baseline | ✅ COMPLETE — 2026-03-13 | Read-only planning baseline established. Tenant AI route surface confirmed (GET /api/ai/insights · POST /api/ai/negotiation-advice · GET /api/ai/health). Event backbone confirmed for tenancy/team/marketplace domains. AI event domain absent from registry. Control-plane AI backend design gate preserved (TECS-FBW-AIGOVERNANCE). 9 drift observations registered. Follow-on units proposed: PW5-AI-EVENT-DOMAIN · PW5-AI-TIS-EXTRACT · PW5-AI-RATE-LIMIT · PW5-AI-IDEMPOTENCY · PW5-AI-NEGOTIATION-RAG. Governance sync: GOVERNANCE-SYNC-PW5-AI-PLAN. |
 
 ---
 
@@ -1434,7 +1434,7 @@ Status: ✅ CLOSED — RESOLVED (policy decision) — intentionally excluded fro
 | 3 | Control-plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; PW5-CP-PLAN-GOV governance sync recorded |
 | 4 | Tenant admin dashboard completion | ⏳ BLOCKED — verification + wiring tranches |
 | 5 | White-label store builder | ⏳ BLOCKED — PW5-WL1 + PW5-WL2 |
-| 6 | AI / event backbone (Wave 5 architecture) | ⏳ BLOCKED — all gate conditions required |
+| 6 | AI / event backbone (Wave 5 architecture) | ✅ PLANNING COMPLETE — 2026-03-13 — PW5-AI-PLAN baseline established; follow-on execution units sequenced; no implementation begins without separate unit authorizations (GOVERNANCE-SYNC-PW5-AI-PLAN) |
 
 Recommended immediate next unit: **PW5-WL1 — WL storefront product grid** (or next available non-blocked unit). Reason: PW5-W3 is FULLY CLOSED — backend (PW5-W3-BE ✅ 14aea49) + frontend (PW5-W3-FE ✅ 8f4a685) + runtime verification (PW5-W3-VERIFY ✅ 2026-03-12) all complete. Non-blocking follow-ups recorded: PW5-W3-TYPE-ALIGN-001 · PW5-W3-TEST-001 · PW5-W3-PERF-INDEX. Wiring tranche: PW5-W1 🚫 BACKEND DESIGN GATE · PW5-W2 ✅ · PW5-W3-BE ✅ · PW5-W3-FE ✅ · PW5-W4 ✅. WL tranche (PW5-WL1 · PW5-WL2 · PW5-WL3) is the next available wiring progression. Deferred: DEF-003 · DEF-004 · DEF-005 · DPP backend audit. (GOVERNANCE-SYNC-PW5-W3-VERIFY-GOV)
 
@@ -1449,3 +1449,75 @@ Wave 5 architecture sequencing does not begin until all of the following are con
 - [x] **Platform wiring truth reconciled in tracker** — ✅ MET (2026-03-10) — PW5-CP-PLAN-GOV governance sync recorded; IMPLEMENTATION-TRACKER-2026-03.md updated; gap-register wiring/planning tranches updated
 
 No agent, no prompt, and no implementation sprint may bypass these conditions.
+
+---
+
+### PW5-AI-PLAN Architectural Baseline — Wave 5 AI/Event Backbone Re-Baseline — 2026-03-13
+
+**Governance sync:** GOVERNANCE-SYNC-PW5-AI-PLAN | **Date:** 2026-03-13 | **Type:** Planning Baseline — Read-Only
+
+**Status: ✅ PLANNING COMPLETE — CLOSED AS BASELINE**
+
+This entry records the authoritative Wave 5 AI/event architectural baseline established by the PW5-AI-PLAN planning unit (2026-03-13). No implementation occurred. No governance files, schemas, or routes were modified in this planning unit.
+
+#### A — Tenant-Plane AI Inference Surface (Confirmed Operational)
+
+| Route | File | Auth | Pattern |
+|---|---|---|---|
+| `GET /api/ai/insights` | `server/src/routes/ai.ts` | `tenantAuthMiddleware` + `databaseContextMiddleware` | Budget preflight → RAG retrieval → Gemini → usage upsert → reasoning_log + audit_log atomic write |
+| `POST /api/ai/negotiation-advice` | `server/src/routes/ai.ts` | `tenantAuthMiddleware` + `databaseContextMiddleware` | Budget preflight → Gemini (no RAG) → usage upsert → reasoning_log + audit_log atomic write |
+| `GET /api/ai/health` | `server/src/routes/ai.ts` | `tenantAuthMiddleware` (auth added by commit 960b736) | Provider/model status; no DB context |
+
+- AI orchestration currently concentrated in `server/src/routes/ai.ts` (460 lines) — not yet extracted into dedicated TIS service boundary per G-028 §2.B  
+- Model: Google Gemini 1.5 Flash via `@google/generative-ai` SDK  
+- Budget enforcement: `aiBudget.ts` (monthly token/cost cap; `BudgetExceededError` → HTTP 429)  
+- RAG: `ragContextBuilder.ts` wired into insights route only (G-028 A5)  
+- Reasoning audit: G-023 `reasoning_logs` table; SHA-256 hash; atomic write with `audit_logs`  
+- Frontend AI calls route through `services/aiService.ts` only; `services/geminiService.ts` deprecated
+
+#### B — Event Backbone (Confirmed Operational; AI Domain Absent)
+
+- Event backbone operational for tenancy/team/marketplace domains (9 `KnownEventName` entries)  
+- Projection infrastructure: `events/projections/projector.ts` (functional, idempotent, sequential)  
+- `events/handlers/index.ts` imports only one handler: `marketplace.projector.ts`  
+- **AI domain events: NOT registered** — `ai.inference.*` / `ai.vector.*` event types are designed in G-028 spec but absent from `KnownEventName` and `AUDIT_ACTION_TO_EVENT_NAME` map  
+- No AI-domain event emitters exist anywhere in the codebase
+
+#### C — Control-Plane AI Governance Gate (Preserved Open)
+
+- `TECS-FBW-AIGOVERNANCE` remains **REQUIRES_BACKEND_DESIGN** — not changed by this baseline  
+- `AiGovernance.tsx` derives data from `GET /api/control/tenants`; authority action buttons gated/hidden (PW5-U3; commit d5ee430)  
+- No dedicated `/api/control/ai/*` route exists  
+- G-028 B/C wave (control-plane authority routes: kill switch, model cap, budget write) not started  
+- **No control-plane AI implementation begins without an authorized design/execution unit**
+
+#### D — Drift Observations Registered (D-001 through D-009)
+
+| ID | Observation | Severity |
+|---|---|---|
+| D-001 | TIS not extracted from `ai.ts` monolith; G-028 §2.B intent not yet realized | Medium |
+| D-002 | AI domain events absent from `KnownEventName` and `AUDIT_ACTION_TO_EVENT_NAME` | High |
+| D-003 | `vectorShadowQuery.ts` uses placeholder embedding (explicit TODO; real pipeline available) | Low |
+| D-004 | No per-tenant AI rate limiting (60 req/min per G-028 §6.3 spec) | Medium |
+| D-005 | PII redaction pipeline (pre-send + post-receive) not implemented | Medium |
+| D-006 | `idempotency_key` absent from `reasoning_logs` schema (G-028 §3.3 specifies it) | Medium |
+| D-007 | `AiGovernance.tsx` control-plane UI cosmetic; no dedicated AI backend (acknowledged design gate) | Acknowledged |
+| D-008 | `GET /api/ai/health` auth-plane ambiguity now resolved (commit 960b736); minor notation retained | Low |
+| D-009 | `negotiation-advice` has no RAG injection; diverges from `insights` without documented rationale | Medium |
+
+#### E — Follow-On Units (Proposed; Not Authorized for Implementation)
+
+| Unit ID | One-Line Description | Prerequisites |
+|---|---|---|
+| PW5-AI-EVENT-DOMAIN | Register `ai.inference.*` and `ai.vector.*` event types in `KnownEventName` + `AUDIT_ACTION_TO_EVENT_NAME` | None (first unit) |
+| PW5-AI-TIS-EXTRACT | Extract AI orchestration from `ai.ts` into dedicated inference service boundary | PW5-AI-EVENT-DOMAIN recommended first |
+| PW5-AI-RATE-LIMIT | Implement per-tenant per-minute rate limiting on `/api/ai/*` routes (60 req/min) | None |
+| PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs` schema; requires migration approval gate | Schema migration approval required |
+| PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into `negotiation-advice` handler | PW5-AI-TIS-EXTRACT recommended first |
+| PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog item mutations via `enqueueVectorIndexJob()` | PW5-AI-EVENT-DOMAIN |
+| PW5-G028-C-CONTROL-PLANE-AI | `PUT /api/control/ai-budget/:tenantId`, kill switch, model cap routes | Explicit design authorization + TECS-FBW-AIGOVERNANCE gate |
+| PW5-SHADOW-QUERY-FIX | Replace placeholder embedding in `vectorShadowQuery.ts` with real `generateEmbedding()` | Low urgency |
+
+**None of the above units are authorized for implementation by this baseline entry. Each requires a separate authorized execution unit.**
+
+**Status: PW5-AI-PLAN ✅ CLOSED AS PLANNING BASELINE — 2026-03-13 — GOVERNANCE-SYNC-PW5-AI-PLAN**
