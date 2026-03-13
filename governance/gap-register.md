@@ -1085,7 +1085,7 @@ Next: VER-002 (TECS-FBW-020 — WL Admin invite shell routing).
 | VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx — confirm seeded picker + TODO resolver ref | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
 | VER-007 | TECS-FBW-RLS-001 | Draft system-level governance statement on RLS-only posture | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (governance defect confirmed) → doctrine written in shared/contracts/rls-policy.md · stale app.tenant_id corrected to app.org_id · TECS-FBW-RLS-001-GOV |}
 | VER-008 | U-001 (Copilot) | Locate /api/ai/* route file; confirm registration + auth posture | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (two defects) → TECS-VER008-REMEDIATION (commit 960b736) · re-verification PASS · DEF-VER008-001 CLOSED: `GET /api/ai/health` tenant-auth protected · DEF-VER008-002 CLOSED: `/api/ai` explicitly declared in `ENDPOINT_REALM_MAP` · GOVERNANCE-SYNC-U-001 |
-| VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard in full | ⏳ Pending |
+| VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard in full | ✅ CLOSED — 2026-03-13 · Verdict: PASS · SUPER_ADMIN enforcement explicit and layered · no bypass surface · prior CI-only assumption resolved by full read · GOVERNANCE-SYNC-U-002 |
 | VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 for role-gating evidence | ⏳ Pending |
 
 ---

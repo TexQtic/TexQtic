@@ -455,7 +455,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx tenant picker — is there a TODOref to /api/public/tenants/resolve? Is seeding still present? | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
 | VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | ✅ CLOSED — 2026-03-13 · Verdict: FAIL (governance defect) → doctrine written (TECS-FBW-RLS-001-GOV) |
 | VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · DEF-VER008-001: `/api/ai/health` was public · DEF-VER008-002: `/api/ai` absent from `ENDPOINT_REALM_MAP` · TECS-VER008-REMEDIATION (commit 960b736) · re-verification PASS · GOVERNANCE-SYNC-U-001 |
-| VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard fully | Copilot §10 U-002: only 150 lines inspected; GOVERNANCE-SYNC-035 CI guard confirms SUPER_ADMIN gating as partial evidence |
+| VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard fully | ✅ CLOSED — 2026-03-13 · Verdict: PASS · Full file read + direct dependency inspection completed · SUPER_ADMIN enforcement explicit · no bypass surface · GOVERNANCE-SYNC-U-002 |
 | VER-010 | U-004 (Copilot) | Read WLOrdersPanel.tsx lines 200–480 — do status-transition PATCH buttons exist? | Copilot §10 U-004: only first 200 lines read |
 
 ---
@@ -1801,3 +1801,60 @@ U-001 is now fully closed. The prior AI route auth posture defects identified by
 **U-001 / VER-008: CLOSED. Await next approved verification unit (VER-009 / U-002).**
 
 *Updated: 2026-03-13 — U-001/VER-008 AI route auth posture remediation closure recorded (Section 9.27); TECS-VER008-REMEDIATION CLOSED; implementation commit 960b736; re-verification PASS; GOVERNANCE-SYNC-U-001 complete; await VER-009*
+
+---
+
+## Section 9.28 — U-002 / VER-009 `admin/tenantProvision.ts` Auth Guard Closure — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-U-002 | **Type:** GOVERNANCE-SYNC — Verification Closure | **Date:** 2026-03-13  
+**Files modified in this governance sync:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/OpenAPI files changed)**
+
+### A — Inputs
+
+| Input | Value |
+|---|---|
+| Gap ID | U-002 |
+| Verification ID | VER-009 |
+| Files inspected | `server/src/routes/admin/tenantProvision.ts` · `server/src/middleware/auth.ts` |
+| Verification result | PASS |
+| Gap decision | CLOSED |
+
+### B — Auth Posture Summary (Verified)
+
+| Layer | Mechanism | Location | Behavior |
+|---|---|---|---|
+| 1 — Realm guard | `ENDPOINT_REALM_MAP: '/api/control' → 'admin'` | `realmGuard.ts` | Wrong-realm tokens rejected 403 before plugin entry |
+| 2 — Plugin authentication | `fastify.addHook('onRequest', adminAuthMiddleware)` | `tenantProvision.ts` line 67 | Admin JWT verified; `isAdmin`, `adminId`, `adminRole` set; 401 on failure |
+| 3 — Role authorization | `preHandler: requireAdminRole('SUPER_ADMIN')` | `tenantProvision.ts` line 85 | Explicit SUPER_ADMIN role enforced; 403 if role absent or mismatched |
+| 4 — Inline fail-fast | `if (!request.isAdmin \|\| !request.adminId) return 403` | `tenantProvision.ts` lines 92–96 | Defense-in-depth before any service invocation |
+
+### C — Rule → Evidence Mapping
+
+| Rule | Evidence |
+|---|---|
+| Explicit SUPER_ADMIN enforcement | `requireAdminRole('SUPER_ADMIN')` declared as `preHandler` on route; `requireAdminRole` in `auth.ts` rejects 403 if `adminRole` not in `allowedRoles` |
+| Plugin authentication | `fastify.addHook('onRequest', adminAuthMiddleware)` — applies to all routes in plugin; `adminAuthMiddleware` calls `request.adminJwtVerify()` and sets `isAdmin`/`adminId`/`adminRole` |
+| Realm integrity | `/api/control` in `ENDPOINT_REALM_MAP` maps to `admin`; enforced by `realmGuard.ts` |
+| Defense in depth | Inline `if (!request.isAdmin \|\| !request.adminId)` guard fires before `provisionTenant()` is called |
+| Export safety | Only export is `export default tenantProvisionRoutes` (Fastify plugin); no standalone callable functions exported |
+| Prior uncertainty resolved | Previous inspection was 150 lines only; full 187-line read + direct dependency inspection (`auth.ts`) confirms posture completely |
+
+### D — Governance Narrative
+
+U-002 is now fully closed. The prior uncertainty around `admin/tenantProvision.ts` auth posture was caused by partial inspection only. Full verification confirms that tenant provisioning is protected by explicit SUPER_ADMIN enforcement at the route level via `requireAdminRole('SUPER_ADMIN')`, backed by plugin-level admin JWT authentication, admin realm binding via `realmGuard.ts`, and an inline fail-fast admin-context check before any service invocation. No bypass surface exists and no implementation changes were required.
+
+### E — Audit-Safe Conclusion
+
+| Gate | Result |
+|---|---|
+| Read completeness | PASS — full 187-line file read + `auth.ts` dependency inspected |
+| Auth posture clarity | PASS — four independent enforcement layers confirmed; SUPER_ADMIN explicit |
+| Evidence quality | PASS — all findings grounded in actual code; no CI assumption relied upon |
+| Governance usefulness | PASS — gap closed with clear evidence; no follow-up required |
+
+**Overall audit conclusion: COMPLIANT**
+
+**U-002 / VER-009: CLOSED. Await next approved verification unit (VER-010 / U-004).**
+
+*Updated: 2026-03-13 — U-002/VER-009 `admin/tenantProvision.ts` auth guard closure recorded (Section 9.28); PASS; GOVERNANCE-SYNC-U-002 complete; await VER-010*
