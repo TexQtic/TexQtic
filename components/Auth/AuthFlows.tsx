@@ -1,15 +1,16 @@
+/**
+ * AuthFlows — tenant and admin login forms.
+ *
+ * TECS-FBW-AUTH-001 (2026-03-13):
+ *   Removed hardcoded SEEDED_TENANTS picker.
+ *   Tenant login now resolves tenantId from user-entered slug via
+ *   GET /api/public/tenants/resolve at submit time.
+ *   No seeded tenant list remains in the production path.
+ */
 import React, { useState } from 'react';
-import { login } from '../../services/authService';
+import { login, resolveTenantBySlug } from '../../services/authService';
+import type { ResolvedTenant } from '../../services/authService';
 import type { AuthRealm } from '../../services/apiClient';
-
-// Flip to true locally to inspect login payloads without exposing tokens
-const _AUTH_DEBUG = false;
-
-// TODO: Replace with dynamic GET /api/public/tenants/resolve?slug=<slug> once that endpoint exists.
-const SEEDED_TENANTS = [
-  { slug: 'acme-corp', id: 'faf2e4a7-5d79-4b00-811b-8d0dce4f4d80', label: 'Acme Corporation' },
-  { slug: 'white-label-co', id: '960c2e3b-64cf-4ba8-88d1-4e8f72d61782', label: 'White Label Co' },
-] as const;
 
 interface AuthFormProps {
   realm: 'TENANT' | 'CONTROL_PLANE';
@@ -22,8 +23,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Explicit <string> type so onChange (e.target.value: string) is assignable to the setter
-  const [selectedTenantId, setSelectedTenantId] = useState<string>(SEEDED_TENANTS[0].id);
+  // TECS-FBW-AUTH-001: slug entered by user; resolved to tenantId at submit time.
+  const [tenantSlug, setTenantSlug] = useState('');
+  const [resolvedTenant, setResolvedTenant] = useState<ResolvedTenant | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,15 +38,31 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
 
     const cleanEmail = email.trim();
 
-    if (!isAdminRealm && !selectedTenantId) {
-      setError('Please select a tenant.');
+    if (!isAdminRealm && !tenantSlug.trim()) {
+      setError('Please enter your organisation slug.');
       setLoading(false);
       return;
     }
 
     try {
+      // TECS-FBW-AUTH-001: resolve slug → tenantId inline before login.
+      // Inline resolution (not pre-cached) ensures a fresh lookup on every submit.
+      let resolvedId: string | undefined;
+      if (!isAdminRealm) {
+        let resolved: ResolvedTenant;
+        try {
+          resolved = await resolveTenantBySlug(tenantSlug.trim());
+        } catch {
+          setError('Organisation not found. Check the slug and try again.');
+          setLoading(false);
+          return;
+        }
+        setResolvedTenant(resolved);
+        resolvedId = resolved.tenantId;
+      }
+
       const response = await login(
-        { email: cleanEmail, password, tenantId: isAdminRealm ? undefined : selectedTenantId },
+        { email: cleanEmail, password, tenantId: resolvedId },
         realm as AuthRealm
       );
       onSuccess(response);
@@ -128,25 +146,29 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
           {!isAdminRealm && (
             <div className="space-y-1">
               <label
-                htmlFor="tenant"
+                htmlFor="tenant-slug"
                 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
               >
-                Tenant
+                Organisation Slug
               </label>
-              {/* TODO: Replace with dynamic tenant resolver once GET /api/public/tenants/resolve exists */}
-              <select
-                id="tenant"
+              <input
+                id="tenant-slug"
+                type="text"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                value={selectedTenantId}
-                onChange={e => setSelectedTenantId(e.target.value)}
+                placeholder="e.g. acme-corp"
+                value={tenantSlug}
+                onChange={e => {
+                  setTenantSlug(e.target.value);
+                  setResolvedTenant(null);
+                }}
                 disabled={loading}
-              >
-                {SEEDED_TENANTS.map(t => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+                autoComplete="organization"
+              />
+              {resolvedTenant && (
+                <p className="text-xs text-emerald-600 pt-1">
+                  ✓ {resolvedTenant.name}
+                </p>
+              )}
             </div>
           )}
 

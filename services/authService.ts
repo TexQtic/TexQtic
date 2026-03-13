@@ -111,6 +111,31 @@ export async function login(
   return payload;
 }
 
+// ─── Tenant Resolver (TECS-FBW-AUTH-001) ─────────────────────────────────────
+
+/**
+ * Resolved tenant identity returned by the public resolver endpoint.
+ * Used by AuthFlows.tsx to obtain tenantId before login submission.
+ */
+export interface ResolvedTenant {
+  tenantId: string;
+  slug: string;
+  name: string;
+}
+
+/**
+ * Resolve a tenant slug to canonical identity required for tenant login.
+ * TECS-FBW-AUTH-001 (2026-03-13)
+ * Route: GET /api/public/tenants/resolve?slug=<slug>
+ * Public endpoint — no auth required.
+ * Throws on unknown slug or validation failure (caller surfaces inline error).
+ */
+export async function resolveTenantBySlug(slug: string): Promise<ResolvedTenant> {
+  return get<ResolvedTenant>(`/api/public/tenants/resolve?slug=${encodeURIComponent(slug)}`);
+}
+
+// ─── Session management ───────────────────────────────────────────────────────
+
 /**
  * Logout (clear local session)
  */

@@ -9,6 +9,7 @@ import { tenantResolutionHook } from './hooks/tenantResolutionHook.js';
 import authRoutes from './routes/auth.js';
 import controlRoutes from './routes/control.js';
 import tenantRoutes from './routes/tenant.js';
+import publicRoutes from './routes/public.js';
 import adminCartSummariesRoutes from './routes/admin-cart-summaries.js';
 import aiRoutes from './routes/ai.js';
 import tenantProvisionRoutes from './routes/admin/tenantProvision.js';
@@ -142,6 +143,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 });
 
 // Import routes
+await fastify.register(publicRoutes, { prefix: '/api/public' });
 await fastify.register(authRoutes, { prefix: '/api/auth' });
 await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });

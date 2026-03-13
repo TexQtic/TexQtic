@@ -17,6 +17,7 @@ import { sendError } from '../utils/response.js';
  */
 const ENDPOINT_REALM_MAP: Record<string, 'tenant' | 'admin' | 'public'> = {
   '/api/auth': 'public',
+  '/api/public': 'public',
   '/api/control': 'admin',
   '/api/tenant': 'tenant',
   '/api/me': 'tenant',
