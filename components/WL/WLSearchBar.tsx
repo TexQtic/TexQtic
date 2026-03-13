@@ -18,7 +18,7 @@
  *   ❌ Search analytics — out of scope for PW5-WL4
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 
 interface WLSearchBarProps {
   /** Current search query value — controlled by WLStorefront. */
@@ -28,7 +28,10 @@ interface WLSearchBarProps {
   placeholder?: string;
 }
 
-export function WLSearchBar({
+// PW5-WL7: React.memo prevents re-render when WLStorefront re-renders for state
+// unrelated to search (e.g. activeCategory, selectedItemId changes).
+// onChange is setSearchQuery from useState — stable across renders.
+export const WLSearchBar = memo(function WLSearchBar({
   value,
   onChange,
   placeholder = 'Search products…',
@@ -97,4 +100,4 @@ export function WLSearchBar({
       )}
     </div>
   );
-}
+});

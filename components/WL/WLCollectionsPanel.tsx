@@ -28,7 +28,7 @@
  *   ❌ Search — out of scope
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 
 export interface CategoryCount {
   name: string;
@@ -41,7 +41,11 @@ interface WLCollectionsPanelProps {
   onSelectCategory: (cat: string | null) => void;
 }
 
-export function WLCollectionsPanel({
+// PW5-WL7: React.memo prevents re-render when WLStorefront re-renders for state
+// unrelated to categories (e.g. searchQuery keystrokes).
+// categories is memoized in WLStorefront; onSelectCategory is setActiveCategory
+// (stable useState setter); activeCategory is a primitive string|null.
+export const WLCollectionsPanel = memo(function WLCollectionsPanel({
   categories,
   activeCategory,
   onSelectCategory,
@@ -97,4 +101,4 @@ export function WLCollectionsPanel({
       </div>
     </nav>
   );
-}
+});

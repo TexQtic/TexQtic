@@ -1,5 +1,5 @@
 /**
- * ProductCard — WL Storefront (PW5-WL1 / PW5-WL3 / PW5-WL6)
+ * ProductCard — WL Storefront (PW5-WL1 / PW5-WL3 / PW5-WL6 / PW5-WL7)
  *
  * Renders a single tenant catalog item in the white-label storefront grid.
  *
@@ -9,34 +9,50 @@
  *   NO data fetching in this component — WLStorefront is the exclusive
  *   catalog data owner.
  *
- * Scope (PW5-WL1 / PW5-WL3 / PW5-WL6):
+ * Scope (PW5-WL1 / PW5-WL3 / PW5-WL6 / PW5-WL7):
  *   ✅ Display: name, SKU, price, MOQ, active status
  *   ✅ onSelect callback — triggers detail view in WLStorefront (PW5-WL3)
+ *              Accepts item id; ProductGrid passes the stable WLStorefront
+ *              handler directly without per-render wrapper (PW5-WL7).
  *   ✅ imageUrl  — rendered from existing CatalogItem field (PW5-WL6)
  *              Graceful placeholder shown when field is absent or broken.
  *              No additional fetch; field travels via existing catalog state.
+ *   ✅ React.memo — prevents re-render when parent re-renders but props are
+ *              unchanged (PW5-WL7). Effective because ProductGrid now passes
+ *              the stable handleSelectItem reference directly.
  *   ❌ category  — missing in current schema; safely omitted from grid card
  *   ❌ currency  — missing in current schema; safely omitted
  *   ❌ cart / checkout — out of scope (PW5-WL3+)
  */
 
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { CatalogItem } from '../../services/catalogService';
 
 interface ProductCardProps {
   item: CatalogItem;
-  /** PW5-WL3: callback to open product detail view (owned by WLStorefront). */
-  onSelect?: () => void;
+  /**
+   * PW5-WL3: callback to open product detail view (owned by WLStorefront).
+   * PW5-WL7: accepts item id so ProductGrid can pass the stable
+   * handleSelectItem reference without creating a per-render wrapper.
+   */
+  onSelect?: (id: string) => void;
 }
+
+// PW5-WL7: Module-level singleton avoids reconstructing Intl.NumberFormat
+// on every render. Locale is system-default (undefined) — same as before.
+const priceFormatter = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price);
+  return priceFormatter.format(price);
 }
 
-export function ProductCard({ item, onSelect }: ProductCardProps) {
+// PW5-WL7: React.memo prevents re-render when ProductGrid re-renders but
+// this card's props (item reference + onSelect reference) are unchanged.
+// Effective because ProductGrid passes the stable handleSelectItem directly.
+export const ProductCard = memo(function ProductCard({ item, onSelect }: ProductCardProps) {
   // PW5-WL6: track broken image without additional fetching.
   // imgError set true only if <img> fires onError (network/404/etc).
   const [imgError, setImgError] = useState(false);
@@ -44,10 +60,10 @@ export function ProductCard({ item, onSelect }: ProductCardProps) {
   return (
     <article
       className={`bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200 ${onSelect ? 'cursor-pointer' : ''}`}
-      onClick={onSelect}
+      onClick={onSelect ? () => onSelect(item.id) : undefined}
       role={onSelect ? 'button' : undefined}
       tabIndex={onSelect ? 0 : undefined}
-      onKeyDown={onSelect ? (e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(); } : undefined}
+      onKeyDown={onSelect ? (e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(item.id); } : undefined}
       aria-label={onSelect ? `View details for ${item.name}` : undefined}
     >
       {/* PW5-WL6: Product image — sourced from existing CatalogItem.imageUrl field.
@@ -124,4 +140,4 @@ export function ProductCard({ item, onSelect }: ProductCardProps) {
       </div>
     </article>
   );
-}
+});

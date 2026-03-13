@@ -20,7 +20,7 @@
  *   ❌ Cart / checkout — out of scope
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { CatalogItem } from '../../services/catalogService';
 import { ProductCard } from './ProductCard';
 
@@ -29,7 +29,8 @@ interface ProductGridProps {
   items: CatalogItem[];
   /**
    * PW5-WL3: Callback raised when a shopper selects a product card.
-   * Owned and handled by WLStorefront — no fetch occurs here.
+   * PW5-WL7: Passed directly to ProductCard as a stable reference;
+   * no inline wrapper created. ProductCard accepts the item id as argument.
    */
   onSelectItem?: (id: string) => void;
   /**
@@ -40,7 +41,9 @@ interface ProductGridProps {
   emptyMessage?: string;
 }
 
-export function ProductGrid({ items, onSelectItem, emptyMessage }: ProductGridProps) {
+// PW5-WL7: React.memo prevents re-render when WLStorefront re-renders for state
+// unrelated to grid data (searchFilteredItems / onSelectItem / emptyMessage).
+export const ProductGrid = memo(function ProductGrid({ items, onSelectItem, emptyMessage }: ProductGridProps) {
   // ── Empty ──────────────────────────────────────────────────────────────────────
   if (items.length === 0) {
     return (
@@ -58,7 +61,7 @@ export function ProductGrid({ items, onSelectItem, emptyMessage }: ProductGridPr
           <ProductCard
             key={item.id}
             item={item}
-            onSelect={onSelectItem ? () => onSelectItem(item.id) : undefined}
+            onSelect={onSelectItem}
           />
         ))}
       </div>
@@ -67,4 +70,4 @@ export function ProductGrid({ items, onSelectItem, emptyMessage }: ProductGridPr
       </p>
     </section>
   );
-}
+});
