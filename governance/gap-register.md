@@ -819,7 +819,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-OA-001 | OpenAPI Tenant Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
 | TECS-FBW-OA-002 | OpenAPI Control-Plane Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
 | TECS-FBW-AT-006 | Order Status UI Role Gating | CODEX | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-106 · 2026-03-07) | Wave 1 |
-| TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 5 |
+| TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | CODEX | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-TECS-FBW-AUTH-001 · 2026-03-13) | Wave 5 |
 | TECS-FBW-RLS-001 | RLS-Only Posture Governance | CODEX | MEDIUM | VERIFY_REQUIRED | Wave 0 |
 | TECS-FBW-PROV-001 | Tenant Provisioning Contract Mismatch | CONFLICT | HIGH | ✅ CLOSED (GOVERNANCE-SYNC-099 · 2026-03-06) | Wave 1 |
 
@@ -1025,10 +1025,18 @@ Implementation: getCurrentUser() called in Promise.all alongside orders fetch (s
 Files changed: components/Tenant/EXPOrdersPanel.tsx only · commit b01fcd3 · typecheck EXIT 0 · lint EXIT 0  
 Backend route tenant.ts: unchanged · No App.tsx change · Envelope preserved: 1 file only.
 
-**TECS-FBW-AUTH-001 — Tenant Login Hardcoded Seeded Picker**  
-Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 5 (if backend route design required)  
-Finding: AuthFlows.tsx tenant picker uses seeded/hardcoded tenant IDs; TODO comment references non-existent /api/public/tenants/resolve endpoint.  
-Next action: Confirm seeded picker still present; determine if resolver endpoint is planned.
+**TECS-FBW-AUTH-001 — Tenant Login Hardcoded Seeded Picker (VER-006 PASS · GOVERNANCE-SYNC-TECS-FBW-AUTH-001 · 2026-03-13)**  
+Source: NEW_IN_CODEX · Severity: MEDIUM · Status: ✅ CLOSED · Wave: 5  
+VER-006 executed: 2026-03-13 · Verdict: FAIL (SEEDED_TENANTS constant confirmed present; /api/public/tenants/resolve absent) → implementation immediately authorized.  
+Finding confirmed: `SEEDED_TENANTS` constant with 2 hardcoded UUIDs active in AuthFlows.tsx; `selectedTenantId` state defaulted to acme-corp UUID; GET /api/public/tenants/resolve did not exist.  
+Implementation: commit 476b3d3 — 5 files, 151 insertions.  
+  - server/src/routes/public.ts (NEW): GET /tenants/resolve?slug=\<slug\>; Zod slug validation (`^[a-z0-9-]+$`, max 100); `prisma.tenant.findUnique({where:{slug},select:{id,slug,name}})`; 404 TENANT_NOT_FOUND / 400 VALIDATION_ERROR  
+  - server/src/index.ts: import + register publicRoutes at /api/public prefix (before auth routes)  
+  - server/src/middleware/realmGuard.ts: `'/api/public': 'public'` added to ENDPOINT_REALM_MAP  
+  - services/authService.ts: `ResolvedTenant` interface + `resolveTenantBySlug()` helper added  
+  - components/Auth/AuthFlows.tsx: SEEDED_TENANTS removed; slug text input added; resolver called before login(); resolved tenant name confirmed in UI  
+Validation: typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · git diff --name-only: 5 files only (all allowlisted).  
+Admin realm flow: completely untouched.
 
 **TECS-FBW-RLS-001 — RLS-Only Posture Governance Clarification**  
 Source: NEW_IN_CODEX · Severity: MEDIUM · Status: VERIFY_REQUIRED · Wave: 0 (governance statement only; no code change)  
@@ -1064,7 +1072,7 @@ Next: VER-002 (TECS-FBW-020 — WL Admin invite shell routing).
 | VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts actual routes | ⏳ Pending |
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts actual routes | ⏳ Pending |
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx role-gating on status transition buttons | ✅ CLOSED — 2026-03-07 · Verdict: FAIL · All 3 action buttons visible to all roles; no canManageOrders gate; file header explicitly stated server-only gate · TECS-FBW-AT-006 → VALIDATED → implemented (GOVERNANCE-SYNC-106 · commit b01fcd3) |
-| VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx — confirm seeded picker + TODO resolver ref | ⏳ Pending |
+| VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx — confirm seeded picker + TODO resolver ref | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
 | VER-007 | TECS-FBW-RLS-001 | Draft system-level governance statement on RLS-only posture | ⏳ Pending |
 | VER-008 | U-001 (Copilot) | Locate /api/ai/* route file; confirm registration + auth posture | ⏳ Pending |
 | VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard in full | ⏳ Pending |

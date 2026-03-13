@@ -349,7 +349,7 @@ Evidence references are quoted from the source document using section + short an
 | Source section | §9.2 "Tenant login tenant selection" | Not identified |
 | Key anchor | "auth form → seeded tenant IDs → login call; TODO references non-existent /api/public/tenants/resolve" | Not inspected |
 | Merged classification | `NEW_IN_CODEX` |
-| Merged status | `VERIFY_REQUIRED` |
+| Merged status | ~~`VERIFY_REQUIRED`~~ → **`IMPLEMENTED — FULLY CLOSED`** · VER-006: FAIL (2026-03-13) · implementation: commit 476b3d3 · GOVERNANCE-SYNC-TECS-FBW-AUTH-001 |
 | Confidence | HIGH |
 
 ---
@@ -412,7 +412,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-OA-001 | OpenAPI Tenant Drift | Contract governance | §7.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
 | TECS-FBW-OA-002 | OpenAPI Control-Plane Drift | Contract governance | §7.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 0 | Must inventory before wave close |
 | TECS-FBW-AT-006 | Order Status UI Role Gating | Auth/UX | §8.1 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Non-admin sees PATCH buttons they'll be 403'd on |
-| TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | Auth discovery | §9.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | HIGH | Wave 5 | TODO refs /api/public/tenants/resolve |
+| TECS-FBW-AUTH-001 | Tenant Login Hardcoded Picker | Auth discovery | §9.2 | Not inspected | NEW_IN_CODEX | ✅ CLOSED (GOVERNANCE-SYNC-TECS-FBW-AUTH-001 · 2026-03-13) | HIGH | Wave 5 | VER-006 FAIL → implemented commit 476b3d3 |
 | TECS-FBW-RLS-001 | RLS-Only Posture Governance | Tenancy doctrine | §8.2 | Not inspected | NEW_IN_CODEX | VERIFY_REQUIRED | MEDIUM | Wave 0 | Intentional per Q2 §12.2; system-wide clarification needed |
 | TECS-FBW-PROV-001 | Tenant Provisioning Contract | Control-plane | §4.1 MISMATCH | §3 ✅ Wired | CROSS_REPORT_CONFLICT → RESOLVED | ✅ CLOSED (GOVERNANCE-SYNC-099 · 2026-03-06) | HIGH | Wave 1 | Implemented: request {orgName,primaryAdminEmail,primaryAdminPassword}; response flat {orgId,slug,userId,membershipId}; typecheck+lint EXIT 0 |
 
@@ -424,7 +424,7 @@ Evidence references are quoted from the source document using section + short an
 |---|---|---|
 | VALIDATED | 13 | FBW-001/002/003/004/005/006/007/008/011/012/015/PROV-001 + STUB-001 |
 | PROVISIONAL | 6 | FBW-014/016/017/018/MOQ + implicitly FBW-013 before product decision |
-| VERIFY_REQUIRED | 7 | FBW-020/OA-001/OA-002/AT-006/AUTH-001/RLS-001 + FBW-018 (VER-001 ✅ CLOSED) |
+| VERIFY_REQUIRED | 6 | FBW-020/OA-001/OA-002/AT-006/RLS-001 + FBW-018 (VER-001 ✅ CLOSED) · AUTH-001 → CLOSED 2026-03-13 |
 | DEFERRED | 3 | FBW-013/019/STUB-001 |
 | REQUIRES_BACKEND_DESIGN | 2 | FBW-AIGOVERNANCE/ADMINRBAC |
 
@@ -452,7 +452,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | VER-003 | TECS-FBW-OA-001 | Enumerate openapi.tenant.json paths vs tenant.ts route list | Codex found drift; Copilot did not inspect |
 | VER-004 | TECS-FBW-OA-002 | Enumerate openapi.control-plane.json paths vs control.ts route list | Codex found drift; Copilot did not inspect |
 | VER-005 | TECS-FBW-AT-006 | Read EXPOrdersPanel.tsx — are status-transition action buttons gated by user role from auth context? | Codex found UX exposure; Copilot confirmed backend PATCH wiring | ✅ CLOSED — 2026-03-07 · Verdict: FAIL · All 3 buttons shown to all users; no role source in Props; server-gate-only design confirmed in file header · TECS-FBW-AT-006 → CLOSED (GOVERNANCE-SYNC-106 · commit b01fcd3) |
-| VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx tenant picker — is there a TODOref to /api/public/tenants/resolve? Is seeding still present? | Codex found; Copilot did not inspect |
+| VER-006 | TECS-FBW-AUTH-001 | Read AuthFlows.tsx tenant picker — is there a TODOref to /api/public/tenants/resolve? Is seeding still present? | ✅ CLOSED — 2026-03-13 · Verdict: FAIL · SEEDED_TENANTS confirmed; resolver absent → TECS-FBW-AUTH-001 implemented (commit 476b3d3) · gap CLOSED |
 | VER-007 | TECS-FBW-RLS-001 | Confirm system-wide governance stance on RLS-only (no app-layer where: {org_id}) for tenant routes | Q2 §12.2 documents decision for memberships; needs system-level statement |
 | VER-008 | U-001 (Copilot) | Locate /api/ai route file — confirm registration point and auth posture | Copilot §10 U-001: not found in tenant.ts or control.ts |
 | VER-009 | U-002 (Copilot) | Read admin/tenantProvision.ts auth guard fully | Copilot §10 U-002: only 150 lines inspected; GOVERNANCE-SYNC-035 CI guard confirms SUPER_ADMIN gating as partial evidence |
@@ -464,12 +464,12 @@ Items that cannot proceed to implementation without targeted inspection:
 
 | Wave | Items | Priority basis |
 |---|---|---|
-| Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 (✅ CLOSED · 2026-03-06 · FAIL); VER-003 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001 | VER-001 closed (FAIL · PROV-001 promoted); VER-002 closed (FAIL · FBW-020 promoted); remaining VER items pending; governance-only; no product code |
+| Wave 0 — Reconciliation + Verification | VER-001 (✅ CLOSED · 2026-03-06 · FAIL); VER-002 (✅ CLOSED · 2026-03-06 · FAIL); VER-003 through VER-010; TECS-FBW-OA-001/OA-002; TECS-FBW-AT-006; TECS-FBW-AUTH-001; TECS-FBW-RLS-001 | VER-001 closed (FAIL · PROV-001 promoted); VER-002 closed (FAIL · FBW-020 promoted); VER-006 closed (FAIL · AUTH-001 implemented · commit 476b3d3 · 2026-03-13); remaining VER items pending; governance-only; no product code |
 | Wave 1 — Runtime/Credibility Fixes | TECS-FBW-011 (basePrice ✅ CLOSED · GOVERNANCE-SYNC-096); TECS-FBW-PROV-001 (✅ CLOSED · GOVERNANCE-SYNC-099 · 2026-03-06); TECS-FBW-014 (post-checkout); TECS-FBW-008 (WL Settings domain dead); TECS-FBW-017 (category grouping); TECS-FBW-MOQ (422 UX) | VALIDATED or PROVISIONAL; small frontend-only changes; no new backend routes |
 | Wave 2 — Backend-Complete Ops Mutations | TECS-FBW-001 (finance/compliance/dispute mutations) | RECONFIRMED; backend verified; additive frontend only |
 | Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002-A (trades control-plane ✅ CLOSED · GOVERNANCE-SYNC-110); TECS-FBW-002-B (trades tenant 🚫 BLOCKED — no GET /api/tenant/trades backend route); TECS-FBW-003-A (escrow tenant read ✅ CLOSED · GOVERNANCE-SYNC-111); TECS-FBW-003-B (escrow mutations 🔵 FUTURE SCOPE); TECS-FBW-006-A (escalations ✅ CLOSED · GOVERNANCE-SYNC-112); TECS-FBW-006-B (escalation mutations 🔵 FUTURE SCOPE); TECS-FBW-004 (settlements ✅ CLOSED · GOVERNANCE-SYNC-113) | RECONFIRMED; high governance impact; 🏁 WAVE 3 GATE CLOSED — all unblocked units complete; TECS-FBW-002-B remains blocked on backend prerequisite |
 | Wave 4 — Extended Exposure | TECS-FBW-005 (certifications ✅ CLOSED GOVERNANCE-SYNC-114 · 2026-03-07); TECS-FBW-015 (traceability CRUD ✅ CLOSED GOVERNANCE-SYNC-115 · 2026-03-07 · df2cc638); TECS-FBW-007 (cart summaries ✅ CLOSED GOVERNANCE-SYNC-116 · 2026-03-08); TECS-FBW-016 (tenant audit logs ✅ CLOSED GOVERNANCE-SYNC-117 · 2026-03-08) | 🏁 WAVE 4 COMPLETE — all 4 units closed (FBW-005 ✅ · FBW-015 ✅ · FBW-007 ✅ · FBW-016 ✅) |
-| Wave 5 — Design-Required | TECS-FBW-012 (edit access); TECS-FBW-ADMINRBAC; TECS-FBW-AIGOVERNANCE; TECS-FBW-013 (B2B quote); TECS-FBW-AUTH-001 (if confirmed as backend design need) | REQUIRES_BACKEND_DESIGN or DEFERRED |
+| Wave 5 — Design-Required | TECS-FBW-012 (edit access); TECS-FBW-ADMINRBAC; TECS-FBW-AIGOVERNANCE; TECS-FBW-013 (B2B quote); TECS-FBW-AUTH-001 (✅ CLOSED · 2026-03-13 · implemented commit 476b3d3) | REQUIRES_BACKEND_DESIGN or DEFERRED |
 
 ---
 
