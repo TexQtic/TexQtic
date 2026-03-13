@@ -1606,3 +1606,62 @@ PW5-WL5 activates cart mutation from the WL storefront product detail surface us
 PW5-WL5 successfully activates the WL storefront cart foundation via minimal, targeted changes to exactly two WL component files. The unit reuses the existing CartContext contract (CASE A), preserves the constitutional single-fetch storefront architecture, maintains D-017-A tenant isolation, and passes all seven verification gates. No tenant isolation, schema, backend, or governance boundaries were altered. **PW5-WL5 FULLY CLOSED. WL1–WL5 tranche complete. Next: PW5-WL6 (Product Images).**
 
 *Updated: 2026-03-13 — PW5-WL5 cart/checkout foundation closure recorded (Section 9.24); PW5-WL5 FULLY CLOSED; WL1–WL5 all COMPLETE; CASE A CartContext reuse confirmed; no backend/schema/tenant-isolation changes · commit c40eb64 · verification PASS · next unit: PW5-WL6 (GOVERNANCE-SYNC-PW5-WL5-GOV)*
+
+---
+
+## Section 9.25 — PW5-WL6 Product Images
+
+**Unit:** PW5-WL6  
+**Name:** Product Images  
+**Implementation commit:** e8f5d551ba220c880630b132bc00af07012fc042  
+**Verification:** PW5-WL6-VERIFY — PASS — 2026-03-13  
+**Governance sync:** GOVERNANCE-SYNC-PW5-WL6-GOV — 2026-03-13
+
+### A — Discovery Result
+
+**CASE A — Existing safe image contract reused.**
+
+`CatalogItem.imageUrl?: string` was already present in `services/catalogService.ts` (confirmed present since commit c40eb64 — pre-WL6 baseline). The field travels through the existing single catalog fetch in `WLStorefront` and arrives at `ProductCard` and `WLProductDetailPage` via props. No new fetching, no schema change, no backend widening, and no new service contract was required.
+
+### B — Implementation Summary
+
+| File | Change |
+|---|---|
+| `components/WL/ProductCard.tsx` | `useState` added; `imgError` local state; `h-40` image container with `<img loading="lazy" alt={item.name} onError>` when `imageUrl` present; SVG placeholder (`aria-hidden="true"`) when absent or broken |
+| `components/WL/WLProductDetailPage.tsx` | `imgError` local state added; `h-64` primary image surface before existing header; `<img loading="eager" alt={item.name} onError>`; SVG placeholder at `h-16 w-16`; JSDoc updated |
+
+All other WL, backend, schema, migration, seed, RLS, governance, and application files unchanged.
+
+### C — Gap Status
+
+| ID | Description | PW5-WL6 Status |
+|---|---|---|
+| CAT-SCHEMA-001 | `imageUrl` historical observation | NON-BLOCKING — `CatalogItem.imageUrl?: string` already present as optional field in frontend contract; WL6 rendering uses it as-is; DB-column presence irrelevant to this rendering unit; observation retained as historical record only |
+| CAT-SCHEMA-002 | `moq?: number` optional | NON-BLOCKING — unchanged |
+| CAT-SCHEMA-003 | `currency` not rendered | NON-BLOCKING — unchanged |
+
+No new CAT-SCHEMA IDs introduced. PW5-WL6 introduces no new gaps.
+
+### D — Architectural Compliance Record
+
+| Rule | Evidence |
+|---|---|
+| Single-fetch storefront | `getCatalogItems` in `WLStorefront` only (lines 52+107); absent from `ProductCard`, `WLProductDetailPage`, `ProductGrid`; image rendering introduces no network activity |
+| No duplicate requests | `onError` fires → `setImgError(true)` (local state); no fetch; no retry; no media side-channel |
+| Tenant isolation (D-017-A) | No `tenantId` in functional code of any touched file; tenant context remains JWT/server-derived exclusively |
+| Schema stability | No Prisma/schema/migration/seed/RLS files in implementation commit |
+| Backend stability | No `server/` files in implementation commit; `CatalogItem.imageUrl` pre-existed in frontend type contract |
+| Presentational purity | `ProductCard` and `WLProductDetailPage` remain data-fetching-free; image rendering is prop/state driven only |
+| Build quality | `tsc --noEmit` clean; `eslint --max-warnings=0` clean; `git show --stat e8f5d55`: 2 files (79 insertions / 6 deletions) |
+
+### E — Doctrine Alignment Note
+
+PW5-WL6 activates product imagery in the WL storefront by reusing the pre-existing `CatalogItem.imageUrl` contract already available in the catalog data path. The unit adds image rendering to grid and detail surfaces with bounded local fallback handling for absent or broken images, without expanding backend or schema scope. The constitutional single-fetch storefront architecture remains intact, tenant identity stays exclusively server/JWT-derived, and verification passed across all gates.
+
+No seller/admin/media-management boundary was widened. No finance/settlement/AI-governance/back-office doctrine was expanded. Image rendering belongs to the storefront experience layer. No new doctrine entries are introduced in this unit.
+
+### F — Audit-Safe Conclusion
+
+PW5-WL6 successfully activates WL product imagery via minimal, targeted changes to exactly two WL component files. The unit reuses the existing `CatalogItem.imageUrl` field (CASE A), preserves the constitutional single-fetch storefront architecture, maintains D-017-A tenant isolation, and passes all seven verification gates. No tenant isolation, schema, backend, or governance boundaries were altered. **PW5-WL6 FULLY CLOSED. WL1–WL6 tranche complete. Next: PW5-WL7 (Storefront Performance Optimizations).**
+
+*Updated: 2026-03-13 — PW5-WL6 product images closure recorded (Section 9.25); PW5-WL6 FULLY CLOSED; WL1–WL6 all COMPLETE; CASE A CatalogItem.imageUrl reuse confirmed; no backend/schema/tenant-isolation changes · commit e8f5d55 · verification PASS · next unit: PW5-WL7 (GOVERNANCE-SYNC-PW5-WL6-GOV)*
