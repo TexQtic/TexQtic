@@ -21,6 +21,7 @@ const ENDPOINT_REALM_MAP: Record<string, 'tenant' | 'admin' | 'public'> = {
   '/api/control': 'admin',
   '/api/tenant': 'tenant',
   '/api/me': 'tenant',
+  '/api/ai': 'tenant',
   '/api/cart': 'tenant',
   '/api/catalog': 'tenant',
   '/health': 'public',

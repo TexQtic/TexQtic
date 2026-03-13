@@ -444,9 +444,9 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/ai/health
-   * AI service health check
+   * AI service health check — tenant-auth protected (VER-008 remediation)
    */
-  fastify.get('/health', async (_request, reply) => {
+  fastify.get('/health', { onRequest: [tenantAuthMiddleware] }, async (_request, reply) => {
     return sendSuccess(reply, {
       status: genAI ? 'operational' : 'degraded',
       provider: 'gemini-1.5-flash',
