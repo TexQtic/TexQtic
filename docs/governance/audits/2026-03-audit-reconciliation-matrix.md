@@ -1994,7 +1994,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 |---|---|---|
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | NOT CLOSED — backend design gate preserved; no change in this unit |
 | AI_GOV-BACKEND-001 | AiGovernance.tsx derives from tenants endpoint; no dedicated AI route | OPEN — design gate; unchanged by this baseline |
-| D-002 | AI domain events absent from KnownEventName | OPEN — addressed by PW5-AI-EVENT-DOMAIN (proposed, not authorized) |
+| D-002 | AI domain events absent from KnownEventName | **CLOSED** — PW5-AI-EVENT-DOMAIN implemented and verified (commit dd18957 · 2026-03-13); `AUDIT_ACTION_TO_EVENT_NAME` not yet mapped (emitter wiring = PW5-AI-EMITTER, open) |
 | D-001, D-005 | TIS monolith + PII redaction | OPEN — addressed together by PW5-AI-TIS-EXTRACT (proposed, not authorized) |
 | D-004 | No per-tenant rate limiting | OPEN — addressed by PW5-AI-RATE-LIMIT (proposed, not authorized) |
 | D-006 | reasoning_logs idempotency_key absent | OPEN — addressed by PW5-AI-IDEMPOTENCY (proposed, not authorized; schema migration required) |
@@ -2041,3 +2041,112 @@ The following were **NOT performed** in this unit:
 **Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
 
 **PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. No implementation is authorized until separate execution units are approved. Next proposed unit: PW5-AI-EVENT-DOMAIN.**
+
+---
+
+## PW5-AI-EVENT-DOMAIN — AI Event Domain Registration — IMPLEMENTATION COMPLETE / VERIFIED
+
+**Governance sync:** GOVERNANCE-SYNC-PW5-AI-EVENT-DOMAIN | **Date:** 2026-03-13 | **Type:** Implementation + Verification Closure
+
+**Verification result:** VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE
+
+**Commit:** dd18957 — `feat(events): register AI event domain (inference + vector)`
+
+### A — Unit Scope and Classification
+
+| Attribute | Value |
+|---|---|
+| Unit type | TECS Implementation |
+| Execution unit | PW5-AI-EVENT-DOMAIN |
+| Predecessor | PW5-AI-PLAN (planning baseline, 2026-03-13) |
+| Status | IMPLEMENTATION COMPLETE |
+| Verification | VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE |
+| Commit | dd18957 |
+
+### B — What Was Implemented
+
+| File | Change Type | Description |
+|---|---|---|
+| `server/src/lib/events.ts` | MODIFIED | `KnownEventName` union extended with 9 AI event names; `knownEventEnvelopeSchema` Zod enum extended with same 9 names (exact string alignment confirmed) |
+| `server/src/events/eventSchemas.ts` | CREATED | 9 Zod payload schemas; `EVENT_PAYLOAD_SCHEMAS: Partial<Record<KnownEventName, z.ZodTypeAny>>`; `validateEventPayload()` helper; all schemas use `.passthrough()` for forward compatibility |
+
+**AI event names registered (9 total):**
+
+| Domain | Event Name |
+|---|---|
+| AI Inference | `ai.inference.generate` |
+| AI Inference | `ai.inference.error` |
+| AI Inference | `ai.inference.budget_exceeded` |
+| AI Inference | `ai.inference.pii_redacted` |
+| AI Inference | `ai.inference.pii_leak_detected` |
+| AI Inference | `ai.inference.cache_hit` |
+| AI Vector | `ai.vector.upsert` |
+| AI Vector | `ai.vector.delete` |
+| AI Vector | `ai.vector.query` |
+
+### C — Scope Discipline (Verified)
+
+| Area | Status |
+|---|---|
+| `AUDIT_ACTION_TO_EVENT_NAME` | NOT MODIFIED — intentional; emission wiring is PW5-AI-EMITTER |
+| AI event emitters | NOT ADDED |
+| Projection handlers | NOT ADDED |
+| Routes | NOT MODIFIED |
+| RLS policies | NOT MODIFIED |
+| Prisma schema / migrations | NOT MODIFIED |
+| `ai.ts` | NOT TOUCHED |
+| Frontend code | NOT TOUCHED |
+| `validateEventPayload()` wired into runtime | NOT DONE — intentional; not a defect |
+
+### D — Integration Safety
+
+| Check | Result |
+|---|---|
+| Existing `tenant.*` / `team.*` / `marketplace.cart.*` events preserved | ✅ PASS — all prior names unchanged in `KnownEventName` and `knownEventEnvelopeSchema` |
+| `KnownEventName` ↔ `knownEventEnvelopeSchema` alignment | ✅ PASS — all 9 AI names present in both; exact string match confirmed |
+| `validateEventPayload()` safe for non-AI events | ✅ PASS — `if (!schema) return payload;` passthrough; no behavioral impact on existing events |
+| No unauthorized behavioral change in emission path | ✅ PASS — `maybeEmitEventFromAuditEntry()` unchanged; `validateEventPayload()` has no callers |
+| EventEnvelope compatibility | ✅ PASS — AI event names pass `knownEventEnvelopeSchema.parse()` (Zod enum includes all 9); payload validated by `z.record(z.any())` in envelope schema |
+
+### E — Validation Gates
+
+| Gate | Command | Result |
+|---|---|---|
+| Type check | `pnpm typecheck` (`tsc --noEmit`) | ✅ PASS — zero output (zero errors) |
+| Lint | `pnpm lint` | ✅ PASS — 0 errors; 108 warnings all pre-existing; no warnings in changed files |
+| Build | `pnpm build` (`tsc`) | ✅ PASS — zero output (zero errors) |
+
+### F — Defects
+
+None.
+
+### G — Follow-On Note (Preserved)
+
+`validateEventPayload()` is defined in `server/src/events/eventSchemas.ts` and is not currently imported or called anywhere in the runtime. This is intentional per the unit boundary established in PW5-AI-EVENT-DOMAIN. The function is infrastructure-ready but not yet active.
+
+AI event emission remains a separate TECS unit: **PW5-AI-EMITTER**.
+
+Downstream AI event projections and consumers remain future work until emission exists.
+
+### H — Gap Register Delta
+
+| Gap / Drift ID | Prior Status | New Status |
+|---|---|---|
+| D-002 (AI domain events absent from KnownEventName) | OPEN | ✅ CLOSED (registry layer) — emitter path open as PW5-AI-EMITTER |
+
+### I — Audit-Safe Conclusion
+
+| Gate | Result |
+|---|---|
+| Unit scope | PASS — exactly 2 files changed; both within authorized event-system boundary |
+| Registry correctness | PASS — all 9 AI event names in `KnownEventName` union and `knownEventEnvelopeSchema` Zod enum; exact string alignment |
+| Payload schema coverage | PASS — all 9 AI events have Zod schemas; all registered in `EVENT_PAYLOAD_SCHEMAS` |
+| Scope discipline | PASS — no emitters, projections, routes, RLS, schema migrations, or audit mappings changed |
+| Integration safety | PASS — existing tenant/team/marketplace events unaffected; emission path unchanged |
+| No unauthorized widening | PASS — no behavioral change introduced into runtime |
+| Follow-on note classified correctly | PASS — `validateEventPayload()` unconnected; correctly classified as follow-on (not defect) |
+| Doctrine alignment | PASS — org_id/RLS posture unchanged; no routes added; no tenant isolation weakened |
+
+**Overall audit conclusion: IMPLEMENTATION COMPLETE / VERIFIED**
+
+**PW5-AI-EVENT-DOMAIN: CLOSED. AI event domain is now registry-ready. D-002 CLOSED (registry layer). Emitter wiring (PW5-AI-EMITTER) and downstream projection/consumer work remain open. Next proposed unit: PW5-AI-EMITTER.**
