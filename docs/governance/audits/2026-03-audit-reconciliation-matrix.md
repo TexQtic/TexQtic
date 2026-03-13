@@ -1525,4 +1525,84 @@ PW5-WL4 remains aligned with current TexQtic doctrine and dashboard separation. 
 
 PW5-WL4 successfully extends the WL storefront from browse/detail capability into search-driven discoverability without expanding backend scope. The unit preserves the constitutional single-fetch storefront architecture by keeping search entirely client-side and derived from existing catalog state. No tenant isolation, schema, or backend boundaries were altered. Verification passed across network, runtime, architecture, regression, and build-quality checks. **PW5-WL4 FULLY CLOSED.**
 
-*Updated: 2026-03-13 — PW5-WL4 product search verification closure recorded (Section 9.23); PW5-WL4 FULLY CLOSED; single-fetch architecture intact; no backend/schema/tenant-isolation changes · commit 25921ae · verification PASS · next unit: PW5-WL5 (GOVERNANCE-SYNC-PW5-WL4-GOV)*
+---
+
+## Section 9.24 — PW5-WL5: WL Cart / Checkout Foundation
+
+**Governance Sync:** GOVERNANCE-SYNC-PW5-WL5-GOV  
+**Date:** 2026-03-13  
+**Commit:** c40eb64  
+**Commit Message:** `feat(wl-storefront): implement PW5-WL5 cart foundation`  
+**Files Changed:** `components/WL/WLProductDetailPage.tsx` · `components/WL/WLStorefront.tsx` (2 files — WL components only)  
+**Discovery class:** CASE A — existing CartContext / cartService / Cart.tsx reused without modification
+
+### A — Implementation Summary
+
+PW5-WL5 activates the WL storefront cart integration. The disabled cart stub introduced in PW5-WL3 (`WLProductDetailPage.tsx`) is converted into a live handler by wiring the existing `CartContext.addToCart` function through a new optional `onAddToCart` prop.
+
+**`WLProductDetailPage.tsx` modified:**
+- `onAddToCart?: (catalogItemId: string, quantity: number) => Promise<void>` optional prop added
+- `quantity` state initialised to `Math.max(item.moq ?? 1, 1)` (MOQ floor enforced at init)
+- Decrement guard: `Math.max(minQty, q - 1)` prevents quantity dropping below MOQ
+- `adding` / `addSuccess` / `addError` feedback states for user-visible UX feedback
+- `handleAddToCart` async callback: calls `onAddToCart(item.id, quantity)` with error boundary
+- `addButtonLabel` pre-return `let` variable resolves `no-nested-ternary` ESLint rule
+- Button disabled on `adding || !item.active`; `onAddToCart` absent → disabled placeholder rendered
+- No service imports added; component remains purely presentational with prop-driven cart access
+
+**`WLStorefront.tsx` modified:**
+- `import { useCart } from '../../contexts/CartContext'` added
+- `const { addToCart } = useCart()` destructured at component top
+- `onAddToCart={addToCart}` passed to `WLProductDetailPage` in the detail render branch
+
+**Unchanged (CASE A reuse):**
+- `contexts/CartContext.tsx` — `CartProvider`, `useCart()`, `addToCart(catalogItemId, quantity)` reused as-is
+- `services/cartService.ts` — `AddToCartRequest = { catalogItemId, quantity }` (no tenantId — D-017-A)
+- `components/Cart/Cart.tsx` — full cart UI, checkout flow unchanged
+- `App.tsx` — `CartProvider` wrapping `EXPERIENCE` case already present
+
+### B — Acceptance Criteria Verification
+
+| Gate | Check | Result |
+|---|---|---|
+| Commit scope | Exactly 2 files (`components/WL/WLProductDetailPage.tsx` + `components/WL/WLStorefront.tsx`); no server/prisma/governance/schema files | PASS |
+| Catalog fetch isolation | No `getCatalogItems` reference in `WLProductDetailPage.tsx`; `WLStorefront` remains sole catalog fetch owner | PASS |
+| Tenant isolation (D-017-A) | `AddToCartRequest = { catalogItemId, quantity }` — no `tenantId`; `tenantId` absent from all WL component props and request bodies | PASS |
+| CartContext contract | `addToCart(catalogItemId: string, quantity: number): Promise<void>` via `useCart()`; `CartProvider` wraps EXPERIENCE case in `App.tsx`; CASE A backward-compat reuse confirmed | PASS |
+| MOQ floor | `quantity` state init: `Math.max(item.moq ?? 1, 1)`; decrement: `Math.max(minQty, q - 1)` prevents sub-MOQ; `?? 1` guards null/undefined `moq` | PASS |
+| Button states | Disabled on `adding \|\| !item.active`; `onAddToCart` absent → disabled placeholder; `addButtonLabel` let variable avoids nested ternary | PASS |
+| Build quality | `tsc --noEmit` EXIT 0; `eslint --max-warnings=0` EXIT 0; `git show --stat c40eb64`: 2 files (105 insertions / 18 deletions) | PASS |
+
+**End-to-end verdict: PASS**
+
+### C — Observations (Non-Blocking)
+
+| ID | Description | PW5-WL5 Status |
+|---|---|---|
+| CAT-SCHEMA-001 | `imageUrl` absent from current schema; WL detail page makes no image assumptions | NON-BLOCKING — reaffirmed; unchanged |
+| CAT-SCHEMA-002 | `moq?: number` optional; `?? 1` guard applied at both MOQ floor init and quantity display | NON-BLOCKING — guarded by implementation |
+| CAT-SCHEMA-003 | `currency` not rendered in detail page or cart items; no currency assumptions added | NON-BLOCKING — unchanged |
+
+No new CAT-SCHEMA IDs introduced. PW5-WL5 introduces no new gaps.
+
+### D — Architectural Compliance Record
+
+| Rule | Evidence |
+|---|---|
+| Single-fetch storefront | `WLStorefront` remains sole catalog fetch owner; `WLProductDetailPage` receives `addToCart` via prop — no service import, no direct API call from detail page |
+| Tenant isolation (D-017-A) | `AddToCartRequest = { catalogItemId, quantity }` — no `tenantId`; server resolves tenant from JWT exclusively |
+| CASE A reuse | `CartContext` / `cartService` / `Cart.tsx` / `App.tsx` `CartProvider` all unchanged; no new context, no new service |
+| Schema stability | No Prisma/schema/migration/seed/RLS files in implementation commit |
+| Backend stability | No backend files in implementation commit; cart route already exists (`POST /api/tenant/cart/items`) |
+| Presentational purity | `WLProductDetailPage` imports only React + type from `catalogService` — no service client added |
+| Build quality | `tsc --noEmit` clean; `eslint --max-warnings=0` clean; 2 WL-only files in commit |
+
+### E — Doctrine Alignment Note
+
+PW5-WL5 activates cart mutation from the WL storefront product detail surface using the pre-existing B2C cart infrastructure (CASE A). The unit belongs to the storefront-consumer-facing WL surface. No new cart routes, no new checkout logic, and no payment/fund-movement behavior is introduced in this unit. CartContext is consumed passively via `useCart()` prop delegation — the WL detail page never directly touches the cart service. Anti-bazaar, settlement, and AI-governance boundaries are unchanged.
+
+### F — Audit-Safe Conclusion
+
+PW5-WL5 successfully activates the WL storefront cart foundation via minimal, targeted changes to exactly two WL component files. The unit reuses the existing CartContext contract (CASE A), preserves the constitutional single-fetch storefront architecture, maintains D-017-A tenant isolation, and passes all seven verification gates. No tenant isolation, schema, backend, or governance boundaries were altered. **PW5-WL5 FULLY CLOSED. WL1–WL5 tranche complete. Next: PW5-WL6 (Product Images).**
+
+*Updated: 2026-03-13 — PW5-WL5 cart/checkout foundation closure recorded (Section 9.24); PW5-WL5 FULLY CLOSED; WL1–WL5 all COMPLETE; CASE A CartContext reuse confirmed; no backend/schema/tenant-isolation changes · commit c40eb64 · verification PASS · next unit: PW5-WL6 (GOVERNANCE-SYNC-PW5-WL5-GOV)*
