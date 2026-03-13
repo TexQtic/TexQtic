@@ -41,7 +41,7 @@
  *   ✅ Selected item derived from existing items state — no new fetch
  *   ✅ Product search via searchQuery state — client-side derived (PW5-WL4)
  *   ✅ Search composes with category filtering via chained useMemo (PW5-WL4)
- *   ❌ Cart / checkout — out of scope
+ *    ✅ Add to Cart wired via CartContext.addToCart — no catalog re-fetch (PW5-WL5)
  *   ❌ Remote / debounced search — architectural guardrail; not implemented
  *
  * WLStorefront remains the only owner of catalog fetching.
@@ -50,6 +50,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getCatalogItems, CatalogItem } from '../../services/catalogService';
+import { useCart } from '../../contexts/CartContext';
 import { WLCollectionsPanel, CategoryCount } from './WLCollectionsPanel';
 import { ProductGrid } from './ProductGrid';
 import { WLProductDetailPage } from './WLProductDetailPage';
@@ -92,6 +93,10 @@ export function WLStorefront() {
   // PW5-WL4: search query — drives client-side derived filtering only.
   // No API call is triggered by changes to this value.
   const [searchQuery, setSearchQuery] = useState('');
+
+  // PW5-WL5: pull addToCart from CartContext (already provided by CartProvider in App EXPERIENCE case).
+  // tenantId is NEVER passed — backend derives scope from JWT.
+  const { addToCart } = useCart();
 
   // ── Single catalog fetch ─────────────────────────────────────────────────
   // tenantId is NEVER passed — tenant scope resolved from JWT on the server.
@@ -215,6 +220,7 @@ export function WLStorefront() {
       <WLProductDetailPage
         item={selectedItem}
         onBack={handleBackFromDetail}
+        onAddToCart={addToCart}
       />
     );
   }

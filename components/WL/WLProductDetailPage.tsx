@@ -1,5 +1,5 @@
 /**
- * WLProductDetailPage — WL Storefront Product Detail View (PW5-WL3)
+ * WLProductDetailPage — WL Storefront Product Detail View (PW5-WL3 / PW5-WL5)
  *
  * Presentational component. Receives an already-fetched CatalogItem
  * from WLStorefront and renders a richer product detail surface.
@@ -10,18 +10,19 @@
  *   tenantId is NEVER used or referenced from the client.
  *   Item is derived from WLStorefront's already-held catalog state.
  *
- * Scope (PW5-WL3):
+ * Scope (PW5-WL3 / PW5-WL5):
  *   ✅ Product name, SKU, category (fallback: Uncategorised)
  *   ✅ Description (if present in existing item shape)
  *   ✅ Price, MOQ, active status
- *   ✅ Cart foundation button stub (non-destructive; not wired to cart API)
+ *   ✅ Add to Cart — live via onAddToCart prop (PW5-WL5)
+ *   ✅ Quantity selector respecting MOQ if present (PW5-WL5)
+ *   ✅ Brief success/error feedback on add (PW5-WL5)
  *   ✅ Back navigation to storefront grid/category context
  *   ❌ imageUrl rendering — not required (field absent in current schema)
- *   ❌ Real cart mutations — out of scope for PW5-WL3
- *   ❌ Checkout — out of scope
+ *   ❌ Checkout — delegated to existing Cart drawer (CartProvider/EXPERIENCE)
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { CatalogItem } from '../../services/catalogService';
 
 const UNCATEGORISED = 'Uncategorised';
@@ -42,10 +43,46 @@ interface WLProductDetailPageProps {
   item: CatalogItem;
   /** Returns the shopper to the storefront grid/category context. */
   onBack: () => void;
+  /**
+   * PW5-WL5: Live add-to-cart handler provided by WLStorefront via CartContext.
+   * When absent the button is suppressed (backwards-compatible).
+   * tenantId is NEVER a parameter — backend derives scope from JWT.
+   */
+  onAddToCart?: (catalogItemId: string, quantity: number) => Promise<void>;
 }
 
-export function WLProductDetailPage({ item, onBack }: WLProductDetailPageProps) {
+export function WLProductDetailPage({ item, onBack, onAddToCart }: WLProductDetailPageProps) {
   const category = resolveCategory(item);
+
+  // PW5-WL5: quantity state. Defaults to MOQ (min order qty) if present, else 1.
+  const minQty = item.moq != null && item.moq > 1 ? item.moq : 1;
+  const [quantity, setQuantity] = useState(minQty);
+  const [adding, setAdding] = useState(false);
+  // Brief success banner: auto-clears after 2 s
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const handleAddToCart = useCallback(async () => {
+    if (!onAddToCart || adding) return;
+    setAdding(true);
+    setAddError(null);
+    setAddSuccess(false);
+    try {
+      await onAddToCart(item.id, quantity);
+      setAddSuccess(true);
+      setTimeout(() => setAddSuccess(false), 2000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add to cart.';
+      setAddError(msg);
+    } finally {
+      setAdding(false);
+    }
+  }, [onAddToCart, adding, item.id, quantity]);
+
+  // PW5-WL5: Derive button label without nested ternary (satisfies no-nested-ternary rule)
+  let addButtonLabel = 'Add to Cart';
+  if (adding) addButtonLabel = 'Adding…';
+  else if (addSuccess) addButtonLabel = '✓ Added!';
 
   return (
     <div className="animate-in fade-in duration-300 max-w-2xl">
@@ -133,16 +170,60 @@ export function WLProductDetailPage({ item, onBack }: WLProductDetailPageProps) 
             </span>
           </div>
 
-          {/* Cart foundation — stub button (PW5-WL3 non-destructive placeholder) */}
-          <button
-            type="button"
-            disabled
-            title="Cart coming soon"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold opacity-40 cursor-not-allowed"
-            aria-disabled="true"
-          >
-            Add to Cart
-          </button>
+          {/* PW5-WL5: Live Add to Cart — handler provided by WLStorefront via CartContext */}
+          {onAddToCart ? (
+            <div className="flex flex-col items-end gap-2">
+              {/* Quantity selector */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(q => Math.max(minQty, q - 1))}
+                  disabled={adding || quantity <= minQty}
+                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors text-slate-700"
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center font-bold text-slate-800 tabular-nums">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity(q => q + 1)}
+                  disabled={adding}
+                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors text-slate-700"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+              {/* Add to Cart button */}
+              <button
+                type="button"
+                onClick={() => void handleAddToCart()}
+                disabled={adding || !item.active}
+                title={!item.active ? 'This product is not currently available' : undefined}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {addButtonLabel}
+              </button>
+              {/* Inline feedback */}
+              {addError && (
+                <p className="text-xs text-rose-600">{addError}</p>
+              )}
+            </div>
+          ) : (
+            /* Backward-compatible: if no handler supplied, show disabled placeholder */
+            <button
+              type="button"
+              disabled
+              title="Cart not available"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold opacity-40 cursor-not-allowed"
+              aria-disabled="true"
+            >
+              Add to Cart
+            </button>
+          )}
         </div>
       </article>
     </div>
