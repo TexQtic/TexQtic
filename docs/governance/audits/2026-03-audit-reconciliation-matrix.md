@@ -1917,6 +1917,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 **U-004 / VER-010: CLOSED. Wave 0 verification pass (VER-001 through VER-010) is now complete — all items resolved (PASS / FAIL / IMPLEMENTED / CLOSED). Wave 1 gate was already closed (GOVERNANCE-SYNC-106). Await next approved roadmap sequence.**
 
 *Updated: 2026-03-13 — U-004/VER-010 `WLOrdersPanel.tsx` role-gating closure recorded (Section 9.29); PASS; GOVERNANCE-SYNC-U-004 complete; Wave 0 VER gate complete (VER-001–VER-010 all resolved)*
+*Updated: 2026-03-13 — PW5-AI-EMITTER (Section 9.31): IMPLEMENTATION COMPLETE / VERIFIED — runtime AI event emission wired; `ai.inference.generate` · `ai.inference.error` · `ai.inference.budget_exceeded` live on both AI routes; `ai.vector.query` live in `runRagRetrieval()`; deferred AI events remain open; AUDIT_ACTION_TO_EVENT_NAME unchanged; no projections/routes/schema/RLS changes; commit 73f0972; GOVERNANCE-SYNC-PW5-AI-EMITTER*
 *Updated: 2026-03-13 — PW5-AI-PLAN Wave 5 AI/event backbone planning baseline recorded (Section 9.30); PLANNING COMPLETE / BASELINE ESTABLISHED; TECS-FBW-AIGOVERNANCE NOT closed; AI/event drift observations D-001–D-009 identified; follow-on units proposed; GOVERNANCE-SYNC-PW5-AI-PLAN*
 
 ---
@@ -1994,25 +1995,26 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 |---|---|---|
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | NOT CLOSED — backend design gate preserved; no change in this unit |
 | AI_GOV-BACKEND-001 | AiGovernance.tsx derives from tenants endpoint; no dedicated AI route | OPEN — design gate; unchanged by this baseline |
-| D-002 | AI domain events absent from KnownEventName | **CLOSED** — PW5-AI-EVENT-DOMAIN implemented and verified (commit dd18957 · 2026-03-13); `AUDIT_ACTION_TO_EVENT_NAME` not yet mapped (emitter wiring = PW5-AI-EMITTER, open) |
+| D-002 | AI domain events absent from KnownEventName | **CLOSED** — PW5-AI-EVENT-DOMAIN (registry, commit dd18957 · 2026-03-13) + PW5-AI-EMITTER (emission runtime wiring, commit 73f0972 · 2026-03-13) both implemented and verified; `AUDIT_ACTION_TO_EVENT_NAME` not mapped by design — emission wiring does not require audit action mapping; emission gap is now CLOSED for current trigger coverage |
 | D-001, D-005 | TIS monolith + PII redaction | OPEN — addressed together by PW5-AI-TIS-EXTRACT (proposed, not authorized) |
 | D-004 | No per-tenant rate limiting | OPEN — addressed by PW5-AI-RATE-LIMIT (proposed, not authorized) |
 | D-006 | reasoning_logs idempotency_key absent | OPEN — addressed by PW5-AI-IDEMPOTENCY (proposed, not authorized; schema migration required) |
 | D-009 | negotiation-advice has no RAG | OPEN — addressed by PW5-AI-NEGOTIATION-RAG (proposed, not authorized) |
 | D-003, D-008 | Shadow query placeholder; health auth note | LOW — recorded; low urgency |
 
-### E — Follow-On Units (Proposed; Not Authorized)
+### E — Follow-On Units (Proposed; Not Authorized Unless Noted)
 
-| Priority | Unit ID | Rationale |
+| Status | Unit ID | Rationale |
 |---|---|---|
-| 1 | PW5-AI-EVENT-DOMAIN | Register AI domain events; prerequisite for all downstream AI event consumers; resolves D-002 |
-| 2 | PW5-AI-TIS-EXTRACT | Extract TIS from `ai.ts` monolith; resolves D-001 + D-005 together |
-| 3 | PW5-AI-RATE-LIMIT | Per-tenant per-minute rate limit on `/api/ai/*`; resolves D-004 |
-| 4 | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs`; schema migration required; resolves D-006 |
-| 5 | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
-| 6 | PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog mutations via vector queue; G-028 B1; depends on PW5-AI-EVENT-DOMAIN |
-| 7 | PW5-G028-C-CONTROL-PLANE-AI | Control-plane AI authority routes; requires TECS-FBW-AIGOVERNANCE gate + design unit |
-| 8 | PW5-SHADOW-QUERY-FIX | Replace placeholder embedding in `vectorShadowQuery.ts`; low urgency |
+| ✅ CLOSED (dd18957 · 2026-03-13) | PW5-AI-EVENT-DOMAIN | Register AI domain events; prerequisite for all downstream AI event consumers; resolves D-002 |
+| ✅ CLOSED (73f0972 · 2026-03-13) | PW5-AI-EMITTER | Wire AI event emission; `ai.inference.generate/error/budget_exceeded` live; `ai.vector.query` live; emission gap closed for current coverage |
+| 🔲 Proposed (not authorized) | PW5-AI-TIS-EXTRACT | Extract TIS from `ai.ts` monolith; resolves D-001 + D-005 together |
+| 🔲 Proposed (not authorized) | PW5-AI-RATE-LIMIT | Per-tenant per-minute rate limit on `/api/ai/*`; resolves D-004 |
+| 🔲 Proposed (not authorized) | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs`; schema migration required; resolves D-006 |
+| 🔲 Proposed (not authorized) | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
+| 🔲 Proposed (not authorized) | PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog mutations via vector queue; G-028 B1; depends on PW5-AI-EVENT-DOMAIN |
+| 🔲 Proposed (not authorized) | PW5-G028-C-CONTROL-PLANE-AI | Control-plane AI authority routes; requires TECS-FBW-AIGOVERNANCE gate + design unit |
+| 🔲 Proposed (not authorized) | PW5-SHADOW-QUERY-FIX | Replace placeholder embedding in `vectorShadowQuery.ts`; low urgency |
 
 ### F — Explicit Prohibitions Confirmed
 
@@ -2040,7 +2042,7 @@ The following were **NOT performed** in this unit:
 
 **Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
 
-**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. No implementation is authorized until separate execution units are approved. Next proposed unit: PW5-AI-EVENT-DOMAIN.**
+**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). Runtime AI emission operational for current approved trigger coverage. Deferred AI events remain open. Next proposed unit: PW5-AI-TIS-EXTRACT.**
 
 ---
 
@@ -2149,4 +2151,138 @@ Downstream AI event projections and consumers remain future work until emission 
 
 **Overall audit conclusion: IMPLEMENTATION COMPLETE / VERIFIED**
 
-**PW5-AI-EVENT-DOMAIN: CLOSED. AI event domain is now registry-ready. D-002 CLOSED (registry layer). Emitter wiring (PW5-AI-EMITTER) and downstream projection/consumer work remain open. Next proposed unit: PW5-AI-EMITTER.**
+**PW5-AI-EVENT-DOMAIN: CLOSED. AI event domain is now registry-ready. D-002 CLOSED (registry layer). Emitter wiring implemented in PW5-AI-EMITTER (commit 73f0972 · 2026-03-13). Next proposed unit: PW5-AI-TIS-EXTRACT.**
+
+---
+
+## Section 9.31 — PW5-AI-EMITTER — AI Event Emission Runtime Wiring — 2026-03-13
+
+**Unit:** GOVERNANCE-SYNC-PW5-AI-EMITTER | **Type:** IMPLEMENTATION COMPLETE / VERIFIED | **Date:** 2026-03-13
+
+**Verification result:** VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE
+
+**Commit:** 73f0972 — `feat(events): wire AI event emission runtime path`
+
+### A — Unit Scope and Classification
+
+| Attribute | Value |
+|---|---|
+| Unit type | TECS Implementation |
+| Execution unit | PW5-AI-EMITTER |
+| Predecessor | PW5-AI-EVENT-DOMAIN (registry layer, commit dd18957 · 2026-03-13) |
+| Status | IMPLEMENTATION COMPLETE |
+| Verification | VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE |
+| Commit | 73f0972 |
+
+### B — What Was Implemented
+
+| File | Change Type | Description |
+|---|---|---|
+| `server/src/events/aiEmitter.ts` | CREATED | `emitAiEventBestEffort()` async helper; `AiEventOpts` interface; full validated emission chain; best-effort (never rethrows) |
+| `server/src/routes/ai.ts` | MODIFIED | Import added; `generateContent()` return type extended with `hadInferenceError: boolean`; `auditLog.id` captured from committed tx; 6 `void emitAiEventBestEffort(...)` call sites wired (2 success + 2 error + 2 budget per route) |
+| `server/src/services/ai/ragContextBuilder.ts` | MODIFIED | Import added; `ai.vector.query` emitted after `querySimilar()` returns, before catch block |
+
+### C — Trigger Points Wired
+
+| Trigger Point | Event Name | Persistence |
+|---|---|---|
+| `/api/ai/insights` success path | `ai.inference.generate` | ✅ persists to `EventLog` (via captured `auditLog.id`) |
+| `/api/ai/insights` inference failure (`hadInferenceError: true`) | `ai.inference.error` | sink-only |
+| `/api/ai/insights` `BudgetExceededError` catch | `ai.inference.budget_exceeded` | sink-only |
+| `/api/ai/negotiation-advice` success path | `ai.inference.generate` | ✅ persists to `EventLog` (via captured `negAuditLog.id`) |
+| `/api/ai/negotiation-advice` inference failure | `ai.inference.error` | sink-only |
+| `/api/ai/negotiation-advice` `BudgetExceededError` catch | `ai.inference.budget_exceeded` | sink-only |
+| `runRagRetrieval()` inside `ragContextBuilder.ts` | `ai.vector.query` | sink-only |
+
+### D — Emission Chain (Verified)
+
+Runtime path implemented in `emitAiEventBestEffort()`:
+1. `validateEventPayload(name, payload)` — Zod validation via `EVENT_PAYLOAD_SCHEMAS`
+2. Build `EventEnvelope` — `{ id: randomUUID(), version: 'v1', name, entity: { type: 'ai', id: orgId }, realm: 'TENANT', actor: 'SYSTEM', ... }`
+3. `validateKnownEvent(envelope)` — validates name is in `KnownEventName`
+4. `assertNoSecretsInPayload(knownEnvelope.payload)` — secrets guard
+5. `emitEventToSink(knownEnvelope)` — in-memory sink emission
+6. `storeEventBestEffort(prisma, knownEnvelope, auditLogId)` — conditional on `auditLogId && prisma`
+
+### E — Persistence Boundary (Recorded)
+
+`EventLog.auditLogId` is `NOT NULL @unique` with FK to `AuditLog`. Persistence is gated on `opts.auditLogId && opts.prisma`. Only success-path inference events (which capture a real `AuditLog.id` from a committed transaction) can persist to `EventLog`. All error-path, budget-path, and vector-query events are sink-only. This is an implementation constraint of the existing `EventLog` schema, not a regression introduced by PW5-AI-EMITTER.
+
+### F — Scope Discipline (Verified)
+
+| Area | Status |
+|---|---|
+| `AUDIT_ACTION_TO_EVENT_NAME` | NOT MODIFIED — intentional; audit action mapping is separate from runtime emission wiring |
+| AI event projections / consumers | NOT ADDED |
+| New routes | NOT ADDED |
+| Prisma schema / migrations | NOT MODIFIED |
+| RLS policies | NOT MODIFIED |
+| Control-plane AI governance | NOT IMPLEMENTED |
+| `ai.vector.upsert` / `ai.vector.delete` | NOT WIRED — async queue path (`vectorIndexQueue.ts`); no synchronous trigger available |
+| PII events / cache_hit | NOT WIRED — no active runtime implementations for PII detection/redaction or inference caching |
+
+### G — Deferred Items
+
+| Event Name | Deferral Reason |
+|---|---|
+| `ai.vector.upsert` | In-process async queue (`vectorIndexQueue.ts`); max queue size 1,000; jobs lost on restart; no synchronous trigger in current call graph |
+| `ai.vector.delete` | Same async queue path as upsert |
+| `ai.inference.pii_redacted` | No PII redaction pipeline exists in codebase |
+| `ai.inference.pii_leak_detected` | No PII detection pipeline exists in codebase |
+| `ai.inference.cache_hit` | No inference caching implementation exists in codebase |
+
+### H — Follow-On Note (Preserved)
+
+When `genAI` is null (Gemini SDK not configured), `generateContent()` returns a degraded text response with `hadInferenceError: false`. This means the degraded-mode fallback emits `ai.inference.generate` rather than `ai.inference.error`. This is pre-existing upstream behavior in `ai.ts` and was not introduced by PW5-AI-EMITTER. This note does not classify PW5-AI-EMITTER as failed or defective. Correcting this behavior requires a separate scoped unit (likely within PW5-AI-TIS-EXTRACT where AI orchestration is extracted into a proper service boundary).
+
+### I — Gap Register Delta
+
+| Gap / Drift ID | Prior Status | New Status |
+|---|---|---|
+| D-002 (AI domain events absent from KnownEventName) | CLOSED (registry layer — PW5-AI-EVENT-DOMAIN) | ✅ FULLY CLOSED — emission layer also closed (PW5-AI-EMITTER) |
+| AI emission gap (runtime wiring absent) | OPEN | ✅ CLOSED — for current approved trigger coverage |
+| `ai.vector.upsert` / `ai.vector.delete` | OPEN | OPEN — intentionally deferred (no sync trigger) |
+| PII events / `ai.inference.cache_hit` | OPEN | OPEN — intentionally deferred (no runtime implementations) |
+
+### J — Validation Gates
+
+| Gate | Command | Result |
+|---|---|---|
+| Type check | `pnpm typecheck` (`tsc --noEmit`) | ✅ PASS — zero errors |
+| Lint | `pnpm lint` | ✅ PASS — 0 errors; 108 pre-existing warnings; no warnings in changed files |
+| Build | `pnpm build` (`tsc`) | ✅ PASS — zero errors |
+
+### K — Defects
+
+None.
+
+### L — Explicit Non-Actions Confirmed
+
+- ❌ No `AUDIT_ACTION_TO_EVENT_NAME` modification
+- ❌ No AI projections added
+- ❌ No new routes
+- ❌ No Prisma schema changes
+- ❌ No RLS changes
+- ❌ No `ai.vector.upsert` wiring
+- ❌ No `ai.vector.delete` wiring
+- ❌ No `ai.inference.pii_redacted` / `pii_leak_detected` / `cache_hit` wiring
+- ❌ No control-plane AI governance widening
+- ❌ TECS-FBW-AIGOVERNANCE NOT closed
+
+### M — Audit-Safe Conclusion
+
+| Gate | Result |
+|---|---|
+| Unit scope | PASS — 3 files changed; all within authorized AI/event boundary |
+| Emission chain correctness | PASS — all 5 steps (`validateEventPayload` → `validateKnownEvent` → `assertNoSecretsInPayload` → `emitEventToSink` → `storeEventBestEffort`) wired in correct order |
+| Trigger coverage | PASS — all 7 approved current trigger points wired; none missed within authorized scope |
+| Persistence gating | PASS — `storeEventBestEffort` only called when `auditLogId && prisma`; compatible with `EventLog.auditLogId NOT NULL @unique` constraint |
+| Scope discipline | PASS — `AUDIT_ACTION_TO_EVENT_NAME` unchanged; no projections/routes/schema/RLS changes |
+| Deferred items | PASS — all deferred items have documented rationale; no missing trigger claim |
+| Follow-on note classified correctly | PASS — degraded-mode semantics correctly classified as pre-existing behavior, not defect |
+| Integration safety | PASS — best-effort emission cannot disrupt inference route responses |
+| Doctrine alignment | PASS — org_id/RLS posture unchanged; no routes added; no tenant isolation weakened |
+
+**Overall audit conclusion: IMPLEMENTATION COMPLETE / VERIFIED**
+
+**PW5-AI-EMITTER: CLOSED. Runtime AI event emission is now operational for current approved trigger coverage. Deferred AI event types (`ai.vector.upsert` · `ai.vector.delete` · PII events · `ai.inference.cache_hit`) remain explicitly open. `AUDIT_ACTION_TO_EVENT_NAME` unchanged by design. No defects. One follow-on note preserved (degraded-mode semantics). Next proposed unit: PW5-AI-TIS-EXTRACT.**

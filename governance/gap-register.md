@@ -1,6 +1,7 @@
 # TEXQTIC — GAP REGISTER
 
-Last Updated: 2026-03-13 (GOVERNANCE-SYNC-PW5-AI-EVENT-DOMAIN — PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE — AI event domain registered in event backbone; 9 AI event names added to KnownEventName and knownEventEnvelopeSchema; eventSchemas.ts created; D-002 CLOSED; emitter path remains open as PW5-AI-EMITTER; commit dd18957)
+Last Updated: 2026-03-13 (GOVERNANCE-SYNC-PW5-AI-EMITTER — PW5-AI-EMITTER ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE — runtime AI event emission wired for approved current trigger points; ai.inference.generate · ai.inference.error · ai.inference.budget_exceeded live on both AI routes; ai.vector.query live in runRagRetrieval(); aiEmitter.ts created with full validated emission chain; deferred events (ai.vector.upsert · ai.vector.delete · PII events · cache_hit) remain open; AUDIT_ACTION_TO_EVENT_NAME unchanged; no projections/routes/schema/RLS changes; commit 73f0972)
+(GOVERNANCE-SYNC-PW5-AI-EVENT-DOMAIN — PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE — AI event domain registered in event backbone; 9 AI event names added to KnownEventName and knownEventEnvelopeSchema; eventSchemas.ts created; D-002 CLOSED; emitter path remains open as PW5-AI-EMITTER; commit dd18957)
 (GOVERNANCE-SYNC-PW5-AI-PLAN — PW5-AI-PLAN ✅ CLOSED AS PLANNING BASELINE — Wave 5 AI/event backbone architectural baseline established; tenant AI route surface confirmed (3 tenant-plane routes); event backbone confirmed for tenancy/team/marketplace; AI event domain absent (design gate open); control-plane AI governance backend remains REQUIRES_BACKEND_DESIGN; 9 drift observations D-001–D-009 registered; follow-on units proposed: PW5-AI-EVENT-DOMAIN · PW5-AI-TIS-EXTRACT · PW5-AI-RATE-LIMIT · PW5-AI-IDEMPOTENCY · PW5-AI-NEGOTIATION-RAG; no implementation occurred; TECS-FBW-AIGOVERNANCE NOT closed) — commit d860b6b · WL Storefront Performance Optimizations complete · React.memo on ProductCard/ProductGrid/WLSearchBar/WLCollectionsPanel · per-card inline closure eliminated · Intl.NumberFormat singleton · PW5-WL7-VERIFY PASS · CAT-SCHEMA-001/002/003 remain non-blocking · WL storefront tranche complete)
 (GOVERNANCE-SYNC-PW5-WL7-GOV — PW5-WL7 ✅ VERIFIED AND CLOSED — 2026-03-13; program: PW5-WL7 Storefront Performance Optimizations; tranche class: GOVERNANCE-SYNC — documentation-only, no product code changes in this unit; commit: d860b6b; commit message: feat(wl-storefront): implement PW5-WL7 performance optimizations; scope: ProductCard.tsx MODIFIED (React.memo applied; onSelect signature changed () => void → (id: string) => void enabling stable ref pass-through; module-level priceFormatter singleton replacing per-render Intl.NumberFormat construction) · ProductGrid.tsx MODIFIED (React.memo applied; per-card inline () => onSelectItem(item.id) closure removed; onSelect={onSelectItem} direct pass) · WLSearchBar.tsx MODIFIED (React.memo applied — skips re-render on activeCategory/selectedItemId state changes; onChange=setSearchQuery is stable useState setter) · WLCollectionsPanel.tsx MODIFIED (React.memo applied — skips re-render on searchQuery keystrokes; categories memoized in WLStorefront; onSelectCategory=setActiveCategory stable setter) · WLStorefront.tsx INTENTIONALLY UNCHANGED — already fully optimized with useCallback handlers and useMemo derivation chain; discovery result: optimization opportunities were render-boundary and prop-stability concentrated — WLStorefront data-ownership layer was already correct; no backend routes; no schema/migration/RLS/seed changes; WLProductDetailPage.tsx UNCHANGED; no tenantId added to any client file; no duplicate catalog requests introduced; architectural outcome confirmed: WLStorefront remains the sole catalog fetch owner; all derived filtering/search/detail ownership remains in WLStorefront; render optimization is boundary-only — no data ownership moved to child components; verification result: PW5-WL7-VERIFY PASS — all gates confirmed: Network (getCatalogItems in WLStorefront only; no child fetch; no backend routes in commit) PASS · Architecture (WLStorefront unchanged; all useMemo derivations intact; 4 WL-only files in commit) PASS · Tenant safety (tenantId JSDoc-only; zero functional occurrences; no RLS/auth changes) PASS · Performance integrity (React.memo prop-stable: handleSelectItem is useCallback([], []); categories is useMemo-ref; setSearchQuery/setActiveCategory are stable setters; no stale-prop risk; Intl.NumberFormat singleton confirmed) PASS · Build quality (tsc EXIT 0; eslint EXIT 0; d860b6b: 4 files 50 insertions / 24 deletions) PASS · Behavioral integrity (grid/search/category/detail/cart/images/keyboard/back all intact; no UX regression) PASS; existing schema observations: CAT-SCHEMA-001 · CAT-SCHEMA-002 · CAT-SCHEMA-003 remain NON-BLOCKING — PW5-WL7 is optimization-only; no schema obligations introduced; no new schema observations; gap register outcome: UNCHANGED; closure state: PW5-WL7 ✅ FULLY CLOSED — commit d860b6b; PW5-WL7-VERIFY ✅ COMPLETE 2026-03-13; WL storefront performance optimization operational; WL storefront tranche: WL1–WL7 ALL CLOSED; next: await next approved roadmap sequence; governance artifacts updated: docs/governance/IMPLEMENTATION-TRACKER-2026-03.md · governance/gap-register.md · docs/governance/audits/2026-03-audit-reconciliation-matrix.md; GOVERNANCE-SYNC-PW5-WL7-GOV)
 (GOVERNANCE-SYNC-PW5-WL6-GOV — PW5-WL6 ✅ VERIFIED AND CLOSED — 2026-03-13; program: PW5-WL6 WL Product Images; tranche class: GOVERNANCE-SYNC — documentation-only, no product code changes in this unit; commit: e8f5d55; commit message: feat(wl-storefront): implement PW5-WL6 product images; scope: ProductCard.tsx MODIFIED (useState import added; imgError local state tracks broken images via onError — no additional fetch; h-40 image container added; <img src={item.imageUrl} alt={item.name} loading="lazy" onError={() => setImgError(true)}> rendered when imageUrl present and not broken; inline SVG placeholder aria-hidden="true" shown when imageUrl absent or imgError=true) · WLProductDetailPage.tsx MODIFIED (imgError local state added; h-64 primary image surface added before existing header; <img loading="eager"> with same onError guard; SVG placeholder at h-16 w-16 for detail surface; JSDoc updated) · CASE A: CatalogItem.imageUrl?: string already present in catalogService.ts since commit c40eb64 — pre-existence confirmed via git show c40eb64:services/catalogService.ts; image data travels via existing item prop from WLStorefront catalog state; no new backend routes; no schema/migration/RLS/seed changes; architectural outcome confirmed: WLStorefront remains the only owner of catalog fetching — image rendering is purely presentational from existing item props; WLStorefront.tsx, catalogService.ts, WLCollectionsPanel.tsx, WLSearchBar.tsx, ProductGrid.tsx, WLStorefront.tsx, CartContext.tsx all UNCHANGED; verification result: PW5-WL6-VERIFY PASS — all 7 gates confirmed: Scope (no schema/migration/governance docs changed; existing CASE A contract reused) PASS · Data flow (getCatalogItems only in WLStorefront lines 52+107; absent from ProductCard/WLProductDetailPage/ProductGrid; onError = local imgError state only) PASS · Tenant safety (tenantId JSDoc-only in touched files; zero functional occurrences; no RLS/auth changes; D-017-A) PASS · Runtime (grid lazy-loads product image; detail eager-loads primary image; onError triggers SVG placeholder; absent imageUrl → immediate SVG placeholder; alt={item.name} on real images; aria-hidden="true" on decorative SVG; no CLS) PASS · Image integrity (CatalogItem.imageUrl pre-existed before PW5-WL6; no fabricated contract; placeholder bounded and explicit) PASS · Build quality (tsc EXIT 0; eslint EXIT 0; git show --stat e8f5d55: 2 files, 79 insertions, 6 deletions) PASS · Behavioral integrity (category browsing intact; detail page intact; search intact; cart foundation intact; card click/onSelect/onKeyDown preserved; back navigation preserved; no image rendering alters catalog/search/cart logic) PASS; existing schema observations: CAT-SCHEMA-001 · CAT-SCHEMA-002 · CAT-SCHEMA-003 remain NON-BLOCKING — CAT-SCHEMA-001 (imageUrl note) superseded in WL rendering context: CatalogItem.imageUrl was already_optional_ in the frontend type contract; its DB-column presence is irrelevant to WL6 which renders from API response only — observation retained as non-blocking historical record only; no new CAT-SCHEMA IDs introduced; no new gaps introduced; gap register outcome: UNCHANGED; closure state: PW5-WL6 ✅ FULLY CLOSED — commit e8f5d55; PW5-WL6-VERIFY ✅ COMPLETE 2026-03-13; WL Product Images operational; next sequenced unit: PW5-WL7 (Storefront Performance Optimizations); governance artifacts updated: docs/governance/IMPLEMENTATION-TRACKER-2026-03.md · governance/gap-register.md · docs/governance/audits/2026-03-audit-reconciliation-matrix.md; GOVERNANCE-SYNC-PW5-WL6-GOV)
@@ -1358,6 +1359,7 @@ Status: FUTURE PERFORMANCE UNIT — non-blocking at current ledger volume; recom
 | PW5-CP-PLAN | Control-plane re-baseline | ✅ COMPLETE — 2026-03-10 | Read-only architectural baseline established. 17 panels reachable. Route map produced. Capability classification complete. 8 drift observations. 5 new gap entries. Governance sync: PW5-CP-PLAN-GOV. |
 | PW5-AI-PLAN | AI/event backbone re-baseline | ✅ COMPLETE — 2026-03-13 | Read-only planning baseline established. Tenant AI route surface confirmed (GET /api/ai/insights · POST /api/ai/negotiation-advice · GET /api/ai/health). Event backbone confirmed for tenancy/team/marketplace domains. AI event domain absent from registry. Control-plane AI backend design gate preserved (TECS-FBW-AIGOVERNANCE). 9 drift observations registered. Follow-on units proposed: PW5-AI-EVENT-DOMAIN · PW5-AI-TIS-EXTRACT · PW5-AI-RATE-LIMIT · PW5-AI-IDEMPOTENCY · PW5-AI-NEGOTIATION-RAG. Governance sync: GOVERNANCE-SYNC-PW5-AI-PLAN. |
 | PW5-AI-EVENT-DOMAIN | Register AI event domain (inference + vector) | ✅ COMPLETE — 2026-03-13 · VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE | AI event domain registered. 9 AI event names added to KnownEventName and knownEventEnvelopeSchema. eventSchemas.ts created: 9 Zod payload schemas · EVENT_PAYLOAD_SCHEMAS · validateEventPayload(). AUDIT_ACTION_TO_EVENT_NAME unchanged. No emitters added. No projections. No routes/RLS/schema changes. validateEventPayload() not yet wired — intentional; not a defect. D-002 CLOSED. Emitter path remains open (PW5-AI-EMITTER). commit dd18957 · typecheck EXIT 0 · lint EXIT 0 · build EXIT 0. Governance sync: GOVERNANCE-SYNC-PW5-AI-EVENT-DOMAIN. |
+| PW5-AI-EMITTER | Wire AI event emission runtime path | ✅ COMPLETE — 2026-03-13 · VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE | Runtime AI event emission wired for approved current trigger points. `server/src/events/aiEmitter.ts` CREATED: `emitAiEventBestEffort()` helper implementing full validated chain (`validateEventPayload()` → `validateKnownEvent()` → `assertNoSecretsInPayload()` → `emitEventToSink()` → `storeEventBestEffort()` where `auditLogId` available); best-effort, non-blocking. `server/src/routes/ai.ts` MODIFIED: `ai.inference.generate` · `ai.inference.error` · `ai.inference.budget_exceeded` wired for both `/api/ai/insights` and `/api/ai/negotiation-advice` success/error/budget paths; success-path events include `auditLogId` for persistence. `server/src/services/ai/ragContextBuilder.ts` MODIFIED: `ai.vector.query` emitted after `querySimilar()` returns (sink-only). AUDIT_ACTION_TO_EVENT_NAME NOT modified. No projections, new routes, schema changes, or RLS changes. Persistence gated: success-path inference events persist to `EventLog` (captured `auditLogId` available); error/budget/vector events are sink-only (`EventLog.auditLogId NOT NULL @unique` implementation constraint). Deferred (no concrete synchronous runtime trigger): `ai.vector.upsert` · `ai.vector.delete` · `ai.inference.pii_redacted` · `ai.inference.pii_leak_detected` · `ai.inference.cache_hit`. Follow-on note: degraded-mode `generateContent()` returns `hadInferenceError: false` when Gemini unconfigured — pre-existing upstream behavior; not a defect of this unit. commit 73f0972 · typecheck EXIT 0 · lint EXIT 0 · build EXIT 0. Governance sync: GOVERNANCE-SYNC-PW5-AI-EMITTER. |
 
 ---
 
@@ -1436,9 +1438,9 @@ Status: ✅ CLOSED — RESOLVED (policy decision) — intentionally excluded fro
 | 3 | Control-plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; PW5-CP-PLAN-GOV governance sync recorded |
 | 4 | Tenant admin dashboard completion | ⏳ BLOCKED — verification + wiring tranches |
 | 5 | White-label store builder | ⏳ BLOCKED — PW5-WL1 + PW5-WL2 |
-| 6 | AI / event backbone (Wave 5 architecture) | ✅ PLANNING COMPLETE — 2026-03-13 — PW5-AI-PLAN baseline established; follow-on execution units sequenced; no implementation begins without separate unit authorizations (GOVERNANCE-SYNC-PW5-AI-PLAN) |
+| 6 | AI / event backbone (Wave 5 architecture) | 🔄 IN PROGRESS — PW5-AI-PLAN ✅ PLANNING COMPLETE (2026-03-13) · PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED (2026-03-13 · commit dd18957) · PW5-AI-EMITTER ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit 73f0972) — runtime AI event emission wired for approved trigger points; `ai.inference.generate` · `ai.inference.error` · `ai.inference.budget_exceeded` live on both AI routes; `ai.vector.query` live in `runRagRetrieval()`; deferred AI events remain open; AUDIT_ACTION_TO_EVENT_NAME unchanged; no projections/routes/schema/RLS changes; next candidate unit: PW5-AI-TIS-EXTRACT; TECS-FBW-AIGOVERNANCE remains REQUIRES_BACKEND_DESIGN |
 
-Recommended immediate next unit: **PW5-WL1 — WL storefront product grid** (or next available non-blocked unit). Reason: PW5-W3 is FULLY CLOSED — backend (PW5-W3-BE ✅ 14aea49) + frontend (PW5-W3-FE ✅ 8f4a685) + runtime verification (PW5-W3-VERIFY ✅ 2026-03-12) all complete. Non-blocking follow-ups recorded: PW5-W3-TYPE-ALIGN-001 · PW5-W3-TEST-001 · PW5-W3-PERF-INDEX. Wiring tranche: PW5-W1 🚫 BACKEND DESIGN GATE · PW5-W2 ✅ · PW5-W3-BE ✅ · PW5-W3-FE ✅ · PW5-W4 ✅. WL tranche (PW5-WL1 · PW5-WL2 · PW5-WL3) is the next available wiring progression. Deferred: DEF-003 · DEF-004 · DEF-005 · DPP backend audit. (GOVERNANCE-SYNC-PW5-W3-VERIFY-GOV)
+Recommended immediate next unit: **PW5-AI-TIS-EXTRACT** — extract AI orchestration from `ai.ts` into a dedicated inference service boundary. Reason: PW5-AI-EMITTER is FULLY CLOSED (commit 73f0972 · 2026-03-13) — backend (PW5-W3-BE ✅ 14aea49) + frontend (PW5-W3-FE ✅ 8f4a685) + runtime verification (PW5-W3-VERIFY ✅ 2026-03-12) all complete. Non-blocking follow-ups recorded: PW5-W3-TYPE-ALIGN-001 · PW5-W3-TEST-001 · PW5-W3-PERF-INDEX. Wiring tranche: PW5-W1 🚫 BACKEND DESIGN GATE · PW5-W2 ✅ · PW5-W3-BE ✅ · PW5-W3-FE ✅ · PW5-W4 ✅. WL tranche (PW5-WL1 · PW5-WL2 · PW5-WL3) is the next available wiring progression. Deferred: DEF-003 · DEF-004 · DEF-005 · DPP backend audit. (GOVERNANCE-SYNC-PW5-W3-VERIFY-GOV)
 
 ---
 
@@ -1512,7 +1514,7 @@ This entry records the authoritative Wave 5 AI/event architectural baseline esta
 | Unit ID | One-Line Description | Prerequisites |
 |---|---|---|
 | ✅ PW5-AI-EVENT-DOMAIN | ~~Register `ai.inference.*` and `ai.vector.*` event types in `KnownEventName` + `AUDIT_ACTION_TO_EVENT_NAME`~~ — **COMPLETE / VERIFIED** — 9 AI event names registered; `eventSchemas.ts` created; `AUDIT_ACTION_TO_EVENT_NAME` not yet mapped (deliberate — emission wiring is PW5-AI-EMITTER); commit dd18957 · 2026-03-13 | ✅ CLOSED |
-| 🔲 PW5-AI-EMITTER | Wire AI event emission: import `validateEventPayload()`; construct and validate `EventEnvelope`; call `emitEventToSink()` + `storeEventBestEffort()` at authorized AI trigger points | PW5-AI-EVENT-DOMAIN ✅ (prerequisite met) |
+| ✅ PW5-AI-EMITTER | ~~Wire AI event emission: import `validateEventPayload()`; construct and validate `EventEnvelope`; call `emitEventToSink()` + `storeEventBestEffort()` at authorized AI trigger points~~ — **COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE** — `aiEmitter.ts` created; `ai.inference.generate` · `ai.inference.error` · `ai.inference.budget_exceeded` live on both AI routes; `ai.vector.query` live in `runRagRetrieval()`; deferred AI events remain open; commit 73f0972 · 2026-03-13 | ✅ CLOSED |
 | PW5-AI-TIS-EXTRACT | Extract AI orchestration from `ai.ts` into dedicated inference service boundary | PW5-AI-EVENT-DOMAIN recommended first |
 | PW5-AI-RATE-LIMIT | Implement per-tenant per-minute rate limiting on `/api/ai/*` routes (60 req/min) | None |
 | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs` schema; requires migration approval gate | Schema migration approval required |
@@ -1571,6 +1573,82 @@ Vector domain: `ai.vector.upsert` · `ai.vector.delete` · `ai.vector.query`
 
 **Status: PW5-AI-EVENT-DOMAIN ✅ CLOSED — 2026-03-13 — GOVERNANCE-SYNC-PW5-AI-EVENT-DOMAIN**
 
-**D-002 GAP STATUS: CLOSED (registry layer complete) — emitter path open as PW5-AI-EMITTER**
+**D-002 GAP STATUS: CLOSED (registry layer complete) — emitter path now also CLOSED (PW5-AI-EMITTER ✅ COMPLETE)**
 
-**Next proposed unit: PW5-AI-EMITTER — wire AI event emission through approved runtime path**
+**Next proposed unit: PW5-AI-TIS-EXTRACT — extract AI orchestration into dedicated inference service boundary**
+
+---
+
+### PW5-AI-EMITTER — AI Event Emission Runtime Wiring — CLOSED 2026-03-13
+
+**Governance sync:** GOVERNANCE-SYNC-PW5-AI-EMITTER | **Date:** 2026-03-13 | **Type:** Implementation + Verification Closure
+
+**Verification result:** VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE
+
+**Commit:** 73f0972 — `feat(events): wire AI event emission runtime path`
+
+#### What This Unit Accomplished
+
+| Artifact | Change |
+|---|---|
+| `server/src/events/aiEmitter.ts` | NEW — `emitAiEventBestEffort()` helper: full validated emission chain; best-effort, non-blocking; `AiEventOpts` interface (`orgId`, `actorId?`, `timestamp?`, `auditLogId?`, `prisma?`) |
+| `server/src/routes/ai.ts` | MODIFIED — import added; `generateContent()` return type extended with `hadInferenceError: boolean`; `auditLog.id` captured from committed tx; `ai.inference.generate` / `ai.inference.error` / `ai.inference.budget_exceeded` wired on both routes |
+| `server/src/services/ai/ragContextBuilder.ts` | MODIFIED — import added; `ai.vector.query` emitted after `querySimilar()` returns |
+
+#### Trigger Points Wired
+
+| Route / Path | Event Emitted | Persistence |
+|---|---|---|
+| `/api/ai/insights` success path | `ai.inference.generate` | ✅ persists (auditLogId captured) |
+| `/api/ai/insights` inference failure | `ai.inference.error` | sink-only |
+| `/api/ai/insights` budget rejection | `ai.inference.budget_exceeded` | sink-only |
+| `/api/ai/negotiation-advice` success path | `ai.inference.generate` | ✅ persists (auditLogId captured) |
+| `/api/ai/negotiation-advice` inference failure | `ai.inference.error` | sink-only |
+| `/api/ai/negotiation-advice` budget rejection | `ai.inference.budget_exceeded` | sink-only |
+| `runRagRetrieval()` vector query path | `ai.vector.query` | sink-only |
+
+#### Emission Chain Confirmed
+
+`validateEventPayload()` → build `EventEnvelope` (randomUUID, v1, entity=`orgId`, realm=TENANT, actor=SYSTEM) → `validateKnownEvent()` → `assertNoSecretsInPayload()` → `emitEventToSink()` → `storeEventBestEffort()` (gated on `auditLogId + prisma`)
+
+#### Persistence Boundary
+
+`EventLog.auditLogId NOT NULL @unique` FK to `AuditLog` is an implementation constraint. Only routes that create an `AuditLog` row inside a committed transaction have a valid `auditLogId` to pass. Error paths and RAG retrieval fire outside a committed audit-log context — sink-only is correct, not a regression.
+
+#### What This Unit Explicitly Did NOT Do
+
+- ❌ Did not modify `AUDIT_ACTION_TO_EVENT_NAME`
+- ❌ Did not add AI projections or event consumers
+- ❌ Did not add new routes
+- ❌ Did not change Prisma schema or RLS
+- ❌ Did not wire `ai.vector.upsert` or `ai.vector.delete` (async queue path — no concrete sync trigger)
+- ❌ Did not wire `ai.inference.pii_redacted`, `ai.inference.pii_leak_detected`, or `ai.inference.cache_hit` (no active runtime implementations)
+- ❌ Did not implement control-plane AI governance
+
+#### Deferred Items (Intentional — No Approved Runtime Trigger)
+
+| Event Name | Reason Deferred |
+|---|---|
+| `ai.vector.upsert` | Gated behind async in-process queue (`vectorIndexQueue.ts`); no synchronous trigger available |
+| `ai.vector.delete` | Same as above |
+| `ai.inference.pii_redacted` | No active PII redaction pipeline in codebase |
+| `ai.inference.pii_leak_detected` | No active PII detection pipeline in codebase |
+| `ai.inference.cache_hit` | No inference caching implementation in codebase |
+
+#### Follow-On Note (Preserved from Verification)
+
+When `genAI` is null (Gemini SDK unconfigured), `generateContent()` returns a degraded text response with `hadInferenceError: false`. As a result, the success path emits `ai.inference.generate` even for a no-op fallback. This is pre-existing upstream behavior and was not introduced by PW5-AI-EMITTER. Correcting this requires a separate scoped unit (likely within PW5-AI-TIS-EXTRACT). This note does not reopen PW5-AI-EMITTER or convert it to a failed unit.
+
+#### Validation Gates
+
+| Gate | Result |
+|---|---|
+| `pnpm typecheck` | ✅ PASS — zero errors |
+| `pnpm lint` | ✅ PASS — 0 errors; 108 pre-existing warnings; no warnings in changed files |
+| `pnpm build` | ✅ PASS — zero errors |
+
+**Status: PW5-AI-EMITTER ✅ CLOSED — 2026-03-13 — GOVERNANCE-SYNC-PW5-AI-EMITTER**
+
+**Runtime AI emission gap: CLOSED for current trigger coverage — deferred AI event types remain open**
+
+**Next proposed unit: PW5-AI-TIS-EXTRACT — extract AI orchestration into dedicated inference service boundary**
