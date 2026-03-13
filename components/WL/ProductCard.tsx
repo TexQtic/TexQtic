@@ -1,18 +1,21 @@
 /**
- * ProductCard — WL Storefront (PW5-WL1)
+ * ProductCard — WL Storefront (PW5-WL1 / PW5-WL3)
  *
  * Renders a single tenant catalog item in the white-label storefront grid.
  *
  * Constitutional compliance:
  *   tenantId is NEVER accepted or rendered from the client.
  *   Tenant scope is derived exclusively from the JWT on the server.
+ *   NO data fetching in this component — WLStorefront is the exclusive
+ *   catalog data owner.
  *
- * Scope (PW5-WL1):
+ * Scope (PW5-WL1 / PW5-WL3):
  *   ✅ Display: name, SKU, price, MOQ, active status
- *   ❌ category  — missing in current schema; safely omitted
+ *   ✅ onSelect callback — triggers detail view in WLStorefront (PW5-WL3)
+ *   ❌ category  — missing in current schema; safely omitted from grid card
  *   ❌ currency  — missing in current schema; safely omitted
  *   ❌ imageUrl  — optional; safely omitted
- *   ❌ cart / checkout — out of scope (PW5-WL2+)
+ *   ❌ cart / checkout — out of scope (PW5-WL3+)
  */
 
 import React from 'react';
@@ -20,6 +23,8 @@ import { CatalogItem } from '../../services/catalogService';
 
 interface ProductCardProps {
   item: CatalogItem;
+  /** PW5-WL3: callback to open product detail view (owned by WLStorefront). */
+  onSelect?: () => void;
 }
 
 function formatPrice(price: number): string {
@@ -29,9 +34,16 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-export function ProductCard({ item }: ProductCardProps) {
+export function ProductCard({ item, onSelect }: ProductCardProps) {
   return (
-    <article className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200">
+    <article
+      className={`bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200 ${onSelect ? 'cursor-pointer' : ''}`}
+      onClick={onSelect}
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onKeyDown={onSelect ? (e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(); } : undefined}
+      aria-label={onSelect ? `View details for ${item.name}` : undefined}
+    >
       {/* Active / Inactive badge */}
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-slate-900 font-semibold text-sm leading-snug flex-1 line-clamp-2">

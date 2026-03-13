@@ -10,34 +10,43 @@
  *   Tenant identity is resolved exclusively from the JWT on the server.
  *   getCatalogItems() → tenantGet() → requireTenantRealm() (JWT-scoped).
  *
- * Data flow (PW5-WL2):
+ * Data flow (PW5-WL2 / PW5-WL3):
  *   WLStorefront
- *    ├ fetchs catalog items once via getCatalogItems()
+ *    ├ fetches catalog items once via getCatalogItems()
  *    ├ stores items in state
  *    ├ derives CategoryCount[] from items
  *    ├ manages activeCategory state
+ *    ├ manages selectedItemId state (PW5-WL3)
+ *    ├ derives selectedItem from items (PW5-WL3 — no secondary fetch)
  *    ├ passes categories + activeCategory + onSelectCategory to WLCollectionsPanel
- *    └ passes filteredItems to ProductGrid
+ *    ├ passes filteredItems + onSelectItem to ProductGrid
+ *    └ renders WLProductDetailPage when selectedItemId is set (PW5-WL3)
  *
  * Category fallback:
  *   Items without a category value resolve to "Uncategorised".
  *   This is expected while the catalog schema lacks a category column.
  *   All products will group under "Uncategorised" by default.
  *
- * Scope (PW5-WL2):
- *   ✅ Single catalog fetch
- *   ✅ Category grouping derived client-side
- *   ✅ Category navigation via WLCollectionsPanel
- *   ✅ Client-side filtering (no additional API calls)
- *   ✅ Loading / empty / error states owned here
+ * Scope (PW5-WL3 additions):
+ *   ✅ Single catalog fetch (unchanged)
+ *   ✅ Category grouping derived client-side (unchanged)
+ *   ✅ Category navigation via WLCollectionsPanel (unchanged)
+ *   ✅ Client-side filtering (no additional API calls) (unchanged)
+ *   ✅ Loading / empty / error states owned here (unchanged)
+ *   ✅ Product detail view via selectedItemId state (PW5-WL3)
+ *   ✅ Selected item derived from existing items state — no new fetch
  *   ❌ Cart / checkout — out of scope
  *   ❌ Search — out of scope
+ *
+ * WLStorefront remains the only owner of catalog fetching.
+ * No child component may independently fetch catalog data.
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getCatalogItems, CatalogItem } from '../../services/catalogService';
 import { WLCollectionsPanel, CategoryCount } from './WLCollectionsPanel';
 import { ProductGrid } from './ProductGrid';
+import { WLProductDetailPage } from './WLProductDetailPage';
 
 // ─── Category helpers ────────────────────────────────────────────────────────
 
@@ -70,6 +79,9 @@ export function WLStorefront() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  // PW5-WL3: selected product for detail view.
+  // Derived item comes from already-fetched `items` — no secondary fetch occurs.
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   // ── Single catalog fetch ─────────────────────────────────────────────────
   // tenantId is NEVER passed — tenant scope resolved from JWT on the server.
@@ -99,6 +111,21 @@ export function WLStorefront() {
     if (activeCategory === null) return items;
     return items.filter((i) => resolveCategory(i) === activeCategory);
   }, [items, activeCategory]);
+
+  // PW5-WL3: derive selected product from already-fetched items — no new fetch.
+  // WLStorefront remains the exclusive owner of catalog data.
+  const selectedItem = useMemo(
+    () => (selectedItemId !== null ? (items.find((i) => i.id === selectedItemId) ?? null) : null),
+    [items, selectedItemId]
+  );
+
+  const handleSelectItem = useCallback((id: string) => {
+    setSelectedItemId(id);
+  }, []);
+
+  const handleBackFromDetail = useCallback(() => {
+    setSelectedItemId(null);
+  }, []);
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
@@ -136,7 +163,36 @@ export function WLStorefront() {
     );
   }
 
-  // ── Loaded ───────────────────────────────────────────────────────────────
+  // ── Loaded — product detail view (PW5-WL3) ──────────────────────────────
+  // Triggered when a shopper selects a product card. selectedItem is derived
+  // from already-fetched items — WLStorefront remains the only fetch owner.
+  if (selectedItemId !== null) {
+    if (selectedItem === null) {
+      // Product ID in state but not found in items (edge case: item removed).
+      return (
+        <div className="animate-in fade-in duration-300">
+          <button
+            type="button"
+            onClick={handleBackFromDetail}
+            className="mb-6 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-widest"
+          >
+            ← Products
+          </button>
+          <p className="text-sm text-slate-500">
+            Product not found. It may have been removed from the catalogue.
+          </p>
+        </div>
+      );
+    }
+    return (
+      <WLProductDetailPage
+        item={selectedItem}
+        onBack={handleBackFromDetail}
+      />
+    );
+  }
+
+  // ── Loaded — storefront grid ─────────────────────────────────────────────
   return (
     <div className="animate-in fade-in duration-300">
       {/* Page heading */}
@@ -156,8 +212,8 @@ export function WLStorefront() {
         onSelectCategory={setActiveCategory}
       />
 
-      {/* Product grid — receives pre-filtered items; no internal fetch */}
-      <ProductGrid items={filteredItems} />
+      {/* Product grid — receives pre-filtered items + onSelectItem; no internal fetch */}
+      <ProductGrid items={filteredItems} onSelectItem={handleSelectItem} />
     </div>
   );
 }
