@@ -28,6 +28,7 @@ import { querySimilar } from '../../lib/vectorStore.js';
 import type { VectorStoreClient, SimilarityResult } from '../../lib/vectorStore.js';
 import { generateEmbedding } from '../vectorIngestion.js';
 import { VECTOR_FLAG_KEY } from '../../lib/vectorShadowQuery.js';
+import { emitAiEventBestEffort } from '../../events/aiEmitter.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -214,6 +215,19 @@ export async function runRagRetrieval(
       topScore:       meta.topScore,
       latencyMs,
     });
+
+    // PW5-AI-EMITTER: emit ai.vector.query (best-effort, sink-only)
+    // auditLogId is unavailable here (retrieval runs before the outer audit log is created).
+    void emitAiEventBestEffort(
+      'ai.vector.query',
+      {
+        orgId,
+        collectionName: 'document_embeddings',
+        latencyMs,
+        resultCount: filtered.length,
+      },
+      { orgId }
+    );
   } catch (retrievalErr) {
     // Hard constraint: retrieval errors MUST NOT break inference
     console.error('[G028-A5][rag_retrieval_error]', { orgId, error: String(retrievalErr) });

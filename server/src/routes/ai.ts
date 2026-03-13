@@ -8,6 +8,7 @@ import { getTenantContext } from '../lib/tenantContext.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
 import { withDbContext } from '../lib/database-context.js';
+import { emitAiEventBestEffort } from '../events/aiEmitter.js';
 import {
   loadTenantBudget,
   getUsage,
@@ -69,11 +70,12 @@ async function generateContent(
   prompt: string,
   systemInstruction?: string,
   timeoutMs: number = 8000
-): Promise<{ text: string; tokensUsed: number }> {
+): Promise<{ text: string; tokensUsed: number; hadInferenceError: boolean }> {
   if (!genAI) {
     return {
       text: 'AI service temporarily unavailable. Please configure GEMINI_API_KEY.',
       tokensUsed: 0,
+      hadInferenceError: false,
     };
   }
 
@@ -101,12 +103,14 @@ async function generateContent(
     return {
       text,
       tokensUsed: estimatedTokens,
+      hadInferenceError: false,
     };
   } catch (error) {
     console.error('AI generation error:', error);
     return {
       text: 'AI service encountered an error. Please try again later.',
       tokensUsed: 0,
+      hadInferenceError: true,
     };
   }
 }
@@ -208,7 +212,10 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
 
         // 5. Generate content (AI call — uses augmented prompt when RAG is active)
         markInferenceStart(metricsHandle);
-        const { text: insightText, tokensUsed } = await generateContent(finalPrompt, systemInstruction);
+        const aiCallStart = Date.now();
+        const aiResult = await generateContent(finalPrompt, systemInstruction);
+        const inferenceLatencyMs = Date.now() - aiCallStart;
+        const { text: insightText, tokensUsed, hadInferenceError } = aiResult;
         recordInferenceLatency(metricsHandle);
         recordTotalLatency(metricsHandle);
 
@@ -246,13 +253,16 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           experience,
           reasoningLogId: reasoningLog.id,
         });
-        await tx.auditLog.create({ data: auditData });
+        const auditLog = await tx.auditLog.create({ data: auditData });
 
         return {
           insightText,
           tokensUsed,
           costEstimateUSD: actualCost,
           monthKey,
+          auditLogId: auditLog.id,
+          inferenceLatencyMs,
+          hadInferenceError,
         };
       });
 
@@ -260,6 +270,16 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
       reply.header('X-AI-Month', result.monthKey);
       reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
       reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
+
+      // PW5-AI-EMITTER: emit ai.inference.generate (best-effort, non-blocking)
+      // Persistence: auditLog row created within tx — safe to link via storeEventBestEffort.
+      void emitAiEventBestEffort(
+        result.hadInferenceError ? 'ai.inference.error' : 'ai.inference.generate',
+        result.hadInferenceError
+          ? { orgId: contextTenantId, taskType: 'insights', model, errorCode: 'AI_GENERATION_FAILED' }
+          : { orgId: contextTenantId, taskType: 'insights', model, latencyMs: result.inferenceLatencyMs },
+        { orgId: contextTenantId, auditLogId: result.auditLogId, prisma }
+      );
 
       return sendSuccess(reply, {
         insightText: result.insightText,
@@ -269,11 +289,28 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     } catch (error) {
       // Handle budget exceeded error
       if (error instanceof BudgetExceededError) {
+        // PW5-AI-EMITTER: emit ai.inference.budget_exceeded (sink-only, no auditLogId)
+        void emitAiEventBestEffort(
+          'ai.inference.budget_exceeded',
+          {
+            orgId: error.tenantId,
+            budgetType: 'tokens',
+            limitAmount: error.limits.tokens,
+            currentUsage: error.usage.tokens,
+          },
+          { orgId: error.tenantId }
+        );
         return reply.code(429).send(error.toJSON());
       }
 
       // Log and return generic error
       console.error('[AI Insights] Error:', error);
+      // PW5-AI-EMITTER: emit ai.inference.error (sink-only, no auditLogId)
+      void emitAiEventBestEffort(
+        'ai.inference.error',
+        { orgId: tenantId, taskType: 'insights', model, errorCode: 'INTERNAL_ERROR' },
+        { orgId: tenantId }
+      );
       return reply.code(500).send({
         ok: false,
         error: 'INTERNAL_ERROR',
@@ -354,11 +391,10 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           'Flag any high-risk strategies.';
 
         // 5. Generate content (AI call)
-        const { text: adviceText, tokensUsed } = await generateContent(
-          prompt,
-          systemInstruction,
-          10000
-        );
+        const negAiCallStart = Date.now();
+        const negAiResult = await generateContent(prompt, systemInstruction, 10000);
+        const negInferenceLatencyMs = Date.now() - negAiCallStart;
+        const { text: adviceText, tokensUsed, hadInferenceError: negHadInferenceError } = negAiResult;
 
         // 6. Calculate actual cost
         const actualCost = estimateCostUSD(tokensUsed, model);
@@ -395,7 +431,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           quantity,
           reasoningLogId: negReasoningLog.id,
         });
-        await tx.auditLog.create({ data: negAuditData });
+        const negAuditLog = await tx.auditLog.create({ data: negAuditData });
 
         // 9. Risk detection
         const riskFlags: string[] = [];
@@ -413,6 +449,9 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
           tokensUsed,
           costEstimateUSD: actualCost,
           monthKey,
+          auditLogId: negAuditLog.id,
+          inferenceLatencyMs: negInferenceLatencyMs,
+          hadInferenceError: negHadInferenceError,
         };
       });
 
@@ -420,6 +459,16 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
       reply.header('X-AI-Month', result.monthKey);
       reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
       reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
+
+      // PW5-AI-EMITTER: emit ai.inference.generate (best-effort, non-blocking)
+      // Persistence: auditLog row created within tx — safe to link via storeEventBestEffort.
+      void emitAiEventBestEffort(
+        result.hadInferenceError ? 'ai.inference.error' : 'ai.inference.generate',
+        result.hadInferenceError
+          ? { orgId: contextTenantId, taskType: 'negotiation-advice', model, errorCode: 'AI_GENERATION_FAILED' }
+          : { orgId: contextTenantId, taskType: 'negotiation-advice', model, latencyMs: result.inferenceLatencyMs },
+        { orgId: contextTenantId, auditLogId: result.auditLogId, prisma }
+      );
 
       return sendSuccess(reply, {
         adviceText: result.adviceText,
@@ -429,11 +478,28 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     } catch (error) {
       // Handle budget exceeded error
       if (error instanceof BudgetExceededError) {
+        // PW5-AI-EMITTER: emit ai.inference.budget_exceeded (sink-only, no auditLogId)
+        void emitAiEventBestEffort(
+          'ai.inference.budget_exceeded',
+          {
+            orgId: error.tenantId,
+            budgetType: 'tokens',
+            limitAmount: error.limits.tokens,
+            currentUsage: error.usage.tokens,
+          },
+          { orgId: error.tenantId }
+        );
         return reply.code(429).send(error.toJSON());
       }
 
       // Log and return generic error
       console.error('[AI Negotiation] Error:', error);
+      // PW5-AI-EMITTER: emit ai.inference.error (sink-only, no auditLogId)
+      void emitAiEventBestEffort(
+        'ai.inference.error',
+        { orgId: tenantId, taskType: 'negotiation-advice', model, errorCode: 'INTERNAL_ERROR' },
+        { orgId: tenantId }
+      );
       return reply.code(500).send({
         ok: false,
         error: 'INTERNAL_ERROR',
