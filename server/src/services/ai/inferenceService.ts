@@ -383,14 +383,15 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
   } = input;
 
   const normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
+
+  enforceTenantRateLimit(orgId);
+
   const existingResult = await findIdempotentReplay(input, normalizedIdempotencyKey);
   if (existingResult) {
     return existingResult;
   }
 
   const reasoningRequestId = buildReasoningRequestId(requestId, normalizedIdempotencyKey);
-
-  enforceTenantRateLimit(orgId);
 
   let txResult: AiInferenceResult;
 
