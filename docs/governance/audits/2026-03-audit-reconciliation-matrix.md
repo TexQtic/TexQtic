@@ -1917,6 +1917,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 **U-004 / VER-010: CLOSED. Wave 0 verification pass (VER-001 through VER-010) is now complete — all items resolved (PASS / FAIL / IMPLEMENTED / CLOSED). Wave 1 gate was already closed (GOVERNANCE-SYNC-106). Await next approved roadmap sequence.**
 
 *Updated: 2026-03-13 — U-004/VER-010 `WLOrdersPanel.tsx` role-gating closure recorded (Section 9.29); PASS; GOVERNANCE-SYNC-U-004 complete; Wave 0 VER gate complete (VER-001–VER-010 all resolved)*
+*Updated: 2026-03-14 — PW5-AI-TIS-EXTRACT (Section 9.32): IMPLEMENTATION COMPLETE / VERIFIED — orchestration extracted from route layer into dedicated inference service boundary (`inferenceService.ts`); route contracts and endpoint paths preserved; reasoning/audit transaction semantics preserved; existing AI event behavior preserved; `ai.vector.query` remains in RAG retrieval path; no defects; runtime verification follow-on preserved as pending operational runbook execution (non-defect); commit f2ae23b; GOVERNANCE-SYNC-PW5-AI-TIS-EXTRACT*
 *Updated: 2026-03-13 — PW5-AI-EMITTER (Section 9.31): IMPLEMENTATION COMPLETE / VERIFIED — runtime AI event emission wired; `ai.inference.generate` · `ai.inference.error` · `ai.inference.budget_exceeded` live on both AI routes; `ai.vector.query` live in `runRagRetrieval()`; deferred AI events remain open; AUDIT_ACTION_TO_EVENT_NAME unchanged; no projections/routes/schema/RLS changes; commit 73f0972; GOVERNANCE-SYNC-PW5-AI-EMITTER*
 *Updated: 2026-03-13 — PW5-AI-PLAN Wave 5 AI/event backbone planning baseline recorded (Section 9.30); PLANNING COMPLETE / BASELINE ESTABLISHED; TECS-FBW-AIGOVERNANCE NOT closed; AI/event drift observations D-001–D-009 identified; follow-on units proposed; GOVERNANCE-SYNC-PW5-AI-PLAN*
 
@@ -1979,7 +1980,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 
 | ID | File/Location | Finding | Severity |
 |---|---|---|---|
-| D-001 | `server/src/routes/ai.ts` | TIS not extracted into dedicated inference service module; orchestration concentrated in route handler | Medium |
+| D-001 | `server/src/routes/ai.ts` | **MATERIALLY REDUCED / RESOLVED BY PW5-AI-TIS-EXTRACT** — orchestration extracted into `server/src/services/ai/inferenceService.ts`; route layer no longer primary home of AI orchestration logic | Closed |
 | D-002 | `server/src/lib/events.ts` (`KnownEventName` · `AUDIT_ACTION_TO_EVENT_NAME`) | AI domain events entirely absent; prerequisite for downstream AI event consumers | High |
 | D-003 | `server/src/lib/vectorShadowQuery.ts` ~line 70 | `TODO(G028-A4): replace with real embedding pipeline` — placeholder; shadow results near-zero similarity | Low |
 | D-004 | `server/src/routes/ai.ts` | No per-tenant per-minute rate limiting (G-028 §6.3 specifies 60 req/min) | Medium |
@@ -1996,7 +1997,8 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | NOT CLOSED — backend design gate preserved; no change in this unit |
 | AI_GOV-BACKEND-001 | AiGovernance.tsx derives from tenants endpoint; no dedicated AI route | OPEN — design gate; unchanged by this baseline |
 | D-002 | AI domain events absent from KnownEventName | **CLOSED** — PW5-AI-EVENT-DOMAIN (registry, commit dd18957 · 2026-03-13) + PW5-AI-EMITTER (emission runtime wiring, commit 73f0972 · 2026-03-13) both implemented and verified; `AUDIT_ACTION_TO_EVENT_NAME` not mapped by design — emission wiring does not require audit action mapping; emission gap is now CLOSED for current trigger coverage |
-| D-001, D-005 | TIS monolith + PII redaction | OPEN — addressed together by PW5-AI-TIS-EXTRACT (proposed, not authorized) |
+| D-001 | TIS monolith concentration in route layer | **CLOSED / MATERIALLY REDUCED** — PW5-AI-TIS-EXTRACT implemented and verified (commit f2ae23b · 2026-03-13) |
+| D-005 | PII redaction pipeline absent | OPEN — remains out-of-scope for PW5-AI-TIS-EXTRACT; requires separate authorized unit |
 | D-004 | No per-tenant rate limiting | OPEN — addressed by PW5-AI-RATE-LIMIT (proposed, not authorized) |
 | D-006 | reasoning_logs idempotency_key absent | OPEN — addressed by PW5-AI-IDEMPOTENCY (proposed, not authorized; schema migration required) |
 | D-009 | negotiation-advice has no RAG | OPEN — addressed by PW5-AI-NEGOTIATION-RAG (proposed, not authorized) |
@@ -2008,7 +2010,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 |---|---|---|
 | ✅ CLOSED (dd18957 · 2026-03-13) | PW5-AI-EVENT-DOMAIN | Register AI domain events; prerequisite for all downstream AI event consumers; resolves D-002 |
 | ✅ CLOSED (73f0972 · 2026-03-13) | PW5-AI-EMITTER | Wire AI event emission; `ai.inference.generate/error/budget_exceeded` live; `ai.vector.query` live; emission gap closed for current coverage |
-| 🔲 Proposed (not authorized) | PW5-AI-TIS-EXTRACT | Extract TIS from `ai.ts` monolith; resolves D-001 + D-005 together |
+| ✅ CLOSED (f2ae23b · 2026-03-13) | PW5-AI-TIS-EXTRACT | Extract AI orchestration from `ai.ts` into dedicated `inferenceService.ts`; preserves route contracts, event behavior, and reasoning/audit transaction semantics; resolves D-001 concentration issue |
 | 🔲 Proposed (not authorized) | PW5-AI-RATE-LIMIT | Per-tenant per-minute rate limit on `/api/ai/*`; resolves D-004 |
 | 🔲 Proposed (not authorized) | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs`; schema migration required; resolves D-006 |
 | 🔲 Proposed (not authorized) | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
@@ -2042,7 +2044,7 @@ The following were **NOT performed** in this unit:
 
 **Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
 
-**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). Runtime AI emission operational for current approved trigger coverage. Deferred AI events remain open. Next proposed unit: PW5-AI-TIS-EXTRACT.**
+**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). Runtime AI emission operational for current approved trigger coverage. Runtime verification follow-on for TIS remains pending operational runbook execution (non-defect). Next proposed unit: PW5-AI-RATE-LIMIT.**
 
 ---
 
@@ -2286,3 +2288,70 @@ None.
 **Overall audit conclusion: IMPLEMENTATION COMPLETE / VERIFIED**
 
 **PW5-AI-EMITTER: CLOSED. Runtime AI event emission is now operational for current approved trigger coverage. Deferred AI event types (`ai.vector.upsert` · `ai.vector.delete` · PII events · `ai.inference.cache_hit`) remain explicitly open. `AUDIT_ACTION_TO_EVENT_NAME` unchanged by design. No defects. One follow-on note preserved (degraded-mode semantics). Next proposed unit: PW5-AI-TIS-EXTRACT.**
+
+---
+
+## Section 9.32 — PW5-AI-TIS-EXTRACT — Tenant Inference Service Extraction Closure — 2026-03-14
+
+**Unit:** GOVERNANCE-SYNC-PW5-AI-TIS-EXTRACT | **Type:** IMPLEMENTATION COMPLETE / VERIFIED | **Date:** 2026-03-14
+
+**Verification result:** VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE
+
+**Commit:** f2ae23b — `refactor(ai): extract tenant inference service (TIS)`
+
+### A — Classification
+
+| Attribute | Value |
+|---|---|
+| Unit type | TECS Implementation + Verification Closure Recording |
+| Execution unit | PW5-AI-TIS-EXTRACT |
+| Scope class | Structural extraction only (no behavior change) |
+| Status | IMPLEMENTATION COMPLETE |
+| Verification | VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE |
+
+### B — What Was Closed
+
+| Item | Closure Evidence |
+|---|---|
+| Extraction reality | Orchestration moved from `server/src/routes/ai.ts` into `server/src/services/ai/inferenceService.ts` (real extraction, not cosmetic) |
+| Route-layer narrowing | `ai.ts` now primarily handles auth/context checks, request validation/parsing, service invocation, and HTTP response formatting |
+| Behavior preservation | Endpoint paths unchanged: `/api/ai/insights` · `/api/ai/negotiation-advice` · `/api/ai/health`; degraded-mode semantics unchanged |
+| Transaction semantics | Reasoning-log and audit-log writes remain in existing transaction boundary (atomicity preserved) |
+| Event behavior | Existing emitter path preserved (`ai.inference.generate` · `ai.inference.error` · `ai.inference.budget_exceeded`); `ai.vector.query` remains in RAG retrieval path |
+
+### C — Explicit Non-Actions (Verified)
+
+- No new routes
+- No request/response contract changes
+- No event names or payload schema changes
+- No emitter semantic changes
+- No PII handling, rate limiting, idempotency, or caching additions
+- No Prisma schema changes
+- No RLS changes
+
+### D — Validation Record
+
+| Gate | Result |
+|---|---|
+| Typecheck | PASS |
+| Lint | PASS (no new errors) |
+| Build | PASS |
+| Runtime verification | Not completed in verification unit (read-only mode); recorded as pending operational runbook execution |
+
+### E — Defects
+
+None.
+
+### F — Governance Decision
+
+PW5-AI-TIS-EXTRACT is **closed**. Verification state is recorded as **VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE**. Runtime verification follow-on remains pending operational runbook execution and is explicitly classified as **non-defect**.
+
+### G — Next Proposed Unit
+
+**PW5-AI-RATE-LIMIT** — implement per-tenant AI request-frequency protection using the TIS boundary as the stable enforcement point.
+
+### H — Audit-Safe Conclusion
+
+**IMPLEMENTATION COMPLETE / VERIFIED.**
+
+Extraction boundary is materially improved (D-001 reduced), route/event/transaction behavior is preserved, and no unauthorized widening occurred.
