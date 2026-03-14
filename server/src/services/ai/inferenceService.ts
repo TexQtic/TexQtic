@@ -60,11 +60,10 @@ type TenantRateLimitWindow = {
 
 const tenantRequestWindows = new Map<string, TenantRateLimitWindow>();
 
-export class AiRateLimitExceededError extends BudgetExceededError {
+export class AiRateLimitExceededError extends Error {
   constructor(public orgId: string) {
-    super(orgId, { tokens: 0, cost: 0 }, { tokens: 0, cost: 0 }, new Date().toISOString());
+    super(`AI request rate limit exceeded for tenant ${orgId}`);
     this.name = 'AiRateLimitExceededError';
-    this.message = `AI request rate limit exceeded for tenant ${orgId}`;
   }
 
   toJSON() {
@@ -72,9 +71,6 @@ export class AiRateLimitExceededError extends BudgetExceededError {
       ok: false,
       error: 'AI_RATE_LIMIT_EXCEEDED',
       message: 'AI request rate limit exceeded',
-      limits: { tokens: 0, cost: 0 },
-      usage: { tokens: 0, cost: 0 },
-      resetAt: new Date(Date.now() + AI_RATE_LIMIT_WINDOW_MS).toISOString(),
     };
   }
 }

@@ -9,6 +9,7 @@ import { PrismaClient } from '@prisma/client';
 import {
   runAiInference,
   isGenAiConfigured,
+  AiRateLimitExceededError,
 } from '../services/ai/inferenceService.js';
 import { config } from '../config/index.js';
 
@@ -123,6 +124,9 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         cached: false,
       });
     } catch (error) {
+      if (error instanceof AiRateLimitExceededError) {
+        return reply.code(429).send(error.toJSON());
+      }
       if (error instanceof BudgetExceededError) {
         return reply.code(429).send(error.toJSON());
       }
@@ -221,6 +225,9 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         updatedAt: new Date().toISOString(),
       });
     } catch (error) {
+      if (error instanceof AiRateLimitExceededError) {
+        return reply.code(429).send(error.toJSON());
+      }
       if (error instanceof BudgetExceededError) {
         return reply.code(429).send(error.toJSON());
       }
