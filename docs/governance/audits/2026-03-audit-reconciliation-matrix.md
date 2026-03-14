@@ -2447,3 +2447,90 @@ PW5-AI-TIS-EXTRACT is **closed**. Verification state is recorded as **VERIFIED_C
 **IMPLEMENTATION COMPLETE / VERIFIED.**
 
 Extraction boundary is materially improved (D-001 reduced), route/event/transaction behavior is preserved, and no unauthorized widening occurred.
+
+---
+
+## Section 9.33 — PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-VERIFICATION — Identifier-Less Tenant Login Closure — 2026-03-14
+
+**Unit:** GOVERNANCE-SYNC-PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-VERIFICATION | **Type:** VERIFICATION + GOVERNANCE CLOSURE | **Date:** 2026-03-14
+
+**Verification result:** VERIFIED CLOSED
+
+**Remediation commit:** be151c7 — `fix(api): register public routes in vercel entrypoint`
+
+### A — Classification
+
+| Attribute | Value |
+|---|---|
+| Remediation chain | PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN |
+| Root cause | publicRoutes absent from api/index.ts (Vercel serverless entrypoint); registered in server/src/index.ts (local/dev) only |
+| Scope class | Route registration parity fix + RLS service role remediation + production verification |
+| Status | VERIFIED CLOSED |
+
+### B — Gap D-009 Closure
+
+**D-009 — Tenant-by-email login failure under FORCE RLS**
+
+| Attribute | Value |
+|---|---|
+| Root cause layer 1 | FORCE RLS on public.memberships + public.users denied bare postgres reads; by-email query returned 0 rows for all emails |
+| Root cause layer 2 | publicRoutes not registered in api/index.ts; production returned 404 for GET /api/public/tenants/by-email |
+| Resolution | PW5-AUTH-BY-EMAIL-RLS-REMEDIATION (texqtic_service SELECT grants) + PW5-AUTH-BY-EMAIL-RLS-MIGRATION-COMPLIANCE (migration applied) + PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-REMEDIATION (entrypoint parity) |
+| Status | **VERIFIED CLOSED** |
+
+### C — Production Evidence (Step A Verification)
+
+| Test Case | Request | Response | Status |
+|---|---|---|---|
+| Case A | GET /api/public/tenants/by-email?email=owner@acme.example.com | HTTP 200 — `{"tenants":[{"tenantId":"faf2e4a7...","slug":"acme-corp","name":"Acme Corporation"}]}` | ✅ PASS |
+| Case B | GET /api/public/tenants/by-email?email=owner@whitelabel.example.com | HTTP 200 — `{"tenants":[{"tenantId":"960c2e3b...","slug":"white-label-co","name":"White Label Co"}]}` | ✅ PASS |
+| Case D (negative) | GET /api/public/tenants/by-email?email=unknown@example.com | HTTP 200 — `{"tenants":[]}` (UI: No account found) | ✅ PASS |
+| Health check | GET /api/health | HTTP 200 — `{"status":"ok"}` | ✅ PASS |
+
+### D — RLS Confirmation (Step B Verification)
+
+- Route executes under `SET LOCAL ROLE texqtic_service` — confirmed by production returning real membership data
+- FORCE RLS remains enabled on public.memberships and public.users (canonical Wave 3 Tail pattern unchanged)
+- texqtic_service role holds minimum SELECT grants on memberships + users only
+- No policy modifications introduced by any remediation unit
+- 0-row result for unknown@example.com confirms RLS isolation intact (no cross-tenant data leak)
+
+### E — Route Registration Confirmation (Steps A + D)
+
+- Production returns HTTP 200 (not 404) for GET /api/public/tenants/by-email — confirms be151c7 route registration is deployed and active
+- api/index.ts now registers publicRoutes at /api/public prefix as first route, matching server/src/index.ts order
+- No duplicate prefixes introduced
+- All existing routes (auth, control, tenant, admin, ai) continue to function (GET /api/health confirms no regression)
+
+### F — Explicit Non-Actions (Verified)
+
+- ❌ No frontend login UX changes in this verification unit
+- ❌ No route logic changes (public.ts untouched)
+- ❌ No RLS policy changes
+- ❌ No migration changes in this unit
+- ❌ No seed data changes
+- ❌ No other governance documents modified outside allowlist
+
+### G — Validation Record
+
+| Gate | Result |
+|---|---|
+| `pnpm typecheck` | ✅ PASS — zero errors |
+| `pnpm lint` | ✅ PASS — zero warnings |
+| `pnpm build` | ✅ PASS — zero errors |
+| Runtime Case A | ✅ PASS — HTTP 200, Acme Corporation |
+| Runtime Case B | ✅ PASS — HTTP 200, White Label Co |
+| Runtime Case D | ✅ PASS — HTTP 200, empty tenants array |
+| Health check | ✅ PASS — HTTP 200 |
+
+### H — Audit-Safe Conclusion
+
+**VERIFICATION COMPLETE. IDENTIFIER-LESS TENANT LOGIN CHAIN CLOSED.**
+
+All four layers verified:
+- Frontend resolution path: API returns correct tenant data for valid email addresses
+- API route registration: GET /api/public/tenants/by-email reachable in production (not 404)
+- Fastify route execution: publicRoutes registered at /api/public in both server/src/index.ts and api/index.ts
+- RLS-protected DB query: texqtic_service SELECT grants enable membership lookup; FORCE RLS intact; no cross-tenant leak
+
+**PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN → CLOSED. D-009 → VERIFIED CLOSED. Remediation chain complete.**

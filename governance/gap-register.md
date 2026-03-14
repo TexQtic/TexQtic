@@ -1043,6 +1043,27 @@ Implementation: commit 476b3d3 — 5 files, 151 insertions.
 Validation: typecheck EXIT 0 (frontend + backend) · lint EXIT 0 · git diff --name-only: 5 files only (all allowlisted).  
 Admin realm flow: completely untouched.
 
+**PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN — Identifier-Less Tenant Login Remediation Chain (PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-VERIFICATION · 2026-03-14)**  
+Source: POST-FEATURE REMEDIATION CHAIN · Severity: HIGH · Status: ✅ VERIFIED CLOSED · Wave: 5  
+Parent feature: TECS-FBW-AUTH-001 (slug resolver, commit 476b3d3, 2026-03-13) delivered slug-based tenant resolution and removed SEEDED_TENANTS.  
+This chain delivers email-based org detection (identifier-less login) — the complete tenant lookup flow requiring only an email address.  
+  
+**D-009 — Tenant-by-email login failure under FORCE RLS — ✅ VERIFIED CLOSED**  
+Root cause: GET /api/public/tenants/by-email executed the memberships SELECT under the bare `postgres` superuser role; FORCE RLS on `public.memberships` + `public.users` (canonical Wave 3 Tail pattern with `texqtic_app`-scoped policies) returned 0 rows — deny-by-default.  
+Resolution units:  
+  - PW5-AUTH-BY-EMAIL-RLS-REMEDIATION: Route query wrapped in SET LOCAL ROLE texqtic_service; minimum SELECT grants on public.memberships + public.users granted to texqtic_service role; FORCE RLS remains fully intact for all other roles and paths.  
+  - PW5-AUTH-BY-EMAIL-RLS-MIGRATION-COMPLIANCE: Migration 20260319000001_pw5_by_email_service_role_grants applied to production Supabase via psql (OPS-ENV-001); Prisma ledger synced via resolve --applied.  
+  - PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-REMEDIATION: publicRoutes absent from api/index.ts (Vercel serverless entrypoint); production returned 404 for all /api/public/* routes; fix imports and registers publicRoutes at /api/public prefix in api/index.ts matching local/dev entrypoint order; commit be151c7.  
+  - PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-VERIFICATION: Production verification completed (2026-03-14).  
+Production evidence (2026-03-14):  
+  - GET /api/public/tenants/by-email?email=owner@acme.example.com → HTTP 200 `{"success":true,"data":{"tenants":[{"tenantId":"faf2e4a7-5d79-4b00-811b-8d0dce4f4d80","slug":"acme-corp","name":"Acme Corporation"}]}}` ✅  
+  - GET /api/public/tenants/by-email?email=owner@whitelabel.example.com → HTTP 200 `{"success":true,"data":{"tenants":[{"tenantId":"960c2e3b-64cf-4ba8-88d1-4e8f72d61782","slug":"white-label-co","name":"White Label Co"}]}}` ✅  
+  - GET /api/public/tenants/by-email?email=unknown@example.com → HTTP 200 `{"success":true,"data":{"tenants":[]}}` (UI: No account found) ✅  
+  - GET /api/health → HTTP 200 ✅  
+FILE SCOPE: api/index.ts (1 file, 3 insertions, commit be151c7) — governance documents only in this unit.  
+RLS state: FORCE RLS intact on all tables; texqtic_service SELECT grants minimal and scoped to memberships + users only; no policy changes.  
+D-009 Status: VERIFIED CLOSED — production endpoint /api/public/tenants/by-email operational; RLS remediation confirmed functioning.  
+
 **TECS-FBW-RLS-001 — RLS-Only Posture Governance Clarification (VER-007 PASS · TECS-FBW-RLS-001-GOV · 2026-03-13)**  
 Source: NEW_IN_CODEX · Severity: MEDIUM · Status: ✅ CLOSED · Wave: 0 (governance statement only; no code change)  
 VER-007 executed: 2026-03-13 · Verdict: FAIL (governance defect confirmed — no system-level doctrine; only memberships-specific Q2 §12.2 precedent; stale `app.tenant_id` GUC reference in contract file) → governance-writing unit authorized.  
