@@ -5,7 +5,7 @@
  * AI endpoints. Route handlers delegate here; this module owns:
  *
  *   - Budget enforcement (load policy, check preflight, upsert usage)
- *   - RAG retrieval + prompt augmentation  (insights task only)
+ *   - RAG retrieval + prompt augmentation  (insights + negotiation-advice tasks)
  *   - Latency instrumentation (ragMetrics)
  *   - Gemini model invocation (generateContent)
  *   - Reasoning log + audit log writes (atomic within Prisma transaction)
@@ -484,24 +484,42 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
         };
       } else {
         // -----------------------------------------------------------------
-        // NEGOTIATION-ADVICE orchestration path
+        // NEGOTIATION-ADVICE orchestration path (PW5-AI-NEGOTIATION-RAG)
         // -----------------------------------------------------------------
 
-        // 4. Generate content (AI call — no RAG, extended timeout)
+        // 4. RAG retrieval + prompt augmentation (PW5-AI-NEGOTIATION-RAG)
+        const metricsHandle = startTimer();
+        markRetrievalStart(metricsHandle);
+        const ragResult = await runRagRetrieval(tx, orgId, prompt);
+        recordRetrievalLatency(
+          metricsHandle,
+          ragResult.meta?.chunksInjected ?? 0,
+          ragResult.meta?.topScore ?? null,
+        );
+
+        // Augment prompt with retrieved context block when available
+        const finalPrompt = ragResult.contextBlock
+          ? `${ragResult.contextBlock}\n\n${prompt}`
+          : prompt;
+
+        // 5. Generate content (AI call — uses augmented prompt when RAG is active, extended timeout)
+        markInferenceStart(metricsHandle);
         const aiCallStart = Date.now();
-        const aiResult = await generateContent(prompt, systemInstruction, 10000);
+        const aiResult = await generateContent(finalPrompt, systemInstruction, 10000);
         const inferenceLatencyMs = Date.now() - aiCallStart;
+        recordInferenceLatency(metricsHandle);
+        recordTotalLatency(metricsHandle);
         const { text, tokensUsed, hadInferenceError } = aiResult;
 
-        // 5. Calculate actual cost
+        // 6. Calculate actual cost
         const actualCost = estimateCostUSD(tokensUsed, model);
 
-        // 6. Update usage meter
+        // 7. Update usage meter
         await upsertUsage(tx, orgId, monthKey, tokensUsed, actualCost);
 
-        // 7. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
+        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
         const reasoningHash = createHash('sha256')
-          .update(prompt + text)
+          .update(finalPrompt + text)
           .digest('hex');
         const reasoningLog = await tx.reasoningLog.create({
           data: {
@@ -509,7 +527,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
             requestId: reasoningRequestId,
             reasoningHash,
             model,
-            promptSummary: prompt.slice(0, 200),
+            promptSummary: finalPrompt.slice(0, 200),
             responseSummary: text,
             tokensUsed,
           },
@@ -529,7 +547,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
         });
         const auditLog = await tx.auditLog.create({ data: auditData });
 
-        // 8. Risk detection
+        // 9. Risk detection
         const riskFlags: string[] = [];
         const lowerAdvice = text.toLowerCase();
         if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
