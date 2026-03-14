@@ -1,49 +1,18 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
-import { createHash } from 'node:crypto';
-import { config } from '../config/index.js';
 import { sendSuccess, sendValidationError } from '../utils/response.js';
 import { getTenantContext } from '../lib/tenantContext.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
 import { databaseContextMiddleware } from '../middleware/database-context.middleware.js';
-import { withDbContext } from '../lib/database-context.js';
-import { emitAiEventBestEffort } from '../events/aiEmitter.js';
-import {
-  loadTenantBudget,
-  getUsage,
-  enforceBudgetOrThrow,
-  upsertUsage,
-  estimateCostUSD,
-  getMonthKey,
-  BudgetExceededError,
-} from '../lib/aiBudget.js';
-import {
-  buildAiInsightsReasoningAudit,
-  buildAiNegotiationReasoningAudit,
-} from '../utils/audit.js';
-import { runRagRetrieval } from '../services/ai/ragContextBuilder.js';
-import {
-  startTimer,
-  markRetrievalStart,
-  recordRetrievalLatency,
-  markInferenceStart,
-  recordInferenceLatency,
-  recordTotalLatency,
-} from '../services/ai/ragMetrics.js';
+import { getMonthKey, BudgetExceededError } from '../lib/aiBudget.js';
 import { PrismaClient } from '@prisma/client';
+import {
+  runAiInference,
+  isGenAiConfigured,
+} from '../services/ai/inferenceService.js';
+import { config } from '../config/index.js';
 
 const prisma = new PrismaClient();
-
-// Initialize Gemini client (server-side only)
-let genAI: GoogleGenerativeAI | null = null;
-try {
-  if (config.GEMINI_API_KEY) {
-    genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
-  }
-} catch (error) {
-  console.warn('Gemini AI initialization failed - using fallback mode', error);
-}
 
 // Request schemas
 const negotiationAdviceSchema = z.object({
@@ -63,57 +32,12 @@ const AI_PREFLIGHT_TOKENS_NEGOTIATION = Number.parseInt(
   10
 );
 
-/**
- * Generate AI content with timeout and token usage tracking
- */
-async function generateContent(
-  prompt: string,
-  systemInstruction?: string,
-  timeoutMs: number = 8000
-): Promise<{ text: string; tokensUsed: number; hadInferenceError: boolean }> {
-  if (!genAI) {
-    return {
-      text: 'AI service temporarily unavailable. Please configure GEMINI_API_KEY.',
-      tokensUsed: 0,
-      hadInferenceError: false,
-    };
-  }
-
-  try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: systemInstruction,
-    });
-
-    // Race between AI call and timeout
-    const aiPromise = model.generateContent(prompt);
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('AI request timeout')), timeoutMs)
-    );
-
-    const result = await Promise.race([aiPromise, timeoutPromise]);
-    const response = result.response;
-    const text = response.text();
-
-    // Estimate tokens used based on response length
-    // Gemini SDK doesn't always provide usage metadata
-    // Rough estimate: 1 token ≈ 4 characters
-    const estimatedTokens = Math.ceil((prompt.length + text.length) / 4);
-
-    return {
-      text,
-      tokensUsed: estimatedTokens,
-      hadInferenceError: false,
-    };
-  } catch (error) {
-    console.error('AI generation error:', error);
-    return {
-      text: 'AI service encountered an error. Please try again later.',
-      tokensUsed: 0,
-      hadInferenceError: true,
-    };
-  }
-}
+// ---------------------------------------------------------------------------
+// NOTE: generateContent, genAI init, orchestration logic, RAG retrieval,
+// latency metrics, reasoning/audit log writes, and event emission have all
+// been extracted to server/src/services/ai/inferenceService.ts
+// (PW5-AI-TIS-EXTRACT). Route handlers below are HTTP-concern only.
+// ---------------------------------------------------------------------------
 
 const aiRoutes: FastifyPluginAsync = async fastify => {
   /**
@@ -127,6 +51,8 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    * Response: { ok: true, data: { insightText: string, updatedAt: string } }
    *
    * Phase 3B: Budget enforcement + usage metering + audit logging
+   *
+   * Orchestration delegated to inferenceService.runAiInference (PW5-AI-TIS-EXTRACT).
    */
   fastify.get('/insights', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { tenantId, realm: _realm, userId } = getTenantContext(request);
@@ -154,163 +80,53 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return reply.code(401).send({ ok: false, error: 'UNAUTHORIZED', message: 'Database context missing' });
       }
-      const contextTenantId = dbContext.orgId;
 
-      // Execute within tenant DB context (RLS enforced)
-      const result = await withDbContext(prisma, dbContext, async tx => {
-        // 1. Load budget policy
-        const budget = await loadTenantBudget(tx, contextTenantId);
+      // Build prompt (HTTP-layer concern: assemble task-specific prompt text)
+      const basePrompt = 'Provide a brief market trend analysis';
+      const contextParts: string[] = [];
+      if (tenantType) contextParts.push(`for a ${tenantType} platform`);
+      if (experience) contextParts.push(`focusing on ${experience}`);
+      const prompt =
+        contextParts.length > 0
+          ? `${basePrompt} ${contextParts.join(' ')}.`
+          : `${basePrompt} for a global commerce platform.`;
 
-        // 2. Get current usage
-        const usage = await getUsage(tx, contextTenantId, monthKey);
+      const systemInstruction =
+        'You are a strategic AI advisor for a multi-tenant global commerce platform. ' +
+        'Provide architectural and market insights concisely in 2-3 sentences.';
 
-        // 3. Preflight budget check (conservative estimate)
-        const preflightTokens = AI_PREFLIGHT_TOKENS_INSIGHTS;
-        const preflightCost = estimateCostUSD(preflightTokens, model);
-        enforceBudgetOrThrow(budget, usage, preflightTokens, preflightCost);
-
-        // 4. Build prompt
-        const basePrompt = 'Provide a brief market trend analysis';
-        const contextParts: string[] = [];
-
-        if (tenantType) {
-          contextParts.push(`for a ${tenantType} platform`);
-        }
-        if (experience) {
-          contextParts.push(`focusing on ${experience}`);
-        }
-
-        const prompt =
-          contextParts.length > 0
-            ? `${basePrompt} ${contextParts.join(' ')}.`
-            : `${basePrompt} for a global commerce platform.`;
-
-        const systemInstruction =
-          'You are a strategic AI advisor for a multi-tenant global commerce platform. ' +
-          'Provide architectural and market insights concisely in 2-3 sentences.';
-
-        // 4.5 G-028 A5: RAG retrieval + prompt injection
-        // Gated by feature flag OP_G028_VECTOR_ENABLED. Fail-safe: errors fall back to zero-shot.
-        // Builds a real Gemini embedding, queries document_embeddings, injects context block.
-        // Metadata (no chunk content) logged to reasoning_logs as model="vector-rag/g028-a5".
-        //
-        // G-028 A7: Latency instrumentation (read-only; logged to console; not persisted).
-        const metricsHandle = startTimer();
-        markRetrievalStart(metricsHandle);
-        const ragResult = await runRagRetrieval(tx, contextTenantId, prompt);
-        recordRetrievalLatency(
-          metricsHandle,
-          ragResult.meta?.chunksInjected ?? 0,
-          ragResult.meta?.topScore ?? null,
-        );
-
-        // Augment prompt: inject retrieved context block before the original user prompt.
-        // Falls back to the original prompt if retrieval is skipped or returns no results.
-        const finalPrompt = ragResult.contextBlock
-          ? `${ragResult.contextBlock}\n\n${prompt}`
-          : prompt;
-
-        // 5. Generate content (AI call — uses augmented prompt when RAG is active)
-        markInferenceStart(metricsHandle);
-        const aiCallStart = Date.now();
-        const aiResult = await generateContent(finalPrompt, systemInstruction);
-        const inferenceLatencyMs = Date.now() - aiCallStart;
-        const { text: insightText, tokensUsed, hadInferenceError } = aiResult;
-        recordInferenceLatency(metricsHandle);
-        recordTotalLatency(metricsHandle);
-
-        // 6. Calculate actual cost
-        const actualCost = estimateCostUSD(tokensUsed, model);
-
-        // 7. Update usage meter
-        await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
-
-        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
-        const auditUserId = userId ?? null;
-        const reasoningHash = createHash('sha256')
-          .update(finalPrompt + insightText)
-          .digest('hex');
-        const reasoningLog = await tx.reasoningLog.create({
-          data: {
-            tenantId: contextTenantId,
-            requestId,
-            reasoningHash,
-            model,
-            promptSummary: finalPrompt.slice(0, 200),
-            responseSummary: insightText.slice(0, 200),
-            tokensUsed,
-          },
-        });
-        const auditData = buildAiInsightsReasoningAudit({
-          tenantId: contextTenantId,
-          userId: auditUserId,
-          model,
-          tokensUsed,
-          costEstimateUSD: actualCost,
-          monthKey,
-          requestId,
-          tenantType,
-          experience,
-          reasoningLogId: reasoningLog.id,
-        });
-        const auditLog = await tx.auditLog.create({ data: auditData });
-
-        return {
-          insightText,
-          tokensUsed,
-          costEstimateUSD: actualCost,
-          monthKey,
-          auditLogId: auditLog.id,
-          inferenceLatencyMs,
-          hadInferenceError,
-        };
+      // Delegate all orchestration to TIS
+      const result = await runAiInference({
+        orgId: dbContext.orgId,
+        taskType: 'insights',
+        model,
+        prompt,
+        systemInstruction,
+        preflightTokens: AI_PREFLIGHT_TOKENS_INSIGHTS,
+        monthKey,
+        requestId,
+        userId: userId ?? null,
+        prisma,
+        dbContext,
+        tenantType,
+        experience,
       });
 
-      // Add response headers for debugging
+      // HTTP response headers
       reply.header('X-AI-Month', result.monthKey);
       reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
       reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
 
-      // PW5-AI-EMITTER: emit ai.inference.generate (best-effort, non-blocking)
-      // Persistence: auditLog row created within tx — safe to link via storeEventBestEffort.
-      void emitAiEventBestEffort(
-        result.hadInferenceError ? 'ai.inference.error' : 'ai.inference.generate',
-        result.hadInferenceError
-          ? { orgId: contextTenantId, taskType: 'insights', model, errorCode: 'AI_GENERATION_FAILED' }
-          : { orgId: contextTenantId, taskType: 'insights', model, latencyMs: result.inferenceLatencyMs },
-        { orgId: contextTenantId, auditLogId: result.auditLogId, prisma }
-      );
-
       return sendSuccess(reply, {
-        insightText: result.insightText,
+        insightText: result.text,
         updatedAt: new Date().toISOString(),
         cached: false,
       });
     } catch (error) {
-      // Handle budget exceeded error
       if (error instanceof BudgetExceededError) {
-        // PW5-AI-EMITTER: emit ai.inference.budget_exceeded (sink-only, no auditLogId)
-        void emitAiEventBestEffort(
-          'ai.inference.budget_exceeded',
-          {
-            orgId: error.tenantId,
-            budgetType: 'tokens',
-            limitAmount: error.limits.tokens,
-            currentUsage: error.usage.tokens,
-          },
-          { orgId: error.tenantId }
-        );
         return reply.code(429).send(error.toJSON());
       }
-
-      // Log and return generic error
       console.error('[AI Insights] Error:', error);
-      // PW5-AI-EMITTER: emit ai.inference.error (sink-only, no auditLogId)
-      void emitAiEventBestEffort(
-        'ai.inference.error',
-        { orgId: tenantId, taskType: 'insights', model, errorCode: 'INTERNAL_ERROR' },
-        { orgId: tenantId }
-      );
       return reply.code(500).send({
         ok: false,
         error: 'INTERNAL_ERROR',
@@ -327,6 +143,8 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    * Response: { ok: true, data: { adviceText: string, riskFlags: string[], updatedAt: string } }
    *
    * Phase 3B: Budget enforcement + usage metering + audit logging
+   *
+   * Orchestration delegated to inferenceService.runAiInference (PW5-AI-TIS-EXTRACT).
    */
   fastify.post('/negotiation-advice', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { tenantId, realm: _realm, userId } = getTenantContext(request);
@@ -358,148 +176,55 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return reply.code(401).send({ ok: false, error: 'UNAUTHORIZED', message: 'Database context missing' });
       }
-      const contextTenantId = dbContext.orgId;
 
-      // Execute within tenant DB context (RLS enforced)
-      const result = await withDbContext(prisma, dbContext, async tx => {
-        // 1. Load budget policy
-        const budget = await loadTenantBudget(tx, contextTenantId);
+      // Build prompt (HTTP-layer concern: assemble task-specific prompt text)
+      let prompt = 'Generate 3 strategic negotiation points for a B2B buyer.';
+      const details: string[] = [];
+      if (productName) details.push(`Product: ${productName}`);
+      if (targetPrice) details.push(`Target Price: $${targetPrice}`);
+      if (quantity) details.push(`Quantity: ${quantity} units`);
+      if (context) details.push(`Context: ${context}`);
+      if (details.length > 0) {
+        prompt = `${details.join('. ')}. ${prompt}`;
+      }
 
-        // 2. Get current usage
-        const usage = await getUsage(tx, contextTenantId, monthKey);
+      const systemInstruction =
+        'You are a B2B negotiation advisor. Provide 3 concise, actionable negotiation tactics. ' +
+        'Flag any high-risk strategies.';
 
-        // 3. Preflight budget check (conservative estimate)
-        const preflightTokens = AI_PREFLIGHT_TOKENS_NEGOTIATION;
-        const preflightCost = estimateCostUSD(preflightTokens, model);
-        enforceBudgetOrThrow(budget, usage, preflightTokens, preflightCost);
-
-        // 4. Build prompt
-        let prompt = 'Generate 3 strategic negotiation points for a B2B buyer.';
-        const details: string[] = [];
-
-        if (productName) details.push(`Product: ${productName}`);
-        if (targetPrice) details.push(`Target Price: $${targetPrice}`);
-        if (quantity) details.push(`Quantity: ${quantity} units`);
-        if (context) details.push(`Context: ${context}`);
-
-        if (details.length > 0) {
-          prompt = `${details.join('. ')}. ${prompt}`;
-        }
-
-        const systemInstruction =
-          'You are a B2B negotiation advisor. Provide 3 concise, actionable negotiation tactics. ' +
-          'Flag any high-risk strategies.';
-
-        // 5. Generate content (AI call)
-        const negAiCallStart = Date.now();
-        const negAiResult = await generateContent(prompt, systemInstruction, 10000);
-        const negInferenceLatencyMs = Date.now() - negAiCallStart;
-        const { text: adviceText, tokensUsed, hadInferenceError: negHadInferenceError } = negAiResult;
-
-        // 6. Calculate actual cost
-        const actualCost = estimateCostUSD(tokensUsed, model);
-
-        // 7. Update usage meter
-        await upsertUsage(tx, contextTenantId, monthKey, tokensUsed, actualCost);
-
-        const auditUserId = userId ?? null;
-        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
-        const negReasoningHash = createHash('sha256')
-          .update(prompt + adviceText)
-          .digest('hex');
-        const negReasoningLog = await tx.reasoningLog.create({
-          data: {
-            tenantId: contextTenantId,
-            requestId,
-            reasoningHash: negReasoningHash,
-            model,
-            promptSummary: prompt.slice(0, 200),
-            responseSummary: adviceText.slice(0, 200),
-            tokensUsed,
-          },
-        });
-        const negAuditData = buildAiNegotiationReasoningAudit({
-          tenantId: contextTenantId,
-          userId: auditUserId,
-          model,
-          tokensUsed,
-          costEstimateUSD: actualCost,
-          monthKey,
-          requestId,
-          productName,
-          targetPrice,
-          quantity,
-          reasoningLogId: negReasoningLog.id,
-        });
-        const negAuditLog = await tx.auditLog.create({ data: negAuditData });
-
-        // 9. Risk detection
-        const riskFlags: string[] = [];
-        const lowerAdvice = adviceText.toLowerCase();
-        if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
-          riskFlags.push('AGGRESSIVE_TACTICS');
-        }
-        if (targetPrice && targetPrice < 10) {
-          riskFlags.push('LOW_PRICE_THRESHOLD');
-        }
-
-        return {
-          adviceText,
-          riskFlags,
-          tokensUsed,
-          costEstimateUSD: actualCost,
-          monthKey,
-          auditLogId: negAuditLog.id,
-          inferenceLatencyMs: negInferenceLatencyMs,
-          hadInferenceError: negHadInferenceError,
-        };
+      // Delegate all orchestration to TIS
+      const result = await runAiInference({
+        orgId: dbContext.orgId,
+        taskType: 'negotiation-advice',
+        model,
+        prompt,
+        systemInstruction,
+        preflightTokens: AI_PREFLIGHT_TOKENS_NEGOTIATION,
+        monthKey,
+        requestId,
+        userId: userId ?? null,
+        prisma,
+        dbContext,
+        productName,
+        targetPrice,
+        quantity,
       });
 
-      // Add response headers for debugging
+      // HTTP response headers
       reply.header('X-AI-Month', result.monthKey);
       reply.header('X-AI-Tokens-Used', result.tokensUsed.toString());
       reply.header('X-AI-Cost-USD', result.costEstimateUSD.toFixed(4));
 
-      // PW5-AI-EMITTER: emit ai.inference.generate (best-effort, non-blocking)
-      // Persistence: auditLog row created within tx — safe to link via storeEventBestEffort.
-      void emitAiEventBestEffort(
-        result.hadInferenceError ? 'ai.inference.error' : 'ai.inference.generate',
-        result.hadInferenceError
-          ? { orgId: contextTenantId, taskType: 'negotiation-advice', model, errorCode: 'AI_GENERATION_FAILED' }
-          : { orgId: contextTenantId, taskType: 'negotiation-advice', model, latencyMs: result.inferenceLatencyMs },
-        { orgId: contextTenantId, auditLogId: result.auditLogId, prisma }
-      );
-
       return sendSuccess(reply, {
-        adviceText: result.adviceText,
-        riskFlags: result.riskFlags,
+        adviceText: result.text,
+        riskFlags: result.riskFlags ?? [],
         updatedAt: new Date().toISOString(),
       });
     } catch (error) {
-      // Handle budget exceeded error
       if (error instanceof BudgetExceededError) {
-        // PW5-AI-EMITTER: emit ai.inference.budget_exceeded (sink-only, no auditLogId)
-        void emitAiEventBestEffort(
-          'ai.inference.budget_exceeded',
-          {
-            orgId: error.tenantId,
-            budgetType: 'tokens',
-            limitAmount: error.limits.tokens,
-            currentUsage: error.usage.tokens,
-          },
-          { orgId: error.tenantId }
-        );
         return reply.code(429).send(error.toJSON());
       }
-
-      // Log and return generic error
       console.error('[AI Negotiation] Error:', error);
-      // PW5-AI-EMITTER: emit ai.inference.error (sink-only, no auditLogId)
-      void emitAiEventBestEffort(
-        'ai.inference.error',
-        { orgId: tenantId, taskType: 'negotiation-advice', model, errorCode: 'INTERNAL_ERROR' },
-        { orgId: tenantId }
-      );
       return reply.code(500).send({
         ok: false,
         error: 'INTERNAL_ERROR',
@@ -514,7 +239,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/health', { onRequest: [tenantAuthMiddleware] }, async (_request, reply) => {
     return sendSuccess(reply, {
-      status: genAI ? 'operational' : 'degraded',
+      status: isGenAiConfigured() ? 'operational' : 'degraded',
       provider: 'gemini-1.5-flash',
       configured: config.GEMINI_API_KEY ? true : false,
       timestamp: new Date().toISOString(),
