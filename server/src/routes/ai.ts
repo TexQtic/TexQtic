@@ -72,6 +72,10 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const requestId = `insights-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    const idempotencyHeader = request.headers['idempotency-key'];
+    const idempotencyKey = Array.isArray(idempotencyHeader)
+      ? idempotencyHeader[0]
+      : idempotencyHeader;
     const monthKey = getMonthKey();
     const model = 'gemini-1.5-flash';
 
@@ -106,6 +110,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         preflightTokens: AI_PREFLIGHT_TOKENS_INSIGHTS,
         monthKey,
         requestId,
+        idempotencyKey,
         userId: userId ?? null,
         prisma,
         dbContext,
@@ -171,6 +176,10 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
     const { productName, targetPrice, quantity, context } = parseResult.data;
 
     const requestId = `negotiation-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    const idempotencyHeader = request.headers['idempotency-key'];
+    const idempotencyKey = Array.isArray(idempotencyHeader)
+      ? idempotencyHeader[0]
+      : idempotencyHeader;
     const monthKey = getMonthKey();
     const model = 'gemini-1.5-flash';
 
@@ -206,6 +215,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         preflightTokens: AI_PREFLIGHT_TOKENS_NEGOTIATION,
         monthKey,
         requestId,
+        idempotencyKey,
         userId: userId ?? null,
         prisma,
         dbContext,

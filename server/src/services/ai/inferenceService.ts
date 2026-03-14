@@ -52,6 +52,7 @@ import { emitAiEventBestEffort } from '../../events/aiEmitter.js';
 
 const AI_RATE_LIMIT_PER_MINUTE = 60;
 const AI_RATE_LIMIT_WINDOW_MS = 60_000;
+const AI_IDEMPOTENCY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 type TenantRateLimitWindow = {
   count: number;
@@ -210,6 +211,7 @@ export interface AiInferenceInput {
   preflightTokens: number;
   monthKey: string;
   requestId: string;
+  idempotencyKey?: string;
   userId: string | null;
   prisma: PrismaClient;
   dbContext: DatabaseContext;
@@ -247,6 +249,111 @@ export interface AiInferenceResult {
   riskFlags?: string[];
 }
 
+function normalizeIdempotencyKey(idempotencyKey?: string): string | undefined {
+  const normalized = idempotencyKey?.trim();
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
+function buildReasoningRequestId(requestId: string, idempotencyKey?: string): string {
+  if (!idempotencyKey) {
+    return requestId;
+  }
+  return `idem:${idempotencyKey}`;
+}
+
+function extractAuditMetadataValue(
+  metadataJson: unknown,
+  key: string
+): string | number | undefined {
+  if (!metadataJson || typeof metadataJson !== 'object' || Array.isArray(metadataJson)) {
+    return undefined;
+  }
+  const value = (metadataJson as Record<string, unknown>)[key];
+  if (typeof value === 'string' || typeof value === 'number') {
+    return value;
+  }
+  return undefined;
+}
+
+async function findIdempotentReplay(
+  input: AiInferenceInput,
+  normalizedIdempotencyKey?: string
+): Promise<AiInferenceResult | null> {
+  if (!normalizedIdempotencyKey) {
+    return null;
+  }
+
+  const replaySince = new Date(Date.now() - AI_IDEMPOTENCY_WINDOW_MS);
+  const reasoningRequestId = buildReasoningRequestId(input.requestId, normalizedIdempotencyKey);
+
+  return withDbContext(input.prisma, input.dbContext, async tx => {
+    const existing = await tx.reasoningLog.findFirst({
+      where: {
+        tenantId: input.orgId,
+        requestId: reasoningRequestId,
+        createdAt: {
+          gte: replaySince,
+        },
+      },
+      include: {
+        auditLogs: {
+          where: {
+            action: {
+              in: ['AI_INSIGHTS', 'AI_NEGOTIATION_ADVICE'],
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (!existing) {
+      return null;
+    }
+
+    const linkedAudit = existing.auditLogs[0];
+    const metadataMonthKey = extractAuditMetadataValue(linkedAudit?.metadataJson, 'monthKey');
+    const metadataCost = extractAuditMetadataValue(linkedAudit?.metadataJson, 'costEstimateUSD');
+
+    const text = existing.responseSummary ?? '';
+    const tokensUsed = existing.tokensUsed;
+    const costEstimateUSD =
+      typeof metadataCost === 'number'
+        ? metadataCost
+        : estimateCostUSD(tokensUsed, input.model);
+
+    const replayResult: AiInferenceResult = {
+      text,
+      tokensUsed,
+      costEstimateUSD,
+      monthKey: typeof metadataMonthKey === 'string' ? metadataMonthKey : input.monthKey,
+      auditLogId: linkedAudit?.id ?? '',
+      inferenceLatencyMs: 0,
+      hadInferenceError: false,
+    };
+
+    if (input.taskType === 'negotiation-advice') {
+      const riskFlags: string[] = [];
+      const lowerAdvice = text.toLowerCase();
+      if (lowerAdvice.includes('aggressive') || lowerAdvice.includes('ultimatum')) {
+        riskFlags.push('AGGRESSIVE_TACTICS');
+      }
+      if (input.targetPrice && input.targetPrice < 10) {
+        riskFlags.push('LOW_PRICE_THRESHOLD');
+      }
+      replayResult.riskFlags = riskFlags;
+    }
+
+    return replayResult;
+  });
+}
+
 /**
  * runAiInference — primary TIS entry point.
  *
@@ -269,10 +376,19 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
     preflightTokens,
     monthKey,
     requestId,
+    idempotencyKey,
     userId,
     prisma,
     dbContext,
   } = input;
+
+  const normalizedIdempotencyKey = normalizeIdempotencyKey(idempotencyKey);
+  const existingResult = await findIdempotentReplay(input, normalizedIdempotencyKey);
+  if (existingResult) {
+    return existingResult;
+  }
+
+  const reasoningRequestId = buildReasoningRequestId(requestId, normalizedIdempotencyKey);
 
   enforceTenantRateLimit(orgId);
 
@@ -334,11 +450,11 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
         const reasoningLog = await tx.reasoningLog.create({
           data: {
             tenantId: orgId,
-            requestId,
+            requestId: reasoningRequestId,
             reasoningHash,
             model,
             promptSummary: finalPrompt.slice(0, 200),
-            responseSummary: text.slice(0, 200),
+            responseSummary: text,
             tokensUsed,
           },
         });
@@ -349,7 +465,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           tokensUsed,
           costEstimateUSD: actualCost,
           monthKey,
-          requestId,
+          requestId: reasoningRequestId,
           tenantType: input.tenantType,
           experience: input.experience,
           reasoningLogId: reasoningLog.id,
@@ -389,11 +505,11 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
         const reasoningLog = await tx.reasoningLog.create({
           data: {
             tenantId: orgId,
-            requestId,
+            requestId: reasoningRequestId,
             reasoningHash,
             model,
             promptSummary: prompt.slice(0, 200),
-            responseSummary: text.slice(0, 200),
+            responseSummary: text,
             tokensUsed,
           },
         });
@@ -404,7 +520,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           tokensUsed,
           costEstimateUSD: actualCost,
           monthKey,
-          requestId,
+          requestId: reasoningRequestId,
           productName: input.productName,
           targetPrice: input.targetPrice,
           quantity: input.quantity,
