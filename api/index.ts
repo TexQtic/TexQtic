@@ -21,6 +21,7 @@ import fastifyJwt from '@fastify/jwt';
 import { config } from '../server/src/config/index.js';
 import { realmHintGuardOnRequest } from '../server/src/middleware/realmGuard.js';
 import { tenantResolutionHook } from '../server/src/hooks/tenantResolutionHook.js';
+import publicRoutes from '../server/src/routes/public.js';
 import authRoutes from '../server/src/routes/auth.js';
 import controlRoutes from '../server/src/routes/control.js';
 import tenantRoutes from '../server/src/routes/tenant.js';
@@ -148,6 +149,8 @@ fastify.addHook('onRequest', async (request, reply) => {
 });
 
 // Register application routes
+// PW5-AUTH-BY-EMAIL-ROUTE-REGISTRATION-REMEDIATION: register publicRoutes for production parity
+await fastify.register(publicRoutes, { prefix: '/api/public' });
 await fastify.register(authRoutes, { prefix: '/api/auth' });
 await fastify.register(controlRoutes, { prefix: '/api/control' });
 await fastify.register(tenantRoutes, { prefix: '/api' });
