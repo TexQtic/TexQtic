@@ -15,7 +15,7 @@
  *   - No behavioral changes from the original ai.ts orchestration logic
  *   - Reasoning log + audit log writes remain atomic (single Prisma transaction)
  *   - Event emission is always best-effort and never blocks the primary flow
- *   - No PII redaction, rate limiting, idempotency, or caching in this unit
+ *   - No PII redaction, idempotency, or caching in this unit
  *   - Export:  runAiInference()
  *              isGenAiConfigured()
  *
@@ -49,6 +49,51 @@ import {
   recordTotalLatency,
 } from './ragMetrics.js';
 import { emitAiEventBestEffort } from '../../events/aiEmitter.js';
+
+const AI_RATE_LIMIT_PER_MINUTE = 60;
+const AI_RATE_LIMIT_WINDOW_MS = 60_000;
+
+type TenantRateLimitWindow = {
+  count: number;
+  windowStart: number;
+};
+
+const tenantRequestWindows = new Map<string, TenantRateLimitWindow>();
+
+export class AiRateLimitExceededError extends BudgetExceededError {
+  constructor(public orgId: string) {
+    super(orgId, { tokens: 0, cost: 0 }, { tokens: 0, cost: 0 }, new Date().toISOString());
+    this.name = 'AiRateLimitExceededError';
+    this.message = `AI request rate limit exceeded for tenant ${orgId}`;
+  }
+
+  toJSON() {
+    return {
+      ok: false,
+      error: 'AI_RATE_LIMIT_EXCEEDED',
+      message: 'AI request rate limit exceeded',
+      limits: { tokens: 0, cost: 0 },
+      usage: { tokens: 0, cost: 0 },
+      resetAt: new Date(Date.now() + AI_RATE_LIMIT_WINDOW_MS).toISOString(),
+    };
+  }
+}
+
+function enforceTenantRateLimit(orgId: string): void {
+  const now = Date.now();
+  const windowEntry = tenantRequestWindows.get(orgId);
+
+  if (!windowEntry || now - windowEntry.windowStart >= AI_RATE_LIMIT_WINDOW_MS) {
+    tenantRequestWindows.set(orgId, { count: 1, windowStart: now });
+    return;
+  }
+
+  if (windowEntry.count >= AI_RATE_LIMIT_PER_MINUTE) {
+    throw new AiRateLimitExceededError(orgId);
+  }
+
+  windowEntry.count += 1;
+}
 
 // ---------------------------------------------------------------------------
 // Gemini client — initialised once at module load (server-side only)
@@ -232,6 +277,8 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
     prisma,
     dbContext,
   } = input;
+
+  enforceTenantRateLimit(orgId);
 
   let txResult: AiInferenceResult;
 
