@@ -1983,7 +1983,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | D-001 | `server/src/routes/ai.ts` | **MATERIALLY REDUCED / RESOLVED BY PW5-AI-TIS-EXTRACT** — orchestration extracted into `server/src/services/ai/inferenceService.ts`; route layer no longer primary home of AI orchestration logic | Closed |
 | D-002 | `server/src/lib/events.ts` (`KnownEventName` · `AUDIT_ACTION_TO_EVENT_NAME`) | AI domain events entirely absent; prerequisite for downstream AI event consumers | High |
 | D-003 | `server/src/lib/vectorShadowQuery.ts` ~line 70 | `TODO(G028-A4): replace with real embedding pipeline` — placeholder; shadow results near-zero similarity | Low |
-| D-004 | `server/src/routes/ai.ts` | No per-tenant per-minute rate limiting (G-028 §6.3 specifies 60 req/min) | Medium |
+| D-004 | `server/src/services/ai/inferenceService.ts` + `server/src/routes/ai.ts` | ~~No per-tenant per-minute rate limiting (G-028 §6.3 specifies 60 req/min)~~ — CLOSED via PW5-AI-RATE-LIMIT + PW5-AI-RATE-LIMIT-REMEDIATION: limiter enforced at TIS boundary (60 / 60_000ms), rate-limit rejection separated from budget semantics | Closed |
 | D-005 | `server/src/routes/ai.ts` | PII redaction pipeline (pre-send + post-receive) not implemented | Medium |
 | D-006 | `server/prisma/schema.prisma` (`reasoning_logs` table) | `idempotency_key` column absent; G-028 §3.3 specifies it as required | Medium |
 | D-007 | `components/ControlPlane/AiGovernance.tsx` | Control-plane AI governance UI cosmetic; no dedicated AI backend; acknowledged design gate | Acknowledged |
@@ -1999,7 +1999,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | D-002 | AI domain events absent from KnownEventName | **CLOSED** — PW5-AI-EVENT-DOMAIN (registry, commit dd18957 · 2026-03-13) + PW5-AI-EMITTER (emission runtime wiring, commit 73f0972 · 2026-03-13) both implemented and verified; `AUDIT_ACTION_TO_EVENT_NAME` not mapped by design — emission wiring does not require audit action mapping; emission gap is now CLOSED for current trigger coverage |
 | D-001 | TIS monolith concentration in route layer | **CLOSED / MATERIALLY REDUCED** — PW5-AI-TIS-EXTRACT implemented and verified (commit f2ae23b · 2026-03-13) |
 | D-005 | PII redaction pipeline absent | OPEN — remains out-of-scope for PW5-AI-TIS-EXTRACT; requires separate authorized unit |
-| D-004 | No per-tenant rate limiting | OPEN — addressed by PW5-AI-RATE-LIMIT (proposed, not authorized) |
+| D-004 | No per-tenant rate limiting | **CLOSED** — PW5-AI-RATE-LIMIT implemented (96ca710) and corrected via PW5-AI-RATE-LIMIT-REMEDIATION (4b96e13); rate-limit path no longer emits `ai.inference.budget_exceeded`; 429 + `AI_RATE_LIMIT_EXCEEDED` preserved |
 | D-006 | reasoning_logs idempotency_key absent | OPEN — addressed by PW5-AI-IDEMPOTENCY (proposed, not authorized; schema migration required) |
 | D-009 | negotiation-advice has no RAG | OPEN — addressed by PW5-AI-NEGOTIATION-RAG (proposed, not authorized) |
 | D-003, D-008 | Shadow query placeholder; health auth note | LOW — recorded; low urgency |
@@ -2011,7 +2011,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | ✅ CLOSED (dd18957 · 2026-03-13) | PW5-AI-EVENT-DOMAIN | Register AI domain events; prerequisite for all downstream AI event consumers; resolves D-002 |
 | ✅ CLOSED (73f0972 · 2026-03-13) | PW5-AI-EMITTER | Wire AI event emission; `ai.inference.generate/error/budget_exceeded` live; `ai.vector.query` live; emission gap closed for current coverage |
 | ✅ CLOSED (f2ae23b · 2026-03-13) | PW5-AI-TIS-EXTRACT | Extract AI orchestration from `ai.ts` into dedicated `inferenceService.ts`; preserves route contracts, event behavior, and reasoning/audit transaction semantics; resolves D-001 concentration issue |
-| 🔲 Proposed (not authorized) | PW5-AI-RATE-LIMIT | Per-tenant per-minute rate limit on `/api/ai/*`; resolves D-004 |
+| ✅ CLOSED (96ca710 → 4b96e13 · 2026-03-14) | PW5-AI-RATE-LIMIT / PW5-AI-RATE-LIMIT-REMEDIATION | Per-tenant per-minute limiter implemented at TIS boundary; initial verification defect (event-behavior leakage) remediated; final state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE; D-004 resolved |
 | 🔲 Proposed (not authorized) | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs`; schema migration required; resolves D-006 |
 | 🔲 Proposed (not authorized) | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
 | 🔲 Proposed (not authorized) | PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog mutations via vector queue; G-028 B1; depends on PW5-AI-EVENT-DOMAIN |
@@ -2044,7 +2044,33 @@ The following were **NOT performed** in this unit:
 
 **Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
 
-**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). Runtime AI emission operational for current approved trigger coverage. Runtime verification follow-on for TIS remains pending operational runbook execution (non-defect). Next proposed unit: PW5-AI-RATE-LIMIT.**
+**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (initial 96ca710; remediation 4b96e13 · 2026-03-14). Defect corrected, route contract preserved, budget path preserved, no residual defects. Static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-IDEMPOTENCY.**
+
+---
+
+## PW5-AI-RATE-LIMIT-REMEDIATION — IMPLEMENTATION COMPLETE / VERIFIED
+
+**Governance sync:** GOVERNANCE-SYNC-PW5-AI-RATE-LIMIT-REMEDIATION | **Date:** 2026-03-14 | **Type:** Remediation + Verification Closure
+
+**Classification:** IMPLEMENTATION COMPLETE · VERIFIED (VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE)
+
+**Defect corrected:** rate-limit rejection previously flowed through budget-exceeded handling and emitted `ai.inference.budget_exceeded`.
+
+**Corrected state recorded:**
+
+- Rate-limit path now distinct from budget path.
+- Rate-limited requests return HTTP 429 with `error: "AI_RATE_LIMIT_EXCEEDED"`.
+- Rate-limited requests no longer emit `ai.inference.generate`, `ai.inference.error`, or `ai.inference.budget_exceeded`.
+- True budget exhaustion behavior preserved for real `BudgetExceededError`.
+- No schema changes, no event schema changes, no new event names, no emitter definition changes, no route-path changes, no rate-limit value changes.
+
+**Evidence chain:**
+
+- Initial implementation commit: `96ca710` — `feat(ai): implement per-tenant AI rate limiting`.
+- Remediation commit: `4b96e13` — `fix(ai): separate rate-limit rejection from budget-exceeded emission`.
+- Verification result: `VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE`.
+
+**Verification note (non-defect):** static code-path verification performed; no live runtime probe introduced in read-only verification unit.
 
 ---
 
