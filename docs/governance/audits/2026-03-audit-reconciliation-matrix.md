@@ -1988,7 +1988,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | D-006 | `server/src/services/ai/inferenceService.ts` + `server/src/routes/ai.ts` | ~~`idempotency_key` column absent in `reasoning_logs`~~ — CLOSED via PW5-AI-IDEMPOTENCY + PW5-AI-IDEMPOTENCY-REMEDIATION: request-level idempotency enforced at TIS boundary using `request_id = idem:<key>`, tenant-scoped 24-hour replay lookup, preserved replay semantics, and restored rate-limit ordering (rate limit before replay return) | Closed |
 | D-007 | `components/ControlPlane/AiGovernance.tsx` | Control-plane AI governance UI cosmetic; no dedicated AI backend; acknowledged design gate | Acknowledged |
 | D-008 | `server/src/routes/ai.ts` | Auth-plane ambiguity for `GET /api/ai/health` resolved by commit 960b736; notation retained | Low |
-| D-009 | `server/src/routes/ai.ts` | `negotiation-advice` has no RAG injection; diverges from `insights` without documented rationale | Medium |
+| D-009 | `server/src/services/ai/inferenceService.ts` | ~~`negotiation-advice` has no RAG injection; diverges from `insights` without documented rationale~~ — CLOSED via PW5-AI-NEGOTIATION-RAG (commit de202c2): negotiation-advice now calls governed `runRagRetrieval(tx, orgId, prompt)`; retrieved context injected into actual model prompt using same prepend pattern as insights; TIS ordering preserved; insights path unchanged | Closed |
 
 ### D — Gap Disposition
 
@@ -2001,7 +2001,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | D-005 | PII redaction pipeline absent | OPEN — remains out-of-scope for PW5-AI-TIS-EXTRACT; requires separate authorized unit |
 | D-004 | No per-tenant rate limiting | **CLOSED** — PW5-AI-RATE-LIMIT implemented (96ca710) and corrected via PW5-AI-RATE-LIMIT-REMEDIATION (4b96e13); rate-limit path no longer emits `ai.inference.budget_exceeded`; 429 + `AI_RATE_LIMIT_EXCEEDED` preserved |
 | D-006 | AI idempotency retry dedupe and replay semantics | **CLOSED** — PW5-AI-IDEMPOTENCY implemented (84c185d) and corrected via PW5-AI-IDEMPOTENCY-REMEDIATION (536fe50); replay remains deduplicated by tenant + key with 24-hour lookup and no replay-side inference/writes/events; rate-limit semantics restored by enforcing limiter before replay return |
-| D-009 | negotiation-advice has no RAG | OPEN — addressed by PW5-AI-NEGOTIATION-RAG (proposed, not authorized) |
+| D-009 | negotiation-advice has no RAG | **CLOSED** — PW5-AI-NEGOTIATION-RAG implemented (de202c2); negotiation-advice now calls governed `runRagRetrieval()`; retrieved context augments model prompt; insights path unchanged; TIS ordering preserved; no schema/event/route changes |
 | D-003, D-008 | Shadow query placeholder; health auth note | LOW — recorded; low urgency |
 
 ### E — Follow-On Units (Proposed; Not Authorized Unless Noted)
@@ -2013,7 +2013,8 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | ✅ CLOSED (f2ae23b · 2026-03-13) | PW5-AI-TIS-EXTRACT | Extract AI orchestration from `ai.ts` into dedicated `inferenceService.ts`; preserves route contracts, event behavior, and reasoning/audit transaction semantics; resolves D-001 concentration issue |
 | ✅ CLOSED (96ca710 → 4b96e13 · 2026-03-14) | PW5-AI-RATE-LIMIT / PW5-AI-RATE-LIMIT-REMEDIATION | Per-tenant per-minute limiter implemented at TIS boundary; initial verification defect (event-behavior leakage) remediated; final state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE; D-004 resolved |
 | ✅ CLOSED (84c185d → 536fe50 · 2026-03-14) | PW5-AI-IDEMPOTENCY / PW5-AI-IDEMPOTENCY-REMEDIATION | Request-level idempotency implemented at TIS boundary and remediated to restore rate-limit ordering (rate-limit enforced before replay lookup/return); replay semantics preserved (stored logical result + no replay-side model/writes/events); final state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE; D-006 resolved |
-| 🔲 Proposed (not authorized) | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
+| ✅ CLOSED (de202c2 · 2026-03-14) | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice at TIS layer; same governed helper used by insights; retrieved context augments actual model prompt; TIS ordering preserved; insights path unchanged; static verification follow-on note (non-defect); resolves D-009 |
+| 🔲 Proposed (not authorized) | PW5-AI-PII-GUARD | Add pre-send and post-receive PII detection/redaction controls at TIS boundary; addresses D-005 |
 | 🔲 Proposed (not authorized) | PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog mutations via vector queue; G-028 B1; depends on PW5-AI-EVENT-DOMAIN |
 | 🔲 Proposed (not authorized) | PW5-G028-C-CONTROL-PLANE-AI | Control-plane AI authority routes; requires TECS-FBW-AIGOVERNANCE gate + design unit |
 | 🔲 Proposed (not authorized) | PW5-SHADOW-QUERY-FIX | Replace placeholder embedding in `vectorShadowQuery.ts`; low urgency |
@@ -2044,7 +2045,44 @@ The following were **NOT performed** in this unit:
 
 **Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
 
-**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (96ca710 → 4b96e13 · 2026-03-14). PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (84c185d → 536fe50 · 2026-03-14). Replay no longer bypasses tenant rate limiting; replay semantics preserved; no residual idempotency defects. Static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-NEGOTIATION-RAG.**
+**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (96ca710 → 4b96e13 · 2026-03-14). PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (84c185d → 536fe50 · 2026-03-14). PW5-AI-NEGOTIATION-RAG ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (de202c2 · 2026-03-14) — negotiation-advice now calls governed `runRagRetrieval()`; retrieved context augments model prompt; insights unchanged; D-009 resolved. Static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-PII-GUARD.**
+
+---
+
+## PW5-AI-NEGOTIATION-RAG — IMPLEMENTATION COMPLETE / VERIFIED
+
+**Governance sync:** GOVERNANCE-SYNC-PW5-AI-NEGOTIATION-RAG | **Date:** 2026-03-14 | **Type:** Implementation + Verification Closure
+
+**Classification:** IMPLEMENTATION COMPLETE · VERIFIED (VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE)
+
+**Implementation commit:** de202c2 — `feat(ai): add RAG retrieval to negotiation advice`
+
+**Retrieval integration confirmed:**
+
+- Negotiation-advice path now calls `runRagRetrieval(tx, orgId, prompt)` — the same governed function imported from `./ragContextBuilder.js` already used by insights. No duplication; no alternative path.
+- Retrieval occurs before model invocation (step 4 in TIS; model call is step 5).
+- Fail-safe contract preserved: `runRagRetrieval` returns `{ contextBlock: null, meta: null }` on flag-off or error; negotiation falls back to original prompt; inference never blocked.
+- `ai.vector.query` event originates from retrieval layer (`ragContextBuilder.ts`) — not reimplemented in TIS.
+
+**Prompt augmentation confirmed:**
+
+- `finalPrompt` is the actual input to `generateContent()`: context block prepended to base prompt when retrieval returns results; falls back to original prompt otherwise.
+- Augmentation pattern is identical to the insights path.
+- Character cap enforced inside `buildRagContextBlock` (`MAX_INJECTED_CHARS = 3_000`).
+- `reasoningHash` and `promptSummary` now derived from `finalPrompt` — stored fingerprint reflects actual content sent to model.
+
+**Insights path unchanged:** The `if (taskType === 'insights')` branch is structurally identical to its pre-implementation state.
+
+**No defects remain.**
+
+**Verification note (non-defect):** static code-path verification performed; no live runtime probe introduced in read-only verification unit. Consistent with verification convention for PW5-AI-EMITTER, PW5-AI-TIS-EXTRACT, PW5-AI-RATE-LIMIT-REMEDIATION, and PW5-AI-IDEMPOTENCY-REMEDIATION.
+
+**Evidence chain:**
+
+- Implementation commit: `de202c2` — `feat(ai): add RAG retrieval to negotiation advice`.
+- Typecheck: EXIT 0. Lint: EXIT 0 (0 errors, 108 pre-existing warnings). Build: EXIT 0.
+- Scope gate: 1 file changed (`server/src/services/ai/inferenceService.ts`), 28 insertions / 10 deletions.
+- D-009 resolved.
 
 ---
 
