@@ -49,6 +49,7 @@ import {
   recordTotalLatency,
 } from './ragMetrics.js';
 import { emitAiEventBestEffort } from '../../events/aiEmitter.js';
+import { redactPii, scanForPii } from './piiGuard.js';
 
 const AI_RATE_LIMIT_PER_MINUTE = 60;
 const AI_RATE_LIMIT_WINDOW_MS = 60_000;
@@ -428,15 +429,42 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           ? `${ragResult.contextBlock}\n\n${prompt}`
           : prompt;
 
+        // PW5-AI-PII-GUARD: pre-send PII inspection / redaction (TIS step 4)
+        // Runs after RAG augmentation and before model invocation.
+        const piiPreSend = redactPii(finalPrompt);
+        const promptForModel = piiPreSend.hasMatches ? piiPreSend.redacted : finalPrompt;
+        if (piiPreSend.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_redacted',
+            { orgId, taskType, model, fieldCount: piiPreSend.matchCount },
+            { orgId }
+          );
+        }
+
         // 5. Generate content (AI call — uses augmented prompt when RAG is active)
         markInferenceStart(metricsHandle);
         const aiCallStart = Date.now();
-        const aiResult = await generateContent(finalPrompt, systemInstruction);
+        const aiResult = await generateContent(promptForModel, systemInstruction);
         const inferenceLatencyMs = Date.now() - aiCallStart;
         recordInferenceLatency(metricsHandle);
         recordTotalLatency(metricsHandle);
 
-        const { text, tokensUsed, hadInferenceError } = aiResult;
+        const { text: rawText, tokensUsed, hadInferenceError: rawHadInferenceError } = aiResult;
+
+        // PW5-AI-PII-GUARD: post-receive PII inspection / leak blocking (TIS step 6)
+        // Runs after model output is received, before text reaches audit/response path.
+        const piiPostReceive = scanForPii(rawText);
+        let text = rawText;
+        let hadInferenceError = rawHadInferenceError;
+        if (piiPostReceive.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_leak_detected',
+            { orgId, taskType, model, leakType: piiPostReceive.categories.join(',') },
+            { orgId }
+          );
+          text = 'AI response blocked: output contained sensitive content.';
+          hadInferenceError = true;
+        }
 
         // 6. Calculate actual cost
         const actualCost = estimateCostUSD(tokensUsed, model);
@@ -446,7 +474,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
 
         // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
         const reasoningHash = createHash('sha256')
-          .update(finalPrompt + text)
+          .update(promptForModel + text)
           .digest('hex');
         const reasoningLog = await tx.reasoningLog.create({
           data: {
@@ -454,7 +482,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
             requestId: reasoningRequestId,
             reasoningHash,
             model,
-            promptSummary: finalPrompt.slice(0, 200),
+            promptSummary: promptForModel.slice(0, 200),
             responseSummary: text,
             tokensUsed,
           },
@@ -502,14 +530,42 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           ? `${ragResult.contextBlock}\n\n${prompt}`
           : prompt;
 
+        // PW5-AI-PII-GUARD: pre-send PII inspection / redaction (TIS step 4)
+        // Runs after RAG augmentation and before model invocation.
+        const piiPreSendNeg = redactPii(finalPrompt);
+        const promptForModelNeg = piiPreSendNeg.hasMatches ? piiPreSendNeg.redacted : finalPrompt;
+        if (piiPreSendNeg.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_redacted',
+            { orgId, taskType, model, fieldCount: piiPreSendNeg.matchCount },
+            { orgId }
+          );
+        }
+
         // 5. Generate content (AI call — uses augmented prompt when RAG is active, extended timeout)
         markInferenceStart(metricsHandle);
         const aiCallStart = Date.now();
-        const aiResult = await generateContent(finalPrompt, systemInstruction, 10000);
+        const aiResult = await generateContent(promptForModelNeg, systemInstruction, 10000);
         const inferenceLatencyMs = Date.now() - aiCallStart;
         recordInferenceLatency(metricsHandle);
         recordTotalLatency(metricsHandle);
-        const { text, tokensUsed, hadInferenceError } = aiResult;
+
+        const { text: rawTextNeg, tokensUsed, hadInferenceError: rawHadInferenceErrorNeg } = aiResult;
+
+        // PW5-AI-PII-GUARD: post-receive PII inspection / leak blocking (TIS step 6)
+        // Runs after model output is received, before text reaches audit/response path.
+        const piiPostReceiveNeg = scanForPii(rawTextNeg);
+        let text = rawTextNeg;
+        let hadInferenceError = rawHadInferenceErrorNeg;
+        if (piiPostReceiveNeg.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_leak_detected',
+            { orgId, taskType, model, leakType: piiPostReceiveNeg.categories.join(',') },
+            { orgId }
+          );
+          text = 'AI response blocked: output contained sensitive content.';
+          hadInferenceError = true;
+        }
 
         // 6. Calculate actual cost
         const actualCost = estimateCostUSD(tokensUsed, model);
@@ -519,7 +575,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
 
         // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
         const reasoningHash = createHash('sha256')
-          .update(finalPrompt + text)
+          .update(promptForModelNeg + text)
           .digest('hex');
         const reasoningLog = await tx.reasoningLog.create({
           data: {
@@ -527,7 +583,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
             requestId: reasoningRequestId,
             reasoningHash,
             model,
-            promptSummary: finalPrompt.slice(0, 200),
+            promptSummary: promptForModelNeg.slice(0, 200),
             responseSummary: text,
             tokensUsed,
           },
