@@ -19,8 +19,9 @@
  *   Fixed /tenants/by-email to run under SET LOCAL ROLE texqtic_service so the
  *   membership lookup is not denied by FORCE RLS (memberships policies scope
  *   exclusively to texqtic_app; bare postgres gets 0 rows under deny-by-default).
- *   Migration 20260314000001_pw5_by_email_service_role_grants adds minimum
+ *   Migration 20260319000001_pw5_by_email_service_role_grants adds minimum
  *   SELECT grants on public.memberships and public.users to texqtic_service.
+ *   Deployed via pnpm -C server migrate:deploy:prod (OPS-ENV-001).
  */
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
@@ -130,9 +131,9 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     //   SET LOCAL ROLE from postgres). This is the canonical TexQtic pattern
     //   established by G-026 / resolveDomain.ts.
     //
-    //   Migration 20260314000001_pw5_by_email_service_role_grants adds the
+    //   Migration 20260319000001_pw5_by_email_service_role_grants adds the
     //   minimum required SELECT grants on public.memberships and public.users
-    //   to texqtic_service.
+    //   to texqtic_service. Deployed via pnpm -C server migrate:deploy:prod.
     const memberships = await prisma.$transaction(async tx => {
       // Assume texqtic_service role for this transaction only (tx-local BYPASSRLS).
       // Role auto-resets on transaction commit/rollback — no persistent state change.
