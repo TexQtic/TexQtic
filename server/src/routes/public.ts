@@ -14,6 +14,13 @@
  *   Used by tenant login UI to replace the manual slug entry field.
  *   No auth required. Returns only public-safe tenant fields (id, slug, name).
  *   Empty array is a valid response — handled by frontend as "no account found".
+ *
+ * PW5-AUTH-BY-EMAIL-RLS-REMEDIATION (2026-03-14):
+ *   Fixed /tenants/by-email to run under SET LOCAL ROLE texqtic_service so the
+ *   membership lookup is not denied by FORCE RLS (memberships policies scope
+ *   exclusively to texqtic_app; bare postgres gets 0 rows under deny-by-default).
+ *   Migration 20260314000001_pw5_by_email_service_role_grants adds minimum
+ *   SELECT grants on public.memberships and public.users to texqtic_service.
  */
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
@@ -112,22 +119,40 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     const emailNormalized = parseResult.data.email.trim().toLowerCase();
 
     // Query via memberships → join tenant. Only return ACTIVE tenants.
-    // prisma is used in admin context here (no RLS tx) — identical to the
-    // existing /tenants/resolve endpoint which also reads tenant data publicly.
-    const memberships = await prisma.membership.findMany({
-      where: {
-        user: { email: emailNormalized },
-        tenant: { status: 'ACTIVE' },
-      },
-      select: {
-        tenant: {
-          select: {
-            id: true,
-            slug: true,
-            name: true,
+    //
+    // PW5-AUTH-BY-EMAIL-RLS-REMEDIATION (2026-03-14):
+    //   memberships is under FORCE RLS with policies scoped exclusively to
+    //   texqtic_app. The bare Prisma client connects as postgres, which matches
+    //   no PERMISSIVE policy under FORCE RLS → 0 rows returned (deny-by-default).
+    //
+    //   Fix: wrap in prisma.$transaction + SET LOCAL ROLE texqtic_service.
+    //   texqtic_service carries BYPASSRLS (NOLOGIN, unreachable except via
+    //   SET LOCAL ROLE from postgres). This is the canonical TexQtic pattern
+    //   established by G-026 / resolveDomain.ts.
+    //
+    //   Migration 20260314000001_pw5_by_email_service_role_grants adds the
+    //   minimum required SELECT grants on public.memberships and public.users
+    //   to texqtic_service.
+    const memberships = await prisma.$transaction(async tx => {
+      // Assume texqtic_service role for this transaction only (tx-local BYPASSRLS).
+      // Role auto-resets on transaction commit/rollback — no persistent state change.
+      await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
+
+      return tx.membership.findMany({
+        where: {
+          user: { email: emailNormalized },
+          tenant: { status: 'ACTIVE' },
+        },
+        select: {
+          tenant: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+            },
           },
         },
-      },
+      });
     });
 
     const tenants = memberships.map(m => ({
