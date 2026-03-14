@@ -1985,7 +1985,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | D-003 | `server/src/lib/vectorShadowQuery.ts` ~line 70 | `TODO(G028-A4): replace with real embedding pipeline` — placeholder; shadow results near-zero similarity | Low |
 | D-004 | `server/src/services/ai/inferenceService.ts` + `server/src/routes/ai.ts` | ~~No per-tenant per-minute rate limiting (G-028 §6.3 specifies 60 req/min)~~ — CLOSED via PW5-AI-RATE-LIMIT + PW5-AI-RATE-LIMIT-REMEDIATION: limiter enforced at TIS boundary (60 / 60_000ms), rate-limit rejection separated from budget semantics | Closed |
 | D-005 | `server/src/routes/ai.ts` | PII redaction pipeline (pre-send + post-receive) not implemented | Medium |
-| D-006 | `server/prisma/schema.prisma` (`reasoning_logs` table) | `idempotency_key` column absent; G-028 §3.3 specifies it as required | Medium |
+| D-006 | `server/src/services/ai/inferenceService.ts` + `server/src/routes/ai.ts` | ~~`idempotency_key` column absent in `reasoning_logs`~~ — CLOSED via PW5-AI-IDEMPOTENCY + PW5-AI-IDEMPOTENCY-REMEDIATION: request-level idempotency enforced at TIS boundary using `request_id = idem:<key>`, tenant-scoped 24-hour replay lookup, preserved replay semantics, and restored rate-limit ordering (rate limit before replay return) | Closed |
 | D-007 | `components/ControlPlane/AiGovernance.tsx` | Control-plane AI governance UI cosmetic; no dedicated AI backend; acknowledged design gate | Acknowledged |
 | D-008 | `server/src/routes/ai.ts` | Auth-plane ambiguity for `GET /api/ai/health` resolved by commit 960b736; notation retained | Low |
 | D-009 | `server/src/routes/ai.ts` | `negotiation-advice` has no RAG injection; diverges from `insights` without documented rationale | Medium |
@@ -2000,7 +2000,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | D-001 | TIS monolith concentration in route layer | **CLOSED / MATERIALLY REDUCED** — PW5-AI-TIS-EXTRACT implemented and verified (commit f2ae23b · 2026-03-13) |
 | D-005 | PII redaction pipeline absent | OPEN — remains out-of-scope for PW5-AI-TIS-EXTRACT; requires separate authorized unit |
 | D-004 | No per-tenant rate limiting | **CLOSED** — PW5-AI-RATE-LIMIT implemented (96ca710) and corrected via PW5-AI-RATE-LIMIT-REMEDIATION (4b96e13); rate-limit path no longer emits `ai.inference.budget_exceeded`; 429 + `AI_RATE_LIMIT_EXCEEDED` preserved |
-| D-006 | reasoning_logs idempotency_key absent | OPEN — addressed by PW5-AI-IDEMPOTENCY (proposed, not authorized; schema migration required) |
+| D-006 | AI idempotency retry dedupe and replay semantics | **CLOSED** — PW5-AI-IDEMPOTENCY implemented (84c185d) and corrected via PW5-AI-IDEMPOTENCY-REMEDIATION (536fe50); replay remains deduplicated by tenant + key with 24-hour lookup and no replay-side inference/writes/events; rate-limit semantics restored by enforcing limiter before replay return |
 | D-009 | negotiation-advice has no RAG | OPEN — addressed by PW5-AI-NEGOTIATION-RAG (proposed, not authorized) |
 | D-003, D-008 | Shadow query placeholder; health auth note | LOW — recorded; low urgency |
 
@@ -2012,7 +2012,7 @@ U-004 is now fully closed. The prior uncertainty around `WLOrdersPanel.tsx` role
 | ✅ CLOSED (73f0972 · 2026-03-13) | PW5-AI-EMITTER | Wire AI event emission; `ai.inference.generate/error/budget_exceeded` live; `ai.vector.query` live; emission gap closed for current coverage |
 | ✅ CLOSED (f2ae23b · 2026-03-13) | PW5-AI-TIS-EXTRACT | Extract AI orchestration from `ai.ts` into dedicated `inferenceService.ts`; preserves route contracts, event behavior, and reasoning/audit transaction semantics; resolves D-001 concentration issue |
 | ✅ CLOSED (96ca710 → 4b96e13 · 2026-03-14) | PW5-AI-RATE-LIMIT / PW5-AI-RATE-LIMIT-REMEDIATION | Per-tenant per-minute limiter implemented at TIS boundary; initial verification defect (event-behavior leakage) remediated; final state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE; D-004 resolved |
-| 🔲 Proposed (not authorized) | PW5-AI-IDEMPOTENCY | Add `idempotency_key` to `reasoning_logs`; schema migration required; resolves D-006 |
+| ✅ CLOSED (84c185d → 536fe50 · 2026-03-14) | PW5-AI-IDEMPOTENCY / PW5-AI-IDEMPOTENCY-REMEDIATION | Request-level idempotency implemented at TIS boundary and remediated to restore rate-limit ordering (rate-limit enforced before replay lookup/return); replay semantics preserved (stored logical result + no replay-side model/writes/events); final state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE; D-006 resolved |
 | 🔲 Proposed (not authorized) | PW5-AI-NEGOTIATION-RAG | Wire `runRagRetrieval()` into negotiation-advice; resolves D-009 |
 | 🔲 Proposed (not authorized) | PW5-G028-B1-CATALOG-INDEXER | Auto-index catalog mutations via vector queue; G-028 B1; depends on PW5-AI-EVENT-DOMAIN |
 | 🔲 Proposed (not authorized) | PW5-G028-C-CONTROL-PLANE-AI | Control-plane AI authority routes; requires TECS-FBW-AIGOVERNANCE gate + design unit |
@@ -2044,7 +2044,35 @@ The following were **NOT performed** in this unit:
 
 **Overall audit conclusion: PLANNING COMPLETE / BASELINE ESTABLISHED**
 
-**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (initial 96ca710; remediation 4b96e13 · 2026-03-14). Defect corrected, route contract preserved, budget path preserved, no residual defects. Static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-IDEMPOTENCY.**
+**PW5-AI-PLAN: CLOSED as planning baseline. Wave 5 AI/event architecture baseline is now recorded in governance. TECS-FBW-AIGOVERNANCE remains open. PW5-AI-EVENT-DOMAIN ✅ CLOSED (dd18957 · 2026-03-13). PW5-AI-EMITTER ✅ CLOSED (73f0972 · 2026-03-13). PW5-AI-TIS-EXTRACT ✅ CLOSED / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (f2ae23b · 2026-03-13). PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (96ca710 → 4b96e13 · 2026-03-14). PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (84c185d → 536fe50 · 2026-03-14). Replay no longer bypasses tenant rate limiting; replay semantics preserved; no residual idempotency defects. Static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-NEGOTIATION-RAG.**
+
+---
+
+## PW5-AI-IDEMPOTENCY-REMEDIATION — IMPLEMENTATION COMPLETE / VERIFIED
+
+**Governance sync:** GOVERNANCE-SYNC-PW5-AI-IDEMPOTENCY-REMEDIATION | **Date:** 2026-03-14 | **Type:** Remediation + Verification Closure
+
+**Classification:** IMPLEMENTATION COMPLETE · VERIFIED (VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE)
+
+**Defect corrected:** initial idempotency replay returned before tenant rate-limit enforcement, creating semantic drift against authoritative PW5-AI-RATE-LIMIT behavior.
+
+**Corrected state recorded:**
+
+- TIS ordering now enforces tenant rate limit before replay lookup/return.
+- Replay still returns stored logical result.
+- Replay still skips model invocation, new reasoning-log creation, new audit-log creation, and inference event re-emission.
+- 24-hour replay logic remains present.
+- First-execution transaction/event semantics remain unchanged.
+- Route/header contract for `Idempotency-Key` remains unchanged.
+- No schema changes, no event schema changes, no new event names, no emitter definition changes, no route-path changes, and no rate-limit value changes (60 / 60_000 ms).
+
+**Evidence chain:**
+
+- Initial implementation commit: `84c185d` — `feat(ai): implement idempotency support for AI inference`.
+- Remediation commit: `536fe50` — `fix(ai): apply rate limiting before idempotent replay`.
+- Verification result: `VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE`.
+
+**Verification note (non-defect):** static code-path verification performed; no live runtime probe introduced in read-only verification unit.
 
 ---
 
