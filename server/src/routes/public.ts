@@ -7,6 +7,13 @@
  *   No auth required. Returns only public-safe fields (id, slug, name).
  *   Registered in index.ts at prefix /api/public.
  *   /api/public added to ENDPOINT_REALM_MAP as 'public' in realmGuard.ts.
+ *
+ * PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN (2026-03-14):
+ *   Added GET /api/public/tenants/by-email?email=<email>
+ *   Returns all active tenant memberships for an email address.
+ *   Used by tenant login UI to replace the manual slug entry field.
+ *   No auth required. Returns only public-safe tenant fields (id, slug, name).
+ *   Empty array is a valid response — handled by frontend as "no account found".
  */
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
@@ -66,6 +73,70 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
       slug: tenant.slug,
       name: tenant.name,
     });
+  });
+
+  /**
+   * GET /api/public/tenants/by-email?email=<email>
+   *
+   * PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN (2026-03-14)
+   *
+   * Returns all ACTIVE tenant memberships that exist for the given email address.
+   * Used by the tenant login flow to present a server-driven tenant selection
+   * instead of requiring the user to manually enter an organisation slug.
+   *
+   * Response: { success: true, data: { tenants: Array<{ tenantId, slug, name }> } }
+   *   tenants is [] when no memberships exist — frontend handles this as "no account found".
+   *
+   * Public endpoint — no authentication required.
+   * Returns only non-sensitive public-safe fields.
+   * Email is normalised to lowercase before lookup.
+   *
+   * Security note: this endpoint reveals which tenant(s) an email is associated with
+   * before authentication. This is comparable to the prior slug-lookup flow and is
+   * an accepted B2B SaaS pattern. No passwords, roles, or internal IDs beyond
+   * tenantId are returned.
+   */
+  fastify.get('/tenants/by-email', async (request, reply) => {
+    const querySchema = z.object({
+      email: z
+        .string()
+        .email('A valid email address is required')
+        .max(255, 'Email must be 255 characters or fewer'),
+    });
+
+    const parseResult = querySchema.safeParse(request.query);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const emailNormalized = parseResult.data.email.trim().toLowerCase();
+
+    // Query via memberships → join tenant. Only return ACTIVE tenants.
+    // prisma is used in admin context here (no RLS tx) — identical to the
+    // existing /tenants/resolve endpoint which also reads tenant data publicly.
+    const memberships = await prisma.membership.findMany({
+      where: {
+        user: { email: emailNormalized },
+        tenant: { status: 'ACTIVE' },
+      },
+      select: {
+        tenant: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const tenants = memberships.map(m => ({
+      tenantId: m.tenant.id,
+      slug: m.tenant.slug,
+      name: m.tenant.name,
+    }));
+
+    return sendSuccess(reply, { tenants });
   });
 };
 

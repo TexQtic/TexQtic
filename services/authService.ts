@@ -134,6 +134,21 @@ export async function resolveTenantBySlug(slug: string): Promise<ResolvedTenant>
   return get<ResolvedTenant>(`/api/public/tenants/resolve?slug=${encodeURIComponent(slug)}`);
 }
 
+/**
+ * Resolve all active tenant memberships for a given email address.
+ * PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN (2026-03-14)
+ * Route: GET /api/public/tenants/by-email?email=<email>
+ * Public endpoint — no auth required.
+ * Returns [] when no memberships exist (caller treats as "no account found").
+ * Returns the same ResolvedTenant shape as resolveTenantBySlug for field consistency.
+ */
+export async function resolveTenantsByEmail(email: string): Promise<ResolvedTenant[]> {
+  const result = await get<{ tenants: ResolvedTenant[] }>(
+    `/api/public/tenants/by-email?email=${encodeURIComponent(email)}`
+  );
+  return result.tenants;
+}
+
 // ─── Session management ───────────────────────────────────────────────────────
 
 /**
