@@ -1014,3 +1014,42 @@ export async function listSettlements(
   const qs = q.toString();
   return adminGet<AdminSettlementListResponse>(`/api/control/settlements${qs ? `?${qs}` : ''}`);
 }
+
+// ==================== G-028-C5 CONTROL-PLANE AI INSIGHTS (PW5-G028-C5) ====================
+//
+// Route: POST /api/control/ai/insights
+// Constitutional:
+//   SUPER_ADMIN-only — enforced server-side by adminAuthMiddleware + requireAdminRole('SUPER_ADMIN').
+//   Optional targetOrgId: backend validates UUID + org existence; 404/ORG_NOT_FOUND if unknown.
+//   Server-side org metadata injected into prompt — no client trust of org authority.
+//   Closed units: C1 (aaf8748 · 2026-03-15) · C2 (a6eac77 · VERIFIED_COMPLETE).
+//   This unit: frontend wiring only.
+
+export interface ControlPlaneAiInsightsRequest {
+  targetOrgId?: string;
+}
+
+export interface ControlPlaneAiInsightsTargetOrg {
+  name: string;
+  type: string;
+  status: string;
+}
+
+export interface ControlPlaneAiInsightsResponse {
+  insight: string;
+  targetOrgId?: string | null;
+  targetOrg?: ControlPlaneAiInsightsTargetOrg | null;
+  generatedAt?: string;
+}
+
+/**
+ * POST /api/control/ai/insights
+ * Request control-plane AI insights (SUPER_ADMIN only).
+ * Optional targetOrgId — backend validates org and injects metadata into prompt context.
+ * Backend contract delivered by PW5-G028-C1 (aaf8748) + PW5-G028-C2 (a6eac77).
+ */
+export async function requestControlPlaneAiInsights(
+  request: ControlPlaneAiInsightsRequest = {}
+): Promise<ControlPlaneAiInsightsResponse> {
+  return adminPost<ControlPlaneAiInsightsResponse>('/api/control/ai/insights', request);
+}
