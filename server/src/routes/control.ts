@@ -13,6 +13,7 @@ import controlEscrowRoutes from './control/escrow.g018.js';
 import controlSettlementRoutes from './control/settlement.js';
 import controlCertificationRoutes from './control/certifications.g019.js';
 import adminTraceabilityRoutes from './admin/traceability.g016.js';
+import controlPlaneAiRoutes from './control/ai.g028.js';
 
 // ── Admin context helper (G-004) ──────────────────────────────────────────────
 // Canonical replacement for withDbContextLegacy({ isAdmin: true }).
@@ -838,6 +839,12 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   // ─── G-016: Traceability Graph governance routes (Phase A) ───────────────────────
   // GET /api/control/traceability/nodes
   // GET /api/control/traceability/edges
-  await fastify.register(adminTraceabilityRoutes, { prefix: '/traceability' });};
+  await fastify.register(adminTraceabilityRoutes, { prefix: '/traceability' });
+
+  // ─── G-028 C1: Control-plane AI insights — Slice 1 ───────────────────────────
+  // GET  /api/control/ai/health   — SUPER_ADMIN health probe
+  // POST /api/control/ai/insights — SUPER_ADMIN platform-level AI insights
+  await fastify.register(controlPlaneAiRoutes, { prefix: '/ai' });
+};
 
 export default controlRoutes;
