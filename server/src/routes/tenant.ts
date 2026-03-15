@@ -30,6 +30,7 @@ import { computeTotals, TotalsInputError } from '../services/pricing/totals.serv
 import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
+import { enqueueSourceIngestion } from '../services/vectorIngestion.js';
 
 // ─── SM Transaction Helper ────────────────────────────────────────────────────
 /**
@@ -298,6 +299,26 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         return created;
       });
+
+      // G-028 B1: Enqueue async vector indexing after successful DB commit.
+      // Must run after withDbContext resolves so the transaction is committed.
+      // Failure is best-effort: a full queue does not fail the HTTP response.
+      const vectorText = description ? `${name}\n\n${description}` : name;
+      const enqueueResult = enqueueSourceIngestion(
+        dbContext.orgId,
+        'CATALOG_ITEM',
+        item.id,
+        vectorText,
+        { name },
+      );
+      if (!enqueueResult.accepted) {
+        console.warn('[G028-B1][catalog_item_enqueue_rejected]', {
+          stage:      'vector_async_index',
+          sourceType: 'CATALOG_ITEM',
+          sourceId:   item.id,
+          reason:     enqueueResult.reason,
+        });
+      }
 
       return sendSuccess(reply, { item }, 201);
     }
