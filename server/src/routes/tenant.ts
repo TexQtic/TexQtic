@@ -30,7 +30,7 @@ import { computeTotals, TotalsInputError } from '../services/pricing/totals.serv
 import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
-import { enqueueSourceIngestion } from '../services/vectorIngestion.js';
+import { enqueueSourceIngestion, enqueueSourceDeletion } from '../services/vectorIngestion.js';
 
 // ─── SM Transaction Helper ────────────────────────────────────────────────────
 /**
@@ -438,11 +438,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * DELETE /api/tenant/catalog/items/:id
    * Delete a catalog item (OWNER or ADMIN only)
    *
-   * G-028 B2: Delete-side vector enqueue is NOT performed in this unit.
-   * The existing enqueueSourceIngestion() contract is ingestion-only (chunk → embed → upsert).
-   * VectorIndexJob has no operation discriminator; there is no delete-index path.
-   * Enqueue omission is intentional and documented — not a defect in this route.
-   * Vector tombstone support requires a new queue operation type (G-028-B2-DELETE-ENQUEUE-BLOCKER).
+   * G-028-B2-DELETE-ENQUEUE-BLOCKER: post-commit best-effort enqueue via
+   * enqueueSourceDeletion() removes stale vector chunks for the deleted item.
+   * Enqueue failure is non-blocking — audit write and HTTP 200 are unaffected.
    * Writes audit entry: catalog.item.deleted
    */
   fastify.delete(
@@ -496,11 +494,22 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendNotFound(reply, 'Catalog item not found');
       }
 
-      // G-028 B2: Vector tombstone enqueue is intentionally omitted here.
-      // enqueueSourceIngestion() is ingestion-only; VectorIndexJob carries no
-      // operation discriminator. Expressing delete-index intent requires a new
-      // queue operation type — that widening is out of scope for this unit.
-      // Blocker: G-028-B2-DELETE-ENQUEUE-BLOCKER (pending governance authorization).
+      // G-028-B2-DELETE-ENQUEUE-BLOCKER: Enqueue async vector chunk deletion post-commit.
+      // Runs after withDbContext() resolves (transaction committed). Failure is best-effort:
+      // a full queue does not affect the HTTP 200 response or audit correctness.
+      const deleteEnqueueResult = enqueueSourceDeletion(
+        dbContext.orgId,
+        'CATALOG_ITEM',
+        id,
+      );
+      if (!deleteEnqueueResult.accepted) {
+        console.warn('[G028-DELETE][catalog_item_delete_enqueue_rejected]', {
+          stage:      'vector_async_delete',
+          sourceType: 'CATALOG_ITEM',
+          sourceId:   id,
+          reason:     deleteEnqueueResult.reason,
+        });
+      }
 
       return sendSuccess(reply, { id, deleted: true });
     }

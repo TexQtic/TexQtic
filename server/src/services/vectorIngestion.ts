@@ -31,7 +31,7 @@
 import { upsertDocumentEmbeddings, deleteBySource } from '../lib/vectorStore.js';
 import type { VectorStoreClient, DocumentChunkInput } from '../lib/vectorStore.js';
 import { enqueueVectorIndexJob } from './vectorIndexQueue.js';
-import type { EnqueueResult } from './vectorIndexQueue.js';
+import type { EnqueueResult, VectorIndexJob } from './vectorIndexQueue.js';
 
 // ─── Re-exports from extracted modules (A6) — backward compatibility ─────────
 // All public symbols that tests and callers import from vectorIngestion are
@@ -82,6 +82,13 @@ export interface EnqueueIngestionResult {
   accepted: boolean;
   jobId?: string;
   reason?: 'QUEUE_FULL' | 'DOC_TOO_LARGE';
+}
+
+/** Result of enqueueSourceDeletion(). */
+export interface EnqueueDeletionResult {
+  accepted: boolean;
+  jobId?: string;
+  reason?: 'QUEUE_FULL';
 }
 
 // ─── ingestSourceText ─────────────────────────────────────────────────────────
@@ -400,6 +407,7 @@ export function enqueueSourceIngestion(
   }
 
   const result: EnqueueResult = enqueueVectorIndexJob({
+    operation:   'upsert',
     orgId,
     sourceType,
     sourceId,
@@ -412,4 +420,88 @@ export function enqueueSourceIngestion(
   }
 
   return { accepted: true, jobId: result.jobId };
+}
+
+// ─── enqueueSourceDeletion ────────────────────────────────────────────────────
+
+/**
+ * Enqueue an async vector chunk deletion job for the given source.
+ *
+ * G-028-B2-DELETE-ENQUEUE-BLOCKER: bounded follow-on to B2.
+ * Mirrors the call style and guard pattern of enqueueSourceIngestion() but
+ * carries no text payload — the vector store runner will call deleteBySource()
+ * for (orgId, sourceType, sourceId) when processing this job.
+ *
+ * - Failure semantics: best-effort, non-blocking (same as ingestion enqueue).
+ * - Queue-full is the only rejection reason (no doc-size guard for deletes).
+ * - MUST be called after the DB transaction commits (post withDbContext()).
+ * - orgId MUST come from req.dbContext.orgId — never from request body.
+ *
+ * @param orgId      JWT-derived org UUID
+ * @param sourceType Domain discriminator (e.g. 'CATALOG_ITEM')
+ * @param sourceId   UUID of the entity whose vector chunks should be removed
+ * @returns          EnqueueDeletionResult (never throws)
+ */
+export function enqueueSourceDeletion(
+  orgId: string,
+  sourceType: string,
+  sourceId: string,
+): EnqueueDeletionResult {
+  const result: EnqueueResult = enqueueVectorIndexJob({
+    operation: 'delete',
+    orgId,
+    sourceType,
+    sourceId,
+    // textContent intentionally absent — not applicable for delete jobs
+  });
+
+  if (!result.accepted) {
+    return { accepted: false, reason: 'QUEUE_FULL' };
+  }
+
+  return { accepted: true, jobId: result.jobId };
+}
+
+// ─── executeVectorIndexJob ────────────────────────────────────────────────────
+
+/**
+ * Dispatch a vector index queue job by operation.
+ *
+ * G-028-B2-DELETE-ENQUEUE-BLOCKER: provides the operation-aware dispatch logic
+ * that the background job runner calls for each dequeued VectorIndexJob.
+ *
+ * Runner implementations MUST call this inside withDbContext() to ensure
+ * all DB operations run under RLS isolation.
+ *
+ * - operation 'delete' (or job.operation === 'delete'):
+ *     deleteBySource(db, orgId, sourceType, sourceId)
+ * - operation 'upsert' (or absent — backwards compat):
+ *     ingestSourceText(db, orgId, sourceType, sourceId, textContent, metadata)
+ *
+ * @param db  Prisma transaction client (from withDbContext — RLS active)
+ * @param job Dequeued VectorIndexJob with operation discriminator
+ */
+export async function executeVectorIndexJob(
+  db: VectorStoreClient,
+  job: VectorIndexJob,
+): Promise<void> {
+  if (job.operation === 'delete') {
+    await deleteBySource(db, job.orgId, job.sourceType, job.sourceId);
+    console.info('[G028-DELETE][vector_async_delete]', {
+      stage:      'vector_async_delete',
+      sourceType: job.sourceType,
+      sourceId:   job.sourceId,
+    });
+    return;
+  }
+
+  // Default: 'upsert' (or operation absent — backwards compatible)
+  await ingestSourceText(
+    db,
+    job.orgId,
+    job.sourceType,
+    job.sourceId,
+    job.textContent ?? '',
+    job.metadata,
+  );
 }
