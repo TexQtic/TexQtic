@@ -2245,6 +2245,174 @@
           }
         }
       }
+    },
+    "/api/control/ai/health": {
+      "get": {
+        "summary": "Control-plane AI health probe",
+        "description": "Returns Gemini configuration status for the control-plane AI surface. SUPER_ADMIN only. No model invocation is performed. PW5-G028-C1.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "AI health status returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "controlPlaneAi": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": ["available", "degraded"]
+                            },
+                            "configured": { "type": "boolean" },
+                            "slice": { "type": "string" },
+                            "checkedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — SUPER_ADMIN role required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/control/ai/insights": {
+      "post": {
+        "summary": "Execute control-plane AI insight",
+        "description": "Executes a platform-level AI insight for SUPER_ADMIN. PII redaction applied pre-send; output scanned for PII. Reasoning persisted in admin audit metadataJson (not reasoning_logs). Optionally targets a specific org via targetOrgId (Slice 2, PW5-G028-C2) — server-validated; not an auth-elevation signal. Requests without targetOrgId use platform-global mode (Slice 1 behavior).",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prompt"],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "description": "Platform-level insight question or directive."
+                  },
+                  "focus": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Optional context hint appended to prompt (e.g. 'platform-health', 'usage-trends')."
+                  },
+                  "targetOrgId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Slice 2 (PW5-G028-C2): optional UUID of a specific org to target. Server-validated via DB lookup before use. Not an auth-elevation signal — SUPER_ADMIN gate is unconditional. When absent, request is platform-global (Slice 1 behavior)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Insight generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "insightText": { "type": "string" },
+                        "requestId": { "type": "string" },
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "model": { "type": "string" },
+                            "tokensUsed": { "type": "number" },
+                            "inferenceLatencyMs": { "type": "number" },
+                            "hadInferenceError": { "type": "boolean" },
+                            "piiRedacted": { "type": "boolean" },
+                            "outputPiiDetected": { "type": "boolean" },
+                            "slice": {
+                              "type": "string",
+                              "description": "G028-C1 for platform-global requests; G028-C2 for targeted-org requests."
+                            },
+                            "targetOrgId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "description": "Present only when targeted-org mode was activated (Slice 2)."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error (invalid body, UUID format failure, etc.)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — admin JWT missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — SUPER_ADMIN role required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Target org not found — targetOrgId does not match any tenant",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

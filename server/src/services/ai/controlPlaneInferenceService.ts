@@ -1,27 +1,28 @@
 /**
- * controlPlaneInferenceService.ts — PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS
+ * controlPlaneInferenceService.ts — PW5-G028-C1/C2-CONTROL-PLANE-AI-INSIGHTS
  *
- * Control-Plane Inference Service: first-slice backend boundary for SUPER_ADMIN
- * AI invocation. Deliberately separate from tenant TIS (inferenceService.ts).
+ * Control-Plane Inference Service: Slices 1 & 2 for SUPER_ADMIN AI invocation.
+ * Deliberately separate from tenant TIS (inferenceService.ts).
  *
- * Slice 1 scope:
+ * Slice 1 scope (preserved):
  *   - Platform-level AI insights for SUPER_ADMIN only
- *   - No per-org targeting (no orgId injected from client)
  *   - Reasoning / prompt-summary persisted in admin audit metadataJson, NOT reasoning_logs
  *   - No tenant budget enforcement, no tenant rate-limit map, no idempotency window
  *   - PII redaction applied pre-send; output scanned for PII leak
  *   - Event emission: reuses ai.inference.generate only (no new ai.control.* names)
  *   - Event emission is always best-effort / non-blocking
  *
- * FORBIDDEN in this unit:
+ * Slice 2 addition (PW5-G028-C2):
+ *   - Optional targetOrgMeta (pre-validated by route) for per-org targeted mode
+ *   - Bounded server-derived org context injected into prompt when present
+ *   - Requests without targetOrgMeta preserve Slice 1 behavior exactly
+ *
+ * FORBIDDEN in this service (all slices):
  *   - Writing to reasoning_logs
  *   - Accepting client-trusted orgId / tenantId / role
  *   - Tenant budget, idempotency, or rate-limit paths
- *   - Per-org targeting
  *   - New ai.control.* event names
  *   - Reopening or refactoring inferenceService.ts
- *
- * SCOPE: PW5-G028-C1 only.
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -78,6 +79,10 @@ try {
  *
  * All identity fields (adminId) MUST be sourced from verified JWT by the
  * route handler. No client-body identity signal is accepted here.
+ *
+ * targetOrgMeta (Slice 2): when provided, must already be server-validated
+ * by the route handler (DB lookup confirmed org exists). Never pass raw
+ * client-supplied org data here.
  */
 export interface CpInsightInput {
   /** Prompt text supplied by the route handler (validated, max 2 000 chars). */
@@ -97,6 +102,20 @@ export interface CpInsightInput {
 
   /** Prisma client for admin audit persistence. */
   prisma: PrismaClient;
+
+  /**
+   * Slice 2: optional validated org metadata for per-org targeted mode.
+   * When present, bounded server-derived org context is injected into the prompt.
+   * Must be pre-validated by the route handler (org existence confirmed) —
+   * never populated from raw client input.
+   */
+  targetOrgMeta?: {
+    id: string;
+    slug: string;
+    name: string;
+    type: string;
+    status: string;
+  };
 }
 
 /**
@@ -191,7 +210,7 @@ async function cpGenerateContent(
  *   7. No tenant budget or reasoning_logs paths are invoked.
  */
 export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpInsightResult> {
-  const { prompt: rawPrompt, focus, adminId, requestId, prisma } = input;
+  const { prompt: rawPrompt, focus, adminId, requestId, prisma, targetOrgMeta } = input;
 
   // ── 1. Input ceiling guard ─────────────────────────────────────────────────
   const truncatedPrompt = rawPrompt.slice(0, CP_MAX_PROMPT_CHARS);
@@ -212,7 +231,14 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
 
   // ── 3. Build final prompt ──────────────────────────────────────────────────
   const focusPart = focus ? ` Focus specifically on: ${focus}.` : '';
-  const finalPrompt = `${safePrompt}${focusPart}`;
+  // Slice 2: inject validated org context when a specific org is targeted.
+  // Only server-derived fields from the tenant record are appended — never raw client input.
+  // The system instruction already scopes the model to platform-level analysis;
+  // this context hint adds bounded informational scope, not an auth change.
+  const orgContextPart = targetOrgMeta
+    ? ` [Targeted org context — platform-validated: name="${targetOrgMeta.name}", type=${targetOrgMeta.type}, status=${targetOrgMeta.status}]`
+    : '';
+  const finalPrompt = `${safePrompt}${focusPart}${orgContextPart}`;
 
   // ── 4. Model invocation ────────────────────────────────────────────────────
   const inferenceStart = Date.now();
@@ -248,7 +274,9 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
     focus: focus ?? null,
     // Prompt fingerprint only — character count, not raw content
     promptChars: safePrompt.length,
-    slice: 'G028-C1',
+    slice: targetOrgMeta ? 'G028-C2' : 'G028-C1',
+    targetMode: targetOrgMeta ? 'per-org' : 'platform-global',
+    targetOrgId: targetOrgMeta?.id ?? null,
     timestamp: new Date().toISOString(),
   });
 

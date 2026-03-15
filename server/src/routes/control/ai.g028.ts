@@ -1,7 +1,7 @@
 /**
- * control/ai.g028.ts — PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS
+ * control/ai.g028.ts — PW5-G028-C1/C2-CONTROL-PLANE-AI-INSIGHTS
  *
- * Control-plane AI routes — Slice 1.
+ * Control-plane AI routes — Slices 1 & 2.
  * Mounted under /api/control/ai/* by the parent controlRoutes plugin.
  *
  * Routes:
@@ -14,16 +14,21 @@
  *   - Each route in this file additionally enforces requireAdminRole('SUPER_ADMIN')
  *     as a preHandler to gate on the highest admin role.
  *   - No identity, role, realm, or orgId field from the client body is trusted.
+ *   - targetOrgId (Slice 2) is UUID-valid via Zod + server-validated via DB lookup;
+ *     it does NOT elevate auth or change the SUPER_ADMIN gate.
  *
- * Slice 1 guarantees:
- *   - No per-org targeting behaviour
+ * Slice 1 guarantees (preserved):
  *   - No tenant AI route changes
  *   - No ai.control.* event-domain expansion
  *   - No schema / migration changes
  *   - No frontend wiring
  *   - Reasoning persisted in admin audit metadataJson, not reasoning_logs
  *
- * SCOPE: PW5-G028-C1 only.
+ * Slice 2 additions (PW5-G028-C2):
+ *   - Optional targetOrgId in POST /insights body for per-org targeted mode
+ *   - Server-side org existence check (prisma.tenant.findUnique)
+ *   - Validated org metadata passed to service for prompt context injection
+ *   - Requests without targetOrgId preserve Slice 1 behavior exactly
  */
 
 import type { FastifyPluginAsync } from 'fastify';
@@ -40,23 +45,36 @@ import {
 const prisma = new PrismaClient();
 
 // ---------------------------------------------------------------------------
-// Request schema — minimal for Slice 1
+// Shared validators
+// ---------------------------------------------------------------------------
+
+/** UUID validator — used for targetOrgId to reject non-UUID strings at schema boundary. */
+const uuidSchema = z.string().uuid('Must be a valid UUID');
+
+// ---------------------------------------------------------------------------
+// Request schema — Slice 1 + Slice 2
 // ---------------------------------------------------------------------------
 
 /**
  * POST /api/control/ai/insights request body.
  *
- * Slice 1 is intentionally minimal:
+ * Slice 1 fields:
  *   - prompt  : The platform-level question or directive.
  *   - focus   : Optional context hint (e.g. 'platform-health', 'usage-trends').
  *
- * Fields NOT accepted in Slice 1 (rejected silently via schema boundary):
- *   - orgId / tenantId / role / realm — all identity signals from client are forbidden
- *   - per-org targeting parameters
+ * Slice 2 addition:
+ *   - targetOrgId : Optional UUID of a specific org to target.
+ *                   Server-validated via prisma.tenant.findUnique before use.
+ *                   Not a trust-elevation signal — SUPER_ADMIN gate is unchanged.
+ *                   When absent, request is treated as platform-global (Slice 1 behavior).
+ *
+ * Fields unconditionally rejected (all client identity signals):
+ *   - orgId / tenantId / role / realm — not accepted in any slice
  */
 const cpInsightsBodySchema = z.object({
   prompt: z.string().min(1).max(2_000),
   focus: z.string().max(200).optional(),
+  targetOrgId: uuidSchema.optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -147,7 +165,38 @@ const controlPlaneAiRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, parseResult.error.errors);
       }
 
-      const { prompt, focus } = parseResult.data;
+      const { prompt, focus, targetOrgId } = parseResult.data;
+
+      // ── Slice 2: per-org target validation ─────────────────────────────────
+      // targetOrgId is UUID-validated by Zod above but NOT yet verified to exist.
+      // A server-side DB lookup is mandatory — this is not an auth-elevation path;
+      // the SUPER_ADMIN gate above is the sole auth boundary. The lookup only
+      // determines whether the org exists and retrieves bounded metadata for prompt
+      // context injection. The sentinel admin DB context is unchanged.
+      type TargetOrgMeta = { id: string; slug: string; name: string; type: string; status: string };
+      let targetOrgMeta: TargetOrgMeta | undefined;
+
+      if (targetOrgId) {
+        const org = await prisma.tenant.findUnique({
+          where: { id: targetOrgId },
+          select: { id: true, slug: true, name: true, type: true, status: true },
+        });
+        if (!org) {
+          return sendError(
+            reply,
+            'ORG_NOT_FOUND',
+            `Target org '${targetOrgId}' does not exist`,
+            404
+          );
+        }
+        targetOrgMeta = {
+          id: org.id,
+          slug: org.slug,
+          name: org.name,
+          type: String(org.type),
+          status: String(org.status),
+        };
+      }
 
       // Trace ID: server-generated, never from client
       const requestId = `cp-insights-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -158,6 +207,7 @@ const controlPlaneAiRoutes: FastifyPluginAsync = async fastify => {
         adminId,
         requestId,
         prisma,
+        targetOrgMeta,
       });
 
       return sendSuccess(reply, {
@@ -170,7 +220,8 @@ const controlPlaneAiRoutes: FastifyPluginAsync = async fastify => {
           hadInferenceError: result.hadInferenceError,
           piiRedacted: result.piiRedacted,
           outputPiiDetected: result.outputPiiDetected,
-          slice: 'G028-C1',
+          slice: targetOrgId ? 'G028-C2' : 'G028-C1',
+          ...(targetOrgId && { targetOrgId }),
         },
       });
     }
