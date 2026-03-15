@@ -303,7 +303,7 @@ Preserving the SEQUENCING-LOCK-PRE-WAVE-5 order already recorded in both `govern
 | 3 | Control plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; governance sync PW5-CP-PLAN-GOV recorded 2026-03-10; 17 panels confirmed; route dependency map produced; classification established; drift findings recorded |
 | 4 | Tenant admin dashboard completion | ⏳ Blocked — verification + wiring tranches must complete first |
 | 5 | White-label store builder | ✅ WL1–WL7 COMPLETE (TRANCHE CLOSED) — PW5-WL1 ✅ CLOSED (cc4278f · 2026-03-12) · PW5-WL2 ✅ CLOSED (3070f80 · 2026-03-13) · PW5-WL3 ✅ CLOSED (06fd294 · 2026-03-13) · PW5-WL4 ✅ CLOSED (25921ae · 2026-03-13) · PW5-WL4-VERIFY ✅ COMPLETE (2026-03-13) · PW5-WL5 ✅ CLOSED (c40eb64 · 2026-03-13) · PW5-WL5-VERIFY ✅ COMPLETE (2026-03-13) · PW5-WL6 ✅ CLOSED (e8f5d55 · 2026-03-13) · PW5-WL6-VERIFY ✅ COMPLETE (2026-03-13) · PW5-WL7 ✅ CLOSED (d860b6b · 2026-03-13) · PW5-WL7-VERIFY ✅ COMPLETE (2026-03-13) · WL storefront tranche complete — await next approved roadmap sequence |
-| 6 | AI / event backbone (Wave 5 architecture) | 🔄 IN PROGRESS — PW5-AI-PLAN ✅ PLANNING COMPLETE (2026-03-13) · PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED (2026-03-13 · commit dd18957) · PW5-AI-EMITTER ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit 73f0972) · PW5-AI-TIS-EXTRACT ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit f2ae23b) · PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (initial impl 96ca710; remediation 4b96e13; final verification state: VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE) · PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (initial impl 84c185d; remediation 536fe50; final verification state: VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE) · PW5-AI-NEGOTIATION-RAG ✅ CLOSED (commit de202c2; verification state: VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE). D-004 request-frequency protection drift corrected; D-006 idempotency drift corrected via remediation; D-009 negotiation RAG drift corrected — negotiation-advice now shares governed retrieval backbone with insights; prompt augmentation confirmed real; TIS ordering preserved. Static verification notes preserved as non-defect (no live runtime probe in read-only verification units per established convention). PW5-AI-PII-GUARD ✅ CLOSED (b1c80da · 2026-03-14) — deterministic pre-send redaction + post-receive blocking implemented at TIS boundary via `piiGuard.ts`; 5 PII categories (EMAIL, PHONE, CARD, AADHAAR, PAN); both AI paths (insights + negotiation-advice) covered; `ai.inference.pii_redacted` + `ai.inference.pii_leak_detected` confirmed registered (dd18957); metadata-only events; D-005 CLOSED. PW5-G028-B1-CATALOG-INDEXER ✅ CLOSED (b3ffd18 · 2026-03-15) — catalog create mutation (`POST /api/tenant/catalog/items`) now enqueues vector indexing work via `enqueueSourceIngestion()` post-commit; existing async vector queue backbone reused; no inline embedding; `orgId` server-derived; create-path only (no update/delete route existed); verification PASS. control-plane AI governance backend remains REQUIRES_BACKEND_DESIGN (TECS-FBW-AIGOVERNANCE). Next unit: pending governance prioritization. |
+| 6 | AI / event backbone (Wave 5 architecture) | 🔄 IN PROGRESS — PW5-AI-PLAN ✅ PLANNING COMPLETE (2026-03-13) · PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED (2026-03-13 · commit dd18957) · PW5-AI-EMITTER ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit 73f0972) · PW5-AI-TIS-EXTRACT ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit f2ae23b) · PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (initial impl 96ca710; remediation 4b96e13; final verification state: VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE) · PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (initial impl 84c185d; remediation 536fe50; final verification state: VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE) · PW5-AI-NEGOTIATION-RAG ✅ CLOSED (commit de202c2; verification state: VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE). D-004 request-frequency protection drift corrected; D-006 idempotency drift corrected via remediation; D-009 negotiation RAG drift corrected — negotiation-advice now shares governed retrieval backbone with insights; prompt augmentation confirmed real; TIS ordering preserved. Static verification notes preserved as non-defect (no live runtime probe in read-only verification units per established convention). PW5-AI-PII-GUARD ✅ CLOSED (b1c80da · 2026-03-14) — deterministic pre-send redaction + post-receive blocking implemented at TIS boundary via `piiGuard.ts`; 5 PII categories (EMAIL, PHONE, CARD, AADHAAR, PAN); both AI paths (insights + negotiation-advice) covered; `ai.inference.pii_redacted` + `ai.inference.pii_leak_detected` confirmed registered (dd18957); metadata-only events; D-005 CLOSED. PW5-G028-B1-CATALOG-INDEXER ✅ CLOSED (b3ffd18 · 2026-03-15) — catalog create mutation (`POST /api/tenant/catalog/items`) now enqueues vector indexing work via `enqueueSourceIngestion()` post-commit; existing async vector queue backbone reused; no inline embedding; `orgId` server-derived; create-path only (no update/delete route existed); verification PASS. PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS ✅ CLOSED (aaf8748 · 2026-03-15) — first control-plane AI backend slice; GET /api/control/ai/health + POST /api/control/ai/insights added under /api/control/ai/*; SUPER_ADMIN-only; separate controlPlaneInferenceService.ts boundary (tenant TIS not reopened); admin audit metadataJson used for reasoning persistence (reasoning_logs not written); piiGuard pre-send + post-receive applied; ai.inference.generate reused (no new ai.control.* names); no schema/migration/frontend/per-org-targeting widening; verification PASS. Control-plane AI Slice 2+ and ai.control.* event-domain remain pending governance prioritization. |
 
 ### Wave 5 Architecture Block Conditions
 
@@ -331,9 +331,15 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 ## Session Carry-Forward Summary
 
-*Last updated: 2026-03-15 — GOVERNANCE-SYNC-PW5-G028-B1-CATALOG-INDEXER (f774f62)*
+*Last updated: 2026-03-15 — GOVERNANCE-SYNC-PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS*
 
 ### Newly Closed (this session)
+
+- **PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS** ✅
+  - Implementation: aaf8748
+  - Verification: PASS
+  - Governance Sync: this commit
+  - Final status: CLOSED / VERIFIED_COMPLETE
 
 - **PW5-G028-B1-CATALOG-INDEXER** ✅
   - Implementation: b3ffd18
@@ -354,20 +360,23 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 | 7 | PW5-AI-NEGOTIATION-RAG | ✅ CLOSED (de202c2) |
 | 8 | PW5-AI-PII-GUARD | ✅ CLOSED (b1c80da) |
 | 9 | PW5-G028-B1-CATALOG-INDEXER | ✅ CLOSED (b3ffd18) |
+| 10 | PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS | ✅ CLOSED (aaf8748) |
 
 ### Still Not Authorized
 
 | Unit | Blocker |
 |---|---|
-| PW5-G028-C-CONTROL-PLANE-AI | Design-gated — requires TECS-FBW-AIGOVERNANCE + explicit design authorization |
+| PW5-G028-C-CONTROL-PLANE-AI (Slice 2+) | Slice 1 (C1) CLOSED (aaf8748); further slices require explicit governance authorization — pending prioritization |
 | PW5-SHADOW-QUERY-FIX | Proposed / low urgency — no authorization issued |
 
 ### Board State (2026-03-15)
 
-- Catalog create mutation (`POST /api/tenant/catalog/items`) now enqueues vector indexing work through the existing A6 queue backbone
-- Scope remained bounded to the real create path only — no schema, migration, route-contract, or control-plane AI widening
+- PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS is now CLOSED / VERIFIED_COMPLETE (commit aaf8748)
+- First control-plane AI backend slice is operational: GET /api/control/ai/health + POST /api/control/ai/insights under /api/control/ai/*, SUPER_ADMIN-only, separate service boundary, admin audit metadataJson reasoning persistence
+- No schema, migration, frontend, per-org-targeting, or ai.control.* event-domain widening occurred
+- Control-plane AI Slice 2+ and all ai.control.* event-domain work remain unauthorized — pending governance prioritization
 - There is **no automatically authorized next implementation unit**
-- TECS-correct next move: authorize a single next unit from remaining proposed items, or issue the design unit required to unlock `PW5-G028-C-CONTROL-PLANE-AI`
+- TECS-correct next move: authorize a single next unit from remaining proposed items
 
 ---
 
