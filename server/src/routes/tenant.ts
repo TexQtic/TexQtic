@@ -325,6 +325,188 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * PATCH /api/tenant/catalog/items/:id
+   * Update an existing catalog item (OWNER or ADMIN only)
+   *
+   * G-028 B2: Post-commit vector reindex enqueue (best-effort, outside tx).
+   * Writes audit entry: catalog.item.updated
+   */
+  fastify.patch(
+    '/tenant/catalog/items/:id',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Role guard: only OWNER or ADMIN may update catalog items
+      if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can update catalog items', 403);
+      }
+
+      const { id } = request.params as { id: string };
+
+      const bodySchema = z.object({
+        name: z.string().min(1).max(255).optional(),
+        sku: z.string().min(1).max(100).nullable().optional(),
+        description: z.string().nullable().optional(),
+        price: z.number().positive().optional(),
+        moq: z.number().int().min(1).optional(),
+        active: z.boolean().optional(),
+      });
+
+      const parseResult = bodySchema.safeParse(request.body);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      if (Object.keys(parseResult.data).length === 0) {
+        return sendError(reply, 'VALIDATION_ERROR', 'At least one field must be provided for update', 400);
+      }
+
+      const data = parseResult.data;
+
+      const updated = await withDbContext(prisma, dbContext, async tx => {
+        // Org-scoped lookup: confirms item belongs to this tenant before update.
+        // Defense in depth — RLS also enforces boundary, but explicit filter is required.
+        const existing = await tx.catalogItem.findFirst({
+          where: { id, tenantId: dbContext.orgId },
+          select: { id: true },
+        });
+        if (!existing) {
+          return null;
+        }
+
+        const result = await tx.catalogItem.update({
+          where: { id },
+          data: {
+            ...(data.name !== undefined ? { name: data.name } : {}),
+            ...(data.sku !== undefined ? { sku: data.sku } : {}),
+            ...(data.description !== undefined ? { description: data.description } : {}),
+            ...(data.price !== undefined ? { price: data.price } : {}),
+            ...(data.moq !== undefined ? { moq: data.moq } : {}),
+            ...(data.active !== undefined ? { active: data.active } : {}),
+          },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'catalog.item.updated',
+          entity: 'catalog_item',
+          entityId: result.id,
+          metadataJson: { ...data },
+        });
+
+        return result;
+      });
+
+      if (!updated) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      // G-028 B2: Enqueue async vector reindex after successful DB commit.
+      // Must run after withDbContext resolves so the transaction is committed.
+      // Failure is best-effort: a full queue does not fail the HTTP response.
+      const vectorText = updated.description ? `${updated.name}\n\n${updated.description}` : updated.name;
+      const enqueueResult = enqueueSourceIngestion(
+        dbContext.orgId,
+        'CATALOG_ITEM',
+        updated.id,
+        vectorText,
+        { name: updated.name },
+      );
+      if (!enqueueResult.accepted) {
+        console.warn('[G028-B2][catalog_item_update_enqueue_rejected]', {
+          stage:      'vector_async_reindex',
+          sourceType: 'CATALOG_ITEM',
+          sourceId:   updated.id,
+          reason:     enqueueResult.reason,
+        });
+      }
+
+      return sendSuccess(reply, { item: updated });
+    }
+  );
+
+  /**
+   * DELETE /api/tenant/catalog/items/:id
+   * Delete a catalog item (OWNER or ADMIN only)
+   *
+   * G-028 B2: Delete-side vector enqueue is NOT performed in this unit.
+   * The existing enqueueSourceIngestion() contract is ingestion-only (chunk → embed → upsert).
+   * VectorIndexJob has no operation discriminator; there is no delete-index path.
+   * Enqueue omission is intentional and documented — not a defect in this route.
+   * Vector tombstone support requires a new queue operation type (G-028-B2-DELETE-ENQUEUE-BLOCKER).
+   * Writes audit entry: catalog.item.deleted
+   */
+  fastify.delete(
+    '/tenant/catalog/items/:id',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Role guard: only OWNER or ADMIN may delete catalog items
+      if (!['OWNER', 'ADMIN'].includes(userRole ?? '')) {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER or ADMIN can delete catalog items', 403);
+      }
+
+      const { id } = request.params as { id: string };
+
+      const deleted = await withDbContext(prisma, dbContext, async tx => {
+        // Org-scoped lookup: confirms item belongs to this tenant before delete.
+        // Defense in depth — RLS also enforces boundary, but explicit filter is required.
+        const existing = await tx.catalogItem.findFirst({
+          where: { id, tenantId: dbContext.orgId },
+          select: { id: true, name: true },
+        });
+        if (!existing) {
+          return null;
+        }
+
+        await tx.catalogItem.delete({
+          where: { id },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'catalog.item.deleted',
+          entity: 'catalog_item',
+          entityId: id,
+          metadataJson: { name: existing.name },
+        });
+
+        return existing;
+      });
+
+      if (!deleted) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      // G-028 B2: Vector tombstone enqueue is intentionally omitted here.
+      // enqueueSourceIngestion() is ingestion-only; VectorIndexJob carries no
+      // operation discriminator. Expressing delete-index intent requires a new
+      // queue operation type — that widening is out of scope for this unit.
+      // Blocker: G-028-B2-DELETE-ENQUEUE-BLOCKER (pending governance authorization).
+
+      return sendSuccess(reply, { id, deleted: true });
+    }
+  );
+
+  /**
    * POST /api/tenant/cart
    * Create or return active cart for authenticated tenant user (idempotent)
    * Gate D.2: RLS-enforced, manual tenant filters removed
