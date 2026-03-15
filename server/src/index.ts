@@ -15,6 +15,7 @@ import aiRoutes from './routes/ai.js';
 import tenantProvisionRoutes from './routes/admin/tenantProvision.js';
 import impersonationRoutes from './routes/admin/impersonation.js';
 import internalGovRoutes from './routes/internal/index.js';
+import { startVectorWorker } from './workers/vectorWorker.js';
 
 /**
  * Type guard for Fastify-like error objects.
@@ -187,6 +188,18 @@ const start = async () => {
   try {
     await fastify.listen({ port: config.PORT, host: config.HOST });
     console.log(`🚀 Server running at http://${config.HOST}:${config.PORT}`);
+
+    // G-028-B2-WORKER-BOOTSTRAP: Start the vector index queue worker.
+    // Jobs enqueued via enqueueSourceIngestion / enqueueSourceDeletion are now
+    // dequeued and dispatched through the RLS-enforced runner in vectorWorker.ts.
+    const vectorWorkerHandle = startVectorWorker();
+
+    // Stop the vector worker when the Fastify server closes (graceful shutdown).
+    // The worker interval is already .unref()'d so it will not block process exit;
+    // this hook ensures clean teardown when fastify.close() is explicitly called.
+    fastify.addHook('onClose', async () => {
+      vectorWorkerHandle.stop();
+    });
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
