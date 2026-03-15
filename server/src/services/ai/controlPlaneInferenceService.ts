@@ -27,8 +27,10 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaClient } from '@prisma/client';
+import { createHash } from 'node:crypto';
 import { config } from '../../config/index.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
+import { withSuperAdminContext } from '../../lib/database-context.js';
 import { redactPii, scanForPii } from './piiGuard.js';
 import { emitAiEventBestEffort } from '../../events/aiEmitter.js';
 
@@ -48,6 +50,9 @@ const CP_INFERENCE_TIMEOUT_MS = 12_000;
 
 /** Maximum input prompt length accepted from route handler (chars). */
 const CP_MAX_PROMPT_CHARS = 2_000;
+
+/** 15-minute idempotency bucket for pre-execution control-plane deduplication. */
+const CP_FINGERPRINT_BUCKET_MS = 15 * 60 * 1_000;
 
 /**
  * Canonical admin-realm sentinel UUID used as control-plane orgId for event
@@ -204,10 +209,22 @@ async function cpGenerateContent(
  *   1. Input ceiling: prompt truncated to CP_MAX_PROMPT_CHARS before processing.
  *   2. PII redaction applied to prompt before send; violated prompts are sanitised.
  *   3. Model output scanned for PII; detected output is suppressed with a safe message.
- *   4. Admin audit record written (reasoning summary in metadataJson) — NOT reasoning_logs.
- *   5. Event emission is best-effort / non-blocking; failure never breaks the primary flow.
- *   6. No client-trusted identity signal is accepted or forwarded.
- *   7. No tenant budget or reasoning_logs paths are invoked.
+ *   4. Admin audit record written with typed reasoning_log_id FK (G028-C3).
+ *   5. reasoning_logs rows written with tenant_id = NULL, admin_actor_id set.
+ *   6. Event emission is best-effort / non-blocking; failure never breaks the primary flow.
+ *   7. No client-trusted identity signal is accepted or forwarded.
+ *   8. No tenant budget, tenant reasoning_logs paths, or Slice 4 paths are invoked.
+ *
+ * C3 reasoning persistence flow:
+ *   C1. Pre-execution: compute requestFingerprint = SHA256(safePrompt).
+ *   C2. Idempotency guard: SELECT for existing finalized row before model invocation.
+ *   C3. Finalized hit → reuse row, skip model, write audit, return early.
+ *       Incomplete row → warn, do not reuse, proceed with fresh model invocation.
+ *   C4. Model invocation on miss only.
+ *   C5. Post-execution: compute reasoningHash = SHA256(safePrompt + response.text).
+ *   C6. INSERT finalized reasoning row via withSuperAdminContext (tenant_id = NULL).
+ *       P2002 conflict → fetch concurrent winner (only if finalized).
+ *   C7. Write admin audit with reasoningLogId FK (omit if persistence degraded).
  */
 export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpInsightResult> {
   const { prompt: rawPrompt, focus, adminId, requestId, prisma, targetOrgMeta } = input;
@@ -233,14 +250,127 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
   const focusPart = focus ? ` Focus specifically on: ${focus}.` : '';
   // Slice 2: inject validated org context when a specific org is targeted.
   // Only server-derived fields from the tenant record are appended — never raw client input.
-  // The system instruction already scopes the model to platform-level analysis;
-  // this context hint adds bounded informational scope, not an auth change.
   const orgContextPart = targetOrgMeta
     ? ` [Targeted org context — platform-validated: name="${targetOrgMeta.name}", type=${targetOrgMeta.type}, status=${targetOrgMeta.status}]`
     : '';
   const finalPrompt = `${safePrompt}${focusPart}${orgContextPart}`;
 
-  // ── 4. Model invocation ────────────────────────────────────────────────────
+  // ── C1. Pre-execution idempotency values (Decision 2 — before model invocation) ──
+  // requestFingerprint = SHA256(safePrompt): uniquely identifies the prompt input.
+  // requestBucketStart = current time normalised to 15-minute boundary.
+  // These two values are the idempotency key together with adminId.
+  const requestFingerprint = createHash('sha256').update(safePrompt).digest('hex');
+  const nowMs = Date.now();
+  const requestBucketStart = new Date(
+    Math.floor(nowMs / CP_FINGERPRINT_BUCKET_MS) * CP_FINGERPRINT_BUCKET_MS,
+  );
+
+  // ── C2. Idempotency guard: SELECT for existing finalized row ───────────────
+  // Must execute BEFORE model invocation to satisfy Decision 2 semantics.
+  // Uses withSuperAdminContext to read control-plane rows (tenant_id IS NULL).
+  // Admin-scoped: (admin_actor_id, request_fingerprint, request_bucket_start).
+  let existingRow: { id: string; reasoningHash: string; responseSummary: string | null } | null =
+    null;
+  try {
+    existingRow = await withSuperAdminContext(prisma, async tx => {
+      return (tx as any).reasoningLog.findFirst({
+        where: {
+          adminActorId: adminId,
+          requestFingerprint,
+          requestBucketStart,
+          tenantId: null,
+        },
+        select: { id: true, reasoningHash: true, responseSummary: true },
+      });
+    });
+  } catch (idempotencyCheckErr) {
+    // Non-blocking: if the check fails, proceed with fresh invocation.
+    console.warn('[ControlPlaneAI] Idempotency pre-check error (proceeding fresh):', {
+      adminId,
+      requestId,
+      error: idempotencyCheckErr,
+    });
+  }
+
+  // ── C3. Handle existing row (Decision 2 / CP-07) ───────────────────────────
+  // A row is "finalized and safe to reuse" only when:
+  //   - reasoningHash is populated (non-empty string)
+  //   - responseSummary is present (not null/undefined)
+  // An incomplete placeholder row must NOT be silently reused (CP-07).
+  let reasoningLogId: string | undefined;
+
+  if (existingRow) {
+    const isFinalized =
+      existingRow.reasoningHash &&
+      existingRow.reasoningHash.length > 0 &&
+      existingRow.responseSummary !== null &&
+      existingRow.responseSummary !== undefined;
+
+    if (isFinalized) {
+      // Safe finalized row found → reuse without model invocation.
+      reasoningLogId = existingRow.id;
+
+      const earlyAuditEntry = createAdminAudit(
+        adminId,
+        'CONTROL_PLANE_AI_INSIGHTS',
+        'ai',
+        {
+          requestId,
+          model: 'gemini-1.5-flash',
+          tokensUsed: 0,
+          inferenceLatencyMs: 0,
+          hadInferenceError: false,
+          piiRedacted,
+          outputPiiDetected: false,
+          focus: focus ?? null,
+          promptChars: safePrompt.length,
+          slice: targetOrgMeta ? 'G028-C2' : 'G028-C1',
+          targetMode: targetOrgMeta ? 'per-org' : 'platform-global',
+          targetOrgId: targetOrgMeta?.id ?? null,
+          timestamp: new Date().toISOString(),
+          idempotencyHit: true,
+        },
+        reasoningLogId,
+      );
+
+      await writeAuditLog(prisma, earlyAuditEntry);
+
+      void emitAiEventBestEffort(
+        'ai.inference.generate',
+        {
+          orgId: ADMIN_SENTINEL_ORG,
+          taskType: 'control-plane-insights',
+          model: 'gemini-1.5-flash',
+          latencyMs: 0,
+        },
+        { orgId: ADMIN_SENTINEL_ORG, actorId: adminId },
+      );
+
+      return {
+        text: existingRow.responseSummary ?? '[Cached AI response]',
+        tokensUsed: 0,
+        hadInferenceError: false,
+        inferenceLatencyMs: 0,
+        piiRedacted,
+        outputPiiDetected: false,
+      };
+    } else {
+      // Incomplete row found — do not silently reuse (CP-07 contract).
+      // Proceed with fresh model invocation. The INSERT in C6 will encounter
+      // a unique conflict if the incomplete row holds the idempotency slot —
+      // that is handled as a degraded mode (no reasoningLogId in audit).
+      console.warn(
+        '[ControlPlaneAI] Incomplete reasoning row found for idempotency key — not reusing',
+        {
+          adminId,
+          requestId,
+          existingRowId: existingRow.id,
+        },
+      );
+    }
+  }
+
+  // ── C4. Model invocation (miss path only) ──────────────────────────────────
   const inferenceStart = Date.now();
   const generation = await cpGenerateContent(finalPrompt);
   const inferenceLatencyMs = Date.now() - inferenceStart;
@@ -255,37 +385,119 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       requestId,
       categories: outputScan.categories,
     });
-    // Suppress the raw output; never return PII-containing model text
+    // Suppress the raw output; never return PII-containing model text.
     generation.text =
       'AI output suppressed: potential PII detected in model response. Please refine your prompt.';
   }
 
-  // ── 6. Admin audit write ───────────────────────────────────────────────────
-  // Reasoning / prompt-summary artifact stored in metadataJson (NOT reasoning_logs).
-  // Raw prompt content is NOT stored — only auditable metadata.
-  const auditEntry = createAdminAudit(adminId, 'CONTROL_PLANE_AI_INSIGHTS', 'ai', {
-    requestId,
-    model: 'gemini-1.5-flash',
-    tokensUsed: generation.tokensUsed,
-    inferenceLatencyMs,
-    hadInferenceError: generation.hadInferenceError,
-    piiRedacted,
-    outputPiiDetected,
-    focus: focus ?? null,
-    // Prompt fingerprint only — character count, not raw content
-    promptChars: safePrompt.length,
-    slice: targetOrgMeta ? 'G028-C2' : 'G028-C1',
-    targetMode: targetOrgMeta ? 'per-org' : 'platform-global',
-    targetOrgId: targetOrgMeta?.id ?? null,
-    timestamp: new Date().toISOString(),
-  });
+  // ── C5. Post-execution artifact hash (Decision 2) ──────────────────────────
+  // reasoningHash = SHA256(safePrompt + generation.text) — artifact integrity only.
+  // This is NOT part of the idempotency key (requestFingerprint is).
+  const reasoningHash = createHash('sha256')
+    .update(safePrompt + generation.text)
+    .digest('hex');
 
-  // writeAuditLog is best-effort internally; failures are logged, not rethrown
+  // ── C6. Insert finalized reasoning row (Decision 1) ───────────────────────
+  // tenant_id = NULL (control-plane row, not tenant-scoped).
+  // admin_actor_id = adminId (from verified JWT only).
+  // All values are final — the immutability trigger forbids UPDATE.
+  // P2002 conflict means a concurrent request inserted the same idempotency key.
+  try {
+    const insertedLog = await withSuperAdminContext(prisma, async tx => {
+      return (tx as any).reasoningLog.create({
+        data: {
+          tenantId: null,
+          adminActorId: adminId,
+          requestId,
+          requestFingerprint,
+          requestBucketStart,
+          reasoningHash,
+          model: 'gemini-1.5-flash',
+          promptSummary: safePrompt.slice(0, 200),
+          responseSummary: generation.text.slice(0, 500),
+          tokensUsed: generation.tokensUsed,
+        },
+        select: { id: true },
+      });
+    });
+    reasoningLogId = insertedLog.id;
+  } catch (persistErr: any) {
+    if (persistErr?.code === 'P2002') {
+      // Unique constraint violation: a concurrent request won the INSERT race.
+      // Fetch the winner row — only adopt its ID if it is a finalized row
+      // (guards against the case where an incomplete row holds the idempotency slot).
+      try {
+        const conflictRow = await withSuperAdminContext(prisma, async tx => {
+          return (tx as any).reasoningLog.findFirst({
+            where: {
+              adminActorId: adminId,
+              requestFingerprint,
+              requestBucketStart,
+              tenantId: null,
+            },
+            select: { id: true, reasoningHash: true, responseSummary: true },
+          });
+        });
+        if (
+          conflictRow &&
+          conflictRow.reasoningHash &&
+          conflictRow.reasoningHash.length > 0 &&
+          conflictRow.responseSummary !== null
+        ) {
+          // Finalized concurrent winner — safe to link.
+          reasoningLogId = conflictRow.id;
+        } else {
+          // Incomplete row holds the slot — degraded mode, omit reasoningLogId.
+          console.warn(
+            '[ControlPlaneAI] Incomplete row holds idempotency slot after P2002 — omitting reasoningLogId',
+            { adminId, requestId },
+          );
+        }
+      } catch (fetchErr) {
+        console.warn('[ControlPlaneAI] Failed to fetch conflict reasoning row:', fetchErr);
+      }
+    } else {
+      // Non-conflict persistence failure — degraded mode, primary AI response unaffected.
+      console.warn('[ControlPlaneAI] Reasoning persistence failed (degraded mode):', {
+        adminId,
+        requestId,
+        error: persistErr,
+      });
+    }
+  }
+
+  // ── C7. Admin audit write with reasoning log FK linkage (Decision 3) ───────
+  // reasoningLogId is threaded through createAdminAudit → writeAuditLog.
+  // If persistence was degraded (no reasoningLogId), the audit row is written
+  // without the FK — this is the permitted degraded path.
+  const auditEntry = createAdminAudit(
+    adminId,
+    'CONTROL_PLANE_AI_INSIGHTS',
+    'ai',
+    {
+      requestId,
+      model: 'gemini-1.5-flash',
+      tokensUsed: generation.tokensUsed,
+      inferenceLatencyMs,
+      hadInferenceError: generation.hadInferenceError,
+      piiRedacted,
+      outputPiiDetected,
+      focus: focus ?? null,
+      promptChars: safePrompt.length,
+      slice: targetOrgMeta ? 'G028-C2' : 'G028-C1',
+      targetMode: targetOrgMeta ? 'per-org' : 'platform-global',
+      targetOrgId: targetOrgMeta?.id ?? null,
+      timestamp: new Date().toISOString(),
+    },
+    reasoningLogId,
+  );
+
+  // writeAuditLog is best-effort internally; failures are logged, not rethrown.
   await writeAuditLog(prisma, auditEntry);
 
-  // ── 7. Best-effort event emission ──────────────────────────────────────────
+  // ── 8. Best-effort event emission ──────────────────────────────────────────
   // Reuse ai.inference.generate — existing KnownEventName, compatible payload.
-  // No new ai.control.* event names in this unit.
+  // No new ai.control.* event names (Slice 4 is unauthorized).
   // orgId = ADMIN_SENTINEL_ORG — control-plane origin, not a tenant scope.
   void emitAiEventBestEffort(
     'ai.inference.generate',
@@ -295,7 +507,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       model: 'gemini-1.5-flash',
       latencyMs: inferenceLatencyMs,
     },
-    { orgId: ADMIN_SENTINEL_ORG, actorId: adminId }
+    { orgId: ADMIN_SENTINEL_ORG, actorId: adminId },
   );
 
   return {

@@ -26,6 +26,8 @@ export interface AuditEntry {
   beforeJson?: Prisma.JsonValue | null;
   afterJson?: Prisma.JsonValue | null;
   metadataJson?: Prisma.JsonValue | null;
+  /** Optional FK to reasoning_logs.id — typed linkage for AI audit rows (G028-C3). */
+  reasoningLogId?: string | null;
 }
 
 /**
@@ -60,6 +62,7 @@ export async function writeAuditLog(tx: DbClient, entry: AuditEntry): Promise<vo
         beforeJson: entry.beforeJson ?? undefined,
         afterJson: entry.afterJson ?? undefined,
         metadataJson: entry.metadataJson ?? undefined,
+        reasoningLogId: entry.reasoningLogId ?? undefined, // G028-C3: typed FK linkage
       },
     });
 
@@ -187,7 +190,8 @@ export function createAdminAudit(
   adminId: string,
   action: string,
   entity: string,
-  metadata?: Prisma.JsonValue
+  metadata?: Prisma.JsonValue,
+  reasoningLogId?: string | null
 ): AuditEntry {
   return {
     realm: 'ADMIN',
@@ -200,6 +204,7 @@ export function createAdminAudit(
     beforeJson: null,
     afterJson: null,
     metadataJson: metadata || {},
+    reasoningLogId: reasoningLogId ?? undefined, // G028-C3: typed FK linkage
   };
 }
 
