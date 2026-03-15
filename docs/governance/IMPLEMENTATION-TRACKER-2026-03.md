@@ -127,7 +127,7 @@
 |---|---|---|---|---|---|---|
 | TECS-FBW-012 | TeamManagement Edit Access — role-change modal + backend route | Backend: PATCH /api/tenant/memberships/:id route designed and implemented | MEDIUM — dead Edit Access button; no backend route | VALIDATED | Do not open memberships route without explicit approval; UI change follows backend change | ❌ Not started (backend design gate) |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority actions | Backend: /api/control/admin-users route designed and implemented | HIGH — no auditable admin provisioning | REQUIRES_BACKEND_DESIGN | Security posture concern; must not proceed without explicit product approval | ❌ Not started (backend design gate) |
-| TECS-FBW-AIGOVERNANCE | AI Governance authority actions (cap, kill switch, registry) | Backend: PUT /api/control/ai-budget/:tenantId + related routes designed (G-028 B1/B2/C1/C2/C3) | HIGH — AI control actions completely dark | REQUIRES_BACKEND_DESIGN | G-028 Deferred Wave 5+ (GOVERNANCE-SYNC-095); must coordinate with G-028 B/C wave | ❌ Not started (backend design gate) |
+| TECS-FBW-AIGOVERNANCE | AI Governance authority actions (cap, kill switch, registry) | Backend: PUT /api/control/ai-budget/:tenantId + related routes designed (G-028 B1/B2/C1/C2/C3) | HIGH — AI control actions completely dark | REQUIRES_BACKEND_DESIGN | G-028 Deferred Wave 5+ (GOVERNANCE-SYNC-095); must coordinate with G-028 B/C wave | 🔄 PARTIAL — G-028 C1 ✅ CLOSED (aaf8748 · 2026-03-15) · G-028 C2 ✅ CLOSED (a6eac77 · VERIFIED_COMPLETE) · Frontend wiring (Slice 5) OPEN — pending governance authorization |
 | TECS-FBW-013 | B2B Request Quote — product decision + backend route | Product decision made; backend quote endpoint designed | LOW — deferred by doctrine | DEFERRED | Keep UI visually disabled until product decision made; do not remove button | ❌ Deferred by product |
 | TECS-FBW-AUTH-001 | Tenant login resolver endpoint | Backend: /api/public/tenants/resolve route designed and implemented | MEDIUM — if seeded picker confirmed (VER-006 FAIL) | VERIFY_REQUIRED | Deferred until VER-006 confirms hardcoded picker still present AND product decides to implement resolver | ✅ CLOSED — 2026-03-13 · commit 476b3d3 · server/src/routes/public.ts (NEW); server/src/index.ts; server/src/middleware/realmGuard.ts; services/authService.ts; components/Auth/AuthFlows.tsx · SEEDED_TENANTS removed; slug resolver implemented · typecheck EXIT 0 · lint EXIT 0 |
 | PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN | Email-based identifier-less tenant lookup | GET /api/public/tenants/by-email: email → membership → tenant lookup; RLS service role grants; migration compliance; serverless route parity | MEDIUM — tenant login required manual slug entry; email-based org detection absent | IMPLEMENTED | Parent program encompassing by-email route, RLS remediation, migration compliance, and serverless entrypoint parity | ✅ CLOSED — 2026-03-14 · full remediation chain complete and verified in production · production endpoint reachable; RLS functioning; tenant resolution correct for seeded accounts |
@@ -333,7 +333,7 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 ## Session Carry-Forward Summary
 
-*Last updated: 2026-03-15 — GOVERNANCE-SYNC-PW5-G028-B2-WORKER-BOOTSTRAP*
+*Last updated: 2026-03-15 — GOVERNANCE-SYNC-PW5-G028-C2-CONTROL-PLANE-AI-TARGETED*
 
 ### Newly Closed (this session)
 
@@ -355,6 +355,12 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
   - Governance Sync: f774f62
   - Final status: CLOSED / VERIFIED_COMPLETE
 
+- **PW5-G028-C2-CONTROL-PLANE-AI-TARGETED** ✅
+  - Implementation: a6eac77
+  - Verification: PASS — VERIFIED_COMPLETE
+  - Governance Sync: this commit
+  - Final status: CLOSED / VERIFIED_COMPLETE
+
 ### Closed AI / Vector Follow-On Chain (cumulative)
 
 | # | Unit | Status |
@@ -370,12 +376,13 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 | 9 | PW5-G028-B1-CATALOG-INDEXER | ✅ CLOSED (b3ffd18) |
 | 10 | PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS | ✅ CLOSED (aaf8748) |
 | 11 | PW5-G028-B2-WORKER-BOOTSTRAP | ✅ CLOSED (f38df3b) |
+| 12 | PW5-G028-C2-CONTROL-PLANE-AI-TARGETED | ✅ CLOSED (a6eac77) |
 
 ### Still Not Authorized
 
 | Unit | Blocker |
 |---|---|
-| PW5-G028-C-CONTROL-PLANE-AI (Slice 2+) | Slice 1 (C1) CLOSED (aaf8748); further slices require explicit governance authorization — pending prioritization |
+| PW5-G028-C-CONTROL-PLANE-AI (Slice 5 — frontend wiring) | C1 CLOSED (aaf8748) · C2 CLOSED (a6eac77); frontend wiring (AiGovernance.tsx) requires explicit governance authorization — pending prioritization |
 | PW5-SHADOW-QUERY-FIX | Proposed / low urgency — no authorization issued |
 
 ### Board State (2026-03-15)
@@ -384,7 +391,9 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 - PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS is CLOSED / VERIFIED_COMPLETE (commit aaf8748)
 - First control-plane AI backend slice is operational: GET /api/control/ai/health + POST /api/control/ai/insights under /api/control/ai/*, SUPER_ADMIN-only, separate service boundary, admin audit metadataJson reasoning persistence
 - No schema, migration, frontend, per-org-targeting, or ai.control.* event-domain widening occurred in this unit
-- Control-plane AI Slice 2+ and all ai.control.* event-domain work remain unauthorized — pending governance prioritization
+- PW5-G028-C2-CONTROL-PLANE-AI-TARGETED is CLOSED / VERIFIED_COMPLETE (commit a6eac77)
+- Per-org targeted mode: optional targetOrgId (Zod UUID) + prisma.tenant.findUnique validation + targetOrgMeta struct (5-field select) + prompt injection (name/type/status only); SUPER_ADMIN boundary preserved; OpenAPI updated (GET /api/control/ai/health back-filled + POST /api/control/ai/insights with targetOrgId documented); no schema/migration/frontend/ai.control.*/reasoning-log widening; VERIFIED_COMPLETE
+- Frontend wiring (Slice 5 — AiGovernance.tsx) and all ai.control.* event-domain work remain unauthorized — pending governance prioritization
 - There is **no automatically authorized next implementation unit**
 - TECS-correct next move: authorize a single next unit from remaining proposed items
 
