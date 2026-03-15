@@ -329,6 +329,48 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 ---
 
+## Session Carry-Forward Summary
+
+*Last updated: 2026-03-15 — GOVERNANCE-SYNC-PW5-G028-B1-CATALOG-INDEXER (f774f62)*
+
+### Newly Closed (this session)
+
+- **PW5-G028-B1-CATALOG-INDEXER** ✅
+  - Implementation: b3ffd18
+  - Verification: PASS
+  - Governance Sync: f774f62
+  - Final status: CLOSED / VERIFIED_COMPLETE
+
+### Closed AI / Vector Follow-On Chain (cumulative)
+
+| # | Unit | Status |
+|---|---|---|
+| 1 | PW5-AI-PLAN | ✅ CLOSED (planning baseline) |
+| 2 | PW5-AI-EVENT-DOMAIN | ✅ CLOSED (dd18957) |
+| 3 | PW5-AI-EMITTER | ✅ CLOSED (73f0972) |
+| 4 | PW5-AI-TIS-EXTRACT | ✅ CLOSED (f2ae23b) |
+| 5 | PW5-AI-RATE-LIMIT | ✅ CLOSED VIA REMEDIATION (96ca710 → 4b96e13) |
+| 6 | PW5-AI-IDEMPOTENCY | ✅ CLOSED VIA REMEDIATION (84c185d → 536fe50) |
+| 7 | PW5-AI-NEGOTIATION-RAG | ✅ CLOSED (de202c2) |
+| 8 | PW5-AI-PII-GUARD | ✅ CLOSED (b1c80da) |
+| 9 | PW5-G028-B1-CATALOG-INDEXER | ✅ CLOSED (b3ffd18) |
+
+### Still Not Authorized
+
+| Unit | Blocker |
+|---|---|
+| PW5-G028-C-CONTROL-PLANE-AI | Design-gated — requires TECS-FBW-AIGOVERNANCE + explicit design authorization |
+| PW5-SHADOW-QUERY-FIX | Proposed / low urgency — no authorization issued |
+
+### Board State (2026-03-15)
+
+- Catalog create mutation (`POST /api/tenant/catalog/items`) now enqueues vector indexing work through the existing A6 queue backbone
+- Scope remained bounded to the real create path only — no schema, migration, route-contract, or control-plane AI widening
+- There is **no automatically authorized next implementation unit**
+- TECS-correct next move: authorize a single next unit from remaining proposed items, or issue the design unit required to unlock `PW5-G028-C-CONTROL-PLANE-AI`
+
+---
+
 ## Governance Closure Protocol
 
 A gap row is marked ✅ **Complete** when ALL of the following are met:
