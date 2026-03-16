@@ -100,6 +100,70 @@ export const AiInferenceCacheHitPayload = z
   .passthrough();
 
 // ============================================================================
+// AI CONTROL-PLANE DOMAIN — PAYLOAD SCHEMAS (G-028-C4)
+// ============================================================================
+
+/**
+ * ai.control.insights.generate
+ * Emitted when a control-plane AI inference request completes successfully.
+ */
+export const AiControlInsightsGeneratePayload = z
+  .object({
+    adminActorId: z.string().uuid(),
+    taskType: z.string(),
+    model: z.string(),
+    latencyMs: z.number(),
+    requestId: z.string().uuid(),
+    targetOrgId: z.string().uuid().optional(),
+    reasoningLogId: z.string().uuid().optional(),
+  })
+  .passthrough();
+
+/**
+ * ai.control.insights.error
+ * Emitted when a control-plane AI inference request fails.
+ */
+export const AiControlInsightsErrorPayload = z
+  .object({
+    adminActorId: z.string().uuid(),
+    taskType: z.string(),
+    model: z.string(),
+    errorCode: z.string(),
+    errorMessage: z.string().optional(),
+    requestId: z.string().uuid(),
+    targetOrgId: z.string().uuid().optional(),
+  })
+  .passthrough();
+
+/**
+ * ai.control.insights.pii_redacted
+ * Emitted when PII fields are redacted before a control-plane inference request.
+ */
+export const AiControlInsightsPiiRedactedPayload = z
+  .object({
+    adminActorId: z.string().uuid(),
+    taskType: z.string(),
+    model: z.string(),
+    fieldCount: z.number().int().nonnegative(),
+    requestId: z.string().uuid(),
+  })
+  .passthrough();
+
+/**
+ * ai.control.insights.pii_leak_detected
+ * Emitted when PII is detected in a control-plane inference output.
+ */
+export const AiControlInsightsPiiLeakDetectedPayload = z
+  .object({
+    adminActorId: z.string().uuid(),
+    taskType: z.string(),
+    model: z.string(),
+    leakType: z.string(),
+    requestId: z.string().uuid(),
+  })
+  .passthrough();
+
+// ============================================================================
 // AI VECTOR DOMAIN — PAYLOAD SCHEMAS (G-028 §3.3)
 // ============================================================================
 
@@ -158,6 +222,11 @@ export const EVENT_PAYLOAD_SCHEMAS: Partial<Record<KnownEventName, z.ZodTypeAny>
   'ai.inference.pii_redacted': AiInferencePiiRedactedPayload,
   'ai.inference.pii_leak_detected': AiInferencePiiLeakDetectedPayload,
   'ai.inference.cache_hit': AiInferenceCacheHitPayload,
+  // PW5-AI-EVENT-DOMAIN: AI Control-Plane domain (G-028-C4)
+  'ai.control.insights.generate': AiControlInsightsGeneratePayload,
+  'ai.control.insights.error': AiControlInsightsErrorPayload,
+  'ai.control.insights.pii_redacted': AiControlInsightsPiiRedactedPayload,
+  'ai.control.insights.pii_leak_detected': AiControlInsightsPiiLeakDetectedPayload,
   'ai.vector.upsert': AiVectorUpsertPayload,
   'ai.vector.delete': AiVectorDeletePayload,
   'ai.vector.query': AiVectorQueryPayload,

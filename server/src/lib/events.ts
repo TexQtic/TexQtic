@@ -175,6 +175,11 @@ export type KnownEventName =
   | 'ai.inference.pii_redacted' // PII fields redacted before inference
   | 'ai.inference.pii_leak_detected' // PII detected in inference output
   | 'ai.inference.cache_hit' // Inference result served from cache
+  // PW5-AI-EVENT-DOMAIN: AI Control-Plane domain (G-028-C4)
+  | 'ai.control.insights.generate' // Control-plane AI inference request completed
+  | 'ai.control.insights.error' // Control-plane AI inference request failed
+  | 'ai.control.insights.pii_redacted' // PII fields redacted before control-plane inference
+  | 'ai.control.insights.pii_leak_detected' // PII detected in control-plane inference output
   // PW5-AI-EVENT-DOMAIN: AI Vector domain (G-028 §3.3)
   | 'ai.vector.upsert' // Vector document upserted
   | 'ai.vector.delete' // Vector document deleted
@@ -253,6 +258,11 @@ export const knownEventEnvelopeSchema = eventEnvelopeSchema.extend({
     'ai.inference.pii_redacted',
     'ai.inference.pii_leak_detected',
     'ai.inference.cache_hit',
+    // PW5-AI-EVENT-DOMAIN: AI Control-Plane domain (G-028-C4)
+    'ai.control.insights.generate',
+    'ai.control.insights.error',
+    'ai.control.insights.pii_redacted',
+    'ai.control.insights.pii_leak_detected',
     // PW5-AI-EVENT-DOMAIN: AI Vector domain (G-028 §3.3)
     'ai.vector.upsert',
     'ai.vector.delete',
