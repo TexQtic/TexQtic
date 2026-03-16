@@ -333,11 +333,48 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 ## Session Carry-Forward Summary
 
-*Last updated: 2026-03-16 — GOVERNANCE-SYNC-G028-C6-CONTROL-PLANE-EMITTER-WIRING*
+*Last updated: 2026-03-16 — GOVERNANCE-SYNC-G028-C6-CONTROL-PLANE-EMITTER-WIRING · GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16*
 
 ### Newly Closed (this session)
 
-- **PW5-G028-B2-WORKER-BOOTSTRAP** ✅
+- **PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS** ✅ aaf8748 — CLOSED / VERIFIED_COMPLETE
+- **PW5-G028-C2-CONTROL-PLANE-AI-MODEL-CAP** ✅ a6eac77 — CLOSED / VERIFIED_COMPLETE
+- **PW5-G028-C3-CONTROL-PLANE-AI-KILLSWITCH** ✅ 3b83d00+4ed4520 — CLOSED / VERIFIED_COMPLETE
+- **PW5-G028-C4-AI-CONTROL-EVENT-CONTRACT** ✅ e6ba2b0 — CLOSED / VERIFIED_COMPLETE (ai.control.* event-domain contract layer only; NOT emitter wiring)
+- **PW5-G028-C5-CONTROL-PLANE-AI-BUDGET-WRITE** ✅ d7e6629 — CLOSED / VERIFIED_COMPLETE
+- **PW5-G028-C6-IMPL-CONTROL-PLANE-EMITTER-WIRING** ✅ 0d181a0 — CLOSED / VERIFIED_COMPLETE (emitAiControlEventBestEffort() helper + 4 emission points in controlPlaneInferenceService.ts)
+- **PW5-G028-B2-WORKER-BOOTSTRAP** ✅ f38df3b — CLOSED / VERIFIED_COMPLETE
+
+**G-028 slice map:** C1 ✅ CLOSED · C2 ✅ CLOSED · C3 ✅ CLOSED / VERIFIED_COMPLETE · C4 ✅ CLOSED / VERIFIED_COMPLETE · C5 ✅ CLOSED / VERIFIED_COMPLETE · C6 ✅ CLOSED / VERIFIED_COMPLETE
+
+**G-028 is fully CLOSED as of 2026-03-16.**
+
+### Board State — Official Open Set (as of 2026-03-16)
+
+| ID | Title | Gate |
+|---|---|---|
+| TECS-FBW-002-B | Frontend→Backend Reachability — Wave 2B | Backend route |
+| TECS-FBW-003-B | Frontend→Backend Reachability — Wave 3B | Backend route |
+| TECS-FBW-006-B | Frontend→Backend Reachability — Wave 6B | Backend route |
+| TECS-FBW-012 | TBD — Wave 5 unstarted | **Product Decision required** |
+| TECS-FBW-013 | TBD — Wave 5 deferred | Backend design gate |
+| TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | Backend design gate |
+
+- There is **no automatically authorized next implementation unit**
+- TECS-correct next move: **Product Decision — TECS-FBW-012**
+
+### Prompt 3 Reconciliation Note (2026-03-16)
+
+**Prompt:** GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 (governance-only recording unit)  
+**Trigger:** Prompt 3 strategic completeness review (read-only) produced 15 provisional blind-spot candidates (BS-001 through BS-015) across 6 themes (A: Workflow Completion, B: Commerce Finalization, C: Regulatory Completeness, D: Platform Observability, E: Access Control, F: Architecture Backbone Extension).  
+**Governance outcome:**
+- None of BS-001 through BS-015 are authorized for implementation
+- None are promoted to the official open set
+- Full provisional candidate register recorded in `governance/gap-register.md` under Prompt 3 section (2026-03-16)
+- G028 stale references (REQUIRES_BACKEND_DESIGN) cleaned from gap-register and audit reconciliation matrix
+- Official open set and next-move posture preserved unchanged
+- TECS-FBW-AIGOVERNANCE remains CLOSED (G-028 C1–C6 all VERIFIED_COMPLETE)
+- **No code was modified in this governance recording unit**
   - Implementation: f38df3b
   - Verification: PASS — VERIFIED_COMPLETE
   - Governance Sync: this commit

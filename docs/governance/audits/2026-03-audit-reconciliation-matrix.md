@@ -405,7 +405,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | Tenant provisioning | Not identified | CM-003 | NEW_IN_COPILOT | PROVISIONAL | HIGH | Wave 0/verify | Intentional mapping per code comment |
 | TECS-FBW-019 | lifecycleState vs status | Orders | Not inspected | CM-004 handled | NEW_IN_COPILOT | DEFERRED | HIGH | — | GAP-ORDER-LC-001 closed (GOVERNANCE-SYNC-063) |
 | TECS-FBW-020 | WL Admin Invite Shell Routing | White-label admin | §6.1 misrouted | Not inspected | NEW_IN_CODEX | ✅ CLOSED (GOVERNANCE-SYNC-101 · 2026-03-06) | MEDIUM | Wave 1 | App.tsx only; wlAdminInviting bool substate; typecheck EXIT 0; lint EXIT 0 |
-| TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Kill switch and secondary buttons gated in AiGovernance component; backend Slice 1 now implemented: PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS ✅ CLOSED (aaf8748 · 2026-03-15) — GET /api/control/ai/health + POST /api/control/ai/insights; SUPER_ADMIN-only; separate service boundary; admin audit metadataJson reasoning persistence; no ai.control.* event-domain expansion; backend Slice 2: PW5-G028-C2-CONTROL-PLANE-AI-TARGETED ✅ CLOSED (a6eac77 · VERIFIED_COMPLETE) — optional targetOrgId (Zod UUID) + per-org validation + prompt injection (name/type/status only); OpenAPI back-filled+documented; no schema/migration/frontend/ai.control.*/reasoning-log widening; Slice 5 frontend wiring: PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND) — AiGovernance.tsx wired to POST /api/control/ai/insights; global + org-targeted modes; loading/error/retry/success states; frontend-only; G-028 C3 ✅ CLOSED / VERIFIED_COMPLETE (3b83d00 + 4ed4520 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C3-REASONING-STORAGE) — reasoning_logs persistence; tenant_id nullable; admin RLS; G-023 single finalized INSERT; startup-hook remediated (4ed4520) · G-028 C4 ✅ CLOSED / VERIFIED_COMPLETE (e6ba2b0 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C4-AI-EVENT-DOMAIN) — 4 ai.control.* event names (ai.control.insights.generate/error/pii_redacted/pii_leak_detected) + Zod payload schemas + registry entries; event-domain contract layer only; control-plane emitter wiring remains a separate follow-on concern if later authorized; verified: VERIFY-PW5-G028-C4-AI-EVENT-DOMAIN VERIFIED_COMPLETE |
+| TECS-FBW-AIGOVERNANCE | AI Governance Dead Actions | AI governance | S-004 implied | F-011 / S-004 | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Kill switch and secondary buttons gated in AiGovernance component; backend Slice 1 now implemented: PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS ✅ CLOSED (aaf8748 · 2026-03-15) — GET /api/control/ai/health + POST /api/control/ai/insights; SUPER_ADMIN-only; separate service boundary; admin audit metadataJson reasoning persistence; no ai.control.* event-domain expansion; backend Slice 2: PW5-G028-C2-CONTROL-PLANE-AI-TARGETED ✅ CLOSED (a6eac77 · VERIFIED_COMPLETE) — optional targetOrgId (Zod UUID) + per-org validation + prompt injection (name/type/status only); OpenAPI back-filled+documented; no schema/migration/frontend/ai.control.*/reasoning-log widening; Slice 5 frontend wiring: PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND) — AiGovernance.tsx wired to POST /api/control/ai/insights; global + org-targeted modes; loading/error/retry/success states; frontend-only; G-028 C3 ✅ CLOSED / VERIFIED_COMPLETE (3b83d00 + 4ed4520 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C3-REASONING-STORAGE) — reasoning_logs persistence; tenant_id nullable; admin RLS; G-023 single finalized INSERT; startup-hook remediated (4ed4520) · G-028 C4 ✅ CLOSED / VERIFIED_COMPLETE (e6ba2b0 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C4-AI-EVENT-DOMAIN) — 4 ai.control.* event names (ai.control.insights.generate/error/pii_redacted/pii_leak_detected) + Zod payload schemas + registry entries; event-domain contract layer only; control-plane emitter wiring FOLLOW-ON NOW CLOSED — G-028 C6 ✅ CLOSED / VERIFIED_COMPLETE (0d181a0 · 2026-03-16 · G028-C6-IMPL-CONTROL-PLANE-EMITTER-WIRING) — emitAiControlEventBestEffort() admin helper added to aiEmitter.ts; 4 ai.control.* emission points wired in controlPlaneInferenceService.ts; verified: VERIFY-PW5-G028-C6-AI-CONTROL-PLANE-EMITTER-WIRING VERIFIED_COMPLETE — **all G-028 C1–C6 slices now CLOSED; G-028 fully CLOSED (2026-03-16)** |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend | Admin access | S-001 implied | F-010 / S-001 | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Invite Admin and Revoke buttons gated; no backend route wired; backend design gate preserved |
 | TECS-FBW-PLACEHOLDER-PANELS | Static control-plane spec panels removed from nav | SuperAdmin UX | — | — | NEW_IN_COPILOT | ✅ RESOLVED — PW5-U4 (3e2e14d) · 2026-03-09 | MEDIUM | PW5-U4 | ArchitectureBlueprints, BackendSkeleton, ApiDocs, DataModel, MiddlewareScaffold removed from SuperAdmin nav; component files preserved on disk |
 | TECS-FBW-MOQ | MOQ_NOT_MET UX Gap | Cart | Not identified | §11 P4.4 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-103) | MEDIUM | Wave 1 | Inline error surfaced via addError state in B2CAddToCartButton |
@@ -2538,3 +2538,77 @@ All four layers verified:
 - RLS-protected DB query: texqtic_service SELECT grants enable membership lookup; FORCE RLS intact; no cross-tenant leak
 
 **PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN → CLOSED. D-009 → VERIFIED CLOSED. Remediation chain complete.**
+
+---
+
+## Section 9.34 — Post-Review-2026-03-16 Governance Reconciliation — 2026-03-16
+
+**Unit:** GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 | **Type:** GOVERNANCE-SYNC — Governance-Only Recording | **Date:** 2026-03-16  
+**Files modified in this governance sync:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/OpenAPI files changed)**
+
+### A — Review Prompt Hierarchy
+
+| Prompt | Role | Outcome |
+|---|---|---|
+| Prompt 1 (prior session) | Controlling — official open set selection and next-unit authorization | Official open set: TECS-FBW-002-B · TECS-FBW-003-B · TECS-FBW-006-B · TECS-FBW-012 · TECS-FBW-013 · TECS-FBW-ADMINRBAC |
+| Prompt 2 (prior session) | Portfolio enrichment only — no authorizations issued | No changes to open set or next-unit posture |
+| Prompt 3 (2026-03-16) | Strategic completeness review — READ-ONLY — provisional future-candidate input only | 15 provisional blind-spot candidates (BS-001–BS-015) across 6 themes; NONE authorized; NONE promoted to open set |
+
+### B — TECS-FBW-AIGOVERNANCE Stale Reference Cleanup
+
+**Stale status:** `REQUIRES_BACKEND_DESIGN` appeared in 4 locations in gap-register.md and 1 location in the §3 reconciliation table (C6 absent) as of the start of this governance recording unit.
+
+**Root cause:** G-028 C6 (0d181a0 · 2026-03-16 · G028-C6-IMPL-CONTROL-PLANE-EMITTER-WIRING) was closed and verified (emitAiControlEventBestEffort() admin helper + 4 emission points in controlPlaneInferenceService.ts) but not yet back-propagated to all governance files.
+
+**Cleanup applied:**
+- gap-register.md open-set table: `REQUIRES_BACKEND_DESIGN` → `✅ CLOSED — G-028 C1–C6 all CLOSED / VERIFIED_COMPLETE (2026-03-16)`
+- gap-register.md detail section: Status corrected; G-028 C1–C6 closure chain recorded with all commit hashes
+- gap-register.md PW5-AI-PLAN exec sequence table: Stale reference replaced with `✅ CLOSED`
+- gap-register.md PW5-AI-PLAN section C baseline: Stale reference corrected; historical planning record preserved
+- audit matrix §3 table (this file): C6 closure (0d181a0) appended to TECS-FBW-AIGOVERNANCE row
+
+**C4 vs C6 distinction preserved:**
+- C4 (e6ba2b0) = ai.control.* event-domain contract layer only (4 event names + Zod schemas + registry entries)
+- C6 (0d181a0) = control-plane emitter wiring (emitAiControlEventBestEffort() helper + 4 emission points in controlPlaneInferenceService.ts)
+- These are distinct and separately verified slices — not merged
+
+### C — Prompt 3 Provisional Candidates (Not Authorized)
+
+**15 provisional blind-spot candidates identified, 6 themes:**
+
+| Theme | IDs | Title summary |
+|---|---|---|
+| A — Workflow Completion | BS-001 · BS-002 · BS-003 | Dispute lifecycle · Maker-checker completeness · Settlement finalization |
+| B — Commerce Finalization | BS-004 · BS-005 · BS-006 | Checkout contract · DPP surface · Catalog coverage |
+| C — Regulatory Completeness | BS-007 · BS-008 · BS-009 | Certification lifecycle · Compliance requests · Finance audit parity |
+| D — Platform Observability | BS-010 · BS-011 · BS-012 | Audit log coverage · AI reasoning log surface · Event projection completeness |
+| E — Access Control | BS-013 · BS-014 | AdminRBAC routes · Membership/invite lifecycle |
+| F — Architecture Backbone | BS-015 | White-label store builder completeness |
+
+**Governance status:** None authorized. None in open set. Full register: `governance/gap-register.md` § Prompt 3 section (2026-03-16).
+
+### D — Official Next Move (Unchanged)
+
+- No new implementation authorized by this governance recording unit
+- Official next candidate: **Product Decision — TECS-FBW-012**
+- TECS-FBW-ADMINRBAC: backend design gate (no product decision yet)
+- G-028: fully CLOSED as of 2026-03-16 (C1–C6 all VERIFIED_COMPLETE)
+
+### E — Compliance Checklist
+
+| Gate | Result |
+|---|---|
+| Only allowlisted files modified | ✅ PASS — 3 governance files only |
+| No product code changed | ✅ PASS |
+| No schema/migration changes | ✅ PASS |
+| No RLS policy changes | ✅ PASS |
+| No OpenAPI contract changes | ✅ PASS |
+| No implementation authorized | ✅ PASS |
+| G-028 C1–C6 remain CLOSED | ✅ PASS — none reopened or reclassified |
+| C4 vs C6 distinction preserved | ✅ PASS |
+| BS-001–BS-015 not promoted | ✅ PASS |
+
+**Overall audit conclusion: GOVERNANCE-RECONCILIATION COMPLETE**
+
+*Updated: 2026-03-16 — GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 recorded (Section 9.34); stale TECS-FBW-AIGOVERNANCE references cleaned; Prompt 3 provisional candidates registered; G-028 fully CLOSED; official next move preserved: Product Decision — TECS-FBW-012*

@@ -828,7 +828,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-018 | Plan BASIC→TRIAL Enum Mapping | COPILOT | LOW | PROVISIONAL | Wave 0 |
 | TECS-FBW-019 | lifecycleState vs status (handled) | COPILOT | CLOSED | DEFERRED | — |
 | TECS-FBW-020 | WL Admin Invite Shell Routing | CODEX | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-101 · 2026-03-06) | Wave 1 |
-| TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
+| TECS-FBW-AIGOVERNANCE | AI Governance Dead Authority Actions | COPILOT | HIGH | ✅ CLOSED — G-028 C1–C6 all CLOSED / VERIFIED_COMPLETE (2026-03-16) | Wave 5 |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | COPILOT | HIGH | REQUIRES_BACKEND_DESIGN | Wave 5 |
 | TECS-FBW-MOQ | MOQ_NOT_MET 422 UX Gap | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-103 · 2026-03-07) | Wave 1 |
 | TECS-FBW-OA-001 | OpenAPI Tenant Contract Drift | CODEX | HIGH | VERIFY_REQUIRED | Wave 0 |
@@ -1009,9 +1009,10 @@ Acceptance criteria: ALL MET
 Residual follow-up: None. No partial implementation.
 
 **TECS-FBW-AIGOVERNANCE — AI Governance Dead Authority Actions**  
-Source: NEW_IN_COPILOT · Severity: HIGH · Status: REQUIRES_BACKEND_DESIGN · Wave: 5  
+Source: NEW_IN_COPILOT · Severity: HIGH · Status: ✅ CLOSED — G-028 C1–C6 all CLOSED / VERIFIED_COMPLETE (2026-03-16) · Wave: 5  
 Finding: AiGovernance.tsx action buttons have no onClick; no PUT /api/control/ai-budget/:tenantId route exists.  
-Backend gap: G-028 B1/B2/C1/C2/C3 all Deferred Wave 5+ (GOVERNANCE-SYNC-095). Not a wiring gap — backend route does not exist.
+Original backend gap: G-028 B1/B2/C1/C2/C3 all Deferred Wave 5+ (GOVERNANCE-SYNC-095). Not a wiring gap — backend route does not exist.  
+Closure: G-028 executed across 6 slices — C1 ✅ aaf8748 (PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS) · C2 ✅ a6eac77 (PW5-G028-C2-CONTROL-PLANE-AI-MODEL-CAP) · C3 ✅ 3b83d00+4ed4520 (PW5-G028-C3-CONTROL-PLANE-AI-KILLSWITCH) · C4 ✅ e6ba2b0 (PW5-G028-C4-AI-CONTROL-EVENT-CONTRACT; ai.control.* event-domain contract layer only) · C5 ✅ d7e6629 (PW5-G028-C5-CONTROL-PLANE-AI-BUDGET-WRITE) · C6 ✅ 0d181a0 (PW5-G028-C6-IMPL-CONTROL-PLANE-EMITTER-WIRING; control-plane emitter wiring — emitAiControlEventBestEffort() helper + 4 emission points in controlPlaneInferenceService.ts). All C1–C6 VERIFIED_COMPLETE. G-028 fully CLOSED 2026-03-16.
 
 **TECS-FBW-ADMINRBAC — AdminRBAC No Backend Route**  
 Source: NEW_IN_COPILOT · Severity: HIGH · Status: REQUIRES_BACKEND_DESIGN · Wave: 5  
@@ -1473,7 +1474,7 @@ Status: ✅ CLOSED — RESOLVED (policy decision) — intentionally excluded fro
 | 3 | Control-plane expansion planning | ✅ COMPLETE — 2026-03-10 — PW5-CP-PLAN baseline complete; PW5-CP-PLAN-GOV governance sync recorded |
 | 4 | Tenant admin dashboard completion | ⏳ BLOCKED — verification + wiring tranches |
 | 5 | White-label store builder | ⏳ BLOCKED — PW5-WL1 + PW5-WL2 |
-| 6 | AI / event backbone (Wave 5 architecture) | 🔄 IN PROGRESS — PW5-AI-PLAN ✅ PLANNING COMPLETE (2026-03-13) · PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED (2026-03-13 · commit dd18957) · PW5-AI-EMITTER ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit 73f0972) · PW5-AI-TIS-EXTRACT ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit f2ae23b) · PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (96ca710 → 4b96e13) · PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (84c185d → 536fe50; verification state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE). Replay no longer bypasses tenant rate limiting; replay semantics preserved; first-execution transaction/event semantics preserved; static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-NEGOTIATION-RAG; TECS-FBW-AIGOVERNANCE remains REQUIRES_BACKEND_DESIGN |
+| 6 | AI / event backbone (Wave 5 architecture) | 🔄 IN PROGRESS — PW5-AI-PLAN ✅ PLANNING COMPLETE (2026-03-13) · PW5-AI-EVENT-DOMAIN ✅ COMPLETE / VERIFIED (2026-03-13 · commit dd18957) · PW5-AI-EMITTER ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit 73f0972) · PW5-AI-TIS-EXTRACT ✅ COMPLETE / VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE (2026-03-13 · commit f2ae23b) · PW5-AI-RATE-LIMIT ✅ CLOSED VIA REMEDIATION (96ca710 → 4b96e13) · PW5-AI-IDEMPOTENCY ✅ CLOSED VIA REMEDIATION (84c185d → 536fe50; verification state VERIFIED_COMPLETE_WITH_FOLLOW_ON_NOTE). Replay no longer bypasses tenant rate limiting; replay semantics preserved; first-execution transaction/event semantics preserved; static verification follow-on note preserved as non-defect. Next proposed unit: PW5-AI-NEGOTIATION-RAG; TECS-FBW-AIGOVERNANCE ✅ CLOSED (G-028 C1–C6 CLOSED / VERIFIED_COMPLETE · 2026-03-16) |
 
 **PW5-AI-PII-GUARD is CLOSED and VERIFIED_COMPLETE — D-005 is now recorded as closed.** Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary`. Deterministic regex-based PII scanner/redactor (`piiGuard.ts`) at TIS boundary (5 categories: EMAIL, PHONE, CARD, AADHAAR, PAN); pre-send redaction applied to both AI paths (insights + negotiation-advice) before `generateContent()`; post-receive blocking on both paths after `generateContent()` — raw output suppressed and substituted with safe message when PII detected; `ai.inference.pii_redacted` + `ai.inference.pii_leak_detected` confirmed registered (PW5-AI-EVENT-DOMAIN · dd18957) and emitted via `emitAiEventBestEffort()` with metadata-only payloads (no raw PII). Verification PASS: typecheck EXIT 0 · lint EXIT 0 · build EXIT 0. Closure chain: implementation (b1c80da) → static code-path verification → VERIFIED_COMPLETE. Next unit: pending governance prioritization.
 
@@ -1488,6 +1489,72 @@ Wave 5 architecture sequencing does not begin until all of the following are con
 - [x] **Platform wiring truth reconciled in tracker** — ✅ MET (2026-03-10) — PW5-CP-PLAN-GOV governance sync recorded; IMPLEMENTATION-TRACKER-2026-03.md updated; gap-register wiring/planning tranches updated
 
 No agent, no prompt, and no implementation sprint may bypass these conditions.
+
+---
+
+## Prompt 3 — Strategic Blind-Spot Provisional Candidates (2026-03-16)
+
+**Governance sync:** GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16  
+**Date:** 2026-03-16 | **Type:** READ-ONLY Strategic Review — No authorizations issued  
+**Authorizing prompt:** GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 (Prompt 4)
+
+> **IMPORTANT:** None of the items below are authorized for implementation. None are promoted to the official open-set. Each is a **provisional candidate only**, requiring a separate product decision and/or a dedicated verification/design unit before any implementation is allowed. The official next candidate subject to Product Decision remains **TECS-FBW-012**.
+
+### BS-001 through BS-015 — Provisional Future Blind-Spot Candidates
+
+**Theme A — Workflow Completion Gaps**
+
+| ID | Title | Severity | Source | Notes |
+|---|---|---|---|---|
+| BS-001 | Dispute Lifecycle Full Closure | HIGH | Strategic Review | Dispute route exists (closed per gap-register); full UI lifecycle + state-machine terminal states not confirmed closed |
+| BS-002 | Maker-Checker System Completeness | HIGH | Strategic Review | G-021 wave active; completeness boundary of maker-checker flow not fully verified in UI |
+| BS-003 | Settlement + Payout Finalization | HIGH | Strategic Review | Settlement surfaces are read-only per doctrine; full lifecycle closure not confirmed |
+
+**Theme B — Commerce Finalization**
+
+| ID | Title | Severity | Source | Notes |
+|---|---|---|---|---|
+| BS-004 | Checkout + Order Completion Contract | HIGH | Strategic Review | Checkout route present; full order-state terminal contract not confirmed |
+| BS-005 | Traceability DPP Surface Completeness | MEDIUM | Strategic Review | DPP/traceability routes present; frontend surface completeness not verified |
+| BS-006 | Catalog + MOQ Full Contract Coverage | MEDIUM | Strategic Review | MOQ gap (TECS-FBW-MOQ) closed; broader catalog contract coverage not confirmed |
+
+**Theme C — Regulatory Completeness**
+
+| ID | Title | Severity | Source | Notes |
+|---|---|---|---|---|
+| BS-007 | Certification Lifecycle Completeness | MEDIUM | Strategic Review | Certification routes exist; full lifecycle (submit/review/approve/expire) not verified |
+| BS-008 | Compliance Request Surface Completeness | MEDIUM | Strategic Review | /compliance/requests in control plane; frontend completeness not confirmed |
+| BS-009 | Escrow + Finance Audit Read-Only Parity | MEDIUM | Strategic Review | Finance surfaces read-only per doctrine; audit trail completeness not confirmed |
+
+**Theme D — Platform Observability**
+
+| ID | Title | Severity | Source | Notes |
+|---|---|---|---|---|
+| BS-010 | Audit Log Full Coverage | MEDIUM | Strategic Review | audit_logs table confirmed operational; coverage completeness for all action types not confirmed |
+| BS-011 | AI Reasoning Log Surface | MEDIUM | Strategic Review | reasoning_logs table operational (G-028); frontend control-plane surface for reasoning audit not confirmed |
+| BS-012 | Event Projection Completeness | LOW | Strategic Review | Projector infrastructure operational; projection coverage for all event domains not confirmed |
+
+**Theme E — Access Control**
+
+| ID | Title | Severity | Source | Notes |
+|---|---|---|---|---|
+| BS-013 | AdminRBAC Backend Route Completeness | HIGH | Strategic Review | TECS-FBW-ADMINRBAC tracked in official open set; see that entry for authoritative status |
+| BS-014 | Membership / Invite Authorization Completeness | MEDIUM | Strategic Review | Team membership routes exist; full invite/revoke lifecycle not confirmed |
+
+**Theme F — Architecture Backbone Extension**
+
+| ID | Title | Severity | Source | Notes |
+|---|---|---|---|---|
+| BS-015 | White-Label Store Builder Completeness | HIGH | Strategic Review | WL1–WL7 closed per tracker; end-to-end WL store builder UX completeness not confirmed |
+
+### Governance Status of Provisional Candidates
+
+- None of BS-001 through BS-015 are registered in the official open set
+- None are subject to Wave planning
+- No implementation is authorized for any of these items
+- Some overlap with existing tracked items (TECS-FBW-ADMINRBAC is in the official open set separately)
+- Official next product decision: **TECS-FBW-012** (backend design gate)
+- These candidates may be promoted to the official open set only via a separate authorized governance unit
 
 ---
 
@@ -1524,7 +1591,7 @@ This entry records the authoritative Wave 5 AI/event architectural baseline esta
 
 #### C — Control-Plane AI Governance Gate (Preserved Open)
 
-- `TECS-FBW-AIGOVERNANCE` remains **REQUIRES_BACKEND_DESIGN** — not changed by this baseline  
+- `TECS-FBW-AIGOVERNANCE` ✅ **CLOSED** — G-028 C1–C6 all CLOSED / VERIFIED_COMPLETE (2026-03-16) — PW5 planning baseline status preserved as historical record  
 - `AiGovernance.tsx` derives data from `GET /api/control/tenants`; authority action buttons gated/hidden (PW5-U3; commit d5ee430)  
 - No dedicated `/api/control/ai/*` route exists  
 - G-028 B/C wave (control-plane authority routes: kill switch, model cap, budget write) not started  
