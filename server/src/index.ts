@@ -186,9 +186,6 @@ fastify.setErrorHandler((error, _request, reply) => {
 // Start server
 const start = async () => {
   try {
-    await fastify.listen({ port: config.PORT, host: config.HOST });
-    console.log(`🚀 Server running at http://${config.HOST}:${config.PORT}`);
-
     // G-028-B2-WORKER-BOOTSTRAP: Start the vector index queue worker.
     // Jobs enqueued via enqueueSourceIngestion / enqueueSourceDeletion are now
     // dequeued and dispatched through the RLS-enforced runner in vectorWorker.ts.
@@ -196,10 +193,13 @@ const start = async () => {
 
     // Stop the vector worker when the Fastify server closes (graceful shutdown).
     // The worker interval is already .unref()'d so it will not block process exit;
-    // this hook ensures clean teardown when fastify.close() is explicitly called.
+    // this hook must be registered BEFORE listen() — Fastify 5 forbids addHook after listen.
     fastify.addHook('onClose', async () => {
       vectorWorkerHandle.stop();
     });
+
+    await fastify.listen({ port: config.PORT, host: config.HOST });
+    console.log(`🚀 Server running at http://${config.HOST}:${config.PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
