@@ -171,6 +171,161 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * PATCH /api/tenant/memberships/:id
+   * Update the role of an existing tenant membership (TECS-FBW-012)
+   *
+   * Actor rule:   Only OWNER may perform role changes.
+   * Target rule:  Same-org membership only (RLS + explicit tenantId filter).
+   *               Invite records are not handled here.
+   *
+   * Allowed transitions:
+   *   MEMBER  → ADMIN | OWNER
+   *   ADMIN   → MEMBER | OWNER
+   *   OWNER   → ADMIN | MEMBER  (self only, OWNER invariant enforced)
+   *
+   * Disallowed:
+   *   any  → VIEWER              (VIEWER_TRANSITION_OUT_OF_SCOPE)
+   *   VIEWER → any               (VIEWER_TRANSITION_OUT_OF_SCOPE)
+   *   same  → same               (NO_OP_ROLE_CHANGE)
+   *   OWNER → ADMIN/MEMBER for a different OWNER  (PEER_OWNER_DEMOTION_FORBIDDEN)
+   *   sole OWNER self-downgrade  (SOLE_OWNER_CANNOT_DOWNGRADE)
+   *
+   * OWNER invariant: at least one OWNER must remain in the org after any mutation.
+   * Audit:  Every successful change writes membership.role.updated (realm TENANT).
+   */
+  fastify.patch(
+    '/tenant/memberships/:id',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Actor guard: only OWNER may perform membership role changes
+      if (userRole !== 'OWNER') {
+        return sendError(reply, 'FORBIDDEN', 'Only OWNER can update membership roles', 403);
+      }
+
+      // Validate path param
+      const paramsSchema = z.object({ id: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+      const { id: membershipId } = paramsResult.data;
+
+      // Validate body — accept full MembershipRole enum so VIEWER gets a specific error code
+      const bodySchema = z.object({
+        role: z.enum(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']),
+      });
+      const bodyResult = bodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+      const { role: requestedRole } = bodyResult.data;
+
+      // Explicitly reject VIEWER as a target (product decision: VIEWER transitions out of scope)
+      if (requestedRole === 'VIEWER') {
+        return sendError(reply, 'VIEWER_TRANSITION_OUT_OF_SCOPE', 'VIEWER role transitions are not supported', 422);
+      }
+
+      // At this point requestedRole is 'OWNER' | 'ADMIN' | 'MEMBER'
+      const safeRole = requestedRole as 'OWNER' | 'ADMIN' | 'MEMBER';
+
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        // Load target membership — org-scoped (RLS enforces boundary; explicit tenantId is defense-in-depth)
+        const target = await tx.membership.findFirst({
+          where: { id: membershipId, tenantId: dbContext.orgId },
+          select: { id: true, userId: true, role: true },
+        });
+
+        if (!target) {
+          return { error: 'MEMBERSHIP_NOT_FOUND' as const };
+        }
+
+        const fromRole = target.role;
+
+        // Reject VIEWER as a source role (VIEWER → any is out of scope)
+        if (fromRole === 'VIEWER') {
+          return { error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' as const };
+        }
+
+        // Reject no-op: same-role transitions carry no semantic meaning
+        if ((fromRole as string) === safeRole) {
+          return { error: 'NO_OP_ROLE_CHANGE' as const };
+        }
+
+        const isSelfTarget = target.userId === userId;
+
+        // Peer-OWNER demotion is unconditionally forbidden (product decision)
+        // An OWNER targeting another OWNER's record for downgrade is not permitted.
+        if (fromRole === 'OWNER' && !isSelfTarget) {
+          return { error: 'PEER_OWNER_DEMOTION_FORBIDDEN' as const };
+        }
+
+        // OWNER invariant: for self-downgrade, at least one other OWNER must remain.
+        if (fromRole === 'OWNER' && isSelfTarget) {
+          const ownerCount = await tx.membership.count({
+            where: { tenantId: dbContext.orgId, role: 'OWNER' },
+          });
+          if (ownerCount <= 1) {
+            return { error: 'SOLE_OWNER_CANNOT_DOWNGRADE' as const };
+          }
+        }
+
+        // Apply the role update
+        const updated = await tx.membership.update({
+          where: { id: membershipId },
+          data: { role: safeRole },
+          select: { id: true, userId: true, tenantId: true, role: true, updatedAt: true },
+        });
+
+        // Audit log — written atomically within the same transaction
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'membership.role.updated',
+          entity: 'membership',
+          entityId: membershipId,
+          metadataJson: {
+            targetMembershipId: membershipId,
+            targetUserId: target.userId,
+            fromRole,
+            toRole: safeRole,
+          },
+        });
+
+        return { membership: updated };
+      });
+
+      if ('error' in result) {
+        if (result.error === 'MEMBERSHIP_NOT_FOUND') {
+          return sendNotFound(reply, 'Membership not found');
+        }
+        if (result.error === 'VIEWER_TRANSITION_OUT_OF_SCOPE') {
+          return sendError(reply, 'VIEWER_TRANSITION_OUT_OF_SCOPE', 'VIEWER role transitions are not supported', 422);
+        }
+        if (result.error === 'NO_OP_ROLE_CHANGE') {
+          return sendError(reply, 'NO_OP_ROLE_CHANGE', 'Membership already has the requested role', 409);
+        }
+        if (result.error === 'PEER_OWNER_DEMOTION_FORBIDDEN') {
+          return sendError(reply, 'PEER_OWNER_DEMOTION_FORBIDDEN', 'Cannot change the role of another OWNER', 403);
+        }
+        if (result.error === 'SOLE_OWNER_CANNOT_DOWNGRADE') {
+          return sendError(reply, 'SOLE_OWNER_CANNOT_DOWNGRADE', 'Cannot downgrade the sole OWNER of this organisation', 409);
+        }
+      }
+
+      return sendSuccess(reply, { membership: result.membership });
+    }
+  );
+
+  /**
    * GET /api/tenant/catalog/items
    * Read tenant-visible catalog items with cursor pagination
    *
