@@ -819,7 +819,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-008 | WL Settings Custom Domain Dead | BOTH | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | Wave 1 |
 | TECS-FBW-011 | Catalog basePrice vs price — CRITICAL runtime | COPILOT | CRITICAL | CLOSED | Wave 1 |
 | TECS-FBW-LINT-001 | middleware.ts Edge Runtime globals — root lint gate | N/A (repo-gate item) | LOW | CLOSED | Immediate |
-| TECS-FBW-012 | TeamManagement Edit Access Dead Button | BOTH | MEDIUM | VALIDATED | Wave 5 |
+| TECS-FBW-012 | TeamManagement Edit Access Dead Button | BOTH | MEDIUM | ⏳ IMPLEMENTATION PENDING (product decision complete · 2026-03-16) | Wave 5 |
 | TECS-FBW-013 | B2B Request Quote Dead | COPILOT | LOW | DEFERRED | Wave 5 |
 | TECS-FBW-014 | Post-Checkout No Confirmation State | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | Wave 1 |
 | TECS-FBW-015 | G-016 Traceability CRUD Frontend Absent | BOTH | HIGH | VALIDATED | Wave 4 |
@@ -937,10 +937,13 @@ Fix: Added a targeted override block in `eslint.config.js` scoped to `files: ['m
 - Commit: `[TEXQTIC] chore: fix middleware root lint globals (TECS-FBW-LINT-001)`
 
 **TECS-FBW-012 — TeamManagement Edit Access Dead Button**  
-Source: RECONFIRMED; confirmed by Q2 tracker §12.3 "Membership edit ❌ Not implemented" · Severity: MEDIUM · Status: VALIDATED · Wave: 5  
-Frontend status: `<button>Edit Access</button>` has no onClick; no role-change service method.  
-Backend status: No PATCH /api/tenant/memberships/:id route exists.  
-Next action: Backend route design required first; then wire UI with role-change modal.
+Source: RECONFIRMED; confirmed by Q2 tracker §12.3 "Membership edit ❌ Not implemented" · Severity: MEDIUM · Status: ⏳ IMPLEMENTATION PENDING · Wave: 5  
+Product decision: **AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION** — PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16.  
+Policy constraints: Actor = OWNER only · same-org target only · no VIEWER transitions · no peer-OWNER demotion via other-edit · OWNER invariant (at least one OWNER always remains) · sole-OWNER self-downgrade forbidden · every successful change writes audit entry (action: membership.role.updated) · modal confirmation UX required · no schema migration required.  
+Allowed transitions: MEMBER→ADMIN · ADMIN→MEMBER · MEMBER→OWNER · ADMIN→OWNER · OWNER→ADMIN (self, invariant-protected) · OWNER→MEMBER (self, invariant-protected). Disallowed: any→VIEWER · VIEWER→any · no-op changes · OWNER demoting a peer OWNER.  
+Frontend status: `<button>Edit Access</button>` has no onClick; no role-change service method. Dead-button gate correct and preserved until implementation lands.  
+Backend status: PATCH /api/tenant/memberships/:id route does not yet exist at runtime. Implementation unit pending.  
+Next action: TECS-FBW-012 implementation follow-on unit (after GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION committed).
 
 **TECS-FBW-013 — B2B Request Quote Dead Button**  
 Source: NEW_IN_COPILOT · Severity: LOW · Status: DEFERRED (DEFERRED_BY_DOCTRINE) · Wave: 5  
@@ -1498,7 +1501,7 @@ No agent, no prompt, and no implementation sprint may bypass these conditions.
 **Date:** 2026-03-16 | **Type:** READ-ONLY Strategic Review — No authorizations issued  
 **Authorizing prompt:** GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 (Prompt 4)
 
-> **IMPORTANT:** None of the items below are authorized for implementation. None are promoted to the official open-set. Each is a **provisional candidate only**, requiring a separate product decision and/or a dedicated verification/design unit before any implementation is allowed. The official next candidate subject to Product Decision remains **TECS-FBW-012**.
+> **IMPORTANT:** None of the items below are authorized for implementation. None are promoted to the official open-set. Each is a **provisional candidate only**, requiring a separate product decision and/or a dedicated verification/design unit before any implementation is allowed. The official next candidate for implementation follow-on is **TECS-FBW-012** (product decision complete · 2026-03-16; implementation unit pending).
 
 ### BS-001 through BS-015 — Provisional Future Blind-Spot Candidates
 
@@ -1553,7 +1556,7 @@ No agent, no prompt, and no implementation sprint may bypass these conditions.
 - None are subject to Wave planning
 - No implementation is authorized for any of these items
 - Some overlap with existing tracked items (TECS-FBW-ADMINRBAC is in the official open set separately)
-- Official next product decision: **TECS-FBW-012** (backend design gate)
+- Official next move: **TECS-FBW-012 implementation follow-on** (product decision complete · 2026-03-16; implementation unit pending)
 - These candidates may be promoted to the official open set only via a separate authorized governance unit
 
 ---

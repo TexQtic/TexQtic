@@ -148,6 +148,9 @@ Evidence references are quoted from the source document using section + short an
 | Merged status | `VALIDATED` |
 | Confidence | HIGH |
 | Note | Also confirmed by Q2 tracker Section 12.3: "Membership edit (role update) ❌ Not implemented" |
+| Product Decision | **AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION** — PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16 |
+
+**Runtime state (2026-03-16):** PATCH /api/tenant/memberships/:id route absent at runtime. Dead-button gate correct and active. Implementation unit pending after GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION.
 
 ---
 
@@ -396,7 +399,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-007 | Cart Summaries Dead Service | Marketplace ops | §5.3 dead | F-007 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-116 · 2026-03-08) | HIGH | Wave 4 | CartSummariesPanel.tsx NEW; CART_SUMMARIES AdminView + NavLink; 3 files (1 NEW + 2 SUNE); search-on-demand; cursor pagination; controlPlaneService.ts untouched; typecheck+lint EXIT 0 |
 | TECS-FBW-008 | WL Custom Domain Dead (EXPERIENCE) | White-label | §6.3 dead | F-013 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | HIGH | Wave 1 | Dead input+Connect removed; onNavigateDomains prop routes to WLDomainsPanel; WLDomainsPanel unchanged |
 | TECS-FBW-011 | Catalog basePrice vs price | Catalog display | §3 contract mismatch (low specificity) | F-012/CM-001 CRITICAL | NEW_IN_COPILOT | VALIDATED | HIGH | Wave 1 | $undefined.00 runtime bug — ship blocker |
-| TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Dead button hidden via gating; TECS-FBW-012 backend design gate preserved |
+| TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Dead button hidden via gating; product decision complete 2026-03-16 — AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION (PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE); PATCH /api/tenant/memberships/:id route absent at runtime; implementation unit pending |
 | TECS-FBW-013 | B2B Request Quote Dead | B2B commerce | §10 uncertain | F-015 / S-003 | NEW_IN_COPILOT | DEFERRED | MEDIUM | Wave 5 | Product decision pending |
 | TECS-FBW-014 | Post-Checkout Missing Confirm | Commerce UX | Not inspected | F-016 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | HIGH | Wave 1 | App.tsx ORDER_CONFIRMED appState; Cart.tsx onCheckoutSuccess prop (SAME-UNIT EXPANSION); typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-015 | G-016 Traceability CRUD | Supply chain | §5.2 absent | F-005 absent | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-115 · 2026-03-07) | HIGH | Wave 4 | commit df2cc638; typecheck EXIT 0; lint EXIT 0; 8 files: 3 NEW + 5 SUNE; tenant CRUD panel + admin read-only surface; D-017-A satisfied; DPPPassport.tsx untouched |
@@ -2611,4 +2614,57 @@ All four layers verified:
 
 **Overall audit conclusion: GOVERNANCE-RECONCILIATION COMPLETE**
 
-*Updated: 2026-03-16 — GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 recorded (Section 9.34); stale TECS-FBW-AIGOVERNANCE references cleaned; Prompt 3 provisional candidates registered; G-028 fully CLOSED; official next move preserved: Product Decision — TECS-FBW-012*
+---
+
+## Section 9.35 — TECS-FBW-012 Product Decision Governance Sync — 2026-03-16
+
+**Unit:** GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION | **Type:** GOVERNANCE-SYNC — Governance-Only Recording | **Date:** 2026-03-16  
+**Files modified:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/OpenAPI files changed)**
+
+### A — Product Decision Recorded
+
+| Field | Value |
+|---|---|
+| Unit | PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE |
+| Decision | **AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION** |
+| Date | 2026-03-16 |
+| Feature | tenant-plane membership role update via PATCH /api/tenant/memberships/:id |
+| Actor rule | OWNER only; org_id from auth context only |
+| Target rule | same-org memberships only; no invite records; no peer-OWNER demotion; no VIEWER transitions |
+| OWNER invariant | at least one OWNER must remain in every org at all times; multiple OWNERs allowed |
+| Self-downgrade | allowed only if another OWNER remains; sole OWNER cannot self-downgrade |
+| Allowed transitions | MEMBER→ADMIN · ADMIN→MEMBER · MEMBER→OWNER · ADMIN→OWNER · OWNER→ADMIN (self) · OWNER→MEMBER (self) |
+| Disallowed transitions | any→VIEWER · VIEWER→any · no-op same-role · OWNER demoting peer OWNER |
+| Audit requirement | every successful change writes audit entry; action: membership.role.updated; realm: TENANT |
+| UX requirement | modal confirmation flow; not inline dropdown; explicit warning for OWNER promotions and self-downgrade |
+| Schema migration | not required; Membership model sufficient as-is |
+| Out of scope | invite flow · membership creation · org deletion · TECS-FBW-ADMINRBAC · admin-realm RBAC · VIEWER transitions · peer-OWNER demotion · any schema migration unless separately authorized |
+
+### B — Official Next Move (Updated)
+
+- Product decision for TECS-FBW-012 is complete as of 2026-03-16
+- Official next move: **TECS-FBW-012 implementation follow-on** in TECS order
+- TECS-FBW-012 remains in the official open set until implementation + verification + governance close
+- TECS-FBW-ADMINRBAC: backend design gate preserved (no product decision yet)
+- G-028: fully CLOSED (C1–C6 all VERIFIED_COMPLETE)
+
+### C — Compliance Checklist
+
+| Gate | Result |
+|---|---|
+| Only allowlisted files modified | ✅ PASS — 3 governance files only |
+| No product code changed | ✅ PASS |
+| No schema/migration changes | ✅ PASS |
+| No RLS policy changes | ✅ PASS |
+| No OpenAPI contract changes | ✅ PASS |
+| No implementation authorized | ✅ PASS — decision recorded only |
+| TECS-FBW-012 not marked closed | ✅ PASS — remains in open set |
+| G-028 C1–C6 remain CLOSED | ✅ PASS — none reopened |
+| C4 vs C6 distinction preserved | ✅ PASS |
+| BS-001–BS-015 not promoted | ✅ PASS |
+| Official open set unchanged | ✅ PASS — same six governed items |
+
+**Overall audit conclusion: GOVERNANCE-SYNC COMPLETE**
+
+*Updated: 2026-03-16 — GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION recorded (Section 9.35); TECS-FBW-012 product decision (AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION) recorded across all governance artifacts; official next move updated: TECS-FBW-012 implementation follow-on*
