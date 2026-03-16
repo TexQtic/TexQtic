@@ -136,3 +136,92 @@ export async function emitAiEventBestEffort(
     });
   }
 }
+
+// ============================================================================
+// CONTROL-PLANE ADMIN EMITTER — G028-C6
+// ============================================================================
+
+/**
+ * Options for emitting an AI control-plane domain event.
+ * Admin semantics are locked by the emitter and cannot be overridden by callers.
+ */
+export interface AiControlEventOpts {
+  /**
+   * SUPER_ADMIN actor ID — must be sourced from verified JWT, never from client body.
+   */
+  adminActorId: string;
+
+  /**
+   * Optional ISO8601 timestamp override. Defaults to new Date().toISOString().
+   */
+  timestamp?: string;
+}
+
+/** Canonical admin-realm entity UUID for all control-plane events. */
+const ADMIN_CONTROL_ENTITY_ID = '00000000-0000-0000-0000-000000000001';
+
+/**
+ * Emit an AI control-plane domain event — best-effort, non-blocking.
+ *
+ * Admin semantics are locked to prevent misconfiguration:
+ *   - envelope.realm      = 'ADMIN'
+ *   - envelope.tenantId   = null
+ *   - actor.type          = 'ADMIN'
+ *   - actor.id            = opts.adminActorId
+ *   - entity.type         = 'ai.control'
+ *   - entity.id           = ADMIN_CONTROL_ENTITY_ID
+ *
+ * All errors are caught and logged. This function MUST NOT throw.
+ * No persistence path — control-plane events are sink-only (no EventLog row).
+ *
+ * @param name    KnownEventName for an AI control-plane domain event
+ * @param payload Minimal, non-secret payload satisfying the registered C4 schema
+ * @param opts    Emission options (adminActorId required)
+ */
+export async function emitAiControlEventBestEffort(
+  name: KnownEventName,
+  payload: Record<string, unknown>,
+  opts: AiControlEventOpts
+): Promise<void> {
+  try {
+    // 1. Validate payload against the registered AI control-plane schema
+    const validatedPayload = validateEventPayload(name, payload);
+
+    // 2. Build v1 EventEnvelope with locked admin semantics
+    const now = opts.timestamp ?? new Date().toISOString();
+    const envelope = {
+      id: randomUUID(),
+      version: 'v1' as const,
+      name,
+      occurredAt: now,
+      tenantId: null,
+      realm: 'ADMIN' as const,
+      actor: {
+        type: 'ADMIN' as const,
+        id: opts.adminActorId,
+      },
+      entity: {
+        type: 'ai.control',
+        id: ADMIN_CONTROL_ENTITY_ID,
+      },
+      payload: validatedPayload as Prisma.JsonValue,
+      metadata: {},
+    };
+
+    // 3. Validate as KnownEventEnvelope (structural guard)
+    const knownEnvelope = validateKnownEvent(envelope);
+
+    // 4. Assert no secrets in payload (security guard)
+    assertNoSecretsInPayload(knownEnvelope.payload);
+
+    // 5. Emit to P0 sink (console logging)
+    emitEventToSink(knownEnvelope);
+  } catch (err) {
+    // Best-effort: log warning, never rethrow
+    console.warn('[AI Control Event Emission] Failed (non-blocking):', {
+      eventName: name,
+      adminActorId: opts.adminActorId ? `${opts.adminActorId.slice(0, 8)}…` : 'unknown',
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}

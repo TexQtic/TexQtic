@@ -32,7 +32,7 @@ import { config } from '../../config/index.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 import { withSuperAdminContext } from '../../lib/database-context.js';
 import { redactPii, scanForPii } from './piiGuard.js';
-import { emitAiEventBestEffort } from '../../events/aiEmitter.js';
+import { emitAiControlEventBestEffort } from '../../events/aiEmitter.js';
 
 // ---------------------------------------------------------------------------
 // Re-export isGenAiConfigured from tenant TIS for shared health reporting.
@@ -53,12 +53,6 @@ const CP_MAX_PROMPT_CHARS = 2_000;
 
 /** 15-minute idempotency bucket for pre-execution control-plane deduplication. */
 const CP_FINGERPRINT_BUCKET_MS = 15 * 60 * 1_000;
-
-/**
- * Canonical admin-realm sentinel UUID used as control-plane orgId for event
- * payloads. Mirrors ADMIN_SENTINEL_ID in control.ts.
- */
-const ADMIN_SENTINEL_ORG = '00000000-0000-0000-0000-000000000001';
 
 // ---------------------------------------------------------------------------
 // Module-level Gemini client — control-plane surface.
@@ -244,6 +238,18 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       categories: piiResult.categories,
       matchCount: piiResult.matchCount,
     });
+    // Wire A — G028-C6: ai.control.insights.pii_redacted
+    void emitAiControlEventBestEffort(
+      'ai.control.insights.pii_redacted',
+      {
+        adminActorId: adminId,
+        taskType: 'control-plane-insights',
+        model: 'gemini-1.5-flash',
+        fieldCount: piiResult.matchCount,
+        requestId,
+      },
+      { adminActorId: adminId },
+    );
   }
 
   // ── 3. Build final prompt ──────────────────────────────────────────────────
@@ -335,15 +341,19 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
 
       await writeAuditLog(prisma, earlyAuditEntry);
 
-      void emitAiEventBestEffort(
-        'ai.inference.generate',
+      // Wire B — G028-C6: ai.control.insights.generate (idempotency-hit early return)
+      void emitAiControlEventBestEffort(
+        'ai.control.insights.generate',
         {
-          orgId: ADMIN_SENTINEL_ORG,
+          adminActorId: adminId,
           taskType: 'control-plane-insights',
           model: 'gemini-1.5-flash',
           latencyMs: 0,
+          requestId,
+          ...(targetOrgMeta?.id !== undefined ? { targetOrgId: targetOrgMeta.id } : {}),
+          ...(reasoningLogId !== undefined ? { reasoningLogId } : {}),
         },
-        { orgId: ADMIN_SENTINEL_ORG, actorId: adminId },
+        { adminActorId: adminId },
       );
 
       return {
@@ -388,6 +398,18 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
     // Suppress the raw output; never return PII-containing model text.
     generation.text =
       'AI output suppressed: potential PII detected in model response. Please refine your prompt.';
+    // Wire C — G028-C6: ai.control.insights.pii_leak_detected
+    void emitAiControlEventBestEffort(
+      'ai.control.insights.pii_leak_detected',
+      {
+        adminActorId: adminId,
+        taskType: 'control-plane-insights',
+        model: 'gemini-1.5-flash',
+        leakType: outputScan.categories.join(','),
+        requestId,
+      },
+      { adminActorId: adminId },
+    );
   }
 
   // ── C5. Post-execution artifact hash (Decision 2) ──────────────────────────
@@ -495,20 +517,37 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
   // writeAuditLog is best-effort internally; failures are logged, not rethrown.
   await writeAuditLog(prisma, auditEntry);
 
-  // ── 8. Best-effort event emission ──────────────────────────────────────────
-  // Reuse ai.inference.generate — existing KnownEventName, compatible payload.
-  // No new ai.control.* event names (Slice 4 is unauthorized).
-  // orgId = ADMIN_SENTINEL_ORG — control-plane origin, not a tenant scope.
-  void emitAiEventBestEffort(
-    'ai.inference.generate',
-    {
-      orgId: ADMIN_SENTINEL_ORG,
-      taskType: 'control-plane-insights',
-      model: 'gemini-1.5-flash',
-      latencyMs: inferenceLatencyMs,
-    },
-    { orgId: ADMIN_SENTINEL_ORG, actorId: adminId },
-  );
+  // ── 8. Best-effort event emission — Wire D (G028-C6) ────────────────────────
+  // Mutually exclusive: emit generate on success, error on inference failure.
+  if (!generation.hadInferenceError) {
+    void emitAiControlEventBestEffort(
+      'ai.control.insights.generate',
+      {
+        adminActorId: adminId,
+        taskType: 'control-plane-insights',
+        model: 'gemini-1.5-flash',
+        latencyMs: inferenceLatencyMs,
+        requestId,
+        ...(targetOrgMeta?.id !== undefined ? { targetOrgId: targetOrgMeta.id } : {}),
+        ...(reasoningLogId !== undefined ? { reasoningLogId } : {}),
+      },
+      { adminActorId: adminId },
+    );
+  } else {
+    void emitAiControlEventBestEffort(
+      'ai.control.insights.error',
+      {
+        adminActorId: adminId,
+        taskType: 'control-plane-insights',
+        model: 'gemini-1.5-flash',
+        errorCode: 'CP_AI_INFERENCE_ERROR',
+        errorMessage: generation.text,
+        requestId,
+        ...(targetOrgMeta?.id !== undefined ? { targetOrgId: targetOrgMeta.id } : {}),
+      },
+      { adminActorId: adminId },
+    );
+  }
 
   return {
     text: generation.text,
