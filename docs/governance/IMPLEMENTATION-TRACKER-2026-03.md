@@ -127,7 +127,7 @@
 |---|---|---|---|---|---|---|
 | TECS-FBW-012 | TeamManagement Edit Access — role-change modal + backend route | Backend: PATCH /api/tenant/memberships/:id route designed and implemented | MEDIUM — dead Edit Access button; no backend route | VALIDATED | Do not open memberships route without explicit approval; UI change follows backend change | ❌ Not started (backend design gate) |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority actions | Backend: /api/control/admin-users route designed and implemented | HIGH — no auditable admin provisioning | REQUIRES_BACKEND_DESIGN | Security posture concern; must not proceed without explicit product approval | ❌ Not started (backend design gate) |
-| TECS-FBW-AIGOVERNANCE | AI Governance authority actions (cap, kill switch, registry) | Backend: PUT /api/control/ai-budget/:tenantId + related routes designed (G-028 B1/B2/C1/C2/C3) | HIGH — AI control actions completely dark | REQUIRES_BACKEND_DESIGN | G-028 Deferred Wave 5+ (GOVERNANCE-SYNC-095); must coordinate with G-028 B/C wave | ✅ CLOSED — G-028 C1 ✅ CLOSED (aaf8748 · 2026-03-15) · G-028 C2 ✅ CLOSED (a6eac77 · VERIFIED_COMPLETE) · G-028 C5 ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND) — AiGovernance.tsx wired to POST /api/control/ai/insights; global + org-targeted modes; loading/error/retry/success states; frontend-only; SUPER_ADMIN enforcement server-side; Slice 3 (reasoning storage) + Slice 4 (ai.control.* event domain) remain open |
+| TECS-FBW-AIGOVERNANCE | AI Governance authority actions (cap, kill switch, registry) | Backend: PUT /api/control/ai-budget/:tenantId + related routes designed (G-028 B1/B2/C1/C2/C3) | HIGH — AI control actions completely dark | REQUIRES_BACKEND_DESIGN | G-028 Deferred Wave 5+ (GOVERNANCE-SYNC-095); must coordinate with G-028 B/C wave | ✅ CLOSED — G-028 C1 ✅ CLOSED (aaf8748 · 2026-03-15) · G-028 C2 ✅ CLOSED (a6eac77 · VERIFIED_COMPLETE) · G-028 C5 ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND) — AiGovernance.tsx wired to POST /api/control/ai/insights; global + org-targeted modes; loading/error/retry/success states; frontend-only; SUPER_ADMIN enforcement server-side; G-028 C3 ✅ CLOSED / VERIFIED_COMPLETE (3b83d00 + 4ed4520 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C3-REASONING-STORAGE) — reasoning_logs.tenant_id made nullable; admin_actor_id + request_fingerprint + request_bucket_start columns added; admin INSERT + SELECT RLS policies added; control-plane reasoning rows persisted with tenant_id = NULL; typed audit_logs.reasoning_log_id FK linkage; admin-scoped pre-execution idempotency; tenant-path preservation; G-023 immutability trigger: implemented via single finalized INSERT after model invocation (correct repo-grounded refinement); startup-hook lifecycle bug remediated in index.ts (4ed4520); runtime /health evidence satisfied · Slice 4 (ai.control.* event domain) remains OPEN |
 | TECS-FBW-013 | B2B Request Quote — product decision + backend route | Product decision made; backend quote endpoint designed | LOW — deferred by doctrine | DEFERRED | Keep UI visually disabled until product decision made; do not remove button | ❌ Deferred by product |
 | TECS-FBW-AUTH-001 | Tenant login resolver endpoint | Backend: /api/public/tenants/resolve route designed and implemented | MEDIUM — if seeded picker confirmed (VER-006 FAIL) | VERIFY_REQUIRED | Deferred until VER-006 confirms hardcoded picker still present AND product decides to implement resolver | ✅ CLOSED — 2026-03-13 · commit 476b3d3 · server/src/routes/public.ts (NEW); server/src/index.ts; server/src/middleware/realmGuard.ts; services/authService.ts; components/Auth/AuthFlows.tsx · SEEDED_TENANTS removed; slug resolver implemented · typecheck EXIT 0 · lint EXIT 0 |
 | PW5-AUTH-ORG-IDENTIFIER-LESS-LOGIN | Email-based identifier-less tenant lookup | GET /api/public/tenants/by-email: email → membership → tenant lookup; RLS service role grants; migration compliance; serverless route parity | MEDIUM — tenant login required manual slug entry; email-based org detection absent | IMPLEMENTED | Parent program encompassing by-email route, RLS remediation, migration compliance, and serverless entrypoint parity | ✅ CLOSED — 2026-03-14 · full remediation chain complete and verified in production · production endpoint reachable; RLS functioning; tenant resolution correct for seeded accounts |
@@ -333,7 +333,7 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 ## Session Carry-Forward Summary
 
-*Last updated: 2026-03-15 — GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND*
+*Last updated: 2026-03-16 — GOVERNANCE-SYNC-PW5-G028-C3-REASONING-STORAGE*
 
 ### Newly Closed (this session)
 
@@ -384,6 +384,7 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 | 11 | PW5-G028-B2-WORKER-BOOTSTRAP | ✅ CLOSED (f38df3b) |
 | 12 | PW5-G028-C2-CONTROL-PLANE-AI-TARGETED | ✅ CLOSED (a6eac77) |
 | 13 | PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND | ✅ CLOSED (d7e6629) |
+| 14 | PW5-G028-C3-REASONING-STORAGE | ✅ CLOSED (3b83d00 + 4ed4520) |
 
 ### Still Not Authorized
 
@@ -400,7 +401,8 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 - PW5-G028-C2-CONTROL-PLANE-AI-TARGETED is CLOSED / VERIFIED_COMPLETE (commit a6eac77)
 - Per-org targeted mode: optional targetOrgId (Zod UUID) + prisma.tenant.findUnique validation + targetOrgMeta struct (5-field select) + prompt injection (name/type/status only); SUPER_ADMIN boundary preserved; OpenAPI updated (GET /api/control/ai/health back-filled + POST /api/control/ai/insights with targetOrgId documented); no schema/migration/frontend/ai.control.*/reasoning-log widening; VERIFIED_COMPLETE
 - PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND is CLOSED / VERIFIED_COMPLETE (commit d7e6629) — AiGovernance.tsx wired to POST /api/control/ai/insights; global + org-targeted modes; loading/error/retry/success states; frontend-only; no backend/schema/migration/event-domain changes
-- ai.control.* event-domain expansion (Slice 4) and reasoning storage (Slice 3) remain open — not authorized in this unit
+- PW5-G028-C3-REASONING-STORAGE is CLOSED / VERIFIED_COMPLETE (commits 3b83d00 + 4ed4520 · 2026-03-16) — reasoning_logs.tenant_id made nullable; admin_actor_id + request_fingerprint + request_bucket_start columns added; admin INSERT + SELECT RLS policies added; control-plane reasoning rows persisted with tenant_id = NULL; typed audit_logs.reasoning_log_id FK linkage; admin-scoped pre-execution idempotency; tenant-path preservation; G-023 immutability trigger: single finalized INSERT after model invocation; startup-hook lifecycle bug remediated in index.ts (4ed4520)
+- ai.control.* event-domain expansion (Slice 4) remains open — not authorized
 - There is **no automatically authorized next implementation unit**
 - TECS-correct next move: authorize a single next unit from remaining proposed items
 
