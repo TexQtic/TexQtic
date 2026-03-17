@@ -125,7 +125,7 @@
 
 | ID | Objective | Prerequisite | Risk | Merged Status | Notes | Status |
 |---|---|---|---|---|---|---|
-| TECS-FBW-012 | TeamManagement Edit Access — role-change modal + backend route | Backend: PATCH /api/tenant/memberships/:id route designed and implemented | MEDIUM — dead Edit Access button; no backend route | VALIDATED | Product decision: AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION (PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16). Policy: OWNER-only actor; same-org target only; OWNER invariant (at least one OWNER always remains); sole-OWNER self-downgrade forbidden; no VIEWER transitions; no peer-OWNER demotion; modal UX required; audit required (action: membership.role.updated); no schema migration required. Implementation unit pending. | ⏳ Implementation follow-on authorized — pending TECS unit (product decision complete · 2026-03-16) |
+| TECS-FBW-012 | TeamManagement Edit Access — role-change modal + backend route | Backend: PATCH /api/tenant/memberships/:id route designed and implemented | MEDIUM — dead Edit Access button; no backend route | VALIDATED | Product decision: AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION (PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16). Policy: OWNER-only actor; same-org target only; OWNER invariant (at least one OWNER always remains); sole-OWNER self-downgrade forbidden; no VIEWER transitions; no peer-OWNER demotion; modal UX required; audit required (action: membership.role.updated); no schema migration required. Implementation complete: backend b7d3c5d · frontend 7f46d54 · verification PASS (TECS-FBW-012-VERIFY-MEMBERSHIP-ROLE-UPDATE · 2026-03-17). | ✅ CLOSED / VERIFIED_COMPLETE (backend: b7d3c5d · frontend: 7f46d54 · 2026-03-17 · GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE) |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority actions | Backend: /api/control/admin-users route designed and implemented | HIGH — no auditable admin provisioning | REQUIRES_BACKEND_DESIGN | Security posture concern; must not proceed without explicit product approval | ❌ Not started (backend design gate) |
 | TECS-FBW-AIGOVERNANCE | AI Governance authority actions (cap, kill switch, registry) | Backend: PUT /api/control/ai-budget/:tenantId + related routes designed (G-028 B1/B2/C1/C2/C3) | HIGH — AI control actions completely dark | REQUIRES_BACKEND_DESIGN | G-028 Deferred Wave 5+ (GOVERNANCE-SYNC-095); must coordinate with G-028 B/C wave | ✅ CLOSED — G-028 C1 ✅ CLOSED (aaf8748 · 2026-03-15) · G-028 C2 ✅ CLOSED (a6eac77 · VERIFIED_COMPLETE) · G-028 C5 ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND) — AiGovernance.tsx wired to POST /api/control/ai/insights; global + org-targeted modes; loading/error/retry/success states; frontend-only; SUPER_ADMIN enforcement server-side; G-028 C3 ✅ CLOSED / VERIFIED_COMPLETE (3b83d00 + 4ed4520 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C3-REASONING-STORAGE) — reasoning_logs.tenant_id made nullable; admin_actor_id + request_fingerprint + request_bucket_start columns added; admin INSERT + SELECT RLS policies added; control-plane reasoning rows persisted with tenant_id = NULL; typed audit_logs.reasoning_log_id FK linkage; admin-scoped pre-execution idempotency; tenant-path preservation; G-023 immutability trigger: implemented via single finalized INSERT after model invocation (correct repo-grounded refinement); startup-hook lifecycle bug remediated in index.ts (4ed4520); runtime /health evidence satisfied · G-028 C4 ✅ CLOSED / VERIFIED_COMPLETE (e6ba2b0 · 2026-03-16 · GOVERNANCE-SYNC-PW5-G028-C4-AI-EVENT-DOMAIN) — 4 ai.control.* event names (ai.control.insights.generate/error/pii_redacted/pii_leak_detected) + Zod payload schemas + registry entries; event-domain contract layer only; control-plane emitter wiring remains a separate follow-on concern if later authorized; verified: VERIFY-PW5-G028-C4-AI-EVENT-DOMAIN VERIFIED_COMPLETE · G-028 C6 ✅ CLOSED / VERIFIED_COMPLETE (0d181a0 · 2026-03-16 · G028-C6-IMPL-CONTROL-PLANE-EMITTER-WIRING) — emitAiControlEventBestEffort() admin helper added to aiEmitter.ts (locked ADMIN realm, tenantId: null, actor.type: ADMIN, sink-only, best-effort); 4 ai.control.* emission points wired in controlPlaneInferenceService.ts (Wire A: pii_redacted; Wire B: idempotency-hit generate; Wire C: pii_leak_detected; Wire D: mutually exclusive generate/error); ADMIN_SENTINEL_ORG removed (ADMIN_CONTROL_ENTITY_ID now in aiEmitter.ts); typecheck EXIT 0 · lint EXIT 0 · 2 files changed; C1 observability note fully resolved: ai.control.* events now emitted with ADMIN realm, tenantId: null, actor.type: ADMIN; G028 slice map: C1 ✅ CLOSED · C2 ✅ CLOSED · C3 ✅ CLOSED / VERIFIED_COMPLETE · C4 ✅ CLOSED / VERIFIED_COMPLETE · C5 ✅ CLOSED / VERIFIED_COMPLETE · C6 ✅ CLOSED / VERIFIED_COMPLETE; verified: G028-C6-VERIFY-CONTROL-PLANE-EMITTER-WIRING VERIFIED_COMPLETE |
 | TECS-FBW-013 | B2B Request Quote — product decision + backend route | Product decision made; backend quote endpoint designed | LOW — deferred by doctrine | DEFERRED | Keep UI visually disabled until product decision made; do not remove button | ❌ Deferred by product |
@@ -333,9 +333,17 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 ## Session Carry-Forward Summary
 
-*Last updated: 2026-03-16 — GOVERNANCE-SYNC-G028-C6-CONTROL-PLANE-EMITTER-WIRING · GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16*
+*Last updated: 2026-03-17 — GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE (preceding session 2026-03-16: GOVERNANCE-SYNC-G028-C6-CONTROL-PLANE-EMITTER-WIRING · GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16)*
 
-### Newly Closed (this session)
+### Newly Closed (2026-03-17)
+
+- **TECS-FBW-012** ✅ backend: b7d3c5d · frontend: 7f46d54 — CLOSED / VERIFIED_COMPLETE (GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE)
+  - BE: TECS-FBW-012-BE-IMPL-MEMBERSHIP-ROLE-UPDATE (b7d3c5d) — `[TEXQTIC] backend(tenant): implement membership role update route for TECS-FBW-012`
+  - FE: TECS-FBW-012-FE-IMPL-MEMBERSHIP-ROLE-UPDATE (7f46d54) — `[TEXQTIC] frontend(team): wire membership role edit flow for TECS-FBW-012`
+  - Verification: TECS-FBW-012-VERIFY-MEMBERSHIP-ROLE-UPDATE — PASS / VERIFIED_COMPLETE (no defects)
+  - Governance close: GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE (this commit)
+
+### Newly Closed (2026-03-16 session)
 
 - **PW5-G028-C1-CONTROL-PLANE-AI-INSIGHTS** ✅ aaf8748 — CLOSED / VERIFIED_COMPLETE
 - **PW5-G028-C2-CONTROL-PLANE-AI-MODEL-CAP** ✅ a6eac77 — CLOSED / VERIFIED_COMPLETE
@@ -349,19 +357,20 @@ Implementation commit: b1c80da — `feat(ai): add pii guardrails at tis boundary
 
 **G-028 is fully CLOSED as of 2026-03-16.**
 
-### Board State — Official Open Set (as of 2026-03-16)
+### Board State — Official Open Set (as of 2026-03-17 — post TECS-FBW-012 governance close)
 
 | ID | Title | Gate |
 |---|---|---|
 | TECS-FBW-002-B | Frontend→Backend Reachability — Wave 2B | Backend route |
 | TECS-FBW-003-B | Frontend→Backend Reachability — Wave 3B | Backend route |
 | TECS-FBW-006-B | Frontend→Backend Reachability — Wave 6B | Backend route |
-| TECS-FBW-012 | TeamManagement Edit Access (role-change modal + backend route) | **Implementation follow-on authorized** — product decision complete · 2026-03-16 |
+| TECS-FBW-012 | TeamManagement Edit Access (role-change modal + backend route) | ✅ CLOSED / VERIFIED_COMPLETE — backend: b7d3c5d · frontend: 7f46d54 · 2026-03-17 · GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE |
 | TECS-FBW-013 | TBD — Wave 5 deferred | Backend design gate |
 | TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | Backend design gate |
 
+- **TECS-FBW-012: ✅ CLOSED / VERIFIED_COMPLETE (2026-03-17)** — removed from active open set
 - There is **no automatically authorized next implementation unit**
-- TECS-correct next move: **TECS-FBW-012 implementation follow-on** (product decision complete · PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16)
+- Fresh governance selection required from remaining open set: TECS-FBW-002-B · TECS-FBW-003-B · TECS-FBW-006-B · TECS-FBW-013 · TECS-FBW-ADMINRBAC
 
 ### Prompt 3 Reconciliation Note (2026-03-16)
 

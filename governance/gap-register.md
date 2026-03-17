@@ -819,7 +819,7 @@ OPS-G028-A7 introduced benchmark tooling to validate retrieval quality and laten
 | TECS-FBW-008 | WL Settings Custom Domain Dead | BOTH | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | Wave 1 |
 | TECS-FBW-011 | Catalog basePrice vs price — CRITICAL runtime | COPILOT | CRITICAL | CLOSED | Wave 1 |
 | TECS-FBW-LINT-001 | middleware.ts Edge Runtime globals — root lint gate | N/A (repo-gate item) | LOW | CLOSED | Immediate |
-| TECS-FBW-012 | TeamManagement Edit Access Dead Button | BOTH | MEDIUM | ⏳ IMPLEMENTATION PENDING (product decision complete · 2026-03-16) | Wave 5 |
+| TECS-FBW-012 | TeamManagement Edit Access Dead Button | BOTH | MEDIUM | ✅ CLOSED / VERIFIED_COMPLETE (backend: b7d3c5d · frontend: 7f46d54 · 2026-03-17 · GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE) | Wave 5 |
 | TECS-FBW-013 | B2B Request Quote Dead | COPILOT | LOW | DEFERRED | Wave 5 |
 | TECS-FBW-014 | Post-Checkout No Confirmation State | COPILOT | MEDIUM | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | Wave 1 |
 | TECS-FBW-015 | G-016 Traceability CRUD Frontend Absent | BOTH | HIGH | VALIDATED | Wave 4 |
@@ -937,13 +937,18 @@ Fix: Added a targeted override block in `eslint.config.js` scoped to `files: ['m
 - Commit: `[TEXQTIC] chore: fix middleware root lint globals (TECS-FBW-LINT-001)`
 
 **TECS-FBW-012 — TeamManagement Edit Access Dead Button**  
-Source: RECONFIRMED; confirmed by Q2 tracker §12.3 "Membership edit ❌ Not implemented" · Severity: MEDIUM · Status: ⏳ IMPLEMENTATION PENDING · Wave: 5  
+Source: RECONFIRMED; confirmed by Q2 tracker §12.3 "Membership edit ❌ Not implemented" · Severity: MEDIUM · Status: ✅ CLOSED / VERIFIED_COMPLETE · Wave: 5  
 Product decision: **AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION** — PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16.  
 Policy constraints: Actor = OWNER only · same-org target only · no VIEWER transitions · no peer-OWNER demotion via other-edit · OWNER invariant (at least one OWNER always remains) · sole-OWNER self-downgrade forbidden · every successful change writes audit entry (action: membership.role.updated) · modal confirmation UX required · no schema migration required.  
 Allowed transitions: MEMBER→ADMIN · ADMIN→MEMBER · MEMBER→OWNER · ADMIN→OWNER · OWNER→ADMIN (self, invariant-protected) · OWNER→MEMBER (self, invariant-protected). Disallowed: any→VIEWER · VIEWER→any · no-op changes · OWNER demoting a peer OWNER.  
 Frontend status: `<button>Edit Access</button>` has no onClick; no role-change service method. Dead-button gate correct and preserved until implementation lands.  
-Backend status: PATCH /api/tenant/memberships/:id route does not yet exist at runtime. Implementation unit pending.  
-Next action: TECS-FBW-012 implementation follow-on unit (after GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION committed).
+Backend status (pre-implementation): PATCH /api/tenant/memberships/:id route does not yet exist at runtime. Implementation unit pending.  
+Next action (pre-implementation): TECS-FBW-012 implementation follow-on unit (after GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION committed). *(Pre-implementation records above preserved as historical truth.)*
+
+**Closure record (2026-03-17) — GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE:**  
+Authoritative chain: PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE (2026-03-16) → GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION (0c0ecf7 · 2026-03-16) → backend (b7d3c5d · 2026-03-17) → frontend (7f46d54 · 2026-03-17) → verification PASS (TECS-FBW-012-VERIFY-MEMBERSHIP-ROLE-UPDATE · VERIFIED_COMPLETE · 2026-03-17) → governance close (this commit).  
+Implementation facts: PATCH /api/tenant/memberships/:id implemented on tenant plane · OWNER-only actor rule enforced · same-org target (org_id from dbContext.orgId — never client-supplied) · VIEWER transitions excluded (source and target) · peer-OWNER demotion excluded · OWNER invariant enforced (ownerCount guard in tx) · sole-owner self-downgrade blocked · audit logging (action: membership.role.updated, realm: TENANT) atomic in tx · frontend Edit Access modal in TeamManagement.tsx (radio role selection, OWNER-promotion warning, self-downgrade warning, sole-owner block with disabled submit, backend error surface, post-success refresh) · updateMembershipRole() in tenantService.ts via tenantPatch (no tenantId in body — D-017-A) · no schema migration required · typecheck EXIT 0 · lint EXIT 0 · defects: None.  
+Final status: ✅ CLOSED / VERIFIED_COMPLETE
 
 **TECS-FBW-013 — B2B Request Quote Dead Button**  
 Source: NEW_IN_COPILOT · Severity: LOW · Status: DEFERRED (DEFERRED_BY_DOCTRINE) · Wave: 5  
@@ -1501,7 +1506,7 @@ No agent, no prompt, and no implementation sprint may bypass these conditions.
 **Date:** 2026-03-16 | **Type:** READ-ONLY Strategic Review — No authorizations issued  
 **Authorizing prompt:** GOVERNANCE-RECONCILIATION-POST-REVIEW-2026-03-16 (Prompt 4)
 
-> **IMPORTANT:** None of the items below are authorized for implementation. None are promoted to the official open-set. Each is a **provisional candidate only**, requiring a separate product decision and/or a dedicated verification/design unit before any implementation is allowed. The official next candidate for implementation follow-on is **TECS-FBW-012** (product decision complete · 2026-03-16; implementation unit pending).
+> **IMPORTANT:** None of the items below are authorized for implementation. None are promoted to the official open-set. Each is a **provisional candidate only**, requiring a separate product decision and/or a dedicated verification/design unit before any implementation is allowed. TECS-FBW-012 is ✅ CLOSED / VERIFIED_COMPLETE (2026-03-17 · GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE). Fresh governance selection from the remaining open set is required for the next implementation unit.
 
 ### BS-001 through BS-015 — Provisional Future Blind-Spot Candidates
 
@@ -1556,7 +1561,7 @@ No agent, no prompt, and no implementation sprint may bypass these conditions.
 - None are subject to Wave planning
 - No implementation is authorized for any of these items
 - Some overlap with existing tracked items (TECS-FBW-ADMINRBAC is in the official open set separately)
-- Official next move: **TECS-FBW-012 implementation follow-on** (product decision complete · 2026-03-16; implementation unit pending)
+- TECS-FBW-012: ✅ CLOSED / VERIFIED_COMPLETE (2026-03-17) — Official next move: Fresh governance selection required from remaining open set (TECS-FBW-002-B · TECS-FBW-003-B · TECS-FBW-006-B · TECS-FBW-013 · TECS-FBW-ADMINRBAC)
 - These candidates may be promoted to the official open set only via a separate authorized governance unit
 
 ---

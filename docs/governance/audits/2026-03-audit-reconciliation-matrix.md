@@ -150,7 +150,9 @@ Evidence references are quoted from the source document using section + short an
 | Note | Also confirmed by Q2 tracker Section 12.3: "Membership edit (role update) ❌ Not implemented" |
 | Product Decision | **AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION** — PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-16 |
 
-**Runtime state (2026-03-16):** PATCH /api/tenant/memberships/:id route absent at runtime. Dead-button gate correct and active. Implementation unit pending after GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION.
+**Runtime state (2026-03-16):** PATCH /api/tenant/memberships/:id route absent at runtime. Dead-button gate correct and active. Implementation unit pending after GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION. *(Historical record — accurate at 2026-03-16; pre-implementation state.)*
+
+**Runtime state (2026-03-17 — CLOSED):** PATCH /api/tenant/memberships/:id route implemented. Backend commit: b7d3c5d · Frontend commit: 7f46d54 · Verification: PASS (TECS-FBW-012-VERIFY-MEMBERSHIP-ROLE-UPDATE · VERIFIED_COMPLETE · 2026-03-17) · Governance close: GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE. Final status: ✅ CLOSED / VERIFIED_COMPLETE.
 
 ---
 
@@ -399,7 +401,7 @@ Evidence references are quoted from the source document using section + short an
 | TECS-FBW-007 | Cart Summaries Dead Service | Marketplace ops | §5.3 dead | F-007 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-116 · 2026-03-08) | HIGH | Wave 4 | CartSummariesPanel.tsx NEW; CART_SUMMARIES AdminView + NavLink; 3 files (1 NEW + 2 SUNE); search-on-demand; cursor pagination; controlPlaneService.ts untouched; typecheck+lint EXIT 0 |
 | TECS-FBW-008 | WL Custom Domain Dead (EXPERIENCE) | White-label | §6.3 dead | F-013 dead | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-104 · 2026-03-07) | HIGH | Wave 1 | Dead input+Connect removed; onNavigateDomains prop routes to WLDomainsPanel; WLDomainsPanel unchanged |
 | TECS-FBW-011 | Catalog basePrice vs price | Catalog display | §3 contract mismatch (low specificity) | F-012/CM-001 CRITICAL | NEW_IN_COPILOT | VALIDATED | HIGH | Wave 1 | $undefined.00 runtime bug — ship blocker |
-| TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Dead button hidden via gating; product decision complete 2026-03-16 — AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION (PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE); PATCH /api/tenant/memberships/:id route absent at runtime; implementation unit pending |
+| TECS-FBW-012 | Edit Access Dead Button | Membership | §6.2 dead | F-014 dead+no route | RECONFIRMED | ✅ RESOLVED — PW5-U3 (d5ee430) · 2026-03-09 | HIGH | Wave 5 | Dead button hidden via gating; product decision complete 2026-03-16 — AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION (PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE); PATCH /api/tenant/memberships/:id implemented: backend b7d3c5d · frontend 7f46d54 (2026-03-17); runtime state note (2026-03-16): route absent [historical; pre-implementation]; verification: PASS / VERIFIED_COMPLETE; ✅ CLOSED / VERIFIED_COMPLETE — GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE (2026-03-17) |
 | TECS-FBW-013 | B2B Request Quote Dead | B2B commerce | §10 uncertain | F-015 / S-003 | NEW_IN_COPILOT | DEFERRED | MEDIUM | Wave 5 | Product decision pending |
 | TECS-FBW-014 | Post-Checkout Missing Confirm | Commerce UX | Not inspected | F-016 | NEW_IN_COPILOT | ✅ CLOSED (GOVERNANCE-SYNC-102 · 2026-03-07) | HIGH | Wave 1 | App.tsx ORDER_CONFIRMED appState; Cart.tsx onCheckoutSuccess prop (SAME-UNIT EXPANSION); typecheck EXIT 0; lint EXIT 0 |
 | TECS-FBW-015 | G-016 Traceability CRUD | Supply chain | §5.2 absent | F-005 absent | RECONFIRMED | ✅ CLOSED (GOVERNANCE-SYNC-115 · 2026-03-07) | HIGH | Wave 4 | commit df2cc638; typecheck EXIT 0; lint EXIT 0; 8 files: 3 NEW + 5 SUNE; tenant CRUD panel + admin read-only surface; D-017-A satisfied; DPPPassport.tsx untouched |
@@ -472,7 +474,7 @@ Items that cannot proceed to implementation without targeted inspection:
 | Wave 2 — Backend-Complete Ops Mutations | TECS-FBW-001 (finance/compliance/dispute mutations) | RECONFIRMED; backend verified; additive frontend only |
 | Wave 3 — Dark Module Exposure (Priority) | TECS-FBW-002-A (trades control-plane ✅ CLOSED · GOVERNANCE-SYNC-110); TECS-FBW-002-B (trades tenant 🚫 BLOCKED — no GET /api/tenant/trades backend route); TECS-FBW-003-A (escrow tenant read ✅ CLOSED · GOVERNANCE-SYNC-111); TECS-FBW-003-B (escrow mutations 🔵 FUTURE SCOPE); TECS-FBW-006-A (escalations ✅ CLOSED · GOVERNANCE-SYNC-112); TECS-FBW-006-B (escalation mutations 🔵 FUTURE SCOPE); TECS-FBW-004 (settlements ✅ CLOSED · GOVERNANCE-SYNC-113) | RECONFIRMED; high governance impact; 🏁 WAVE 3 GATE CLOSED — all unblocked units complete; TECS-FBW-002-B remains blocked on backend prerequisite |
 | Wave 4 — Extended Exposure | TECS-FBW-005 (certifications ✅ CLOSED GOVERNANCE-SYNC-114 · 2026-03-07); TECS-FBW-015 (traceability CRUD ✅ CLOSED GOVERNANCE-SYNC-115 · 2026-03-07 · df2cc638); TECS-FBW-007 (cart summaries ✅ CLOSED GOVERNANCE-SYNC-116 · 2026-03-08); TECS-FBW-016 (tenant audit logs ✅ CLOSED GOVERNANCE-SYNC-117 · 2026-03-08) | 🏁 WAVE 4 COMPLETE — all 4 units closed (FBW-005 ✅ · FBW-015 ✅ · FBW-007 ✅ · FBW-016 ✅) |
-| Wave 5 — Design-Required | TECS-FBW-012 (edit access); TECS-FBW-ADMINRBAC; TECS-FBW-AIGOVERNANCE (backend Slice 1 ✅ CLOSED · PW5-G028-C1 · aaf8748 · 2026-03-15; backend Slice 2 ✅ CLOSED · PW5-G028-C2 · a6eac77 · VERIFIED_COMPLETE; Slice 5 ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND); Slice 4 ✅ CLOSED (e6ba2b0 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C4-AI-EVENT-DOMAIN; event-domain contract layer only; control-plane emitter wiring remains separate)); TECS-FBW-013 (B2B quote); TECS-FBW-AUTH-001 (✅ CLOSED · 2026-03-13 · implemented commit 476b3d3) | REQUIRES_BACKEND_DESIGN or DEFERRED |
+| Wave 5 — Design-Required | TECS-FBW-012 (edit access ✅ CLOSED / VERIFIED_COMPLETE · b7d3c5d + 7f46d54 · GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE · 2026-03-17); TECS-FBW-ADMINRBAC; TECS-FBW-AIGOVERNANCE (backend Slice 1 ✅ CLOSED · PW5-G028-C1 · aaf8748 · 2026-03-15; backend Slice 2 ✅ CLOSED · PW5-G028-C2 · a6eac77 · VERIFIED_COMPLETE; Slice 5 ✅ CLOSED (d7e6629 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C5-CONTROL-PLANE-AI-FRONTEND); Slice 4 ✅ CLOSED (e6ba2b0 · VERIFIED_COMPLETE · GOVERNANCE-SYNC-PW5-G028-C4-AI-EVENT-DOMAIN; event-domain contract layer only; control-plane emitter wiring remains separate)); TECS-FBW-013 (B2B quote); TECS-FBW-AUTH-001 (✅ CLOSED · 2026-03-13 · implemented commit 476b3d3) | REQUIRES_BACKEND_DESIGN or DEFERRED |
 
 ---
 
@@ -2668,3 +2670,97 @@ All four layers verified:
 **Overall audit conclusion: GOVERNANCE-SYNC COMPLETE**
 
 *Updated: 2026-03-16 — GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION recorded (Section 9.35); TECS-FBW-012 product decision (AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION) recorded across all governance artifacts; official next move updated: TECS-FBW-012 implementation follow-on*
+
+---
+
+## Section 9.36 — TECS-FBW-012 Governance Close — 2026-03-17
+
+**Unit:** GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE | **Type:** GOVERNANCE-CLOSE | **Date:** 2026-03-17  
+**Files modified:** `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` · `governance/gap-register.md` · `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
+**(no product code; no schema/migration/RLS/OpenAPI files changed)**
+
+### A — Authoritative Chain Reconciled
+
+| Stage | Unit | Commit | Date | Result |
+|---|---|---|---|---|
+| Product Decision | PRODUCT-DECISION-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE | — | 2026-03-16 | AUTHORIZED_FOR_DESIGN_AND_FOLLOW-ON_IMPLEMENTATION |
+| Governance Sync | GOVERNANCE-SYNC-TECS-FBW-012-PRODUCT-DECISION | 0c0ecf7 | 2026-03-16 | ✅ COMPLETE |
+| Backend Implementation | TECS-FBW-012-BE-IMPL-MEMBERSHIP-ROLE-UPDATE | b7d3c5d | 2026-03-17 | ✅ CLOSED |
+| Frontend Implementation | TECS-FBW-012-FE-IMPL-MEMBERSHIP-ROLE-UPDATE | 7f46d54 | 2026-03-17 | ✅ CLOSED |
+| Verification | TECS-FBW-012-VERIFY-MEMBERSHIP-ROLE-UPDATE | — | 2026-03-17 | PASS / VERIFIED_COMPLETE |
+| Governance Close | GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE | this commit | 2026-03-17 | ✅ CLOSED |
+
+### B — Implementation Facts Recorded
+
+| Fact | Value |
+|---|---|
+| Route | PATCH /api/tenant/memberships/:id (tenant plane) |
+| Auth guards | tenantAuthMiddleware + databaseContextMiddleware |
+| Actor rule | OWNER only; org_id from dbContext.orgId (auth context) — never client-supplied |
+| same-org target | enforced via findFirst({ where: { id: membershipId, tenantId: dbContext.orgId } }) |
+| VIEWER target | rejected pre-transaction (422 VIEWER_TRANSITION_OUT_OF_SCOPE) |
+| VIEWER source | rejected in-transaction (VIEWER_TRANSITION_OUT_OF_SCOPE) |
+| Same-role no-op | rejected (NO_OP_ROLE_CHANGE → 409) |
+| Peer-OWNER demotion | excluded (PEER_OWNER_DEMOTION_FORBIDDEN → 403) |
+| OWNER invariant | enforced — ownerCount query inside tx before mutation |
+| Sole-owner block | SOLE_OWNER_CANNOT_DOWNGRADE → 409 |
+| Audit log | writeAuditLog(tx, { action: 'membership.role.updated', realm: 'TENANT' }) — atomic in same tx |
+| Frontend | Edit Access modal in TeamManagement.tsx — radio role selection, OWNER-promotion warning, self-downgrade warning, sole-owner block (disabled submit), backend error surface, post-success refresh |
+| Service client | updateMembershipRole() in tenantService.ts — tenantPatch (no tenantId in body — D-017-A) |
+| Schema migration | Not required — not performed |
+| Files changed | server/src/routes/tenant.ts (b7d3c5d) · components/Tenant/TeamManagement.tsx + services/tenantService.ts (7f46d54) |
+| Forbidden files | Untouched: schema.prisma · migrations/ · openapi contracts · control.ts · plugins/ |
+| Verification defects | None |
+
+### C — Official Open Set After Close
+
+| ID | Title | Gate |
+|---|---|---|
+| TECS-FBW-002-B | Frontend→Backend Reachability — Wave 2B | Backend route |
+| TECS-FBW-003-B | Frontend→Backend Reachability — Wave 3B | Backend route |
+| TECS-FBW-006-B | Frontend→Backend Reachability — Wave 6B | Backend route |
+| TECS-FBW-013 | B2B Request Quote Dead | Backend design gate |
+| TECS-FBW-ADMINRBAC | AdminRBAC No Backend Route | Backend design gate |
+
+TECS-FBW-012 removed from active open set. Five items remain governed and open.
+
+### D — Next-Move Posture
+
+- TECS-FBW-012 is ✅ CLOSED / VERIFIED_COMPLETE (2026-03-17)
+- No new implementation unit is automatically authorized by this governance close
+- Fresh governance selection is required from remaining open set: TECS-FBW-002-B · TECS-FBW-003-B · TECS-FBW-006-B · TECS-FBW-013 · TECS-FBW-ADMINRBAC
+- TECS-FBW-ADMINRBAC: backend design gate (no product decision yet)
+- TECS-FBW-013: deferred by product
+
+### E — Compliance Checklist
+
+| Gate | Result |
+|---|---|
+| Only allowlisted governance files modified | ✅ PASS — 3 governance files only |
+| No product code changed | ✅ PASS |
+| No schema/migration changes | ✅ PASS |
+| No RLS policy changes | ✅ PASS |
+| No OpenAPI contract changes | ✅ PASS |
+| TECS-FBW-012 marked closed | ✅ PASS |
+| TECS-FBW-012 removed from active open-set listings | ✅ PASS |
+| Closure includes both implementation commits and verification PASS | ✅ PASS |
+| Chronology preserved | ✅ PASS — Section 9.35 and all pre-implementation records intact |
+| No unrelated item reclassified | ✅ PASS |
+| G-028 C1–C6 remain CLOSED | ✅ PASS — none disturbed |
+| C4 vs C6 distinction preserved | ✅ PASS |
+| TECS-FBW-ADMINRBAC separate and open | ✅ PASS |
+| Prompt 3 blind spots remain provisional | ✅ PASS |
+| BS-001–BS-015 not promoted | ✅ PASS |
+| No new file created | ✅ PASS |
+
+### F — Historical Records Preserved
+
+The following historical records were NOT modified — preserved as chronological truth:
+- Section 9.35: Pre-implementation product decision record (2026-03-16) — route absent at runtime note preserved as historically accurate at time of writing
+- Audit matrix §3 TECS-FBW-012 summary table row: PW5-U3 (d5ee430) gating closure preserved
+- Gap-register detailed entry: pre-implementation frontend/backend status lines preserved with additive closure block
+- Implementation-tracker Board State (2026-03-16): prior posture preserved; TECS-FBW-012 row updated to CLOSED (not deleted)
+
+**Overall audit conclusion: GOVERNANCE CLOSE COMPLETE — TECS-FBW-012 is ✅ CLOSED / VERIFIED_COMPLETE as of 2026-03-17**
+
+*Updated: 2026-03-17 — GOVERNANCE-CLOSE-TECS-FBW-012-MEMBERSHIP-ROLE-UPDATE recorded (Section 9.36); TECS-FBW-012 closed across all governance artifacts; active open set updated (5 items remaining: TECS-FBW-002-B · TECS-FBW-003-B · TECS-FBW-006-B · TECS-FBW-013 · TECS-FBW-ADMINRBAC); fresh next-unit selection required*
