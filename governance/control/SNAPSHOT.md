@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-17
 last_unit_closed: GOV-OS-006
-last_commit: "2bc6e62 — GOV-OS-006 execution log bootstrap (2026-03-17)"
+last_commit: "8e6e6d3 — GOV-OS-006 SHA resolution (execution log + snapshot, 2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -78,5 +78,9 @@ These are distinct closed units and must not be conflated.
 - Layer 2 decision ledger installed: `governance/decisions/` — 4 files (PRODUCT/DESIGN/SECURITY-DECISIONS.md + README) (GOV-OS-005 VERIFIED_COMPLETE, 2026-03-17)
 - Layer 3 execution log installed: `governance/log/` — 2 files (EXECUTION-LOG.md + README) (GOV-OS-006, 2026-03-17)
 - Future prompts must read Layer 0 → Layer 1 → Layer 2 before consulting Layer 3; see `governance/log/README.md`
-- VOCABULARY SEPARATION (operator directive, 2026-03-17): unit status (BLOCKED/DEFERRED/DESIGN_GATE/OPEN/VERIFIED_COMPLETE) and decision status (OPEN/DECIDED/SUPERSEDED) are separate vocabularies — do not conflate
+- VOCABULARY SEPARATION (operator directive, 2026-03-17 — three vocabularies, never collapse):
+  - Unit status: BLOCKED / DEFERRED / DESIGN_GATE / OPEN / VERIFIED_COMPLETE
+  - Decision status: OPEN / DECIDED / SUPERSEDED
+  - Log event result: CLOSED / VERIFIED_COMPLETE
+  Do not let these collapse into one another in future prompts.
 - All product work requires blocker resolution or product/design decision before implementation may proceed
