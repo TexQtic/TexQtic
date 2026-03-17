@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-17
 last_unit_closed: GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION
-last_commit: "pending — GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION (2026-03-17)"
+last_commit: "a98dc6b — GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"

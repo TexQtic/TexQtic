@@ -231,7 +231,7 @@ Refs: governance/units/TECS-FBW-002-B.md · shared/contracts/openapi.tenant.json
 ### GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION — 2026-03-17
 Type: GOVERNANCE / SYNC-CLOSE
 Status: CLOSED
-Commit: pending (this unit)
+Commit: a98dc6b
 Title: Record TECS-FBW-002-B blocker resolution after verified tenant trades route
 Summary: Governance-only sync/close unit. Recorded resolution of BLK-FBW-002-B-001 based on
   TECS-FBW-002-B-BE-ROUTE-001 (commit 5ffd727, VERIFIED_COMPLETE). Transitioned TECS-FBW-002-B
