@@ -4,6 +4,7 @@
  * Fastify plugin — registered at /api/tenant/trades
  *
  * Routes:
+ *   GET  /api/tenant/trades                      — list trades for authenticated org (RLS-scoped)
  *   POST /api/tenant/trades                     — create a trade in DRAFT state
  *   POST /api/tenant/trades/:id/transition       — lifecycle transition
  *
@@ -91,9 +92,63 @@ const transitionTradeBodySchema = z.object({
 
 const tradeIdParamSchema = z.object({ id: uuidSchema });
 
+const listQuerySchema = z.object({
+  status: z.enum(['DRAFT', 'ACTIVE', 'SETTLED', 'DISPUTED', 'CANCELLED']).optional(),
+  limit:  z.coerce.number().int().min(1).max(200).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
+
+  // ─── GET /api/tenant/trades ──────────────────────────────────────────────
+  /**
+   * List trades for the authenticated tenant's org.
+   * org scope is derived exclusively from the authenticated JWT (dbContext.orgId).
+   * RLS via withDbContext enforces the tenant boundary at DB level — no cross-org
+   * access is possible. No client-supplied org identifier is trusted.
+   * TECS-FBW-002-B-BE-ROUTE-001 (resolves BLK-FBW-002-B-001).
+   */
+  fastify.get(
+    '/',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const queryResult = listQuerySchema.safeParse(request.query);
+      if (!queryResult.success) {
+        return sendValidationError(reply, queryResult.error.errors);
+      }
+      const query = queryResult.data;
+
+      try {
+        const rows = await withDbContext(prisma, dbContext, async tx => {
+          // RLS enforces org_id boundary — app.org_id is set by withDbContext
+          // to dbContext.orgId (JWT-derived). No explicit tenantId filter needed
+          // beyond what RLS provides; adding it here is defence-in-depth.
+          return (tx as unknown as PrismaClient).trade.findMany({
+            where: {
+              tenantId: dbContext.orgId,
+              ...(query.status ? { lifecycleState: { stateKey: query.status } } : {}),
+            },
+            include: { lifecycleState: true },
+            orderBy: { createdAt: 'desc' },
+            take:    query.limit,
+            skip:    query.offset,
+          });
+        });
+
+        return sendSuccess(reply, { trades: rows, count: rows.length });
+      } catch (err) {
+        fastify.log.error({ err }, '[G-017] GET /tenant/trades error');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to list trades', 500);
+      }
+    },
+  );
 
   // ─── POST /api/tenant/trades ─────────────────────────────────────────────
   /**

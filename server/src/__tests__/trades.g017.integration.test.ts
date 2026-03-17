@@ -455,6 +455,33 @@ describe('G-017 Tenant Trade Routes', () => {
     // Ensure TradeService was NOT invoked
     expect(_svc.transitionTrade).not.toHaveBeenCalled();
   });
+
+  // ── GET /tenant/trades — list (BLK-FBW-002-B-001 resolution) ─────────────
+
+  it('T-011: GET /tenant/trades returns 200 with org-scoped trade list', async () => {
+    MOCK_TRADE_FINDMANY.mockResolvedValue([
+      { id: TEST_TRADE_ID, tenantId: TEST_TENANT_ID, lifecycleState: { stateKey: 'DRAFT' } },
+    ]);
+
+    const res = await app.inject({ method: 'GET', url: '/tenant/trades' });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body.data.trades)).toBe(true);
+    expect(body.data.count).toBe(1);
+    expect(body.data.trades[0].tenantId).toBe(TEST_TENANT_ID);
+  });
+
+  it('T-012: GET /tenant/trades returns empty list when no trades exist', async () => {
+    MOCK_TRADE_FINDMANY.mockResolvedValue([]);
+
+    const res = await app.inject({ method: 'GET', url: '/tenant/trades' });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.data.trades).toEqual([]);
+    expect(body.data.count).toBe(0);
+  });
 });
 
 // ── Control Plane Trade Routes ────────────────────────────────────────────────

@@ -495,7 +495,11 @@
                   "sku": { "type": "string" },
                   "description": { "type": "string" },
                   "price": { "type": "number", "minimum": 0 },
-                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  }
                 }
               }
             }
@@ -505,11 +509,19 @@
           "201": { "description": "Catalog item created" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -890,7 +902,11 @@
                 "required": ["tradeId", "currency"],
                 "properties": {
                   "tradeId": { "type": "string", "format": "uuid" },
-                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  }
                 }
               }
             }
@@ -900,11 +916,19 @@
           "201": { "description": "Escrow account created" },
           "401": {
             "description": "Unauthorized — invalid or missing tenant JWT",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1037,7 +1061,11 @@
                   "entityType": { "type": "string" },
                   "entityId": { "type": "string", "format": "uuid" },
                   "reason": { "type": "string" },
-                  "severityLevel": { "type": "integer", "minimum": 0, "maximum": 4 }
+                  "severityLevel": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4
+                  }
                 }
               }
             }
@@ -1047,11 +1075,19 @@
           "201": { "description": "Escalation event created" },
           "401": {
             "description": "Unauthorized — invalid or missing tenant JWT",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1727,7 +1763,11 @@
           "200": { "description": "Reset email sent" },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1755,11 +1795,19 @@
           "200": { "description": "Password reset successful" },
           "400": {
             "description": "Invalid or expired token",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1786,7 +1834,11 @@
           "200": { "description": "Email verified successfully" },
           "400": {
             "description": "Invalid or expired token",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1800,7 +1852,11 @@
           "200": { "description": "Verification email resent" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1813,7 +1869,11 @@
           "200": { "description": "New access token issued" },
           "401": {
             "description": "Refresh token missing or expired",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1837,15 +1897,27 @@
           "201": { "description": "Order created successfully" },
           "400": {
             "description": "Cart empty or unavailable",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1859,7 +1931,12 @@
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
           },
           {
             "name": "cursor",
@@ -1872,7 +1949,11 @@
           "200": { "description": "Order list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1894,11 +1975,19 @@
           "200": { "description": "Order detail returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Order not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1934,15 +2023,27 @@
           "200": { "description": "Order status updated" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Order not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -1969,7 +2070,11 @@
                 "required": ["amount", "currency", "type"],
                 "properties": {
                   "amount": { "type": "number", "minimum": 0.01 },
-                  "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
                   "type": { "type": "string", "enum": ["DEBIT", "CREDIT"] },
                   "referenceId": { "type": "string" },
                   "reason": { "type": "string" }
@@ -1982,15 +2087,27 @@
           "201": { "description": "Transaction recorded" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Escrow account not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -2029,15 +2146,27 @@
           "202": { "description": "Pending maker-checker approval" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -2059,16 +2188,78 @@
           "200": { "description": "Escrow detail returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Escrow account not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
     },
     "/api/tenant/trades": {
+      "get": {
+        "summary": "List trades for authenticated tenant (read-only)",
+        "description": "Returns trades scoped to the authenticated tenant's org. org scope is derived from JWT — never from the request body or query params. RLS enforces boundary at DB layer. Optional query filters: status, limit, offset. D-017-A: no client-supplied tenant identity is trusted. TECS-FBW-002-B-BE-ROUTE-001 (resolves BLK-FBW-002-B-001).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["DRAFT", "ACTIVE", "SETTLED", "DISPUTED", "CANCELLED"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0, "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trade list returned — scoped to authenticated org"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "Create a trade",
         "description": "Opens a new trade between parties. Tenant scope is derived from JWT claims (D-017-A). G-017.",
@@ -2093,11 +2284,19 @@
           "201": { "description": "Trade created" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -2136,15 +2335,27 @@
           "202": { "description": "Pending maker-checker approval" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "409": {
             "description": "STATE_MACHINE_DENIED or ENTITY_FROZEN",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -2158,7 +2369,11 @@
           "200": { "description": "Domain list returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       },
@@ -2184,15 +2399,27 @@
           "201": { "description": "Domain registered" },
           "400": {
             "description": "Domain already in use",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "422": {
             "description": "Validation error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -2214,11 +2441,19 @@
           "200": { "description": "Domain removed" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Domain not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
@@ -2240,11 +2475,19 @@
           "200": { "description": "DPP graph returned" },
           "401": {
             "description": "Unauthorized",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           },
           "404": {
             "description": "Node not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
         }
       }
