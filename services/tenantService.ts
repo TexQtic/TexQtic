@@ -8,7 +8,7 @@
  */
 
 import { post } from './apiClient';
-import { tenantGet, tenantPost, tenantPut } from './tenantApiClient';
+import { tenantGet, tenantPost, tenantPut, tenantPatch } from './tenantApiClient';
 
 // ==================== ACTIVATION ====================
 
@@ -104,6 +104,30 @@ export async function createMembership(
   request: CreateMembershipRequest
 ): Promise<CreateMembershipResponse> {
   return tenantPost<CreateMembershipResponse>('/api/tenant/memberships', request);
+}
+
+// ==================== MEMBERSHIP ROLE UPDATE ====================
+
+export interface UpdateMembershipRoleResponse {
+  membership: {
+    id: string;
+    userId: string;
+    tenantId: string;
+    role: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * Update the role of an existing tenant membership (TECS-FBW-012)
+ * Only OWNER may call this endpoint. VIEWER is not a valid target role.
+ * Do not pass tenantId — derived from auth context server-side.
+ */
+export async function updateMembershipRole(
+  id: string,
+  role: 'OWNER' | 'ADMIN' | 'MEMBER'
+): Promise<UpdateMembershipRoleResponse> {
+  return tenantPatch<UpdateMembershipRoleResponse>(`/api/tenant/memberships/${id}`, { role });
 }
 
 // ==================== BRANDING ====================
