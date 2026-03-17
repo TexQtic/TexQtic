@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-17
-last_unit_closed: GOV-OS-007
-last_commit: "086f40a — GOV-OS-007 archive migration (2026-03-17)"
+last_unit_closed: GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION
+last_commit: "pending — GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,21 +28,21 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **TECS-FBW-002-B** — `BLOCKED` — Trades tenant panel; needs GET /api/tenant/trades backend first
+- **TECS-FBW-002-B** — `OPEN` — Trades tenant panel; backend route resolved (commit 5ffd727); ready for TradesPanel.tsx frontend implementation
 - **TECS-FBW-003-B** — `DEFERRED` — Escrow mutations; future scope; awaiting product authorization
 - **TECS-FBW-006-B** — `DEFERRED` — Escalation mutations; future scope; awaiting product authorization
 - **TECS-FBW-013** — `DEFERRED` — B2B Request Quote; product-deferred; UI remains visually disabled
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**No product unit is currently OPEN (implementation-ready).**
+**1 product unit is currently OPEN (implementation-ready): TECS-FBW-002-B.**
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED` · No product unit is OPEN · See `NEXT-ACTION.md` for full posture
+`TECS-FBW-002-B` · IMPLEMENTATION · Frontend TradesPanel.tsx · See `NEXT-ACTION.md` for full posture
 
 ## Active Blockers
 
-- **TECS-FBW-002-B** — Backend route `GET /api/tenant/trades` not yet designed or implemented
+*(None — BLK-FBW-002-B-001 resolved 2026-03-17; see BLOCKED.md Section 4)*
 
 ## Active Design Gates
 
@@ -78,6 +78,7 @@ These are distinct closed units and must not be conflated.
 - Layer 1 unit records installed: `governance/units/` — 5 canonical unit files + README (GOV-OS-003, SHA 190936f, 2026-03-17)
 - Layer 2 decision ledger installed: `governance/decisions/` — 4 files (PRODUCT/DESIGN/SECURITY-DECISIONS.md + README) (GOV-OS-005 VERIFIED_COMPLETE, 2026-03-17)
 - Layer 3 execution log installed: `governance/log/` — 2 files (EXECUTION-LOG.md + README) (GOV-OS-006, 2026-03-17)
+- BLK-FBW-002-B-001 resolved 2026-03-17: TECS-FBW-002-B-BE-ROUTE-001 (commit 5ffd727) + VERIFY-TECS-FBW-002-B-BE-ROUTE-001 (VERIFIED_COMPLETE). TECS-FBW-002-B transitioned BLOCKED → OPEN.
 - Layer 4 archive installed: `governance/archive/` — README + 4 ARCHIVED-* files (GOV-OS-007, 2026-03-17)
 - All 4 Governance OS layers now installed; no product unit is OPEN
 - Future prompts must read Layer 0 → Layer 1 → Layer 2 before consulting Layer 3; see `governance/log/README.md`

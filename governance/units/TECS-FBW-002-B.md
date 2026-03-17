@@ -2,7 +2,7 @@
 unit_id: TECS-FBW-002-B
 title: Trades Tenant Panel — backend route prerequisite
 type: IMPLEMENTATION
-status: BLOCKED
+status: OPEN
 wave: W3-residual
 plane: TENANT
 opened: 2026-03-07
@@ -14,11 +14,14 @@ doctrine_constraints:
   - D-001: RLS must enforce tenant isolation on trades table query (when route implemented)
   - D-011: org_id must scope GET /api/tenant/trades; no cross-tenant leakage permitted
 decisions_required:
-  - none (implementation authorized once BLK-FBW-002-B-001 is formally resolved)
+  - none (implementation authorized — BLK-FBW-002-B-001 formally resolved 2026-03-17)
 blockers:
   - id: BLK-FBW-002-B-001
     description: GET /api/tenant/trades tenant-plane route not designed or implemented
     registered: 2026-03-07
+    resolved: 2026-03-17
+    resolved_by: TECS-FBW-002-B-BE-ROUTE-001
+    resolution_evidence: "commit 5ffd727 · VERIFY-TECS-FBW-002-B-BE-ROUTE-001: VERIFIED_COMPLETE"
 ---
 
 ## Unit Summary
@@ -30,7 +33,7 @@ this B-slice cannot begin until a backend GET /api/tenant/trades route is design
 
 ## Acceptance Criteria
 
-- [ ] Backend `GET /api/tenant/trades` route designed, implemented, and verified (prerequisite unit; not in scope of this unit)
+- [x] Backend `GET /api/tenant/trades` route designed, implemented, and verified (TECS-FBW-002-B-BE-ROUTE-001, commit 5ffd727, VERIFIED_COMPLETE)
 - [ ] `TradesPanel.tsx` (tenant panel) implemented against the live backend route
 - [ ] Response scoped by `org_id`; RLS enforced at DB layer
 - [ ] Loading, error, and empty states handled in the frontend component
@@ -54,7 +57,13 @@ Expected candidates (for future implementation prompt only):
 - `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` (historical reference)
 
 ## Evidence Record
-*Not yet recorded — unit is BLOCKED.*
+
+**Backend prerequisite resolved (2026-03-17):**
+- Implementation unit: `TECS-FBW-002-B-BE-ROUTE-001`, commit `5ffd727`
+- Verification unit: `VERIFY-TECS-FBW-002-B-BE-ROUTE-001`, result: `VERIFIED_COMPLETE`
+- Route: `GET /api/tenant/trades` — tenant-plane, org_id-scoped, RLS-enforced
+
+*Frontend acceptance criteria evidence: not yet recorded — unit is OPEN, not yet IN_PROGRESS.*
 
 ## Governance Closure
 *Not yet set — unit is BLOCKED and not implementation-ready.*
@@ -63,15 +72,16 @@ Expected candidates (for future implementation prompt only):
 
 ## Allowed Next Step
 
-A **new IMPLEMENTATION unit** must be authorized to:
-1. Design the tenant-plane `GET /api/tenant/trades` backend route
-2. Implement the route (Fastify, org_id-scoped, RLS-enforced)
-3. Verify the backend route in isolation
+This unit is **OPEN (implementation-ready)**. A **TECS-FBW-002-B implementation prompt** may
+now be issued to implement the TradesPanel.tsx frontend work. The prompt must:
+1. Define the allowlist (expected: `components/Tenant/TradesPanel.tsx`, `services/tenantApiClient.ts`)
+2. Reference the live backend route `GET /api/tenant/trades` (commit 5ffd727)
+3. Implement against the acceptance criteria below (all frontend items remain `[ ]`)
+4. Run narrow validation (typecheck + lint)
+5. Close with one atomic commit
 
-Only after that backend unit is `VERIFIED_COMPLETE` may a follow-on implementation unit
-begin the TradesPanel.tsx frontend work.
-
-**Operator authorization is required** to define the backend unit before any code work begins.
+**Operator authorization is required** to issue that implementation prompt. NEXT-ACTION.md
+authorizes TECS-FBW-002-B implementation as the next action.
 
 ## Forbidden Next Step
 

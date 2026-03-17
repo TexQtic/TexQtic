@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-17 (GOV-OS-002 bootstrap)  
+**Last Updated:** 2026-03-17 (GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION)  
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
@@ -14,14 +14,7 @@
 
 ## Section 1 — BLOCKED (active technical blocker; cannot proceed without resolution)
 
-| UNIT-ID | Blocker Type | Blocker Description | Registered |
-|---|---|---|---|
-| TECS-FBW-002-B | Backend dependency | GET /api/tenant/trades route not yet designed or implemented | 2026-03-07 |
-
-**To unblock TECS-FBW-002-B:**  
-A new implementation unit must design and implement the backend `GET /api/tenant/trades` route
-(tenant-plane, `org_id`-scoped, RLS-enforced). That unit is a prerequisite before
-TECS-FBW-002-B (frontend TradesPanel.tsx) may begin. The backend unit is not yet authorized.
+*(No units currently blocked. BLK-FBW-002-B-001 was resolved 2026-03-17 — see Section 4.)*
 
 ---
 
@@ -57,3 +50,13 @@ That is not the same as ADMINRBAC implementation authorization.
 
 > **Rule:** Any prompt that sequences a unit from this register as OPEN (implementation-ready)
 > without first recording the required resolution is a governance violation (per GOV-OS-001 Section 4.4).
+
+---
+
+## Section 4 — Recently Resolved Blockers (carry-forward context)
+
+| UNIT-ID | Blocker ID | Resolution | Resolved | Evidence |
+|---|---|---|---|---|
+| TECS-FBW-002-B | BLK-FBW-002-B-001 | GET /api/tenant/trades implemented and verified | 2026-03-17 | commit 5ffd727 · VERIFY-TECS-FBW-002-B-BE-ROUTE-001: VERIFIED_COMPLETE |
+
+TECS-FBW-002-B is now OPEN (implementation-ready). See `OPEN-SET.md` and the unit record.

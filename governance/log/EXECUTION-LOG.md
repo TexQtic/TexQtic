@@ -189,3 +189,59 @@ Notes: Archive files are frozen read-only after this date. Layer 0 remains the s
   authorize the next action before any implementation work begins.
 Refs: governance/archive/ (README.md · ARCHIVED-gap-register-2026-03.md ·
   ARCHIVED-tracker-2026-03.md · ARCHIVED-tracker-2026-Q2.md · ARCHIVED-audit-matrix-2026-03.md)
+
+---
+
+### TECS-FBW-002-B-BE-ROUTE-001 — 2026-03-17
+Type: IMPLEMENTATION
+Status: VERIFIED_COMPLETE
+Commit: 5ffd727
+Title: Add tenant GET /api/tenant/trades to resolve BLK-FBW-002-B-001
+Summary: Implemented GET /api/tenant/trades on the tenant plane — Fastify route in
+  tenantTradesRoutes plugin, scoped by org_id (JWT-derived via databaseContextMiddleware),
+  RLS enforced via withDbContext (app.org_id GUC, SET LOCAL, texqtic_app role). OpenAPI
+  tenant contract updated; T-011 and T-012 integration tests added. Verified VERIFIED_COMPLETE
+  by VERIFY-TECS-FBW-002-B-BE-ROUTE-001 (19/19 tests pass; tsc EXIT:0). Resolves BLK-FBW-002-B-001.
+Layer Impact: Layer 0 — none (governance sync done separately in GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION)
+Notes: D-017-A enforced — tenantId not accepted from client; derived server-side from JWT.
+  shared/contracts/openapi.tenant.json updated as part of the implementation commit.
+Refs: server/src/routes/tenant/trades.g017.ts · server/src/__tests__/trades.g017.integration.test.ts ·
+  shared/contracts/openapi.tenant.json
+
+---
+
+### VERIFY-TECS-FBW-002-B-BE-ROUTE-001 — 2026-03-17
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (read-only verification unit)
+Title: Verify tenant GET /api/tenant/trades implementation
+Summary: Read-only verification of TECS-FBW-002-B-BE-ROUTE-001 (commit 5ffd727). Confirmed:
+  route registration at /api/tenant/trades (tenant.ts:2033 + index.ts:150); middleware chain
+  (tenantAuthMiddleware + databaseContextMiddleware); org_id exclusively from JWT; defence-in-depth
+  where clause (tenantId: dbContext.orgId); withDbContext sets app.org_id via SET LOCAL; OpenAPI
+  GET verb present with correct D-017-A description; 3 allowlisted files only; 19/19 tests pass;
+  tsc EXIT:0. Result: VERIFIED_COMPLETE.
+Layer Impact: None (read-only unit)
+Notes: All doctrine invariants confirmed: D-001, D-011, D-017-A. No forbidden files touched.
+  Blocker BLK-FBW-002-B-001 confirmed ready for governance sync/close.
+Refs: governance/units/TECS-FBW-002-B.md · shared/contracts/openapi.tenant.json
+
+---
+
+### GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION — 2026-03-17
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: pending (this unit)
+Title: Record TECS-FBW-002-B blocker resolution after verified tenant trades route
+Summary: Governance-only sync/close unit. Recorded resolution of BLK-FBW-002-B-001 based on
+  TECS-FBW-002-B-BE-ROUTE-001 (commit 5ffd727, VERIFIED_COMPLETE). Transitioned TECS-FBW-002-B
+  from BLOCKED to OPEN across Layer 0 (OPEN-SET.md, BLOCKED.md, NEXT-ACTION.md, SNAPSHOT.md)
+  and Layer 1 (TECS-FBW-002-B.md). NEXT-ACTION.md now authorizes TECS-FBW-002-B frontend
+  implementation. No application code changed; no decisions changed; no other unit statuses changed.
+Layer Impact: Layer 0 — OPEN-SET.md, BLOCKED.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — TECS-FBW-002-B.md updated (BLOCKED→OPEN, blocker marked resolved);
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: All deferred/design-gated units unchanged. Decision ledger unchanged. No implementation
+  authorized beyond the governance transition itself. TECS-FBW-002-B is now implementation-ready;
+  operator must issue the TECS-FBW-002-B implementation prompt as the next step.
+Refs: governance/control/ · governance/units/TECS-FBW-002-B.md · governance/log/EXECUTION-LOG.md
