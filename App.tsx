@@ -29,6 +29,8 @@ import { CertificationsAdmin } from './components/ControlPlane/CertificationsAdm
 import { TraceabilityPanel } from './components/Tenant/TraceabilityPanel';
 // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only surface)
 import { TenantAuditLogs } from './components/Tenant/TenantAuditLogs';
+// TECS-FBW-002-B: G-017 tenant trade read-only panel
+import { TradesPanel } from './components/Tenant/TradesPanel';
 import { TraceabilityAdmin } from './components/ControlPlane/TraceabilityAdmin';
 // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
 import { CartSummariesPanel } from './components/ControlPlane/CartSummariesPanel';
@@ -115,7 +117,8 @@ const App: React.FC = () => {
   // TECS-FBW-005: 'CERTIFICATIONS' added for G-019 tenant certification lifecycle panel
   // TECS-FBW-015: 'TRACEABILITY' added for G-016 traceability CRUD panel
   // TECS-FBW-016: 'AUDIT_LOGS' added for tenant audit log read-only panel
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS'>('HOME');
+  // TECS-FBW-002-B: 'TRADES' added for G-017 tenant trade read-only panel
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS' | 'TRADES'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -600,6 +603,8 @@ const App: React.FC = () => {
     if (expView === 'TRACEABILITY') return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only; no filters/pagination; server take:50)
     if (expView === 'AUDIT_LOGS') return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
+    // TECS-FBW-002-B: G-017 tenant trade read-only panel (D-017-A / D-020-B compliant)
+    if (expView === 'TRADES') return <TradesPanel onBack={() => setExpView('HOME')} />;
 
     // PW5-WL1-WIRE: WL storefront HOME — renders ProductGrid for is_white_label tenants.
     // tenantId is NEVER passed by the client. Server resolves tenant scope from JWT (D-017-A compliant).
@@ -1236,6 +1241,8 @@ const App: React.FC = () => {
           onNavigateTraceability: () => setExpView('TRACEABILITY'),
           // TECS-FBW-016: tenant audit log read-only panel navigation
           onNavigateAuditLogs: () => setExpView('AUDIT_LOGS'),
+          // TECS-FBW-002-B: G-017 tenant trade read-only panel navigation
+          onNavigateTrades: () => setExpView('TRADES'),
           // B3-REM-1: wire B2CShell header cart icon to same cart-open action as CartToggleButton
           onNavigateCart: () => setShowCart(true),
         };
