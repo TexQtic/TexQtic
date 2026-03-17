@@ -12,14 +12,15 @@
 
 ```yaml
 snapshot_date: 2026-03-17
-last_unit_closed: GOV-OS-005
-last_commit: "15b3276 — GOV-OS-005 decision ledger bootstrap VERIFIED_COMPLETE (2026-03-17)"
+last_unit_closed: GOV-OS-006
+last_commit: "TBD — GOV-OS-006 execution log bootstrap (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
 governance_os_installed: true
 layer_1_installed: true
 layer_2_installed: true
+layer_3_installed: true
 ```
 
 ---
@@ -36,7 +37,7 @@ layer_2_installed: true
 
 ## Current Next Action
 
-`GOV-OS-006` · GOVERNANCE · Execution Log Bootstrap — create `governance/log/` layer
+`GOV-OS-007` · GOVERNANCE · Archive Migration — move legacy docs to `governance/archive/` (Layer 4)
 
 ## Active Blockers
 
@@ -60,6 +61,7 @@ layer_2_installed: true
 | GOV-OS-003 | CLOSED |
 | GOV-OS-004 | CLOSED |
 | GOV-OS-005 | VERIFIED_COMPLETE |
+| GOV-OS-006 | CLOSED |
 
 **G-028 C4 vs C6 distinction (preserved):**  
 - C4 = `ai.control.*` event-domain contract only  
@@ -74,6 +76,7 @@ These are distinct closed units and must not be conflated.
 - Design documents in `docs/governance/control/` (GOV-OS-001-DESIGN.md + README.md)
 - Layer 1 unit records installed: `governance/units/` — 5 canonical unit files + README (GOV-OS-003, SHA 190936f, 2026-03-17)
 - Layer 2 decision ledger installed: `governance/decisions/` — 4 files (PRODUCT/DESIGN/SECURITY-DECISIONS.md + README) (GOV-OS-005 VERIFIED_COMPLETE, 2026-03-17)
-- Future prompts must read Layer 0 → Layer 1 → Layer 2 (in that order); see `governance/decisions/README.md`
+- Layer 3 execution log installed: `governance/log/` — 2 files (EXECUTION-LOG.md + README) (GOV-OS-006, 2026-03-17)
+- Future prompts must read Layer 0 → Layer 1 → Layer 2 before consulting Layer 3; see `governance/log/README.md`
 - VOCABULARY SEPARATION (operator directive, 2026-03-17): unit status (BLOCKED/DEFERRED/DESIGN_GATE/OPEN/VERIFIED_COMPLETE) and decision status (OPEN/DECIDED/SUPERSEDED) are separate vocabularies — do not conflate
 - All product work requires blocker resolution or product/design decision before implementation may proceed
