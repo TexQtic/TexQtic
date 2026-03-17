@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-17 (GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION)  
+**Last Updated:** 2026-03-17 (GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL)  
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,7 +13,6 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-FBW-002-B | Trades tenant panel — backend route prerequisite | OPEN | W3-residual | 2026-03-17 |
 | TECS-FBW-003-B | Escrow mutations + detail view | DEFERRED | W3-residual | 2026-03-17 |
 | TECS-FBW-006-B | Escalation mutations (upgrade / resolve / override) | DEFERRED | W3-residual | 2026-03-17 |
 | TECS-FBW-013 | B2B Request Quote — product decision + backend | DEFERRED | W5 | 2026-03-17 |
@@ -23,15 +22,14 @@
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1** (TECS-FBW-002-B)
+- **OPEN** (implementation-ready): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 3 (TECS-FBW-003-B, TECS-FBW-006-B, TECS-FBW-013)
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 5**
+- **Total non-terminal units: 4**
 
-TECS-FBW-002-B is now OPEN (implementation-ready). Blocker BLK-FBW-002-B-001 resolved:
-GET /api/tenant/trades implemented (commit 5ffd727) and verified (VERIFIED_COMPLETE).
-All other open units remain DEFERRED or DESIGN_GATE.
+TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
+No product unit is currently OPEN. All remaining units are DEFERRED or DESIGN_GATE.
 
 ---
 
@@ -39,6 +37,7 @@ All other open units remain DEFERRED or DESIGN_GATE.
 
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
+| TECS-FBW-002-B | CLOSED | 2026-03-17 | b647092 (frontend) · 5ffd727 (backend) |
 | GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION | CLOSED | 2026-03-17 | see git log |
 | GOV-OS-002 | CLOSED | 2026-03-17 | see git log |
 | GOV-OS-001 | CLOSED | 2026-03-17 | 91031f0 |

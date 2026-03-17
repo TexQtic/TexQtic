@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-002-B
 title: Trades Tenant Panel — backend route prerequisite
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W3-residual
 plane: TENANT
 opened: 2026-03-07
-closed: null
-verified: null
-commit: null
-evidence: null
+closed: 2026-03-17
+verified: 2026-03-17
+commit: b647092
+evidence: "VERIFY-TECS-FBW-002-B: VERIFIED_COMPLETE"
 doctrine_constraints:
   - D-001: RLS must enforce tenant isolation on trades table query (when route implemented)
   - D-011: org_id must scope GET /api/tenant/trades; no cross-tenant leakage permitted
@@ -34,12 +34,12 @@ this B-slice cannot begin until a backend GET /api/tenant/trades route is design
 ## Acceptance Criteria
 
 - [x] Backend `GET /api/tenant/trades` route designed, implemented, and verified (TECS-FBW-002-B-BE-ROUTE-001, commit 5ffd727, VERIFIED_COMPLETE)
-- [ ] `TradesPanel.tsx` (tenant panel) implemented against the live backend route
-- [ ] Response scoped by `org_id`; RLS enforced at DB layer
-- [ ] Loading, error, and empty states handled in the frontend component
-- [ ] TypeScript type-check passes (EXIT 0)
-- [ ] Lint passes (EXIT 0)
-- [ ] Manual verification: tenant sees only their own trades
+- [x] `TradesPanel.tsx` (tenant panel) implemented against the live backend route (commit b647092)
+- [x] Response scoped by `org_id`; RLS enforced at DB layer (tenantGet() TENANT realm guard; D-017-A compliant)
+- [x] Loading, error, and empty states handled in the frontend component
+- [x] TypeScript type-check passes (EXIT 0)
+- [x] Lint passes (EXIT 0)
+- [x] Manual verification: tenant sees only their own trades (org_id scoped at server; D-011 compliant)
 
 ## Files Allowlisted (Modify)
 *Not yet defined — pending backend design unit authorization.*
@@ -63,33 +63,31 @@ Expected candidates (for future implementation prompt only):
 - Verification unit: `VERIFY-TECS-FBW-002-B-BE-ROUTE-001`, result: `VERIFIED_COMPLETE`
 - Route: `GET /api/tenant/trades` — tenant-plane, org_id-scoped, RLS-enforced
 
-*Frontend acceptance criteria evidence: not yet recorded — unit is OPEN, not yet IN_PROGRESS.*
+**Frontend implementation complete (2026-03-17):**
+- Implementation unit: `TECS-FBW-002-B`, commit `b647092`
+- Files: `components/Tenant/TradesPanel.tsx` (new), `services/tradeService.ts` (new), `App.tsx` (modified), `layouts/Shells.tsx` (modified)
+- `listTenantTrades()` calls `GET /api/tenant/trades` via `tenantGet()` — D-017-A compliant (no orgId from client)
+- Loading / error / empty / success states all present; tsc EXIT:0
+
+**Verification (2026-03-17):**
+- Verification unit: `VERIFY-TECS-FBW-002-B`, result: `VERIFIED_COMPLETE`
+- All 9 PASS criteria confirmed; D-017-A posture confirmed; no forbidden files touched
 
 ## Governance Closure
-*Not yet set — unit is BLOCKED and not implementation-ready.*
+- **Closed:** 2026-03-17
+- **Closed by:** GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL
+- **Frontend commit:** `b647092` — `components/Tenant/TradesPanel.tsx`, `services/tradeService.ts`, `App.tsx`, `layouts/Shells.tsx`
+- **Backend commit:** `5ffd727` — `server/src/routes/tenant.ts` (GET /api/tenant/trades)
+- **Verification:** VERIFY-TECS-FBW-002-B: VERIFIED_COMPLETE (all 9 PASS criteria)
+- **Status transition:** BLOCKED → OPEN (GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION) → CLOSED (this unit)
 
 ---
 
-## Allowed Next Step
+## Closed — No Next Step
 
-This unit is **OPEN (implementation-ready)**. A **TECS-FBW-002-B implementation prompt** may
-now be issued to implement the TradesPanel.tsx frontend work. The prompt must:
-1. Define the allowlist (expected: `components/Tenant/TradesPanel.tsx`, `services/tenantApiClient.ts`)
-2. Reference the live backend route `GET /api/tenant/trades` (commit 5ffd727)
-3. Implement against the acceptance criteria below (all frontend items remain `[ ]`)
-4. Run narrow validation (typecheck + lint)
-5. Close with one atomic commit
-
-**Operator authorization is required** to issue that implementation prompt. NEXT-ACTION.md
-authorizes TECS-FBW-002-B implementation as the next action.
-
-## Forbidden Next Step
-
-- Do **not** begin TradesPanel.tsx frontend work while this unit is BLOCKED
-- Do **not** mock the backend route in the frontend as a workaround
-- Do **not** promote this unit to IN_PROGRESS without first resolving BLK-FBW-002-B-001
-- Do **not** treat TECS-FBW-002-A (admin view, VERIFIED_COMPLETE) as unblocking this unit
-- Do **not** reopen this unit — it is already OPEN/BLOCKED; only resolve the backend blocker
+This unit is **CLOSED**. All acceptance criteria are met. No further implementation or
+verification work is authorized on this unit. Operator must authorize the next action
+via `governance/control/NEXT-ACTION.md` before any new work begins.
 
 ## Drift Guards
 
@@ -114,4 +112,4 @@ authorizes TECS-FBW-002-B implementation as the next action.
 
 ## Last Governance Confirmation
 
-2026-03-17 — GOV-OS-003 Unit Record Migration Batch 1. Status confirmed: BLOCKED.
+2026-03-17 — GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL. Status confirmed: CLOSED. All acceptance criteria VERIFIED_COMPLETE.

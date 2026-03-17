@@ -245,3 +245,55 @@ Notes: All deferred/design-gated units unchanged. Decision ledger unchanged. No 
   authorized beyond the governance transition itself. TECS-FBW-002-B is now implementation-ready;
   operator must issue the TECS-FBW-002-B implementation prompt as the next step.
 Refs: governance/control/ · governance/units/TECS-FBW-002-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### TECS-FBW-002-B — 2026-03-17
+Type: IMPLEMENTATION
+Status: CLOSED
+Commit: b647092
+Title: Trades Tenant Panel — frontend TradesPanel.tsx implementation
+Summary: Implemented tenant TradesPanel.tsx (read-only) against the verified GET /api/tenant/trades
+  route (commit 5ffd727). Created services/tradeService.ts using tenantGet() (D-017-A compliant —
+  no orgId accepted from client). Wired TradesPanel into App.tsx expView routing and navigation
+  buttons across all four shell layouts. Loading / empty / error / success states present. tsc EXIT:0.
+Layer Impact: Layer 0 — none (governance sync handled in GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL);
+  Layer 1 — none (unit record updated in GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL)
+Notes: D-017-A enforced — tenantId not accepted from client; tenantGet() TENANT realm guard is
+  sufficient. Panel is read-only (no mutations). Frontend-only commit (4 files).
+Refs: components/Tenant/TradesPanel.tsx · services/tradeService.ts · App.tsx · layouts/Shells.tsx
+
+---
+
+### VERIFY-TECS-FBW-002-B — 2026-03-17
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (read-only verification unit)
+Title: Verify tenant TradesPanel frontend implementation for TECS-FBW-002-B
+Summary: Read-only verification of TECS-FBW-002-B frontend implementation (commit b647092).
+  Confirmed TradesPanel wired into expView routing; navigation exposed across all 4 shells;
+  listTenantTrades() calls GET /api/tenant/trades via tenantGet() only; no client org selector;
+  loading/empty/error/success states all present; only allowlisted files modified; tsc EXIT:0.
+  All 9 PASS criteria confirmed. Verification result: VERIFIED_COMPLETE.
+Layer Impact: None (read-only unit)
+Notes: D-017-A posture confirmed. No forbidden files touched. TECS-FBW-002-B cleared for
+  governance closure.
+Refs: governance/units/TECS-FBW-002-B.md · components/Tenant/TradesPanel.tsx · services/tradeService.ts
+
+---
+
+### GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL — 2026-03-17
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: <SHA-PENDING — backfill after commit>
+Title: Record verified closure of TECS-FBW-002-B TradesPanel implementation
+Summary: Governance-only sync/close unit. Recorded closure of TECS-FBW-002-B based on frontend
+  implementation commit b647092 and VERIFY-TECS-FBW-002-B (VERIFIED_COMPLETE). TECS-FBW-002-B
+  transitioned OPEN→CLOSED across Layer 0, Layer 1, and Layer 3. NEXT-ACTION.md now records
+  OPERATOR_DECISION_REQUIRED — no product unit is currently OPEN.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — TECS-FBW-002-B.md updated (OPEN→CLOSED, all acceptance criteria ticked, evidence recorded);
+  Layer 3 — EXECUTION-LOG.md appended (TECS-FBW-002-B, VERIFY-TECS-FBW-002-B, this entry)
+Notes: No decisions changed. No deferred/gated unit statuses changed. No application code changed.
+  Operator must authorize the next action before any further implementation work begins.
+Refs: governance/control/ · governance/units/TECS-FBW-002-B.md · governance/log/EXECUTION-LOG.md

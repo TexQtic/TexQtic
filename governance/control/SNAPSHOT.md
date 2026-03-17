@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-17
-last_unit_closed: GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION
-last_commit: "a98dc6b — GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION (2026-03-17)"
+last_unit_closed: GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL
+last_commit: "<SHA-PENDING> — GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,17 +28,16 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **TECS-FBW-002-B** — `OPEN` — Trades tenant panel; backend route resolved (commit 5ffd727); ready for TradesPanel.tsx frontend implementation
 - **TECS-FBW-003-B** — `DEFERRED` — Escrow mutations; future scope; awaiting product authorization
 - **TECS-FBW-006-B** — `DEFERRED` — Escalation mutations; future scope; awaiting product authorization
 - **TECS-FBW-013** — `DEFERRED` — B2B Request Quote; product-deferred; UI remains visually disabled
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**1 product unit is currently OPEN (implementation-ready): TECS-FBW-002-B.**
+**0 product units are currently OPEN.** All remaining tracked units are DEFERRED or DESIGN_GATE.
 
 ## Current Next Action
 
-`TECS-FBW-002-B` · IMPLEMENTATION · Frontend TradesPanel.tsx · See `NEXT-ACTION.md` for full posture
+`OPERATOR_DECISION_REQUIRED` · No product unit is OPEN · Operator must authorize next action · See `NEXT-ACTION.md` for full posture
 
 ## Active Blockers
 
@@ -81,6 +80,9 @@ These are distinct closed units and must not be conflated.
 - BLK-FBW-002-B-001 resolved 2026-03-17: TECS-FBW-002-B-BE-ROUTE-001 (commit 5ffd727) + VERIFY-TECS-FBW-002-B-BE-ROUTE-001 (VERIFIED_COMPLETE). TECS-FBW-002-B transitioned BLOCKED → OPEN.
 - Layer 4 archive installed: `governance/archive/` — README + 4 ARCHIVED-* files (GOV-OS-007, 2026-03-17)
 - All 4 Governance OS layers now installed; no product unit is OPEN
+- TECS-FBW-002-B frontend implementation complete (commit b647092, 2026-03-17): TradesPanel.tsx + tradeService.ts wired into App.tsx and all 4 shells. tsc EXIT:0.
+- VERIFY-TECS-FBW-002-B: VERIFIED_COMPLETE (2026-03-17) — all 9 PASS criteria confirmed; D-017-A posture confirmed.
+- GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL (2026-03-17): TECS-FBW-002-B transitioned OPEN → CLOSED across Layer 0/1/3. NEXT-ACTION.md now OPERATOR_DECISION_REQUIRED.
 - Future prompts must read Layer 0 → Layer 1 → Layer 2 before consulting Layer 3; see `governance/log/README.md`
 - VOCABULARY SEPARATION (operator directive, 2026-03-17 — three vocabularies, never collapse):
   - Unit status: BLOCKED / DEFERRED / DESIGN_GATE / OPEN / VERIFIED_COMPLETE
