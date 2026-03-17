@@ -38,7 +38,7 @@ layer_4_installed: true
 
 ## Current Next Action
 
-`GOV-OS-007` · GOVERNANCE · Archive Migration — move legacy docs to `governance/archive/` (Layer 4)
+`OPERATOR_DECISION_REQUIRED` · No product unit is OPEN · See `NEXT-ACTION.md` for full posture
 
 ## Active Blockers
 
