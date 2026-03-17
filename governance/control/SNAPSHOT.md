@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-17
-last_unit_closed: GOV-OS-004
-last_commit: "84e5bb8 — GOV-OS-004 control-plane sync (2026-03-17)"
+last_unit_closed: GOV-OS-005
+last_commit: "15b3276 — GOV-OS-005 decision ledger bootstrap VERIFIED_COMPLETE (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -59,6 +59,7 @@ layer_2_installed: true
 | GOV-OS-002 | CLOSED |
 | GOV-OS-003 | CLOSED |
 | GOV-OS-004 | CLOSED |
+| GOV-OS-005 | VERIFIED_COMPLETE |
 
 **G-028 C4 vs C6 distinction (preserved):**  
 - C4 = `ai.control.*` event-domain contract only  
@@ -72,6 +73,7 @@ These are distinct closed units and must not be conflated.
 - Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`) remain preserved as historical secondary references; they are NOT operational truth
 - Design documents in `docs/governance/control/` (GOV-OS-001-DESIGN.md + README.md)
 - Layer 1 unit records installed: `governance/units/` — 5 canonical unit files + README (GOV-OS-003, SHA 190936f, 2026-03-17)
-- Layer 2 decision ledger installed: `governance/decisions/` — 4 files (PRODUCT/DESIGN/SECURITY-DECISIONS.md + README) (GOV-OS-005, 2026-03-17)
+- Layer 2 decision ledger installed: `governance/decisions/` — 4 files (PRODUCT/DESIGN/SECURITY-DECISIONS.md + README) (GOV-OS-005 VERIFIED_COMPLETE, 2026-03-17)
 - Future prompts must read Layer 0 → Layer 1 → Layer 2 (in that order); see `governance/decisions/README.md`
+- VOCABULARY SEPARATION (operator directive, 2026-03-17): unit status (BLOCKED/DEFERRED/DESIGN_GATE/OPEN/VERIFIED_COMPLETE) and decision status (OPEN/DECIDED/SUPERSEDED) are separate vocabularies — do not conflate
 - All product work requires blocker resolution or product/design decision before implementation may proceed
