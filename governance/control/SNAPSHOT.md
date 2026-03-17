@@ -12,12 +12,14 @@
 
 ```yaml
 snapshot_date: 2026-03-17
-last_unit_closed: GOV-OS-002
-last_commit: GOV-OS-002 bootstrap commit (see git log)
+last_unit_closed: GOV-OS-003
+last_commit: "190936f — GOV-OS-003 unit record migration (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
 governance_os_installed: true
+layer_1_installed: true
+layer_2_installed: false
 ```
 
 ---
@@ -34,7 +36,7 @@ governance_os_installed: true
 
 ## Current Next Action
 
-`GOV-OS-003` · GOVERNANCE · Unit Record Migration Batch 1 — create `governance/units/` files for open units
+`GOV-OS-005` · GOVERNANCE · Decision Ledger Bootstrap — create `governance/decisions/` layer
 
 ## Active Blockers
 
@@ -54,6 +56,8 @@ governance_os_installed: true
 | G-028 slices C1–C6 | ALL VERIFIED_COMPLETE |
 | Pre-Wave-5 remediation (PW5-V1–V4, PW5-U1–U3) | ALL CLOSED / PASS |
 | GOV-OS-001 | CLOSED |
+| GOV-OS-002 | CLOSED |
+| GOV-OS-003 | CLOSED |
 
 **G-028 C4 vs C6 distinction (preserved):**  
 - C4 = `ai.control.*` event-domain contract only  
@@ -66,5 +70,7 @@ These are distinct closed units and must not be conflated.
 - Canonical operational files: `governance/control/` (5 files — this directory)
 - Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`) remain preserved as historical secondary references; they are NOT operational truth
 - Design documents in `docs/governance/control/` (GOV-OS-001-DESIGN.md + README.md)
-- Layer 1 unit records (`governance/units/`) and Layer 2 decisions (`governance/decisions/`) have not yet been created — that is the scope of GOV-OS-003 and later phases
+- Layer 1 unit records installed: `governance/units/` — 5 canonical unit files + README (GOV-OS-003, SHA 190936f, 2026-03-17)
+- Layer 2 decision ledger (`governance/decisions/`) not yet installed — scope of GOV-OS-005
+- Future prompts must read Layer 0 (`governance/control/`) before Layer 1 (`governance/units/`)
 - All product work requires blocker resolution or product/design decision before implementation may proceed

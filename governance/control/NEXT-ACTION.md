@@ -1,26 +1,19 @@
-# NEXT-ACTION.md — Authorized Next Action
-
-**Layer:** 0 — Control Plane  
-**Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-17 (GOV-OS-002 bootstrap)  
-**Max Size:** 20 lines (structural gate)
-
-> Exactly one authorized next action. Read this before any work begins.  
-> Do not act on a different unit without updating this file first (governance unit required).
+# NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-17 (GOV-OS-004 control-plane sync)
+> One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: GOV-OS-003
+unit_id: GOV-OS-005
 type: GOVERNANCE
-title: Unit Record Migration — create governance/units/ files for open units
+title: Decision Ledger Bootstrap — create governance/decisions/ layer
 prerequisites_met: true
-authorized_by: auto-sequenced (per GOV-OS-001 Phase 2 migration plan)
+authorized_by: auto-sequenced (GOV-OS-001 Phase 3 migration plan)
 date_authorized: 2026-03-17
 notes: |
-  GOV-OS-002 bootstrap complete. Governance control plane is now installed.
-  All current product units are BLOCKED, DEFERRED, or DESIGN_GATE — none are OPEN.
-  GOV-OS-003 completes Phase 2 of the Governance OS migration (per GOV-OS-001 Section 8).
-  Alternative (operator decision required): authorize a backend design unit to resolve
-  the TECS-FBW-002-B blocker (design + implement GET /api/tenant/trades route).
+  Layer 1 installed (governance/units/ — 5 unit records + README, SHA 190936f).
+  Layer 2 (governance/decisions/) not yet installed. No product unit is OPEN.
+  All units are BLOCKED, DEFERRED, or DESIGN_GATE. No deferred/gated unit may
+  proceed without Layer 2 decision records in governance/decisions/.
 ```
