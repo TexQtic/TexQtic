@@ -1,15 +1,29 @@
-# TexQtic Implementation Tracker — Q2 2026
+# TexQtic Implementation Tracker — Q2 2026 (ARCHIVED)
 
-**Source:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`  
-**Baseline:** GOVERNANCE-SYNC-048  
-**Date:** 2026-03-03  
-**RLS Maturity:** 5.0 / 5 *(updated GOVERNANCE-SYNC-077: OPS-CI-RLS-DOMAIN-PROOF-001 CI domain table coverage 3/5→5/5; Phase A fully closed)*  
-**Migrations:** 73 / 73 Applied · `Database schema is up to date!` *(updated GOVERNANCE-SYNC-070: migration 20260315000007 applied)*  
-**Doctrine Version:** v1.4
+> **THIS FILE HAS BEEN ARCHIVED.**
+>
+> This file was the Q2 2026 G-001–G-028 governance history tracker. It is no longer
+> maintained and must not be used as a first-read operational governance source.
+>
+> **Archived copy (full content preserved):**
+> `governance/archive/ARCHIVED-tracker-2026-Q2.md`
+>
+> **Current operational truth lives in Layer 0:**
+> - `governance/control/OPEN-SET.md` — current open set
+> - `governance/control/NEXT-ACTION.md` — authorized next action
+> - `governance/control/BLOCKED.md` — blockers, deferred items, design gates
+> - `governance/control/SNAPSHOT.md` — carry-forward context
+>
+> **Per-unit canonical truth lives in Layer 1:**
+> - `governance/units/<UNIT-ID>.md` — status, evidence, blockers, decisions
+>
+> If this file's content appears inconsistent with Layer 0 or Layer 1, Layer 0 wins.
+> Run a governance reconciliation unit before any sequencing action.
+>
+> Archived: 2026-03-17 (GOV-OS-007). Authority: GOV-OS-001-DESIGN.md Section 3.6.
 
-> **Cross-reference:** Frontend-backend reachability recovery and cross-audit reconciliation for March 2026 is governed in
-> `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` (Section 8) and
-> `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md`. This Q2 tracker remains active for its original scope (G-001 through G-028 + membership governance).
+<!-- ORIGINAL CONTENT HAS BEEN MOVED TO governance/archive/ARCHIVED-tracker-2026-Q2.md -->
+<!-- See governance/archive/README.md for layer 4 archive guidance -->
 
 ---
 

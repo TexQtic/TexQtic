@@ -1,23 +1,29 @@
-# TexQtic Implementation Tracker — Frontend-Backend Reachability Recovery Program (March 2026)
+# TexQtic Implementation Tracker — March 2026 (ARCHIVED)
 
-**Source:** `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` (Section 8)  
-**Reconciliation artifact:** `docs/governance/audits/2026-03-audit-reconciliation-matrix.md`  
-**Gap register section:** `governance/gap-register.md` → "Frontend-Backend Wiring Gap Audit — March 2026"  
-**Baseline:** GOVERNANCE-SYNC-095 (last recorded high-water mark at tracker creation)  
-**Date created:** 2026-03-06  
-**RLS Maturity:** 5.0 / 5  
-**Migrations:** 82 / 82 Applied  
-**Doctrine Version:** v1.4  
+> **THIS FILE HAS BEEN ARCHIVED.**
+>
+> This file was the March 2026 frontend-backend reachability recovery tracker. It is no
+> longer maintained and must not be used as a first-read operational governance source.
+>
+> **Archived copy (full content preserved):**
+> `governance/archive/ARCHIVED-tracker-2026-03.md`
+>
+> **Current operational truth lives in Layer 0:**
+> - `governance/control/OPEN-SET.md` — current open set
+> - `governance/control/NEXT-ACTION.md` — authorized next action
+> - `governance/control/BLOCKED.md` — blockers, deferred items, design gates
+> - `governance/control/SNAPSHOT.md` — carry-forward context
+>
+> **Per-unit canonical truth lives in Layer 1:**
+> - `governance/units/<UNIT-ID>.md` — status, evidence, blockers, decisions
+>
+> If this file's content appears inconsistent with Layer 0 or Layer 1, Layer 0 wins.
+> Run a governance reconciliation unit before any sequencing action.
+>
+> Archived: 2026-03-17 (GOV-OS-007). Authority: GOV-OS-001-DESIGN.md Section 3.6.
 
-> **Scope:** This tracker governs the frontend-backend reachability recovery work only.
-> All G-001 through G-028 governance history remains in `IMPLEMENTATION-TRACKER-2026-Q2.md`.
-> Rows in this tracker are derived exclusively from cross-audit merged statuses — not from single-report claims.
-
----
-
-## Status Legend
-
-| Symbol | Meaning |
+<!-- ORIGINAL CONTENT HAS BEEN MOVED TO governance/archive/ARCHIVED-tracker-2026-03.md -->
+<!-- See governance/archive/README.md for layer 4 archive guidance -->
 |---|---|
 | ✅ | Complete — evidence recorded |
 | ⏳ | Pending — not yet started |

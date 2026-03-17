@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-17
-last_unit_closed: GOV-OS-006
-last_commit: "8e6e6d3 — GOV-OS-006 SHA resolution (execution log + snapshot, 2026-03-17)"
+last_unit_closed: GOV-OS-007
+last_commit: "pending — GOV-OS-007 archive migration (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -21,6 +21,7 @@ governance_os_installed: true
 layer_1_installed: true
 layer_2_installed: true
 layer_3_installed: true
+layer_4_installed: true
 ```
 
 ---
@@ -72,11 +73,13 @@ These are distinct closed units and must not be conflated.
 
 - Governance OS control plane installed 2026-03-17 by GOV-OS-002
 - Canonical operational files: `governance/control/` (5 files — this directory)
-- Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`) remain preserved as historical secondary references; they are NOT operational truth
+- Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`, `IMPLEMENTATION-TRACKER-2026-Q2.md`, `2026-03-audit-reconciliation-matrix.md`) have been archived to `governance/archive/` (GOV-OS-007, 2026-03-17) and replaced with pointer stubs; they are NOT operational truth
 - Design documents in `docs/governance/control/` (GOV-OS-001-DESIGN.md + README.md)
 - Layer 1 unit records installed: `governance/units/` — 5 canonical unit files + README (GOV-OS-003, SHA 190936f, 2026-03-17)
 - Layer 2 decision ledger installed: `governance/decisions/` — 4 files (PRODUCT/DESIGN/SECURITY-DECISIONS.md + README) (GOV-OS-005 VERIFIED_COMPLETE, 2026-03-17)
 - Layer 3 execution log installed: `governance/log/` — 2 files (EXECUTION-LOG.md + README) (GOV-OS-006, 2026-03-17)
+- Layer 4 archive installed: `governance/archive/` — README + 4 ARCHIVED-* files (GOV-OS-007, 2026-03-17)
+- All 4 Governance OS layers now installed; no product unit is OPEN
 - Future prompts must read Layer 0 → Layer 1 → Layer 2 before consulting Layer 3; see `governance/log/README.md`
 - VOCABULARY SEPARATION (operator directive, 2026-03-17 — three vocabularies, never collapse):
   - Unit status: BLOCKED / DEFERRED / DESIGN_GATE / OPEN / VERIFIED_COMPLETE

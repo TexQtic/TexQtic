@@ -1,18 +1,34 @@
-# Audit Reconciliation Matrix — CODEX vs VS Code Copilot (March 2026)
+# Audit Reconciliation Matrix — CODEX vs VS Code Copilot March 2026 (ARCHIVED)
 
-**Produced:** 2026-03-06  
-**Classification:** Governance-Only Document — No Application Code Modified  
-**Source Audits:**
-- `docs/governance/audits/2026-03-codex-frontend-backend-audit.md` (Codex AI, read-only, March 2026)
-- `docs/governance/audits/2026-03-copilot-frontend-backend-audit.md` (VS Code Copilot TECS Audit Report, March 2026)
+> **THIS FILE HAS BEEN ARCHIVED.**
+>
+> This file was the March 2026 Codex vs Copilot audit reconciliation matrix. It is no longer
+> maintained and must not be used as a first-read operational governance source.
+>
+> **Archived copy (full content preserved):**
+> `governance/archive/ARCHIVED-audit-matrix-2026-03.md`
+>
+> **Current operational truth lives in Layer 0:**
+> - `governance/control/OPEN-SET.md` — current open set
+> - `governance/control/NEXT-ACTION.md` — authorized next action
+> - `governance/control/BLOCKED.md` — blockers, deferred items, design gates
+> - `governance/control/SNAPSHOT.md` — carry-forward context
+>
+> **Per-unit canonical truth lives in Layer 1:**
+> - `governance/units/<UNIT-ID>.md` — status, evidence, blockers, decisions
+>
+> **Decisions that gate units live in Layer 2:**
+> - `governance/decisions/PRODUCT-DECISIONS.md`
+> - `governance/decisions/DESIGN-DECISIONS.md`
+> - `governance/decisions/SECURITY-DECISIONS.md`
+>
+> If this file's content appears inconsistent with Layer 0 or Layer 1, Layer 0 wins.
+> Run a governance reconciliation unit before any sequencing action.
+>
+> Archived: 2026-03-17 (GOV-OS-007). Authority: GOV-OS-001-DESIGN.md Section 3.6.
 
-**Baseline governance state:** GOVERNANCE-SYNC-095 · 73/73 migrations applied · RLS Maturity 5.0/5 · Doctrine v1.4
-
----
-
-## 1. Reconciliation Method
-
-For every finding from both reports the following classification rules apply:
+<!-- ORIGINAL CONTENT HAS BEEN MOVED TO governance/archive/ARCHIVED-audit-matrix-2026-03.md -->
+<!-- See governance/archive/README.md for layer 4 archive guidance -->
 
 | Label | Rule |
 |---|---|

@@ -168,3 +168,24 @@ Notes: The execution log is append-only after this bootstrap. All future closed 
   append one entry to this file. Layer 3 is historical context — not operational truth.
   Layer 4 (archive migration) remains not yet installed.
 Refs: governance/log/ (README.md · EXECUTION-LOG.md)
+
+---
+
+### GOV-OS-007 — 2026-03-17
+Type: GOVERNANCE / ARCHIVE MIGRATION
+Status: CLOSED
+Commit: pending
+Title: Archive Migration — Layer 4 bootstrap
+Summary: Created governance/archive/ (Layer 4) and migrated 4 oversized legacy governance
+  artifacts — gap-register.md, IMPLEMENTATION-TRACKER-2026-03.md, IMPLEMENTATION-TRACKER-2026-Q2.md,
+  and 2026-03-audit-reconciliation-matrix.md — into canonical archive structure with ARCHIVED-
+  prefix and frozen headers. Replaced all 4 originals with pointer stubs. No application code
+  changed; no product unit statuses changed.
+Layer Impact: Layer 4 — governance/archive/ installed; README.md + 4 ARCHIVED-* files created;
+  Layer 0 — NEXT-ACTION.md updated (OPERATOR_DECISION_REQUIRED), SNAPSHOT.md updated
+  (layer_4_installed: true, last_unit_closed: GOV-OS-007, session notes refreshed)
+Notes: Archive files are frozen read-only after this date. Layer 0 remains the sole operational
+  truth. All 4 Governance OS layers are now installed. No product unit is OPEN. Operator must
+  authorize the next action before any implementation work begins.
+Refs: governance/archive/ (README.md · ARCHIVED-gap-register-2026-03.md ·
+  ARCHIVED-tracker-2026-03.md · ARCHIVED-tracker-2026-Q2.md · ARCHIVED-audit-matrix-2026-03.md)

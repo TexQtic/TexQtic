@@ -1,4 +1,26 @@
-# TEXQTIC — GAP REGISTER
+# TEXQTIC — GAP REGISTER (ARCHIVED)
+
+> **THIS FILE HAS BEEN ARCHIVED.**
+>
+> This file was the pre-Governance-OS cumulative governance SYNC log. It is no longer
+> maintained and must not be used as a first-read operational governance source.
+>
+> **Archived copy (full content preserved):**
+> `governance/archive/ARCHIVED-gap-register-2026-03.md`
+>
+> **Current operational truth lives in Layer 0:**
+> - `governance/control/OPEN-SET.md` — current open set
+> - `governance/control/NEXT-ACTION.md` — authorized next action
+> - `governance/control/BLOCKED.md` — blockers, deferred items, design gates
+> - `governance/control/SNAPSHOT.md` — carry-forward context
+>
+> If this file's content appears inconsistent with Layer 0, Layer 0 wins.
+> Run a governance reconciliation unit before any sequencing action.
+>
+> Archived: 2026-03-17 (GOV-OS-007). Authority: GOV-OS-001-DESIGN.md Section 3.6.
+
+<!-- ORIGINAL CONTENT HAS BEEN MOVED TO governance/archive/ARCHIVED-gap-register-2026-03.md -->
+<!-- See governance/archive/README.md for layer 4 archive guidance -->
 
 Last Updated: 2026-03-16 (GOVERNANCE-SYNC-G028-C6-CONTROL-PLANE-EMITTER-WIRING — G028-C6 ✅ CLOSED / VERIFIED_COMPLETE — implementation commit 0d181a0 — verified G028-C6-VERIFY-CONTROL-PLANE-EMITTER-WIRING (VERIFIED_COMPLETE) — scope: emitAiControlEventBestEffort() admin-locked helper added to server/src/events/aiEmitter.ts; 4 ai.control.* emission points wired in controlPlaneInferenceService.ts (Wire A: pii_redacted in if(piiRedacted) block; Wire B: ai.control.insights.generate replaces ai.inference.generate on idempotency-hit early-return; Wire C: pii_leak_detected in if(outputPiiDetected) block; Wire D: mutually exclusive generate/error in section 8); ADMIN_SENTINEL_ORG removed — resolved C1 observability note: ai.control.* events now correctly emitted with ADMIN realm, tenantId: null, actor.type: ADMIN; server/src/events/aiEmitter.ts + server/src/services/ai/controlPlaneInferenceService.ts only; typecheck EXIT 0 · lint EXIT 0 · 2 files changed; G028 slice map: C1 ✅ CLOSED · C2 ✅ CLOSED · C3 ✅ CLOSED / VERIFIED_COMPLETE · C4 ✅ CLOSED / VERIFIED_COMPLETE · C5 ✅ CLOSED / VERIFIED_COMPLETE · C6 ✅ CLOSED / VERIFIED_COMPLETE)
 Last Updated: 2026-03-16 (GOVERNANCE-SYNC-PW5-G028-C4-AI-EVENT-DOMAIN — PW5-G028-C4-AI-EVENT-DOMAIN ✅ CLOSED / VERIFIED_COMPLETE — implementation commit e6ba2b0 — verified VERIFY-PW5-G028-C4-AI-EVENT-DOMAIN (VERIFIED_COMPLETE) — scope: 4 ai.control.* event names (ai.control.insights.generate / ai.control.insights.error / ai.control.insights.pii_redacted / ai.control.insights.pii_leak_detected) added to KnownEventName union + knownEventEnvelopeSchema z.enum + EVENT_PAYLOAD_SCHEMAS registry; Zod payload schemas with .passthrough(); server/src/lib/events.ts + server/src/events/eventSchemas.ts only; event-domain contract layer only; control-plane emitter wiring remains a separate follow-on concern if later authorized; typecheck EXIT 0 · lint EXIT 0 · 2 files changed +79 lines; G028 slice map: C1 ✅ CLOSED · C2 ✅ CLOSED · C3 ✅ CLOSED / VERIFIED_COMPLETE · C4 ✅ CLOSED / VERIFIED_COMPLETE · C5 ✅ CLOSED)
