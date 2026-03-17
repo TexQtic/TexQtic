@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-17
 last_unit_closed: GOV-OS-006
-last_commit: "TBD — GOV-OS-006 execution log bootstrap (2026-03-17)"
+last_commit: "2bc6e62 — GOV-OS-006 execution log bootstrap (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"

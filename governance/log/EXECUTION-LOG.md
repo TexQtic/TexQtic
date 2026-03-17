@@ -156,7 +156,7 @@ Refs: governance/decisions/ (README.md · PRODUCT-DECISIONS.md · DESIGN-DECISIO
 ### GOV-OS-006 — 2026-03-17
 Type: GOVERNANCE / BOOTSTRAP
 Status: CLOSED
-Commit: TBD (this unit — see git log)
+Commit: 2bc6e62
 Title: Execution Log Bootstrap (Layer 3)
 Summary: Created Layer 3 execution log — governance/log/ — with README and this
   EXECUTION-LOG.md. Populated the log with canonical historical entries for all completed
