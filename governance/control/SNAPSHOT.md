@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-17
 last_unit_closed: GOV-OS-007
-last_commit: "pending — GOV-OS-007 archive migration (2026-03-17)"
+last_commit: "086f40a — GOV-OS-007 archive migration (2026-03-17)"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"

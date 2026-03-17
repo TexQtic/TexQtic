@@ -174,7 +174,7 @@ Refs: governance/log/ (README.md · EXECUTION-LOG.md)
 ### GOV-OS-007 — 2026-03-17
 Type: GOVERNANCE / ARCHIVE MIGRATION
 Status: CLOSED
-Commit: pending
+Commit: 086f40a
 Title: Archive Migration — Layer 4 bootstrap
 Summary: Created governance/archive/ (Layer 4) and migrated 4 oversized legacy governance
   artifacts — gap-register.md, IMPLEMENTATION-TRACKER-2026-03.md, IMPLEMENTATION-TRACKER-2026-Q2.md,
