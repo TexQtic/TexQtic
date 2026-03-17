@@ -285,7 +285,7 @@ Refs: governance/units/TECS-FBW-002-B.md · components/Tenant/TradesPanel.tsx ·
 ### GOV-CLOSE-TECS-FBW-002-B-TRADES-PANEL — 2026-03-17
 Type: GOVERNANCE / SYNC-CLOSE
 Status: CLOSED
-Commit: <SHA-PENDING — backfill after commit>
+Commit: ec51b72
 Title: Record verified closure of TECS-FBW-002-B TradesPanel implementation
 Summary: Governance-only sync/close unit. Recorded closure of TECS-FBW-002-B based on frontend
   implementation commit b647092 and VERIFY-TECS-FBW-002-B (VERIFIED_COMPLETE). TECS-FBW-002-B
