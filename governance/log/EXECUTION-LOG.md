@@ -635,3 +635,22 @@ Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer
 Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
   No unit was opened. No schema, migrations, or product code changed.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOVERNANCE-SEQUENCE-BUYER-RFQ-READS-001 — 2026-03-18
+Type: GOVERNANCE / SEQUENCING
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SEQUENCE-BUYER-RFQ-READS-001)
+Title: Sequence first buyer RFQ read unit after PRODUCT-DEC-BUYER-RFQ-READS
+Summary: Governance-only sequencing unit. Opened TECS-RFQ-READ-001 as the single
+  implementation-ready buyer RFQ read follow-on unit after PRODUCT-DEC-BUYER-RFQ-READS was
+  recorded as DECIDED. Authorized scope is backend-only, read-only tenant-plane buyer RFQ list
+  + detail APIs with org_id-scoped reads, minimal field projection, lifecycle visibility, and
+  only the minimal search/filter/sort authorized by the decision.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-RFQ-READ-001.md created and set to OPEN;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No frontend unit was opened. No supplier inbox work was opened. No schema or migration
+  work was opened. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/units/TECS-RFQ-READ-001.md

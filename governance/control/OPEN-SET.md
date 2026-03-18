@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-18 (GOVERNANCE-SYNC-TECS-RFQ-DOMAIN-001)
+**Last Updated:** 2026-03-18 (GOVERNANCE-SEQUENCE-BUYER-RFQ-READS-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,26 +13,27 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
+| TECS-RFQ-READ-001 | Buyer RFQ reads — tenant list + detail API slice | OPEN | W5 | 2026-03-18 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **0**
+- **OPEN** (implementation-ready): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 1**
+- **Total non-terminal units: 2**
 
 TECS-FBW-013 closed 2026-03-18: implementation commit 060cac7 + corrective commit 7f59a62 + VERIFY-TECS-FBW-013 VERIFIED_COMPLETE.
 TECS-FBW-006-B closed 2026-03-18: implementation/corrective/alignment commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9 + VERIFY-TECS-FBW-006-B PASS.
 TECS-FBW-003-B closed 2026-03-18: implementation commit 4d71e17 + VERIFY-TECS-FBW-003-B VERIFIED_COMPLETE. GOV-CLOSE-TECS-FBW-003-B.
 TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
 
-TECS-RFQ-DOMAIN-001 reached VERIFIED_COMPLETE on 2026-03-18 after canonical RFQ domain persistence
-and corrective supplier-owner resolution were both implemented and verified.
-TECS-FBW-ADMINRBAC remains DESIGN_GATE. No implementation-ready unit is currently OPEN.
+TECS-RFQ-READ-001 is now the single implementation-ready buyer RFQ read follow-on unit after
+PRODUCT-DEC-BUYER-RFQ-READS was recorded as DECIDED.
+TECS-FBW-ADMINRBAC remains DESIGN_GATE and is not authorized to open.
 
 ---
 
