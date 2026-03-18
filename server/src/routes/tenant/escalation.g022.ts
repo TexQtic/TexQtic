@@ -249,6 +249,45 @@ const tenantEscalationRoutes: FastifyPluginAsync = async fastify => {
         const result = await withDbContext(prisma, dbContext, async tx => {
           const svc = new EscalationService(tx as unknown as PrismaClient);
 
+          const escalation = await tx.escalationEvent.findUnique({
+            where: { id: escalationEventId },
+            select: {
+              id: true,
+              status: true,
+              severityLevel: true,
+            },
+          });
+
+          // Tenant resolve is intentionally limited to LEVEL_0 / LEVEL_1 only.
+          // RLS ensures cross-org rows are invisible and collapse to not-found.
+          if (!escalation) {
+            return {
+              status: 'ERROR' as const,
+              code: 'ESCALATION_NOT_FOUND',
+              message: `Escalation ${escalationEventId} not found. [G-022-NOT-FOUND]`,
+            };
+          }
+
+          if (escalation.status !== 'OPEN') {
+            return {
+              status: 'ERROR' as const,
+              code: 'ESCALATION_NOT_OPEN',
+              message:
+                `Escalation ${escalationEventId} has status "${escalation.status}". ` +
+                'Only OPEN escalations can be resolved.',
+            };
+          }
+
+          if (escalation.severityLevel > 1) {
+            return {
+              status: 'ERROR' as const,
+              code: 'TENANT_ESCALATION_RESOLVE_LEVEL_FORBIDDEN',
+              message:
+                'Tenant escalation resolve is restricted to LEVEL_0 and LEVEL_1 escalations. ' +
+                `[G-022-TENANT-RESOLVE-LEVEL-FORBIDDEN:${escalation.severityLevel}]`,
+            };
+          }
+
           const resolveResult = await svc.resolveEscalation({
             escalationEventId,
             resolvedByPrincipal: userId,
@@ -281,9 +320,12 @@ const tenantEscalationRoutes: FastifyPluginAsync = async fastify => {
         });
 
         if (result.status !== 'RESOLVED') {
-          const httpCode =
-            result.code === 'ESCALATION_NOT_FOUND' ? 404 :
-            result.code === 'ESCALATION_NOT_OPEN'  ? 409 : 422;
+          let httpCode = 422;
+          if (result.code === 'ESCALATION_NOT_FOUND') {
+            httpCode = 404;
+          } else if (result.code === 'ESCALATION_NOT_OPEN') {
+            httpCode = 409;
+          }
           return sendError(reply, (result as any).code ?? 'ESCALATION_ERROR', (result as any).message, httpCode);
         }
 
