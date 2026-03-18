@@ -49,6 +49,45 @@ function makeTxBoundPrisma(tx: Prisma.TransactionClient): PrismaClient {
   });
 }
 
+type RfqCatalogItemTarget = {
+  id: string;
+  name: string;
+  sku: string | null;
+  active: boolean;
+  supplierOrgId: string;
+};
+
+async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCatalogItemTarget | null> {
+  return prisma.$transaction(async tx => {
+    // Resolve only the referenced catalog item's owner under a tx-local service role.
+    // This bypass is intentionally bounded to RFQ target resolution and does not widen tenant catalog reads.
+    await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
+
+    const catalogItem = await tx.catalogItem.findUnique({
+      where: { id: catalogItemId },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        active: true,
+        tenantId: true,
+      },
+    });
+
+    if (!catalogItem) {
+      return null;
+    }
+
+    return {
+      id: catalogItem.id,
+      name: catalogItem.name,
+      sku: catalogItem.sku,
+      active: catalogItem.active,
+      supplierOrgId: catalogItem.tenantId,
+    };
+  });
+}
+
 const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/me
@@ -1005,36 +1044,27 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
     const { catalogItemId, quantity, buyerMessage } = parseResult.data;
 
+    const catalogItemTarget = await resolveRfqCatalogItemTarget(catalogItemId);
+
+    if (!catalogItemTarget) {
+      return sendNotFound(reply, 'Catalog item not found');
+    }
+
+    if (!catalogItemTarget.active) {
+      return sendError(reply, 'BAD_REQUEST', 'Catalog item is not active', 400);
+    }
+
     const dbContext = request.dbContext;
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
     const result = await withDbContext(prisma, dbContext, async tx => {
-      const catalogItem = await tx.catalogItem.findUnique({
-        where: { id: catalogItemId },
-        select: {
-          id: true,
-          name: true,
-          sku: true,
-          active: true,
-          tenantId: true,
-        },
-      });
-
-      if (!catalogItem) {
-        return { error: 'CATALOG_ITEM_NOT_FOUND' as const };
-      }
-
-      if (!catalogItem.active) {
-        return { error: 'CATALOG_ITEM_INACTIVE' as const };
-      }
-
       const rfq = await tx.rfq.create({
         data: {
           orgId: dbContext.orgId,
-          supplierOrgId: catalogItem.tenantId,
-          catalogItemId: catalogItem.id,
+          supplierOrgId: catalogItemTarget.supplierOrgId,
+          catalogItemId: catalogItemTarget.id,
           quantity,
           buyerMessage: buyerMessage ?? null,
           status: 'OPEN',
@@ -1063,9 +1093,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         entityId: requestId,
         afterJson: {
           requestId,
-          catalogItemId: catalogItem.id,
-          catalogItemName: catalogItem.name,
-          catalogItemSku: catalogItem.sku,
+          catalogItemId: catalogItemTarget.id,
+          catalogItemName: catalogItemTarget.name,
+          catalogItemSku: catalogItemTarget.sku,
           quantity,
           buyerMessage: buyerMessage ?? null,
           status: 'INITIATED',
@@ -1076,7 +1106,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
         metadataJson: {
           requestId,
-          catalogItemId: catalogItem.id,
+          catalogItemId: catalogItemTarget.id,
           quantity,
           submittedAt,
           initiatedBy: 'BUYER',
@@ -1092,16 +1122,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         submittedAt,
       };
     });
-
-    if ('error' in result) {
-      if (result.error === 'CATALOG_ITEM_NOT_FOUND') {
-        return sendNotFound(reply, 'Catalog item not found');
-      }
-
-      if (result.error === 'CATALOG_ITEM_INACTIVE') {
-        return sendError(reply, 'BAD_REQUEST', 'Catalog item is not active', 400);
-      }
-    }
 
     return sendSuccess(reply, {
       requestId: result.requestId,
