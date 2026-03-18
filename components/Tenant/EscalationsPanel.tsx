@@ -71,7 +71,6 @@ const SEVERITY_COLORS: Record<number, string> = {
   4: 'bg-rose-200 text-rose-900',
 };
 
-function SeverityBadge({ level }: { level: number }) {
 function SeverityBadge({ level }: Readonly<{ level: number }>) {
   const classes = SEVERITY_COLORS[level] ?? 'bg-amber-100 text-amber-700';
   return (
