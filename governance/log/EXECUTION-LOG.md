@@ -411,3 +411,119 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, BLOCKED.md, SNAPSHOT.md u
 Notes: No decisions changed. No application code changed. Remaining portfolio: TECS-FBW-006-B
   (OPEN) · TECS-FBW-013 (DEFERRED) · TECS-FBW-ADMINRBAC (DESIGN_GATE).
 Refs: governance/control/ · governance/units/TECS-FBW-006-B-BE-001.md · governance/units/TECS-FBW-006-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### TECS-FBW-006-B — 2026-03-18
+Type: IMPLEMENTATION
+Status: VERIFIED_COMPLETE
+Commit: d6e5e77
+Title: Escalation mutation flows — frontend wiring across tenant and control plane
+Summary: Implemented the approved TECS-FBW-006-B mutation surface in the tenant and control-plane
+  escalation panels plus the corresponding service-layer calls. The implementation surface was
+  limited to EscalationsPanel.tsx, EscalationOversight.tsx, escalationService.ts, and
+  controlPlaneService.ts. Tenant create/resolve, control upgrade/resolve/override, and doctrine
+  constraints were wired without introducing client org identity, freeze controls, or bulk actions.
+Layer Impact: Layer 0 — none (governance close handled separately in GOV-CLOSE-TECS-FBW-006-B);
+  Layer 1 — none (unit record updated in GOV-CLOSE-TECS-FBW-006-B)
+Notes: Tenant create remained limited to severity 0–1 and approved tenant entity types.
+  Tenant upgrade and tenant override remained absent. Control-plane override remained distinct
+  and reason-required.
+Refs: components/Tenant/EscalationsPanel.tsx · components/ControlPlane/EscalationOversight.tsx ·
+  services/escalationService.ts · services/controlPlaneService.ts
+
+---
+
+### TECS-FBW-006-B-UI-DIAGNOSTICS — 2026-03-18
+Type: IMPLEMENTATION / CORRECTIVE
+Status: CLOSED
+Commit: d2e28ff
+Title: Resolve escalation UI diagnostics
+Summary: Corrected the TECS-FBW-006-B UI diagnostics in the tenant and control-plane escalation
+  components without changing approved route targets, mutation semantics, or role-gated behavior.
+  The correction remained limited to EscalationsPanel.tsx and EscalationOversight.tsx.
+Layer Impact: None (corrective implementation evidence only)
+Notes: No backend, governance, schema, migration, or test files changed.
+Refs: components/Tenant/EscalationsPanel.tsx · components/ControlPlane/EscalationOversight.tsx
+
+---
+
+### TECS-FBW-006-B-DUPLICATE-FIX — 2026-03-18
+Type: IMPLEMENTATION / CORRECTIVE
+Status: CLOSED
+Commit: a5151a6
+Title: Remove duplicate SeverityBadge declaration in escalation tenant panel
+Summary: Removed the duplicate SeverityBadge declaration from EscalationsPanel.tsx to eliminate
+  the duplication defect without widening scope beyond the tenant escalation UI surface.
+Layer Impact: None (corrective implementation evidence only)
+Notes: No control-plane, service, governance, schema, migration, or test files changed.
+Refs: components/Tenant/EscalationsPanel.tsx
+
+---
+
+### TECS-FBW-006-B-FIX-003 — 2026-03-18
+Type: IMPLEMENTATION / CORRECTIVE
+Status: CLOSED
+Commit: 0f2d212
+Title: Resolve controlPlaneService escalation diagnostics
+Summary: Flattened the nested template literal URL composition in controlPlaneService.ts to clear
+  the remaining active diagnostics in the allowlisted service file. Route targets, payload shapes,
+  and escalation mutation semantics remained unchanged.
+Layer Impact: None (corrective implementation evidence only)
+Notes: Exactly one allowlisted service file changed.
+Refs: services/controlPlaneService.ts
+
+---
+
+### TECS-FBW-006-B-CONTRACT-ALIGN-001 — 2026-03-18
+Type: IMPLEMENTATION / CONTRACT-ALIGNMENT
+Status: CLOSED
+Commit: a4c7fc9
+Title: Align escalation mutation contracts with backend truth
+Summary: Updated the governed tenant and control-plane OpenAPI surfaces to match the verified
+  backend escalation mutation schemas and response shapes. Frontend service payloads already
+  matched backend truth, so no application code changes were required in this alignment unit.
+Layer Impact: None (contract-alignment evidence only; governance close handled separately)
+Notes: Contract-alignment surface remained limited to openapi.control-plane.json and
+  openapi.tenant.json.
+Refs: shared/contracts/openapi.control-plane.json · shared/contracts/openapi.tenant.json
+
+---
+
+### VERIFY-TECS-FBW-006-B — 2026-03-18
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (read-only verification unit)
+Title: Verify escalation mutation implementation, remediations, and contract alignment
+Summary: Read-only verification of TECS-FBW-006-B across implementation commit d6e5e77,
+  corrective commits d2e28ff · a5151a6 · 0f2d212, and contract-alignment commit a4c7fc9.
+  Confirmed no active diagnostics remained in the four-file implementation surface, no duplicate
+  code defect remained, no contract drift remained between backend truth, frontend services, and
+  governed OpenAPI, tenant create/resolve behavior remained intact, control upgrade/resolve/
+  override behavior remained intact, and no scope drift occurred. Result: PASS. Gap Decision:
+  VERIFIED_COMPLETE.
+Layer Impact: None (read-only unit)
+Notes: Worktree was cleaned before governance close so closure evidence is based on a clean tree.
+  Vocabulary separation preserved: unit status, decision status, and log result vocabulary remain
+  distinct.
+Refs: governance/units/TECS-FBW-006-B.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md
+
+---
+
+### GOV-CLOSE-TECS-FBW-006-B — 2026-03-18
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-FBW-006-B)
+Title: Record verified closure of TECS-FBW-006-B escalation mutation implementation
+Summary: Governance-only close unit. Recorded TECS-FBW-006-B as VERIFIED_COMPLETE based on
+  implementation/corrective/alignment commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9
+  plus VERIFY-TECS-FBW-006-B (PASS, gap decision VERIFIED_COMPLETE). TECS-FBW-006-B transitioned
+  OPEN → VERIFIED_COMPLETE across Layer 0, Layer 1, and Layer 3. NEXT-ACTION.md now records
+  OPERATOR_DECISION_REQUIRED; the remaining non-terminal portfolio is TECS-FBW-013 (DEFERRED)
+  and TECS-FBW-ADMINRBAC (DESIGN_GATE).
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-006-B.md updated (OPEN→VERIFIED_COMPLETE, evidence recorded);
+  Layer 3 — EXECUTION-LOG.md appended (TECS-FBW-006-B close chain + this entry)
+Notes: No decisions changed. No application code changed. No forbidden files touched.
+  Operator must authorize the next action before any further implementation work begins.
+Refs: governance/control/ · governance/units/TECS-FBW-006-B.md · governance/log/EXECUTION-LOG.md

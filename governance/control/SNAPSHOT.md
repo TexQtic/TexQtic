@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOV-CLOSE-TECS-FBW-006-B-BE-001
-last_commit: "d212d0d — fix(api): enforce tenant escalation resolve severity guard for TECS-FBW-006-B-BE-001"
+last_unit_closed: GOV-CLOSE-TECS-FBW-006-B
+last_commit: "feat(governance): close TECS-FBW-006-B after verified escalation mutation implementation"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -30,16 +30,16 @@ layer_4_installed: true
 
 - **TECS-FBW-003-B** — `VERIFIED_COMPLETE` — Escrow mutations + detail view; closed 2026-03-18; commit 4d71e17
 - **TECS-FBW-006-B-BE-001** — `VERIFIED_COMPLETE` — Backend prereq route complete; commits a2d8bfc · d212d0d; verified 2026-03-18
-- **TECS-FBW-006-B** — `OPEN` — Escalation mutations; backend prerequisite resolved; implementation-ready
+- **TECS-FBW-006-B** — `VERIFIED_COMPLETE` — Escalation mutations closed 2026-03-18; commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS
 - **TECS-FBW-013** — `DEFERRED` — B2B Request Quote; product-deferred; UI remains visually disabled
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**1 product unit is currently OPEN** (TECS-FBW-006-B). 0 BLOCKED · 1 DEFERRED · 1 DESIGN_GATE.
+**0 product units are currently OPEN.** 0 BLOCKED · 1 DEFERRED · 1 DESIGN_GATE.
 
 ## Current Next Action
 
-`TECS-FBW-006-B` · Escalation mutations — frontend wiring across tenant and control plane · `OPEN`
-Authorized by PRODUCT-DEC-ESCALATION-MUTATIONS and unblocked by VERIFIED_COMPLETE of TECS-FBW-006-B-BE-001.
+`OPERATOR_DECISION_REQUIRED` · No product unit is OPEN — operator must authorize next action.
+The remaining non-terminal portfolio is TECS-FBW-013 (`DEFERRED`) and TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -98,3 +98,5 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-ESCROW-MUTATIONS (2026-03-18): Layer 2 decision recorded; Layers 0/1 updated. NEXT-ACTION.md now points to TECS-FBW-003-B (OPEN).
 - TECS-FBW-006-B-BE-001 VERIFIED_COMPLETE 2026-03-18: implementation commits a2d8bfc · d212d0d + VERIFY-TECS-FBW-006-B-BE-001 PASS. BLK-006-B-001 resolved.
 - GOV-CLOSE-TECS-FBW-006-B-BE-001 (2026-03-18): TECS-FBW-006-B transitioned BLOCKED → OPEN. NEXT-ACTION.md now points to TECS-FBW-006-B.
+- TECS-FBW-006-B VERIFIED_COMPLETE 2026-03-18: implementation/corrective/alignment commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS; gap decision VERIFIED_COMPLETE.
+- GOV-CLOSE-TECS-FBW-006-B (2026-03-18): TECS-FBW-006-B transitioned OPEN → VERIFIED_COMPLETE. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED.

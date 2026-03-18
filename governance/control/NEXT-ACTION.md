@@ -1,23 +1,22 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-18 (GOV-CLOSE-TECS-FBW-006-B-BE-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-18 (GOV-CLOSE-TECS-FBW-006-B)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: TECS-FBW-006-B
-type: IMPLEMENTATION
-subtype: FRONTEND
-title: Escalation mutations — frontend wiring across tenant and control plane
-prerequisites_met: true
-authorized_by: "PRODUCT-DEC-ESCALATION-MUTATIONS (Paresh, 2026-03-18) + GOV-CLOSE-TECS-FBW-006-B-BE-001"
+unit_id: OPERATOR_DECISION_REQUIRED
+type: GOVERNANCE / SEQUENCING
+title: No product unit is OPEN — operator must authorize next action
+prerequisites_met: false
+authorized_by: GOV-CLOSE-TECS-FBW-006-B
 date_authorized: 2026-03-18
 notes: |
-  PRODUCT-DEC-ESCALATION-MUTATIONS recorded as DECIDED 2026-03-18.
-  TECS-FBW-006-B-BE-001 is VERIFIED_COMPLETE (implementation commits a2d8bfc · d212d0d; verification PASS).
-  BLK-006-B-001 is resolved. TECS-FBW-006-B is now OPEN.
-  Active scope: frontend mutation wiring only.
-  Authorized surfaces: tenant create escalation, tenant resolve own escalation,
-  control-plane upgrade / resolve / override.
-  Tenant upgrade and tenant override remain out of scope.
+  TECS-FBW-006-B is now VERIFIED_COMPLETE (implementation/corrective/alignment commits
+  d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS).
+  No product unit is currently OPEN. Remaining units are DEFERRED or DESIGN_GATE:
+    - TECS-FBW-013: DEFERRED (B2B Request Quote — awaiting product authorization)
+    - TECS-FBW-ADMINRBAC: DESIGN_GATE (requires product + security decision)
+  No implementation work may begin without operator authorization to undefer or
+  ungate one of the above units.
 ```
