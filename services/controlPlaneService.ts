@@ -910,7 +910,8 @@ export async function adminListEscrows(
   if (params?.limit !== undefined) q.set('limit', String(params.limit));
   if (params?.offset !== undefined) q.set('offset', String(params.offset));
   const qs = q.toString();
-  return adminGet<AdminEscrowListResponse>(`/api/control/escrows${qs ? `?${qs}` : ''}`);
+  const url = qs ? `/api/control/escrows?${qs}` : '/api/control/escrows';
+  return adminGet<AdminEscrowListResponse>(url);
 }
 
 // ==================== G-021 MAKER-CHECKER ADMIN READ (PW5-W4) ====================
@@ -980,8 +981,9 @@ export async function adminListApprovals(
   if (params?.status)      q.set('status',      params.status);
   if (params?.entityType)  q.set('entityType',  params.entityType);
   const qs = q.toString();
+  const url = qs ? `/api/control/internal/gov/approvals?${qs}` : '/api/control/internal/gov/approvals';
   return adminGetWithHeaders<AdminApprovalsListResponse>(
-    `/api/control/internal/gov/approvals${qs ? `?${qs}` : ''}`,
+    url,
     MAKER_CHECKER_INTERNAL_HEADER,
   );
 }
@@ -1055,7 +1057,8 @@ export async function listSettlements(
   if (params?.cursor)      q.set('cursor',      params.cursor);
   if (params?.limit !== undefined) q.set('limit', String(params.limit));
   const qs = q.toString();
-  return adminGet<AdminSettlementListResponse>(`/api/control/settlements${qs ? `?${qs}` : ''}`);
+  const url = qs ? `/api/control/settlements?${qs}` : '/api/control/settlements';
+  return adminGet<AdminSettlementListResponse>(url);
 }
 
 // ==================== G-028-C5 CONTROL-PLANE AI INSIGHTS (PW5-G028-C5) ====================
