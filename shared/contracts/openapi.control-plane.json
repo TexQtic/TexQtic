@@ -1936,21 +1936,50 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["severityLevel", "reason"],
+                "required": ["newSeverityLevel", "reason"],
                 "properties": {
-                  "severityLevel": {
+                  "newSeverityLevel": {
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 4
                   },
-                  "reason": { "type": "string" }
+                  "reason": { "type": "string" },
+                  "source": {
+                    "type": "string",
+                    "enum": ["STATE_MACHINE", "APPROVAL", "MANUAL", "SYSTEM"],
+                    "default": "MANUAL"
+                  },
+                  "triggeredByActorType": {
+                    "type": "string",
+                    "enum": ["PLATFORM_ADMIN", "TENANT_ADMIN", "SYSTEM_AUTOMATION", "SERVICE_LAYER"],
+                    "default": "PLATFORM_ADMIN"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Escalation severity upgraded" },
+          "201": {
+            "description": "Escalation severity upgraded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "escalationEventId": { "type": "string", "format": "uuid" },
+                        "createdAt": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
@@ -1980,8 +2009,8 @@
     },
     "/api/control/escalations/{id}/resolve": {
       "post": {
-        "summary": "Resolve an escalation event (SUPER_ADMIN)",
-        "description": "Marks an escalation as RESOLVED. Requires SUPER_ADMIN role. G-022.",
+        "summary": "Resolve or override an escalation event (SUPER_ADMIN)",
+        "description": "Marks an escalation as RESOLVED or OVERRIDDEN. Requires SUPER_ADMIN role. G-022.",
         "parameters": [
           {
             "name": "id",
@@ -1996,8 +2025,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["reason"],
+                "required": ["resolutionStatus", "reason"],
                 "properties": {
+                  "resolutionStatus": {
+                    "type": "string",
+                    "enum": ["RESOLVED", "OVERRIDDEN"]
+                  },
                   "reason": { "type": "string" }
                 }
               }
@@ -2005,7 +2038,33 @@
           }
         },
         "responses": {
-          "200": { "description": "Escalation resolved" },
+          "200": {
+            "description": "Escalation resolved or overridden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "escalationEventId": { "type": "string", "format": "uuid" },
+                        "resolutionStatus": {
+                          "type": "string",
+                          "enum": ["RESOLVED", "OVERRIDDEN"]
+                        },
+                        "action": {
+                          "type": "string",
+                          "enum": ["RESOLVED", "OVERRIDDEN"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
@@ -2016,6 +2075,14 @@
           },
           "403": {
             "description": "Forbidden — SUPER_ADMIN required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error or override severity threshold violation",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

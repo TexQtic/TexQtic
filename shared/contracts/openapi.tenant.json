@@ -1064,7 +1064,7 @@
                   "severityLevel": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 4
+                    "maximum": 1
                   }
                 }
               }
@@ -1072,7 +1072,26 @@
           }
         },
         "responses": {
-          "201": { "description": "Escalation event created" },
+          "201": {
+            "description": "Escalation event created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "escalationEventId": { "type": "string", "format": "uuid" },
+                        "createdAt": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized — invalid or missing tenant JWT",
             "content": {
@@ -1083,6 +1102,92 @@
           },
           "422": {
             "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/escalations/{id}/resolve": {
+      "post": {
+        "summary": "Resolve an escalation event for the authenticated tenant",
+        "description": "Resolves an OPEN escalation event within the authenticated tenant scope. Tenant resolve is limited to LEVEL_0 and LEVEL_1 escalations; override remains control-plane only.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Escalation resolved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "enum": [true] },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "escalationEventId": { "type": "string", "format": "uuid" },
+                        "resolutionStatus": {
+                          "type": "string",
+                          "enum": ["RESOLVED"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing tenant JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Escalation not found in tenant scope",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Escalation not open",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error or tenant severity restriction violation",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
