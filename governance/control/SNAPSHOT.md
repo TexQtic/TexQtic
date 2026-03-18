@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOVERNANCE-SEQUENCE-BUYER-RFQ-READS-001
-last_commit: "feat(governance): sequence first buyer RFQ read unit after PRODUCT-DEC-BUYER-RFQ-READS"
+last_unit_closed: GOVERNANCE-SYNC-TECS-RFQ-READ-001
+last_commit: "feat(governance): close TECS-RFQ-READ-001 after verified buyer RFQ read endpoints"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,7 +28,7 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **TECS-RFQ-READ-001** — `OPEN` — First implementation-ready buyer RFQ read follow-on unit; backend-only, read-only buyer RFQ list + detail API slice authorized 2026-03-18
+- **TECS-RFQ-READ-001** — `VERIFIED_COMPLETE` — Buyer RFQ read unit closed 2026-03-18; implementation commit 49d757d; verification `VERIFY-TECS-RFQ-READ-001: VERIFIED_COMPLETE`
 - **TECS-RFQ-DOMAIN-001** — `VERIFIED_COMPLETE` — Canonical RFQ domain persistence closed 2026-03-18; implementation commit 3c8fc31 + corrective commit db8cc60; verification `VERIFY-TECS-RFQ-DOMAIN-001: VERIFIED_COMPLETE`
 - **TECS-FBW-003-B** — `VERIFIED_COMPLETE` — Escrow mutations + detail view; closed 2026-03-18; commit 4d71e17
 - **TECS-FBW-006-B-BE-001** — `VERIFIED_COMPLETE` — Backend prereq route complete; commits a2d8bfc · d212d0d; verified 2026-03-18
@@ -37,11 +37,11 @@ layer_4_installed: true
 - **TECS-FBW-013** — `VERIFIED_COMPLETE` — Buyer RFQ activation closed 2026-03-18; commits 060cac7 · 7f59a62; VERIFY-TECS-FBW-013 VERIFIED_COMPLETE
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 ## Current Next Action
 
-`TECS-RFQ-READ-001` · Introduce the first buyer RFQ read API slice.
+`OPERATOR_DECISION_REQUIRED` · No implementation-ready unit remains OPEN.
 Remaining non-terminal portfolio also includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
 See `NEXT-ACTION.md`.
 
@@ -113,3 +113,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-TECS-RFQ-DOMAIN-001 (2026-03-18): TECS-RFQ-DOMAIN-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 3c8fc31, corrective commit db8cc60, and `VERIFY-TECS-RFQ-DOMAIN-001: VERIFIED_COMPLETE`. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because TECS-FBW-ADMINRBAC remains DESIGN_GATE and no implementation unit is OPEN.
 - GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS (2026-03-18): PRODUCT-DEC-BUYER-RFQ-READS recorded as DECIDED in Layer 2. Authorized buyer-side RFQ reads are now a narrow read-only tenant-plane scope covering list + detail together with basic status filtering, recency sorting, and minimal search. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED pending a separate sequencing unit.
 - GOVERNANCE-SEQUENCE-BUYER-RFQ-READS-001 (2026-03-18): TECS-RFQ-READ-001 opened as the single implementation-ready buyer RFQ read follow-on unit after PRODUCT-DEC-BUYER-RFQ-READS was recorded as DECIDED. NEXT-ACTION.md now points to backend-only, read-only buyer RFQ list + detail APIs. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+- GOVERNANCE-SYNC-TECS-RFQ-READ-001 (2026-03-18): TECS-RFQ-READ-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 49d757d and verification `VERIFY-TECS-RFQ-READ-001: VERIFIED_COMPLETE`. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because no implementation-ready unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.

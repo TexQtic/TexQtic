@@ -3,10 +3,14 @@ unit_id: TECS-RFQ-READ-001
 title: Buyer RFQ Reads — tenant list + detail API slice
 type: IMPLEMENTATION
 subtype: BACKEND
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: BACKEND
 opened: 2026-03-18
+closed: 2026-03-18
+verified: 2026-03-18
+commit: "49d757d"
+evidence: "VERIFY-TECS-RFQ-READ-001: VERIFIED_COMPLETE"
 doctrine_constraints:
   - D-001: RLS remains mandatory on tenant-scoped RFQ reads
   - D-004: this unit is backend read-only only; no frontend work may be mixed in
@@ -32,16 +36,16 @@ coupling belongs here.
 
 ## Acceptance Criteria
 
-- [ ] Buyer RFQ list API exists on the tenant plane
-- [ ] Buyer RFQ detail API exists on the tenant plane
-- [ ] Reads are limited to RFQs where `org_id = current tenant`
-- [ ] List and detail are read-only; no mutation semantics introduced
-- [ ] Field projection remains aligned to PRODUCT-DEC-BUYER-RFQ-READS
-- [ ] Buyer-visible statuses remain limited to `INITIATED`, `OPEN`, `RESPONDED`, `CLOSED`
-- [ ] Basic status filtering is implemented only if required by the final route contract
-- [ ] Recency sorting is implemented only if required by the final route contract
-- [ ] Basic RFQ id / item name / item sku search is implemented only if required by the final route contract
-- [ ] No supplier inbox reads, supplier response actions, negotiation threads, quote pricing,
+- [x] Buyer RFQ list API exists on the tenant plane
+- [x] Buyer RFQ detail API exists on the tenant plane
+- [x] Reads are limited to RFQs where `org_id = current tenant`
+- [x] List and detail are read-only; no mutation semantics introduced
+- [x] Field projection remains aligned to PRODUCT-DEC-BUYER-RFQ-READS
+- [x] Buyer-visible statuses remain limited to `INITIATED`, `OPEN`, `RESPONDED`, `CLOSED`
+- [x] Basic status filtering is implemented only if required by the final route contract
+- [x] Recency sorting is implemented only if required by the final route contract
+- [x] Basic RFQ id / item name / item sku search is implemented only if required by the final route contract
+- [x] No supplier inbox reads, supplier response actions, negotiation threads, quote pricing,
       order conversion, checkout, settlement, control-plane reads, AI automation, or Trade coupling introduced
 
 ## Files Allowlisted (Modify)
@@ -62,10 +66,34 @@ coupling belongs here.
 - `governance/units/TECS-FBW-013.md`
 - `governance/units/TECS-FBW-013-BE-001.md`
 
+## Evidence Record
+
+- Implementation commit: `49d757d` — `feat(rfq): add buyer RFQ read endpoints for TECS-RFQ-READ-001`
+- Verification result: `VERIFY-TECS-RFQ-READ-001` — `VERIFIED_COMPLETE`
+- Verified characteristics:
+  - GET `/api/tenant/rfqs` exists in the tenant-plane backend route module
+  - GET `/api/tenant/rfqs/:id` exists in the tenant-plane backend route module
+  - both routes use `tenantAuthMiddleware` + `databaseContextMiddleware`
+  - both routes execute via `withDbContext` with DB-level RLS active
+  - buyer ownership is enforced by `orgId = dbContext.orgId`
+  - no client-supplied `org_id`, `tenantId`, or authority fields are accepted or trusted
+  - status filter is limited to `INITIATED | OPEN | RESPONDED | CLOSED`
+  - recency sort is limited to `updated_at_desc | created_at_desc`
+  - `q` search is limited to RFQ id, item name, and item sku
+  - list query is bounded with fixed `take: 50`; no pagination or broader query surface introduced
+  - list/detail projections match PRODUCT-DEC-BUYER-RFQ-READS exactly using stable snake_case fields
+  - detail returns only a buyer-owned RFQ row or not-found
+  - no unrelated supplier-side data leakage or Trade coupling introduced
+
+## Governance Closure
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-RFQ-READ-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+
 ## Allowed Next Step
 
-Implement TECS-RFQ-READ-001 as the single authorized buyer RFQ read follow-on unit.
-Work must remain backend-only and read-only, and must stop at tenant-plane buyer RFQ list + detail APIs.
+This unit is **VERIFIED_COMPLETE**. No further implementation work is authorized on this unit.
 
 ## Forbidden Next Step
 
@@ -95,4 +123,4 @@ Work must remain backend-only and read-only, and must stop at tenant-plane buyer
 
 ## Last Governance Confirmation
 
-2026-03-18 — GOVERNANCE-SEQUENCE-BUYER-RFQ-READS-001. Status: `OPEN`.
+2026-03-18 — GOVERNANCE-SYNC-TECS-RFQ-READ-001. Status transitioned: `OPEN` → `VERIFIED_COMPLETE`.

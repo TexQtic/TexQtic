@@ -192,6 +192,24 @@ Refs: governance/archive/ (README.md · ARCHIVED-gap-register-2026-03.md ·
 
 ---
 
+### GOVERNANCE-SYNC-TECS-RFQ-READ-001 — 2026-03-18
+Type: GOVERNANCE / SYNC
+Status: CLOSED
+Commit: N/A (recorded in the same atomic governance commit)
+Title: Close TECS-RFQ-READ-001 after verified buyer RFQ read endpoints
+Summary: Recorded TECS-RFQ-READ-001 as VERIFIED_COMPLETE after implementation commit
+  49d757d and verification evidence `VERIFY-TECS-RFQ-READ-001: VERIFIED_COMPLETE`.
+  Layer 0 and Layer 1 were reconciled so no implementation-ready unit remains OPEN.
+  NEXT-ACTION returned to OPERATOR_DECISION_REQUIRED while TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — TECS-RFQ-READ-001.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: PRODUCT-DEC-RFQ-DOMAIN-MODEL and PRODUCT-DEC-BUYER-RFQ-READS remain DECIDED.
+  No governance action in this unit reopens TECS-RFQ-DOMAIN-001 or forces open TECS-FBW-ADMINRBAC.
+Refs: governance/units/TECS-RFQ-READ-001.md · governance/control/OPEN-SET.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md
+
+---
+
 ### TECS-FBW-002-B-BE-ROUTE-001 — 2026-03-17
 Type: IMPLEMENTATION
 Status: VERIFIED_COMPLETE
