@@ -59,7 +59,7 @@ type RfqCatalogItemTarget = {
 
 const rfqReadStatusSchema = z.enum(['INITIATED', 'OPEN', 'RESPONDED', 'CLOSED']);
 
-const buyerRfqListQuerySchema = z.object({
+const rfqListQuerySchema = z.object({
   status: rfqReadStatusSchema.optional(),
   sort: z.enum(['updated_at_desc', 'created_at_desc']).optional().default('updated_at_desc'),
   q: z.string().trim().min(1).max(200).optional(),
@@ -84,6 +84,23 @@ type BuyerRfqDetailRow = BuyerRfqListRow & {
   createdByUserId: string | null;
 };
 
+type SupplierRfqListRow = {
+  id: string;
+  status: 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
+  catalogItemId: string;
+  quantity: number;
+  createdAt: Date;
+  updatedAt: Date;
+  catalogItem: {
+    name: string;
+    sku: string | null;
+  };
+};
+
+type SupplierRfqDetailRow = SupplierRfqListRow & {
+  buyerMessage: string | null;
+};
+
 function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
   return {
     id: rfq.id,
@@ -103,6 +120,26 @@ function mapBuyerRfqDetail(rfq: BuyerRfqDetailRow) {
     ...mapBuyerRfqListItem(rfq),
     buyer_message: rfq.buyerMessage,
     created_by_user_id: rfq.createdByUserId,
+  };
+}
+
+function mapSupplierRfqListItem(rfq: SupplierRfqListRow) {
+  return {
+    id: rfq.id,
+    status: rfq.status,
+    catalog_item_id: rfq.catalogItemId,
+    item_name: rfq.catalogItem.name,
+    item_sku: rfq.catalogItem.sku,
+    quantity: rfq.quantity,
+    created_at: rfq.createdAt,
+    updated_at: rfq.updatedAt,
+  };
+}
+
+function mapSupplierRfqDetail(rfq: SupplierRfqDetailRow) {
+  return {
+    ...mapSupplierRfqListItem(rfq),
+    buyer_message: rfq.buyerMessage,
   };
 }
 
@@ -1082,7 +1119,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
-    const queryResult = buyerRfqListQuerySchema.safeParse(request.query);
+    const queryResult = rfqListQuerySchema.safeParse(request.query);
     if (!queryResult.success) {
       return sendValidationError(reply, queryResult.error.errors);
     }
@@ -1129,6 +1166,111 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     });
 
     return sendSuccess(reply, { rfqs: rfqs.map(mapBuyerRfqListItem), count: rfqs.length });
+  });
+
+  /**
+   * GET /api/tenant/rfqs/inbox
+   * List supplier-addressed RFQs for the authenticated tenant with minimal inbox projection.
+   */
+  fastify.get('/tenant/rfqs/inbox', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const queryResult = rfqListQuerySchema.safeParse(request.query);
+    if (!queryResult.success) {
+      return sendValidationError(reply, queryResult.error.errors);
+    }
+
+    const { q, sort, status } = queryResult.data;
+    const searchTerm = q?.trim();
+    const idSearchResult = searchTerm ? z.string().uuid().safeParse(searchTerm) : null;
+
+    const rfqs = await withDbContext(prisma, dbContext, async tx => {
+      return tx.rfq.findMany({
+        where: {
+          supplierOrgId: dbContext.orgId,
+          ...(status ? { status } : {}),
+          ...(searchTerm
+            ? {
+                OR: [
+                  ...(idSearchResult?.success ? [{ id: searchTerm }] : []),
+                  { catalogItem: { name: { contains: searchTerm, mode: 'insensitive' } } },
+                  { catalogItem: { sku: { contains: searchTerm, mode: 'insensitive' } } },
+                ],
+              }
+            : {}),
+        },
+        select: {
+          id: true,
+          status: true,
+          catalogItemId: true,
+          quantity: true,
+          createdAt: true,
+          updatedAt: true,
+          catalogItem: {
+            select: {
+              name: true,
+              sku: true,
+            },
+          },
+        },
+        orderBy: sort === 'created_at_desc'
+          ? [{ createdAt: 'desc' }, { id: 'desc' }]
+          : [{ updatedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+        take: 50,
+      });
+    });
+
+    return sendSuccess(reply, { rfqs: rfqs.map(mapSupplierRfqListItem), count: rfqs.length });
+  });
+
+  /**
+   * GET /api/tenant/rfqs/inbox/:id
+   * Read a single supplier-addressed RFQ for the authenticated tenant with minimal detail projection.
+   */
+  fastify.get('/tenant/rfqs/inbox/:id', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const rfq = await withDbContext(prisma, dbContext, async tx => {
+      return tx.rfq.findFirst({
+        where: {
+          id: paramsResult.data.id,
+          supplierOrgId: dbContext.orgId,
+        },
+        select: {
+          id: true,
+          status: true,
+          catalogItemId: true,
+          quantity: true,
+          buyerMessage: true,
+          createdAt: true,
+          updatedAt: true,
+          catalogItem: {
+            select: {
+              name: true,
+              sku: true,
+            },
+          },
+        },
+      });
+    });
+
+    if (!rfq) {
+      return sendNotFound(reply, 'RFQ not found');
+    }
+
+    return sendSuccess(reply, { rfq: mapSupplierRfqDetail(rfq) });
   });
 
   /**
