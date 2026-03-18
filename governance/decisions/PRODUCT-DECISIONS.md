@@ -2,7 +2,7 @@
 
 **Layer:** 2 — Decision Ledger
 **Authority:** GOV-OS-001-DESIGN.md (Section 3.4)
-**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-ESCROW-MUTATIONS)
+**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-ESCALATION-MUTATIONS)
 
 > This file owns all product scope decisions that gate governed units.
 > A DEFERRED unit MUST NOT be treated as implementation-ready due to the existence of
@@ -63,26 +63,68 @@ Impact: TECS-FBW-003-B transitions DEFERRED → OPEN. Implementation may now pro
 
 ### PRODUCT-DEC-ESCALATION-MUTATIONS
 
-Date: null — decision not yet made
-Authorized by: null — pending operator decision (Paresh)
-Summary: Product must decide whether escalation mutation actions (upgrade, resolve, override)
-  are in scope. The read-only EscalationsPanel.tsx + EscalationOversight.tsx (006-A) are
-  VERIFIED_COMPLETE and do not authorize write operations.
-Impact: Unblocks TECS-FBW-006-B when DECIDED/approved. Unit remains DEFERRED until then.
-Status: OPEN
+Date: 2026-03-18
+Authorized by: Paresh
+Status: DECIDED
+Summary: TECS-FBW-006-B is product-authorized for limited, role-differentiated escalation
+  mutation scope.
+
+  Authorized target scope:
+
+  Tenant plane:
+    - create root escalation via POST /api/tenant/escalations
+        - severity levels 0-1 only
+        - entity types limited to TRADE | ESCROW | APPROVAL | LIFECYCLE_LOG
+        - tenant-scoped only (org_id derived from JWT; D-011 mandatory)
+        - two-phase confirmation required
+    - tenant resolution of own escalation is authorized as a product target,
+      but may not be implemented unless the required tenant-plane backend route
+      is first established through governance-approved sequencing
+
+  Control plane:
+    - upgrade severity
+    - resolve
+    - override
+    - restricted to platform roles per control-plane posture
+    - override remains explicitly audited and reason-required (D-002)
+
+  Excluded:
+    - freezeRecommendation as an actionable control (D-022-C: forever informational-only)
+    - kill-switch / freeze toggle
+    - tenant upgrade
+    - tenant override
+    - tenant LEVEL 2-4 escalation creation
+    - tenant ORG / GLOBAL entity types
+    - bulk / batch / cross-org actions
+
+  Constitutional constraints remain mandatory and unchanged:
+    - D-017-A: tenantId derived from JWT only; never from request body
+    - D-011: org_id is the canonical tenancy boundary; cannot be weakened
+    - D-022-A, D-022-B, D-022-C, D-022-D: escalation doctrine invariants
+    - D-002: control-plane override actions must be explicit and audited
+
+  Sequencing note:
+    This decision authorizes the product scope only.
+    Governance must next determine whether TECS-FBW-006-B can open with an
+    existing-route-first slice, or whether a backend prerequisite sub-unit must
+    be installed before implementation opens. TECS-FBW-006-B status is NOT changed
+    by this decision record alone — a subsequent governance sequencing unit must
+    make that determination explicitly.
+
+Impact: Product scope authorized. TECS-FBW-006-B remains DEFERRED until a governance
+  sequencing unit determines the correct next step (narrowed first slice vs. backend
+  prerequisite sub-unit installation).
 
 **Required For:** TECS-FBW-006-B — Escalation Mutations (upgrade / resolve / override) (BOTH planes)
-**Current Known Posture:** Not made. Escalation mutations are explicitly future scope.
-  D-022-C: `freezeRecommendation` is informational-only in current implementation. 006-A
-  read-only views are complete; they do not constitute authorization for any mutation path.
-**Does Not Authorize:** This placeholder entry does not authorize any escalation mutation
-  (upgrade, resolve, override), control-plane override logic, or tenant-plane escalation
-  write path. TECS-FBW-006-B remains DEFERRED regardless of this entry's existence.
-**Next Required Step:** Operator (Paresh) formally records a product decision here with
-  `Status: DECIDED`, then a governance unit must transition TECS-FBW-006-B from
-  DEFERRED → OPEN in its unit record and in `governance/control/OPEN-SET.md`.
-**Last Governance Confirmation:** 2026-03-17 — GOV-OS-005 decision ledger bootstrap.
-  Status: OPEN (unresolved).
+**Authorizes:** Limited, role-differentiated escalation mutation scope as defined above.
+  Tenant create (severity 0-1, restricted entity types) and control-plane upgrade / resolve /
+  override are the authorized surfaces. Tenant resolve is authorized as a product target
+  only — sequencing-dependent on backend route availability.
+**Does Not Authorize:** This decision does not directly open TECS-FBW-006-B. A governance
+  sequencing unit must follow to determine whether the unit opens with a narrowed
+  existing-route-first slice, or whether a backend prerequisite sub-unit is required first.
+**Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-ESCALATION-MUTATIONS.
+  Status: DECIDED.
 
 ---
 
