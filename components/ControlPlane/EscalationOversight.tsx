@@ -54,7 +54,7 @@ const SEVERITY_COLORS: Record<number, string> = {
   4: 'bg-rose-700 text-white',
 };
 
-function SeverityBadge({ level }: { level: number }) {
+function SeverityBadge({ level }: Readonly<{ level: number }>) {
   const classes = SEVERITY_COLORS[level] ?? 'bg-amber-900/50 text-amber-300';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${classes}`}>
@@ -71,7 +71,7 @@ const STATUS_COLORS: Record<string, string> = {
   OVERRIDDEN: 'bg-slate-700 text-slate-400',
 };
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: Readonly<{ status: string }>) {
   const classes = STATUS_COLORS[status] ?? 'bg-amber-900/50 text-amber-300';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${classes}`}>
@@ -98,7 +98,7 @@ function formatDate(iso: string): string {
 
 type FetchState = 'IDLE' | 'LOADING' | 'ERROR' | 'DONE';
 
-function Banner({ tone, message }: BannerState) {
+function Banner({ tone, message }: Readonly<BannerState>) {
   const classes =
     tone === 'SUCCESS'
       ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
@@ -229,24 +229,22 @@ export const EscalationOversight: React.FC = () => {
 
     const escalationLabel = truncateId(actionDialog.escalation.id);
     const isOverride = actionDialog.kind === 'OVERRIDE';
-    const title =
-      actionDialog.kind === 'UPGRADE'
-        ? 'Confirm Escalation Upgrade'
-        : isOverride
-          ? 'Confirm Override Action'
-          : 'Confirm Resolve Action';
-    const actionButtonClass =
-      actionDialog.kind === 'UPGRADE'
-        ? 'bg-amber-600 hover:bg-amber-700'
-        : isOverride
-          ? 'bg-rose-600 hover:bg-rose-700'
-          : 'bg-emerald-600 hover:bg-emerald-700';
-    const actionButtonLabel =
-      actionDialog.kind === 'UPGRADE'
-        ? 'Confirm Upgrade'
-        : isOverride
-          ? 'Confirm Override'
-          : 'Confirm Resolve';
+    let title = 'Confirm Resolve Action';
+    let actionButtonClass = 'bg-emerald-600 hover:bg-emerald-700';
+    let actionButtonLabel = 'Confirm Resolve';
+    let actionDescription = ' will be resolved.';
+
+    if (actionDialog.kind === 'UPGRADE') {
+      title = 'Confirm Escalation Upgrade';
+      actionButtonClass = 'bg-amber-600 hover:bg-amber-700';
+      actionButtonLabel = 'Confirm Upgrade';
+      actionDescription = ' will be upgraded to a higher severity.';
+    } else if (isOverride) {
+      title = 'Confirm Override Action';
+      actionButtonClass = 'bg-rose-600 hover:bg-rose-700';
+      actionButtonLabel = 'Confirm Override';
+      actionDescription = ' will be marked as Override.';
+    }
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4">
@@ -254,7 +252,7 @@ export const EscalationOversight: React.FC = () => {
           <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
           <p className="mt-1 text-sm text-slate-400">
             Escalation <span className="font-mono text-xs text-slate-300">{escalationLabel}</span>
-            {isOverride ? ' will be marked as Override.' : actionDialog.kind === 'RESOLVE' ? ' will be resolved.' : ' will be upgraded to a higher severity.'}
+            {actionDescription}
           </p>
 
           <div className="mt-4 rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-sm text-slate-300 space-y-2">
@@ -272,7 +270,7 @@ export const EscalationOversight: React.FC = () => {
                   value={actionDialog.newSeverityLevel}
                   onChange={event => {
                     setActionError(null);
-                    setActionDialog(prev => prev && prev.kind === 'UPGRADE'
+                    setActionDialog(prev => prev?.kind === 'UPGRADE'
                       ? { ...prev, newSeverityLevel: Number(event.target.value) as 1 | 2 | 3 | 4 }
                       : prev);
                   }}
@@ -408,7 +406,7 @@ export const EscalationOversight: React.FC = () => {
           <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
             <div>
               <span className="text-sm font-semibold text-slate-200">
-                {count} escalation{count !== 1 ? 's' : ''}
+                {count} escalation{count === 1 ? '' : 's'}
               </span>
               <span className="ml-2 text-xs text-slate-500 font-mono">org: {truncateId(orgId)}</span>
             </div>

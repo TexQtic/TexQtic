@@ -72,6 +72,7 @@ const SEVERITY_COLORS: Record<number, string> = {
 };
 
 function SeverityBadge({ level }: { level: number }) {
+function SeverityBadge({ level }: Readonly<{ level: number }>) {
   const classes = SEVERITY_COLORS[level] ?? 'bg-amber-100 text-amber-700';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${classes}`}>
@@ -88,7 +89,7 @@ const STATUS_COLORS: Record<string, string> = {
   OVERRIDDEN: 'bg-slate-100 text-slate-600',
 };
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: Readonly<{ status: string }>) {
   const classes = STATUS_COLORS[status] ?? 'bg-amber-100 text-amber-700';
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide ${classes}`}>
@@ -141,7 +142,7 @@ function validateCreateDraft(draft: CreateDraft): string | null {
   return null;
 }
 
-function Banner({ tone, message }: BannerState) {
+function Banner({ tone, message }: Readonly<BannerState>) {
   const classes =
     tone === 'SUCCESS'
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -152,7 +153,7 @@ function Banner({ tone, message }: BannerState) {
 
 // ─── EscalationsPanel ────────────────────────────────────────────────────────
 
-export function EscalationsPanel({ onBack }: Props) {
+export function EscalationsPanel({ onBack }: Readonly<Props>) {
   const [escalations, setEscalations] = useState<EscalationEvent[]>([]);
   const [count, setCount]             = useState(0);
   const [loading, setLoading]         = useState(true);
@@ -404,7 +405,7 @@ export function EscalationsPanel({ onBack }: Props) {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <p className="text-sm text-slate-500">
-                  {count} escalation{count !== 1 ? 's' : ''} found
+                  {count} escalation{count === 1 ? '' : 's'} found
                 </p>
               </div>
               <div className="overflow-x-auto">
