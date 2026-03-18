@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-18 (GOV-SEQUENCE-TECS-FBW-006-B)  
+**Last Updated:** 2026-03-18 (GOV-CLOSE-TECS-FBW-006-B-BE-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,8 +13,7 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-FBW-006-B-BE-001 | Backend Prereq — Tenant Resolve Own Escalation Route | OPEN | W3-residual | 2026-03-18 |
-| TECS-FBW-006-B | Escalation mutations (upgrade / resolve / override) | BLOCKED | W3-residual | 2026-03-18 |
+| TECS-FBW-006-B | Escalation mutations (upgrade / resolve / override) | OPEN | W3-residual | 2026-03-18 |
 | TECS-FBW-013 | B2B Request Quote — product decision + backend | DEFERRED | W5 | 2026-03-17 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
@@ -22,14 +21,14 @@
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1** (TECS-FBW-006-B-BE-001)
-- **BLOCKED**: 1 (TECS-FBW-006-B — pending TECS-FBW-006-B-BE-001)
+- **OPEN** (implementation-ready): **1** (TECS-FBW-006-B)
+- **BLOCKED**: 0
 - **DEFERRED**: 1 (TECS-FBW-013)
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 4**
+- **Total non-terminal units: 3**
 
-TECS-FBW-006-B-BE-001 installed 2026-03-18: backend prereq for TECS-FBW-006-B; sequenced as Path 2 by GOV-SEQUENCE-TECS-FBW-006-B.
-TECS-FBW-006-B transitioned DEFERRED → BLOCKED 2026-03-18: blocker BLK-006-B-001 (missing tenant resolve route).
+TECS-FBW-006-B-BE-001 reached VERIFIED_COMPLETE 2026-03-18: implementation commits a2d8bfc · d212d0d + VERIFY-TECS-FBW-006-B-BE-001 PASS.
+TECS-FBW-006-B transitioned BLOCKED → OPEN 2026-03-18: BLK-006-B-001 resolved by GOV-CLOSE-TECS-FBW-006-B-BE-001.
 TECS-FBW-003-B closed 2026-03-18: implementation commit 4d71e17 + VERIFY-TECS-FBW-003-B VERIFIED_COMPLETE. GOV-CLOSE-TECS-FBW-003-B.
 TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
 
@@ -39,6 +38,7 @@ TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIF
 
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
+| TECS-FBW-006-B-BE-001 | VERIFIED_COMPLETE | 2026-03-18 | a2d8bfc · d212d0d |
 | TECS-FBW-003-B | VERIFIED_COMPLETE | 2026-03-18 | 4d71e17 |
 | TECS-FBW-002-B | CLOSED | 2026-03-17 | b647092 (frontend) · 5ffd727 (backend) |
 | GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION | CLOSED | 2026-03-17 | see git log |

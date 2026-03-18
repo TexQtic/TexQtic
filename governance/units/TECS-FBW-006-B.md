@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-006-B
 title: Escalation Mutations — upgrade / resolve / override
 type: IMPLEMENTATION
-status: BLOCKED
+status: OPEN
 wave: W3-residual
 plane: BOTH
-opened: null
+opened: 2026-03-18
 closed: null
 verified: null
 commit: null
-evidence: null
+evidence: "BLK-006-B-001 resolved by TECS-FBW-006-B-BE-001 (a2d8bfc · d212d0d) · VERIFY-TECS-FBW-006-B-BE-001 PASS"
 doctrine_constraints:
   - D-011: org_id must scope all escalation mutations; no cross-tenant write permitted
   - D-001: RLS must enforce tenant isolation on escalation write path
@@ -20,10 +20,12 @@ decisions_required:
 blockers:
   - id: BLK-006-B-001
     type: MISSING_BACKEND_ROUTE
-    description: POST /api/tenant/escalations/:id/resolve does not exist; required for tenant resolve product target
+    description: POST /api/tenant/escalations/:id/resolve did not exist; required for tenant resolve product target
     prerequisite_unit: TECS-FBW-006-B-BE-001
     registered: 2026-03-18
-    status: OPEN
+    resolved: 2026-03-18
+    status: RESOLVED
+    resolution_evidence: "a2d8bfc · d212d0d · VERIFY-TECS-FBW-006-B-BE-001 PASS"
 ---
 
 ## Unit Summary
@@ -31,15 +33,16 @@ blockers:
 TECS-FBW-006-B covers escalation mutation operations: upgrade, resolve, and override actions
 in both the tenant panel and the control-plane oversight view. The parent unit TECS-FBW-006-A
 (read-only EscalationsPanel.tsx + EscalationOversight.tsx) is already VERIFIED_COMPLETE.
-This B-slice is intentionally deferred to future scope. It must not be implemented until
-explicit product authorization is granted.
+This B-slice is now OPEN following verified completion of the backend prerequisite unit
+TECS-FBW-006-B-BE-001 and resolution of BLK-006-B-001. Product authorization is already
+in place via PRODUCT-DEC-ESCALATION-MUTATIONS (DECIDED 2026-03-18).
 
 ## Acceptance Criteria
 
-*Not yet active — unit is DEFERRED. Acceptance criteria will be defined when product authorizes.*
+*Active — unit is OPEN. Acceptance criteria below are implementation requirements.*
 
-Expected future criteria (illustrative only; do not treat as active work):
-- [ ] Escalation mutation endpoints designed and implemented (server-side)
+- [x] Escalation mutation endpoints designed and implemented (server-side)
+  (`a2d8bfc` + `d212d0d`; VERIFY-TECS-FBW-006-B-BE-001 PASS)
 - [ ] Tenant-plane: escalation upgrade and resolve actions in EscalationsPanel.tsx
 - [ ] Control-plane: escalation override action in EscalationOversight.tsx
 - [ ] `freezeRecommendation` remains informational-only per D-022-C doctrine
@@ -49,7 +52,7 @@ Expected future criteria (illustrative only; do not treat as active work):
 - [ ] Lint passes (EXIT 0)
 
 ## Files Allowlisted (Modify)
-*Not yet defined — pending product authorization.*
+*To be defined by the TECS-FBW-006-B implementation prompt.*
 
 ## Files Read-Only
 - `governance/control/DOCTRINE.md`
@@ -58,33 +61,36 @@ Expected future criteria (illustrative only; do not treat as active work):
 - `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` (historical reference)
 
 ## Evidence Record
-*Not yet recorded — unit is DEFERRED.*
+
+- Backend prerequisite resolved by `TECS-FBW-006-B-BE-001`
+- Implementation commits: `a2d8bfc` · `d212d0d`
+- Verification result: `VERIFY-TECS-FBW-006-B-BE-001` — `PASS`
+- Gap Decision: `VERIFIED_COMPLETE`
+- BLK-006-B-001 resolved on 2026-03-18
 
 ## Governance Closure
-*Not yet set — unit is DEFERRED and not implementation-ready.*
+
+- Blocker-resolution governance unit: `GOV-CLOSE-TECS-FBW-006-B-BE-001`
+- Status transition: `BLOCKED` → `OPEN`
+- Parent unit is implementation-ready; not yet verified or closed
 
 ---
 
 ## Allowed Next Step
 
-This unit is **BLOCKED** pending `TECS-FBW-006-B-BE-001` (OPEN).
+This unit is **OPEN**.
 
-The only allowed next step is for `TECS-FBW-006-B-BE-001` to reach `VERIFIED_COMPLETE`.
-After that, a governance closure unit must transition this unit from BLOCKED → OPEN and
-update Layer 0 accordingly. Implementation may not begin until that transition is recorded.
-
-Product authorization is already in place: PRODUCT-DEC-ESCALATION-MUTATIONS (DECIDED, 2026-03-18).
-The authorized scope when this unit opens:
+The allowed next step is implementation of the authorized frontend mutation wiring for:
   - Tenant plane: create escalation (POST /api/tenant/escalations, severity 0-1 only)
   - Tenant plane: resolve own escalation (POST /api/tenant/escalations/:id/resolve)
   - Control plane: upgrade severity, resolve, override (all routes exist; frontend wiring only)
 
+Implementation may now proceed under `governance/control/NEXT-ACTION.md`.
+
 ## Forbidden Next Step
 
-- Do **not** begin any frontend mutation wiring until TECS-FBW-006-B-BE-001 is VERIFIED_COMPLETE
 - Do **not** add mutation controls to EscalationsPanel.tsx or EscalationOversight.tsx
 - Do **not** treat TECS-FBW-006-A (read-only views, VERIFIED_COMPLETE) as implementation authorization
-- Do **not** promote this unit to OPEN or IN_PROGRESS without BLK-006-B-001 resolved
 - Do **not** implement `freezeRecommendation` as an actionable control — it is informational-only (D-022-C)
 
 ## Drift Guards
@@ -100,10 +106,10 @@ The authorized scope when this unit opens:
 
 | Question | Answer lives in |
 |---|---|
-| Is this unit open? | `governance/control/OPEN-SET.md` (listed as DEFERRED) |
-| Why is it deferred? | `governance/control/BLOCKED.md` — Section 2 |
+| Is this unit open? | `governance/control/OPEN-SET.md` (listed as OPEN) |
+| What was the blocker? | `governance/control/BLOCKED.md` — BLK-006-B-001 resolved 2026-03-18 |
 | What doctrine applies? | `governance/control/DOCTRINE.md` (D-010) |
-| When can it open? | After TECS-FBW-006-B-BE-001 reaches VERIFIED_COMPLETE and a governance closure unit transitions BLOCKED → OPEN |
+| When can implementation begin? | Immediately — this unit is OPEN via GOV-CLOSE-TECS-FBW-006-B-BE-001 |
 | What authorized it? | `governance/decisions/PRODUCT-DECISIONS.md` — PRODUCT-DEC-ESCALATION-MUTATIONS (DECIDED 2026-03-18) |
 | Historical context | `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` line ~103 |
 
@@ -111,4 +117,4 @@ The authorized scope when this unit opens:
 
 ## Last Governance Confirmation
 
-2026-03-17 — GOV-OS-003 Unit Record Migration Batch 1. Status confirmed: DEFERRED.
+2026-03-18 — GOV-CLOSE-TECS-FBW-006-B-BE-001. Status transitioned: BLOCKED → OPEN.

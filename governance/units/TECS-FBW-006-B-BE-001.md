@@ -3,14 +3,14 @@ unit_id: TECS-FBW-006-B-BE-001
 title: Backend Prerequisite — Tenant Resolve Own Escalation Route
 type: IMPLEMENTATION
 subtype: BACKEND
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W3-residual
 plane: BACKEND
 opened: 2026-03-18
-closed: null
-verified: null
-commit: null
-evidence: null
+closed: 2026-03-18
+verified: 2026-03-18
+commit: "a2d8bfc · d212d0d"
+evidence: "VERIFY-TECS-FBW-006-B-BE-001: PASS · VERIFIED_COMPLETE · GOV-CLOSE-TECS-FBW-006-B-BE-001"
 prerequisite_for: TECS-FBW-006-B
 doctrine_constraints:
   - D-011: org_id must scope the resolve path; tenant can only resolve escalations belonging to their own org
@@ -41,15 +41,15 @@ routes.
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/tenant/escalations/:id/resolve` route is implemented in
+- [x] `POST /api/tenant/escalations/:id/resolve` route is implemented in
       `server/src/routes/tenant/escalation.g022.ts`
-- [ ] Tenant may only resolve escalations belonging to their own org (orgId derived from JWT — D-011)
-- [ ] RLS via `withDbContext` enforces the org boundary at DB level (D-001)
-- [ ] Tenant resolve restricted to LEVEL_0 and LEVEL_1 escalations (consistent with create posture)
-- [ ] Audit log written in the same Prisma transaction as the resolve mutation (D-002)
-- [ ] TypeScript type-check passes: `pnpm --filter server typecheck` EXIT 0
-- [ ] Lint passes: `pnpm --filter server lint` EXIT 0
-- [ ] Server restarts cleanly; health check `GET /health` returns 200
+- [x] Tenant may only resolve escalations belonging to their own org (orgId derived from JWT — D-011)
+- [x] RLS via `withDbContext` enforces the org boundary at DB level (D-001)
+- [x] Tenant resolve restricted to LEVEL_0 and LEVEL_1 escalations (consistent with create posture)
+- [x] Audit log written in the same Prisma transaction as the resolve mutation (D-002)
+- [x] TypeScript type-check passes: `cd server ; pnpm typecheck` EXIT 0
+- [x] Lint passes: `cd server ; pnpm lint` EXIT 0 (warnings only, 0 errors)
+- [x] Server route compiles cleanly; blocker prerequisite satisfied for governance transition
 
 ## Files Allowlisted (Modify)
 
@@ -65,22 +65,27 @@ routes.
 
 ## Evidence Record
 
-*Not yet recorded — unit is OPEN.*
+- Implementation commit: `a2d8bfc` — `feat(api): add tenant escalation resolve route for TECS-FBW-006-B-BE-001`
+- Corrective commit: `d212d0d` — `fix(api): enforce tenant escalation resolve severity guard for TECS-FBW-006-B-BE-001`
+- Verification: `VERIFY-TECS-FBW-006-B-BE-001` — Result: `PASS` — Gap Decision: `VERIFIED_COMPLETE`
+- Verified blocker resolution facts:
+  - `POST /api/tenant/escalations/:id/resolve` exists
+  - route is tenant-plane only
+  - tenant auth + JWT/RLS org scoping preserved
+  - no client `orgId` / `tenantId` accepted
+  - tenant resolve explicitly restricted to LEVEL_0 / LEVEL_1
+  - severity `> 1` rejected before delegation
+  - allowed cases still reuse `EscalationService.resolveEscalation()`
+  - no tenant upgrade path added
+  - no tenant override path added
 
 ## Governance Closure
 
-On VERIFIED_COMPLETE of this unit, a governance closure unit must:
-
-1. Update `governance/units/TECS-FBW-006-B-BE-001.md` status → VERIFIED_COMPLETE
-2. Transition `governance/units/TECS-FBW-006-B.md` status: BLOCKED → OPEN
-   - Remove blocker reference BLK-006-B-001
-   - Set `opened` date and update `decisions_required`
-3. Update `governance/control/OPEN-SET.md`:
-   - Remove TECS-FBW-006-B-BE-001 (now terminal)
-   - Update TECS-FBW-006-B status: BLOCKED → OPEN
-4. Update `governance/control/NEXT-ACTION.md` → TECS-FBW-006-B
-5. Update `governance/control/BLOCKED.md`: remove BLK-006-B-001 from Section 1; add to Section 4 (resolved blockers)
-6. Update `governance/control/SNAPSHOT.md`
+- Governance close unit: `GOV-CLOSE-TECS-FBW-006-B-BE-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- BLK-006-B-001 resolved on 2026-03-18
+- Parent unit `TECS-FBW-006-B` transitioned `BLOCKED` → `OPEN`
+- Layer 0, Layer 1, and Layer 3 synchronized by this governance close unit
 
 ## Drift Guards
 
@@ -91,6 +96,11 @@ On VERIFIED_COMPLETE of this unit, a governance closure unit must:
   expose or set this field.
 - orgId must come from the JWT (tenantAuthMiddleware + databaseContextMiddleware), never from
   the request body (D-011, D-017-A analog for escalation).
+
+## Closed — No Next Step
+
+This prerequisite unit is **VERIFIED_COMPLETE**. No further implementation or verification
+work is authorized on this unit. The next active implementation unit is `TECS-FBW-006-B`.
 
 ## Control-Plane Source of Truth
 

@@ -354,3 +354,60 @@ Notes: No decisions changed. No deferred/gated unit statuses changed. No applica
   Operator must authorize the next action before any further implementation work begins.
   Remaining portfolio: TECS-FBW-006-B (DEFERRED) · TECS-FBW-013 (DEFERRED) · TECS-FBW-ADMINRBAC (DESIGN_GATE).
 Refs: governance/control/ · governance/units/TECS-FBW-003-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### TECS-FBW-006-B-BE-001 — 2026-03-18
+Type: IMPLEMENTATION
+Status: VERIFIED_COMPLETE
+Commit: a2d8bfc · d212d0d
+Title: Backend prerequisite — tenant resolve own escalation route
+Summary: Implemented POST /api/tenant/escalations/:id/resolve in the tenant escalation route
+  module and then corrected the route with a tenant-only severity guard. The final implementation
+  keeps tenant auth and JWT/RLS org scoping intact, accepts no client org identifier, rejects
+  severity > 1 before delegation, preserves not-found collapse for invisible rows, and reuses
+  EscalationService.resolveEscalation() for allowed cases. Exactly one allowlisted backend file
+  changed across both commits.
+Layer Impact: Layer 0 — none (governance sync handled in GOV-CLOSE-TECS-FBW-006-B-BE-001);
+  Layer 1 — none (unit record updated in GOV-CLOSE-TECS-FBW-006-B-BE-001)
+Notes: No tenant upgrade path added. No tenant override path added. No governance, frontend,
+  schema, migration, or test files changed.
+Refs: server/src/routes/tenant/escalation.g022.ts · server/src/services/escalation.service.ts
+
+---
+
+### VERIFY-TECS-FBW-006-B-BE-001 — 2026-03-18
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (read-only verification unit)
+Title: Verify tenant escalation resolve prerequisite after corrective severity guard
+Summary: Read-only verification of TECS-FBW-006-B-BE-001 across implementation commits a2d8bfc
+  and d212d0d. Confirmed the route exists at POST /api/tenant/escalations/:id/resolve, is
+  tenant-plane only, preserves tenant auth and JWT/RLS org scoping, accepts no client orgId or
+  tenantId, rejects severity > 1 before delegation under tenant RLS context, preserves not-found
+  and non-OPEN behavior, and still reuses EscalationService.resolveEscalation() for allowed cases.
+  Result: PASS. Gap Decision: VERIFIED_COMPLETE.
+Layer Impact: None (read-only unit)
+Notes: BLK-006-B-001 is resolved. Parent unit TECS-FBW-006-B is ready for governance transition
+  from BLOCKED to OPEN.
+Refs: governance/units/TECS-FBW-006-B-BE-001.md · server/src/routes/tenant/escalation.g022.ts
+
+---
+
+### GOV-CLOSE-TECS-FBW-006-B-BE-001 — 2026-03-18
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-FBW-006-B-BE-001)
+Title: Resolve BLK-006-B-001 and open TECS-FBW-006-B
+Summary: Governance-only blocker-resolution / close unit. Recorded TECS-FBW-006-B-BE-001 as
+  VERIFIED_COMPLETE based on implementation commits a2d8bfc and d212d0d plus
+  VERIFY-TECS-FBW-006-B-BE-001 (PASS). Resolved BLK-006-B-001 and transitioned parent unit
+  TECS-FBW-006-B from BLOCKED → OPEN across Layer 0, Layer 1, and Layer 3. NEXT-ACTION.md now
+  points to TECS-FBW-006-B as the active implementation unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, BLOCKED.md, SNAPSHOT.md updated;
+  Layer 1 — TECS-FBW-006-B-BE-001.md updated (OPEN→VERIFIED_COMPLETE, evidence recorded),
+  governance/units/TECS-FBW-006-B.md updated (BLOCKED→OPEN, blocker resolved);
+  Layer 3 — EXECUTION-LOG.md appended (TECS-FBW-006-B-BE-001, VERIFY-TECS-FBW-006-B-BE-001, this entry)
+Notes: No decisions changed. No application code changed. Remaining portfolio: TECS-FBW-006-B
+  (OPEN) · TECS-FBW-013 (DEFERRED) · TECS-FBW-ADMINRBAC (DESIGN_GATE).
+Refs: governance/control/ · governance/units/TECS-FBW-006-B-BE-001.md · governance/units/TECS-FBW-006-B.md · governance/log/EXECUTION-LOG.md
