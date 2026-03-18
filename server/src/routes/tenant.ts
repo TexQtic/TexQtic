@@ -57,6 +57,55 @@ type RfqCatalogItemTarget = {
   supplierOrgId: string;
 };
 
+const rfqReadStatusSchema = z.enum(['INITIATED', 'OPEN', 'RESPONDED', 'CLOSED']);
+
+const buyerRfqListQuerySchema = z.object({
+  status: rfqReadStatusSchema.optional(),
+  sort: z.enum(['updated_at_desc', 'created_at_desc']).optional().default('updated_at_desc'),
+  q: z.string().trim().min(1).max(200).optional(),
+}).strict();
+
+type BuyerRfqListRow = {
+  id: string;
+  status: 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
+  catalogItemId: string;
+  quantity: number;
+  supplierOrgId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  catalogItem: {
+    name: string;
+    sku: string | null;
+  };
+};
+
+type BuyerRfqDetailRow = BuyerRfqListRow & {
+  buyerMessage: string | null;
+  createdByUserId: string | null;
+};
+
+function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
+  return {
+    id: rfq.id,
+    status: rfq.status,
+    catalog_item_id: rfq.catalogItemId,
+    item_name: rfq.catalogItem.name,
+    item_sku: rfq.catalogItem.sku,
+    quantity: rfq.quantity,
+    supplier_org_id: rfq.supplierOrgId,
+    created_at: rfq.createdAt,
+    updated_at: rfq.updatedAt,
+  };
+}
+
+function mapBuyerRfqDetail(rfq: BuyerRfqDetailRow) {
+  return {
+    ...mapBuyerRfqListItem(rfq),
+    buyer_message: rfq.buyerMessage,
+    created_by_user_id: rfq.createdByUserId,
+  };
+}
+
 async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCatalogItemTarget | null> {
   return prisma.$transaction(async tx => {
     // Resolve only the referenced catalog item's owner under a tx-local service role.
@@ -1022,6 +1071,114 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(reply, { cartItem: result.cartItem }, 201);
     }
   );
+
+  /**
+   * GET /api/tenant/rfqs
+   * List buyer-owned RFQs for the authenticated tenant with minimal read projection.
+   */
+  fastify.get('/tenant/rfqs', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const queryResult = buyerRfqListQuerySchema.safeParse(request.query);
+    if (!queryResult.success) {
+      return sendValidationError(reply, queryResult.error.errors);
+    }
+
+    const { q, sort, status } = queryResult.data;
+    const searchTerm = q?.trim();
+    const idSearchResult = searchTerm ? z.string().uuid().safeParse(searchTerm) : null;
+
+    const rfqs = await withDbContext(prisma, dbContext, async tx => {
+      return tx.rfq.findMany({
+        where: {
+          orgId: dbContext.orgId,
+          ...(status ? { status } : {}),
+          ...(searchTerm
+            ? {
+                OR: [
+                  ...(idSearchResult?.success ? [{ id: searchTerm }] : []),
+                  { catalogItem: { name: { contains: searchTerm, mode: 'insensitive' } } },
+                  { catalogItem: { sku: { contains: searchTerm, mode: 'insensitive' } } },
+                ],
+              }
+            : {}),
+        },
+        select: {
+          id: true,
+          status: true,
+          catalogItemId: true,
+          quantity: true,
+          supplierOrgId: true,
+          createdAt: true,
+          updatedAt: true,
+          catalogItem: {
+            select: {
+              name: true,
+              sku: true,
+            },
+          },
+        },
+        orderBy: sort === 'created_at_desc'
+          ? [{ createdAt: 'desc' }, { id: 'desc' }]
+          : [{ updatedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+        take: 50,
+      });
+    });
+
+    return sendSuccess(reply, { rfqs: rfqs.map(mapBuyerRfqListItem), count: rfqs.length });
+  });
+
+  /**
+   * GET /api/tenant/rfqs/:id
+   * Read a single buyer-owned RFQ for the authenticated tenant with minimal detail projection.
+   */
+  fastify.get('/tenant/rfqs/:id', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const rfq = await withDbContext(prisma, dbContext, async tx => {
+      return tx.rfq.findFirst({
+        where: {
+          id: paramsResult.data.id,
+          orgId: dbContext.orgId,
+        },
+        select: {
+          id: true,
+          status: true,
+          catalogItemId: true,
+          quantity: true,
+          buyerMessage: true,
+          supplierOrgId: true,
+          createdByUserId: true,
+          createdAt: true,
+          updatedAt: true,
+          catalogItem: {
+            select: {
+              name: true,
+              sku: true,
+            },
+          },
+        },
+      });
+    });
+
+    if (!rfq) {
+      return sendNotFound(reply, 'RFQ not found');
+    }
+
+    return sendSuccess(reply, { rfq: mapBuyerRfqDetail(rfq) });
+  });
 
   /**
    * POST /api/tenant/rfq
