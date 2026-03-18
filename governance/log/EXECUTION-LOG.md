@@ -559,3 +559,22 @@ Notes: No decisions changed. No application code changed. BLOCKED.md retained BL
   resolved carry-forward context while removing stale parent-unit OPEN wording. Operator
   authorization is required before any further implementation work begins.
 Refs: governance/control/ · governance/units/TECS-FBW-013.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL — 2026-03-18
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL)
+Title: Record PRODUCT-DEC-RFQ-DOMAIN-MODEL as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-RFQ-DOMAIN-MODEL as
+  DECIDED in Layer 2. RFQ is now defined as a first-class tenant-plane domain entity (`rfqs`),
+  separate from Trade, buyer-owned by `org_id`, direct-supplier visible via `supplier_org_id`,
+  and operationally queryable while preserving audit-log coexistence and current
+  `rfq.RFQ_INITIATED` behavior.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DECISIONS.md updated with the canonical RFQ domain model;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was reopened. No schema, migrations, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md

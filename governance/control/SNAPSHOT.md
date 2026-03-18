@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOVERNANCE-SYNC-TECS-FBW-013
-last_commit: "feat(governance): close TECS-FBW-013 after verified buyer RFQ activation"
+last_unit_closed: GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL
+last_commit: "feat(governance): record PRODUCT-DEC-RFQ-DOMAIN-MODEL decision"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -106,3 +106,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-TECS-FBW-013-BE-001 (2026-03-18): TECS-FBW-013-BE-001 recorded VERIFIED_COMPLETE after implementation commit 451f45b and verification VERIFIED_COMPLETE. BLK-013-001 resolved. Parent unit TECS-FBW-013 transitioned BLOCKED → OPEN. NEXT-ACTION.md now points to TECS-FBW-013.
 - TECS-FBW-013 VERIFIED_COMPLETE 2026-03-18: frontend activation commit 060cac7 + strict-validation corrective commit 7f59a62; VERIFY-TECS-FBW-013 VERIFIED_COMPLETE.
 - GOVERNANCE-SYNC-TECS-FBW-013 (2026-03-18): TECS-FBW-013 transitioned OPEN → VERIFIED_COMPLETE. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because TECS-FBW-ADMINRBAC remains DESIGN_GATE and no product unit is OPEN.
+- GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL (2026-03-18): PRODUCT-DEC-RFQ-DOMAIN-MODEL recorded as DECIDED in Layer 2. RFQ is now canonically a first-class entity (`rfqs`), buyer-owned by `org_id`, direct-supplier visible via `supplier_org_id`, operationally separate from Trade, and coexistent with the mandatory audit trail. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.

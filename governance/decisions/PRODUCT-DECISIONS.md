@@ -2,7 +2,7 @@
 
 **Layer:** 2 — Decision Ledger
 **Authority:** GOV-OS-001-DESIGN.md (Section 3.4)
-**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-B2B-QUOTE)
+**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL)
 
 > This file owns all product scope decisions that gate governed units.
 > A DEFERRED unit MUST NOT be treated as implementation-ready due to the existence of
@@ -175,4 +175,103 @@ Impact: Product scope authorized only. This decision does not itself open TECS-F
 **Next Required Step:** A future governance sequencing unit must determine whether a backend
   prerequisite unit is required before TECS-FBW-013 can move beyond DEFERRED.
 **Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-B2B-QUOTE.
+  Status: DECIDED.
+
+---
+
+### PRODUCT-DEC-RFQ-DOMAIN-MODEL
+
+Date: 2026-03-18
+Authorized by: Paresh
+Status: DECIDED
+Summary: RFQ becomes a first-class tenant-plane domain entity in TexQtic.
+
+  Canonical domain shape:
+    - table: `rfqs`
+    - RFQ remains separate from Trade
+    - domain row is the operational source of truth
+    - audit log remains the mandatory immutable evidence trail
+    - current `rfq.RFQ_INITIATED` audit behavior remains preserved
+
+  Canonical fields:
+    - id: uuid primary key
+    - org_id: uuid required
+    - supplier_org_id: uuid required
+    - catalog_item_id: uuid required
+    - quantity: integer required, min 1
+    - buyer_message: text nullable
+    - status: rfq_status required
+    - created_by_user_id: uuid nullable but recommended
+    - created_at: timestamptz required
+    - updated_at: timestamptz required
+
+  Canonical status enum:
+    - INITIATED
+    - OPEN
+    - RESPONDED
+    - CLOSED
+
+  Canonical relationships:
+    - rfqs.org_id -> tenants.id
+    - rfqs.supplier_org_id -> tenants.id
+    - rfqs.catalog_item_id -> catalog_items.id
+    - rfqs.created_by_user_id -> users.id
+
+  Tenant isolation posture:
+    - org_id is the canonical owner tenancy key
+    - buyer tenant reads its own RFQs
+    - supplier tenant reads only RFQs addressed to it via supplier_org_id
+    - no cross-tenant discovery
+    - create allowed only from authenticated buyer-side tenant context
+    - supplier mutation is not broadly authorized in this decision
+
+  Seller visibility posture:
+    - direct supplier visibility only
+    - no broadcast routing
+    - no multi-supplier fan-out or matching
+    - no control-plane RFQ workflow authority in this decision
+
+  Lifecycle posture:
+    - INITIATED exists for event compatibility
+    - OPEN is the first stable operational state
+    - RESPONDED and CLOSED are future-facing minimal lifecycle states
+    - no negotiation state
+    - no priced quote state
+    - no order conversion state
+
+  Audit and event posture:
+    - RFQ creation must preserve `rfq.RFQ_INITIATED`
+    - future state changes should emit corresponding audit events
+    - future G-028 alignment should emit domain events from RFQ state changes
+    - domain reads must not be reconstructed from audit scans
+
+  Excluded:
+    - negotiation logic
+    - counter-offers
+    - quote pricing
+    - seller quote composition rules
+    - order conversion
+    - checkout
+    - settlement
+    - AI automation
+    - control-plane RFQ workflows
+    - broadcast routing
+    - multi-supplier matching
+    - collapsing RFQ into Trade
+
+Impact: Product domain posture is now decided for future RFQ work. This decision does not
+  create or reopen any implementation unit, does not alter Layer 0 sequencing by itself,
+  and does not authorize schema, migration, or product-code changes in this recording step.
+
+**Required For:** Future governed RFQ domain work beyond TECS-FBW-013 initiation-only scope.
+**Authorizes:** Canonical RFQ domain modeling as a first-class entity with buyer-owned tenancy,
+  direct-supplier visibility, audit coexistence, and lifecycle states INITIATED / OPEN /
+  RESPONDED / CLOSED.
+**Does Not Authorize:** This decision does not directly open a new RFQ implementation unit,
+  does not authorize negotiation, pricing, order conversion, checkout, settlement, AI
+  automation, control-plane RFQ workflow authority, broadcast routing, or collapsing RFQ
+  into Trade.
+**Next Required Step:** A separate governance sequencing unit must decide whether and when
+  a future RFQ domain implementation unit should be opened.
+**Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL.
   Status: DECIDED.
