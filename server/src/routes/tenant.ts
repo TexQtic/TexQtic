@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { StateMachineService } from '../services/stateMachine.service.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
@@ -983,6 +984,111 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(reply, { cartItem: result.cartItem }, 201);
     }
   );
+
+  /**
+   * POST /api/tenant/rfq
+   * Record a non-binding buyer-initiated RFQ submission for a tenant-scoped catalog item.
+   * This route is the backend prerequisite for future Request Quote CTA activation only.
+   */
+  fastify.post('/tenant/rfq', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+
+    const bodySchema = z.object({
+      catalogItemId: z.string().uuid(),
+      quantity: z.number().int().min(1).optional().default(1),
+      buyerMessage: z.string().trim().min(1).max(1000).optional(),
+    }).strict();
+
+    const parseResult = bodySchema.safeParse(request.body);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { catalogItemId, quantity, buyerMessage } = parseResult.data;
+
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const requestId = randomUUID();
+    const submittedAt = new Date().toISOString();
+
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      const catalogItem = await tx.catalogItem.findUnique({
+        where: { id: catalogItemId },
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          active: true,
+        },
+      });
+
+      if (!catalogItem) {
+        return { error: 'CATALOG_ITEM_NOT_FOUND' as const };
+      }
+
+      if (!catalogItem.active) {
+        return { error: 'CATALOG_ITEM_INACTIVE' as const };
+      }
+
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: dbContext.orgId,
+        actorType: 'USER',
+        actorId: userId ?? null,
+        action: 'rfq.RFQ_INITIATED',
+        entity: 'rfq',
+        entityId: requestId,
+        afterJson: {
+          requestId,
+          catalogItemId: catalogItem.id,
+          catalogItemName: catalogItem.name,
+          catalogItemSku: catalogItem.sku,
+          quantity,
+          buyerMessage: buyerMessage ?? null,
+          status: 'INITIATED',
+          nonBinding: true,
+          submittedAt,
+        },
+        metadataJson: {
+          requestId,
+          catalogItemId: catalogItem.id,
+          quantity,
+          submittedAt,
+          initiatedBy: 'BUYER',
+          nonBinding: true,
+        },
+      });
+
+      return {
+        requestId,
+        catalogItemId: catalogItem.id,
+        quantity,
+        submittedAt,
+      };
+    });
+
+    if ('error' in result) {
+      if (result.error === 'CATALOG_ITEM_NOT_FOUND') {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      if (result.error === 'CATALOG_ITEM_INACTIVE') {
+        return sendError(reply, 'BAD_REQUEST', 'Catalog item is not active', 400);
+      }
+    }
+
+    return sendSuccess(reply, {
+      requestId: result.requestId,
+      status: 'RFQ_INITIATED',
+      nonBinding: true,
+      catalogItemId: result.catalogItemId,
+      quantity: result.quantity,
+      submittedAt: result.submittedAt,
+    }, 201);
+  });
 
   /**
    * PATCH /api/tenant/cart/items/:id
