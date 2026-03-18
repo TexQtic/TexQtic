@@ -617,3 +617,21 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
 Notes: No decisions changed. No blockers changed. No application code changed.
   No new product scope was opened.
 Refs: governance/control/ · governance/units/TECS-RFQ-DOMAIN-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS — 2026-03-18
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS)
+Title: Record PRODUCT-DEC-BUYER-RFQ-READS as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-BUYER-RFQ-READS as
+  DECIDED in Layer 2. Buyer-side RFQ reads are now defined as a narrow read-only tenant-plane
+  scope covering list + detail together, limited to RFQs owned by the current tenant via `org_id`,
+  with basic status filtering, recency sorting, and minimal RFQ id / item name / item sku search.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DECISIONS.md updated with the buyer RFQ read decision;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened. No schema, migrations, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md

@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOVERNANCE-SYNC-TECS-RFQ-DOMAIN-001
-last_commit: "feat(governance): close TECS-RFQ-DOMAIN-001 after verified RFQ domain persistence"
+last_unit_closed: GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS
+last_commit: "feat(governance): record PRODUCT-DEC-BUYER-RFQ-READS as decided"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -110,3 +110,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL (2026-03-18): PRODUCT-DEC-RFQ-DOMAIN-MODEL recorded as DECIDED in Layer 2. RFQ is now canonically a first-class entity (`rfqs`), buyer-owned by `org_id`, direct-supplier visible via `supplier_org_id`, operationally separate from Trade, and coexistent with the mandatory audit trail. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
 - GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001 (2026-03-18): TECS-RFQ-DOMAIN-001 opened as the single implementation-ready RFQ follow-on unit. NEXT-ACTION.md now points to canonical RFQ persistence only: `rfqs` model, `rfq_status` enum, existing create-path persistence, direct supplier derivation, and audit preservation. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOVERNANCE-SYNC-TECS-RFQ-DOMAIN-001 (2026-03-18): TECS-RFQ-DOMAIN-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 3c8fc31, corrective commit db8cc60, and `VERIFY-TECS-RFQ-DOMAIN-001: VERIFIED_COMPLETE`. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because TECS-FBW-ADMINRBAC remains DESIGN_GATE and no implementation unit is OPEN.
+- GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS (2026-03-18): PRODUCT-DEC-BUYER-RFQ-READS recorded as DECIDED in Layer 2. Authorized buyer-side RFQ reads are now a narrow read-only tenant-plane scope covering list + detail together with basic status filtering, recency sorting, and minimal search. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED pending a separate sequencing unit.

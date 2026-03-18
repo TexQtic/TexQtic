@@ -2,7 +2,7 @@
 
 **Layer:** 2 — Decision Ledger
 **Authority:** GOV-OS-001-DESIGN.md (Section 3.4)
-**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL)
+**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS)
 
 > This file owns all product scope decisions that gate governed units.
 > A DEFERRED unit MUST NOT be treated as implementation-ready due to the existence of
@@ -274,4 +274,96 @@ Impact: Product domain posture is now decided for future RFQ work. This decision
 **Next Required Step:** A separate governance sequencing unit must decide whether and when
   a future RFQ domain implementation unit should be opened.
 **Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL.
+  Status: DECIDED.
+
+---
+
+### PRODUCT-DEC-BUYER-RFQ-READS
+
+Date: 2026-03-18
+Authorized by: Paresh
+Status: DECIDED
+Summary: Buyer-side RFQ reads are authorized as a single narrow read-only tenant-plane scope.
+
+  Authorized scope:
+    - buyer RFQ list
+    - buyer RFQ detail
+    - buyer may read only RFQs owned by the current tenant via `org_id`
+    - basic filter by status
+    - sort by recency
+    - search by RFQ id, item name, and item sku
+
+  Authorized minimum list fields:
+    - id
+    - status
+    - catalog_item_id
+    - item name
+    - item sku
+    - quantity
+    - supplier_org_id
+    - created_at
+    - updated_at
+
+  Authorized minimum detail fields:
+    - id
+    - status
+    - catalog_item_id
+    - item name
+    - item sku
+    - quantity
+    - buyer_message
+    - supplier_org_id
+    - created_by_user_id
+    - created_at
+    - updated_at
+
+  Lifecycle visibility:
+    - INITIATED
+    - OPEN
+    - RESPONDED
+    - CLOSED
+
+  UI boundaries:
+    - read-only buyer RFQ list screen
+    - read-only buyer RFQ detail screen
+    - empty state
+    - status badges
+    - basic filters only
+
+  Excluded:
+    - frontend implementation authorization in this decision record itself
+    - supplier inbox reads
+    - supplier response actions
+    - negotiation threads
+    - counter-offers
+    - quote pricing
+    - order conversion
+    - checkout
+    - settlement
+    - AI automation
+    - control-plane RFQ views
+    - Trade coupling
+
+  Constraints:
+    - authenticated tenant users only
+    - buyer reads are limited to rows where org_id = current tenant
+    - no cross-tenant discovery
+    - no supplier inbox behavior is authorized by this decision
+    - no control-plane read surface is authorized by this decision
+
+Impact: Product scope for buyer-side RFQ reads is now authorized, but no implementation unit is
+  opened by this decision record alone. A separate governance sequencing unit must decide whether
+  and when the first buyer RFQ read implementation unit should open.
+
+**Required For:** Future governed buyer-side RFQ read work after TECS-RFQ-DOMAIN-001 closure.
+**Authorizes:** One narrow buyer-side tenant-plane RFQ read scope covering list + detail together,
+  with read-only lifecycle visibility, minimal field projection, basic status filtering, recency
+  sorting, and basic RFQ id / item name / item sku search.
+**Does Not Authorize:** This decision does not directly open a new implementation unit, does not
+  authorize frontend implementation, does not authorize supplier inbox reads or actions, and does
+  not authorize negotiation, pricing, order conversion, checkout, settlement, AI automation,
+  control-plane RFQ views, or Trade coupling.
+**Next Required Step:** A separate governance sequencing unit must determine whether and when the
+  first buyer RFQ read implementation unit should be opened.
+**Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-BUYER-RFQ-READS.
   Status: DECIDED.
