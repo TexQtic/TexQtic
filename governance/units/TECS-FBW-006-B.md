@@ -2,22 +2,28 @@
 unit_id: TECS-FBW-006-B
 title: Escalation Mutations — upgrade / resolve / override
 type: IMPLEMENTATION
-status: DEFERRED
+status: BLOCKED
 wave: W3-residual
 plane: BOTH
-opened: 2026-03-07
+opened: null
 closed: null
 verified: null
 commit: null
 evidence: null
 doctrine_constraints:
-  - D-010: product-deferred; must not be treated as a bug or reopened without product authorization
   - D-011: org_id must scope all escalation mutations; no cross-tenant write permitted
   - D-001: RLS must enforce tenant isolation on escalation write path
   - D-002: control-plane escalation override actions must be explicit and audited
+  - D-004: one logical unit; frontend wiring is the scope; backend prereq is TECS-FBW-006-B-BE-001
 decisions_required:
-  - PRODUCT-DEC-ESCALATION-MUTATIONS (not yet made; future product decision required)
-blockers: []
+  - PRODUCT-DEC-ESCALATION-MUTATIONS: DECIDED (2026-03-18, Paresh) — authorized limited, role-differentiated scope
+blockers:
+  - id: BLK-006-B-001
+    type: MISSING_BACKEND_ROUTE
+    description: POST /api/tenant/escalations/:id/resolve does not exist; required for tenant resolve product target
+    prerequisite_unit: TECS-FBW-006-B-BE-001
+    registered: 2026-03-18
+    status: OPEN
 ---
 
 ## Unit Summary
@@ -61,20 +67,24 @@ Expected future criteria (illustrative only; do not treat as active work):
 
 ## Allowed Next Step
 
-**Nothing.** This unit is DEFERRED.
+This unit is **BLOCKED** pending `TECS-FBW-006-B-BE-001` (OPEN).
 
-The only allowed next step is a **product authorization event** recorded in
-`governance/decisions/PRODUCT-DECISIONS.md` (Layer 2 — Decision Ledger), followed by
-a governance unit that transitions this unit from DEFERRED → OPEN. Until that authorization
-exists in the decision ledger, no implementation work may begin.
+The only allowed next step is for `TECS-FBW-006-B-BE-001` to reach `VERIFIED_COMPLETE`.
+After that, a governance closure unit must transition this unit from BLOCKED → OPEN and
+update Layer 0 accordingly. Implementation may not begin until that transition is recorded.
+
+Product authorization is already in place: PRODUCT-DEC-ESCALATION-MUTATIONS (DECIDED, 2026-03-18).
+The authorized scope when this unit opens:
+  - Tenant plane: create escalation (POST /api/tenant/escalations, severity 0-1 only)
+  - Tenant plane: resolve own escalation (POST /api/tenant/escalations/:id/resolve)
+  - Control plane: upgrade severity, resolve, override (all routes exist; frontend wiring only)
 
 ## Forbidden Next Step
 
-- Do **not** begin any escalation mutation, upgrade, resolve, or override implementation
+- Do **not** begin any frontend mutation wiring until TECS-FBW-006-B-BE-001 is VERIFIED_COMPLETE
 - Do **not** add mutation controls to EscalationsPanel.tsx or EscalationOversight.tsx
-- Do **not** treat TECS-FBW-006-A (read-only views, VERIFIED_COMPLETE) as authorization for mutations
-- Do **not** promote this unit to OPEN or IN_PROGRESS without a product decision record
-- Do **not** treat this as a gap or defect — mutation scope was explicitly deferred, not forgotten
+- Do **not** treat TECS-FBW-006-A (read-only views, VERIFIED_COMPLETE) as implementation authorization
+- Do **not** promote this unit to OPEN or IN_PROGRESS without BLK-006-B-001 resolved
 - Do **not** implement `freezeRecommendation` as an actionable control — it is informational-only (D-022-C)
 
 ## Drift Guards
@@ -93,7 +103,8 @@ exists in the decision ledger, no implementation work may begin.
 | Is this unit open? | `governance/control/OPEN-SET.md` (listed as DEFERRED) |
 | Why is it deferred? | `governance/control/BLOCKED.md` — Section 2 |
 | What doctrine applies? | `governance/control/DOCTRINE.md` (D-010) |
-| When can it be reopened? | After product decision in `governance/decisions/PRODUCT-DECISIONS.md` |
+| When can it open? | After TECS-FBW-006-B-BE-001 reaches VERIFIED_COMPLETE and a governance closure unit transitions BLOCKED → OPEN |
+| What authorized it? | `governance/decisions/PRODUCT-DECISIONS.md` — PRODUCT-DEC-ESCALATION-MUTATIONS (DECIDED 2026-03-18) |
 | Historical context | `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` line ~103 |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**

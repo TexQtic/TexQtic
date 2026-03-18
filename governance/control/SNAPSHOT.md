@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOV-CLOSE-TECS-FBW-003-B
-last_commit: "4d71e17 — feat(tenant): implement TECS-FBW-003-B escrow detail and mutation flows"
+last_unit_closed: GOV-SEQUENCE-TECS-FBW-006-B
+last_commit: "fd5d23a — feat(governance): record PRODUCT-DEC-ESCALATION-MUTATIONS decision"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -29,21 +29,24 @@ layer_4_installed: true
 ## Current Open Set Summary
 
 - **TECS-FBW-003-B** — `VERIFIED_COMPLETE` — Escrow mutations + detail view; closed 2026-03-18; commit 4d71e17
-- **TECS-FBW-006-B** — `DEFERRED` — Escalation mutations; future scope; awaiting product authorization
+- **TECS-FBW-006-B-BE-001** — `OPEN` — Backend prereq: POST /api/tenant/escalations/:id/resolve; installed 2026-03-18
+- **TECS-FBW-006-B** — `BLOCKED` — Escalation mutations; blocked on BLK-006-B-001 (TECS-FBW-006-B-BE-001)
 - **TECS-FBW-013** — `DEFERRED` — B2B Request Quote; product-deferred; UI remains visually disabled
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**0 product units are currently OPEN.** 2 DEFERRED · 1 DESIGN_GATE. Portfolio is at OPERATOR_DECISION_REQUIRED posture.
+**1 product unit is currently OPEN** (TECS-FBW-006-B-BE-001). 1 BLOCKED · 1 DEFERRED · 1 DESIGN_GATE.
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED` · No product unit is currently OPEN. Operator must authorize the next action.
-Remaining portfolio: TECS-FBW-006-B (DEFERRED) · TECS-FBW-013 (DEFERRED) · TECS-FBW-ADMINRBAC (DESIGN_GATE).
+`TECS-FBW-006-B-BE-001` · Backend Prerequisite — Tenant Resolve Own Escalation Route · `OPEN`
+Implement `POST /api/tenant/escalations/:id/resolve` in `server/src/routes/tenant/escalation.g022.ts`.
+Authorized by PRODUCT-DEC-ESCALATION-MUTATIONS + GOV-SEQUENCE-TECS-FBW-006-B (2026-03-18).
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
 
-*(None — BLK-FBW-002-B-001 resolved 2026-03-17; see BLOCKED.md Section 4)*
+- **TECS-FBW-006-B** — BLK-006-B-001: `POST /api/tenant/escalations/:id/resolve` route does not exist.
+  Prerequisite sub-unit TECS-FBW-006-B-BE-001 is OPEN and must reach VERIFIED_COMPLETE before 006-B opens.
 
 ## Active Design Gates
 

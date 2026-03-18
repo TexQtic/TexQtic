@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-17 (GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION)  
+**Last Updated:** 2026-03-18 (GOV-SEQUENCE-TECS-FBW-006-B)  
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
@@ -14,7 +14,9 @@
 
 ## Section 1 — BLOCKED (active technical blocker; cannot proceed without resolution)
 
-*(No units currently blocked. BLK-FBW-002-B-001 was resolved 2026-03-17 — see Section 4.)*
+| UNIT-ID | Blocker ID | Blocker Description | Registered |
+|---|---|---|---|
+| TECS-FBW-006-B | BLK-006-B-001 | Missing tenant-plane route: `POST /api/tenant/escalations/:id/resolve`. Prerequisite sub-unit TECS-FBW-006-B-BE-001 (OPEN) must reach VERIFIED_COMPLETE before 006-B may open. | 2026-03-18 |
 
 ---
 
@@ -23,7 +25,6 @@
 | UNIT-ID | Deferred Reason | Standing Instruction | Deferred |
 |---|---|---|---|
 | TECS-FBW-003-B | Future scope — escrow mutations + detail view | Do NOT implement; await product authorization | 2026-03-17 |
-| TECS-FBW-006-B | Future scope — escalation mutations (upgrade/resolve/override) | Do NOT implement; await product authorization | 2026-03-17 |
 | TECS-FBW-013 | Product decision — B2B Request Quote | Do NOT implement or remove UI (keep visually disabled); await product decision | 2026-03-07 |
 
 **Doctrine (D-010):** Deferred items are not bugs. They must not be reopened or implemented
