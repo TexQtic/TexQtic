@@ -599,6 +599,26 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.m
 
 ---
 
+### GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-READS-001 — 2026-03-18
+Type: GOVERNANCE / SEQUENCING
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-READS-001)
+Title: Sequence first supplier RFQ read unit after PRODUCT-DEC-SUPPLIER-RFQ-READS
+Summary: Governance-only sequencing unit. Opened TECS-RFQ-SUPPLIER-READ-001 as the single
+  implementation-ready supplier RFQ read follow-on unit after PRODUCT-DEC-SUPPLIER-RFQ-READS was
+  recorded as DECIDED. Authorized scope is backend-only, read-only tenant-plane supplier RFQ
+  inbox list + detail APIs with supplier_org_id-scoped reads, minimal field projection, buyer
+  identity withheld in the first slice, lifecycle visibility, and only the minimal search/filter/
+  sort authorized by the decision.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-RFQ-SUPPLIER-READ-001.md created and set to OPEN;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No frontend unit was opened. No supplier response or negotiation work was opened. No schema
+  or migration work was opened. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/units/TECS-RFQ-SUPPLIER-READ-001.md
+
+---
+
 ### GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001 — 2026-03-18
 Type: GOVERNANCE / SEQUENCING
 Status: CLOSED

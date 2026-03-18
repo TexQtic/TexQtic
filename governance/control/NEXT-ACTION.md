@@ -1,20 +1,25 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-18 (GOVERNANCE-SYNC-TECS-RFQ-READ-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-18 (GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-READS-001)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: OPERATOR_DECISION_REQUIRED
-type: NONE
-title: Await next governed unit sequencing
-prerequisites_met: false
-authorized_by: GOVERNANCE-SYNC-TECS-RFQ-READ-001
+unit_id: TECS-RFQ-SUPPLIER-READ-001
+type: IMPLEMENTATION / BACKEND
+title: Introduce the first supplier RFQ inbox read API slice
+prerequisites_met: true
+authorized_by: GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-READS-001
 date_authorized: 2026-03-18
 notes: |
-  TECS-RFQ-READ-001 reached VERIFIED_COMPLETE after implementation commit
-  49d757d and verification evidence VERIFY-TECS-RFQ-READ-001. No
-  implementation-ready unit remains OPEN. TECS-FBW-ADMINRBAC remains
-  DESIGN_GATE and must not be opened without explicit product + security
-  decision.
+  PRODUCT-DEC-SUPPLIER-RFQ-READS is DECIDED and authorizes a narrow supplier-side
+  RFQ read scope covering inbox list + detail together. TECS-RFQ-SUPPLIER-READ-001
+  is the single authorized next action. Scope is backend read-only only:
+  supplier RFQ inbox list API, supplier RFQ detail API, supplier_org_id-scoped
+  reads, minimal field projection, buyer identity withheld in the first slice,
+  buyer-visible lifecycle statuses, and only the minimal search/filter/sort
+  authorized by the decision. Excluded: frontend UI, supplier response actions,
+  negotiation, pricing, order conversion, checkout, settlement, control-plane
+  RFQ views, AI automation, and schema changes unless a separate defect
+  requires them.
 ```
