@@ -92,6 +92,21 @@ export interface CreateCatalogItemResponse {
   item: CatalogItem;
 }
 
+export interface CreateRfqRequest {
+  catalogItemId: string;
+  quantity?: number;
+  buyerMessage?: string;
+}
+
+export interface CreateRfqResponse {
+  requestId: string;
+  status: 'RFQ_INITIATED';
+  nonBinding: true;
+  catalogItemId: string;
+  quantity: number;
+  submittedAt: string;
+}
+
 /**
  * Create a catalog item (OWNER/ADMIN only)
  *
@@ -102,4 +117,14 @@ export async function createCatalogItem(
   payload: CreateCatalogItemRequest
 ): Promise<CreateCatalogItemResponse> {
   return tenantPost<CreateCatalogItemResponse>('/api/tenant/catalog/items', payload);
+}
+
+/**
+ * Submit a non-binding tenant RFQ initiation request for a catalog item.
+ * The server derives tenant scope from the authenticated tenant context.
+ */
+export async function createRfq(
+  payload: CreateRfqRequest
+): Promise<CreateRfqResponse> {
+  return tenantPost<CreateRfqResponse>('/api/tenant/rfq', payload);
 }

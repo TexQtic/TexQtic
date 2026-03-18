@@ -56,7 +56,7 @@ import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
-import { getCatalogItems, CatalogItem, createCatalogItem } from './services/catalogService';
+import { getCatalogItems, CatalogItem, createCatalogItem, createRfq } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
@@ -144,6 +144,27 @@ const App: React.FC = () => {
     loading: boolean;
     error: string | null;
   }>({ open: false, tenant: null, reason: '', loading: false, error: null });
+
+  const [rfqDialog, setRfqDialog] = useState<{
+    open: boolean;
+    product: CatalogItem | null;
+    quantity: string;
+    buyerMessage: string;
+    loading: boolean;
+    error: string | null;
+    success: {
+      requestId: string;
+      quantity: number;
+    } | null;
+  }>({
+    open: false,
+    product: null,
+    quantity: '1',
+    buyerMessage: '',
+    loading: false,
+    error: null,
+    success: null,
+  });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
   const [showArchitecture, setShowArchitecture] = useState(false);
@@ -442,6 +463,69 @@ const App: React.FC = () => {
       setAddItemError(err?.message || 'Failed to create item.');
     } finally {
       setAddItemLoading(false);
+    }
+  };
+
+  const handleOpenRfqDialog = (product: CatalogItem) => {
+    setRfqDialog({
+      open: true,
+      product,
+      quantity: product.moq ? String(product.moq) : '1',
+      buyerMessage: '',
+      loading: false,
+      error: null,
+      success: null,
+    });
+  };
+
+  const handleCloseRfqDialog = () => {
+    setRfqDialog({
+      open: false,
+      product: null,
+      quantity: '1',
+      buyerMessage: '',
+      loading: false,
+      error: null,
+      success: null,
+    });
+  };
+
+  const handleSubmitRfq = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rfqDialog.product) return;
+
+    const quantity = Number.parseInt(rfqDialog.quantity, 10);
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      setRfqDialog(dialog => ({ ...dialog, error: 'Quantity must be a whole number of at least 1.' }));
+      return;
+    }
+
+    const buyerMessage = rfqDialog.buyerMessage.trim();
+    setRfqDialog(dialog => ({ ...dialog, loading: true, error: null }));
+
+    try {
+      const response = await createRfq({
+        catalogItemId: rfqDialog.product.id,
+        quantity,
+        ...(buyerMessage ? { buyerMessage } : {}),
+      });
+
+      setRfqDialog(dialog => ({
+        ...dialog,
+        loading: false,
+        error: null,
+        success: {
+          requestId: response.requestId,
+          quantity: response.quantity,
+        },
+      }));
+    } catch (error) {
+      console.error('Failed to submit RFQ:', error);
+      setRfqDialog(dialog => ({
+        ...dialog,
+        loading: false,
+        error: error instanceof APIError ? error.message : 'Failed to submit your request for quote. Please try again.',
+      }));
     }
   };
 
@@ -1034,9 +1118,13 @@ const App: React.FC = () => {
   };
 
   // Cart-aware Add to Cart button components
-  const B2BAddToCartButton: React.FC<{ product: CatalogItem }> = ({ product: _product }) => {
+  const B2BAddToCartButton: React.FC<{ product: CatalogItem }> = ({ product }) => {
     return (
-      <button className="w-full mt-4 border border-slate-200 py-2 rounded text-sm font-semibold hover:bg-slate-50 transition">
+      <button
+        type="button"
+        onClick={() => handleOpenRfqDialog(product)}
+        className="w-full mt-4 border border-slate-200 py-2 rounded text-sm font-semibold hover:bg-slate-50 transition"
+      >
         Request Quote
       </button>
     );
@@ -1371,6 +1459,103 @@ const App: React.FC = () => {
 
   return (
     <div className="relative font-sans">
+      {rfqDialog.open && rfqDialog.product && (
+        <div className="fixed inset-0 bg-slate-950/45 z-[190] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Request Quote</h2>
+              <p className="text-sm text-slate-500 mt-2">
+                Submit a non-binding request for quote for <strong>{rfqDialog.product.name}</strong>.
+                This starts an RFQ only and does not create an order or checkout commitment.
+              </p>
+            </div>
+
+            {rfqDialog.success ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-4 text-sm text-emerald-800">
+                  Your request for quote was initiated for {rfqDialog.success.quantity} unit(s). It remains non-binding until a separate quote workflow is provided.
+                </div>
+                <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                  Reference ID: {rfqDialog.success.requestId}
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleCloseRfqDialog}
+                    className="px-5 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form className="space-y-5" onSubmit={handleSubmitRfq}>
+                <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-start">
+                  <div>
+                    <label htmlFor="rfq-quantity" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Quantity
+                    </label>
+                    <input
+                      id="rfq-quantity"
+                      type="number"
+                      min={1}
+                      step={1}
+                      inputMode="numeric"
+                      value={rfqDialog.quantity}
+                      onChange={e => setRfqDialog(dialog => ({ ...dialog, quantity: e.target.value, error: null }))}
+                      className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      Minimum 1 unit. Default is 1 unless you set a higher amount.
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="rfq-message" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Buyer Message (optional)
+                    </label>
+                    <textarea
+                      id="rfq-message"
+                      rows={4}
+                      maxLength={1000}
+                      value={rfqDialog.buyerMessage}
+                      onChange={e => setRfqDialog(dialog => ({ ...dialog, buyerMessage: e.target.value, error: null }))}
+                      placeholder="Add context such as target delivery timing, fabric preferences, or packaging needs."
+                      className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      Keep it specific. This message supports RFQ initiation only and is not a purchase commitment.
+                    </p>
+                  </div>
+                </div>
+
+                {rfqDialog.error && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm text-rose-700">
+                    {rfqDialog.error}
+                  </div>
+                )}
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={handleCloseRfqDialog}
+                    disabled={rfqDialog.loading}
+                    className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={rfqDialog.loading}
+                    className="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {rfqDialog.loading ? 'Submitting...' : 'Submit RFQ'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
       {/* G-W3-ROUTING-001: Impersonation reason dialog */}
       {impersonationDialog.open && impersonationDialog.tenant && (
         <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center">
