@@ -539,3 +539,23 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
 Notes: No decisions changed. No application code changed. No forbidden files touched.
   Operator must authorize the next action before any further implementation work begins.
 Refs: governance/control/ · governance/units/TECS-FBW-006-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOVERNANCE-SYNC-TECS-FBW-013 — 2026-03-18
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-FBW-013)
+Title: Record verified closure of TECS-FBW-013 buyer RFQ activation
+Summary: Governance-only close unit. Recorded TECS-FBW-013 as VERIFIED_COMPLETE based on
+  frontend activation commit 060cac7, corrective strict-validation commit 7f59a62, and
+  VERIFY-TECS-FBW-013 (VERIFIED_COMPLETE). TECS-FBW-013 transitioned OPEN → VERIFIED_COMPLETE
+  across Layer 0 and Layer 1. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE and no product unit is OPEN.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, BLOCKED.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-013.md updated (OPEN→VERIFIED_COMPLETE, evidence recorded);
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No decisions changed. No application code changed. BLOCKED.md retained BLK-013-001 as
+  resolved carry-forward context while removing stale parent-unit OPEN wording. Operator
+  authorization is required before any further implementation work begins.
+Refs: governance/control/ · governance/units/TECS-FBW-013.md · governance/log/EXECUTION-LOG.md

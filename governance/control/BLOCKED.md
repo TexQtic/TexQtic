@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-18 (GOVERNANCE-SYNC-TECS-FBW-013-BE-001)
+**Last Updated:** 2026-03-18 (GOVERNANCE-SYNC-TECS-FBW-013)
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
@@ -59,4 +59,5 @@ That is not the same as ADMINRBAC implementation authorization.
 | TECS-FBW-006-B | BLK-006-B-001 | Tenant resolve route implemented, severity-capped at LEVEL_0 / LEVEL_1, and verified; parent unit may now open | 2026-03-18 | commits a2d8bfc · d212d0d · VERIFY-TECS-FBW-006-B-BE-001: VERIFIED_COMPLETE |
 | TECS-FBW-002-B | BLK-FBW-002-B-001 | GET /api/tenant/trades implemented and verified | 2026-03-17 | commit 5ffd727 · VERIFY-TECS-FBW-002-B-BE-ROUTE-001: VERIFIED_COMPLETE |
 
-TECS-FBW-013 is now OPEN (implementation-ready). See `OPEN-SET.md` and the unit record.
+TECS-FBW-013's blocker remains resolved. The parent unit later reached VERIFIED_COMPLETE;
+see `OPEN-SET.md`, `SNAPSHOT.md`, and the unit record.

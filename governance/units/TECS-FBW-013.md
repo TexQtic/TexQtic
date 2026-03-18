@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-013
 title: B2B Request Quote — product decision + backend
 type: IMPLEMENTATION
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: TENANT
 opened: 2026-03-07
-closed: null
-verified: null
-commit: null
-evidence: null
+closed: 2026-03-18
+verified: 2026-03-18
+commit: "060cac7 · 7f59a62"
+evidence: "VERIFY-TECS-FBW-013: VERIFIED_COMPLETE · commits 060cac7 · 7f59a62 · GOVERNANCE-SYNC-TECS-FBW-013"
 doctrine_constraints:
   - D-010: product authorization does not itself open the unit; no frontend activation until backend prerequisite is complete
   - D-011: org_id must scope all quote request operations when authorized
@@ -32,20 +32,27 @@ TECS-FBW-013 covers the B2B Request Quote flow: backend route design follow-on a
 activation for the product-authorized limited tenant-plane RFQ initiation scope. PRODUCT-DEC-B2B-QUOTE is
 DECIDED and backend prerequisite TECS-FBW-013-BE-001 is now VERIFIED_COMPLETE. BLK-013-001 is
 resolved because the required tenant-plane RFQ submission route exists and has passed verification.
-This parent unit is now OPEN for the buyer-side follow-on only.
+This parent unit is now VERIFIED_COMPLETE following the buyer-side frontend activation commit
+and the corrective strict-validation commit. The implemented scope remains limited to tenant-plane,
+non-binding buyer RFQ initiation only.
 
 ## Acceptance Criteria
 
-*Unit is now OPEN following verified backend prerequisite completion.*
+*Satisfied — unit is VERIFIED_COMPLETE. All criteria met across commits 060cac7 · 7f59a62.*
 
-Expected future criteria (illustrative only; do not treat as active work):
 - [x] Product decision recorded in `governance/decisions/PRODUCT-DECISIONS.md`
 - [x] Backend prerequisite unit `TECS-FBW-013-BE-001` implemented and VERIFIED_COMPLETE
-- [ ] org_id-scoped for tenant operations
-- [ ] Frontend quote flow enabled only after backend route is live
-- [ ] UI disabled state replaced with functional state (product-authorized transition)
-- [ ] TypeScript type-check passes (EXIT 0)
-- [ ] Lint passes (EXIT 0)
+- [x] Frontend Request Quote CTA enabled only after backend route was live
+- [x] Existing B2B Request Quote CTA replaced dead-button behavior with a real tenant-plane RFQ flow
+- [x] Frontend calls `POST /api/tenant/rfq` through the existing tenant service pattern
+- [x] Request payload remains limited to `catalogItemId`, `quantity`, and optional `buyerMessage`
+- [x] No client org_id / orgId / tenantId / tenant authority fields introduced
+- [x] Strict quantity validation enforced before submission: required, integer-only, `>= 1`, decimals rejected instead of coerced
+- [x] Invalid quantity blocks submission before any API request is sent
+- [x] Success state preserves non-binding semantics and explicitly states no order / checkout commitment
+- [x] No seller negotiation, counter-offers, multi-round negotiation, quote inbox, compliance progression,
+      order conversion, checkout, settlement, AI-autonomous quote decisions, control-plane quote actions,
+      or public/cross-tenant quote actions introduced
 
 ## Files Allowlisted (Modify)
 *Not yet defined — pending product authorization.*
@@ -58,56 +65,62 @@ Expected future criteria (illustrative only; do not treat as active work):
 
 ## Evidence Record
 - Backend prerequisite resolved by `TECS-FBW-013-BE-001`
-- Implementation commit for prerequisite: `451f45b`
-- Verification result: `VERIFY-TECS-FBW-013-BE-001` — `VERIFIED_COMPLETE`
-- Resolved blocker evidence: `451f45b · VERIFY-TECS-FBW-013-BE-001: VERIFIED_COMPLETE`
+- Backend prerequisite implementation commit: `451f45b`
+- Frontend activation implementation commit: `060cac7` — `feat(frontend): activate buyer RFQ initiation flow for TECS-FBW-013`
+- Corrective validation commit: `7f59a62` — `fix(frontend): enforce strict integer validation for RFQ quantity in TECS-FBW-013`
+- Final verification: `VERIFY-TECS-FBW-013` — Result: `VERIFIED_COMPLETE`
+- Verification date: 2026-03-18
+- Verified implementation surface: `App.tsx` · `services/catalogService.ts`
+- Corrective strict-validation remained localized to `App.tsx`
+- No backend, schema, migration, governance-mixed, or test changes were introduced in the implementation unit
 
 ## Governance Closure
-*Not yet set — unit is OPEN and implementation-ready for the authorized buyer-side follow-on only.*
+
+- Governance sync / close unit: `GOVERNANCE-SYNC-TECS-FBW-013` — 2026-03-18
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- All Layer 0 and Layer 1 files updated by `GOVERNANCE-SYNC-TECS-FBW-013`
+- Unit is terminal. Do not reopen (D-008).
 
 ---
 
 ## Allowed Next Step
 
-**Implement TECS-FBW-013 only.** This parent unit is OPEN.
-
-The only allowed next step is the buyer-side follow-on implementation now that the backend
-RFQ prerequisite is verified complete.
+**This unit is VERIFIED_COMPLETE and closed.** No further action on this unit is authorized (D-008).
+The remaining non-terminal portfolio is: TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
+An operator decision is required before any further implementation work may begin.
 
 ## Forbidden Next Step
 
 - Do **not** add seller negotiation workflows, counter-offers, or multi-round negotiation loops
 - Do **not** add compliance progression, order conversion, checkout, or settlement semantics
 - Do **not** add AI-autonomous quote decisions, control-plane quote actions, or public/cross-tenant quote actions
-- Do **not** remove the UI's disabled quote button/element except as part of the authorized buyer-side follow-on implementation
-- Do **not** treat the disabled button as a defect requiring a fix — its presence is intentional
+- Do **not** reopen this unit (D-008)
 - Do **not** widen scope beyond limited tenant-plane RFQ initiation
 
 ## Drift Guards
 
-- **CRITICAL: Do not remove the disabled B2B Quote UI element.** The tracker explicitly states:
-  *"Keep UI visually disabled until product decision made; do not remove button."*
-  The disabled button is a deliberate holding pattern, not dead code.
 - PRODUCT-DEC-B2B-QUOTE authorizes limited RFQ initiation only. It does not authorize opening
   any seller-side or downstream transaction semantics.
-- This unit has NO parent sibling that is VERIFIED_COMPLETE. There is no B2B Quote A-slice.
-  Scope remains the buyer-side follow-on only, after verified backend prerequisite completion.
-- LOW risk designation (tracker): low business risk, but governance posture still requires
-  strict tenant scoping and narrow RFQ-only semantics.
+- Scope remains tenant-plane buyer RFQ initiation only, after verified backend prerequisite completion.
+- Quantity validation is now strict on the frontend submit path, but tenant authority remains server-derived.
+- LOW risk designation (tracker): low business risk, but governance posture still requires strict tenant scoping
+  and narrow RFQ-only semantics.
 
 ## Control-Plane Source of Truth
 
 | Question | Answer lives in |
 |---|---|
-| Is this unit open? | `governance/control/OPEN-SET.md` (listed as OPEN) |
+| What is this unit's final status? | `governance/control/OPEN-SET.md` (removed from non-terminal set) |
 | What was the blocker? | `governance/control/BLOCKED.md` — Section 4 |
 | What doctrine applies? | `governance/control/DOCTRINE.md` (D-010) |
 | What authorized the scope? | `governance/decisions/PRODUCT-DECISIONS.md` — PRODUCT-DEC-B2B-QUOTE |
 | What unblocked it? | `TECS-FBW-013-BE-001` — commit `451f45b` + verification VERIFIED_COMPLETE |
+| What closed it? | `governance/log/EXECUTION-LOG.md` — `GOVERNANCE-SYNC-TECS-FBW-013` |
 | Historical context | `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` line ~106 area |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
 
 ## Last Governance Confirmation
 
-2026-03-18 — GOVERNANCE-SYNC-TECS-FBW-013-BE-001. Status transitioned: BLOCKED → OPEN.
+2026-03-18 — GOVERNANCE-SYNC-TECS-FBW-013. TECS-FBW-013 VERIFIED_COMPLETE and closed.
+Status transitioned: OPEN → VERIFIED_COMPLETE. Verification: `VERIFY-TECS-FBW-013` — `VERIFIED_COMPLETE`.
