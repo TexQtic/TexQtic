@@ -31,6 +31,8 @@ model Tenant {
   orders                   Order[]
   organizations            organizations?
   reasoningLogs            ReasoningLog[]
+  rfqsAsBuyer              Rfq[]                    @relation("rfq_buyer_org")
+  rfqsAsSupplier           Rfq[]                    @relation("rfq_supplier_org")
   branding                 TenantBranding?
   domains                  TenantDomain[]
   featureOverrides         TenantFeatureOverride[]
@@ -77,6 +79,7 @@ model User {
   memberships              Membership[]
   orders                   Order[]
   passwordResetTokens      PasswordResetToken[]
+  rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
   refreshTokens            RefreshToken[]
 
   @@map("users")
@@ -333,6 +336,7 @@ model CatalogItem {
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
   moq         Int         @default(1)
   cartItems   CartItem[]
+  rfqs        Rfq[]
   tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
 
@@ -552,6 +556,31 @@ model TradeLifecycleLog {
   @@index([toStateKey], map: "idx_trade_lifecycle_logs_to_state")
   @@index([tradeId], map: "idx_trade_lifecycle_logs_trade_id")
   @@map("trade_lifecycle_logs")
+}
+
+/// TECS-RFQ-DOMAIN-001: Canonical, tenant-scoped RFQ entity.
+/// Buyer ownership is enforced by org_id; supplier visibility is mediated by supplier_org_id.
+/// Operational source of truth for RFQ initiation, separate from Trade.
+model Rfq {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId           String      @map("org_id") @db.Uuid
+  supplierOrgId   String      @map("supplier_org_id") @db.Uuid
+  catalogItemId   String      @map("catalog_item_id") @db.Uuid
+  quantity        Int
+  buyerMessage    String?     @map("buyer_message")
+  status          RfqStatus   @default(OPEN)
+  createdByUserId String?     @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  buyerOrg        Tenant      @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
+  supplierOrg     Tenant      @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
+  catalogItem     CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  createdByUser   User?       @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([orgId])
+  @@index([supplierOrgId])
+  @@index([catalogItemId])
+  @@map("rfqs")
 }
 
 /// G-020 D-020-B ESCROW NEUTRALITY: This model records state acknowledgements ONLY.
@@ -1170,4 +1199,13 @@ enum OrderStatus {
   FULFILLED
 
   @@map("order_status")
+}
+
+enum RfqStatus {
+  INITIATED
+  OPEN
+  RESPONDED
+  CLOSED
+
+  @@map("rfq_status")
 }

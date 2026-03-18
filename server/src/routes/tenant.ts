@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
-import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { StateMachineService } from '../services/stateMachine.service.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
@@ -1011,9 +1010,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
-    const requestId = randomUUID();
-    const submittedAt = new Date().toISOString();
-
     const result = await withDbContext(prisma, dbContext, async tx => {
       const catalogItem = await tx.catalogItem.findUnique({
         where: { id: catalogItemId },
@@ -1022,6 +1018,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           name: true,
           sku: true,
           active: true,
+          tenantId: true,
         },
       });
 
@@ -1032,6 +1029,29 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (!catalogItem.active) {
         return { error: 'CATALOG_ITEM_INACTIVE' as const };
       }
+
+      const rfq = await tx.rfq.create({
+        data: {
+          orgId: dbContext.orgId,
+          supplierOrgId: catalogItem.tenantId,
+          catalogItemId: catalogItem.id,
+          quantity,
+          buyerMessage: buyerMessage ?? null,
+          status: 'OPEN',
+          createdByUserId: userId ?? null,
+        },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          quantity: true,
+          catalogItemId: true,
+          supplierOrgId: true,
+        },
+      });
+
+      const requestId = rfq.id;
+      const submittedAt = rfq.createdAt.toISOString();
 
       await writeAuditLog(tx, {
         realm: 'TENANT',
@@ -1049,6 +1069,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           quantity,
           buyerMessage: buyerMessage ?? null,
           status: 'INITIATED',
+          rfqStatus: rfq.status,
+          supplierOrgId: rfq.supplierOrgId,
           nonBinding: true,
           submittedAt,
         },
@@ -1058,14 +1080,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           quantity,
           submittedAt,
           initiatedBy: 'BUYER',
+          supplierOrgId: rfq.supplierOrgId,
           nonBinding: true,
         },
       });
 
       return {
         requestId,
-        catalogItemId: catalogItem.id,
-        quantity,
+        catalogItemId: rfq.catalogItemId,
+        quantity: rfq.quantity,
         submittedAt,
       };
     });
