@@ -684,7 +684,7 @@ export async function listTrades(params?: TradesQueryParams): Promise<TradesResp
   return adminGet<TradesResponse>(endpoint);
 }
 
-// ==================== G-022 ESCALATIONS (TECS-FBW-006-A) ====================
+// ==================== G-022 ESCALATIONS (TECS-FBW-006-B) ====================
 
 /**
  * Control-plane escalation event as returned by GET /api/control/escalations.
@@ -728,6 +728,27 @@ export interface EscalationsListResponse {
   count: number;
 }
 
+export interface UpgradeEscalationRequest {
+  newSeverityLevel: 0 | 1 | 2 | 3 | 4;
+  reason: string;
+}
+
+export interface UpgradeEscalationResponse {
+  escalationEventId: string;
+  createdAt: string;
+}
+
+export interface ResolveControlEscalationRequest {
+  resolutionStatus: 'RESOLVED' | 'OVERRIDDEN';
+  reason: string;
+}
+
+export interface ResolveControlEscalationResponse {
+  escalationEventId: string;
+  resolutionStatus: 'RESOLVED' | 'OVERRIDDEN';
+  action: 'RESOLVED' | 'OVERRIDDEN';
+}
+
 /**
  * List G-022 escalation events for a specified organisation (admin cross-org read).
  * Route: GET /api/control/escalations
@@ -735,8 +756,8 @@ export interface EscalationsListResponse {
  * orgId is mandatory — the endpoint returns 400 if absent (RLS scope boundary).
  * All other params are optional filters passed as URL query parameters.
  *
- * Read-only in TECS-FBW-006-A. Mutation endpoints (create, upgrade, resolve,
- * override) are out of scope for this unit.
+ * TECS-FBW-006-B adds approved control-plane mutation wiring for upgrade,
+ * resolve, and override alongside the existing list surface.
  */
 export async function getEscalations(
   orgId: string,
@@ -749,6 +770,28 @@ export async function getEscalations(
   if (params?.limit !== undefined) queryParams.set('limit', String(params.limit));
 
   return adminGet<EscalationsListResponse>(`/api/control/escalations?${queryParams.toString()}`);
+}
+
+/**
+ * Upgrade an existing escalation through the control-plane route.
+ * Route: POST /api/control/escalations/:id/upgrade
+ */
+export async function upgradeEscalation(
+  escalationId: string,
+  request: UpgradeEscalationRequest,
+): Promise<UpgradeEscalationResponse> {
+  return adminPost<UpgradeEscalationResponse>(`/api/control/escalations/${escalationId}/upgrade`, request);
+}
+
+/**
+ * Resolve or override an existing escalation through the control-plane route.
+ * Route: POST /api/control/escalations/:id/resolve
+ */
+export async function resolveControlEscalation(
+  escalationId: string,
+  request: ResolveControlEscalationRequest,
+): Promise<ResolveControlEscalationResponse> {
+  return adminPost<ResolveControlEscalationResponse>(`/api/control/escalations/${escalationId}/resolve`, request);
 }
 
 // ==================== SYSTEM HEALTH ====================

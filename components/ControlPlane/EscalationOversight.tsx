@@ -1,33 +1,48 @@
 /**
- * EscalationOversight — Control Plane, Read-Only (TECS-FBW-006-A)
+ * EscalationOversight — Control Plane (TECS-FBW-006-B)
  *
- * Surfaces GET /api/control/escalations — admin cross-tenant escalation event list.
+ * Surfaces GET /api/control/escalations plus the approved control-plane mutation subset:
+ *   - upgrade severity via POST /api/control/escalations/:id/upgrade
+ *   - resolve via POST /api/control/escalations/:id/resolve (RESOLVED)
+ *   - override via POST /api/control/escalations/:id/resolve (OVERRIDDEN)
  *
  * Critical constraint: orgId is a MANDATORY query parameter on this endpoint.
  * The API returns 400 if orgId is absent. This component gates all fetches behind
  * a non-empty orgId input — no API call is attempted until orgId is provided.
- *
- * G-022 constitutional compliance:
- *   D-022-A  Severity monotonicity is server-enforced; this panel is display-only.
- *   D-022-B  Org freeze state is read via existing escalation_events rows.
- *   D-022-C  freezeRecommendation is informational only — no kill-switch UI here.
- *   D-022-D  Override path is SUPER_ADMIN only; no override controls in this read unit.
- *
- * Scope (TECS-FBW-006-A):
- *   ✅ Read-only escalation list, scoped to one org at a time
- *   ❌ Create escalation — out of scope (TECS-FBW-006-B)
- *   ❌ Upgrade severity — out of scope (TECS-FBW-006-B)
- *   ❌ Resolve / override — out of scope (TECS-FBW-006-B)
  */
 
 import React, { useState, useCallback } from 'react';
+import { getCurrentUser } from '../../services/authService';
+import { APIError } from '../../services/apiClient';
 import {
   getEscalations,
   type ControlPlaneEscalationEvent,
+  resolveControlEscalation,
+  upgradeEscalation,
 } from '../../services/controlPlaneService';
 import { LoadingState } from '../shared/LoadingState';
 import { ErrorState } from '../shared/ErrorState';
 import { EmptyState } from '../shared/EmptyState';
+
+type BannerTone = 'SUCCESS' | 'ERROR';
+
+interface BannerState {
+  tone: BannerTone;
+  message: string;
+}
+
+type ActionDialogState =
+  | {
+      kind: 'UPGRADE';
+      escalation: ControlPlaneEscalationEvent;
+      newSeverityLevel: 1 | 2 | 3 | 4;
+      reason: string;
+    }
+  | {
+      kind: 'RESOLVE' | 'OVERRIDE';
+      escalation: ControlPlaneEscalationEvent;
+      reason: string;
+    };
 
 // ─── Severity → Badge color map ───────────────────────────────────────────────
 
@@ -83,6 +98,35 @@ function formatDate(iso: string): string {
 
 type FetchState = 'IDLE' | 'LOADING' | 'ERROR' | 'DONE';
 
+function Banner({ tone, message }: BannerState) {
+  const classes =
+    tone === 'SUCCESS'
+      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+      : 'border-rose-500/30 bg-rose-500/10 text-rose-300';
+
+  return <div className={`rounded-xl border px-4 py-3 text-sm ${classes}`}>{message}</div>;
+}
+
+function friendlyEscalationError(err: unknown, fallback: string): string {
+  if (err instanceof APIError) {
+    if (err.status === 403 || err.code === 'FORBIDDEN') {
+      return 'This escalation action is restricted to SUPER_ADMIN posture.';
+    }
+    if (err.code === 'ESCALATION_NOT_FOUND' || err.status === 404) {
+      return 'The escalation could not be found for the selected organisation.';
+    }
+    if (err.code === 'ESCALATION_NOT_OPEN') {
+      return 'This escalation is no longer open.';
+    }
+    if (err.code === 'OVERRIDE_LEVEL_TOO_LOW') {
+      return 'Override is only allowed for escalations at severity LEVEL_2 or higher.';
+    }
+    return err.message || fallback;
+  }
+
+  return err instanceof Error ? err.message : fallback;
+}
+
 // ─── EscalationOversight ─────────────────────────────────────────────────────
 
 export const EscalationOversight: React.FC = () => {
@@ -92,6 +136,13 @@ export const EscalationOversight: React.FC = () => {
   const [count, setCount]                   = useState(0);
   const [fetchState, setFetchState]         = useState<FetchState>('IDLE');
   const [error, setError]                   = useState<string | null>(null);
+  const [adminRole, setAdminRole]           = useState<string | null>(null);
+  const [banner, setBanner]                 = useState<BannerState | null>(null);
+  const [actionDialog, setActionDialog]     = useState<ActionDialogState | null>(null);
+  const [actionError, setActionError]       = useState<string | null>(null);
+  const [actionSubmitting, setActionSubmitting] = useState(false);
+
+  const isSuperAdmin = adminRole === 'SUPER_ADMIN';
 
   const handleFetch = useCallback(async (targetOrgId: string) => {
     if (!targetOrgId.trim()) return;
@@ -99,9 +150,13 @@ export const EscalationOversight: React.FC = () => {
     setFetchState('LOADING');
     setError(null);
     try {
-      const res = await getEscalations(targetOrgId.trim(), { limit: 100 });
+      const [res, meRes] = await Promise.all([
+        getEscalations(targetOrgId.trim(), { limit: 100 }),
+        getCurrentUser().catch(() => null),
+      ]);
       setEscalations(res.escalations);
       setCount(res.count);
+      setAdminRole(meRes?.role ?? null);
       setFetchState('DONE');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load escalations.');
@@ -113,15 +168,184 @@ export const EscalationOversight: React.FC = () => {
     if (e.key === 'Enter') handleFetch(orgIdInput);
   };
 
+  const openUpgradeDialog = (escalation: ControlPlaneEscalationEvent) => {
+    const nextLevel = Math.min(4, escalation.severityLevel + 1) as 1 | 2 | 3 | 4;
+    setActionError(null);
+    setActionDialog({ kind: 'UPGRADE', escalation, newSeverityLevel: nextLevel, reason: '' });
+  };
+
+  const openResolveDialog = (escalation: ControlPlaneEscalationEvent) => {
+    setActionError(null);
+    setActionDialog({ kind: 'RESOLVE', escalation, reason: '' });
+  };
+
+  const openOverrideDialog = (escalation: ControlPlaneEscalationEvent) => {
+    setActionError(null);
+    setActionDialog({ kind: 'OVERRIDE', escalation, reason: '' });
+  };
+
+  const handleConfirmAction = async () => {
+    if (!actionDialog) return;
+
+    if (!actionDialog.reason.trim()) {
+      setActionError('A reason is required for this escalation action.');
+      return;
+    }
+
+    setActionSubmitting(true);
+    setActionError(null);
+
+    try {
+      if (actionDialog.kind === 'UPGRADE') {
+        await upgradeEscalation(actionDialog.escalation.id, {
+          newSeverityLevel: actionDialog.newSeverityLevel,
+          reason: actionDialog.reason.trim(),
+        });
+        setBanner({ tone: 'SUCCESS', message: 'Escalation upgraded successfully.' });
+      } else {
+        const resolutionStatus = actionDialog.kind === 'OVERRIDE' ? 'OVERRIDDEN' : 'RESOLVED';
+        await resolveControlEscalation(actionDialog.escalation.id, {
+          resolutionStatus,
+          reason: actionDialog.reason.trim(),
+        });
+        setBanner({
+          tone: 'SUCCESS',
+          message: actionDialog.kind === 'OVERRIDE' ? 'Escalation override recorded successfully.' : 'Escalation resolved successfully.',
+        });
+      }
+
+      setActionDialog(null);
+      await handleFetch(orgId);
+    } catch (err) {
+      setActionError(friendlyEscalationError(err, 'Failed to update escalation.'));
+      setBanner(null);
+    } finally {
+      setActionSubmitting(false);
+    }
+  };
+
+  const renderActionDialog = () => {
+    if (!actionDialog) return null;
+
+    const escalationLabel = truncateId(actionDialog.escalation.id);
+    const isOverride = actionDialog.kind === 'OVERRIDE';
+    const title =
+      actionDialog.kind === 'UPGRADE'
+        ? 'Confirm Escalation Upgrade'
+        : isOverride
+          ? 'Confirm Override Action'
+          : 'Confirm Resolve Action';
+    const actionButtonClass =
+      actionDialog.kind === 'UPGRADE'
+        ? 'bg-amber-600 hover:bg-amber-700'
+        : isOverride
+          ? 'bg-rose-600 hover:bg-rose-700'
+          : 'bg-emerald-600 hover:bg-emerald-700';
+    const actionButtonLabel =
+      actionDialog.kind === 'UPGRADE'
+        ? 'Confirm Upgrade'
+        : isOverride
+          ? 'Confirm Override'
+          : 'Confirm Resolve';
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4">
+        <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+          <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Escalation <span className="font-mono text-xs text-slate-300">{escalationLabel}</span>
+            {isOverride ? ' will be marked as Override.' : actionDialog.kind === 'RESOLVE' ? ' will be resolved.' : ' will be upgraded to a higher severity.'}
+          </p>
+
+          <div className="mt-4 rounded-xl border border-slate-700 bg-slate-800/70 px-4 py-3 text-sm text-slate-300 space-y-2">
+            <div className="flex justify-between gap-4">
+              <span className="text-slate-500">Current severity</span>
+              <span className="font-semibold">LEVEL_{actionDialog.escalation.severityLevel}</span>
+            </div>
+            {actionDialog.kind === 'UPGRADE' && (
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1.5" htmlFor="control-escalation-level">
+                  New Severity
+                </label>
+                <select
+                  id="control-escalation-level"
+                  value={actionDialog.newSeverityLevel}
+                  onChange={event => {
+                    setActionError(null);
+                    setActionDialog(prev => prev && prev.kind === 'UPGRADE'
+                      ? { ...prev, newSeverityLevel: Number(event.target.value) as 1 | 2 | 3 | 4 }
+                      : prev);
+                  }}
+                  className="w-full rounded-xl border border-slate-600 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {[1, 2, 3, 4]
+                    .filter(level => level > actionDialog.escalation.severityLevel)
+                    .map(level => (
+                      <option key={level} value={level}>LEVEL_{level}</option>
+                    ))}
+                </select>
+              </div>
+            )}
+            {isOverride && (
+              <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                Override remains distinct from ordinary resolve and is only available where the escalation severity threshold permits it.
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-1.5" htmlFor="control-escalation-reason">
+              Reason
+            </label>
+            <textarea
+              id="control-escalation-reason"
+              value={actionDialog.reason}
+              onChange={event => {
+                setActionError(null);
+                setActionDialog(prev => prev ? { ...prev, reason: event.target.value } : prev);
+              }}
+              rows={4}
+              className="w-full rounded-xl border border-slate-600 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+              placeholder={isOverride ? 'Explain why the escalation is being overridden.' : 'Explain the rationale for this action.'}
+            />
+          </div>
+
+          {actionError && <div className="mt-4"><Banner tone="ERROR" message={actionError} /></div>}
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setActionDialog(null)}
+              disabled={actionSubmitting}
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-slate-800 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmAction}
+              disabled={actionSubmitting}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50 ${actionButtonClass}`}
+            >
+              {actionSubmitting ? 'Submitting…' : actionButtonLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-100">Escalation Oversight</h1>
         <p className="text-sm text-slate-400 mt-1">
-          G-022 escalation events — admin cross-tenant read surface (read-only)
+          G-022 escalation events with approved control-plane upgrade, resolve, and override actions.
         </p>
       </div>
+
+      {banner && <Banner tone={banner.tone} message={banner.message} />}
 
       {/* orgId filter — required before any fetch */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
@@ -150,6 +374,11 @@ export const EscalationOversight: React.FC = () => {
         <p className="mt-2 text-xs text-slate-500">
           GET /api/control/escalations requires orgId — results are scoped to the specified organisation.
         </p>
+        {fetchState !== 'IDLE' && !isSuperAdmin && adminRole && (
+          <div className="mt-4">
+            <Banner tone="ERROR" message="Mutation controls are visible only to SUPER_ADMIN posture. Read access remains available." />
+          </div>
+        )}
       </div>
 
       {/* Idle state */}
@@ -195,6 +424,7 @@ export const EscalationOversight: React.FC = () => {
                   <th className="px-5 py-3 text-left">Status</th>
                   <th className="px-5 py-3 text-left">Source</th>
                   <th className="px-5 py-3 text-left">Created</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
@@ -221,6 +451,39 @@ export const EscalationOversight: React.FC = () => {
                     <td className="px-5 py-4 text-xs text-slate-500">
                       {formatDate(esc.createdAt)}
                     </td>
+                    <td className="px-5 py-4 text-right">
+                      {isSuperAdmin && esc.status === 'OPEN' ? (
+                        <div className="flex justify-end gap-2">
+                          {esc.severityLevel < 4 && (
+                            <button
+                              type="button"
+                              onClick={() => openUpgradeDialog(esc)}
+                              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 transition hover:bg-amber-500/20"
+                            >
+                              Upgrade
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => openResolveDialog(esc)}
+                            className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+                          >
+                            Resolve
+                          </button>
+                          {esc.severityLevel >= 2 && (
+                            <button
+                              type="button"
+                              onClick={() => openOverrideDialog(esc)}
+                              className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-rose-200 transition hover:bg-rose-500/20"
+                            >
+                              Override
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-600">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -228,6 +491,8 @@ export const EscalationOversight: React.FC = () => {
           </div>
         </div>
       )}
+
+      {renderActionDialog()}
     </div>
   );
 };

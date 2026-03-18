@@ -1,9 +1,10 @@
 /**
- * TexQtic Escalation Service — Tenant Plane (TECS-FBW-006-A)
+ * TexQtic Escalation Service — Tenant Plane (TECS-FBW-006-B)
  *
- * READ-ONLY in this unit. Only list endpoint wired.
- * Mutation endpoints (create, upgrade, resolve, override) are out of scope
- * for TECS-FBW-006-A and are NOT implemented here.
+ * Tenant-plane surface for escalation reads plus the approved mutation subset:
+ *   - list escalation events
+ *   - create escalation
+ *   - resolve own escalation
  *
  * D-017-A: orgId is NEVER sent by the client in any request body.
  *           tenantGet() enforces the TENANT realm guard and sets X-Texqtic-Realm: tenant.
@@ -13,10 +14,10 @@
  *   D-022-A  Severity monotonicity is enforced server-side only — not a frontend concern.
  *   D-022-B  Org freeze state is server-derived; this service only reads existing rows.
  *   D-022-C  Kill switch is informational; freezeRecommendation is read-only here.
- *   D-022-D  Override path is control-plane only; this service has no override wiring.
+ *   D-022-D  Override path is control-plane only; this service exposes no override wiring.
  */
 
-import { tenantGet } from './tenantApiClient';
+import { tenantGet, tenantPost } from './tenantApiClient';
 
 // ==================== G-022 ESCALATION (TECS-FBW-006-A) ====================
 
@@ -64,6 +65,29 @@ export interface EscalationListResponse {
   count: number;
 }
 
+export type TenantEscalationEntityType = 'TRADE' | 'ESCROW' | 'APPROVAL' | 'LIFECYCLE_LOG';
+
+export interface CreateTenantEscalationRequest {
+  entityType: TenantEscalationEntityType;
+  entityId: string;
+  reason: string;
+  severityLevel: 0 | 1;
+}
+
+export interface CreateTenantEscalationResponse {
+  escalationEventId: string;
+  createdAt: string;
+}
+
+export interface ResolveTenantEscalationRequest {
+  reason: string;
+}
+
+export interface ResolveTenantEscalationResponse {
+  escalationEventId: string;
+  resolutionStatus: 'RESOLVED';
+}
+
 /**
  * List escalation events for the authenticated tenant.
  *
@@ -84,4 +108,26 @@ export async function listEscalations(params?: EscalationListParams): Promise<Es
   const endpoint = qs ? `/api/tenant/escalations?${qs}` : '/api/tenant/escalations';
 
   return tenantGet<EscalationListResponse>(endpoint);
+}
+
+/**
+ * Create a tenant-scoped escalation.
+ * Route: POST /api/tenant/escalations
+ * D-017-A: orgId / tenantId never sent by client; server derives tenant scope from JWT.
+ */
+export async function createEscalation(
+  request: CreateTenantEscalationRequest,
+): Promise<CreateTenantEscalationResponse> {
+  return tenantPost<CreateTenantEscalationResponse>('/api/tenant/escalations', request);
+}
+
+/**
+ * Resolve an existing tenant escalation through the tenant-plane route only.
+ * Route: POST /api/tenant/escalations/:id/resolve
+ */
+export async function resolveEscalation(
+  escalationId: string,
+  request: ResolveTenantEscalationRequest,
+): Promise<ResolveTenantEscalationResponse> {
+  return tenantPost<ResolveTenantEscalationResponse>(`/api/tenant/escalations/${escalationId}/resolve`, request);
 }
