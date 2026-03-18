@@ -2,7 +2,7 @@
 
 **Layer:** 2 — Decision Ledger
 **Authority:** GOV-OS-001-DESIGN.md (Section 3.4)
-**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-ESCALATION-MUTATIONS)
+**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-B2B-QUOTE)
 
 > This file owns all product scope decisions that gate governed units.
 > A DEFERRED unit MUST NOT be treated as implementation-ready due to the existence of
@@ -130,22 +130,49 @@ Impact: Product scope authorized. TECS-FBW-006-B remains DEFERRED until a govern
 
 ### PRODUCT-DEC-B2B-QUOTE
 
-Date: null — decision not yet made
-Authorized by: null — pending operator decision (Paresh)
-Summary: Product must decide whether the B2B Request Quote flow is in scope, and if so, what
-  the exact scope (backend route, frontend activation, pricing model) is. The UI currently
-  shows a visually disabled button that **must remain in place** until this decision is made.
-Impact: Unblocks TECS-FBW-013 when DECIDED/approved. Unit remains DEFERRED until then.
-Status: OPEN
+Date: 2026-03-18
+Authorized by: Paresh
+Status: DECIDED
+Summary: TECS-FBW-013 is authorized for limited tenant-plane B2B quote scope only.
+
+  Authorized scope:
+    - buyer-initiated RFQ submission from the existing B2B Request Quote CTA
+    - org_id-scoped, auditable backend route for RFQ submission
+    - corresponding frontend activation only after that route exists
+    - quote semantics are non-binding RFQ initiation only
+
+  Excluded:
+    - seller negotiation workflows
+    - counter-offers
+    - multi-round negotiation loops
+    - compliance progression
+    - order conversion
+    - checkout
+    - settlement
+    - AI-autonomous quote decisions
+    - control-plane quote actions
+    - public or cross-tenant quote actions
+
+  Constraints:
+    - authenticated tenant users only
+    - org_id scoping mandatory
+    - auditable human-triggered submission only
+    - no auto-promotion from DEFERRED to OPEN in this decision record
+
+Impact: Product scope authorized only. This decision does not itself open TECS-FBW-013.
+  Future sequencing must determine whether a backend prerequisite unit is needed before the
+  parent can move beyond DEFERRED.
 
 **Required For:** TECS-FBW-013 — B2B Request Quote, product decision + backend (tenant plane)
-**Current Known Posture:** Not made. B2B Quote is product-deferred, not a defect. The
-  disabled UI button is an intentional holding pattern (D-010) — it must not be removed.
-**Does Not Authorize:** This placeholder entry does not authorize implementing the quote
-  request backend, activating the UI quote button, or removing the disabled button.
-  TECS-FBW-013 remains DEFERRED regardless of this entry's existence.
-**Next Required Step:** Operator (Paresh) formally records a product decision here with
-  `Status: DECIDED`, then a governance unit must transition TECS-FBW-013 from
-  DEFERRED → OPEN in its unit record and in `governance/control/OPEN-SET.md`.
-**Last Governance Confirmation:** 2026-03-17 — GOV-OS-005 decision ledger bootstrap.
-  Status: OPEN (unresolved).
+**Authorizes:** Limited tenant-plane B2B quote scope only: buyer-initiated RFQ submission,
+  an org_id-scoped auditable backend submission route, and frontend activation only after the
+  route exists. Quote semantics are non-binding RFQ initiation only.
+**Does Not Authorize:** This decision does not directly open TECS-FBW-013, does not change
+  any Layer 0 sequencing state, and does not authorize seller negotiation workflows,
+  counter-offers, multi-round negotiation loops, compliance progression, order conversion,
+  checkout, settlement, AI-autonomous quote decisions, or any control-plane, public, or
+  cross-tenant quote actions.
+**Next Required Step:** A future governance sequencing unit must determine whether a backend
+  prerequisite unit is required before TECS-FBW-013 can move beyond DEFERRED.
+**Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-B2B-QUOTE.
+  Status: DECIDED.
