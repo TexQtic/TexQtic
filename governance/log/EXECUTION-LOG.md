@@ -578,3 +578,22 @@ Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer
 Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
   No unit was reopened. No schema, migrations, or product code changed.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001 — 2026-03-18
+Type: GOVERNANCE / SEQUENCING
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001)
+Title: Sequence first RFQ domain persistence unit after PRODUCT-DEC-RFQ-DOMAIN-MODEL
+Summary: Governance-only sequencing unit. Opened TECS-RFQ-DOMAIN-001 as the single
+  implementation-ready RFQ follow-on unit after PRODUCT-DEC-RFQ-DOMAIN-MODEL was recorded
+  as DECIDED. Authorized scope is backend/schema persistence only: canonical `rfqs` model,
+  `rfq_status` enum, existing RFQ create-path persistence, direct supplier derivation from
+  the catalog item owner, and preservation of `rfq.RFQ_INITIATED`.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-RFQ-DOMAIN-001.md created and set to OPEN;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No schema, migrations, product code, or frontend sequencing opened in this unit.
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/units/TECS-RFQ-DOMAIN-001.md
