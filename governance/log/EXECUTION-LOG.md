@@ -414,6 +414,18 @@ Refs: governance/control/ · governance/units/TECS-FBW-006-B-BE-001.md · govern
 
 ---
 
+### GOVERNANCE-SYNC-TECS-FBW-013-BE-001 — 2026-03-18
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-FBW-013-BE-001)
+Title: Resolve BLK-013-001 and open TECS-FBW-013
+Summary: Recorded TECS-FBW-013-BE-001 as VERIFIED_COMPLETE from implementation commit 451f45b and verification VERIFIED_COMPLETE, resolved BLK-013-001, and transitioned parent unit TECS-FBW-013 from BLOCKED → OPEN. NEXT-ACTION.md now points to TECS-FBW-013.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, BLOCKED.md, SNAPSHOT.md updated; Layer 1 — TECS-FBW-013-BE-001.md updated (OPEN→VERIFIED_COMPLETE, evidence recorded), governance/units/TECS-FBW-013.md updated (BLOCKED→OPEN, blocker resolved); Layer 3 — EXECUTION-LOG.md appended.
+Notes: No product code changed. No frontend activation occurred. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/ · governance/units/TECS-FBW-013-BE-001.md · governance/units/TECS-FBW-013.md
+
+---
+
 ### TECS-FBW-006-B — 2026-03-18
 Type: IMPLEMENTATION
 Status: VERIFIED_COMPLETE

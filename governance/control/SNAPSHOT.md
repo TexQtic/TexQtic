@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOV-CLOSE-TECS-FBW-006-B
-last_commit: "feat(governance): close TECS-FBW-006-B after verified escalation mutation implementation"
+last_unit_closed: GOVERNANCE-SYNC-TECS-FBW-013-BE-001
+last_commit: "feat(governance): resolve BLK-013-001 and open TECS-FBW-013 after verified RFQ backend prerequisite"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -31,22 +31,21 @@ layer_4_installed: true
 - **TECS-FBW-003-B** — `VERIFIED_COMPLETE` — Escrow mutations + detail view; closed 2026-03-18; commit 4d71e17
 - **TECS-FBW-006-B-BE-001** — `VERIFIED_COMPLETE` — Backend prereq route complete; commits a2d8bfc · d212d0d; verified 2026-03-18
 - **TECS-FBW-006-B** — `VERIFIED_COMPLETE` — Escalation mutations closed 2026-03-18; commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS
-- **TECS-FBW-013** — `BLOCKED` — B2B Request Quote; product-authorized limited scope, blocked on missing tenant-plane RFQ submission route
-- **TECS-FBW-013-BE-001** — `OPEN` — Backend prerequisite for tenant RFQ submission route
+- **TECS-FBW-013-BE-001** — `VERIFIED_COMPLETE` — Backend prerequisite route complete; commit 451f45b; verification VERIFIED_COMPLETE
+- **TECS-FBW-013** — `OPEN` — B2B Request Quote follow-on now unblocked after verified tenant-plane RFQ submission route
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**1 implementation unit is currently OPEN.** 1 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 ## Current Next Action
 
-`TECS-FBW-013-BE-001` · Backend prerequisite — tenant RFQ submission route for limited B2B quote scope.
-The remaining non-terminal portfolio is TECS-FBW-013 (`BLOCKED`) · TECS-FBW-013-BE-001 (`OPEN`) ·
-TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
+`TECS-FBW-013` · Frontend activation follow-on — buyer Request Quote CTA on verified RFQ backend prerequisite.
+The remaining non-terminal portfolio is TECS-FBW-013 (`OPEN`) · TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
 
-- **TECS-FBW-013** — BLK-013-001 — Missing tenant-plane RFQ submission route
+*(None — BLK-013-001 resolved 2026-03-18; see BLOCKED.md Section 4)*
 
 ## Active Design Gates
 
@@ -104,3 +103,4 @@ These are distinct closed units and must not be conflated.
 - GOV-CLOSE-TECS-FBW-006-B (2026-03-18): TECS-FBW-006-B transitioned OPEN → VERIFIED_COMPLETE. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-B2B-QUOTE (2026-03-18): PRODUCT-DEC-B2B-QUOTE recorded as DECIDED in Layer 2. Decision authorizes limited tenant-plane RFQ initiation only and does not itself open TECS-FBW-013.
 - GOV-SEQUENCE-TECS-FBW-013 (2026-03-18): TECS-FBW-013 transitioned DEFERRED → BLOCKED on BLK-013-001 because no tenant-plane RFQ submission route exists. Backend prerequisite unit TECS-FBW-013-BE-001 installed as OPEN. NEXT-ACTION.md now points to TECS-FBW-013-BE-001.
+- GOVERNANCE-SYNC-TECS-FBW-013-BE-001 (2026-03-18): TECS-FBW-013-BE-001 recorded VERIFIED_COMPLETE after implementation commit 451f45b and verification VERIFIED_COMPLETE. BLK-013-001 resolved. Parent unit TECS-FBW-013 transitioned BLOCKED → OPEN. NEXT-ACTION.md now points to TECS-FBW-013.

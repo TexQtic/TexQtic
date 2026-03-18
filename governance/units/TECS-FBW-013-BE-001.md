@@ -3,14 +3,14 @@ unit_id: TECS-FBW-013-BE-001
 title: Backend Prerequisite — Tenant RFQ Submission Route
 type: IMPLEMENTATION
 subtype: BACKEND
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: BACKEND
 opened: 2026-03-18
-closed: null
-verified: null
-commit: null
-evidence: null
+closed: 2026-03-18
+verified: 2026-03-18
+commit: "451f45b"
+evidence: "VERIFY-TECS-FBW-013-BE-001: VERIFIED_COMPLETE"
 prerequisite_for: TECS-FBW-013
 doctrine_constraints:
   - D-011: org_id must scope the RFQ submission path; no cross-tenant quote writes permitted
@@ -38,14 +38,14 @@ belong in this prerequisite unit.
 
 ## Acceptance Criteria
 
-- [ ] `POST /api/tenant/rfq` route is designed and implemented server-side
-- [ ] Route requires authenticated tenant users only
-- [ ] org_id is derived from authenticated tenant context; no client-supplied orgId or tenantId accepted
-- [ ] RFQ submission is auditable and human-triggered only
-- [ ] Route implements non-binding RFQ initiation only; no seller workflow or order semantics introduced
-- [ ] TypeScript type-check passes for the backend target (EXIT 0)
-- [ ] Lint passes for the backend target (EXIT 0)
-- [ ] Parent blocker BLK-013-001 is satisfiable from implementation evidence alone
+- [x] `POST /api/tenant/rfq` route is designed and implemented server-side
+- [x] Route requires authenticated tenant users only
+- [x] org_id is derived from authenticated tenant context; no client-supplied orgId or tenantId accepted
+- [x] RFQ submission is auditable and human-triggered only
+- [x] Route implements non-binding RFQ initiation only; no seller workflow or order semantics introduced
+- [x] Response remains narrow and initiation-only
+- [x] No schema, migration, governance, frontend, control-plane quote, seller negotiation, checkout, settlement, or AI-autonomous behavior was introduced
+- [x] Parent blocker BLK-013-001 is satisfiable from implementation evidence alone
 
 ## Files Allowlisted (Modify)
 *To be defined by the TECS-FBW-013-BE-001 implementation prompt.*
@@ -66,23 +66,33 @@ Expected candidates (for future implementation prompt only):
 
 ## Evidence Record
 
-*Not yet recorded — unit is OPEN and awaiting implementation.*
+- Implementation commit: `451f45b` — `feat(api): add tenant RFQ submission route for TECS-FBW-013-BE-001`
+- Verified route: `POST /api/tenant/rfq`
+- Verified characteristics:
+  - tenant-auth protected with `tenantAuthMiddleware` + `databaseContextMiddleware`
+  - strict request schema allows only `catalogItemId`, `quantity`, `buyerMessage`
+  - `quantity` defaults to `1` and must be integer `>= 1`
+  - `buyerMessage` is optional, trimmed, and bounded
+  - catalog item existence + active checks occur under tenant DB context
+  - audit write path records `rfq.RFQ_INITIATED`
+  - response remains narrow and initiation-only
+  - no schema, migration, governance, frontend, control-plane quote, seller negotiation, checkout, settlement, or AI-autonomous behavior introduced
+- Verification result: `VERIFY-TECS-FBW-013-BE-001` — `VERIFIED_COMPLETE`
 
 ## Governance Closure
 
-*Not yet set — unit is OPEN.*
-
-On successful implementation and verification:
-- BLK-013-001 may be resolved
-- Parent unit `TECS-FBW-013` may be reconsidered for `BLOCKED` → `OPEN`
-- A separate governance sequencing / close unit must make that transition explicitly
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-FBW-013-BE-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- BLK-013-001 resolved on 2026-03-18
+- Parent unit `TECS-FBW-013` transitioned `BLOCKED` → `OPEN`
 
 ## Allowed Next Step
 
-Implement this backend prerequisite unit only.
+This unit is **VERIFIED_COMPLETE**. No further implementation work is authorized on this unit.
 
 ## Forbidden Next Step
 
+- Do **not** reopen this unit (D-008)
 - Do **not** activate or wire the frontend Request Quote CTA in this unit
 - Do **not** add seller negotiation workflows, counter-offers, or multi-round quote loops
 - Do **not** add compliance progression, order conversion, checkout, or settlement semantics
@@ -97,6 +107,7 @@ Implement this backend prerequisite unit only.
 - org_id must come from the authenticated tenant context, never from request body input.
 - If implementation requires a wider contract surface than a single tenant-plane RFQ submission route,
   stop and raise a governance blocker instead of widening scope implicitly.
+- This unit remained backend-only and non-binding RFQ initiation only. Any future frontend CTA work belongs in `TECS-FBW-013`.
 
 ## Control-Plane Source of Truth
 
@@ -107,3 +118,7 @@ Implement this backend prerequisite unit only.
 | What authorized it? | `governance/decisions/PRODUCT-DECISIONS.md` — PRODUCT-DEC-B2B-QUOTE |
 | What does it unblock? | `TECS-FBW-013` — limited B2B quote parent unit |
 | What doctrine applies? | `governance/control/DOCTRINE.md` (D-011, D-001, D-002, D-004) |
+
+## Last Governance Confirmation
+
+2026-03-18 — GOVERNANCE-SYNC-TECS-FBW-013-BE-001. Status transitioned: OPEN → VERIFIED_COMPLETE.

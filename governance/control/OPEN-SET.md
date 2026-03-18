@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-18 (GOV-SEQUENCE-TECS-FBW-013)
+**Last Updated:** 2026-03-18 (GOVERNANCE-SYNC-TECS-FBW-013-BE-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,26 +13,25 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-FBW-013 | B2B Request Quote — product decision + backend | BLOCKED | W5 | 2026-03-18 |
-| TECS-FBW-013-BE-001 | Backend Prerequisite — Tenant RFQ Submission Route | OPEN | W5 | 2026-03-18 |
+| TECS-FBW-013 | B2B Request Quote — product decision + backend | OPEN | W5 | 2026-03-18 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1** (TECS-FBW-013-BE-001)
-- **BLOCKED**: 1 (TECS-FBW-013)
+- **OPEN** (implementation-ready): **1** (TECS-FBW-013)
+- **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 3**
+- **Total non-terminal units: 2**
 
 TECS-FBW-006-B closed 2026-03-18: implementation/corrective/alignment commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9 + VERIFY-TECS-FBW-006-B PASS.
 TECS-FBW-003-B closed 2026-03-18: implementation commit 4d71e17 + VERIFY-TECS-FBW-003-B VERIFIED_COMPLETE. GOV-CLOSE-TECS-FBW-003-B.
 TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
 
-TECS-FBW-013 is product-authorized but blocked on a missing tenant-plane RFQ submission route.
-TECS-FBW-013-BE-001 is now the only OPEN implementation-ready unit.
+TECS-FBW-013-BE-001 is VERIFIED_COMPLETE and BLK-013-001 is resolved.
+TECS-FBW-013 is now the only OPEN implementation-ready unit.
 
 ---
 
@@ -42,6 +41,7 @@ TECS-FBW-013-BE-001 is now the only OPEN implementation-ready unit.
 |---|---|---|---|
 | TECS-FBW-006-B | VERIFIED_COMPLETE | 2026-03-18 | d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9 |
 | TECS-FBW-006-B-BE-001 | VERIFIED_COMPLETE | 2026-03-18 | a2d8bfc · d212d0d |
+| TECS-FBW-013-BE-001 | VERIFIED_COMPLETE | 2026-03-18 | 451f45b |
 | TECS-FBW-003-B | VERIFIED_COMPLETE | 2026-03-18 | 4d71e17 |
 | TECS-FBW-002-B | CLOSED | 2026-03-17 | b647092 (frontend) · 5ffd727 (backend) |
 | GOV-SYNC-TECS-FBW-002-B-BLOCKER-RESOLUTION | CLOSED | 2026-03-17 | see git log |

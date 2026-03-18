@@ -2,7 +2,7 @@
 unit_id: TECS-FBW-013
 title: B2B Request Quote — product decision + backend
 type: IMPLEMENTATION
-status: BLOCKED
+status: OPEN
 wave: W5
 plane: TENANT
 opened: 2026-03-07
@@ -18,27 +18,29 @@ decisions_required:
 blockers:
   - id: BLK-013-001
     type: MISSING_BACKEND_ROUTE
-    description: Tenant-plane RFQ submission route does not exist; required before parent unit can open
+    description: Tenant-plane RFQ submission route did not exist; required before parent unit could open
     prerequisite_unit: TECS-FBW-013-BE-001
     registered: 2026-03-18
-    status: ACTIVE
+    resolved: 2026-03-18
+    status: RESOLVED
+    resolution_evidence: "451f45b · VERIFY-TECS-FBW-013-BE-001: VERIFIED_COMPLETE"
 ---
 
 ## Unit Summary
 
-TECS-FBW-013 covers the B2B Request Quote flow: backend route design and frontend activation
-for the product-authorized limited tenant-plane RFQ initiation scope. PRODUCT-DEC-B2B-QUOTE is
-now DECIDED, but the decision explicitly requires a live tenant-plane RFQ submission route before
-any frontend activation may occur. That route does not exist today, so this parent unit is now
-BLOCKED on backend prerequisite BLK-013-001 / TECS-FBW-013-BE-001.
+TECS-FBW-013 covers the B2B Request Quote flow: backend route design follow-on and frontend
+activation for the product-authorized limited tenant-plane RFQ initiation scope. PRODUCT-DEC-B2B-QUOTE is
+DECIDED and backend prerequisite TECS-FBW-013-BE-001 is now VERIFIED_COMPLETE. BLK-013-001 is
+resolved because the required tenant-plane RFQ submission route exists and has passed verification.
+This parent unit is now OPEN for the buyer-side follow-on only.
 
 ## Acceptance Criteria
 
-*Not yet active — unit is BLOCKED pending backend prerequisite completion.*
+*Unit is now OPEN following verified backend prerequisite completion.*
 
 Expected future criteria (illustrative only; do not treat as active work):
 - [x] Product decision recorded in `governance/decisions/PRODUCT-DECISIONS.md`
-- [ ] Backend prerequisite unit `TECS-FBW-013-BE-001` implemented and VERIFIED_COMPLETE
+- [x] Backend prerequisite unit `TECS-FBW-013-BE-001` implemented and VERIFIED_COMPLETE
 - [ ] org_id-scoped for tenant operations
 - [ ] Frontend quote flow enabled only after backend route is live
 - [ ] UI disabled state replaced with functional state (product-authorized transition)
@@ -55,28 +57,30 @@ Expected future criteria (illustrative only; do not treat as active work):
 - `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` (historical reference)
 
 ## Evidence Record
-*Not yet recorded — parent unit is BLOCKED pending backend prerequisite completion.*
+- Backend prerequisite resolved by `TECS-FBW-013-BE-001`
+- Implementation commit for prerequisite: `451f45b`
+- Verification result: `VERIFY-TECS-FBW-013-BE-001` — `VERIFIED_COMPLETE`
+- Resolved blocker evidence: `451f45b · VERIFY-TECS-FBW-013-BE-001: VERIFIED_COMPLETE`
 
 ## Governance Closure
-*Not yet set — unit is BLOCKED and not implementation-ready.*
+*Not yet set — unit is OPEN and implementation-ready for the authorized buyer-side follow-on only.*
 
 ---
 
 ## Allowed Next Step
 
-**Implement TECS-FBW-013-BE-001 only.** This parent unit is BLOCKED.
+**Implement TECS-FBW-013 only.** This parent unit is OPEN.
 
-The only allowed next step is implementation of backend prerequisite unit
-`TECS-FBW-013-BE-001`, followed by verification and a governance close/sequencing unit to
-determine whether this parent may transition from BLOCKED → OPEN.
+The only allowed next step is the buyer-side follow-on implementation now that the backend
+RFQ prerequisite is verified complete.
 
 ## Forbidden Next Step
 
-- Do **not** implement the B2B quote request backend or frontend flow
-- Do **not** activate, enable, or remove the UI's disabled quote button/element
-- Do **not** promote this unit to OPEN or IN_PROGRESS until BLK-013-001 is resolved
+- Do **not** add seller negotiation workflows, counter-offers, or multi-round negotiation loops
+- Do **not** add compliance progression, order conversion, checkout, or settlement semantics
+- Do **not** add AI-autonomous quote decisions, control-plane quote actions, or public/cross-tenant quote actions
+- Do **not** remove the UI's disabled quote button/element except as part of the authorized buyer-side follow-on implementation
 - Do **not** treat the disabled button as a defect requiring a fix — its presence is intentional
-- Do **not** treat this as a gap or bug — it is product-authorized but blocked on missing backend capability
 - Do **not** widen scope beyond limited tenant-plane RFQ initiation
 
 ## Drift Guards
@@ -85,25 +89,25 @@ determine whether this parent may transition from BLOCKED → OPEN.
   *"Keep UI visually disabled until product decision made; do not remove button."*
   The disabled button is a deliberate holding pattern, not dead code.
 - PRODUCT-DEC-B2B-QUOTE authorizes limited RFQ initiation only. It does not authorize opening
-  the parent before the backend route exists.
+  any seller-side or downstream transaction semantics.
 - This unit has NO parent sibling that is VERIFIED_COMPLETE. There is no B2B Quote A-slice.
-  Frontend activation must wait for backend prerequisite completion.
+  Scope remains the buyer-side follow-on only, after verified backend prerequisite completion.
 - LOW risk designation (tracker): low business risk, but governance posture still requires
-  backend capability before implementation may proceed on the parent unit.
+  strict tenant scoping and narrow RFQ-only semantics.
 
 ## Control-Plane Source of Truth
 
 | Question | Answer lives in |
 |---|---|
-| Is this unit open? | `governance/control/OPEN-SET.md` (listed as BLOCKED) |
-| What is the blocker? | `governance/control/BLOCKED.md` — Section 1 |
+| Is this unit open? | `governance/control/OPEN-SET.md` (listed as OPEN) |
+| What was the blocker? | `governance/control/BLOCKED.md` — Section 4 |
 | What doctrine applies? | `governance/control/DOCTRINE.md` (D-010) |
 | What authorized the scope? | `governance/decisions/PRODUCT-DECISIONS.md` — PRODUCT-DEC-B2B-QUOTE |
-| When can it move beyond BLOCKED? | After `TECS-FBW-013-BE-001` resolves BLK-013-001 |
+| What unblocked it? | `TECS-FBW-013-BE-001` — commit `451f45b` + verification VERIFIED_COMPLETE |
 | Historical context | `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` line ~106 area |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
 
 ## Last Governance Confirmation
 
-2026-03-18 — GOV-SEQUENCE-TECS-FBW-013. Status transitioned: DEFERRED → BLOCKED.
+2026-03-18 — GOVERNANCE-SYNC-TECS-FBW-013-BE-001. Status transitioned: BLOCKED → OPEN.
