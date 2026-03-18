@@ -1,12 +1,15 @@
----
 unit_id: TECS-RFQ-SUPPLIER-READ-001
 title: Supplier RFQ Reads — inbox list + detail API slice
 type: IMPLEMENTATION
 subtype: BACKEND
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: BACKEND
 opened: 2026-03-18
+closed: 2026-03-18
+verified: 2026-03-18
+commit: "c5ab120"
+evidence: "VERIFY-TECS-RFQ-SUPPLIER-READ-001: VERIFIED_COMPLETE"
 doctrine_constraints:
   - D-001: RLS remains mandatory on tenant-scoped RFQ reads
   - D-004: this unit is backend read-only only; no frontend work may be mixed in
@@ -32,18 +35,45 @@ exposure beyond the decided minimal posture, or Trade coupling belongs here.
 
 ## Acceptance Criteria
 
-- [ ] Supplier RFQ inbox list API exists on the tenant plane
-- [ ] Supplier RFQ detail API exists on the tenant plane
-- [ ] Reads are limited to RFQs where `supplier_org_id = current tenant`
-- [ ] List and detail are read-only; no mutation semantics introduced
-- [ ] Field projection remains aligned to PRODUCT-DEC-SUPPLIER-RFQ-READS
-- [ ] Supplier-visible statuses remain limited to `INITIATED`, `OPEN`, `RESPONDED`, `CLOSED`
-- [ ] Basic status filtering is implemented only if required by the final route contract
-- [ ] Recency sorting is implemented only if required by the final route contract
-- [ ] Basic RFQ id / item name / item sku search is implemented only if required by the final route contract
-- [ ] Buyer org_id, buyer display label/surrogate, and created_by_user_id remain withheld in this first slice
-- [ ] No supplier response actions, negotiation threads, quote pricing, order conversion,
+- [x] Supplier RFQ inbox list API exists on the tenant plane
+- [x] Supplier RFQ detail API exists on the tenant plane
+- [x] Reads are limited to RFQs where `supplier_org_id = current tenant`
+- [x] List and detail are read-only; no mutation semantics introduced
+- [x] Field projection remains aligned to PRODUCT-DEC-SUPPLIER-RFQ-READS
+- [x] Supplier-visible statuses remain limited to `INITIATED`, `OPEN`, `RESPONDED`, `CLOSED`
+- [x] Basic status filtering is implemented only if required by the final route contract
+- [x] Recency sorting is implemented only if required by the final route contract
+- [x] Basic RFQ id / item name / item sku search is implemented only if required by the final route contract
+- [x] Buyer org_id, buyer display label/surrogate, and created_by_user_id remain withheld in this first slice
+- [x] No supplier response actions, negotiation threads, quote pricing, order conversion,
       checkout, settlement, control-plane reads, AI automation, or Trade coupling introduced
+
+## Evidence Record
+
+- Implementation commit: `c5ab120` — `feat(rfq): add supplier RFQ read endpoints for TECS-RFQ-SUPPLIER-READ-001`
+- Verification result: `VERIFY-TECS-RFQ-SUPPLIER-READ-001` — `VERIFIED_COMPLETE`
+- Verified characteristics:
+  - GET `/api/tenant/rfqs/inbox` exists in the tenant-plane backend route module
+  - GET `/api/tenant/rfqs/inbox/:id` exists in the tenant-plane backend route module
+  - both routes use `tenantAuthMiddleware` + `databaseContextMiddleware`
+  - both routes execute via `withDbContext` with DB-level RLS active
+  - supplier recipient scope is enforced by `supplierOrgId = dbContext.orgId`
+  - no client-supplied `org_id`, `tenantId`, or authority fields are accepted or trusted
+  - status filter is limited to `INITIATED | OPEN | RESPONDED | CLOSED`
+  - recency sort is limited to `updated_at_desc | created_at_desc`
+  - `q` search is limited to RFQ id, item name, and item sku
+  - list query is bounded with fixed `take: 50`; no pagination or broader query surface introduced
+  - list/detail projections match PRODUCT-DEC-SUPPLIER-RFQ-READS exactly using stable snake_case fields
+  - buyer `org_id`, buyer display label/surrogate, and `created_by_user_id` remain withheld
+  - detail returns only a supplier-addressed RFQ row or not-found
+  - no unrelated buyer-identity or joined-data leakage is introduced
+  - no Trade coupling is introduced
+
+## Governance Closure
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-RFQ-SUPPLIER-READ-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
 
 ## Files Allowlisted (Modify)
 
@@ -64,9 +94,7 @@ exposure beyond the decided minimal posture, or Trade coupling belongs here.
 
 ## Allowed Next Step
 
-Implement TECS-RFQ-SUPPLIER-READ-001 as the single authorized supplier RFQ read follow-on unit.
-Work must remain backend-only and read-only, and must stop at tenant-plane supplier RFQ inbox
-list + detail APIs.
+This unit is **VERIFIED_COMPLETE**. No further implementation work is authorized on this unit.
 
 ## Forbidden Next Step
 
@@ -98,4 +126,4 @@ list + detail APIs.
 
 ## Last Governance Confirmation
 
-2026-03-18 — GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-READS-001. Status: `OPEN`.
+2026-03-18 — GOVERNANCE-SYNC-TECS-RFQ-SUPPLIER-READ-001. Status transitioned: `OPEN` → `VERIFIED_COMPLETE`.
