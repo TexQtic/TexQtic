@@ -1,22 +1,20 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-18 (GOV-CLOSE-TECS-FBW-006-B)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-18 (GOV-SEQUENCE-TECS-FBW-013)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: OPERATOR_DECISION_REQUIRED
-type: GOVERNANCE / SEQUENCING
-title: No product unit is OPEN — operator must authorize next action
-prerequisites_met: false
-authorized_by: GOV-CLOSE-TECS-FBW-006-B
+unit_id: TECS-FBW-013-BE-001
+type: IMPLEMENTATION
+title: Backend prerequisite — tenant RFQ submission route for limited B2B quote scope
+prerequisites_met: true
+authorized_by: GOV-SEQUENCE-TECS-FBW-013
 date_authorized: 2026-03-18
 notes: |
-  TECS-FBW-006-B is now VERIFIED_COMPLETE (implementation/corrective/alignment commits
-  d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS).
-  No product unit is currently OPEN. Remaining units are DEFERRED or DESIGN_GATE:
-    - TECS-FBW-013: DEFERRED (B2B Request Quote — awaiting product authorization)
-    - TECS-FBW-ADMINRBAC: DESIGN_GATE (requires product + security decision)
-  No implementation work may begin without operator authorization to undefer or
-  ungate one of the above units.
+  PRODUCT-DEC-B2B-QUOTE is DECIDED, but the authorized scope explicitly requires
+  a live tenant-plane RFQ submission route before any frontend activation may occur.
+  No tenant-plane RFQ submission route exists today, so parent unit TECS-FBW-013
+  is transitioned to BLOCKED on backend prerequisite BLK-013-001.
+  TECS-FBW-013-BE-001 is now OPEN as the single authorized next implementation unit.
 ```

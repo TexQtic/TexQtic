@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-18 (GOV-CLOSE-TECS-FBW-006-B-BE-001)
+**Last Updated:** 2026-03-18 (GOV-SEQUENCE-TECS-FBW-013)
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
@@ -14,7 +14,9 @@
 
 ## Section 1 — BLOCKED (active technical blocker; cannot proceed without resolution)
 
-*(No units currently blocked. BLK-006-B-001 was resolved 2026-03-18 — see Section 4.)*
+| UNIT-ID | Blocker ID | Blocker Type | Description | Standing Instruction | Registered |
+|---|---|---|---|---|---|
+| TECS-FBW-013 | BLK-013-001 | MISSING_BACKEND_ROUTE | Limited B2B quote scope requires a tenant-plane RFQ submission route that does not yet exist | Do not open parent unit or activate CTA; implement backend prerequisite TECS-FBW-013-BE-001 first | 2026-03-18 |
 
 ---
 
@@ -23,7 +25,6 @@
 | UNIT-ID | Deferred Reason | Standing Instruction | Deferred |
 |---|---|---|---|
 | TECS-FBW-003-B | Future scope — escrow mutations + detail view | Do NOT implement; await product authorization | 2026-03-17 |
-| TECS-FBW-013 | Product decision — B2B Request Quote | Do NOT implement or remove UI (keep visually disabled); await product decision | 2026-03-07 |
 
 **Doctrine (D-010):** Deferred items are not bugs. They must not be reopened or implemented
 without explicit product authorization recorded in `governance/decisions/PRODUCT-DECISIONS.md`.
