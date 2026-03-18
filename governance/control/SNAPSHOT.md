@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-18
-last_unit_closed: GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001
-last_commit: "feat(governance): sequence first RFQ domain persistence unit after PRODUCT-DEC-RFQ-DOMAIN-MODEL"
+last_unit_closed: GOVERNANCE-SYNC-TECS-RFQ-DOMAIN-001
+last_commit: "feat(governance): close TECS-RFQ-DOMAIN-001 after verified RFQ domain persistence"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,7 +28,7 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **TECS-RFQ-DOMAIN-001** — `OPEN` — First implementation-ready RFQ follow-on unit; backend/schema only; canonical `rfqs` persistence + existing write-path update authorized 2026-03-18
+- **TECS-RFQ-DOMAIN-001** — `VERIFIED_COMPLETE` — Canonical RFQ domain persistence closed 2026-03-18; implementation commit 3c8fc31 + corrective commit db8cc60; verification `VERIFY-TECS-RFQ-DOMAIN-001: VERIFIED_COMPLETE`
 - **TECS-FBW-003-B** — `VERIFIED_COMPLETE` — Escrow mutations + detail view; closed 2026-03-18; commit 4d71e17
 - **TECS-FBW-006-B-BE-001** — `VERIFIED_COMPLETE` — Backend prereq route complete; commits a2d8bfc · d212d0d; verified 2026-03-18
 - **TECS-FBW-006-B** — `VERIFIED_COMPLETE` — Escalation mutations closed 2026-03-18; commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS
@@ -36,12 +36,12 @@ layer_4_installed: true
 - **TECS-FBW-013** — `VERIFIED_COMPLETE` — Buyer RFQ activation closed 2026-03-18; commits 060cac7 · 7f59a62; VERIFY-TECS-FBW-013 VERIFIED_COMPLETE
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
-**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 ## Current Next Action
 
-`TECS-RFQ-DOMAIN-001` · Introduce RFQ domain persistence as the first implementation-ready follow-on unit.
-Remaining non-terminal portfolio also includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
+`OPERATOR_DECISION_REQUIRED` · No implementation-ready unit is open.
+Remaining non-terminal portfolio is TECS-FBW-ADMINRBAC (`DESIGN_GATE`) only.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -109,3 +109,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-TECS-FBW-013 (2026-03-18): TECS-FBW-013 transitioned OPEN → VERIFIED_COMPLETE. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because TECS-FBW-ADMINRBAC remains DESIGN_GATE and no product unit is OPEN.
 - GOV-RECORD-PRODUCT-DEC-RFQ-DOMAIN-MODEL (2026-03-18): PRODUCT-DEC-RFQ-DOMAIN-MODEL recorded as DECIDED in Layer 2. RFQ is now canonically a first-class entity (`rfqs`), buyer-owned by `org_id`, direct-supplier visible via `supplier_org_id`, operationally separate from Trade, and coexistent with the mandatory audit trail. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
 - GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001 (2026-03-18): TECS-RFQ-DOMAIN-001 opened as the single implementation-ready RFQ follow-on unit. NEXT-ACTION.md now points to canonical RFQ persistence only: `rfqs` model, `rfq_status` enum, existing create-path persistence, direct supplier derivation, and audit preservation. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+- GOVERNANCE-SYNC-TECS-RFQ-DOMAIN-001 (2026-03-18): TECS-RFQ-DOMAIN-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 3c8fc31, corrective commit db8cc60, and `VERIFY-TECS-RFQ-DOMAIN-001: VERIFIED_COMPLETE`. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because TECS-FBW-ADMINRBAC remains DESIGN_GATE and no implementation unit is OPEN.
