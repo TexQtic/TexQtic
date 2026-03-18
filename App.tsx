@@ -494,9 +494,15 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!rfqDialog.product) return;
 
-    const quantity = Number.parseInt(rfqDialog.quantity, 10);
-    if (!Number.isInteger(quantity) || quantity < 1) {
-      setRfqDialog(dialog => ({ ...dialog, error: 'Quantity must be a whole number of at least 1.' }));
+    const quantityInput = rfqDialog.quantity.trim();
+    const quantity = Number(quantityInput);
+    if (
+      quantityInput.length === 0 ||
+      Number.isNaN(quantity) ||
+      !Number.isInteger(quantity) ||
+      quantity < 1
+    ) {
+      setRfqDialog(dialog => ({ ...dialog, error: 'Quantity must be an integer of at least 1.' }));
       return;
     }
 
