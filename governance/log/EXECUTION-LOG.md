@@ -672,3 +672,22 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
 Notes: No frontend unit was opened. No supplier inbox work was opened. No schema or migration
   work was opened. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/units/TECS-RFQ-READ-001.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-READS — 2026-03-18
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-READS)
+Title: Record PRODUCT-DEC-SUPPLIER-RFQ-READS as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-SUPPLIER-RFQ-READS as
+  DECIDED in Layer 2. Supplier-side RFQ reads are now defined as a narrow read-only tenant-plane
+  recipient scope covering inbox list + detail together, limited to rows where `supplier_org_id`
+  matches the current tenant, with minimal field projection and buyer identity withheld in the
+  first slice.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DECISIONS.md updated with the supplier RFQ read decision;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened. No schema, migrations, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md
