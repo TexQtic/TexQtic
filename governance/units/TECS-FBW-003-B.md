@@ -1,46 +1,57 @@
 ---
 unit_id: TECS-FBW-003-B
-title: Escrow Mutations and Detail View — future scope
+title: Escrow Mutations and Detail View — frontend wiring (G-018 tenant endpoints)
 type: IMPLEMENTATION
-status: DEFERRED
+status: VERIFIED_COMPLETE
 wave: W3-residual
 plane: TENANT
 opened: 2026-03-07
-closed: null
-verified: null
-commit: null
-evidence: null
+closed: 2026-03-18
+verified: 2026-03-18
+commit: 4d71e17
+evidence: "VERIFY-TECS-FBW-003-B PASS · commit 4d71e17 · GOV-CLOSE-TECS-FBW-003-B"
 doctrine_constraints:
-  - D-010: product-deferred; must not be treated as a bug or reopened without product authorization
-  - D-011: org_id must scope all escrow mutations when authorized (no cross-tenant write)
-  - D-001: RLS must enforce tenant isolation on any escrow write path
+  - D-010: product-authorized 2026-03-18; PRODUCT-DEC-ESCROW-MUTATIONS DECIDED
+  - D-011: org_id must scope all escrow mutations (no cross-tenant write)
+  - D-001: RLS must enforce tenant isolation on all escrow write paths
 decisions_required:
-  - PRODUCT-DEC-ESCROW-MUTATIONS (not yet made; future product decision required)
+  - PRODUCT-DEC-ESCROW-MUTATIONS (DECIDED 2026-03-18 — see governance/decisions/PRODUCT-DECISIONS.md)
 blockers: []
 ---
 
 ## Unit Summary
 
-TECS-FBW-003-B covers escrow mutations (create, update, dispute, resolve) and the escrow
-detail view in the tenant panel. The parent unit TECS-FBW-003-A (read-only EscrowPanel.tsx)
-is already VERIFIED_COMPLETE. This B-slice is intentionally deferred to future scope by
-product decision. It must not be implemented until explicit product authorization is granted.
+TECS-FBW-003-B covers frontend wiring of all G-018 escrow mutation surfaces: detail view,
+create escrow account, record transaction, and lifecycle transition in the tenant panel.
+The parent unit TECS-FBW-003-A (read-only EscrowPanel.tsx) is VERIFIED_COMPLETE.
+This unit is now OPEN following PRODUCT-DEC-ESCROW-MUTATIONS (DECIDED 2026-03-18,
+authorized by Paresh). The G-018 backend is fully implemented and tested; this unit is
+frontend-only.
 
 ## Acceptance Criteria
 
-*Not yet active — unit is DEFERRED. Acceptance criteria will be defined when product authorizes.*
+*Satisfied — unit is VERIFIED_COMPLETE. All criteria met in commit 4d71e17.*
 
-Expected future criteria (illustrative only; do not treat as active work):
-- [ ] Escrow mutation endpoints designed and implemented (server-side)
-- [ ] EscrowPanel.tsx extended with mutation controls (create/dispute/resolve)
-- [ ] Escrow detail view implemented
-- [ ] Two-phase flow / preview step before commit (per D-020-B doctrine)
-- [ ] org_id-scoped writes; RLS enforced
-- [ ] TypeScript type-check passes (EXIT 0)
-- [ ] Lint passes (EXIT 0)
+- [x] `GET /api/tenant/escrows/:escrowId` — escrow detail view wired in `EscrowPanel.tsx`
+      (derived balance displayed; D-020-B compliant — server-computed SUM, not stored column)
+- [x] `POST /api/tenant/escrows` — create escrow account control wired; DRAFT initial state only
+- [x] `POST /api/tenant/escrows/:escrowId/transactions` — record ledger entry wired
+      HOLD / RELEASE / REFUND available to normal tenant operations users
+      ADJUSTMENT restricted to elevated tenant role (tenant-admin / designated ops authority)
+      aiTriggered always false (D-020-C; no AI integration in this unit)
+      Two-phase confirmation step before any irreversible ledger write
+- [x] `POST /api/tenant/escrows/:escrowId/transition` — lifecycle transition wired
+      All four result states handled in UI: APPLIED / PENDING_APPROVAL / ESCALATION_REQUIRED / DENIED
+      PENDING_APPROVAL surfaces "awaiting approval" feedback (G-021 Maker-Checker)
+      ENTITY_FROZEN error handled gracefully (D-022-B/C)
+- [x] org_id derived from JWT exclusively; tenantId never in request body (D-017-A)
+- [x] `services/escrowService.ts` extended with mutation client functions
+- [x] TypeScript type-check passes (EXIT 0)
+- [x] Lint passes (EXIT 0)
 
 ## Files Allowlisted (Modify)
-*Not yet defined — pending product authorization.*
+- `components/Tenant/EscrowPanel.tsx` — extend with detail view and mutation controls
+- `services/escrowService.ts` — add mutation client functions (create, recordTransaction, transition)
 
 ## Files Read-Only
 - `governance/control/DOCTRINE.md`
@@ -49,30 +60,37 @@ Expected future criteria (illustrative only; do not treat as active work):
 - `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` (historical reference)
 
 ## Evidence Record
-*Not yet recorded — unit is DEFERRED.*
+- Implementation commit: `4d71e17` — `feat(tenant): implement TECS-FBW-003-B escrow detail and mutation flows`
+- Files changed: `components/Tenant/EscrowPanel.tsx` · `services/escrowService.ts` (exactly 2 allowlisted files)
+- Verification: VERIFY-TECS-FBW-003-B — Result: **PASS** — Gap Decision: **VERIFIED_COMPLETE**
+- Verification date: 2026-03-18
+- TypeScript: EXIT 0 (pre-commit) · ESLint: EXIT 0 (pre-commit)
+- All 8 acceptance criteria confirmed satisfied
+- Constitutional constraints confirmed: D-017-A · D-020-B · D-020-C · D-022-B/C · G-021
 
 ## Governance Closure
-*Not yet set — unit is DEFERRED and not implementation-ready.*
+- Governance close unit: `GOV-CLOSE-TECS-FBW-003-B` — 2026-03-18
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- All Layer 0 and Layer 1 files updated by GOV-CLOSE-TECS-FBW-003-B
+- Unit is terminal. Do not reopen (D-008).
 
 ---
 
 ## Allowed Next Step
 
-**Nothing.** This unit is DEFERRED.
+**This unit is VERIFIED_COMPLETE and closed.** No further action on this unit is authorized (D-008).
 
-The only allowed next step is a **product authorization event** recorded in
-`governance/decisions/PRODUCT-DECISIONS.md` (Layer 2 — Decision Ledger), followed by
-a governance unit that transitions this unit from DEFERRED → OPEN. Until that authorization
-exists in the decision ledger, no implementation work may begin.
+The remaining portfolio is: TECS-FBW-006-B (DEFERRED) · TECS-FBW-013 (DEFERRED) · TECS-FBW-ADMINRBAC (DESIGN_GATE).
+An operator decision is required before any further implementation work may begin.
 
 ## Forbidden Next Step
 
-- Do **not** begin any escrow mutation or detail-view implementation
-- Do **not** extend EscrowPanel.tsx with write controls without product authorization
-- Do **not** treat TECS-FBW-003-A (read-only panel, VERIFIED_COMPLETE) as authorization for mutations
-- Do **not** promote this unit to OPEN or IN_PROGRESS without a product decision record
-- Do **not** interpret user feedback or UI polish requests as implicit product authorization
-- Do **not** treat this as a bug — escrow mutation scope was explicitly deferred, not forgotten
+- Do **not** exceed the authorized scope defined in PRODUCT-DEC-ESCROW-MUTATIONS
+- Do **not** implement aiTriggered=true mutation paths (not in scope for this unit)
+- Do **not** touch `EscrowAdminPanel.tsx` or any control-plane escrow surface
+- Do **not** add a balance column to the list view (D-020-B — balance is in detail view only, server-derived)
+- Do **not** implement escalation mutation surfaces (separate unit TECS-FBW-006-B)
+- Do **not** mix governance file edits with implementation work (D-006/D-007)
 
 ## Drift Guards
 
@@ -86,14 +104,16 @@ exists in the decision ledger, no implementation work may begin.
 
 | Question | Answer lives in |
 |---|---|
-| Is this unit open? | `governance/control/OPEN-SET.md` (listed as DEFERRED) |
-| Why is it deferred? | `governance/control/BLOCKED.md` — Section 2 |
-| What doctrine applies? | `governance/control/DOCTRINE.md` (D-010) |
-| When can it be reopened? | After product decision in `governance/decisions/PRODUCT-DECISIONS.md` |
+| Is this unit open? | `governance/control/OPEN-SET.md` (listed as OPEN) |
+| What authorized it? | `governance/decisions/PRODUCT-DECISIONS.md` — PRODUCT-DEC-ESCROW-MUTATIONS (DECIDED 2026-03-18) |
+| What doctrine applies? | `governance/control/DOCTRINE.md` (D-011, D-001, D-020-B) |
+| What is next? | Issue implementation prompt for TECS-FBW-003-B |
 | Historical context | `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` line ~101 |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
 
 ## Last Governance Confirmation
 
-2026-03-17 — GOV-OS-003 Unit Record Migration Batch 1. Status confirmed: DEFERRED.
+2026-03-18 — GOV-CLOSE-TECS-FBW-003-B. TECS-FBW-003-B VERIFIED_COMPLETE and closed.
+Status transitioned: OPEN → VERIFIED_COMPLETE. Implementation commit: 4d71e17.
+Verification: VERIFY-TECS-FBW-003-B — PASS.

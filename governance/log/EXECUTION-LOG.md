@@ -297,3 +297,60 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
 Notes: No decisions changed. No deferred/gated unit statuses changed. No application code changed.
   Operator must authorize the next action before any further implementation work begins.
 Refs: governance/control/ · governance/units/TECS-FBW-002-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### TECS-FBW-003-B — 2026-03-18
+Type: IMPLEMENTATION
+Status: VERIFIED_COMPLETE
+Commit: 4d71e17
+Title: Escrow Mutations and Detail View — frontend wiring (G-018 tenant endpoints)
+Summary: Implemented EscrowPanel.tsx mutation flows and extended escrowService.ts with G-018
+  tenant endpoint client functions. Covers LIST/CREATE/DETAIL panel with create escrow,
+  record transaction (HOLD/RELEASE/REFUND/ADJUSTMENT with role gate), and lifecycle transition
+  (APPLIED/PENDING_APPROVAL/ESCALATION_REQUIRED/DENIED/FROZEN). D-017-A enforced (no tenantId
+  in body); D-020-B enforced (balance server-sourced only); D-020-C enforced (aiTriggered=false);
+  D-022-B/C enforced (ENTITY_FROZEN surfaced); G-021 enforced (PENDING_APPROVAL maker-checker).
+  TypeScript EXIT:0 · ESLint EXIT:0. Exactly 2 allowlisted files changed.
+Layer Impact: Layer 0 — none (governance sync handled in GOV-CLOSE-TECS-FBW-003-B);
+  Layer 1 — none (unit record updated in GOV-CLOSE-TECS-FBW-003-B)
+Notes: ADJUSTMENT restricted to OWNER/ADMIN via getCurrentUser() safe-fail pattern.
+  Two-phase confirmation before any irreversible ledger write. Frontend-only commit.
+Refs: components/Tenant/EscrowPanel.tsx · services/escrowService.ts
+
+---
+
+### VERIFY-TECS-FBW-003-B — 2026-03-18
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (read-only verification unit)
+Title: Verify TECS-FBW-003-B escrow mutation and detail view implementation
+Summary: Read-only verification of TECS-FBW-003-B implementation (commit 4d71e17). Confirmed:
+  escrow detail view wired (GET /api/tenant/escrows/:escrowId); create wired (POST /api/tenant/escrows);
+  record transaction wired with two-phase confirmation; lifecycle transition wired with all 5
+  outcome kinds (APPLIED/PENDING_APPROVAL/ESCALATION_REQUIRED/DENIED/FROZEN) distinctly rendered;
+  ADJUSTMENT option gated by canUseAdjustment (OWNER/ADMIN only); D-017-A/D-020-B/D-020-C/D-022-B/C/G-021
+  all confirmed; exactly 2 allowlisted files; TypeScript EXIT:0; ESLint EXIT:0. Result: PASS.
+Layer Impact: None (read-only unit)
+Notes: Gap Decision: VERIFIED_COMPLETE. All 8 acceptance criteria confirmed satisfied.
+  No defects found. TECS-FBW-003-B cleared for governance closure.
+Refs: governance/units/TECS-FBW-003-B.md · components/Tenant/EscrowPanel.tsx · services/escrowService.ts
+
+---
+
+### GOV-CLOSE-TECS-FBW-003-B — 2026-03-18
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-FBW-003-B)
+Title: Record verified closure of TECS-FBW-003-B escrow mutation implementation
+Summary: Governance-only sync/close unit. Recorded closure of TECS-FBW-003-B based on
+  implementation commit 4d71e17 and VERIFY-TECS-FBW-003-B (PASS, VERIFIED_COMPLETE).
+  TECS-FBW-003-B transitioned OPEN→VERIFIED_COMPLETE across Layer 0, Layer 1, and Layer 3.
+  NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED — no product unit is currently OPEN.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — TECS-FBW-003-B.md updated (OPEN→VERIFIED_COMPLETE, all acceptance criteria ticked, evidence recorded);
+  Layer 3 — EXECUTION-LOG.md appended (TECS-FBW-003-B, VERIFY-TECS-FBW-003-B, this entry)
+Notes: No decisions changed. No deferred/gated unit statuses changed. No application code changed.
+  Operator must authorize the next action before any further implementation work begins.
+  Remaining portfolio: TECS-FBW-006-B (DEFERRED) · TECS-FBW-013 (DEFERRED) · TECS-FBW-ADMINRBAC (DESIGN_GATE).
+Refs: governance/control/ · governance/units/TECS-FBW-003-B.md · governance/log/EXECUTION-LOG.md
