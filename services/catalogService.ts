@@ -107,6 +107,35 @@ export interface CreateRfqResponse {
   submittedAt: string;
 }
 
+export type BuyerRfqStatus = 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
+
+export interface BuyerRfqSupplierResponse {
+  id: string;
+  supplier_org_id: string;
+  message: string;
+  submitted_at: string;
+  created_at: string;
+}
+
+export interface BuyerRfqDetail {
+  id: string;
+  status: BuyerRfqStatus;
+  catalog_item_id: string;
+  item_name: string;
+  item_sku: string;
+  quantity: number;
+  supplier_org_id: string;
+  created_at: string;
+  updated_at: string;
+  buyer_message: string | null;
+  created_by_user_id: string;
+  supplier_response: BuyerRfqSupplierResponse | null;
+}
+
+export interface BuyerRfqDetailResponse {
+  rfq: BuyerRfqDetail;
+}
+
 /**
  * Create a catalog item (OWNER/ADMIN only)
  *
@@ -127,4 +156,8 @@ export async function createRfq(
   payload: CreateRfqRequest
 ): Promise<CreateRfqResponse> {
   return tenantPost<CreateRfqResponse>('/api/tenant/rfq', payload);
+}
+
+export async function getBuyerRfqDetail(rfqId: string): Promise<BuyerRfqDetailResponse> {
+  return tenantGet<BuyerRfqDetailResponse>(`/api/tenant/rfqs/${rfqId}`);
 }

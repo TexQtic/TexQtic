@@ -56,9 +56,10 @@ import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
-import { getCatalogItems, CatalogItem, createCatalogItem, createRfq } from './services/catalogService';
+import { getCatalogItems, CatalogItem, createCatalogItem, createRfq, getBuyerRfqDetail, BuyerRfqDetail } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
+import { BuyerRfqDetailSurface } from './components/Tenant/BuyerRfqDetailSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
@@ -164,6 +165,19 @@ const App: React.FC = () => {
     loading: false,
     error: null,
     success: null,
+  });
+  const [rfqDetailView, setRfqDetailView] = useState<{
+    open: boolean;
+    rfqId: string | null;
+    loading: boolean;
+    error: string | null;
+    data: BuyerRfqDetail | null;
+  }>({
+    open: false,
+    rfqId: null,
+    loading: false,
+    error: null,
+    data: null,
   });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
@@ -488,6 +502,13 @@ const App: React.FC = () => {
       error: null,
       success: null,
     });
+    setRfqDetailView({
+      open: false,
+      rfqId: null,
+      loading: false,
+      error: null,
+      data: null,
+    });
   };
 
   const handleSubmitRfq = async (e: React.FormEvent) => {
@@ -525,6 +546,13 @@ const App: React.FC = () => {
           quantity: response.quantity,
         },
       }));
+      setRfqDetailView({
+        open: false,
+        rfqId: response.requestId,
+        loading: false,
+        error: null,
+        data: null,
+      });
     } catch (error) {
       console.error('Failed to submit RFQ:', error);
       setRfqDialog(dialog => ({
@@ -533,6 +561,47 @@ const App: React.FC = () => {
         error: error instanceof APIError ? error.message : 'Failed to submit your request for quote. Please try again.',
       }));
     }
+  };
+
+  const handleOpenRfqDetail = async () => {
+    const rfqId = rfqDialog.success?.requestId;
+    if (!rfqId) return;
+
+    if (rfqDetailView.rfqId === rfqId && rfqDetailView.data) {
+      setRfqDetailView(view => ({ ...view, open: true, error: null }));
+      return;
+    }
+
+    setRfqDetailView({
+      open: true,
+      rfqId,
+      loading: true,
+      error: null,
+      data: null,
+    });
+
+    try {
+      const response = await getBuyerRfqDetail(rfqId);
+      setRfqDetailView({
+        open: true,
+        rfqId,
+        loading: false,
+        error: null,
+        data: response.rfq,
+      });
+    } catch (error) {
+      setRfqDetailView({
+        open: true,
+        rfqId,
+        loading: false,
+        error: error instanceof APIError ? error.message : 'Unable to load RFQ detail right now.',
+        data: null,
+      });
+    }
+  };
+
+  const handleCloseRfqDetail = () => {
+    setRfqDetailView(view => ({ ...view, open: false }));
   };
 
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
@@ -1463,6 +1532,41 @@ const App: React.FC = () => {
     }
   };
 
+  const rfqSuccessContent = rfqDetailView.open ? (
+    <BuyerRfqDetailSurface
+      rfq={rfqDetailView.data}
+      loading={rfqDetailView.loading}
+      error={rfqDetailView.error}
+      onBack={handleCloseRfqDetail}
+      onClose={handleCloseRfqDialog}
+    />
+  ) : (
+    <div className="space-y-4">
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-4 text-sm text-emerald-800">
+        Your request for quote was initiated for {rfqDialog.success?.quantity} unit(s). It remains non-binding until a separate quote workflow is provided.
+      </div>
+      <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+        Reference ID: {rfqDialog.success?.requestId}
+      </div>
+      <div className="flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={handleOpenRfqDetail}
+          className="px-5 py-3 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 transition"
+        >
+          View RFQ Detail
+        </button>
+        <button
+          type="button"
+          onClick={handleCloseRfqDialog}
+          className="px-5 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative font-sans">
       {rfqDialog.open && rfqDialog.product && (
@@ -1476,25 +1580,7 @@ const App: React.FC = () => {
               </p>
             </div>
 
-            {rfqDialog.success ? (
-              <div className="space-y-4">
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-4 text-sm text-emerald-800">
-                  Your request for quote was initiated for {rfqDialog.success.quantity} unit(s). It remains non-binding until a separate quote workflow is provided.
-                </div>
-                <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-                  Reference ID: {rfqDialog.success.requestId}
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleCloseRfqDialog}
-                    className="px-5 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            ) : (
+            {rfqDialog.success ? rfqSuccessContent : (
               <form className="space-y-5" onSubmit={handleSubmitRfq}>
                 <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-start">
                   <div>
