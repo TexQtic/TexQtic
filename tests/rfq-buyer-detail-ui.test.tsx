@@ -70,9 +70,12 @@ describe('TECS-RFQ-BUYER-DETAIL-UI-001 — buyer RFQ detail surface', () => {
     const html = renderHtml(makeBuyerRfqDetail());
 
     expect(html).toContain('RFQ Detail');
+    expect(html).toContain('Status: RESPONDED');
+    expect(html).toContain('RFQ Reference');
+    expect(html).toContain('Supplier Response');
+    expect(html).toContain('Response Message');
     expect(html).toContain('Italian Cotton Twill');
     expect(html).toContain('COT-TWL-001');
-    expect(html).toContain('RESPONDED');
     expect(html).toContain('Need delivery timing and packaging notes.');
     expect(html).toContain('We can supply this request within 10 business days.');
   });
@@ -80,7 +83,7 @@ describe('TECS-RFQ-BUYER-DETAIL-UI-001 — buyer RFQ detail surface', () => {
   it('renders a stable empty state when no supplier response exists', () => {
     const html = renderHtml(makeBuyerRfqDetail({ status: 'OPEN', supplier_response: null }));
 
-    expect(html).toContain('No supplier response has been shared yet.');
+    expect(html).toContain('No supplier response has been shared yet. If the supplier replies later, the response will appear here without changing the current RFQ workflow.');
     expect(html).not.toContain('We can supply this request within 10 business days.');
   });
 
@@ -88,7 +91,7 @@ describe('TECS-RFQ-BUYER-DETAIL-UI-001 — buyer RFQ detail surface', () => {
     const html = renderHtml(null, { error: 'RFQ not found.' });
 
     expect(html).toContain('RFQ not found.');
-    expect(html).toContain('The requested RFQ detail could not be displayed.');
+    expect(html).toContain('The current RFQ detail view is unavailable, but no RFQ workflow state has changed.');
   });
 
   it('does not render forbidden controls or pricing surfaces', () => {
