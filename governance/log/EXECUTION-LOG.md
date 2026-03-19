@@ -657,6 +657,26 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.m
 
 ---
 
+### GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-RESPONSE-001 — 2026-03-19
+Type: GOVERNANCE / SEQUENCING
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-RESPONSE-001)
+Title: Sequence first supplier RFQ response unit after PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE
+Summary: Governance-only sequencing unit. Opened TECS-RFQ-RESPONSE-001 as the single
+  implementation-ready supplier RFQ response follow-on unit after PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE
+  was recorded as DECIDED. Authorized scope is backend/schema only: supplier response child
+  entity aligned to the decision, supplier-authorized response creation, one-response-per-RFQ
+  posture, RFQ status transition to `RESPONDED`, and audit coexistence if required by existing
+  RFQ doctrine.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-RFQ-RESPONSE-001.md created and set to OPEN;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No frontend unit was opened. No negotiation, pricing, control-plane RFQ workflow,
+  AI automation, or Trade coupling work was opened. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/units/TECS-RFQ-RESPONSE-001.md
+
+---
+
 ### GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001 — 2026-03-18
 Type: GOVERNANCE / SEQUENCING
 Status: CLOSED
