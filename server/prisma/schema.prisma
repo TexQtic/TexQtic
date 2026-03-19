@@ -32,6 +32,7 @@ model Tenant {
   organizations            organizations?
   reasoningLogs            ReasoningLog[]
   rfqsAsBuyer              Rfq[]                    @relation("rfq_buyer_org")
+  rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_supplier_org")
   rfqsAsSupplier           Rfq[]                    @relation("rfq_supplier_org")
   branding                 TenantBranding?
   domains                  TenantDomain[]
@@ -80,6 +81,7 @@ model User {
   orders                   Order[]
   passwordResetTokens      PasswordResetToken[]
   rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
+  rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_created_by_user")
   refreshTokens            RefreshToken[]
 
   @@map("users")
@@ -572,6 +574,7 @@ model Rfq {
   createdByUserId String?     @map("created_by_user_id") @db.Uuid
   createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  supplierResponse RfqSupplierResponse? @relation("rfq_supplier_response")
   buyerOrg        Tenant      @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
   supplierOrg     Tenant      @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
   catalogItem     CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
@@ -581,6 +584,27 @@ model Rfq {
   @@index([supplierOrgId])
   @@index([catalogItemId])
   @@map("rfqs")
+}
+
+/// TECS-RFQ-RESPONSE-001: Canonical first-slice supplier RFQ response artifact.
+/// Supplier response remains separate from rfqs and is constrained to one response per RFQ.
+/// Pricing, negotiation, revision history, and Trade coupling are out of scope.
+model RfqSupplierResponse {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfqId           String   @unique @map("rfq_id") @db.Uuid
+  supplierOrgId   String   @map("supplier_org_id") @db.Uuid
+  message         String
+  submittedAt     DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  rfq             Rfq      @relation("rfq_supplier_response", fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  supplierOrg     Tenant   @relation("rfq_response_supplier_org", fields: [supplierOrgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  createdByUser   User     @relation("rfq_response_created_by_user", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@index([supplierOrgId])
+  @@index([createdByUserId])
+  @@map("rfq_supplier_responses")
 }
 
 /// G-020 D-020-B ESCROW NEUTRALITY: This model records state acknowledgements ONLY.

@@ -101,6 +101,17 @@ type SupplierRfqDetailRow = SupplierRfqListRow & {
   buyerMessage: string | null;
 };
 
+type SupplierRfqResponseRow = {
+  id: string;
+  rfqId: string;
+  supplierOrgId: string;
+  message: string;
+  submittedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  createdByUserId: string;
+};
+
 function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
   return {
     id: rfq.id,
@@ -140,6 +151,19 @@ function mapSupplierRfqDetail(rfq: SupplierRfqDetailRow) {
   return {
     ...mapSupplierRfqListItem(rfq),
     buyer_message: rfq.buyerMessage,
+  };
+}
+
+function mapSupplierRfqResponse(response: SupplierRfqResponseRow) {
+  return {
+    id: response.id,
+    rfq_id: response.rfqId,
+    supplier_org_id: response.supplierOrgId,
+    message: response.message,
+    submitted_at: response.submittedAt,
+    created_at: response.createdAt,
+    updated_at: response.updatedAt,
+    created_by_user_id: response.createdByUserId,
   };
 }
 
@@ -1271,6 +1295,163 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
 
     return sendSuccess(reply, { rfq: mapSupplierRfqDetail(rfq) });
+  });
+
+  /**
+   * POST /api/tenant/rfqs/inbox/:id/respond
+   * Record the first supplier-side non-binding RFQ response for a supplier-addressed RFQ.
+   */
+  fastify.post('/tenant/rfqs/inbox/:id/respond', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+    if (!userId) {
+      return sendError(reply, 'UNAUTHORIZED', 'User context missing', 401);
+    }
+
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const bodySchema = z.object({
+      message: z.string().trim().min(1).max(1000),
+    }).strict();
+    const bodyResult = bodySchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return sendValidationError(reply, bodyResult.error.errors);
+    }
+
+    const rfqId = paramsResult.data.id;
+    const message = bodyResult.data.message;
+
+    try {
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        const rfq = await tx.rfq.findFirst({
+          where: {
+            id: rfqId,
+            supplierOrgId: dbContext.orgId,
+          },
+          select: {
+            id: true,
+            supplierOrgId: true,
+            status: true,
+          },
+        });
+
+        if (!rfq) {
+          return { error: 'RFQ_NOT_FOUND' as const };
+        }
+
+        if (rfq.status === 'CLOSED') {
+          return { error: 'RFQ_CLOSED' as const };
+        }
+
+        if (rfq.status === 'RESPONDED') {
+          return { error: 'RFQ_ALREADY_RESPONDED' as const };
+        }
+
+        const existingResponse = await tx.rfqSupplierResponse.findUnique({
+          where: { rfqId },
+          select: { id: true },
+        });
+
+        if (existingResponse) {
+          return { error: 'RFQ_RESPONSE_ALREADY_EXISTS' as const };
+        }
+
+        const response = await tx.rfqSupplierResponse.create({
+          data: {
+            rfqId,
+            supplierOrgId: dbContext.orgId,
+            message,
+            createdByUserId: userId,
+          },
+          select: {
+            id: true,
+            rfqId: true,
+            supplierOrgId: true,
+            message: true,
+            submittedAt: true,
+            createdAt: true,
+            updatedAt: true,
+            createdByUserId: true,
+          },
+        });
+
+        await tx.rfq.update({
+          where: { id: rfqId },
+          data: { status: 'RESPONDED' },
+          select: { id: true, status: true },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId,
+          action: 'rfq.RFQ_RESPONDED',
+          entity: 'rfq_supplier_response',
+          entityId: response.id,
+          afterJson: {
+            id: response.id,
+            rfqId: response.rfqId,
+            supplierOrgId: response.supplierOrgId,
+            message: response.message,
+            submittedAt: response.submittedAt.toISOString(),
+            createdAt: response.createdAt.toISOString(),
+            updatedAt: response.updatedAt.toISOString(),
+            createdByUserId: response.createdByUserId,
+            nonBinding: true,
+          },
+          metadataJson: {
+            rfqId: response.rfqId,
+            supplierOrgId: response.supplierOrgId,
+            respondedAt: response.submittedAt.toISOString(),
+            parentRfqStatus: 'RESPONDED',
+            nonBinding: true,
+          },
+        });
+
+        return { response };
+      });
+
+      if ('error' in result) {
+        if (result.error === 'RFQ_NOT_FOUND') {
+          return sendNotFound(reply, 'RFQ not found');
+        }
+        if (result.error === 'RFQ_CLOSED') {
+          return sendError(reply, 'RFQ_CLOSED', 'RFQ is closed', 409);
+        }
+        if (result.error === 'RFQ_ALREADY_RESPONDED') {
+          return sendError(reply, 'RFQ_ALREADY_RESPONDED', 'RFQ already has a supplier response', 409);
+        }
+        if (result.error === 'RFQ_RESPONSE_ALREADY_EXISTS') {
+          return sendError(reply, 'RFQ_RESPONSE_ALREADY_EXISTS', 'RFQ already has a supplier response', 409);
+        }
+
+        return sendError(reply, 'CONFLICT', 'Unable to create RFQ response', 409);
+      }
+
+      return sendSuccess(reply, {
+        response: mapSupplierRfqResponse(result.response),
+        rfq: {
+          id: result.response.rfqId,
+          status: 'RESPONDED',
+        },
+        non_binding: true,
+      }, 201);
+    } catch (error: unknown) {
+      const prismaError = error as { code?: string };
+      if (prismaError?.code === 'P2002') {
+        return sendError(reply, 'RFQ_RESPONSE_ALREADY_EXISTS', 'RFQ already has a supplier response', 409);
+      }
+      throw error;
+    }
   });
 
   /**
