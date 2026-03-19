@@ -1012,6 +1012,28 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-DESIGN-GOVERNAN
 
 ---
 
+### GOV-REFINE-GOVERNANCE-LINTER-V2 — 2026-03-19
+Type: GOVERNANCE / PROCESS-REFINEMENT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-REFINE-GOVERNANCE-LINTER-V2)
+Title: Calibrate governance-linter v1 against real repo usage
+Summary: Governance/process refinement unit. Calibrated the installed governance linter against
+  actual repo behavior by narrowing human-boundary warnings to changed canonical unit and decision
+  records only, collapsing duplicate per-file warning noise into one clearer advisory message, and
+  printing the changed-file list in the console report for easier local and CI inspection. No new
+  machine-enforced policy rules were introduced.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 3 —
+  EXECUTION-LOG.md appended (this entry); Governance/process tooling — `scripts/governance-lint.ts`
+  and `governance/GOVERNANCE-LINTER.md` refined
+Notes: OPEN-SET.md remains unchanged because no non-terminal unit status changed. NEXT-ACTION.md
+  remains OPERATOR_DECISION_REQUIRED. This refinement reduces warning noise from explanatory or
+  carry-forward files without expanding the linter into human-only historical, chronology,
+  materiality, or sequencing decisions. No application feature code, tests, schema, migrations,
+  policies, or secret-bearing files were modified.
+Refs: governance/control/SNAPSHOT.md · scripts/governance-lint.ts · governance/GOVERNANCE-LINTER.md
+
+---
+
 ### GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW — 2026-03-19
 Type: GOVERNANCE / PROCESS-IMPLEMENTATION
 Status: CLOSED

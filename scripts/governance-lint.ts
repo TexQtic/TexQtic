@@ -97,6 +97,11 @@ function main(): void {
   const changedFiles = collectChangedFiles();
 
   console.log(`[lint] Changed files detected: ${changedFiles.length}`);
+  if (changedFiles.length > 0) {
+    for (const file of changedFiles) {
+      console.log(`[lint]   - ${file}`);
+    }
+  }
 
   const layer0Summary = validateLayer0(failures);
   validateSnapshotConsistency(layer0Summary, failures);
@@ -297,12 +302,6 @@ function validateChangedFiles(changedFiles: string[], failures: string[], warnin
       validateVerificationTaxonomy(file, text, failures);
       validateArchiveOnlyClosure(file, text, failures);
       addHumanBoundaryWarnings(file, text, warnings);
-      continue;
-    }
-
-    if (/^governance\/.*\.md$/.test(file)) {
-      const text = readRepoFile(file);
-      addHumanBoundaryWarnings(file, text, warnings);
     }
   }
 }
@@ -374,11 +373,30 @@ function validateArchiveOnlyClosure(file: string, text: string, failures: string
 }
 
 function addHumanBoundaryWarnings(file: string, text: string, warnings: string[]): void {
-  if (/(historical|reconciliation|backfill|Case A|Case B|Case C|Case D|Case E)/i.test(text)) {
-    warnings.push(`${file} touches historical-reconciliation language. Case classification and exactness remain human-only judgment.`);
+  const touchesHistorical = /(historical|reconciliation|backfill|Case A|Case B|Case C|Case D|Case E)/i.test(text);
+  const touchesSequencing = /(sequencing|materially present|materially implemented)/i.test(text);
+
+  if (!touchesHistorical && !touchesSequencing) {
+    return;
   }
-  if (/(sequencing|materially present|materially implemented)/i.test(text)) {
-    warnings.push(`${file} touches sequencing or materiality language. Priority choice and materiality remain human-only judgment.`);
+
+  const categories: string[] = [];
+  if (touchesHistorical) {
+    categories.push('historical classification / exactness');
+  }
+  if (touchesSequencing) {
+    categories.push('sequencing / materiality');
+  }
+
+  pushUniqueWarning(
+    warnings,
+    `${file} touches human-review-only governance judgment (${categories.join(', ')}). These remain outside automation.`
+  );
+}
+
+function pushUniqueWarning(warnings: string[], warning: string): void {
+  if (!warnings.includes(warning)) {
+    warnings.push(warning);
   }
 }
 

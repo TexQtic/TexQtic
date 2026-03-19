@@ -10,6 +10,9 @@ It is intentionally narrow.
 It checks machine-verifiable structure only and does not attempt to automate historical,
 materiality, chronology, or sequencing judgment.
 
+When it emits human-boundary warnings, those warnings are intentionally limited to changed
+canonical unit or decision records where that judgment is actionable.
+
 ## What It Checks
 
 1. Layer 0 structural consistency in `OPEN-SET.md`, `NEXT-ACTION.md`, and `SNAPSHOT.md`
@@ -48,5 +51,9 @@ GitHub Actions runs the same command in `.github/workflows/governance-lint.yml`.
 
 CI hard-fails only for structural violations.
 Human-only judgment remains outside automation.
+
+Human-boundary warnings are advisory only. They appear when a changed canonical unit or decision
+record touches historical-classification, exactness, sequencing, or materiality language. The
+workflow does not warn on carry-forward summaries or maintainer notes alone.
 
 The workflow uploads `artifacts/governance-lint-report.json` for inspection on both pass and fail.
