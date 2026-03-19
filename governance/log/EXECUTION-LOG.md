@@ -879,3 +879,24 @@ Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECI
   No unit was opened or reopened. TECS-FBW-ADMINRBAC remains DESIGN_GATE. RFQ remains capped
   at pre-negotiation. No schema, migrations, tests, or product code changed.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED — 2026-03-19
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED)
+Title: Record PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED as
+  DECIDED in Layer 2. Wave 4 is now formally bounded as a strategic domain for governed
+  operator/back-office surfaces, white-label enablement, compliance/read-model layers, and
+  advisory AI/infrastructure consideration only. Settlement remains limited to "Not Fintech Now"
+  system-of-record visibility, AI remains advisory only, and white-label/custom-domain routing
+  remains a favored future stream without any implementation authorization.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. RFQ remains capped at pre-negotiation. TECS-FBW-ADMINRBAC
+  remains DESIGN_GATE. No schema, migrations, tests, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED.md · governance/log/EXECUTION-LOG.md

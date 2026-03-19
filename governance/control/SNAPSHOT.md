@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOV-RECORD-PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY
-last_commit: "feat(governance): record next operator product decision"
+last_unit_closed: GOV-RECORD-PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED
+last_commit: "feat(governance): ratify wave 4 boundary"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -149,3 +149,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-RFQ-002 (2026-03-19): governance drift reconciled after TECS-RFQ-BUYER-LIST-READ-001 was already implemented, verified, and committed in 64500cf. Layer 0/1/3 now reflect the installed buyer RFQ discovery posture: buyer initiation, buyer discovery list, buyer detail UI foundation, buyer-visible bounded supplier response reads, supplier response submission, and parent RFQ transition to RESPONDED. Pre-negotiation exclusions remain explicit: no pricing, negotiation, acceptance, counter-offers, thread model, comparison, dashboard-scale expansion, backend redesign, or workflow mutation scope.
 - GOV-RECORD-PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP (2026-03-19): PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP recorded as DECIDED in Layer 2. RFQ remains intentionally capped at the installed pre-negotiation posture after discovery completion. Future RFQ pricing, negotiation, acceptance/rejection, counter-offers, messaging, supplier comparison, and Trade / checkout / settlement / order conversion work now require a separate later product decision. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY (2026-03-19): PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY recorded as DECIDED in Layer 2. The immediate post-RFQ operator priority is now Wave 4 boundary ratification, and white-label / custom-domain routing is designated as the favored first non-RFQ feature stream once the documented settlement/addendum/AI prerequisites are formally satisfied. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOV-RECORD-PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED (2026-03-19): PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED recorded as DECIDED in Layer 2. Wave 4 is now formally bounded to governed operator/back-office, white-label enablement, compliance/read-model, and advisory AI/infrastructure consideration only. Settlement remains "Not Fintech Now" system-of-record visibility only, AI remains advisory only, RFQ remains capped, and white-label/custom-domain routing remains a favored future stream without being opened. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
