@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-19 (GOVERNANCE-SYNC-RFQ-001)
+**Last Updated:** 2026-03-19 (GOVERNANCE-SYNC-RFQ-002)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -26,6 +26,7 @@
 - **Total non-terminal units: 1**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
+TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
 TECS-RFQ-BUYER-RESPONSE-READ-001 closed 2026-03-19: implementation commit 211800a + VERIFY-TECS-RFQ-BUYER-RESPONSE-READ-001 VERIFIED_COMPLETE.
 TECS-RFQ-RESPONSE-001 closed 2026-03-19: implementation commit 7edb891 + VERIFY-TECS-RFQ-RESPONSE-001 VERIFIED_COMPLETE.
 TECS-RFQ-SUPPLIER-READ-001 closed 2026-03-18: implementation commit c5ab120 + VERIFY-TECS-RFQ-SUPPLIER-READ-001 VERIFIED_COMPLETE.
@@ -44,6 +45,7 @@ TECS-FBW-ADMINRBAC remains DESIGN_GATE and is not authorized to open.
 
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
+| TECS-RFQ-BUYER-LIST-READ-001 | VERIFIED_COMPLETE | 2026-03-19 | 64500cf |
 | TECS-RFQ-BUYER-DETAIL-UI-001 | VERIFIED_COMPLETE | 2026-03-19 | dcb5964 |
 | TECS-RFQ-BUYER-RESPONSE-READ-001 | VERIFIED_COMPLETE | 2026-03-19 | 211800a |
 | TECS-RFQ-RESPONSE-001 | VERIFIED_COMPLETE | 2026-03-19 | 7edb891 |

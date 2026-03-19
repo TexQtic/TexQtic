@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOVERNANCE-SYNC-RFQ-001
-last_commit: "chore(governance): sync rfq state after buyer detail ui completion"
+last_unit_closed: GOVERNANCE-SYNC-RFQ-002
+last_commit: "feat(governance): sync buyer rfq list read unit"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,6 +28,7 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
+- **TECS-RFQ-BUYER-LIST-READ-001** — `VERIFIED_COMPLETE` — Buyer RFQ discovery surface closed 2026-03-19; implementation commit 64500cf; verified RFQ UI evidence: `vitest.cmd --root . run tests/rfq-buyer-detail-ui.test.tsx tests/rfq-buyer-list-ui.test.tsx` with 2 files passed / 11 tests passed; buyers can now discover their own RFQs through a minimal read-only list surface and open the existing RFQ detail surface using existing backend read contracts only
 - **TECS-RFQ-BUYER-DETAIL-UI-001** — `VERIFIED_COMPLETE` — Buyer RFQ detail UI foundation closed 2026-03-19; implementation commit dcb5964; verification `VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001: VERIFIED_COMPLETE`; buyer-safe success-dialog entry path now opens a minimal RFQ detail surface using the existing backend detail contract
 - **TECS-RFQ-BUYER-RESPONSE-READ-001** — `VERIFIED_COMPLETE` — Buyer-visible bounded supplier response read slice closed 2026-03-19; implementation commit 211800a; verification `VERIFY-TECS-RFQ-BUYER-RESPONSE-READ-001: VERIFIED_COMPLETE`; buyer RFQ detail reads now include the bounded supplier response artifact when present and null-safe absence when not present
 - **TECS-RFQ-RESPONSE-001** — `VERIFIED_COMPLETE` — Supplier RFQ response foundation closed 2026-03-19; implementation commit 7edb891; verification `VERIFY-TECS-RFQ-RESPONSE-001: VERIFIED_COMPLETE`; remote baseline + response migrations applied, reconciled, and verified
@@ -48,6 +49,7 @@ layer_4_installed: true
 RFQ now supports:
 
 - buyer RFQ initiation
+- buyer RFQ discovery list
 - buyer RFQ detail UI (minimal foundation)
 - buyer-visible bounded supplier response reads
 - supplier response submission
@@ -144,3 +146,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-RESPONSE-001 (2026-03-19): TECS-RFQ-RESPONSE-001 opened as the single implementation-ready supplier RFQ response follow-on unit after PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE was recorded as DECIDED. NEXT-ACTION.md now points to backend/schema-only supplier RFQ response foundation: response child entity, supplier-authorized create path, one-response-per-RFQ posture, RFQ status transition to `RESPONDED`, and audit coexistence if required. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOVERNANCE-SYNC-TECS-RFQ-RESPONSE-001 (2026-03-19): TECS-RFQ-RESPONSE-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 7edb891 and verification `VERIFY-TECS-RFQ-RESPONSE-001: VERIFIED_COMPLETE`. Remote prerequisite and response migrations were applied, reconciled, and verified. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because no implementation-ready unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOVERNANCE-SYNC-RFQ-001 (2026-03-19): governance truth refreshed after TECS-RFQ-BUYER-RESPONSE-READ-001 and TECS-RFQ-BUYER-DETAIL-UI-001 both reached VERIFIED_COMPLETE. Layer 0 now reflects the installed RFQ posture: buyer initiation, buyer detail UI foundation, buyer-visible bounded supplier response reads, supplier response submission, and parent RFQ transition to RESPONDED. Pre-negotiation exclusions remain explicit: no pricing, negotiation, acceptance, counter-offers, thread model, or Trade / checkout / order coupling.
+- GOVERNANCE-SYNC-RFQ-002 (2026-03-19): governance drift reconciled after TECS-RFQ-BUYER-LIST-READ-001 was already implemented, verified, and committed in 64500cf. Layer 0/1/3 now reflect the installed buyer RFQ discovery posture: buyer initiation, buyer discovery list, buyer detail UI foundation, buyer-visible bounded supplier response reads, supplier response submission, and parent RFQ transition to RESPONDED. Pre-negotiation exclusions remain explicit: no pricing, negotiation, acceptance, counter-offers, thread model, comparison, dashboard-scale expansion, backend redesign, or workflow mutation scope.
