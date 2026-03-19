@@ -859,3 +859,23 @@ Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECI
   No unit was opened or reopened. TECS-FBW-ADMINRBAC remains DESIGN_GATE. No schema,
   migrations, tests, or product code changed.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY — 2026-03-19
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY)
+Title: Record PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY
+  as DECIDED in Layer 2. After RFQ closure, the immediate operator priority is Wave 4
+  boundary ratification, and white-label / custom-domain routing is now the favored first
+  non-RFQ feature stream once the documented settlement-boundary, addendum sign-off, and AI
+  ratification prerequisites are formally satisfied. No implementation was authorized in this unit.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. TECS-FBW-ADMINRBAC remains DESIGN_GATE. RFQ remains capped
+  at pre-negotiation. No schema, migrations, tests, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY.md · governance/log/EXECUTION-LOG.md
