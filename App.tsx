@@ -56,10 +56,11 @@ import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
-import { getCatalogItems, CatalogItem, createCatalogItem, createRfq, getBuyerRfqDetail, BuyerRfqDetail } from './services/catalogService';
+import { getCatalogItems, CatalogItem, createCatalogItem, createRfq, getBuyerRfqs, getBuyerRfqDetail, BuyerRfqDetail, BuyerRfqListItem } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
 import { BuyerRfqDetailSurface } from './components/Tenant/BuyerRfqDetailSurface';
+import { BuyerRfqListSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
@@ -119,7 +120,7 @@ const App: React.FC = () => {
   // TECS-FBW-015: 'TRACEABILITY' added for G-016 traceability CRUD panel
   // TECS-FBW-016: 'AUDIT_LOGS' added for tenant audit log read-only panel
   // TECS-FBW-002-B: 'TRADES' added for G-017 tenant trade read-only panel
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS' | 'TRADES'>('HOME');
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS' | 'TRADES' | 'RFQS'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -168,16 +169,27 @@ const App: React.FC = () => {
   });
   const [rfqDetailView, setRfqDetailView] = useState<{
     open: boolean;
+    source: 'dialog' | 'list' | null;
     rfqId: string | null;
     loading: boolean;
     error: string | null;
     data: BuyerRfqDetail | null;
   }>({
     open: false,
+    source: null,
     rfqId: null,
     loading: false,
     error: null,
     data: null,
+  });
+  const [buyerRfqListView, setBuyerRfqListView] = useState<{
+    loading: boolean;
+    error: string | null;
+    rfqs: BuyerRfqListItem[];
+  }>({
+    loading: false,
+    error: null,
+    rfqs: [],
   });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
@@ -504,6 +516,7 @@ const App: React.FC = () => {
     });
     setRfqDetailView({
       open: false,
+      source: null,
       rfqId: null,
       loading: false,
       error: null,
@@ -548,6 +561,7 @@ const App: React.FC = () => {
       }));
       setRfqDetailView({
         open: false,
+        source: null,
         rfqId: response.requestId,
         loading: false,
         error: null,
@@ -563,28 +577,70 @@ const App: React.FC = () => {
     }
   };
 
-  const handleOpenRfqDetail = async () => {
-    const rfqId = rfqDialog.success?.requestId;
-    if (!rfqId) return;
+  const handleOpenBuyerRfqs = async () => {
+    setExpView('RFQS');
+    setRfqDetailView(view =>
+      view.source === 'list'
+        ? {
+            open: false,
+            source: null,
+            rfqId: null,
+            loading: false,
+            error: null,
+            data: null,
+          }
+        : view
+    );
+    setBuyerRfqListView(view => ({
+      ...view,
+      loading: true,
+      error: null,
+    }));
 
-    if (rfqDetailView.rfqId === rfqId && rfqDetailView.data) {
+    try {
+      const response = await getBuyerRfqs();
+      setBuyerRfqListView({
+        loading: false,
+        error: null,
+        rfqs: response.rfqs,
+      });
+    } catch (error) {
+      setBuyerRfqListView({
+        loading: false,
+        error: error instanceof APIError ? error.message : 'Unable to load your RFQs right now.',
+        rfqs: [],
+      });
+    }
+  };
+
+  const handleOpenRfqDetail = async (rfqId?: string, source: 'dialog' | 'list' = 'dialog') => {
+    const nextRfqId = rfqId ?? rfqDialog.success?.requestId;
+    if (!nextRfqId) return;
+
+    if (source === 'list') {
+      setExpView('RFQS');
+    }
+
+    if (rfqDetailView.rfqId === nextRfqId && rfqDetailView.data && rfqDetailView.source === source) {
       setRfqDetailView(view => ({ ...view, open: true, error: null }));
       return;
     }
 
     setRfqDetailView({
       open: true,
-      rfqId,
+      source,
+      rfqId: nextRfqId,
       loading: true,
       error: null,
       data: null,
     });
 
     try {
-      const response = await getBuyerRfqDetail(rfqId);
+      const response = await getBuyerRfqDetail(nextRfqId);
       setRfqDetailView({
         open: true,
-        rfqId,
+        source,
+        rfqId: nextRfqId,
         loading: false,
         error: null,
         data: response.rfq,
@@ -592,12 +648,29 @@ const App: React.FC = () => {
     } catch (error) {
       setRfqDetailView({
         open: true,
-        rfqId,
+        source,
+        rfqId: nextRfqId,
         loading: false,
         error: error instanceof APIError ? error.message : 'Unable to load RFQ detail right now.',
         data: null,
       });
     }
+  };
+
+  const handleReturnToBuyerRfqList = () => {
+    setRfqDetailView({
+      open: false,
+      source: null,
+      rfqId: null,
+      loading: false,
+      error: null,
+      data: null,
+    });
+  };
+
+  const handleCloseBuyerRfqs = () => {
+    handleReturnToBuyerRfqList();
+    setExpView('HOME');
   };
 
   const handleCloseRfqDetail = () => {
@@ -750,6 +823,31 @@ const App: React.FC = () => {
     // G-025 TECS 4D: DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
     if (expView === 'DPP') return <DPPPassport onBack={() => setExpView('HOME')} />;
     if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
+    if (expView === 'RFQS') {
+      if (rfqDetailView.open && rfqDetailView.source === 'list') {
+        return (
+          <BuyerRfqDetailSurface
+            rfq={rfqDetailView.data}
+            loading={rfqDetailView.loading}
+            error={rfqDetailView.error}
+            onBack={handleReturnToBuyerRfqList}
+            onClose={handleCloseBuyerRfqs}
+          />
+        );
+      }
+
+      return (
+        <BuyerRfqListSurface
+          rfqs={buyerRfqListView.rfqs}
+          loading={buyerRfqListView.loading}
+          error={buyerRfqListView.error}
+          onViewDetail={rfqId => {
+            void handleOpenRfqDetail(rfqId, 'list');
+          }}
+          onBack={handleCloseBuyerRfqs}
+        />
+      );
+    }
     // TECS-FBW-003-A: G-018 tenant escrow read surface (D-020-B: no balance; D-017-A: no tenantId in body)
     if (expView === 'ESCROW') return <EscrowPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-006-A: G-022 tenant escalation read surface (read-only; D-017-A compliant)
@@ -839,6 +937,15 @@ const App: React.FC = () => {
                 <p className="text-slate-500">Tiered pricing and MOQ enforcement active.</p>
               </div>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleOpenBuyerRfqs();
+                  }}
+                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
+                >
+                  View My RFQs
+                </button>
                 <button
                   onClick={() => setShowAddItemForm(v => !v)}
                   className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition text-sm"
@@ -1551,7 +1658,9 @@ const App: React.FC = () => {
       <div className="flex justify-end gap-3">
         <button
           type="button"
-          onClick={handleOpenRfqDetail}
+          onClick={() => {
+            void handleOpenRfqDetail();
+          }}
           className="px-5 py-3 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm font-semibold hover:bg-slate-50 transition"
         >
           View RFQ Detail
