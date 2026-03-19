@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOV-RECORD-PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED
-last_commit: "feat(governance): ratify wave 4 boundary"
+last_unit_closed: GOV-RECORD-PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING
+last_commit: "feat(governance): sequence first wave 4 candidate"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -150,3 +150,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP (2026-03-19): PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP recorded as DECIDED in Layer 2. RFQ remains intentionally capped at the installed pre-negotiation posture after discovery completion. Future RFQ pricing, negotiation, acceptance/rejection, counter-offers, messaging, supplier comparison, and Trade / checkout / settlement / order conversion work now require a separate later product decision. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY (2026-03-19): PRODUCT-DEC-POST-RFQ-WL-DOMAINS-PRIORITY recorded as DECIDED in Layer 2. The immediate post-RFQ operator priority is now Wave 4 boundary ratification, and white-label / custom-domain routing is designated as the favored first non-RFQ feature stream once the documented settlement/addendum/AI prerequisites are formally satisfied. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED (2026-03-19): PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED recorded as DECIDED in Layer 2. Wave 4 is now formally bounded to governed operator/back-office, white-label enablement, compliance/read-model, and advisory AI/infrastructure consideration only. Settlement remains "Not Fintech Now" system-of-record visibility only, AI remains advisory only, RFQ remains capped, and white-label/custom-domain routing remains a favored future stream without being opened. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOV-RECORD-PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING (2026-03-19): PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING recorded as DECIDED in Layer 2. White-label / custom-domain routing remains the favored first Wave 4 stream, but no implementation unit was opened because the stream still carries unresolved prerequisite G-026-H in its own design anchor. RFQ remains capped, AdminRBAC remains DESIGN_GATE, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.

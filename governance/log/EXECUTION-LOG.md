@@ -900,3 +900,23 @@ Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECI
   No unit was opened or reopened. RFQ remains capped at pre-negotiation. TECS-FBW-ADMINRBAC
   remains DESIGN_GATE. No schema, migrations, tests, or product code changed.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-WAVE4-BOUNDARY-RATIFIED.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING — 2026-03-19
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING)
+Title: Record PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING
+  as DECIDED in Layer 2. White-label / custom-domain routing remains the favored first Wave 4
+  candidate because it fits the ratified Wave 4 boundary more cleanly than RFQ continuation,
+  AdminRBAC, or DPP expansion, but no implementation was authorized because the stream still has
+  unresolved prerequisite G-026-H recorded in its design anchor.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. RFQ remains capped at pre-negotiation. TECS-FBW-ADMINRBAC
+  remains DESIGN_GATE. No schema, migrations, tests, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING.md · governance/log/EXECUTION-LOG.md
