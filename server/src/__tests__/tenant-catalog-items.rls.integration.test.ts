@@ -385,3 +385,357 @@ describe.skipIf(!hasDb)('Gate C.2 — Pilot Route RLS Contract Tests', () => {
     expect(body.error).toBeDefined();
   });
 });
+
+describe.skipIf(!hasDb)('TECS-RFQ-BUYER-RESPONSE-READ-001 — Buyer RFQ detail reads', () => {
+  let server: FastifyInstance | null = null;
+  let testRunId: string;
+  let buyerOrgId: string;
+  let supplierOrgId: string;
+  let otherBuyerOrgId: string;
+  let buyerUserId: string;
+  let supplierUserId: string;
+  let otherBuyerUserId: string;
+  let buyerToken: string;
+  let supplierToken: string;
+  let otherBuyerToken: string;
+  let catalogItemId: string;
+  let respondedRfqId: string;
+  let openRfqId: string;
+
+  beforeEach(async () => {
+    testRunId = randomUUID();
+    buyerOrgId = randomUUID();
+    supplierOrgId = randomUUID();
+    otherBuyerOrgId = randomUUID();
+
+    await seedTenantForTest(buyerOrgId, testRunId);
+    await seedTenantForTest(supplierOrgId, testRunId);
+    await seedTenantForTest(otherBuyerOrgId, testRunId);
+
+    await withBypassForSeed(prisma, async tx => {
+      const passwordHash = await bcrypt.hash('test-password', 10);
+
+      const buyerUser = await tx.user.create({
+        data: {
+          id: randomUUID(),
+          email: `buyer-${testRunId}@test.local`,
+          passwordHash,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+        },
+      });
+      buyerUserId = buyerUser.id;
+
+      const supplierUser = await tx.user.create({
+        data: {
+          id: randomUUID(),
+          email: `supplier-${testRunId}@test.local`,
+          passwordHash,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+        },
+      });
+      supplierUserId = supplierUser.id;
+
+      const otherBuyerUser = await tx.user.create({
+        data: {
+          id: randomUUID(),
+          email: `other-buyer-${testRunId}@test.local`,
+          passwordHash,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
+        },
+      });
+      otherBuyerUserId = otherBuyerUser.id;
+
+      await tx.membership.createMany({
+        data: [
+          {
+            tenantId: buyerOrgId,
+            userId: buyerUserId,
+            role: 'OWNER',
+          },
+          {
+            tenantId: supplierOrgId,
+            userId: supplierUserId,
+            role: 'OWNER',
+          },
+          {
+            tenantId: otherBuyerOrgId,
+            userId: otherBuyerUserId,
+            role: 'OWNER',
+          },
+        ],
+      });
+
+      const catalogItem = await tx.catalogItem.create({
+        data: {
+          id: randomUUID(),
+          tenantId: supplierOrgId,
+          name: `RFQ Supplier Item [tag:${testRunId}]`,
+          sku: `RFQ-${testRunId}`,
+          description: `RFQ response read fixture for ${testRunId}`,
+          price: 25,
+          active: true,
+        },
+      });
+      catalogItemId = catalogItem.id;
+
+      const respondedRfq = await tx.rfq.create({
+        data: {
+          id: randomUUID(),
+          orgId: buyerOrgId,
+          supplierOrgId,
+          catalogItemId,
+          quantity: 5,
+          buyerMessage: 'Please confirm availability',
+          status: 'RESPONDED',
+          createdByUserId: buyerUserId,
+        },
+      });
+      respondedRfqId = respondedRfq.id;
+
+      await tx.rfqSupplierResponse.create({
+        data: {
+          rfqId: respondedRfqId,
+          supplierOrgId,
+          message: 'We can supply this request within 10 business days.',
+          createdByUserId: supplierUserId,
+        },
+      });
+
+      const openRfq = await tx.rfq.create({
+        data: {
+          id: randomUUID(),
+          orgId: buyerOrgId,
+          supplierOrgId,
+          catalogItemId,
+          quantity: 3,
+          buyerMessage: 'Need lead time confirmation',
+          status: 'OPEN',
+          createdByUserId: buyerUserId,
+        },
+      });
+      openRfqId = openRfq.id;
+    });
+
+    server = Fastify({ logger: false });
+    await server.register(fastifyCookie, { secret: 'test-secret' });
+    await server.register(fastifyJwt, {
+      secret: config.JWT_ACCESS_SECRET,
+      namespace: 'tenant',
+      jwtVerify: 'tenantJwtVerify',
+      jwtSign: 'tenantJwtSign',
+    });
+
+    await server.register(async fastify => {
+      fastify.addHook('onRequest', async (request, reply) => {
+        try {
+          await request.tenantJwtVerify({ onlyCookie: false });
+          const payload = request.user as { userId?: string; tenantId?: string };
+
+          if (!payload.userId || !payload.tenantId) {
+            return reply.code(401).send({ success: false, error: 'Invalid token payload' });
+          }
+
+          request.userId = payload.userId;
+          request.tenantId = payload.tenantId;
+        } catch {
+          return reply.code(401).send({ success: false, error: 'Invalid or expired token' });
+        }
+      });
+
+      fastify.addHook('onRequest', databaseContextMiddleware);
+      await fastify.register(tenantRoutes, { prefix: '/api' });
+    });
+
+    await server.ready();
+
+    buyerToken = jwt.sign({ userId: buyerUserId, tenantId: buyerOrgId }, config.JWT_ACCESS_SECRET, {
+      expiresIn: '1h',
+    });
+    supplierToken = jwt.sign({ userId: supplierUserId, tenantId: supplierOrgId }, config.JWT_ACCESS_SECRET, {
+      expiresIn: '1h',
+    });
+    otherBuyerToken = jwt.sign({ userId: otherBuyerUserId, tenantId: otherBuyerOrgId }, config.JWT_ACCESS_SECRET, {
+      expiresIn: '1h',
+    });
+  }, 30000);
+
+  afterEach(async () => {
+    if (server) {
+      await server.close().catch(() => {});
+      server = null;
+    }
+
+    await withBypassForSeed(prisma, async tx => {
+      await tx.rfqSupplierResponse.deleteMany({
+        where: {
+          rfqId: { in: [respondedRfqId, openRfqId] },
+        },
+      });
+
+      await tx.rfq.deleteMany({
+        where: {
+          id: { in: [respondedRfqId, openRfqId] },
+        },
+      });
+
+      await tx.catalogItem.deleteMany({ where: { id: catalogItemId } });
+
+      await tx.membership.deleteMany({
+        where: {
+          OR: [
+            { tenantId: buyerOrgId },
+            { tenantId: supplierOrgId },
+            { tenantId: otherBuyerOrgId },
+          ],
+        },
+      });
+
+      await tx.user.deleteMany({
+        where: {
+          id: { in: [buyerUserId, supplierUserId, otherBuyerUserId] },
+        },
+      });
+
+      await tx.tenant.deleteMany({
+        where: {
+          id: { in: [buyerOrgId, supplierOrgId, otherBuyerOrgId] },
+        },
+      });
+    });
+  }, 30000);
+
+  it('buyer can read a bounded supplier response for its own RFQ', async () => {
+    const response = await server!.inject({
+      method: 'GET',
+      url: `/api/tenant/rfqs/${respondedRfqId}`,
+      headers: {
+        Authorization: `Bearer ${buyerToken}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(true);
+    expect(body.data.rfq.id).toBe(respondedRfqId);
+    expect(body.data.rfq.status).toBe('RESPONDED');
+    expect(body.data.rfq.supplier_org_id).toBe(supplierOrgId);
+    expect(body.data.rfq.supplier_response).toEqual(
+      expect.objectContaining({
+        id: expect.any(String),
+        supplier_org_id: supplierOrgId,
+        message: 'We can supply this request within 10 business days.',
+        submitted_at: expect.any(String),
+        created_at: expect.any(String),
+      })
+    );
+    expect(body.data.rfq.supplier_response).not.toHaveProperty('created_by_user_id');
+    expect(body.data.rfq.supplier_response).not.toHaveProperty('price');
+    expect(body.data.rfq.supplier_response).not.toHaveProperty('currency');
+    expect(body.data.rfq.supplier_response).not.toHaveProperty('total');
+  });
+
+  it('buyer sees a stable null response when no supplier response exists', async () => {
+    const response = await server!.inject({
+      method: 'GET',
+      url: `/api/tenant/rfqs/${openRfqId}`,
+      headers: {
+        Authorization: `Bearer ${buyerToken}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(true);
+    expect(body.data.rfq.id).toBe(openRfqId);
+    expect(body.data.rfq.status).toBe('OPEN');
+    expect(body.data.rfq.supplier_response).toBeNull();
+  });
+
+  it('cross-tenant buyers cannot read another buyer org response through the buyer path', async () => {
+    const response = await server!.inject({
+      method: 'GET',
+      url: `/api/tenant/rfqs/${respondedRfqId}`,
+      headers: {
+        Authorization: `Bearer ${otherBuyerToken}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('supplier tenants cannot use the buyer detail path to read buyer RFQs', async () => {
+    const response = await server!.inject({
+      method: 'GET',
+      url: `/api/tenant/rfqs/${respondedRfqId}`,
+      headers: {
+        Authorization: `Bearer ${supplierToken}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+
+    const body = JSON.parse(response.body);
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('single-response semantics remain unchanged after buyer-visible reads are added', async () => {
+    const firstResponse = await server!.inject({
+      method: 'POST',
+      url: `/api/tenant/rfqs/inbox/${openRfqId}/respond`,
+      headers: {
+        Authorization: `Bearer ${supplierToken}`,
+      },
+      payload: {
+        message: 'Availability confirmed for the requested quantity.',
+      },
+    });
+
+    expect(firstResponse.statusCode).toBe(201);
+
+    const secondResponse = await server!.inject({
+      method: 'POST',
+      url: `/api/tenant/rfqs/inbox/${openRfqId}/respond`,
+      headers: {
+        Authorization: `Bearer ${supplierToken}`,
+      },
+      payload: {
+        message: 'Attempted second response should be rejected.',
+      },
+    });
+
+    expect(secondResponse.statusCode).toBe(409);
+
+    const secondBody = JSON.parse(secondResponse.body);
+    expect(secondBody.success).toBe(false);
+    expect(secondBody.error.code).toBe('RFQ_ALREADY_RESPONDED');
+
+    const buyerRead = await server!.inject({
+      method: 'GET',
+      url: `/api/tenant/rfqs/${openRfqId}`,
+      headers: {
+        Authorization: `Bearer ${buyerToken}`,
+      },
+    });
+
+    expect(buyerRead.statusCode).toBe(200);
+
+    const buyerReadBody = JSON.parse(buyerRead.body);
+    expect(buyerReadBody.data.rfq.status).toBe('RESPONDED');
+    expect(buyerReadBody.data.rfq.supplier_response).toEqual(
+      expect.objectContaining({
+        message: 'Availability confirmed for the requested quantity.',
+        supplier_org_id: supplierOrgId,
+      })
+    );
+  });
+});

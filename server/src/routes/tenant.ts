@@ -65,6 +65,14 @@ const rfqListQuerySchema = z.object({
   q: z.string().trim().min(1).max(200).optional(),
 }).strict();
 
+type BuyerRfqResponseRow = {
+  id: string;
+  supplierOrgId: string;
+  message: string;
+  submittedAt: Date;
+  createdAt: Date;
+};
+
 type BuyerRfqListRow = {
   id: string;
   status: 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
@@ -82,6 +90,7 @@ type BuyerRfqListRow = {
 type BuyerRfqDetailRow = BuyerRfqListRow & {
   buyerMessage: string | null;
   createdByUserId: string | null;
+  supplierResponse: BuyerRfqResponseRow | null;
 };
 
 type SupplierRfqListRow = {
@@ -126,11 +135,22 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
   };
 }
 
+function mapBuyerRfqResponse(response: BuyerRfqResponseRow) {
+  return {
+    id: response.id,
+    supplier_org_id: response.supplierOrgId,
+    message: response.message,
+    submitted_at: response.submittedAt,
+    created_at: response.createdAt,
+  };
+}
+
 function mapBuyerRfqDetail(rfq: BuyerRfqDetailRow) {
   return {
     ...mapBuyerRfqListItem(rfq),
     buyer_message: rfq.buyerMessage,
     created_by_user_id: rfq.createdByUserId,
+    supplier_response: rfq.supplierResponse ? mapBuyerRfqResponse(rfq.supplierResponse) : null,
   };
 }
 
@@ -195,6 +215,25 @@ async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCa
       active: catalogItem.active,
       supplierOrgId: catalogItem.tenantId,
     };
+  });
+}
+
+async function resolveBuyerRfqSupplierResponse(rfqId: string): Promise<BuyerRfqResponseRow | null> {
+  return prisma.$transaction(async tx => {
+    // Buyer detail reads are authorized by the parent RFQ ownership check first.
+    // This bounded lookup avoids leaking supplier-only rows into broader tenant queries.
+    await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
+
+    return tx.rfqSupplierResponse.findUnique({
+      where: { rfqId },
+      select: {
+        id: true,
+        supplierOrgId: true,
+        message: true,
+        submittedAt: true,
+        createdAt: true,
+      },
+    });
   });
 }
 
@@ -1486,12 +1525,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           createdByUserId: true,
           createdAt: true,
           updatedAt: true,
-          catalogItem: {
-            select: {
-              name: true,
-              sku: true,
-            },
-          },
         },
       });
     });
@@ -1500,7 +1533,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendNotFound(reply, 'RFQ not found');
     }
 
-    return sendSuccess(reply, { rfq: mapBuyerRfqDetail(rfq) });
+    const catalogItem = await resolveRfqCatalogItemTarget(rfq.catalogItemId);
+    if (!catalogItem) {
+      return sendNotFound(reply, 'RFQ not found');
+    }
+
+    const supplierResponse = await resolveBuyerRfqSupplierResponse(rfq.id);
+
+    return sendSuccess(reply, {
+      rfq: mapBuyerRfqDetail({
+        ...rfq,
+        catalogItem: {
+          name: catalogItem.name,
+          sku: catalogItem.sku,
+        },
+        supplierResponse,
+      }),
+    });
   });
 
   /**
