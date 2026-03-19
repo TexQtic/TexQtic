@@ -988,6 +988,30 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-POLICY-CLOSURE-
 
 ---
 
+### GOV-RECORD-GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW — 2026-03-19
+Type: GOVERNANCE / DESIGN-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW)
+Title: Record GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW as DECIDED
+Summary: Governance-only operationalization/design unit. Recorded GOV-DESIGN-GOVERNANCE-
+  HARDENING-WORKFLOW as DECIDED in Layer 2. TexQtic now has a minimal workflow design for
+  operationalizing closure and sequencing hardening through a narrow structural governance linter,
+  a reusable checklist family, explicit CI block-versus-warn boundaries, and an explicit
+  human-only judgment boundary for historical and sequencing ambiguity. No implementation was
+  authorized in this unit.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged because no non-terminal unit status changed. NEXT-ACTION.md
+  remains OPERATOR_DECISION_REQUIRED. This design reuses the existing repo pattern of narrow guard
+  scripts plus dedicated CI workflows and explicitly defers any closure-index automation unless a
+  later hardening phase proves it necessary. A later governance/process implementation unit is
+  required to install the linter and CI workflow. No application code, tests, schema, migrations,
+  or product implementation files changed in this governance unit.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION — 2026-03-19
 Type: GOVERNANCE / POLICY-RECORD
 Status: CLOSED

@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING
-last_commit: "feat(governance): harden closure and sequencing controls"
+last_unit_closed: GOV-RECORD-GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW
+last_commit: "feat(governance): operationalize governance hardening workflow"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -156,3 +156,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECONCILE-BOUNDED-G026-V1-HISTORY (2026-03-19): governance reconciliation confirmed that bounded G-026 v1 historical implementation evidence exists across multiple proven subunits and current repo files, but Layer 1 contains no matching canonical unit records for that bounded chain. Layer 0 sequencing remains unchanged because no implementation unit is opening now, and no synthetic Layer 1 backfill was created because doing so would collapse multiple distinct historical subunits into a fabricated single unit. Broader custom-domain and apex-domain scope remains deferred under G-026-A.
 - GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION (2026-03-19): GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION recorded as DECIDED in Layer 2. Historical Layer 1 gaps must now be handled by the minimum truthful correction mechanism: exact backfill only when exact historical identity is provable, snapshot/log reconciliation when proven history cannot be reduced to one truthful unit, and no reconstruction when evidence is too weak. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED and no implementation unit is opened by this policy.
 - GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING (2026-03-19): GOV-POLICY-CLOSURE-SEQUENCING-HARDENING recorded as DECIDED in Layer 2. TexQtic now requires write-time closure integrity and sequencing safety: explicit evidence-class labelling, mandatory historical-evidence classification before sequencing-sensitive edits, no archive-only closure truth, and minimum canonical traceability through the existing Governance OS layers. The operator-supplied unsaved governance analysis that motivated this hardening pass is now captured in a governance-owned decision record. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOV-RECORD-GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW (2026-03-19): GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW recorded as DECIDED in Layer 2. TexQtic now has a minimal operational workflow design for governance hardening: one structural linter, a reusable checklist family, explicit CI block-versus-warn boundaries, and a hard human-only judgment boundary for historical reconciliation and sequencing ambiguity. A later dedicated governance/process implementation unit is required to install the linter and CI workflow. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
