@@ -940,3 +940,24 @@ Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECI
   No unit was opened or reopened. RFQ remains capped at pre-negotiation. TECS-FBW-ADMINRBAC
   remains DESIGN_GATE. No schema, migrations, tests, or product code changed in this governance unit.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-H-PREREQUISITE-POSTURE.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION — 2026-03-19
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION)
+Title: Record PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION
+  as DECIDED in Layer 2. The bounded G-026 v1 platform-subdomain resolver/domain-routing slice
+  remains inside the ratified Wave 4 boundary and no longer carries G-026-H as a blocker, but no
+  new implementation unit was opened because current repo evidence already shows the bounded v1
+  resolver stack and WL domains operator path materially present while broader custom-domain and
+  apex-domain scope remains deferred under G-026-A.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. RFQ remains capped at pre-negotiation. TECS-FBW-ADMINRBAC
+  remains DESIGN_GATE. No schema, migrations, tests, or product code changed in this governance unit.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION.md · governance/log/EXECUTION-LOG.md
