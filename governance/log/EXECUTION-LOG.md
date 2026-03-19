@@ -1130,3 +1130,25 @@ Notes: OPEN-SET.md remains unchanged because it governs only non-terminal open u
   the drift explicitly. RFQ remains capped. Broader G-026-A scope remains deferred. No schema,
   migrations, tests, or product code changed in this governance unit.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECONCILE-LAYER0-TECS-FBW-003-B — 2026-03-19
+Type: GOVERNANCE / RECONCILIATION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECONCILE-LAYER0-TECS-FBW-003-B)
+Title: Reconcile stale Layer 0 deferred state for TECS-FBW-003-B
+Summary: Governance-only reconciliation unit. Confirmed TECS-FBW-003-B is already terminal as
+  VERIFIED_COMPLETE in its canonical unit record and that OPEN-SET.md and SNAPSHOT.md already
+  reflect that same posture. Removed the stale deferred entry from BLOCKED.md so Layer 0 is
+  internally consistent again before any further sequencing decision.
+Layer Impact: Layer 0 — BLOCKED.md corrected to remove the stale DEFERRED entry for
+  TECS-FBW-003-B; Layer 1 — unchanged because the canonical unit record already showed
+  VERIFIED_COMPLETE; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged because it already truthfully reports zero DEFERRED units and
+  does not list TECS-FBW-003-B as non-terminal. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED
+  because this reconciliation opens no implementation or sequencing path. SNAPSHOT.md remains
+  unchanged because it already records TECS-FBW-003-B as VERIFIED_COMPLETE and the current Layer 0
+  carry-forward posture was otherwise accurate. No product code, tests, schema, migrations, or
+  implementation units changed in this governance unit.
+Refs: governance/control/BLOCKED.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/units/TECS-FBW-003-B.md · governance/log/EXECUTION-LOG.md

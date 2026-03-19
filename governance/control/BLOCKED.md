@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-18 (GOVERNANCE-SYNC-TECS-FBW-013)
+**Last Updated:** 2026-03-19 (GOV-RECONCILE-LAYER0-TECS-FBW-003-B)
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
@@ -20,9 +20,7 @@
 
 ## Section 2 — DEFERRED (product decision; not a defect; do not implement without authorization)
 
-| UNIT-ID | Deferred Reason | Standing Instruction | Deferred |
-|---|---|---|---|
-| TECS-FBW-003-B | Future scope — escrow mutations + detail view | Do NOT implement; await product authorization | 2026-03-17 |
+*(No units currently deferred.)*
 
 **Doctrine (D-010):** Deferred items are not bugs. They must not be reopened or implemented
 without explicit product authorization recorded in `governance/decisions/PRODUCT-DECISIONS.md`.
