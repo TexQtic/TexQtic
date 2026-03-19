@@ -1012,6 +1012,28 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-DESIGN-GOVERNAN
 
 ---
 
+### GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW — 2026-03-19
+Type: GOVERNANCE / PROCESS-IMPLEMENTATION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW)
+Title: Install the minimal governance linter workflow
+Summary: Governance/process implementation unit. Installed a minimal repo-local governance linter
+  in `scripts/governance-lint.ts`, exposed it through `pnpm run governance:lint`, wired CI through
+  `.github/workflows/governance-lint.yml`, and added maintainer guidance in
+  `governance/GOVERNANCE-LINTER.md`. The linter hard-fails only machine-checkable structural
+  governance violations and leaves historical classification, materiality, chronology, and
+  sequencing judgment unautomated.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 3 —
+  EXECUTION-LOG.md appended (this entry); Governance/process tooling — script, package command,
+  workflow, and maintainer note installed
+Notes: OPEN-SET.md remains unchanged because no non-terminal unit status changed. NEXT-ACTION.md
+  remains OPERATOR_DECISION_REQUIRED. No application feature code, tests unrelated to the linter,
+  database files, migrations, schema, policies, or secret-bearing files were modified. No
+  implementation unit was opened.
+Refs: governance/control/SNAPSHOT.md · scripts/governance-lint.ts · .github/workflows/governance-lint.yml · governance/GOVERNANCE-LINTER.md
+
+---
+
 ### GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION — 2026-03-19
 Type: GOVERNANCE / POLICY-RECORD
 Status: CLOSED
