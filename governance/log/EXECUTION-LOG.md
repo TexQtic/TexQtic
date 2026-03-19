@@ -961,3 +961,35 @@ Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECI
   No unit was opened or reopened. RFQ remains capped at pre-negotiation. TECS-FBW-ADMINRBAC
   remains DESIGN_GATE. No schema, migrations, tests, or product code changed in this governance unit.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECONCILE-BOUNDED-G026-V1-HISTORY — 2026-03-19
+Type: GOVERNANCE / RECONCILIATION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECONCILE-BOUNDED-G026-V1-HISTORY)
+Title: Reconcile bounded G-026 v1 historical governance posture
+Summary: Governance-only reconciliation unit. Confirmed that bounded G-026 v1 historical
+  implementation evidence exists in both current redaction-safe repository files and secondary
+  historical governance artifacts. The bounded v1 resolver/domain-routing slice is materially
+  present through TECS 6C1, 6C2, 6C3, and TECS 6D evidence, but Layer 1 contains no corresponding
+  canonical unit records for that bounded chain.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed to reflect that bounded G-026 v1 historical
+  evidence exists without changing sequencing; Layer 1 — unchanged because no single truthful
+  backfill unit could be created without collapsing multiple distinct historical subunits into a
+  fabricated replacement record; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Evidence Reviewed: middleware.ts; server/src/routes/internal/resolveDomain.ts;
+  server/src/hooks/tenantResolutionHook.ts; server/src/routes/internal/cacheInvalidate.ts;
+  components/WhiteLabelAdmin/WLDomainsPanel.tsx; server/src/routes/tenant.ts;
+  server/src/index.ts; server/prisma/migrations/20260317000000_g026_texqtic_service_role/migration.sql;
+  docs/ops/REMOTE-MIGRATION-APPLY-LOG.md; governance/wave-execution-log.md; governance/gap-register.md;
+  docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md
+Notes: OPEN-SET.md remains unchanged because it governs only non-terminal open units and no new
+  implementation unit is opening now. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED. No
+  historical Layer 1 implementation unit was created or updated because the proved bounded history
+  spans multiple distinct subunits (`G-026-CUSTOM-DOMAIN-ROUTING-RESOLVER-001`, TECS 6C2,
+  `G-026-CUSTOM-DOMAIN-ROUTING-CACHE-INVALIDATE-001`, and `OPS-WLADMIN-DOMAINS-001`), and a
+  synthetic single unit record would be less truthful than leaving Layer 1 unchanged and recording
+  the drift explicitly. RFQ remains capped. Broader G-026-A scope remains deferred. No schema,
+  migrations, tests, or product code changed in this governance unit.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION.md · governance/log/EXECUTION-LOG.md

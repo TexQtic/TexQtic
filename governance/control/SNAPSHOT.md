@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOV-RECORD-PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION
-last_commit: "feat(governance): sequence bounded g-026 v1 stream"
+last_unit_closed: GOV-RECONCILE-BOUNDED-G026-V1-HISTORY
+last_commit: "feat(governance): reconcile bounded g-026 v1 history"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -153,3 +153,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING (2026-03-19): PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING recorded as DECIDED in Layer 2. White-label / custom-domain routing remains the favored first Wave 4 stream, but no implementation unit was opened because the stream still carries unresolved prerequisite G-026-H in its own design anchor. RFQ remains capped, AdminRBAC remains DESIGN_GATE, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-G026-H-PREREQUISITE-POSTURE (2026-03-19): PRODUCT-DEC-G026-H-PREREQUISITE-POSTURE recorded as DECIDED in Layer 2. G-026-H is now governed as satisfied for the bounded v1 resolver path based on later repo evidence, while broader custom-domain and apex-domain scope remains bounded by deferred G-026-A. No implementation unit was opened, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION (2026-03-19): PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION recorded as DECIDED in Layer 2. The bounded G-026 v1 platform-subdomain resolver/domain-routing slice remains within the ratified Wave 4 boundary and no longer carries G-026-H as a blocker, but no new implementation unit was opened because current repo evidence already shows the bounded v1 slice materially present while broader custom-domain and apex-domain scope remains deferred under G-026-A. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOV-RECONCILE-BOUNDED-G026-V1-HISTORY (2026-03-19): governance reconciliation confirmed that bounded G-026 v1 historical implementation evidence exists across multiple proven subunits and current repo files, but Layer 1 contains no matching canonical unit records for that bounded chain. Layer 0 sequencing remains unchanged because no implementation unit is opening now, and no synthetic Layer 1 backfill was created because doing so would collapse multiple distinct historical subunits into a fabricated single unit. Broader custom-domain and apex-domain scope remains deferred under G-026-A.
