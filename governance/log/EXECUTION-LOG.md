@@ -838,3 +838,24 @@ Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer
 Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
   No unit was opened. No schema, migrations, or product code changed.
 Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP — 2026-03-19
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP)
+Title: Record PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP as
+  DECIDED in Layer 2. RFQ discovery is now explicitly capped at the installed pre-negotiation
+  posture: buyer initiation, buyer discovery list, buyer detail, buyer-visible bounded supplier
+  response reads, supplier inbox reads, supplier submit-once response, and parent RFQ transition
+  to RESPONDED. Future RFQ negotiation or Trade-conversion expansion is deferred pending a
+  separate later product decision, and no implementation was authorized in this unit.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. TECS-FBW-ADMINRBAC remains DESIGN_GATE. No schema,
+  migrations, tests, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP.md · governance/log/EXECUTION-LOG.md

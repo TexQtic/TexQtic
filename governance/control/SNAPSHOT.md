@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOVERNANCE-SYNC-RFQ-002
-last_commit: "feat(governance): sync buyer rfq list read unit"
+last_unit_closed: GOV-RECORD-PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP
+last_commit: "feat(governance): record next rfq product decision"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -147,3 +147,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-TECS-RFQ-RESPONSE-001 (2026-03-19): TECS-RFQ-RESPONSE-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 7edb891 and verification `VERIFY-TECS-RFQ-RESPONSE-001: VERIFIED_COMPLETE`. Remote prerequisite and response migrations were applied, reconciled, and verified. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because no implementation-ready unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOVERNANCE-SYNC-RFQ-001 (2026-03-19): governance truth refreshed after TECS-RFQ-BUYER-RESPONSE-READ-001 and TECS-RFQ-BUYER-DETAIL-UI-001 both reached VERIFIED_COMPLETE. Layer 0 now reflects the installed RFQ posture: buyer initiation, buyer detail UI foundation, buyer-visible bounded supplier response reads, supplier response submission, and parent RFQ transition to RESPONDED. Pre-negotiation exclusions remain explicit: no pricing, negotiation, acceptance, counter-offers, thread model, or Trade / checkout / order coupling.
 - GOVERNANCE-SYNC-RFQ-002 (2026-03-19): governance drift reconciled after TECS-RFQ-BUYER-LIST-READ-001 was already implemented, verified, and committed in 64500cf. Layer 0/1/3 now reflect the installed buyer RFQ discovery posture: buyer initiation, buyer discovery list, buyer detail UI foundation, buyer-visible bounded supplier response reads, supplier response submission, and parent RFQ transition to RESPONDED. Pre-negotiation exclusions remain explicit: no pricing, negotiation, acceptance, counter-offers, thread model, comparison, dashboard-scale expansion, backend redesign, or workflow mutation scope.
+- GOV-RECORD-PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP (2026-03-19): PRODUCT-DEC-RFQ-PRE-NEGOTIATION-CAP recorded as DECIDED in Layer 2. RFQ remains intentionally capped at the installed pre-negotiation posture after discovery completion. Future RFQ pricing, negotiation, acceptance/rejection, counter-offers, messaging, supplier comparison, and Trade / checkout / settlement / order conversion work now require a separate later product decision. No Layer 0 sequencing state changed; NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
