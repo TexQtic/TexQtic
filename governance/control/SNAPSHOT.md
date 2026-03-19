@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOV-REFINE-GOVERNANCE-LINTER-V2
-last_commit: "feat(governance): refine governance linter v2"
+last_unit_closed: GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING
+last_commit: "feat(governance): define governance linter v3 trigger policy"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -159,3 +159,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW (2026-03-19): GOV-DESIGN-GOVERNANCE-HARDENING-WORKFLOW recorded as DECIDED in Layer 2. TexQtic now has a minimal operational workflow design for governance hardening: one structural linter, a reusable checklist family, explicit CI block-versus-warn boundaries, and a hard human-only judgment boundary for historical reconciliation and sequencing ambiguity. A later dedicated governance/process implementation unit is required to install the linter and CI workflow. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW (2026-03-19): the minimal governance linter workflow is now installed. Repo-local structural checks live in `scripts/governance-lint.ts`, local execution is exposed through `pnpm run governance:lint`, CI runs the same command in `.github/workflows/governance-lint.yml`, and maintainer guidance is recorded in `governance/GOVERNANCE-LINTER.md`. The linter enforces machine-checkable closure and sequencing safeguards only and leaves historical, chronology, materiality, and priority judgment human-controlled. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-REFINE-GOVERNANCE-LINTER-V2 (2026-03-19): governance-linter v1 was calibrated against actual repo usage and recent governance commits. Human-boundary warnings are now limited to changed canonical unit and decision records, duplicate per-file warning noise was collapsed into one clearer advisory message, and the console report now lists the changed files being evaluated in local and CI runs. No new policy rules were introduced, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING (2026-03-19): TexQtic now has an explicit monitoring and calibration framework for deciding whether governance-linter v2 should remain stable, receive a bounded refinement, or justify a later v3 design review. The framework requires repeated real-world evidence before linter change, prefers documentation-only clarification before rule changes, and preserves the machine-checkable versus human-only boundary. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.

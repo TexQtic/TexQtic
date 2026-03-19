@@ -1012,6 +1012,29 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-DESIGN-GOVERNAN
 
 ---
 
+### GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING — 2026-03-19
+Type: GOVERNANCE / DESIGN-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING)
+Title: Define the monitoring framework for future governance-linter v3 triggers
+Summary: Governance/process monitoring design unit. Recorded the evidence-led framework TexQtic
+  must use to decide whether governance-linter v2 remains stable, receives a bounded refinement,
+  or justifies a later v3 design review. The framework defines stability criteria, refinement
+  triggers, metrics, thresholds, review cadence, and change-discipline rules while preserving the
+  current machine-checkable boundary and explicitly refusing to authorize v3 implementation.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged because no non-terminal unit status changed. NEXT-ACTION.md
+  remains OPERATOR_DECISION_REQUIRED. This monitoring design does not modify the installed linter,
+  does not add new rules, and does not authorize any expansion into historical classification,
+  backfill exactness, chronology, materiality, snapshot/log-only reconciliation judgment, or
+  product/operator sequencing choice. No application code, tests, schema, migrations, policies,
+  or secret-bearing files were modified.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-REFINE-GOVERNANCE-LINTER-V2 — 2026-03-19
 Type: GOVERNANCE / PROCESS-REFINEMENT
 Status: CLOSED
