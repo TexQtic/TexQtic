@@ -638,6 +638,25 @@ Refs: governance/units/TECS-RFQ-SUPPLIER-READ-001.md · governance/control/OPEN-
 
 ---
 
+### GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE — 2026-03-19
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE)
+Title: Record PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE as DECIDED
+Summary: Governance-only decision-record unit. Recorded PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE as
+  DECIDED in Layer 2. The first supplier-side RFQ response is now defined as one narrow,
+  non-binding child artifact separate from `rfqs`, limited to one response per RFQ in the first
+  slice, with pricing deferred, no broader buyer identity exposure, and parent RFQ lifecycle
+  transition to `RESPONDED` on first valid submission.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DECISIONS.md updated with the supplier RFQ response decision;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. No schema, migrations, or product code changed.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DECISIONS.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SEQUENCE-RFQ-DOMAIN-001 — 2026-03-18
 Type: GOVERNANCE / SEQUENCING
 Status: CLOSED

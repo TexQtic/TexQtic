@@ -11,9 +11,9 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-18
-last_unit_closed: GOVERNANCE-SYNC-TECS-RFQ-SUPPLIER-READ-001
-last_commit: "feat(governance): close TECS-RFQ-SUPPLIER-READ-001 after verified supplier RFQ inbox read endpoints"
+snapshot_date: 2026-03-19
+last_unit_closed: GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE
+last_commit: "feat(governance): record PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE decision"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -118,3 +118,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-READS (2026-03-18): PRODUCT-DEC-SUPPLIER-RFQ-READS recorded as DECIDED in Layer 2. Authorized supplier-side RFQ reads are now a narrow read-only tenant-plane recipient scope covering inbox list + detail together, with buyer identity withheld in the first slice and only minimal status/filter/sort/search behavior. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED pending a separate sequencing unit.
 - GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-READS-001 (2026-03-18): TECS-RFQ-SUPPLIER-READ-001 opened as the single implementation-ready supplier RFQ read follow-on unit after PRODUCT-DEC-SUPPLIER-RFQ-READS was recorded as DECIDED. NEXT-ACTION.md now points to backend-only, read-only supplier RFQ inbox list + detail APIs. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOVERNANCE-SYNC-TECS-RFQ-SUPPLIER-READ-001 (2026-03-18): TECS-RFQ-SUPPLIER-READ-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit c5ab120 and verification `VERIFY-TECS-RFQ-SUPPLIER-READ-001: VERIFIED_COMPLETE`. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because no implementation-ready unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE. PRODUCT-DEC-RFQ-DOMAIN-MODEL, PRODUCT-DEC-BUYER-RFQ-READS, and PRODUCT-DEC-SUPPLIER-RFQ-READS remain DECIDED.
+- GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE (2026-03-19): PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE recorded as DECIDED in Layer 2. The first supplier-side RFQ response is now defined as one narrow non-binding child artifact separate from `rfqs`, limited to one response per RFQ in the first slice, with pricing deferred, no broader buyer identity exposure, and RFQ status transition to `RESPONDED` on first valid submission. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED pending a separate sequencing unit.

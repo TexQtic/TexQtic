@@ -2,7 +2,7 @@
 
 **Layer:** 2 — Decision Ledger
 **Authority:** GOV-OS-001-DESIGN.md (Section 3.4)
-**Last Updated:** 2026-03-18 (GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-READS)
+**Last Updated:** 2026-03-19 (GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE)
 
 > This file owns all product scope decisions that gate governed units.
 > A DEFERRED unit MUST NOT be treated as implementation-ready due to the existence of
@@ -462,4 +462,90 @@ Impact: Product scope for supplier-side RFQ reads is now authorized, but no impl
 **Next Required Step:** A separate governance sequencing unit must determine whether and when the
   first supplier RFQ read implementation unit should open.
 **Last Governance Confirmation:** 2026-03-18 — GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-READS.
+  Status: DECIDED.
+
+---
+
+### PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE
+
+Date: 2026-03-19
+Authorized by: Paresh
+Status: DECIDED
+Summary: The first supplier-side RFQ response composition model is authorized as one narrow,
+  non-binding child artifact separate from `rfqs`.
+
+  Canonical response model:
+    - separate child entity: `rfq_supplier_responses`
+    - relationship: `rfq_supplier_responses.rfq_id -> rfqs.id`
+    - first slice permits exactly one supplier response artifact per RFQ
+    - RFQ remains the buyer-owned parent request; supplier response is a distinct reply artifact
+    - future multi-response threads or negotiation flows require a separate decision
+
+  Authorized first-slice fields:
+    - id
+    - rfq_id
+    - supplier_org_id
+    - message
+    - submitted_at
+    - created_at
+    - updated_at
+    - created_by_user_id
+
+  Field posture:
+    - `message` is the required human-authored supplier reply body
+    - `created_by_user_id` is retained for authenticated human accountability in the first slice
+    - `submitted_at` is the first-slice submission marker; no separate response status model is required now
+    - lead-time / delivery-note fields are deferred
+
+  Pricing posture:
+    - pricing is deferred in this first slice
+    - no unit price, total price, currency, validity window, MOQ pricing, or quote terms are authorized
+
+  Lifecycle effect:
+    - first valid supplier response sets the parent RFQ status to `RESPONDED`
+    - no separate negotiation loop, priced quote state, or response revision lifecycle is introduced
+
+  Tenant isolation posture:
+    - supplier may create a response only for RFQs addressed to the current tenant via `supplier_org_id`
+    - buyer does not create supplier response artifacts
+    - no cross-tenant response composition is authorized
+    - no control-plane response workflow authority is authorized in this decision
+
+  Buyer identity exposure posture:
+    - no broader buyer identity exposure is authorized in this slice
+    - supplier response composition relies only on the already-authorized supplier RFQ read surface
+    - buyer org_id, buyer display label/surrogate, and buyer user identity remain withheld
+
+  Excluded:
+    - embedding supplier response fields directly on `rfqs`
+    - negotiation threads
+    - counter-offers
+    - response editing or revision history
+    - quote pricing
+    - quote acceptance
+    - order conversion
+    - checkout
+    - settlement
+    - AI automation
+    - control-plane RFQ actions
+    - Trade coupling
+    - multi-round negotiation
+
+Impact: Product scope is now decided for the first supplier-side RFQ response composition model.
+  This decision does not itself open or reopen any implementation unit, does not alter Layer 0
+  sequencing, and does not authorize schema, migration, or product-code changes in this
+  recording step.
+
+**Required For:** Future governed supplier-side RFQ response work after TECS-RFQ-DOMAIN-001,
+  TECS-RFQ-READ-001, and TECS-RFQ-SUPPLIER-READ-001 closure.
+**Authorizes:** One narrow non-binding supplier response artifact per RFQ, modeled as a separate
+  child entity with submit-once posture, pricing deferred, RFQ lifecycle transition to
+  `RESPONDED`, and supplier-only tenant-scoped write authority.
+**Does Not Authorize:** This decision does not directly open a new implementation unit, does not
+  authorize negotiation, pricing, revisions, buyer identity exposure beyond the current supplier
+  read slice, order conversion, checkout, settlement, AI automation, control-plane RFQ actions,
+  or Trade coupling.
+**Next Required Step:** A separate governance sequencing unit must determine whether and when the
+  first supplier RFQ response implementation unit should be opened.
+**Last Governance Confirmation:** 2026-03-19 — GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE.
   Status: DECIDED.
