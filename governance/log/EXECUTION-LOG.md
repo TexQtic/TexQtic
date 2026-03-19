@@ -964,6 +964,28 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1
 
 ---
 
+### GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION — 2026-03-19
+Type: GOVERNANCE / POLICY-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION)
+Title: Record GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION as DECIDED
+Summary: Governance-only policy-record unit. Recorded GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION
+  as DECIDED in Layer 2. TexQtic now has an explicit rule for handling missing or incomplete
+  historical Layer 1 coverage: exact backfill only when exact identity is provable, snapshot/log
+  reconciliation when historical truth is proven but not one-to-one reconstructable, and no
+  reconstruction when evidence is too weak. No implementation was authorized in this unit.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged because no non-terminal unit status changed. NEXT-ACTION.md
+  remains OPERATOR_DECISION_REQUIRED. This policy explicitly forbids creating a fake new
+  implementation unit merely to explain already-present historical code and forbids synthetic
+  single-unit reconstruction from multi-unit evidence. No schema, migrations, tests, or product
+  code changed in this governance unit.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-RECONCILE-BOUNDED-G026-V1-HISTORY — 2026-03-19
 Type: GOVERNANCE / RECONCILIATION
 Status: CLOSED
