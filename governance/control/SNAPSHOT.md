@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-19
-last_unit_closed: GOVERNANCE-SYNC-TECS-RFQ-RESPONSE-001
-last_commit: "feat(governance): close TECS-RFQ-RESPONSE-001 after verified supplier RFQ response foundation"
+last_unit_closed: GOVERNANCE-SYNC-RFQ-001
+last_commit: "chore(governance): sync rfq state after buyer detail ui completion"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,6 +28,8 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
+- **TECS-RFQ-BUYER-DETAIL-UI-001** — `VERIFIED_COMPLETE` — Buyer RFQ detail UI foundation closed 2026-03-19; implementation commit dcb5964; verification `VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001: VERIFIED_COMPLETE`; buyer-safe success-dialog entry path now opens a minimal RFQ detail surface using the existing backend detail contract
+- **TECS-RFQ-BUYER-RESPONSE-READ-001** — `VERIFIED_COMPLETE` — Buyer-visible bounded supplier response read slice closed 2026-03-19; implementation commit 211800a; verification `VERIFY-TECS-RFQ-BUYER-RESPONSE-READ-001: VERIFIED_COMPLETE`; buyer RFQ detail reads now include the bounded supplier response artifact when present and null-safe absence when not present
 - **TECS-RFQ-RESPONSE-001** — `VERIFIED_COMPLETE` — Supplier RFQ response foundation closed 2026-03-19; implementation commit 7edb891; verification `VERIFY-TECS-RFQ-RESPONSE-001: VERIFIED_COMPLETE`; remote baseline + response migrations applied, reconciled, and verified
 - **TECS-RFQ-SUPPLIER-READ-001** — `VERIFIED_COMPLETE` — Supplier RFQ inbox read unit closed 2026-03-18; implementation commit c5ab120; verification `VERIFY-TECS-RFQ-SUPPLIER-READ-001: VERIFIED_COMPLETE`
 - **TECS-RFQ-READ-001** — `VERIFIED_COMPLETE` — Buyer RFQ read unit closed 2026-03-18; implementation commit 49d757d; verification `VERIFY-TECS-RFQ-READ-001: VERIFIED_COMPLETE`
@@ -40,6 +42,25 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
 
 **0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+
+## RFQ Platform State
+
+RFQ now supports:
+
+- buyer RFQ initiation
+- buyer RFQ detail UI (minimal foundation)
+- buyer-visible bounded supplier response reads
+- supplier response submission
+- RFQ transition to `RESPONDED`
+
+RFQ remains pre-negotiation:
+
+- no pricing
+- no negotiation loop
+- no acceptance or rejection
+- no counter-offers
+- no thread or messaging model
+- no Trade, checkout, or order coupling
 
 ## Current Next Action
 
@@ -122,3 +143,4 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE (2026-03-19): PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE recorded as DECIDED in Layer 2. The first supplier-side RFQ response is now defined as one narrow non-binding child artifact separate from `rfqs`, limited to one response per RFQ in the first slice, with pricing deferred, no broader buyer identity exposure, and RFQ status transition to `RESPONDED` on first valid submission. No Layer 0 sequencing state changed; NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED pending a separate sequencing unit.
 - GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-RESPONSE-001 (2026-03-19): TECS-RFQ-RESPONSE-001 opened as the single implementation-ready supplier RFQ response follow-on unit after PRODUCT-DEC-SUPPLIER-RFQ-RESPONSE was recorded as DECIDED. NEXT-ACTION.md now points to backend/schema-only supplier RFQ response foundation: response child entity, supplier-authorized create path, one-response-per-RFQ posture, RFQ status transition to `RESPONDED`, and audit coexistence if required. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOVERNANCE-SYNC-TECS-RFQ-RESPONSE-001 (2026-03-19): TECS-RFQ-RESPONSE-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 7edb891 and verification `VERIFY-TECS-RFQ-RESPONSE-001: VERIFIED_COMPLETE`. Remote prerequisite and response migrations were applied, reconciled, and verified. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED because no implementation-ready unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+- GOVERNANCE-SYNC-RFQ-001 (2026-03-19): governance truth refreshed after TECS-RFQ-BUYER-RESPONSE-READ-001 and TECS-RFQ-BUYER-DETAIL-UI-001 both reached VERIFIED_COMPLETE. Layer 0 now reflects the installed RFQ posture: buyer initiation, buyer detail UI foundation, buyer-visible bounded supplier response reads, supplier response submission, and parent RFQ transition to RESPONDED. Pre-negotiation exclusions remain explicit: no pricing, negotiation, acceptance, counter-offers, thread model, or Trade / checkout / order coupling.

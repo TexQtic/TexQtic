@@ -679,6 +679,29 @@ Refs: governance/units/TECS-RFQ-RESPONSE-001.md · governance/control/OPEN-SET.m
 
 ---
 
+### GOVERNANCE-SYNC-RFQ-001 — 2026-03-19
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SYNC-RFQ-001)
+Title: Sync RFQ governance state after buyer detail UI completion
+Summary: Governance-only sync unit. Recorded TECS-RFQ-BUYER-RESPONSE-READ-001 and
+  TECS-RFQ-BUYER-DETAIL-UI-001 as VERIFIED_COMPLETE after implementation commits 211800a and
+  dcb5964. Layer 0 and Layer 1 were reconciled so RFQ governance now reflects the installed
+  buyer-safe posture: buyer RFQ initiation, buyer-visible bounded supplier response reads,
+  minimal buyer RFQ detail UI, supplier response submission, and parent RFQ transition to
+  `RESPONDED`.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — TECS-RFQ-BUYER-RESPONSE-READ-001.md and TECS-RFQ-BUYER-DETAIL-UI-001.md created in
+  VERIFIED_COMPLETE state; Layer 3 — EXECUTION-LOG.md appended
+Notes: RFQ remains pre-negotiation only. No pricing, negotiation loop, acceptance, counter-offers,
+  thread or messaging model, Trade coupling, checkout coupling, order coupling, or control-plane
+  RFQ workflow authority was introduced by this governance sync. No product code changed.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-RFQ-BUYER-RESPONSE-READ-001.md ·
+  governance/units/TECS-RFQ-BUYER-DETAIL-UI-001.md
+
+---
+
 ### GOVERNANCE-SEQUENCE-SUPPLIER-RFQ-RESPONSE-001 — 2026-03-19
 Type: GOVERNANCE / SEQUENCING
 Status: CLOSED
