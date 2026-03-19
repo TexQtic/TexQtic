@@ -964,6 +964,30 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1
 
 ---
 
+### GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING — 2026-03-19
+Type: GOVERNANCE / POLICY-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING)
+Title: Record GOV-POLICY-CLOSURE-SEQUENCING-HARDENING as DECIDED
+Summary: Governance-only policy-record unit. Recorded GOV-POLICY-CLOSURE-SEQUENCING-HARDENING
+  as DECIDED in Layer 2. TexQtic now requires write-time closure integrity and sequencing safety:
+  closure claims must be canonically traceable, sequencing-sensitive work must classify historical
+  evidence posture before edits, archive-only evidence cannot establish closure truth, and future
+  governance records must distinguish verification strength instead of collapsing all proof into a
+  single generic verified posture. The previously unsaved operator-supplied governance analysis
+  motivating this hardening pass is now captured in a governance-owned decision record.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/GOV-POLICY-CLOSURE-SEQUENCING-HARDENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged because no non-terminal unit status changed. NEXT-ACTION.md
+  remains OPERATOR_DECISION_REQUIRED. This policy does not backfill any historical Layer 1 unit,
+  does not open implementation scope, and treats the existing Governance OS layers as the minimum
+  canonical closure traceability mechanism unless a later dedicated hardening unit explicitly
+  installs stronger process structure.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-POLICY-CLOSURE-SEQUENCING-HARDENING.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION — 2026-03-19
 Type: GOVERNANCE / POLICY-RECORD
 Status: CLOSED
