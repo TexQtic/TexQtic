@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-20 (GOVERNANCE-SYNC-TECS-G026-H-001)
+**Last Updated:** 2026-03-20 (GOV-CLOSE-TECS-G026-H-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -37,7 +37,7 @@ TECS-FBW-003-B closed 2026-03-18: implementation commit 4d71e17 + VERIFY-TECS-FB
 TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
 
 TECS-FBW-ADMINRBAC-REGISTRY-READ-001 closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8, backend runtime proof, frontend runtime proof, and type-level proof.
-TECS-G026-H-001 governance-synced 2026-03-20 after implementation commit deef077 and remote Supabase verification PASS: manual SQL apply succeeded, verifier block passed, `prisma db pull` succeeded, `prisma generate` succeeded, and `prisma migrate resolve --applied 20260320010000_tecs_g026_h_001_reconcile_texqtic_service_role` succeeded. Additional historical `SELECT`-only grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows, were preserved as bounded observations only and did not fail the unit.
+TECS-G026-H-001 closed 2026-03-20 after implementation commit deef077, governance-sync commit e154f58, authoritative remote Supabase verification PASS, and bounded prerequisite proof. Additional historical `SELECT`-only grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows, remain preserved as bounded historical observations only and are not treated as resolved work by this closure step.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 No implementation-ready G-026 stream is currently OPEN.
 
@@ -47,7 +47,7 @@ No implementation-ready G-026 stream is currently OPEN.
 
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
-| TECS-G026-H-001 | VERIFIED_COMPLETE | 2026-03-20 | deef077 |
+| TECS-G026-H-001 | CLOSED | 2026-03-20 | deef077 · e154f58 |
 | TECS-FBW-ADMINRBAC-REGISTRY-READ-001 | CLOSED | 2026-03-20 | 38419b5 · 50d1e36 |
 | TECS-RFQ-BUYER-LIST-READ-001 | VERIFIED_COMPLETE | 2026-03-19 | 64500cf |
 | TECS-RFQ-BUYER-DETAIL-UI-001 | VERIFIED_COMPLETE | 2026-03-19 | dcb5964 |

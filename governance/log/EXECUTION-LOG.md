@@ -1149,6 +1149,29 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-TECS-G026-H-001 — 2026-03-20
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-G026-H-001)
+Title: Record closure of the verified bounded G-026-H prerequisite unit
+Summary: Governance-only closure unit. Recorded TECS-G026-H-001 as CLOSED after implementation
+  commit deef077, governance-sync commit e154f58, and the already-recorded authoritative remote
+  Supabase verification PASS. Layer 0, Layer 1, and Layer 3 were reconciled while broad G-026
+  routing remained unopened and no implementation-ready unit was authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-G026-H-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: Additional historical `SELECT`-only grants observed on `catalog_items`, `memberships`,
+  `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows,
+  remain preserved as bounded historical observations only and are not reinterpreted as resolved
+  work by this closure step. No product code, tests, schema, migrations, routes, contracts, or
+  decisions changed in this closure unit. No broad G-026 routing authorization is implied.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-G026-H-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW — 2026-03-19
 Type: GOVERNANCE / PROCESS-IMPLEMENTATION
 Status: CLOSED

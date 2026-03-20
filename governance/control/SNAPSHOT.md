@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-20
-last_unit_closed: GOVERNANCE-SYNC-TECS-G026-H-001
-last_commit: "governance(sync): record verified completion of TECS-G026-H-001"
+last_unit_closed: GOV-CLOSE-TECS-G026-H-001
+last_commit: "governance(close): close TECS-G026-H-001"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -68,7 +68,7 @@ RFQ remains pre-negotiation:
 ## Current Next Action
 
 `OPERATOR_DECISION_REQUIRED`.
-TECS-G026-H-001 is VERIFIED_COMPLETE after bounded remote-database verification and governance sync.
+TECS-G026-H-001 is CLOSED after bounded remote-database verification, governance sync, and conservative closure.
 The broad G-026 v1 routing stream remains unopened.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
@@ -160,6 +160,7 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION (2026-03-19): PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION recorded as DECIDED in Layer 2. The bounded G-026 v1 platform-subdomain resolver/domain-routing slice remains within the ratified Wave 4 boundary and no longer carries G-026-H as a blocker, but no new implementation unit was opened because current repo evidence already shows the bounded v1 slice materially present while broader custom-domain and apex-domain scope remains deferred under G-026-A. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-DEC-G026-H-PREREQUISITE-OPENING (2026-03-20): current operational sequencing opens `TECS-G026-H-001` as the sole bounded next development step for the unresolved G-026-H prerequisite only. The broad G-026 v1 platform-subdomain routing stream remains unopened, RFQ remains capped, and `TECS-FBW-ADMINRBAC` remains DESIGN_GATE.
 - GOVERNANCE-SYNC-TECS-G026-H-001 (2026-03-20): TECS-G026-H-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit `deef077`, authoritative remote Supabase verification PASS, manual SQL apply PASS, verifier block PASS, `prisma db pull` PASS, `prisma generate` PASS, and `prisma migrate resolve --applied 20260320010000_tecs_g026_h_001_reconcile_texqtic_service_role` PASS. Additional historical `SELECT`-only grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows, were preserved as bounded discrepancy notes only. NEXT-ACTION returns to `OPERATOR_DECISION_REQUIRED`; no broad G-026 routing authorization is implied.
+- GOV-CLOSE-TECS-G026-H-001 (2026-03-20): TECS-G026-H-001 transitioned VERIFIED_COMPLETE → CLOSED after the already-recorded implementation, verification, and governance-sync chain. Broad G-026 routing remains unopened, no routing unit was created, and the extra historical `SELECT` grants plus duplicate/equivalent `postgres` membership rows remain historical observations only, not resolved work.
 - GOV-RECONCILE-BOUNDED-G026-V1-HISTORY (2026-03-19): governance reconciliation confirmed that bounded G-026 v1 historical implementation evidence exists across multiple proven subunits and current repo files, but Layer 1 contains no matching canonical unit records for that bounded chain. Layer 0 sequencing remains unchanged because no implementation unit is opening now, and no synthetic Layer 1 backfill was created because doing so would collapse multiple distinct historical subunits into a fabricated single unit. Broader custom-domain and apex-domain scope remains deferred under G-026-A.
 - GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION (2026-03-19): GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION recorded as DECIDED in Layer 2. Historical Layer 1 gaps must now be handled by the minimum truthful correction mechanism: exact backfill only when exact historical identity is provable, snapshot/log reconciliation when proven history cannot be reduced to one truthful unit, and no reconstruction when evidence is too weak. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED and no implementation unit is opened by this policy.
 - GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING (2026-03-19): GOV-POLICY-CLOSURE-SEQUENCING-HARDENING recorded as DECIDED in Layer 2. TexQtic now requires write-time closure integrity and sequencing safety: explicit evidence-class labelling, mandatory historical-evidence classification before sequencing-sensitive edits, no archive-only closure truth, and minimum canonical traceability through the existing Governance OS layers. The operator-supplied unsaved governance analysis that motivated this hardening pass is now captured in a governance-owned decision record. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
