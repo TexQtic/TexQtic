@@ -189,9 +189,9 @@ function mapSupplierRfqResponse(response: SupplierRfqResponseRow) {
 
 async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCatalogItemTarget | null> {
   return prisma.$transaction(async tx => {
-    // Resolve only the referenced catalog item's owner under a tx-local service role.
-    // This bypass is intentionally bounded to RFQ target resolution and does not widen tenant catalog reads.
-    await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
+    // Resolve only the referenced catalog item's owner under a tx-local RFQ helper role.
+    // This bypass is intentionally bounded to RFQ helper reads and keeps the resolver role narrow.
+    await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
 
     const catalogItem = await tx.catalogItem.findUnique({
       where: { id: catalogItemId },
@@ -222,7 +222,7 @@ async function resolveBuyerRfqSupplierResponse(rfqId: string): Promise<BuyerRfqR
   return prisma.$transaction(async tx => {
     // Buyer detail reads are authorized by the parent RFQ ownership check first.
     // This bounded lookup avoids leaking supplier-only rows into broader tenant queries.
-    await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
+    await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
 
     return tx.rfqSupplierResponse.findUnique({
       where: { rfqId },

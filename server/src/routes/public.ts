@@ -16,11 +16,11 @@
  *   Empty array is a valid response — handled by frontend as "no account found".
  *
  * PW5-AUTH-BY-EMAIL-RLS-REMEDIATION (2026-03-14):
- *   Fixed /tenants/by-email to run under SET LOCAL ROLE texqtic_service so the
+ *   Fixed /tenants/by-email to run under a tx-local BYPASSRLS role so the
  *   membership lookup is not denied by FORCE RLS (memberships policies scope
  *   exclusively to texqtic_app; bare postgres gets 0 rows under deny-by-default).
  *   Migration 20260319000001_pw5_by_email_service_role_grants adds minimum
- *   SELECT grants on public.memberships and public.users to texqtic_service.
+ *   SELECT grants on public.memberships and public.users for the lookup role.
  *   Deployed via pnpm -C server migrate:deploy:prod (OPS-ENV-001).
  */
 import type { FastifyPluginAsync } from 'fastify';
@@ -126,18 +126,17 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     //   texqtic_app. The bare Prisma client connects as postgres, which matches
     //   no PERMISSIVE policy under FORCE RLS → 0 rows returned (deny-by-default).
     //
-    //   Fix: wrap in prisma.$transaction + SET LOCAL ROLE texqtic_service.
-    //   texqtic_service carries BYPASSRLS (NOLOGIN, unreachable except via
-    //   SET LOCAL ROLE from postgres). This is the canonical TexQtic pattern
-    //   established by G-026 / resolveDomain.ts.
+    //   Fix: wrap in prisma.$transaction + SET LOCAL ROLE texqtic_public_lookup.
+    //   texqtic_public_lookup carries BYPASSRLS (NOLOGIN, unreachable except via
+    //   SET LOCAL ROLE from postgres). This keeps the resolver role narrow while
+    //   preserving the public by-email lookup contract.
     //
-    //   Migration 20260319000001_pw5_by_email_service_role_grants adds the
-    //   minimum required SELECT grants on public.memberships and public.users
-    //   to texqtic_service. Deployed via pnpm -C server migrate:deploy:prod.
+    //   Cleanup remediation moves these non-routing grants off texqtic_service
+    //   onto a dedicated bounded lookup role.
     const memberships = await prisma.$transaction(async tx => {
-      // Assume texqtic_service role for this transaction only (tx-local BYPASSRLS).
+      // Assume the dedicated by-email lookup role for this transaction only.
       // Role auto-resets on transaction commit/rollback — no persistent state change.
-      await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
+      await tx.$executeRaw`SET LOCAL ROLE texqtic_public_lookup`;
 
       return tx.membership.findMany({
         where: {
