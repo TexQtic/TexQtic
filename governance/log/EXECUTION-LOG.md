@@ -1101,6 +1101,25 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-POLICY-HISTORIC
 
 ---
 
+### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT)
+Title: Record DESIGN-DEC-ADMINRBAC-PRODUCT as DECIDED
+Summary: Governance-only decision-record unit. Recorded DESIGN-DEC-ADMINRBAC-PRODUCT as
+  DECIDED in Layer 2. AdminRBAC is now product-authorized only as a bounded control-plane
+  admin invite, revoke, and explicit role-partitioning surface, while the separate
+  SECURITY-DEC-ADMINRBAC-POSTURE gate remains unresolved and no implementation was authorized.
+Layer Impact: Layer 2 — governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. NEXT-ACTION.md stays OPERATOR_DECISION_REQUIRED because no
+  implementation-ready unit is OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE pending the
+  separate security-side decision. No application code, tests, schema, migrations, policies,
+  or secret-bearing files were modified.
+Refs: governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md · governance/units/TECS-FBW-ADMINRBAC.md · governance/control/NEXT-ACTION.md
+
+---
+
 ### GOV-RECONCILE-BOUNDED-G026-V1-HISTORY — 2026-03-19
 Type: GOVERNANCE / RECONCILIATION
 Status: CLOSED
