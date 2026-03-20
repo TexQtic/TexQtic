@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-20
 last_unit_closed: GOV-CLOSE-TECS-G026-H-001
-last_commit: "governance(close): close TECS-G026-H-001"
+last_commit: "governance(audit): record compensating post-close audit for TECS-G026-H-001"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -69,6 +69,7 @@ RFQ remains pre-negotiation:
 
 `OPERATOR_DECISION_REQUIRED`.
 TECS-G026-H-001 is CLOSED after bounded remote-database verification, governance sync, and conservative closure.
+The compensating post-close governance audit is now recorded and recommends `HOLD`.
 The broad G-026 v1 routing stream remains unopened.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
@@ -172,3 +173,4 @@ These are distinct closed units and must not be conflated.
 - GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned VERIFIED_COMPLETE → CLOSED after the already-recorded implementation, verification, and governance sync chain. No new implementation unit was opened, and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION (2026-03-20): recorded the post-close AdminRBAC operator disposition as a decision only. TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED, TECS-FBW-ADMINRBAC remains DESIGN_GATE, no separate closeout artifact is required now, and no new AdminRBAC slice is opened or approved.
 - GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT (2026-03-20): recorded the permanent policy that every Governance Sync or Close must emit a mandatory post-close governance audit. The audit is advisory only, preserves `NEXT-ACTION` single-action discipline, and currently recommends `HOLD` while `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
+- GOV-AUDIT-TECS-G026-H-001-POST-CLOSE (2026-03-20): recorded the missing compensating post-close governance audit for already-closed TECS-G026-H-001. Audit result: `HOLD`. Natural next-step candidates: `HOLD`, `DECISION_REQUIRED`, `DESIGN_REFINEMENT`, `RECORD_ONLY`, `OPENING_CANDIDATE`. Ranked recommendation: `HOLD` because the bounded prerequisite unit is already closed, broad G-026 remains unopened, and preserved discrepancy notes on extra `SELECT` grants plus duplicate/equivalent `postgres` membership rows still require explicit later governance handling before any routing opening may be considered. `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.

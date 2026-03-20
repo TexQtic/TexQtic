@@ -1235,6 +1235,37 @@ Refs: governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md · governance/decis
 
 ---
 
+### GOV-AUDIT-TECS-G026-H-001-POST-CLOSE — 2026-03-20
+Type: GOVERNANCE / POST-CLOSE-AUDIT-CORRECTION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-TECS-G026-H-001-POST-CLOSE)
+Title: Record the compensating post-close governance audit for TECS-G026-H-001
+Summary: Governance-only correction unit. Recorded the missing mandatory post-close governance
+  audit for already-closed TECS-G026-H-001 without reopening the unit, changing Layer 1 status,
+  or authorizing any implementation. Audit output: state summary = closed bounded prerequisite
+  child with no implementation-ready unit open and `NEXT-ACTION` compatible with
+  `OPERATOR_DECISION_REQUIRED`; outstanding gates = broad G-026 remains unopened, broader
+  custom-domain / apex-domain / DNS-verification scope remains excluded, and preserved
+  discrepancy notes on extra `SELECT` grants plus duplicate/equivalent `postgres` membership rows
+  remain unresolved observations only; natural next-step candidates = `HOLD`,
+  `DECISION_REQUIRED`, `DESIGN_REFINEMENT`, `RECORD_ONLY`, `OPENING_CANDIDATE`; ranked
+  recommendation = `HOLD`; stronger moves remain blocked because no explicit routing-opening
+  decision exists and the preserved discrepancy posture has not been separately dispositioned.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture only; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged. NEXT-ACTION.md remains `OPERATOR_DECISION_REQUIRED`.
+  TECS-G026-H-001 remains `CLOSED`. No broad G-026 routing unit was opened. No product code,
+  tests, schema, migrations, routes, contracts, or decision files changed in this correction
+  unit. Forbidden next moves preserved: no implicit implementation opening, no broad G-026 by
+  implication, no custom-domain / apex-domain / DNS-verification authorization, and no
+  reinterpretation of the preserved discrepancy notes as resolved work.
+Refs: governance/control/SNAPSHOT.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/units/TECS-G026-H-001.md ·
+  governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
