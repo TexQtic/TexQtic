@@ -1,8 +1,8 @@
-import type { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest, preHandlerHookHandler } from 'fastify';
 import { z } from 'zod';
 import { Prisma, type EventLog } from '@prisma/client';
 import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
-import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
+import { sendSuccess, sendError, sendForbidden, sendUnauthorized, sendValidationError } from '../utils/response.js';
 import { randomUUID } from 'node:crypto';
 import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
@@ -35,6 +35,26 @@ async function withAdminContext<T>(callback: (tx: any) => Promise<T>): Promise<T
     return callback(tx);
   });
 }
+
+const requireSuperAdminReadAccess: preHandlerHookHandler = (
+  request: FastifyRequest,
+  reply: FastifyReply,
+  done,
+) => {
+  if (!request.isAdmin || !request.adminRole) {
+    sendUnauthorized(reply, 'Admin authentication required');
+    done();
+    return;
+  }
+
+  if (request.adminRole !== 'SUPER_ADMIN') {
+    sendForbidden(reply, 'Requires one of: SUPER_ADMIN');
+    done();
+    return;
+  }
+
+  done();
+};
 
 const controlRoutes: FastifyPluginAsync = async fastify => {
   // All control routes require admin auth
@@ -453,6 +473,61 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch disputes', 500);
     }
   });
+
+  /**
+   * GET /api/control/admin-access-registry
+   * Bounded control-plane admin identity registry (SUPER_ADMIN only)
+   *
+   * TECS-FBW-ADMINRBAC-REGISTRY-READ-001
+   * Returns only current internal control-plane identities + bounded role posture.
+   * No invite/revoke/role-change mutation behavior is authorized here.
+   */
+  fastify.get(
+    '/admin-access-registry',
+    { preHandler: requireSuperAdminReadAccess },
+    async (request, reply) => {
+      const adminId = request.adminId ?? 'unknown';
+      const adminRole = request.adminRole ?? 'unknown';
+
+      try {
+        const adminRows = await prisma.adminUser.findMany({
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy: [
+            { role: 'asc' },
+            { email: 'asc' },
+          ],
+        });
+
+        const admins = adminRows.map(row => ({
+          id: row.id,
+          email: row.email,
+          role: row.role,
+          accessClass: row.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'PLATFORM_ADMIN',
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+        }));
+
+        await writeAuditLog(
+          prisma,
+          createAdminAudit(adminId, 'control.admin_access_registry.read', 'admin_user', {
+            viewerRole: adminRole,
+            resultCount: admins.length,
+          })
+        );
+
+        return sendSuccess(reply, { admins, count: admins.length });
+      } catch (error: unknown) {
+        fastify.log.error({ err: error }, '[Admin Access Registry] Error');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch admin access registry', 500);
+      }
+    }
+  );
 
   /**
    * GET /api/control/whoami

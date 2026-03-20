@@ -546,6 +546,33 @@ export interface DisputesResponse {
   disputes: DisputeDecision[];
 }
 
+// ==================== ADMINRBAC REGISTRY READ (TECS-FBW-ADMINRBAC-REGISTRY-READ-001) ====================
+
+export type ControlPlaneAdminRole = 'SUPER_ADMIN' | 'SUPPORT' | 'ANALYST';
+export type ControlPlaneAdminAccessClass = 'SUPER_ADMIN' | 'PLATFORM_ADMIN';
+
+export interface ControlPlaneAdminRegistryEntry {
+  id: string;
+  email: string;
+  role: ControlPlaneAdminRole;
+  accessClass: ControlPlaneAdminAccessClass;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ControlPlaneAdminRegistryResponse {
+  admins: ControlPlaneAdminRegistryEntry[];
+  count: number;
+}
+
+/**
+ * Fetch the bounded control-plane admin access registry (SUPER_ADMIN only).
+ * Read-only surface: current internal control-plane identities + bounded role posture.
+ */
+export async function getAdminAccessRegistry(): Promise<ControlPlaneAdminRegistryResponse> {
+  return adminGet<ControlPlaneAdminRegistryResponse>('/api/control/admin-access-registry');
+}
+
 /**
  * Fetch dispute authority intents (admin only)
  * Backed by EventLog - returns dispute-related authority decisions
