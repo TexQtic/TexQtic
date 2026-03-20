@@ -31,10 +31,10 @@
  * Secret: process.env.TEXQTIC_RESOLVER_SECRET (min 32 chars, same as Edge).
  */
 
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { config } from '../config/index.js';
-import { normalizeHost } from '../lib/hostNormalize.js';
+import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import {
   TENANT_ID_HEADER,
   TENANT_SLUG_HEADER,
@@ -61,7 +61,7 @@ declare module 'fastify' {
     resolvedTenantSlug?: string;
   }
 }
-
+    /** 'subdomain' for the bounded runtime path. */
 // ─── Internal routes prefix ──────────────────────────────────────────────────
 
 const INTERNAL_PREFIX = '/api/internal/';
@@ -83,7 +83,7 @@ function verifyEdgeSignature(
     return { ok: false, reason: 'MISSING' };
   }
 
-  const tsSeconds = parseInt(tsHeader, 10);
+  const tsSeconds = Number.parseInt(tsHeader, 10);
   if (!Number.isFinite(tsSeconds)) {
     return { ok: false, reason: 'INVALID_TS' };
   }
@@ -143,7 +143,8 @@ export async function tenantResolutionHook(
   const tsHeader = request.headers[RESOLVER_TS_HEADER] as string | undefined;
 
   // Normalize the host (Edge used normalized host in its canonical string).
-  const rawHost = (request.headers.host as string | undefined) ?? '';
+  const rawHostHeader = request.headers.host;
+  const rawHost = typeof rawHostHeader === 'string' ? rawHostHeader : '';
   const hostResult = normalizeHost(rawHost);
 
   if (!hostResult.ok) {
@@ -156,6 +157,24 @@ export async function tenantResolutionHook(
   }
 
   const normalizedHost = hostResult.host;
+  const platformParse = parsePlatformHost(normalizedHost);
+  const tenantSource = request.headers[TENANT_SOURCE_HEADER] as string | undefined;
+  const tenantSlug = request.headers[TENANT_SLUG_HEADER] as string | undefined;
+
+  if (!platformParse.isPlatform || tenantSource !== 'subdomain' || tenantSlug !== platformParse.slug) {
+    request.log.warn(
+      {
+        host: normalizedHost,
+        url: request.url,
+        tenantSource,
+        tenantSlug,
+      },
+      'tenantResolutionHook: rejected out-of-scope or malformed platform-subdomain tenant headers',
+    );
+    reply.code(401).send();
+    return;
+  }
+
   const result = verifyEdgeSignature(
     normalizedHost,
     tenantId,
@@ -183,8 +202,8 @@ export async function tenantResolutionHook(
 
   // 4. Valid — store resolved context on request for downstream use.
   request.resolvedTenantId = tenantId;
-  request.tenantSource = (request.headers[TENANT_SOURCE_HEADER] as string | undefined) ?? 'unknown';
-  request.resolvedTenantSlug = (request.headers[TENANT_SLUG_HEADER] as string | undefined);
+  request.tenantSource = tenantSource;
+  request.resolvedTenantSlug = tenantSlug;
 
   request.log.debug(
     {

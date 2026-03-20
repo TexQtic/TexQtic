@@ -39,6 +39,10 @@ export async function tenantAuthMiddleware(request: FastifyRequest, reply: Fasti
       return; // checkRealmMismatch already sent 403 WRONG_REALM response
     }
 
+    if (request.resolvedTenantId && request.resolvedTenantId !== payload.tenantId) {
+      return sendForbidden(reply, 'Resolved tenant does not match token tenant');
+    }
+
     // Verify membership
     const membership = await getUserMembership(payload.userId, payload.tenantId);
     if (!membership) {

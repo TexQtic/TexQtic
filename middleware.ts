@@ -61,6 +61,10 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+type PlatformHostResult =
+  | { isPlatform: true; slug: string }
+  | { isPlatform: false };
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CACHE_TTL_MS = 60_000;
@@ -141,6 +145,18 @@ function normalizeHostEdge(raw: string): NormHostResult {
   return { ok: true, host };
 }
 
+function parsePlatformHostEdge(host: string): PlatformHostResult {
+  const segments = host.split('.');
+  if (segments.length === 3 && segments[1] === 'texqtic' && segments[2] === 'app') {
+    const slug = segments[0];
+    if (slug && (/^[a-z0-9][a-z0-9-]{0,98}[a-z0-9]$/.test(slug) || /^[a-z0-9]$/.test(slug))) {
+      return { isPlatform: true, slug };
+    }
+  }
+
+  return { isPlatform: false };
+}
+
 // ─── Platform passthrough list ────────────────────────────────────────────────
 
 function buildPassthroughSet(): Set<string> {
@@ -166,6 +182,7 @@ function isDevHost(host: string): boolean {
 async function fetchResolvedTenant(
   baseUrl: string,
   normalizedHost: string,
+  expectedSlug: string,
   secret: string,
 ): Promise<ResolvedTenant | null> {
   // Resolver HMAC: "resolve:{host}:{tsMs}" (epoch milliseconds)
@@ -194,6 +211,9 @@ async function fetchResolvedTenant(
   try {
     const body = await resp.json() as ResolvedTenant;
     if (body.status !== 'resolved') return null;
+    if (!body.tenantId || !body.tenantSlug) return null;
+    if (body.canonicalHost !== normalizedHost) return null;
+    if (body.tenantSlug !== expectedSlug) return null;
     return body;
   } catch {
     return null;
@@ -257,17 +277,26 @@ export default async function middleware(request: Request): Promise<Response> {
     });
   }
 
+  const platformHost = parsePlatformHostEdge(normalizedHost);
+  if (!platformHost.isPlatform) {
+    return notFoundResponse();
+  }
+
   // 4. Cache lookup.
   const cached = cacheGet(normalizedHost);
   if (cached) {
-    return buildInjectedPassthrough(normalizedHost, cached.tenantId, cached.tenantSlug, secret);
+    if (cached.canonicalHost !== normalizedHost || cached.tenantSlug !== platformHost.slug) {
+      resolutionCache.delete(normalizedHost);
+    } else {
+      return buildInjectedPassthrough(normalizedHost, cached.tenantId, cached.tenantSlug, secret);
+    }
   }
 
   // 5. Cache miss → call backend resolver.
   const requestUrl = new URL(request.url);
   const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
 
-  const resolved = await fetchResolvedTenant(baseUrl, normalizedHost, secret);
+  const resolved = await fetchResolvedTenant(baseUrl, normalizedHost, platformHost.slug, secret);
 
   if (!resolved) {
     // Not found or resolver error — fail-closed (D8): return generic 404.
@@ -327,6 +356,6 @@ async function buildInjectedPassthrough(
 
 export const config = {
   matcher: [
-    '/((?!api/internal|_next/static|_next/image|favicon\\.ico|assets/).*)',
+    String.raw`/((?!api/internal|_next/static|_next/image|favicon\.ico|assets/).*)`,
   ],
 };

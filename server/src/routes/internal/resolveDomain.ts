@@ -4,8 +4,8 @@
  * GET /api/internal/resolve-domain?host=<raw-host>
  *
  * Resolves a raw HTTP Host header value to the owning TexQtic tenant.
- * Called exclusively by the Vercel Edge function that handles custom-domain
- * routing (Design Anchor §D1, §D4, §D6).
+ * Called exclusively by the Vercel Edge function for the bounded
+ * platform-subdomain runtime routing path.
  *
  * Auth:
  *   HMAC-SHA256 via x-texqtic-resolver-hmac + x-texqtic-resolver-ts headers.
@@ -14,9 +14,8 @@
  * Resolution logic (§D6.4):
  *   1. Platform subdomain  <slug>.texqtic.app
  *      → lookup tenant by slug WHERE status = ACTIVE
- *   2. Custom domain       any other hostname
- *      → lookup tenant_domains WHERE domain = host AND verified = true
- *        then fetch tenant WHERE status = ACTIVE
+ *   2. Any other hostname
+ *      → bounded v1 runtime path returns not_found
  *
  * DB execution (§D4):
  *   Runs inside a Prisma $transaction with SET LOCAL ROLE texqtic_service,
@@ -117,7 +116,6 @@ interface ResolvedTenant {
  * texqtic_service has:
  *   - BYPASSRLS
  *   - SELECT on public.tenants
- *   - SELECT on public.tenant_domains (via GRANT in migration)
  *
  * This is safe because the role is NOLOGIN and only reachable
  * via `SET LOCAL ROLE` by the postgres user.
@@ -129,30 +127,17 @@ async function resolveHostToTenant(host: string): Promise<ResolvedTenant | null>
 
     const platformParseResult = parsePlatformHost(host);
 
-    if (platformParseResult.isPlatform) {
-      // Path A — Platform subdomain: <slug>.texqtic.app
-      const tenant = await tx.tenant.findFirst({
-        where: { slug: platformParseResult.slug, status: 'ACTIVE' },
-        select: { id: true, slug: true },
-      });
-      if (!tenant) return null;
-      return { tenantId: tenant.id, tenantSlug: tenant.slug };
-    }
-
-    // Path B — Custom domain: look up tenant_domains first.
-    const domainRecord = await tx.tenantDomain.findFirst({
-      where: { domain: host, verified: true },
-      select: { tenantId: true, tenant: { select: { id: true, slug: true, status: true } } },
-    });
-
-    if (!domainRecord || domainRecord.tenant.status !== 'ACTIVE') {
+    if (!platformParseResult.isPlatform) {
       return null;
     }
 
-    return {
-      tenantId:   domainRecord.tenant.id,
-      tenantSlug: domainRecord.tenant.slug,
-    };
+    const tenant = await tx.tenant.findFirst({
+      where: { slug: platformParseResult.slug, status: 'ACTIVE' },
+      select: { id: true, slug: true },
+    });
+
+    if (!tenant) return null;
+    return { tenantId: tenant.id, tenantSlug: tenant.slug };
   });
 }
 
