@@ -1667,3 +1667,26 @@ Refs: governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
   governance/control/OPEN-SET.md · governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md ·
   governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md ·
   governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY — 2026-03-20
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY)
+Title: Record the post-remediation routing-opening eligibility decision for bounded G-026
+Summary: Governance-only decision-record unit. Recorded the disposition that the closed G-026
+  prerequisite + clarification + remediation chain is now sufficient to make one separate bounded
+  routing opening governance-eligible, but does not itself open routing work. The smallest
+  truthful eligible slice is bounded platform-subdomain runtime routing only, and broad G-026,
+  custom-domain, apex-domain, and DNS-verification scope all remain unopened or excluded.
+Layer Impact: Layer 2 — governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. `NEXT-ACTION.md` stays `OPERATOR_DECISION_REQUIRED` because no
+  implementation-ready unit is opened by this decision. No product code, tests, schema,
+  migrations, routes, contracts, or unit records changed. This decision does not itself authorize
+  implementation and still requires a separate bounded opening artifact if TexQtic later chooses
+  to proceed.
+Refs: governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY.md ·
+  governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
+  governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
