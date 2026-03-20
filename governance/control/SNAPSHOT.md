@@ -11,9 +11,9 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-19
-last_unit_closed: GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING
-last_commit: "feat(governance): define governance linter v3 trigger policy"
+snapshot_date: 2026-03-20
+last_unit_closed: GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING
+last_commit: "feat(governance): open adminrbac registry read slice"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -40,9 +40,10 @@ layer_4_installed: true
 - **TECS-FBW-006-B** — `VERIFIED_COMPLETE` — Escalation mutations closed 2026-03-18; commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS
 - **TECS-FBW-013-BE-001** — `VERIFIED_COMPLETE` — Backend prerequisite route complete; commit 451f45b; verification VERIFIED_COMPLETE
 - **TECS-FBW-013** — `VERIFIED_COMPLETE` — Buyer RFQ activation closed 2026-03-18; commits 060cac7 · 7f59a62; VERIFY-TECS-FBW-013 VERIFIED_COMPLETE
-- **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Admin RBAC; requires explicit product + security decision
+- **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `OPEN` — First bounded AdminRBAC child slice authorized 2026-03-20; one read-only control-plane admin access registry surface only; current repo evidence supports replacing the static placeholder with a real control-plane read surface without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
+- **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 ## RFQ Platform State
 
@@ -66,7 +67,7 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
+`TECS-FBW-ADMINRBAC-REGISTRY-READ-001`.
 Remaining non-terminal portfolio also includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
 See `NEXT-ACTION.md`.
 
@@ -77,6 +78,7 @@ See `NEXT-ACTION.md`.
 ## Active Design Gates
 
 - **TECS-FBW-ADMINRBAC** — Requires explicit product + security decision before any work
+- **TECS-FBW-ADMINRBAC** — Broad parent remains non-open; later mutation slices require separate bounded sequencing
 
 ## Closed Baseline (must not be reopened)
 

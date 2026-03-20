@@ -15,43 +15,42 @@ doctrine_constraints:
   - D-009: design-gated; must not be forced into implementation prior to design decision
   - D-011: org_id-scoped admin role assignments required; no cross-tenant admin elevation
 decisions_required:
-  - DESIGN-DEC-ADMINRBAC-PRODUCT (product scope decision — not yet made)
-  - SECURITY-DEC-ADMINRBAC-POSTURE (security posture decision — not yet made)
+  - DESIGN-DEC-ADMINRBAC-PRODUCT: DECIDED (2026-03-20, Paresh)
+  - SECURITY-DEC-ADMINRBAC-POSTURE: DECIDED (2026-03-20, Paresh)
+  - GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING: DECIDED (2026-03-20, Paresh)
+  - GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING: DECIDED (2026-03-20, Paresh)
 blockers:
-  - id: GATE-ADMINRBAC-001
-    description: Product approval not yet granted for admin invite/revoke implementation
-    registered: 2026-03-09
-  - id: GATE-ADMINRBAC-002
-    description: Security posture decision not recorded in governance/decisions/SECURITY-DECISIONS.md
-    registered: 2026-03-09
+  - id: GATE-ADMINRBAC-003
+    description: Broad parent stream remains too wide to open as one first implementation-ready unit; child slices must be sequenced separately
+    registered: 2026-03-20
 ---
 
 ## Unit Summary
 
-TECS-FBW-ADMINRBAC covers the AdminRBAC control-plane surface: the ability to invite
-administrators, revoke access, and manage admin role assignments. This unit is classified
-HIGH risk because there is currently no auditable admin provisioning pathway. It sits behind
-a DESIGN_GATE — both a product scope decision and a security posture decision must be
-formally recorded before implementation may begin. The dead-button UI stop-gap applied in
-PW5-U3 (commit d5ee430, 2026-03-09) is NOT authorization to implement.
+TECS-FBW-ADMINRBAC is the broad parent umbrella for the AdminRBAC control-plane surface:
+invite, revoke, role assignment/change, and related high-risk authority boundaries. Both
+required gate decisions are now recorded, but the parent remains non-open because it is still
+too broad to truthfully open as one first implementation-ready unit. The first bounded child
+slice has now been split out separately as `TECS-FBW-ADMINRBAC-REGISTRY-READ-001`.
+
+This parent record remains `DESIGN_GATE` to preserve the boundary that invite, revoke,
+role-change mutation, and broader authority design must not be collapsed into the first read-only
+child slice. The dead-button UI stop-gap applied in PW5-U3 (commit d5ee430, 2026-03-09) remains
+non-authorizing historical context only.
 
 ## Acceptance Criteria
 
-*Not yet active — unit is DESIGN_GATE. Criteria will be defined after both gate decisions are recorded.*
+*Parent unit remains non-open. Criteria for later mutation or broader authority child slices must
+be defined in separate child-unit records and must not be inferred from this umbrella record.*
 
-Expected future criteria (illustrative only; do not treat as active work):
-- [ ] DESIGN-DEC-ADMINRBAC-PRODUCT recorded in `governance/decisions/PRODUCT-DECISIONS.md`
-- [ ] SECURITY-DEC-ADMINRBAC-POSTURE recorded in `governance/decisions/SECURITY-DECISIONS.md`
-- [ ] Backend: admin invite and revoke endpoints designed per security posture decision
-- [ ] Audit trail written on every admin provisioning action (D-002)
-- [ ] org_id-scoped role assignments — no cross-tenant admin elevation possible (D-011)
-- [ ] UI dead-button gating removed only after backend is live
-- [ ] TypeScript type-check passes (EXIT 0)
-- [ ] Lint passes (EXIT 0)
-- [ ] Security review evidence recorded in Evidence Record
+- [ ] Any later invite child slice is separately sequenced and bounded
+- [ ] Any later revoke/remove child slice is separately sequenced and bounded
+- [ ] Any later role assignment/change mutation slice is separately sequenced and bounded
+- [ ] No later child slice weakens the TenantAdmin / PlatformAdmin / SuperAdmin terminology lock
+- [ ] No later child slice infers blanket read-everything or ambient bypass authority
 
 ## Files Allowlisted (Modify)
-*Not yet defined — pending product and security gate decisions.*
+*None. This umbrella parent record is not itself implementation-ready.*
 
 ## Files Read-Only
 - `governance/control/DOCTRINE.md`
@@ -61,7 +60,8 @@ Expected future criteria (illustrative only; do not treat as active work):
 - `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` (historical reference)
 
 ## Evidence Record
-*Not yet recorded — unit is DESIGN_GATE.*
+- Split/opening decision: `GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING` — broad parent remains non-open; only a read-only access-registry child slice is a truthful first candidate
+- Split/opening decision: `GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING` — first child unit opened as `TECS-FBW-ADMINRBAC-REGISTRY-READ-001`
 
 ## Governance Closure
 *Not yet set — unit is DESIGN_GATE and not implementation-ready.*
@@ -70,23 +70,24 @@ Expected future criteria (illustrative only; do not treat as active work):
 
 ## Allowed Next Step
 
-**Nothing.** This unit is DESIGN_GATE.
+Do not open this parent directly.
 
-The only allowed next steps (in order) are:
-1. Record **DESIGN-DEC-ADMINRBAC-PRODUCT** in `governance/decisions/PRODUCT-DECISIONS.md`
-2. Record **SECURITY-DEC-ADMINRBAC-POSTURE** in `governance/decisions/SECURITY-DECISIONS.md`
-3. Only after BOTH decisions are recorded: open a new implementation unit that cites both
-   decision IDs and defines a constrained allowlist and implementation plan.
+The only currently allowed implementation next step is the already-open child unit:
+`TECS-FBW-ADMINRBAC-REGISTRY-READ-001`.
+
+Any later AdminRBAC mutation or broader authority work requires a separate bounded child-unit
+sequencing decision.
 
 ## Forbidden Next Step
 
 - Do **not** implement admin invite or revoke logic, endpoints, or UI flows
+- Do **not** treat the existence of the open read-only child slice as authorization for parent-stream mutation work
 - Do **not** touch `components/ControlPlane/AdminRBAC.tsx` for any implementation purpose
 - Do **not** interpret the PW5-U3 dead-button UI lock as authorization to implement — it is
   explicitly a stop-gap, not a green light
-- Do **not** treat this unit as IN_PROGRESS, OPEN, or partially started — it has not begun
-- Do **not** promote this unit without BOTH required decisions formally recorded
-- Do **not** introduce any admin provisioning logic outside the approved allowlist when authorized
+- Do **not** treat this parent as OPEN or partially started
+- Do **not** collapse invite, revoke, role-change mutation, and read-only registry work into one unit
+- Do **not** introduce any admin provisioning logic outside the approved child-unit allowlist when authorized
 
 ## Drift Guards
 
@@ -94,15 +95,15 @@ The only allowed next steps (in order) are:
   dead-button UI lock to AdminRBAC.tsx as PW5-U3. This was a UI governance stop-gap — it locked
   the button to prevent accidental invocation. It is NOT product or security authorization to
   implement the underlying invite/revoke logic.
-- **Two decisions required, both must be documented.** DESIGN-DEC-ADMINRBAC-PRODUCT alone is
-  insufficient. SECURITY-DEC-ADMINRBAC-POSTURE is separately required and must be recorded
-  in `governance/decisions/SECURITY-DECISIONS.md` (a future Layer 2 file).
+- **Broad parent remains non-open by design.** Even after both gate decisions are recorded, this
+  parent umbrella record must not be opened as one implementation-ready unit when the first
+  truthful slice is narrower than the parent title.
 - **HIGH risk classification.** There is currently no auditable admin provisioning pathway.
   Any code touching admin-level access control must meet audit-trail requirements (D-002).
 - **Control-plane only.** AdminRBAC is a control-plane surface (PLANE: CONTROL). Do not allow
   tenant-plane code to call or rely on admin provisioning pathways.
-- D-009: This unit is design-gated. A design gate is not a temporary delay — it is a formal
-  block requiring explicit governance decisions before advancement is permitted.
+- **Terminology lock is mandatory.** Future child slices must preserve `TenantAdmin`,
+  `PlatformAdmin`, and `SuperAdmin` exactly and must not collapse them into `Admin`.
 
 ## Control-Plane Source of Truth
 
@@ -111,7 +112,7 @@ The only allowed next steps (in order) are:
 | Is this unit open? | `governance/control/OPEN-SET.md` (listed as DESIGN_GATE) |
 | What are the gates? | `governance/control/BLOCKED.md` — Section 3 |
 | What doctrine applies? | `governance/control/DOCTRINE.md` (D-002, D-009) |
-| What authorizes movement? | Both decisions recorded in `governance/decisions/` (Layer 2) |
+| What authorizes movement? | Separate bounded child-unit sequencing decisions recorded in `governance/decisions/` (Layer 2) |
 | Historical context | `docs/governance/IMPLEMENTATION-TRACKER-2026-03.md` |
 | PW5-U3 commit reference | d5ee430 (2026-03-09) — dead-button only, not implementation |
 
@@ -119,6 +120,6 @@ The only allowed next steps (in order) are:
 
 ## Last Governance Confirmation
 
-2026-03-17 — GOV-OS-003 Unit Record Migration Batch 1. Status confirmed: DESIGN_GATE.
-Both gate decisions (DESIGN-DEC-ADMINRBAC-PRODUCT and SECURITY-DEC-ADMINRBAC-POSTURE) remain
-unrecorded. No implementation work is authorized.
+2026-03-20 — GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING. Parent remains `DESIGN_GATE` as the broad
+non-open umbrella stream after the first bounded child slice `TECS-FBW-ADMINRBAC-REGISTRY-READ-001`
+was split out and opened separately.

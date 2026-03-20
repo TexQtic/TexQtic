@@ -1170,6 +1170,38 @@ Refs: governance/decisions/GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING.md · govern
 
 ---
 
+### GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING — 2026-03-20
+Type: GOVERNANCE / SEQUENCING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING)
+Title: Split and open the first bounded AdminRBAC child slice
+Summary: Governance-only split/opening decision. Confirmed that the broad parent
+  `TECS-FBW-ADMINRBAC` remains non-open while one narrower child unit,
+  `TECS-FBW-ADMINRBAC-REGISTRY-READ-001`, is now opened as the first implementation-ready
+  AdminRBAC slice. The opened child is limited to a read-only control-plane admin access registry
+  surface only and does not authorize invite, revoke/remove, role-change mutation, self-elevation,
+  session invalidation, or blanket read-everything posture.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  TECS-FBW-ADMINRBAC clarified as the broad non-open parent and
+  TECS-FBW-ADMINRBAC-REGISTRY-READ-001 created as OPEN; Layer 2 —
+  governance/decisions/GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Evidence Reviewed: governance/control/DOCTRINE.md; governance/control/OPEN-SET.md;
+  governance/control/NEXT-ACTION.md; governance/control/BLOCKED.md; governance/control/SNAPSHOT.md;
+  governance/units/TECS-FBW-ADMINRBAC.md;
+  governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md;
+  governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md;
+  governance/decisions/GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING.md;
+  governance/decisions/DESIGN-DECISIONS.md; governance/decisions/SECURITY-DECISIONS.md;
+  components/ControlPlane/AdminRBAC.tsx; constants.tsx; server/src/types/index.ts;
+  server/src/routes/auth.ts; docs/governance/audits/2026-03-copilot-frontend-backend-audit.md
+Notes: The parent remains non-open because it still bundles broader AdminRBAC authority work.
+  Layer 0 now shows exactly one OPEN implementation-ready unit. No application code, tests,
+  schema, migrations, policies, or secret-bearing files were modified.
+Refs: governance/units/TECS-FBW-ADMINRBAC.md · governance/units/TECS-FBW-ADMINRBAC-REGISTRY-READ-001.md · governance/decisions/GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING.md
+
+---
+
 ### GOV-RECONCILE-BOUNDED-G026-V1-HISTORY — 2026-03-19
 Type: GOVERNANCE / RECONCILIATION
 Status: CLOSED
