@@ -2,14 +2,14 @@
 unit_id: TECS-G026-CLEANUP-REMEDIATION-001
 title: Remove or re-home non-routing texqtic_service dependencies before any routing opening
 type: IMPLEMENTATION
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W4
 plane: BACKEND
 opened: 2026-03-20
 closed: null
-verified: null
-commit: null
-evidence: null
+verified: 2026-03-20
+commit: 0f3d2c3
+evidence: "Authoritative remote Supabase verification PASS: remediation migration applied, grants/revokes proved, prisma db pull PASS, prisma generate PASS, prisma migrate resolve reached applied state, tsc --noEmit PASS, and bounded runtime verification PASS for public by-email, internal resolve-domain, and buyer RFQ helper reads."
 prerequisite_for: Any future bounded G-026 routing-opening question
 doctrine_constraints:
   - D-004: this is one bounded cleanup or remediation unit only; no routing work may be mixed in
@@ -36,13 +36,13 @@ reopen `TECS-G026-H-001`.
 
 ## Acceptance Criteria
 
-- [ ] The public by-email path no longer depends on `texqtic_service` for `memberships` or `users`, or that dependency is explicitly re-homed within the bounded remediation scope
-- [ ] The RFQ helper read paths no longer depend on `texqtic_service` for `catalog_items` or `rfq_supplier_responses`, or those dependencies are explicitly re-homed within the bounded remediation scope
-- [ ] The extra `SELECT` grants on `memberships`, `users`, `catalog_items`, and `rfq_supplier_responses` are removed once the non-routing paths no longer require them
-- [ ] The base resolver posture remains preserved on `public.tenants` and `public.tenant_domains`
-- [ ] `texqtic_service` remains `NOLOGIN`, `BYPASSRLS`, transaction-local via `postgres`, and `SELECT`-only
-- [ ] Duplicate/equivalent `postgres` membership rows are changed only if implementation evidence shows normalization is actually required to preserve the clarified posture
-- [ ] No routing implementation, broad G-026 opening, custom-domain scope, apex-domain scope, or DNS-verification scope is introduced
+- [x] The public by-email path no longer depends on `texqtic_service` for `memberships` or `users`, or that dependency is explicitly re-homed within the bounded remediation scope
+- [x] The RFQ helper read paths no longer depend on `texqtic_service` for `catalog_items` or `rfq_supplier_responses`, or those dependencies are explicitly re-homed within the bounded remediation scope
+- [x] The extra `SELECT` grants on `memberships`, `users`, `catalog_items`, and `rfq_supplier_responses` are removed once the non-routing paths no longer require them
+- [x] The base resolver posture remains preserved on `public.tenants` and `public.tenant_domains`
+- [x] `texqtic_service` remains `NOLOGIN`, `BYPASSRLS`, transaction-local via `postgres`, and `SELECT`-only
+- [x] Duplicate/equivalent `postgres` membership rows are changed only if implementation evidence shows normalization is actually required to preserve the clarified posture
+- [x] No routing implementation, broad G-026 opening, custom-domain scope, apex-domain scope, or DNS-verification scope is introduced
 
 ## Files Allowlisted (Modify)
 
@@ -76,10 +76,14 @@ Expected candidates for the future implementation prompt only:
 - Prior prerequisite unit: `TECS-G026-H-001` remains `CLOSED`
 - Prior clarification unit: `TECS-G026-DESIGN-CLARIFICATION-001` remains `CLOSED`
 - This unit exists because the clarified future routing-opening target posture remains resolver-only while the current repo truth still includes non-routing `texqtic_service` dependencies
+- Implementation commit: `0f3d2c3` (`fix(g026): rehome non-routing service-role dependencies`)
+- Authoritative remote verification proved the bounded role posture after remediation: `texqtic_service` retains `SELECT` only on `public.tenants` and `public.tenant_domains`; `texqtic_public_lookup` holds the by-email read grants on `public.memberships`, `public.tenants`, and `public.users`; `texqtic_rfq_read` holds the RFQ helper read grants on `public.catalog_items` and `public.rfq_supplier_responses`
+- Runtime verification passed for `/api/public/tenants/by-email`, `/api/internal/resolve-domain`, and buyer RFQ helper reads via `/api/tenant/rfqs/:id`
+- Verification-side `server/prisma/schema.prisma` reconciliation drift from `prisma db pull` was not retained as product-code scope and is not part of this governance sync record
 
 ## Allowed Next Step
 
-Bounded implementation work for this remediation unit only.
+Governance-only close or later operator decision. No routing opening is implied by this verified state.
 
 ## Forbidden Next Step
 
@@ -94,8 +98,8 @@ Bounded implementation work for this remediation unit only.
 ## Drift Guards
 
 - This unit is remediation-only. If work requires routing behavior, resolver contract changes, or broader white-label domain scope, stop and return to governance rather than widening scope implicitly.
-- Broad G-026 remains unopened while this unit is active.
-- Any later routing-opening question must wait until this unit is implemented, verified, synced, and closed.
+- Broad G-026 remains unopened after this verified remediation state.
+- Any later routing-opening question must still wait for a separate governance decision and, if chosen, a later close step for this unit.
 
 ## Control-Plane Source of Truth
 

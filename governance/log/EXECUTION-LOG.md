@@ -1562,3 +1562,35 @@ Notes: BLOCKED.md remains unchanged because no blocked register entry changed. T
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/TECS-G026-H-001.md ·
   governance/decisions/GOV-DEC-G026-H-PREREQUISITE-OPENING.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOVERNANCE-SYNC-TECS-G026-CLEANUP-REMEDIATION-001 — 2026-03-20
+Type: GOVERNANCE / SYNC
+Status: CLOSED
+Commit: (pending governance-sync commit)
+Title: Sync verified G-026 cleanup remediation state into canonical governance layers
+Summary: Governance-only sync unit. Recorded `TECS-G026-CLEANUP-REMEDIATION-001` as
+  `VERIFIED_COMPLETE` after the already-landed implementation commit `0f3d2c3` was verified
+  against the authoritative remote Supabase environment. The verified remediation posture now
+  truthfully records that non-routing reads were re-homed from `texqtic_service` to the bounded
+  roles `texqtic_public_lookup` and `texqtic_rfq_read`, while internal resolve-domain preserved
+  the canonical resolver-only `texqtic_service` posture on `public.tenants` and
+  `public.tenant_domains`. Broad G-026 routing remains unopened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md updated to VERIFIED_COMPLETE; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Evidence Reviewed: authoritative remote Supabase migration apply PASS; direct role/grant proof
+  PASS; `pnpm -C server exec prisma db pull` PASS; `pnpm -C server exec prisma generate` PASS;
+  `pnpm -C server exec prisma migrate resolve --applied 20260320020000_tecs_g026_cleanup_remediate_non_routing_roles`
+  already-applied state confirmed; `pnpm -C server exec tsc --noEmit` PASS; bounded runtime
+  verification PASS for `/api/public/tenants/by-email`, `/api/internal/resolve-domain`, and buyer
+  RFQ helper reads via `/api/tenant/rfqs/:id`
+Notes: This is sync only, not closure. `NEXT-ACTION.md` now returns to
+  `OPERATOR_DECISION_REQUIRED` because no implementation-ready unit remains OPEN. No routing unit
+  is authorized by this sync, and no broad G-026 opening, custom-domain scope, apex-domain scope,
+  or DNS-verification scope was created. Verification-side `server/prisma/schema.prisma` drift
+  from `prisma db pull` was not retained in this governance-only change set.
+Refs: governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md ·
+  governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
