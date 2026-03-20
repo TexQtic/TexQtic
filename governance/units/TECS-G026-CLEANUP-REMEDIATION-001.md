@@ -2,11 +2,11 @@
 unit_id: TECS-G026-CLEANUP-REMEDIATION-001
 title: Remove or re-home non-routing texqtic_service dependencies before any routing opening
 type: IMPLEMENTATION
-status: VERIFIED_COMPLETE
+status: CLOSED
 wave: W4
 plane: BACKEND
 opened: 2026-03-20
-closed: null
+closed: 2026-03-20
 verified: 2026-03-20
 commit: 0f3d2c3
 evidence: "Authoritative remote Supabase verification PASS: remediation migration applied, grants/revokes proved, prisma db pull PASS, prisma generate PASS, prisma migrate resolve reached applied state, tsc --noEmit PASS, and bounded runtime verification PASS for public by-email, internal resolve-domain, and buyer RFQ helper reads."
@@ -26,13 +26,13 @@ blockers: []
 
 ## Unit Summary
 
-`TECS-G026-CLEANUP-REMEDIATION-001` is the sole bounded next governed unit for G-026.
+`TECS-G026-CLEANUP-REMEDIATION-001` was the sole bounded remediation unit for this G-026 cleanup step.
 
 It covers only the cleanup or remediation work required to remove or re-home the non-routing
 `texqtic_service` dependencies identified by `GOV-DEC-G026-DESIGN-CLARIFICATION-001`.
 
-This unit does not open the broader G-026 stream. It does not authorize routing work. It does not
-reopen `TECS-G026-H-001`.
+This closed unit does not open the broader G-026 stream. It does not authorize routing work. It
+does not reopen `TECS-G026-H-001`.
 
 ## Acceptance Criteria
 
@@ -83,7 +83,9 @@ Expected candidates for the future implementation prompt only:
 
 ## Allowed Next Step
 
-Governance-only close or later operator decision. No routing opening is implied by this verified state.
+No further implementation work is authorized inside this closed unit.
+
+No routing opening is implied by this closed state.
 
 ## Forbidden Next Step
 
@@ -101,13 +103,33 @@ Governance-only close or later operator decision. No routing opening is implied 
 - Broad G-026 remains unopened after this verified remediation state.
 - Any later routing-opening question must still wait for a separate governance decision and, if chosen, a later close step for this unit.
 
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-G026-CLEANUP-REMEDIATION-001`
+- Status transition: `OPEN` -> `VERIFIED_COMPLETE`
+- Next-action posture after sync: `OPERATOR_DECISION_REQUIRED`
+
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001`
+- Status transition: `VERIFIED_COMPLETE` -> `CLOSED`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Mandatory post-close audit result: `HOLD`
+
 ## Control-Plane Source of Truth
 
 | Question | Answer lives in |
 |---|---|
-| Why is this unit open now? | `governance/decisions/GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING.md` |
+| Why did this unit open? | `governance/decisions/GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING.md` |
 | What clarification required this step? | `governance/decisions/GOV-DEC-G026-DESIGN-CLARIFICATION-001.md` |
 | What broader stream remains unopened? | bounded G-026 v1 platform-subdomain routing |
 | What is the single authorized next action? | `governance/control/NEXT-ACTION.md` |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
+
+## Last Governance Confirmation
+
+2026-03-20 — `GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001`. Status transitioned:
+`VERIFIED_COMPLETE` -> `CLOSED` after the already-recorded implementation, verification, and
+governance-sync chain. Broad G-026 routing remains unopened, no routing unit was created, and the
+mandatory post-close audit result is `HOLD`.

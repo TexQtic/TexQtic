@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-20 (GOVERNANCE-SYNC-TECS-G026-CLEANUP-REMEDIATION-001)
+**Last Updated:** 2026-03-20 (GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -39,7 +39,7 @@ TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIF
 TECS-FBW-ADMINRBAC-REGISTRY-READ-001 closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8, backend runtime proof, frontend runtime proof, and type-level proof.
 TECS-G026-H-001 closed 2026-03-20 after implementation commit deef077, governance-sync commit e154f58, authoritative remote Supabase verification PASS, and bounded prerequisite proof. Additional historical `SELECT`-only grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows, remain preserved as bounded historical observations only and are not treated as resolved work by this closure step.
 TECS-G026-DESIGN-CLARIFICATION-001 closed 2026-03-20 after recording the bounded clarification result that future G-026 routing must return to a resolver-only `texqtic_service` posture. The extra grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users` are now classified as separately governed non-routing dependencies that must be removed or re-homed before any routing opening may be considered.
-TECS-G026-CLEANUP-REMEDIATION-001 reached VERIFIED_COMPLETE on 2026-03-20 after implementation commit 0f3d2c3, authoritative remote Supabase verification PASS, direct role/grant proof, `prisma db pull` PASS, `prisma generate` PASS, applied-state reconciliation for `prisma migrate resolve`, `pnpm -C server exec tsc --noEmit` PASS, and bounded runtime verification PASS for public by-email, internal resolve-domain, and buyer RFQ helper reads. Broad G-026 routing remains unopened and no routing implementation-ready G-026 stream is OPEN.
+TECS-G026-CLEANUP-REMEDIATION-001 closed 2026-03-20 after implementation commit 0f3d2c3, governance-sync commit f21ef8c, the already-recorded authoritative remote Supabase verification PASS, and a conservative closure step with mandatory post-close audit result `HOLD`. Broad G-026 routing remains unopened and no routing implementation-ready G-026 stream is OPEN.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 No routing implementation-ready G-026 stream is currently OPEN.
 
@@ -49,7 +49,7 @@ No routing implementation-ready G-026 stream is currently OPEN.
 
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
-| TECS-G026-CLEANUP-REMEDIATION-001 | VERIFIED_COMPLETE | 2026-03-20 | 0f3d2c3 |
+| TECS-G026-CLEANUP-REMEDIATION-001 | CLOSED | 2026-03-20 | 0f3d2c3 · f21ef8c |
 | TECS-G026-DESIGN-CLARIFICATION-001 | CLOSED | 2026-03-20 | see git log |
 | TECS-G026-H-001 | CLOSED | 2026-03-20 | deef077 · e154f58 |
 | TECS-FBW-ADMINRBAC-REGISTRY-READ-001 | CLOSED | 2026-03-20 | 38419b5 · 50d1e36 |

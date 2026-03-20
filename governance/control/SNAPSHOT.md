@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-20
-last_unit_closed: GOV-CLOSE-TECS-G026-DESIGN-CLARIFICATION-001
-last_commit: "governance(sync): sync G-026 cleanup remediation verification"
+last_unit_closed: GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001
+last_commit: "governance(close): close G-026 cleanup remediation unit"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -45,7 +45,7 @@ layer_4_installed: true
 
 **0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
-`TECS-G026-CLEANUP-REMEDIATION-001` is now `VERIFIED_COMPLETE` after bounded remote verification.
+`TECS-G026-CLEANUP-REMEDIATION-001` is now `CLOSED` after conservative closure and mandatory post-close audit result `HOLD`.
 
 ## RFQ Platform State
 
@@ -72,7 +72,8 @@ RFQ remains pre-negotiation:
 `OPERATOR_DECISION_REQUIRED`.
 TECS-G026-H-001 is CLOSED after bounded remote-database verification, governance sync, and conservative closure.
 TECS-G026-DESIGN-CLARIFICATION-001 is CLOSED after clarifying that future G-026 routing must return to a resolver-only texqtic_service posture.
-TECS-G026-CLEANUP-REMEDIATION-001 is VERIFIED_COMPLETE after authoritative remote Supabase verification proved that the public by-email and buyer RFQ helper reads were re-homed to bounded non-routing roles while internal resolve-domain preserved the resolver-only texqtic_service posture.
+TECS-G026-CLEANUP-REMEDIATION-001 is CLOSED after authoritative remote Supabase verification proved that the public by-email and buyer RFQ helper reads were re-homed to bounded non-routing roles while internal resolve-domain preserved the resolver-only texqtic_service posture.
+Post-close audit result: HOLD.
 Any future routing-opening question remains blocked pending a separate governance decision; this sync does not open routing.
 The broad G-026 v1 routing stream remains unopened.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.

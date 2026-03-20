@@ -1594,3 +1594,76 @@ Notes: This is sync only, not closure. `NEXT-ACTION.md` now returns to
 Refs: governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md ·
   governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001 — 2026-03-20
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001)
+Title: Record closure of the verified bounded G-026 cleanup remediation unit
+Summary: Governance-only closure unit. Recorded TECS-G026-CLEANUP-REMEDIATION-001 as CLOSED
+  after implementation commit 0f3d2c3, governance-sync commit f21ef8c, and the already-recorded
+  authoritative remote Supabase verification PASS. Layer 0, Layer 1, and Layer 3 were reconciled
+  while broad G-026 routing remained unopened and no implementation-ready unit was authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No product code, tests, schema, migrations, routes, contracts, or decisions changed in
+  this closure unit. No routing unit was created. No broad G-026 routing authorization is
+  implied.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TECS-G026-CLEANUP-REMEDIATION-001-POST-CLOSE — 2026-03-20
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-TECS-G026-CLEANUP-REMEDIATION-001-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for TECS-G026-CLEANUP-REMEDIATION-001
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  HOLD.
+State Summary:
+  - classification: closed bounded remediation child with no implementation-ready unit open
+  - parent gate posture: broad G-026 routing remains unopened; TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - open-unit count: 0
+  - blocked / deferred / design-gated context: 0 / 0 / 1
+  - current NEXT-ACTION compatibility: compatible with OPERATOR_DECISION_REQUIRED
+Outstanding Gates:
+  - broad G-026 routing remains unopened
+  - no routing unit exists
+  - custom-domain, apex-domain, and DNS-verification scope remain excluded
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+Natural Next-Step Candidates:
+  - HOLD
+  - DECISION_REQUIRED
+  - RECORD_ONLY
+  - DESIGN_REFINEMENT
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: HOLD
+  - reason: the remediation child is fully closed, but no separate routing-opening decision or later bounded opening has been authorized
+Why Stronger Moves Remain Blocked:
+  - no explicit routing-opening decision exists
+  - broad G-026 remains unopened in Layer 0
+  - closure of this child does not authorize broader routing implementation by implication
+Forbidden Next Moves:
+  - no implicit routing implementation opening
+  - no broad G-026 opening by implication
+  - no custom-domain, apex-domain, or DNS-verification authorization by follow-on wording
+  - no tenant/control-plane boundary drift
+  - no mutation or resolver-surface authorization by natural-next-step phrasing
+Resulting Layer 0 Posture:
+  - NEXT-ACTION remains OPERATOR_DECISION_REQUIRED
+  - no implementation unit is opened
+  - no routing authorization is implied
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md preserved as OPERATOR_DECISION_REQUIRED carry-forward posture;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: TECS-G026-CLEANUP-REMEDIATION-001 remains CLOSED. No product code, tests, schema,
+  migrations, routes, contracts, or decisions changed in this audit step.
+Refs: governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/control/OPEN-SET.md · governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md ·
+  governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md ·
+  governance/log/EXECUTION-LOG.md
