@@ -1101,6 +1101,25 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/GOV-POLICY-HISTORIC
 
 ---
 
+### GOV-RECORD-SECURITY-DEC-ADMINRBAC-POSTURE — 2026-03-20
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-SECURITY-DEC-ADMINRBAC-POSTURE)
+Title: Record SECURITY-DEC-ADMINRBAC-POSTURE as DECIDED
+Summary: Governance-only decision-record unit. Recorded SECURITY-DEC-ADMINRBAC-POSTURE as
+  DECIDED in Layer 2. AdminRBAC is now security-authorized only under strict TenantAdmin /
+  PlatformAdmin / SuperAdmin terminology separation, SuperAdmin-only mutation authority, explicit
+  auditability, and a no-blanket-read-everything posture. No implementation was authorized.
+Layer Impact: Layer 2 — governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. NEXT-ACTION.md stays OPERATOR_DECISION_REQUIRED because no
+  implementation-ready unit is OPEN and TECS-FBW-ADMINRBAC is not being force-opened in this
+  governance unit. No application code, tests, schema, migrations, policies, or secret-bearing
+  files were modified.
+Refs: governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md · governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md · governance/control/NEXT-ACTION.md
+
+---
+
 ### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
