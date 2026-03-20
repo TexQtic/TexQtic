@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-20 (GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001)
+**Last Updated:** 2026-03-20 (GOV-DEC-G026-H-PREREQUISITE-OPENING)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,17 +13,18 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
+| TECS-G026-H-001 | G-026-H resolver-role prerequisite | OPEN | W4 | 2026-03-20 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **0**
+- **OPEN** (implementation-ready): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 1**
+- **Total non-terminal units: 2**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
@@ -37,8 +38,9 @@ TECS-FBW-003-B closed 2026-03-18: implementation commit 4d71e17 + VERIFY-TECS-FB
 TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
 
 TECS-FBW-ADMINRBAC-REGISTRY-READ-001 closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8, backend runtime proof, frontend runtime proof, and type-level proof.
+TECS-G026-H-001 opened 2026-03-20 as the sole bounded prerequisite unit for the G-026-H resolver-role gate only. The broad bounded G-026 v1 routing stream remains unopened.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-No implementation-ready unit is currently OPEN.
+No broad G-026 implementation stream is currently OPEN.
 
 ---
 

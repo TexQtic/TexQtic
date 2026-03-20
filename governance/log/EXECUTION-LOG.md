@@ -1341,3 +1341,27 @@ Notes: OPEN-SET.md and BLOCKED.md remain unchanged because no non-terminal unit 
   implementation was authorized, and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 Refs: governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
   governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-DEC-G026-H-PREREQUISITE-OPENING — 2026-03-20
+Type: GOVERNANCE / SEQUENCING
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-G026-H-PREREQUISITE-OPENING)
+Title: Open the sole bounded G-026-H prerequisite unit
+Summary: Governance-only decision and opening unit. Recorded GOV-DEC-G026-H-PREREQUISITE-
+  OPENING in Layer 2 and created TECS-G026-H-001 as the only implementation-ready next action.
+  The opening is limited to the unresolved G-026-H prerequisite only: the repo-governed SQL
+  prerequisite for the texqtic_service resolver role. The broader bounded G-026 v1 routing stream
+  was not opened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-G026-H-001.md created and set to OPEN; Layer 2 —
+  governance/decisions/GOV-DEC-G026-H-PREREQUISITE-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: BLOCKED.md remains unchanged because no blocked register entry changed. TECS-FBW-ADMINRBAC
+  remains DESIGN_GATE. RFQ remains capped at pre-negotiation. No broad G-026 unit, AdminRBAC,
+  RFQ, DPP, AI, settlement, code, schema, migration, test, or contract work was opened by this
+  governance unit beyond the bounded prerequisite opening itself.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-G026-H-001.md ·
+  governance/decisions/GOV-DEC-G026-H-PREREQUISITE-OPENING.md · governance/log/EXECUTION-LOG.md

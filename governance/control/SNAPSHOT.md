@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-20
-last_unit_closed: GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT
-last_commit: "feat(governance): add mandatory post-close audit policy"
+last_unit_closed: GOV-DEC-G026-H-PREREQUISITE-OPENING
+last_commit: "feat(governance): open bounded g-026-h prerequisite unit"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,6 +28,7 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
+- **TECS-G026-H-001** — `OPEN` — Bounded database prerequisite for the G-026-H resolver-role gate opened 2026-03-20; scope is limited to the repo-governed SQL prerequisite for the `texqtic_service` resolver role only; no broad G-026 v1 routing stream, resolver endpoint, middleware, cache/invalidation, WL domains UI, custom-domain, apex-domain, or DNS verification work is opened by this unit
 - **TECS-RFQ-BUYER-LIST-READ-001** — `VERIFIED_COMPLETE` — Buyer RFQ discovery surface closed 2026-03-19; implementation commit 64500cf; verified RFQ UI evidence: `vitest.cmd --root . run tests/rfq-buyer-detail-ui.test.tsx tests/rfq-buyer-list-ui.test.tsx` with 2 files passed / 11 tests passed; buyers can now discover their own RFQs through a minimal read-only list surface and open the existing RFQ detail surface using existing backend read contracts only
 - **TECS-RFQ-BUYER-DETAIL-UI-001** — `VERIFIED_COMPLETE` — Buyer RFQ detail UI foundation closed 2026-03-19; implementation commit dcb5964; verification `VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001: VERIFIED_COMPLETE`; buyer-safe success-dialog entry path now opens a minimal RFQ detail surface using the existing backend detail contract
 - **TECS-RFQ-BUYER-RESPONSE-READ-001** — `VERIFIED_COMPLETE` — Buyer-visible bounded supplier response read slice closed 2026-03-19; implementation commit 211800a; verification `VERIFY-TECS-RFQ-BUYER-RESPONSE-READ-001: VERIFIED_COMPLETE`; buyer RFQ detail reads now include the bounded supplier response artifact when present and null-safe absence when not present
@@ -43,7 +44,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 ## RFQ Platform State
 
@@ -67,10 +68,10 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 is CLOSED.
-Remaining non-terminal portfolio includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`) only.
-Mandatory post-close audit recommendation class: `HOLD`.
+`TECS-G026-H-001`.
+TECS-G026-H-001 is the sole authorized next implementation step.
+The broad G-026 v1 routing stream remains unopened.
+TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -158,6 +159,7 @@ These are distinct closed units and must not be conflated.
 - GOV-RECORD-PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING (2026-03-19): PRODUCT-DEC-WAVE4-FIRST-STREAM-SEQUENCING recorded as DECIDED in Layer 2. White-label / custom-domain routing remains the favored first Wave 4 stream, but no implementation unit was opened because the stream still carries unresolved prerequisite G-026-H in its own design anchor. RFQ remains capped, AdminRBAC remains DESIGN_GATE, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-G026-H-PREREQUISITE-POSTURE (2026-03-19): PRODUCT-DEC-G026-H-PREREQUISITE-POSTURE recorded as DECIDED in Layer 2. G-026-H is now governed as satisfied for the bounded v1 resolver path based on later repo evidence, while broader custom-domain and apex-domain scope remains bounded by deferred G-026-A. No implementation unit was opened, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-RECORD-PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION (2026-03-19): PRODUCT-DEC-G026-V1-FIRST-STREAM-DISPOSITION recorded as DECIDED in Layer 2. The bounded G-026 v1 platform-subdomain resolver/domain-routing slice remains within the ratified Wave 4 boundary and no longer carries G-026-H as a blocker, but no new implementation unit was opened because current repo evidence already shows the bounded v1 slice materially present while broader custom-domain and apex-domain scope remains deferred under G-026-A. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOV-DEC-G026-H-PREREQUISITE-OPENING (2026-03-20): current operational sequencing opens `TECS-G026-H-001` as the sole bounded next development step for the unresolved G-026-H prerequisite only. The broad G-026 v1 platform-subdomain routing stream remains unopened, RFQ remains capped, and `TECS-FBW-ADMINRBAC` remains DESIGN_GATE.
 - GOV-RECONCILE-BOUNDED-G026-V1-HISTORY (2026-03-19): governance reconciliation confirmed that bounded G-026 v1 historical implementation evidence exists across multiple proven subunits and current repo files, but Layer 1 contains no matching canonical unit records for that bounded chain. Layer 0 sequencing remains unchanged because no implementation unit is opening now, and no synthetic Layer 1 backfill was created because doing so would collapse multiple distinct historical subunits into a fabricated single unit. Broader custom-domain and apex-domain scope remains deferred under G-026-A.
 - GOV-RECORD-GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION (2026-03-19): GOV-POLICY-HISTORICAL-LAYER1-RECONCILIATION recorded as DECIDED in Layer 2. Historical Layer 1 gaps must now be handled by the minimum truthful correction mechanism: exact backfill only when exact historical identity is provable, snapshot/log reconciliation when proven history cannot be reduced to one truthful unit, and no reconstruction when evidence is too weak. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED and no implementation unit is opened by this policy.
 - GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING (2026-03-19): GOV-POLICY-CLOSURE-SEQUENCING-HARDENING recorded as DECIDED in Layer 2. TexQtic now requires write-time closure integrity and sequencing safety: explicit evidence-class labelling, mandatory historical-evidence classification before sequencing-sensitive edits, no archive-only closure truth, and minimum canonical traceability through the existing Governance OS layers. The operator-supplied unsaved governance analysis that motivated this hardening pass is now captured in a governance-owned decision record. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
