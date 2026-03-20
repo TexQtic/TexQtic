@@ -102,7 +102,8 @@ describe('TECS-FBW-ADMINRBAC-REGISTRY-READ-001 — admin registry surface', () =
       },
     });
 
-    expect(html).toContain('Forbidden');
+    expect(html).toContain('Error 403');
+    expect(html).toContain('You don&#x27;t have access to this action.');
   });
 
   it('does not render forbidden mutation controls or tenant-plane language', () => {
