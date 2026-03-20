@@ -1323,6 +1323,37 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-TECS-G026-DESIGN-CLARIFICATION-001 — 2026-03-20
+Type: GOVERNANCE / DESIGN-CLARIFICATION-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-G026-DESIGN-CLARIFICATION-001)
+Title: Close the bounded G-026 resolver-role discrepancy clarification unit
+Summary: Governance-only design-clarification close unit. Recorded the authoritative clarification
+  result for `texqtic_service` before any future routing opening may be considered. The canonical
+  target posture remains the original narrow resolver-only posture: `NOLOGIN`, `BYPASSRLS`,
+  transaction-local `SET LOCAL ROLE` from `postgres`, `SELECT`-only, and base grants limited to
+  `public.tenants` plus `public.tenant_domains`. Repo evidence shows that later shipped by-email
+  and RFQ helper paths also depend on `texqtic_service`, so the extra grants on `memberships`,
+  `users`, `catalog_items`, and `rfq_supplier_responses` are classified as separately governed
+  non-routing dependencies rather than acceptable routing residuals. Any future routing opening
+  therefore remains blocked until those dependencies are removed or re-homed by a separate bounded
+  cleanup or remediation unit. Duplicate/equivalent `postgres` membership rows were classified as
+  non-blocking if semantically equivalent only.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-G026-DESIGN-CLARIFICATION-001.md updated and closed; Layer 2 —
+  governance/decisions/GOV-DEC-G026-DESIGN-CLARIFICATION-001.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. Recommended next governance-valid
+  move: `DECISION_REQUIRED`, not automatic cleanup opening and not routing opening. Broad G-026
+  remains unopened. No product code, tests, schema, migrations, routes, contracts, or CI files
+  changed.
+Refs: governance/decisions/GOV-DEC-G026-DESIGN-CLARIFICATION-001.md ·
+  governance/units/TECS-G026-DESIGN-CLARIFICATION-001.md ·
+  governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md
+
+---
+
 ### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
