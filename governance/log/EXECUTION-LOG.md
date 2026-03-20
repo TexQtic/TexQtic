@@ -1124,6 +1124,31 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-SYNC-TECS-G026-H-001 — 2026-03-20
+Type: GOVERNANCE / SYNC
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-G026-H-001)
+Title: Record verified completion of the bounded G-026-H prerequisite unit
+Summary: Governance-only sync unit. Recorded TECS-G026-H-001 as VERIFIED_COMPLETE after
+  implementation commit deef077, authoritative remote Supabase verification PASS, manual SQL
+  apply PASS, verifier-block PASS, `prisma db pull` PASS, `prisma generate` PASS, and
+  `prisma migrate resolve --applied 20260320010000_tecs_g026_h_001_reconcile_texqtic_service_role`
+  PASS. Layer 0 and Layer 1 were reconciled so no implementation-ready unit remains OPEN and no
+  broader G-026 routing authorization is implied.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-G026-H-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: Additional historical `SELECT`-only grants observed on `catalog_items`, `memberships`,
+  `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows,
+  were preserved as bounded discrepancy notes only and did not fail the required invariants for
+  this unit. No product code, tests, schema, migrations, routes, contracts, or decisions changed
+  in this governance sync unit. The broad bounded G-026 v1 routing stream remains unopened.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-G026-H-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW — 2026-03-19
 Type: GOVERNANCE / PROCESS-IMPLEMENTATION
 Status: CLOSED

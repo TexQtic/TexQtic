@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-20 (GOV-DEC-G026-H-PREREQUISITE-OPENING)
+**Last Updated:** 2026-03-20 (GOVERNANCE-SYNC-TECS-G026-H-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,18 +13,17 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-G026-H-001 | G-026-H resolver-role prerequisite | OPEN | W4 | 2026-03-20 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1**
+- **OPEN** (implementation-ready): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
@@ -38,9 +37,9 @@ TECS-FBW-003-B closed 2026-03-18: implementation commit 4d71e17 + VERIFY-TECS-FB
 TECS-FBW-002-B closed 2026-03-17: frontend implementation commit b647092 + VERIFY-TECS-FBW-002-B VERIFIED_COMPLETE.
 
 TECS-FBW-ADMINRBAC-REGISTRY-READ-001 closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8, backend runtime proof, frontend runtime proof, and type-level proof.
-TECS-G026-H-001 opened 2026-03-20 as the sole bounded prerequisite unit for the G-026-H resolver-role gate only. The broad bounded G-026 v1 routing stream remains unopened.
+TECS-G026-H-001 governance-synced 2026-03-20 after implementation commit deef077 and remote Supabase verification PASS: manual SQL apply succeeded, verifier block passed, `prisma db pull` succeeded, `prisma generate` succeeded, and `prisma migrate resolve --applied 20260320010000_tecs_g026_h_001_reconcile_texqtic_service_role` succeeded. Additional historical `SELECT`-only grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows, were preserved as bounded observations only and did not fail the unit.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-No broad G-026 implementation stream is currently OPEN.
+No implementation-ready G-026 stream is currently OPEN.
 
 ---
 
@@ -48,6 +47,7 @@ No broad G-026 implementation stream is currently OPEN.
 
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
+| TECS-G026-H-001 | VERIFIED_COMPLETE | 2026-03-20 | deef077 |
 | TECS-FBW-ADMINRBAC-REGISTRY-READ-001 | CLOSED | 2026-03-20 | 38419b5 · 50d1e36 |
 | TECS-RFQ-BUYER-LIST-READ-001 | VERIFIED_COMPLETE | 2026-03-19 | 64500cf |
 | TECS-RFQ-BUYER-DETAIL-UI-001 | VERIFIED_COMPLETE | 2026-03-19 | dcb5964 |
