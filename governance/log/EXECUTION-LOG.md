@@ -1295,6 +1295,34 @@ Refs: governance/control/DOCTRINE.md ·
 
 ---
 
+### GOV-DEC-G026-DESIGN-CLARIFICATION-OPENING — 2026-03-20
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-G026-DESIGN-CLARIFICATION-OPENING)
+Title: Open the bounded G-026 resolver-role discrepancy clarification step
+Summary: Governance-only decision/opening unit. Opened `TECS-G026-DESIGN-CLARIFICATION-001` as
+  the sole bounded next governed unit after `GOV-DEC-G026-DISCREPANCY-DISPOSITION` concluded that
+  the preserved discrepancy posture is blocking until bounded design clarification is completed.
+  The opened unit is clarification-only: define the intended canonical `texqtic_service`
+  resolver-role posture, determine whether the extra `SELECT` grants are acceptable residuals or
+  inconsistent with that posture, determine whether the duplicate/equivalent `postgres`
+  membership rows are acceptable or require normalization, and decide whether any later cleanup
+  unit is required. No routing unit was opened, no cleanup implementation unit was opened, and the
+  broad G-026 routing stream remains unopened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-G026-DESIGN-CLARIFICATION-001.md created; Layer 2 —
+  governance/decisions/GOV-DEC-G026-DESIGN-CLARIFICATION-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No product code, tests, schema, migrations, routes, or contracts changed. `TECS-G026-H-001`
+  remains `CLOSED`. Broad G-026 remains held. This opening authorizes bounded design clarification
+  only and does not authorize routing implementation or discrepancy cleanup implementation.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-G026-DESIGN-CLARIFICATION-OPENING.md ·
+  governance/units/TECS-G026-DESIGN-CLARIFICATION-001.md
+
+---
+
 ### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
