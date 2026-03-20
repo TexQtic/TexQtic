@@ -1658,6 +1658,32 @@ Forbidden Next Moves:
 Resulting Layer 0 Posture:
   - NEXT-ACTION remains OPERATOR_DECISION_REQUIRED
   - no implementation unit is opened
+
+---
+
+### GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 — 2026-03-21
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
+Title: Record verified completion of the bounded platform-subdomain runtime routing slice
+Summary: Governance-only sync unit. Recorded `TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001` as
+  `VERIFIED_COMPLETE` after implementation commit `0b8fff2085490d32d379e43fc6a2303034563b11` and
+  bounded verification PASS (`pnpm -C server exec vitest run src/__tests__/g026-platform-subdomain-routing.spec.ts`,
+  `pnpm -C server exec tsc --noEmit`, `pnpm exec tsc --noEmit`). Layer 0 and Layer 1 were
+  reconciled while broad G-026 remained unopened, no broader domain authorization was created,
+  resolver-only `texqtic_service` posture remained canonical, and no new opening was implied.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. No product code, tests, schema, migrations,
+  routes, contracts, or decisions changed in this governance sync unit. No custom-domain,
+  apex-domain, DNS-verification, or broader white-label domain lifecycle authorization was
+  created. This is sync only, not closure; the unit is postured for Close only and must emit the
+  mandatory post-close audit in the same closure operation.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md ·
+  governance/log/EXECUTION-LOG.md
   - no routing authorization is implied
 Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md preserved as OPERATOR_DECISION_REQUIRED carry-forward posture;
   Layer 3 — EXECUTION-LOG.md appended

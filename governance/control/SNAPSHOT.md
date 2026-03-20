@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-20
 last_unit_closed: GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001
-last_commit: "governance(open): open first bounded G-026 routing unit"
+last_commit: "[TEXQTIC] governance: sync verified g026 platform-subdomain routing slice"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -43,9 +43,9 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
-`TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001` is now `OPEN` as the first bounded G-026 routing slice.
+`TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001` is now `VERIFIED_COMPLETE` after bounded implementation and verification only; it is postured for Close but not yet closed.
 
 ## RFQ Platform State
 
@@ -69,13 +69,13 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`.
-TECS-G026-H-001 is CLOSED after bounded remote-database verification, governance sync, and conservative closure.
-TECS-G026-DESIGN-CLARIFICATION-001 is CLOSED after clarifying that future G-026 routing must return to a resolver-only texqtic_service posture.
-TECS-G026-CLEANUP-REMEDIATION-001 is CLOSED after authoritative remote Supabase verification proved that the public by-email and buyer RFQ helper reads were re-homed to bounded non-routing roles while internal resolve-domain preserved the resolver-only texqtic_service posture.
-GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY is DECIDED and the first bounded platform-subdomain runtime routing slice is now separately opened.
+`GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`.
+TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 is VERIFIED_COMPLETE after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11 and bounded verification PASS.
 The broad G-026 v1 routing stream remains unopened beyond this first bounded slice.
-Custom-domain, apex-domain, DNS-verification, and broader white-label domain lifecycle scope remain excluded.
+No custom-domain, apex-domain, DNS-verification, or broader white-label domain lifecycle authorization was created.
+Resolver-only texqtic_service posture remains canonical.
+No new unit was opened by verification or governance sync.
+The unit is now postured for Close only and must close together with the mandatory post-close audit.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
 
@@ -175,6 +175,7 @@ These are distinct closed units and must not be conflated.
 - GOV-REFINE-GOVERNANCE-LINTER-V2 (2026-03-19): governance-linter v1 was calibrated against actual repo usage and recent governance commits. Human-boundary warnings are now limited to changed canonical unit and decision records, duplicate per-file warning noise was collapsed into one clearer advisory message, and the console report now lists the changed files being evaluated in local and CI runs. No new policy rules were introduced, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING (2026-03-19): TexQtic now has an explicit monitoring and calibration framework for deciding whether governance-linter v2 should remain stable, receive a bounded refinement, or justify a later v3 design review. The framework requires repeated real-world evidence before linter change, prefers documentation-only clarification before rule changes, and preserves the machine-checkable versus human-only boundary. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5. Backend runtime proof, frontend runtime proof, and type-level proof are now recorded. NEXT-ACTION now returns to OPERATOR_DECISION_REQUIRED because no implementation unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+- GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 (2026-03-21): TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11 and bounded verification PASS (`pnpm -C server exec vitest run src/__tests__/g026-platform-subdomain-routing.spec.ts`, `pnpm -C server exec tsc --noEmit`, `pnpm exec tsc --noEmit`). Broad G-026 remains unopened, no broader domain authorization was created, resolver-only texqtic_service posture remains canonical, and NEXT-ACTION now points to closure for this same bounded unit only.
 - GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned VERIFIED_COMPLETE → CLOSED after the already-recorded implementation, verification, and governance sync chain. No new implementation unit was opened, and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION (2026-03-20): recorded the post-close AdminRBAC operator disposition as a decision only. TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED, TECS-FBW-ADMINRBAC remains DESIGN_GATE, no separate closeout artifact is required now, and no new AdminRBAC slice is opened or approved.
 - GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT (2026-03-20): recorded the permanent policy that every Governance Sync or Close must emit a mandatory post-close governance audit. The audit is advisory only, preserves `NEXT-ACTION` single-action discipline, and currently recommends `HOLD` while `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.

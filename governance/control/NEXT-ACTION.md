@@ -1,35 +1,29 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-20 (GOV-DEC-G026-FIRST-ROUTING-OPENING)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
-type: IMPLEMENTATION
-title: Bounded platform-subdomain runtime routing for <slug>.texqtic.app
+unit_id: GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
+type: GOVERNANCE
+title: Record closure of the verified bounded platform-subdomain runtime routing unit
 prerequisites_met: true
-authorized_by: GOV-DEC-G026-FIRST-ROUTING-OPENING
-date_authorized: 2026-03-20
+authorized_by: GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
+date_authorized: 2026-03-21
 notes: |
-  TECS-G026-H-001 remains CLOSED.
-  TECS-G026-DESIGN-CLARIFICATION-001 is now CLOSED.
-  TECS-G026-CLEANUP-REMEDIATION-001 remains CLOSED after the already-recorded
-  implementation, verification, governance sync, and closure chain.
-  GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY is now DECIDED and permits
-  one separate bounded routing opening only.
-  This bounded next step is platform-subdomain runtime routing only for
-  <slug>.texqtic.app.
-  Allowed scope only: internal signed resolver path, host-to-tenant resolution
-  for platform subdomains, request-path tenant-context propagation and
-  validation required by that bounded runtime path, bounded cache/invalidation
-  behavior required by that same path, and safe fallback behavior for
-  unresolved platform-subdomain requests.
-  The broad bounded G-026 v1 routing stream is not open.
+  Governance Sync has recorded TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 as
+  VERIFIED_COMPLETE after implementation commit
+  0b8fff2085490d32d379e43fc6a2303034563b11 and bounded verification PASS.
+  The broad bounded G-026 v1 routing stream remains unopened.
+  No broader domain authorization was created.
+  Resolver-only texqtic_service posture remains canonical.
+  No custom-domain, apex-domain, DNS-verification, or broader white-label
+  domain lifecycle authorization was created.
+  No new unit was opened by verification or governance sync.
+  The next valid move is closure for this same bounded unit only, together with
+  the mandatory post-close audit in the same closure operation.
   TECS-FBW-ADMINRBAC remains DESIGN_GATE.
   RFQ remains capped at pre-negotiation.
-  Forbidden: no broad G-026 opening, no custom-domain routing, no apex-domain
-  routing, no DNS-verification workflow, no broader white-label domain
-  lifecycle work, and no AdminRBAC opening.
 ```

@@ -2,14 +2,14 @@
 unit_id: TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
 title: Bounded platform-subdomain runtime routing for <slug>.texqtic.app
 type: IMPLEMENTATION
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W4
 plane: BACKEND
 opened: 2026-03-20
 closed: null
-verified: null
-commit: null
-evidence: null
+verified: 2026-03-21
+commit: 0b8fff2085490d32d379e43fc6a2303034563b11
+evidence: "TEST_VERIFICATION: pnpm -C server exec vitest run src/__tests__/g026-platform-subdomain-routing.spec.ts PASS · STATIC_VERIFICATION: pnpm -C server exec tsc --noEmit PASS · STATIC_VERIFICATION: pnpm exec tsc --noEmit PASS · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded verification accepted with no broader G-026 authorization implied"
 prerequisite_for: First bounded G-026 v1 routing implementation slice only
 doctrine_constraints:
   - D-004: this is one bounded platform-subdomain routing slice only; no broader domain scope may be mixed in
@@ -33,14 +33,14 @@ apex-domain routing, DNS-verification workflow, or broader white-label domain li
 
 ## Acceptance Criteria
 
-- [ ] The bounded runtime path supports host-to-tenant resolution for `<slug>.texqtic.app` only
-- [ ] The internal signed resolver path required by the bounded platform-subdomain runtime path is present and limited to this routing slice
-- [ ] Request-path tenant-context propagation and validation required by the bounded runtime path is present and limited to this routing slice
-- [ ] Bounded cache/invalidation behavior required by the same platform-subdomain runtime path is present and limited to this routing slice
-- [ ] Safe fallback behavior for unresolved platform-subdomain requests is present and bounded to this runtime path
-- [ ] No custom-domain, apex-domain, or DNS-verification workflow scope is introduced
-- [ ] No broader white-label domain lifecycle work is introduced
-- [ ] No broad G-026 opening is introduced
+- [x] The bounded runtime path supports host-to-tenant resolution for `<slug>.texqtic.app` only
+- [x] The internal signed resolver path required by the bounded platform-subdomain runtime path is present and limited to this routing slice
+- [x] Request-path tenant-context propagation and validation required by the bounded runtime path is present and limited to this routing slice
+- [x] Bounded cache/invalidation behavior required by the same platform-subdomain runtime path is present and limited to this routing slice
+- [x] Safe fallback behavior for unresolved platform-subdomain requests is present and bounded to this runtime path
+- [x] No custom-domain, apex-domain, or DNS-verification workflow scope is introduced
+- [x] No broader white-label domain lifecycle work is introduced
+- [x] No broad G-026 opening is introduced
 
 ## Files Allowlisted (Modify)
 
@@ -71,6 +71,11 @@ Expected candidates for the future implementation prompt only:
 
 ## Evidence Record
 
+- Implementation commit: `0b8fff2085490d32d379e43fc6a2303034563b11` — `feat(g026): implement platform-subdomain runtime routing for <slug>.texqtic.app`
+- Verification result: PASS for the bounded platform-subdomain runtime routing slice only
+- Test verification: `pnpm -C server exec vitest run src/__tests__/g026-platform-subdomain-routing.spec.ts` PASS
+- Static verification: `pnpm -C server exec tsc --noEmit` PASS · `pnpm exec tsc --noEmit` PASS
+- Verification confirmation: runtime behavior remains limited to `<slug>.texqtic.app`; broad G-026 remains unopened; no broader domain authorization was created; resolver-only `texqtic_service` posture remains canonical
 - Opening decision: `GOV-DEC-G026-FIRST-ROUTING-OPENING`
 - Eligibility decision: `GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY`
 - Prior prerequisite unit: `TECS-G026-H-001` remains `CLOSED`
@@ -78,9 +83,22 @@ Expected candidates for the future implementation prompt only:
 - Prior cleanup/remediation unit: `TECS-G026-CLEANUP-REMEDIATION-001` remains `CLOSED`
 - This unit exists because the prerequisite and remediation chain is now closed and one bounded platform-subdomain runtime routing slice has been judged governance-eligible
 
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after sync: `GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`
+
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`
+- Status transition: `VERIFIED_COMPLETE` → `CLOSED`
+- Next-action posture after closure: closure only; no new unit implied
+- Mandatory post-close audit must be emitted in the same closure operation
+
 ## Allowed Next Step
 
-Bounded implementation work for this routing unit only.
+Governance-only closure for this same bounded unit.
 
 ## Forbidden Next Step
 
@@ -91,12 +109,21 @@ Bounded implementation work for this routing unit only.
 - Do **not** broaden into broader white-label domain lifecycle work in this unit
 - Do **not** reopen `TECS-G026-H-001`, `TECS-G026-DESIGN-CLARIFICATION-001`, or `TECS-G026-CLEANUP-REMEDIATION-001`
 - Do **not** couple this unit to RFQ, AdminRBAC, DPP, AI, settlement, or money-movement work
+- Do **not** treat governance sync as authorization for any new routing unit or broader G-026 opening
 
 ## Drift Guards
 
 - This unit is platform-subdomain runtime-routing only. If work requires custom domains, apex domains, or DNS verification, stop and return to governance rather than widening scope implicitly.
-- Broad G-026 remains unopened while this unit is active.
+- Broad G-026 remains unopened while this unit is active and after this verified state.
 - Any later broader domain-scope question must be separately governed and must not be inferred from this unit.
+
+## Last Governance Confirmation
+
+2026-03-21 — `GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`. Status transitioned:
+`OPEN` → `VERIFIED_COMPLETE` after implementation commit
+`0b8fff2085490d32d379e43fc6a2303034563b11` and bounded verification PASS. Broad G-026 remains
+unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture
+remains canonical, and the unit is now postured for Close only.
 
 ## Control-Plane Source of Truth
 
