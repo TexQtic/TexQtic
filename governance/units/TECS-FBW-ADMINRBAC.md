@@ -72,8 +72,10 @@ be defined in separate child-unit records and must not be inferred from this umb
 
 Do not open this parent directly.
 
-The only currently allowed implementation next step is the already-open child unit:
-`TECS-FBW-ADMINRBAC-REGISTRY-READ-001`.
+No AdminRBAC implementation unit is currently OPEN.
+
+The bounded child unit `TECS-FBW-ADMINRBAC-REGISTRY-READ-001` is now VERIFIED_COMPLETE and any
+separate closure handling for that child must remain distinct from this parent umbrella record.
 
 Any later AdminRBAC mutation or broader authority work requires a separate bounded child-unit
 sequencing decision.
@@ -120,6 +122,7 @@ sequencing decision.
 
 ## Last Governance Confirmation
 
-2026-03-20 — GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING. Parent remains `DESIGN_GATE` as the broad
-non-open umbrella stream after the first bounded child slice `TECS-FBW-ADMINRBAC-REGISTRY-READ-001`
-was split out and opened separately.
+2026-03-20 — GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001. Parent remains `DESIGN_GATE`
+as the broad non-open umbrella stream after the bounded child slice
+`TECS-FBW-ADMINRBAC-REGISTRY-READ-001` reached `VERIFIED_COMPLETE` without opening invite,
+revoke, role-change mutation, or broader authority scope.

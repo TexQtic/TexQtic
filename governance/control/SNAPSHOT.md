@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-20
-last_unit_closed: GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING
-last_commit: "feat(governance): open adminrbac registry read slice"
+last_unit_closed: GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001
+last_commit: "feat(governance): sync verified adminrbac registry read unit"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -40,10 +40,10 @@ layer_4_installed: true
 - **TECS-FBW-006-B** — `VERIFIED_COMPLETE` — Escalation mutations closed 2026-03-18; commits d6e5e77 · d2e28ff · a5151a6 · 0f2d212 · a4c7fc9; VERIFY-TECS-FBW-006-B PASS
 - **TECS-FBW-013-BE-001** — `VERIFIED_COMPLETE` — Backend prerequisite route complete; commit 451f45b; verification VERIFIED_COMPLETE
 - **TECS-FBW-013** — `VERIFIED_COMPLETE` — Buyer RFQ activation closed 2026-03-18; commits 060cac7 · 7f59a62; VERIFY-TECS-FBW-013 VERIFIED_COMPLETE
-- **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `OPEN` — First bounded AdminRBAC child slice authorized 2026-03-20; one read-only control-plane admin access registry surface only; current repo evidence supports replacing the static placeholder with a real control-plane read surface without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
+- **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `VERIFIED_COMPLETE` — Control-plane admin access registry read surface verified 2026-03-20; implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5 recorded; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 ## RFQ Platform State
 
@@ -67,8 +67,9 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`TECS-FBW-ADMINRBAC-REGISTRY-READ-001`.
-Remaining non-terminal portfolio also includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`).
+`OPERATOR_DECISION_REQUIRED`.
+TECS-FBW-ADMINRBAC-REGISTRY-READ-001 is VERIFIED_COMPLETE and eligible for a separate closure step.
+Remaining non-terminal portfolio includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`) only.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -162,3 +163,4 @@ These are distinct closed units and must not be conflated.
 - GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW (2026-03-19): the minimal governance linter workflow is now installed. Repo-local structural checks live in `scripts/governance-lint.ts`, local execution is exposed through `pnpm run governance:lint`, CI runs the same command in `.github/workflows/governance-lint.yml`, and maintainer guidance is recorded in `governance/GOVERNANCE-LINTER.md`. The linter enforces machine-checkable closure and sequencing safeguards only and leaves historical, chronology, materiality, and priority judgment human-controlled. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-REFINE-GOVERNANCE-LINTER-V2 (2026-03-19): governance-linter v1 was calibrated against actual repo usage and recent governance commits. Human-boundary warnings are now limited to changed canonical unit and decision records, duplicate per-file warning noise was collapsed into one clearer advisory message, and the console report now lists the changed files being evaluated in local and CI runs. No new policy rules were introduced, and NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING (2026-03-19): TexQtic now has an explicit monitoring and calibration framework for deciding whether governance-linter v2 should remain stable, receive a bounded refinement, or justify a later v3 design review. The framework requires repeated real-world evidence before linter change, prefers documentation-only clarification before rule changes, and preserves the machine-checkable versus human-only boundary. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+- GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5. Backend runtime proof, frontend runtime proof, and type-level proof are now recorded. NEXT-ACTION now returns to OPERATOR_DECISION_REQUIRED because no implementation unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.

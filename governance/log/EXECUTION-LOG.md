@@ -1057,6 +1057,30 @@ Refs: governance/control/SNAPSHOT.md · scripts/governance-lint.ts · governance
 
 ---
 
+### GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 — 2026-03-20
+Type: GOVERNANCE / SYNC
+Status: CLOSED
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001)
+Title: Record verified completion of TECS-FBW-ADMINRBAC-REGISTRY-READ-001
+Summary: Governance-only sync unit. Recorded TECS-FBW-ADMINRBAC-REGISTRY-READ-001 as
+  VERIFIED_COMPLETE after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3,
+  runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, prior backend
+  runtime proof, and type-level proof. Layer 0 and Layer 1 were reconciled so no
+  implementation-ready unit remains OPEN. NEXT-ACTION.md now records OPERATOR_DECISION_REQUIRED
+  while TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-ADMINRBAC.md and
+  governance/units/TECS-FBW-ADMINRBAC-REGISTRY-READ-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No decisions changed. No product code, backend code, tests, or contracts changed in this
+  governance sync unit. The verified child slice remains read-only and control-plane only.
+  Any later closure handling or broader AdminRBAC sequencing requires a separate governance step.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC.md ·
+  governance/units/TECS-FBW-ADMINRBAC-REGISTRY-READ-001.md
+
+---
+
 ### GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW — 2026-03-19
 Type: GOVERNANCE / PROCESS-IMPLEMENTATION
 Status: CLOSED

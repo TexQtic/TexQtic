@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-ADMINRBAC-REGISTRY-READ-001
 title: Control-plane admin access registry read surface
 type: IMPLEMENTATION
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: CONTROL
 opened: 2026-03-20
 closed: null
-verified: null
-commit: null
-evidence: null
+verified: 2026-03-20
+commit: 38419b5651ea736c2b569d6182002b9bd25c6eb3 · 50d1e36adacb3a58ae714741193d61d5e65696e5
+evidence: backend runtime proof complete · frontend runtime proof complete · type-level proof complete
 doctrine_constraints:
   - D-002: admin visibility and any control-plane bypass posture must remain explicit and auditable
   - D-004: this unit is one bounded read-only AdminRBAC child slice only; no mutation work may be mixed in
@@ -38,16 +38,16 @@ membership visibility, white-label staff visibility, or session invalidation mec
 
 ## Acceptance Criteria
 
-- [ ] A control-plane AdminRBAC read route exists for the bounded admin access registry surface
-- [ ] The route returns current internal control-plane admin identities only
-- [ ] The route returns bounded control-plane role posture only
-- [ ] The route is control-plane authenticated and does not trust client-supplied tenant or org identifiers
-- [ ] The UI no longer depends on placeholder `ADMIN_USERS` data for this surface
-- [ ] The UI preserves canonical terminology separation among `TenantAdmin`, `PlatformAdmin`, and `SuperAdmin`
-- [ ] The UI does not expose invite, revoke/remove, or role-change controls
-- [ ] No tenant-plane membership or white-label staff membership data is mixed into the surface
-- [ ] No blanket cross-tenant read-everything posture is introduced
-- [ ] Any audit visibility associated with the surface remains explicit and bounded to this read-only control-plane use case
+- [x] A control-plane AdminRBAC read route exists for the bounded admin access registry surface
+- [x] The route returns current internal control-plane admin identities only
+- [x] The route returns bounded control-plane role posture only
+- [x] The route is control-plane authenticated and does not trust client-supplied tenant or org identifiers
+- [x] The UI no longer depends on placeholder `ADMIN_USERS` data for this surface
+- [x] The UI preserves canonical terminology separation among `TenantAdmin`, `PlatformAdmin`, and `SuperAdmin`
+- [x] The UI does not expose invite, revoke/remove, or role-change controls
+- [x] No tenant-plane membership or white-label staff membership data is mixed into the surface
+- [x] No blanket cross-tenant read-everything posture is introduced
+- [x] Any audit visibility associated with the surface remains explicit and bounded to this read-only control-plane use case
 
 ## Files Allowlisted (Modify)
 
@@ -76,15 +76,22 @@ membership visibility, white-label staff visibility, or session invalidation mec
 
 ## Evidence Record
 
-*Not yet recorded — unit is OPEN and awaiting implementation.*
+- Implementation commit: `38419b5651ea736c2b569d6182002b9bd25c6eb3` — bounded control-plane admin access registry read surface across `components/ControlPlane/AdminRBAC.tsx`, `server/src/routes/control.ts`, `services/controlPlaneService.ts`, `server/src/__tests__/admin-rbac-registry-read.integration.test.ts`, and `tests/adminrbac-registry-read-ui.test.tsx`
+- Verification runtime-test commit: `50d1e36adacb3a58ae714741193d61d5e65696e5` — frontend runtime verification enabled and passing for `tests/adminrbac-registry-read-ui.test.tsx`
+- Type-level proof: `pnpm exec tsc --noEmit` — PASS
+- Backend runtime proof: `pnpm --dir server exec vitest run src/__tests__/admin-rbac-registry-read.integration.test.ts` — PASS; SUPER_ADMIN read allowed; SUPPORT denied; no `passwordHash` leakage in response
+- Frontend runtime proof: `pnpm --dir server exec vitest --root .. run tests/adminrbac-registry-read-ui.test.tsx` — PASS; registry fetch contract, SuperAdmin/PlatformAdmin distinction, empty state, error state, and negative assertions for mutation controls / tenant-plane language all satisfied
 
 ## Governance Closure
 
-*Not yet set — this unit is OPEN.*
+*Not yet set — this unit is VERIFIED_COMPLETE and eligible for a separate closure step if desired.*
 
 ## Allowed Next Step
 
-Implement this bounded read-only child slice only.
+No further implementation work is authorized inside this unit.
+
+The next governance-valid action, if chosen, is a separate closure step for this already-verified
+child unit.
 
 ## Forbidden Next Step
 
@@ -117,5 +124,6 @@ Implement this bounded read-only child slice only.
 
 ## Last Governance Confirmation
 
-2026-03-20 — GOV-DEC-ADMINRBAC-REGISTRY-READ-OPENING. Status set to `OPEN` as the first bounded
-AdminRBAC child slice.
+2026-03-20 — GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001. Status recorded as
+`VERIFIED_COMPLETE` after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and
+runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5.
