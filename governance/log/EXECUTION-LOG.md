@@ -1320,3 +1320,24 @@ Notes: OPEN-SET.md remains unchanged because it already truthfully reports zero 
   carry-forward posture was otherwise accurate. No product code, tests, schema, migrations, or
   implementation units changed in this governance unit.
 Refs: governance/control/BLOCKED.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/units/TECS-FBW-003-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT — 2026-03-20
+Type: GOVERNANCE / POLICY-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT)
+Title: Record GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT as DECIDED
+Summary: Governance-only policy-record unit. Recorded GOV-POLICY-MANDATORY-POST-CLOSE-
+  GOVERNANCE-AUDIT as DECIDED in Layer 2. TexQtic now requires a mandatory post-close
+  governance audit after every Governance Sync or Close. The audit is advisory only: it emits
+  state classification, governance-valid action classes, one ranked recommendation, stronger-move
+  blockers, forbidden next moves, and the resulting Layer 0 posture without opening any work.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed; Layer 2 —
+  governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md and BLOCKED.md remain unchanged because no non-terminal unit status changed.
+  NEXT-ACTION remains OPERATOR_DECISION_REQUIRED. No implementation unit was opened, no
+  implementation was authorized, and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md · governance/log/EXECUTION-LOG.md

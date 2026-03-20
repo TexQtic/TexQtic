@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-20
-last_unit_closed: GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION
-last_commit: "feat(governance): record adminrbac post-close operator decision"
+last_unit_closed: GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT
+last_commit: "feat(governance): add mandatory post-close audit policy"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -70,11 +70,12 @@ RFQ remains pre-negotiation:
 `OPERATOR_DECISION_REQUIRED`.
 TECS-FBW-ADMINRBAC-REGISTRY-READ-001 is CLOSED.
 Remaining non-terminal portfolio includes TECS-FBW-ADMINRBAC (`DESIGN_GATE`) only.
+Mandatory post-close audit recommendation class: `HOLD`.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
 
-*(None — BLK-013-001 resolved 2026-03-18; see BLOCKED.md Section 4)*
+None. BLK-013-001 resolved 2026-03-18; see BLOCKED.md Section 4.
 
 ## Active Design Gates
 
@@ -84,7 +85,7 @@ See `NEXT-ACTION.md`.
 ## Closed Baseline (must not be reopened)
 
 | Group | Status |
-|---|---|
+| --- | --- |
 | Wave 0–5 (all FBW units except residuals above) | ALL CLOSED |
 | WL storefront tranche (PW5-WL1–7) | ALL CLOSED |
 | Auth remediation chain (TECS-FBW-AUTH-001–003 etc.) | ALL CLOSED |
@@ -98,6 +99,7 @@ See `NEXT-ACTION.md`.
 | GOV-OS-006 | CLOSED |
 
 **G-028 C4 vs C6 distinction (preserved):**  
+
 - C4 = `ai.control.*` event-domain contract only  
 - C6 = control-plane emitter wiring only  
 These are distinct closed units and must not be conflated.
@@ -166,3 +168,4 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5. Backend runtime proof, frontend runtime proof, and type-level proof are now recorded. NEXT-ACTION now returns to OPERATOR_DECISION_REQUIRED because no implementation unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned VERIFIED_COMPLETE → CLOSED after the already-recorded implementation, verification, and governance sync chain. No new implementation unit was opened, and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION (2026-03-20): recorded the post-close AdminRBAC operator disposition as a decision only. TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED, TECS-FBW-ADMINRBAC remains DESIGN_GATE, no separate closeout artifact is required now, and no new AdminRBAC slice is opened or approved.
+- GOV-RECORD-GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT (2026-03-20): recorded the permanent policy that every Governance Sync or Close must emit a mandatory post-close governance audit. The audit is advisory only, preserves `NEXT-ACTION` single-action discipline, and currently recommends `HOLD` while `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
