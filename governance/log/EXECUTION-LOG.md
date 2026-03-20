@@ -1139,6 +1139,37 @@ Refs: governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md · governance/units/T
 
 ---
 
+### GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING — 2026-03-20
+Type: GOVERNANCE / SEQUENCING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING)
+Title: Record the first-slice sequencing answer for TECS-FBW-ADMINRBAC
+Summary: Governance-only sequencing decision. Confirmed that both AdminRBAC gate decisions are
+  now resolved, but that `TECS-FBW-ADMINRBAC` still must not be opened as an implementation-ready
+  stream because the only truthful first slice proven by current repo evidence is a narrower,
+  read-only control-plane admin access registry surface. No implementation unit was opened.
+Layer Impact: Layer 2 — governance/decisions/GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Evidence Reviewed: governance/control/DOCTRINE.md; governance/control/OPEN-SET.md;
+  governance/control/NEXT-ACTION.md; governance/control/BLOCKED.md; governance/control/SNAPSHOT.md;
+  governance/units/TECS-FBW-ADMINRBAC.md;
+  governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md;
+  governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md; governance/decisions/DESIGN-DECISIONS.md;
+  governance/decisions/SECURITY-DECISIONS.md; docs/strategy/CONTROL_CENTER_TAXONOMY.md;
+  docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md;
+  docs/governance/audits/2026-03-copilot-frontend-backend-audit.md;
+  components/ControlPlane/AdminRBAC.tsx; components/ControlPlane/EscalationOversight.tsx;
+  constants.tsx; server/src/routes/auth.ts; server/src/types/index.ts
+Notes: Layer 0 remains unchanged. NEXT-ACTION.md stays OPERATOR_DECISION_REQUIRED because no
+  implementation-ready unit is OPEN and the broad TECS-FBW-ADMINRBAC parent stream is not being
+  force-opened by this sequencing decision. This record explicitly preserves the TenantAdmin /
+  PlatformAdmin / SuperAdmin terminology lock, keeps SuperAdmin mutation authority bounded, and
+  does not authorize any read-everything posture. No application code, tests, schema, migrations,
+  policies, or secret-bearing files were modified.
+Refs: governance/decisions/GOV-DEC-ADMINRBAC-FIRST-SLICE-SEQUENCING.md · governance/decisions/DESIGN-DEC-ADMINRBAC-PRODUCT.md · governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md
+
+---
+
 ### GOV-RECONCILE-BOUNDED-G026-V1-HISTORY — 2026-03-19
 Type: GOVERNANCE / RECONCILIATION
 Status: CLOSED
