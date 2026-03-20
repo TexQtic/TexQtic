@@ -1354,6 +1354,36 @@ Refs: governance/decisions/GOV-DEC-G026-DESIGN-CLARIFICATION-001.md ·
 
 ---
 
+### GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING — 2026-03-20
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING)
+Title: Open the bounded G-026 cleanup or remediation step for non-routing texqtic_service dependencies
+Summary: Governance-only decision/opening unit. Opened `TECS-G026-CLEANUP-REMEDIATION-001` as
+  the sole bounded next governed G-026 unit after the completed clarification established that
+  future routing must return to a resolver-only `texqtic_service` posture and that the current
+  non-routing dependencies on `memberships`, `users`, `catalog_items`, and
+  `rfq_supplier_responses` must first be removed or re-homed. The opened unit is remediation-only:
+  retire or re-home those non-routing dependencies, remove the corresponding extra grants once no
+  longer required, preserve the base resolver posture on `public.tenants` and
+  `public.tenant_domains`, and touch duplicate/equivalent `postgres` membership rows only if
+  implementation evidence shows normalization is actually required. No routing unit was opened,
+  no broad G-026 opening occurred, and no custom-domain, apex-domain, or DNS-verification scope
+  was authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md created; Layer 2 —
+  governance/decisions/GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: This opening authorizes one bounded remediation implementation unit only. Broad G-026
+  routing remains unopened. No product code, tests, schema, migrations, routes, or contracts were
+  changed by this governance unit.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING.md ·
+  governance/units/TECS-G026-CLEANUP-REMEDIATION-001.md
+
+---
+
 ### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED

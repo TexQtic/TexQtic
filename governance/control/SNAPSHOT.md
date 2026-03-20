@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-20
 last_unit_closed: GOV-CLOSE-TECS-G026-DESIGN-CLARIFICATION-001
-last_commit: "governance(design): clarify G-026 resolver-role posture"
+last_commit: "governance(open): open G-026 cleanup remediation unit"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -43,9 +43,9 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
-No bounded governance design-clarification unit is currently OPEN.
+One bounded G-026 remediation unit is now OPEN: `TECS-G026-CLEANUP-REMEDIATION-001`.
 
 ## RFQ Platform State
 
@@ -69,10 +69,11 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
+`TECS-G026-CLEANUP-REMEDIATION-001`.
 TECS-G026-H-001 is CLOSED after bounded remote-database verification, governance sync, and conservative closure.
 TECS-G026-DESIGN-CLARIFICATION-001 is CLOSED after clarifying that future G-026 routing must return to a resolver-only texqtic_service posture.
-Any future routing-opening question remains blocked until the separately governed non-routing texqtic_service dependencies are removed or re-homed.
+The bounded next governed step is now cleanup or remediation only for the separately governed non-routing texqtic_service dependencies on memberships, users, catalog_items, and rfq_supplier_responses.
+Any future routing-opening question remains blocked until that remediation unit is implemented, verified, governance-synced, and closed.
 The broad G-026 v1 routing stream remains unopened.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
@@ -180,3 +181,4 @@ These are distinct closed units and must not be conflated.
 - GOV-DOCTRINE-MANDATORY-CLOSURE-AUDIT-ENFORCEMENT (2026-03-20): doctrine and policy now explicitly enforce that a governance close is incomplete unless it emits the mandatory post-close audit output in the same closure operation or as an explicitly required immediate closure sub-step. The audit content is fixed, remains advisory only, and any missed audit now requires an immediate governance correction before further sequencing or implementation work.
 - GOV-DEC-G026-DESIGN-CLARIFICATION-OPENING (2026-03-20): opened `TECS-G026-DESIGN-CLARIFICATION-001` as the sole bounded next governed unit. This opening is design clarification only: define the intended canonical `texqtic_service` resolver-role posture, classify the extra `SELECT` grants and duplicate/equivalent `postgres` membership rows against that posture, and determine whether any later cleanup unit is needed. Broad G-026 routing remains unopened and no routing or cleanup implementation unit is authorized.
 - GOV-CLOSE-TECS-G026-DESIGN-CLARIFICATION-001 (2026-03-20): `TECS-G026-DESIGN-CLARIFICATION-001` is now CLOSED. The clarification result keeps the canonical future routing-opening posture resolver-only and classifies the extra grants on `memberships`, `users`, `catalog_items`, and `rfq_supplier_responses` as separately governed non-routing dependencies that must be removed or re-homed before any routing opening may be considered. Duplicate/equivalent `postgres` membership rows are treated as non-blocking if semantically equivalent only. `NEXT-ACTION` now returns to `OPERATOR_DECISION_REQUIRED`.
+- GOV-DEC-G026-CLEANUP-REMEDIATION-OPENING (2026-03-20): opened `TECS-G026-CLEANUP-REMEDIATION-001` as the sole bounded next governed G-026 unit. This opening is cleanup or remediation only: remove or re-home the non-routing `texqtic_service` dependencies on `memberships`, `users`, `catalog_items`, and `rfq_supplier_responses`, retire the associated extra grants once no longer needed, preserve the base resolver posture, and touch duplicate/equivalent `postgres` membership rows only if implementation evidence shows normalization is truly required. Broad G-026 routing remains unopened and no routing implementation unit is authorized.
