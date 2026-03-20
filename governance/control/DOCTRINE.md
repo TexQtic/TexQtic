@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.4  
-**Last Updated:** 2026-03-17 (GOV-OS-002 bootstrap)  
+**Doctrine Version:** v1.5  
+**Last Updated:** 2026-03-20 (GOV-DOCTRINE-MANDATORY-CLOSURE-AUDIT-ENFORCEMENT)  
 **Max Size:** 150 lines (structural gate)
 
 > This file is the canonical summary of active doctrine invariants.  
@@ -80,6 +80,13 @@ Cross-tenant queries are forbidden outside the control-plane super-admin context
 
 ### D-012 — Secrets Are Never Printed
 DB URLs, .env contents, passwords, JWTs, and API keys must never be logged or echoed.
+
+### D-013 — Closure Requires Mandatory Post-Close Audit Output
+A governance close step is incomplete unless it emits the mandatory post-close audit output in the
+same closure operation or as an explicitly required closure sub-step completed immediately with the
+close. The audit remains advisory only and must not authorize work. If a close is recorded without
+the audit output, treat the closure procedure as incomplete and run an immediate governance
+correction unit before any further sequencing, opening, or implementation work.
 
 ---
 

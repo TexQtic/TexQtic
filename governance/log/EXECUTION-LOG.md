@@ -1266,6 +1266,35 @@ Refs: governance/control/SNAPSHOT.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-DOCTRINE-MANDATORY-CLOSURE-AUDIT-ENFORCEMENT — 2026-03-20
+Type: GOVERNANCE / DOCTRINE-ENFORCEMENT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DOCTRINE-MANDATORY-CLOSURE-AUDIT-ENFORCEMENT)
+Title: Enforce mandatory post-close audit within closure completeness
+Summary: Governance-only doctrine-enforcement unit. Patched the Governance OS so a governance
+  close is now explicitly incomplete unless it emits the mandatory post-close audit output in the
+  same closure operation or as an explicitly required immediate closure sub-step. The major
+  sequence remains unchanged at Decision -> Opening -> Implementation -> Verification ->
+  Governance Sync -> Close, but `Close` now explicitly includes mandatory post-close audit output.
+  The audit content is now fixed to include state summary, outstanding gates, natural next-step
+  candidates, one ranked recommendation, why stronger moves remain blocked, forbidden next moves,
+  and resulting Layer 0 posture. Failure handling is also explicit: if a close is recorded without
+  the audit, treat that as incomplete closure procedure and run an immediate governance correction
+  before further sequencing, opening, or implementation work.
+Layer Impact: Layer 0 — DOCTRINE.md and SNAPSHOT.md updated; Layer 2 —
+  governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md updated; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: NEXT-ACTION.md remains unchanged and stays `OPERATOR_DECISION_REQUIRED`. No implementation
+  unit was opened. No G-026 discrepancy-resolution decision was created. No product code, tests,
+  schema, migrations, routes, contracts, or unit records changed in this enforcement patch. The
+  audit remains advisory only and does not authorize work.
+Refs: governance/control/DOCTRINE.md ·
+  governance/decisions/GOV-POLICY-MANDATORY-POST-CLOSE-GOVERNANCE-AUDIT.md ·
+  governance/control/SNAPSHOT.md · governance/control/NEXT-ACTION.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-RECORD-DESIGN-DEC-ADMINRBAC-PRODUCT — 2026-03-20
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED

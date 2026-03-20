@@ -50,20 +50,44 @@ emitted at the end of that unit.
 
 The audit is **advisory and sequencing-support only**. It does not authorize work.
 
+The audit is also a closure-completeness requirement.
+
+A governance close is not fully complete unless the mandatory post-close audit output is emitted
+in the same closure operation or as an explicitly required closure sub-step completed immediately
+with the close.
+
 ## Policy Rules
 
-### Rule 1 — What Changes
+### Rule 1 — Closure Completeness
+
+A governance close is incomplete unless it emits the mandatory post-close governance audit output.
+
+Permitted shapes:
+
+- same close operation
+- explicitly required closure sub-step completed immediately with the close
+
+Forbidden shape:
+
+- treating a closure as fully complete while the audit output is still missing
+
+### Rule 2 — What Changes
 
 The Governance OS now requires a mandatory post-close governance audit output after each
 Governance Sync or Close.
 
 This is a permanent operating rule.
 
-### Rule 2 — What Does Not Change
+### Rule 3 — What Does Not Change
 
 The canonical sequence remains unchanged:
 
 Decision -> Opening -> Implementation -> Verification -> Governance Sync -> Close
+
+Operational clarification:
+
+- `Close` now includes mandatory post-close audit output
+- closure is incomplete without it
 
 The audit does **not**:
 
@@ -74,7 +98,7 @@ The audit does **not**:
 - alter legal status transitions
 - weaken doctrine
 
-### Rule 3 — Layer 0 Interaction
+### Rule 4 — Layer 0 Interaction
 
 The audit must derive from:
 
@@ -90,7 +114,7 @@ If no new action is explicitly authorized, the audit may recommend only a next g
 action class. The resulting Layer 0 posture must remain `OPERATOR_DECISION_REQUIRED` or the
 current equivalent canonical posture until a separate explicit decision authorizes movement.
 
-### Rule 4 — Mandatory Audit Output Shape
+### Rule 5 — Mandatory Audit Output Shape
 
 Every post-close governance audit must emit the following compact structure:
 
@@ -103,27 +127,34 @@ Every post-close governance audit must emit the following compact structure:
    - blocked / deferred / design-gated context
    - current `NEXT-ACTION` compatibility
 
-2. **Natural next-step candidates**
+2. **Outstanding gates**
+   - unresolved gating facts still preventing stronger moves
+   - preserved discrepancy notes or unresolved design gates when applicable
+   - exact statement of broader scope that remains unopened or excluded
+
+3. **Natural next-step candidates**
    - governance-valid action classes only
    - allowed classes include: `HOLD`, `DECISION_REQUIRED`, `DESIGN_REFINEMENT`, `RECORD_ONLY`, `OPENING_CANDIDATE`
 
-3. **Recommended next governance-valid move**
+4. **Recommended next governance-valid move**
    - exactly one ranked recommendation
    - one short reason
-   - why stronger moves remain blocked
 
-4. **Forbidden next moves**
+5. **Why stronger moves remain blocked**
+   - exact blocker explanation for not taking a stronger move now
+
+6. **Forbidden next moves**
    - no implicit implementation opening
    - no parent ungating by implication
    - no scope broadening by phrasing
    - no tenant/control-plane boundary drift
    - no mutation authorization by "natural next step" wording
 
-5. **Resulting Layer 0 posture**
+7. **Resulting Layer 0 posture**
    - the current authorized next action preserved exactly as authorized
    - or `OPERATOR_DECISION_REQUIRED` preserved when no action is authorized
 
-### Rule 5 — Recommendation Is Not Authorization
+### Rule 6 — Recommendation Is Not Authorization
 
 The audit may narrow the operator's decision space, but it may not authorize execution.
 
@@ -135,7 +166,19 @@ Recommendation and authorization are distinct:
 No audit wording may imply that a recommended class is already approved for implementation,
 opening, mutation, or ungating.
 
-### Rule 6 — Productivity Effect
+### Rule 7 — Failure Handling
+
+If a governance close is recorded without the mandatory audit output, treat that as an incomplete
+closure procedure.
+
+Required response:
+
+- run a governance correction unit immediately
+- record the missing audit output
+- do not treat the missing audit as optional or deferrable
+- do not open, sequence, or implement further work until the audit gap is corrected
+
+### Rule 8 — Productivity Effect
 
 This policy exists to reduce repeated manual reconstruction of post-close state.
 
@@ -145,7 +188,7 @@ It improves productivity by:
 - reducing repeated operator re-analysis of the same Layer 0 posture
 - preserving conservative governance while reducing wasted sequencing time
 
-### Rule 7 — Boundary Preservation
+### Rule 9 — Boundary Preservation
 
 The audit must never:
 
@@ -170,26 +213,35 @@ The current mandatory post-close governance audit outcome is:
    - blocked / deferred / design-gated context: 0 / 0 / 1
    - current `NEXT-ACTION` compatibility: compatible with `OPERATOR_DECISION_REQUIRED`
 
-2. **Natural next-step candidates**
+2. **Outstanding gates**
+   - `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`
+   - no separate bounded next move is selected or approved
+   - no parent ungating is recorded
+
+3. **Natural next-step candidates**
    - `HOLD`
    - `DECISION_REQUIRED`
    - `RECORD_ONLY`
    - `DESIGN_REFINEMENT`
    - `OPENING_CANDIDATE`
 
-3. **Recommended next governance-valid move**
+4. **Recommended next governance-valid move**
    - ranked recommendation: `HOLD`
    - reason: the current state is already synchronized and no separate bounded next move has been decided
-   - why stronger moves remain blocked: no new child slice is selected, no parent ungating is recorded, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`
 
-4. **Forbidden next moves**
+5. **Why stronger moves remain blocked**
+   - no new child slice is selected
+   - no parent ungating is recorded
+   - `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`
+
+6. **Forbidden next moves**
    - no implicit implementation opening
    - no parent ungating by implication
    - no scope broadening from the closed child
    - no role-boundary collapse
    - no mutation authorization by follow-on wording
 
-5. **Resulting Layer 0 posture**
+7. **Resulting Layer 0 posture**
    - `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`
    - no implementation unit is opened
    - no implementation is authorized
@@ -197,6 +249,7 @@ The current mandatory post-close governance audit outcome is:
 ## Consequences
 
 - TexQtic now requires a mandatory post-close governance audit after every Governance Sync or Close
+- a governance close is now explicitly incomplete without that audit output
 - the audit is mandatory, but advisory only
 - `NEXT-ACTION.md` still carries exactly one authorized next action
 - closed units remain closed unless a separate governance unit explicitly reopens or supersedes them
