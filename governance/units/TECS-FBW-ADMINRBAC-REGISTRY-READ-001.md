@@ -2,11 +2,11 @@
 unit_id: TECS-FBW-ADMINRBAC-REGISTRY-READ-001
 title: Control-plane admin access registry read surface
 type: IMPLEMENTATION
-status: VERIFIED_COMPLETE
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-20
-closed: null
+closed: 2026-03-20
 verified: 2026-03-20
 commit: 38419b5651ea736c2b569d6182002b9bd25c6eb3 · 50d1e36adacb3a58ae714741193d61d5e65696e5
 evidence: backend runtime proof complete · frontend runtime proof complete · type-level proof complete
@@ -84,14 +84,14 @@ membership visibility, white-label staff visibility, or session invalidation mec
 
 ## Governance Closure
 
-*Not yet set — this unit is VERIFIED_COMPLETE and eligible for a separate closure step if desired.*
+Closed 2026-03-20 by GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 after prior implementation,
+verification, and governance sync were already recorded.
 
 ## Allowed Next Step
 
 No further implementation work is authorized inside this unit.
 
-The next governance-valid action, if chosen, is a separate closure step for this already-verified
-child unit.
+No further action is authorized inside this closed child unit.
 
 ## Forbidden Next Step
 
@@ -124,6 +124,5 @@ child unit.
 
 ## Last Governance Confirmation
 
-2026-03-20 — GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001. Status recorded as
-`VERIFIED_COMPLETE` after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and
-runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5.
+2026-03-20 — GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001. Status recorded as `CLOSED` after
+the previously completed implementation, verification, and governance-sync chain.

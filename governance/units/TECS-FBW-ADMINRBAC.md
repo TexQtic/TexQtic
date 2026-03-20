@@ -74,8 +74,8 @@ Do not open this parent directly.
 
 No AdminRBAC implementation unit is currently OPEN.
 
-The bounded child unit `TECS-FBW-ADMINRBAC-REGISTRY-READ-001` is now VERIFIED_COMPLETE and any
-separate closure handling for that child must remain distinct from this parent umbrella record.
+The bounded child unit `TECS-FBW-ADMINRBAC-REGISTRY-READ-001` is now CLOSED and must remain
+distinct from this parent umbrella record.
 
 Any later AdminRBAC mutation or broader authority work requires a separate bounded child-unit
 sequencing decision.
@@ -122,7 +122,7 @@ sequencing decision.
 
 ## Last Governance Confirmation
 
-2026-03-20 — GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001. Parent remains `DESIGN_GATE`
+2026-03-20 — GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001. Parent remains `DESIGN_GATE`
 as the broad non-open umbrella stream after the bounded child slice
-`TECS-FBW-ADMINRBAC-REGISTRY-READ-001` reached `VERIFIED_COMPLETE` without opening invite,
+`TECS-FBW-ADMINRBAC-REGISTRY-READ-001` reached `CLOSED` without opening invite,
 revoke, role-change mutation, or broader authority scope.

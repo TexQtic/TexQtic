@@ -1081,6 +1081,29 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 — 2026-03-20
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001)
+Title: Record closure of the verified AdminRBAC registry read child slice
+Summary: Governance-only closure unit. Recorded TECS-FBW-ADMINRBAC-REGISTRY-READ-001 as CLOSED
+  after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend
+  verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit
+  82dae2397df9674baa934a5e6610cb447fe741a8. Layer 0, Layer 1, and Layer 3 were reconciled while
+  TECS-FBW-ADMINRBAC remained DESIGN_GATE and no implementation-ready unit was opened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-ADMINRBAC.md and
+  governance/units/TECS-FBW-ADMINRBAC-REGISTRY-READ-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No decisions changed. No product code, tests, backend contracts, schema, migrations, or
+  policies changed in this closure unit. TenantAdmin / PlatformAdmin / SuperAdmin separation and
+  the parent DESIGN_GATE posture remain unchanged.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC.md ·
+  governance/units/TECS-FBW-ADMINRBAC-REGISTRY-READ-001.md
+
+---
+
 ### GOV-IMPLEMENT-GOVERNANCE-LINTER-WORKFLOW — 2026-03-19
 Type: GOVERNANCE / PROCESS-IMPLEMENTATION
 Status: CLOSED
