@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-20
-last_unit_closed: GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001
-last_commit: "feat(governance): close adminrbac registry read unit"
+last_unit_closed: GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION
+last_commit: "feat(governance): record adminrbac post-close operator decision"
 doctrine_version: v1.4
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -165,3 +165,4 @@ These are distinct closed units and must not be conflated.
 - GOV-DESIGN-GOVERNANCE-LINTER-V3-TRIGGER-MONITORING (2026-03-19): TexQtic now has an explicit monitoring and calibration framework for deciding whether governance-linter v2 should remain stable, receive a bounded refinement, or justify a later v3 design review. The framework requires repeated real-world evidence before linter change, prefers documentation-only clarification before rule changes, and preserves the machine-checkable versus human-only boundary. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
 - GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned OPEN → VERIFIED_COMPLETE after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5. Backend runtime proof, frontend runtime proof, and type-level proof are now recorded. NEXT-ACTION now returns to OPERATOR_DECISION_REQUIRED because no implementation unit remains OPEN and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
 - GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001 (2026-03-20): TECS-FBW-ADMINRBAC-REGISTRY-READ-001 transitioned VERIFIED_COMPLETE → CLOSED after the already-recorded implementation, verification, and governance sync chain. No new implementation unit was opened, and TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+- GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION (2026-03-20): recorded the post-close AdminRBAC operator disposition as a decision only. TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED, TECS-FBW-ADMINRBAC remains DESIGN_GATE, no separate closeout artifact is required now, and no new AdminRBAC slice is opened or approved.

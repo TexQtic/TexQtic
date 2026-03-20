@@ -964,6 +964,26 @@ Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-G026-V1
 
 ---
 
+### GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION — 2026-03-20
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-RECORD-GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION)
+Title: Record GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION as DECIDED
+Summary: Governance-only decision-record unit. Recorded GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION
+  as DECIDED in Layer 2. The closed AdminRBAC registry-read child remains closed, the broad parent
+  remains DESIGN_GATE, no separate closeout artifact is required now, and no next AdminRBAC slice
+  was selected, opened, or approved by this unit.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed; Layer 2 —
+  governance/decisions/GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No implementation unit was opened. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED.
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE. No product code, tests, contracts, schema,
+  migrations, or unit-opening records changed in this governance unit.
+Refs: governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-RECORD-GOV-POLICY-CLOSURE-SEQUENCING-HARDENING — 2026-03-19
 Type: GOVERNANCE / POLICY-RECORD
 Status: CLOSED

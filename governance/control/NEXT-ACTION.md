@@ -7,17 +7,15 @@
 ```yaml
 unit_id: OPERATOR_DECISION_REQUIRED
 type: GOVERNANCE
-title: Decide whether to run separate closure for the verified AdminRBAC registry read slice
+title: Hold AdminRBAC at DESIGN_GATE; no next slice is authorized
 prerequisites_met: true
-authorized_by: GOV-CLOSE-TECS-FBW-ADMINRBAC-REGISTRY-READ-001
+authorized_by: GOV-DEC-ADMINRBAC-POST-CLOSE-DISPOSITION
 date_authorized: 2026-03-20
 notes: |
-  TECS-FBW-ADMINRBAC-REGISTRY-READ-001 is now CLOSED after
-  implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3 and
-  runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5,
-  following governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8.
-  Backend runtime proof, frontend runtime proof, and type-level proof remain complete.
-  No implementation unit is currently OPEN. TECS-FBW-ADMINRBAC remains DESIGN_GATE.
-  Any further AdminRBAC mutation or broader authority work requires a separate bounded
-  sequencing decision. No new work is opened by this closure step.
+  TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED.
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+  No implementation unit is currently OPEN.
+  No separate closeout artifact is required by the post-close AdminRBAC decision.
+  No next AdminRBAC slice is selected, opened, or approved.
+  Any future AdminRBAC movement requires a separate bounded decision first.
 ```
