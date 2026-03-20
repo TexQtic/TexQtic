@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-20
 last_unit_closed: GOV-CLOSE-TECS-G026-CLEANUP-REMEDIATION-001
-last_commit: "governance(close): close G-026 cleanup remediation unit"
+last_commit: "governance(open): open first bounded G-026 routing unit"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -43,9 +43,9 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
-`TECS-G026-CLEANUP-REMEDIATION-001` is now `CLOSED` after conservative closure and mandatory post-close audit result `HOLD`.
+`TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001` is now `OPEN` as the first bounded G-026 routing slice.
 
 ## RFQ Platform State
 
@@ -69,13 +69,13 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
+`TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`.
 TECS-G026-H-001 is CLOSED after bounded remote-database verification, governance sync, and conservative closure.
 TECS-G026-DESIGN-CLARIFICATION-001 is CLOSED after clarifying that future G-026 routing must return to a resolver-only texqtic_service posture.
 TECS-G026-CLEANUP-REMEDIATION-001 is CLOSED after authoritative remote Supabase verification proved that the public by-email and buyer RFQ helper reads were re-homed to bounded non-routing roles while internal resolve-domain preserved the resolver-only texqtic_service posture.
-Post-close audit result: HOLD.
-Any future routing-opening question remains blocked pending a separate governance decision; this sync does not open routing.
-The broad G-026 v1 routing stream remains unopened.
+GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY is DECIDED and the first bounded platform-subdomain runtime routing slice is now separately opened.
+The broad G-026 v1 routing stream remains unopened beyond this first bounded slice.
+Custom-domain, apex-domain, DNS-verification, and broader white-label domain lifecycle scope remain excluded.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
 

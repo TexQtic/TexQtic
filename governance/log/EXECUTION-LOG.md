@@ -1690,3 +1690,32 @@ Notes: Layer 0 remains unchanged. `NEXT-ACTION.md` stays `OPERATOR_DECISION_REQU
 Refs: governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY.md ·
   governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
   governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
+
+---
+
+### GOV-DEC-G026-FIRST-ROUTING-OPENING — 2026-03-20
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-G026-FIRST-ROUTING-OPENING)
+Title: Open the first bounded G-026 platform-subdomain runtime routing slice
+Summary: Governance-only decision/opening unit. Opened `TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`
+  as the sole bounded first G-026 routing implementation slice after the eligibility decision
+  established that the closed prerequisite + clarification + remediation chain is sufficient for
+  one separate bounded opening. The opened slice is limited to platform-subdomain runtime routing
+  for `<slug>.texqtic.app` only: internal signed resolver path, host-to-tenant resolution for
+  platform subdomains, request-path tenant-context propagation/validation required by that bounded
+  runtime path, bounded cache/invalidation behavior required by that same path, and safe fallback
+  behavior for unresolved platform-subdomain requests. Broad G-026 remains unopened, and
+  custom-domain, apex-domain, DNS-verification, and broader white-label domain lifecycle scope all
+  remain excluded.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md created; Layer 2 —
+  governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No product code, tests, schema, migrations, routes, or contracts changed in this opening
+  unit. No broad G-026 stream was opened. No custom-domain, apex-domain, DNS-verification, or
+  broader white-label domain lifecycle work was authorized by this governance step.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING.md ·
+  governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md
