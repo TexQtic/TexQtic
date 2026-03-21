@@ -216,3 +216,40 @@ Any later opening, if separately created, must preserve all of the following:
 
 Any further movement still requires a separate later opening artifact for at most one bounded
 policy-design child and nothing broader.
+
+## Approval
+
+Approval record: `GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION`
+Approval date: 2026-03-21
+
+The recorded decision is approved as recorded, without expansion.
+
+This approval confirms all of the following remain true:
+
+- the decision is valid governance state
+- the decision remains bounded, decision-only, non-opening, and non-authorizing
+- no policy-design or implementation unit was created by the recorded decision
+- no implementation, CI, Playwright, verifier, or automation work was authorized
+- `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`
+- no implementation-ready unit is `OPEN`
+
+## Approval Boundary Preservation
+
+This approval does **not**:
+
+- reopen or refine the decision substance
+- convert the recorded decision into an opening
+- authorize `GOV-VERIFY-01` or any similarly named unit
+- authorize CI, Playwright, verifier, or automation implementation
+- alter AdminRBAC posture
+- alter G-026 posture
+- launch a governance-hardening child by implication
+- change doctrine
+
+## Friction Observation
+
+Recent governance navigation for small meta-steps is showing signs of process friction.
+
+That observation is recorded here only as a future navigation-efficiency concern.
+It does not change current doctrine, does not change the approved decision scope, and does not
+create any new opening candidate or authorization effect unless separately decided later.
