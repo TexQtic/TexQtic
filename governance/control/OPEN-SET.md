@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
+**Last Updated:** 2026-03-21 (GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,17 +13,18 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
+| TECS-RUNTIME-VERIFICATION-HARDENING-001 | Executable runtime verification hardening for implemented tenant-enterprise and white-label slices | OPEN | W5 | 2026-03-21 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **0**
+- **OPEN** (implementation-ready): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 1**
+- **Total non-terminal units: 2**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
@@ -41,8 +42,9 @@ TECS-G026-H-001 closed 2026-03-20 after implementation commit deef077, governanc
 TECS-G026-DESIGN-CLARIFICATION-001 closed 2026-03-20 after recording the bounded clarification result that future G-026 routing must return to a resolver-only `texqtic_service` posture. The extra grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users` are now classified as separately governed non-routing dependencies that must be removed or re-homed before any routing opening may be considered.
 TECS-G026-CLEANUP-REMEDIATION-001 closed 2026-03-20 after implementation commit 0f3d2c3, governance-sync commit f21ef8c, the already-recorded authoritative remote Supabase verification PASS, and a conservative closure step with mandatory post-close audit result `HOLD`. Broad G-026 routing remains unopened and no routing implementation-ready G-026 stream is OPEN.
 TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 closed 2026-03-21 after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11, governance-sync commit 963c9359eb551cef076913722071e4577cf7040f, and the mandatory post-close audit result `DECISION_REQUIRED`. Broad G-026 remains unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture remains canonical, and no new routing unit is opened by implication.
+TECS-RUNTIME-VERIFICATION-HARDENING-001 is OPEN as the sole bounded verification-hardening implementation-ready unit. It is limited to repo-runnable runtime verification for implemented tenant-enterprise UI/auth/contract paths and white-label seeded storefront/catalog visibility/data-state paths only; no broad QA, CI, auth, catalog, AdminRBAC, RFQ, or domain-routing program is opened.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-No implementation-ready unit is currently OPEN.
+Exactly one implementation-ready unit is currently OPEN.
 
 ---
 

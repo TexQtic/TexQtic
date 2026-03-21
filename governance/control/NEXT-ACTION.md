@@ -1,31 +1,27 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: OPERATOR_DECISION_REQUIRED
-type: GOVERNANCE
-title: Await explicit operator governance sequencing after bounded G-026 platform-subdomain routing closure
+unit_id: TECS-RUNTIME-VERIFICATION-HARDENING-001
+type: IMPLEMENTATION
+title: Executable runtime verification hardening for implemented tenant-enterprise and white-label slices
 prerequisites_met: true
-authorized_by: GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
+authorized_by: GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING
 date_authorized: 2026-03-21
 notes: |
-  TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 is now CLOSED after the
-  already-recorded bounded implementation, bounded verification PASS,
-  governance-sync reconciliation, and mandatory post-close audit in the same
-  closure operation.
-  Audit result: DECISION_REQUIRED.
-  The broad bounded G-026 v1 routing stream remains unopened.
-  No broader domain authorization was created.
-  Resolver-only texqtic_service posture remains canonical.
-  No custom-domain, apex-domain, DNS-verification, or broader white-label
-  domain lifecycle authorization was created.
-  No new unit was opened by implication.
-  The next governance-valid move requires explicit operator sequencing or
-  decision work only.
-  TECS-FBW-ADMINRBAC remains DESIGN_GATE.
-  RFQ remains capped at pre-negotiation.
+  This is the sole bounded implementation-ready verification-hardening unit.
+  Scope is limited to repo-runnable runtime verification for already-implemented
+  tenant-enterprise UI smoke paths, realm/session transitions, affected
+  frontend/backend response-envelope checks, and white-label seeded
+  storefront/catalog visibility and data-state paths.
+  The unit exists because recent bounded implementations passed typecheck and
+  bounded verification while real runtime failures still escaped to manual UI
+  inspection.
+  No broad QA transformation, CI redesign, auth redesign, catalog redesign,
+  schema/migration work, product feature work, custom-domain/apex/DNS work,
+  AdminRBAC expansion, RFQ expansion, or governance closure is authorized.
 ```

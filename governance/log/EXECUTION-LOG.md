@@ -1812,3 +1812,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md ·
   governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING.md ·
   governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md
+
+---
+
+### GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING — 2026-03-21
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING)
+Title: Open one bounded runtime verification hardening unit for implemented tenant-enterprise and white-label slices
+Summary: Governance-only decision/opening unit. Opened `TECS-RUNTIME-VERIFICATION-HARDENING-001`
+  as the sole bounded implementation-ready verification-hardening slice after confirming that
+  recent bounded implementations still allowed runtime failures to escape to manual operator UI
+  inspection. The opened unit is limited to executable tenant-enterprise UI smoke verification,
+  realm/session transition verification, affected frontend/backend response-envelope verification,
+  white-label seeded storefront/catalog visibility and data-state verification, and one
+  repo-runnable verification path only.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-RUNTIME-VERIFICATION-HARDENING-001.md created as OPEN; Layer 2 —
+  governance/decisions/GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No product code, tests, schema, migrations, Prisma models, routes, contracts, or CI files
+  were modified in this opening step. No broad QA transformation, broad CI redesign, broad auth
+  redesign, broad catalog redesign, AdminRBAC expansion, RFQ expansion, or domain-routing work was
+  opened.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING.md ·
+  governance/units/TECS-RUNTIME-VERIFICATION-HARDENING-001.md
