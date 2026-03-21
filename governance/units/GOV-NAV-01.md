@@ -34,8 +34,9 @@ and sequencing ergonomics that preserve doctrine.
 This is a bounded governance-navigation unit only. No implementation of tooling, product
 behavior, or doctrine rewrite is authorized.
 
-Implementation and verification of the bounded governance-navigation design content are now
-complete inside this unit. The unit remains `OPEN` pending a separate governance-sync phase.
+Implementation, verification, and governance sync of the bounded governance-navigation design
+content are now complete inside this unit. The unit remains `OPEN` pending a separate closure
+phase.
 
 ## Acceptance Criteria
 
@@ -84,11 +85,16 @@ No other files are authorized for edit in this opening step.
 - Disposition decision id: `GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION`
 - Readiness decision id: `GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION`
 - Opening decision id: `GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING`
+- Opening commit: `81b44f3` — `[TEXQTIC] governance: open GOV-NAV-01 bounded navigation-layer upgradation child`
 - Implementation commit: `cdcb26c` — `[TEXQTIC] governance: implement GOV-NAV-01 bounded navigation-layer upgradation design`
+- Verification commit: `079a30d` — `[TEXQTIC] governance: verify GOV-NAV-01 bounded navigation-layer upgradation design`
 - Preserved Layer 0 posture on entry: `GOV-NAV-01` is `OPEN`, `GOV-NAV-01` is the sole active `OPEN` governed unit, `NEXT-ACTION` points only to `GOV-NAV-01`, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, `GOV-VERIFY-01` remains `CLOSED`, no broader AdminRBAC posture is implied, and no broader G-026 posture is implied
 - This implementation preserves that `OPEN` is not `IMPLEMENTED`, `IMPLEMENTED` is not `VERIFIED_COMPLETE`, and `VERIFIED_COMPLETE` is not `CLOSED`
 - Verification result: `VERIFY-GOV-NAV-01` — `VERIFIED_PASS`
 - Verification confirmation: file-grounded navigation-design review complete, implementation file-scope compliance confirmed against commit `cdcb26c`, Layer 0 and Layer 3 remain internally consistent for a post-verification pre-sync state, governance lint compatible, and no unrelated worktree caveat was present at verification time
+- Governance sync unit: `GOVERNANCE-SYNC-GOV-NAV-01`
+- Governance sync result: implementation-complete and `VERIFIED_PASS` are now canonically reconciled within the bounded governance-navigation unit; `GOV-NAV-01` remains `OPEN`, is sync-complete, and is closure-ready only after this sync
+- Governance sync commit: `(this step — see git log for GOVERNANCE-SYNC-GOV-NAV-01)`
 
 ## Exact In-Scope Boundary
 
@@ -303,13 +309,13 @@ None of those are opened or authorized by this unit.
 
 ## Allowed Next Step
 
-Governance sync of `GOV-NAV-01` governance-navigation design only.
+Governance closure of `GOV-NAV-01` governance-navigation design only.
 
 ## Forbidden Next Step
 
 Any product, tooling, CI, Playwright, test, governance-lint, script, schema, contract,
-AdminRBAC, G-026, or doctrine-rewrite implementation, any second-unit opening, or closure before
-separate governance sync.
+AdminRBAC, G-026, or doctrine-rewrite implementation, any second-unit opening, or any step other
+than separate closure for this unit.
 
 ## Drift Guards
 
@@ -386,3 +392,18 @@ Intentionally excluded:
 `GOV-NAV-01` remains `OPEN` as the sole bounded governed unit for this cycle.
 `NEXT-ACTION` must point only to separate governance sync for `GOV-NAV-01` until a later
 governance step changes it.
+
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-GOV-NAV-01`
+- Status truth after sync: `GOV-NAV-01` remains `OPEN`
+- Sync result: implementation-complete and `VERIFIED_PASS` are now canonically reconciled within the bounded governance-navigation unit
+- Next-action posture after sync: `GOV-CLOSE-GOV-NAV-01`
+- This sync is recording only; it is not closure and does not open any new unit
+
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-GOV-NAV-01`
+- Status transition: `OPEN` → `CLOSED`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Mandatory post-close audit result: `DECISION_REQUIRED`

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING)
+**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-GOV-NAV-01)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -27,7 +27,7 @@
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **Total non-terminal units: 2**
 
-GOV-NAV-01 is now OPEN as the sole bounded governance-navigation unit for the current cycle. The opened scope is limited to lighter-weight paths for low-risk approvals and acknowledgments, clearer distinctions between doctrine-changing versus opening/authorization versus low-risk meta-confirmation versus post-close advisory moves, reduced ceremony for non-authorizing governance records, and sequencing ergonomics that preserve one-unit discipline, atomic commits, explicit boundaries, mandatory post-close audit, conservative wording rules, human-only governance judgment where required, and evidence-triggered hardening. No product implementation, doctrine rewrite, governance-lint change, verification tooling rollout, CI rollout, Playwright rollout, test rollout, workflow collapse, automatic authorization shortcut, AdminRBAC reopening, or G-026 reopening is authorized by this opening.
+GOV-NAV-01 remains OPEN as the sole bounded governance-navigation unit for the current cycle. Implementation and verification are now canonically reconciled as complete within the opened boundary, the unit is sync-complete and closure-ready only after this sync, and the bounded scope remains limited to lighter-weight paths for low-risk approvals and acknowledgments, clearer distinctions between doctrine-changing versus opening/authorization versus low-risk meta-confirmation versus post-close advisory moves, reduced ceremony for non-authorizing governance records, and sequencing ergonomics that preserve one-unit discipline, atomic commits, explicit boundaries, mandatory post-close audit, conservative wording rules, human-only governance judgment where required, and evidence-triggered hardening. No doctrine rewrite, governance-lint change, verification tooling rollout, CI rollout, Playwright rollout, test rollout, workflow collapse, automatic authorization shortcut, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening is authorized by this sync.
 
 GOV-VERIFY-01 closed 2026-03-21 after the bounded opening, implementation, verification, governance-sync, and closure chain. It remains completed governance truth for TexQtic's mandatory automated verification policy design only: declared verification profiles at Opening, closure evidence requirements by unit type and acceptance boundary, bounded category expectations, explicit closure-verdict posture, manual-check advisory posture, and forbidden expansion protections are preserved as delivered policy content. No Playwright implementation, tests, verifier tooling, CI workflows, governance-lint refinement, package changes, product changes, schema changes, AdminRBAC reopening, G-026 reopening, navigation-layer implementation, broad QA transformation, broad CI redesign, or repo-wide enforcement rollout was authorized by this closed unit.
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.

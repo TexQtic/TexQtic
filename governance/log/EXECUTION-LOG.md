@@ -2710,6 +2710,35 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-SYNC-GOV-NAV-01 — 2026-03-21
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for GOVERNANCE-SYNC-GOV-NAV-01)
+Title: Record verified completion of the bounded governance-navigation design unit
+Summary: Governance-only sync unit. Recorded `GOV-NAV-01` as implementation-complete and
+  verification-complete within the opened boundary after opening commit `81b44f3`,
+  implementation commit `cdcb26c`, and verification commit `079a30d`. Layer 0 and Layer 1 were
+  reconciled while `GOV-NAV-01` remained `OPEN`, remained the sole active governed unit, and
+  became sync-complete and closure-ready only after this step. Scope remained limited to the
+  bounded governance-navigation design unit only: core navigation rule, move-type
+  classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics
+  rule, human-judgment preservation rule, evidence-trigger rule, conservative wording
+  preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit
+  exclusions/non-goals, separately-governed future follow-on posture, and drift-guard /
+  forbidden-expansion-by-implication protections.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-NAV-01.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. This is sync only, not closure; `GOV-NAV-01`
+  remains `OPEN`, no doctrine rewrite, governance-lint modification, tooling rollout,
+  Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work,
+  AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or
+  second-unit opening was authorized or implied.
+Refs: governance/units/GOV-NAV-01.md · governance/control/OPEN-SET.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### VERIFY-GOV-NAV-01 — 2026-03-21
 Type: VERIFICATION
 Status: VERIFIED_COMPLETE
