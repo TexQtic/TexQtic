@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-21
 last_unit_closed: GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001
-last_commit: "governance(adminrbac): close revoke-remove opening clarification"
+last_commit: "[TEXQTIC] governance: decide adminrbac revoke-remove sequencing posture"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -50,6 +50,8 @@ layer_4_installed: true
 
 **0 implementation units are currently OPEN.** TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 is now `CLOSED` after bounded implementation, bounded verification, governance sync, and the mandatory post-close audit result `DECISION_REQUIRED`. READY_FOR_OPENING remained opening-readiness only, no AdminRBAC implementation child is open, no new implementation opening is implied, and TECS-FBW-ADMINRBAC remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
+`GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
+
 `TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001` is now `CLOSED` after bounded implementation, bounded verification, governance sync, and the mandatory post-close audit result `DECISION_REQUIRED`. Broad G-026 remains unopened and no broader routing authorization is implied by this closure.
 `TECS-RUNTIME-VERIFICATION-HARDENING-001` is now `CLOSED` after bounded implementation, bounded verification, governance sync, and the mandatory post-close audit result `DECISION_REQUIRED`. The repo-runnable runtime verification path exists, the covered failure classes now surface automatically for the bounded tenant-enterprise and white-label slices, and broad QA transformation, broad CI redesign, auth redesign, catalog redesign, AdminRBAC expansion, RFQ expansion, and domain-routing work all remain unopened.
 
@@ -78,7 +80,7 @@ RFQ remains pre-negotiation:
 `OPERATOR_DECISION_REQUIRED`.
 No implementation-ready unit is OPEN.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 is now `CLOSED` after implementation commit `4ede95d`, governance sync commit `8c58bcd`, and mandatory post-close audit result `DECISION_REQUIRED`. READY_FOR_OPENING remained opening-readiness only, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, and no invite, role-change, tenant-scope, or broader authority expansion was authorized. Any stronger move still requires explicit operator sequencing or decision work and must not be inferred from this closed bounded clarification unit.
+GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY is now `DECIDED`. The closed revoke/remove clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no opening was created by this decision. The next possible AdminRBAC move, if separately chosen later, is a bounded revoke/remove opening artifact only. No invite, role-change, tenant-scope, or broader authority expansion was authorized.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -128,6 +130,7 @@ These are distinct closed units and must not be conflated.
 - GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 (2026-03-21): recorded `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001` as `VERIFIED_COMPLETE` after implementation commit `4ede95d` and bounded governance verification confirmation with no verification commit required. The unit remains clarification-only, `READY_FOR_OPENING` remains opening-readiness only, revoke/remove implementation is not opened, the candidate remains bounded to control-plane revoke/remove posture only, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no invite, role-change, tenant-scope, or broader authority expansion was authorized, and the unit is postured for Close only. No new opening is implied.
 - GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 (2026-03-21): `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001` transitioned `VERIFIED_COMPLETE` → `CLOSED` after the already-recorded implementation, verification, and governance-sync chain. The unit remained clarification-only, `READY_FOR_OPENING` remained opening-readiness only, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, no invite, role-change, tenant-scope, or broader authority expansion was authorized, and `NEXT-ACTION` now returns to `OPERATOR_DECISION_REQUIRED`.
 - GOV-AUDIT-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001-POST-CLOSE (2026-03-21): mandatory post-close audit emitted in the same closure operation. Audit result: `DECISION_REQUIRED`. Natural next-step candidates: `DECISION_REQUIRED`, `HOLD`, `RECORD_ONLY`, `DESIGN_REFINEMENT`, `OPENING_CANDIDATE`. Ranked recommendation: `DECISION_REQUIRED` because this bounded clarification unit is now fully closed, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, revoke/remove remains candidate-only and not opened, and any stronger move still requires explicit operator sequencing rather than implication from this closure. `NEXT-ACTION` now returns to `OPERATOR_DECISION_REQUIRED`.
+- GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY (2026-03-21): recorded the disposition that the closed AdminRBAC revoke/remove clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but does not itself open revoke/remove work. `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no implementation-ready unit is open, and any later movement still requires a separate bounded opening artifact.
 - Governance OS control plane installed 2026-03-17 by GOV-OS-002
 - Canonical operational files: `governance/control/` (5 files — this directory)
 - Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`, `IMPLEMENTATION-TRACKER-2026-Q2.md`, `2026-03-audit-reconciliation-matrix.md`) have been archived to `governance/archive/` (GOV-OS-007, 2026-03-17) and replaced with pointer stubs; they are NOT operational truth

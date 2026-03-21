@@ -2138,6 +2138,31 @@ Refs: governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY.md ·
 
 ---
 
+### GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY — 2026-03-21
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY)
+Title: Record the revoke/remove opening-eligibility decision for AdminRBAC
+Summary: Governance-only decision-record unit. Recorded the disposition that the closed
+  AdminRBAC clarification chain is now sufficient to make one separate bounded revoke/remove
+  opening governance-eligible, but does not itself open revoke/remove work. The smallest truthful
+  eligible slice remains control-plane revoke/remove authority only, and invite, role-change,
+  tenant-scope, and broader authority expansion all remain unopened or excluded.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed;
+  Layer 2 — governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: `OPEN-SET.md` remains unchanged. `NEXT-ACTION.md` stays `OPERATOR_DECISION_REQUIRED`
+  because no implementation-ready unit is opened by this decision. No product code, tests,
+  schema, migrations, Prisma models, contracts, or unit records changed. This decision does not
+  itself authorize implementation and still requires a separate bounded opening artifact if
+  TexQtic later chooses to proceed.
+Refs: governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY.md ·
+  governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001.md
+
+---
+
 ### GOV-DEC-G026-FIRST-ROUTING-OPENING — 2026-03-20
 Type: GOVERNANCE / OPENING-DECISION
 Status: CLOSED
