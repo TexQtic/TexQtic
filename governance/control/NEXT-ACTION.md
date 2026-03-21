@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-AUDIT-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001-POST-CLOSE)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -10,19 +10,13 @@ unit_id: OPERATOR_DECISION_REQUIRED
 type: GOVERNANCE
 title: Await explicit operator sequencing after closing the bounded revoke/remove child unit
 prerequisites_met: true
-authorized_by: GOV-AUDIT-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001-POST-CLOSE
+authorized_by: GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION
 date_authorized: 2026-03-21
 notes: |
-  TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 is now CLOSED after implementation commit d51a2a8,
-  governance-sync commit 794fcd4, bounded verification evidence, and mandatory post-close audit
-  result DECISION_REQUIRED.
-  TECS-FBW-ADMINRBAC remains DESIGN_GATE.
-  The closed unit remained limited to control-plane revoke/remove authority only: SuperAdmin
-  actor only, existing non-SuperAdmin internal control-plane admin target only,
-  no self-revoke, no peer-SuperAdmin revoke, next-request authorization failure
-  after revoke/remove preserved, refresh-token invalidation preserved, and explicit
-  audit traceability required. No invite, role-change, tenant-scope, or broader
-  authority expansion was opened, and no broader AdminRBAC implementation opening was created.
-  Resulting Layer 0 posture returns to OPERATOR_DECISION_REQUIRED unless a later separate
-  operator decision or opening authorizes additional work.
+  No implementation-ready unit is OPEN. GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION
+  is now DECIDED and records only that TexQtic may later consider one separate bounded automated
+  verification policy-design opening candidate. That candidate is limited to declared verification
+  profiles and closure evidence requirements by unit type and acceptance boundary. No policy-design
+  unit is opened, no implementation or workflow change is authorized, TECS-FBW-ADMINRBAC remains
+  DESIGN_GATE, and resulting Layer 0 posture remains OPERATOR_DECISION_REQUIRED.
 ```

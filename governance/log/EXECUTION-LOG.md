@@ -2238,6 +2238,30 @@ Notes: Layer 0 remains unchanged. `NEXT-ACTION.md` stays `OPERATOR_DECISION_REQU
   implementation and still requires a separate bounded opening artifact if TexQtic later chooses
   to proceed.
 Refs: governance/decisions/GOV-DEC-G026-FIRST-ROUTING-OPENING-ELIGIBILITY.md ·
+
+---
+
+### GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION — 2026-03-21
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION)
+Title: Record the disposition of a bounded automated verification policy-design candidate
+Summary: Governance-only decision-record unit. Recorded the disposition that TexQtic may later
+  consider one separate bounded automated verification policy-design opening candidate, but does
+  not itself open any verification/process unit. The candidate, if later separately opened, is
+  limited to declared verification profiles and closure evidence requirements by unit type and
+  acceptance boundary only. No Playwright, CI, script, package, linter, product, contract,
+  schema, migration, Prisma, AdminRBAC, or G-026 change is authorized by this decision.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed for carry-forward posture;
+  Layer 2 — governance/decisions/GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. NEXT-ACTION remains
+  OPERATOR_DECISION_REQUIRED because no implementation-ready unit is opened and no policy-design
+  opening is created by this decision. No product code, tests, Playwright suites, CI workflows,
+  scripts, package manifests, schema, migrations, Prisma, or unit records changed.
+Refs: governance/decisions/GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
   governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
   governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
 
