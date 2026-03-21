@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001
 title: AdminRBAC next mutation child boundary clarification
 type: GOVERNANCE
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
 closed: null
-verified: null
-commit: null
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: clarification outcome recorded; narrowest truthful next mutation child candidate is control-plane admin access revoke/remove only, with SuperAdmin-only actor posture, explicit audit requirements, and session/token invalidation explicitly treated as in-scope boundary rather than deferred ambient behavior"
+verified: 2026-03-21
+commit: ec2c614
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: clarification outcome recorded and verified; narrowest truthful next mutation child candidate remains control-plane admin access revoke/remove authority only, with SuperAdmin-only actor posture, explicit audit requirements, session/token invalidation explicitly treated as in-scope boundary rather than deferred ambient behavior, governance:lint PASS, and no implementation child opened or implied"
 doctrine_constraints:
   - D-004: this is one bounded clarification unit only; no implementation, verification, sync, or closure work may be mixed in
   - D-007: governance units must not touch application code, schema, tests, or CI scripts
@@ -72,6 +72,8 @@ Expected candidates for the future clarification prompt only:
 ## Evidence Record
 
 - Opening decision: `GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING`
+- Implementation commit: `ec2c614` — `governance(adminrbac): clarify next mutation child boundary`
+- Verification confirmation: governance-only verification completed with `pnpm run governance:lint` PASS and clean worktree; no verification commit required
 - Broad parent remains non-open: `TECS-FBW-ADMINRBAC` is still `DESIGN_GATE`
 - Closed first child preserved: `TECS-FBW-ADMINRBAC-REGISTRY-READ-001` remains `CLOSED`
 - Current mutation question still unresolved at the exact child-boundary level:
@@ -198,6 +200,13 @@ The exact shape of a possible later governance step, if later chosen, should be:
 
 This unit does **not** perform that decision/opening.
 
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after sync: `GOV-CLOSE-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001`
+- Sync preserves clarification-only posture, keeps the next mutation child candidate-only, and does not open any AdminRBAC implementation unit
+
 ## Allowed Next Step
 
 Bounded governance clarification only for this unit.
@@ -228,3 +237,12 @@ Bounded governance clarification only for this unit.
 | What is the single authorized next action? | `governance/control/NEXT-ACTION.md` |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
+
+## Last Governance Confirmation
+
+2026-03-21 — `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001`. Status
+transitioned: `OPEN` → `VERIFIED_COMPLETE` after implementation commit `ec2c614` and
+bounded governance verification confirmation. Scope remains clarification-only, the next
+mutation child remains candidate-only and limited to control-plane admin access
+revoke/remove authority, no AdminRBAC implementation unit was opened, TECS-FBW-ADMINRBAC
+remains `DESIGN_GATE`, and no new opening is implied.

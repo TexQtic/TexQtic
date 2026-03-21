@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING)
+**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,14 +13,14 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 | AdminRBAC next mutation child boundary clarification | OPEN | W5 | 2026-03-21 |
+| TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 | AdminRBAC next mutation child boundary clarification | VERIFIED_COMPLETE | W5 | 2026-03-21 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1**
+- **OPEN** (implementation-ready): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
@@ -43,9 +43,9 @@ TECS-G026-DESIGN-CLARIFICATION-001 closed 2026-03-20 after recording the bounded
 TECS-G026-CLEANUP-REMEDIATION-001 closed 2026-03-20 after implementation commit 0f3d2c3, governance-sync commit f21ef8c, the already-recorded authoritative remote Supabase verification PASS, and a conservative closure step with mandatory post-close audit result `HOLD`. Broad G-026 routing remains unopened and no routing implementation-ready G-026 stream is OPEN.
 TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 closed 2026-03-21 after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11, governance-sync commit 963c9359eb551cef076913722071e4577cf7040f, and the mandatory post-close audit result `DECISION_REQUIRED`. Broad G-026 remains unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture remains canonical, and no new routing unit is opened by implication.
 TECS-RUNTIME-VERIFICATION-HARDENING-001 closed 2026-03-21 after implementation commit 858505b, governance-sync commit e4b3e1e, and the mandatory post-close audit result `DECISION_REQUIRED`. Scope remained limited to repo-runnable runtime verification for already-implemented tenant-enterprise UI/auth/contract paths and white-label seeded storefront/catalog visibility/data-state paths only; covered runtime failure classes now surface automatically for those bounded slices, and no broad QA, CI, auth, catalog, AdminRBAC, RFQ, or domain-routing program was opened by implication.
-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 is OPEN as the sole bounded next governed unit. Scope is limited to clarifying the next truthful AdminRBAC mutation child after the closed registry-read slice: whether invite, revoke/remove, or role assignment/change may later be sequenced first, what exact in-scope and out-of-scope boundary that child would carry, and whether invitation transport, account setup, session/token propagation, or audit-model detail must remain outside that later child or be explicitly bounded into it. No implementation unit is opened by this decision.
+TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 is VERIFIED_COMPLETE after implementation commit ec2c614 and bounded governance verification confirmation. Scope remains clarification-only: the next mutation child remains candidate-only and is limited to control-plane admin access revoke/remove authority, no implementation unit is opened, no invite, role-change, tenant-scope, or broader authority expansion is authorized, and no new opening is implied. The unit is postured for Close only and is not closed by this sync.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-No AdminRBAC implementation unit is currently OPEN; the sole OPEN unit is clarification-only.
+No implementation-ready unit is currently OPEN; no AdminRBAC implementation unit was opened by this sync.
 
 ---
 
