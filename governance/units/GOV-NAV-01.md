@@ -7,9 +7,9 @@ wave: W5
 plane: CONTROL
 opened: 2026-03-21
 closed: null
-verified: null
-commit: null
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION recorded the bounded navigation-layer direction only as one later separate OPENING_CANDIDATE; GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION recorded that the bounded child is READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING opened GOV-NAV-01 as the sole bounded governance-navigation unit for the current cycle; IMPLEMENTATION_RESULT: GOV-NAV-01 governance-navigation design content is now implemented within the opened boundary only, with no product implementation, doctrine rewrite, governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout, AdminRBAC reopening, G-026 reopening, workflow collapse, or automatic authorization shortcut authorized"
+verified: 2026-03-21
+commit: cdcb26c
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION recorded the bounded navigation-layer direction only as one later separate OPENING_CANDIDATE; GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION recorded that the bounded child is READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING opened GOV-NAV-01 as the sole bounded governance-navigation unit for the current cycle; IMPLEMENTATION_RESULT: GOV-NAV-01 governance-navigation design content is now implemented within the opened boundary only, with no product implementation, doctrine rewrite, governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout, AdminRBAC reopening, G-026 reopening, workflow collapse, or automatic authorization shortcut authorized; VERIFICATION_RESULT: VERIFIED_PASS for the bounded governance-navigation design content only, with implementation file-scope compliance confirmed against commit cdcb26c and no unrelated worktree caveat present at verification time"
 doctrine_constraints:
   - D-004: this is one bounded governance-navigation unit only; no second navigation/process child or broad rewrite may be mixed in
   - D-007: governance-only units must not touch application code, schema, tests, CI workflows, or repo tooling under this opening
@@ -34,8 +34,8 @@ and sequencing ergonomics that preserve doctrine.
 This is a bounded governance-navigation unit only. No implementation of tooling, product
 behavior, or doctrine rewrite is authorized.
 
-Implementation of the bounded governance-navigation design content is now complete inside this
-unit. The unit remains `OPEN` pending a separate verification phase.
+Implementation and verification of the bounded governance-navigation design content are now
+complete inside this unit. The unit remains `OPEN` pending a separate governance-sync phase.
 
 ## Acceptance Criteria
 
@@ -84,8 +84,11 @@ No other files are authorized for edit in this opening step.
 - Disposition decision id: `GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION`
 - Readiness decision id: `GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION`
 - Opening decision id: `GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING`
+- Implementation commit: `cdcb26c` — `[TEXQTIC] governance: implement GOV-NAV-01 bounded navigation-layer upgradation design`
 - Preserved Layer 0 posture on entry: `GOV-NAV-01` is `OPEN`, `GOV-NAV-01` is the sole active `OPEN` governed unit, `NEXT-ACTION` points only to `GOV-NAV-01`, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, `GOV-VERIFY-01` remains `CLOSED`, no broader AdminRBAC posture is implied, and no broader G-026 posture is implied
 - This implementation preserves that `OPEN` is not `IMPLEMENTED`, `IMPLEMENTED` is not `VERIFIED_COMPLETE`, and `VERIFIED_COMPLETE` is not `CLOSED`
+- Verification result: `VERIFY-GOV-NAV-01` — `VERIFIED_PASS`
+- Verification confirmation: file-grounded navigation-design review complete, implementation file-scope compliance confirmed against commit `cdcb26c`, Layer 0 and Layer 3 remain internally consistent for a post-verification pre-sync state, governance lint compatible, and no unrelated worktree caveat was present at verification time
 
 ## Exact In-Scope Boundary
 
@@ -300,12 +303,13 @@ None of those are opened or authorized by this unit.
 
 ## Allowed Next Step
 
-Verification of `GOV-NAV-01` governance-navigation design only.
+Governance sync of `GOV-NAV-01` governance-navigation design only.
 
 ## Forbidden Next Step
 
 Any product, tooling, CI, Playwright, test, governance-lint, script, schema, contract,
-AdminRBAC, G-026, or doctrine-rewrite implementation.
+AdminRBAC, G-026, or doctrine-rewrite implementation, any second-unit opening, or closure before
+separate governance sync.
 
 ## Drift Guards
 
@@ -339,8 +343,46 @@ This unit must not be interpreted as authorizing:
 - navigation-layer implementation outside governance-navigation design
 - any second open unit
 
-## Implementation Consequence
+## Verification Record
+
+- Verification unit: `VERIFY-GOV-NAV-01`
+- Verification date: `2026-03-21`
+- Normalized verdict: `VERIFIED_PASS`
+- Commit readiness: `commit allowed`
+- Unrelated worktree caveat: none
+
+Verified content:
+
+- core navigation simplification rule present
+- move-type classification model present
+- low-risk path eligibility criteria present
+- non-authorizing ceremony reduction rules present
+- sequencing ergonomics rules present
+- human-judgment preservation rules present
+- evidence-trigger preservation rules present
+- conservative wording preservation rules present
+- reporting-correction versus repo-state-correction rules present
+- advisory and carry-forward note rules present
+- explicit exclusions and non-goals present
+- allowed future follow-on categories present and bounded
+- drift guards present
+- forbidden expansion-by-implication posture present
+- implementation file-scope compliance confirmed against commit `cdcb26c`
+- Layer 0 and Layer 3 remain internally consistent for a post-verification, pre-sync state
+
+Not verified:
+
+- no tooling rollout, CI rollout, Playwright rollout, test rollout, product/runtime behavior, deployment behavior, doctrine rewrite, or schema behavior was verified because those are outside this bounded governance-navigation verification boundary
+
+Intentionally excluded:
+
+- governance sync
+- closure
+- any new opening
+- any product or schema verification outside this unit's governance-navigation design content
+
+## Verification Consequence
 
 `GOV-NAV-01` remains `OPEN` as the sole bounded governed unit for this cycle.
-`NEXT-ACTION` must point only to separate verification for `GOV-NAV-01` until a later
+`NEXT-ACTION` must point only to separate governance sync for `GOV-NAV-01` until a later
 governance step changes it.
