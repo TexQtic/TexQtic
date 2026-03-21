@@ -2682,3 +2682,28 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md ·
   governance/decisions/GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING.md ·
   governance/units/GOV-NAV-01.md
+
+---
+
+### GOV-NAV-01 — 2026-03-21
+Type: GOVERNANCE / IMPLEMENTATION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-NAV-01)
+Title: Implement the bounded navigation-layer upgradation design
+Summary: Governance-only implementation unit. Implemented the bounded governance-navigation
+  design content inside `GOV-NAV-01` only. The implemented design now records the core navigation
+  simplification rule, move-type classification model, low-risk path eligibility criteria,
+  non-authorizing ceremony reduction rules, sequencing ergonomics rules, human-judgment
+  preservation rules, evidence-trigger preservation rules, conservative wording preservation
+  rules, reporting-correction versus repo-state-correction rules, advisory/carry-forward note
+  rules, explicit non-goals, drift guards, allowed later separately-governed follow-on
+  categories, and forbidden expansion-by-implication protections only.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-NAV-01.md updated; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: `GOV-NAV-01` remains `OPEN` and remains the sole active governed unit. The next canonical
+  phase is verification for `GOV-NAV-01` only. No doctrine rewrite, governance-lint change,
+  tooling rollout, CI rollout, Playwright rollout, test rollout, product changes, schema
+  changes, AdminRBAC reopening, G-026 reopening, or second unit opening was authorized or
+  implied.
+Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
