@@ -1,23 +1,22 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: OPERATOR_DECISION_REQUIRED
+unit_id: GOV-NAV-01
 type: GOVERNANCE
-title: Await explicit operator sequencing after recording the navigation-layer child opening disposition
+title: Implement the bounded governance-navigation design for GOV-NAV-01 only
 prerequisites_met: true
-authorized_by: GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION
+authorized_by: GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING
 date_authorized: 2026-03-21
 notes: |
-  GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION is now recorded as a decision-only
-  governance artifact. The bounded navigation-layer upgradation child is now READY_FOR_OPENING
-  only for one later separate bounded opening step. READY_FOR_OPENING is not OPEN. No
-  implementation-ready unit is OPEN, no opening was created, no navigation-layer implementation
-  was authorized, GOV-VERIFY-01 remains CLOSED, TECS-FBW-ADMINRBAC remains DESIGN_GATE, broad
-  G-026 remains unopened, and the portfolio remains at OPERATOR_DECISION_REQUIRED pending
-  explicit operator sequencing.
+  GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING is now recorded as an opening-only governance
+  artifact. GOV-NAV-01 is now OPEN as the sole bounded governance-navigation unit for the
+  current cycle. NEXT-ACTION points only to GOV-NAV-01. No implementation beyond this
+  governance-navigation unit is authorized, no product implementation, doctrine rewrite,
+  governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout,
+  AdminRBAC reopening, or G-026 reopening is authorized, and no second unit is OPEN.
 ```

@@ -2655,3 +2655,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md ·
   governance/decisions/GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING.md ·
   governance/units/TECS-RUNTIME-VERIFICATION-HARDENING-001.md
+
+---
+
+### GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING — 2026-03-21
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING)
+Title: Open GOV-NAV-01 as one bounded navigation-layer upgradation child
+Summary: Governance-only opening unit. Opened `GOV-NAV-01` as the sole bounded governance-
+  navigation unit for the current cycle after the prior disposition chain recorded the direction,
+  then recorded the child as READY_FOR_OPENING only. The opened scope is limited to lighter-weight
+  paths for low-risk approvals and acknowledgments, clearer distinctions between doctrine-changing
+  moves versus opening/authorization moves versus low-risk meta-confirmations versus post-close
+  advisory observations, reduced ceremony for non-authorizing governance records, and sequencing
+  ergonomics that preserve existing doctrine.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-NAV-01.md created; Layer 2 —
+  governance/decisions/GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No product implementation, doctrine rewrite, governance-lint change, verification tooling,
+  CI workflow, Playwright, test, script, package, schema, migration, Prisma, RLS, seed,
+  contract, AdminRBAC, or G-026 implementation is authorized by this opening. GOV-NAV-01 is the
+  sole OPEN unit, NEXT-ACTION now points only to GOV-NAV-01, and no second unit is OPEN.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING.md ·
+  governance/units/GOV-NAV-01.md
