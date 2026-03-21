@@ -1,24 +1,25 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-AUDIT-TECS-RUNTIME-VERIFICATION-HARDENING-001-POST-CLOSE)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: OPERATOR_DECISION_REQUIRED
-type: GOVERNANCE / DECISION
-title: Operator decision required before any new governed opening
+unit_id: TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001
+type: GOVERNANCE / DESIGN-CLARIFICATION
+title: Clarify the next truthful bounded AdminRBAC mutation child and no implementation work
 prerequisites_met: true
-authorized_by: GOV-AUDIT-TECS-RUNTIME-VERIFICATION-HARDENING-001-POST-CLOSE
+authorized_by: GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING
 date_authorized: 2026-03-21
 notes: |
-  TECS-RUNTIME-VERIFICATION-HARDENING-001 is now CLOSED after implementation
-  commit 858505b, governance sync commit e4b3e1e, and the mandatory post-close
-  audit result DECISION_REQUIRED.
-  No implementation-ready unit is OPEN.
-  TECS-FBW-ADMINRBAC remains DESIGN_GATE.
-  Any stronger move still requires explicit operator sequencing or decision
-  work and must not be inferred from the closed bounded runtime-verification
-  unit.
+  TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED and does not authorize
+  continuation by implication.
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
+  The sole OPEN governed unit is clarification-only:
+  TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.
+  This unit may clarify which later AdminRBAC mutation child, if any, can be
+  truthfully sequenced next and what exact boundary it must carry. It does not
+  authorize invite, revoke/remove, role-change, session invalidation,
+  invitation transport, token propagation, or any other implementation work.
 ```

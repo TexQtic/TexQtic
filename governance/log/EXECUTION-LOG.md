@@ -1806,6 +1806,24 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING — 2026-03-21
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING)
+Title: Open one bounded AdminRBAC next mutation child boundary clarification unit and no implementation work
+Summary: Governance-only decision/opening unit. Opened `TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001` as the sole bounded next governed unit after the closed AdminRBAC registry-read child left the broad parent still in `DESIGN_GATE` with no selected next mutation slice. Scope is limited to clarifying which later AdminRBAC mutation child, if any, may be truthfully sequenced next and what exact boundary that later child must carry. No implementation unit, no verification unit, and no broader AdminRBAC authority stream was opened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md created; Layer 2 —
+  governance/decisions/GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: TECS-FBW-ADMINRBAC-REGISTRY-READ-001 remains CLOSED. TECS-FBW-ADMINRBAC remains DESIGN_GATE. This opening is clarification-only and does not authorize invite, revoke/remove, role-change, session invalidation, invitation transport, token propagation, or any other implementation work.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING.md ·
+  governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md
+
+---
+
 ### GOV-AUDIT-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001-POST-CLOSE — 2026-03-21
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED
