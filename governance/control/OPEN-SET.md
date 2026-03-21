@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-GOV-NAV-01)
+**Last Updated:** 2026-03-21 (GOV-CLOSE-GOV-NAV-01)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,21 +13,20 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 | --- | --- | --- | --- | --- |
-| GOV-NAV-01 | Bounded navigation-layer upgradation child | OPEN | W5 | 2026-03-21 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1**
+- **OPEN** (implementation-ready): **0**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
-GOV-NAV-01 remains OPEN as the sole bounded governance-navigation unit for the current cycle. Implementation and verification are now canonically reconciled as complete within the opened boundary, the unit is sync-complete and closure-ready only after this sync, and the bounded scope remains limited to lighter-weight paths for low-risk approvals and acknowledgments, clearer distinctions between doctrine-changing versus opening/authorization versus low-risk meta-confirmation versus post-close advisory moves, reduced ceremony for non-authorizing governance records, and sequencing ergonomics that preserve one-unit discipline, atomic commits, explicit boundaries, mandatory post-close audit, conservative wording rules, human-only governance judgment where required, and evidence-triggered hardening. No doctrine rewrite, governance-lint change, verification tooling rollout, CI rollout, Playwright rollout, test rollout, workflow collapse, automatic authorization shortcut, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening is authorized by this sync.
+GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 
 GOV-VERIFY-01 closed 2026-03-21 after the bounded opening, implementation, verification, governance-sync, and closure chain. It remains completed governance truth for TexQtic's mandatory automated verification policy design only: declared verification profiles at Opening, closure evidence requirements by unit type and acceptance boundary, bounded category expectations, explicit closure-verdict posture, manual-check advisory posture, and forbidden expansion protections are preserved as delivered policy content. No Playwright implementation, tests, verifier tooling, CI workflows, governance-lint refinement, package changes, product changes, schema changes, AdminRBAC reopening, G-026 reopening, navigation-layer implementation, broad QA transformation, broad CI redesign, or repo-wide enforcement rollout was authorized by this closed unit.
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
@@ -51,7 +50,7 @@ TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 closed 2026-03-21 after imple
 TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 closed 2026-03-21 after implementation commit 4ede95d, governance sync commit 8c58bcd, and the mandatory post-close audit result `DECISION_REQUIRED`. The unit remained clarification-only, `READY_FOR_OPENING` remained opening-readiness only, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, and no invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 closed 2026-03-21 after implementation commit d51a2a8, governance-sync commit 794fcd4, focused UI PASS (6 tests), focused backend PASS (4 tests), `pnpm validate:contracts` PASS, and mandatory post-close audit result `DECISION_REQUIRED`. The unit remained bounded to control-plane admin access revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and explicit audit traceability required. No invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-GOV-NAV-01 is the sole OPEN governed unit.
+No implementation-ready unit is OPEN.
 
 ---
 
@@ -59,6 +58,7 @@ GOV-NAV-01 is the sole OPEN governed unit.
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| GOV-NAV-01 | CLOSED | 2026-03-21 | 81b44f3 · cdcb26c · 079a30d · 1366bee · see git log |
 | TECS-G026-CLEANUP-REMEDIATION-001 | CLOSED | 2026-03-20 | 0f3d2c3 · f21ef8c |
 | TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 | CLOSED | 2026-03-21 | 0b8fff2 · 963c935 |
 | TECS-G026-DESIGN-CLARIFICATION-001 | CLOSED | 2026-03-20 | see git log |

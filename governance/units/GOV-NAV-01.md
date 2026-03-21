@@ -2,14 +2,14 @@
 unit_id: GOV-NAV-01
 title: Bounded navigation-layer upgradation child
 type: GOVERNANCE
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
-closed: null
+closed: 2026-03-21
 verified: 2026-03-21
 commit: cdcb26c
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION recorded the bounded navigation-layer direction only as one later separate OPENING_CANDIDATE; GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION recorded that the bounded child is READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING opened GOV-NAV-01 as the sole bounded governance-navigation unit for the current cycle; IMPLEMENTATION_RESULT: GOV-NAV-01 governance-navigation design content is now implemented within the opened boundary only, with no product implementation, doctrine rewrite, governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout, AdminRBAC reopening, G-026 reopening, workflow collapse, or automatic authorization shortcut authorized; VERIFICATION_RESULT: VERIFIED_PASS for the bounded governance-navigation design content only, with implementation file-scope compliance confirmed against commit cdcb26c and no unrelated worktree caveat present at verification time"
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION recorded the bounded navigation-layer direction only as one later separate OPENING_CANDIDATE; GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION recorded that the bounded child is READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING opened GOV-NAV-01 as the sole bounded governance-navigation unit for the current cycle; IMPLEMENTATION_RESULT: GOV-NAV-01 governance-navigation design content is now implemented within the opened boundary only, with no product implementation, doctrine rewrite, governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout, AdminRBAC reopening, G-026 reopening, workflow collapse, or automatic authorization shortcut authorized; VERIFICATION_RESULT: VERIFIED_PASS for the bounded governance-navigation design content only, with implementation file-scope compliance confirmed against commit cdcb26c and no unrelated worktree caveat present at verification time; GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification completed successfully within the opened boundary, sync completed under commit 1366bee, GOV-NAV-01 is now CLOSED after this step together with mandatory post-close audit result DECISION_REQUIRED, and no doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized"
 doctrine_constraints:
   - D-004: this is one bounded governance-navigation unit only; no second navigation/process child or broad rewrite may be mixed in
   - D-007: governance-only units must not touch application code, schema, tests, CI workflows, or repo tooling under this opening
@@ -34,9 +34,8 @@ and sequencing ergonomics that preserve doctrine.
 This is a bounded governance-navigation unit only. No implementation of tooling, product
 behavior, or doctrine rewrite is authorized.
 
-Implementation, verification, and governance sync of the bounded governance-navigation design
-content are now complete inside this unit. The unit remains `OPEN` pending a separate closure
-phase.
+Opening, implementation, verification, governance sync, and closure of the bounded governance-
+navigation design content are now complete inside this unit. The unit is now `CLOSED`.
 
 ## Acceptance Criteria
 
@@ -94,7 +93,10 @@ No other files are authorized for edit in this opening step.
 - Verification confirmation: file-grounded navigation-design review complete, implementation file-scope compliance confirmed against commit `cdcb26c`, Layer 0 and Layer 3 remain internally consistent for a post-verification pre-sync state, governance lint compatible, and no unrelated worktree caveat was present at verification time
 - Governance sync unit: `GOVERNANCE-SYNC-GOV-NAV-01`
 - Governance sync result: implementation-complete and `VERIFIED_PASS` are now canonically reconciled within the bounded governance-navigation unit; `GOV-NAV-01` remains `OPEN`, is sync-complete, and is closure-ready only after this sync
-- Governance sync commit: `(this step — see git log for GOVERNANCE-SYNC-GOV-NAV-01)`
+- Governance sync commit: `1366bee` — `[TEXQTIC] governance: sync GOV-NAV-01 bounded navigation-layer upgradation design`
+- Governance close unit: `GOV-CLOSE-GOV-NAV-01`
+- Governance close commit: `(this step — see git log for GOV-CLOSE-GOV-NAV-01)`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
 
 ## Exact In-Scope Boundary
 
@@ -309,13 +311,14 @@ None of those are opened or authorized by this unit.
 
 ## Allowed Next Step
 
-Governance closure of `GOV-NAV-01` governance-navigation design only.
+No further implementation, verification, governance-sync, or closure work is authorized inside this closed unit.
 
 ## Forbidden Next Step
 
-Any product, tooling, CI, Playwright, test, governance-lint, script, schema, contract,
-AdminRBAC, G-026, or doctrine-rewrite implementation, any second-unit opening, or any step other
-than separate closure for this unit.
+- Do **not** revise the completed navigation-design substance under this unit
+- Do **not** implement tooling, Playwright, tests, verifier tooling, CI, governance-lint, product behavior, schema, migrations, Prisma, seeds, contracts, or RLS under this unit
+- Do **not** reopen AdminRBAC or G-026 under this unit
+- Do **not** treat this closure as authorization for doctrine rewrite, tooling rollout, Playwright rollout, test rollout, verifier implementation, CI rollout, governance-lint modification, product/schema work, navigation-layer implementation beyond design, or any second unit
 
 ## Drift Guards
 
@@ -407,3 +410,14 @@ governance step changes it.
 - Status transition: `OPEN` → `CLOSED`
 - Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
 - Mandatory post-close audit result: `DECISION_REQUIRED`
+
+## Last Governance Confirmation
+
+2026-03-21 — `GOV-CLOSE-GOV-NAV-01`. Status transitioned: `OPEN` → `CLOSED` after the
+already-recorded opening, bounded implementation, bounded verification, and governance-sync chain,
+together with mandatory post-close audit result `DECISION_REQUIRED`. The completed unit remains
+bounded to governance navigation design only, the delivered navigation truth is preserved, no
+doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout,
+verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening,
+navigation-layer implementation beyond design, or second-unit opening was authorized, and the
+portfolio returns to `OPERATOR_DECISION_REQUIRED`.

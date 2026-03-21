@@ -1,23 +1,21 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-NAV-01)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-CLOSE-GOV-NAV-01)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: GOV-NAV-01
+unit_id: OPERATOR_DECISION_REQUIRED
 type: GOVERNANCE
-title: Close the bounded governance-navigation design for GOV-NAV-01 only
+title: Operator decision required before any new governed work
 prerequisites_met: true
-authorized_by: GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING
+authorized_by: GOV-CLOSE-GOV-NAV-01
 date_authorized: 2026-03-21
 notes: |
-  GOVERNANCE-SYNC-GOV-NAV-01 is now recorded. GOV-NAV-01 remains OPEN as the sole active
-  governed unit, implementation and verification are canonically reconciled as complete within
-  the bounded governance-navigation unit, and the unit is now sync-complete and closure-ready
-  only. The next canonical phase is separate closure for GOV-NAV-01 only. No doctrine rewrite,
-  governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout,
-  product implementation, AdminRBAC reopening, G-026 reopening, or second-unit opening was
-  authorized or implied.
+  GOV-CLOSE-GOV-NAV-01 and GOV-AUDIT-GOV-NAV-01-POST-CLOSE are now recorded. GOV-NAV-01 is
+  CLOSED, no implementation-ready unit is OPEN, TECS-FBW-ADMINRBAC remains DESIGN_GATE, broad
+  G-026 remains unopened unless separately changed elsewhere, and the portfolio returns to
+  OPERATOR_DECISION_REQUIRED. Recommendation is not authorization, and no new unit is opened by
+  this closure.
 ```

@@ -2739,6 +2739,78 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/OPEN-SET.md ·
 
 ---
 
+### GOV-AUDIT-GOV-NAV-01-POST-CLOSE — 2026-03-21
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-GOV-NAV-01-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for GOV-NAV-01
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED.
+State Summary:
+  - what was closed: GOV-NAV-01, the bounded navigation-layer upgradation child
+  - what it accomplished: delivered TexQtic's completed governance truth for bounded navigation-layer design only
+  - what it did not authorize: doctrine rewrite, governance-lint changes, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, or navigation-layer implementation beyond design
+Outstanding Gates:
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - broad G-026 remains unopened unless separately changed elsewhere
+  - navigation-layer implementation is not opened by this closure
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - a separately governed adoption or standardization child derived from GOV-NAV-01
+  - return to AdminRBAC decision sequencing
+  - a bounded ergonomics or refinement decision if still needed
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: this bounded governance-navigation unit is now fully closed, no implementation-ready unit remains open, and any stronger follow-on move still requires explicit operator sequencing rather than implication from this closure
+Why Stronger Moves Remain Blocked:
+  - doctrine rewrite remains blocked because this unit delivered bounded navigation design only and did not authorize broader governance redesign
+  - tooling rollout, verifier tooling, and CI rollout remain blocked because this closure did not authorize mechanisms or enforcement
+  - navigation-layer implementation beyond design remains blocked because this closure did not open any implementation unit
+  - AdminRBAC expansion and G-026 expansion remain blocked because TECS-FBW-ADMINRBAC remains DESIGN_GATE and broad G-026 remains unopened
+Forbidden Next Moves:
+  - do not infer doctrine rewrite, tooling rollout, Playwright rollout, test rollout, verifier implementation, or CI rollout from this closure
+  - do not infer navigation-layer implementation beyond design from this closure
+  - do not infer AdminRBAC reopening or expansion from this closure
+  - do not infer G-026 reopening or expansion from this closure
+  - do not open any second unit by implication from this closure
+Resulting Layer 0 Posture:
+  - whether any implementation-ready unit is OPEN: no
+  - resulting NEXT-ACTION posture: OPERATOR_DECISION_REQUIRED
+  - whether the portfolio has returned to OPERATOR_DECISION_REQUIRED: yes
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOV-NAV-01.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-GOV-NAV-01 — 2026-03-21
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-GOV-NAV-01)
+Title: Close the bounded navigation-layer upgradation design unit
+Summary: Governance-only closure unit. Recorded `GOV-NAV-01` as CLOSED after opening commit
+  `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, and governance-sync
+  commit `1366bee`. Layer 0, Layer 1, and Layer 3 were reconciled while the completed unit
+  remained bounded to governance navigation design only: core navigation rule, move-type
+  classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics
+  rule, human-judgment preservation rule, evidence-trigger rule, conservative wording
+  preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit
+  exclusions/non-goals, separately governed future follow-on posture, and drift-guard /
+  forbidden-expansion-by-implication protections are preserved as delivered governance truth.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-NAV-01.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. This closure is bounded to GOV-NAV-01 only; no
+  doctrine rewrite, governance-lint modification, tooling rollout, Playwright rollout, test
+  rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026
+  reopening, navigation-layer implementation beyond design, or second-unit opening was
+  authorized or implied. No implementation-ready unit remains OPEN after this closure, and the
+  portfolio returns to OPERATOR_DECISION_REQUIRED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOV-NAV-01.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### VERIFY-GOV-NAV-01 — 2026-03-21
 Type: VERIFICATION
 Status: VERIFIED_COMPLETE
