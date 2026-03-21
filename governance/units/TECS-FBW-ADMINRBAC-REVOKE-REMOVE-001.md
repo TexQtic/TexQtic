@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001
 title: Control-plane admin access revoke/remove authority
 type: IMPLEMENTATION
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
 closed: null
-verified: null
-commit: null
-evidence: null
+verified: 2026-03-21
+commit: d51a2a8
+evidence: "TEST_VERIFICATION: tests/adminrbac-registry-read-ui.test.tsx PASS (6 tests) · TEST_VERIFICATION: server/src/__tests__/admin-rbac-revoke-remove.integration.test.ts PASS (4 tests) · CONTRACT_VALIDATION: pnpm validate:contracts PASS · GOVERNANCE_RECONCILIATION_CONFIRMATION: control-plane-only revoke/remove scope, actor/target/self-peer protection locks, next-request authorization failure, refresh-token invalidation, and audit traceability all preserved with no invite, role-change, tenant-scope, schema, migration, or broader auth redesign expansion"
 doctrine_constraints:
   - D-002: admin mutation posture must remain explicit, auditable, and control-plane only
   - D-004: this unit is one bounded revoke/remove child slice only; no invite, role-change, tenant-scope, or broader authority work may be mixed in
@@ -27,8 +27,8 @@ blockers: []
 
 ## Unit Summary
 
-`TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` is the sole implementation-ready AdminRBAC revoke/remove
-child slice.
+`TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` is the sole bounded AdminRBAC revoke/remove child slice
+and is now `VERIFIED_COMPLETE`.
 
 It is limited to one bounded control-plane mutation surface only:
 
@@ -44,18 +44,18 @@ expansion, impersonation or support bypass expansion, or broad auth redesign.
 
 ## Acceptance Criteria
 
-- [ ] Revoke/remove is limited to control-plane admin access only
-- [ ] The actor is `SuperAdmin` only at action time
-- [ ] The target is limited to already-existing internal non-`SuperAdmin` control-plane admins
-- [ ] Self-revoke is blocked
-- [ ] Peer-`SuperAdmin` revoke/remove is blocked
-- [ ] No hidden downgrade or role-delta semantics are introduced
-- [ ] Successful revoke/remove immediately blocks new privileged control-plane access
-- [ ] Active privileged control-plane sessions fail authorization on the next control-plane request after success
-- [ ] Refresh-token or equivalent renewal invalidation is implemented in the same bounded child
-- [ ] Explicit audit capture exists for every attempted revoke/remove, including successful, denied, and failed operations
-- [ ] The minimum audit evidence shape remains mandatory
-- [ ] No invite, role-change, tenant-scope, white-label admin, or broader authority expansion is introduced
+- [x] Revoke/remove is limited to control-plane admin access only
+- [x] The actor is `SuperAdmin` only at action time
+- [x] The target is limited to already-existing internal non-`SuperAdmin` control-plane admins
+- [x] Self-revoke is blocked
+- [x] Peer-`SuperAdmin` revoke/remove is blocked
+- [x] No hidden downgrade or role-delta semantics are introduced
+- [x] Successful revoke/remove immediately blocks new privileged control-plane access
+- [x] Active privileged control-plane sessions fail authorization on the next control-plane request after success
+- [x] Refresh-token or equivalent renewal invalidation is implemented in the same bounded child
+- [x] Explicit audit capture exists for every attempted revoke/remove, including successful, denied, and failed operations
+- [x] The minimum audit evidence shape remains mandatory
+- [x] No invite, role-change, tenant-scope, white-label admin, or broader authority expansion is introduced
 
 ## Files Allowlisted (Modify)
 
@@ -88,7 +88,10 @@ expansion, impersonation or support bypass expansion, or broad auth redesign.
 - Eligibility decision: `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY`
 - Broad parent remains non-open: `TECS-FBW-ADMINRBAC` is still `DESIGN_GATE`
 - Closed clarification chain preserved: `TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001` and `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001` both remain `CLOSED`
-- This unit is the only opened implementation-ready revoke/remove slice and is bounded by the preserved actor, target, invalidation, audit, and exclusion locks
+- This unit is the only bounded verified revoke/remove slice and remains bounded by the preserved actor, target, invalidation, audit, and exclusion locks
+- Implementation commit: `d51a2a8` — `feat(adminrbac): implement bounded control-plane revoke-remove authority`
+- Verification evidence: focused UI PASS (`6` tests), focused backend PASS (`4` tests), and `pnpm validate:contracts` PASS
+- Request-time admin-record enforcement now preserves next-request authorization failure after revoke/remove without schema change or broader auth redesign
 
 ## Exact In-Scope Boundary
 
@@ -141,10 +144,16 @@ The exact out-of-scope boundary of this unit is:
 - explicit audit traceability remains mandatory
 - invite, role-change, tenant-scope, and broader authority expansion remain excluded
 
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after sync: `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`
+- Governance sync preserves control-plane-only revoke/remove posture, `SuperAdmin`-only actor lock, existing non-`SuperAdmin` internal target lock, self/peer-`SuperAdmin` denial, next-request authorization failure after revoke/remove, refresh-token invalidation, explicit audit traceability, `TECS-FBW-ADMINRBAC` as `DESIGN_GATE`, and no new opening implication
+
 ## Allowed Next Step
 
-Implementation work is authorized only inside this bounded unit and only within the exact in-scope
-boundary above.
+Governance close work is authorized only for this same bounded unit.
 
 ## Forbidden Next Step
 
@@ -156,6 +165,7 @@ boundary above.
 - Do **not** broaden into blanket `SuperAdmin` authority, impersonation, or support-mode expansion
 - Do **not** redesign auth beyond the bounded invalidation behavior required for revoke/remove truthfulness
 - Do **not** open any second AdminRBAC child unit under this step
+- Do **not** treat governance sync as closure; a separate close step is still required
 
 ## Drift Guards
 
@@ -165,6 +175,7 @@ boundary above.
 - First safe target class remains existing non-`SuperAdmin` internal control-plane admins only
 - Invalidation behavior is part of this bounded child and must not be deferred as ambient or eventual-only behavior
 - Audit minimums remain mandatory and must cover successful, denied, and failed attempts
+- Governance sync for this unit is recording only; no new implementation, no new opening, and no closure is implied by the `VERIFIED_COMPLETE` state
 
 ## Control-Plane Source of Truth
 
@@ -179,7 +190,12 @@ boundary above.
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING`. Status recorded as `OPEN` as the sole
-implementation-ready AdminRBAC revoke/remove child slice, with the broad parent preserved as
-`DESIGN_GATE` and all recorded control-plane, actor, target, invalidation, audit, and exclusion
-locks carried forward unchanged.
+2026-03-21 — `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`. Status transitioned:
+`OPEN` → `VERIFIED_COMPLETE` after implementation commit `d51a2a8`, focused UI PASS (`6` tests),
+focused backend PASS (`4` tests), and `pnpm validate:contracts` PASS. Scope remains bounded to
+control-plane admin access revoke/remove authority only, with `SuperAdmin` actor only, existing
+non-`SuperAdmin` internal target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request
+authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and
+explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority
+expansion remain excluded, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and the unit is postured
+for Close only.

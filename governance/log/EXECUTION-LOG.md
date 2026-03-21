@@ -1762,6 +1762,36 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 — 2026-03-21
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001)
+Title: Record verified completion of the bounded AdminRBAC revoke/remove unit
+Summary: Governance-only sync unit. Recorded `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` as
+  `VERIFIED_COMPLETE` after implementation commit `d51a2a8`, focused UI verification PASS
+  (`tests/adminrbac-registry-read-ui.test.tsx`, `6` tests), focused backend verification PASS
+  (`server/src/__tests__/admin-rbac-revoke-remove.integration.test.ts`, `4` tests), and
+  `pnpm validate:contracts` PASS. Layer 0 and Layer 1 were reconciled while scope remained
+  limited to control-plane admin access revoke/remove authority only, `SuperAdmin` actor only,
+  existing non-`SuperAdmin` internal target only, self-revoke and peer-`SuperAdmin` revoke
+  remained denied, next-request authorization failure after revoke/remove remained preserved
+  through request-time admin-record enforcement, refresh-token invalidation remained preserved,
+  explicit audit capture for successful, denied, and failed operations remained mandatory, no
+  invite, role-change, tenant-scope, or broader authority expansion was authorized, and no new
+  opening was implied.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. No product code, tests, schema, migrations,
+  Prisma models, BLOCKED.md, decisions, or unrelated governance files changed in this sync unit.
+  This is sync only, not closure; the unit is postured for Close only, `TECS-FBW-ADMINRBAC`
+  remains DESIGN_GATE, and no new opening is implied.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001-POST-CLOSE — 2026-03-21
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED
