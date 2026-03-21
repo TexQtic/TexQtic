@@ -21,7 +21,8 @@
     "control:manifest": "pnpm --dir server exec tsx ../scripts/control-plane-manifest.ts",
     "control:guard": "pnpm --dir server exec tsx ../scripts/control-plane-guard.ts",
     "test:server": "pnpm --dir server run test:ci",
-    "test:server:targeted": "pnpm --dir server run test"
+    "test:server:targeted": "pnpm --dir server run test",
+    "test:runtime-verification": "pnpm --dir server run test:runtime-verification"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

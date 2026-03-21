@@ -24,6 +24,11 @@ export default defineConfig({
     teardownTimeout: 10_000,
 
     // ── Discovery ───────────────────────────────────────────────────────────
+    include: [
+      'src/__tests__/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+      '../tests/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+    ],
+
     // Exclude compiled dist output — duplicates of src tests.
     // GATE-TEST-001: exclude dist from test discovery.
     exclude: [
