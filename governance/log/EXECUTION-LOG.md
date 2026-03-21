@@ -2311,6 +2311,32 @@ Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. NEXT-ACTION 
 Refs: governance/decisions/GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION.md ·
   governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
   governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING — 2026-03-21
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING)
+Title: Open GOV-VERIFY-01 as one bounded automated verification policy-design child
+Summary: Governance-only opening unit. Opened `GOV-VERIFY-01` as the sole bounded governance/
+  policy-design unit for the current cycle after the prior disposition chain recorded and approved
+  the child and then marked it READY_FOR_OPENING only. The opened scope is limited to declared
+  verification profiles at Opening, closure evidence requirements by unit type and acceptance
+  boundary, bounded category expectations, explicit closure-verdict posture, and manual-check
+  advisory posture only.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-VERIFY-01.md created; Layer 2 —
+  governance/decisions/GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Playwright, test, verifier-tooling, CI, governance-lint, package, product, schema,
+  migration, Prisma, contract, AdminRBAC, or G-026 implementation is authorized by this opening.
+  GOV-VERIFY-01 is the sole OPEN unit, NEXT-ACTION now points only to GOV-VERIFY-01, and no
+  second unit is OPEN.
+Refs: governance/units/GOV-VERIFY-01.md · governance/control/OPEN-SET.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING.md ·
+  governance/log/EXECUTION-LOG.md
   governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
   governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
 
