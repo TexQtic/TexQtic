@@ -1950,6 +1950,22 @@ Refs: governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md ·
 
 ---
 
+### TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 — 2026-03-21 (non-terminal clarification note)
+Note: Non-terminal clarification update only. This unit remains `OPEN`; no governance sync or closure was performed in this commit.
+Clarification Result: `READY_FOR_OPENING` for one later separate decision/opening step only.
+Bounded Future Child Posture:
+  - actor: `SuperAdmin` only
+  - target: existing internal control-plane admin access only, limited to non-`SuperAdmin` targets in the first child
+  - self-revoke: forbidden
+  - same-highest-role revoke: forbidden in the first child
+  - session/token semantics: immediate privileged-session failure on next control-plane request and refresh-token or equivalent renewal invalidation required
+  - audit: explicit actor, target, access-delta, invalidation outcome, timestamp, and result traceability required
+Exclusions Preserved: invite, role-change, tenant scope, account creation, auth redesign, broader authority expansion, and any implementation opening in this commit remain out of scope.
+Refs: governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001.md ·
+  governance/control/SNAPSHOT.md
+
+---
+
 ### GOV-AUDIT-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001-POST-CLOSE — 2026-03-21
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED
