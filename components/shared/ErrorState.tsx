@@ -38,7 +38,7 @@ function getErrorMessage(error: ErrorStateProps['error']): string {
       }
       return 'Rate limit exceeded. Please try again later.';
     case 0:
-      return 'Network error. Please check your connection.';
+      return message || 'Network error. Please check your connection.';
     default:
       if (status >= 500) {
         return 'Service temporarily unavailable. Try again.';

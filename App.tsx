@@ -64,7 +64,7 @@ import { BuyerRfqListSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
-import { setImpersonationToken, setToken, APIError } from './services/apiClient';
+import { setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
 // Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
@@ -432,6 +432,8 @@ const App: React.FC = () => {
       });
       // Apply impersonation JWT — admin token in localStorage is untouched
       setImpersonationToken(result.token);
+      setStoredAuthRealm('TENANT');
+      setAuthRealm('TENANT');
       setCurrentTenantId(impersonationDialog.tenant!.id);
       setImpersonation({
         isAdmin: true,
@@ -451,6 +453,9 @@ const App: React.FC = () => {
 
   /** G-W3-ROUTING-001: Stop impersonation via server API, then restore admin session */
   const handleExitImpersonation = async () => {
+    setStoredAuthRealm('CONTROL_PLANE');
+    setAuthRealm('CONTROL_PLANE');
+
     if (impersonation.impersonationId) {
       try {
         await stopImpersonationSession({

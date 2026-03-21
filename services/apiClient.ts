@@ -62,15 +62,27 @@ let currentAbortController = new AbortController();
 
 export type AuthRealm = 'TENANT' | 'CONTROL_PLANE';
 
+export function setStoredAuthRealm(realm: AuthRealm | null): void {
+  if (realm) {
+    localStorage.setItem(AUTH_REALM_KEY, realm);
+    return;
+  }
+
+  localStorage.removeItem(AUTH_REALM_KEY);
+}
+
 /**
  * Get stored JWT token based on current realm.
  * If an impersonation token override is active it takes precedence over the
  * stored tenant token (admin token in localStorage is never overwritten).
  */
 export function getToken(): string | null {
-  if (_impersonationTokenOverride) return _impersonationTokenOverride;
   const realm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
   if (!realm) return null;
+
+  if (_impersonationTokenOverride && realm === 'TENANT') {
+    return _impersonationTokenOverride;
+  }
 
   return realm === 'CONTROL_PLANE'
     ? localStorage.getItem(ADMIN_TOKEN_KEY)
@@ -81,7 +93,7 @@ export function getToken(): string | null {
  * Store JWT token for specific realm
  */
 export function setToken(token: string, realm: AuthRealm): void {
-  localStorage.setItem(AUTH_REALM_KEY, realm);
+  setStoredAuthRealm(realm);
 
   if (realm === 'CONTROL_PLANE') {
     localStorage.setItem(ADMIN_TOKEN_KEY, token);
@@ -96,7 +108,7 @@ export function setToken(token: string, realm: AuthRealm): void {
 export function clearAuth(): void {
   localStorage.removeItem(TENANT_TOKEN_KEY);
   localStorage.removeItem(ADMIN_TOKEN_KEY);
-  localStorage.removeItem(AUTH_REALM_KEY);
+  setStoredAuthRealm(null);
 }
 
 /**
@@ -119,7 +131,7 @@ export function resetOnRealmChange(): void {
   // 2. Clear all auth tokens
   localStorage.removeItem(TENANT_TOKEN_KEY);
   localStorage.removeItem(ADMIN_TOKEN_KEY);
-  localStorage.removeItem(AUTH_REALM_KEY);
+  setStoredAuthRealm(null);
 
   // 3. Navigate to root (single navigation, no loops)
   window.location.href = '/';
