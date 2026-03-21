@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001)
+**Last Updated:** 2026-03-21 (GOV-CLOSE-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,7 +13,6 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 | AdminRBAC next mutation child boundary clarification | VERIFIED_COMPLETE | W5 | 2026-03-21 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
@@ -24,7 +23,7 @@
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
@@ -43,9 +42,9 @@ TECS-G026-DESIGN-CLARIFICATION-001 closed 2026-03-20 after recording the bounded
 TECS-G026-CLEANUP-REMEDIATION-001 closed 2026-03-20 after implementation commit 0f3d2c3, governance-sync commit f21ef8c, the already-recorded authoritative remote Supabase verification PASS, and a conservative closure step with mandatory post-close audit result `HOLD`. Broad G-026 routing remains unopened and no routing implementation-ready G-026 stream is OPEN.
 TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 closed 2026-03-21 after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11, governance-sync commit 963c9359eb551cef076913722071e4577cf7040f, and the mandatory post-close audit result `DECISION_REQUIRED`. Broad G-026 remains unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture remains canonical, and no new routing unit is opened by implication.
 TECS-RUNTIME-VERIFICATION-HARDENING-001 closed 2026-03-21 after implementation commit 858505b, governance-sync commit e4b3e1e, and the mandatory post-close audit result `DECISION_REQUIRED`. Scope remained limited to repo-runnable runtime verification for already-implemented tenant-enterprise UI/auth/contract paths and white-label seeded storefront/catalog visibility/data-state paths only; covered runtime failure classes now surface automatically for those bounded slices, and no broad QA, CI, auth, catalog, AdminRBAC, RFQ, or domain-routing program was opened by implication.
-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 is VERIFIED_COMPLETE after implementation commit ec2c614 and bounded governance verification confirmation. Scope remains clarification-only: the next mutation child remains candidate-only and is limited to control-plane admin access revoke/remove authority, no implementation unit is opened, no invite, role-change, tenant-scope, or broader authority expansion is authorized, and no new opening is implied. The unit is postured for Close only and is not closed by this sync.
+TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 closed 2026-03-21 after implementation commit ec2c614, governance sync commit 6a34e64, and the mandatory post-close audit result `DECISION_REQUIRED`. The unit remained clarification-only, the next mutation child remained candidate-only and limited to control-plane admin access revoke/remove authority, no AdminRBAC implementation unit was opened, and no invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-No implementation-ready unit is currently OPEN; no AdminRBAC implementation unit was opened by this sync.
+No implementation-ready unit is currently OPEN.
 
 ---
 
@@ -58,6 +57,7 @@ No implementation-ready unit is currently OPEN; no AdminRBAC implementation unit
 | TECS-G026-DESIGN-CLARIFICATION-001 | CLOSED | 2026-03-20 | see git log |
 | TECS-G026-H-001 | CLOSED | 2026-03-20 | deef077 · e154f58 |
 | TECS-FBW-ADMINRBAC-REGISTRY-READ-001 | CLOSED | 2026-03-20 | 38419b5 · 50d1e36 |
+| TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 | CLOSED | 2026-03-21 | ec2c614 · 6a34e64 |
 | TECS-RUNTIME-VERIFICATION-HARDENING-001 | CLOSED | 2026-03-21 | 858505b · e4b3e1e |
 | TECS-RFQ-BUYER-LIST-READ-001 | VERIFIED_COMPLETE | 2026-03-19 | 64500cf |
 | TECS-RFQ-BUYER-DETAIL-UI-001 | VERIFIED_COMPLETE | 2026-03-19 | dcb5964 |

@@ -1738,6 +1738,75 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 — 2026-03-21
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001)
+Title: Close the bounded AdminRBAC next mutation clarification unit
+Summary: Governance-only closure unit. Recorded TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 as
+  CLOSED after implementation commit ec2c614, governance-sync commit 6a34e64, and bounded
+  governance verification confirmation. Layer 0, Layer 1, and Layer 3 were reconciled while the
+  unit remained clarification-only, the next mutation child remained candidate-only and limited to
+  control-plane admin access revoke/remove authority, no AdminRBAC implementation unit was opened,
+  and no invite, role-change, tenant-scope, or broader authority expansion was authorized by
+  implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No product code, tests, schema, migrations, Prisma models, BLOCKED.md, decisions, or
+  unrelated governance files changed in this closure unit. No new opening was created, and
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001-POST-CLOSE — 2026-03-21
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED.
+State Summary:
+  - classification: closed bounded AdminRBAC clarification child with no implementation-ready unit open
+  - bounded scope preserved: clarification-only; revoke/remove remains candidate-only and not opened
+  - open-unit count: 0
+  - blocked / deferred / design-gated context: 0 / 0 / 1
+  - current NEXT-ACTION compatibility: compatible with OPERATOR_DECISION_REQUIRED
+Outstanding Gates:
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - revoke/remove remains candidate-only and still requires a separate later decision/opening
+  - no invite, role-change, tenant-scope, or broader authority expansion is authorized
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - HOLD
+  - RECORD_ONLY
+  - DESIGN_REFINEMENT
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: this bounded clarification unit is fully closed, but any stronger follow-on move still requires explicit operator sequencing and a separate later decision/opening rather than implication from this closure
+Why Stronger Moves Remain Blocked:
+  - closure of this bounded clarification unit does not authorize revoke/remove implementation
+  - closure of this bounded clarification unit does not authorize invite, role-change, tenant-scope, or broader authority expansion
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE and no new implementation-ready unit is open
+Forbidden Next Moves:
+  - do not infer a revoke/remove implementation opening from this closure
+  - do not infer invite, role-change, tenant-scope, or broader authority expansion from this closure
+  - do not reopen TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 without a separate governance action
+  - do not open the broad parent TECS-FBW-ADMINRBAC by implication from this closure
+Resulting Layer 0 Posture:
+  - NEXT-ACTION returns to OPERATOR_DECISION_REQUIRED
+  - OPEN set contains no implementation-ready unit
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 — 2026-03-21
 Type: GOVERNANCE / CLOSE
 Status: CLOSED
