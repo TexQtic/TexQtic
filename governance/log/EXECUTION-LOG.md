@@ -2413,6 +2413,76 @@ Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. This is sync only, not closure; `
   CI rollout, governance-lint modification, repo-wide enforcement rollout, product/schema work,
   AdminRBAC reopening, G-026 reopening, navigation-layer implementation, or second unit opening
   was authorized or implied.
+
+---
+
+### GOV-AUDIT-GOV-VERIFY-01-POST-CLOSE — 2026-03-21
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-GOV-VERIFY-01-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for GOV-VERIFY-01
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED.
+State Summary:
+  - what was closed: GOV-VERIFY-01, the bounded mandatory automated verification policy-design child
+  - what it accomplished: delivered TexQtic's completed governance truth for mandatory automated verification policy design
+  - what it did not authorize: tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, governance-lint changes, repo-wide enforcement rollout, product/schema work, AdminRBAC reopening, G-026 reopening, or navigation-layer implementation
+Outstanding Gates:
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - broad G-026 remains unopened unless separately changed elsewhere
+  - navigation-layer work is not opened by this closure
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - decision-only step for navigation-layer simplification / upgradation
+  - separately governed adoption/enforcement design child derived from GOV-VERIFY-01
+  - return to AdminRBAC decision sequencing
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: this bounded governance policy-design unit is fully closed, no implementation-ready unit remains open, and any stronger follow-on move still requires explicit operator sequencing rather than implication from this closure
+Why Stronger Moves Remain Blocked:
+  - broader verification rollout remains blocked because this unit defined policy only and did not authorize rollout
+  - tooling rollout, verifier implementation, and CI rollout remain blocked because this closure did not authorize mechanisms or enforcement
+  - navigation-layer implementation remains blocked because this closure did not open navigation work
+  - AdminRBAC expansion and G-026 expansion remain blocked because TECS-FBW-ADMINRBAC remains DESIGN_GATE and broad G-026 remains unopened
+Forbidden Next Moves:
+  - do not infer tooling rollout, Playwright rollout, test rollout, verifier implementation, or CI rollout from this closure
+  - do not infer navigation-layer implementation from this closure
+  - do not infer AdminRBAC reopening or expansion from this closure
+  - do not infer G-026 reopening or expansion from this closure
+  - do not open any second unit by implication from this closure
+Resulting Layer 0 Posture:
+  - whether any implementation-ready unit is OPEN: no
+  - resulting NEXT-ACTION posture: OPERATOR_DECISION_REQUIRED
+  - whether the portfolio has returned to OPERATOR_DECISION_REQUIRED: yes
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOV-VERIFY-01.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-GOV-VERIFY-01 — 2026-03-21
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-GOV-VERIFY-01)
+Title: Close the bounded automated verification policy-design unit
+Summary: Governance-only closure unit. Recorded `GOV-VERIFY-01` as CLOSED after opening commit
+  `acb3d16`, implementation commit `3609fe6`, verification commit `da15e40`, and governance-sync
+  commit `d9f5f63`. Layer 0, Layer 1, and Layer 3 were reconciled while the completed unit
+  remained bounded to governance policy design only: core policy rule, verification profile rule,
+  unit-type matrix, mixed UI plus backend wiring effective-runtime rule, coverage declaration
+  rule, normalized verdict rule, commit-readiness rule, runtime ambiguity note rule,
+  manual-check advisory rule, explicit exclusions/non-goals, separately governed future
+  follow-on posture, and forbidden expansion-by-implication protections are preserved as
+  delivered governance truth. No tooling rollout, Playwright rollout, test rollout, verifier
+  tooling, CI rollout, governance-lint modification, repo-wide enforcement rollout,
+  product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation,
+  or second-unit opening was authorized by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-VERIFY-01.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: This is closure only, not a new decision, opening, implementation, verification, or sync
+  step. The portfolio now has no implementation-ready unit OPEN, TECS-FBW-ADMINRBAC remains
+  DESIGN_GATE, and the mandatory post-close audit in the same operation returned
+  `DECISION_REQUIRED`.
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/GOV-VERIFY-01.md ·
   governance/log/EXECUTION-LOG.md

@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-21
-last_unit_closed: GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001
-last_commit: "[TEXQTIC] governance: sync GOV-VERIFY-01 bounded automated verification policy design"
+last_unit_closed: GOV-CLOSE-GOV-VERIFY-01
+last_commit: "[TEXQTIC] governance: close GOV-VERIFY-01 bounded automated verification policy design"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,10 +28,8 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 1**
+- **Open governed units: 0**
 - **Verified-complete governed units: 0**
-
-- **GOV-VERIFY-01** — `OPEN` — Bounded governance/policy-design child opened 2026-03-21, implementation-complete for policy content only, verification-recorded as `VERIFIED_PASS`, and now governance-sync-complete and closure-ready within the bounded governance-only lifecycle. Verified and reconciled content includes the core policy rule, verification profile rule, unit-type matrix, mixed UI plus backend wiring effective-runtime rule, coverage declaration rule, normalized verdict rule, commit-readiness rule, runtime ambiguity note rule, manual-check advisory posture, explicit exclusions/non-goals, separately-governed future follow-on posture, and forbidden expansion-by-implication protections only. No implementation of Playwright, tests, verifier tooling, CI workflows, governance-lint refinement, package changes, product changes, schema changes, AdminRBAC reopening, G-026 reopening, broad QA transformation, broad CI redesign, or repo-wide enforcement rollout is authorized. GOV-VERIFY-01 remains the sole open governed unit and `NEXT-ACTION` now points to separate closure for GOV-VERIFY-01 only
 
 - **TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001** — `CLOSED` — Bounded AdminRBAC revoke/remove child slice closed 2026-03-21 after implementation commit `d51a2a8`, governance-sync commit `794fcd4`, focused UI PASS (`6` tests), focused backend PASS (`4` tests), `pnpm validate:contracts` PASS, and mandatory post-close audit result `DECISION_REQUIRED`. Scope remained limited to control-plane admin access revoke/remove authority only, with `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved through request-time admin-record enforcement, refresh-token invalidation preserved, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remained excluded, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and no broader AdminRBAC implementation opening was created
 
@@ -53,7 +51,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**1 implementation unit is currently OPEN.** `GOV-VERIFY-01` is the sole OPEN governed unit and is limited to bounded governance/policy-design only. `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` is now CLOSED after bounded implementation, bounded verification, governance sync, and mandatory post-close audit result `DECISION_REQUIRED`. Scope remained control-plane only, `SuperAdmin`-actor only, existing non-`SuperAdmin` internal target only, with no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remained excluded, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and no broader AdminRBAC implementation opening was created. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**0 implementation units are currently OPEN.** `GOV-VERIFY-01` is now CLOSED after the bounded opening, implementation, verification, governance sync, and closure chain together with mandatory post-close audit result `DECISION_REQUIRED`. The completed unit remains bounded to governance policy design only, delivered the mandatory automated verification policy truth, authorized no tooling or product rollout, and implied no second unit opening. `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -82,8 +80,7 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`GOV-VERIFY-01`.
-GOV-VERIFY-01 is the sole OPEN governed unit.
+`OPERATOR_DECISION_REQUIRED`.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION is now recorded as a decision-only governance artifact. No implementation-ready unit is OPEN, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and the decision recognizes at most one later separate bounded automated verification policy-design opening candidate only. That candidate is limited to declared verification profiles and closure evidence requirements by unit type and acceptance boundary, does not open any policy or implementation unit, does not authorize Playwright, CI, scripts, tests, or governance-lint expansion, and does not reopen AdminRBAC or G-026 sequencing. Resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
 GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION is now recorded as an approval-only governance step. The recorded decision is approved as valid governance state without expansion, no opening was created, no implementation was authorized, operator sequencing remains unchanged, and recent navigation friction for small meta-steps is recorded as observation only with no authorization effect. Resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
@@ -92,6 +89,7 @@ GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING is now recorded as an opening-only
 GOV-VERIFY-01 policy-design implementation is now complete inside the bounded unit only. GOV-VERIFY-01 remains `OPEN`, the next canonical phase is verification for GOV-VERIFY-01 only, no tooling or product implementation was authorized, and no second unit was opened.
 VERIFY-GOV-VERIFY-01 is now recorded as a bounded governance-only verification result. GOV-VERIFY-01 remains `OPEN`, the bounded policy-design content returned `VERIFIED_PASS`, the next canonical phase is governance sync for GOV-VERIFY-01 only, and no tooling or product implementation was authorized.
 GOVERNANCE-SYNC-GOV-VERIFY-01 is now recorded as a bounded governance-only sync result. GOV-VERIFY-01 remains `OPEN`, implementation and verification are canonically reconciled as complete within the opened boundary, the unit is now sync-complete and closure-ready, the next canonical phase is separate closure for GOV-VERIFY-01 only, and no tooling or product implementation was authorized.
+GOV-CLOSE-GOV-VERIFY-01 is now recorded as a bounded governance-only closure result. GOV-VERIFY-01 is now `CLOSED`, no implementation-ready unit is `OPEN`, the portfolio returns to `OPERATOR_DECISION_REQUIRED`, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, G-026, navigation-layer, or second-unit authorization was created by this closure.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -153,6 +151,7 @@ These are distinct closed units and must not be conflated.
 - GOV-VERIFY-01 implementation (2026-03-21): implemented the bounded automated verification policy-design content inside `GOV-VERIFY-01` only. The implemented policy now records the verification profile requirement at Opening, unit-type matrix, effective runtime verification rule, coverage declaration rule, normalized verdict rule, commit-readiness rule, runtime ambiguity note rule, explicit exclusions/non-goals, and separately-governed future follow-on categories. `GOV-VERIFY-01` remains `OPEN`, the next canonical phase is verification for `GOV-VERIFY-01` only, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, or G-026 implementation is authorized.
 - VERIFY-GOV-VERIFY-01 (2026-03-21): verified the bounded automated verification policy-design content inside `GOV-VERIFY-01` and returned `VERIFIED_PASS`. File-scope compliance for implementation commit `3609fe6` was confirmed against the four allowlisted governance files only, Layer 0 and Layer 3 remain internally consistent for a post-verification pre-sync state, `GOV-VERIFY-01` remains `OPEN`, and the next canonical phase is governance sync for `GOV-VERIFY-01` only.
 - GOVERNANCE-SYNC-GOV-VERIFY-01 (2026-03-21): canonically recorded that `GOV-VERIFY-01` implementation and verification completed successfully within the opened boundary. `GOV-VERIFY-01` remains `OPEN`, remains the sole active governed unit, is now sync-complete and closure-ready, `NEXT-ACTION` now points only to separate closure for `GOV-VERIFY-01`, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, G-026, navigation-layer, or second-unit expansion was authorized.
+- GOV-CLOSE-GOV-VERIFY-01 (2026-03-21): closed `GOV-VERIFY-01` after the already-recorded opening, implementation, verification, and governance-sync chain. The completed unit remains bounded to governance policy design only, delivered the mandatory automated verification policy truth, no implementation-ready unit remains OPEN, `NEXT-ACTION` returns to `OPERATOR_DECISION_REQUIRED`, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, G-026, navigation-layer, or second-unit authorization was created.
 - Governance OS control plane installed 2026-03-17 by GOV-OS-002
 - Canonical operational files: `governance/control/` (5 files — this directory)
 - Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`, `IMPLEMENTATION-TRACKER-2026-Q2.md`, `2026-03-audit-reconciliation-matrix.md`) have been archived to `governance/archive/` (GOV-OS-007, 2026-03-17) and replaced with pointer stubs; they are NOT operational truth

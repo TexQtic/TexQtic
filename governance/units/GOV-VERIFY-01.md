@@ -6,11 +6,10 @@ status: OPEN
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
-closed: null
+closed: 2026-03-21
 verified: 2026-03-21
 commit: 3609fe6
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION recorded the bounded policy-design candidate only; GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION approved that posture without expansion; GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION recorded READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING now opens GOV-VERIFY-01 as the sole bounded governance policy-design unit with Layer 0 preserved, TECS-FBW-ADMINRBAC remaining DESIGN_GATE, and no tooling, CI, Playwright, test, linter, or product implementation authorization · VERIFICATION_RESULT: VERIFIED_PASS for the bounded policy-design content only; file-scope compliance confirmed against implementation commit 3609fe6; GOV-VERIFY-01 remains OPEN pending separate governance sync and closure"
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION recorded the bounded policy-design candidate only; GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION approved that posture without expansion; GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION recorded READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING now opens GOV-VERIFY-01 as the sole bounded governance policy-design unit with Layer 0 preserved, TECS-FBW-ADMINRBAC remaining DESIGN_GATE, and no tooling, CI, Playwright, test, linter, or product implementation authorization · VERIFICATION_RESULT: VERIFIED_PASS for the bounded policy-design content only; file-scope compliance confirmed against implementation commit 3609fe6 · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically recorded as complete within the opened boundary, GOV-VERIFY-01 remains OPEN as the sole active governed unit, sync is complete, closure is the only next lawful step, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, G-026, navigation-layer, or second-unit expansion was authorized"
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION recorded the bounded policy-design candidate only; GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION approved that posture without expansion; GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION recorded READY_FOR_OPENING only and explicitly preserved that READY_FOR_OPENING is not OPEN; GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING opened GOV-VERIFY-01 as the sole bounded governance policy-design unit; VERIFICATION_RESULT: VERIFIED_PASS for the bounded policy-design content only with file-scope compliance confirmed against implementation commit 3609fe6; GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification completed successfully within the opened boundary, sync completed under commit d9f5f63, GOV-VERIFY-01 is now CLOSED after this step, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, G-026, navigation-layer, or second-unit expansion was authorized"
 doctrine_constraints:
   - D-004: this is one bounded policy-design unit only; no second verification/process child or broad program may be mixed in
   - D-007: governance-only units must not touch application code, schema, tests, CI workflows, or repo tooling under this opening
@@ -96,6 +95,9 @@ No other files are authorized for edit in this implementation step.
 - Verification confirmation: file-grounded policy-content review complete, implementation file-scope compliance confirmed against commit `3609fe6`, governance lint compatible, and no unrelated worktree caveat was present at verification time
 - Governance sync unit: `GOVERNANCE-SYNC-GOV-VERIFY-01`
 - Governance sync result: implementation and verification are now canonically reconciled as complete within the opened boundary; `GOV-VERIFY-01` remains `OPEN`, is sync-complete, and is closure-ready only after this sync
+- Governance sync commit: `d9f5f63` — `[TEXQTIC] governance: sync GOV-VERIFY-01 bounded automated verification policy design`
+- Governance close unit: `GOV-CLOSE-GOV-VERIFY-01`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
 
 ## Exact In-Scope Boundary
 
@@ -296,9 +298,16 @@ The following remain out of scope for `GOV-VERIFY-01`:
 - Next-action posture after sync: `GOV-CLOSE-GOV-VERIFY-01`
 - This sync is recording only; it is not closure and does not open any new unit
 
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-GOV-VERIFY-01`
+- Status transition: `OPEN` → `CLOSED`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
+
 ## Allowed Next Step
 
-Closure of `GOV-VERIFY-01` only.
+No further implementation, verification, or governance-sync work is authorized inside this closed unit.
 
 ## Forbidden Next Step
 
@@ -310,7 +319,7 @@ Closure of `GOV-VERIFY-01` only.
 - Do **not** change product behavior under this unit
 - Do **not** change schema, migrations, Prisma, seeds, contracts, or RLS under this unit
 - Do **not** reopen AdminRBAC or G-026 under this unit
-- Do **not** treat this sync step as closure
+- Do **not** treat this closure as authorization for tooling rollout, Playwright rollout, test rollout, verifier implementation, CI rollout, governance-lint modification, repo-wide enforcement rollout, product/schema work, navigation-layer implementation, AdminRBAC reopening, G-026 reopening, or any second unit
 - Do **not** open a second verification/process child by implication
 
 ## Verification Record
@@ -363,7 +372,8 @@ Blocked by env/data:
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOVERNANCE-SYNC-GOV-VERIFY-01`. Implementation and verification are now
-canonically reconciled inside the bounded governance-only unit. `GOV-VERIFY-01` remains `OPEN`,
-remains the sole active governed unit, is now sync-complete and closure-ready, no tooling or
-product implementation was authorized, and the only next lawful step is separate closure.
+2026-03-21 — `GOV-CLOSE-GOV-VERIFY-01`. Status transitioned: `OPEN` → `CLOSED` after the
+already-recorded opening, bounded implementation, bounded verification, and governance-sync chain,
+together with mandatory post-close audit result `DECISION_REQUIRED`. The completed unit remains
+bounded to governance policy design only, the delivered policy truth is preserved, no tooling or
+product implementation was authorized, and the portfolio returns to `OPERATOR_DECISION_REQUIRED`.
