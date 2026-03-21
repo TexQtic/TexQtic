@@ -2483,6 +2483,36 @@ Notes: This is closure only, not a new decision, opening, implementation, verifi
   step. The portfolio now has no implementation-ready unit OPEN, TECS-FBW-ADMINRBAC remains
   DESIGN_GATE, and the mandatory post-close audit in the same operation returned
   `DECISION_REQUIRED`.
+
+---
+
+### GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION — 2026-03-21
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION)
+Title: Record the disposition of the bounded navigation-layer upgradation direction
+Summary: Governance-only decision-record unit. Recorded the disposition that navigation-layer
+  upgradation is now recognized as the strongest bounded next governance-valid direction only in
+  the form of one later separate bounded OPENING_CANDIDATE. OPENING_CANDIDATE is not OPEN, no
+  navigation-layer unit was opened by this decision, and no implementation was authorized. Any
+  future child, if later separately opened, is limited to governance-navigation improvement for
+  low-risk meta-steps only: lighter-weight approval/acknowledgment paths, clearer distinctions
+  between doctrine-changing vs authorization vs meta-confirmation vs post-close advisory moves,
+  reduced ceremony for non-authorizing records, and sequencing ergonomics that preserve existing
+  doctrine. No doctrine rewrite, workflow collapse, governance-lint, Playwright, test, CI,
+  script, package, product, contract, schema, migration, Prisma, AdminRBAC, or G-026 change is
+  authorized by this decision.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed for carry-forward posture;
+  Layer 2 — governance/decisions/GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. DOCTRINE.md remains
+  unchanged. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED because no implementation-ready unit
+  is opened and OPENING_CANDIDATE is not OPEN. No product code, tests, Playwright suites, CI
+  workflows, scripts, package manifests, schema, migrations, Prisma, contracts, or unit records
+  changed.
+Refs: governance/decisions/GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/GOV-VERIFY-01.md ·
   governance/log/EXECUTION-LOG.md
