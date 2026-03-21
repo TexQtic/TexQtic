@@ -2286,6 +2286,31 @@ Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. No new decis
 Refs: governance/decisions/GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION.md ·
   governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
   governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION — 2026-03-21
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION)
+Title: Record the opening disposition for the bounded automated verification policy-design child
+Summary: Governance-only decision-record unit. Recorded the disposition that the bounded automated
+  verification policy-design child is now READY_FOR_OPENING only for one later separate bounded
+  opening step. READY_FOR_OPENING is not OPEN, no policy-design unit was opened by this decision,
+  no implementation was authorized, and the future opening boundary remains limited to declared
+  verification profiles and closure evidence requirements by unit type and acceptance boundary
+  only. No Playwright, test, verifier, CI, linter, product, schema, AdminRBAC, or G-026 change is
+  authorized by this decision.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed for carry-forward posture;
+  Layer 2 — governance/decisions/GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. NEXT-ACTION remains
+  OPERATOR_DECISION_REQUIRED because no implementation-ready unit is opened and READY_FOR_OPENING
+  is not OPEN. No product code, tests, Playwright suites, scripts, CI workflows, package
+  manifests, schema, migrations, Prisma, contracts, or unit records changed.
+Refs: governance/decisions/GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
   governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
   governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
 
