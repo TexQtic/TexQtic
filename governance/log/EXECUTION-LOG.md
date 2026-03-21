@@ -2388,6 +2388,34 @@ Notes: `GOV-VERIFY-01` remains `OPEN` pending separate governance sync and closu
   AdminRBAC reopening, G-026 reopening, or second unit opening was authorized or implied.
 Refs: governance/units/GOV-VERIFY-01.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOVERNANCE-SYNC-GOV-VERIFY-01 — 2026-03-21
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for GOVERNANCE-SYNC-GOV-VERIFY-01)
+Title: Record verified completion of the bounded automated verification policy-design unit
+Summary: Governance-only sync unit. Recorded `GOV-VERIFY-01` as implementation-complete and
+  verification-complete within the opened boundary after opening commit `acb3d16`,
+  implementation commit `3609fe6`, and verification commit `da15e40`. Layer 0 and Layer 1 were
+  reconciled while `GOV-VERIFY-01` remained `OPEN`, remained the sole active governed unit, and
+  became sync-complete and closure-ready only after this step. Scope remained limited to the
+  bounded governance policy-design unit only: core policy rule, verification profile rule,
+  unit-type matrix, mixed UI plus backend wiring effective-runtime rule, coverage declaration
+  rule, normalized verdict rule, commit-readiness rule, runtime ambiguity note rule,
+  manual-check advisory rule, explicit exclusions/non-goals, separately-governed future
+  follow-on posture, and forbidden expansion-by-implication protections.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-VERIFY-01.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. This is sync only, not closure; `GOV-VERIFY-01`
+  remains `OPEN`, no tooling rollout, Playwright rollout, test rollout, verifier tooling,
+  CI rollout, governance-lint modification, repo-wide enforcement rollout, product/schema work,
+  AdminRBAC reopening, G-026 reopening, navigation-layer implementation, or second unit opening
+  was authorized or implied.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOV-VERIFY-01.md ·
+  governance/log/EXECUTION-LOG.md
   governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
   governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
 

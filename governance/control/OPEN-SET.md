@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING)
+**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-GOV-VERIFY-01)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -27,7 +27,7 @@
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **Total non-terminal units: 2**
 
-GOV-VERIFY-01 is now OPEN as the sole bounded governance/policy-design unit for the current cycle. Scope is limited to defining declared verification profiles at Opening, closure evidence requirements by unit type and acceptance boundary, bounded category expectations, explicit closure-verdict posture, and manual-check advisory posture only. No Playwright implementation, tests, verifier tooling, CI workflows, governance-lint refinement, package changes, product changes, schema changes, AdminRBAC reopening, G-026 reopening, broad QA transformation, broad CI redesign, or repo-wide enforcement rollout is authorized by this opening.
+GOV-VERIFY-01 remains OPEN as the sole bounded governance/policy-design unit for the current cycle. Implementation and verification are now canonically recorded as complete within the opened boundary, governance sync is now complete, and the unit is closure-ready only after this sync. Scope remains limited to declared verification profiles at Opening, closure evidence requirements by unit type and acceptance boundary, bounded category expectations, explicit closure-verdict posture, and manual-check advisory posture only. No Playwright implementation, tests, verifier tooling, CI workflows, governance-lint refinement, package changes, product changes, schema changes, AdminRBAC reopening, G-026 reopening, broad QA transformation, broad CI redesign, or repo-wide enforcement rollout is authorized by this sync.
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
 TECS-RFQ-BUYER-RESPONSE-READ-001 closed 2026-03-19: implementation commit 211800a + VERIFY-TECS-RFQ-BUYER-RESPONSE-READ-001 VERIFIED_COMPLETE.
@@ -49,7 +49,7 @@ TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 closed 2026-03-21 after imple
 TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 closed 2026-03-21 after implementation commit 4ede95d, governance sync commit 8c58bcd, and the mandatory post-close audit result `DECISION_REQUIRED`. The unit remained clarification-only, `READY_FOR_OPENING` remained opening-readiness only, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, and no invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 closed 2026-03-21 after implementation commit d51a2a8, governance-sync commit 794fcd4, focused UI PASS (6 tests), focused backend PASS (4 tests), `pnpm validate:contracts` PASS, and mandatory post-close audit result `DECISION_REQUIRED`. The unit remained bounded to control-plane admin access revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and explicit audit traceability required. No invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
-GOV-VERIFY-01 is the sole OPEN governed unit.
+GOV-VERIFY-01 is the sole OPEN governed unit and is now sync-complete and closure-ready.
 
 ---
 
