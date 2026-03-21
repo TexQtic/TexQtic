@@ -1918,6 +1918,24 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-OPENING — 2026-03-21
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-OPENING)
+Title: Open one bounded AdminRBAC revoke/remove opening posture clarification unit and no implementation work
+Summary: Governance-only decision/opening unit. Opened `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001` as the sole bounded next governed unit after the closed next-mutation clarification unit left revoke/remove candidate-only and the broad parent still in `DESIGN_GATE`. Scope is limited to clarifying whether a later control-plane admin access revoke/remove child may be truthfully opened and what exact actor/target safety posture, self-revoke or same-highest-role guard posture, active-session and refresh-token invalidation semantics, minimum audit evidence shape, and preserved exclusions must be explicitly fixed first. No implementation unit, no verification unit, and no broader AdminRBAC authority stream was opened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001.md created; Layer 2 —
+  governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: `TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001` remains CLOSED. Revoke/remove remains candidate-only. `TECS-FBW-ADMINRBAC` remains DESIGN_GATE. This opening is governance-only clarification and does not authorize revoke/remove implementation, invite, role-change, tenant-scope, or broader authority expansion.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-OPENING.md ·
+  governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001.md
+
+---
+
 ### TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 — 2026-03-21
 Type: GOVERNANCE / CLARIFICATION
 Status: VERIFIED_COMPLETE
