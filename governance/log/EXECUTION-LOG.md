@@ -1966,6 +1966,31 @@ Refs: governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-00
 
 ---
 
+### GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 — 2026-03-21
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001)
+Title: Record verified completion of the bounded AdminRBAC revoke/remove opening-posture clarification unit
+Summary: Governance-only sync unit. Recorded `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`
+  as `VERIFIED_COMPLETE` after implementation commit `4ede95d` and bounded governance
+  verification confirmation. Layer 0 and Layer 1 were reconciled while scope remained
+  clarification-only, `READY_FOR_OPENING` remained opening-readiness only, revoke/remove
+  implementation remained unopened, the candidate remained bounded to control-plane
+  revoke/remove posture only, no invite, role-change, tenant-scope, or broader authority
+  expansion was authorized, and no new opening was implied.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. This is sync only, not closure; the unit is
+  postured for Close only, `READY_FOR_OPENING` remains opening-readiness only, revoke/remove
+  implementation is not opened, TECS-FBW-ADMINRBAC remains DESIGN_GATE, and no new opening is implied.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001-POST-CLOSE — 2026-03-21
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED

@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001
 title: AdminRBAC revoke/remove opening posture clarification
 type: GOVERNANCE
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
 closed: null
-verified: null
-commit: null
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: revoke/remove opening posture clarified as control-plane only, SuperAdmin-only actor, existing internal control-plane admin target only, no self-revoke, no same-highest-role revoke, immediate privileged-session and refresh-token invalidation required, explicit audit traceability required, and READY_FOR_OPENING recorded for a later separate decision/opening step only"
+verified: 2026-03-21
+commit: 4ede95d
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: revoke/remove opening posture clarified as control-plane only, SuperAdmin-only actor, existing internal control-plane admin target only, no self-revoke, no same-highest-role revoke, immediate privileged-session and refresh-token invalidation required, explicit audit traceability required, and READY_FOR_OPENING recorded for a later separate decision/opening step only · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded verification confirmed the clarification remains governance-only, READY_FOR_OPENING remains opening-readiness only, revoke/remove implementation is not opened, TECS-FBW-ADMINRBAC remains DESIGN_GATE, governance:lint PASS, and no verification commit was required"
 doctrine_constraints:
   - D-004: this is one bounded clarification unit only; no implementation, verification, sync, or closure work may be mixed in
   - D-007: governance units must not touch application code, schema, tests, or CI scripts
@@ -85,6 +85,8 @@ No other files are authorized for edit in this clarification step.
 - Closed first child preserved: `TECS-FBW-ADMINRBAC-REGISTRY-READ-001` remains `CLOSED`
 - Closed mutation-candidate clarification preserved: `TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001` remains `CLOSED`
 - This clarification records the exact revoke/remove opening posture as bounded governance truth only; it does not open implementation
+- Implementation commit: `4ede95d` — `governance(adminrbac): clarify revoke-remove opening posture`
+- Verification confirmation: governance-only verification completed with `pnpm run governance:lint` PASS and clean worktree; no verification commit required
 
 ## Current Parent Truth
 
@@ -321,17 +323,16 @@ The following remain out of scope for this clarification unit and must not be bu
 
 ## Allowed Next Step
 
-No implementation is authorized in this unit.
+This unit is now postured for governance close only.
 
-The only governance-valid later move enabled by this clarification result is a separate future
-decision/opening step that explicitly chooses whether to open one bounded revoke/remove child under
-the exact posture recorded above.
+No further implementation, verification, or governance-sync work is authorized inside this unit.
 
 ## Forbidden Next Step
 
 - Do **not** implement revoke/remove in this unit
 - Do **not** implement invite, role assignment/change, session invalidation, token propagation, or invitation transport in this unit
 - Do **not** treat `READY_FOR_OPENING` as implementation authorization
+- Do **not** treat governance sync as closure; a separate close step is still required
 - Do **not** open the broad parent `TECS-FBW-ADMINRBAC` in this unit
 - Do **not** reopen `TECS-FBW-ADMINRBAC-REGISTRY-READ-001`
 - Do **not** reopen `TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001`
@@ -344,6 +345,21 @@ the exact posture recorded above.
 - `TenantAdmin`, `PlatformAdmin`, and `SuperAdmin` terminology lock remains mandatory.
 - `SuperAdmin`-only mutation posture remains mandatory for any later AdminRBAC mutation child.
 - No blanket `SuperAdmin can read everything` posture may be inferred.
+- Governance sync for this unit is recording only; no implementation opening, no new opening, and no closure is implied by the `VERIFIED_COMPLETE` state.
+
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after sync: `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`
+- Sync preserves clarification-only posture, keeps `READY_FOR_OPENING` as opening-readiness only, keeps revoke/remove implementation unopened, preserves the bounded control-plane revoke/remove posture only, preserves `TECS-FBW-ADMINRBAC` as `DESIGN_GATE`, authorizes no invite, role-change, tenant-scope, or broader authority expansion, and implies no new opening
+
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`
+- Status transition: `VERIFIED_COMPLETE` → `CLOSED`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Closure is not performed in this sync step
 
 ## Control-Plane Source of Truth
 
@@ -356,3 +372,14 @@ the exact posture recorded above.
 | What is the single authorized next action? | `governance/control/NEXT-ACTION.md` |
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
+
+## Last Governance Confirmation
+
+2026-03-21 — `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`.
+Status transitioned: `OPEN` → `VERIFIED_COMPLETE` after implementation commit `4ede95d`
+and bounded governance verification confirmation with no verification commit required.
+The unit remains clarification-only, `READY_FOR_OPENING` remains opening-readiness only,
+revoke/remove implementation is not opened, the candidate remains bounded to control-plane
+revoke/remove posture only, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no invite,
+role-change, tenant-scope, or broader authority expansion was authorized, and no new opening is
+implied by this sync.
