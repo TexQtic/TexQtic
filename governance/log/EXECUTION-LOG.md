@@ -2513,6 +2513,35 @@ Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. DOCTRINE.md 
 Refs: governance/decisions/GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION.md ·
   governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
   governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION — 2026-03-21
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION)
+Title: Record the opening disposition for the bounded navigation-layer upgradation child
+Summary: Governance-only decision-record unit. Recorded the disposition that the bounded
+  navigation-layer upgradation child is now READY_FOR_OPENING only for one later separate bounded
+  opening step. READY_FOR_OPENING is not OPEN, no navigation-layer unit was opened by this
+  decision, no implementation was authorized, and the future opening boundary remains limited to
+  governance-navigation improvement for low-risk meta-steps only: lighter-weight approval and
+  acknowledgment paths, clearer distinctions between doctrine-changing vs authorization vs
+  meta-confirmation vs post-close advisory moves, reduced ceremony for non-authorizing records,
+  and sequencing ergonomics that preserve existing doctrine. No doctrine rewrite, workflow
+  collapse, governance-lint, Playwright, test, CI, script, package, product, contract, schema,
+  migration, Prisma, AdminRBAC, or G-026 change is authorized by this decision.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md refreshed for carry-forward posture;
+  Layer 2 — governance/decisions/GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: OPEN-SET.md remains unchanged. BLOCKED.md remains unchanged. DOCTRINE.md remains
+  unchanged. NEXT-ACTION remains OPERATOR_DECISION_REQUIRED because no implementation-ready unit
+  is opened and READY_FOR_OPENING is not OPEN. No product code, tests, Playwright suites, CI
+  workflows, scripts, package manifests, schema, migrations, Prisma, contracts, or unit records
+  changed.
+Refs: governance/decisions/GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/GOV-VERIFY-01.md ·
   governance/log/EXECUTION-LOG.md
