@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-21
-last_unit_closed: GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
-last_commit: "[TEXQTIC] governance: close g026 platform-subdomain routing slice"
+last_unit_closed: GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001
+last_commit: "[TEXQTIC] governance: sync runtime verification hardening unit"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,7 +28,7 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **TECS-RUNTIME-VERIFICATION-HARDENING-001** — `OPEN` — Sole bounded verification-hardening unit opened 2026-03-21; scope limited to executable tenant-enterprise UI smoke verification, realm/session transition verification, affected frontend/backend response-envelope verification, white-label seeded storefront/catalog visibility and data-state verification, and one repo-runnable verification path only
+- **TECS-RUNTIME-VERIFICATION-HARDENING-001** — `VERIFIED_COMPLETE` — Bounded runtime verification hardening unit verified 2026-03-21 after implementation commit `858505b` and bounded verification evidence `pnpm test:runtime-verification` PASS (`6` files passed / `39` tests passed); scope remains limited to executable tenant-enterprise UI smoke verification, realm/session transition verification, affected frontend/backend response-envelope verification, white-label seeded storefront/catalog visibility and data-state verification, and one repo-runnable verification path only
 - **TECS-RFQ-BUYER-LIST-READ-001** — `VERIFIED_COMPLETE` — Buyer RFQ discovery surface closed 2026-03-19; implementation commit 64500cf; verified RFQ UI evidence: `vitest.cmd --root . run tests/rfq-buyer-detail-ui.test.tsx tests/rfq-buyer-list-ui.test.tsx` with 2 files passed / 11 tests passed; buyers can now discover their own RFQs through a minimal read-only list surface and open the existing RFQ detail surface using existing backend read contracts only
 - **TECS-RFQ-BUYER-DETAIL-UI-001** — `VERIFIED_COMPLETE` — Buyer RFQ detail UI foundation closed 2026-03-19; implementation commit dcb5964; verification `VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001: VERIFIED_COMPLETE`; buyer-safe success-dialog entry path now opens a minimal RFQ detail surface using the existing backend detail contract
 - **TECS-RFQ-BUYER-RESPONSE-READ-001** — `VERIFIED_COMPLETE` — Buyer-visible bounded supplier response read slice closed 2026-03-19; implementation commit 211800a; verification `VERIFY-TECS-RFQ-BUYER-RESPONSE-READ-001: VERIFIED_COMPLETE`; buyer RFQ detail reads now include the bounded supplier response artifact when present and null-safe absence when not present
@@ -44,10 +44,10 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**1 implementation unit is currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**0 implementation units are currently OPEN.** 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001` is now `CLOSED` after bounded implementation, bounded verification, governance sync, and the mandatory post-close audit result `DECISION_REQUIRED`. Broad G-026 remains unopened and no broader routing authorization is implied by this closure.
-`TECS-RUNTIME-VERIFICATION-HARDENING-001` is now `OPEN` as the sole bounded verification-hardening step. Broad QA transformation, broad CI redesign, auth redesign, catalog redesign, AdminRBAC expansion, RFQ expansion, and domain-routing work all remain unopened.
+`TECS-RUNTIME-VERIFICATION-HARDENING-001` is now `VERIFIED_COMPLETE` after bounded implementation and bounded verification. The repo-runnable runtime verification path exists, the covered failure classes now surface automatically for the bounded tenant-enterprise and white-label slices, and broad QA transformation, broad CI redesign, auth redesign, catalog redesign, AdminRBAC expansion, RFQ expansion, and domain-routing work all remain unopened.
 
 ## RFQ Platform State
 
@@ -71,11 +71,11 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`TECS-RUNTIME-VERIFICATION-HARDENING-001`.
-The sole authorized next move is one bounded implementation-ready verification-hardening unit for already-implemented tenant-enterprise and white-label runtime slices.
-Scope is limited to executable tenant-enterprise UI smoke verification, realm/session transitions, affected frontend/backend response-envelope verification, white-label seeded storefront/catalog visibility and data-state verification, and one repo-runnable verification path.
-The unit exists because recent bounded implementations passed typecheck and bounded verification while runtime failures still escaped to manual operator inspection.
-No broad QA transformation, broad CI redesign, broad auth or catalog redesign, AdminRBAC expansion, RFQ expansion, custom-domain/apex/DNS work, or governance closure is authorized by this opening.
+`GOV-CLOSE-TECS-RUNTIME-VERIFICATION-HARDENING-001`.
+The sole authorized next move is governance-only closure for the same bounded runtime-verification hardening unit.
+TECS-RUNTIME-VERIFICATION-HARDENING-001 is already VERIFIED_COMPLETE after implementation commit `858505b` and bounded verification evidence `pnpm test:runtime-verification` PASS (`6` files passed / `39` tests passed).
+Scope remains limited to executable runtime verification for already-implemented tenant-enterprise and white-label slices only.
+No broad QA transformation, broad CI redesign, broad auth or catalog redesign, AdminRBAC expansion, RFQ expansion, custom-domain/apex/DNS work, or new opening is authorized by this sync.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 See `NEXT-ACTION.md`.
 
@@ -113,6 +113,7 @@ These are distinct closed units and must not be conflated.
 ## Session Notes
 
 - GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING (2026-03-21): opened `TECS-RUNTIME-VERIFICATION-HARDENING-001` as the sole bounded implementation-ready verification-hardening step. Scope is limited to executable tenant-enterprise UI smoke verification, realm/session transition verification, affected frontend/backend response-envelope verification, white-label seeded storefront/catalog visibility and data-state verification, and one repo-runnable verification path only. Broad QA transformation, broad CI redesign, broad auth or catalog redesign, AdminRBAC expansion, RFQ expansion, and domain-routing work remain unopened.
+- GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001 (2026-03-21): recorded `TECS-RUNTIME-VERIFICATION-HARDENING-001` as `VERIFIED_COMPLETE` after implementation commit `858505b` and bounded verification evidence `pnpm test:runtime-verification` PASS (`6` files passed / `39` tests passed). The repo-runnable runtime verification path now exists, covered failure classes now surface automatically for the bounded tenant-enterprise and white-label slices, no product behavior change was introduced, and no broader QA/CI/auth/catalog/routing program was opened. The unit is postured for Close only; no new opening is implied.
 - Governance OS control plane installed 2026-03-17 by GOV-OS-002
 - Canonical operational files: `governance/control/` (5 files — this directory)
 - Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`, `IMPLEMENTATION-TRACKER-2026-Q2.md`, `2026-03-audit-reconciliation-matrix.md`) have been archived to `governance/archive/` (GOV-OS-007, 2026-03-17) and replaced with pointer stubs; they are NOT operational truth

@@ -1,27 +1,29 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: TECS-RUNTIME-VERIFICATION-HARDENING-001
-type: IMPLEMENTATION
-title: Executable runtime verification hardening for implemented tenant-enterprise and white-label slices
+unit_id: GOV-CLOSE-TECS-RUNTIME-VERIFICATION-HARDENING-001
+type: GOVERNANCE / CLOSE
+title: Close the verified bounded runtime verification hardening unit
 prerequisites_met: true
-authorized_by: GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING
+authorized_by: GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001
 date_authorized: 2026-03-21
 notes: |
-  This is the sole bounded implementation-ready verification-hardening unit.
-  Scope is limited to repo-runnable runtime verification for already-implemented
-  tenant-enterprise UI smoke paths, realm/session transitions, affected
-  frontend/backend response-envelope checks, and white-label seeded
-  storefront/catalog visibility and data-state paths.
-  The unit exists because recent bounded implementations passed typecheck and
-  bounded verification while real runtime failures still escaped to manual UI
-  inspection.
-  No broad QA transformation, CI redesign, auth redesign, catalog redesign,
-  schema/migration work, product feature work, custom-domain/apex/DNS work,
-  AdminRBAC expansion, RFQ expansion, or governance closure is authorized.
+  TECS-RUNTIME-VERIFICATION-HARDENING-001 is now VERIFIED_COMPLETE after
+  implementation commit 858505b and bounded verification evidence
+  `pnpm test:runtime-verification` PASS (6 files passed, 39 tests passed).
+  Scope remains limited to executable runtime verification for the already-
+  implemented tenant-enterprise and white-label slices only.
+  Covered failure classes now surface automatically for the bounded slices:
+  tenant realm/session miswiring, bounded response-envelope mismatch,
+  transaction proxy/service-path regression, and white-label seeded
+  storefront/catalog visibility or data-state failure.
+  No broad QA transformation, broad CI redesign, auth redesign, catalog
+  redesign, routing/domain work, schema/migration/Prisma work, AdminRBAC
+  expansion, RFQ expansion, or product behavior change was authorized or
+  created. This posture is sync only and is not closure yet.
 ```

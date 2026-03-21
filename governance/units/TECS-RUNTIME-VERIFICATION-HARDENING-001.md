@@ -2,14 +2,14 @@
 unit_id: TECS-RUNTIME-VERIFICATION-HARDENING-001
 title: Executable runtime verification hardening for implemented tenant-enterprise and white-label slices
 type: IMPLEMENTATION
-status: OPEN
+status: VERIFIED_COMPLETE
 wave: W5
 plane: BOTH
 opened: 2026-03-21
 closed: null
-verified: null
-commit: null
-evidence: null
+verified: 2026-03-21
+commit: 858505b
+evidence: "TEST_VERIFICATION: pnpm test:runtime-verification PASS (6 files passed, 39 tests passed) · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded runtime verification path exists, is repo-runnable, remains limited to tenant-enterprise and white-label verification hardening only, and introduces no product behavior, schema, migration, Prisma, governance-doctrine, auth redesign, catalog redesign, or routing/domain changes"
 doctrine_constraints:
   - D-004: this unit is one bounded verification-hardening slice only; no second unit or broadened QA stream may be mixed in
   - D-007: no product implementation, schema, migration, or Prisma work may be introduced under this verification unit
@@ -38,15 +38,15 @@ checks.
 
 ## Acceptance Criteria
 
-- [ ] One repo-runnable verification command/path exists for this bounded unit
-- [ ] The bounded verification path executes tenant-enterprise UI smoke checks for the already-implemented pages in scope
-- [ ] The bounded verification path exercises realm/session transitions and fails on miswiring
-- [ ] The bounded verification path asserts frontend/backend response-envelope alignment for the affected tenant modules in scope
-- [ ] The bounded verification path exercises white-label seeded storefront/catalog visibility and data-state behavior in scope
-- [ ] The bounded verification path fails when a transaction proxy runtime failure breaks the implemented slice in scope
-- [ ] No product feature behavior is added or changed by this unit
-- [ ] No schema, migration, Prisma, broad CI, broad auth, or broad catalog redesign scope is introduced
-- [ ] No AdminRBAC, RFQ, custom-domain, apex-domain, or DNS scope is introduced
+- [x] One repo-runnable verification command/path exists for this bounded unit
+- [x] The bounded verification path executes tenant-enterprise UI smoke checks for the already-implemented pages in scope
+- [x] The bounded verification path exercises realm/session transitions and fails on miswiring
+- [x] The bounded verification path asserts frontend/backend response-envelope alignment for the affected tenant modules in scope
+- [x] The bounded verification path exercises white-label seeded storefront/catalog visibility and data-state behavior in scope
+- [x] The bounded verification path fails when a transaction proxy runtime failure breaks the implemented slice in scope
+- [x] No product feature behavior is added or changed by this unit
+- [x] No schema, migration, Prisma, broad CI, broad auth, or broad catalog redesign scope is introduced
+- [x] No AdminRBAC, RFQ, custom-domain, apex-domain, or DNS scope is introduced
 
 ## Files Allowlisted (Modify)
 
@@ -70,18 +70,25 @@ checks.
 - Opening decision: `GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING`
 - Trigger evidence class: recent bounded implementations passed build/typecheck and bounded verification yet still allowed runtime failures to escape to manual operator inspection
 - Runtime failure classes motivating this unit: tenant realm/session miswiring; frontend/backend response-envelope mismatch; transaction proxy runtime failure; white-label seeded catalog visibility/data-state blocker
-- No implementation or verification evidence is recorded yet for this unit; this record is the opening only
+- Implementation commit: `858505b` — `test(runtime-verification): harden tenant-enterprise and white-label runtime checks`
+- Verification evidence: `pnpm test:runtime-verification` PASS (`6` files passed, `39` tests passed)
+- Repo-runnable runtime verification path now exists at root `package.json` and delegates to bounded server-side execution only
+- Covered failure classes now surface automatically for the bounded slices: tenant realm/session miswiring, bounded frontend/backend response-envelope mismatch, transaction proxy/service-path regression, and white-label seeded storefront/catalog visibility or data-state failure
+- No product behavior change, schema/migration/Prisma work, governance-doctrine change, auth redesign, catalog redesign, routing/domain work, or broader QA/CI transformation was introduced by this unit
+
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Next-action posture after sync: `GOV-CLOSE-TECS-RUNTIME-VERIFICATION-HARDENING-001`
 
 ## Governance Closure
 
-*Not yet set — unit is OPEN and implementation-ready.*
+*Not yet set — unit is VERIFIED_COMPLETE and postured for Close only.*
 
 ## Allowed Next Step
 
-Implement only this bounded verification-hardening unit.
-
-The next implementation prompt may create the executable repo-runnable verification path for the
-specific tenant-enterprise and white-label runtime slices in scope, and no more.
+Governance-only closure for this same bounded runtime-verification hardening unit.
 
 ## Forbidden Next Step
 
@@ -93,6 +100,7 @@ specific tenant-enterprise and white-label runtime slices in scope, and no more.
 - Do **not** modify schema, migrations, Prisma models, or database configuration under this unit
 - Do **not** open or imply any second verification-hardening unit under this step
 - Do **not** expand into AdminRBAC, RFQ, custom-domain, apex-domain, or DNS work under this unit
+- Do **not** treat governance sync as closure; a separate close step is still required
 
 ## Drift Guards
 
@@ -100,6 +108,7 @@ specific tenant-enterprise and white-label runtime slices in scope, and no more.
 - Repo-runnable does not mean CI redesign. The required output is a runnable verification path inside the repo, not a broad pipeline transformation.
 - Affected tenant modules must remain bounded to the implemented slices under review. Do not use this unit to create a generalized contract-testing platform.
 - White-label coverage remains limited to seeded storefront/catalog visibility and data-state runtime truth for the implemented path only.
+- Governance sync for this unit is recording only; no new implementation, no new opening, and no closure is implied by the VERIFIED_COMPLETE state.
 
 ## Control-Plane Source of Truth
 
@@ -113,6 +122,9 @@ specific tenant-enterprise and white-label runtime slices in scope, and no more.
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING`. Unit opened as the sole bounded
-implementation-ready verification-hardening step. No product code, tests, schema, migrations, or
-broader governance closure/sync work was performed in this opening step.
+2026-03-21 — `GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001`. Status transitioned:
+`OPEN` → `VERIFIED_COMPLETE` after implementation commit `858505b` and bounded verification evidence
+`pnpm test:runtime-verification` PASS (`6` files passed / `39` tests passed). The repo-runnable
+runtime verification path now exists, covered failure classes now surface automatically for the
+bounded tenant-enterprise and white-label slices, no product behavior change was introduced, and
+the unit is postured for Close only.
