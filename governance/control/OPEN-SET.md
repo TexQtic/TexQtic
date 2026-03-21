@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001)
+**Last Updated:** 2026-03-21 (GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,7 +13,6 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 | Control-plane admin access revoke/remove authority | VERIFIED_COMPLETE | W5 | 2026-03-21 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
@@ -21,11 +20,11 @@
 ## Summary
 
 - **OPEN** (implementation-ready): **0**
-- **VERIFIED_COMPLETE** (postured for Close): **1**
+- **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
@@ -46,7 +45,7 @@ TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 closed 2026-03-21 after implementati
 TECS-RUNTIME-VERIFICATION-HARDENING-001 closed 2026-03-21 after implementation commit 858505b, governance-sync commit e4b3e1e, and the mandatory post-close audit result `DECISION_REQUIRED`. Scope remained limited to repo-runnable runtime verification for already-implemented tenant-enterprise UI/auth/contract paths and white-label seeded storefront/catalog visibility/data-state paths only; covered runtime failure classes now surface automatically for those bounded slices, and no broad QA, CI, auth, catalog, AdminRBAC, RFQ, or domain-routing program was opened by implication.
 TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 closed 2026-03-21 after implementation commit ec2c614, governance sync commit 6a34e64, and the mandatory post-close audit result `DECISION_REQUIRED`. The unit remained clarification-only, the next mutation child remained candidate-only and limited to control-plane admin access revoke/remove authority, no AdminRBAC implementation unit was opened, and no invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 closed 2026-03-21 after implementation commit 4ede95d, governance sync commit 8c58bcd, and the mandatory post-close audit result `DECISION_REQUIRED`. The unit remained clarification-only, `READY_FOR_OPENING` remained opening-readiness only, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, and no invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 is now VERIFIED_COMPLETE after implementation commit d51a2a8 and bounded verification evidence: `tests/adminrbac-registry-read-ui.test.tsx` PASS (6 tests), `server/src/__tests__/admin-rbac-revoke-remove.integration.test.ts` PASS (4 tests), and `pnpm validate:contracts` PASS. Scope remains limited to control-plane admin access revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved through request-time admin-record enforcement, refresh-token invalidation preserved, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remain excluded. The unit is postured for Close only; no new opening is implied.
+TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 closed 2026-03-21 after implementation commit d51a2a8, governance-sync commit 794fcd4, focused UI PASS (6 tests), focused backend PASS (4 tests), `pnpm validate:contracts` PASS, and mandatory post-close audit result `DECISION_REQUIRED`. The unit remained bounded to control-plane admin access revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and explicit audit traceability required. No invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 No implementation-ready unit is currently OPEN.
 
@@ -61,6 +60,7 @@ No implementation-ready unit is currently OPEN.
 | TECS-G026-DESIGN-CLARIFICATION-001 | CLOSED | 2026-03-20 | see git log |
 | TECS-G026-H-001 | CLOSED | 2026-03-20 | deef077 · e154f58 |
 | TECS-FBW-ADMINRBAC-REGISTRY-READ-001 | CLOSED | 2026-03-20 | 38419b5 · 50d1e36 |
+| TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 | CLOSED | 2026-03-21 | d51a2a8 · 794fcd4 |
 | TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 | CLOSED | 2026-03-21 | ec2c614 · 6a34e64 |
 | TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 | CLOSED | 2026-03-21 | 4ede95d · 8c58bcd |
 | TECS-RUNTIME-VERIFICATION-HARDENING-001 | CLOSED | 2026-03-21 | 858505b · e4b3e1e |

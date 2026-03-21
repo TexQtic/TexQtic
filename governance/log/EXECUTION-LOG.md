@@ -1930,6 +1930,81 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 — 2026-03-21
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001)
+Title: Close the bounded AdminRBAC revoke/remove implementation unit
+Summary: Governance-only closure unit. Recorded TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 as
+  CLOSED after implementation commit d51a2a8, governance-sync commit 794fcd4, focused UI PASS
+  (6 tests), focused backend PASS (4 tests), and `pnpm validate:contracts` PASS. Layer 0,
+  Layer 1, and Layer 3 were reconciled while scope remained limited to control-plane admin
+  access revoke/remove authority only, `SuperAdmin` actor only, existing non-`SuperAdmin`
+  internal target only, self-revoke and peer-`SuperAdmin` revoke remained denied, next-request
+  authorization failure after revoke/remove remained preserved, refresh-token invalidation
+  remained preserved, explicit audit capture remained mandatory, `TECS-FBW-ADMINRBAC` remained
+  DESIGN_GATE, and no broader AdminRBAC implementation opening was created by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No product code, tests, schema, migrations, Prisma models, BLOCKED.md, decisions, or
+  unrelated governance files changed in this closure unit. No new opening was created.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001-POST-CLOSE — 2026-03-21
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED.
+State Summary:
+  - classification: closed bounded AdminRBAC revoke/remove child with no implementation-ready unit open
+  - bounded scope preserved: control-plane admin access revoke/remove authority only
+  - open-unit count: 0
+  - blocked / deferred / design-gated context: 0 / 0 / 1
+  - current NEXT-ACTION compatibility: compatible with OPERATOR_DECISION_REQUIRED
+Outstanding Gates:
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - no invite opening is authorized
+  - no role-change opening is authorized
+  - no tenant-scope expansion is authorized
+  - no broader authority expansion is authorized
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - HOLD
+  - RECORD_ONLY
+  - DESIGN_REFINEMENT
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: this bounded revoke/remove unit is fully closed, but any stronger follow-on move still requires explicit operator sequencing or a separate later decision/opening rather than implication from this closure
+Why Stronger Moves Remain Blocked:
+  - closure of this bounded unit does not authorize invite opening
+  - closure of this bounded unit does not authorize role-change opening
+  - closure of this bounded unit does not authorize tenant-scope expansion
+  - closure of this bounded unit does not authorize broader authority expansion
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE and no new implementation-ready unit is open
+Forbidden Next Moves:
+  - do not infer an invite opening from this closure
+  - do not infer a role-change opening from this closure
+  - do not infer tenant-scope expansion from this closure
+  - do not infer broader authority expansion from this closure
+  - do not reopen TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 without a separate governance action
+Resulting Layer 0 Posture:
+  - NEXT-ACTION returns to OPERATOR_DECISION_REQUIRED
+  - OPEN set contains no implementation-ready unit
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING — 2026-03-21
 Type: GOVERNANCE / OPENING-DECISION
 Status: CLOSED

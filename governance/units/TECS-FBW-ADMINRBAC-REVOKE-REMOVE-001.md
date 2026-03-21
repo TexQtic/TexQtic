@@ -2,11 +2,11 @@
 unit_id: TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001
 title: Control-plane admin access revoke/remove authority
 type: IMPLEMENTATION
-status: VERIFIED_COMPLETE
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
-closed: null
+closed: 2026-03-21
 verified: 2026-03-21
 commit: d51a2a8
 evidence: "TEST_VERIFICATION: tests/adminrbac-registry-read-ui.test.tsx PASS (6 tests) · TEST_VERIFICATION: server/src/__tests__/admin-rbac-revoke-remove.integration.test.ts PASS (4 tests) · CONTRACT_VALIDATION: pnpm validate:contracts PASS · GOVERNANCE_RECONCILIATION_CONFIRMATION: control-plane-only revoke/remove scope, actor/target/self-peer protection locks, next-request authorization failure, refresh-token invalidation, and audit traceability all preserved with no invite, role-change, tenant-scope, schema, migration, or broader auth redesign expansion"
@@ -28,7 +28,7 @@ blockers: []
 ## Unit Summary
 
 `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` is the sole bounded AdminRBAC revoke/remove child slice
-and is now `VERIFIED_COMPLETE`.
+and is now `CLOSED`.
 
 It is limited to one bounded control-plane mutation surface only:
 
@@ -151,9 +151,17 @@ The exact out-of-scope boundary of this unit is:
 - Next-action posture after sync: `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`
 - Governance sync preserves control-plane-only revoke/remove posture, `SuperAdmin`-only actor lock, existing non-`SuperAdmin` internal target lock, self/peer-`SuperAdmin` denial, next-request authorization failure after revoke/remove, refresh-token invalidation, explicit audit traceability, `TECS-FBW-ADMINRBAC` as `DESIGN_GATE`, and no new opening implication
 
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`
+- Status transition: `VERIFIED_COMPLETE` → `CLOSED`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
+- Closure preserves control-plane-only revoke/remove posture, `SuperAdmin`-only actor lock, existing non-`SuperAdmin` internal target lock, self/peer-`SuperAdmin` denial, next-request authorization failure after revoke/remove, refresh-token invalidation, explicit audit traceability, `TECS-FBW-ADMINRBAC` as `DESIGN_GATE`, and no invite, role-change, tenant-scope, or broader authority expansion implication
+
 ## Allowed Next Step
 
-Governance close work is authorized only for this same bounded unit.
+No further implementation or governance-sync work is authorized inside this closed unit.
 
 ## Forbidden Next Step
 
@@ -166,6 +174,10 @@ Governance close work is authorized only for this same bounded unit.
 - Do **not** redesign auth beyond the bounded invalidation behavior required for revoke/remove truthfulness
 - Do **not** open any second AdminRBAC child unit under this step
 - Do **not** treat governance sync as closure; a separate close step is still required
+- Do **not** infer invite opening from this closure
+- Do **not** infer role-change opening from this closure
+- Do **not** infer tenant-scope expansion from this closure
+- Do **not** infer broader authority expansion from this closure
 
 ## Drift Guards
 
@@ -176,6 +188,8 @@ Governance close work is authorized only for this same bounded unit.
 - Invalidation behavior is part of this bounded child and must not be deferred as ambient or eventual-only behavior
 - Audit minimums remain mandatory and must cover successful, denied, and failed attempts
 - Governance sync for this unit is recording only; no new implementation, no new opening, and no closure is implied by the `VERIFIED_COMPLETE` state
+- Closure of this bounded unit does not authorize invite, role-change, tenant-scope, or broader AdminRBAC implementation work
+- Closure of this bounded unit does not alter `TECS-FBW-ADMINRBAC` from `DESIGN_GATE`
 
 ## Control-Plane Source of Truth
 
@@ -190,12 +204,14 @@ Governance close work is authorized only for this same bounded unit.
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`. Status transitioned:
-`OPEN` → `VERIFIED_COMPLETE` after implementation commit `d51a2a8`, focused UI PASS (`6` tests),
-focused backend PASS (`4` tests), and `pnpm validate:contracts` PASS. Scope remains bounded to
+2026-03-21 — `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`. Status transitioned:
+`VERIFIED_COMPLETE` → `CLOSED` after implementation commit `d51a2a8`, governance-sync commit
+`794fcd4`, focused UI PASS (`6` tests), focused backend PASS (`4` tests), `pnpm validate:contracts`
+PASS, and mandatory post-close audit result `DECISION_REQUIRED`. Scope remained bounded to
 control-plane admin access revoke/remove authority only, with `SuperAdmin` actor only, existing
 non-`SuperAdmin` internal target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request
 authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and
 explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority
-expansion remain excluded, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and the unit is postured
-for Close only.
+expansion remained excluded, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no broader AdminRBAC
+implementation opening was created, and resulting Layer 0 posture returned to
+`OPERATOR_DECISION_REQUIRED`.
