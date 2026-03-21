@@ -2,14 +2,14 @@
 unit_id: TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001
 title: AdminRBAC revoke/remove opening posture clarification
 type: GOVERNANCE
-status: VERIFIED_COMPLETE
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
-closed: null
+closed: 2026-03-21
 verified: 2026-03-21
 commit: 4ede95d
-evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: revoke/remove opening posture clarified as control-plane only, SuperAdmin-only actor, existing internal control-plane admin target only, no self-revoke, no same-highest-role revoke, immediate privileged-session and refresh-token invalidation required, explicit audit traceability required, and READY_FOR_OPENING recorded for a later separate decision/opening step only · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded verification confirmed the clarification remains governance-only, READY_FOR_OPENING remains opening-readiness only, revoke/remove implementation is not opened, TECS-FBW-ADMINRBAC remains DESIGN_GATE, governance:lint PASS, and no verification commit was required"
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: revoke/remove opening posture clarified as control-plane only, SuperAdmin-only actor, existing internal control-plane admin target only, no self-revoke, no same-highest-role revoke, immediate privileged-session and refresh-token invalidation required, explicit audit traceability required, and READY_FOR_OPENING recorded for a later separate decision/opening step only · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded verification confirmed the clarification remains governance-only, READY_FOR_OPENING remains opening-readiness only, revoke/remove implementation is not opened, TECS-FBW-ADMINRBAC remains DESIGN_GATE, governance:lint PASS, and no verification commit was required · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded closure completed with mandatory post-close audit result DECISION_REQUIRED, the unit remained clarification-only, READY_FOR_OPENING did not open implementation, revoke/remove implementation remained unopened, TECS-FBW-ADMINRBAC remained DESIGN_GATE, and NEXT-ACTION returned to OPERATOR_DECISION_REQUIRED"
 doctrine_constraints:
   - D-004: this is one bounded clarification unit only; no implementation, verification, sync, or closure work may be mixed in
   - D-007: governance units must not touch application code, schema, tests, or CI scripts
@@ -359,7 +359,8 @@ No further implementation, verification, or governance-sync work is authorized i
 - Governance close unit: `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`
 - Status transition: `VERIFIED_COMPLETE` → `CLOSED`
 - Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
-- Closure is not performed in this sync step
+- Mandatory post-close audit result: `DECISION_REQUIRED`
+- Closure preserves clarification-only posture, keeps `READY_FOR_OPENING` as opening-readiness only, keeps revoke/remove implementation unopened, preserves the bounded control-plane revoke/remove posture only, preserves `TECS-FBW-ADMINRBAC` as `DESIGN_GATE`, authorizes no invite, role-change, tenant-scope, or broader authority expansion, and creates no AdminRBAC implementation opening
 
 ## Control-Plane Source of Truth
 
@@ -375,11 +376,11 @@ No further implementation, verification, or governance-sync work is authorized i
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOVERNANCE-SYNC-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`.
-Status transitioned: `OPEN` → `VERIFIED_COMPLETE` after implementation commit `4ede95d`
-and bounded governance verification confirmation with no verification commit required.
-The unit remains clarification-only, `READY_FOR_OPENING` remains opening-readiness only,
-revoke/remove implementation is not opened, the candidate remains bounded to control-plane
-revoke/remove posture only, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no invite,
-role-change, tenant-scope, or broader authority expansion was authorized, and no new opening is
-implied by this sync.
+2026-03-21 — `GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001`.
+Status transitioned: `VERIFIED_COMPLETE` → `CLOSED` after the already-recorded
+implementation, verification, and governance-sync chain, together with mandatory
+post-close audit result `DECISION_REQUIRED`. The unit remained clarification-only,
+`READY_FOR_OPENING` remained opening-readiness only, revoke/remove implementation was not
+opened, the candidate remained bounded to control-plane revoke/remove posture only,
+`TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no invite, role-change, tenant-scope, or
+broader authority expansion was authorized, and no new opening is implied by this closure.
