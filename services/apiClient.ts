@@ -71,13 +71,33 @@ export function setStoredAuthRealm(realm: AuthRealm | null): void {
   localStorage.removeItem(AUTH_REALM_KEY);
 }
 
+function resolveStoredAuthRealm(): AuthRealm | null {
+  const storedRealm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
+  if (storedRealm) {
+    return storedRealm;
+  }
+
+  const hasTenantToken = !!localStorage.getItem(TENANT_TOKEN_KEY);
+  const hasAdminToken = !!localStorage.getItem(ADMIN_TOKEN_KEY);
+
+  if (hasTenantToken && !hasAdminToken) {
+    return 'TENANT';
+  }
+
+  if (hasAdminToken && !hasTenantToken) {
+    return 'CONTROL_PLANE';
+  }
+
+  return null;
+}
+
 /**
  * Get stored JWT token based on current realm.
  * If an impersonation token override is active it takes precedence over the
  * stored tenant token (admin token in localStorage is never overwritten).
  */
 export function getToken(): string | null {
-  const realm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
+  const realm = resolveStoredAuthRealm();
   if (!realm) return null;
 
   if (_impersonationTokenOverride && realm === 'TENANT') {
@@ -115,7 +135,7 @@ export function clearAuth(): void {
  * Get current auth realm
  */
 export function getAuthRealm(): AuthRealm | null {
-  return localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
+  return resolveStoredAuthRealm();
 }
 
 /**

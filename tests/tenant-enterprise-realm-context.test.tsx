@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ErrorState } from '../components/shared/ErrorState';
 import {
+  getAuthRealm,
   getToken,
   setImpersonationToken,
   setStoredAuthRealm,
@@ -45,6 +46,15 @@ describe('tenant-enterprise realm context hotfix', () => {
 
     setStoredAuthRealm('CONTROL_PLANE');
     expect(getToken()).toBe('admin-jwt');
+  });
+
+  it('recovers a tenant-only session when the tenant token exists but the stored realm key is missing', () => {
+    setToken('tenant-jwt', 'TENANT');
+
+    localStorage.removeItem('texqtic_auth_realm');
+
+    expect(getAuthRealm()).toBe('TENANT');
+    expect(getToken()).toBe('tenant-jwt');
   });
 
   it('surfaces explicit realm mismatch messages instead of collapsing them into a generic network error', () => {

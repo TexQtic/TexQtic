@@ -44,7 +44,17 @@ function makeTxBoundPrisma(tx: Prisma.TransactionClient): PrismaClient {
   return new Proxy(tx as unknown as PrismaClient, {
     get(target, prop) {
       if (prop === '$transaction') {
-        return (cb: (client: Prisma.TransactionClient) => Promise<unknown>) => cb(tx);
+        return (arg: unknown) => {
+          if (typeof arg === 'function') {
+            return (arg as (client: Prisma.TransactionClient) => Promise<unknown>)(tx);
+          }
+
+          if (Array.isArray(arg)) {
+            return Promise.all(arg);
+          }
+
+          throw new TypeError('Unsupported $transaction usage in makeTxBoundPrisma');
+        };
       }
       return (target as unknown as Record<string | symbol, unknown>)[prop];
     },
@@ -256,7 +266,7 @@ const tenantCertificationRoutes: FastifyPluginAsync = async fastify => {
           return sendError(reply, result.code, result.message, httpStatus);
         }
 
-        return sendSuccess(reply, result.certification);
+        return sendSuccess(reply, { certification: result.certification });
       });
     },
   );
