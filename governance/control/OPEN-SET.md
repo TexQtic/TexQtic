@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
+**Last Updated:** 2026-03-21 (GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,7 +13,6 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 |---|---|---|---|---|
-| TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 | Bounded platform-subdomain runtime routing for <slug>.texqtic.app | VERIFIED_COMPLETE | W4 | 2026-03-21 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
@@ -24,7 +23,7 @@
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
 TECS-RFQ-BUYER-DETAIL-UI-001 closed 2026-03-19: implementation commit dcb5964 + VERIFY-TECS-RFQ-BUYER-DETAIL-UI-001 VERIFIED_COMPLETE.
 TECS-RFQ-BUYER-LIST-READ-001 closed 2026-03-19: implementation commit 64500cf + verified RFQ UI evidence (2 files passed, 11 tests passed) + GOVERNANCE-SYNC-RFQ-002.
@@ -41,7 +40,7 @@ TECS-FBW-ADMINRBAC-REGISTRY-READ-001 closed 2026-03-20 after implementation comm
 TECS-G026-H-001 closed 2026-03-20 after implementation commit deef077, governance-sync commit e154f58, authoritative remote Supabase verification PASS, and bounded prerequisite proof. Additional historical `SELECT`-only grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users`, plus duplicate/equivalent `postgres` membership rows, remain preserved as bounded historical observations only and are not treated as resolved work by this closure step.
 TECS-G026-DESIGN-CLARIFICATION-001 closed 2026-03-20 after recording the bounded clarification result that future G-026 routing must return to a resolver-only `texqtic_service` posture. The extra grants on `catalog_items`, `memberships`, `rfq_supplier_responses`, and `users` are now classified as separately governed non-routing dependencies that must be removed or re-homed before any routing opening may be considered.
 TECS-G026-CLEANUP-REMEDIATION-001 closed 2026-03-20 after implementation commit 0f3d2c3, governance-sync commit f21ef8c, the already-recorded authoritative remote Supabase verification PASS, and a conservative closure step with mandatory post-close audit result `HOLD`. Broad G-026 routing remains unopened and no routing implementation-ready G-026 stream is OPEN.
-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 recorded VERIFIED_COMPLETE 2026-03-21 after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11 and bounded verification PASS (`pnpm -C server exec vitest run src/__tests__/g026-platform-subdomain-routing.spec.ts`, `pnpm -C server exec tsc --noEmit`, `pnpm exec tsc --noEmit`). Broad G-026 remains unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture remains canonical, and this unit is now postured for Close only.
+TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 closed 2026-03-21 after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11, governance-sync commit 963c9359eb551cef076913722071e4577cf7040f, and the mandatory post-close audit result `DECISION_REQUIRED`. Broad G-026 remains unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture remains canonical, and no new routing unit is opened by implication.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 No implementation-ready unit is currently OPEN.
 
@@ -52,7 +51,7 @@ No implementation-ready unit is currently OPEN.
 | UNIT-ID | Status | Closed | Commit |
 |---|---|---|---|
 | TECS-G026-CLEANUP-REMEDIATION-001 | CLOSED | 2026-03-20 | 0f3d2c3 · f21ef8c |
-| TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 | VERIFIED_COMPLETE | 2026-03-21 | 0b8fff2 |
+| TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 | CLOSED | 2026-03-21 | 0b8fff2 · 963c935 |
 | TECS-G026-DESIGN-CLARIFICATION-001 | CLOSED | 2026-03-20 | see git log |
 | TECS-G026-H-001 | CLOSED | 2026-03-20 | deef077 · e154f58 |
 | TECS-FBW-ADMINRBAC-REGISTRY-READ-001 | CLOSED | 2026-03-20 | 38419b5 · 50d1e36 |

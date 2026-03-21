@@ -2,11 +2,11 @@
 unit_id: TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
 title: Bounded platform-subdomain runtime routing for <slug>.texqtic.app
 type: IMPLEMENTATION
-status: VERIFIED_COMPLETE
+status: CLOSED
 wave: W4
 plane: BACKEND
 opened: 2026-03-20
-closed: null
+closed: 2026-03-21
 verified: 2026-03-21
 commit: 0b8fff2085490d32d379e43fc6a2303034563b11
 evidence: "TEST_VERIFICATION: pnpm -C server exec vitest run src/__tests__/g026-platform-subdomain-routing.spec.ts PASS · STATIC_VERIFICATION: pnpm -C server exec tsc --noEmit PASS · STATIC_VERIFICATION: pnpm exec tsc --noEmit PASS · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded verification accepted with no broader G-026 authorization implied"
@@ -93,8 +93,8 @@ Expected candidates for the future implementation prompt only:
 
 - Governance close unit: `GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`
 - Status transition: `VERIFIED_COMPLETE` → `CLOSED`
-- Next-action posture after closure: closure only; no new unit implied
-- Mandatory post-close audit must be emitted in the same closure operation
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
 
 ## Allowed Next Step
 
@@ -119,11 +119,12 @@ Governance-only closure for this same bounded unit.
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOVERNANCE-SYNC-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`. Status transitioned:
-`OPEN` → `VERIFIED_COMPLETE` after implementation commit
-`0b8fff2085490d32d379e43fc6a2303034563b11` and bounded verification PASS. Broad G-026 remains
-unopened, no broader domain authorization was created, resolver-only `texqtic_service` posture
-remains canonical, and the unit is now postured for Close only.
+2026-03-21 — `GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001`. Status transitioned:
+`VERIFIED_COMPLETE` → `CLOSED` after the already-recorded implementation,
+bounded verification PASS, governance-sync reconciliation, and mandatory post-close audit result
+`DECISION_REQUIRED`. Broad G-026 remains unopened, no broader domain authorization was created,
+resolver-only `texqtic_service` posture remains canonical, and no new routing unit was opened by
+implication.
 
 ## Control-Plane Source of Truth
 

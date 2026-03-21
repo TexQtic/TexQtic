@@ -1684,6 +1684,73 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md ·
   governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md ·
   governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 — 2026-03-21
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001)
+Title: Close the bounded platform-subdomain runtime routing unit
+Summary: Governance-only closure unit. Recorded TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 as
+  CLOSED after implementation commit 0b8fff2085490d32d379e43fc6a2303034563b11, bounded
+  verification PASS, and governance-sync commit 963c9359eb551cef076913722071e4577cf7040f. Layer 0,
+  Layer 1, and Layer 3 were reconciled while broad G-026 remained unopened, no broader domain
+  authorization was created, resolver-only texqtic_service posture remained canonical, and no new
+  routing unit was opened by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No product code, tests, schema, migrations, routes, contracts, or decisions changed in
+  this closure unit. No custom-domain, apex-domain, DNS-verification, or broader white-label
+  domain lifecycle authorization was created.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001-POST-CLOSE — 2026-03-21
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED.
+State Summary:
+  - classification: closed bounded routing child with no implementation-ready unit open
+  - parent gate posture: broad G-026 routing remains unopened; TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - open-unit count: 0
+  - blocked / deferred / design-gated context: 0 / 0 / 1
+  - current NEXT-ACTION compatibility: compatible with OPERATOR_DECISION_REQUIRED
+Outstanding Gates:
+  - broad G-026 routing remains unopened
+  - custom-domain, apex-domain, DNS-verification, and broader white-label domain lifecycle scope remain excluded
+  - no broader routing-opening decision exists beyond this closed bounded slice
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - HOLD
+  - RECORD_ONLY
+  - DESIGN_REFINEMENT
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: the bounded child is fully closed, but any stronger follow-on action still requires explicit operator sequencing or decision work rather than implication from this closure
+Why Stronger Moves Remain Blocked:
+  - broad G-026 remains unopened in Layer 0
+  - this closure does not authorize custom-domain, apex-domain, DNS-verification, or broader white-label domain lifecycle work
+  - no new implementation unit may be inferred from the closed state of this bounded child
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE and no competing implementation-ready unit is OPEN
+Forbidden Next Moves:
+  - no broad G-026 opening by implication
+  - no custom-domain, apex-domain, or DNS-verification authorization by follow-on wording
+  - no broader white-label lifecycle authorization by implication
+  - no product-code, schema, migration, Prisma, or resolver-surface expansion under this closed unit
+  - no tenant/control-plane boundary drift
+Resulting Layer 0 Posture:
+  - NEXT-ACTION returns to OPERATOR_DECISION_REQUIRED
+  - no implementation unit is opened
   - no routing authorization is implied
 Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md preserved as OPERATOR_DECISION_REQUIRED carry-forward posture;
   Layer 3 — EXECUTION-LOG.md appended
