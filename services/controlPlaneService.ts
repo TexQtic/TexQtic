@@ -8,7 +8,7 @@
  * Wave 4 Scope: Admin tenant provisioning added
  */
 
-import { adminGet, adminGetWithHeaders, adminPost, adminPostWithHeaders, adminPut } from './adminApiClient';
+import { adminDelete, adminGet, adminGetWithHeaders, adminPost, adminPostWithHeaders, adminPut } from './adminApiClient';
 
 // ==================== TENANT MANAGEMENT ====================
 
@@ -565,12 +565,26 @@ export interface ControlPlaneAdminRegistryResponse {
   count: number;
 }
 
+export interface RevokeControlPlaneAdminAccessResponse {
+  revokedAdminId: string;
+  refreshTokensInvalidated: number;
+}
+
 /**
  * Fetch the bounded control-plane admin access registry (SUPER_ADMIN only).
  * Read-only surface: current internal control-plane identities + bounded role posture.
  */
 export async function getAdminAccessRegistry(): Promise<ControlPlaneAdminRegistryResponse> {
   return adminGet<ControlPlaneAdminRegistryResponse>('/api/control/admin-access-registry');
+}
+
+/**
+ * Revoke/remove a bounded control-plane admin access target (SUPER_ADMIN only).
+ */
+export async function revokeControlPlaneAdminAccess(
+  adminId: string
+): Promise<RevokeControlPlaneAdminAccessResponse> {
+  return adminDelete<RevokeControlPlaneAdminAccessResponse>(`/api/control/admin-access-registry/${adminId}`);
 }
 
 /**

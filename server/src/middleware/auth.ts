@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { sendUnauthorized, sendForbidden } from '../utils/response.js';
 import { getUserMembership } from '../db/withDbContext.js';
 import { checkRealmMismatch } from './realmGuard.js';
+import { prisma } from '../db/prisma.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -73,9 +74,25 @@ export async function adminAuthMiddleware(request: FastifyRequest, reply: Fastif
       return sendUnauthorized(reply, 'Invalid admin token');
     }
 
+    const adminRecord = await prisma.adminUser.findUnique({
+      where: { id: payload.adminId },
+      select: {
+        id: true,
+        role: true,
+      },
+    });
+
+    if (!adminRecord) {
+      return sendUnauthorized(reply, 'Admin access revoked or unavailable');
+    }
+
+    if (adminRecord.role !== payload.role) {
+      return sendUnauthorized(reply, 'Admin access no longer matches token');
+    }
+
     request.isAdmin = true;
-    request.adminId = payload.adminId;
-    request.adminRole = payload.role;
+    request.adminId = adminRecord.id;
+    request.adminRole = adminRecord.role;
 
     // Wave 0-B: Check realm mismatch using centralized mapping
     // This catches cases where admin token is used on tenant-only endpoint

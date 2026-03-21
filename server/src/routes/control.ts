@@ -2,7 +2,7 @@ import type { FastifyPluginAsync, FastifyReply, FastifyRequest, preHandlerHookHa
 import { z } from 'zod';
 import { Prisma, type EventLog } from '@prisma/client';
 import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
-import { sendSuccess, sendError, sendForbidden, sendUnauthorized, sendValidationError } from '../utils/response.js';
+import { sendSuccess, sendError, sendForbidden, sendNotFound, sendUnauthorized, sendValidationError } from '../utils/response.js';
 import { randomUUID } from 'node:crypto';
 import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
@@ -528,6 +528,146 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       }
     }
   );
+
+  /**
+   * DELETE /api/control/admin-access-registry/:id
+   * Bounded revoke/remove for existing non-SUPER_ADMIN control-plane admins.
+   *
+   * TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001
+   * Scope locks preserved:
+   * - control-plane only
+   * - SUPER_ADMIN actor only
+   * - existing non-SUPER_ADMIN target only
+   * - no self-revoke
+   * - no peer-SUPER_ADMIN revoke/remove
+   * - immediate refresh-token invalidation
+   */
+  fastify.delete('/admin-access-registry/:id', async (request, reply) => {
+    if (!request.isAdmin || !request.adminId || !request.adminRole) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const actorId = request.adminId;
+    const actorRole = request.adminRole;
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid admin id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const { id: targetAdminId } = paramsResult.data;
+
+    if (actorRole !== 'SUPER_ADMIN') {
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(actorId, 'control.admin_access_registry.revoke.denied', 'admin_user', {
+          actorRole,
+          targetAdminId,
+          reason: 'ACTOR_NOT_SUPER_ADMIN',
+        })
+      );
+
+      return sendForbidden(reply, 'Requires one of: SUPER_ADMIN');
+    }
+
+    if (targetAdminId === actorId) {
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(actorId, 'control.admin_access_registry.revoke.denied', 'admin_user', {
+          actorRole,
+          targetAdminId,
+          reason: 'SELF_REVOKE_BLOCKED',
+        })
+      );
+
+      return sendForbidden(reply, 'Self-revoke is not allowed');
+    }
+
+    try {
+      const targetAdmin = await prisma.adminUser.findUnique({
+        where: { id: targetAdminId },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+        },
+      });
+
+      if (!targetAdmin) {
+        await writeAuditLog(
+          prisma,
+          createAdminAudit(actorId, 'control.admin_access_registry.revoke.failed', 'admin_user', {
+            actorRole,
+            targetAdminId,
+            reason: 'TARGET_NOT_FOUND',
+          })
+        );
+
+        return sendNotFound(reply, 'Admin access target not found');
+      }
+
+      if (targetAdmin.role === 'SUPER_ADMIN') {
+        await writeAuditLog(
+          prisma,
+          createAdminAudit(actorId, 'control.admin_access_registry.revoke.denied', 'admin_user', {
+            actorRole,
+            targetAdminId: targetAdmin.id,
+            targetAdminRole: targetAdmin.role,
+            reason: 'PEER_SUPER_ADMIN_PROTECTED',
+          })
+        );
+
+        return sendForbidden(reply, 'Peer SUPER_ADMIN revoke/remove is not allowed');
+      }
+
+      const revokeResult = await prisma.$transaction(async tx => {
+        const deletedRefreshTokens = await tx.refreshToken.deleteMany({
+          where: { adminId: targetAdmin.id },
+        });
+
+        await tx.adminUser.delete({
+          where: { id: targetAdmin.id },
+        });
+
+        return {
+          refreshTokensInvalidated: deletedRefreshTokens.count,
+        };
+      });
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(actorId, 'control.admin_access_registry.revoke.succeeded', 'admin_user', {
+          actorRole,
+          targetAdminId: targetAdmin.id,
+          targetAdminEmail: targetAdmin.email,
+          targetAdminRole: targetAdmin.role,
+          refreshTokensInvalidated: revokeResult.refreshTokensInvalidated,
+        })
+      );
+
+      return sendSuccess(reply, {
+        revokedAdminId: targetAdmin.id,
+        refreshTokensInvalidated: revokeResult.refreshTokensInvalidated,
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, actorId, targetAdminId }, '[Admin Access Registry Revoke] Error');
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(actorId, 'control.admin_access_registry.revoke.failed', 'admin_user', {
+          actorRole,
+          targetAdminId,
+          reason: 'INTERNAL_ERROR',
+        })
+      );
+
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to revoke admin access', 500);
+    }
+  });
 
   /**
    * GET /api/control/whoami

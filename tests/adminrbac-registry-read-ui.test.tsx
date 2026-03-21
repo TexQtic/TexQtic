@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../services/adminApiClient', () => ({
+  adminDelete: vi.fn(),
   adminGet: vi.fn(),
   adminGetWithHeaders: vi.fn(),
   adminPost: vi.fn(),
@@ -13,11 +14,13 @@ vi.mock('../services/adminApiClient', () => ({
 import { AdminRbacRegistrySurface } from '../components/ControlPlane/AdminRBAC';
 import {
   getAdminAccessRegistry,
+  revokeControlPlaneAdminAccess,
   type ControlPlaneAdminRegistryEntry,
 } from '../services/controlPlaneService';
-import { adminGet } from '../services/adminApiClient';
+import { adminDelete, adminGet } from '../services/adminApiClient';
 import type { APIError } from '../services/apiClient';
 
+const adminDeleteMock = vi.mocked(adminDelete);
 const adminGetMock = vi.mocked(adminGet);
 
 function makeRegistryEntry(
@@ -50,6 +53,7 @@ function renderHtml(
 
 describe('TECS-FBW-ADMINRBAC-REGISTRY-READ-001 — admin registry fetch', () => {
   beforeEach(() => {
+    adminDeleteMock.mockReset();
     adminGetMock.mockReset();
   });
 
@@ -62,6 +66,21 @@ describe('TECS-FBW-ADMINRBAC-REGISTRY-READ-001 — admin registry fetch', () => 
     expect(adminGetMock).toHaveBeenCalledWith('/api/control/admin-access-registry');
     expect(result.admins).toEqual([admin]);
     expect(result.count).toBe(1);
+  });
+
+  it('calls the bounded revoke/remove endpoint for an existing control-plane admin target', async () => {
+    adminDeleteMock.mockResolvedValue({
+      revokedAdminId: '22222222-2222-2222-2222-222222222222',
+      refreshTokensInvalidated: 2,
+    });
+
+    const result = await revokeControlPlaneAdminAccess('22222222-2222-2222-2222-222222222222');
+
+    expect(adminDeleteMock).toHaveBeenCalledWith(
+      '/api/control/admin-access-registry/22222222-2222-2222-2222-222222222222'
+    );
+    expect(result.revokedAdminId).toBe('22222222-2222-2222-2222-222222222222');
+    expect(result.refreshTokensInvalidated).toBe(2);
   });
 });
 
@@ -106,11 +125,20 @@ describe('TECS-FBW-ADMINRBAC-REGISTRY-READ-001 — admin registry surface', () =
     expect(html).toContain('You don&#x27;t have access to this action.');
   });
 
-  it('does not render forbidden mutation controls or tenant-plane language', () => {
-    const html = renderHtml([makeRegistryEntry()]);
+  it('renders bounded revoke control only for non-SuperAdmin entries', () => {
+    const html = renderHtml([
+      makeRegistryEntry(),
+      makeRegistryEntry({
+        id: '22222222-2222-2222-2222-222222222222',
+        email: 'support@texqtic.example',
+        role: 'SUPPORT',
+        accessClass: 'PLATFORM_ADMIN',
+      }),
+    ]);
 
+    expect(html).toContain('Revoke Access');
+    expect(html).toContain('Protected');
     expect(html).not.toContain('Invite');
-    expect(html).not.toContain('Revoke');
     expect(html).not.toContain('Change Role');
     expect(html).not.toContain('TenantAdmin');
     expect(html).not.toContain('Impersonation');
