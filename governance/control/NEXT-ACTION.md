@@ -1,25 +1,25 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-21 (GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
 
 ```yaml
-unit_id: OPERATOR_DECISION_REQUIRED
+unit_id: TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001
 type: GOVERNANCE
-title: Operator decision required before any new governed opening
+title: Implement the bounded control-plane AdminRBAC revoke/remove child unit
 prerequisites_met: true
-authorized_by: GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY
+authorized_by: GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING
 date_authorized: 2026-03-21
 notes: |
-  GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY is now DECIDED.
-  No implementation-ready unit is OPEN.
+  GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING is now DECIDED.
+  TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 is now the sole OPEN implementation-ready unit.
   TECS-FBW-ADMINRBAC remains DESIGN_GATE.
-  The closed AdminRBAC revoke/remove clarification chain is now sufficient to
-  make one separate bounded revoke/remove opening governance-eligible, but this
-  decision does not itself open implementation.
-  The next possible AdminRBAC move, if separately chosen later, is one bounded
-  revoke/remove opening artifact only. No invite, role-change, tenant-scope,
-  or broader authority expansion was authorized.
+  Scope is limited to control-plane revoke/remove authority only: SuperAdmin
+  actor only, existing non-SuperAdmin internal control-plane admin target only,
+  no self-revoke, no peer-SuperAdmin revoke, immediate privileged-session and
+  refresh-token invalidation in scope, and explicit audit traceability
+  required. No invite, role-change, tenant-scope, or broader authority
+  expansion was opened.
 ```

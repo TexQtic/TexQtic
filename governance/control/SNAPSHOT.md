@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-21
 last_unit_closed: GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001
-last_commit: "[TEXQTIC] governance: decide adminrbac revoke-remove sequencing posture"
+last_commit: "[TEXQTIC] governance: open adminrbac revoke-remove implementation unit"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,7 +28,9 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 0**
+- **Open governed units: 1**
+
+- **TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001** — `OPEN` — Sole bounded implementation-ready AdminRBAC revoke/remove child slice opened 2026-03-21. Scope is limited to control-plane admin access revoke/remove authority only, with `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, immediate privileged-session and refresh-token invalidation in scope, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remain excluded
 
 - **TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001** — `CLOSED` — Bounded governance clarification unit closed 2026-03-21 after implementation commit `4ede95d`, governance sync commit `8c58bcd`, and mandatory post-close audit result `DECISION_REQUIRED`; the unit remained clarification-only, `READY_FOR_OPENING` remained opening-readiness only and not an implementation opening, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and no invite, role-change, tenant-scope, or broader authority expansion was authorized
 - **TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001** — `CLOSED` — Bounded governance clarification unit closed 2026-03-21 after implementation commit `ec2c614`, governance sync commit `6a34e64`, and mandatory post-close audit result `DECISION_REQUIRED`; the unit remained clarification-only, the next mutation child remained candidate-only and limited to control-plane admin access revoke/remove authority, no AdminRBAC implementation unit was opened, and no invite, role-change, tenant-scope, or broader authority expansion was authorized
@@ -48,7 +50,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**0 implementation units are currently OPEN.** TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 is now `CLOSED` after bounded implementation, bounded verification, governance sync, and the mandatory post-close audit result `DECISION_REQUIRED`. READY_FOR_OPENING remained opening-readiness only, no AdminRBAC implementation child is open, no new implementation opening is implied, and TECS-FBW-ADMINRBAC remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` is now the sole bounded implementation-ready AdminRBAC revoke/remove child slice. Scope remains control-plane only, `SuperAdmin`-actor only, existing non-`SuperAdmin` internal target only, with no self-revoke, no peer-`SuperAdmin` revoke, immediate privileged-session and refresh-token invalidation in scope, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remain excluded, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -77,10 +79,10 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
-No implementation-ready unit is OPEN.
+`TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`.
+Exactly one implementation-ready unit is OPEN.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
-GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY is now `DECIDED`. The closed revoke/remove clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no opening was created by this decision. The next possible AdminRBAC move, if separately chosen later, is a bounded revoke/remove opening artifact only. No invite, role-change, tenant-scope, or broader authority expansion was authorized.
+GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING is now `DECIDED`. `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` is now the sole bounded implementation-ready AdminRBAC unit. Scope is limited to control-plane revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, immediate privileged-session and refresh-token invalidation in scope, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remain excluded.
 See `NEXT-ACTION.md`.
 
 ## Active Blockers
@@ -131,6 +133,7 @@ These are distinct closed units and must not be conflated.
 - GOV-CLOSE-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 (2026-03-21): `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001` transitioned `VERIFIED_COMPLETE` → `CLOSED` after the already-recorded implementation, verification, and governance-sync chain. The unit remained clarification-only, `READY_FOR_OPENING` remained opening-readiness only, revoke/remove implementation was not opened, the candidate remained bounded to control-plane revoke/remove posture only, no invite, role-change, tenant-scope, or broader authority expansion was authorized, and `NEXT-ACTION` now returns to `OPERATOR_DECISION_REQUIRED`.
 - GOV-AUDIT-TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001-POST-CLOSE (2026-03-21): mandatory post-close audit emitted in the same closure operation. Audit result: `DECISION_REQUIRED`. Natural next-step candidates: `DECISION_REQUIRED`, `HOLD`, `RECORD_ONLY`, `DESIGN_REFINEMENT`, `OPENING_CANDIDATE`. Ranked recommendation: `DECISION_REQUIRED` because this bounded clarification unit is now fully closed, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, revoke/remove remains candidate-only and not opened, and any stronger move still requires explicit operator sequencing rather than implication from this closure. `NEXT-ACTION` now returns to `OPERATOR_DECISION_REQUIRED`.
 - GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY (2026-03-21): recorded the disposition that the closed AdminRBAC revoke/remove clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but does not itself open revoke/remove work. `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, no implementation-ready unit is open, and any later movement still requires a separate bounded opening artifact.
+- GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING (2026-03-21): opened `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` as the sole bounded implementation-ready AdminRBAC revoke/remove child slice. Scope is limited to control-plane revoke/remove authority only, with `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, immediate privileged-session and refresh-token invalidation in scope, and explicit audit traceability required. `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and no invite, role-change, tenant-scope, or broader authority expansion was opened.
 - Governance OS control plane installed 2026-03-17 by GOV-OS-002
 - Canonical operational files: `governance/control/` (5 files — this directory)
 - Legacy large files (`gap-register.md`, `IMPLEMENTATION-TRACKER-2026-03.md`, `IMPLEMENTATION-TRACKER-2026-Q2.md`, `2026-03-audit-reconciliation-matrix.md`) have been archived to `governance/archive/` (GOV-OS-007, 2026-03-17) and replaced with pointer stubs; they are NOT operational truth

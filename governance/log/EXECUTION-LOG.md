@@ -2163,6 +2163,33 @@ Refs: governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY.m
 
 ---
 
+### GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING — 2026-03-21
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING)
+Title: Open exactly one bounded AdminRBAC revoke/remove implementation unit and nothing broader
+Summary: Governance-only decision/opening unit. Opened `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001`
+  as the sole bounded implementation-ready AdminRBAC revoke/remove child slice after the
+  eligibility decision established that the closed clarification chain is sufficient for one
+  separate bounded opening. The opened slice is limited to control-plane admin access
+  revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal
+  control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, immediate
+  privileged-session and refresh-token invalidation in scope, and explicit audit traceability
+  required.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md created; Layer 2 —
+  governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: The broad parent `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. No invite, role-change,
+  tenant-scope, broader authority expansion, self-revoke, or peer-`SuperAdmin` revoke/remove
+  behavior was opened. No product code, tests, schema, migrations, Prisma models, or contracts
+  changed in this governance opening unit.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/decisions/GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING.md ·
+  governance/units/TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001.md
+
+---
+
 ### GOV-DEC-G026-FIRST-ROUTING-OPENING — 2026-03-20
 Type: GOVERNANCE / OPENING-DECISION
 Status: CLOSED
