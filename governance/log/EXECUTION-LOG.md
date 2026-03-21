@@ -2337,6 +2337,31 @@ Refs: governance/units/GOV-VERIFY-01.md · governance/control/OPEN-SET.md ·
   governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md ·
   governance/decisions/GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING.md ·
   governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-VERIFY-01 — 2026-03-21
+Type: GOVERNANCE / IMPLEMENTATION
+Status: CLOSED
+Commit: (this unit — see git log for GOV-VERIFY-01)
+Title: Implement the bounded automated verification policy design
+Summary: Governance-only implementation unit. Implemented the bounded automated verification
+  policy-design content inside `GOV-VERIFY-01` only. The implemented policy now records the core
+  rule that no implementation unit may close without an automated verification artifact bundle
+  appropriate to its declared unit type and acceptance boundary, requires every future
+  implementation unit to declare a verification profile at Opening, defines the unit-type matrix,
+  records the effective runtime verification rule, coverage declaration rule, normalized verdict
+  set, commit-readiness rule, runtime ambiguity note rule, explicit exclusions/non-goals, and
+  allowed later separately-governed follow-on categories only.
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOV-VERIFY-01.md updated; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: `GOV-VERIFY-01` remains `OPEN` and remains the sole active governed unit. The next
+  canonical phase is verification for `GOV-VERIFY-01` only. No verification, governance sync, or
+  closure was performed in this step. No Playwright, tests, verifier tooling, CI workflows,
+  governance-lint refinement, product changes, schema changes, AdminRBAC reopening, G-026
+  reopening, or second unit opening was authorized or implied.
+Refs: governance/units/GOV-VERIFY-01.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
   governance/control/NEXT-ACTION.md · governance/control/OPEN-SET.md ·
   governance/control/SNAPSHOT.md · docs/architecture/CUSTOM-DOMAIN-ROUTING-DESIGN.md
 
