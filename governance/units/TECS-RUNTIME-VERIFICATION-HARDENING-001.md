@@ -2,11 +2,11 @@
 unit_id: TECS-RUNTIME-VERIFICATION-HARDENING-001
 title: Executable runtime verification hardening for implemented tenant-enterprise and white-label slices
 type: IMPLEMENTATION
-status: VERIFIED_COMPLETE
+status: CLOSED
 wave: W5
 plane: BOTH
 opened: 2026-03-21
-closed: null
+closed: 2026-03-21
 verified: 2026-03-21
 commit: 858505b
 evidence: "TEST_VERIFICATION: pnpm test:runtime-verification PASS (6 files passed, 39 tests passed) · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded runtime verification path exists, is repo-runnable, remains limited to tenant-enterprise and white-label verification hardening only, and introduces no product behavior, schema, migration, Prisma, governance-doctrine, auth redesign, catalog redesign, or routing/domain changes"
@@ -84,11 +84,14 @@ checks.
 
 ## Governance Closure
 
-*Not yet set — unit is VERIFIED_COMPLETE and postured for Close only.*
+- Governance close unit: `GOV-CLOSE-TECS-RUNTIME-VERIFICATION-HARDENING-001`
+- Status transition: `VERIFIED_COMPLETE` → `CLOSED`
+- Next-action posture after closure: `OPERATOR_DECISION_REQUIRED`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
 
 ## Allowed Next Step
 
-Governance-only closure for this same bounded runtime-verification hardening unit.
+No further implementation or governance-sync work is authorized inside this closed unit.
 
 ## Forbidden Next Step
 
@@ -101,6 +104,7 @@ Governance-only closure for this same bounded runtime-verification hardening uni
 - Do **not** open or imply any second verification-hardening unit under this step
 - Do **not** expand into AdminRBAC, RFQ, custom-domain, apex-domain, or DNS work under this unit
 - Do **not** treat governance sync as closure; a separate close step is still required
+- Do **not** treat closure of this bounded unit as authorization for broad QA, CI, auth, catalog, routing/domain, AdminRBAC, or RFQ follow-on work
 
 ## Drift Guards
 
@@ -109,6 +113,7 @@ Governance-only closure for this same bounded runtime-verification hardening uni
 - Affected tenant modules must remain bounded to the implemented slices under review. Do not use this unit to create a generalized contract-testing platform.
 - White-label coverage remains limited to seeded storefront/catalog visibility and data-state runtime truth for the implemented path only.
 - Governance sync for this unit is recording only; no new implementation, no new opening, and no closure is implied by the VERIFIED_COMPLETE state.
+- Closure of this unit does not authorize any follow-on transformation. Future moves require explicit operator sequencing and must not be inferred from this closed bounded unit.
 
 ## Control-Plane Source of Truth
 
@@ -122,9 +127,9 @@ Governance-only closure for this same bounded runtime-verification hardening uni
 
 ## Last Governance Confirmation
 
-2026-03-21 — `GOVERNANCE-SYNC-TECS-RUNTIME-VERIFICATION-HARDENING-001`. Status transitioned:
-`OPEN` → `VERIFIED_COMPLETE` after implementation commit `858505b` and bounded verification evidence
-`pnpm test:runtime-verification` PASS (`6` files passed / `39` tests passed). The repo-runnable
-runtime verification path now exists, covered failure classes now surface automatically for the
-bounded tenant-enterprise and white-label slices, no product behavior change was introduced, and
-the unit is postured for Close only.
+2026-03-21 — `GOV-CLOSE-TECS-RUNTIME-VERIFICATION-HARDENING-001`. Status transitioned:
+`VERIFIED_COMPLETE` → `CLOSED` after the already-recorded implementation, bounded verification,
+and governance-sync chain, together with mandatory post-close audit result `DECISION_REQUIRED`.
+The repo-runnable runtime verification path exists, covered failure classes now surface
+automatically for the bounded tenant-enterprise and white-label slices, no product behavior
+change was introduced, and no broader transformation was authorized by this closure.
