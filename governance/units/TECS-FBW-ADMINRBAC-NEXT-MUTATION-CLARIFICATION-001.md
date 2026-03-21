@@ -9,7 +9,7 @@ opened: 2026-03-21
 closed: null
 verified: null
 commit: null
-evidence: "opening decision recorded"
+evidence: "GOVERNANCE_RECONCILIATION_CONFIRMATION: clarification outcome recorded; narrowest truthful next mutation child candidate is control-plane admin access revoke/remove only, with SuperAdmin-only actor posture, explicit audit requirements, and session/token invalidation explicitly treated as in-scope boundary rather than deferred ambient behavior"
 doctrine_constraints:
   - D-004: this is one bounded clarification unit only; no implementation, verification, sync, or closure work may be mixed in
   - D-007: governance units must not touch application code, schema, tests, or CI scripts
@@ -39,12 +39,12 @@ This unit does not authorize implementation work. It does not reopen
 
 ## Acceptance Criteria
 
-- [ ] It is explicitly determined whether invite, revoke/remove, role assignment/change, or explicit no-opening-yet is the next truthful AdminRBAC child disposition
-- [ ] The exact in-scope boundary for that later child is recorded
-- [ ] The exact out-of-scope boundary for that later child is recorded
-- [ ] It is explicitly determined whether invitation transport, account setup, session invalidation, token propagation, and audit-model detail must remain outside that later child or be explicitly bounded into it
-- [ ] It is explicitly determined whether a later implementation opening is justified and, if so, what exact bounded unit it would be
-- [ ] No implementation, verification, governance sync, or closure work is authorized inside this unit
+- [x] It is explicitly determined whether invite, revoke/remove, role assignment/change, or explicit no-opening-yet is the next truthful AdminRBAC child disposition
+- [x] The exact in-scope boundary for that later child is recorded
+- [x] The exact out-of-scope boundary for that later child is recorded
+- [x] It is explicitly determined whether invitation transport, account setup, session invalidation, token propagation, and audit-model detail must remain outside that later child or be explicitly bounded into it
+- [x] It is explicitly determined whether a later implementation opening is justified and, if so, what exact bounded unit it would be
+- [x] No implementation, verification, governance sync, or closure work is authorized inside this unit
 
 ## Files Allowlisted (Modify)
 
@@ -81,6 +81,122 @@ Expected candidates for the future clarification prompt only:
   - session invalidation and token propagation coupling
   - invitation transport and account-setup coupling
   - exact audit-model boundary for a later mutation child
+
+## Current Parent Truth
+
+`TECS-FBW-ADMINRBAC` remains `DESIGN_GATE` because the parent still bundles multiple high-risk
+control-plane mutation concerns into one umbrella stream:
+
+- invite / provisioning behavior
+- revoke / removal behavior
+- role assignment / role change behavior
+- audit expectations tied to those actions
+- active-session and token-semantics implications for revoke and role change
+- invitation transport and account-setup coupling for invite
+
+That parent is still too broad to open directly because doing so would collapse distinct mutation
+surfaces and their coupled security mechanics into one implementation-ready stream, which current
+canonical AdminRBAC decisions explicitly do not authorize.
+
+## Clarification Outcome
+
+The narrowest truthful next mutation child candidate is:
+
+- **candidate title:** `Control-plane admin access revoke/remove authority`
+
+This candidate is narrower and more truthful than invite or role assignment/change because:
+
+- it operates only on already-existing internal control-plane admin identities
+- it does not require invitation delivery, invite acceptance, or account-bootstrap mechanics
+- it does not require multi-role expansion or role-family redesign beyond removing an existing
+  bounded admin access posture
+- it can remain control-plane only and preserve the already-closed read-only registry slice as a
+  separate completed child
+
+This unit does **not** open that candidate. It records only that revoke/remove is the narrowest
+truthful next mutation-child candidate currently supported by the existing AdminRBAC governance
+truth.
+
+## Exact In-Scope Boundary For The Candidate
+
+If a later separate governance decision/opening ever authorizes this candidate, its exact in-scope
+boundary must be limited to:
+
+- removal or revocation of an already-existing internal control-plane admin access posture
+- control-plane only scope
+- `SuperAdmin` as the acting mutation role only
+- explicit bounded targeting of an existing internal control-plane admin identity
+- explicit audit capture for the revoke/remove action
+- explicit revoke/remove outcome semantics for the affected control-plane access posture
+- explicit session / refresh-token / active-privilege invalidation posture as part of the bounded
+  child, because current canonical records already classify that coupling as integral rather than
+  safely deferrable ambient behavior
+- system surfaces limited to the control-plane admin identity store, the control-plane auth/session
+  boundary, and the audit boundary required to make the mutation explicit and attributable
+
+## Exact Exclusions
+
+The following remain out of scope for that candidate and must not be bundled into it:
+
+- invite / invitation delivery
+- invite acceptance
+- account setup or password bootstrap
+- creation of new internal admin identities
+- role assignment or role change mutation
+- self-elevation or self-role widening
+- tenant-plane membership changes
+- white-label staff / tenant admin / org-plane admin management
+- blanket cross-tenant read expansion
+- any blanket `SuperAdmin can do everything` posture
+- impersonation, step-up authentication redesign, or broader support-mode expansion
+- schema, migrations, Prisma, product code, test code, UI code, API code, or auth/session redesign outside the explicit revoke/remove boundary itself
+
+Invite remains separate because it drags invitation transport, acceptance, and account-bootstrap
+mechanics that are not required for revoke/remove.
+
+Role assignment/change remains separate because it drags role-delta semantics, possible same-session
+privilege transition behavior, and a broader authority-shaping surface than simple access removal.
+
+## Prerequisites And Blocking Conditions
+
+Any later opening for the revoke/remove candidate would still require the later decision/opening to
+state all of the following explicitly:
+
+- exact actor/target safety posture, including no self-elevation and no implicit self-widening
+- exact self-revoke or same-highest-role guard posture so the candidate does not silently create
+  lockout or authority-collapse behavior by assumption
+- exact revoke/remove outcome semantics for active sessions and refresh-token or equivalent
+  continuing access posture
+- exact minimum audit evidence shape required by the security posture
+- exact preservation of control-plane-only scope and terminology lock
+
+Until those conditions are explicitly bounded in a later decision/opening, no revoke/remove
+implementation opening would be lawful.
+
+## Terminology And Posture Locks Preserved
+
+This clarification preserves all existing AdminRBAC locks:
+
+- `TenantAdmin`, `PlatformAdmin`, and `SuperAdmin` remain distinct terms
+- `TenantAdmin` remains out of scope for this control-plane stream
+- `SuperAdmin` remains the only mutation actor class for future AdminRBAC mutation work
+- the closed read-only child `TECS-FBW-ADMINRBAC-REGISTRY-READ-001` remains truthful and closed
+- the broad parent `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`
+- no blanket `SuperAdmin can read everything` or `SuperAdmin can do everything` collapse is authorized
+- control-plane-only posture remains mandatory
+
+## Recommended Later Governance Step
+
+The exact shape of a possible later governance step, if later chosen, should be:
+
+- one separate decision/opening step only
+- one bounded candidate only: `Control-plane admin access revoke/remove authority`
+- one explicit statement that session / refresh-token invalidation posture is in-scope and not
+  ambient or deferred by assumption
+- one explicit statement that invite, role change, transport, acceptance, account setup, tenant
+  scope, and broader authority expansion remain out of scope
+
+This unit does **not** perform that decision/opening.
 
 ## Allowed Next Step
 

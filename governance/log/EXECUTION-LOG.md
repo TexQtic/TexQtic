@@ -1824,6 +1824,20 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001 — 2026-03-21
+Type: GOVERNANCE / CLARIFICATION
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001)
+Title: Clarify the next truthful AdminRBAC mutation child boundary
+Summary: Governance-only clarification unit. Recorded that the narrowest truthful next AdminRBAC mutation child candidate is control-plane admin access revoke/remove authority only, while preserving the broad parent as DESIGN_GATE and the closed read-only child as CLOSED. Invite remains separate because it drags invitation transport, acceptance, and account-bootstrap coupling; role assignment/change remains separate because it drags role-delta and same-session privilege-transition semantics. No implementation unit was opened by this clarification result.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md minimally normalized for structural validation consistency; Layer 1 — governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md updated with clarification outcome and verification taxonomy label; Layer 3 — EXECUTION-LOG.md appended
+Notes: This entry records clarification only. It does not perform governance sync or closure, does not open a mutation implementation child, and does not change the broad parent posture. Control-plane-only scope, SuperAdmin-only mutation posture, read-only child closure truth, and the TenantAdmin / PlatformAdmin / SuperAdmin terminology lock all remain intact.
+Refs: governance/units/TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001.md ·
+  governance/units/TECS-FBW-ADMINRBAC.md · governance/control/OPEN-SET.md ·
+  governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md
+
+---
+
 ### GOV-AUDIT-TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001-POST-CLOSE — 2026-03-21
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED

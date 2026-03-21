@@ -7,7 +7,7 @@
 
 ```yaml
 unit_id: TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001
-type: GOVERNANCE / DESIGN-CLARIFICATION
+type: GOVERNANCE
 title: Clarify the next truthful bounded AdminRBAC mutation child and no implementation work
 prerequisites_met: true
 authorized_by: GOV-DEC-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-OPENING

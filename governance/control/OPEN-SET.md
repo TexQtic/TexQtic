@@ -20,7 +20,7 @@
 
 ## Summary
 
-- **OPEN**: **1** (TECS-FBW-ADMINRBAC-NEXT-MUTATION-CLARIFICATION-001)
+- **OPEN** (implementation-ready): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
