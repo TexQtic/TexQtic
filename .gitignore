@@ -58,3 +58,6 @@ artifacts/
 # Debug / test-run output files (never commit — use logs, not files)
 server/*.txt
 server/*.json.bak
+
+.vercel
+.env*.local

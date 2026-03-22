@@ -1,0 +1,185 @@
+# RUNTIME-PARITY-VERIFICATION-INFRA-001
+#
+# Manual preview deployment path for runtime-parity verification.
+# This workflow is intentionally bounded to capability establishment:
+# - links to an existing Vercel project via repository secrets
+# - validates the preview env contract without printing secret values
+# - deploys one preview target from source
+# - records the deployed URL and basic parity checks for follow-on audit use
+
+name: Runtime Parity Preview Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for deploying a runtime parity preview target'
+        required: false
+        default: 'manual runtime parity verification'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-preview:
+    name: Deploy Preview Verification Target
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Validate required Vercel linkage secrets
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          MISSING=0
+          for key in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!key}" ]; then
+              echo "::error::[Runtime Parity] Required secret $key is not configured."
+              MISSING=1
+            fi
+          done
+          if [ "$MISSING" -eq 1 ]; then
+            echo "::error::[Runtime Parity] Missing Vercel linkage secrets block deployment capability establishment."
+            exit 1
+          fi
+          echo "[Runtime Parity] Vercel linkage secrets are present."
+
+      - name: Pull Vercel preview configuration
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: pnpm dlx vercel@latest pull --yes --environment=preview --token "$VERCEL_TOKEN"
+
+      - name: Validate preview env contract
+        shell: bash
+        run: |
+          ENV_FILE=".vercel/.env.preview.local"
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "::error::[Runtime Parity] Expected preview env file $ENV_FILE was not created by vercel pull."
+            exit 1
+          fi
+
+          MISSING=0
+          REQUIRED_KEYS=(
+            DATABASE_URL
+            JWT_ACCESS_SECRET
+            JWT_REFRESH_SECRET
+            JWT_ADMIN_ACCESS_SECRET
+            JWT_ADMIN_REFRESH_SECRET
+            GEMINI_API_KEY
+            CORS_ALLOWED_ORIGINS
+            TEXQTIC_RESOLVER_SECRET
+          )
+
+          for key in "${REQUIRED_KEYS[@]}"; do
+            if ! grep -q "^${key}=" "$ENV_FILE"; then
+              echo "::error::[Runtime Parity] Missing required preview env key: $key"
+              MISSING=1
+            fi
+          done
+
+          OPTIONAL_KEYS=(FRONTEND_URL TEXQTIC_PLATFORM_DOMAINS)
+          for key in "${OPTIONAL_KEYS[@]}"; do
+            if grep -q "^${key}=" "$ENV_FILE"; then
+              echo "[Runtime Parity] Optional preview env key present: $key"
+            else
+              echo "::warning::[Runtime Parity] Optional preview env key not present: $key"
+            fi
+          done
+
+          if grep -q '^VITE_API_BASE_URL=' "$ENV_FILE" && grep -q '^VITE_API_BASE_URL=.*localhost' "$ENV_FILE"; then
+            echo "::error::[Runtime Parity] VITE_API_BASE_URL points to localhost in preview env."
+            MISSING=1
+          fi
+
+          if [ "$MISSING" -eq 1 ]; then
+            echo "::error::[Runtime Parity] Preview env contract is incomplete for deployed verification."
+            exit 1
+          fi
+
+          echo "[Runtime Parity] Required preview env contract is present."
+
+      - name: Deploy preview target from source
+        id: deploy
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          DEPLOY_OUTPUT=$(pnpm dlx vercel@latest deploy --yes --token "$VERCEL_TOKEN" 2>&1)
+          DEPLOY_URL=$(printf '%s\n' "$DEPLOY_OUTPUT" | grep -Eo 'https://[^ ]+\.vercel\.app' | tail -n 1)
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "::error::[Runtime Parity] Vercel deploy did not return a deployment URL."
+            printf '%s\n' "$DEPLOY_OUTPUT"
+            exit 1
+          fi
+          echo "deployment_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "[Runtime Parity] Preview target deployed."
+
+      - name: Verify deployed route exposure
+        shell: bash
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
+        run: |
+          ROOT_STATUS=$(curl -sS -o /tmp/root.html -w "%{http_code}" "$DEPLOY_URL/")
+          HEALTH_STATUS=$(curl -sS -o /tmp/health.json -w "%{http_code}" "$DEPLOY_URL/api/health")
+          DEEPLINK_STATUS=$(curl -sS -o /tmp/deeplink.html -w "%{http_code}" "$DEPLOY_URL/verify-email?token=parity-check")
+
+          if [ "$ROOT_STATUS" != "200" ]; then
+            echo "::error::[Runtime Parity] Root entry returned HTTP $ROOT_STATUS"
+            exit 1
+          fi
+          if [ "$HEALTH_STATUS" != "200" ]; then
+            echo "::error::[Runtime Parity] /api/health returned HTTP $HEALTH_STATUS"
+            exit 1
+          fi
+          if [ "$DEEPLINK_STATUS" != "200" ]; then
+            echo "::error::[Runtime Parity] Deep-link entry returned HTTP $DEEPLINK_STATUS"
+            exit 1
+          fi
+
+          if ! grep -qi '<!doctype html>' /tmp/root.html; then
+            echo "::error::[Runtime Parity] Root entry did not return an HTML document."
+            exit 1
+          fi
+          if ! grep -qi 'status' /tmp/health.json; then
+            echo "::error::[Runtime Parity] /api/health response did not include the expected health payload marker."
+            exit 1
+          fi
+          if ! grep -qi '<!doctype html>' /tmp/deeplink.html; then
+            echo "::error::[Runtime Parity] Deep-link entry did not return the SPA HTML shell."
+            exit 1
+          fi
+
+      - name: Publish runtime parity summary
+        if: always()
+        shell: bash
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
+        run: |
+          echo "## Runtime Parity Preview Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Item | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Target class | preview |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Deployment URL | $DEPLOY_URL |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Route checks | /, /api/health, /verify-email?token=parity-check |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Purpose | Follow-on runtime audit against deployed surface |" >> "$GITHUB_STEP_SUMMARY"
