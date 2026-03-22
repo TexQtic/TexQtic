@@ -2963,6 +2963,32 @@ Notes: Mandatory post-close audit emitted with the closure record. State summary
   - ranked recommendation: DECISION_REQUIRED
   Stronger moves remain blocked because any work beyond resuming
   `CONTROL-PLANE-IDENTITY-TRUTH-002` verification would require separate operator sequencing.
+
+---
+
+### IMPERSONATION-SESSION-REHYDRATION-001 — 2026-03-22
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for IMPERSONATION-SESSION-REHYDRATION-001)
+Title: Record the decision posture for the impersonation session persistence defect
+Summary: Governance-only decision unit. Recorded the narrowest truthful next posture for the newly
+  observed defect where active impersonation does not persist across reload and the app returns to
+  `AUTH` instead of restoring the impersonation session. Result: `OPENING_CANDIDATE`. The defect is
+  now classified as a separate impersonation session lifecycle / rehydration slice limited to
+  reload persistence, mount-time restoration, and preservation of the control-plane actor to
+  impersonated tenant relationship after reload. No implementation opening was created by this
+  decision.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/IMPERSONATION-SESSION-REHYDRATION-001.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: The new finding remains separate from `CONTROL-PLANE-IDENTITY-TRUTH-002`,
+  `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, tenant-shell correctness, white-label behavior, and
+  impersonation stop cleanup. `OPENING_CANDIDATE` is not `OPEN`, recommendation is not
+  authorization, and `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-001.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md ·
   governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
