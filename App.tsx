@@ -66,6 +66,14 @@ import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
 import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 
+type ControlPlaneIdentity = {
+  id: string | null;
+  email: string | null;
+  role: string | null;
+};
+
+const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
+
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
 // Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
 function resolveExperienceShell(
@@ -98,6 +106,71 @@ const App: React.FC = () => {
       email: user?.email ?? null,
       role: role ?? null,
     };
+  };
+
+  const persistControlPlaneIdentity = (identity: ControlPlaneIdentity | null) => {
+    if (!identity) {
+      localStorage.removeItem(CONTROL_PLANE_IDENTITY_KEY);
+      return;
+    }
+
+    localStorage.setItem(CONTROL_PLANE_IDENTITY_KEY, JSON.stringify(identity));
+  };
+
+  const readStoredControlPlaneIdentity = (): ControlPlaneIdentity | null => {
+    const raw = localStorage.getItem(CONTROL_PLANE_IDENTITY_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as ControlPlaneIdentity;
+      if (!parsed || (typeof parsed !== 'object')) {
+        return null;
+      }
+
+      return {
+        id: typeof parsed.id === 'string' ? parsed.id : null,
+        email: typeof parsed.email === 'string' ? parsed.email : null,
+        role: typeof parsed.role === 'string' ? parsed.role : null,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const readStoredAdminJwtClaims = (): { adminId: string; role: string | null; exp: number | null } | null => {
+    const token = localStorage.getItem('texqtic_admin_token');
+    if (!token) {
+      return null;
+    }
+
+    const [, payload] = token.split('.');
+    if (!payload) {
+      return null;
+    }
+
+    try {
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const decoded = JSON.parse(window.atob(padded)) as {
+        adminId?: unknown;
+        role?: unknown;
+        exp?: unknown;
+      };
+
+      if (typeof decoded.adminId !== 'string') {
+        return null;
+      }
+
+      return {
+        adminId: decoded.adminId,
+        role: typeof decoded.role === 'string' ? decoded.role : null,
+        exp: typeof decoded.exp === 'number' ? decoded.exp : null,
+      };
+    } catch {
+      return null;
+    }
   };
 
   // Production-grade State Machine
@@ -146,11 +219,7 @@ const App: React.FC = () => {
   const [tenantProvisionError, setTenantProvisionError] = useState<string | null>(null);
   const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
-  const [controlPlaneIdentity, setControlPlaneIdentity] = useState<{
-    id: string | null;
-    email: string | null;
-    role: string | null;
-  } | null>(null);
+  const [controlPlaneIdentity, setControlPlaneIdentity] = useState<ControlPlaneIdentity | null>(null);
   const [impersonation, setImpersonation] = useState<ImpersonationState>({
     isAdmin: false,
     targetTenantId: null,
@@ -258,11 +327,15 @@ const App: React.FC = () => {
     setAppState('CONTROL_PLANE');
   };
 
-  const applyControlPlaneShellEntry = (identity: {
-    id: string | null;
-    email: string | null;
-    role: string | null;
-  }) => {
+  const clearControlPlaneIdentityState = () => {
+    persistControlPlaneIdentity(null);
+    setControlPlaneIdentity(null);
+    setSelectedTenant(null);
+    setAdminView('TENANTS');
+  };
+
+  const applyControlPlaneShellEntry = (identity: ControlPlaneIdentity) => {
+    persistControlPlaneIdentity(identity);
     setControlPlaneIdentity(identity);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
@@ -274,9 +347,15 @@ const App: React.FC = () => {
   const resolveControlPlaneIdentity = async (data?: any) => {
     try {
       const me = await getCurrentUser();
-      return buildControlPlaneIdentity(me.user, me.role ?? data?.user?.role ?? null);
+      return buildControlPlaneIdentity(
+        me.user,
+        me.role ?? data?.admin?.role ?? data?.user?.role ?? null
+      );
     } catch {
-      return buildControlPlaneIdentity(data?.user, data?.user?.role ?? null);
+      return buildControlPlaneIdentity(
+        data?.admin ?? data?.user,
+        data?.admin?.role ?? data?.user?.role ?? null
+      );
     }
   };
 
@@ -425,38 +504,45 @@ const App: React.FC = () => {
       return;
     }
 
-    let cancelled = false;
+    const claims = readStoredAdminJwtClaims();
+    const storedIdentity = readStoredControlPlaneIdentity();
 
-    const rehydrateControlPlaneShell = async () => {
-      let identity = null;
-
-      try {
-        const me = await getCurrentUser();
-        identity = buildControlPlaneIdentity(me.user, me.role ?? null);
-      } catch {
-        identity = null;
+    const identity = (() => {
+      if (!claims?.adminId || !storedIdentity?.id) {
+        return null;
       }
 
-      if (cancelled) {
-        return;
+      if (claims.exp && claims.exp * 1000 <= Date.now()) {
+        return null;
       }
 
-      if (!identity) {
-        clearAuth();
-        setControlPlaneIdentity(null);
-        setSelectedTenant(null);
-        setAdminView('TENANTS');
-        return;
+      if (claims.adminId !== storedIdentity.id) {
+        return null;
       }
 
-      applyControlPlaneShellEntry(identity);
-    };
+      return {
+        ...storedIdentity,
+        role: claims.role ?? storedIdentity.role ?? null,
+      };
+    })();
 
-    void rehydrateControlPlaneShell();
+    if (!identity) {
+      clearAuth();
+      persistControlPlaneIdentity(null);
+      setControlPlaneIdentity(null);
+      setSelectedTenant(null);
+      setAdminView('TENANTS');
+      setAuthRealm('CONTROL_PLANE');
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
+    persistControlPlaneIdentity(identity);
+    setControlPlaneIdentity(identity);
+    setStoredAuthRealm('CONTROL_PLANE');
+    setAuthRealm('CONTROL_PLANE');
+    setSelectedTenant(null);
+    setAdminView('TENANTS');
+    setAppState('CONTROL_PLANE');
   }, [appState]);
 
   const handleAuthSuccess = async (data: any) => {
@@ -467,9 +553,8 @@ const App: React.FC = () => {
 
       if (!identity) {
         clearAuth();
-        setControlPlaneIdentity(null);
-        setSelectedTenant(null);
-        setAdminView('TENANTS');
+        clearControlPlaneIdentityState();
+        setAuthRealm('CONTROL_PLANE');
         setAppState('AUTH');
         return;
       }
@@ -478,7 +563,7 @@ const App: React.FC = () => {
       return;
     }
 
-    setControlPlaneIdentity(null);
+  clearControlPlaneIdentityState();
     setStoredAuthRealm('TENANT');
     setAuthRealm('TENANT');
 
@@ -2032,9 +2117,7 @@ const App: React.FC = () => {
               <button
                 onClick={() => {
                   clearAuth();
-                  setControlPlaneIdentity(null);
-                  setSelectedTenant(null);
-                  setAdminView('TENANTS');
+                  clearControlPlaneIdentityState();
                   setAppState('AUTH');
                 }}
                 className="px-4 py-2 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase hover:bg-slate-200 transition"
