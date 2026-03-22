@@ -78,6 +78,7 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
       : idempotencyHeader;
     const monthKey = getMonthKey();
     const model = 'gemini-1.5-flash';
+    const degradedInsightText = 'AI insights temporarily unavailable. Please try again later.';
 
     try {
       // Database context injected by databaseContextMiddleware (G-005)
@@ -136,10 +137,10 @@ const aiRoutes: FastifyPluginAsync = async fastify => {
         return reply.code(429).send(error.toJSON());
       }
       console.error('[AI Insights] Error:', error);
-      return reply.code(500).send({
-        ok: false,
-        error: 'INTERNAL_ERROR',
-        message: 'Failed to generate insights',
+      return sendSuccess(reply, {
+        insightText: degradedInsightText,
+        updatedAt: new Date().toISOString(),
+        cached: false,
       });
     }
   });
