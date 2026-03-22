@@ -64,7 +64,7 @@ import { BuyerRfqListSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
-import { getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
+import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
 // Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
@@ -222,6 +222,7 @@ const App: React.FC = () => {
       setAuthRealm(effectiveRealm);
     }
   }, [appState, authRealm, effectiveRealm]);
+
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
   const controlPlaneActorLabel = useMemo(() => {
     if (!controlPlaneIdentity) {
@@ -255,6 +256,28 @@ const App: React.FC = () => {
     setSelectedTenant(null);
     setAdminView('TENANTS');
     setAppState('CONTROL_PLANE');
+  };
+
+  const applyControlPlaneShellEntry = (identity: {
+    id: string | null;
+    email: string | null;
+    role: string | null;
+  }) => {
+    setControlPlaneIdentity(identity);
+    setStoredAuthRealm('CONTROL_PLANE');
+    setAuthRealm('CONTROL_PLANE');
+    setSelectedTenant(null);
+    setAdminView('TENANTS');
+    setAppState('CONTROL_PLANE');
+  };
+
+  const resolveControlPlaneIdentity = async (data?: any) => {
+    try {
+      const me = await getCurrentUser();
+      return buildControlPlaneIdentity(me.user, me.role ?? data?.user?.role ?? null);
+    } catch {
+      return buildControlPlaneIdentity(data?.user, data?.user?.role ?? null);
+    }
   };
 
   // Catalog state
@@ -397,17 +420,61 @@ const App: React.FC = () => {
     setAppState('EXPERIENCE');
   }, [appState, canAccessControlPlane]);
 
+  useEffect(() => {
+    if (appState !== 'AUTH' || getCurrentAuthRealm() !== 'CONTROL_PLANE') {
+      return;
+    }
+
+    let cancelled = false;
+
+    const rehydrateControlPlaneShell = async () => {
+      let identity = null;
+
+      try {
+        const me = await getCurrentUser();
+        identity = buildControlPlaneIdentity(me.user, me.role ?? null);
+      } catch {
+        identity = null;
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      if (!identity) {
+        clearAuth();
+        setControlPlaneIdentity(null);
+        setSelectedTenant(null);
+        setAdminView('TENANTS');
+        return;
+      }
+
+      applyControlPlaneShellEntry(identity);
+    };
+
+    void rehydrateControlPlaneShell();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appState]);
+
   const handleAuthSuccess = async (data: any) => {
     const nextRealm = getCurrentAuthRealm(authRealm) ?? 'TENANT';
 
     if (nextRealm === 'CONTROL_PLANE') {
-      try {
-        const me = await getCurrentUser();
-        setControlPlaneIdentity(buildControlPlaneIdentity(me.user, me.role ?? data?.user?.role ?? null));
-      } catch {
-        setControlPlaneIdentity(buildControlPlaneIdentity(data?.user, data?.user?.role ?? null));
+      const identity = await resolveControlPlaneIdentity(data);
+
+      if (!identity) {
+        clearAuth();
+        setControlPlaneIdentity(null);
+        setSelectedTenant(null);
+        setAdminView('TENANTS');
+        setAppState('AUTH');
+        return;
       }
-      enterControlPlane();
+
+      applyControlPlaneShellEntry(identity);
       return;
     }
 
@@ -1964,7 +2031,10 @@ const App: React.FC = () => {
               )}
               <button
                 onClick={() => {
+                  clearAuth();
                   setControlPlaneIdentity(null);
+                  setSelectedTenant(null);
+                  setAdminView('TENANTS');
                   setAppState('AUTH');
                 }}
                 className="px-4 py-2 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase hover:bg-slate-200 transition"

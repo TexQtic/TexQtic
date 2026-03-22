@@ -19,7 +19,7 @@ import type { AuthRealm } from '../../services/apiClient';
 
 interface AuthFormProps {
   realm: 'TENANT' | 'CONTROL_PLANE';
-  onSuccess: (data: any) => void;
+  onSuccess: (data: any) => void | Promise<void>;
 }
 
 export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
@@ -91,7 +91,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
         { email: cleanEmail, password, tenantId: selectedTenantId ?? undefined },
         realm as AuthRealm
       );
-      onSuccess(response);
+      await onSuccess(response);
     } catch (err: any) {
       if (err.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
         setError('Too many attempts. Wait 10 minutes.');
