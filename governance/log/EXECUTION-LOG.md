@@ -2710,6 +2710,31 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### AUTH-IDENTITY-TRUTH-DEPLOYED-001 — 2026-03-22
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for AUTH-IDENTITY-TRUTH-DEPLOYED-001)
+Title: Record the decision posture for the deployed identity-truth defect family
+Summary: Governance-only decision unit. Recorded the narrowest truthful next posture for the
+  remaining deployed identity-truth finding after closure of
+  `REALM-BOUNDARY-SHELL-AFFORDANCE-001`. Result: `SPLIT_REQUIRED`. The remaining finding is not
+  yet one truthful implementation slice because control-plane displayed identity truth,
+  tenant-shell displayed identity truth, and impersonation persona labeling remain mixed and
+  shell-sensitive, while `IMPERSONATION-STOP-CLEANUP-001` remains causally separate. No
+  implementation opening was created by this decision.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/AUTH-IDENTITY-TRUTH-DEPLOYED-001.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: `NEXT-ACTION` returns to `OPERATOR_DECISION_REQUIRED` because split is required before any
+  narrower child may be named, and recommendation is not authorization. No product code, tests,
+  schema, migrations, Prisma models, runtime configuration, or implementation unit records were
+  changed beyond this decision record.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/AUTH-IDENTITY-TRUTH-DEPLOYED-001.md ·
+  governance/units/REALM-BOUNDARY-SHELL-AFFORDANCE-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-GOV-NAV-01 — 2026-03-21
 Type: GOVERNANCE / SYNC
 Status: VERIFIED_COMPLETE

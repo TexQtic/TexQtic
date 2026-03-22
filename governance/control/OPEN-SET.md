@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-22 (GOV-CLOSE-REALM-BOUNDARY-SHELL-AFFORDANCE-001)
+**Last Updated:** 2026-03-22 (AUTH-IDENTITY-TRUTH-DEPLOYED-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -52,6 +52,7 @@ TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 closed 2026-03-21 after implementation comm
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 No implementation-ready unit is OPEN.
 REALM-BOUNDARY-SHELL-AFFORDANCE-001 closed 2026-03-22 after final implementation commit ddeb579, exact Vercel deployment proof for `https://texqtic-godq32ri1-tex-qtic.vercel.app`, deployed runtime PASS for enterprise tenant crossover, deployed runtime PASS for white-label tenant crossover, preserved control-plane login PASS to Tenant Registry, and mandatory post-close audit result `DECISION`. The closure remains bounded to shell-affordance realm-boundary repair only and does not authorize broader auth, impersonation, routing, or other control-plane follow-on work by implication.
+AUTH-IDENTITY-TRUTH-DEPLOYED-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `SPLIT_REQUIRED`. The remaining deployed identity-truth finding is not yet one truthful implementation slice because control-plane displayed identity truth, tenant-shell displayed identity truth, and impersonation persona labeling remain mixed and shell-sensitive, while `IMPERSONATION-STOP-CLEANUP-001` remains causally separate. No implementation opening was created by this decision.
 
 ---
 
@@ -60,6 +61,7 @@ REALM-BOUNDARY-SHELL-AFFORDANCE-001 closed 2026-03-22 after final implementation
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
 | GOV-NAV-01 | CLOSED | 2026-03-21 | 81b44f3 · cdcb26c · 079a30d · 1366bee · see git log |
+| AUTH-IDENTITY-TRUTH-DEPLOYED-001 | CLOSED | 2026-03-22 | see git log |
 | REALM-BOUNDARY-SHELL-AFFORDANCE-001 | CLOSED | 2026-03-22 | ddeb579 |
 | TECS-G026-CLEANUP-REMEDIATION-001 | CLOSED | 2026-03-20 | 0f3d2c3 · f21ef8c |
 | TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 | CLOSED | 2026-03-21 | 0b8fff2 · 963c935 |
