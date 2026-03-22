@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-22 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 decision)
+**Last Updated:** 2026-03-22 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,18 +13,19 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 | --- | --- | --- | --- | --- |
+| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 | Bounded placeholder-image DNS/resource failure correction | OPEN | W5 | 2026-03-22 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **0**
+- **OPEN** (implementation-ready): **1**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 1**
+- **Total non-terminal units: 2**
 
 GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 
@@ -55,6 +56,7 @@ IMPERSONATION-SESSION-REHYDRATION-001 closed 2026-03-22 as a bounded decision-on
 TENANT-EXPERIENCE-RUNTIME-500-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. Observed tenant-experience runtime `500` errors during impersonated tenant runtime are now classified as one separate bounded defect family limited to the observed failing request/error behavior only. No implementation opening was created by this decision, and no broader tenant-shell correctness, white-label behavior, impersonation stop cleanup, auth redesign, DB/schema, or API redesign scope was authorized by implication.
 TENANT-EXPERIENCE-RUNTIME-500-002 closed 2026-03-22 after implementation commit `4d4cbe9`, remote impersonated-tenant runtime verification PASS, governance sync, and the mandatory post-close audit result `OPERATOR_DECISION_REQUIRED`. The bounded AI insights runtime `500` slice is now complete: `/api/ai/insights?tenantType=B2B&experience=market_trends` returned `200` instead of the previously observed `500`, the response carried the safe degraded fallback text `AI insights temporarily unavailable. Please try again later.`, the exercised tenant page remained usable, and bounded non-regression checks stayed healthy for `/api/me`, `/api/tenant/cart`, `/api/tenant/catalog/items?limit=20`, and `/api/tenant/rfqs`. Placeholder image DNS failures with `ERR_NAME_NOT_RESOLVED` remain a separate defect class, and any deeper exception behind the degraded fallback path remains out of scope for this closed unit.
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. Observed tenant-runtime placeholder image requests using `https://via.placeholder.com/400x300` are now classified as one separate bounded defect family limited to tenant-visible image-resource loading failure caused by DNS resolution failure (`ERR_NAME_NOT_RESOLVED`) only. Tenant catalog/page usability may still succeed while those image resources fail. No implementation opening was created by this decision, and no broader catalog rendering, media platform, tenant-shell, white-label, auth, DB/schema, or API redesign scope was authorized by implication.
+TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 opened 2026-03-22 as one bounded implementation-ready unit for the observed placeholder-image DNS/resource failure only. Scope is limited to the exact tenant-visible surface currently generating `https://via.placeholder.com/400x300` placeholder-image requests in the exercised tenant runtime path, including directly coupled resource-generation logic only if needed to stop that bounded failure. No implementation was performed by this opening, and AI insights runtime handling, identity-truth, auth-shell transition, impersonation session rehydration, stop-cleanup, broader tenant-shell correctness, broader catalog overhaul, white-label behavior, media/CDN/platform redesign, auth redesign, DB/schema work, and broader API redesign remain excluded.
 IMPERSONATION-SESSION-REHYDRATION-002 closed 2026-03-22 after implementation commit `1d9657a`, deployed runtime verification PASS, and the mandatory post-close audit result `DECISION_REQUIRED`. The bounded reload/rehydration slice is now complete: active impersonation survived reload/remount in exercised deployed runtime, the authenticated control-plane actor was preserved after reload, the impersonated tenant target was preserved after reload, the actor-target impersonation relationship was preserved after reload, invalid persisted impersonation state failed closed, control-plane API protection remained `401`-protected when unauthenticated, and control-plane actor identity truth remained non-regressed in the exercised path. A separate out-of-scope defect candidate was observed during impersonated tenant runtime: unrelated tenant-experience requests showed some `500` errors. That observation is not merged into this closed unit, and no tenant-shell correctness, white-label behavior, impersonation stop cleanup, auth redesign, DB/schema, or API redesign was authorized by this closure.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: OPENING_CANDIDATE. Live deployed evidence now proves that valid control-plane authentication succeeds at the API/token layer while the SPA fails to transition into the authenticated control-plane shell, but no implementation opening was created by this decision and the defect remains separate from CONTROL-PLANE-IDENTITY-TRUTH-002.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 opened 2026-03-22 as one additional bounded implementation-ready unit for control-plane auth-shell transition only. Scope was limited to post-login shell transition, control-plane session rehydration on app mount, and login-success-to-shell-state propagation for the control-plane path. No implementation was performed by the opening, and banner identity truth, tenant-shell, white-label, impersonation stop cleanup, broader impersonation behavior, auth redesign, DB/schema, and API redesign remained excluded.

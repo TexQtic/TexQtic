@@ -2385,6 +2385,33 @@ Refs: governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001.md ·
 
 ---
 
+### TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 — 2026-03-22
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] open bounded implementation unit for placeholder-image DNS failure)
+Title: Open the bounded implementation unit for placeholder-image DNS/resource failure
+Summary: Governance-only opening unit. Opened `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` as the
+  sole bounded implementation-ready unit for the observed placeholder-image DNS/resource failure
+  after the prior decision recorded and closed the defect family as `OPENING_CANDIDATE` only.
+  The opened scope is limited to the exact tenant-visible surface currently generating
+  `https://via.placeholder.com/400x300` placeholder-image requests in the exercised tenant runtime
+  path and directly coupled resource-generation logic only if needed to stop that bounded failure.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No implementation, product code edits, tests, schema, config, AI insights repair,
+  identity-truth repair, auth-shell transition repair, impersonation session rehydration repair,
+  stop-cleanup repair, broader tenant-shell correctness, broader catalog overhaul,
+  white-label overhaul, media/CDN/platform redesign, auth redesign, DB/schema work, or broader
+  API redesign is authorized by this opening. `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` is the
+  sole OPEN unit, NEXT-ACTION now points only to this unit, and no second implementation unit is
+  OPEN.
+Refs: governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md ·
+  governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-TENANT-EXPERIENCE-RUNTIME-500-002-POST-CLOSE — 2026-03-22
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED
