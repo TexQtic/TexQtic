@@ -141,13 +141,16 @@ jobs:
           DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          CURL_ARGS=(-sS)
+          COOKIE_JAR=/tmp/vercel-bypass-cookie.txt
+          : > "$COOKIE_JAR"
+
+          CURL_ARGS=(-sS -L -c "$COOKIE_JAR" -b "$COOKIE_JAR")
           if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
             CURL_ARGS+=(
               -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET"
               -H "x-vercel-set-bypass-cookie: true"
             )
-            echo "[Runtime Parity] Using Vercel deployment-protection bypass headers for automation."
+            echo "[Runtime Parity] Using Vercel deployment-protection bypass headers for automation and following the bypass-cookie redirect."
           else
             echo "::warning::[Runtime Parity] VERCEL_AUTOMATION_BYPASS_SECRET not configured. Protected preview deployments may return 401."
           fi

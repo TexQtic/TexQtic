@@ -37,6 +37,10 @@ When Vercel Deployment Protection is enabled for preview deployments, the workfl
 This value is generated in Vercel Deployment Protection settings and is used only for automated
 preview verification requests.
 
+When this secret is used, Vercel may first respond with a redirect that sets a bypass cookie.
+The workflow follows that redirect and reuses the cookie for subsequent preview verification
+requests.
+
 ## Vercel Preview Env Contract
 
 The workflow pulls preview env values via `vercel pull` and validates presence of the required
