@@ -5,6 +5,7 @@
 # - links to an existing Vercel project via repository secrets
 # - validates the preview env contract without printing secret values
 # - deploys one preview target from source
+# - optionally bypasses Vercel preview protection for automation checks
 # - records the deployed URL and basic parity checks for follow-on audit use
 
 name: Runtime Parity Preview Deploy
@@ -138,12 +139,28 @@ jobs:
         shell: bash
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          ROOT_STATUS=$(curl -sS -o /tmp/root.html -w "%{http_code}" "$DEPLOY_URL/")
-          HEALTH_STATUS=$(curl -sS -o /tmp/health.json -w "%{http_code}" "$DEPLOY_URL/api/health")
-          DEEPLINK_STATUS=$(curl -sS -o /tmp/deeplink.html -w "%{http_code}" "$DEPLOY_URL/verify-email?token=parity-check")
+          CURL_ARGS=(-sS)
+          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            CURL_ARGS+=(
+              -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET"
+              -H "x-vercel-set-bypass-cookie: true"
+            )
+            echo "[Runtime Parity] Using Vercel deployment-protection bypass headers for automation."
+          else
+            echo "::warning::[Runtime Parity] VERCEL_AUTOMATION_BYPASS_SECRET not configured. Protected preview deployments may return 401."
+          fi
+
+          ROOT_STATUS=$(curl "${CURL_ARGS[@]}" -o /tmp/root.html -w "%{http_code}" "$DEPLOY_URL/")
+          HEALTH_STATUS=$(curl "${CURL_ARGS[@]}" -o /tmp/health.json -w "%{http_code}" "$DEPLOY_URL/api/health")
+          DEEPLINK_STATUS=$(curl "${CURL_ARGS[@]}" -o /tmp/deeplink.html -w "%{http_code}" "$DEPLOY_URL/verify-email?token=parity-check")
 
           if [ "$ROOT_STATUS" != "200" ]; then
+            if [ "$ROOT_STATUS" = "401" ] && [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+              echo "::error::[Runtime Parity] Root entry returned HTTP 401 because Vercel Deployment Protection is active and VERCEL_AUTOMATION_BYPASS_SECRET is not configured in GitHub Actions."
+              exit 1
+            fi
             echo "::error::[Runtime Parity] Root entry returned HTTP $ROOT_STATUS"
             exit 1
           fi

@@ -30,6 +30,13 @@ The manual deployment workflow requires these repository secrets:
 
 If any of these secrets are missing, deployment capability is environment-blocked.
 
+When Vercel Deployment Protection is enabled for preview deployments, the workflow also needs:
+
+- `VERCEL_AUTOMATION_BYPASS_SECRET`
+
+This value is generated in Vercel Deployment Protection settings and is used only for automated
+preview verification requests.
+
 ## Vercel Preview Env Contract
 
 The workflow pulls preview env values via `vercel pull` and validates presence of the required
@@ -83,6 +90,7 @@ The workflow records:
 - `/api/health` route exposure check
 - SPA deep-link check for `/verify-email?token=parity-check`
 - preview env contract validation result
+- preview-protection bypass usage when configured
 
 This is sufficient to establish a usable deployed verification surface for a follow-on audit.
 
