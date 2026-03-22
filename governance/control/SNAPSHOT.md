@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-22
 last_unit_closed: IMPERSONATION-SESSION-REHYDRATION-001
-last_commit: "[IMPERSONATION-SESSION-REHYDRATION-001] record decision for impersonation session persistence defect"
+last_commit: "[IMPERSONATION-SESSION-REHYDRATION-002] open bounded implementation unit for impersonation session rehydration"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,8 +28,10 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 0**
+- **Open governed units: 1**
 - **Verified-complete governed units: 0**
+
+- **IMPERSONATION-SESSION-REHYDRATION-002** — `OPEN` — Bounded implementation-ready unit opened 2026-03-22 for impersonation session persistence across reload only. Scope is limited to mount-time restoration of active impersonation state, preservation of the authenticated control-plane actor plus impersonated tenant relationship after reload, and bounded runtime-sensitive verification for this slice only. No implementation has been executed yet, and identity-truth, baseline auth-shell transition, tenant-shell correctness, white-label behavior, impersonation stop cleanup, broader impersonation behavior, auth redesign, DB/schema, and API redesign remain excluded
 
 - **IMPERSONATION-SESSION-REHYDRATION-001** — `CLOSED` — Bounded decision-only unit closed 2026-03-22 with result `OPENING_CANDIDATE`; active impersonation reload-loss is now classified as a separate impersonation session lifecycle defect limited to reload persistence, restoration of impersonation state on mount, and preservation of the control-plane actor to impersonated tenant relationship after reload only. No implementation opening was created, and identity-truth, baseline auth-shell transition, tenant-shell correctness, white-label behavior, and impersonation stop cleanup remain separate
 
@@ -65,7 +67,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**No implementation unit is currently OPEN.** `IMPERSONATION-SESSION-REHYDRATION-001` is now closed as `OPENING_CANDIDATE` only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**One implementation unit is currently OPEN.** `IMPERSONATION-SESSION-REHYDRATION-002` is now open as the sole bounded implementation-ready unit for impersonation session rehydration only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and resulting Layer 0 posture now points only to `IMPERSONATION-SESSION-REHYDRATION-002`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -96,11 +98,12 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
-IMPERSONATION-SESSION-REHYDRATION-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The active-impersonation reload-loss defect is now classified as a separate impersonation session lifecycle / rehydration slice, no implementation opening was created by this decision, and `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED` until a separate explicit opening is chosen.
+`IMPERSONATION-SESSION-REHYDRATION-002`.
+IMPERSONATION-SESSION-REHYDRATION-002 is now `OPEN` as the sole bounded implementation-ready unit for the active-impersonation reload-loss defect. Scope remains limited to impersonation session persistence across reload, restoration of active impersonation state on app mount, and preservation of the authenticated control-plane actor plus impersonated tenant relationship after reload only. No implementation has been performed by this opening.
+IMPERSONATION-SESSION-REHYDRATION-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for this opened child slice.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
 CONTROL-PLANE-IDENTITY-TRUTH-002 is now `CLOSED` after bounded identity-truth verification PASS. The identity-truth defect is fully resolved within scope and no broader auth, tenant-shell, white-label, impersonation-stop-cleanup, DB/schema, or API authorization was created by this closure.
-New defect candidate identified: active impersonation does not persist across reload and returns the app to `AUTH`. This session-rehydration observation remains separate from the closed identity-truth unit and requires separate operator sequencing.
+The active-impersonation reload-loss observation remains separate from the closed identity-truth unit and is now sequenced through the opened child `IMPERSONATION-SESSION-REHYDRATION-002` only.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The newly proven transition defect remains separate from banner identity truth, no implementation opening was created by that decision, and one later separate bounded opening may be considered if operator sequencing chooses to unblock the verification path.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 is now `CLOSED` after implementation commit `2538901`, deployed runtime PASS, and the mandatory post-close audit emitted in the same closure operation. The bounded shell-transition slice is complete and no broader auth or identity-truth claims were authorized by this closure.
 CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only and is superseded by the separate opening artifact `CONTROL-PLANE-IDENTITY-TRUTH-002`.

@@ -2989,9 +2989,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-001.md ·
   governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
   governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### IMPERSONATION-SESSION-REHYDRATION-002 — 2026-03-22
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for IMPERSONATION-SESSION-REHYDRATION-002)
+Title: Open exactly one bounded implementation unit for impersonation session rehydration
+Summary: Governance-only opening unit. Opened `IMPERSONATION-SESSION-REHYDRATION-002` as one
+  bounded implementation-ready unit for the impersonation session reload-loss defect only. Scope
+  is limited to persistence across reload, restoration of active impersonation state on app mount,
+  and preservation of the authenticated control-plane actor plus impersonated tenant relationship
+  after reload. No implementation-ready second unit was created, and no implementation was
+  performed by this opening.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: This opening remains separate from `CONTROL-PLANE-IDENTITY-TRUTH-002`,
+  `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, tenant-shell correctness, white-label behavior, and
+  impersonation stop cleanup. `IMPERSONATION-SESSION-REHYDRATION-002` is now the sole OPEN
+  implementation unit. No implementation has been executed yet.
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
-  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md ·
-  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
+  governance/control/SNAPSHOT.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-001.md ·
+  governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
 
 ---
 
