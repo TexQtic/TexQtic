@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-22
 last_unit_closed: TENANT-EXPERIENCE-RUNTIME-500-001
-last_commit: "[TENANT-EXPERIENCE-RUNTIME-500-001] record decision for observed tenant-runtime 500 defect"
+last_commit: "[TENANT-EXPERIENCE-RUNTIME-500-002] open bounded implementation unit for observed tenant-runtime 500 defect"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,8 +28,10 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 0**
+- **Open governed units: 1**
 - **Verified-complete governed units: 0**
+
+- **TENANT-EXPERIENCE-RUNTIME-500-002** — `OPEN` — Bounded implementation-ready unit opened 2026-03-22 for observed tenant-experience runtime `500` errors only. Scope is limited to the exact failing tenant-experience request or runtime surface later identified for this slice in the exercised impersonated-tenant path. No implementation has been executed yet, and the unit remains explicitly separate from identity-truth, auth-shell transition, impersonation session rehydration, stop-cleanup, broader tenant-shell correctness, white-label behavior, broader auth redesign, DB/schema work, and broader API redesign
 
 - **TENANT-EXPERIENCE-RUNTIME-500-001** — `CLOSED` — Bounded decision-only unit closed 2026-03-22 with result `OPENING_CANDIDATE`; observed tenant-experience runtime `500` errors during impersonated tenant runtime are now classified as one separate bounded defect family limited to the observed failing request/error behavior only. No implementation opening was created, and no broader tenant-shell correctness, white-label behavior, impersonation stop cleanup, auth redesign, DB/schema, or API redesign scope was authorized by this decision
 
@@ -69,7 +71,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**No implementation unit is currently OPEN.** `TENANT-EXPERIENCE-RUNTIME-500-001` is now closed as `OPENING_CANDIDATE` only for the observed tenant-runtime `500` defect family, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and resulting Layer 0 posture now returns to `OPERATOR_DECISION_REQUIRED`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**One implementation unit is currently OPEN.** `TENANT-EXPERIENCE-RUNTIME-500-002` is now open as the sole bounded implementation-ready unit for the observed tenant-runtime `500` defect family, `TENANT-EXPERIENCE-RUNTIME-500-001` remains the closed opening authority only, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -100,8 +102,9 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
-TENANT-EXPERIENCE-RUNTIME-500-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The currently recorded truth remains limited to observed tenant-experience runtime `500` errors during impersonated tenant runtime while the impersonation banner and tenant shell restoration still succeeded in the exercised path. No implementation opening was created by this decision.
+`TENANT-EXPERIENCE-RUNTIME-500-002`.
+TENANT-EXPERIENCE-RUNTIME-500-002 is now `OPEN` as the sole bounded implementation-ready unit for observed tenant-experience runtime `500` errors during impersonated tenant runtime. The later implementation boundary remains limited to the exact failing tenant-experience request or runtime surface identified for this slice only.
+TENANT-EXPERIENCE-RUNTIME-500-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-open child slice.
 IMPERSONATION-SESSION-REHYDRATION-002 is now `CLOSED` after implementation commit `1d9657a`, bounded deployed verification PASS, Layer 0 sync, and the mandatory post-close audit in the same closure operation. The unit is closed only on its bounded reload/rehydration slice.
 IMPERSONATION-SESSION-REHYDRATION-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the original decision authority for the now-closed child slice.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.

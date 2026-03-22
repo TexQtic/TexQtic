@@ -1671,6 +1671,33 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
 
 ---
+
+### TENANT-EXPERIENCE-RUNTIME-500-002 — 2026-03-22
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for TENANT-EXPERIENCE-RUNTIME-500-002)
+Title: Open one bounded implementation unit for observed tenant-experience runtime 500 errors
+Summary: Governance-only opening unit. Opened `TENANT-EXPERIENCE-RUNTIME-500-002` as one bounded
+  implementation-ready unit for the observed tenant-experience runtime `500` defect only. Scope
+  is limited to the exact failing tenant-experience request or runtime surface later identified
+  for this slice in the exercised impersonated-tenant path. No implementation-ready second unit
+  was created, and no implementation was performed by this opening.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: This opening remains separate from `CONTROL-PLANE-IDENTITY-TRUTH-002`,
+  `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, `IMPERSONATION-SESSION-REHYDRATION-002`,
+  tenant-shell overhaul, white-label behavior, and impersonation stop cleanup.
+  `TENANT-EXPERIENCE-RUNTIME-500-002` is now the sole OPEN implementation unit. No implementation
+  has been executed yet.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-EXPERIENCE-RUNTIME-500-001.md ·
+  governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md ·
+  governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
+
+---
   - no explicit routing-opening decision exists
   - broad G-026 remains unopened in Layer 0
   - closure of this child does not authorize broader routing implementation by implication
