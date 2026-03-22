@@ -64,7 +64,7 @@ import { BuyerRfqListSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
-import { setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
+import { getAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
 // Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
@@ -105,6 +105,9 @@ const App: React.FC = () => {
     | 'ORDER_CONFIRMED'
   >('AUTH');
   const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
+  const storedAuthRealm = getAuthRealm();
+  const effectiveRealm: 'TENANT' | 'CONTROL_PLANE' =
+    storedAuthRealm ?? (appState === 'AUTH' ? authRealm : 'TENANT');
   // Wave 4 P1: active panel in the WL Store Admin console
   type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
@@ -194,6 +197,12 @@ const App: React.FC = () => {
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
   const [showArchitecture, setShowArchitecture] = useState(false);
+
+  useEffect(() => {
+    if (authRealm !== effectiveRealm) {
+      setAuthRealm(effectiveRealm);
+    }
+  }, [authRealm, effectiveRealm]);
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
 
   // Catalog state
@@ -217,7 +226,7 @@ const App: React.FC = () => {
   // GUARD: Only load control-plane tenants when in Staff Control Plane view
   useEffect(() => {
     // Skip if not in control plane view or wrong realm
-    if (appState !== 'CONTROL_PLANE' || authRealm !== 'CONTROL_PLANE') {
+    if (appState !== 'CONTROL_PLANE' || effectiveRealm !== 'CONTROL_PLANE') {
       return;
     }
 
@@ -239,7 +248,7 @@ const App: React.FC = () => {
       }
     };
     fetchTenants();
-  }, [appState, authRealm]);
+  }, [appState, effectiveRealm]);
 
   // Helper to normalize plan string to strict union type
   const normalizePlan = (plan: string | null | undefined): 'TRIAL' | 'PAID' | 'ENTERPRISE' => {
@@ -325,20 +334,31 @@ const App: React.FC = () => {
   // Tenant sessions must never remain in control-plane state.
   // Normalize immediately back to a tenant-safe landing before any control-plane shell can persist.
   useEffect(() => {
-    if (appState !== 'CONTROL_PLANE' || authRealm === 'CONTROL_PLANE') {
+    if (appState !== 'CONTROL_PLANE' || effectiveRealm === 'CONTROL_PLANE') {
       return;
     }
 
+    setStoredAuthRealm('TENANT');
+    setAuthRealm('TENANT');
     setSelectedTenant(null);
     setAdminView('TENANTS');
     setAppState('EXPERIENCE');
-  }, [appState, authRealm]);
+  }, [appState, effectiveRealm]);
 
   const handleAuthSuccess = async (data: any) => {
-    if (authRealm === 'CONTROL_PLANE') {
+    const nextRealm = getAuthRealm() ?? (authRealm === 'CONTROL_PLANE' ? 'CONTROL_PLANE' : 'TENANT');
+
+    if (nextRealm === 'CONTROL_PLANE') {
+      setStoredAuthRealm('CONTROL_PLANE');
+      setAuthRealm('CONTROL_PLANE');
+      setSelectedTenant(null);
+      setAdminView('TENANTS');
       setAppState('CONTROL_PLANE');
       return;
     }
+
+    setStoredAuthRealm('TENANT');
+    setAuthRealm('TENANT');
 
     // TENANT realm: call /api/me to hydrate tenant context before transitioning.
     // This prevents the "Loading workspace..." hang caused by tenants[] being empty
@@ -1457,12 +1477,12 @@ const App: React.FC = () => {
           </div>
         );
       case 'CONTROL_PLANE':
-        if (authRealm !== 'CONTROL_PLANE') {
+        if (effectiveRealm !== 'CONTROL_PLANE') {
           return null;
         }
 
         return (
-          <SuperAdminShell authRealm={authRealm} activeView={adminView} onViewChange={setAdminView}>
+          <SuperAdminShell authRealm={effectiveRealm} activeView={adminView} onViewChange={setAdminView}>
             {renderAdminView()}
           </SuperAdminShell>
         );
@@ -1871,9 +1891,20 @@ const App: React.FC = () => {
               </div>
             )}
             <div className="glass shadow-2xl rounded-2xl border border-slate-200 p-2 flex gap-2">
-              {authRealm === 'CONTROL_PLANE' && !impersonation.isAdmin && (
+              {effectiveRealm === 'CONTROL_PLANE' && !impersonation.isAdmin && (
                 <button
                   onClick={() => {
+                    if (effectiveRealm !== 'CONTROL_PLANE') {
+                      setStoredAuthRealm('TENANT');
+                      setAuthRealm('TENANT');
+                      setSelectedTenant(null);
+                      setAdminView('TENANTS');
+                      setAppState('EXPERIENCE');
+                      return;
+                    }
+
+                    setStoredAuthRealm('CONTROL_PLANE');
+                    setAuthRealm('CONTROL_PLANE');
                     setAppState(appState === 'CONTROL_PLANE' ? 'EXPERIENCE' : 'CONTROL_PLANE');
                     setSelectedTenant(null);
                   }}
