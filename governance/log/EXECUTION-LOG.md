@@ -2550,6 +2550,28 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### CONTROL-PLANE-IDENTITY-TRUTH-001 — 2026-03-22
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for CONTROL-PLANE-IDENTITY-TRUTH-001)
+Title: Record the decision and pre-opening posture for control-plane identity truth
+Summary: Governance-only decision and pre-opening-preparation unit. Recorded that the control-plane
+  displayed identity-truth slice is now narrow enough for one later bounded `OPENING_CANDIDATE`
+  only, limited to control-plane chrome identity label correctness and persona presentation
+  consistency. No implementation-ready unit was opened by this decision. Tenant-shell,
+  white-label, and `IMPERSONATION-STOP-CLEANUP-001` scope all remained excluded.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-001.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED` because `OPENING_CANDIDATE` is not
+  `OPEN` and no implementation-ready unit was created. Future acceptance for any later opening
+  must depend on deployed runtime chrome truth rather than local-only proof.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-IDENTITY-TRUTH-001.md ·
+  governance/units/AUTH-IDENTITY-TRUTH-DEPLOYED-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY — 2026-03-21
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED

@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-22
-last_unit_closed: AUTH-IDENTITY-TRUTH-DEPLOYED-001
-last_commit: "[AUTH-IDENTITY-TRUTH-DEPLOYED-001] record decision posture for deployed identity-truth defect"
+last_unit_closed: CONTROL-PLANE-IDENTITY-TRUTH-001
+last_commit: "[CONTROL-PLANE-IDENTITY-TRUTH-001] record decision and pre-opening posture for control-plane identity truth"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -30,6 +30,8 @@ layer_4_installed: true
 
 - **Open governed units: 0**
 - **Verified-complete governed units: 0**
+
+- **CONTROL-PLANE-IDENTITY-TRUTH-001** — `CLOSED` — Decision and pre-opening-preparation unit closed 2026-03-22 with result `OPENING_CANDIDATE` only; the control-plane displayed identity-truth slice is now narrow enough for one later bounded opening candidate limited to control-plane chrome identity label correctness and persona presentation consistency only, future acceptance must depend on deployed runtime chrome truth, and no implementation-ready unit was opened
 
 - **AUTH-IDENTITY-TRUTH-DEPLOYED-001** — `CLOSED` — Decision-only deployed identity-truth posture record closed 2026-03-22 with result `SPLIT_REQUIRED`; remaining observations are still mixed across control-plane displayed identity truth, tenant-shell displayed identity truth, and impersonation persona labeling, white-label behavior must not be generalized without proof, and `IMPERSONATION-STOP-CLEANUP-001` remains separate. No implementation opening was created and resulting Layer 0 posture returned to `OPERATOR_DECISION_REQUIRED`
 
@@ -88,6 +90,7 @@ RFQ remains pre-negotiation:
 
 `OPERATOR_DECISION_REQUIRED`.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
+CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. No implementation unit is OPEN. The next lawful move, if chosen later, is one separate bounded opening decision for control-plane displayed identity truth only.
 AUTH-IDENTITY-TRUTH-DEPLOYED-001 is now `CLOSED` with result `SPLIT_REQUIRED`. No implementation unit is OPEN. The next lawful move, if any, is a later separate decision that names narrower identity-truth child boundaries explicitly and keeps stop-path cleanup separate.
 REALM-BOUNDARY-SHELL-AFFORDANCE-001 is now `CLOSED` after the bounded implementation chain culminated in deployed verification PASS on the exact `ddeb579` build. That closed unit remains bounded and does not authorize further auth, impersonation, or broader control-plane work by implication.
 GOV-CLOSE-GOV-NAV-01 is now recorded as a bounded governance-only closure result. GOV-NAV-01 is now `CLOSED`, no implementation-ready unit is `OPEN`, the portfolio returns to `OPERATOR_DECISION_REQUIRED`, and no doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier-tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit authorization was created by this closure.
