@@ -3018,6 +3018,94 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### VERIFY-IMPERSONATION-SESSION-REHYDRATION-002 — 2026-03-22
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: 1d9657a
+Title: Verify deployed impersonation session rehydration on the bounded reload/remount slice
+Summary: Deployed runtime verification for implementation commit `1d9657a` returned bounded PASS.
+  Active impersonation survived reload/remount in exercised deployed runtime, the authenticated
+  control-plane actor was preserved after reload, the impersonated tenant target was preserved
+  after reload, and the actor-target impersonation relationship was preserved after reload.
+  Invalid persisted impersonation state failed closed, control-plane API protection remained
+  `401`-protected when unauthenticated, and control-plane actor identity truth remained
+  non-regressed in the exercised path.
+Layer Impact: Layer 1 — governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md updated with
+  deployed verification truth; Layer 3 — EXECUTION-LOG.md appended
+Notes: This verification remains bounded to the reload/rehydration slice only and does not claim
+  broader tenant-shell correctness, white-label correctness, impersonation stop cleanup, or
+  broader auth correctness. A separate out-of-scope observation was made: some unrelated tenant
+  experience requests showed `500` errors during impersonated tenant runtime. That observation is
+  candidate-only follow-on work and is not merged into this verification verdict.
+Refs: governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-IMPERSONATION-SESSION-REHYDRATION-002 — 2026-03-22
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-IMPERSONATION-SESSION-REHYDRATION-002)
+Title: Close the bounded impersonation session rehydration unit after deployed verification PASS
+Summary: Governance-only sync-close unit. Recorded `IMPERSONATION-SESSION-REHYDRATION-002` as
+  `CLOSED` after implementation commit `1d9657a` and deployed runtime verification PASS on the
+  bounded reload/rehydration slice only. Layer 0, Layer 1, and Layer 3 were reconciled so the
+  unit no longer appears in the OPEN set, `NEXT-ACTION` returns to `OPERATOR_DECISION_REQUIRED`,
+  and the verified truth remains limited to reload/remount restoration of active impersonation,
+  preservation of the authenticated control-plane actor plus impersonated tenant relationship, and
+  fail-closed rejection of invalid persisted impersonation state.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This closure does not merge the observed tenant-runtime `500` errors into the closed unit.
+  That observation remains separate candidate-only follow-on work. No product code, no other unit
+  record, and no already-closed identity-truth or auth-shell-transition slice was reopened.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-IMPERSONATION-SESSION-REHYDRATION-002-POST-CLOSE — 2026-03-22
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-IMPERSONATION-SESSION-REHYDRATION-002-POST-CLOSE)
+Title: Record the mandatory post-close governance audit for IMPERSONATION-SESSION-REHYDRATION-002
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED.
+State Summary:
+  - OPEN-SET.md no longer references `IMPERSONATION-SESSION-REHYDRATION-002` as open
+  - NEXT-ACTION.md no longer points to the closed unit and now returns to `OPERATOR_DECISION_REQUIRED`
+  - SNAPSHOT.md records `last_unit_closed: IMPERSONATION-SESSION-REHYDRATION-002`
+  - governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md is marked `CLOSED` and `VERIFIED_COMPLETE`
+  - EXECUTION-LOG.md contains the verification record, sync-close record, and this post-close audit record
+  - bounded scope preserved: closure remains limited to the reload/rehydration slice only
+  - separate observation preserved: tenant-runtime `500` errors remain candidate-only follow-on work and were not merged into this closed unit
+  - unintended scope expansion: none observed
+Outstanding Gates:
+  - TECS-FBW-ADMINRBAC remains `DESIGN_GATE`
+  - the tenant-runtime `500` observation remains unopened and requires separate later sequencing if pursued
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - HOLD
+  - RECORD_ONLY
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: this bounded reload/rehydration unit is fully closed, no implementation-ready unit remains OPEN, and the new tenant-runtime `500` observation is only a separate candidate posture, not an implied opening
+Why Stronger Moves Remain Blocked:
+  - this closure does not authorize tenant-shell correctness work beyond the exercised path
+  - this closure does not authorize white-label, impersonation stop cleanup, or broader auth redesign work
+  - this closure does not authorize the tenant-runtime `500` candidate as open work by implication
+Resulting Layer 0 Posture:
+  - NEXT-ACTION returns to `OPERATOR_DECISION_REQUIRED`
+  - OPEN set contains no implementation-ready unit
+  - `IMPERSONATION-SESSION-REHYDRATION-002` is fully closed on its bounded reload/rehydration slice only
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-GOV-NAV-01 — 2026-03-21
 Type: GOVERNANCE / SYNC
 Status: VERIFIED_COMPLETE

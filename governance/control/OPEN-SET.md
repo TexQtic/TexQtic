@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-22 (IMPERSONATION-SESSION-REHYDRATION-002)
+**Last Updated:** 2026-03-22 (IMPERSONATION-SESSION-REHYDRATION-002 close)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,19 +13,18 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 | --- | --- | --- | --- | --- |
-| IMPERSONATION-SESSION-REHYDRATION-002 | Impersonation session persistence across reload | OPEN | W5 | 2026-03-22 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1**
+- **OPEN** (implementation-ready): **0**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
 GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 
@@ -53,7 +52,7 @@ TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 closed 2026-03-21 after implementation comm
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 CONTROL-PLANE-IDENTITY-TRUTH-002 closed 2026-03-22 after implementation commit `44db73c`, deployed runtime identity-truth verification PASS on `https://texqtic-7ce7t8f2z-tex-qtic.vercel.app/`, and the mandatory post-close audit result `DECISION_REQUIRED`. The bounded control-plane identity-truth slice is now complete: baseline control-plane identity renders truthfully, impersonation banner identity renders truthfully, baseline actor equals banner actor in exercised runtime, and no mixed or stale actor identity was observed. A separate out-of-scope defect candidate was observed during verification: active impersonation does not persist across reload and returns the app to `AUTH`. That session-rehydration observation is not merged into this unit, and no tenant-shell correctness, white-label behavior, impersonation stop cleanup, auth redesign, DB/schema, or API redesign was authorized by this closure.
 IMPERSONATION-SESSION-REHYDRATION-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. Active impersonation reload-loss is now classified as a separate impersonation session lifecycle defect limited to persistence across reload, restoration on mount, and preservation of the control-plane actor to impersonated tenant relationship after reload. No implementation opening was created by this decision, and `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.
-IMPERSONATION-SESSION-REHYDRATION-002 opened 2026-03-22 as one bounded implementation-ready unit for impersonation session rehydration only. Scope is limited to persistence across reload, restoration of active impersonation state on app mount, preservation of the authenticated control-plane actor plus impersonated tenant relationship after reload, and bounded future verification for this slice. No implementation was performed by this opening, and identity-truth, baseline auth-shell transition, tenant-shell correctness, white-label behavior, impersonation stop cleanup, broader impersonation behavior, auth redesign, DB/schema, and API redesign remain excluded.
+IMPERSONATION-SESSION-REHYDRATION-002 closed 2026-03-22 after implementation commit `1d9657a`, deployed runtime verification PASS, and the mandatory post-close audit result `DECISION_REQUIRED`. The bounded reload/rehydration slice is now complete: active impersonation survived reload/remount in exercised deployed runtime, the authenticated control-plane actor was preserved after reload, the impersonated tenant target was preserved after reload, the actor-target impersonation relationship was preserved after reload, invalid persisted impersonation state failed closed, control-plane API protection remained `401`-protected when unauthenticated, and control-plane actor identity truth remained non-regressed in the exercised path. A separate out-of-scope defect candidate was observed during impersonated tenant runtime: unrelated tenant-experience requests showed some `500` errors. That observation is not merged into this closed unit, and no tenant-shell correctness, white-label behavior, impersonation stop cleanup, auth redesign, DB/schema, or API redesign was authorized by this closure.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: OPENING_CANDIDATE. Live deployed evidence now proves that valid control-plane authentication succeeds at the API/token layer while the SPA fails to transition into the authenticated control-plane shell, but no implementation opening was created by this decision and the defect remains separate from CONTROL-PLANE-IDENTITY-TRUTH-002.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 opened 2026-03-22 as one additional bounded implementation-ready unit for control-plane auth-shell transition only. Scope was limited to post-login shell transition, control-plane session rehydration on app mount, and login-success-to-shell-state propagation for the control-plane path. No implementation was performed by the opening, and banner identity truth, tenant-shell, white-label, impersonation stop cleanup, broader impersonation behavior, auth redesign, DB/schema, and API redesign remained excluded.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 closed 2026-03-22 after implementation commit `2538901`, deployed runtime verification PASS on `https://texqtic-k2mcmqf96-tex-qtic.vercel.app/`, and the mandatory post-close audit result `DECISION_REQUIRED`. The bounded control-plane auth-shell transition slice is now complete: control-plane login enters the authenticated shell, reload rehydrates the shell from valid stored auth, invalid stored auth is rejected, unauthenticated control-plane API access remains `401`, and tenant-vs-control-plane separation remains intact in exercised paths. That closure unblocked the later identity-truth verification path and did not authorize banner identity truth, tenant-shell correctness, white-label correctness, impersonation cleanup, or broader auth redesign.
@@ -67,6 +66,7 @@ CONTROL-PLANE-IDENTITY-TRUTH-001 closed 2026-03-22 as a bounded decision and pre
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| IMPERSONATION-SESSION-REHYDRATION-002 | CLOSED | 2026-03-22 | 1d9657a · this close record |
 | IMPERSONATION-SESSION-REHYDRATION-001 | CLOSED | 2026-03-22 | this decision record |
 | CONTROL-PLANE-IDENTITY-TRUTH-002 | CLOSED | 2026-03-22 | 44db73c · this close record |
 | CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 | CLOSED | 2026-03-22 | 2538901 · this close record |

@@ -1,158 +1,98 @@
 ---
 unit_id: IMPERSONATION-SESSION-REHYDRATION-002
-title: Open bounded implementation unit for impersonation session rehydration
+title: Bounded implementation unit for impersonation session rehydration
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-22
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_AUTHORITY: IMPERSONATION-SESSION-REHYDRATION-001 closed as OPENING_CANDIDATE only and remains the sole decision authority for this defect family · LAYER_0_CONFIRMATION: OPEN-SET contains no OPEN implementation unit, NEXT-ACTION is OPERATOR_DECISION_REQUIRED, and SNAPSHOT preserves the impersonation reload-loss defect as separate from identity-truth and baseline auth-shell transition · VERIFIED_DEFECT_BASELINE: active impersonation starts successfully, but during active impersonation reload returns the app to AUTH instead of restoring the impersonation session"
+closed: 2026-03-22
+verified: 2026-03-22
+commit: 1d9657a
+evidence: "IMPLEMENTATION_COMMIT: 1d9657a [IMPERSONATION-SESSION-REHYDRATION-002] fix impersonation session rehydration · DEPLOYED_VERIFICATION_PASS: active impersonation session survived reload/remount in deployed runtime while preserving the authenticated control-plane actor, the impersonated tenant target, and the actor-target impersonation relationship after reload · NEGATIVE_PATH_PASS: invalid persisted impersonation state failed closed and did not falsely restore impersonation · NON_REGRESSION_PASS: control-plane protection boundary remained 401-protected when unauthenticated and control-plane actor identity truth remained non-regressed in the exercised path"
 doctrine_constraints:
-  - D-004: this opening creates exactly one bounded implementation unit and must not merge identity-truth, baseline auth-shell transition, tenant-shell correctness, white-label behavior, impersonation stop cleanup, or any broader auth or impersonation slice
-  - D-007: opening only; no implementation, product code edits, schema work, tests, or config changes occur in this operation
-  - D-011: acceptance must remain limited to impersonation session reload/rehydration truth and must not generalize to tenant-shell, white-label, or broader auth correctness without separate proof
-  - D-013: opening authorizes one later implementation step only and does not itself satisfy implementation, verification, sync, or closure
+  - D-004: this unit closes only on the bounded impersonation-session reload/rehydration slice and must not merge identity-truth, baseline auth-shell transition, tenant-shell correctness, white-label behavior, impersonation stop cleanup, or any broader auth or impersonation slice
+  - D-011: deployed PASS remains limited to impersonation session reload/rehydration truth and does not generalize to tenant-shell, white-label, or broader auth correctness without separate proof
+  - D-013: closure records deployed verification truth, Layer 0 sync, and mandatory post-close audit only; no follow-on defect candidate is opened by implication in this operation
 decisions_required: []
 blockers: []
 ---
 
 ## Unit Summary
 
-`IMPERSONATION-SESSION-REHYDRATION-002` is the bounded implementation-ready unit for the
-impersonation session reload-loss defect only.
+`IMPERSONATION-SESSION-REHYDRATION-002` is the bounded implementation unit for the active
+impersonation session reload/remount rehydration defect only.
 
-Opening decision: `YES`.
+Result: `VERIFIED_COMPLETE` and `CLOSED`.
 
-This opening is lawful because `IMPERSONATION-SESSION-REHYDRATION-001` already closed as
-`OPENING_CANDIDATE` only, Layer 0 enters at `OPERATOR_DECISION_REQUIRED`, the defect is already
-evidenced in deployed runtime, and the resulting posture preserves strict separation from
-`CONTROL-PLANE-IDENTITY-TRUTH-002`, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, tenant-shell
-correctness, white-label behavior, and impersonation stop cleanup.
+This unit is now closed after bounded implementation commit `1d9657a` and deployed runtime
+verification PASS. The closure preserves strict separation from `CONTROL-PLANE-IDENTITY-TRUTH-002`,
+`CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, tenant-shell correctness, white-label behavior, and
+impersonation stop cleanup.
 
-Implementation is not executed in this opening operation.
+## Implementation Under Test
 
-## Layer 0 State Confirmation
+- commit: `1d9657a`
+- message: `[IMPERSONATION-SESSION-REHYDRATION-002] fix impersonation session rehydration`
 
-Exact Layer 0 posture on entry:
+## Verification Environment
 
-- `OPEN-SET.md`: no implementation-ready unit is `OPEN`
-- `NEXT-ACTION.md`: `OPERATOR_DECISION_REQUIRED`
-- `SNAPSHOT.md`: `IMPERSONATION-SESSION-REHYDRATION-001` is `CLOSED` with result
-  `OPENING_CANDIDATE` only
+- verification mode: deployed runtime
+- deployed URL exercised: `https://texqtic-h9y2c9x8z-tex-qtic.vercel.app/`
+- clean unauthenticated boundary confirmed before login
 
-This confirms all required entry truths:
+## Verified Truth
 
-- `IMPERSONATION-SESSION-REHYDRATION-001` is the decision authority for this opening
-- `CONTROL-PLANE-IDENTITY-TRUTH-002` is `CLOSED` and must not be reopened
-- `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` is `CLOSED` and must not be reopened
-- the new defect remains separate from tenant-shell correctness, white-label behavior, and
-  impersonation stop cleanup
+- active impersonation session survived reload/remount in deployed runtime
+- after reload, the authenticated control-plane actor was preserved
+- after reload, the impersonated tenant target was preserved
+- after reload, the actor-target impersonation relationship was preserved
+- invalid persisted impersonation state failed closed
+- control-plane protection boundary remained protected in the exercised path
+- control-plane actor identity truth remained non-regressed in the exercised path
 
-## Opening Decision
+## Bounded Runtime Evidence
 
-Yes — open one bounded implementation unit only if the exact scope below is preserved.
+- clean unauthenticated app remained on `AUTH`
+- unauthenticated control-plane endpoint returned `401`
+- control-plane login entered the authenticated shell and rendered actor identity truthfully
+- active impersonation banner rendered the actor and target tenant before reload
+- reload/remount restored the impersonation banner and tenant shell without falling back to `AUTH`
+- persisted control-plane identity and persisted impersonation session remained aligned after reload
+- tampered persisted impersonation expiry returned the app to `AUTH` and cleared false restoration
 
-## Exact Bounded Implementation Objective
+## Acceptance Result
 
-Correct impersonation session rehydration so that, when an active impersonation session exists and
-the app reloads, the runtime restores the impersonation session truthfully instead of falling back
-to `AUTH`.
+Acceptance: `PASS`.
 
-## Exact In-Scope Boundary
+The bounded acceptance boundary is satisfied because deployed runtime proof confirmed reload-time
+restoration of active impersonation state while preserving the authenticated control-plane actor,
+the impersonated tenant target, and their relationship, and because invalid persisted
+impersonation state failed closed.
 
-This unit is limited to:
+## Out-of-Scope Observation
 
-- impersonation session persistence across reload
-- restoration of active impersonation state on app mount
-- preservation of the authenticated control-plane actor plus impersonated tenant relationship after
-  reload
-- bounded future verification definition for this slice
+- during impersonated tenant runtime, console/network showed some `500` errors on unrelated tenant
+  experience requests
+- these errors did not invalidate the bounded PASS for impersonation session rehydration because
+  the impersonation banner and tenant shell restoration still succeeded in the exercised path
+- this observation must be tracked as separate follow-on work and must not be merged into this
+  closed unit
 
-## Exact Out-of-Scope Boundary
+## Scope Boundary Preserved at Closure
 
-This unit excludes all of the following:
+This closure remains limited to impersonation session persistence across reload, mount-time
+restoration of active impersonation state, preservation of the authenticated control-plane actor
+plus impersonated tenant relationship after reload, bounded negative-path rejection of invalid
+persisted impersonation state, and bounded non-regression checks for control-plane protection and
+actor identity truth in the exercised path only.
 
-- implementation in this opening operation
-- product code edits
-- identity-truth repair
-- baseline control-plane auth-shell transition repair
-- tenant-shell correctness
-- white-label correctness
-- impersonation stop cleanup
-- broader impersonation program
-- auth architecture rewrite
-- token/session model redesign beyond this bounded reload/rehydration path
-- DB or schema changes
-- API redesign
-- realm-boundary work
-- multi-slice auth bundle
-- hidden expansion into broader auth or impersonation behavior
+This closure does not authorize or claim tenant-shell correctness beyond the exercised path,
+white-label correctness, impersonation stop cleanup correctness, broader impersonation lifecycle
+behavior, broader auth redesign, DB/schema work, or API redesign.
 
-## Exact Acceptance Boundary
+## Close Status Statement
 
-Acceptance is satisfied only when:
+`IMPERSONATION-SESSION-REHYDRATION-002` is now `CLOSED` and `VERIFIED_COMPLETE` on its bounded
+reload/rehydration slice only.
 
-- an active impersonation session survives reload/remount in the exercised runtime path
-- after reload, the restored state preserves the authenticated control-plane actor
-- after reload, the restored state preserves the impersonated tenant target
-- after reload, the restored state preserves the impersonation relationship between actor and tenant
-- acceptance does not rely on tenant-shell correctness beyond the exercised impersonation path
-- acceptance does not rely on white-label behavior
-- acceptance does not rely on impersonation stop cleanup behavior
-- acceptance does not claim broader auth or impersonation correctness beyond the reload/rehydration slice
-
-## Exact Verification Profile
-
-- unit type: runtime-sensitive impersonation-session rehydration correction
-- required verification modes:
-  - local implementation verification
-  - effective runtime verification
-  - deployed verification if acceptance depends on live runtime reload truth
-- exclusions:
-  - local-only proof is insufficient if deployed behavior is the acceptance boundary
-  - stop-cleanup behavior is excluded from this unit
-  - tenant-shell and white-label verification are excluded except as explicitly labeled boundary or
-    non-regression checks
-
-## Governance Posture After Opening
-
-Resulting governance posture after this opening:
-
-- one implementation unit is now `OPEN`
-- the open unit is `IMPERSONATION-SESSION-REHYDRATION-002`
-- scope remains impersonation session rehydration only
-- no implementation has been executed yet
-- the next canonical phase is later implementation for `IMPERSONATION-SESSION-REHYDRATION-002` only
-
-## Allowed Future Implementation Boundary
-
-The later implementation step, if separately performed, must remain bounded to restoring truthful
-impersonation session continuity across reload in the exercised control-plane impersonation path,
-including any directly coupled app-mount restoration logic or state continuity needed to preserve
-the authenticated control-plane actor plus impersonated tenant relationship after reload.
-
-The later implementation step must not absorb identity-truth, baseline auth-shell transition,
-tenant-shell, white-label, stop cleanup, broader impersonation lifecycle, auth redesign, schema, or
-API scope.
-
-## Risks / Blockers
-
-- acceptance is runtime-sensitive and may require deployed proof if the exercised reload truth
-  boundary depends on live runtime behavior
-- actor restoration and tenant restoration must remain one bounded slice only if they stay strictly
-  inside the reload/rehydration path
-- a later implementation must not use this opening to reopen already-closed identity-truth or
-  baseline auth-shell transition claims
-
-## Implementation Status Statement
-
-Implementation remains not yet executed in this operation.
-
-## Atomic Commit
-
-`[IMPERSONATION-SESSION-REHYDRATION-002] open bounded implementation unit for impersonation session rehydration`
-
-**Read control-plane files before this unit file. This file refines unit-specific truth only.**
