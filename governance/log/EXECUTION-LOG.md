@@ -2807,6 +2807,35 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 — 2026-03-22
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for CONTROL-PLANE-AUTH-SHELL-TRANSITION-002)
+Title: Open exactly one bounded implementation unit for control-plane auth-shell transition
+Summary: Governance-only opening unit. Opened `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` as one
+  additional bounded implementation-ready unit for control-plane auth-shell transition only.
+  Scope is limited to post-login shell transition, control-plane session rehydration on app mount,
+  and login-success-to-shell-state propagation for the control-plane path. No implementation was
+  performed by this opening. `CONTROL-PLANE-IDENTITY-TRUTH-002` remained OPEN in VERIFICATION,
+  and banner identity truth, tenant-shell, white-label, `IMPERSONATION-STOP-CLEANUP-001`, broader
+  impersonation behavior, auth redesign, DB/schema, API redesign, and realm-boundary continuation
+  remained excluded.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: `NEXT-ACTION` now points to `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` as the next bounded
+  implementation step only. `CONTROL-PLANE-IDENTITY-TRUTH-002` remains OPEN in VERIFICATION and
+  remains blocked until the separate control-plane shell path is repaired. Acceptance for the later
+  implementation remains runtime-sensitive and must not rely on tenant-shell correctness,
+  white-label behavior, impersonation stop cleanup, or broader auth claims beyond the transition
+  slice.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md ·
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-001.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-GOV-NAV-01 — 2026-03-21
 Type: GOVERNANCE / SYNC
 Status: VERIFIED_COMPLETE
