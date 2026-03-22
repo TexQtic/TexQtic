@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-22
-last_unit_closed: TENANT-EXPERIENCE-RUNTIME-500-002
-last_commit: "[TENANT-EXPERIENCE-RUNTIME-500-002] close unit after remote verification PASS"
+last_unit_closed: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001
+last_commit: "[TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001] record decision for placeholder-image DNS failure"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -30,6 +30,8 @@ layer_4_installed: true
 
 - **Open governed units: 0**
 - **Verified-complete governed units: 0**
+
+- **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001** — `CLOSED` — Bounded decision-only unit closed 2026-03-22 with result `OPENING_CANDIDATE`; observed tenant-visible placeholder image requests using `https://via.placeholder.com/400x300` failed with `ERR_NAME_NOT_RESOLVED` while tenant catalog/page usability could still succeed in the exercised path. The defect family is now preserved as a separate bounded image-resource loading candidate only and remains explicitly separate from AI insights runtime `500` handling, identity-truth, auth-shell transition, impersonation session rehydration, broader tenant-shell correctness, white-label behavior, and broader media platform redesign
 
 - **TENANT-EXPERIENCE-RUNTIME-500-002** — `CLOSED` — Bounded implementation unit closed 2026-03-22 after implementation commit `4d4cbe9`, remote runtime verification PASS, governance sync, and mandatory post-close audit. The exact previously failing endpoint `/api/ai/insights?tenantType=B2B&experience=market_trends` returned `200` instead of `500`, returned the safe degraded fallback text `AI insights temporarily unavailable. Please try again later.`, and the exercised tenant path remained usable while `/api/me`, `/api/tenant/cart`, `/api/tenant/catalog/items?limit=20`, and `/api/tenant/rfqs` remained healthy. Placeholder image DNS failures with `ERR_NAME_NOT_RESOLVED` remain separate and unmerged, and any deeper hidden exception behind the degraded fallback remains out of scope for this closed unit
 
@@ -71,7 +73,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**No implementation unit is currently OPEN.** `TENANT-EXPERIENCE-RUNTIME-500-002` is now `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `TENANT-EXPERIENCE-RUNTIME-500-001` remains the closed opening authority only, placeholder image DNS failures remain separate candidate-only follow-on work if later authorized, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**No implementation unit is currently OPEN.** `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` is now `CLOSED` as `OPENING_CANDIDATE` only for the bounded placeholder-image DNS/resource failure family, `TENANT-EXPERIENCE-RUNTIME-500-002` remains `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `TENANT-EXPERIENCE-RUNTIME-500-001` remains the closed opening authority only for the AI insights runtime defect family, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -103,10 +105,11 @@ RFQ remains pre-negotiation:
 ## Current Next Action
 
 `OPERATOR_DECISION_REQUIRED`.
+TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The bounded future candidate is limited to tenant-visible placeholder-image resource loading failure caused by DNS resolution failure on `https://via.placeholder.com/400x300` only.
 TENANT-EXPERIENCE-RUNTIME-500-002 is now `CLOSED` after bounded remote runtime verification PASS on the exact `/api/ai/insights?tenantType=B2B&experience=market_trends` surface. The closure is limited to the removal of the observed hard `500` on that exercised AI insights path only.
 TENANT-EXPERIENCE-RUNTIME-500-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child slice.
 No implementation-ready unit remains open.
-Placeholder image DNS failures remain separate candidate-only follow-on work if later authorized and were not merged into this closed unit.
+Placeholder image DNS failures remain separate candidate-only follow-on work if later authorized and were not merged into the closed AI insights unit.
 IMPERSONATION-SESSION-REHYDRATION-002 is now `CLOSED` after implementation commit `1d9657a`, bounded deployed verification PASS, Layer 0 sync, and the mandatory post-close audit in the same closure operation. The unit is closed only on its bounded reload/rehydration slice.
 IMPERSONATION-SESSION-REHYDRATION-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the original decision authority for the now-closed child slice.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.

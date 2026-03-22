@@ -2361,6 +2361,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 — 2026-03-22
+Type: DECISION
+Status: CLOSED
+Commit: (this unit — see git log for [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001] record decision for placeholder-image DNS failure)
+Title: Record the decision for observed placeholder-image DNS failure in tenant runtime
+Summary: Governance-only decision unit. Recorded the disposition that observed tenant-visible
+  placeholder image requests using `https://via.placeholder.com/400x300` failed with
+  `ERR_NAME_NOT_RESOLVED` while tenant catalog/page usability could still succeed in the exercised
+  path. Classified this as a separate bounded defect family and selected `OPENING_CANDIDATE`
+  without opening implementation.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated for decision carry-forward posture;
+  Layer 1 — governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: This decision remains strictly separate from TENANT-EXPERIENCE-RUNTIME-500-002, control-plane
+  identity truth, control-plane auth-shell transition, impersonation session rehydration,
+  impersonation stop cleanup, broader tenant-shell correctness, and broader media-platform
+  redesign. `OPENING_CANDIDATE` is not `OPEN`, no implementation-ready unit was created, and
+  `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.
+Refs: governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001.md ·
+  governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-TENANT-EXPERIENCE-RUNTIME-500-002-POST-CLOSE — 2026-03-22
 Type: GOVERNANCE / POST-CLOSE-AUDIT
 Status: CLOSED
