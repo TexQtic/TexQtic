@@ -1698,6 +1698,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
 
 ---
+
+### TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 — 2026-03-22
+Type: GOVERNANCE / DECISION
+Status: CLOSED
+Commit: (this unit — see git log for TENANT-CATALOG-IMAGE-UPLOAD-GAP-001)
+Title: Record the decision for the observed tenant catalog image upload or assignment gap
+Summary: Governance-only decision unit. Classified the exercised tenant catalog add-item UI gap
+  as one separate bounded defect family and selected `OPENING_CANDIDATE` as the narrowest
+  truthful next posture. The observed flow exposed Name, Price, SKU, Save Item, and Cancel with
+  no visible image upload or image assignment control, so the gap remains separate from the open
+  placeholder-image DNS/resource unit and no implementation was opened.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-001.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: This decision does not reopen or merge `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`,
+  `TENANT-EXPERIENCE-RUNTIME-500-002`, `CONTROL-PLANE-IDENTITY-TRUTH-002`,
+  `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, or `IMPERSONATION-SESSION-REHYDRATION-002`.
+  It does not authorize implementation, broader catalog overhaul, white-label expansion,
+  media-platform redesign, auth redesign, DB/schema work, or API redesign. `OPENING_CANDIDATE`
+  is not `OPEN`, and the current `NEXT-ACTION` remains the separate open placeholder-image unit.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-001.md ·
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md ·
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001.md · governance/log/EXECUTION-LOG.md
+
+---
   - no explicit routing-opening decision exists
   - broad G-026 remains unopened in Layer 0
   - closure of this child does not authorize broader routing implementation by implication
