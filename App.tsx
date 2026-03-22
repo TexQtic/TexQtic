@@ -64,7 +64,7 @@ import { BuyerRfqListSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
-import { getAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
+import { getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
 // Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
@@ -105,9 +105,11 @@ const App: React.FC = () => {
     | 'ORDER_CONFIRMED'
   >('AUTH');
   const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
-  const storedAuthRealm = getAuthRealm();
-  const effectiveRealm: 'TENANT' | 'CONTROL_PLANE' =
-    storedAuthRealm ?? (appState === 'AUTH' ? authRealm : 'TENANT');
+  const effectiveRealm = useMemo(
+    () => getCurrentAuthRealm(appState === 'AUTH' ? authRealm : null) ?? 'TENANT',
+    [appState, authRealm]
+  );
+  const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
@@ -199,11 +201,28 @@ const App: React.FC = () => {
   const [showArchitecture, setShowArchitecture] = useState(false);
 
   useEffect(() => {
-    if (authRealm !== effectiveRealm) {
+    if (appState === 'AUTH' && authRealm !== effectiveRealm) {
       setAuthRealm(effectiveRealm);
     }
-  }, [authRealm, effectiveRealm]);
+  }, [appState, authRealm, effectiveRealm]);
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
+
+  const enterControlPlane = () => {
+    if (getCurrentAuthRealm() !== 'CONTROL_PLANE') {
+      setStoredAuthRealm('TENANT');
+      setAuthRealm('TENANT');
+      setSelectedTenant(null);
+      setAdminView('TENANTS');
+      setAppState('EXPERIENCE');
+      return;
+    }
+
+    setStoredAuthRealm('CONTROL_PLANE');
+    setAuthRealm('CONTROL_PLANE');
+    setSelectedTenant(null);
+    setAdminView('TENANTS');
+    setAppState('CONTROL_PLANE');
+  };
 
   // Catalog state
   const [products, setProducts] = useState<CatalogItem[]>([]);
@@ -226,7 +245,7 @@ const App: React.FC = () => {
   // GUARD: Only load control-plane tenants when in Staff Control Plane view
   useEffect(() => {
     // Skip if not in control plane view or wrong realm
-    if (appState !== 'CONTROL_PLANE' || effectiveRealm !== 'CONTROL_PLANE') {
+    if (appState !== 'CONTROL_PLANE' || !canAccessControlPlane) {
       return;
     }
 
@@ -248,7 +267,7 @@ const App: React.FC = () => {
       }
     };
     fetchTenants();
-  }, [appState, effectiveRealm]);
+  }, [appState, canAccessControlPlane]);
 
   // Helper to normalize plan string to strict union type
   const normalizePlan = (plan: string | null | undefined): 'TRIAL' | 'PAID' | 'ENTERPRISE' => {
@@ -334,7 +353,7 @@ const App: React.FC = () => {
   // Tenant sessions must never remain in control-plane state.
   // Normalize immediately back to a tenant-safe landing before any control-plane shell can persist.
   useEffect(() => {
-    if (appState !== 'CONTROL_PLANE' || effectiveRealm === 'CONTROL_PLANE') {
+    if (appState !== 'CONTROL_PLANE' || canAccessControlPlane) {
       return;
     }
 
@@ -343,17 +362,13 @@ const App: React.FC = () => {
     setSelectedTenant(null);
     setAdminView('TENANTS');
     setAppState('EXPERIENCE');
-  }, [appState, effectiveRealm]);
+  }, [appState, canAccessControlPlane]);
 
   const handleAuthSuccess = async (data: any) => {
-    const nextRealm = getAuthRealm() ?? (authRealm === 'CONTROL_PLANE' ? 'CONTROL_PLANE' : 'TENANT');
+    const nextRealm = getCurrentAuthRealm(authRealm) ?? 'TENANT';
 
     if (nextRealm === 'CONTROL_PLANE') {
-      setStoredAuthRealm('CONTROL_PLANE');
-      setAuthRealm('CONTROL_PLANE');
-      setSelectedTenant(null);
-      setAdminView('TENANTS');
-      setAppState('CONTROL_PLANE');
+      enterControlPlane();
       return;
     }
 
@@ -1477,12 +1492,12 @@ const App: React.FC = () => {
           </div>
         );
       case 'CONTROL_PLANE':
-        if (effectiveRealm !== 'CONTROL_PLANE') {
+        if (!canAccessControlPlane) {
           return null;
         }
 
         return (
-          <SuperAdminShell authRealm={effectiveRealm} activeView={adminView} onViewChange={setAdminView}>
+          <SuperAdminShell authRealm="CONTROL_PLANE" activeView={adminView} onViewChange={setAdminView}>
             {renderAdminView()}
           </SuperAdminShell>
         );
@@ -1891,22 +1906,16 @@ const App: React.FC = () => {
               </div>
             )}
             <div className="glass shadow-2xl rounded-2xl border border-slate-200 p-2 flex gap-2">
-              {effectiveRealm === 'CONTROL_PLANE' && !impersonation.isAdmin && (
+              {canAccessControlPlane && !impersonation.isAdmin && (
                 <button
                   onClick={() => {
-                    if (effectiveRealm !== 'CONTROL_PLANE') {
-                      setStoredAuthRealm('TENANT');
-                      setAuthRealm('TENANT');
+                    if (appState === 'CONTROL_PLANE') {
                       setSelectedTenant(null);
-                      setAdminView('TENANTS');
                       setAppState('EXPERIENCE');
                       return;
                     }
 
-                    setStoredAuthRealm('CONTROL_PLANE');
-                    setAuthRealm('CONTROL_PLANE');
-                    setAppState(appState === 'CONTROL_PLANE' ? 'EXPERIENCE' : 'CONTROL_PLANE');
-                    setSelectedTenant(null);
+                    enterControlPlane();
                   }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition uppercase tracking-tighter ${appState === 'CONTROL_PLANE' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                 >

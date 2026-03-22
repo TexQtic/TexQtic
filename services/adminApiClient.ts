@@ -5,7 +5,7 @@
  * Throws REALM_MISMATCH error if current realm is not CONTROL_PLANE.
  */
 
-import { get, post, put, patch, del, getAuthRealm } from './apiClient';
+import { get, post, put, patch, del, getCurrentAuthRealm } from './apiClient';
 
 /**
  * Wave 0-B-FIX-V3: Realm hint header for admin requests
@@ -18,7 +18,7 @@ const ADMIN_REALM_HEADER = { 'X-Texqtic-Realm': 'control' };
  * Prevents admin endpoints from being called in tenant realm
  */
 function requireAdminRealm(): void {
-  const realm = getAuthRealm();
+  const realm = getCurrentAuthRealm();
   if (realm !== 'CONTROL_PLANE') {
     throw new Error(
       `REALM_MISMATCH: Admin endpoint requires CONTROL_PLANE realm, got ${realm || 'NONE'}`

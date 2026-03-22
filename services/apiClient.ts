@@ -71,7 +71,7 @@ export function setStoredAuthRealm(realm: AuthRealm | null): void {
   localStorage.removeItem(AUTH_REALM_KEY);
 }
 
-function resolveStoredAuthRealm(): AuthRealm | null {
+function resolveStoredAuthRealm(fallbackRealm: AuthRealm | null = null): AuthRealm | null {
   const storedRealm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
   if (storedRealm) {
     return storedRealm;
@@ -88,7 +88,7 @@ function resolveStoredAuthRealm(): AuthRealm | null {
     return 'CONTROL_PLANE';
   }
 
-  return null;
+  return fallbackRealm;
 }
 
 /**
@@ -135,7 +135,15 @@ export function clearAuth(): void {
  * Get current auth realm
  */
 export function getAuthRealm(): AuthRealm | null {
-  return resolveStoredAuthRealm();
+  return getCurrentAuthRealm();
+}
+
+/**
+ * Get the canonical current realm with an optional fallback.
+ * This is the single source of truth for UI gating and request validation.
+ */
+export function getCurrentAuthRealm(fallbackRealm: AuthRealm | null = null): AuthRealm | null {
+  return resolveStoredAuthRealm(fallbackRealm);
 }
 
 /**
