@@ -2782,6 +2782,31 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 — 2026-03-22
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for CONTROL-PLANE-AUTH-SHELL-TRANSITION-001)
+Title: Record the decision posture for the control-plane auth-shell transition defect
+Summary: Governance-only decision unit. Recorded the narrowest truthful next posture for the newly
+  proven deployed runtime defect where valid control-plane authentication succeeds at the API and
+  token layer but the SPA fails to transition into the authenticated control-plane shell. Result:
+  `OPENING_CANDIDATE`. `CONTROL-PLANE-IDENTITY-TRUTH-002` remains OPEN in VERIFICATION, but its
+  runtime acceptance path is currently blocked by this separate defect. No implementation opening
+  was created by this decision.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-001.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: The new finding remains separate from banner identity truth, tenant-shell identity truth,
+  white-label behavior, impersonation stop cleanup, and broader auth redesign. `OPENING_CANDIDATE`
+  is not `OPEN`, recommendation is not authorization, and `CONTROL-PLANE-IDENTITY-TRUTH-002`
+  remains the sole OPEN unit.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-001.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-GOV-NAV-01 — 2026-03-21
 Type: GOVERNANCE / SYNC
 Status: VERIFIED_COMPLETE

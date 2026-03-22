@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-22
-last_unit_closed: CONTROL-PLANE-IDENTITY-TRUTH-001
-last_commit: "[CONTROL-PLANE-IDENTITY-TRUTH-002] open bounded implementation unit for control-plane identity truth"
+last_unit_closed: CONTROL-PLANE-AUTH-SHELL-TRANSITION-001
+last_commit: "[CONTROL-PLANE-AUTH-SHELL-TRANSITION-001] record decision posture for control-plane auth-shell transition defect"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -31,7 +31,9 @@ layer_4_installed: true
 - **Open governed units: 1**
 - **Verified-complete governed units: 0**
 
-- **CONTROL-PLANE-IDENTITY-TRUTH-002** — `OPEN` — Bounded implementation unit opened 2026-03-22 for control-plane authenticated identity display truth only. Scope is limited to control-plane chrome identity label correctness, control-plane persona/user presentation consistency, and control-plane-only state used to render displayed identity. Acceptance remains runtime-sensitive, may require deployed verification if acceptance depends on live runtime chrome truth, and implementation has not yet been executed by the opening step
+- **CONTROL-PLANE-IDENTITY-TRUTH-002** — `OPEN` — Bounded implementation unit opened 2026-03-22 for control-plane authenticated identity display truth only. Scope is limited to control-plane chrome identity label correctness, control-plane persona/user presentation consistency, and control-plane-only state used to render displayed identity. Implementation is complete, but the unit remains OPEN in VERIFICATION and its runtime acceptance path is currently blocked by the separately governed deployed runtime defect recorded in `CONTROL-PLANE-AUTH-SHELL-TRANSITION-001`
+
+- **CONTROL-PLANE-AUTH-SHELL-TRANSITION-001** — `CLOSED` — Decision-only deployed runtime posture record closed 2026-03-22 with result `OPENING_CANDIDATE`; live evidence now proves that valid control-plane authentication succeeds at the API/token layer while the SPA fails to transition into the authenticated control-plane shell, the defect remains separate from banner identity truth, and no implementation opening was created by this decision
 
 - **CONTROL-PLANE-IDENTITY-TRUTH-001** — `CLOSED` — Decision and pre-opening-preparation unit closed 2026-03-22 with result `OPENING_CANDIDATE` only; the control-plane displayed identity-truth slice is now narrow enough for one later bounded opening candidate limited to control-plane chrome identity label correctness and persona presentation consistency only, future acceptance must depend on deployed runtime chrome truth, and no implementation-ready unit was opened
 
@@ -92,7 +94,8 @@ RFQ remains pre-negotiation:
 
 `CONTROL-PLANE-IDENTITY-TRUTH-002`.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
-CONTROL-PLANE-IDENTITY-TRUTH-002 is now `OPEN` as the sole bounded implementation-ready unit for control-plane authenticated identity display truth only. The next lawful move is later implementation for this same bounded unit only; no implementation was performed in the opening operation.
+CONTROL-PLANE-IDENTITY-TRUTH-002 remains `OPEN` as the sole bounded implementation unit for control-plane authenticated identity display truth only. Implementation has been executed, but runtime verification is currently blocked by the separate deployed runtime defect recorded in CONTROL-PLANE-AUTH-SHELL-TRANSITION-001.
+CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The newly proven transition defect remains separate from banner identity truth, no implementation opening was created by that decision, and one later separate bounded opening may be considered if operator sequencing chooses to unblock the verification path.
 CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only and is superseded by the separate opening artifact `CONTROL-PLANE-IDENTITY-TRUTH-002`.
 AUTH-IDENTITY-TRUTH-DEPLOYED-001 is now `CLOSED` with result `SPLIT_REQUIRED`. The broader mixed identity-truth family remains non-open outside this separate control-plane-only implementation unit.
 REALM-BOUNDARY-SHELL-AFFORDANCE-001 is now `CLOSED` after the bounded implementation chain culminated in deployed verification PASS on the exact `ddeb579` build. That closed unit remains bounded and does not authorize further auth, impersonation, or broader control-plane work by implication.
