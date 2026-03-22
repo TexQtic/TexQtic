@@ -2861,6 +2861,85 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### VERIFY-CONTROL-PLANE-IDENTITY-TRUTH-002 — 2026-03-22
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: 44db73c
+Title: Record deployed identity-truth verification PASS for control-plane actor consistency
+Summary: Deployed runtime verification against `https://texqtic-7ce7t8f2z-tex-qtic.vercel.app/`
+  verified the bounded control-plane identity-truth slice after implementation commit `44db73c`.
+  Verified truth: baseline control-plane identity PASS, impersonation banner identity PASS,
+  baseline actor equals banner actor PASS, and no mixed or stale actor identity observed.
+  Additional observation: active impersonation does not persist across reload and returns the app
+  to `AUTH`; this is classified as a separate out-of-scope defect candidate and is not treated as
+  a failure of the closed identity-truth unit.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (verification record only)
+Notes: Verification remained limited to control-plane actor identity truth only. No tenant-shell
+  correctness, white-label behavior, impersonation stop cleanup, broader impersonation lifecycle,
+  auth redesign, DB/schema, or API redesign was proven or implied.
+Refs: governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-CONTROL-PLANE-IDENTITY-TRUTH-002 — 2026-03-22
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-CONTROL-PLANE-IDENTITY-TRUTH-002)
+Title: Close control-plane identity truth after deployed verification PASS
+Summary: Governance-only sync-close unit. Recorded `CONTROL-PLANE-IDENTITY-TRUTH-002` as
+  `VERIFIED_COMPLETE` and `CLOSED` after implementation commit `44db73c` and deployed runtime
+  identity-truth verification PASS on `https://texqtic-7ce7t8f2z-tex-qtic.vercel.app/`. Verified
+  truth now proves baseline control-plane identity PASS, impersonation banner identity PASS,
+  baseline actor equals banner actor PASS, and no mixed or stale actor identity observed. A new
+  out-of-scope defect candidate was explicitly recorded: active impersonation does not persist
+  across reload and returns the app to `AUTH`. That session-rehydration observation remains
+  separate and was not merged into the closed identity-truth unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md updated; Layer 3 — EXECUTION-LOG.md
+  appended
+Notes: Scope remained limited to the bounded control-plane identity-truth slice only.
+  No auth-shell transition change, tenant-shell correctness, white-label behavior, impersonation
+  stop cleanup, broader impersonation lifecycle, auth redesign, DB/schema, or API redesign was
+  introduced or implied by this closure. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-CONTROL-PLANE-IDENTITY-TRUTH-002-POST-CLOSE — 2026-03-22
+Type: GOVERNANCE / AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-CONTROL-PLANE-IDENTITY-TRUTH-002-POST-CLOSE)
+Title: Mandatory post-close audit for control-plane identity-truth closure completeness
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied, OPEN-SET contains no reference to the
+  closed unit in the active table, NEXT-ACTION no longer references the closed unit, SNAPSHOT now
+  records `last_unit_closed: CONTROL-PLANE-IDENTITY-TRUTH-002`, the unit file is marked `CLOSED`
+  and `VERIFIED_COMPLETE`, and EXECUTION-LOG contains the verification, closure, and audit records.
+  The identity-truth defect is fully resolved within scope, no unintended scope expansion occurred,
+  and the new impersonation session rehydration defect candidate is explicitly preserved as separate
+  follow-on work.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. State summary:
+  `CONTROL-PLANE-IDENTITY-TRUTH-002` is fully closed after deployed runtime PASS for identity
+  truth, no implementation-ready unit remains OPEN, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`,
+  and `NEXT-ACTION` now returns to `OPERATOR_DECISION_REQUIRED`. Natural next-step candidates
+  remain bounded only:
+  - `DECISION_REQUIRED`
+  - `HOLD`
+  - `RECORD_ONLY`
+  - `OPENING_CANDIDATE`
+  - ranked recommendation: DECISION_REQUIRED
+  New defect candidate identified: impersonation session rehydration failure.
+  Stronger moves remain blocked because any work on that defect requires separate operator
+  sequencing rather than implication from this closure.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002-POST-CLOSE — 2026-03-22
 Type: GOVERNANCE / AUDIT
 Status: CLOSED

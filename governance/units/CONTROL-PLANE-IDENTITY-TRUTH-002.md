@@ -2,14 +2,14 @@
 unit_id: CONTROL-PLANE-IDENTITY-TRUTH-002
 title: Open bounded implementation unit for control-plane authenticated identity display truth
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-22
-closed: null
-verified: null
-commit: null
-evidence: "LAYER_0_CONFIRMATION: OPEN-SET entered with zero implementation-ready units open, NEXT-ACTION entered as OPERATOR_DECISION_REQUIRED, and SNAPSHOT carried CONTROL-PLANE-IDENTITY-TRUTH-001 as CLOSED with result OPENING_CANDIDATE only · OPENING_DECISION: Yes, open exactly one bounded implementation unit because the control-plane slice is now narrow and evidenced enough if and only if the scope remains limited to control-plane authenticated identity display truth and runtime-sensitive acceptance"
+closed: 2026-03-22
+verified: 2026-03-22
+commit: 44db73c
+evidence: "IMPLEMENTATION: 44db73c normalized control-plane actor identity onto one canonical App-owned identity object and one shared formatter used by both SuperAdminShell chrome and the impersonation banner · DEPLOYED_VERIFICATION: baseline control-plane identity PASS, impersonation banner identity PASS, baseline actor equals banner actor PASS, and no mixed or stale identity observed on the deployed preview https://texqtic-7ce7t8f2z-tex-qtic.vercel.app/ · OUT_OF_SCOPE_DEFECT_OBSERVED: active impersonation does not persist across reload and returns to AUTH, classified as a separate defect candidate rather than part of this unit"
 doctrine_constraints:
   - D-004: this opening creates exactly one bounded implementation unit and must not merge tenant-shell, white-label, stop-cleanup, or any second slice
   - D-007: opening only; no implementation, product code edits, schema work, tests, or config changes occur in this operation
@@ -30,7 +30,7 @@ This opening is lawful because `CONTROL-PLANE-IDENTITY-TRUTH-001` already closed
 `OPENING_CANDIDATE` only, Layer 0 still entered at `OPERATOR_DECISION_REQUIRED`, and no other
 implementation-ready unit is open.
 
-Implementation remains not yet executed in this operation.
+Implementation and deployed verification are complete for this bounded unit.
 
 ## Layer 0 State Confirmation
 
@@ -131,14 +131,46 @@ impersonation program, auth redesign, schema, or API scope.
 - control-plane persona labeling must stay bounded to displayed identity truth and must not expand into stop-path cleanup
 - tenant-shell and white-label observations must remain exclusion checks only unless separately opened later
 
-## Implementation Status Statement
+## Verification Outcome
 
-Implementation remains not yet executed.
+Deployed runtime verification on `https://texqtic-7ce7t8f2z-tex-qtic.vercel.app/` produced a bounded
+identity-truth PASS for this unit.
 
-This operation is Opening only.
+Verified truth:
+
+- baseline control-plane identity: PASS
+- impersonation banner identity: PASS
+- baseline actor equals banner actor: PASS
+- no mixed or stale actor identity observed: PASS
+
+Observed out-of-scope defect:
+
+- active impersonation session does not persist across reload and returns the app to `AUTH`
+- this is classified as a separate defect candidate and is not merged into this unit
+
+## Governance Sync
+
+This unit is now `VERIFIED_COMPLETE` and `CLOSED`.
+
+Layer 0 is reconciled so `CONTROL-PLANE-IDENTITY-TRUTH-002` is removed from the open set and
+`NEXT-ACTION` returns to `OPERATOR_DECISION_REQUIRED` with the newly discovered defect candidate
+explicitly recorded as separate follow-on decision work.
+
+## Governance Closure
+
+Closure is lawful because the bounded identity-truth acceptance is satisfied without widening into
+tenant-shell behavior, white-label behavior, impersonation stop cleanup, auth-shell transition,
+session persistence redesign, DB/schema, or API scope.
+
+## Last Governance Confirmation
+
+- unit status: `CLOSED`
+- verified complete: `YES`
+- layer 0 consistency: `VERIFIED`
+- out-of-scope defect merged into this unit: `NO`
 
 ## Atomic Commit
 
-`[CONTROL-PLANE-IDENTITY-TRUTH-002] open bounded implementation unit for control-plane identity truth`
+`[CONTROL-PLANE-IDENTITY-TRUTH-002] close unit after identity truth verification PASS`
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**

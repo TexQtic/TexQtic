@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-22
-last_unit_closed: CONTROL-PLANE-AUTH-SHELL-TRANSITION-002
-last_commit: "[CONTROL-PLANE-AUTH-SHELL-TRANSITION-002] close unit after deployed verification PASS"
+last_unit_closed: CONTROL-PLANE-IDENTITY-TRUTH-002
+last_commit: "[CONTROL-PLANE-IDENTITY-TRUTH-002] close unit after identity truth verification PASS"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,10 +28,10 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 1**
+- **Open governed units: 0**
 - **Verified-complete governed units: 0**
 
-- **CONTROL-PLANE-IDENTITY-TRUTH-002** — `OPEN` — Bounded implementation unit opened 2026-03-22 for control-plane authenticated identity display truth only. Scope is limited to control-plane chrome identity label correctness, control-plane persona/user presentation consistency, and control-plane-only state used to render displayed identity. The unit now returns to `VERIFICATION` unblocked because `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` is closed after deployed runtime PASS
+- **CONTROL-PLANE-IDENTITY-TRUTH-002** — `CLOSED` — Bounded implementation unit closed 2026-03-22 after implementation commit `44db73c`, deployed runtime identity-truth verification PASS on `https://texqtic-7ce7t8f2z-tex-qtic.vercel.app/`, and mandatory post-close audit result `DECISION_REQUIRED`. The bounded slice now proves truthful baseline control-plane actor display, truthful impersonation-banner actor display, exact baseline-to-banner actor equality in exercised runtime, and no mixed or stale actor identity observed. A separate out-of-scope defect candidate was discovered: active impersonation does not persist across reload and returns the app to `AUTH`
 
 - **CONTROL-PLANE-AUTH-SHELL-TRANSITION-002** — `CLOSED` — Bounded implementation unit closed 2026-03-22 after implementation commit `2538901`, deployed runtime verification PASS on `https://texqtic-k2mcmqf96-tex-qtic.vercel.app/`, and mandatory post-close audit result `DECISION_REQUIRED`. The bounded slice now proves control-plane login shell entry, mount-time rehydration from valid stored auth, invalid stored auth rejection, unauthenticated control-plane API `401`, and tenant-vs-control-plane separation in exercised paths only
 
@@ -63,7 +63,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**1 implementation unit is currently OPEN.** `CONTROL-PLANE-IDENTITY-TRUTH-002` remains open in `VERIFICATION` for control-plane authenticated identity display truth only and is now unblocked because `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` is closed after deployed runtime PASS. Tenant-shell, white-label, `IMPERSONATION-STOP-CLEANUP-001`, stop-path cleanup, auth redesign, DB/schema, API redesign, and realm-boundary continuation remain excluded. `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**No implementation unit is currently OPEN.** `CONTROL-PLANE-IDENTITY-TRUTH-002` is now closed after bounded identity-truth verification PASS, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and resulting Layer 0 posture returns to `OPERATOR_DECISION_REQUIRED`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -94,9 +94,10 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`CONTROL-PLANE-IDENTITY-TRUTH-002`.
+`OPERATOR_DECISION_REQUIRED`.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
-CONTROL-PLANE-IDENTITY-TRUTH-002 remains `OPEN` as the sole bounded implementation unit for control-plane authenticated identity display truth only. Implementation has been executed and runtime verification can now resume because the separate control-plane auth-shell transition blocker is resolved and closed.
+CONTROL-PLANE-IDENTITY-TRUTH-002 is now `CLOSED` after bounded identity-truth verification PASS. The identity-truth defect is fully resolved within scope and no broader auth, tenant-shell, white-label, impersonation-stop-cleanup, DB/schema, or API authorization was created by this closure.
+New defect candidate identified: active impersonation does not persist across reload and returns the app to `AUTH`. This session-rehydration observation remains separate from the closed identity-truth unit and requires separate operator sequencing.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The newly proven transition defect remains separate from banner identity truth, no implementation opening was created by that decision, and one later separate bounded opening may be considered if operator sequencing chooses to unblock the verification path.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 is now `CLOSED` after implementation commit `2538901`, deployed runtime PASS, and the mandatory post-close audit emitted in the same closure operation. The bounded shell-transition slice is complete and no broader auth or identity-truth claims were authorized by this closure.
 CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only and is superseded by the separate opening artifact `CONTROL-PLANE-IDENTITY-TRUTH-002`.
