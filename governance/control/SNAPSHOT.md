@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-22
 last_unit_closed: CONTROL-PLANE-IDENTITY-TRUTH-001
-last_commit: "[CONTROL-PLANE-IDENTITY-TRUTH-001] record decision and pre-opening posture for control-plane identity truth"
+last_commit: "[CONTROL-PLANE-IDENTITY-TRUTH-002] open bounded implementation unit for control-plane identity truth"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,8 +28,10 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 0**
+- **Open governed units: 1**
 - **Verified-complete governed units: 0**
+
+- **CONTROL-PLANE-IDENTITY-TRUTH-002** — `OPEN` — Bounded implementation unit opened 2026-03-22 for control-plane authenticated identity display truth only. Scope is limited to control-plane chrome identity label correctness, control-plane persona/user presentation consistency, and control-plane-only state used to render displayed identity. Acceptance remains runtime-sensitive, may require deployed verification if acceptance depends on live runtime chrome truth, and implementation has not yet been executed by the opening step
 
 - **CONTROL-PLANE-IDENTITY-TRUTH-001** — `CLOSED` — Decision and pre-opening-preparation unit closed 2026-03-22 with result `OPENING_CANDIDATE` only; the control-plane displayed identity-truth slice is now narrow enough for one later bounded opening candidate limited to control-plane chrome identity label correctness and persona presentation consistency only, future acceptance must depend on deployed runtime chrome truth, and no implementation-ready unit was opened
 
@@ -57,7 +59,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**0 implementation units are currently OPEN.** `GOV-NAV-01` is now `CLOSED` after the bounded opening, implementation, verification, governance-sync, and closure chain together with mandatory post-close audit result `DECISION_REQUIRED`. The completed unit preserves TexQtic's bounded navigation-layer upgradation design truth only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections. No doctrine rewrite, governance-lint change, tooling rollout, CI rollout, Playwright rollout, test rollout, workflow collapse, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized. `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**1 implementation unit is currently OPEN.** `CONTROL-PLANE-IDENTITY-TRUTH-002` is now the sole bounded implementation-ready unit, limited to control-plane authenticated identity display truth only. No implementation has been executed by the opening step. Tenant-shell, white-label, `IMPERSONATION-STOP-CLEANUP-001`, stop-path cleanup, auth redesign, DB/schema, API redesign, and realm-boundary continuation remain excluded. `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -88,10 +90,11 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
+`CONTROL-PLANE-IDENTITY-TRUTH-002`.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
-CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. No implementation unit is OPEN. The next lawful move, if chosen later, is one separate bounded opening decision for control-plane displayed identity truth only.
-AUTH-IDENTITY-TRUTH-DEPLOYED-001 is now `CLOSED` with result `SPLIT_REQUIRED`. No implementation unit is OPEN. The next lawful move, if any, is a later separate decision that names narrower identity-truth child boundaries explicitly and keeps stop-path cleanup separate.
+CONTROL-PLANE-IDENTITY-TRUTH-002 is now `OPEN` as the sole bounded implementation-ready unit for control-plane authenticated identity display truth only. The next lawful move is later implementation for this same bounded unit only; no implementation was performed in the opening operation.
+CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only and is superseded by the separate opening artifact `CONTROL-PLANE-IDENTITY-TRUTH-002`.
+AUTH-IDENTITY-TRUTH-DEPLOYED-001 is now `CLOSED` with result `SPLIT_REQUIRED`. The broader mixed identity-truth family remains non-open outside this separate control-plane-only implementation unit.
 REALM-BOUNDARY-SHELL-AFFORDANCE-001 is now `CLOSED` after the bounded implementation chain culminated in deployed verification PASS on the exact `ddeb579` build. That closed unit remains bounded and does not authorize further auth, impersonation, or broader control-plane work by implication.
 GOV-CLOSE-GOV-NAV-01 is now recorded as a bounded governance-only closure result. GOV-NAV-01 is now `CLOSED`, no implementation-ready unit is `OPEN`, the portfolio returns to `OPERATOR_DECISION_REQUIRED`, and no doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier-tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit authorization was created by this closure.
 GOV-AUDIT-GOV-NAV-01-POST-CLOSE is now recorded in the same closure operation. Audit result: `DECISION_REQUIRED`. Natural next-step candidates remain bounded only, the ranked recommendation is `DECISION_REQUIRED`, recommendation is not authorization, TECS-FBW-ADMINRBAC remains `DESIGN_GATE`, broad G-026 remains unopened unless separately changed elsewhere, and navigation-layer implementation is not opened by this closure.

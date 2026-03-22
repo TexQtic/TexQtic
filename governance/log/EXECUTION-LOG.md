@@ -2550,6 +2550,31 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### CONTROL-PLANE-IDENTITY-TRUTH-002 — 2026-03-22
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for CONTROL-PLANE-IDENTITY-TRUTH-002)
+Title: Open exactly one bounded implementation unit for control-plane identity truth
+Summary: Governance-only opening unit. Opened `CONTROL-PLANE-IDENTITY-TRUTH-002` as the sole
+  bounded implementation-ready unit for control-plane authenticated identity display truth only.
+  Scope is limited to control-plane chrome identity label correctness, control-plane persona/user
+  presentation consistency, and control-plane-only state used to render displayed identity. No
+  implementation was performed by this opening. Tenant-shell, white-label,
+  `IMPERSONATION-STOP-CLEANUP-001`, stop-path cleanup, auth redesign, DB/schema, API redesign,
+  and realm-boundary continuation remained excluded.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md created; Layer 3 — EXECUTION-LOG.md
+  appended (this entry)
+Notes: `NEXT-ACTION` now points to `CONTROL-PLANE-IDENTITY-TRUTH-002` as the sole open
+  implementation-ready unit. Acceptance for the later implementation remains runtime-sensitive and
+  must not rely on tenant-shell correctness, white-label behavior, stop-path cleanup, or broader
+  auth claims beyond the control-plane slice.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### CONTROL-PLANE-IDENTITY-TRUTH-001 — 2026-03-22
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
