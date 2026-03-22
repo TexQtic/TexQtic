@@ -2317,6 +2317,101 @@ Refs: governance/decisions/GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPO
 
 ---
 
+### VERIFY-TENANT-EXPERIENCE-RUNTIME-500-002 — 2026-03-22
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (remote runtime verification against implementation commit `4d4cbe9`)
+Title: Verify remote resolution of the bounded AI insights runtime 500 surface
+Summary: Remote impersonated-tenant runtime verification exercised the exact previously failing
+  endpoint `/api/ai/insights?tenantType=B2B&experience=market_trends` and observed `200` instead
+  of the previously observed `500`. The response returned the safe degraded fallback text `AI
+  insights temporarily unavailable. Please try again later.`, the tenant page remained usable in
+  the exercised path, and bounded non-regression checks remained healthy for `/api/me`,
+  `/api/tenant/cart`, `/api/tenant/catalog/items?limit=20`, and `/api/tenant/rfqs`.
+Layer Impact: Layer 1 — governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md updated with
+  verification record; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Placeholder image requests still failed with `ERR_NAME_NOT_RESOLVED` during the exercised
+  path, but that observation remains a separate defect class and was not merged into this unit.
+  The deeper exception behind the degraded fallback may still exist, but that does not invalidate
+  the bounded PASS for this unit.
+Refs: governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOVERNANCE-SYNC-TENANT-EXPERIENCE-RUNTIME-500-002 — 2026-03-22
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [TENANT-EXPERIENCE-RUNTIME-500-002] close unit after remote verification PASS)
+Title: Close TENANT-EXPERIENCE-RUNTIME-500-002 after remote verification PASS
+Summary: Governance-only sync-close step. Recorded TENANT-EXPERIENCE-RUNTIME-500-002 as
+  VERIFIED_COMPLETE and CLOSED after implementation commit `4d4cbe9` and remote runtime
+  verification PASS on the exact AI insights `500` surface. Layer 0 was reconciled so the open
+  set no longer contains TENANT-EXPERIENCE-RUNTIME-500-002, NEXT-ACTION now returns to
+  `OPERATOR_DECISION_REQUIRED`, and placeholder image DNS failures remain separate candidate-only
+  follow-on work if later authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md updated; Layer 3 — EXECUTION-LOG.md
+  appended
+Notes: This closure is limited to the bounded AI insights runtime `500` surface only. No product
+  code changed in this sync-close step, no broader tenant-shell or auth claims were created, and
+  no other unit was modified.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TENANT-EXPERIENCE-RUNTIME-500-002-POST-CLOSE — 2026-03-22
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for [TENANT-EXPERIENCE-RUNTIME-500-002] close unit after remote verification PASS)
+Title: Record the mandatory post-close audit for TENANT-EXPERIENCE-RUNTIME-500-002
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  OPERATOR_DECISION_REQUIRED.
+State Summary:
+  - classification: closed bounded AI insights runtime `500` child with no implementation-ready unit open
+  - parent gate posture: TECS-FBW-ADMINRBAC remains DESIGN_GATE
+  - open-unit count: 0
+  - blocked / deferred / design-gated context: 0 / 0 / 1
+  - current NEXT-ACTION compatibility: compatible with OPERATOR_DECISION_REQUIRED
+Outstanding Gates:
+  - no implementation-ready unit remains open
+  - placeholder image DNS failures remain separate candidate-only follow-on work if later authorized
+  - any deeper hidden exception behind the degraded fallback remains out of scope unless separately governed
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+Natural Next-Step Candidates:
+  - OPERATOR_DECISION_REQUIRED
+  - HOLD
+  - RECORD_ONLY
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: OPERATOR_DECISION_REQUIRED
+  - reason: this bounded child is fully closed, no implementation-ready unit remains open, and any stronger follow-on move still requires explicit operator sequencing rather than implication from this closure
+Why Stronger Moves Remain Blocked:
+  - closure of this bounded unit does not authorize broader tenant-shell or auth work
+  - closure of this bounded unit does not merge placeholder image DNS failures into the AI insights slice
+  - closure of this bounded unit does not prove or authorize remediation of any deeper hidden exception behind the degraded fallback
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE and no competing implementation-ready unit is open
+Forbidden Next Moves:
+  - do not infer broader tenant-shell correctness from this closure
+  - do not merge placeholder image DNS failures into this closed unit by implication
+  - do not reopen TENANT-EXPERIENCE-RUNTIME-500-002 without new contrary evidence on the exact bounded surface
+  - do not authorize new implementation from this audit without a separate governance action
+Resulting Layer 0 Posture:
+  - NEXT-ACTION returns to OPERATOR_DECISION_REQUIRED
+  - OPEN set contains no implementation-ready unit
+  - TECS-FBW-ADMINRBAC remains DESIGN_GATE
+Layer Impact: Layer 0 — NEXT-ACTION.md and SNAPSHOT.md preserved as decision-required carry-forward posture;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: Post-close audit confirms the unit is closed only on its bounded AI insights `500`
+  surface, placeholder image DNS failures were preserved separately and not merged, and no
+  unintended scope expansion occurred.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION — 2026-03-21
 Type: GOVERNANCE / APPROVAL-RECORD
 Status: CLOSED

@@ -1,15 +1,15 @@
 ---
 unit_id: TENANT-EXPERIENCE-RUNTIME-500-002
-title: Open bounded implementation unit for observed tenant-experience runtime 500 errors
+title: Bounded tenant-experience runtime 500 correction
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-22
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_AUTHORITY: TENANT-EXPERIENCE-RUNTIME-500-001 closed as OPENING_CANDIDATE only and remains the sole decision authority for this defect family · LAYER_0_CONFIRMATION: OPEN-SET contains no OPEN implementation unit, NEXT-ACTION is OPERATOR_DECISION_REQUIRED, and SNAPSHOT preserves the tenant-runtime 500 defect family as a separate bounded candidate only · OBSERVED_RUNTIME_BASELINE: during impersonated tenant runtime, some tenant-experience requests showed runtime 500 errors while the impersonation banner still rendered and tenant shell restoration still succeeded in the exercised path"
+closed: 2026-03-22
+verified: 2026-03-22
+commit: 4d4cbe9
+evidence: "OPENING_AUTHORITY: TENANT-EXPERIENCE-RUNTIME-500-001 closed as OPENING_CANDIDATE only and remains the sole decision authority for this defect family · IMPLEMENTATION_COMMIT: 4d4cbe9 ([TENANT-EXPERIENCE-RUNTIME-500-002] fix market_trends ai insights 500) · VERIFIED_TRUTH: /api/ai/insights?tenantType=B2B&experience=market_trends was exercised in remote impersonated-tenant runtime and returned 200 instead of the previously observed 500 · VERIFIED_FALLBACK: safe degraded response text returned as AI insights temporarily unavailable. Please try again later. · BOUNDED_NON_REGRESSION: /api/me, /api/tenant/cart, /api/tenant/catalog/items?limit=20, and /api/tenant/rfqs remained healthy in the exercised path"
 doctrine_constraints:
   - D-004: this opening creates exactly one bounded implementation unit and must not merge identity-truth, control-plane auth-shell transition, impersonation session rehydration, stop-cleanup, white-label behavior, or any broader auth or tenant-shell slice
   - D-007: opening only; no implementation, product code edits, schema work, tests, or config changes occur in this operation
@@ -21,19 +21,19 @@ blockers: []
 
 ## Unit Summary
 
-`TENANT-EXPERIENCE-RUNTIME-500-002` is the bounded implementation-ready unit for the observed
-tenant-experience runtime `500` defect only.
+`TENANT-EXPERIENCE-RUNTIME-500-002` is the closed bounded implementation unit for the observed
+tenant-experience runtime `500` defect on the exact AI insights surface only.
 
 Opening decision: `YES`.
 
-This opening is lawful because `TENANT-EXPERIENCE-RUNTIME-500-001` already closed as
-`OPENING_CANDIDATE` only, Layer 0 enters at `OPERATOR_DECISION_REQUIRED`, the defect family is
-already evidenced as a separate observed runtime error pattern, and the resulting posture preserves
-strict separation from `CONTROL-PLANE-IDENTITY-TRUTH-002`,
-`CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, `IMPERSONATION-SESSION-REHYDRATION-002`, tenant-shell
-overhaul, white-label behavior, and impersonation stop cleanup.
+VERIFIED_COMPLETE: `YES`.
 
-Implementation is not executed in this opening operation.
+Closure decision: `YES`.
+
+The unit is now closed because the exact previously failing endpoint was corrected, remote
+impersonated-tenant runtime verification proved that the exercised request no longer returns the
+observed hard `500`, the tenant page remained usable in the same path, and the bounded
+non-regression checks remained healthy without widening scope.
 
 ## Layer 0 State Confirmation
 
@@ -112,15 +112,49 @@ Acceptance is satisfied only when:
   - stop-cleanup behavior is excluded from this unit
   - white-label and broader tenant-shell verification are excluded except as explicitly labeled boundary or non-regression checks
 
-## Governance Posture After Opening
+## Implementation Result
 
-Resulting governance posture after this opening:
+Implementation was executed in the separately recorded product change commit `4d4cbe9`
+(`[TENANT-EXPERIENCE-RUNTIME-500-002] fix market_trends ai insights 500`).
 
-- one implementation unit is now `OPEN`
-- the open unit is `TENANT-EXPERIENCE-RUNTIME-500-002`
-- scope remains the bounded tenant-runtime `500` slice only
-- no implementation has been executed yet
-- the next canonical phase is later implementation for `TENANT-EXPERIENCE-RUNTIME-500-002` only
+The bounded implementation changed only the AI insights route behavior needed to remove the
+observed hard `500` from the exercised `market_trends` path while preserving safe degraded
+runtime behavior when the deeper AI insights path throws unexpectedly.
+
+## Verified Truth
+
+- `/api/ai/insights?tenantType=B2B&experience=market_trends` was exercised in remote impersonated-tenant runtime
+- the endpoint returned `200` instead of the previously observed `500`
+- the endpoint returned a safe degraded fallback response: `AI insights temporarily unavailable. Please try again later.`
+- the tenant page remained usable in the exercised path
+- bounded non-regression checks remained healthy for:
+  - `/api/me`
+  - `/api/tenant/cart`
+  - `/api/tenant/catalog/items?limit=20`
+  - `/api/tenant/rfqs`
+
+## Out-of-Scope Observation
+
+- placeholder image requests still failed with `ERR_NAME_NOT_RESOLVED`
+- this remains a separate defect class and was not merged into this unit
+
+## Residual Note
+
+The deeper underlying exception source behind the degraded fallback may still exist.
+
+That does not invalidate the bounded PASS for this unit because the acceptance target for this
+slice was removal of the observed hard `500` and preservation of usable runtime behavior on the
+exercised path.
+
+## Governance Posture After Close
+
+Resulting governance posture after this close:
+
+- no implementation unit remains `OPEN`
+- `TENANT-EXPERIENCE-RUNTIME-500-002` is now `CLOSED`
+- the unit closed only on the bounded AI insights runtime `500` surface
+- placeholder image DNS failures remain separate candidate-only follow-on work if later authorized
+- the next canonical phase returns to `OPERATOR_DECISION_REQUIRED`
 
 ## Allowed Future Implementation Boundary
 
@@ -136,17 +170,17 @@ scope.
 
 ## Risks / Blockers
 
-- the currently recorded evidence is observation-level and not yet request-path-specific
-- acceptance is runtime-sensitive and may require deployed proof if the exercised request behavior depends on live runtime conditions
-- a later implementation must stay disciplined and not use this opening to widen into generic tenant-shell overhaul
-- white-label and non-impersonated tenant runtime remain excluded unless later separately evidenced and governed
+- no blocker remains for closure on this bounded unit
+- placeholder image DNS failures remain separate and unmerged
+- any deeper hidden exception behind the degraded fallback remains out of scope unless later separately authorized
 
 ## Implementation Status Statement
 
-Implementation remains not yet executed in this operation.
+Implementation and remote verification are complete for the bounded unit, and the unit is now
+closed.
 
 ## Atomic Commit
 
-`[TENANT-EXPERIENCE-RUNTIME-500-002] open bounded implementation unit for observed tenant-runtime 500 defect`
+`[TENANT-EXPERIENCE-RUNTIME-500-002] close unit after remote verification PASS`
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
