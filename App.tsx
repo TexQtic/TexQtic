@@ -88,6 +88,18 @@ function resolveExperienceShell(
 }
 
 const App: React.FC = () => {
+  const buildControlPlaneIdentity = (user?: { id?: string; email?: string }, role?: string | null) => {
+    if (!user?.id && !user?.email && !role) {
+      return null;
+    }
+
+    return {
+      id: user?.id ?? null,
+      email: user?.email ?? null,
+      role: role ?? null,
+    };
+  };
+
   // Production-grade State Machine
   const [appState, setAppState] = useState<
     | 'AUTH'
@@ -134,6 +146,11 @@ const App: React.FC = () => {
   const [tenantProvisionError, setTenantProvisionError] = useState<string | null>(null);
   const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
+  const [controlPlaneIdentity, setControlPlaneIdentity] = useState<{
+    id: string | null;
+    email: string | null;
+    role: string | null;
+  } | null>(null);
   const [impersonation, setImpersonation] = useState<ImpersonationState>({
     isAdmin: false,
     targetTenantId: null,
@@ -206,6 +223,22 @@ const App: React.FC = () => {
     }
   }, [appState, authRealm, effectiveRealm]);
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
+  const controlPlaneActorLabel = useMemo(() => {
+    if (!controlPlaneIdentity) {
+      return null;
+    }
+
+    const roleLabel = controlPlaneIdentity.role
+      ? controlPlaneIdentity.role
+          .split('_')
+          .filter(Boolean)
+          .map(part => part.charAt(0) + part.slice(1).toLowerCase())
+          .join(' ')
+      : 'Control Plane';
+    const principal = controlPlaneIdentity.email ?? controlPlaneIdentity.id ?? 'Authenticated user';
+
+    return `${roleLabel}: ${principal}`;
+  }, [controlPlaneIdentity]);
 
   const enterControlPlane = () => {
     if (getCurrentAuthRealm() !== 'CONTROL_PLANE') {
@@ -368,10 +401,17 @@ const App: React.FC = () => {
     const nextRealm = getCurrentAuthRealm(authRealm) ?? 'TENANT';
 
     if (nextRealm === 'CONTROL_PLANE') {
+      try {
+        const me = await getCurrentUser();
+        setControlPlaneIdentity(buildControlPlaneIdentity(me.user, me.role ?? data?.user?.role ?? null));
+      } catch {
+        setControlPlaneIdentity(buildControlPlaneIdentity(data?.user, data?.user?.role ?? null));
+      }
       enterControlPlane();
       return;
     }
 
+    setControlPlaneIdentity(null);
     setStoredAuthRealm('TENANT');
     setAuthRealm('TENANT');
 
@@ -1877,7 +1917,7 @@ const App: React.FC = () => {
           <div className="bg-rose-600 text-white px-6 py-2 sticky top-0 z-[100] flex justify-between items-center shadow-lg border-b border-rose-700 animate-in slide-in-from-top duration-300">
             <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-              Staff Active: {currentTenant.name} ({currentTenant.id})
+              Staff Active: {controlPlaneActorLabel ?? 'Control Plane Session'} impersonating {currentTenant.name} ({currentTenant.id})
               {impersonation.expiresAt && (
                 <span className="text-rose-200 font-normal normal-case tracking-normal">
                   — expires {new Date(impersonation.expiresAt).toLocaleTimeString()}
@@ -1923,7 +1963,10 @@ const App: React.FC = () => {
                 </button>
               )}
               <button
-                onClick={() => setAppState('AUTH')}
+                onClick={() => {
+                  setControlPlaneIdentity(null);
+                  setAppState('AUTH');
+                }}
                 className="px-4 py-2 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase hover:bg-slate-200 transition"
               >
                 Logout
