@@ -2836,6 +2836,60 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 — 2026-03-22
+Type: GOVERNANCE / SYNC-CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002)
+Title: Close control-plane auth-shell transition after deployed verification PASS
+Summary: Governance-only sync-close unit. Recorded `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` as
+  `VERIFIED_COMPLETE` and `CLOSED` after implementation commit `2538901` and deployed runtime
+  verification PASS on `https://texqtic-k2mcmqf96-tex-qtic.vercel.app/`. Verified truth now proves
+  control-plane login enters the authenticated shell, valid stored control-plane auth rehydrates
+  that shell on reload, invalid stored auth is rejected, unauthenticated control-plane API access
+  remains `401`, and tenant-vs-control-plane separation remains intact in exercised paths.
+  `CONTROL-PLANE-IDENTITY-TRUTH-002` is now unblocked and returns to `VERIFICATION`.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: Scope remained limited to the bounded control-plane auth-shell transition slice only.
+  No banner identity truth, tenant-shell correctness, white-label behavior, impersonation cleanup,
+  broader auth redesign, DB/schema, API redesign, or realm-boundary continuation was introduced
+  or implied by this closure.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002-POST-CLOSE — 2026-03-22
+Type: GOVERNANCE / AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002-POST-CLOSE)
+Title: Mandatory post-close audit for control-plane auth-shell transition closure completeness
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied, Layer 0 is internally consistent, no
+  unintended scope was introduced, and the dependent unit `CONTROL-PLANE-IDENTITY-TRUTH-002` is
+  now unblocked and returns to `VERIFICATION`. Ranked recommendation: `DECISION_REQUIRED`.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. State summary:
+  `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` is fully closed after deployed runtime PASS,
+  `CONTROL-PLANE-IDENTITY-TRUTH-002` is now the sole OPEN unit and can resume verification,
+  and no broader auth or identity-truth scope was opened by implication. Natural next-step
+  candidates remain bounded only:
+  - `DECISION_REQUIRED`
+  - `HOLD`
+  - `RECORD_ONLY`
+  - `VERIFICATION`
+  - `OPENING_CANDIDATE`
+  - ranked recommendation: DECISION_REQUIRED
+  Stronger moves remain blocked because any work beyond resuming
+  `CONTROL-PLANE-IDENTITY-TRUTH-002` verification would require separate operator sequencing.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-GOV-NAV-01 — 2026-03-21
 Type: GOVERNANCE / SYNC
 Status: VERIFIED_COMPLETE

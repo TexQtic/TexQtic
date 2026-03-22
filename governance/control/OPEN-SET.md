@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-22 (CONTROL-PLANE-AUTH-SHELL-TRANSITION-002)
+**Last Updated:** 2026-03-22 (GOV-CLOSE-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,19 +14,18 @@
 | UNIT-ID | Title | Status | Wave | Last Updated |
 | --- | --- | --- | --- | --- |
 | CONTROL-PLANE-IDENTITY-TRUTH-002 | Control-plane authenticated identity display truth | OPEN | W5 | 2026-03-22 |
-| CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 | Control-plane auth-shell transition | OPEN | W5 | 2026-03-22 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **2**
+- **OPEN** (implementation-ready): **1**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 3**
+- **Total non-terminal units: 2**
 
 GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 
@@ -55,6 +54,7 @@ TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 CONTROL-PLANE-IDENTITY-TRUTH-002 opened 2026-03-22 as the sole bounded implementation-ready unit for control-plane authenticated identity display truth only. Scope is limited to control-plane chrome identity label correctness, control-plane persona/user presentation consistency, and control-plane-only state used to render displayed identity. Implementation is complete, the unit remains OPEN in VERIFICATION, and runtime acceptance is currently blocked by the separately governed deployed runtime defect recorded in CONTROL-PLANE-AUTH-SHELL-TRANSITION-001. Tenant-shell, white-label, stop-cleanup, realm-boundary continuation, auth redesign, DB/schema, and API redesign remain excluded.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: OPENING_CANDIDATE. Live deployed evidence now proves that valid control-plane authentication succeeds at the API/token layer while the SPA fails to transition into the authenticated control-plane shell, but no implementation opening was created by this decision and the defect remains separate from CONTROL-PLANE-IDENTITY-TRUTH-002.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 opened 2026-03-22 as one additional bounded implementation-ready unit for control-plane auth-shell transition only. Scope is limited to post-login shell transition, control-plane session rehydration on app mount, and login-success-to-shell-state propagation for the control-plane path. No implementation was performed by the opening, CONTROL-PLANE-IDENTITY-TRUTH-002 remains OPEN in VERIFICATION, and banner identity truth, tenant-shell, white-label, impersonation stop cleanup, broader impersonation behavior, auth redesign, DB/schema, and API redesign remain excluded.
+CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 closed 2026-03-22 after implementation commit `2538901`, deployed runtime verification PASS on `https://texqtic-k2mcmqf96-tex-qtic.vercel.app/`, and the mandatory post-close audit result `DECISION_REQUIRED`. The bounded control-plane auth-shell transition slice is now complete: control-plane login enters the authenticated shell, reload rehydrates the shell from valid stored auth, invalid stored auth is rejected, unauthenticated control-plane API access remains `401`, and tenant-vs-control-plane separation remains intact in exercised paths. `CONTROL-PLANE-IDENTITY-TRUTH-002` is now unblocked and returns to `VERIFICATION`; no banner identity truth, tenant-shell correctness, white-label correctness, impersonation cleanup, or broader auth redesign was authorized by this closure.
 REALM-BOUNDARY-SHELL-AFFORDANCE-001 closed 2026-03-22 after final implementation commit ddeb579, exact Vercel deployment proof for `https://texqtic-godq32ri1-tex-qtic.vercel.app`, deployed runtime PASS for enterprise tenant crossover, deployed runtime PASS for white-label tenant crossover, preserved control-plane login PASS to Tenant Registry, and mandatory post-close audit result `DECISION`. The closure remains bounded to shell-affordance realm-boundary repair only and does not authorize broader auth, impersonation, routing, or other control-plane follow-on work by implication.
 AUTH-IDENTITY-TRUTH-DEPLOYED-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `SPLIT_REQUIRED`. The remaining deployed identity-truth finding is not yet one truthful implementation slice because control-plane displayed identity truth, tenant-shell displayed identity truth, and impersonation persona labeling remain mixed and shell-sensitive, while `IMPERSONATION-STOP-CLEANUP-001` remains causally separate. No implementation opening was created by this decision.
 CONTROL-PLANE-IDENTITY-TRUTH-001 closed 2026-03-22 as a bounded decision and pre-opening-preparation unit. Result: `OPENING_CANDIDATE` only. The control-plane displayed identity-truth slice is now narrow enough for one later bounded opening candidate limited to control-plane chrome identity label correctness and persona presentation consistency only, but no implementation-ready unit was opened, no tenant-shell or white-label scope was introduced, and no impersonation stop-cleanup scope was merged.
@@ -65,6 +65,7 @@ CONTROL-PLANE-IDENTITY-TRUTH-001 closed 2026-03-22 as a bounded decision and pre
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 | CLOSED | 2026-03-22 | 2538901 · this close record |
 | GOV-NAV-01 | CLOSED | 2026-03-21 | 81b44f3 · cdcb26c · 079a30d · 1366bee · see git log |
 | CONTROL-PLANE-IDENTITY-TRUTH-001 | CLOSED | 2026-03-22 | see git log |
 | AUTH-IDENTITY-TRUTH-DEPLOYED-001 | CLOSED | 2026-03-22 | see git log |

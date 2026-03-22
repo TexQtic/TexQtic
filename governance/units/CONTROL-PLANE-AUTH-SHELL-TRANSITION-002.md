@@ -2,14 +2,14 @@
 unit_id: CONTROL-PLANE-AUTH-SHELL-TRANSITION-002
 title: Open bounded implementation unit for control-plane auth-shell transition
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-22
-closed: null
-verified: null
-commit: null
-evidence: "LAYER_0_CONFIRMATION: OPEN-SET entered with CONTROL-PLANE-IDENTITY-TRUTH-002 as OPEN in VERIFICATION, NEXT-ACTION entered on that same blocked verification posture, and SNAPSHOT carried CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 as CLOSED with result OPENING_CANDIDATE only · OPENING_DECISION: Yes, open exactly one additional bounded implementation unit because the control-plane auth-shell transition defect is now narrow and evidenced enough if and only if the scope remains limited to control-plane shell entry, mount-time rehydration, and login-success-to-shell-state propagation only"
+closed: 2026-03-22
+verified: 2026-03-22
+commit: 2538901
+evidence: "IMPLEMENTATION: 2538901 fixed mount-time control-plane rehydration in App.tsx only by persisting control-plane identity and validating stored admin JWT claims on mount · DEPLOYED_VERIFICATION: control-plane login PASS, reload rehydration PASS, no login fallback after valid stored auth, invalid stored auth rejection PASS, unauthenticated control-plane API 401 PASS, tenant-vs-control-plane separation PASS · GOVERNANCE_RECONCILIATION_CONFIRMATION: bounded auth-shell transition slice is fully verified and closed with no banner identity, tenant-shell, white-label, impersonation cleanup, auth redesign, DB/schema, or API scope introduced"
 doctrine_constraints:
   - D-004: this opening creates exactly one additional bounded implementation unit and must not merge banner identity truth, tenant-shell, white-label, impersonation stop cleanup, or any broader auth slice
   - D-007: opening only; no implementation, product code edits, schema work, tests, or config changes occur in this operation
@@ -30,14 +30,14 @@ This opening is lawful because `CONTROL-PLANE-AUTH-SHELL-TRANSITION-001` already
 `OPENING_CANDIDATE` only, the live defect is evidenced enough to isolate one truthful transition
 slice, and the resulting posture preserves separation from `CONTROL-PLANE-IDENTITY-TRUTH-002`.
 
-Implementation remains not yet executed in this operation.
+Implementation and deployed verification are complete for this bounded unit.
 
 ## Layer 0 State Confirmation
 
 Exact Layer 0 posture on entry:
 
 - `OPEN-SET.md`: `CONTROL-PLANE-IDENTITY-TRUTH-002` is `OPEN`
-- `NEXT-ACTION.md`: `CONTROL-PLANE-IDENTITY-TRUTH-002` remains the current verification posture
+- `NEXT-ACTION.md`: `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remained the current implementation posture before this governance-only close operation
 - `SNAPSHOT.md`: `CONTROL-PLANE-AUTH-SHELL-TRANSITION-001` is `CLOSED` with result `OPENING_CANDIDATE` only
 
 This confirms all required entry truths:
@@ -136,14 +136,47 @@ impersonation stop cleanup, broader impersonation behavior, auth redesign, schem
 - `CONTROL-PLANE-IDENTITY-TRUTH-002` remains blocked until this separate runtime defect is repaired and verified
 - login-success propagation and mount-time rehydration must stay one bounded slice and must not drift into broader auth redesign
 
+## Evidence Record
+
+- Opening authority: `CONTROL-PLANE-AUTH-SHELL-TRANSITION-001` plus this opened child unit
+- Implementation commit: `2538901` — `[CONTROL-PLANE-AUTH-SHELL-TRANSITION-002] fix control-plane mount-time rehydration`
+- Deployed verification truth:
+  - control-plane login enters authenticated control-plane shell: PASS
+  - reload/remount rehydrates control-plane shell from valid stored auth: PASS
+  - no fallback to login after valid stored auth: PASS
+  - invalid stored control-plane auth is rejected: PASS
+  - unauthenticated control-plane API access returns `401`: PASS
+  - tenant-vs-control-plane separation remains intact in exercised paths: PASS
+- Acceptance boundary result: all clauses satisfied in deployed runtime
+
+## Governance Sync
+
+- Governance sync and closure were recorded in the same bounded governance-only operation
+- Result: `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` is now `VERIFIED_COMPLETE` and `CLOSED`
+- Resulting dependency posture: `CONTROL-PLANE-IDENTITY-TRUTH-002` is now unblocked and returns to `VERIFICATION`
+
+## Governance Closure
+
+- Governance close unit: `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` closure record in Layer 3
+- Status transition: `OPEN` → `VERIFIED_COMPLETE` → `CLOSED`
+- Next-action posture after closure: `CONTROL-PLANE-IDENTITY-TRUTH-002` `VERIFICATION`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
+
 ## Implementation Status Statement
 
-Implementation remains not yet executed.
-
-This operation is Opening only.
+This bounded unit is fully implemented, deployed-verified, and closed.
 
 ## Atomic Commit
 
-`[CONTROL-PLANE-AUTH-SHELL-TRANSITION-002] open bounded implementation unit for control-plane auth-shell transition`
+`[CONTROL-PLANE-AUTH-SHELL-TRANSITION-002] close unit after deployed verification PASS`
 
 **Read control-plane files before this unit file. This file refines unit-specific truth only.**
+
+## Last Governance Confirmation
+
+2026-03-22 — `GOV-CLOSE-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`. Status transitioned:
+`OPEN` → `VERIFIED_COMPLETE` → `CLOSED` after implementation commit `2538901`, deployed
+verification PASS on `https://texqtic-k2mcmqf96-tex-qtic.vercel.app/`, and the mandatory
+post-close audit result `DECISION_REQUIRED`. The bounded control-plane auth-shell transition
+slice is now complete, no broader auth or identity-truth scope was introduced, and
+`CONTROL-PLANE-IDENTITY-TRUTH-002` is now unblocked for verification.
