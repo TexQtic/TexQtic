@@ -1646,6 +1646,31 @@ Recommended Next Governance-Valid Move:
   - ranked recommendation: HOLD
   - reason: the remediation child is fully closed, but no separate routing-opening decision or later bounded opening has been authorized
 Why Stronger Moves Remain Blocked:
+### TENANT-EXPERIENCE-RUNTIME-500-001 — 2026-03-22
+Type: GOVERNANCE / DECISION
+Status: CLOSED
+Commit: (this unit — see git log for TENANT-EXPERIENCE-RUNTIME-500-001)
+Title: Record the decision for observed tenant-experience runtime 500 errors during impersonated tenant runtime
+Summary: Governance-only decision unit. Classified the observed tenant-experience runtime `500`
+  errors seen during impersonated tenant runtime as one separate bounded defect family and
+  selected `OPENING_CANDIDATE` as the narrowest truthful next posture. The evidence is limited to
+  observed request/error behavior while the impersonation banner and tenant shell restoration still
+  succeeded in the exercised path, so no broader tenant-shell correctness claim is authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TENANT-EXPERIENCE-RUNTIME-500-001.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: This decision does not reopen or merge `CONTROL-PLANE-IDENTITY-TRUTH-002`,
+  `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002`, or `IMPERSONATION-SESSION-REHYDRATION-002`.
+  It does not authorize implementation, broader tenant-shell overhaul, white-label expansion,
+  impersonation stop cleanup, auth redesign, DB/schema work, or API redesign. `OPENING_CANDIDATE`
+  is not `OPEN`, and `NEXT-ACTION` returns to `OPERATOR_DECISION_REQUIRED`.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-EXPERIENCE-RUNTIME-500-001.md ·
+  governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md ·
+  governance/units/CONTROL-PLANE-IDENTITY-TRUTH-002.md ·
+  governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/log/EXECUTION-LOG.md
+
+---
   - no explicit routing-opening decision exists
   - broad G-026 remains unopened in Layer 0
   - closure of this child does not authorize broader routing implementation by implication
