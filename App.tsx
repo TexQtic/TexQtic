@@ -1518,11 +1518,21 @@ const App: React.FC = () => {
                     key={p.id}
                     className="bg-white rounded-xl border border-slate-200 overflow-hidden group shadow-sm"
                   >
-                    <img
-                      src={p.imageUrl || 'https://via.placeholder.com/400x300'}
-                      className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
-                      alt={p.name}
-                    />
+                    {p.imageUrl ? (
+                      <img
+                        src={p.imageUrl}
+                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                        alt={p.name}
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-40 bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-400"
+                        aria-label={`${p.name} image unavailable`}
+                        role="img"
+                      >
+                        Image unavailable
+                      </div>
+                    )}
                     <div className="p-4 space-y-2">
                       <div className="text-xs text-slate-400 font-bold uppercase">
                         {p.category || 'General'}
