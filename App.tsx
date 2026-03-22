@@ -72,6 +72,21 @@ import { getCurrentUser } from './services/authService';
 import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
+const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
+const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
+  isAdmin: false,
+  targetTenantId: null,
+  startTime: null,
+  impersonationId: null,
+  token: null,
+  expiresAt: null,
+};
+
+type StoredImpersonationSession = {
+  adminId: string;
+  state: ImpersonationState;
+  tenant: Tenant;
+};
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
 // Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
@@ -94,83 +109,222 @@ function resolveExperienceShell(
   }
 }
 
-const App: React.FC = () => {
-  const buildControlPlaneIdentity = (user?: { id?: string; email?: string }, role?: string | null) => {
-    if (!user?.id && !user?.email && !role) {
+const buildControlPlaneIdentity = (user?: { id?: string; email?: string }, role?: string | null) => {
+  if (!user?.id && !user?.email && !role) {
+    return null;
+  }
+
+  return {
+    id: user?.id ?? null,
+    email: user?.email ?? null,
+    role: role ?? null,
+  };
+};
+
+const persistControlPlaneIdentity = (identity: ControlPlaneIdentity | null) => {
+  if (!identity) {
+    localStorage.removeItem(CONTROL_PLANE_IDENTITY_KEY);
+    return;
+  }
+
+  localStorage.setItem(CONTROL_PLANE_IDENTITY_KEY, JSON.stringify(identity));
+};
+
+const readStoredControlPlaneIdentity = (): ControlPlaneIdentity | null => {
+  const raw = localStorage.getItem(CONTROL_PLANE_IDENTITY_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as ControlPlaneIdentity;
+    if (!parsed || typeof parsed !== 'object') {
       return null;
     }
 
     return {
-      id: user?.id ?? null,
-      email: user?.email ?? null,
-      role: role ?? null,
+      id: typeof parsed.id === 'string' ? parsed.id : null,
+      email: typeof parsed.email === 'string' ? parsed.email : null,
+      role: typeof parsed.role === 'string' ? parsed.role : null,
     };
-  };
+  } catch {
+    return null;
+  }
+};
 
-  const persistControlPlaneIdentity = (identity: ControlPlaneIdentity | null) => {
-    if (!identity) {
-      localStorage.removeItem(CONTROL_PLANE_IDENTITY_KEY);
-      return;
-    }
+const readStoredAdminJwtClaims = (): { adminId: string; role: string | null; exp: number | null } | null => {
+  const token = localStorage.getItem('texqtic_admin_token');
+  if (!token) {
+    return null;
+  }
 
-    localStorage.setItem(CONTROL_PLANE_IDENTITY_KEY, JSON.stringify(identity));
-  };
+  const [, payload] = token.split('.');
+  if (!payload) {
+    return null;
+  }
 
-  const readStoredControlPlaneIdentity = (): ControlPlaneIdentity | null => {
-    const raw = localStorage.getItem(CONTROL_PLANE_IDENTITY_KEY);
-    if (!raw) {
+  try {
+    const normalized = payload.replaceAll('-', '+').replaceAll('_', '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = JSON.parse(window.atob(padded)) as {
+      adminId?: unknown;
+      role?: unknown;
+      exp?: unknown;
+    };
+
+    if (typeof decoded.adminId !== 'string') {
       return null;
     }
 
-    try {
-      const parsed = JSON.parse(raw) as ControlPlaneIdentity;
-      if (!parsed || (typeof parsed !== 'object')) {
-        return null;
-      }
+    return {
+      adminId: decoded.adminId,
+      role: typeof decoded.role === 'string' ? decoded.role : null,
+      exp: typeof decoded.exp === 'number' ? decoded.exp : null,
+    };
+  } catch {
+    return null;
+  }
+};
 
-      return {
-        id: typeof parsed.id === 'string' ? parsed.id : null,
-        email: typeof parsed.email === 'string' ? parsed.email : null,
-        role: typeof parsed.role === 'string' ? parsed.role : null,
+const buildTenantSnapshot = (tenant?: {
+  id?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  type?: string | null;
+  tenant_category?: string | null;
+  is_white_label?: boolean | null;
+  status?: string | null;
+  plan?: string | null;
+} | null): Tenant | null => {
+  if (!tenant?.id || !tenant.slug || !tenant.name || !tenant.type || !tenant.status || !tenant.plan) {
+    return null;
+  }
+
+  return {
+    id: tenant.id,
+    slug: tenant.slug,
+    name: tenant.name,
+    type: tenant.type,
+    tenant_category: tenant.tenant_category ?? null,
+    is_white_label: tenant.is_white_label === true,
+    status: tenant.status,
+    plan: tenant.plan,
+    createdAt: '',
+    updatedAt: '',
+  };
+};
+
+const persistImpersonationSession = (session: StoredImpersonationSession | null) => {
+  if (!session) {
+    localStorage.removeItem(IMPERSONATION_SESSION_KEY);
+    return;
+  }
+
+  localStorage.setItem(IMPERSONATION_SESSION_KEY, JSON.stringify(session));
+};
+
+const readStoredImpersonationTenant = (tenant: {
+  id?: unknown;
+  slug?: unknown;
+  name?: unknown;
+  type?: unknown;
+  tenant_category?: unknown;
+  is_white_label?: unknown;
+  status?: unknown;
+  plan?: unknown;
+} | undefined) => {
+  if (!tenant) {
+    return null;
+  }
+
+  return buildTenantSnapshot({
+    id: typeof tenant.id === 'string' ? tenant.id : null,
+    slug: typeof tenant.slug === 'string' ? tenant.slug : null,
+    name: typeof tenant.name === 'string' ? tenant.name : null,
+    type: typeof tenant.type === 'string' ? tenant.type : null,
+    tenant_category:
+      typeof tenant.tenant_category === 'string' || tenant.tenant_category === null ? tenant.tenant_category ?? null : null,
+    is_white_label: tenant.is_white_label === true,
+    status: typeof tenant.status === 'string' ? tenant.status : null,
+    plan: typeof tenant.plan === 'string' ? tenant.plan : null,
+  });
+};
+
+const readStoredImpersonationState = (state: Partial<ImpersonationState> | undefined, tenantId: string | undefined) => {
+  if (
+    state?.isAdmin !== true ||
+    typeof state?.targetTenantId !== 'string' ||
+    typeof state?.startTime !== 'string' ||
+    typeof state?.impersonationId !== 'string' ||
+    typeof state?.token !== 'string' ||
+    typeof state?.expiresAt !== 'string'
+  ) {
+    return null;
+  }
+
+  const expiry = Date.parse(state.expiresAt);
+  if (!Number.isFinite(expiry) || expiry <= Date.now() || state.targetTenantId !== tenantId) {
+    return null;
+  }
+
+  return {
+    isAdmin: true,
+    targetTenantId: state.targetTenantId,
+    startTime: state.startTime,
+    impersonationId: state.impersonationId,
+    token: state.token,
+    expiresAt: state.expiresAt,
+  } satisfies ImpersonationState;
+};
+
+const readStoredImpersonationSession = (): StoredImpersonationSession | null => {
+  const raw = localStorage.getItem(IMPERSONATION_SESSION_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as {
+      adminId?: unknown;
+      state?: Partial<ImpersonationState>;
+      tenant?: {
+        id?: unknown;
+        slug?: unknown;
+        name?: unknown;
+        type?: unknown;
+        tenant_category?: unknown;
+        is_white_label?: unknown;
+        status?: unknown;
+        plan?: unknown;
       };
-    } catch {
-      return null;
-    }
-  };
+    };
 
-  const readStoredAdminJwtClaims = (): { adminId: string; role: string | null; exp: number | null } | null => {
-    const token = localStorage.getItem('texqtic_admin_token');
-    if (!token) {
+    if (typeof parsed.adminId !== 'string') {
       return null;
     }
 
-    const [, payload] = token.split('.');
-    if (!payload) {
+    const tenant = readStoredImpersonationTenant(parsed.tenant);
+    const state = readStoredImpersonationState(parsed.state, tenant?.id);
+    if (!tenant || !state) {
       return null;
     }
 
-    try {
-      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-      const decoded = JSON.parse(window.atob(padded)) as {
-        adminId?: unknown;
-        role?: unknown;
-        exp?: unknown;
-      };
+    return {
+      adminId: parsed.adminId,
+      tenant,
+      state,
+    };
+  } catch {
+    return null;
+  }
+};
 
-      if (typeof decoded.adminId !== 'string') {
-        return null;
-      }
+const clearPersistedImpersonationSession = () => {
+  setImpersonationToken(null);
+  persistImpersonationSession(null);
+};
 
-      return {
-        adminId: decoded.adminId,
-        role: typeof decoded.role === 'string' ? decoded.role : null,
-        exp: typeof decoded.exp === 'number' ? decoded.exp : null,
-      };
-    } catch {
-      return null;
-    }
-  };
+const App: React.FC = () => {
 
   // Production-grade State Machine
   const [appState, setAppState] = useState<
@@ -219,14 +373,7 @@ const App: React.FC = () => {
   const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
   const [controlPlaneIdentity, setControlPlaneIdentity] = useState<ControlPlaneIdentity | null>(null);
-  const [impersonation, setImpersonation] = useState<ImpersonationState>({
-    isAdmin: false,
-    targetTenantId: null,
-    startTime: null,
-    impersonationId: null,
-    token: null,
-    expiresAt: null,
-  });
+  const [impersonation, setImpersonation] = useState<ImpersonationState>(EMPTY_IMPERSONATION_STATE);
 
   /** G-W3-ROUTING-001: Reason-input dialog before API-backed impersonation start */
   const [impersonationDialog, setImpersonationDialog] = useState<{
@@ -514,6 +661,8 @@ const App: React.FC = () => {
 
     if (!identity) {
       clearAuth();
+      clearPersistedImpersonationSession();
+      setImpersonation(EMPTY_IMPERSONATION_STATE);
       persistControlPlaneIdentity(null);
       setControlPlaneIdentity(null);
       setSelectedTenant(null);
@@ -531,14 +680,85 @@ const App: React.FC = () => {
     setAppState('CONTROL_PLANE');
   }, [appState]);
 
+  useEffect(() => {
+    if (appState !== 'AUTH' || getCurrentAuthRealm() === 'CONTROL_PLANE') {
+      return;
+    }
+
+    const claims = readStoredAdminJwtClaims();
+    const storedIdentity = readStoredControlPlaneIdentity();
+    const storedImpersonation = readStoredImpersonationSession();
+
+    if (!claims?.adminId || !storedIdentity?.id || !storedImpersonation) {
+      clearPersistedImpersonationSession();
+      return;
+    }
+
+    if (
+      (claims.exp && claims.exp * 1000 <= Date.now()) ||
+      claims.adminId !== storedIdentity.id ||
+      claims.adminId !== storedImpersonation.adminId
+    ) {
+      clearPersistedImpersonationSession();
+      setImpersonation(EMPTY_IMPERSONATION_STATE);
+      return;
+    }
+
+    const actorIdentity = {
+      ...storedIdentity,
+      role: claims.role ?? storedIdentity.role ?? null,
+    };
+
+    let cancelled = false;
+
+    const restoreImpersonationSession = async () => {
+      setImpersonationToken(storedImpersonation.state.token);
+      setStoredAuthRealm('TENANT');
+      setAuthRealm('TENANT');
+
+      try {
+        const me = await getCurrentUser();
+        const tenant = buildTenantSnapshot(me.tenant) ?? storedImpersonation.tenant;
+
+        if (tenant?.id !== storedImpersonation.state.targetTenantId || cancelled) {
+          throw new Error('Stored impersonation tenant is invalid.');
+        }
+
+        persistControlPlaneIdentity(actorIdentity);
+        setControlPlaneIdentity(actorIdentity);
+        setTenants([tenant]);
+        setCurrentTenantId(tenant.id);
+        setTenantProvisionError(null);
+        setImpersonation(storedImpersonation.state);
+        setAppState('EXPERIENCE');
+      } catch {
+        if (cancelled) {
+          return;
+        }
+
+        clearPersistedImpersonationSession();
+        setImpersonation(EMPTY_IMPERSONATION_STATE);
+      }
+    };
+
+    void restoreImpersonationSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appState]);
+
   const handleAuthSuccess = async (data: any) => {
     const nextRealm = getCurrentAuthRealm(authRealm) ?? 'TENANT';
 
     if (nextRealm === 'CONTROL_PLANE') {
+      clearPersistedImpersonationSession();
+      setImpersonation(EMPTY_IMPERSONATION_STATE);
       const identity = await resolveControlPlaneIdentity(data);
 
       if (!identity) {
         clearAuth();
+        clearPersistedImpersonationSession();
         clearControlPlaneIdentityState();
         setAuthRealm('CONTROL_PLANE');
         setAppState('AUTH');
@@ -549,7 +769,9 @@ const App: React.FC = () => {
       return;
     }
 
-  clearControlPlaneIdentityState();
+    clearPersistedImpersonationSession();
+    setImpersonation(EMPTY_IMPERSONATION_STATE);
+    clearControlPlaneIdentityState();
     setStoredAuthRealm('TENANT');
     setAuthRealm('TENANT');
 
@@ -631,7 +853,8 @@ const App: React.FC = () => {
 
   /** G-W3-ROUTING-001: Confirm impersonation — fetch member userId, call server, store token */
   const handleImpersonateConfirm = async () => {
-    if (!impersonationDialog.tenant) return;
+    const tenant = impersonationDialog.tenant;
+    if (!tenant) return;
     const reason = impersonationDialog.reason.trim();
     if (reason.length < 10) {
       setImpersonationDialog(d => ({ ...d, error: 'Reason must be at least 10 characters.' }));
@@ -639,8 +862,13 @@ const App: React.FC = () => {
     }
     setImpersonationDialog(d => ({ ...d, loading: true, error: null }));
     try {
+      const actorAdminId = controlPlaneIdentity?.id ?? readStoredAdminJwtClaims()?.adminId;
+      if (!actorAdminId) {
+        throw new Error('Control-plane actor identity unavailable.');
+      }
+
       // Fetch tenant details to find an eligible member userId
-      const detail = await getTenantById(impersonationDialog.tenant!.id);
+      const detail = await getTenantById(tenant.id);
       const members = detail.tenant.memberships ?? [];
       const target =
         members.find(m => m.role === 'OWNER' && m.status === 'ACTIVE') ||
@@ -652,22 +880,39 @@ const App: React.FC = () => {
         return;
       }
       const result = await startImpersonationSession({
-        orgId: impersonationDialog.tenant!.id,
+        orgId: tenant.id,
         userId: target.user.id,
         reason,
       });
-      // Apply impersonation JWT — admin token in localStorage is untouched
-      setImpersonationToken(result.token);
-      setStoredAuthRealm('TENANT');
-      setAuthRealm('TENANT');
-      setCurrentTenantId(impersonationDialog.tenant!.id);
-      setImpersonation({
+      const nextImpersonationState: ImpersonationState = {
         isAdmin: true,
-        targetTenantId: impersonationDialog.tenant!.id,
+        targetTenantId: tenant.id,
         startTime: new Date().toISOString(),
         impersonationId: result.impersonationId,
         token: result.token,
         expiresAt: result.expiresAt,
+      };
+
+      // Apply impersonation JWT — admin token in localStorage is untouched
+      setImpersonationToken(result.token);
+      setStoredAuthRealm('TENANT');
+      setAuthRealm('TENANT');
+      setCurrentTenantId(tenant.id);
+      setImpersonation(nextImpersonationState);
+      persistImpersonationSession({
+        adminId: actorAdminId,
+        state: nextImpersonationState,
+        tenant:
+          buildTenantSnapshot({
+            id: tenant.id,
+            slug: tenant.slug,
+            name: tenant.name,
+            type: String(tenant.type),
+            tenant_category: tenant.tenant_category ?? null,
+            is_white_label: tenant.is_white_label ?? false,
+            status: String(tenant.status),
+            plan: String(tenant.plan),
+          })!,
       });
       setImpersonationDialog({ open: false, tenant: null, reason: '', loading: false, error: null });
       setAppState('EXPERIENCE');
@@ -694,8 +939,8 @@ const App: React.FC = () => {
       }
     }
     // Clear impersonation token override — admin JWT in localStorage is restored automatically
-    setImpersonationToken(null);
-    setImpersonation({ isAdmin: false, targetTenantId: null, startTime: null, impersonationId: null, token: null, expiresAt: null });
+    clearPersistedImpersonationSession();
+    setImpersonation(EMPTY_IMPERSONATION_STATE);
     setAppState('CONTROL_PLANE');
   };
 
@@ -2108,6 +2353,8 @@ const App: React.FC = () => {
               <button
                 onClick={() => {
                   clearAuth();
+                    clearPersistedImpersonationSession();
+                    setImpersonation(EMPTY_IMPERSONATION_STATE);
                   clearControlPlaneIdentityState();
                   setAppState('AUTH');
                 }}
