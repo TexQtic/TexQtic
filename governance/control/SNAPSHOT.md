@@ -11,9 +11,9 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-21
-last_unit_closed: GOV-CLOSE-GOV-NAV-01
-last_commit: "[TEXQTIC] governance: close GOV-NAV-01 bounded navigation-layer upgradation design"
+snapshot_date: 2026-03-22
+last_unit_closed: REALM-BOUNDARY-SHELL-AFFORDANCE-001
+last_commit: "[REALM-BOUNDARY-SHELL-AFFORDANCE-001] unify canonical realm source for admin gating"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -30,6 +30,8 @@ layer_4_installed: true
 
 - **Open governed units: 0**
 - **Verified-complete governed units: 0**
+
+- **REALM-BOUNDARY-SHELL-AFFORDANCE-001** — `CLOSED` — Deployed runtime realm-boundary shell-affordance repair closed 2026-03-22 after final implementation commit `ddeb579`, exact Vercel deployment proof for `https://texqtic-godq32ri1-tex-qtic.vercel.app`, deployed runtime PASS for enterprise tenant crossover, deployed runtime PASS for white-label tenant crossover, preserved control-plane login PASS to `Tenant Registry`, and mandatory post-close audit result `DECISION`; scope remained bounded to the tenant-vs-control-plane shell-affordance defect only, canonical realm truth now resolves from one shared source for app-root and admin gating, and no broader auth, impersonation, routing, or control-plane expansion was opened
 
 - **TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001** — `CLOSED` — Bounded AdminRBAC revoke/remove child slice closed 2026-03-21 after implementation commit `d51a2a8`, governance-sync commit `794fcd4`, focused UI PASS (`6` tests), focused backend PASS (`4` tests), `pnpm validate:contracts` PASS, and mandatory post-close audit result `DECISION_REQUIRED`. Scope remained limited to control-plane admin access revoke/remove authority only, with `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved through request-time admin-record enforcement, refresh-token invalidation preserved, and explicit audit traceability required. Invite, role-change, tenant-scope, and broader authority expansion remained excluded, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and no broader AdminRBAC implementation opening was created
 
@@ -82,8 +84,9 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
+`AUTH-IDENTITY-TRUTH-DEPLOYED-001` decision only.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
+REALM-BOUNDARY-SHELL-AFFORDANCE-001 is now `CLOSED` after the bounded implementation chain culminated in deployed verification PASS on the exact `ddeb579` build. The next authorized move is decision-only for a possible deployed identity-truth follow-on; no implementation unit is OPEN and no auth, impersonation, or broader control-plane work is authorized by implication.
 GOV-CLOSE-GOV-NAV-01 is now recorded as a bounded governance-only closure result. GOV-NAV-01 is now `CLOSED`, no implementation-ready unit is `OPEN`, the portfolio returns to `OPERATOR_DECISION_REQUIRED`, and no doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier-tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit authorization was created by this closure.
 GOV-AUDIT-GOV-NAV-01-POST-CLOSE is now recorded in the same closure operation. Audit result: `DECISION_REQUIRED`. Natural next-step candidates remain bounded only, the ranked recommendation is `DECISION_REQUIRED`, recommendation is not authorization, TECS-FBW-ADMINRBAC remains `DESIGN_GATE`, broad G-026 remains unopened unless separately changed elsewhere, and navigation-layer implementation is not opened by this closure.
 GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING is now recorded as an opening-only governance artifact. GOV-NAV-01 is now OPEN as the sole bounded governance-navigation unit for the current cycle. NEXT-ACTION points only to GOV-NAV-01. No implementation beyond this governance-navigation unit is authorized, and no second unit is OPEN.

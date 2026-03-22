@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-21 (GOV-CLOSE-GOV-NAV-01)
+**Last Updated:** 2026-03-22 (GOV-CLOSE-REALM-BOUNDARY-SHELL-AFFORDANCE-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -51,6 +51,7 @@ TECS-FBW-ADMINRBAC-REVOKE-REMOVE-OPENING-CLARIFICATION-001 closed 2026-03-21 aft
 TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001 closed 2026-03-21 after implementation commit d51a2a8, governance-sync commit 794fcd4, focused UI PASS (6 tests), focused backend PASS (4 tests), `pnpm validate:contracts` PASS, and mandatory post-close audit result `DECISION_REQUIRED`. The unit remained bounded to control-plane admin access revoke/remove authority only: `SuperAdmin` actor only, existing non-`SuperAdmin` internal control-plane admin target only, no self-revoke, no peer-`SuperAdmin` revoke, next-request authorization failure after revoke/remove preserved, refresh-token invalidation preserved, and explicit audit traceability required. No invite, role-change, tenant-scope, or broader authority expansion was authorized by implication.
 TECS-FBW-ADMINRBAC remains DESIGN_GATE as the broad non-open parent stream.
 No implementation-ready unit is OPEN.
+REALM-BOUNDARY-SHELL-AFFORDANCE-001 closed 2026-03-22 after final implementation commit ddeb579, exact Vercel deployment proof for `https://texqtic-godq32ri1-tex-qtic.vercel.app`, deployed runtime PASS for enterprise tenant crossover, deployed runtime PASS for white-label tenant crossover, preserved control-plane login PASS to Tenant Registry, and mandatory post-close audit result `DECISION`. The closure remains bounded to shell-affordance realm-boundary repair only and does not authorize broader auth, impersonation, routing, or other control-plane follow-on work by implication.
 
 ---
 
@@ -59,6 +60,7 @@ No implementation-ready unit is OPEN.
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
 | GOV-NAV-01 | CLOSED | 2026-03-21 | 81b44f3 · cdcb26c · 079a30d · 1366bee · see git log |
+| REALM-BOUNDARY-SHELL-AFFORDANCE-001 | CLOSED | 2026-03-22 | ddeb579 |
 | TECS-G026-CLEANUP-REMEDIATION-001 | CLOSED | 2026-03-20 | 0f3d2c3 · f21ef8c |
 | TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001 | CLOSED | 2026-03-21 | 0b8fff2 · 963c935 |
 | TECS-G026-DESIGN-CLARIFICATION-001 | CLOSED | 2026-03-20 | see git log |
