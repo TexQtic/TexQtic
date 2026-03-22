@@ -321,6 +321,19 @@ const App: React.FC = () => {
     }
   }, [appState]);
 
+  // REALM-BOUNDARY-SHELL-AFFORDANCE-001:
+  // Tenant sessions must never remain in control-plane state.
+  // Normalize immediately back to a tenant-safe landing before any control-plane shell can persist.
+  useEffect(() => {
+    if (appState !== 'CONTROL_PLANE' || authRealm === 'CONTROL_PLANE') {
+      return;
+    }
+
+    setSelectedTenant(null);
+    setAdminView('TENANTS');
+    setAppState('EXPERIENCE');
+  }, [appState, authRealm]);
+
   const handleAuthSuccess = async (data: any) => {
     if (authRealm === 'CONTROL_PLANE') {
       setAppState('CONTROL_PLANE');
@@ -1444,8 +1457,12 @@ const App: React.FC = () => {
           </div>
         );
       case 'CONTROL_PLANE':
+        if (authRealm !== 'CONTROL_PLANE') {
+          return null;
+        }
+
         return (
-          <SuperAdminShell activeView={adminView} onViewChange={setAdminView}>
+          <SuperAdminShell authRealm={authRealm} activeView={adminView} onViewChange={setAdminView}>
             {renderAdminView()}
           </SuperAdminShell>
         );
@@ -1854,7 +1871,7 @@ const App: React.FC = () => {
               </div>
             )}
             <div className="glass shadow-2xl rounded-2xl border border-slate-200 p-2 flex gap-2">
-              {!impersonation.isAdmin && (
+              {authRealm === 'CONTROL_PLANE' && !impersonation.isAdmin && (
                 <button
                   onClick={() => {
                     setAppState(appState === 'CONTROL_PLANE' ? 'EXPERIENCE' : 'CONTROL_PLANE');

@@ -28,15 +28,22 @@ export type AdminView =
 
 interface SuperAdminShellProps {
   children: React.ReactNode;
+  authRealm: 'TENANT' | 'CONTROL_PLANE';
   activeView: AdminView;
   onViewChange: (_view: AdminView) => void;
 }
 
 export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
   children,
+  authRealm,
   activeView,
   onViewChange,
-}) => (
+}) => {
+  if (authRealm !== 'CONTROL_PLANE') {
+    return null;
+  }
+
+  return (
   <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans">
     <header className="h-14 border-b border-slate-800 bg-slate-900/50 backdrop-blur flex items-center px-6 justify-between sticky top-0 z-50">
       <div className="flex items-center gap-4">
@@ -186,7 +193,8 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
       <main className="flex-1 p-8 bg-[#020617] overflow-y-auto">{children}</main>
     </div>
   </div>
-);
+  );
+};
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest py-3 px-3">
