@@ -1,5 +1,34 @@
 import React from 'react';
 
+export type ControlPlaneIdentity = {
+  id: string | null;
+  email: string | null;
+  role: string | null;
+};
+
+const formatControlPlaneRole = (role: string | null) => {
+  if (!role) {
+    return null;
+  }
+
+  return role
+    .split('_')
+    .filter(Boolean)
+    .map(part => part.charAt(0) + part.slice(1).toLowerCase())
+    .join('');
+};
+
+export const formatControlPlaneActorLabel = (identity: ControlPlaneIdentity | null) => {
+  if (!identity) {
+    return 'Authenticated user';
+  }
+
+  const principal = identity.email ?? identity.id ?? 'Authenticated user';
+  const roleLabel = formatControlPlaneRole(identity.role);
+
+  return roleLabel ? `${principal} (${roleLabel})` : principal;
+};
+
 export type AdminView =
   | 'TENANTS'
   | 'FLAGS'
@@ -29,6 +58,7 @@ export type AdminView =
 interface SuperAdminShellProps {
   children: React.ReactNode;
   authRealm: 'TENANT' | 'CONTROL_PLANE';
+  actorIdentity: ControlPlaneIdentity | null;
   activeView: AdminView;
   onViewChange: (_view: AdminView) => void;
 }
@@ -36,6 +66,7 @@ interface SuperAdminShellProps {
 export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
   children,
   authRealm,
+  actorIdentity,
   activeView,
   onViewChange,
 }) => {
@@ -61,7 +92,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           Platform: Operational
         </div>
         <div className="flex items-center gap-2 px-3 py-1 bg-slate-800 rounded">
-          sjones@texqtic.com <span className="text-rose-500 ml-2">(SuperAdmin)</span>
+          {formatControlPlaneActorLabel(actorIdentity)}
         </div>
       </div>
     </header>

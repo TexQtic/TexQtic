@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TenantType, TenantConfig, ImpersonationState } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell, WhiteLabelAdminShell } from './layouts/Shells';
-import { SuperAdminShell, AdminView } from './layouts/SuperAdminShell';
+import {
+  SuperAdminShell,
+  AdminView,
+  type ControlPlaneIdentity,
+  formatControlPlaneActorLabel,
+} from './layouts/SuperAdminShell';
 import { AuthForm } from './components/Auth/AuthFlows';
 import { ForgotPassword } from './components/Auth/ForgotPassword';
 import { VerifyEmail } from './components/Auth/VerifyEmail';
@@ -65,12 +70,6 @@ import { getTenants, getTenantById, startImpersonationSession, stopImpersonation
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
 import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
-
-type ControlPlaneIdentity = {
-  id: string | null;
-  email: string | null;
-  role: string | null;
-};
 
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
 
@@ -294,20 +293,7 @@ const App: React.FC = () => {
 
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
   const controlPlaneActorLabel = useMemo(() => {
-    if (!controlPlaneIdentity) {
-      return null;
-    }
-
-    const roleLabel = controlPlaneIdentity.role
-      ? controlPlaneIdentity.role
-          .split('_')
-          .filter(Boolean)
-          .map(part => part.charAt(0) + part.slice(1).toLowerCase())
-          .join(' ')
-      : 'Control Plane';
-    const principal = controlPlaneIdentity.email ?? controlPlaneIdentity.id ?? 'Authenticated user';
-
-    return `${roleLabel}: ${principal}`;
+    return formatControlPlaneActorLabel(controlPlaneIdentity);
   }, [controlPlaneIdentity]);
 
   const enterControlPlane = () => {
@@ -1689,7 +1675,12 @@ const App: React.FC = () => {
         }
 
         return (
-          <SuperAdminShell authRealm="CONTROL_PLANE" activeView={adminView} onViewChange={setAdminView}>
+          <SuperAdminShell
+            authRealm="CONTROL_PLANE"
+            actorIdentity={controlPlaneIdentity}
+            activeView={adminView}
+            onViewChange={setAdminView}
+          >
             {renderAdminView()}
           </SuperAdminShell>
         );
@@ -2069,7 +2060,7 @@ const App: React.FC = () => {
           <div className="bg-rose-600 text-white px-6 py-2 sticky top-0 z-[100] flex justify-between items-center shadow-lg border-b border-rose-700 animate-in slide-in-from-top duration-300">
             <div className="text-xs font-bold uppercase tracking-widest flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-              Staff Active: {controlPlaneActorLabel ?? 'Control Plane Session'} impersonating {currentTenant.name} ({currentTenant.id})
+              Staff Active: {controlPlaneActorLabel} impersonating {currentTenant.name} ({currentTenant.id})
               {impersonation.expiresAt && (
                 <span className="text-rose-200 font-normal normal-case tracking-normal">
                   — expires {new Date(impersonation.expiresAt).toLocaleTimeString()}
