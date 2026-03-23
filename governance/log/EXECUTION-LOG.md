@@ -1390,6 +1390,30 @@ Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analys
 
 ---
 
+### IMAGE-SURFACE-REPO-TRUTH-VALIDATION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for IMAGE-SURFACE-REPO-TRUTH-VALIDATION-001)
+Title: Validate repo-truth status of the image-surface candidate
+Summary: Governance-only analysis record. Validated the current repo-truth and governance-truth
+  status of the pending image-surface candidate framed as `other image surfaces beyond
+  App.tsx:1522`. Current repo truth shows that the already closed `App.tsx:1522` surface remains
+  separate, white-label image surfaces are separately governed and closed, and the broad pending
+  framing now reduces to one narrower exact B2C `New Arrivals` card fallback branch in `App.tsx`
+  that still uses `https://via.placeholder.com/400x500` when `p.imageUrl` is absent. Exact result:
+  `narrower issue set`.
+Layer Impact: Layer 2 — governance/analysis/IMAGE-SURFACE-REPO-TRUTH-VALIDATION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  The analysis explicitly keeps this surface separate from the already closed
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` exact `App.tsx:1522` branch, the separate
+  image-capability units, white-label image behavior, broader media/CDN/platform behavior, and
+  generic catalog/runtime correctness claims.
+Refs: governance/analysis/IMAGE-SURFACE-REPO-TRUTH-VALIDATION.md · App.tsx · components/WL/ProductCard.tsx · components/WL/WLProductDetailPage.tsx · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-001.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
