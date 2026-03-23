@@ -3,6 +3,7 @@ unit_id: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001
 title: Decision posture for the certification lifecycle transition/logging gap
 type: DECISION
 status: CLOSED
+delivery_class: OPENING_QUEUE
 wave: W5
 plane: BOTH
 opened: 2026-03-23

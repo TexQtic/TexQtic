@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-23 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 opening)
+**Last Updated:** 2026-03-23 (GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001 decision)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -11,10 +11,10 @@
 
 ---
 
-| UNIT-ID | Title | Status | Wave | Last Updated |
-| --- | --- | --- | --- | --- |
-| CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | W5 | 2026-03-23 |
-| TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
+| UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
+| --- | --- | --- | --- | --- | --- |
+| CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-23 |
+| TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
@@ -25,7 +25,12 @@
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
+- **ACTIVE_DELIVERY**: 1
+- **DESIGN_GATE_QUEUE**: 1
 - **Total non-terminal units: 2**
+
+Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
+does not replace TECS lifecycle, unit status, or authorization.
 
 GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 

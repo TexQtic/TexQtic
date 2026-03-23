@@ -9,6 +9,7 @@
 unit_id: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
 type: IMPLEMENTATION
 title: Bounded implementation unit for certification transition applicability and lifecycle logging
+delivery_class: ACTIVE_DELIVERY
 prerequisites_met: true
 authorized_by: GOV-DEC-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-OPENING
 date_authorized: 2026-03-23
@@ -20,4 +21,6 @@ notes: |
   This opening remains one unit only. Certification metadata PATCH UI, maker-checker mutation work,
   broad certification redesign, DB/schema expansion beyond what later implementation may lawfully
   require, and unrelated AI/logging streams remain excluded.
+  Delivery-steering doctrine is active, but current authorization is unchanged: this unit remains
+  the sole ACTIVE_DELIVERY item.
 ```

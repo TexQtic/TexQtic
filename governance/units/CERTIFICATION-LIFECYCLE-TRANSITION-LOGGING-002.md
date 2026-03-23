@@ -3,6 +3,7 @@ unit_id: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
 title: Open bounded implementation unit for certification transition applicability and lifecycle logging
 type: IMPLEMENTATION
 status: OPEN
+delivery_class: ACTIVE_DELIVERY
 wave: W5
 plane: BOTH
 opened: 2026-03-23

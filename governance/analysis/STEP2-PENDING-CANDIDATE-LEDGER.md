@@ -2,8 +2,24 @@
 
 Date: 2026-03-23
 Type: GOVERNANCE ANALYSIS LEDGER
-Status: ACTIVE
-Scope: Canonical bounded ledger for Step 2 pending-candidate validation results recorded through governance-analysis artifacts. No implementation authorized. No Layer 0 status transition.
+Status: SUPERSEDED / TRANSITIONAL_REFERENCE
+Superseded By: `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md`
+Scope: Transitional pointer preserving the previously recorded Step 2 normalization contents until a later migration/sync unit completes canonical ledger consolidation. No implementation authorized. No Layer 0 status transition.
+
+## Supersession Decision
+
+`GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001` supersedes this phase-named artifact as the long-term
+canonical normalization ledger.
+
+Approved posture for this file:
+
+- status: `superseded`
+- retained temporarily for transition/reference: `yes`
+- later follow-up governance sync / migration still required: `yes`
+
+Permanent canonical replacement:
+
+- `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md`
 
 ## Purpose
 
@@ -39,7 +55,7 @@ explicit governance decision.
 ## Step 2 Candidate Validation Ledger
 
 | Candidate Name | Original Pending Framing | Validation Unit ID | Current Classification | Sequencing Status | Preserved Narrower Note | Brief Rationale | Validation Artifact | Confidence | Last Updated |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | impersonation stop-path / cleanup | Preserved historically as a separate pending candidate from impersonation session rehydration and broader identity-truth or auth-shell work | `IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION-001` | `insufficient evidence` | `parked pending narrower evidence` | Preserve only as a historically separate candidate name pending any later direct evidence of a narrower stop-cleanup failure mode. | Current repo truth shows an implemented server stop path, implemented client exit cleanup, and fail-closed stale-state clearing. Preserve the historical candidate reference only; do not treat the current broad form as an active bounded sequencing candidate. A narrower future candidate may exist, but it is not currently evidenced enough to sequence. | `governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md` | `HIGH` | `2026-03-23 · STEP2-PENDING-CANDIDATE-LEDGER-SYNC-001` |
 | tenant eligibility | Treated pendingly as if the observed message `No eligible member found for this tenant.` could represent one separate broad sequencing candidate. | `TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION-001` | `insufficient evidence` | `removed as active broad candidate; parked as narrower note only` | Preserve only as a narrower impersonation-member-resolution / empty-membership-handling note. Do not treat it as a generic tenant-eligibility sequencing candidate. | Current repo truth shows the message exists only as a local client-side preflight string in the control-plane impersonation start flow and is currently reached when no memberships are returned in the tenant detail payload. That is narrower than a broad tenant-eligibility defect family and does not support active sequencing in the broad form. | `governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md` | `HIGH` | `2026-03-23 · PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001` |
 | auth/session instability | Treated pendingly as if one broad umbrella candidate still covered auth persistence, token restoration, shell entry, session rehydration, and related continuity failures. | `AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION-001` | `already resolved / stale` | `removed as active broad candidate` | Do not treat this as an active umbrella sequencing candidate. Any future recurrence must be named by the exact bounded surface, and the broad label must not be reused unless a new validation proves a genuinely broad unresolved family has re-emerged. | Current repo truth shows explicit stale-token protections, explicit control-plane mount-time restoration safeguards, explicit impersonation-session restoration logic, and tenant-login hydration safeguards. Governance history shows the concrete live session-state failures were already split into narrower units for control-plane auth-shell transition and impersonation session rehydration, and those slices are already closed. | `governance/analysis/AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION.md` | `HIGH` | `2026-03-23 · PENDING-LIST-SYNC-AUTH-SESSION-INSTABILITY-001` |

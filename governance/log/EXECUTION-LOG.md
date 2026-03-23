@@ -43,6 +43,31 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001 — 2026-03-23
+Type: GOVERNANCE / DECISION
+Status: CLOSED
+Commit: N/A
+Title: Decide Governance OS delivery-steering upgrade and Sentinel enforcement framework
+Summary: Closed one bounded governance-only doctrine decision that preserves core TECS authority
+  and lifecycle discipline while replacing hold-first / operator-stall posture with explicit
+  delivery-steering queue governance. Approved the permanent canonical normalization ledger at
+  governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md, superseded the phase-named Step 2 ledger
+  into transitional-reference status, and adopted Governance Sentinel as a mandatory binary
+  enforcement gate for future governance progression without authorizing implementation tooling in
+  this unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 — certification
+  unit records annotated with delivery class and new governance unit record added; Layer 2 —
+  decision record added; Layer 3 — EXECUTION-LOG.md appended
+Notes: Current implementation authorization remains unchanged. CERTIFICATION-LIFECYCLE-
+  TRANSITION-LOGGING-002 remains the sole OPEN implementation-ready unit under ACTIVE_DELIVERY.
+  Recommended next governance move is a later separate Opening for governance artifact updates and
+  Sentinel v1 specification only; recommendation is not authorization.
+Refs: governance/units/GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001.md ·
+  governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md
+
+---
+
 ### TECS-FBW-012 — pre-2026-03-17
 Type: IMPLEMENTATION
 Status: CLOSED
