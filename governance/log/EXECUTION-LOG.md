@@ -3336,6 +3336,32 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### ADDITIONAL-REPO-TRUTH-CANDIDATES-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS
+Status: CLOSED
+Commit: N/A (workspace analysis record)
+Title: Record additional repo-truth candidates beyond the normalized Step 2 pending ledger
+Summary: Secret-safe bounded governance analysis completed against the current repo and
+  governance state, limited to allowlisted discovery surfaces only. Compared current evidence
+  against the canonical normalized Step 2 pending ledger and classified additional survivors as
+  new high-confidence candidate, possible candidate / insufficient evidence, already governed
+  elsewhere, or informational only. Result: one additional high-confidence sequencing candidate
+  was identified outside the normalized Step 2 ledger: the certification lifecycle
+  transition/logging gap. That candidate is strongly evidenced by an exposed tenant transition
+  UI, a live frontend transition helper, a live tenant transition route, and current backend
+  transition logic that still refuses to apply certification transitions because
+  `certification_lifecycle_logs` does not exist. Other scanned surfaces were not promoted.
+Layer Impact: Layer 3 — governance/analysis/ADDITIONAL-REPO-TRUTH-CANDIDATES.md created;
+  EXECUTION-LOG.md appended (this entry only). Layer 0 unchanged.
+Notes: Bounded governance-only record. No product code, tests, routes, contracts, schema,
+  migrations, Prisma state, auth logic, or Layer 0 control files were modified. Discovery stayed
+  within the secret-safe allowlisted scan boundary.
+Refs: governance/analysis/ADDITIONAL-REPO-TRUTH-CANDIDATES.md ·
+  governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/gap-register.md ·
+  governance/wave-execution-log.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### VERIFY-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 — 2026-03-23
 Type: VERIFICATION
 Status: VERIFIED_COMPLETE
