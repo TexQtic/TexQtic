@@ -1235,6 +1235,28 @@ Refs: governance/decisions/SECURITY-DEC-ADMINRBAC-POSTURE.md · governance/decis
 
 ---
 
+### TRADE-CREATION-REPO-TRUTH-CORRECTION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for TRADE-CREATION-REPO-TRUTH-CORRECTION-001)
+Title: Record corrected repo truth for tenant trade creation scope
+Summary: Governance-only analysis record. Captured the corrected current repo truth for tenant
+  trade creation after reconciling live code, closed governance history, and prior audit posture.
+  The tenant trade read-only surface already exists and is historically closed under
+  TECS-FBW-002-B. The unresolved gap is the tenant trade create/write frontend path, not the
+  existence of a tenant trade UI in general. Trade lifecycle transitions remain separate. The
+  existing backend create and transition routes plus trade service support do not, by themselves,
+  make this a simple ready-to-wire UI gap because create inputs, counterparty selection, and
+  tenant-surface placement remain unresolved.
+Layer Impact: Layer 2 — governance/analysis/TRADE-CREATION-REPO-TRUTH-CORRECTION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md still has no implementation-ready unit open.
+  NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED. No product code, tests, contracts, schema,
+  migrations, policies, or unit status records changed in this governance analysis.
+Refs: governance/analysis/TRADE-CREATION-REPO-TRUTH-CORRECTION.md · governance/units/TECS-FBW-002-B.md · docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md · docs/audits/GAP-015-016-017-019-VALIDATION-REPORT.md
+
+---
+
 ### GOV-AUDIT-TECS-G026-H-001-POST-CLOSE — 2026-03-20
 Type: GOVERNANCE / POST-CLOSE-AUDIT-CORRECTION
 Status: CLOSED
