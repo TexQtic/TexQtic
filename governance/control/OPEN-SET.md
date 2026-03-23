@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-23 (TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 close)
+**Last Updated:** 2026-03-23 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 close)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,19 +13,18 @@
 
 | UNIT-ID | Title | Status | Wave | Last Updated |
 | --- | --- | --- | --- | --- |
-| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 | Bounded placeholder-image DNS/resource failure correction | OPEN | W5 | 2026-03-22 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (implementation-ready): **1**
+- **OPEN** (implementation-ready): **0**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **Total non-terminal units: 2**
+- **Total non-terminal units: 1**
 
 GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 
@@ -58,6 +57,7 @@ TENANT-EXPERIENCE-RUNTIME-500-002 closed 2026-03-22 after implementation commit 
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. Observed tenant-runtime placeholder image requests using `https://via.placeholder.com/400x300` are now classified as one separate bounded defect family limited to tenant-visible image-resource loading failure caused by DNS resolution failure (`ERR_NAME_NOT_RESOLVED`) only. Tenant catalog/page usability may still succeed while those image resources fail. No implementation opening was created by this decision, and no broader catalog rendering, media platform, tenant-shell, white-label, auth, DB/schema, or API redesign scope was authorized by implication.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. Observed tenant catalog add-item runtime exposed Name, Price, SKU, Save Item, and Cancel with no visible image upload or image assignment control in the exercised path, making the image-capability gap a separate bounded candidate. This decision remains strictly separate from `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`, AI insights runtime 500 handling, identity-truth, auth-shell transition, impersonation session rehydration, stop-cleanup, broader catalog overhaul, white-label behavior, media/CDN redesign, auth redesign, DB/schema work, and API redesign.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 closed 2026-03-23 after implementation commit `2f1b28d`, DB/schema commit `ab52404`, production runtime verification PASS on `https://tex-qtic.vercel.app/`, governance sync, and the mandatory post-close audit result `VERIFIED_COMPLETE`. The bounded image-capability slice is now complete: the exercised tenant add-item flow exposed the `Image URL` control, a lawful non-empty image URL was accepted, the created item persisted with `imageUrl` in tenant API results, and the relevant catalog card rendered a real image from the stored `imageUrl`. Older catalog cards still showing `Image unavailable` remain separate follow-on work under `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`, and no broader catalog correctness, media/CDN/platform redesign, auth redesign, DB/schema redesign, or API redesign was authorized by this closure.
+TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 closed 2026-03-23 after implementation commit `f0f58ea`, strict remote verification PASS on `https://tex-qtic.vercel.app/`, governance sync, and the mandatory post-close audit result `VERIFIED_COMPLETE`. The bounded placeholder-image DNS/resource slice is now complete on the exact `App.tsx:1522` card surface only: the missing-image branch rendered a local placeholder block safely, the positive-control branch rendered a real image correctly when `p.imageUrl` existed, no request to `https://via.placeholder.com/400x300` was emitted from the exact exercised surface, and no `via.placeholder.com/*` resource entry was observed. No broader catalog correctness, broader media/CDN/platform correctness, or correctness of other image surfaces was authorized by this closure.
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 opened 2026-03-22 as one bounded implementation-ready unit for the observed placeholder-image DNS/resource failure only. Scope is limited to the exact tenant-visible surface currently generating `https://via.placeholder.com/400x300` placeholder-image requests in the exercised tenant runtime path, including directly coupled resource-generation logic only if needed to stop that bounded failure. No implementation was performed by this opening, and AI insights runtime handling, identity-truth, auth-shell transition, impersonation session rehydration, stop-cleanup, broader tenant-shell correctness, broader catalog overhaul, white-label behavior, media/CDN/platform redesign, auth redesign, DB/schema work, and broader API redesign remain excluded.
 IMPERSONATION-SESSION-REHYDRATION-002 closed 2026-03-22 after implementation commit `1d9657a`, deployed runtime verification PASS, and the mandatory post-close audit result `DECISION_REQUIRED`. The bounded reload/rehydration slice is now complete: active impersonation survived reload/remount in exercised deployed runtime, the authenticated control-plane actor was preserved after reload, the impersonated tenant target was preserved after reload, the actor-target impersonation relationship was preserved after reload, invalid persisted impersonation state failed closed, control-plane API protection remained `401`-protected when unauthenticated, and control-plane actor identity truth remained non-regressed in the exercised path. A separate out-of-scope defect candidate was observed during impersonated tenant runtime: unrelated tenant-experience requests showed some `500` errors. That observation is not merged into this closed unit, and no tenant-shell correctness, white-label behavior, impersonation stop cleanup, auth redesign, DB/schema, or API redesign was authorized by this closure.
 CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: OPENING_CANDIDATE. Live deployed evidence now proves that valid control-plane authentication succeeds at the API/token layer while the SPA fails to transition into the authenticated control-plane shell, but no implementation opening was created by this decision and the defect remains separate from CONTROL-PLANE-IDENTITY-TRUTH-002.
@@ -73,6 +73,7 @@ CONTROL-PLANE-IDENTITY-TRUTH-001 closed 2026-03-22 as a bounded decision and pre
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 | CLOSED | 2026-03-23 | f0f58ea · this close record |
 | TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 | CLOSED | 2026-03-23 | 2f1b28d · ab52404 · this close record |
 | TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 | CLOSED | 2026-03-22 | this decision record |
 | TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 | CLOSED | 2026-03-22 | this decision record |

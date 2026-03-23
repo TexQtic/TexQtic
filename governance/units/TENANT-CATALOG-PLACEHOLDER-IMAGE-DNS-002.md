@@ -2,14 +2,14 @@
 unit_id: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002
 title: Open bounded implementation unit for placeholder-image DNS/resource failure
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-22
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_AUTHORITY: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 closed as OPENING_CANDIDATE only and remains the sole decision authority for this defect family · OBSERVED_RUNTIME_BASELINE: during remote tenant runtime verification, placeholder image requests using https://via.placeholder.com/400x300 failed with ERR_NAME_NOT_RESOLVED while tenant catalog/page usability still succeeded in the exercised path · FRONTEND_SURFACE_CONFIRMATION: App.tsx tenant-visible catalog card image currently renders src={p.imageUrl || 'https://via.placeholder.com/400x300'} and is the exact known surface generating the observed failing placeholder-image request pattern"
+closed: 2026-03-23
+verified: 2026-03-23
+commit: f0f58ea
+evidence: "IMPLEMENTATION_COMMIT: f0f58ea [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] fix placeholder-image DNS failure · REMOTE_VERIFICATION_PASS: the exact tenant-visible catalog-card image surface at App.tsx:1522 was exercised in remote runtime, the missing-image branch rendered a local placeholder block safely, the positive-control branch rendered a real image correctly when p.imageUrl existed, no request to https://via.placeholder.com/400x300 was emitted from the exact exercised surface, and no via.placeholder.com/* resource entry was observed from the exact exercised surface · SEPARATE_BOUNDARY_NOTE: this unit is closed only on the exact App.tsx:1522 surface and does not claim broader catalog correctness, broader media/CDN correctness, or correctness of other image surfaces"
 doctrine_constraints:
   - D-004: this opening creates exactly one bounded implementation unit and must not merge AI insights runtime handling, identity-truth, control-plane auth-shell transition, impersonation session rehydration, stop-cleanup, white-label behavior, broader catalog overhaul, or any broader media-platform slice
   - D-007: opening only; no implementation, product code edits, schema work, tests, or config changes occur in this operation
@@ -24,26 +24,92 @@ blockers: []
 `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` is the bounded implementation-ready unit for the
 observed placeholder-image DNS/resource failure only.
 
-Opening decision: `YES`.
+Result: `VERIFIED_COMPLETE` and `CLOSED`.
 
-This opening is lawful because `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` already closed as
-`OPENING_CANDIDATE` only, Layer 0 enters at `OPERATOR_DECISION_REQUIRED`, and the exact
-tenant-visible frontend/resource surface is now evidenced enough to support one bounded future
-implementation unit without widening scope.
+This unit is now closed after bounded implementation commit `f0f58ea` and strict remote runtime
+verification PASS on the exact tenant-visible catalog-card image surface at `App.tsx:1522` only.
 
-Implementation is not executed in this opening operation.
+## Implementation Under Test
+
+- implementation commit: `f0f58ea`
+- message: `[TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] fix placeholder-image DNS failure`
+
+## Verification Environment
+
+- verification mode: remote runtime
+- deployed URL exercised: `https://tex-qtic.vercel.app/`
+- exercised tenant runtime: `Acme Corporation`
+- exact exercised card surface: `App.tsx:1522`
+
+## Verified Truth
+
+- the exact tenant-visible catalog-card image surface at `App.tsx:1522` was exercised in remote runtime
+- the missing-image branch was exercised and rendered a local placeholder block safely
+- the positive-control branch was exercised and rendered a real image correctly when `p.imageUrl` existed
+- no request to `https://via.placeholder.com/400x300` was emitted from the exact exercised surface
+- no `via.placeholder.com/*` resource entry was observed from the exact exercised surface
+
+## Bounded Remote Evidence
+
+- the lawful deployed tenant runtime rendered the exercised `Wholesale Catalog` path for `Acme Corporation`
+- missing-image branch example on the exact card surface:
+  - `RCP1-Validation-1772526705780`
+  - rendered local placeholder block with `role="img"`
+  - `aria-label="RCP1-Validation-1772526705780 image unavailable"`
+  - visible text `Image unavailable`
+- positive-control branch example on the same card surface family:
+  - `IMG-VERIFY-1774237234391`
+  - rendered real `<img>`
+  - `src/currentSrc: https://picsum.photos/seed/texqtic-gap-002/400/300`
+  - `complete: true`
+  - `naturalWidth: 400`
+  - `naturalHeight: 300`
+- exercised surface resource check:
+  - no `https://via.placeholder.com/400x300` image source observed
+  - no `via.placeholder.com/*` resource entry observed
+
+## Separate Boundary Note
+
+- this unit is closed only on the exact `App.tsx:1522` placeholder-image surface
+- no broader catalog correctness claim is made
+- no broader media/CDN correctness claim is made
+- no correctness claim is made for other image surfaces such as `App.tsx:1668`
+- `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` remains separate and already closed
+
+## Acceptance Result
+
+Acceptance: `PASS`.
+
+The bounded acceptance boundary is satisfied because the exact exercised card surface now proves
+the safe missing-image branch, the intact positive-control real-image branch, and the absence of
+the historical `via.placeholder.com` request pattern on that exact surface.
+
+## Scope Boundary Preserved at Closure
+
+This closure remains limited to the exact tenant-visible catalog-card image surface at
+`App.tsx:1522` only.
+
+This closure does not authorize or claim broader catalog correctness, broader media/CDN/platform
+correctness, correctness of other image surfaces, AI insights behavior, impersonation/session/auth
+redesign, or any broader product/runtime correctness outside the exact exercised surface.
+
+## Close Status Statement
+
+`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` is now `CLOSED` and `VERIFIED_COMPLETE` on the exact
+`App.tsx:1522` placeholder-image surface only.
 
 ## Layer 0 State Confirmation
 
 Exact Layer 0 posture on entry:
 
-- `OPEN-SET.md`: no implementation-ready unit is `OPEN`
-- `NEXT-ACTION.md`: `OPERATOR_DECISION_REQUIRED`
-- `SNAPSHOT.md`: `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` is `CLOSED` with result `OPENING_CANDIDATE` only
+- `OPEN-SET.md`: `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` is the sole `OPEN` implementation unit
+- `NEXT-ACTION.md`: `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` remains the current authorized work
+- `SNAPSHOT.md`: `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` is `CLOSED` and this unit remains the sole open stream
 
 This confirms all required entry truths:
 
 - `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` is the decision authority for this opening
+- `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` remains separate and already `CLOSED`
 - `TENANT-EXPERIENCE-RUNTIME-500-002` is `CLOSED` and must not be reopened
 - `IMPERSONATION-SESSION-REHYDRATION-002` is `CLOSED` and must not be reopened
 - `CONTROL-PLANE-IDENTITY-TRUTH-002` is `CLOSED` and must not be reopened
@@ -136,15 +202,14 @@ redesign, auth redesign, schema, or broader API scope.
 
 ## Risks / Blockers
 
-- acceptance is runtime-sensitive and may require remote/deployed proof if the exercised asset behavior depends on live runtime conditions
-- the currently recorded evidence is centered on the tenant-visible placeholder-image fallback at `https://via.placeholder.com/400x300`
-- a later implementation must stay disciplined and not drift into generic catalog rendering or media-platform redesign
-- the later implementation still has to prove whether the bounded repair belongs at the exact frontend fallback surface or directly coupled image-source generation logic only
+- no verification blocker remained at close time; strict remote verification completed successfully
+- this PASS must not be generalized beyond the exact `App.tsx:1522` card surface
+- other image surfaces remain out of scope and unverified by this unit
 
 ## Implementation Status Statement
 
-Implementation remains not yet executed in this operation.
+This bounded unit is fully implemented, remotely verified, and closed.
 
 ## Atomic Commit
 
-`[TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] open bounded implementation unit for placeholder-image DNS failure`
+`[TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] close unit after remote verification PASS`

@@ -3011,6 +3011,89 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### VERIFY-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 — 2026-03-23
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: f0f58ea
+Title: Verify bounded placeholder-image DNS/resource correction on the deployed tenant catalog-card surface
+Summary: Strict remote verification completed for `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`
+  on the lawful deployed tenant runtime at `https://tex-qtic.vercel.app/` using the exercised
+  `Wholesale Catalog` card grid at `App.tsx:1522` as the exact acceptance surface. Missing-image
+  branch evidence: visible card `RCP1-Validation-1772526705780` rendered the local placeholder
+  block (`DIV`, `role="img"`, `aria-label="RCP1-Validation-1772526705780 image unavailable"`,
+  text `Image unavailable`) instead of an `<img>` fallback request. Positive-control branch
+  evidence: visible card `IMG-VERIFY-1774237234391` rendered a real `<img>` on the same card
+  surface family with `src/currentSrc` = `https://picsum.photos/seed/texqtic-gap-002/400/300`,
+  `complete=true`, `naturalWidth=400`, and `naturalHeight=300`. Across the exercised surface
+  checks, no `https://via.placeholder.com/400x300` image source and no `via.placeholder.com/*`
+  resource entry were observed.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry only)
+Notes: VERIFIED_PASS. Implementation under test remained bounded to commit `f0f58ea`
+  (`[TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] fix placeholder-image DNS failure`) on the exact
+  catalog-card surface only. Positive-control reachability depended on the already-closed image
+  capability unit commit `27ca215`, but that dependency was not merged into this verification
+  scope. No governance sync, no close, no product-code change, no broader catalog correctness
+  claim, no broader media/CDN correctness claim, and no other placeholder/image surface such as
+  `App.tsx:1668` was verified or implied by this record.
+Refs: governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md · App.tsx ·
+  governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 — 2026-03-23
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] close unit after remote verification PASS
+Title: Close the bounded placeholder-image DNS/resource unit after strict remote verification PASS
+Summary: Governance-only closure recorded `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` as
+  `CLOSED` after implementation commit `f0f58ea` and strict remote verification PASS on the exact
+  tenant-visible catalog-card image surface at `App.tsx:1522`. The bounded closure truth is
+  limited to that exact surface only: the missing-image branch rendered a safe local placeholder
+  block, the positive-control branch rendered a real image correctly when `p.imageUrl` existed,
+  no request to `https://via.placeholder.com/400x300` was emitted from the exact exercised
+  surface, and no `via.placeholder.com/*` resource entry was observed. `TENANT-CATALOG-IMAGE-
+  UPLOAD-GAP-002` remained separate and already closed, and no broader catalog correctness,
+  broader media/CDN correctness, or correctness of other image surfaces such as `App.tsx:1668`
+  was merged into this closure.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. No product-code change, no new implementation, no
+  reopening of closed units, and no scope expansion beyond the exact `App.tsx:1522` surface was
+  authorized or implied. No implementation-ready unit remains OPEN after this closure, so Layer 0
+  returns to `OPERATOR_DECISION_REQUIRED`.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002-POST-CLOSE — 2026-03-23
+Type: GOVERNANCE / AUDIT
+Status: VERIFIED_COMPLETE
+Commit: [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] close unit after remote verification PASS
+Title: Post-close audit for bounded placeholder-image DNS/resource unit
+Summary: Post-close audit executed immediately after governance sync for
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`. Confirmed `OPEN-SET.md` no longer references the
+  unit as open, `NEXT-ACTION.md` no longer points to the closed unit and instead records
+  `OPERATOR_DECISION_REQUIRED`, `SNAPSHOT.md` records
+  `last_unit_closed: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`, the unit file records `CLOSED`
+  and `VERIFIED_COMPLETE` truth with the bounded remote PASS evidence, and this execution log now
+  contains the verification, close, and audit records for the unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md audited; Layer 1 —
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md audited; Layer 3 —
+  EXECUTION-LOG.md appended and audited
+Notes: LAYER 0 CONSISTENCY: VERIFIED. This unit is closed only on the exact `App.tsx:1522`
+  placeholder-image surface. `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` remains separate and already
+  closed, no other image surfaces were merged into this unit, and no unintended scope expansion
+  occurred.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### VERIFY-TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 — 2026-03-23
 Type: VERIFICATION
 Status: VERIFIED_COMPLETE
