@@ -7,9 +7,9 @@ wave: W5
 plane: CONTROL
 opened: 2026-03-23
 closed: null
-verified: null
-commit: null
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · OPENING_GAP_CONFIRMATION: no lawful automation unit record or automation opening decision existed yet, so any later implementation prompt would otherwise risk implicit opening"
+verified: 2026-03-23
+commit: 4677bad
+evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time"
 doctrine_constraints:
   - D-004: this is one bounded governance-tooling automation unit only; no second automation child or broader governance/tooling program may be mixed in
   - D-007: no product code, certification code, DB/schema, contract, or broad automation rollout is authorized in this opening step
@@ -83,7 +83,12 @@ No other files are authorized for edit in this opening step.
 
 - Spec opening decision id: `GOV-DEC-GOVERNANCE-SENTINEL-V1-SPEC-OPENING`
 - Automation opening decision id: `GOV-DEC-GOVERNANCE-SENTINEL-V1-AUTOMATION-OPENING`
+- Implementation commit: `4677bad` — `[GOVERNANCE-SENTINEL-V1-AUTOMATION-001] implement bounded Sentinel v1 governance automation`
+- Verification commit: `(this step — see git log for GOVERNANCE-SENTINEL-V1-AUTOMATION-001 verification)`
 - Preserved Layer 0 posture on entry: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains `OPEN`, remains the sole `ACTIVE_DELIVERY` implementation-ready unit, `NEXT-ACTION` points only to that certification unit, `GOVERNANCE-SENTINEL-V1-SPEC-001` remains concurrently open as bounded governance-only spec work, and the new automation unit is concurrent governance-tooling work with `DECISION_QUEUE` delivery class only
+- This implementation preserves that `OPEN` is not `IMPLEMENTED`, `IMPLEMENTED` is not `VERIFIED_COMPLETE`, and `VERIFIED_COMPLETE` is not `CLOSED`
+- Verification result: `VERIFY-GOVERNANCE-SENTINEL-V1-AUTOMATION-001` — `VERIFIED_COMPLETE`
+- Verification confirmation: file-grounded automation review complete, exact approved checkpoint set confirmed, exact approved check catalog confirmed, opening_progression PASS confirmed, candidate-bearing progression PASS confirmed with checks `SENTINEL-V1-CHECK-001`, `SENTINEL-V1-CHECK-003`, and `SENTINEL-V1-CHECK-004` exercised, correction-order emission confirmed, implementation file-scope compliance confirmed against commit `4677bad`, runtime posture remains plain Node with no new dependency, Layer 0 remained unchanged, and no unrelated worktree caveat was present at verification time
 
 ## Exact In-Scope Boundary
 
@@ -167,6 +172,34 @@ Explicitly not delivered:
 - no product/application code
 - no certification implementation work
 - no doctrine rewrite or expansion of the approved Sentinel v1 surface
+
+## Verification Result
+
+Verification of the bounded Sentinel v1 automation implementation is now complete inside this unit.
+
+Verification verdict:
+
+- `VERIFY-GOVERNANCE-SENTINEL-V1-AUTOMATION-001` — `VERIFIED_COMPLETE`
+
+Verified in this phase only:
+
+- exact command surface: `run` and `correction-order` only
+- exact approved check catalog only: `SENTINEL-V1-CHECK-001` through `SENTINEL-V1-CHECK-009`
+- exact approved checkpoint set only:
+  - `candidate_normalization_progression`
+  - `opening_progression`
+  - `governance_sync_progression`
+  - `close_progression`
+  - `layer0_next_action_change`
+  - `clean_governance_review_claim`
+- gate-result output shape conforms to the approved schema surface
+- correction-order output shape conforms to the approved template surface
+- canonical normalization ledger remains authoritative
+- Step 2 pending ledger remains transitional/reference only
+- Layer 0 authority remains unchanged and non-interfered with
+- implementation commit scope remains bounded to the approved local runner surfaces only
+
+This unit remains `OPEN` pending separate governance sync and any later lawful close step.
 
 ## Purpose
 
