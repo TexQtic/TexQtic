@@ -1301,6 +1301,28 @@ Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analys
 
 ---
 
+### TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION-001)
+Title: Validate repo-truth status of the tenant eligibility candidate
+Summary: Governance-only analysis record. Validated the current repo-truth and governance-truth
+  status of the candidate associated with the observed message `No eligible member found for this
+  tenant.` The exact message exists in current code, but only as a local client-side preflight
+  string inside the control-plane impersonation start flow. Current repo truth shows a narrower
+  `no memberships returned for tenant detail` selection condition rather than a separately governed
+  broad tenant-eligibility defect. Exact result: `insufficient evidence`.
+Layer Impact: Layer 2 — governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  The analysis explicitly keeps this surface separate from impersonation lifecycle defects,
+  auth-shell transition, control-plane identity truth, tenant trade creation placement, and broader
+  runtime issues.
+Refs: governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md · App.tsx · services/controlPlaneService.ts · server/src/routes/control.ts · server/src/services/impersonation.service.ts · governance/control/OPEN-SET.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
