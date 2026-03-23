@@ -2458,6 +2458,36 @@ Outstanding Gates:
   - TECS-FBW-ADMINRBAC remains DESIGN_GATE
 Natural Next-Step Candidates:
   - OPERATOR_DECISION_REQUIRED
+
+---
+
+### TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 — 2026-03-23
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for [TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] open bounded implementation unit for catalog image upload gap)
+Title: Open the bounded implementation unit for tenant catalog image upload or assignment capability gap
+Summary: Governance-only opening unit. Opened `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` as one
+  additional bounded implementation-ready unit for the observed tenant catalog image upload or
+  image assignment capability gap after the prior decision recorded and closed that defect family
+  as `OPENING_CANDIDATE` only. The opened scope is limited to the exercised tenant catalog
+  add-item flow and the minimum directly coupled capability needed for a tenant user to attach,
+  upload, or assign an image and save a non-empty image reference in that flow.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No implementation, product code edits, tests, schema, config, placeholder-image
+  DNS/resource repair, AI insights repair, identity-truth repair, auth-shell transition repair,
+  impersonation session rehydration repair, stop-cleanup repair, broader tenant-shell
+  correctness, broader catalog overhaul, white-label overhaul, media/CDN/platform redesign, auth
+  redesign, DB/schema work, or broader API redesign is authorized by this opening.
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` remains OPEN and unchanged in scope, and
+  `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` becomes the current NEXT-ACTION without merging the two
+  open implementation streams.
+Refs: governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md ·
+  governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-001.md ·
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md ·
+  governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
   - HOLD
   - RECORD_ONLY
   - OPENING_CANDIDATE
