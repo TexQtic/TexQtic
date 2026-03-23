@@ -1438,6 +1438,31 @@ Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analys
 
 ---
 
+### PENDING-LIST-SYNC-TENANT-RUNTIME-OTHER-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for PENDING-LIST-SYNC-TENANT-RUNTIME-OTHER-001)
+Title: Update the canonical pending list for the tenant-runtime-other validation result
+Summary: Governance-only pending-list maintenance record. Confirmed that the current canonical
+  pending-candidate record is the bounded Step 2 ledger at
+  `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`. Updated the `tenant-runtime-other`
+  record there to reflect validation unit `TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION-001`, exact
+  classification `already resolved / stale`, removal as an active broad sequencing candidate, and
+  a preserved rule note that future tenant runtime findings must be named by exact bounded
+  surfaces, current repo truth defaults to panel-level/local ownership of loading, error, empty,
+  retry, or safe-degraded states unless new evidence proves otherwise, and the broad umbrella must
+  not be revived unless a later validation proves a genuinely broader unresolved shared tenant
+  runtime family.
+Layer Impact: Layer 2 — governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, unit status records, or
+  validation conclusions changed. No parallel pending list was created; the existing Step 2 ledger
+  remains the single canonical record for this pending-candidate class.
+Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION-001 — 2026-03-23
 Type: GOVERNANCE / ANALYSIS-RECORD
 Status: CLOSED
