@@ -3011,6 +3011,82 @@ Refs: governance/units/GOV-NAV-01.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### VERIFY-TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 — 2026-03-23
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (production runtime verification record)
+Title: Verify bounded tenant catalog image-capability slice on the deployed tenant runtime
+Summary: Strict bounded production verification completed for `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`
+  on `https://tex-qtic.vercel.app/` using the exercised tenant runtime path for `Acme Corporation`.
+  Confirmed the tenant `Wholesale Catalog` add-item flow exposed the `Image URL` control, accepted
+  and persisted a lawful non-empty image URL, and rendered the relevant catalog card from the
+  stored value instead of the fallback text path. Positive-control evidence: created item
+  `IMG-VERIFY-1774237234391`, persisted item id `9a422280-2c1f-40ed-ab78-58bf121fbff1`, stored
+  `imageUrl` `https://picsum.photos/seed/texqtic-gap-002/400/300`, and verified the rendered
+  image loaded with `naturalWidth=400`, `naturalHeight=300`, and `complete=true`. Separate older
+  cards still showing `Image unavailable` remained outside this unit and continue as distinct
+  follow-on work under `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` only.
+Layer Impact: Layer 1 — governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md updated with
+  production verification truth; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: VERIFIED_PASS. Implementation under test remained bounded to implementation commit
+  `2f1b28d` and DB/schema commit `ab52404` only. No placeholder-image DNS fix, broader catalog
+  overhaul, white-label/media platform work, auth redesign, schema widening, or route-contract
+  redesign was authorized or implied by this verification.
+Refs: governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 — 2026-03-23
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: [TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] close unit after production verification PASS
+Title: Close the bounded tenant catalog image-capability unit after production verification PASS
+Summary: Governance-only closure recorded `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` as `CLOSED`
+  after implementation commit `2f1b28d`, DB/schema commit `ab52404`, and strict production
+  verification PASS on the exercised tenant runtime path. Layer 0, Layer 1, and Layer 3 were
+  reconciled to reflect that the bounded image-capability slice is complete: the exercised tenant
+  add-item flow exposed the `Image URL` control, accepted and persisted a lawful non-empty image
+  reference, and rendered the catalog card from the stored image value on the deployed runtime.
+  The separate placeholder-image DNS/resource failure stream remains open under
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` only and was not merged into this closed unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md updated; Layer 3 — EXECUTION-LOG.md
+  appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. Closure remains bounded to the exercised tenant
+  catalog image-capability slice only. No placeholder-image DNS fix, no broader catalog/media
+  redesign, no auth change, no DB widening beyond the already-landed nullable `image_url` column,
+  and no second unit closure was authorized or implied. After this closure, the sole active open
+  implementation unit returns to `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` in `VERIFICATION`.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TENANT-CATALOG-IMAGE-UPLOAD-GAP-002-POST-CLOSE — 2026-03-23
+Type: GOVERNANCE / AUDIT
+Status: VERIFIED_COMPLETE
+Commit: [TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] close unit after production verification PASS
+Title: Post-close audit for bounded tenant catalog image-capability unit
+Summary: Post-close audit executed immediately after governance sync for
+  `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`. Confirmed `OPEN-SET.md` no longer lists the unit as
+  open, `NEXT-ACTION.md` no longer points to the closed unit and instead authorizes
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 / VERIFICATION`, `SNAPSHOT.md` records
+  `last_unit_closed: TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`, the unit file records
+  `VERIFIED_COMPLETE` and `CLOSED` truth with production evidence, and this execution log now
+  contains the verification, close, and audit records for the unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md audited; Layer 1 —
+  governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md audited; Layer 3 — EXECUTION-LOG.md
+  appended and audited
+Notes: LAYER 0 CONSISTENCY: VERIFIED. Stream separation preserved: older `Image unavailable`
+  cards remain bounded to `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` only and are not reopened
+  through this audit.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### AUTH-IDENTITY-TRUTH-DEPLOYED-001 — 2026-03-22
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED

@@ -2,14 +2,14 @@
 unit_id: TENANT-CATALOG-IMAGE-UPLOAD-GAP-002
 title: Open bounded implementation unit for tenant catalog image upload or assignment capability gap
 type: IMPLEMENTATION
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-23
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_AUTHORITY: TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 closed as OPENING_CANDIDATE only and remains the sole decision authority for this defect family · OBSERVED_RUNTIME_BASELINE: in the exercised remote tenant catalog add-item flow, the visible UI exposed Name, Price, SKU, Save Item, and Cancel with no visible image upload or image assignment control in that path · POSITIVE_CONTROL_CONTEXT: remote positive-control verification for the exact App.tsx:1522 catalog-card image surface could not be completed because no lawful remote example with non-empty p.imageUrl was reached, which keeps this capability-gap opening separate from the already-open placeholder-image DNS/resource unit"
+closed: 2026-03-23
+verified: 2026-03-23
+commit: 2f1b28d · ab52404
+evidence: "IMPLEMENTATION_COMMIT: 2f1b28d37ad5b88bc279e5d7820e307a8dce48bd [TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] add bounded catalog image capability · DB_SCHEMA_COMMIT: ab52404d42359b23213cf2737212d5c9f150c5ee [TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] apply bounded catalog image schema change · PRODUCTION_VERIFICATION_PASS: production tenant runtime was reachable, the exercised add-item flow exposed the Image URL control, a lawful non-empty image URL was accepted, the created item persisted with imageUrl in tenant API results, and the relevant catalog card rendered a real image from the stored imageUrl · SEPARATE_BOUNDARY_NOTE: older catalog cards still showing Image unavailable remain separate follow-on work under TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 and were not merged into this unit"
 doctrine_constraints:
   - D-004: this opening creates exactly one additional bounded implementation unit and must not merge placeholder-image DNS/resource failure, AI insights runtime handling, identity-truth, control-plane auth-shell transition, impersonation session rehydration, stop-cleanup, white-label behavior, broader catalog overhaul, or any broader media-platform slice
   - D-007: opening only; no implementation, product code edits, schema work, tests, or config changes occur in this operation
@@ -21,16 +21,80 @@ blockers: []
 
 ## Unit Summary
 
-`TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` is the bounded implementation-ready unit for the
-observed tenant catalog image upload or image assignment capability gap only.
+`TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` is the bounded implementation unit for the observed tenant
+catalog image upload or image assignment capability gap only.
 
-Opening decision: `YES`.
+Result: `VERIFIED_COMPLETE` and `CLOSED`.
 
-This opening is lawful because `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` already closed as
-`OPENING_CANDIDATE` only, the observed add-item path is narrow and user-visible, and the
-resulting scope can remain fully separate from `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`.
+This unit is now closed after bounded implementation commit `2f1b28d`, bounded DB/schema commit
+`ab52404`, and production runtime verification PASS on the exercised tenant catalog
+image-capability slice only.
 
-Implementation is not executed in this opening operation.
+## Implementation Under Test
+
+- implementation commit: `2f1b28d37ad5b88bc279e5d7820e307a8dce48bd`
+- message: `[TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] add bounded catalog image capability`
+- db/schema commit: `ab52404d42359b23213cf2737212d5c9f150c5ee`
+- message: `[TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] apply bounded catalog image schema change`
+
+## Verification Environment
+
+- verification mode: production runtime
+- deployed URL exercised: `https://tex-qtic.vercel.app/`
+- exercised tenant runtime: `Acme Corporation`
+
+## Verified Truth
+
+- production tenant runtime was reachable
+- the exercised add-item flow exposed the `Image URL` control
+- a lawful non-empty image URL was accepted
+- the created item persisted with `imageUrl` in tenant API results
+- the relevant catalog card rendered a real image from the stored `imageUrl`
+- this satisfies the bounded image-capability acceptance for the exercised catalog path
+
+## Bounded Production Evidence
+
+- tenant shell rendered the exercised `Wholesale Catalog` path for `Acme Corporation`
+- `+ Add Item` opened `New Catalog Item` with `Name *`, `Price *`, `SKU`, and `Image URL`
+- one positive-control item was created in production:
+  - name: `IMG-VERIFY-1774237234391`
+  - image URL: `https://picsum.photos/seed/texqtic-gap-002/400/300`
+- tenant API verification returned `200` from `GET /api/tenant/catalog/items`
+- the matching persisted item returned:
+  - `id: 9a422280-2c1f-40ed-ab78-58bf121fbff1`
+  - `name: IMG-VERIFY-1774237234391`
+  - `imageUrl: https://picsum.photos/seed/texqtic-gap-002/400/300`
+- the rendered card image returned:
+  - `src: https://picsum.photos/seed/texqtic-gap-002/400/300`
+  - `naturalWidth: 400`
+  - `naturalHeight: 300`
+  - `complete: true`
+
+## Separate Boundary Note
+
+- older catalog cards still showing `Image unavailable` remain separate follow-on work
+- that observation belongs to `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` and was not merged into this unit
+
+## Acceptance Result
+
+Acceptance: `PASS`.
+
+The bounded acceptance boundary is satisfied because production runtime proof confirmed that the
+exercised add-item path exposed the truthful `Image URL` control, accepted and persisted a lawful
+non-empty image URL, and rendered the relevant catalog card from the stored image value.
+
+## Scope Boundary Preserved at Closure
+
+This closure remains limited to the exercised tenant catalog add-item image-capability slice only.
+
+This closure does not authorize or claim placeholder-image DNS/resource repair, broader catalog
+correctness, white-label behavior, media/CDN/platform redesign, broader tenant-runtime correctness,
+auth redesign, DB/schema redesign beyond the bounded applied field, or broader API redesign.
+
+## Close Status Statement
+
+`TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` is now `CLOSED` and `VERIFIED_COMPLETE` on its bounded
+image-capability slice only.
 
 ## Layer 0 State Confirmation
 
@@ -136,16 +200,15 @@ white-label behavior, media/CDN/platform redesign, auth redesign, schema, or bro
 
 ## Risks / Blockers
 
-- the current evidence is UI-observation-level around the exercised add-item flow only
-- a later implementation must stay disciplined and not drift into broad catalog or media-platform redesign
-- the evidence does not yet prove whether the narrowest repair is UI-only, API-backed, storage-backed,
-  or some bounded combination inside the add-item flow
-- white-label and broader catalog-management behavior remain unproven for this defect family
+- older catalog cards still showing `Image unavailable` remain separate follow-on work under
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`
+- production PASS for this unit must not be generalized into broader catalog correctness beyond the
+  exercised image-capability path
 
 ## Implementation Status Statement
 
-Implementation remains not yet executed in this operation.
+This bounded unit is fully implemented, production-verified, and closed.
 
 ## Atomic Commit
 
-`[TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] open bounded implementation unit for catalog image upload gap`
+`[TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] close unit after production verification PASS`

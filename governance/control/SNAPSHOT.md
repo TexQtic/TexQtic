@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-23
-last_unit_closed: TENANT-CATALOG-IMAGE-UPLOAD-GAP-001
-last_commit: "[TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] open bounded implementation unit for catalog image upload gap"
+last_unit_closed: TENANT-CATALOG-IMAGE-UPLOAD-GAP-002
+last_commit: "[TENANT-CATALOG-IMAGE-UPLOAD-GAP-002] close unit after production verification PASS"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,10 +28,10 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 2**
+- **Open governed units: 1**
 - **Verified-complete governed units: 0**
 
-- **TENANT-CATALOG-IMAGE-UPLOAD-GAP-002** — `OPEN` — Bounded implementation-ready unit opened 2026-03-23 for the observed tenant catalog image upload or image assignment capability gap only. Scope is limited to the exercised tenant catalog add-item flow and the minimum directly coupled capability needed for a tenant user to attach, upload, or assign an image and save a non-empty image reference in that flow. No implementation has been executed yet, and the unit remains explicitly separate from the open placeholder-image DNS/resource unit, AI insights runtime handling, identity-truth, auth-shell transition, impersonation session rehydration, stop-cleanup, broader catalog overhaul, white-label behavior, media/CDN/platform redesign, auth redesign, DB/schema work, and broader API redesign
+- **TENANT-CATALOG-IMAGE-UPLOAD-GAP-002** — `CLOSED` — Bounded implementation unit closed 2026-03-23 after implementation commit `2f1b28d`, DB/schema commit `ab52404`, production runtime verification PASS on `https://tex-qtic.vercel.app/`, governance sync, and mandatory post-close audit. The bounded image-capability slice now proves that the exercised tenant add-item path exposed the `Image URL` control, accepted and persisted a lawful non-empty image URL, and rendered the relevant catalog card from the stored image value. Older catalog cards still showing `Image unavailable` remain separate follow-on work under `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` and were not merged into this closed unit
 
 - **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002** — `OPEN` — Bounded implementation-ready unit opened 2026-03-22 for the observed placeholder-image DNS/resource failure only. Scope is limited to the exact tenant-visible surface currently generating `https://via.placeholder.com/400x300` placeholder-image requests in the exercised tenant runtime path, including directly coupled resource-generation logic only if needed to stop that bounded failure. No implementation has been executed yet, and the unit remains explicitly separate from AI insights runtime handling, identity-truth, auth-shell transition, impersonation session rehydration, stop-cleanup, broader tenant-shell correctness, broader catalog overhaul, white-label behavior, media/CDN/platform redesign, auth redesign, DB/schema work, and broader API redesign
 
@@ -79,8 +79,8 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**Two implementation units are currently OPEN.** `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` is now open as one bounded implementation-ready unit for the observed tenant catalog image upload or image assignment capability gap only, and `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` remains open as the separate bounded implementation-ready unit for the observed placeholder-image DNS/resource failure family. `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains the closed opening authority only for the new upload-gap unit, `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` remains the closed opening authority only for the placeholder-image unit, `TENANT-EXPERIENCE-RUNTIME-500-002` remains `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
-`TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` is now `CLOSED` with result `OPENING_CANDIDATE` only. The decision preserves the separate tenant catalog image upload or assignment capability-gap family and now authorizes the separately opened child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` without widening the open placeholder-image DNS/resource unit.
+**One implementation unit is currently OPEN.** `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` remains open as the separate bounded implementation-ready unit for the observed placeholder-image DNS/resource failure family. `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` is now closed after bounded production verification PASS on the exercised image-capability slice only, which likely provides the positive-control runtime path needed to finish the still-open placeholder-image DNS verification stream. `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains the closed opening authority only for the now-closed upload-gap unit, `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` remains the closed opening authority only for the still-open placeholder-image unit, `TENANT-EXPERIENCE-RUNTIME-500-002` remains `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+`TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
 
@@ -111,15 +111,14 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
-TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 is now `OPEN` as one bounded implementation-ready unit for the observed tenant catalog image upload or image assignment capability gap only. The later implementation boundary remains limited to the exercised tenant catalog add-item flow and the minimum directly coupled capability needed for a tenant user to attach, upload, or assign an image and save a non-empty image reference in that flow.
-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 remains `OPEN` as a separate bounded implementation-ready unit for the observed placeholder-image DNS/resource failure only. Its later implementation boundary remains limited to the exact tenant-visible surface currently generating `https://via.placeholder.com/400x300` placeholder-image requests in the exercised tenant runtime path.
-TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 is now `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-open child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
+`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`.
+TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 remains `OPEN` as the separate bounded implementation-ready unit for the observed placeholder-image DNS/resource failure only, and its next canonical phase is `VERIFICATION`.
+TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 is now `CLOSED` after bounded production verification PASS on the exercised image-capability slice only. The newly closed unit likely provides the positive-control runtime path needed to finish the still-open placeholder-image DNS stream, but the two units remain strictly separate and neither widens the other by implication.
+TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-open child slice.
 TENANT-EXPERIENCE-RUNTIME-500-002 is now `CLOSED` after bounded remote runtime verification PASS on the exact `/api/ai/insights?tenantType=B2B&experience=market_trends` surface. The closure is limited to the removal of the observed hard `500` on that exercised AI insights path only.
 TENANT-EXPERIENCE-RUNTIME-500-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child slice.
-The upload-gap stream and the placeholder-image DNS stream are now both open but remain strictly separate; neither open unit widens the other by implication.
-Placeholder image DNS failures no longer remain candidate-only; they are now bounded to the open child `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` only and must not be merged into the closed AI insights unit.
+Placeholder image DNS failures remain bounded to the still-open child `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` only and must not be merged into the now-closed upload-gap unit or the closed AI insights unit.
 IMPERSONATION-SESSION-REHYDRATION-002 is now `CLOSED` after implementation commit `1d9657a`, bounded deployed verification PASS, Layer 0 sync, and the mandatory post-close audit in the same closure operation. The unit is closed only on its bounded reload/rehydration slice.
 IMPERSONATION-SESSION-REHYDRATION-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the original decision authority for the now-closed child slice.
 TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
