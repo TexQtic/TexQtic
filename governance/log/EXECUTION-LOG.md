@@ -3362,6 +3362,40 @@ Refs: governance/analysis/ADDITIONAL-REPO-TRUTH-CANDIDATES.md ·
 
 ---
 
+### CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 — 2026-03-23
+Type: GOVERNANCE / DECISION
+Status: CLOSED
+Commit: (this unit — see git log for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001)
+Title: Record the decision posture for the certification lifecycle transition/logging gap
+Summary: Governance-only decision unit. Recorded the narrowest truthful next posture for the
+  certification lifecycle transition/logging gap and selected `OPENING_CANDIDATE`. Current repo
+  truth shows that the tenant certification transition surface is already installed end-to-end:
+  tenant UI exposes a live transition form, the frontend transition helper is live, and the
+  tenant transition route is installed. The current backend path still cannot apply certification
+  transitions because `StateMachineService.transition()` denies `CERTIFICATION` transitions when
+  `certification_lifecycle_logs` is absent. No implementation opening was created by this
+  decision.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: The candidate is framed as one bounded certification transition/logging gap, not as a
+  separate UI-only defect and not as a pure storage-only gap. Split was rejected because current
+  evidence shows one direct causal chain. The stale current reference to `G-023` materially
+  affects framing because `G-023` is a different already-closed reasoning-log stream, so this
+  candidate cannot be treated as already governed there. `OPENING_CANDIDATE` is not `OPEN`, and
+  `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001.md ·
+  governance/analysis/ADDITIONAL-REPO-TRUTH-CANDIDATES.md ·
+  components/Tenant/CertificationsPanel.tsx · services/certificationService.ts ·
+  server/src/routes/tenant/certifications.g019.ts ·
+  server/src/services/certification.g019.service.ts ·
+  server/src/services/stateMachine.service.ts · governance/wave-execution-log.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### VERIFY-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 — 2026-03-23
 Type: VERIFICATION
 Status: VERIFIED_COMPLETE

@@ -12,8 +12,8 @@
 
 ```yaml
 snapshot_date: 2026-03-23
-last_unit_closed: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002
-last_commit: "[TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002] close unit after remote verification PASS"
+last_unit_closed: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001
+last_commit: "[CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001] decide next-step posture for certification lifecycle transition/logging gap"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -30,6 +30,8 @@ layer_4_installed: true
 
 - **Open governed units: 0**
 - **Verified-complete governed units: 0**
+
+- **CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001** — `CLOSED` — Bounded decision-only unit closed 2026-03-23 with result `OPENING_CANDIDATE`; current repo truth shows that the tenant certification transition surface is already installed end-to-end, but backend transition application is denied because `certification_lifecycle_logs` does not exist. The candidate remains limited to the certification transition/logging gap only, and no implementation opening, metadata PATCH UI work, maker-checker mutation work, broader certification redesign, DB/schema authorization, or unrelated AI/logging stream was created by this decision
 
 - **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002** — `CLOSED` — Bounded implementation unit closed 2026-03-23 after implementation commit `f0f58ea`, strict remote verification PASS on `https://tex-qtic.vercel.app/`, governance sync, and the mandatory post-close audit. The exact tenant-visible catalog-card image surface at `App.tsx:1522` now proves the safe missing-image branch, the intact positive-control real-image branch, and the absence of `via.placeholder.com` emission from that exact exercised surface only. No broader catalog correctness, broader media/CDN correctness, or correctness of other image surfaces is claimed
 
@@ -80,6 +82,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
 **No implementation unit is currently OPEN.** `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` is now closed after bounded strict remote verification PASS on the exact `App.tsx:1522` placeholder-image surface only, `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` remains separately closed after bounded production verification PASS on the exercised image-capability slice only, `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains the closed opening authority only for the already-closed upload-gap unit, `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` remains the closed opening authority only for the now-closed placeholder-image unit, `TENANT-EXPERIENCE-RUNTIME-500-002` remains `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
 `GOV-DEC-ADMINRBAC-REVOKE-REMOVE-OPENING-ELIGIBILITY` is now `DECIDED`. The closed AdminRBAC clarification chain is sufficient to make one separate bounded revoke/remove opening governance-eligible, but no revoke/remove opening artifact has been created, no implementation-ready unit is open, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`.
@@ -113,6 +116,7 @@ RFQ remains pre-negotiation:
 
 `OPERATOR_DECISION_REQUIRED`.
 No implementation-ready unit remains open after closure of `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`.
+CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The installed tenant certification transition surface is real, but the backend transition path still denies application because `certification_lifecycle_logs` does not exist. No implementation opening was created by that decision.
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 is now `CLOSED` after strict remote verification PASS on the exact `App.tsx:1522` surface only.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 is now `CLOSED` after bounded production verification PASS on the exercised image-capability slice only. The two units remain strictly separate and neither widens the other by implication.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.

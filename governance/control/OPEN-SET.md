@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-23 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 close)
+**Last Updated:** 2026-03-23 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 decision)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -66,6 +66,7 @@ CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 closed 2026-03-22 after implementation c
 REALM-BOUNDARY-SHELL-AFFORDANCE-001 closed 2026-03-22 after final implementation commit ddeb579, exact Vercel deployment proof for `https://texqtic-godq32ri1-tex-qtic.vercel.app`, deployed runtime PASS for enterprise tenant crossover, deployed runtime PASS for white-label tenant crossover, preserved control-plane login PASS to Tenant Registry, and mandatory post-close audit result `DECISION`. The closure remains bounded to shell-affordance realm-boundary repair only and does not authorize broader auth, impersonation, routing, or other control-plane follow-on work by implication.
 AUTH-IDENTITY-TRUTH-DEPLOYED-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `SPLIT_REQUIRED`. The remaining deployed identity-truth finding is not yet one truthful implementation slice because control-plane displayed identity truth, tenant-shell displayed identity truth, and impersonation persona labeling remain mixed and shell-sensitive, while `IMPERSONATION-STOP-CLEANUP-001` remains causally separate. No implementation opening was created by this decision.
 CONTROL-PLANE-IDENTITY-TRUTH-001 closed 2026-03-22 as a bounded decision and pre-opening-preparation unit. Result: `OPENING_CANDIDATE` only. The control-plane displayed identity-truth slice is now narrow enough for one later bounded opening candidate limited to control-plane chrome identity label correctness and persona presentation consistency only, but no implementation-ready unit was opened, no tenant-shell or white-label scope was introduced, and no impersonation stop-cleanup scope was merged.
+CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 closed 2026-03-23 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. The installed tenant certification transition surface, tenant route, and backend transition path now preserve one separate bounded certification transition/logging candidate only: certification transitions are currently exposed but cannot be applied because `certification_lifecycle_logs` does not exist. No implementation opening was created by this decision, and certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, DB/schema work, and unrelated AI/logging streams remain separate.
 
 ---
 
