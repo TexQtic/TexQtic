@@ -2,14 +2,14 @@
 unit_id: GOVERNANCE-SENTINEL-V1-AUTOMATION-001
 title: Sentinel v1 automation implementation
 type: GOVERNANCE
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-23
-closed: null
+closed: 2026-03-23
 verified: 2026-03-23
 commit: 4677bad
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically reconciled across Layer 0, Layer 1, and Layer 3 while this unit remains OPEN, CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY next action, Layer 0 consistency was reviewed after sync and verified, and no Sentinel code, product code, certification implementation, doctrine, spec, or sequencing drift was authorized · SENTINEL_SYNC_EVIDENCE_RECONCILIATION: governance_sync_progression run executed after the already-completed sync and returned FAIL on SENTINEL-V1-CHECK-006 because governance/log/EXECUTION-LOG.md was outside the prior runner allowlist, so the prior sync was not yet lawfully evidentially reconcilable as Sentinel-enforced · IMPLEMENTATION_CORRECTION_RESULT: bounded execution-log allowlist handling is now corrected in scripts/governance/sentinel-v1.js so the canonical Layer 3 path governance/log/EXECUTION-LOG.md is allowlisted for SENTINEL-V1-CHECK-006 only · SENTINEL_SYNC_EVIDENCE_RECONCILIATION_RERUN: governance_sync_progression rerun now returns PASS with checks 005, 006, 008, and 007 all passing, correction-order not required, Layer 0 unchanged, and the already-completed sync now lawfully evidentially reconcilable as Sentinel-enforced"
+evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically reconciled across Layer 0, Layer 1, and Layer 3, governance sync is completed, sync enforcement proof is reconciled and PASS, CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY next action, and no Sentinel code, product code, certification implementation, doctrine, spec, or sequencing drift was authorized · SENTINEL_SYNC_EVIDENCE_RECONCILIATION: governance_sync_progression run executed after the already-completed sync and returned FAIL on SENTINEL-V1-CHECK-006 because governance/log/EXECUTION-LOG.md was outside the prior runner allowlist, so the prior sync was not yet lawfully evidentially reconcilable as Sentinel-enforced · IMPLEMENTATION_CORRECTION_RESULT: bounded execution-log allowlist handling is now corrected in scripts/governance/sentinel-v1.js so the canonical Layer 3 path governance/log/EXECUTION-LOG.md is allowlisted for SENTINEL-V1-CHECK-006 only · SENTINEL_SYNC_EVIDENCE_RECONCILIATION_RERUN: governance_sync_progression rerun now returns PASS with checks 005, 006, 008, and 007 all passing, correction-order not required, Layer 0 unchanged, and the already-completed sync now lawfully evidentially reconcilable as Sentinel-enforced · CLOSE_RESULT: GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001 now records this bounded governance-tooling unit as CLOSED only after completed implementation, verification, governance sync, reconciled sync-enforcement proof PASS, and mandatory post-close audit emitted in the same close operation"
 doctrine_constraints:
   - D-004: this is one bounded governance-tooling automation unit only; no second automation child or broader governance/tooling program may be mixed in
   - D-007: no product code, certification code, DB/schema, contract, or broad automation rollout is authorized in this opening step
@@ -23,15 +23,17 @@ blockers: []
 
 ## Unit Summary
 
-`GOVERNANCE-SENTINEL-V1-AUTOMATION-001` is one bounded governance-tooling unit for one later
-separate Sentinel v1 automation implementation step.
+`GOVERNANCE-SENTINEL-V1-AUTOMATION-001` is the bounded governance-tooling unit that carried the
+separate Sentinel v1 automation implementation step through implementation, verification,
+governance sync, sync-enforcement reconciliation, closure, and mandatory post-close audit.
 
-It is limited to later local automation that must implement only the already-approved Sentinel v1
+It is limited to local automation that implements only the already-approved Sentinel v1
 doctrine/spec package without widening doctrine, changing Layer 0 authorization, or touching
 product/application code.
 
-This opening did not implement automation. Implementation, verification, and governance sync are
-now recorded separately inside this still-open unit.
+This opening did not implement automation. Implementation, verification, governance sync,
+sync-enforcement reconciliation, closure, and the mandatory post-close audit are now recorded
+separately inside this closed unit.
 
 ## Acceptance Criteria
 
@@ -106,10 +108,14 @@ No other files are authorized for edit in this opening step.
 - Governance sync evidence reconciliation rerun checks: `SENTINEL-V1-CHECK-005`, `SENTINEL-V1-CHECK-006`, `SENTINEL-V1-CHECK-008`, `SENTINEL-V1-CHECK-007`
 - Governance sync evidence reconciliation rerun correction-order required: `false`
 - Governance sync evidence reconciliation rerun posture: the already-completed sync is now lawfully evidentially reconcilable as Sentinel-enforced
+- Governance close unit: `GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001`
+- Governance close commit: `(this step — see git log for GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001)`
+- Mandatory post-close audit unit: `GOV-AUDIT-GOVERNANCE-SENTINEL-V1-AUTOMATION-001-POST-CLOSE`
+- Mandatory post-close audit result: `DECISION_REQUIRED`
 
 ## Exact In-Scope Boundary
 
-This unit may later implement only:
+This unit implemented only:
 
 - executable Sentinel v1 automation to the already-approved doctrine/spec package
 - the exact approved check catalog fixed in `governance/sentinel/GOVERNANCE-SENTINEL-V1-SPEC.md`
@@ -122,7 +128,7 @@ This unit may later implement only:
 
 ## Exact Out-of-Scope Boundary
 
-This opening does **not** authorize:
+This unit did **not** authorize:
 
 - any Sentinel automation implementation in this opening step
 - any scripts, hooks, CI, bots, parsers, linters, or executable tooling changes in this opening step
@@ -135,7 +141,7 @@ This opening does **not** authorize:
 - any change to the active certification implementation authorization in Layer 0
 - any non-standard opening path
 
-## Verification Profile For The Later Implementation Unit
+## Verification Profile For The Implemented Unit
 
 - unit type: bounded governance-tooling implementation
 - acceptance boundary:
@@ -216,12 +222,12 @@ Verified in this phase only:
 - Layer 0 authority remains unchanged and non-interfered with
 - implementation commit scope remains bounded to the approved local runner surfaces only
 
-This unit remains `OPEN` after governance sync and is closure-ready only after this step.
+This unit remained `OPEN` after governance sync and became closure-ready only after that step.
 
 ## Governance Sync
 
 - Governance sync unit: `GOVERNANCE-SYNC-GOVERNANCE-SENTINEL-V1-AUTOMATION-001`
-- Status truth after sync: `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` remains `OPEN`
+- Status truth after sync: `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` remained `OPEN`
 - Sync result: bounded Sentinel v1 automation is now canonically recorded as implemented and verification-complete within the opened boundary only
 - Preserved next-action posture after sync: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next action
 - Layer 0 consistency result after sync: `VERIFIED`
@@ -253,7 +259,31 @@ This unit remains `OPEN` after governance sync and is closure-ready only after t
 - Layer 0 consistency after the correction rerun: `VERIFIED`
 - Resulting posture: the already-completed Governance Sync may now be treated as Sentinel-enforced
 
+## Governance Close
+
+- Governance close unit: `GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001`
+- Close result: `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` is now `CLOSED`
+- Close basis: bounded Sentinel v1 automation implementation completed under commit `4677bad`, verification completed under `VERIFY-GOVERNANCE-SENTINEL-V1-AUTOMATION-001`, governance sync completed under commit `530a123`, sync evidence reconciliation failure preserved under commit `2363d15`, bounded allowlist correction completed under commit `b0192fa`, and sync enforcement proof is now reconciled and `PASS`
+- Preserved next-action posture after close: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next action
+- Layer 0 consistency result after close: `VERIFIED`
+- Close-scope confirmation: no Sentinel implementation change, no product/application code change, no certification implementation work, no doctrine rewrite, no spec rewrite, and no sequencing drift were introduced
+
+## Mandatory Post-Close Audit
+
+- Audit unit: `GOV-AUDIT-GOVERNANCE-SENTINEL-V1-AUTOMATION-001-POST-CLOSE`
+- Audit result: `DECISION_REQUIRED`
+- Audit completeness review: closure completeness is satisfied, OPEN-SET no longer lists `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` in the non-terminal governed-unit table, NEXT-ACTION still points only to `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`, SNAPSHOT now records this unit as the last unit closed, and EXECUTION-LOG contains the sync, close, and audit records for this bounded unit
+- Natural next-step candidates remain bounded only:
+  - `DECISION_REQUIRED`
+  - `HOLD`
+  - `RECORD_ONLY`
+  - `OPENING_CANDIDATE`
+- Ranked recommendation: `DECISION_REQUIRED`
+- Recommendation is not authorization
+
 ## Purpose
 
-Create one lawful governance opening so that any later Sentinel v1 automation implementation runs
-inside an already-open bounded unit instead of being opened implicitly by an implementation prompt.
+Carry one lawful governance-tooling automation unit so the bounded Sentinel v1 automation
+implementation, verification, governance sync, sync-enforcement reconciliation, closure, and
+mandatory post-close audit are all preserved inside one explicit governed boundary rather than
+being implied by an implementation prompt.

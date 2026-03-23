@@ -3793,6 +3793,63 @@ Refs: governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md ·
 
 ---
 
+### GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001 — 2026-03-23
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001)
+Title: Close bounded Sentinel v1 automation unit after reconciled sync-enforcement proof
+Summary: Governance-only close unit. Closed `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` after the
+  already-recorded implementation commit `4677bad`, verification result
+  `VERIFY-GOVERNANCE-SENTINEL-V1-AUTOMATION-001`, governance-sync commit `530a123`,
+  evidence-reconciliation record commit `2363d15`, and bounded allowlist correction commit
+  `b0192fa`. Sentinel v1 doctrine remains decided, the Sentinel v1 specification package remains
+  completed, bounded Sentinel v1 automation remains implemented and verified, governance sync
+  remains completed, sync enforcement proof is reconciled and `PASS`,
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next action,
+  and the automation unit is now `CLOSED`.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md updated; Layer 3 — EXECUTION-LOG.md
+  appended
+Notes: Scope remained limited to the bounded close surfaces only. No Sentinel implementation
+  change, no product/application code change, no certification implementation work, no doctrine
+  rewrite, no spec rewrite, and no sequencing drift were introduced. LAYER 0 CONSISTENCY:
+  VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-GOVERNANCE-SENTINEL-V1-AUTOMATION-001-POST-CLOSE — 2026-03-23
+Type: GOVERNANCE / AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-GOVERNANCE-SENTINEL-V1-AUTOMATION-001-POST-CLOSE)
+Title: Mandatory post-close audit for bounded Sentinel v1 automation closure completeness
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied, Layer 0 is internally consistent,
+  OPEN-SET no longer lists `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` in the non-terminal table,
+  NEXT-ACTION still points only to `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`, SNAPSHOT now
+  records `last_unit_closed: GOVERNANCE-SENTINEL-V1-AUTOMATION-001`, the unit file is marked
+  `CLOSED`, and EXECUTION-LOG contains the sync, close, and audit records. Sync enforcement proof
+  remains reconciled and `PASS`, and no unintended scope expansion occurred.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. State summary:
+  `GOVERNANCE-SENTINEL-V1-AUTOMATION-001` is fully closed, Sentinel v1 doctrine remains decided,
+  the Sentinel v1 specification package remains completed,
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next action,
+  and stronger moves remain separately governed. Natural next-step candidates remain bounded only:
+  - `DECISION_REQUIRED`
+  - `HOLD`
+  - `RECORD_ONLY`
+  - `OPENING_CANDIDATE`
+  - ranked recommendation: DECISION_REQUIRED
+  Recommendation is not authorization. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-CONTROL-PLANE-IDENTITY-TRUTH-002-POST-CLOSE — 2026-03-22
 Type: GOVERNANCE / AUDIT
 Status: CLOSED

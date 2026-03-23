@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-23 (GOVERNANCE-SYNC-GOVERNANCE-SENTINEL-V1-AUTOMATION-001)
+**Last Updated:** 2026-03-23 (GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -15,22 +15,21 @@
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-23 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
-| GOVERNANCE-SENTINEL-V1-AUTOMATION-001 | Sentinel v1 automation implementation | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **3**
+- **OPEN** (all governed units): **2**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 2
+- **DECISION_QUEUE**: 1
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 4**
+- **Total non-terminal units: 3**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -44,16 +43,24 @@ or broader governance implementation remains separately governed.
 The bounded Sentinel v1 specification package is now implemented inside
 `GOVERNANCE-SENTINEL-V1-SPEC-001`, but that unit remains `OPEN` pending separate verification.
 
-`GOVERNANCE-SENTINEL-V1-AUTOMATION-001` is now open as a bounded governance-tooling unit for one
-later separate Sentinel v1 automation implementation step only. Its concurrent opening does not
-replace `NEXT-ACTION`, does not create a second `ACTIVE_DELIVERY` authorization, and does not
-implement any tooling by implication.
+`GOVERNANCE-SENTINEL-V1-AUTOMATION-001` was the bounded governance-tooling unit for the separate
+Sentinel v1 automation implementation step completed in this cycle. Its opening, implementation,
+verification, governance sync, sync-enforcement reconciliation, closure, and mandatory post-close
+audit do not replace `NEXT-ACTION`, do not create a second `ACTIVE_DELIVERY` authorization, and
+do not imply any broader tooling rollout.
 
-The bounded Sentinel v1 automation implementation is now implemented and verified inside
-`GOVERNANCE-SENTINEL-V1-AUTOMATION-001`, and governance sync now records that verified-complete
-state across Layer 0, Layer 1, and Layer 3 while the unit remains `OPEN`. This sync does not
-replace `NEXT-ACTION`, does not create a second `ACTIVE_DELIVERY` authorization, and does not
-close the unit.
+GOVERNANCE-SENTINEL-V1-AUTOMATION-001 closed 2026-03-23 after implementation commit `4677bad`,
+verification result `VERIFY-GOVERNANCE-SENTINEL-V1-AUTOMATION-001`, governance-sync commit
+`530a123`, evidence-reconciliation record commit `2363d15`, bounded allowlist correction commit
+`b0192fa`, reconciled sync-enforcement proof `PASS`, and the mandatory post-close audit emitted in
+the same closure operation. The completed unit remains preserved governance truth for bounded
+Sentinel v1 automation only: Sentinel v1 doctrine remains decided, the Sentinel v1 spec package
+remains completed, bounded Sentinel v1 automation remains implemented and verified, governance
+sync remains completed, sync enforcement proof is reconciled and `PASS`,
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next action,
+and no Sentinel implementation change, product/application code change, certification
+implementation change, doctrine rewrite, spec rewrite, or sequencing drift was authorized by this
+closure.
 
 GOV-NAV-01 closed 2026-03-21 after opening commit `81b44f3`, implementation commit `cdcb26c`, verification commit `079a30d`, governance-sync commit `1366bee`, and the mandatory post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed unit remains preserved governance truth for bounded navigation-layer upgradation design only: core navigation rule, move-type classification rule, low-risk path rule, non-authorizing ceremony rule, sequencing ergonomics rule, human-judgment preservation rule, evidence-trigger rule, conservative wording preservation rule, reporting-correction rule, advisory/carry-forward rule, explicit exclusions/non-goals, allowed separately governed follow-on posture, and drift-guard / forbidden-expansion-by-implication protections are preserved as delivered content. No doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit opening was authorized by this closure.
 
