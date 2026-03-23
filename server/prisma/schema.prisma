@@ -31,8 +31,8 @@ model Tenant {
   orders                   Order[]
   organizations            organizations?
   reasoningLogs            ReasoningLog[]
-  rfqsAsBuyer              Rfq[]                    @relation("rfq_buyer_org")
   rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_supplier_org")
+  rfqsAsBuyer              Rfq[]                    @relation("rfq_buyer_org")
   rfqsAsSupplier           Rfq[]                    @relation("rfq_supplier_org")
   branding                 TenantBranding?
   domains                  TenantDomain[]
@@ -80,9 +80,9 @@ model User {
   memberships              Membership[]
   orders                   Order[]
   passwordResetTokens      PasswordResetToken[]
-  rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
-  rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_created_by_user")
   refreshTokens            RefreshToken[]
+  rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_created_by_user")
+  rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
 
   @@map("users")
 }
@@ -331,17 +331,17 @@ model CatalogItem {
   tenantId    String      @map("tenant_id") @db.Uuid
   name        String      @db.VarChar(255)
   sku         String?     @db.VarChar(100)
-  imageUrl    String?     @map("image_url")
   description String?
   price       Decimal?    @db.Decimal(10, 2)
   active      Boolean     @default(true)
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
   moq         Int         @default(1)
+  imageUrl    String?     @map("image_url")
   cartItems   CartItem[]
-  rfqs        Rfq[]
   tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
+  rfqs        Rfq[]
 
   @@index([tenantId, active])
   @@index([tenantId, updatedAt])
@@ -565,21 +565,21 @@ model TradeLifecycleLog {
 /// Buyer ownership is enforced by org_id; supplier visibility is mediated by supplier_org_id.
 /// Operational source of truth for RFQ initiation, separate from Trade.
 model Rfq {
-  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId           String      @map("org_id") @db.Uuid
-  supplierOrgId   String      @map("supplier_org_id") @db.Uuid
-  catalogItemId   String      @map("catalog_item_id") @db.Uuid
-  quantity        Int
-  buyerMessage    String?     @map("buyer_message")
-  status          RfqStatus   @default(OPEN)
-  createdByUserId String?     @map("created_by_user_id") @db.Uuid
-  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId            String               @map("org_id") @db.Uuid
+  supplierOrgId    String               @map("supplier_org_id") @db.Uuid
+  catalogItemId    String               @map("catalog_item_id") @db.Uuid
+  quantity         Int
+  buyerMessage     String?              @map("buyer_message")
+  status           RfqStatus            @default(OPEN)
+  createdByUserId  String?              @map("created_by_user_id") @db.Uuid
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
   supplierResponse RfqSupplierResponse? @relation("rfq_supplier_response")
-  buyerOrg        Tenant      @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
-  supplierOrg     Tenant      @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
-  catalogItem     CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  createdByUser   User?       @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  catalogItem      CatalogItem          @relation(fields: [catalogItemId], references: [id], onUpdate: NoAction)
+  createdByUser    User?                @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onUpdate: NoAction)
+  buyerOrg         Tenant               @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
+  supplierOrg      Tenant               @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
 
   @@index([orgId])
   @@index([supplierOrgId])
@@ -599,9 +599,9 @@ model RfqSupplierResponse {
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
   createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdByUser   User     @relation("rfq_response_created_by_user", fields: [createdByUserId], references: [id], onUpdate: NoAction)
   rfq             Rfq      @relation("rfq_supplier_response", fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  supplierOrg     Tenant   @relation("rfq_response_supplier_org", fields: [supplierOrgId], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  createdByUser   User     @relation("rfq_response_created_by_user", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  supplierOrg     Tenant   @relation("rfq_response_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
 
   @@index([supplierOrgId])
   @@index([createdByUserId])
