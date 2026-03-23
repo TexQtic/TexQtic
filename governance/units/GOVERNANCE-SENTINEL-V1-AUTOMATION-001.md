@@ -34,12 +34,17 @@ This opening does not implement automation.
 
 ## Acceptance Criteria
 
-- [ ] A lawful opening decision artifact exists
-- [ ] A lawful Layer 1 automation unit record exists
-- [ ] Layer 0 reflects the new open automation unit without displacing `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` as the sole active implementation next action
-- [ ] The opening clearly states that implementation is separate and not performed here
-- [ ] The opening is bounded to the already-approved Sentinel v1 automation scope only
-- [ ] No automation/tooling/product implementation is performed
+- [x] A lawful opening decision artifact exists
+- [x] A lawful Layer 1 automation unit record exists
+- [x] Layer 0 reflects the new open automation unit without displacing `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` as the sole active implementation next action
+- [x] The opening clearly states that implementation is separate and not performed here
+- [x] The opening is bounded to the already-approved Sentinel v1 automation scope only
+- [x] A bounded local Sentinel v1 automation entrypoint exists
+- [x] The entrypoint emits gate-result JSON using the approved schema shape
+- [x] The entrypoint emits correction-order YAML using the approved template structure
+- [x] The entrypoint enforces only the approved checkpoint set and approved check catalog
+- [x] The implementation preserves Layer 0 read-only authority and does not displace the certification ACTIVE_DELIVERY authorization
+- [x] Minimal local run documentation exists for bounded manual invocation
 
 ## Files Allowlisted (Modify)
 
@@ -131,6 +136,37 @@ This opening does **not** authorize:
   - correction-order output verification against the approved correction-order protocol/template
   - changed-file scope verification
   - no-widening verification against the approved Sentinel v1 spec
+
+## Implementation Result
+
+The bounded Sentinel v1 automation implementation is now delivered for local execution only.
+
+Implemented surfaces:
+
+- `scripts/governance/sentinel-v1.js` — plain Node CLI runner for the exact approved Sentinel v1
+  checkpoints and checks only
+- `package.json` — bounded local script entrypoint only
+- `docs/governance/GOVERNANCE-SENTINEL-V1-AUTOMATION.md` — local execution and boundary notes
+
+Delivered automation behaviors:
+
+- loads only the approved canonical governance artifacts needed for Sentinel v1 validation
+- derives required checks from the approved checkpoint matrix only
+- emits binary `PASS` / `FAIL` gate-result JSON only
+- emits deterministic correction-order YAML only
+- treats `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md` as authoritative normalized
+  truth
+- treats `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md` as transitional/reference only
+- validates Layer 0 consistency against `OPEN-SET.md`, `NEXT-ACTION.md`, and `SNAPSHOT.md`
+- validates allowlist boundary conformance against the bounded implementation allowlist only
+
+Explicitly not delivered:
+
+- no Layer 0 mutation or sequencing change
+- no CI integration
+- no product/application code
+- no certification implementation work
+- no doctrine rewrite or expansion of the approved Sentinel v1 surface
 
 ## Purpose
 
