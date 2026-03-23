@@ -1368,6 +1368,28 @@ Refs: governance/analysis/AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION.md · A
 
 ---
 
+### PENDING-LIST-SYNC-AUTH-SESSION-INSTABILITY-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for PENDING-LIST-SYNC-AUTH-SESSION-INSTABILITY-001)
+Title: Update the canonical pending list for the auth/session instability validation result
+Summary: Governance-only pending-list maintenance record. Confirmed that the current canonical
+  pending-candidate record is the bounded Step 2 ledger at
+  `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`. Updated the `auth/session instability`
+  record there to reflect validation unit `AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION-001`,
+  exact classification `already resolved / stale`, removal as an active broad sequencing candidate,
+  and explicit reuse-guard language that the broad umbrella label must not be revived unless a
+  later validation proves a genuinely broad unresolved family has re-emerged.
+Layer Impact: Layer 2 — governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  No parallel pending list was created; the existing Step 2 ledger remains the single canonical
+  record for this pending-candidate class.
+Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
