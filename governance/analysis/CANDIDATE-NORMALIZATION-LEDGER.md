@@ -206,6 +206,17 @@ Governance Sentinel uses this ledger as the canonical input for:
 - negative-evidence presence checks
 - delivery-class presence checks for candidate-bearing artifacts
 
+## Sentinel v1 Validation Contract
+
+For any Sentinel v1 run that reviews candidate-bearing work:
+
+- this ledger is the authoritative `normalization_reference`
+- Sentinel must validate the exact row fields required by this ledger before progression
+- Sentinel must fail any progression artifact that substitutes the Step 2 ledger as authoritative
+  normalized truth
+- Sentinel must treat any execution-log reference named by a row as linkage that must be accurate
+  if cited by the reviewed governance move
+
 ## Canonical Normalization Ledger
 
 | Exact Candidate Name | Candidate Kind | Original Framing | Exact Surface / Boundary | Validation Artifact | Positive Evidence Summary | Negative Evidence Summary | Prior Governance Exclusions | Disposition | Delivery Class | Broad Label Retirement | Next Lawful Step | Confidence | Last Validated |

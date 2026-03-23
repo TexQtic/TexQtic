@@ -71,6 +71,16 @@ Layer 0 remains unchanged by this ledger artifact:
 - `governance/control/NEXT-ACTION.md`: unchanged
 - `governance/control/SNAPSHOT.md`: unchanged
 
+## Sentinel v1 Transitional Access Rule
+
+Sentinel v1 may read this file for transition/history context only.
+
+It must not treat this file as the authoritative normalization source for new progression. If a
+new candidate progression, opening, sync, close, or clean-governance claim cites this file as the
+authoritative normalization source instead of
+`governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md`, the canonical normalization/schema check
+fails.
+
 ## Maintenance Rule
 
 Future Step 2 pending-candidate validation results should be added to this ledger rather than

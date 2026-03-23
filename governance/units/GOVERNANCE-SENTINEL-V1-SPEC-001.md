@@ -33,17 +33,20 @@ implementation acceptance boundary.
 This unit does not authorize Sentinel tooling, enforcement rollout, CI wiring, scripts, or product
 changes.
 
+Implementation of the bounded Sentinel v1 specification package is now complete inside this unit.
+The unit remains `OPEN` pending separate verification and any later lawful sync/closure steps.
+
 ## Acceptance Criteria
 
-- [ ] The canonical Sentinel v1 spec surface is created and defines the exact artifact set
-- [ ] The gate-result schema is created and fixes pass/fail output requirements
-- [ ] The correction-order template is created and fixes retry/correction structure
-- [ ] AVM-style binary gate behavior and trigger semantics are fixed
-- [ ] Mirror-check and negative-evidence traceability rules are fixed
-- [ ] Layer 0 interaction rules are fixed without changing the certification ACTIVE_DELIVERY authorization
-- [ ] Ownership boundaries and later implementation acceptance boundary are fixed
-- [ ] Old/new normalization-ledger transition posture is fixed
-- [ ] No tooling rollout, CI wiring, scripts, packages, product code, DB/schema, or contract work is bundled in
+- [x] The canonical Sentinel v1 spec surface is created and defines the exact artifact set
+- [x] The gate-result schema is created and fixes pass/fail output requirements
+- [x] The correction-order template is created and fixes retry/correction structure
+- [x] AVM-style binary gate behavior and trigger semantics are fixed
+- [x] Mirror-check and negative-evidence traceability rules are fixed
+- [x] Layer 0 interaction rules are fixed without changing the certification ACTIVE_DELIVERY authorization
+- [x] Ownership boundaries and later implementation acceptance boundary are fixed
+- [x] Old/new normalization-ledger transition posture is fixed
+- [x] No tooling rollout, CI wiring, scripts, packages, product code, DB/schema, or contract work is bundled in
 
 ## Files Allowlisted (Modify)
 
@@ -85,6 +88,8 @@ No other files are authorized for edit in this opening step.
 - Opening decision id: `GOV-DEC-GOVERNANCE-SENTINEL-V1-SPEC-OPENING`
 - Preserved Layer 0 posture on entry: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains `OPEN`, remains the sole `ACTIVE_DELIVERY` implementation-ready unit, `NEXT-ACTION` points only to that certification unit, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and the newly opened Sentinel unit is concurrent governance-only work with `DECISION_QUEUE` delivery class only
 - Opening result: canonical Sentinel v1 specification surfaces are now authorized and created only on the exact governance surfaces listed above
+- Implementation result: the canonical spec surface now fixes the exact Sentinel v1 check catalog, per-check pass/fail semantics, trigger-to-check matrix, negative-evidence output shape, Layer 0 consistency requirements, allowlist/boundary requirements, normalization-ledger validation requirements, artifact classes, ownership boundaries, and later implementation acceptance boundary without authorizing runnable enforcement
+- Implementation commit: `(this step — see git log for GOVERNANCE-SENTINEL-V1-SPEC-001 implementation)`
 
 ## Exact In-Scope Boundary
 

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-23 (GOVERNANCE-SENTINEL-V1-SPEC-001 opening preserved ACTIVE_DELIVERY authorization)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-23 (GOVERNANCE-SENTINEL-V1-SPEC-001 implementation preserved ACTIVE_DELIVERY authorization)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -19,8 +19,8 @@ notes: |
   lawfully applicable by providing the lifecycle-log persistence required for certification
   transition application in that same bounded flow.
   GOVERNANCE-SENTINEL-V1-SPEC-001 may be OPEN concurrently in Layer 0 as a bounded governance-only
-  Sentinel v1 specification unit, but it does not displace this unit's ACTIVE_DELIVERY
-  authorization.
+  Sentinel v1 specification unit. Its bounded specification package is now implemented, but it
+  does not displace this unit's ACTIVE_DELIVERY authorization.
   This opening remains one unit only. Certification metadata PATCH UI, maker-checker mutation work,
   broad certification redesign, DB/schema expansion beyond what later implementation may lawfully
   require, and unrelated AI/logging streams remain excluded.
