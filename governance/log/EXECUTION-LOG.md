@@ -1344,6 +1344,30 @@ Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analys
 
 ---
 
+### AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION-001)
+Title: Validate repo-truth status of the auth/session instability candidate
+Summary: Governance-only analysis record. Validated the current repo-truth and governance-truth
+  status of the broad `auth/session instability` candidate. Current repo truth shows explicit
+  safeguards for stale-token login loops, control-plane mount-time auth restoration, impersonation
+  session restoration, and tenant login hydration continuity. Current governance truth shows that
+  the concrete live session-state defects were already split into narrower bounded units for
+  control-plane auth-shell transition and impersonation session rehydration, and those session
+  slices are already closed. Exact result: `already resolved / stale` for the broad candidate as
+  currently named.
+Layer Impact: Layer 2 — governance/analysis/AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  The analysis explicitly keeps this surface separate from impersonation stop cleanup,
+  tenant eligibility / member-resolution, trade creation placement, broader tenant runtime issues,
+  and image/media behavior.
+Refs: governance/analysis/AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION.md · App.tsx · services/authService.ts · services/apiClient.ts · governance/units/AUTH-IDENTITY-TRUTH-DEPLOYED-001.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-001.md · governance/units/CONTROL-PLANE-AUTH-SHELL-TRANSITION-002.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-001.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
