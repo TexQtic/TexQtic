@@ -1438,6 +1438,30 @@ Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analys
 
 ---
 
+### MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION-001)
+Title: Validate repo-truth status of the media-behavior candidate
+Summary: Governance-only analysis record. Validated the current repo-truth and governance-truth
+  status of the pending broader media-behavior candidate. Current repo truth shows no broader
+  unresolved media/CDN/platform family beyond the already separated exact image-surface findings:
+  the exact `App.tsx:1522` surface is already governed and closed, the only meaningful unresolved
+  remote placeholder dependency remaining in product code is already isolated to the exact B2C
+  `New Arrivals` fallback surface, WL image behavior is separately governed and closed, and other
+  remaining external media-adjacent facts are not currently evidenced as one broader defect family.
+  Exact result: `already resolved / stale` for the broad candidate as currently named.
+Layer Impact: Layer 2 — governance/analysis/MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  The analysis explicitly keeps this surface separate from the exact B2C placeholder-image fallback
+  branch, the already closed exact `App.tsx:1522` surface, WL-specific image behavior already
+  governed elsewhere, generic catalog correctness, and unrelated tenant runtime issues.
+Refs: governance/analysis/MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION.md · App.tsx · components/WL/ProductCard.tsx · components/WL/WLProductDetailPage.tsx · components/Tenant/WhiteLabelSettings.tsx · layouts/Shells.tsx · services/tenantService.ts · governance/analysis/IMAGE-SURFACE-REPO-TRUTH-VALIDATION.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-001.md · governance/units/TENANT-CATALOG-IMAGE-UPLOAD-GAP-002.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
