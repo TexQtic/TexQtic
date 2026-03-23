@@ -1323,6 +1323,27 @@ Refs: governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md · App.tsx
 
 ---
 
+### PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001)
+Title: Update the canonical pending list for the tenant eligibility validation result
+Summary: Governance-only pending-list maintenance record. Confirmed that the current canonical
+  pending-candidate record is the bounded Step 2 ledger at
+  `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`. Updated the `tenant eligibility`
+  record there to reflect validation unit `TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION-001`, exact
+  classification `insufficient evidence`, removal as an active broad sequencing candidate, and
+  preservation only as a narrower impersonation-member-resolution / empty-membership-handling note.
+Layer Impact: Layer 2 — governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  No parallel pending list was created; the existing Step 2 ledger remains the single canonical
+  record for this pending-candidate class.
+Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED

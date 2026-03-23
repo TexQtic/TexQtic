@@ -30,6 +30,7 @@ explicit governance decision.
 - validation unit ID
 - current classification
 - sequencing status
+- preserved narrower note
 - brief rationale
 - validation artifact reference
 - confidence level
@@ -37,9 +38,10 @@ explicit governance decision.
 
 ## Step 2 Candidate Validation Ledger
 
-| Candidate Name | Original Pending Framing | Validation Unit ID | Current Classification | Sequencing Status | Brief Rationale | Validation Artifact | Confidence | Last Updated |
-|---|---|---|---|---|---|---|---|---|
-| impersonation stop-path / cleanup | Preserved historically as a separate pending candidate from impersonation session rehydration and broader identity-truth or auth-shell work | `IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION-001` | `insufficient evidence` | `parked pending narrower evidence` | Current repo truth shows an implemented server stop path, implemented client exit cleanup, and fail-closed stale-state clearing. Preserve the historical candidate reference only; do not treat the current broad form as an active bounded sequencing candidate. A narrower future candidate may exist, but it is not currently evidenced enough to sequence. | `governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md` | `HIGH` | `2026-03-23 · STEP2-PENDING-CANDIDATE-LEDGER-SYNC-001` |
+| Candidate Name | Original Pending Framing | Validation Unit ID | Current Classification | Sequencing Status | Preserved Narrower Note | Brief Rationale | Validation Artifact | Confidence | Last Updated |
+|---|---|---|---|---|---|---|---|---|---|
+| impersonation stop-path / cleanup | Preserved historically as a separate pending candidate from impersonation session rehydration and broader identity-truth or auth-shell work | `IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION-001` | `insufficient evidence` | `parked pending narrower evidence` | Preserve only as a historically separate candidate name pending any later direct evidence of a narrower stop-cleanup failure mode. | Current repo truth shows an implemented server stop path, implemented client exit cleanup, and fail-closed stale-state clearing. Preserve the historical candidate reference only; do not treat the current broad form as an active bounded sequencing candidate. A narrower future candidate may exist, but it is not currently evidenced enough to sequence. | `governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md` | `HIGH` | `2026-03-23 · STEP2-PENDING-CANDIDATE-LEDGER-SYNC-001` |
+| tenant eligibility | Treated pendingly as if the observed message `No eligible member found for this tenant.` could represent one separate broad sequencing candidate. | `TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION-001` | `insufficient evidence` | `removed as active broad candidate; parked as narrower note only` | Preserve only as a narrower impersonation-member-resolution / empty-membership-handling note. Do not treat it as a generic tenant-eligibility sequencing candidate. | Current repo truth shows the message exists only as a local client-side preflight string in the control-plane impersonation start flow and is currently reached when no memberships are returned in the tenant detail payload. That is narrower than a broad tenant-eligibility defect family and does not support active sequencing in the broad form. | `governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md` | `HIGH` | `2026-03-23 · PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001` |
 
 ## Layer 0 Status
 
