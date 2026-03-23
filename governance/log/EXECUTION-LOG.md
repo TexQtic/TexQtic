@@ -1414,6 +1414,30 @@ Refs: governance/analysis/IMAGE-SURFACE-REPO-TRUTH-VALIDATION.md · App.tsx · c
 
 ---
 
+### PENDING-LIST-SYNC-IMAGE-SURFACE-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for PENDING-LIST-SYNC-IMAGE-SURFACE-001)
+Title: Update the canonical pending list for the image-surface validation result
+Summary: Governance-only pending-list maintenance record. Confirmed that the current canonical
+  pending-candidate record is the bounded Step 2 ledger at
+  `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`. Replaced the broad image-surface
+  umbrella pending record with the exact narrower surviving candidate `B2C New Arrivals
+  placeholder-image fallback surface`, carrying validation unit
+  `IMAGE-SURFACE-REPO-TRUTH-VALIDATION-001`, exact classification `narrower issue set`, retirement
+  of the broad umbrella as an active candidate, exact code-path `App.tsx:1698`, and exact current
+  fallback `https://via.placeholder.com/400x500`.
+Layer Impact: Layer 2 — governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  No parallel pending list was created; the existing Step 2 ledger remains the single canonical
+  record for this pending-candidate class. The updated record explicitly preserves separation from
+  the already closed `App.tsx:1522` image-surface unit and from separate WL image behavior.
+Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/IMAGE-SURFACE-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
