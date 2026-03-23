@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-23 (GOVERNANCE-SENTINEL-V1-AUTOMATION-001 opening preserved ACTIVE_DELIVERY authorization)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-23 (GOVERNANCE-SYNC-GOVERNANCE-SENTINEL-V1-AUTOMATION-001 preserved ACTIVE_DELIVERY authorization)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -22,8 +22,10 @@ notes: |
   Sentinel v1 specification unit. Its bounded specification package is now implemented, but it
   does not displace this unit's ACTIVE_DELIVERY authorization.
   GOVERNANCE-SENTINEL-V1-AUTOMATION-001 may now also be OPEN concurrently as a bounded
-  governance-tooling automation unit for one later separate implementation step only, and it does
-  not displace this unit's ACTIVE_DELIVERY authorization.
+  governance-tooling automation unit for one later separate implementation step only. Its bounded
+  automation implementation is now implemented and verified, and governance sync records that
+  verified-complete state while the unit remains OPEN. That sync does not displace this unit's
+  ACTIVE_DELIVERY authorization.
   This opening remains one unit only. Certification metadata PATCH UI, maker-checker mutation work,
   broad certification redesign, DB/schema expansion beyond what later implementation may lawfully
   require, and unrelated AI/logging streams remain excluded.
