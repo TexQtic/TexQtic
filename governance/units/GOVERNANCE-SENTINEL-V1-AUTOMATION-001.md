@@ -9,7 +9,7 @@ opened: 2026-03-23
 closed: null
 verified: 2026-03-23
 commit: 4677bad
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically reconciled across Layer 0, Layer 1, and Layer 3 while this unit remains OPEN, CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY next action, Layer 0 consistency was reviewed after sync and verified, and no Sentinel code, product code, certification implementation, doctrine, spec, or sequencing drift was authorized · SENTINEL_SYNC_EVIDENCE_RECONCILIATION: governance_sync_progression run executed after the already-completed sync and returned FAIL on SENTINEL-V1-CHECK-006 because governance/log/EXECUTION-LOG.md is outside the current runner allowlist, so the prior sync is not yet lawfully evidentially reconcilable as Sentinel-enforced"
+evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically reconciled across Layer 0, Layer 1, and Layer 3 while this unit remains OPEN, CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY next action, Layer 0 consistency was reviewed after sync and verified, and no Sentinel code, product code, certification implementation, doctrine, spec, or sequencing drift was authorized · SENTINEL_SYNC_EVIDENCE_RECONCILIATION: governance_sync_progression run executed after the already-completed sync and returned FAIL on SENTINEL-V1-CHECK-006 because governance/log/EXECUTION-LOG.md was outside the prior runner allowlist, so the prior sync was not yet lawfully evidentially reconcilable as Sentinel-enforced · IMPLEMENTATION_CORRECTION_RESULT: bounded execution-log allowlist handling is now corrected in scripts/governance/sentinel-v1.js so the canonical Layer 3 path governance/log/EXECUTION-LOG.md is allowlisted for SENTINEL-V1-CHECK-006 only · SENTINEL_SYNC_EVIDENCE_RECONCILIATION_RERUN: governance_sync_progression rerun now returns PASS with checks 005, 006, 008, and 007 all passing, correction-order not required, Layer 0 unchanged, and the already-completed sync now lawfully evidentially reconcilable as Sentinel-enforced"
 doctrine_constraints:
   - D-004: this is one bounded governance-tooling automation unit only; no second automation child or broader governance/tooling program may be mixed in
   - D-007: no product code, certification code, DB/schema, contract, or broad automation rollout is authorized in this opening step
@@ -100,6 +100,12 @@ No other files are authorized for edit in this opening step.
 - Governance sync evidence reconciliation failure reason: `non-allowlisted file in change scope: governance/log/EXECUTION-LOG.md`
 - Governance sync evidence reconciliation correction-order required: `true`
 - Governance sync evidence reconciliation posture: the already-completed sync is not yet lawfully evidentially reconcilable as Sentinel-enforced
+- Implementation correction unit scope: bounded execution-log allowlist handling for `SENTINEL-V1-CHECK-006` only
+- Implementation correction result: `scripts/governance/sentinel-v1.js` now allowlists `governance/log/EXECUTION-LOG.md` as the canonical Layer 3 execution-log path used by repo truth
+- Governance sync evidence reconciliation rerun result: `PASS`
+- Governance sync evidence reconciliation rerun checks: `SENTINEL-V1-CHECK-005`, `SENTINEL-V1-CHECK-006`, `SENTINEL-V1-CHECK-008`, `SENTINEL-V1-CHECK-007`
+- Governance sync evidence reconciliation rerun correction-order required: `false`
+- Governance sync evidence reconciliation rerun posture: the already-completed sync is now lawfully evidentially reconcilable as Sentinel-enforced
 
 ## Exact In-Scope Boundary
 
@@ -234,6 +240,18 @@ This unit remains `OPEN` after governance sync and is closure-ready only after t
 - Layer 0 authority impact from reconciliation run: `none`
 - Layer 0 consistency during reconciliation run: `VERIFIED`
 - Exact blocker preserved by the reconciliation result: the current runner allowlist names `governance/EXECUTION-LOG.md`, while the actual synced governance surface is `governance/log/EXECUTION-LOG.md`
+
+## Implementation Correction
+
+- Corrected defect: execution-log allowlist handling for `SENTINEL-V1-CHECK-006` now recognizes the canonical repo-truth Layer 3 path `governance/log/EXECUTION-LOG.md`
+- Exact file changed for the correction: `scripts/governance/sentinel-v1.js`
+- Correction scope: one allowlist entry only; no new checks, no new checkpoints, no doctrine/spec/schema/correction-order semantic change, and no Layer 0 change
+- Exact local proof rerun: the same `governance_sync_progression` command used in the evidence reconciliation step
+- Exact rerun result: `PASS`
+- Exact rerun gate-result summary: Layer 0 consistency `PASS`; allowlist boundary conformance `PASS`; spec-surface linkage consistency `PASS`; execution-log linkage applicability `PASS`; `checks_failed` empty; `correction_order_required` false
+- Changed-file scope verification for the correction implementation: `scripts/governance/sentinel-v1.js` only
+- Layer 0 consistency after the correction rerun: `VERIFIED`
+- Resulting posture: the already-completed Governance Sync may now be treated as Sentinel-enforced
 
 ## Purpose
 

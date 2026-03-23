@@ -183,7 +183,7 @@ const AUTOMATION_ALLOWLIST = [
   'governance/control/OPEN-SET.md',
   'governance/control/NEXT-ACTION.md',
   'governance/control/SNAPSHOT.md',
-  'governance/EXECUTION-LOG.md',
+  'governance/log/EXECUTION-LOG.md',
   'governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md',
   'governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md',
   'governance/units/GOVERNANCE-SENTINEL-V1-SPEC-001.md',
