@@ -1438,6 +1438,31 @@ Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analys
 
 ---
 
+### TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION-001)
+Title: Validate repo-truth status of the tenant-runtime-other candidate
+Summary: Governance-only analysis record. Validated the current repo-truth and governance-truth
+  status of the broad pending `tenant-runtime-other` candidate. Current repo truth shows no
+  remaining broad tenant-runtime family beyond already separated exact surfaces: tenant shell entry
+  in `App.tsx` uses explicit provisioning and configuration error handling, tenant panels own local
+  loading/error/empty/retry states, and several panels deliberately degrade safely when adjacent
+  `/api/me` calls fail. Governance history already bounded the previously observed runtime `500`
+  behavior, image-runtime behavior, auth/session continuity, and impersonation-adjacent findings
+  into separate units and explicitly denied broader tenant-shell correctness by implication. Exact
+  result: `already resolved / stale` for the broad candidate as currently named.
+Layer Impact: Layer 2 — governance/analysis/TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  The analysis explicitly keeps this broad candidate separate from the closed runtime `500` units,
+  auth/session instability, tenant eligibility / member-resolution, exact image-surface findings,
+  broader media behavior, WL-specific behavior, and trade-domain ownership or placement decisions.
+Refs: governance/analysis/TENANT-RUNTIME-OTHER-REPO-TRUTH-VALIDATION.md · App.tsx · components/WL/WLStorefront.tsx · components/Tenant/EXPOrdersPanel.tsx · components/Tenant/EscrowPanel.tsx · components/Tenant/TradesPanel.tsx · components/Tenant/TeamManagement.tsx · components/Tenant/DPPPassport.tsx · governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/AUTH-SESSION-INSTABILITY-REPO-TRUTH-VALIDATION.md · governance/analysis/TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION.md · governance/analysis/IMAGE-SURFACE-REPO-TRUTH-VALIDATION.md · governance/analysis/MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION.md · governance/units/TENANT-EXPERIENCE-RUNTIME-500-001.md · governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION-001 — 2026-03-23
 Type: GOVERNANCE / ANALYSIS-RECORD
 Status: CLOSED
