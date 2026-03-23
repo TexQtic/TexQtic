@@ -10,7 +10,7 @@
  *   - All guardrails run before any DB write.
  *   - The log tables (trade_lifecycle_logs, escrow_lifecycle_logs, order_lifecycle_logs)
  *     are append-only. This service exposes NO update or delete methods — Layer 1 of D-020-D.
- *   - CERTIFICATION log writes are deferred to G-023 (no schema table in Phase 3).
+ *   - CERTIFICATION writes are persisted in certification_lifecycle_logs.
  *   - ORDER log writes use simplified schema (order_lifecycle_logs): actor_id (single field),
  *     realm ('tenant'|'admin'|'system'), tenant_id (denormalised from orgId). See B1 design.
  *   - This service does NOT update entity tables (trades, escrow_accounts) — those
@@ -87,19 +87,18 @@ export class StateMachineService {
    *  2.  Validate reason is non-empty.
    *  3.  Run pre-DB guardrails (principal exclusivity, AI boundary, SYSTEM_AUTOMATION pre-check).
    *  4.  Normalize state keys to uppercase.
-   *  5.  Check CERTIFICATION entityType → return CERTIFICATION_LOG_DEFERRED (no table yet).
-   *  6.  Fetch fromState from lifecycle_states.
-   *  7.  If fromState not found → STATE_KEY_NOT_FOUND.
-   *  8.  If fromState.isTerminal → TRANSITION_FROM_TERMINAL.
-   *  9.  Fetch allowed transition from allowed_transitions.
-   *  10. If not found → TRANSITION_NOT_PERMITTED.
-   *  11. Run post-DB SYSTEM_AUTOMATION boundary check (checks toState.isTerminal).
-   *  12. Fetch toState to get isTerminal (needed for guardrail B post-DB).
-   *  13. Check actorType in allowedActorType → ACTOR_ROLE_NOT_PERMITTED.
-   *  14. Handle escalation requirement (G-022 compatibility).
-   *  15. Handle maker-checker requirement (G-021 compatibility).
-   *  16. Write log record in a transaction.
-   *  17. Return TransitionSuccessResult.
+   *  5.  Fetch fromState from lifecycle_states.
+   *  6.  If fromState not found → STATE_KEY_NOT_FOUND.
+   *  7.  If fromState.isTerminal → TRANSITION_FROM_TERMINAL.
+   *  8.  Fetch allowed transition from allowed_transitions.
+   *  9.  If not found → TRANSITION_NOT_PERMITTED.
+   *  10. Run post-DB SYSTEM_AUTOMATION boundary check (checks toState.isTerminal).
+   *  11. Fetch toState to get isTerminal (needed for guardrail B post-DB).
+   *  12. Check actorType in allowedActorType → ACTOR_ROLE_NOT_PERMITTED.
+   *  13. Handle escalation requirement (G-022 compatibility).
+   *  14. Handle maker-checker requirement (G-021 compatibility).
+   *  15. Write log record in a transaction.
+   *  16. Return TransitionSuccessResult.
    *
    * @returns TransitionResult — never throws (all errors become DENIED results).
    */
@@ -179,18 +178,7 @@ export class StateMachineService {
     const normalizedFromState = req.fromStateKey.toUpperCase().trim();
     const normalizedToState = req.toStateKey.toUpperCase().trim();
 
-    // ── Step 5: CERTIFICATION deferral ────────────────────────────────────────
-    if (normalizedEntityType === 'CERTIFICATION') {
-      return denied(
-        'CERTIFICATION_LOG_DEFERRED',
-        `CERTIFICATION lifecycle log writes are deferred to G-023. ` +
-          `No certification_lifecycle_logs table exists in the current schema (G-020 Phase 3). ` +
-          `State validation is supported; log writes are not. ` +
-          `Transition: ${normalizedFromState} → ${normalizedToState} was NOT recorded.`
-      );
-    }
-
-    // ── Steps 6–7: Fetch fromState ────────────────────────────────────────────
+    // ── Steps 5–6: Fetch fromState ────────────────────────────────────────────
     const fromState = await this.db.lifecycleState.findUnique({
       where: {
         entityType_stateKey: {
@@ -209,7 +197,7 @@ export class StateMachineService {
       );
     }
 
-    // ── Step 8: Terminal state check ──────────────────────────────────────────
+    // ── Step 7: Terminal state check ──────────────────────────────────────────
     if (fromState.isTerminal) {
       return denied(
         'TRANSITION_FROM_TERMINAL',
@@ -219,7 +207,7 @@ export class StateMachineService {
       );
     }
 
-    // ── Step 9: Fetch allowed transition ──────────────────────────────────────
+    // ── Step 8: Fetch allowed transition ──────────────────────────────────────
     const allowedTransition = await this.db.allowedTransition.findUnique({
       where: {
         entityType_fromStateKey_toStateKey: {
@@ -240,7 +228,7 @@ export class StateMachineService {
       );
     }
 
-    // ── Steps 10–11: Post-DB SYSTEM_AUTOMATION + toState terminal check ───────
+    // ── Steps 9–10: Post-DB SYSTEM_AUTOMATION + toState terminal check ───────
     // Fetch toState to determine is_terminal for guardrail B
     const toState = await this.db.lifecycleState.findUnique({
       where: {
@@ -269,7 +257,7 @@ export class StateMachineService {
       throw err;
     }
 
-    // ── Step 12: Actor type check ─────────────────────────────────────────────
+    // ── Step 11: Actor type check ─────────────────────────────────────────────
     // allowedTransition.allowedActorType is a TEXT[] (String[]) from the DB.
     const actorPermitted = allowedTransition.allowedActorType.includes(req.actorType);
     if (!actorPermitted) {
@@ -282,7 +270,7 @@ export class StateMachineService {
       );
     }
 
-    // ── Step 13: Escalation requirement (G-022 compatibility) ────────────────
+    // ── Step 12: Escalation requirement (G-022 compatibility) ────────────────
     if (allowedTransition.requiresEscalation && !req.escalationLevel) {
       return {
         status: 'ESCALATION_REQUIRED',
@@ -292,7 +280,7 @@ export class StateMachineService {
       };
     }
 
-    // ── Step 14: Maker-Checker requirement (G-021 compatibility) ─────────────
+    // ── Step 13: Maker-Checker requirement (G-021 compatibility) ─────────────
     // If requires_maker_checker=true, do NOT write the log yet.
     // Return PENDING_APPROVAL — the caller is responsible for creating the G-021
     // pending_approvals record (table is out of scope for G-020 Day 3).
@@ -313,7 +301,7 @@ export class StateMachineService {
       }
     }
 
-    // ── Step 15: Write log record ─────────────────────────────────────────────
+    // ── Step 14: Write log record ─────────────────────────────────────────────
     // Uses $transaction for atomic write.
     // Note: We do NOT update entity tables (trades / escrow_accounts) here —
     // those tables don't exist until G-017/G-018. This service records the
@@ -378,6 +366,39 @@ export class StateMachineService {
         const log = opts?.db
           ? await opts.db.escrowLifecycleLog.create({ data: logData })
           : await this.db.$transaction(async tx => tx.escrowLifecycleLog.create({ data: logData }));
+
+        return {
+          status: 'APPLIED',
+          transitionId: log.id,
+          entityType: req.entityType,
+          entityId: req.entityId,
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          createdAt: log.createdAt,
+        };
+      }
+
+      if (normalizedEntityType === 'CERTIFICATION') {
+        const logData = {
+          orgId: req.orgId,
+          certificationId: req.entityId,
+          fromStateKey: normalizedFromState,
+          toStateKey: normalizedToState,
+          actorUserId: req.actorUserId ?? null,
+          actorAdminId: req.actorAdminId ?? null,
+          actorType: req.actorType,
+          actorRole: req.actorRole,
+          escalationLevel: req.escalationLevel ?? null,
+          makerUserId: req.makerUserId ?? null,
+          checkerUserId: req.checkerUserId ?? null,
+          aiTriggered: req.aiTriggered ?? false,
+          impersonationId: req.impersonationId ?? null,
+          reason: req.reason,
+          requestId: req.requestId ?? null,
+        };
+        const log = opts?.db
+          ? await opts.db.certificationLifecycleLog.create({ data: logData })
+          : await this.db.$transaction(async tx => tx.certificationLifecycleLog.create({ data: logData }));
 
         return {
           status: 'APPLIED',
@@ -493,10 +514,9 @@ export class StateMachineService {
         };
       }
 
-      // Unreachable — CERTIFICATION blocked at step 5; all known entity types handled above.
       // Guard against future entity type skeletons that skip the write branch.
       return denied(
-        'CERTIFICATION_LOG_DEFERRED',
+        'TRANSITION_NOT_PERMITTED',
         `Unhandled entityType: '${normalizedEntityType}'. This is an implementation gap.`
       );
     } catch (dbErr) {

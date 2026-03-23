@@ -12,8 +12,7 @@
  *   - D-020-C: aiTriggered=true requires "HUMAN_CONFIRMED:" in reason.
  *
  * StateMachineService:
- *   CERTIFICATION entity_type is supported (EntityType union includes it).
- *   No lifecycle log table for CERTIFICATION yet (deferred post G-019).
+ *   CERTIFICATION entity_type is supported and persisted via certification_lifecycle_logs.
  *
  * No escalation freeze gate for certifications (out of scope for G-019).
  * No direct Maker-Checker invocation — SM handles MC via PENDING_APPROVAL response.
@@ -455,7 +454,7 @@ export class CertificationService {
    *  5. Assert entity_type='CERTIFICATION' on the current state (stop condition)
    *  6. Call StateMachineService.transition(entityType='CERTIFICATION')
    *  7. Interpret result: APPLIED / PENDING_APPROVAL / DENIED
-   *  8. On APPLIED: update certification.lifecycle_state_id to new state
+   *  8. On APPLIED: update certification.lifecycle_state_id to new state in the same tx
    */
   async transitionCertification(
     input: CertificationTransitionInput,
@@ -479,99 +478,101 @@ export class CertificationService {
       };
     }
 
-    // Step 1: load certification (orgId-scoped)
-    let cert: { id: string; orgId: string; lifecycleStateId: string } | null = null;
     try {
-      cert = await this.db.certification.findFirst({
-        where: { id: input.certificationId, orgId: input.orgId },
-        select: { id: true, orgId: true, lifecycleStateId: true },
-      });
-    } catch (err) {
-      return {
-        status: 'ERROR',
-        code: 'DB_ERROR',
-        message:
-          err instanceof Error
-            ? `DB error loading certification: ${err.message}`
-            : 'Unknown DB error loading certification.',
-      };
-    }
+      return await this.db.$transaction(async tx => {
+        const cert = await tx.certification.findFirst({
+          where: { id: input.certificationId, orgId: input.orgId },
+          select: { id: true, orgId: true, lifecycleStateId: true },
+        });
 
-    if (!cert) {
-      return {
-        status: 'ERROR',
-        code: 'NOT_FOUND',
-        message: `Certification ${input.certificationId} not found for org ${input.orgId}.`,
-      };
-    }
+        if (!cert) {
+          return {
+            status: 'ERROR',
+            code: 'NOT_FOUND',
+            message: `Certification ${input.certificationId} not found for org ${input.orgId}.`,
+          } as const;
+        }
 
-    // Step 4 + 5: resolve fromStateKey and verify entity_type='CERTIFICATION'
-    let fromStateKey: string;
-    try {
-      const state = await this.db.lifecycleState.findFirst({
-        where: { id: cert.lifecycleStateId, entityType: 'CERTIFICATION' },
-        select: { stateKey: true, entityType: true },
-      });
+        const state = await tx.lifecycleState.findFirst({
+          where: { id: cert.lifecycleStateId, entityType: 'CERTIFICATION' },
+          select: { stateKey: true },
+        });
 
-      if (!state) {
+        if (!state) {
+          return {
+            status: 'ERROR',
+            code: 'INVALID_LIFECYCLE_STATE',
+            message:
+              `Stop condition: lifecycle_states row for id=${cert.lifecycleStateId} ` +
+              `with entityType='CERTIFICATION' not found. Data integrity issue.`,
+          } as const;
+        }
+
+        const normalizedToState = input.toStateKey.toUpperCase();
+        const smResult = await this.stateMachine.transition(
+          {
+            entityType:   'CERTIFICATION',
+            entityId:     cert.id,
+            orgId:        cert.orgId,
+            fromStateKey: state.stateKey,
+            toStateKey:   normalizedToState,
+            actorType:    input.actorUserId
+              ? (input.actorAdminId ? 'PLATFORM_ADMIN' : 'TENANT_USER')
+              : (input.actorAdminId ? 'PLATFORM_ADMIN' : 'SYSTEM_AUTOMATION'),
+            actorUserId:  input.actorUserId  ?? null,
+            actorAdminId: input.actorAdminId ?? null,
+            actorRole:    input.actorRole,
+            reason:       input.reason,
+            aiTriggered:  input.aiTriggered ?? false,
+          },
+          { db: tx as PrismaClient },
+        );
+
+        if (smResult.status === 'DENIED') {
+          return {
+            status: 'ERROR',
+            code: 'TRANSITION_NOT_APPLIED',
+            message: smResult.message ?? `Transition to ${normalizedToState} denied by StateMachineService.`,
+          } as const;
+        }
+
+        if (smResult.status === 'APPLIED') {
+          const targetState = await tx.lifecycleState.findFirst({
+            where: { entityType: 'CERTIFICATION', stateKey: normalizedToState },
+            select: { id: true },
+          });
+
+          if (!targetState) {
+            throw new Error(
+              `Stop condition: lifecycle_states row for entityType='CERTIFICATION' stateKey='${normalizedToState}' not found.`,
+            );
+          }
+
+          await tx.certification.update({
+            where: { id: cert.id },
+            data: { lifecycleStateId: targetState.id },
+          });
+
+          return {
+            status: 'APPLIED',
+            newStateKey: normalizedToState,
+          } as const;
+        }
+
         return {
-          status: 'ERROR',
-          code: 'INVALID_LIFECYCLE_STATE',
-          message:
-            `Stop condition: lifecycle_states row for id=${cert.lifecycleStateId} ` +
-            `with entityType='CERTIFICATION' not found. Data integrity issue.`,
-        };
-      }
-
-      fromStateKey = state.stateKey;
+          status: smResult.status as 'PENDING_APPROVAL' | 'ESCALATION_REQUIRED',
+          newStateKey: normalizedToState,
+        } as const;
+      });
     } catch (err) {
       return {
         status: 'ERROR',
         code: 'DB_ERROR',
         message:
           err instanceof Error
-            ? `DB error resolving lifecycle state: ${err.message}`
-            : 'Unknown DB error resolving lifecycle state.',
+            ? `DB error applying certification transition: ${err.message}`
+            : 'Unknown DB error applying certification transition.',
       };
     }
-
-    // Step 6: call StateMachineService
-    const smResult = await this.stateMachine.transition({
-      entityType:   'CERTIFICATION',
-      entityId:     cert.id,
-      orgId:        cert.orgId,
-      fromStateKey,
-      toStateKey:   input.toStateKey.toUpperCase(),
-      actorType:    input.actorUserId
-        ? (input.actorAdminId ? 'PLATFORM_ADMIN' : 'TENANT_USER')
-        : (input.actorAdminId ? 'PLATFORM_ADMIN' : 'SYSTEM_AUTOMATION'),
-      actorUserId:  input.actorUserId  ?? null,
-      actorAdminId: input.actorAdminId ?? null,
-      actorRole:    input.actorRole,
-      reason:       input.reason,
-      aiTriggered:  input.aiTriggered ?? false,
-    });
-
-    // Step 7: interpret result
-    if (smResult.status === 'DENIED') {
-      return {
-        status: 'ERROR',
-        code: 'TRANSITION_NOT_APPLIED',
-        message: smResult.message ?? `Transition to ${input.toStateKey} denied by StateMachineService.`,
-      };
-    }
-
-    // G-020 NOTE: APPLIED branch permanently removed.
-    // StateMachineService.transition() always returns CERTIFICATION_LOG_DEFERRED (DENIED)
-    // for entityType='CERTIFICATION' (SM step 5 fast-path, certification.g019.service.ts
-    // line ~520). This 'if (smResult.status === "APPLIED")' block was therefore
-    // unreachable — removed to eliminate dead code and avoid misleading audit coverage.
-    // G-023 will implement CERTIFICATION lifecycle log writes and add the APPLIED handler.
-
-    // PENDING_APPROVAL or ESCALATION_REQUIRED: SM queued the transition; no DB update yet
-    return {
-      status: smResult.status as 'PENDING_APPROVAL' | 'ESCALATION_REQUIRED',
-      newStateKey: input.toStateKey.toUpperCase(),
-    };
   }
 }
