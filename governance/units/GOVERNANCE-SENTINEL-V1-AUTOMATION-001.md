@@ -9,7 +9,7 @@ opened: 2026-03-23
 closed: null
 verified: 2026-03-23
 commit: 4677bad
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically reconciled across Layer 0, Layer 1, and Layer 3 while this unit remains OPEN, CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY next action, Layer 0 consistency was reviewed after sync and verified, and no Sentinel code, product code, certification implementation, doctrine, spec, or sequencing drift was authorized"
+evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, and NEXT-ACTION still points only to that unit · SPEC_PACKAGE_CONFIRMATION: the bounded Sentinel v1 doctrine/spec package is already implemented and fixes the exact check catalog, exact checkpoint set, exact gate-result schema, exact correction-order protocol, exact Layer 0 interaction rule, and exact authoritative-vs-transitional ledger posture · IMPLEMENTATION_RESULT: bounded local Sentinel v1 automation now exists on the approved local runner surfaces only, with no Layer 0 mutation, CI expansion, product coupling, or certification implementation drift · VERIFICATION_RESULT: VERIFIED_COMPLETE for bounded Sentinel v1 automation verification only, with opening_progression PASS, candidate_normalization_progression PASS exercising checks 001 and 003 and 004, correction-order output PASS, implementation commit file-scope compliance confirmed against commit 4677bad, and no unrelated worktree caveat present at verification time · GOVERNANCE_RECONCILIATION_CONFIRMATION: implementation and verification are now canonically reconciled across Layer 0, Layer 1, and Layer 3 while this unit remains OPEN, CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY next action, Layer 0 consistency was reviewed after sync and verified, and no Sentinel code, product code, certification implementation, doctrine, spec, or sequencing drift was authorized · SENTINEL_SYNC_EVIDENCE_RECONCILIATION: governance_sync_progression run executed after the already-completed sync and returned FAIL on SENTINEL-V1-CHECK-006 because governance/log/EXECUTION-LOG.md is outside the current runner allowlist, so the prior sync is not yet lawfully evidentially reconcilable as Sentinel-enforced"
 doctrine_constraints:
   - D-004: this is one bounded governance-tooling automation unit only; no second automation child or broader governance/tooling program may be mixed in
   - D-007: no product code, certification code, DB/schema, contract, or broad automation rollout is authorized in this opening step
@@ -94,6 +94,12 @@ No other files are authorized for edit in this opening step.
 - Governance sync result: implemented and verification-complete state is now canonically reconciled across Layer 0, Layer 1, and Layer 3 while this unit remains `OPEN`
 - Governance sync commit: `(this step — see git log for GOVERNANCE-SYNC-GOVERNANCE-SENTINEL-V1-AUTOMATION-001)`
 - Post-sync Layer 0 consistency validation: `VERIFIED`
+- Governance sync evidence reconciliation command: `npm run governance:sentinel:v1 -- run --checkpoint governance_sync_progression --subject GOVERNANCE-SENTINEL-V1-AUTOMATION-001 --decision-ref governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-V1-SPEC-OPENING.md --decision-ref governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-V1-AUTOMATION-OPENING.md --evidence-ref governance/control/OPEN-SET.md --evidence-ref governance/control/NEXT-ACTION.md --evidence-ref governance/control/SNAPSHOT.md --evidence-ref governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md --modified-file governance/control/OPEN-SET.md --modified-file governance/control/NEXT-ACTION.md --modified-file governance/control/SNAPSHOT.md --modified-file governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md --modified-file governance/log/EXECUTION-LOG.md --execution-log-ref governance/log/EXECUTION-LOG.md`
+- Governance sync evidence reconciliation result: `FAIL`
+- Governance sync evidence reconciliation failing check: `SENTINEL-V1-CHECK-006` — `allowlist_boundary_conformance`
+- Governance sync evidence reconciliation failure reason: `non-allowlisted file in change scope: governance/log/EXECUTION-LOG.md`
+- Governance sync evidence reconciliation correction-order required: `true`
+- Governance sync evidence reconciliation posture: the already-completed sync is not yet lawfully evidentially reconcilable as Sentinel-enforced
 
 ## Exact In-Scope Boundary
 
@@ -214,6 +220,20 @@ This unit remains `OPEN` after governance sync and is closure-ready only after t
 - Preserved next-action posture after sync: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next action
 - Layer 0 consistency result after sync: `VERIFIED`
 - This sync is recording only; it is not closure and does not open any new unit
+
+## Governance Sync Evidence Reconciliation
+
+- Reconciliation scope: bounded post-sync Sentinel evidence reconciliation only
+- Exact checkpoint run: `governance_sync_progression`
+- Exact subject run: `GOVERNANCE-SENTINEL-V1-AUTOMATION-001`
+- Exact checks exercised: `SENTINEL-V1-CHECK-005`, `SENTINEL-V1-CHECK-006`, `SENTINEL-V1-CHECK-008`, `SENTINEL-V1-CHECK-007`
+- Exact result: `FAIL`
+- Gate-result summary: Layer 0 consistency `PASS`; allowlist boundary conformance `FAIL` because `governance/log/EXECUTION-LOG.md` is outside the current runner allowlist; spec-surface linkage consistency `PASS`; execution-log linkage applicability `PASS`
+- Correction-order required: `true`
+- Prior sync Sentinel-enforced status after reconciliation: `no`
+- Layer 0 authority impact from reconciliation run: `none`
+- Layer 0 consistency during reconciliation run: `VERIFIED`
+- Exact blocker preserved by the reconciliation result: the current runner allowlist names `governance/EXECUTION-LOG.md`, while the actual synced governance surface is `governance/log/EXECUTION-LOG.md`
 
 ## Purpose
 
