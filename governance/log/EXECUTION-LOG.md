@@ -1257,6 +1257,28 @@ Refs: governance/analysis/TRADE-CREATION-REPO-TRUTH-CORRECTION.md · governance/
 
 ---
 
+### IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION-001)
+Title: Validate current repo truth for the impersonation stop-path candidate
+Summary: Governance-only analysis record. Validated the current repo-truth and governance-truth
+  status of the preserved impersonation stop-path or cleanup candidate separately from the already
+  closed impersonation session rehydration work. Current repo truth shows an implemented server stop
+  path, implemented client exit cleanup, and fail-closed stale-state clearing. Governance still
+  preserves `IMPERSONATION-STOP-CLEANUP-001` as a separate candidate name, but no standalone unit
+  record for that candidate was found. Exact result: `insufficient evidence` for the broad candidate
+  as currently named.
+Layer Impact: Layer 2 — governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  The analysis explicitly preserves separation from `IMPERSONATION-SESSION-REHYDRATION-002` and does
+  not authorize implementation, reopening, or a new governed child.
+Refs: governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/SNAPSHOT.md · governance/units/AUTH-IDENTITY-TRUTH-DEPLOYED-001.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-001.md · governance/units/IMPERSONATION-SESSION-REHYDRATION-002.md · App.tsx · server/src/routes/admin/impersonation.ts · server/src/services/impersonation.service.ts
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
