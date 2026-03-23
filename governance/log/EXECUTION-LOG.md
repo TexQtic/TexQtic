@@ -1462,6 +1462,30 @@ Refs: governance/analysis/MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION.md · App.tsx · 
 
 ---
 
+### PENDING-LIST-SYNC-MEDIA-BEHAVIOR-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for PENDING-LIST-SYNC-MEDIA-BEHAVIOR-001)
+Title: Update the canonical pending list for the media-behavior validation result
+Summary: Governance-only pending-list maintenance record. Confirmed that the current canonical
+  pending-candidate record is the bounded Step 2 ledger at
+  `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`. Updated the `media behavior` record
+  there to reflect validation unit `MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION-001`, exact
+  classification `already resolved / stale`, removal as an active broad sequencing candidate, and
+  a preserved rule note that the broad umbrella must not be revived unless a later validation
+  proves a genuinely broader unresolved media/CDN/platform family.
+Layer Impact: Layer 2 — governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  No parallel pending list was created; the existing Step 2 ledger remains the single canonical
+  record for this pending-candidate class. The updated record explicitly preserves that exact
+  image-surface findings remain separately named and that decorative remote media existence alone
+  is not sufficient to justify reviving the broad media-behavior umbrella.
+Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/MEDIA-BEHAVIOR-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
