@@ -1257,6 +1257,30 @@ Refs: governance/analysis/TRADE-CREATION-REPO-TRUTH-CORRECTION.md · governance/
 
 ---
 
+### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
+Type: GOVERNANCE / DECISION-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for TENANT-TRADE-CREATION-PLACEMENT-001)
+Title: Record the placement decision posture for tenant trade creation
+Summary: Governance-only decision unit. Recorded PRODUCT-DEC-TENANT-TRADE-CREATION-PLACEMENT as
+  DECIDED in Layer 2. The correct eventual owner for tenant trade creation is the tenant
+  `Trades` domain, but the current result is `BLOCKED_PENDING_PRIOR_DECISION` rather than an
+  implementation opening. Existing tenant `Trades` runtime/navigation evidence makes Orders,
+  RFQ/negotiation adjacency, and control-plane ownership the wrong placements; however, the
+  authoritative tenant surface map has not yet canonically ratified `Trades` as a tenant module,
+  and the already-closed installed trade surface was intentionally scoped read-only. No
+  implementation was authorized in this unit.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Layer 2 —
+  governance/decisions/PRODUCT-DEC-TENANT-TRADE-CREATION-PLACEMENT.md created; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: No Layer 0 sequencing state changed. NEXT-ACTION.md remains OPERATOR_DECISION_REQUIRED.
+  No unit was opened or reopened. Trade create-form design, backend route changes, lifecycle
+  transition UI, order/RFQ workflow redesign, schema, contracts, tests, and product code all
+  remain unchanged and unauthorized by this decision.
+Refs: governance/control/SNAPSHOT.md · governance/decisions/PRODUCT-DEC-TENANT-TRADE-CREATION-PLACEMENT.md · governance/analysis/TRADE-CREATION-REPO-TRUTH-CORRECTION.md · governance/units/TECS-FBW-002-B.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-TECS-G026-H-001-POST-CLOSE — 2026-03-20
 Type: GOVERNANCE / POST-CLOSE-AUDIT-CORRECTION
 Status: CLOSED
