@@ -1279,6 +1279,28 @@ Refs: governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md · go
 
 ---
 
+### STEP2-PENDING-CANDIDATE-LEDGER-SYNC-001 — 2026-03-23
+Type: GOVERNANCE / ANALYSIS-RECORD
+Status: CLOSED
+Commit: (this unit — see git log for STEP2-PENDING-CANDIDATE-LEDGER-SYNC-001)
+Title: Record Step 2 validation result in the canonical pending-candidate ledger
+Summary: Governance-only ledger-sync record. Confirmed that no canonical Step 2 pending-candidate
+  ledger already existed in the current repo. Following current governance-analysis practice,
+  created one bounded canonical ledger artifact at `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`
+  and recorded the validated result for the preserved candidate `impersonation stop-path / cleanup`.
+  Exact recorded result: classification `insufficient evidence`; sequencing status `parked pending
+  narrower evidence`; preserve the historical name only and do not treat the current broad form as
+  an active bounded sequencing candidate.
+Layer Impact: Layer 2 — governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Layer 0 remains unchanged. OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md were not updated.
+  No product code, tests, contracts, schema, migrations, policies, or unit status records changed.
+  This ledger is the single canonical Step 2 pending-candidate ledger unless a later explicit
+  governance decision replaces the pattern.
+Refs: governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md · governance/analysis/IMPERSONATION-STOP-PATH-REPO-TRUTH-VALIDATION.md · governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRADE-CREATION-PLACEMENT-001 — 2026-03-23
 Type: GOVERNANCE / DECISION-RECORD
 Status: CLOSED
