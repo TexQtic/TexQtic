@@ -604,6 +604,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const bodySchema = z.object({
         name: z.string().min(1).max(255),
         sku: z.string().min(1).max(100).optional(),
+        imageUrl: z.string().url().max(2048).optional(),
         description: z.string().optional(),
         price: z.number().positive(),
         moq: z.number().int().min(1).default(1),
@@ -614,7 +615,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, parseResult.error.errors);
       }
 
-      const { name, sku, description, price, moq } = parseResult.data;
+      const { name, sku, imageUrl, description, price, moq } = parseResult.data;
 
       const item = await withDbContext(prisma, dbContext, async tx => {
         const created = await tx.catalogItem.create({
@@ -622,6 +623,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             tenantId: dbContext.orgId,
             name,
             sku: sku ?? null,
+            imageUrl: imageUrl ?? null,
             description: description ?? null,
             price,
             moq,
@@ -637,7 +639,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           action: 'catalog.item.created',
           entity: 'catalog_item',
           entityId: created.id,
-          metadataJson: { name, sku: sku ?? null, price, moq },
+          metadataJson: { name, sku: sku ?? null, imageUrl: imageUrl ?? null, price, moq },
         });
 
         return created;

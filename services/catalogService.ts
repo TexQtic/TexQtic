@@ -83,6 +83,7 @@ export async function searchCatalog(
 export interface CreateCatalogItemRequest {
   name: string;
   sku?: string;
+  imageUrl?: string;
   description?: string;
   price: number;
   moq?: number;

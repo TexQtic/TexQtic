@@ -505,7 +505,7 @@ const App: React.FC = () => {
 
   // RU-003: inline add-item form toggle (B2B/B2C catalog)
   const [showAddItemForm, setShowAddItemForm] = useState(false);
-  const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '' });
+  const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '' });
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
 
@@ -953,13 +953,22 @@ const App: React.FC = () => {
       const priceVal = parseFloat(addItemFormData.price);
       if (isNaN(priceVal) || priceVal <= 0) throw new Error('Price must be a positive number.');
       if (!addItemFormData.name.trim()) throw new Error('Name is required.');
+      const imageUrl = addItemFormData.imageUrl.trim();
+      if (imageUrl) {
+        try {
+          new URL(imageUrl);
+        } catch {
+          throw new Error('Image URL must be a valid URL.');
+        }
+      }
       const result = await createCatalogItem({
         name: addItemFormData.name.trim(),
         sku: addItemFormData.sku.trim() || undefined,
+        imageUrl: imageUrl || undefined,
         price: priceVal,
       });
       setProducts(prev => [result.item, ...prev]);
-      setAddItemFormData({ name: '', price: '', sku: '' });
+      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '' });
       setShowAddItemForm(false);
     } catch (err: any) {
       setAddItemError(err?.message || 'Failed to create item.');
@@ -1474,6 +1483,17 @@ const App: React.FC = () => {
                       placeholder="Optional SKU"
                     />
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="b2b-add-image-url" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Image URL</label>
+                  <input
+                    id="b2b-add-image-url"
+                    type="url"
+                    value={addItemFormData.imageUrl}
+                    onChange={e => setAddItemFormData(d => ({ ...d, imageUrl: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="https://example.com/product-image.jpg"
+                  />
                 </div>
                 <div className="flex gap-3">
                   <button

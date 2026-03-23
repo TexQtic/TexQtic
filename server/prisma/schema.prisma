@@ -331,6 +331,7 @@ model CatalogItem {
   tenantId    String      @map("tenant_id") @db.Uuid
   name        String      @db.VarChar(255)
   sku         String?     @db.VarChar(100)
+  imageUrl    String?     @map("image_url")
   description String?
   price       Decimal?    @db.Decimal(10, 2)
   active      Boolean     @default(true)

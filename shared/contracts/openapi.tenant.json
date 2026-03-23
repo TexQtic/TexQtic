@@ -489,17 +489,18 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "sku"],
+                "required": ["name", "price"],
                 "properties": {
                   "name": { "type": "string" },
                   "sku": { "type": "string" },
+                  "imageUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Optional image reference URL for the catalog item"
+                  },
                   "description": { "type": "string" },
                   "price": { "type": "number", "minimum": 0 },
-                  "currency": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 3
-                  }
+                  "moq": { "type": "integer", "minimum": 1 }
                 }
               }
             }
