@@ -3396,6 +3396,42 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 — 2026-03-23
+Type: GOVERNANCE / OPENING-DECISION
+Status: CLOSED
+Commit: (this unit — see git log for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002)
+Title: Open exactly one bounded implementation unit for certification transition applicability and lifecycle logging
+Summary: Governance-only opening unit. Opened `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+  as one bounded implementation-ready unit for the certification transition/logging gap only.
+  Scope is limited to the already-exposed certification transition path across the tenant
+  Certifications UI, frontend transition helper, tenant transition route, backend certification
+  transition service/state-machine path, and the lifecycle-log persistence required to make that
+  bounded path applicable. No implementation was performed by this opening, and no second child
+  unit was created.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md created; Layer 2 —
+  governance/decisions/GOV-DEC-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-OPENING.md created;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: This opening keeps transition applicability and lifecycle-log persistence in the same
+  bounded unit because current repo truth shows one direct causal chain across the installed
+  certification transition path. The stale `G-023` deferral framing is superseded for this exact
+  certification stream at governance level only; it is no longer the opening authority for this
+  slice. `NEXT-ACTION` now points to `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` as the sole
+  OPEN implementation-ready unit. No certification metadata PATCH UI work, maker-checker mutation
+  work, broad certification redesign, DB/schema work in this opening step, or unrelated
+  AI/logging stream was opened by implication.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/decisions/GOV-DEC-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-OPENING.md ·
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001.md ·
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md ·
+  components/Tenant/CertificationsPanel.tsx · services/certificationService.ts ·
+  server/src/routes/tenant/certifications.g019.ts ·
+  server/src/services/certification.g019.service.ts ·
+  server/src/services/stateMachine.service.ts · governance/log/EXECUTION-LOG.md
+
+---
+
 ### VERIFY-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 — 2026-03-23
 Type: VERIFICATION
 Status: VERIFIED_COMPLETE

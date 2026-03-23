@@ -13,7 +13,7 @@
 ```yaml
 snapshot_date: 2026-03-23
 last_unit_closed: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001
-last_commit: "[CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001] decide next-step posture for certification lifecycle transition/logging gap"
+last_commit: "[CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002] open bounded unit for certification transition applicability and lifecycle logging"
 doctrine_version: v1.5
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -28,8 +28,10 @@ layer_4_installed: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 0**
+- **Open governed units: 1**
 - **Verified-complete governed units: 0**
+
+- **CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002** — `OPEN` — Bounded implementation-ready unit opened 2026-03-23 for the certification transition/logging gap only. Scope is limited to the already-exposed certification transition path across the tenant Certifications UI, frontend transition helper, tenant transition route, backend certification transition service/state-machine path, and the lifecycle-log persistence required to make that bounded path applicable. No implementation has been executed by this opening, and certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, and unrelated AI/logging streams remain excluded
 
 - **CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001** — `CLOSED` — Bounded decision-only unit closed 2026-03-23 with result `OPENING_CANDIDATE`; current repo truth shows that the tenant certification transition surface is already installed end-to-end, but backend transition application is denied because `certification_lifecycle_logs` does not exist. The candidate remains limited to the certification transition/logging gap only, and no implementation opening, metadata PATCH UI work, maker-checker mutation work, broader certification redesign, DB/schema authorization, or unrelated AI/logging stream was created by this decision
 
@@ -81,7 +83,7 @@ layer_4_installed: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**No implementation unit is currently OPEN.** `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` is now closed after bounded strict remote verification PASS on the exact `App.tsx:1522` placeholder-image surface only, `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` remains separately closed after bounded production verification PASS on the exercised image-capability slice only, `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains the closed opening authority only for the already-closed upload-gap unit, `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` remains the closed opening authority only for the now-closed placeholder-image unit, `TENANT-EXPERIENCE-RUNTIME-500-002` remains `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
+**One implementation unit is currently OPEN.** `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` is now the sole open implementation-ready unit and is limited to the already-exposed certification transition path plus the lifecycle-log persistence required for that same bounded flow. `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` remains closed after bounded strict remote verification PASS on the exact `App.tsx:1522` placeholder-image surface only, `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002` remains separately closed after bounded production verification PASS on the exercised image-capability slice only, `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains the closed opening authority only for the already-closed upload-gap unit, `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` remains the closed opening authority only for the now-closed placeholder-image unit, `TENANT-EXPERIENCE-RUNTIME-500-002` remains `CLOSED` after bounded remote verification PASS on the AI insights `500` surface only, `IMPERSONATION-SESSION-REHYDRATION-002` remains closed after bounded deployed verification PASS on the reload/rehydration slice only, `CONTROL-PLANE-IDENTITY-TRUTH-002` remains closed after bounded identity-truth verification PASS, `CONTROL-PLANE-AUTH-SHELL-TRANSITION-002` remains closed after bounded shell-transition verification PASS, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`. 0 BLOCKED · 0 DEFERRED · 1 DESIGN_GATE.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
@@ -114,9 +116,10 @@ RFQ remains pre-negotiation:
 
 ## Current Next Action
 
-`OPERATOR_DECISION_REQUIRED`.
-No implementation-ready unit remains open after closure of `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`.
-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The installed tenant certification transition surface is real, but the backend transition path still denies application because `certification_lifecycle_logs` does not exist. No implementation opening was created by that decision.
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`.
+One implementation-ready unit is now open.
+CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 is the sole OPEN bounded implementation unit for the currently exposed certification transition path that still cannot apply because certification lifecycle-log persistence is missing.
+CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the opening authority for the now-open child.
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 is now `CLOSED` after strict remote verification PASS on the exact `App.tsx:1522` surface only.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 is now `CLOSED` after bounded production verification PASS on the exercised image-capability slice only. The two units remain strictly separate and neither widens the other by implication.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
