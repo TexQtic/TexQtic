@@ -32,6 +32,14 @@ Supporting governance wrappers remain separate:
 - `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md`
 - `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`
 
+Runtime correction-order artifacts emitted from the canonical template are stored at the canonical
+repo path:
+
+- `governance/correction-orders/<correction_order_id>.yaml`
+
+These runtime correction-order instances are governed evidence artifacts consumed by
+`correction_order_reference`. They are not a fourth static specification package file.
+
 No other artifact surface is canonical for Sentinel v1.
 
 ## Canonical Check Catalog
@@ -191,7 +199,8 @@ Sentinel v1 must be able to evaluate these check families:
 
 - every prior failed mandatory gate has one exact correction-order artifact
 - every listed retry precondition is satisfied before rerun
-- the retry cites the completed correction-order artifact explicitly
+- the retry cites the completed correction-order artifact explicitly using
+  `governance/correction-orders/<correction_order_id>.yaml`
 
 `FAIL` if retry occurs without completed correction-order fulfillment.
 

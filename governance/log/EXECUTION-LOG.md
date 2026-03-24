@@ -43,6 +43,34 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 IMPLEMENTATION / ANALYSIS — 2026-03-24
+Type: GOVERNANCE / IMPLEMENTATION + ANALYSIS
+Status: OPEN
+Commit: (this unit — see git log for exact SHA)
+Title: Implement bounded correction-order-reference fix
+Summary: Repo truth confirmed that CHECK-009 already enforced an existing correction-order artifact
+  reference, but no exact canonical in-repo correction-order artifact path existed for the blocked
+  certification close retry posture. The minimum lawful fix defined the canonical path as
+  `governance/correction-orders/<correction_order_id>.yaml`, aligned the bounded CHECK-009
+  doctrine/documentation surfaces to that path, and tightened runner validation to require it. No
+  correction-order artifact was created, no certification close was performed, and no Sentinel
+  rerun was performed in this step.
+Layer Impact: Layer 1 — remediation unit record updated with implementation/analysis result;
+  Layer 3 — EXECUTION-LOG.md appended; governance doctrine/documentation/runner surfaces updated
+  with the bounded CHECK-009 path fix only
+Notes: Exact root cause was not a new certification defect and not a reopened CHECK-005 or
+  CHECK-006 issue. Repo truth contained no exact canonical correction-order artifact path for this
+  retry posture, so later lawful retry would still have required path invention. The certification
+  close remains blocked pending issuance of one concrete correction-order artifact at the canonical
+  path and a later lawful Sentinel rerun.
+Refs: governance/units/GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001.md ·
+  governance/sentinel/GOVERNANCE-SENTINEL-V1-SPEC.md ·
+  governance/schema/GOVERNANCE-SENTINEL-V1-GATE-RESULT-SCHEMA.md ·
+  governance/templates/GOVERNANCE-SENTINEL-V1-CORRECTION-ORDER-TEMPLATE.md ·
+  docs/governance/GOVERNANCE-SENTINEL-V1-AUTOMATION.md · scripts/governance/sentinel-v1.js
+
+---
+
 ### GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 — 2026-03-24
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN

@@ -11,6 +11,7 @@ const CANONICAL_PATHS = {
   schema: 'governance/schema/GOVERNANCE-SENTINEL-V1-GATE-RESULT-SCHEMA.md',
   template:
     'governance/templates/GOVERNANCE-SENTINEL-V1-CORRECTION-ORDER-TEMPLATE.md',
+  correctionOrderDirectory: 'governance/correction-orders/',
   openSet: 'governance/control/OPEN-SET.md',
   nextAction: 'governance/control/NEXT-ACTION.md',
   snapshot: 'governance/control/SNAPSHOT.md',
@@ -776,6 +777,18 @@ function runCheck009(options, context) {
   }
 
   const content = readRepoFile(correctionOrderRef);
+  const correctionOrderId = parseCorrectionOrderId(content);
+  if (correctionOrderId) {
+    const expectedRef =
+      getCanonicalCorrectionOrderArtifactPath(correctionOrderId);
+    if (normalizeRepoPath(correctionOrderRef) !== expectedRef) {
+      failures.push(
+        `correction-order-reference must equal canonical path ${expectedRef}`
+      );
+    }
+  } else {
+    failures.push('correction order does not include correction_order_id');
+  }
   if (!content.includes('directive_verdict: RETRY_BLOCKED')) {
     failures.push(
       'correction order does not preserve directive_verdict: RETRY_BLOCKED'
@@ -864,6 +877,28 @@ function buildCorrectionOrder(options) {
     'directive_verdict: RETRY_BLOCKED',
     `notes: ${quoteYaml(notes)}`,
   ].join('\n');
+}
+
+function parseCorrectionOrderId(content) {
+  const correctionOrderIdPattern = /^correction_order_id:\s*(.+)$/m;
+  const match = correctionOrderIdPattern.exec(String(content));
+  if (!match) {
+    return '';
+  }
+
+  const value = match[1].trim();
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+
+  return value;
+}
+
+function getCanonicalCorrectionOrderArtifactPath(correctionOrderId) {
+  return `${CANONICAL_PATHS.correctionOrderDirectory}${correctionOrderId}.yaml`;
 }
 
 function validateGateResult(result, requiredChecks, context) {

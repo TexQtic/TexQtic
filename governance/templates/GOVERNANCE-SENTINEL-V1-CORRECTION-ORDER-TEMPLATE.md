@@ -9,6 +9,14 @@ Authority: `GOV-DEC-GOVERNANCE-SENTINEL-V1-SPEC-OPENING`
 This template fixes the minimum artifact shape required after a failed mandatory Sentinel v1 gate
 and before retry.
 
+## Canonical Instance Path
+
+A concrete correction-order artifact derived from this template must be stored at:
+
+- `governance/correction-orders/<correction_order_id>.yaml`
+
+That exact repo path is the canonical `correction_order_reference` target for retry validation.
+
 ## Template
 
 ```yaml
@@ -56,3 +64,5 @@ notes: <bounded explanatory note>
    invalid.
 8. The correction order does not itself change Layer 0, open work, close work, or authorize
    implementation.
+9. The concrete correction-order artifact must be recorded at
+  `governance/correction-orders/<correction_order_id>.yaml` before retry.

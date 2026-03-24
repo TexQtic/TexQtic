@@ -58,12 +58,16 @@ context flags only. It does not invent additional checks, warning tiers, or chec
 - A rerun after any prior mandatory-gate `FAIL` must include `--retry-from-fail true`.
 - Any rerun with `--retry-from-fail true` must also include `--correction-order-reference <path>`.
 - The referenced path must already exist in repo truth and must point to a bounded correction-order artifact.
+- The canonical repo path for that artifact is `governance/correction-orders/<correction_order_id>.yaml`.
 - Sentinel does not invent, infer, or auto-create that artifact during `run`.
 - If no lawful correction-order artifact path has been created and approved yet, the retry remains blocked.
 
 ### `correction-order`
 
 Emits one YAML correction-order artifact matching the approved template structure.
+
+The command emits YAML to stdout. To create a lawful retry artifact, persist that output at the
+canonical repo path `governance/correction-orders/<correction_order_id>.yaml`.
 
 ## Canonical Artifact Handling
 
@@ -127,7 +131,8 @@ npm run governance:sentinel:v1 -- correction-order \
   --retry-blocked-until "All non-allowlisted file edits are removed." \
   --evidence-required-for-retry governance/units/GOVERNANCE-SENTINEL-V1-AUTOMATION-001.md \
   --pass-fail-recheck-target SENTINEL-V1-CHECK-006 \
-  --notes "Sample correction-order emission for local protocol verification."
+  --notes "Sample correction-order emission for local protocol verification." \
+  > governance/correction-orders/GOVERNANCE-SENTINEL-V1-AUTOMATION-001-CO-001.yaml
 ```
 
 ## Retry Requirement Example
@@ -144,7 +149,7 @@ npm run governance:sentinel:v1 -- run \
   --checkpoint close_progression \
   --subject CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 \
   --retry-from-fail true \
-  --correction-order-reference <approved-existing-correction-order-path> \
+  --correction-order-reference governance/correction-orders/<correction_order_id>.yaml \
   --decision-ref governance/decisions/GOV-DEC-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-OPENING.md \
   --evidence-ref governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md
 ```

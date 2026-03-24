@@ -10,7 +10,7 @@ opened: 2026-03-24
 closed: null
 verified: null
 commit: null
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY close stream in NEXT-ACTION and remains blocked rather than displaced by this concurrent governance opening · SENTINEL_BLOCKER_CONFIRMATION: the remaining controlling manual close gate blocker is SENTINEL-V1-CHECK-009 with reported reason correction-order-reference is required for retry validation while SENTINEL-V1-CHECK-006 now returns PASS and SENTINEL-V1-CHECK-005 has already been remediated in repo truth · RETRY_POSTURE_CONFIRMATION: correction_order_required returned true, closure proceeded no, and no correction-order artifact was created and no path was guessed during the prior bounded remediation step"
+evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY close stream in NEXT-ACTION and remains blocked rather than displaced by this concurrent governance opening · SENTINEL_BLOCKER_CONFIRMATION: the remaining controlling manual close gate blocker is SENTINEL-V1-CHECK-009 with reported reason correction-order-reference is required for retry validation while SENTINEL-V1-CHECK-006 now returns PASS and SENTINEL-V1-CHECK-005 has already been remediated in repo truth · ROOT_CAUSE_CONFIRMATION: repo truth contained no exact canonical correction-order artifact path for this retry posture even though CHECK-009 required correction_order_reference to cite an existing artifact · IMPLEMENTATION_RESULT: the canonical correction-order artifact path is now fixed as governance/correction-orders/<correction_order_id>.yaml across the bounded CHECK-009 doctrine and validation surfaces"
 doctrine_constraints:
   - D-004: this is one bounded governance remediation unit only; it must not be merged with certification close execution, certification implementation change, or broader Sentinel redesign
   - D-007: no product code, service code, route code, test code, schema, migration, package, CI, hook, or auto-trigger rollout work is authorized in this unit
@@ -53,16 +53,16 @@ the currently authorized certification Close step in `NEXT-ACTION`.
 
 ## Acceptance Criteria
 
-- [ ] Repo truth is inspected to determine how `SENTINEL-V1-CHECK-009` defines
+- [x] Repo truth is inspected to determine how `SENTINEL-V1-CHECK-009` defines
       correction-order-reference requirements for retry validation
-- [ ] Repo truth is inspected to determine whether an exact canonical correction-order artifact path
+- [x] Repo truth is inspected to determine whether an exact canonical correction-order artifact path
       already exists for this retry posture
-- [ ] The minimum lawful correction needed to satisfy `SENTINEL-V1-CHECK-009` is defined
-- [ ] If repo truth requires it, the unit authorizes creation or recovery of exactly one canonical
+- [x] The minimum lawful correction needed to satisfy `SENTINEL-V1-CHECK-009` is defined
+- [x] If repo truth requires it, the unit authorizes creation or recovery of exactly one canonical
       correction-order artifact/reference path in a later lawful implementation step
-- [ ] The existing blocked certification close state is preserved without performing the close
-- [ ] `NEXT-ACTION` preserves the same sole `ACTIVE_DELIVERY` authorization
-- [ ] No broad Sentinel rollout, CI integration, hook integration, auto-triggering, certification
+- [x] The existing blocked certification close state is preserved without performing the close
+- [x] `NEXT-ACTION` preserves the same sole `ACTIVE_DELIVERY` authorization
+- [x] No broad Sentinel rollout, CI integration, hook integration, auto-triggering, certification
       implementation change, or unrelated widening is bundled in
 
 ## Files Allowlisted (Modify)
@@ -130,3 +130,28 @@ with `DECISION_QUEUE` posture only.
 in `NEXT-ACTION`, but it remains blocked by the mandatory Sentinel `FAIL` until the
 correction-order-reference requirement is corrected lawfully and `close_progression` reruns to
 `PASS`.
+
+## Implementation / Analysis Result
+
+Repo truth confirms that `SENTINEL-V1-CHECK-009` is defined in the Sentinel v1 spec, enforced in
+`scripts/governance/sentinel-v1.js`, and structurally represented in the gate-result schema.
+
+Exact root cause for the remaining blocker:
+
+- `runCheck009()` already required `--retry-from-fail true`
+- `runCheck009()` already required `--correction-order-reference <path>` to exist and contain the
+  required correction-order fields
+- repo truth contained no exact canonical in-repo correction-order artifact path for this retry
+  posture
+- the correction-order template fixed content shape only, not storage path
+- operator documentation named a required path but still left the path class implicit
+
+Minimum lawful correction applied in this unit:
+
+- fixed the canonical correction-order artifact path as
+  `governance/correction-orders/<correction_order_id>.yaml`
+- aligned the bounded CHECK-009 doctrine and operator surfaces to that exact path
+- tightened CHECK-009 runtime validation so a future retry must cite that canonical path class
+
+No correction-order artifact was created in this step. No certification close was performed. No
+Sentinel rerun was performed in this step.

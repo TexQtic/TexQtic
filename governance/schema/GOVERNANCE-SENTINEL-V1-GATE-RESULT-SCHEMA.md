@@ -25,7 +25,7 @@ This file fixes the required structure for every Sentinel v1 gate-result artifac
 | `check_results` | array | Non-empty list of per-check result objects using canonical check IDs only. |
 | `allowlist_scope_checked` | boolean | Must record whether boundary/allowlist validation ran. |
 | `correction_order_required` | boolean | Must be `true` on `FAIL`; `false` on `PASS`. |
-| `correction_order_reference` | string | Required on retry after a prior `FAIL`; otherwise `not_applicable`. |
+| `correction_order_reference` | string | Required on retry after a prior `FAIL`; must point to `governance/correction-orders/<correction_order_id>.yaml`; otherwise `not_applicable`. |
 | `negative_evidence_required` | boolean | Must be `true` when broad-label retirement, disproval, or scope-blocking review is part of the subject. |
 | `broad_claim_under_review` | string | Required when `negative_evidence_required` is `true`; otherwise `not_applicable`. |
 | `negative_evidence_references` | array | Required when `negative_evidence_required` is `true`; otherwise empty. |
@@ -85,7 +85,7 @@ Each `check_results` entry must contain:
 1. A `FAIL` result is invalid if `checks_failed` is empty.
 2. A `PASS` result is invalid if `checks_failed` is non-empty.
 3. A retry after `FAIL` is invalid unless `correction_order_reference` points to a bounded
-   correction-order artifact.
+   correction-order artifact at `governance/correction-orders/<correction_order_id>.yaml`.
 4. Candidate-bearing work is invalid if `normalization_reference` is omitted.
 5. Any result claiming Layer 0 safety is invalid if `layer0_reference` is omitted.
 6. `check_results` must cover every mandatory check required by the checkpoint being evaluated.
