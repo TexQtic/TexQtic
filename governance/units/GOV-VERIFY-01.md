@@ -1,8 +1,7 @@
----
 unit_id: GOV-VERIFY-01
 title: Mandatory automated verification policy-design child
 type: GOVERNANCE
-status: OPEN
+status: CLOSED
 wave: W5
 plane: CONTROL
 opened: 2026-03-21
@@ -36,7 +35,8 @@ This is a bounded policy-design unit only. No implementation of tooling or produ
 authorized.
 
 Implementation of the bounded automated verification policy-design content is now complete inside
-this unit. The unit remains `OPEN` pending a separate verification phase.
+this unit. Opening, implementation, verification, governance sync, and closure of the bounded
+policy-design content are now complete inside this unit. The unit is now `CLOSED`.
 
 ## Acceptance Criteria
 

@@ -10,7 +10,7 @@ opened: 2026-03-24
 closed: null
 verified: null
 commit: null
-evidence: "LAYER_0_CONFIRMATION: NEXT-ACTION remains OPERATOR_DECISION_REQUIRED and no ACTIVE_DELIVERY unit is open while this concurrent normalization unit is open only under DECISION_QUEUE posture · OPERATOR_AUDIT_CONFIRMATION: no currently named candidate is cleanly compelled by Layer 0 as the next lawful opening and some candidate records are stale, mixed, or historically consumed · NON_REOPENING_CONFIRMATION: stale READY_FOR_OPENING posture, mixed open/closed text, and consumed opening artifacts must not reopen historical units by implication"
+evidence: "LAYER_0_CONFIRMATION: NEXT-ACTION remains OPERATOR_DECISION_REQUIRED and no ACTIVE_DELIVERY unit is open while this concurrent normalization unit is open only under DECISION_QUEUE posture · OPERATOR_AUDIT_CONFIRMATION: no currently named candidate is cleanly compelled by Layer 0 as the next lawful opening and some candidate records are stale, mixed, or historically consumed · IMPLEMENTATION_RESULT: unambiguous candidate-state defects were corrected in current repo truth by classifying GOV-VERIFY-01 as CLOSED instead of mixed OPEN/CLOSED, by preserving GOV-NAV-01 and GOV-VERIFY-01 openings as consumed historical artifacts rather than current-open posture in SNAPSHOT carry-forward text, and by preserving AdminRBAC revoke/remove history as already-opened and already-closed rather than eligibility-only posture · NON_REOPENING_CONFIRMATION: stale READY_FOR_OPENING posture, mixed open/closed text, and consumed opening artifacts must not reopen historical units by implication"
 doctrine_constraints:
   - D-004: this is one bounded governance normalization unit only; it must not be merged with any implementation stream, successor opening, or broad governance redesign
   - D-007: no product, server, schema, migration, test, package, CI, hook, watcher, or Sentinel-tooling surface is authorized in this unit
@@ -32,6 +32,12 @@ cycles or ambiguous carry-forward text.
 
 This unit is concurrent governance work only. It is not `ACTIVE_DELIVERY`, does not displace
 `OPERATOR_DECISION_REQUIRED`, and does not authorize implementation work.
+
+Implementation/analysis in this unit has now corrected the minimum unambiguous stale candidate-
+state records: the mixed `OPEN`/`CLOSED` posture in `GOV-VERIFY-01` and the current-facing
+carry-forward wording in `SNAPSHOT.md` that still described consumed `GOV-NAV-01`, `GOV-VERIFY-01`,
+and AdminRBAC revoke/remove opening posture as if it were still current. The unit remains `OPEN`
+pending any later verification, governance sync, and close steps.
 
 ## Acceptance Criteria
 

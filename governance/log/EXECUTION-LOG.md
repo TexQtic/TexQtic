@@ -542,6 +542,30 @@ Refs: governance/units/GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001.md ·
 
 ---
 
+### GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 — 2026-03-24
+Type: GOVERNANCE / IMPLEMENTATION + ANALYSIS
+Status: OPEN
+Commit: N/A
+Title: Implement bounded candidate-state normalization
+Summary: Corrected the minimum unambiguous candidate-state defects without altering Layer 0
+  authorization posture. `GOV-VERIFY-01` had mixed current state (`status: OPEN` while already
+  carrying `closed: 2026-03-21` and closed-state evidence) and is now normalized to `CLOSED`.
+  `SNAPSHOT.md` current-facing carry-forward text also now preserves `GOV-NAV-01` and
+  `GOV-VERIFY-01` openings as consumed historical artifacts instead of current-open posture and
+  preserves AdminRBAC revoke/remove history as already-opened and already-closed rather than
+  eligibility-only posture.
+Layer Impact: Layer 0 — SNAPSHOT.md corrected; Layer 1 — GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
+  and GOV-VERIFY-01 updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: `OPEN-SET.md` required no change, `NEXT-ACTION.md` remains `OPERATOR_DECISION_REQUIRED`,
+  no `ACTIVE_DELIVERY` unit was opened, `GOV-NAV-01` required no correction, `TECS-FBW-ADMINRBAC`
+  remains `DESIGN_GATE`, and `TECS-FBW-ADMINRBAC-REVOKE-REMOVE-001` remains `CLOSED`. The patch
+  is bounded to candidate-state normalization only and does not reopen any historical unit by
+  implication.
+Refs: governance/units/GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001.md ·
+  governance/units/GOV-VERIFY-01.md · governance/control/SNAPSHOT.md
+
+---
+
 ### GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 — 2026-03-23
 Type: GOVERNANCE / DECISION
 Status: CLOSED
