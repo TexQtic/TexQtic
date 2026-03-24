@@ -23,7 +23,7 @@ Title: <one-line title>
 Summary: <≤3 sentences: what was done, what changed, what was closed>
 Layer Impact: <which layers had truth updated>
 Notes: <constraints or cautions applicable after closure>
-Refs: <canonical reference path>
+ direct SQL remains lawful only as an explicitly classified exception path,
 ```
 
 `Layer Impact` values:
@@ -35,7 +35,6 @@ Refs: <canonical reference path>
   or in Layer 0 closed-baseline, not in a new-style unit record
 
 ---
-
 ### GOV-AUDIT-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002-POST-CLOSE — 2026-03-24
 Type: GOVERNANCE / AUDIT
 Status: CLOSED
@@ -60,7 +59,6 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/log/EXECUTION-LOG.md
 
 ---
-
 ### GOV-CLOSE-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 — 2026-03-24
 Type: IMPLEMENTATION / CLOSE
 Status: CLOSED
@@ -79,7 +77,6 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Laye
   governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md updated; Layer 3 —
   EXECUTION-LOG.md appended
 Notes: This closure is governance-only. `NEXT-ACTION.md` now returns to `OPERATOR_DECISION_REQUIRED`,
-  no new implementation authorization was created by closure, and no broader certification redesign
   or unrelated work is implied.
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md ·
@@ -96,7 +93,6 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 ---
 
 ### GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 IMPLEMENTATION / ANALYSIS — 2026-03-24
-Type: GOVERNANCE / IMPLEMENTATION + ANALYSIS
 Status: OPEN
 Commit: N/A
 Title: Implement bounded CHECK-005 recount fix
@@ -114,7 +110,6 @@ Notes: No further Layer 0 patch, runner patch, or documentation patch was requir
 Refs: governance/units/GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001.md ·
   governance/control/OPEN-SET.md · governance/control/SNAPSHOT.md ·
   scripts/governance/sentinel-v1.js
-
 ---
 
 ### GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 — 2026-03-24
@@ -133,7 +128,6 @@ Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Laye
 Notes: This unit is authorized only to remediate the remaining CHECK-005 recount blocker in
   bounded governance form. It does not close the certification unit, does not authorize
   certification implementation change, and does not authorize Sentinel doctrine expansion,
-  automation rollout, CI integration, hooks, bots, or auto-triggering.
 Refs: governance/units/GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001.md ·
   governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-OPENING.md
 
@@ -149,7 +143,6 @@ Summary: Corrected bounded governance wording after artifact emission so Layer 0
   `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
   No certification close was performed, no Sentinel rerun was performed, and
   `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` stream.
-Layer Impact: Layer 0 — control-plane carry-forward wording corrected; Layer 1 — remediation unit
   record corrected; Layer 3 — EXECUTION-LOG.md appended
 Notes: This entry is record correction only. It does not alter Sentinel doctrine, does not rerun
   the blocked close gate, and does not change delivery authority.
@@ -170,7 +163,6 @@ Summary: Emitted exactly one correction-order artifact instance for the blocked 
   `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
   The artifact aligns to the current correction-order template and runner field shape for
   `SENTINEL-V1-CHECK-009` retry only. No certification close was performed and no Sentinel rerun
-  was performed in this step.
 Layer Impact: Layer 1 — remediation unit record updated with implementation evidence; Layer 3 —
   EXECUTION-LOG.md appended; governed correction-order artifact emitted at canonical repo path
 Notes: Layer 0 authority remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
@@ -588,6 +580,31 @@ Notes: `NEXT-ACTION.md` remains `OPERATOR_DECISION_REQUIRED`, no `ACTIVE_DELIVER
 Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   governance/control/SNAPSHOT.md · governance/units/GOV-VERIFY-01.md ·
   governance/units/GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 — 2026-03-24
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded B2C placeholder fallback remediation
+Summary: Opened one bounded product-facing ACTIVE_DELIVERY unit after normalized repo truth
+  isolated the exact surviving B2C New Arrivals placeholder-image fallback surface in App.tsx
+  still using https://via.placeholder.com/400x500 when imageUrl is absent. This unit is now the
+  sole ACTIVE_DELIVERY. No implementation was performed in this step, no consumed historical
+  placeholder-image unit was reopened, and no broader media/catalog/image work was authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 — governance
+  unit record added; Layer 2 — decision/opening record added; Layer 3 — EXECUTION-LOG.md appended
+Notes: Delivery-first opening only. Scope is limited to the exact surviving storefront fallback
+  surface, exact future implementation must use repo-relative allowlists only, and no Governance
+  OS development, Sentinel/governance-system work, AdminRBAC, control-plane, certification,
+  migration, Prisma, schema, DB, upload-pipeline, or unrelated placeholder-surface work is
+  authorized here.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003.md ·
+  governance/decisions/GOV-DEC-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003-OPENING.md ·
   governance/log/EXECUTION-LOG.md
 
 ---

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (candidate-state normalization opening preserves operator-decision posture)
+**Last Updated:** 2026-03-24 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 opening establishes sole ACTIVE_DELIVERY)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -21,21 +21,22 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
+| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 | B2C New Arrivals placeholder-image fallback remediation | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-24 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **8**
+- **OPEN** (all governed units): **9**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 0
+- **ACTIVE_DELIVERY**: 1
 - **DECISION_QUEUE**: 8
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 9**
+- **Total non-terminal units: 10**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -45,10 +46,14 @@ implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114` remained unch
 verification and governance sync were already complete, and the mandatory manual Sentinel
 `close_progression` rerun returned `PASS` using correction-order reference
 `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
-No implementation, migration, Prisma, or SQL work occurred in the close step. No `ACTIVE_DELIVERY`
-unit now remains open, `NEXT-ACTION.md` returns to `OPERATOR_DECISION_REQUIRED`, and the
-concurrently open governance-only units remain `DECISION_QUEUE` only without any implied successor
-authorization. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001` remains open concurrently
+No implementation, migration, Prisma, or SQL work occurred in the close step. That close returned
+Layer 0 to `OPERATOR_DECISION_REQUIRED` temporarily only. `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003`
+is now `OPEN` as the sole `ACTIVE_DELIVERY` unit for the exact surviving B2C `New Arrivals`
+placeholder-image fallback surface still using `https://via.placeholder.com/400x500` when
+`imageUrl` is absent. This opening is delivery-first, does not reopen consumed historical
+placeholder-image units by implication, and does not authorize broader catalog/media/image work.
+The concurrently open governance-only units remain `DECISION_QUEUE` only without any implied
+successor authorization. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001` remains open concurrently
 with `DECISION_QUEUE` posture because it bounded and preserved the prior allowlist mismatch
 correction only. `GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001` remains open concurrently with
 `DECISION_QUEUE` posture because it preserves the bounded close-retry blocker history only and
