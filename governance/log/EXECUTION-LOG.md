@@ -43,6 +43,28 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 IMPLEMENTATION / ANALYSIS — 2026-03-24
+Type: GOVERNANCE / IMPLEMENTATION + ANALYSIS
+Status: OPEN
+Commit: N/A
+Title: Implement bounded CHECK-005 recount fix
+Summary: Repo truth confirmed that `runCheck005()` derives the expected SNAPSHOT count from the
+  total non-terminal row count in `OPEN-SET.md`, while the failing pre-opening Layer 0 truth still
+  advertised `**Open governed units: 7**` against 8 non-terminal rows. The minimum lawful
+  correction was therefore Layer 0 truth only, already reconciled during the bounded opening that
+  brought current repo truth to 9 non-terminal units after adding this remediation unit. No
+  Sentinel rerun was performed in this implementation step.
+Layer Impact: Layer 1 — remediation unit record updated with implementation evidence; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: No further Layer 0 patch, runner patch, or documentation patch was required in this
+  implementation step. The certification close remains blocked pending a later lawful Sentinel
+  rerun, but CHECK-005 recount truth is now reconciled to the runner's current non-terminal rule.
+Refs: governance/units/GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001.md ·
+  governance/control/OPEN-SET.md · governance/control/SNAPSHOT.md ·
+  scripts/governance/sentinel-v1.js
+
+---
+
 ### GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 — 2026-03-24
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN

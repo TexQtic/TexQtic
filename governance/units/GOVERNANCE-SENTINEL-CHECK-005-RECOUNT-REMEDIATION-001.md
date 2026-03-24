@@ -10,7 +10,7 @@ opened: 2026-03-24
 closed: null
 verified: null
 commit: null
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY close stream in NEXT-ACTION and remains blocked rather than displaced by this concurrent governance opening · SENTINEL_BLOCKER_CONFIRMATION: the latest lawful manual Sentinel close_progression rerun failed on SENTINEL-V1-CHECK-005 with reported reason SNAPSHOT does not reflect the current open governed unit count while SENTINEL-V1-CHECK-006, SENTINEL-V1-CHECK-007, SENTINEL-V1-CHECK-008, and SENTINEL-V1-CHECK-009 returned PASS · BOUNDARY_CONFIRMATION: this unit is authorized only to determine and resolve the remaining CHECK-005 recount mismatch in bounded governance form"
+evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY close stream in NEXT-ACTION and remains blocked rather than displaced by this concurrent governance opening · SENTINEL_BLOCKER_CONFIRMATION: the latest lawful manual Sentinel close_progression rerun failed on SENTINEL-V1-CHECK-005 with reported reason SNAPSHOT does not reflect the current open governed unit count while SENTINEL-V1-CHECK-006, SENTINEL-V1-CHECK-007, SENTINEL-V1-CHECK-008, and SENTINEL-V1-CHECK-009 returned PASS · ROOT_CAUSE_CONFIRMATION: runCheck005 compares SNAPSHOT against the total non-terminal row count in OPEN-SET, while the failing pre-opening SNAPSHOT truth still advertised 7 open governed units against 8 non-terminal OPEN-SET rows · IMPLEMENTATION_RESULT: the minimum lawful correction was Layer 0 truth only, already applied during the bounded opening by reconciling SNAPSHOT and OPEN-SET to the runner's non-terminal recount rule, so no runner or documentation patch was required in this implementation step"
 doctrine_constraints:
   - D-004: this is one bounded governance remediation unit only; it must not be merged with certification close execution, certification implementation change, or broader Sentinel redesign
   - D-007: no product code, service code, route code, test code, schema, migration, package, CI, hook, or auto-trigger rollout work is authorized in this unit
@@ -59,16 +59,16 @@ the currently authorized certification Close step in `NEXT-ACTION`.
 
 ## Acceptance Criteria
 
-- [ ] Repo truth is inspected to determine why CHECK-005 still reports a SNAPSHOT open governed
-      unit count mismatch during `close_progression`
-- [ ] The mismatch cause is bounded precisely to stale SNAPSHOT truth, stale OPEN-SET truth,
-      count-definition mismatch, runner recount logic, inclusion/exclusion of specific
-      non-terminal classes, or parsing of current governance records
-- [ ] The minimum lawful correction needed for the CHECK-005 mismatch is identified
-- [ ] The existing blocked certification close state is preserved without performing the close
-- [ ] `NEXT-ACTION` preserves the same sole `ACTIVE_DELIVERY` authorization
-- [ ] No broad Sentinel rollout, CI integration, hook integration, auto-triggering, certification
-      implementation change, or unrelated widening is bundled in
+- [x] Repo truth is inspected to determine why CHECK-005 still reports a SNAPSHOT open governed
+  unit count mismatch during `close_progression`
+- [x] The mismatch cause is bounded precisely to stale SNAPSHOT truth, stale OPEN-SET truth,
+  count-definition mismatch, runner recount logic, inclusion/exclusion of specific
+  non-terminal classes, or parsing of current governance records
+- [x] The minimum lawful correction needed for the CHECK-005 mismatch is identified
+- [x] The existing blocked certification close state is preserved without performing the close
+- [x] `NEXT-ACTION` preserves the same sole `ACTIVE_DELIVERY` authorization
+- [x] No broad Sentinel rollout, CI integration, hook integration, auto-triggering, certification
+  implementation change, or unrelated widening is bundled in
 
 ## Files Allowlisted (Modify)
 
@@ -136,6 +136,32 @@ form.
 
 No certification close, no certification implementation work, and no automation rollout are
 authorized here.
+
+## Implementation / Analysis Result
+
+Implementation / analysis completed in bounded form only.
+
+- `runCheck005()` computes the expected SNAPSHOT open governed unit count from
+  `OPEN-SET.md` table truth using `openSet.rows.length`, which counts every non-terminal Layer 0
+  row rather than only rows with status `OPEN`
+- pre-opening repo truth showed a count-definition mismatch in Layer 0 only:
+  `OPEN-SET.md` carried 8 non-terminal rows while `SNAPSHOT.md` still advertised
+  `**Open governed units: 7**`
+- the mismatch therefore came from stale SNAPSHOT truth against the runner's non-terminal recount
+  rule, not from remaining runner logic error, not from inclusion/exclusion drift inside the
+  current runner, and not from documentation gap
+- the minimum lawful correction was Layer 0 truth only
+- that bounded Layer 0 correction was already applied during the decision/opening step that opened
+  this remediation unit, reconciling current repo truth to 9 non-terminal units after the new
+  remediation opening was added
+- no further Layer 0 patch was required in this implementation step
+- no runner patch was required in this implementation step
+- no documentation patch was required in this implementation step
+- no Sentinel rerun was performed in this implementation step
+
+This correction should enable a later lawful rerun of `close_progression` for
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` because the remaining CHECK-005 mismatch has been
+reconciled in Layer 0 truth without widening checkpoint semantics.
 
 ## Current Layer 0 Rule
 
