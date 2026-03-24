@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 preserved the blocked certification Close as ACTIVE_DELIVERY and recorded the bounded Sentinel retry blockers)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 preserved the blocked certification Close as ACTIVE_DELIVERY and recorded the remaining bounded CHECK-009 blocker)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -24,20 +24,23 @@ notes: |
   ACTIVE_DELIVERY sequencing authority.
   Close progression is currently blocked because the latest mandatory manual Sentinel
   close_progression run for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 returned FAIL on
-  SENTINEL-V1-CHECK-005 (layer0_consistency) with reported reason: SNAPSHOT does not reflect the
-  current open governed unit count, and on SENTINEL-V1-CHECK-009
-  (correction_order_completion) with reported reason: correction-order-reference is required for
-  retry validation. No closure was performed.
-  The prior close allowlist blocker on SENTINEL-V1-CHECK-006 now returns PASS and is not the
-  current blocker.
+  SENTINEL-V1-CHECK-009 (correction_order_completion) with reported reason:
+  correction-order-reference is required for retry validation. No closure was performed.
+  The prior close allowlist blocker on SENTINEL-V1-CHECK-006 now returns PASS, and
+  SENTINEL-V1-CHECK-005 has already been remediated in repo truth.
   GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 is now OPEN concurrently in Layer 0 as a
   bounded governance remediation unit with DECISION_QUEUE posture only. It exists only to make
   the blocked close gate lawfully passable after correction and does not displace this unit's
   ACTIVE_DELIVERY authorization.
   GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 is now OPEN concurrently in Layer 0 as a bounded
-  governance remediation unit with DECISION_QUEUE posture only. It exists only to resolve the
-  newly surfaced CHECK-005 and CHECK-009 close-retry blockers in bounded form, does not close the
-  certification unit, and does not displace this unit's ACTIVE_DELIVERY authorization.
+  governance remediation unit with DECISION_QUEUE posture only. It exists only to preserve the
+  bounded close-retry blocker remediation context, does not close the certification unit, and does
+  not displace this unit's ACTIVE_DELIVERY authorization.
+  GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 is now OPEN concurrently in Layer
+  0 as a bounded governance remediation unit with DECISION_QUEUE posture only. It exists only to
+  determine, authorize, and resolve the exact lawful correction-order-reference posture required by
+  SENTINEL-V1-CHECK-009 retry validation, does not close the certification unit, and does not
+  displace this unit's ACTIVE_DELIVERY authorization.
   Manual Sentinel v1 invocation is now mandatory by workflow before governance progression at the
   already-decided checkpoints for Opening, Governance Sync, Close, Layer 0 next-action change not
   already compelled by an open unit, and any governance review claiming clean bounded compliance.

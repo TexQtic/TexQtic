@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 decision + opening)
+**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 decision + opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,6 +14,7 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
+| GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 | Sentinel correction-order reference remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 | Sentinel close retry blocker remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 | Sentinel close allowlist mismatch remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
@@ -24,15 +25,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **4**
+- **OPEN** (all governed units): **5**
 - **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 4
+- **DECISION_QUEUE**: 5
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 6**
+- **Total non-terminal units: 7**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -43,19 +44,21 @@ authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`
 implementation delta, focused tests PASS (`5` passed, `0` failed), and verified lifecycle-log
 persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only, but
 that close remains blocked after the latest mandatory manual Sentinel `close_progression` rerun
-returned `FAIL` on `SENTINEL-V1-CHECK-005` (`layer0_consistency`) with reported reason `SNAPSHOT
-does not reflect the current open governed unit count` and on `SENTINEL-V1-CHECK-009`
-(`correction_order_completion`) with reported reason `correction-order-reference is required for
-retry validation`. The prior `SENTINEL-V1-CHECK-006` close allowlist blocker now returns `PASS`
-and is not the current blocker. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001` remains
+returned `FAIL` on `SENTINEL-V1-CHECK-009` (`correction_order_completion`) with reported reason
+`correction-order-reference is required for retry validation`. `SENTINEL-V1-CHECK-006` now
+returns `PASS`, `SENTINEL-V1-CHECK-005` has already been remediated in repo truth, and no
+certification close was performed. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001` remains
 open concurrently with `DECISION_QUEUE` posture because it bounded and preserved the prior
-allowlist mismatch correction only. `GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001` is now open
-concurrently with `DECISION_QUEUE` posture to remediate only the newly surfaced close-retry
-blockers while preserving the blocked certification Close as the same `ACTIVE_DELIVERY` stream.
-The Sentinel manual-workflow unit remains open concurrently with `DECISION_QUEUE` posture to
-require manual local Sentinel invocation before governance progression at the already-decided
-checkpoints. `GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded governance-only spec/design unit
-with `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout, or
+allowlist mismatch correction only. `GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001` remains
+open concurrently with `DECISION_QUEUE` posture because it bounded the close-retry blocker class
+and preserved the blocked certification Close as the same `ACTIVE_DELIVERY` stream. `GOVERNANCE-
+SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001` is now open concurrently with
+`DECISION_QUEUE` posture to determine and resolve only the remaining lawful correction-order-
+reference requirement that still blocks rerun of the certification close gate. The Sentinel
+manual-workflow unit remains open concurrently with `DECISION_QUEUE` posture to require manual
+local Sentinel invocation before governance progression at the already-decided checkpoints.
+`GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded governance-only spec/design unit with
+`DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout, or
 broader governance implementation remains separately governed.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
