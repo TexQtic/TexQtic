@@ -43,6 +43,27 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 — 2026-03-23
+Type: GOVERNANCE / DECISION
+Status: CLOSED
+Commit: N/A
+Title: Decide canonical migration execution and remote validation policy
+Summary: Closed one bounded governance-only doctrine decision that fixes TexQtic's canonical
+  migration execution rules. Repo-tracked Prisma migration folders now default to the repo-managed
+  Prisma deploy path, direct SQL remains lawful only as an explicitly classified exception path,
+  execution-path switching now requires explicit re-authorization, and every governed remote
+  migration must end with mandatory remote validation and explicit ledger proof.
+Layer Impact: Layer 1 — governance unit record added; Layer 2 — permanent decision record added;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: Current Layer 0 authority is unchanged. CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
+  remains the sole ACTIVE_DELIVERY authorization in Layer 0. Legacy package scripts and stale docs
+  that still advertise `migrate dev`, `db:push`, or older psql-first patterns are preserved as
+  historical truth or remediation candidates only and were not modified by this unit.
+Refs: governance/units/GOVERNANCE-MIGRATION-EXECUTION-POLICY-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001.md
+
+---
+
 ### GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001 — 2026-03-23
 Type: GOVERNANCE / DECISION
 Status: CLOSED
