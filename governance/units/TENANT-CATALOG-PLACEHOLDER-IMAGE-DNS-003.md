@@ -2,15 +2,15 @@
 unit_id: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003
 title: B2C New Arrivals placeholder-image fallback remediation
 type: ACTIVE_DELIVERY
-status: VERIFIED_COMPLETE
+status: CLOSED
 delivery_class: ACTIVE_DELIVERY
 wave: W5
 plane: TENANT
 opened: 2026-03-24
-closed: null
+closed: 2026-03-24
 verified: 2026-03-24
 commit: "d50b20834adf0e54fb628a93fa3613109da26388"
-evidence: "OPENING_CONFIRMATION: current Layer 0 had no compelled successor ACTIVE_DELIVERY, NEXT-ACTION was OPERATOR_DECISION_REQUIRED, and no ACTIVE_DELIVERY unit was OPEN before this opening · NORMALIZED_REPO_TRUTH_CONFIRMATION: the canonical normalization ledger preserved one exact surviving openable product-facing candidate only, the B2C New Arrivals placeholder-image fallback surface at App.tsx:1698 · ROOT_CAUSE_CONFIRMATION: the B2C New Arrivals branch used p.imageUrl || https://via.placeholder.com/400x500 when imageUrl was absent · IMPLEMENTATION_COMMIT: d50b20834adf0e54fb628a93fa3613109da26388 removed that remote fallback from the exact bounded surface only and now renders a local Image unavailable state when imageUrl is absent · VERIFICATION_RESULT: VERIFIED_COMPLETE after bounded verification confirmed the exact B2C branch now renders a real image when imageUrl exists, renders a local missing-image state when imageUrl is absent, introduced no broader image/media/catalog refactor, and required no separate verification-record commit · GOVERNANCE_SYNC_CONFIRMATION: this unit is now sync-complete and postured for separate Close only while remaining the same sole ACTIVE_DELIVERY stream"
+evidence: "OPENING_CONFIRMATION: current Layer 0 had no compelled successor ACTIVE_DELIVERY, NEXT-ACTION was OPERATOR_DECISION_REQUIRED, and no ACTIVE_DELIVERY unit was OPEN before this opening · NORMALIZED_REPO_TRUTH_CONFIRMATION: the canonical normalization ledger preserved one exact surviving openable product-facing candidate only, the B2C New Arrivals placeholder-image fallback surface at App.tsx:1698 · ROOT_CAUSE_CONFIRMATION: the B2C New Arrivals branch used p.imageUrl || https://via.placeholder.com/400x500 when imageUrl was absent · IMPLEMENTATION_COMMIT: d50b20834adf0e54fb628a93fa3613109da26388 removed that remote fallback from the exact bounded surface only and now renders a local Image unavailable state when imageUrl is absent · VERIFICATION_RESULT: VERIFIED_COMPLETE after bounded verification confirmed the exact B2C branch now renders a real image when imageUrl exists, renders a local missing-image state when imageUrl is absent, introduced no broader image/media/catalog refactor, and required no separate verification-record commit · GOVERNANCE_SYNC_CONFIRMATION: governance sync commit 9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68 recorded this unit as VERIFIED_COMPLETE while preserving the same sole ACTIVE_DELIVERY stream pending separate Close only · CLOSE_CONFIRMATION: governance-only closure recorded after implementation, verification, and governance sync were already complete; no broader image/media/catalog refactor was authorized and no new implementation authorization was created by closure"
 doctrine_constraints:
   - D-004: this is one bounded ACTIVE_DELIVERY unit only; it must not be merged with broader catalog, media, image, runtime, or governance-system work
   - D-007: no product/server/schema/migration/test/package/CI/hook/Sentinel-tooling surface outside the exact allowlist is authorized
@@ -29,15 +29,16 @@ It exists only to remediate the exact surviving B2C `New Arrivals` placeholder-i
 surface in `App.tsx` that still uses `https://via.placeholder.com/400x500` when `imageUrl` is
 absent.
 
-Result: `VERIFIED_COMPLETE`.
+Result: `CLOSED`.
 
 The authoritative implementation baseline is commit
 `d50b20834adf0e54fb628a93fa3613109da26388`.
 
-This unit remains the same sole authorized `ACTIVE_DELIVERY` stream pending separate Close only.
-It is delivery-first, does not authorize new Governance OS development, does not reopen
-`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` or `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`, and
-does not authorize broader catalog/media/image work.
+This unit is now closed after the already-complete implementation, verification, and governance
+sync chain. Closure is governance-only, does not authorize new Governance OS development, does not
+reopen `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001` or `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002`,
+and does not authorize broader catalog/media/image work or any follow-on implementation by
+implication.
 
 ## Source Truth
 
@@ -159,20 +160,41 @@ necessary, implementation must halt and report blocker rather than widen scope.
    `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` only
 - no closure is implied by this sync
 
+## Close Record
+
+- close date: `2026-03-24`
+- resulting status: `CLOSED`
+- close basis:
+   - implementation complete
+   - verification complete
+   - governance sync complete
+   - implementation baseline commit `d50b20834adf0e54fb628a93fa3613109da26388`
+   - governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68`
+- close summary:
+   - the exact B2C `New Arrivals` placeholder-image fallback surface in `App.tsx` was remediated
+     in bounded form only
+   - the remote `https://via.placeholder.com/400x500` dependency was removed from that exact
+     branch only
+   - no broader image/media/catalog refactor was authorized
+   - closure is governance-only and does not create new implementation authorization
+
 ## Current Layer 0 Rule
 
-`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` remains the sole authorized current
-`ACTIVE_DELIVERY` stream and is now `VERIFIED_COMPLETE`.
+`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` is now `CLOSED`.
 
-Concurrent governance-only units remain `DECISION_QUEUE` only. No consumed historical unit is
-reopened by implication, no successor unit is created, and no closure has yet occurred.
+`NEXT-ACTION.md` now returns to `OPERATOR_DECISION_REQUIRED` because no implementation-ready or
+close-ready `ACTIVE_DELIVERY` unit remains open. Concurrent governance-only units remain
+`DECISION_QUEUE` only. No consumed historical unit is reopened by implication and no successor
+unit is created by this closure.
 
 ## Last Governance Confirmation
 
-2026-03-24 — governance sync recorded `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` as
-`VERIFIED_COMPLETE` after bounded verification confirmed that implementation commit
-`d50b20834adf0e54fb628a93fa3613109da26388` removed the remote `400x500` placeholder dependency
-from the exact B2C `New Arrivals` branch in `App.tsx`, preserved the real-image path when
-`imageUrl` exists, and rendered a local `Image unavailable` state when `imageUrl` is absent. The
-change remained bounded to that exact storefront surface only, no broader image/media/catalog
-refactor was authorized, and the next lawful lifecycle step is separate Close only.
+2026-03-24 — governance close recorded `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` as `CLOSED`
+after implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, bounded verification, and
+governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68` were already complete. The
+closed bounded outcome remains limited to the exact B2C `New Arrivals` branch in `App.tsx`, where
+the remote `400x500` placeholder dependency was removed, the real-image path was preserved when
+`imageUrl` exists, and a local `Image unavailable` state renders when `imageUrl` is absent. No
+broader image/media/catalog refactor was authorized, closure performed no implementation,
+verification rerun, governance sync rerun, migration, Prisma, or SQL work, and no successor
+implementation authorization was created.

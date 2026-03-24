@@ -633,6 +633,88 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 — 2026-03-24
+Type: CLOSE
+Status: CLOSED
+Commit: [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003] close verified B2C placeholder fallback remediation
+Title: Close the verified bounded B2C placeholder fallback remediation unit
+Summary: Governance-only close unit. Recorded TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 as CLOSED
+  after implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, bounded verification,
+  and governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68` were already complete for
+  the exact bounded App.tsx B2C `New Arrivals` placeholder-image fallback remediation only. The
+  remote `https://via.placeholder.com/400x500` dependency had already been removed from that exact
+  branch, the real-image path remained preserved when `imageUrl` exists, and a local `Image
+  unavailable` state now renders when `imageUrl` is absent. No broader image/media/catalog
+  refactor was authorized, no implementation, migration, Prisma, or SQL work occurred in the
+  close step, and no successor unit was opened implicitly.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: This closure is governance-only. No product/application files, tests, schema, migrations,
+  Prisma commands, CI, hooks, or Sentinel-tooling surfaces were modified in this close step. No
+  implementation authorization was created by closure.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003-POST-CLOSE — 2026-03-24
+Type: GOVERNANCE / POST-CLOSE-AUDIT
+Status: CLOSED
+Commit: [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003] close verified B2C placeholder fallback remediation
+Title: Record the mandatory post-close governance audit for TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  DECISION_REQUIRED. Close occurred only after implementation, verification, and governance sync
+  were already complete; no out-of-scope files were changed; OPEN-SET no longer lists
+  `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` as non-terminal; `NEXT-ACTION.md` no longer points to
+  the closed unit; Layer 0 is internally consistent after close; no new unit was opened
+  implicitly; no implementation authorization was created by closure; and governance records now
+  consistently show this unit as `CLOSED`.
+State Summary:
+  - classification: closed bounded product-facing remediation unit with no implementation-ready unit open
+  - bounded scope preserved: exact B2C `New Arrivals` placeholder-image fallback branch in `App.tsx` only
+  - open-unit count: 9
+  - blocked / deferred / design-gated context: 0 / 0 / 1
+  - current NEXT-ACTION compatibility: compatible with OPERATOR_DECISION_REQUIRED
+Outstanding Gates:
+  - no implementation-ready or close-ready `ACTIVE_DELIVERY` unit remains open
+  - GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-SENTINEL-V1-SPEC-001 remains `DECISION_QUEUE`
+  - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 remains `DECISION_QUEUE`
+  - TECS-FBW-ADMINRBAC remains `DESIGN_GATE`
+Natural Next-Step Candidates:
+  - DECISION_REQUIRED
+  - HOLD
+  - RECORD_ONLY
+  - DESIGN_REFINEMENT
+  - OPENING_CANDIDATE
+Recommended Next Governance-Valid Move:
+  - ranked recommendation: DECISION_REQUIRED
+  - reason: this bounded unit is fully closed, no successor unit is authorized by implication,
+    and any stronger follow-on move still requires explicit operator sequencing rather than
+    inference from closure
+Why Stronger Moves Remain Blocked:
+  - closure of this bounded unit does not authorize broader image/media/catalog work
+  - closure of this bounded unit does not authorize reopening historical placeholder-image units
+  - closure of this bounded unit does not authorize new implementation, verification rerun, or
+    governance sync rerun
+  - closure of this bounded unit does not elevate DECISION_QUEUE or DESIGN_GATE work into
+    `ACTIVE_DELIVERY`
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. Recommendation is not
+  authorization. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 — 2026-03-23
 Type: GOVERNANCE / DECISION
 Status: CLOSED

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 governance sync postured the next step to Close)
+**Last Updated:** 2026-03-24 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 closed; Layer 0 returned to OPERATOR_DECISION_REQUIRED)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -21,7 +21,6 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
-| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 | B2C New Arrivals placeholder-image fallback remediation | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
@@ -29,26 +28,28 @@
 ## Summary
 
 - **OPEN** (all governed units): **8**
-- **VERIFIED_COMPLETE** (postured for Close): **1**
+- **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 1
+- **ACTIVE_DELIVERY**: 0
 - **DECISION_QUEUE**: 8
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 10**
+- **Total non-terminal units: 9**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
 
-`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` remains the sole `ACTIVE_DELIVERY` unit, is now
-`VERIFIED_COMPLETE`, and is postured for separate Close after bounded verification confirmed
-implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, removed the remote
+`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` is now `CLOSED` after the already-complete
+implementation, verification, and governance sync chain confirmed that implementation commit
+`d50b20834adf0e54fb628a93fa3613109da26388` removed the remote
 `https://via.placeholder.com/400x500` dependency from the exact B2C `New Arrivals` branch in
 `App.tsx`, preserved the real-image path when `imageUrl` exists, and rendered a local `Image
-unavailable` state when `imageUrl` is absent. `NEXT-ACTION.md` now points to the same unit's
-lawful Close step only. No broader image/media/catalog refactor was authorized, no successor unit
-was opened, and no closure occurred in this sync.
+unavailable` state when `imageUrl` is absent. No broader image/media/catalog refactor was
+authorized, no implementation, migration, Prisma, or SQL work occurred in the close step, and no
+successor unit was opened implicitly. `NEXT-ACTION.md` now truthfully returns to
+`OPERATOR_DECISION_REQUIRED` because no implementation-ready or close-ready `ACTIVE_DELIVERY` unit
+remains open.
 
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` closed 2026-03-24 after the authoritative
 implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114` remained unchanged, bounded
