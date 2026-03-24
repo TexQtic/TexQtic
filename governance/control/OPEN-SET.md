@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-23 (GOV-CLOSE-GOVERNANCE-SENTINEL-V1-AUTOMATION-001)
+**Last Updated:** 2026-03-24 (GOV-DEC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-OPENING)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,6 +14,7 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-23 |
+| GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | Bounded remediation for migration policy alignment | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
@@ -21,15 +22,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **2**
+- **OPEN** (all governed units): **3**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 1
+- **DECISION_QUEUE**: 2
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 3**
+- **Total non-terminal units: 4**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -39,6 +40,14 @@ implementation-ready unit and `NEXT-ACTION.md` remains unchanged by the concurre
 `GOVERNANCE-SENTINEL-V1-SPEC-001`. The Sentinel unit is a bounded governance-only spec/design
 unit with `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout,
 or broader governance implementation remains separately governed.
+
+`GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` is now also `OPEN` as a bounded governance-only
+remediation-opening unit with `DECISION_QUEUE` posture. It preserves
+`GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` as the authority source for canonical
+migration execution and remote validation policy, preserves `NEXT-ACTION.md` unchanged, preserves
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` as the sole `ACTIVE_DELIVERY` authorization, and
+does not authorize package-script edits, migration-doc edits, tooling changes, or migration
+execution in the opening step.
 
 The bounded Sentinel v1 specification package is now implemented inside
 `GOVERNANCE-SENTINEL-V1-SPEC-001`, but that unit remains `OPEN` pending separate verification.
