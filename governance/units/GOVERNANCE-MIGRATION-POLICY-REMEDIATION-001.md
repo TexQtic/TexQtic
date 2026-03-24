@@ -2,12 +2,12 @@
 unit_id: GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001
 title: Bounded remediation for migration policy alignment
 type: GOVERNANCE
-status: VERIFIED_COMPLETE
+status: CLOSED
 delivery_class: DECISION_QUEUE
 wave: W5
 plane: CONTROL
 opened: 2026-03-24
-closed: null
+closed: 2026-03-24
 verified: 2026-03-24
 commit: "0db8de4"
 evidence: "VERIFICATION_SCOPE_CONFIRMATION: remediation implementation commit 0db8de4 changed only package.json, server/package.json, docs/ops/prisma-migrations.md, docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md, and this unit file · PACKAGE_PATH_CONFIRMATION: root and server db:migrate entry points now default to db:migrate:tracked, server db:rls is blocked as non-default guidance, db:rls:exception is explicitly exception-only, and db:push is blocked as legacy/unsafe · DOC_GUIDANCE_CONFIRMATION: docs/ops/prisma-migrations.md now states repo-managed Prisma deploy as the default lawful tracked-migration path, direct SQL as exception-only, and mandatory remote validation expectations; MASTER-IMPLEMENTATION-PLAN-2026-03.md now preserves older Wave 3 psql-plus-ledger-reconcile practice as historical or exception-only context rather than current default guidance · LAYER_0_CONFIRMATION: OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md remained unchanged after implementation, and CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remained the sole ACTIVE_DELIVERY authorization · GOVERNANCE_RECONCILIATION_CONFIRMATION: governance sync now canonically reconciles this unit as VERIFIED_COMPLETE across Layer 0, Layer 1, and Layer 3 while preserving CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 as the sole ACTIVE_DELIVERY next action and preserving direct SQL as exception-only posture"
@@ -224,6 +224,33 @@ No defects found.
 - Layer 0 consistency result after sync: `VERIFIED`
 - This sync is recording only; it is not closure and does not open any new unit
 
+## Governance Closure
+
+- Governance close unit: `GOV-CLOSE-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001`
+- Close result: `GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` is now `CLOSED`
+- Close basis: bounded migration-policy remediation implementation completed under commit
+  `0db8de4`, verification completed under commit `bb358a8`, and governance sync completed under
+  commit `112bf9e`
+- Preserved next-action posture after close: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+  remains the sole `ACTIVE_DELIVERY` next action
+- Layer 0 consistency result after close: `VERIFIED`
+- Close-scope confirmation: governance sync already reconciled Layer 0, Layer 1, and Layer 3,
+  `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the doctrinal authority source, and
+  this closure does not authorize new migration work, product work, migration execution, Prisma
+  execution, SQL execution, or DB-state change
+
+## Mandatory Post-Close Audit
+
+- Audit unit: `GOV-AUDIT-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001-POST-CLOSE`
+- Audit result: `DECISION_REQUIRED`
+- Audit completeness review: close was performed only after verification and governance sync, no
+  out-of-scope files were changed in this close operation, Layer 0 remains internally consistent,
+  `NEXT-ACTION.md` remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains
+  the sole `ACTIVE_DELIVERY` next action, no new unit was opened implicitly, no implementation
+  authorization was created by closure, and governance records now consistently show this unit as
+  `CLOSED`
+- Recommendation is not authorization
+
 ## Allowed Future Remediation Boundary
 
 The later remediation step, if separately performed, must remain bounded to aligning repo-
@@ -249,10 +276,11 @@ product/application, certification, contract, Sentinel, or CI/platform work.
 
 ## Implementation Status Statement
 
-This bounded governance-only remediation implementation is complete on the allowlisted package and
-documentation surfaces only, and the verification result is now recorded as `VERIFIED_COMPLETE` in
-Layer 1. No Layer 0 change is made by this verification step.
+This bounded governance-only remediation implementation completed on the allowlisted package and
+documentation surfaces only, verification returned `VERIFIED_COMPLETE`, governance sync reconciled
+Layer 0, Layer 1, and Layer 3, and the unit is now `CLOSED` without changing active-delivery
+authority or authorizing any new migration, product, Prisma, SQL, or DB execution work.
 
 ## Atomic Commit
 
-`[GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] verify bounded migration policy alignment remediation`
+`[GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] close verified and synced migration policy remediation`

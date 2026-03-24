@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOVERNANCE-SYNC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001)
+**Last Updated:** 2026-03-24 (GOV-CLOSE-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,7 +14,6 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-23 |
-| GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | Bounded remediation for migration policy alignment | VERIFIED_COMPLETE | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
@@ -23,14 +22,14 @@
 ## Summary
 
 - **OPEN** (all governed units): **2**
-- **VERIFIED_COMPLETE** (postured for Close): **1**
+- **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 2
+- **DECISION_QUEUE**: 1
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 4**
+- **Total non-terminal units: 3**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -41,13 +40,17 @@ implementation-ready unit and `NEXT-ACTION.md` remains unchanged by the concurre
 unit with `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout,
 or broader governance implementation remains separately governed.
 
-`GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` is now `VERIFIED_COMPLETE` as a bounded
-governance-only remediation unit with `DECISION_QUEUE` posture. The repo-advertised migration
-entry points now default to the canonical tracked Prisma path, direct SQL remains explicitly
-exception-only, stale forward-looking migration guidance is aligned to the already-decided policy,
-`GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the authority source, `NEXT-ACTION.md`
-remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole
-`ACTIVE_DELIVERY` authorization, and no closure is implied by this sync.
+GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
+`0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
+post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed
+unit remains preserved governance truth for bounded migration-policy remediation only:
+repo-advertised migration entry points now default to the canonical tracked Prisma path, direct
+SQL remains explicitly exception-only, stale forward-looking migration guidance remains aligned to
+the already-decided policy, `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the
+authority source, `NEXT-ACTION.md` remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+remains the sole `ACTIVE_DELIVERY` authorization, and no new migration work, product work,
+migration execution, Prisma execution, SQL execution, or DB-state change was authorized by this
+closure.
 
 The bounded Sentinel v1 specification package is now implemented inside
 `GOVERNANCE-SENTINEL-V1-SPEC-001`, but that unit remains `OPEN` pending separate verification.
@@ -120,6 +123,7 @@ CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 opened 2026-03-23 as one bounded 
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | CLOSED | 2026-03-24 | 0db8de4 · bb358a8 · 112bf9e · this close record |
 | TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 | CLOSED | 2026-03-23 | f0f58ea · this close record |
 | TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 | CLOSED | 2026-03-23 | 2f1b28d · ab52404 · this close record |
 | TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 | CLOSED | 2026-03-22 | this decision record |

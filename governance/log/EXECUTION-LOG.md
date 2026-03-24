@@ -2735,6 +2735,56 @@ Refs: governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md · governance/log/EX
 
 ---
 
+### GOV-CLOSE-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 — 2026-03-24
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] close verified and synced migration policy remediation)
+Title: Close the verified and synced bounded migration policy remediation unit
+Summary: Governance-only close unit. Recorded `GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` as
+  `CLOSED` after bounded remediation implementation commit `0db8de4`, verification commit
+  `bb358a8`, and governance-sync commit `112bf9e`. The unit's doctrinal purpose is complete and
+  closed: repo-advertised migration entry points now default to the canonical tracked Prisma path,
+  direct SQL remains explicitly exception-only, stale forward-looking migration guidance is
+  aligned to the already-decided canonical migration execution and remote validation policy,
+  `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the authority source,
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` next
+  action, and no migration execution, DB-state change, product code change, or new implementation
+  authorization is implied by this closure.
+Layer Impact: Layer 0 — OPEN-SET.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This closure is governance-only. `NEXT-ACTION.md` remains intentionally unchanged, no new
+  unit is opened by implication, and no Prisma, SQL, migration, env, or product/application work
+  was performed in this close step.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001-POST-CLOSE — 2026-03-24
+Type: GOVERNANCE / AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for GOV-AUDIT-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001-POST-CLOSE)
+Title: Mandatory post-close audit for bounded migration policy remediation closure completeness
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied, close occurred only after verification
+  and governance sync, no out-of-scope files were changed, Layer 0 is internally consistent,
+  OPEN-SET no longer lists `GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` in the non-terminal
+  governed-unit table, `NEXT-ACTION.md` remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+  remains the sole `ACTIVE_DELIVERY` next action, no new unit was opened implicitly, no
+  implementation authorization was created by closure, the unit file is marked `CLOSED`, and
+  governance records now consistently show this unit as `CLOSED`.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. Recommendation is not
+  authorization. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 — 2026-03-24
 Type: GOVERNANCE / SYNC
 Status: VERIFIED_COMPLETE
