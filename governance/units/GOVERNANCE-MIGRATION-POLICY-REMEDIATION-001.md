@@ -2,15 +2,15 @@
 unit_id: GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001
 title: Bounded remediation for migration policy alignment
 type: GOVERNANCE
-status: OPEN
+status: VERIFIED_COMPLETE
 delivery_class: DECISION_QUEUE
 wave: W5
 plane: CONTROL
 opened: 2026-03-24
 closed: null
-verified: null
-commit: null
-evidence: "LAYER_0_CONFIRMATION: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains OPEN, remains the sole ACTIVE_DELIVERY implementation-ready unit, NEXT-ACTION still points only to that unit, and GOVERNANCE-SENTINEL-V1-SPEC-001 remains concurrently OPEN with DECISION_QUEUE posture only · DOCTRINE_CONFIRMATION: GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 already fixed the canonical migration execution classes, blocker posture, and mandatory remote validation doctrine · REMEDIATION_SURFACE_CONFIRMATION: package.json, server/package.json, docs/ops/prisma-migrations.md, and docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md still preserve conflicting migration entry points or stale forward-looking migration instructions that now require bounded alignment to the decided doctrine"
+verified: 2026-03-24
+commit: "0db8de4"
+evidence: "VERIFICATION_SCOPE_CONFIRMATION: remediation implementation commit 0db8de4 changed only package.json, server/package.json, docs/ops/prisma-migrations.md, docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md, and this unit file · PACKAGE_PATH_CONFIRMATION: root and server db:migrate entry points now default to db:migrate:tracked, server db:rls is blocked as non-default guidance, db:rls:exception is explicitly exception-only, and db:push is blocked as legacy/unsafe · DOC_GUIDANCE_CONFIRMATION: docs/ops/prisma-migrations.md now states repo-managed Prisma deploy as the default lawful tracked-migration path, direct SQL as exception-only, and mandatory remote validation expectations; MASTER-IMPLEMENTATION-PLAN-2026-03.md now preserves older Wave 3 psql-plus-ledger-reconcile practice as historical or exception-only context rather than current default guidance · LAYER_0_CONFIRMATION: OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md remain unchanged after implementation, and CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY authorization"
 doctrine_constraints:
   - D-004: this is one bounded governance-only remediation unit only; no second migration-policy child or broader database-governance program may be mixed in
   - D-007: opening only; no package-script edits, migration-doc edits, tooling changes, migration execution, DB-state changes, env edits, or application/code changes occur in this operation
@@ -144,10 +144,11 @@ surfaces only:
 
 ## Exact Verification Profile
 
-- unit type: governance-only remediation opening
+- unit type: governance-only remediation verification
 - required verification modes:
   - governance artifact inspection
-  - migration-policy decision inspection
+  - package-script inspection
+  - docs instruction inspection
   - Layer 0 consistency review
   - bounded-scope compliance review
 - exclusions:
@@ -168,6 +169,49 @@ Resulting governance posture after this opening:
 - no implementation has been executed yet
 - the next canonical phase for this unit is later bounded remediation implementation only if
   separately authorized
+
+## Verification Record
+
+- Verification date: `2026-03-24`
+- Verification unit type: governance-only remediation verification
+- Implementation commit inspected: `0db8de4`
+- Verification surfaces inspected:
+  - `package.json`
+  - `server/package.json`
+  - `docs/ops/prisma-migrations.md`
+  - `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md`
+  - `governance/units/GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001.md`
+  - `governance/decisions/GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001.md`
+  - `governance/decisions/GOV-DEC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-OPENING.md`
+  - `governance/control/OPEN-SET.md`
+  - `governance/control/NEXT-ACTION.md`
+  - `governance/control/SNAPSHOT.md`
+
+Verification findings:
+
+- `package.json` now advertises the canonical tracked-migration path through `db:migrate:tracked`,
+  and `db:migrate` now resolves to that same tracked path rather than to conflicting legacy
+  server behavior
+- `server/package.json` now advertises `db:migrate:tracked` as the default tracked-migration
+  path, while `db:migrate` aliases that path and no longer resolves to `prisma migrate dev`
+- `server/package.json` now retains direct SQL only under explicit exception posture via
+  `db:rls:exception`, while `db:rls` is blocked with corrective guidance and `db:push` is blocked
+  as legacy/unsafe
+- `docs/ops/prisma-migrations.md` now presents repo-managed Prisma deploy as the default lawful
+  tracked-migration path, presents direct SQL as exception-only, and includes forward remote
+  validation expectations
+- `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` now preserves Wave 3 psql-plus-ledger-
+  reconcile language as historical practice or exception-only context instead of current default
+  guidance
+- `OPEN-SET.md`, `NEXT-ACTION.md`, and `SNAPSHOT.md` remained unchanged during the remediation
+  implementation commit, and `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole
+  `ACTIVE_DELIVERY` authorization
+- no migration execution, Prisma command execution, DB-state change, product/application code
+  change, or Sentinel work was performed by the remediation implementation commit
+
+Verification verdict: `VERIFIED_COMPLETE`
+
+No defects found.
 
 ## Allowed Future Remediation Boundary
 
@@ -195,9 +239,9 @@ product/application, certification, contract, Sentinel, or CI/platform work.
 ## Implementation Status Statement
 
 This bounded governance-only remediation implementation is complete on the allowlisted package and
-documentation surfaces only. The unit remains `OPEN` pending any later verification, sync, or
-closure steps.
+documentation surfaces only, and the verification result is now recorded as `VERIFIED_COMPLETE` in
+Layer 1. No Layer 0 change is made by this verification step.
 
 ## Atomic Commit
 
-`[GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] implement bounded migration policy alignment remediation`
+`[GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] verify bounded migration policy alignment remediation`
