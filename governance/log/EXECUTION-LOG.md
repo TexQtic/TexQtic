@@ -43,6 +43,28 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 — 2026-03-24
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded CHECK-005 recount remediation
+Summary: Opened one bounded concurrent governance remediation unit after the latest lawful manual
+  Sentinel close rerun for `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` returned `FAIL` on
+  `SENTINEL-V1-CHECK-005` with reported reason `SNAPSHOT does not reflect the current open governed
+  unit count`. `SENTINEL-V1-CHECK-006`, `SENTINEL-V1-CHECK-007`, `SENTINEL-V1-CHECK-008`, and
+  `SENTINEL-V1-CHECK-009` now pass for that same retry posture. No close was performed and
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` stream.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 — governance
+  unit record added; Layer 2 — decision/opening record added; Layer 3 — EXECUTION-LOG.md appended
+Notes: This unit is authorized only to remediate the remaining CHECK-005 recount blocker in
+  bounded governance form. It does not close the certification unit, does not authorize
+  certification implementation change, and does not authorize Sentinel doctrine expansion,
+  automation rollout, CI integration, hooks, bots, or auto-triggering.
+Refs: governance/units/GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-OPENING.md
+
+---
+
 ### GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 RECORD CORRECTION — 2026-03-24
 Type: GOVERNANCE / RECORD CORRECTION
 Status: OPEN

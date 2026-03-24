@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 record correction after bounded artifact emission)
+**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 decision + opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,6 +14,7 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
+| GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 | Sentinel CHECK-005 recount remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 | Sentinel correction-order artifact emission | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 | Sentinel correction-order reference remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 | Sentinel close retry blocker remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
@@ -26,15 +27,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **6**
+- **OPEN** (all governed units): **7**
 - **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 6
+- **DECISION_QUEUE**: 7
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 8**
+- **Total non-terminal units: 9**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -45,12 +46,11 @@ authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`
 implementation delta, focused tests PASS (`5` passed, `0` failed), and verified lifecycle-log
 persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only, but
 that close remains blocked in practical effect pending a later lawful Sentinel rerun under
-`SENTINEL-V1-CHECK-009`. The latest mandatory manual Sentinel `close_progression` rerun previously
-returned `FAIL` on `SENTINEL-V1-CHECK-009`
-(`correction_order_completion`) with reported reason `correction-order-reference is required for
-retry validation`. `SENTINEL-V1-CHECK-006` now returns `PASS`, `SENTINEL-V1-CHECK-005` has
-already been remediated in repo truth, the CHECK-009 reference-path doctrine is already remediated
-in repo truth, the canonical correction-order artifact instance now exists at
+`SENTINEL-V1-CHECK-005`. The latest mandatory manual Sentinel `close_progression` rerun returned
+`FAIL` on `SENTINEL-V1-CHECK-005` (`layer0_consistency`) with reported reason `SNAPSHOT does not
+reflect the current open governed unit count`. `SENTINEL-V1-CHECK-006`,
+`SENTINEL-V1-CHECK-007`, `SENTINEL-V1-CHECK-008`, and `SENTINEL-V1-CHECK-009` now return `PASS`
+for the same lawful retry posture, the canonical correction-order artifact instance exists at
 `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`,
 and no certification close was performed. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-
 REMEDIATION-001` remains open concurrently with `DECISION_QUEUE` posture because it bounded and
@@ -66,6 +66,10 @@ correction-order artifact instance exists at the canonical governed path require
 of the blocked certification close gate. The Sentinel manual-
 workflow unit remains open concurrently with `DECISION_QUEUE` posture to require manual local
 Sentinel invocation before governance progression at the already-decided checkpoints.
+`GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001` now remains open concurrently with
+`DECISION_QUEUE` posture because the latest lawful close rerun is still blocked only by the
+remaining Layer 0 recount mismatch and this remediation is bounded to that CHECK-005 blocker
+class only.
 `GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded governance-only spec/design unit with
 `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout, or
 broader governance implementation remains separately governed.
