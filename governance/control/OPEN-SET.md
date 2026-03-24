@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOV-CLOSE-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001)
+**Last Updated:** 2026-03-24 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 governance sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,7 +13,7 @@
 
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
-| CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-23 |
+| CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
@@ -21,8 +21,8 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **2**
-- **VERIFIED_COMPLETE** (postured for Close): **0**
+- **OPEN** (all governed units): **1**
+- **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
@@ -34,11 +34,14 @@
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
 
-`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY`
-implementation-ready unit and `NEXT-ACTION.md` remains unchanged by the concurrent opening of
-`GOVERNANCE-SENTINEL-V1-SPEC-001`. The Sentinel unit is a bounded governance-only spec/design
-unit with `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout,
-or broader governance implementation remains separately governed.
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` unit, is now
+`VERIFIED_COMPLETE`, and is postured for separate Close after bounded verification confirmed the
+authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`, no remaining
+implementation delta, focused tests PASS (`5` passed, `0` failed), and verified lifecycle-log
+persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only. The
+Sentinel unit is a bounded governance-only spec/design unit with `DECISION_QUEUE` posture because
+any later Sentinel tooling rollout, enforcement rollout, or broader governance implementation
+remains separately governed.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
@@ -115,7 +118,7 @@ REALM-BOUNDARY-SHELL-AFFORDANCE-001 closed 2026-03-22 after final implementation
 AUTH-IDENTITY-TRUTH-DEPLOYED-001 closed 2026-03-22 as a bounded decision-only governance unit. Result: `SPLIT_REQUIRED`. The remaining deployed identity-truth finding is not yet one truthful implementation slice because control-plane displayed identity truth, tenant-shell displayed identity truth, and impersonation persona labeling remain mixed and shell-sensitive, while `IMPERSONATION-STOP-CLEANUP-001` remains causally separate. No implementation opening was created by this decision.
 CONTROL-PLANE-IDENTITY-TRUTH-001 closed 2026-03-22 as a bounded decision and pre-opening-preparation unit. Result: `OPENING_CANDIDATE` only. The control-plane displayed identity-truth slice is now narrow enough for one later bounded opening candidate limited to control-plane chrome identity label correctness and persona presentation consistency only, but no implementation-ready unit was opened, no tenant-shell or white-label scope was introduced, and no impersonation stop-cleanup scope was merged.
 CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 closed 2026-03-23 as a bounded decision-only governance unit. Result: `OPENING_CANDIDATE`. The installed tenant certification transition surface, tenant route, and backend transition path now preserve one separate bounded certification transition/logging candidate only: certification transitions are currently exposed but cannot be applied because `certification_lifecycle_logs` does not exist. That decision is now carried forward by the opened child `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` only. Certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, DB/schema work, and unrelated AI/logging streams remain separate.
-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 opened 2026-03-23 as one bounded implementation-ready unit for certification transition applicability and lifecycle logging only. Scope is limited to the already-exposed certification transition path across the tenant Certifications UI, frontend transition helper, tenant transition route, backend certification transition service/state-machine path, and the lifecycle-log persistence required to make that bounded path applicable. No implementation was performed by this opening, and no metadata PATCH UI work, maker-checker mutation work, broad certification redesign, DB/schema work, or unrelated AI/logging stream was opened by implication.
+CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 is now `VERIFIED_COMPLETE` after bounded governance sync on 2026-03-24. The authoritative implementation baseline remains `5cd6f74bc813c1b264f3228dcfca926826a36114`, no remaining implementation delta was found during continuation review, focused bounded verification passed (`5` passed, `0` failed), lifecycle-log persistence is verified as present and wired into the certification transition path, no unauthorized changed-file dependence was found, and no closure is implied by this sync. The next lawful lifecycle step is separate Close only.
 
 ---
 
