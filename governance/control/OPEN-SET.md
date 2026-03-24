@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 close after lawful Sentinel rerun PASS)
+**Last Updated:** 2026-03-24 (candidate-state normalization opening preserves operator-decision posture)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -20,21 +20,22 @@
 | GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 | Sentinel close allowlist mismatch remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
+| GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **7**
+- **OPEN** (all governed units): **8**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 0
-- **DECISION_QUEUE**: 7
+- **DECISION_QUEUE**: 8
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 8**
+- **Total non-terminal units: 9**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -65,6 +66,12 @@ resolved CHECK-005 blocker class only.
 `GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded governance-only spec/design unit with
 `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout, or
 broader governance implementation remains separately governed.
+`GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001` remains open concurrently with `DECISION_QUEUE`
+posture because the latest operator audit found no currently compelled next opening in Layer 0 and
+identified stale, mixed, or historically consumed candidate-state records that should not be
+reused casually as new openings. This bounded governance-only normalization unit exists only to
+normalize candidate-state truth before any later operator choice and does not authorize a
+successor `ACTIVE_DELIVERY` stream or reopen any consumed historical unit by implication.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory

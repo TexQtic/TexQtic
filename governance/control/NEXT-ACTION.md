@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 close)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (candidate-state normalization opening preserves operator-decision posture)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -27,7 +27,12 @@ notes: |
   GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001,
   GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001, and GOVERNANCE-SENTINEL-V1-SPEC-001
   remain open concurrently in Layer 0 with DECISION_QUEUE posture only.
+  GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 now also remains open concurrently in Layer 0 with
+  DECISION_QUEUE posture only while candidate-state normalization is in progress.
   TECS-FBW-ADMINRBAC remains DESIGN_GATE.
+  No currently named candidate is cleanly compelled by Layer 0 as the next lawful opening, and no
+  stale READY_FOR_OPENING state, mixed open/closed text, or consumed opening artifact may reopen a
+  historical unit by implication.
   No new unit was opened implicitly, no successor implementation authorization was created by
   closure, and the truthful post-close posture is OPERATOR_DECISION_REQUIRED.
 ```

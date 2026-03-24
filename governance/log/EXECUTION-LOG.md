@@ -522,6 +522,26 @@ correction-order-reference requirement is corrected lawfully and `close_progress
 
 ---
 
+### GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 — 2026-03-24
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded candidate-state normalization
+Summary: Opened one bounded concurrent governance normalization unit after the latest operator
+  audit found no currently compelled next opening in Layer 0 and found stale, mixed, or
+  historically consumed candidate-state records that make future operator selection unsafe if they
+  are reused casually. Current Layer 0 remains `OPERATOR_DECISION_REQUIRED`, no `ACTIVE_DELIVERY`
+  successor is compelled yet, and no implementation, close, or successor opening was performed.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 — governance
+  unit record added; Layer 2 — decision/opening record added; Layer 3 — EXECUTION-LOG.md appended
+Notes: This unit is authorized only to normalize candidate-state truth so later operator choice is
+  reliable and technically correct. It does not authorize implementation work, does not create a
+  new `ACTIVE_DELIVERY` stream, and does not reopen consumed historical units by implication.
+Refs: governance/units/GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-OPENING.md
+
+---
+
 ### GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 — 2026-03-23
 Type: GOVERNANCE / DECISION
 Status: CLOSED
