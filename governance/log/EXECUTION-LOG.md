@@ -1444,6 +1444,31 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 — 2026-03-24
+Type: GOVERNANCE / IMPLEMENTATION-ANALYSIS
+Status: OPEN
+Commit: (this unit — see git log for [GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001] implement bounded Sentinel close allowlist fix)
+Title: Implement bounded Sentinel close allowlist fix
+Summary: Governance-only remediation implementation/analysis step. Confirmed that the exact
+  blocker came from runner implementation in `scripts/governance/sentinel-v1.js`: `SENTINEL-V1-CHECK-006`
+  validated every checkpoint against one global automation allowlist, so `close_progression`
+  treated `governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md` as non-allowlisted
+  even though the lawful close surface necessarily includes that same unit record. Applied the
+  minimum bounded correction by treating the supplied `--unit-file` as one additional explicit
+  allowlisted surface for `close_progression` only.
+Layer Impact: Layer 0 — unchanged;
+  Layer 1 — governance/units/GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001.md updated with implementation-analysis evidence;
+  Layer 3 — EXECUTION-LOG.md appended;
+  Runner surface — scripts/governance/sentinel-v1.js updated;
+  Operator documentation — docs/governance/GOVERNANCE-SENTINEL-V1-AUTOMATION.md updated
+Notes: No Sentinel rerun was performed in this remediation step. No certification close was
+  performed. No certification implementation, product code, DB/schema, tests, CI integration,
+  hooks, bots, or broader Sentinel redesign was modified or authorized.
+Refs: scripts/governance/sentinel-v1.js · docs/governance/GOVERNANCE-SENTINEL-V1-AUTOMATION.md ·
+  governance/units/GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001 — 2026-03-23
 Type: GOVERNANCE / ANALYSIS-RECORD
 Status: CLOSED

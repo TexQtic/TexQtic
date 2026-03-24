@@ -352,7 +352,7 @@ function runCheck(checkId, options, context) {
     case 'SENTINEL-V1-CHECK-005':
       return runCheck005();
     case 'SENTINEL-V1-CHECK-006':
-      return runCheck006(options);
+      return runCheck006(options, context);
     case 'SENTINEL-V1-CHECK-007':
       return runCheck007(options, context);
     case 'SENTINEL-V1-CHECK-008':
@@ -600,11 +600,12 @@ function runCheck005() {
   return buildCheckResult('SENTINEL-V1-CHECK-005', failures, evidence);
 }
 
-function runCheck006(options) {
+function runCheck006(options, context) {
   const modifiedFiles = getArray(options, 'modified-file').map(
     normalizeRepoPath
   );
   const failures = [];
+  const allowlist = buildAllowlistForCheck006(options, context, failures);
 
   if (modifiedFiles.length === 0) {
     failures.push(
@@ -613,12 +614,32 @@ function runCheck006(options) {
   }
 
   for (const filePath of modifiedFiles) {
-    if (!isAllowlisted(filePath)) {
+    if (!isAllowlisted(filePath, allowlist)) {
       failures.push(`non-allowlisted file in change scope: ${filePath}`);
     }
   }
 
   return buildCheckResult('SENTINEL-V1-CHECK-006', failures, modifiedFiles);
+}
+
+function buildAllowlistForCheck006(options, context, failures) {
+  const allowlist = [...AUTOMATION_ALLOWLIST];
+
+  if (context.checkpoint !== 'close_progression') {
+    return allowlist;
+  }
+
+  const unitFile = getOptional(options, 'unit-file');
+
+  if (!unitFile) {
+    failures.push(
+      'unit-file is required for close_progression allowlist boundary validation'
+    );
+    return allowlist;
+  }
+
+  allowlist.push(normalizeRepoPath(unitFile));
+  return dedupe(allowlist);
 }
 
 function runCheck007(options, context) {
@@ -1163,8 +1184,8 @@ function normalizeRepoPath(value) {
   return normalized.startsWith('./') ? normalized.slice(2) : normalized;
 }
 
-function isAllowlisted(relativePath) {
-  return AUTOMATION_ALLOWLIST.some((allowed) => {
+function isAllowlisted(relativePath, allowlist = AUTOMATION_ALLOWLIST) {
+  return allowlist.some((allowed) => {
     if (allowed.endsWith('/')) {
       return relativePath.startsWith(allowed);
     }
@@ -1200,6 +1221,7 @@ function printHelp() {
       '  --analysis-ref <path>            Repeatable for mirror-check traceability.',
       '  --layer0-effect-claimed true|false',
       '  --execution-log-ref <path>       Repeatable when linkage is claimed.',
+      '  --unit-file <path>               Required for close_progression when the unit record is part of the lawful close surface.',
       '  --retry-from-fail true|false',
       '  --correction-order-reference <path>',
       '',

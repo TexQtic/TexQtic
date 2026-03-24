@@ -49,6 +49,19 @@ Resolve the exact Sentinel v1 close allowlist mismatch that blocked lawful closu
 - this remediation unit is concurrent `DECISION_QUEUE` only
 - this remediation unit does not displace or supersede the blocked certification close stream
 
+## Implementation Analysis Result
+
+- Exact root cause found in repo truth: `scripts/governance/sentinel-v1.js` enforced `SENTINEL-V1-CHECK-006` through one global `AUTOMATION_ALLOWLIST` for every checkpoint, so `close_progression` had no explicit lawful path for the certification unit file even when that same unit record was necessarily part of the close surface.
+- Exact mismatch class: runner implementation allowlist logic only.
+- Not the root cause for this blocker: Layer 0 authority, certification implementation scope, spec/schema/template structure, or the certification unit record itself.
+
+## Correction Applied
+
+- `scripts/governance/sentinel-v1.js` now treats the supplied `--unit-file` as one additional explicit allowlisted surface for `close_progression` only.
+- The base Sentinel automation allowlist remains unchanged for non-close checkpoints.
+- No other checks, checkpoints, Layer 0 files, certification files, product files, schema files, or automation rollout surfaces were changed.
+- No Sentinel rerun was performed in this remediation step.
+
 ## Completion Standard
 
 This unit may progress only when the exact mismatch is bounded, the minimum lawful correction is defined without scope drift, and the required correction-order posture is explicit for a later remediation implementation/verification flow if needed.

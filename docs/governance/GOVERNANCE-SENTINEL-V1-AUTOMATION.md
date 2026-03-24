@@ -72,6 +72,13 @@ Emits one YAML correction-order artifact matching the approved template structur
   - `governance/schema/GOVERNANCE-SENTINEL-V1-GATE-RESULT-SCHEMA.md`
   - `governance/templates/GOVERNANCE-SENTINEL-V1-CORRECTION-ORDER-TEMPLATE.md`
 
+## Allowlist Boundary Handling
+
+- `SENTINEL-V1-CHECK-006` validates `--modified-file` inputs against the bounded checkpoint-aware allowlist only.
+- The base allowlist covers the canonical Sentinel governance automation surfaces.
+- For `close_progression`, the supplied `--unit-file` is treated as one additional explicit lawful close surface because a lawful close of a governed unit necessarily edits that same unit record.
+- This close-specific allowance does not widen any other checkpoint and does not authorize arbitrary `governance/units/*` edits.
+
 ## Example PASS Run
 
 This example exercises the bounded automation opening posture without altering Layer 0 authority.
