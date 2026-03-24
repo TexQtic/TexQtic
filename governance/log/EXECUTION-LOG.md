@@ -36,6 +36,58 @@ Refs: <canonical reference path>
 
 ---
 
+### GOV-AUDIT-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002-POST-CLOSE — 2026-03-24
+Type: GOVERNANCE / AUDIT
+Status: CLOSED
+Commit: (this unit — see git log for [CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002] close verified certification transition logging after lawful Sentinel rerun)
+Title: Mandatory post-close audit for certification transition logging closure completeness
+Summary: Governance-only post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied, close occurred only after
+  implementation, verification, and governance sync were already complete, the manual Sentinel
+  rerun was executed before progression and returned `PASS`, the correction-order reference used
+  was `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`,
+  no out-of-scope files were changed, `OPEN-SET.md` no longer lists
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` in the non-terminal governed-unit table,
+  `NEXT-ACTION.md` no longer points to the closed unit, Layer 0 is internally consistent after
+  close, no new unit was opened implicitly, no implementation authorization was created by
+  closure, and governance records now consistently show this unit as `CLOSED`.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Mandatory post-close audit emitted with the closure record. Recommendation is not
+  authorization. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 — 2026-03-24
+Type: IMPLEMENTATION / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002] close verified certification transition logging after lawful Sentinel rerun)
+Title: Close the verified certification transition logging unit after lawful Sentinel rerun
+Summary: Governance-only close unit. Recorded `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+  as `CLOSED` after authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`
+  remained unchanged, verification was already complete, governance sync was already complete,
+  and the mandatory manual Sentinel `close_progression` rerun returned `PASS` using
+  correction-order reference
+  `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
+  The certification lifecycle-log persistence gap is closed within the bounded authorized flow
+  only, no implementation, migration, Prisma, or SQL work occurred in this close step, and no
+  successor unit was opened implicitly.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This closure is governance-only. `NEXT-ACTION.md` now returns to `OPERATOR_DECISION_REQUIRED`,
+  no new implementation authorization was created by closure, and no broader certification redesign
+  or unrelated work is implied.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md ·
+  governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml
+
+---
+
 ## Completed Governance Milestones
 
 Entries are ordered chronologically by closure date. Oldest first.
