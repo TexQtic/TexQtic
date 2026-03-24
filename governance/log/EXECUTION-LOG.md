@@ -43,6 +43,32 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 — 2026-03-24
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded correction-order artifact emission
+Summary: Opened one bounded concurrent governance remediation unit after repo truth confirmed that
+  the certification close remains blocked in practical effect because no concrete correction-order
+  artifact instance yet exists for the lawful retry posture under `SENTINEL-V1-CHECK-009`.
+  CHECK-009 reference-path doctrine is already resolved in repo truth, the canonical artifact path
+  class is `governance/correction-orders/<correction_order_id>.yaml`, and this new unit is
+  authorized only to emit the exact correction-order artifact instance needed for later lawful
+  retry. No close was performed and `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the
+  sole `ACTIVE_DELIVERY` stream.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 — governance
+  unit record added; Layer 2 — decision/opening record added; Layer 3 — EXECUTION-LOG.md appended
+Notes: The practical failing checkpoint remains `close_progression` for subject
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`, but the remaining practical blocker is now the
+  absence of one concrete correction-order artifact instance at the already-decided canonical path
+  class. This unit is bounded to artifact emission only, does not close the certification unit,
+  does not authorize certification implementation change, and does not authorize Sentinel
+  doctrine expansion, automation rollout, CI integration, hooks, bots, or auto-triggering.
+Refs: governance/units/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-OPENING.md
+
+---
+
 ### GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 IMPLEMENTATION / ANALYSIS — 2026-03-24
 Type: GOVERNANCE / IMPLEMENTATION + ANALYSIS
 Status: OPEN

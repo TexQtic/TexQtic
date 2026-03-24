@@ -22,12 +22,15 @@ notes: |
   The next lawful lifecycle step is separate Close for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
   only. This governance sync does not close the unit, does not open a new unit, and does not change
   ACTIVE_DELIVERY sequencing authority.
-  Close progression is currently blocked because the latest mandatory manual Sentinel
+  Close progression remains blocked in practical effect because no concrete correction-order
+  artifact instance yet exists at the canonical CHECK-009 retry path class
+  governance/correction-orders/<correction_order_id>.yaml. The latest mandatory manual Sentinel
   close_progression run for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 returned FAIL on
   SENTINEL-V1-CHECK-009 (correction_order_completion) with reported reason:
   correction-order-reference is required for retry validation. No closure was performed.
-  The prior close allowlist blocker on SENTINEL-V1-CHECK-006 now returns PASS, and
-  SENTINEL-V1-CHECK-005 has already been remediated in repo truth.
+  The prior close allowlist blocker on SENTINEL-V1-CHECK-006 now returns PASS,
+  SENTINEL-V1-CHECK-005 has already been remediated in repo truth, and CHECK-009 reference-path
+  doctrine is already remediated in repo truth.
   GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 is now OPEN concurrently in Layer 0 as a
   bounded governance remediation unit with DECISION_QUEUE posture only. It exists only to make
   the blocked close gate lawfully passable after correction and does not displace this unit's
@@ -41,6 +44,11 @@ notes: |
   determine, authorize, and resolve the exact lawful correction-order-reference posture required by
   SENTINEL-V1-CHECK-009 retry validation, does not close the certification unit, and does not
   displace this unit's ACTIVE_DELIVERY authorization.
+  GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 is now OPEN concurrently in Layer 0
+  as a bounded governance remediation unit with DECISION_QUEUE posture only. It exists only to
+  emit exactly one lawful correction-order artifact instance at the canonical governed path
+  required for SENTINEL-V1-CHECK-009 retry validation, does not close the certification unit, and
+  does not displace this unit's ACTIVE_DELIVERY authorization.
   Manual Sentinel v1 invocation is now mandatory by workflow before governance progression at the
   already-decided checkpoints for Opening, Governance Sync, Close, Layer 0 next-action change not
   already compelled by an open unit, and any governance review claiming clean bounded compliance.
