@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 governance sync)
+**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 decision + opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,6 +14,7 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
+| GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
@@ -21,15 +22,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **1**
+- **OPEN** (all governed units): **2**
 - **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 1
+- **DECISION_QUEUE**: 2
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 3**
+- **Total non-terminal units: 4**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -39,9 +40,12 @@ does not replace TECS lifecycle, unit status, or authorization.
 authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`, no remaining
 implementation delta, focused tests PASS (`5` passed, `0` failed), and verified lifecycle-log
 persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only. The
-Sentinel unit is a bounded governance-only spec/design unit with `DECISION_QUEUE` posture because
-any later Sentinel tooling rollout, enforcement rollout, or broader governance implementation
-remains separately governed.
+Sentinel manual-workflow unit is now open concurrently with `DECISION_QUEUE` posture to make
+manual Sentinel v1 invocation mandatory by workflow before governance progression at the already-
+decided checkpoints while preserving the existing local/manual runner and preserving the current
+ACTIVE_DELIVERY authorization unchanged. `GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded
+governance-only spec/design unit with `DECISION_QUEUE` posture because any later Sentinel tooling
+rollout, enforcement rollout, or broader governance implementation remains separately governed.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory

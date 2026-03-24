@@ -1393,6 +1393,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 — 2026-03-24
+Type: GOVERNANCE / DECISION+OPENING
+Status: OPEN
+Commit: (this unit — see git log for [GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001] decide and open mandatory manual Sentinel workflow integration)
+Title: Decide and open mandatory manual Sentinel workflow integration
+Summary: Governance-only decision/opening unit. Recorded that Governance Sentinel v1 manual
+  invocation is now mandatory by workflow before governance progression at the already-decided
+  checkpoints for Opening, Governance Sync, Close, Layer 0 next-action change not already
+  compelled by an open unit, and any governance review claiming clean bounded compliance. The
+  existing bounded local/manual Sentinel v1 runner remains the operative tool. No auto-trigger,
+  CI, hook, bot, or broader enforcement rollout is authorized, and ACTIVE_DELIVERY authority
+  remains unchanged.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001.md created;
+  Layer 2 — governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-OPENING.md created;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: NEXT-ACTION remains the certification Close step only, with an added truthful workflow note
+  that manual Sentinel invocation is now required before governance progression at the already-
+  decided checkpoints. No scripts, package surfaces, CI/hook wiring, product code, DB/schema,
+  migrations, contracts, or tests were modified.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-OPENING.md ·
+  governance/units/GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001 — 2026-03-23
 Type: GOVERNANCE / ANALYSIS-RECORD
 Status: CLOSED

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 governance sync postured the next step to Close)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 preserved ACTIVE_DELIVERY authority and recorded mandatory manual Sentinel workflow discipline)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -22,6 +22,15 @@ notes: |
   The next lawful lifecycle step is separate Close for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
   only. This governance sync does not close the unit, does not open a new unit, and does not change
   ACTIVE_DELIVERY sequencing authority.
+  Manual Sentinel v1 invocation is now mandatory by workflow before governance progression at the
+  already-decided checkpoints for Opening, Governance Sync, Close, Layer 0 next-action change not
+  already compelled by an open unit, and any governance review claiming clean bounded compliance.
+  The required runner remains the existing bounded local/manual Sentinel v1 entrypoint only, and
+  no auto-trigger wiring, CI integration, git-hook integration, or broader enforcement rollout is
+  authorized by that concurrent governance decision/opening.
+  GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 is now OPEN concurrently in Layer 0 as a bounded
+  governance-workflow unit with DECISION_QUEUE posture only. It does not displace this unit's
+  ACTIVE_DELIVERY authorization.
   GOVERNANCE-SENTINEL-V1-SPEC-001 may be OPEN concurrently in Layer 0 as a bounded governance-only
   Sentinel v1 specification unit. Its bounded specification package is now implemented, but it
   does not displace this unit's ACTIVE_DELIVERY authorization.
