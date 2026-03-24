@@ -8,6 +8,18 @@
 
 ## Overview
 
+## Policy Status
+
+Current forward migration policy is governed by
+`GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001`.
+
+The default lawful path for repo-tracked Prisma migrations is the repo-managed Prisma deploy path.
+Direct SQL remains lawful only as a separately authorized exception path with explicit ledger
+posture and mandatory remote validation.
+
+Historical docs or trackers may still preserve older `psql` plus `prisma migrate resolve --applied`
+practice. Those references remain truthful as history only and are not the current default policy.
+
 TexQtic uses Prisma's two-URL pattern:
 
 | Variable | Used by | Pooler OK? | Notes |
@@ -64,7 +76,52 @@ pnpm -C server exec prisma migrate deploy
 
 ---
 
-## Standard Migration Workflow
+## Canonical Execution Classes
+
+### Repo-managed Prisma migrations (default)
+
+Use this path when the change is represented by repo-tracked migration artifacts under
+`server/prisma/migrations/`.
+
+Canonical shorthand entry points:
+
+- `pnpm run db:migrate:tracked`
+- `pnpm run db:migrate`
+- `pnpm -C server run db:migrate:tracked`
+- `pnpm -C server run db:migrate`
+
+Canonical underlying sequence:
+
+1. `pnpm -C server prisma:preflight`
+2. `pnpm -C server migrate:deploy:prod`
+
+Equivalent lower-level invocation remains lawful only when env-loading posture is already fixed:
+
+- `pnpm -C server exec prisma migrate deploy`
+
+### Direct SQL exception path (exception-only)
+
+Use this path only for separately authorized direct SQL exception work such as ops SQL, RLS,
+grant, backfill, or corrective SQL that is intentionally outside the repo-managed Prisma deploy
+path.
+
+This path is never the default for repo-tracked migrations.
+
+If direct SQL is used, the plan must explicitly fix:
+
+- why the work is not using the repo-managed Prisma deploy path
+- whether ledger impact is `none` or requires explicit reconciliation
+- exact remote validation proof expected after apply
+- exact post-apply validation sequence
+
+Explicit exception-labelled shorthand surface:
+
+- `pnpm -C server run db:rls:exception`
+
+Raw `psql` remains a lower-level equivalent only for separately authorized direct SQL exception
+work and is not current default migration guidance.
+
+## Standard Repo-Managed Prisma Workflow
 
 ### 1. Run preflight (validate env before any deploy)
 ```powershell
@@ -104,6 +161,18 @@ SELECT proname FROM pg_proc WHERE proname IN ('is_org_sanctioned', 'is_entity_sa
 ```
 
 ---
+
+## Direct SQL Exception Validation Expectations
+
+When a direct SQL exception path is separately authorized, forward guidance requires all of the
+following after apply:
+
+1. apply proof showing no `ERROR` and no `ROLLBACK`
+2. remote object or policy proof showing the intended state exists
+3. explicit ledger proof showing either no ledger change was intended or the separately authorized
+  reconciliation result
+4. Prisma alignment proof when Prisma surfaces are affected
+5. focused runtime or test proof only when the governing unit requires it
 
 ## Legacy: MIGRATION_DATABASE_URL
 
@@ -154,4 +223,8 @@ git add server/.env
 
 # ❌ FORBIDDEN — run dev migrate on production
 pnpm -C server exec prisma migrate dev
+
+# ❌ FORBIDDEN — use deprecated default-looking shortcuts that are now explicitly blocked
+pnpm -C server run db:push
+pnpm -C server run db:rls
 ```

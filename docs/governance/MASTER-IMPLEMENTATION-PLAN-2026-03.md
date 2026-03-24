@@ -70,7 +70,10 @@ The RCP-1 cycle delivered a functional end-to-end commerce loop:
 
 #### Schema + Lifecycle Architecture
 
-Eight new domain tables were introduced in Wave 3, each following the canonical pattern: ENABLE+FORCE RLS, RESTRICTIVE guard with admin pass-through, PERMISSIVE tenant SELECT/INSERT/UPDATE, PERMISSIVE admin SELECT (cross-tenant), DO-block verifier, psql apply + Prisma ledger sync:
+Eight new domain tables were introduced in Wave 3, each following the historical Wave 3 pattern at
+that time: ENABLE+FORCE RLS, RESTRICTIVE guard with admin pass-through, PERMISSIVE tenant
+SELECT/INSERT/UPDATE, PERMISSIVE admin SELECT (cross-tenant), DO-block verifier, direct SQL apply
++ explicit Prisma ledger reconciliation:
 
 | Domain | Tables | Migration Timestamp |
 |--------|--------|---------------------|
@@ -94,7 +97,7 @@ Architectural drift was actively monitored and corrected via the wave-execution-
 - The `governance/gap-register.md` serves as the single source of truth for all gap status, commit evidence, and validation proof.
 - Each TECS is atomic: one commit, one gap, one evidence record.
 - The CI control-plane guard (`scripts/control-plane-guard.ts`) ensures no mutation route is added without audit evidence and no high-risk surface is added without SUPER_ADMIN gating.
-- DB migration discipline: all schema changes applied via psql with embedded DO-block verifiers; Prisma ledger synchronized via `prisma migrate resolve --applied` (never via `migrate dev` or `migrate deploy` for Wave 3 tables).
+- Historical Wave 3 migration discipline at that time used direct SQL with embedded DO-block verifiers plus explicit Prisma ledger reconciliation. Current forward policy is now governed by `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001`: repo-tracked migrations default to the repo-managed Prisma deploy path, while direct SQL is exception-only and must carry explicit ledger posture plus remote validation.
 
 #### DB Alignment State (Remote Migration Reconciliation)
 
@@ -114,7 +117,7 @@ As of GOVERNANCE-SYNC-048 (2026-03-03):
 |--------|---------------|--------------------------|-----------|----------------------|
 | **Control Plane** | Provisioning endpoint; tenant registry; feature flags CRUD; finance ops (payout approve/reject); compliance requests; disputes; escalation management; audit log viewer; event stream; system health; CI guardrails; SUPER_ADMIN surface locks; read audit on all 14 GET handlers | Superadmin DB-level RLS policies (`app.is_superadmin` GUC set but no RLS policies consume it yet) | — | Superadmin-specific policy extension (OPS-RLS-SUPERADMIN-001) |
 | **Tenant RLS** | `app.org_id` canonical context; FORCE RLS on 13 commerce tables; unified SELECT/INSERT/UPDATE/DELETE policies on audit_logs, carts, cart_items (P2), orders, order_items, event_logs; RESTRICTIVE guard with admin arm; pooler-safe SET LOCAL; CI cross-tenant 0-row proof | G-006C remaining: catalog_items, memberships, tenant_branding, tenant_domains, impersonation_sessions still have original (non-canonicalized) policy structure; admin arm may still reference legacy `bypass_enabled()` | — | — |
-| **Orders / Revenue** | Catalog CRUD (create, list); cart lifecycle (create / get / add / update / remove); MOQ enforcement; checkout (PAYMENT_PENDING); orders list + detail; order status transitions (PAYMENT_PENDING→CONFIRMED→FULFILLED/CANCELLED); app-layer audit trail; WL_ADMIN Orders panel; EXPERIENCE Orders UX | Orders UPDATE RLS — governed ops SQL created, pending psql apply for Phases 4–5 of RCP-1 validation | — | Full payment gateway / PSP integration |
+| **Orders / Revenue** | Catalog CRUD (create, list); cart lifecycle (create / get / add / update / remove); MOQ enforcement; checkout (PAYMENT_PENDING); orders list + detail; order status transitions (PAYMENT_PENDING→CONFIRMED→FULFILLED/CANCELLED); app-layer audit trail; WL_ADMIN Orders panel; EXPERIENCE Orders UX | Orders UPDATE RLS — governed ops SQL created, pending separately authorized direct-SQL-exception apply for Phases 4–5 of RCP-1 validation | — | Full payment gateway / PSP integration |
 | **Lifecycle (G-020)** | State machine 43-edge graph; `lifecycle_states`, `allowed_transitions`, `trade_lifecycle_logs`, `escrow_lifecycle_logs`; SM enforcement atomicity ($transaction); TradeService + EscrowService wired; SanctionsService injected | ORDER entity type not in G-020 SM (DB CHECK constraint only allows TRADE/ESCROW/CERTIFICATION); audit-only lifecycle events at checkout | ORDER lifecycle schema prerequisite (GAP-ORDER-LC-001) requires schema migration approval | Full ORDER state machine wiring |
 | **Escalations** | `escalation_events` table; EscalationService (freeze gate D-022-B/C); LEVEL_0/1 tenant routes; upgrade/resolve control routes; CERTIFICATION org+entity freeze (G-022 P2); entity_type CHECK extended to CERTIFICATION | — | — | — |
 | **Certification** | `certifications` table + RLS; CertificationService create/list/get/update/transition; tenant + admin routes; G-020 SM integration; sanctions check at transition; G-022 escalation freeze wiring | — | — | — |
@@ -135,9 +138,9 @@ As of GOVERNANCE-SYNC-048 (2026-03-03):
 
 | Gap ID | Domain | Requires Schema? | Requires RLS? | Requires Backend Code? | Requires Frontend? | Risk Level | Dependency |
 |--------|--------|-----------------|--------------|----------------------|-------------------|-----------|-----------|
-| GAP-RLS-ORDERS-UPDATE-001 *(ops SQL created; pending psql apply)* | Orders RLS | No | Yes (ops SQL only) | No | No | 🔴 HIGH | None — ops SQL ready at `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` |
+| GAP-RLS-ORDERS-UPDATE-001 *(ops SQL created; pending separately authorized direct-SQL-exception apply)* | Orders RLS | No | Yes (ops SQL only) | No | No | 🔴 HIGH | None — ops SQL ready at `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` |
 
-> **Note:** This is the only P-A gap. The ops SQL file is committed and verified with a DO-block. It requires a single `psql "$DATABASE_URL" -f` invocation.
+> **Note:** This is the only P-A gap. The ops SQL file is committed and verified with a DO-block. Historical plan wording assumed a direct SQL apply step. Under current forward policy, any future apply must be opened as a direct-SQL-exception step with explicit ledger posture and mandatory remote validation; it is not the default tracked-migration path.
 
 ---
 
@@ -230,11 +233,12 @@ As of GOVERNANCE-SYNC-048 (2026-03-03):
 [Wave 4: G-025, G-026, G-027, G-028]
 ```
 
-### Recommended Execution Sequence (Strictly Ordered)
+### Recommended Execution Sequence (Historical plan order with current-policy guardrails)
 
 ```
 Step 1 — IMMEDIATE (P-A):
-  Apply ops SQL: psql "$DATABASE_URL" -f server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql
+  If separately authorized as a direct-SQL exception, apply the ops SQL with explicit ledger posture
+  and mandatory remote validation
   Re-run RCP-1 Phases 4–5: pnpm -C server exec tsx scripts/validate-rcp1-flow.ts --only-transitions
   → Closes GAP-RLS-ORDERS-UPDATE-001 operationally
 
@@ -247,7 +251,9 @@ Step 3 — P-B (RLS consolidation; one migration per table; independent after St
   b. G-006C memberships
   c. G-006C tenant_branding + tenant_domains (can be parallel)
   d. G-006C impersonation_sessions
-  Each requires: migration SQL + DO-block verifier + psql apply + prisma migrate resolve --applied
+  Each now requires: repo-tracked migration artifacts plus the repo-managed Prisma deploy path by
+  default; the older direct-SQL-plus-ledger-reconcile pattern is preserved as historical Wave 3
+  practice only and is not current default guidance
 
 Step 4 — P-C (schema approval required):
   Formal governance approval for GAP-ORDER-LC-001 scope
@@ -293,7 +299,7 @@ Step 6 — OPS-RLS-SUPERADMIN-001:
 |---|------|--------|-----------|-----------|
 | 1 | **B1 re-entry condition ignored** — The decision to keep `app.roles` dormant (MembershipRole never flows to DB GUC) has a documented re-entry condition: if a new write path bypasses app-layer role guard. Any new route added without strong role guard could allow MEMBER/VIEWER to perform OWNER/ADMIN actions | HIGH | LOW | Every new route must be reviewed against B1 re-entry condition; CI guard covers mutation audit but not role granularity |
 | 2 | **Committed governance sync drift** — GOVERNANCE-SYNC-048 is the current high-water mark; any future gap closed without a governance-sync commit risks losing the audit trail chain | MED | MED | Enforce one GOVERNANCE-SYNC-N commit per TECS; gap-register is the canonical ledger |
-| 3 | **ops SQL files never auto-applied** — `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` is committed but requires manual `psql` invocation; no CI/CD step applies ops SQL files automatically | HIGH | CERTAIN | Document explicit ops-SQL apply step in TECS; add pre-deploy checklist in `docs/ops/` |
+| 3 | **ops SQL files never auto-applied** — `server/prisma/ops/rcp1_orders_update_unified_tenant_arm.sql` is committed but requires a separately authorized direct-SQL-exception invocation; no CI/CD step applies ops SQL files automatically | HIGH | CERTAIN | Document explicit direct-SQL-exception apply step in TECS; add pre-deploy checklist in `docs/ops/` |
 | 4 | **DPP export without cryptographic signatures** — G-025 is deferred but traceability data (nodes/edges) exists in DB; if a regulator-facing export is built without the planned signature bundle scheme, non-repudiation is absent | HIGH | LOW (Wave 4 not started) | Ensure G-025 design includes export signature per `docs/north-star/`; block any ad-hoc export |
 | 5 | **Frontend lint debt blocks CI gate** — Root `pnpm run lint` exits non-zero (G-QG-001); this prevents lint from being enforceable in full-repo CI checks | MED | CERTAIN | G-QG-001 is P-D; low-risk fix; prioritize early in Phase A |
 
@@ -301,7 +307,7 @@ Step 6 — OPS-RLS-SUPERADMIN-001:
 
 | # | Risk | Impact | Likelihood | Mitigation |
 |---|------|--------|-----------|-----------|
-| 1 | **Orders UPDATE RLS not yet applied in prod** — Governed ops SQL created; until `psql apply` executed, tenant actors cannot advance order status in production | HIGH | CERTAIN (pending) | Execute Step 1 of recommended sequence immediately |
+| 1 | **Orders UPDATE RLS not yet applied in prod** — Governed ops SQL created; until the separately authorized direct-SQL-exception apply is executed, tenant actors cannot advance order status in production | HIGH | CERTAIN (pending) | Execute Step 1 of recommended sequence under the current exception-only rules |
 | 2 | **Pooler URL used for DDL** — Historical incidents (OPS-ENV-001) showed session pooler rejects long-running DDL; `DIRECT_DATABASE_URL` must be used for `prisma migrate deploy`; preflight script guards this but human error remains | MED | LOW | Preflight script (`prisma:preflight`) enforces exit 1 on TX-pooler URL; documented in `docs/ops/prisma-migrations.md` |
 | 3 | **64-migration ledger with 1 historical rolled_back_at row** — A pre-existing `rolled_back_at` anomaly exists (non-blocking, artifact of prior failed apply); future tooling that treats any `rolled_back_at` as fatal would block deploys | LOW | LOW | Documented in `docs/ops/REMOTE-MIGRATION-APPLY-LOG.md`; historical artifact only |
 | 4 | **RCP-1 validation script (`validate-rcp1-flow.ts`) mints real JWTs and creates real DB records** — Running the script against prod without `--dry-run` mode would pollute the prod tenant | MED | LOW (script is in scripts/) | Add explicit env guard to script; only invoke against dev/staging |
@@ -313,7 +319,7 @@ Step 6 — OPS-RLS-SUPERADMIN-001:
 
 All 64 migrations are applied with `finished_at NOT NULL`. The Prisma ledger reports `Database schema is up to date!`. The one historical `rolled_back_at` row is a pre-existing artifact from an earlier failed apply attempt and is documented as non-blocking. The 2 migrations applied in GOVERNANCE-SYNC-048 were verified with DO-block execution proofs before ledger entry. No schema drift is known.
 
-**Residual risk:** ops SQL files in `server/prisma/ops/` are not tracked by `_prisma_migrations`; they require manual psql apply and are governance-logged but not automatically enforced.
+**Residual risk:** ops SQL files in `server/prisma/ops/` are not tracked by `_prisma_migrations`; they require separately authorized direct-SQL-exception apply and are governance-logged but not automatically enforced.
 
 ### 5.5 RLS Maturity Rating
 
@@ -450,8 +456,8 @@ mindmap
       WLTypeDerive[Tenant type from server response]
     MigrationDiscipline[Migration Discipline ✅]
       64Migrations[64/64 migrations applied finished_at NOT NULL]
-      PsqlApply[psql -f apply with embedded DO-block verifier]
-      LedgerSync[prisma migrate resolve applied — never migrate deploy for Wave 3]
+      PsqlApply[Historical direct SQL apply with embedded DO-block verifier]
+      LedgerSync[Historical Prisma ledger reconciliation after direct SQL]
       OpsSQL[ops SQL files governance-signed separate from migrations]
       EnvPreflight[DIRECT_DATABASE_URL preflight script]
 ```
@@ -466,7 +472,7 @@ mindmap
     PriorityA[P-A Critical]
       OrdersUpdateRLS[GAP-RLS-ORDERS-UPDATE-001]
         OpsSQL[ops SQL committed and ready]
-        Apply[psql apply pending]
+        Apply[Direct-SQL exception apply pending]
         RCP1Phases45[Unblocks RCP-1 Phases 4-5 order transitions]
     PriorityB[P-B RLS Consolidation]
       CatalogItems[G-006C catalog_items]

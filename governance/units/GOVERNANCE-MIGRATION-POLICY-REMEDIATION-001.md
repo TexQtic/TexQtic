@@ -30,8 +30,11 @@ It is limited to defining the exact later remediation scope needed to align repo
 migration entry points and stale forward-looking migration instructions with the already-decided
 canonical migration execution and remote validation policy.
 
-This unit does not authorize package-script edits, migration-doc edits, tooling changes,
-migration execution, or DB-state changes in the opening step.
+The bounded remediation implementation is now complete inside this unit on the exact allowlisted
+package and documentation surfaces only.
+
+This unit does not authorize migration execution, DB-state changes, Layer 0 authority changes, or
+product/application code changes.
 
 ## Layer 0 State Confirmation
 
@@ -120,6 +123,25 @@ Acceptance is satisfied only when:
 - no package-script edits, migration-doc edits, tooling changes, migration execution, or DB-state
   changes are performed by this opening step
 
+## Implementation Result
+
+The bounded remediation implementation now records all of the following on the allowlisted
+surfaces only:
+
+- root `package.json` now exposes the canonical tracked-migration path explicitly through
+  `db:migrate:tracked`, while `db:migrate` now aliases that canonical path instead of routing to
+  a conflicting server shortcut
+- `server/package.json` now exposes `db:migrate:tracked` as the canonical tracked-migration path,
+  while `db:migrate` now aliases that canonical path instead of resolving to `prisma migrate dev`
+- `server/package.json` now relabels the direct SQL RLS surface as `db:rls:exception` and blocks
+  the old `db:rls` shortcut from presenting itself as a default lawful path
+- `server/package.json` now blocks `db:push` as a legacy/unsafe surface so it cannot be mistaken
+  for a lawful governed remote migration path
+- `docs/ops/prisma-migrations.md` now distinguishes the default repo-managed Prisma path, the
+  exception-only direct SQL path, and the mandatory remote validation expectations clearly
+- `docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md` now preserves its Wave 3 migration
+  references as historical or exception-only context rather than current default guidance
+
 ## Exact Verification Profile
 
 - unit type: governance-only remediation opening
@@ -172,8 +194,10 @@ product/application, certification, contract, Sentinel, or CI/platform work.
 
 ## Implementation Status Statement
 
-This bounded governance-only remediation unit is now open and awaiting later implementation.
+This bounded governance-only remediation implementation is complete on the allowlisted package and
+documentation surfaces only. The unit remains `OPEN` pending any later verification, sync, or
+closure steps.
 
 ## Atomic Commit
 
-`[GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] open bounded remediation unit for migration policy alignment`
+`[GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] implement bounded migration policy alignment remediation`
