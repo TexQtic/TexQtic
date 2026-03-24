@@ -1419,6 +1419,31 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 — 2026-03-24
+Type: GOVERNANCE / DECISION+OPENING
+Status: OPEN
+Commit: (this unit — pending commit for [GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001] decide and open bounded Sentinel close allowlist remediation)
+Title: Decide and open bounded Sentinel close allowlist remediation
+Summary: Governance-only decision/opening unit. Recorded the blocked lawful Close attempt for
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`, where mandatory manual Sentinel
+  `close_progression` returned `FAIL` on `SENTINEL-V1-CHECK-006` with reported reason
+  `non-allowlisted file in change scope: governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md`.
+  Opened one concurrent bounded remediation unit to resolve only that exact close-allowlist
+  mismatch while preserving the blocked certification Close stream unchanged.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001.md created;
+  Layer 2 — governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-OPENING.md created;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: NEXT-ACTION remains the same certification Close step only, now truthfully marked as
+  blocked pending bounded remediation of the Sentinel close allowlist mismatch. No certification
+  close was performed. No certification implementation, tests, product code, DB/schema, contracts,
+  CI integration, hooks, bots, or Sentinel automation rollout was modified or authorized.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-OPENING.md ·
+  governance/units/GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### PENDING-LIST-SYNC-TENANT-ELIGIBILITY-001 — 2026-03-23
 Type: GOVERNANCE / ANALYSIS-RECORD
 Status: CLOSED

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 decision + opening)
+**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 decision + opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,6 +14,7 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
+| GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 | Sentinel close allowlist mismatch remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
@@ -22,15 +23,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **2**
+- **OPEN** (all governed units): **3**
 - **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 2
+- **DECISION_QUEUE**: 3
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 4**
+- **Total non-terminal units: 5**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
@@ -39,13 +40,18 @@ does not replace TECS lifecycle, unit status, or authorization.
 `VERIFIED_COMPLETE`, and is postured for separate Close after bounded verification confirmed the
 authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`, no remaining
 implementation delta, focused tests PASS (`5` passed, `0` failed), and verified lifecycle-log
-persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only. The
-Sentinel manual-workflow unit is now open concurrently with `DECISION_QUEUE` posture to make
-manual Sentinel v1 invocation mandatory by workflow before governance progression at the already-
-decided checkpoints while preserving the existing local/manual runner and preserving the current
-ACTIVE_DELIVERY authorization unchanged. `GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded
-governance-only spec/design unit with `DECISION_QUEUE` posture because any later Sentinel tooling
-rollout, enforcement rollout, or broader governance implementation remains separately governed.
+persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only, but
+that close remains blocked after the mandatory manual Sentinel `close_progression` run returned
+`FAIL` on `SENTINEL-V1-CHECK-006` (`allowlist_boundary_conformance`) with reported reason
+`non-allowlisted file in change scope: governance/units/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.md`.
+`GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001` is now open concurrently with
+`DECISION_QUEUE` posture to remediate only that bounded close-allowlist mismatch while preserving
+the blocked certification Close as the same `ACTIVE_DELIVERY` stream. The Sentinel manual-workflow
+unit remains open concurrently with `DECISION_QUEUE` posture to require manual local Sentinel
+invocation before governance progression at the already-decided checkpoints. `GOVERNANCE-SENTINEL-V1-SPEC-001`
+remains a bounded governance-only spec/design unit with `DECISION_QUEUE` posture because any later
+Sentinel tooling rollout, enforcement rollout, or broader governance implementation remains
+separately governed.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
