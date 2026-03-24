@@ -1694,11 +1694,21 @@ const App: React.FC = () => {
                   {products.slice(0, 8).map(p => (
                     <div key={p.id} className="space-y-3">
                       <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100">
-                        <img
-                          src={p.imageUrl || 'https://via.placeholder.com/400x500'}
-                          className="w-full h-full object-cover hover:scale-110 transition duration-700"
-                          alt={p.name}
-                        />
+                        {p.imageUrl ? (
+                          <img
+                            src={p.imageUrl}
+                            className="w-full h-full object-cover hover:scale-110 transition duration-700"
+                            alt={p.name}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex items-center justify-center text-sm font-medium text-slate-400"
+                            aria-label={`${p.name} image unavailable`}
+                            role="img"
+                          >
+                            Image unavailable
+                          </div>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-medium text-slate-800">{p.name}</h4>
