@@ -43,6 +43,31 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 — 2026-03-24
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded Sentinel close retry remediation
+Summary: Opened one bounded concurrent governance remediation unit after the latest lawful manual
+  Sentinel `close_progression` run for `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` returned
+  `FAIL` on `SENTINEL-V1-CHECK-005` and `SENTINEL-V1-CHECK-009` before any closure edit. The
+  prior `SENTINEL-V1-CHECK-006` close allowlist blocker now returns `PASS` and is not the current
+  blocker. No certification close was performed, and the new unit is authorized only to remediate
+  the retry blockers in bounded form while preserving the same `ACTIVE_DELIVERY` authority.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 — governance
+  unit record added; Layer 2 — decision/opening record added; Layer 3 — EXECUTION-LOG.md appended
+Notes: The controlling Sentinel blocker source is the latest manual close gate for checkpoint
+  `close_progression` and subject `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`. Failing checks
+  are `SENTINEL-V1-CHECK-005` with reported reason `SNAPSHOT does not reflect the current open
+  governed unit count` and `SENTINEL-V1-CHECK-009` with reported reason
+  `correction-order-reference is required for retry validation`. `correction_order_required` is
+  true, closure proceeded `no`, and `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the
+  sole `ACTIVE_DELIVERY` close stream in Layer 0.
+Refs: governance/units/GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-OPENING.md
+
+---
+
 ### GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 — 2026-03-23
 Type: GOVERNANCE / DECISION
 Status: CLOSED
