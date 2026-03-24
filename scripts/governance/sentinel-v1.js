@@ -581,7 +581,8 @@ function runCheck005() {
       'NEXT-ACTION does not match the sole ACTIVE_DELIVERY Layer 0 unit'
     );
   }
-  if (!snapshot.includes('**Open governed units: 3**')) {
+  const expectedSnapshotOpenUnits = `**Open governed units: ${openSet.rows.length}**`;
+  if (!snapshot.includes(expectedSnapshotOpenUnits)) {
     failures.push(
       'SNAPSHOT does not reflect the current open governed unit count'
     );
@@ -1222,8 +1223,8 @@ function printHelp() {
       '  --layer0-effect-claimed true|false',
       '  --execution-log-ref <path>       Repeatable when linkage is claimed.',
       '  --unit-file <path>               Required for close_progression when the unit record is part of the lawful close surface.',
-      '  --retry-from-fail true|false',
-      '  --correction-order-reference <path>',
+      '  --retry-from-fail true|false     Required when rerunning a checkpoint after a prior FAIL.',
+      '  --correction-order-reference <path> Required whenever --retry-from-fail is true; must point to an existing bounded correction-order artifact.',
       '',
       'Use docs/governance/GOVERNANCE-SENTINEL-V1-AUTOMATION.md for exact invocation examples.',
     ].join('\n')
