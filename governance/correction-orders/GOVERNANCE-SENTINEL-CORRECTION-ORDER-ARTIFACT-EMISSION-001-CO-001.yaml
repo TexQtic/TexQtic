@@ -1,0 +1,19 @@
+correction_order_id: GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001
+sentinel_version: v1
+failed_checkpoint: close_progression
+failed_subject: CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
+failed_gate_result: sentinel://close_progression/CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002/manual-fail-2026-03-24
+failure_class:
+  - correction_order_completion
+required_corrections:
+  - 'Create exactly one correction-order artifact instance at governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml.'
+owners:
+  - 'governance-operator'
+retry_blocked_until:
+  - 'The correction-order artifact exists at governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml and no broader close action is attempted in this unit.'
+evidence_required_for_retry:
+  - 'governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml'
+pass_fail_recheck_targets:
+  - SENTINEL-V1-CHECK-009
+directive_verdict: RETRY_BLOCKED
+notes: 'Bounded correction-order artifact emission for the blocked certification close retry under CHECK-009 only.'

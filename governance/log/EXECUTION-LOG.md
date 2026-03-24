@@ -43,6 +43,29 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 IMPLEMENTATION — 2026-03-24
+Type: GOVERNANCE / IMPLEMENTATION
+Status: OPEN
+Commit: (this unit — see git log for exact SHA)
+Title: Emit bounded correction-order artifact for certification close retry
+Summary: Emitted exactly one correction-order artifact instance for the blocked certification close
+  retry using correction_order_id `GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001`
+  at canonical path
+  `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
+  The artifact aligns to the current correction-order template and runner field shape for
+  `SENTINEL-V1-CHECK-009` retry only. No certification close was performed and no Sentinel rerun
+  was performed in this step.
+Layer Impact: Layer 1 — remediation unit record updated with implementation evidence; Layer 3 —
+  EXECUTION-LOG.md appended; governed correction-order artifact emitted at canonical repo path
+Notes: Layer 0 authority remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+  remains the sole `ACTIVE_DELIVERY` stream, CHECK-009 reference-path doctrine remains resolved,
+  and the remaining next lawful move is a separate Sentinel rerun rather than close completion in
+  this unit.
+Refs: governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml ·
+  governance/units/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001.md
+
+---
+
 ### GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 — 2026-03-24
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN
