@@ -43,6 +43,26 @@ Do not insert new entries above the horizontal rule marking the most recent entr
 
 ---
 
+### GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 RECORD CORRECTION — 2026-03-24
+Type: GOVERNANCE / RECORD CORRECTION
+Status: OPEN
+Commit: N/A
+Title: Correct stale post-emission governance record state
+Summary: Corrected bounded governance wording after artifact emission so Layer 0 and the unit
+  record truthfully state that the canonical correction-order artifact now exists at
+  `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
+  No certification close was performed, no Sentinel rerun was performed, and
+  `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole `ACTIVE_DELIVERY` stream.
+Layer Impact: Layer 0 — control-plane carry-forward wording corrected; Layer 1 — remediation unit
+  record corrected; Layer 3 — EXECUTION-LOG.md appended
+Notes: This entry is record correction only. It does not alter Sentinel doctrine, does not rerun
+  the blocked close gate, and does not change delivery authority.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001.md
+
+---
+
 ### GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 IMPLEMENTATION — 2026-03-24
 Type: GOVERNANCE / IMPLEMENTATION
 Status: OPEN

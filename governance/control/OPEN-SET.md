@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 decision + opening)
+**Last Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 record correction after bounded artifact emission)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -44,13 +44,15 @@ does not replace TECS lifecycle, unit status, or authorization.
 authoritative implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114`, no remaining
 implementation delta, focused tests PASS (`5` passed, `0` failed), and verified lifecycle-log
 persistence wiring. `NEXT-ACTION.md` now points to the same unit's lawful Close step only, but
-that close remains blocked in practical effect because no concrete correction-order artifact
-instance yet exists for retry under `SENTINEL-V1-CHECK-009`. The latest mandatory manual Sentinel
-`close_progression` rerun previously returned `FAIL` on `SENTINEL-V1-CHECK-009`
+that close remains blocked in practical effect pending a later lawful Sentinel rerun under
+`SENTINEL-V1-CHECK-009`. The latest mandatory manual Sentinel `close_progression` rerun previously
+returned `FAIL` on `SENTINEL-V1-CHECK-009`
 (`correction_order_completion`) with reported reason `correction-order-reference is required for
 retry validation`. `SENTINEL-V1-CHECK-006` now returns `PASS`, `SENTINEL-V1-CHECK-005` has
 already been remediated in repo truth, the CHECK-009 reference-path doctrine is already remediated
-in repo truth, and no certification close was performed. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-
+in repo truth, the canonical correction-order artifact instance now exists at
+`governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`,
+and no certification close was performed. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-
 REMEDIATION-001` remains open concurrently with `DECISION_QUEUE` posture because it bounded and
 preserved the prior allowlist mismatch correction only. `GOVERNANCE-SENTINEL-CLOSE-RETRY-
 REMEDIATION-001` remains open concurrently with `DECISION_QUEUE` posture because it bounded the
@@ -58,9 +60,10 @@ close-retry blocker class and preserved the blocked certification Close as the s
 `ACTIVE_DELIVERY` stream. `GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001`
 remains open concurrently with `DECISION_QUEUE` posture because it fixed the exact canonical
 correction-order artifact path class required by CHECK-009 retry validation. `GOVERNANCE-
-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001` is now open concurrently with `DECISION_QUEUE`
-posture to emit exactly one concrete correction-order artifact instance at the canonical governed
-path required for lawful retry of the blocked certification close gate. The Sentinel manual-
+SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001` remains open concurrently with `DECISION_QUEUE`
+posture to preserve the bounded artifact-emission record now that exactly one concrete
+correction-order artifact instance exists at the canonical governed path required for lawful retry
+of the blocked certification close gate. The Sentinel manual-
 workflow unit remains open concurrently with `DECISION_QUEUE` posture to require manual local
 Sentinel invocation before governance progression at the already-decided checkpoints.
 `GOVERNANCE-SENTINEL-V1-SPEC-001` remains a bounded governance-only spec/design unit with

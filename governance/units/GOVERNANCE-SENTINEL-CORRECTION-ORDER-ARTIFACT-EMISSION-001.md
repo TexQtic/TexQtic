@@ -49,8 +49,9 @@ the currently authorized certification Close step in `NEXT-ACTION`.
 - CHECK-009 reference-path doctrine is already remediated in repo truth.
 - The canonical correction-order artifact path class is
   `governance/correction-orders/<correction_order_id>.yaml`.
-- No concrete correction-order artifact instance yet exists for this blocked certification close
-  retry posture.
+- Exactly one concrete correction-order artifact instance now exists at
+  `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`
+  for this blocked certification close retry posture.
 - No certification close was performed.
 
 ## Acceptance Criteria

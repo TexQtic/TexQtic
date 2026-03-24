@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Authorized Next Action (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 preserved the blocked certification Close as ACTIVE_DELIVERY and recorded the remaining bounded CHECK-009 blocker)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-03-24 (GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 record correction preserved the blocked certification Close as ACTIVE_DELIVERY after bounded artifact emission)
 > One authorized next action. Read before any work begins. Changing this requires a governance unit.
 
 ---
@@ -22,9 +22,11 @@ notes: |
   The next lawful lifecycle step is separate Close for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002
   only. This governance sync does not close the unit, does not open a new unit, and does not change
   ACTIVE_DELIVERY sequencing authority.
-  Close progression remains blocked in practical effect because no concrete correction-order
-  artifact instance yet exists at the canonical CHECK-009 retry path class
-  governance/correction-orders/<correction_order_id>.yaml. The latest mandatory manual Sentinel
+  Close progression remains blocked in practical effect pending a later lawful Sentinel rerun under
+  SENTINEL-V1-CHECK-009. Exactly one concrete correction-order artifact instance now exists at the
+  canonical CHECK-009 retry path
+  governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml.
+  The latest mandatory manual Sentinel
   close_progression run for CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 returned FAIL on
   SENTINEL-V1-CHECK-009 (correction_order_completion) with reported reason:
   correction-order-reference is required for retry validation. No closure was performed.
