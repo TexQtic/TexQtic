@@ -609,6 +609,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 — 2026-03-24
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: [TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003] governance sync verified B2C placeholder fallback remediation
+Title: Record verified completion of the bounded B2C placeholder fallback remediation
+Summary: Governance-only sync unit. Recorded TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 as
+  VERIFIED_COMPLETE on the exact bounded B2C `New Arrivals` branch in `App.tsx` after bounded
+  verification confirmed that implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`
+  removed the remote `https://via.placeholder.com/400x500` placeholder dependency from that exact
+  surface only, preserved the real-image path when `imageUrl` exists, and rendered a local
+  `Image unavailable` state when `imageUrl` is absent. No broader image/media/catalog refactor was
+  authorized, no verification-record commit was required, and no closure is implied by this sync.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated;
+  Layer 1 — governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: No product/application files, tests, schema, migrations, Prisma commands, CI, hooks, or
+  Sentinel-tooling surfaces were modified in this governance sync unit. No new ACTIVE_DELIVERY
+  stream was introduced. The next lawful lifecycle step is separate Close only.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-MIGRATION-EXECUTION-POLICY-001 — 2026-03-23
 Type: GOVERNANCE / DECISION
 Status: CLOSED

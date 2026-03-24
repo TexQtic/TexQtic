@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 opening establishes sole ACTIVE_DELIVERY)
+**Last Updated:** 2026-03-24 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 governance sync postured the next step to Close)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -21,15 +21,15 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
-| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 | B2C New Arrivals placeholder-image fallback remediation | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-24 |
+| TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 | B2C New Arrivals placeholder-image fallback remediation | VERIFIED_COMPLETE | ACTIVE_DELIVERY | W5 | 2026-03-24 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **9**
-- **VERIFIED_COMPLETE** (postured for Close): **0**
+- **OPEN** (all governed units): **8**
+- **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
@@ -41,17 +41,25 @@
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
 
+`TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` remains the sole `ACTIVE_DELIVERY` unit, is now
+`VERIFIED_COMPLETE`, and is postured for separate Close after bounded verification confirmed
+implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, removed the remote
+`https://via.placeholder.com/400x500` dependency from the exact B2C `New Arrivals` branch in
+`App.tsx`, preserved the real-image path when `imageUrl` exists, and rendered a local `Image
+unavailable` state when `imageUrl` is absent. `NEXT-ACTION.md` now points to the same unit's
+lawful Close step only. No broader image/media/catalog refactor was authorized, no successor unit
+was opened, and no closure occurred in this sync.
+
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` closed 2026-03-24 after the authoritative
 implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114` remained unchanged, bounded
 verification and governance sync were already complete, and the mandatory manual Sentinel
 `close_progression` rerun returned `PASS` using correction-order reference
 `governance/correction-orders/GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001-CO-001.yaml`.
 No implementation, migration, Prisma, or SQL work occurred in the close step. That close returned
-Layer 0 to `OPERATOR_DECISION_REQUIRED` temporarily only. `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003`
-is now `OPEN` as the sole `ACTIVE_DELIVERY` unit for the exact surviving B2C `New Arrivals`
-placeholder-image fallback surface still using `https://via.placeholder.com/400x500` when
-`imageUrl` is absent. This opening is delivery-first, does not reopen consumed historical
-placeholder-image units by implication, and does not authorize broader catalog/media/image work.
+Layer 0 to `OPERATOR_DECISION_REQUIRED` temporarily only before the later bounded opening and now
+later bounded governance sync of `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003`. This earlier closed
+certification unit remains separate from the current verified-complete B2C placeholder-fallback
+stream and does not authorize broader catalog/media/image work.
 The concurrently open governance-only units remain `DECISION_QUEUE` only without any implied
 successor authorization. `GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001` remains open concurrently
 with `DECISION_QUEUE` posture because it bounded and preserved the prior allowlist mismatch
