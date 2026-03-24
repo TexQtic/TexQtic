@@ -10,7 +10,7 @@ opened: 2026-03-24
 closed: null
 verified: 2026-03-24
 commit: "0db8de4"
-evidence: "VERIFICATION_SCOPE_CONFIRMATION: remediation implementation commit 0db8de4 changed only package.json, server/package.json, docs/ops/prisma-migrations.md, docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md, and this unit file · PACKAGE_PATH_CONFIRMATION: root and server db:migrate entry points now default to db:migrate:tracked, server db:rls is blocked as non-default guidance, db:rls:exception is explicitly exception-only, and db:push is blocked as legacy/unsafe · DOC_GUIDANCE_CONFIRMATION: docs/ops/prisma-migrations.md now states repo-managed Prisma deploy as the default lawful tracked-migration path, direct SQL as exception-only, and mandatory remote validation expectations; MASTER-IMPLEMENTATION-PLAN-2026-03.md now preserves older Wave 3 psql-plus-ledger-reconcile practice as historical or exception-only context rather than current default guidance · LAYER_0_CONFIRMATION: OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md remain unchanged after implementation, and CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remains the sole ACTIVE_DELIVERY authorization"
+evidence: "VERIFICATION_SCOPE_CONFIRMATION: remediation implementation commit 0db8de4 changed only package.json, server/package.json, docs/ops/prisma-migrations.md, docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md, and this unit file · PACKAGE_PATH_CONFIRMATION: root and server db:migrate entry points now default to db:migrate:tracked, server db:rls is blocked as non-default guidance, db:rls:exception is explicitly exception-only, and db:push is blocked as legacy/unsafe · DOC_GUIDANCE_CONFIRMATION: docs/ops/prisma-migrations.md now states repo-managed Prisma deploy as the default lawful tracked-migration path, direct SQL as exception-only, and mandatory remote validation expectations; MASTER-IMPLEMENTATION-PLAN-2026-03.md now preserves older Wave 3 psql-plus-ledger-reconcile practice as historical or exception-only context rather than current default guidance · LAYER_0_CONFIRMATION: OPEN-SET.md, NEXT-ACTION.md, and SNAPSHOT.md remained unchanged after implementation, and CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 remained the sole ACTIVE_DELIVERY authorization · GOVERNANCE_RECONCILIATION_CONFIRMATION: governance sync now canonically reconciles this unit as VERIFIED_COMPLETE across Layer 0, Layer 1, and Layer 3 while preserving CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 as the sole ACTIVE_DELIVERY next action and preserving direct SQL as exception-only posture"
 doctrine_constraints:
   - D-004: this is one bounded governance-only remediation unit only; no second migration-policy child or broader database-governance program may be mixed in
   - D-007: opening only; no package-script edits, migration-doc edits, tooling changes, migration execution, DB-state changes, env edits, or application/code changes occur in this operation
@@ -212,6 +212,17 @@ Verification findings:
 Verification verdict: `VERIFIED_COMPLETE`
 
 No defects found.
+
+## Governance Sync
+
+- Governance sync unit: `GOVERNANCE-SYNC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001`
+- Status transition: `OPEN` → `VERIFIED_COMPLETE`
+- Sync result: bounded migration-policy remediation is now canonically reconciled across Layer 0,
+  Layer 1, and Layer 3 after implementation commit `0db8de4` and verification commit `bb358a8`
+- Preserved next-action posture after sync: `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
+  remains the sole `ACTIVE_DELIVERY` next action
+- Layer 0 consistency result after sync: `VERIFIED`
+- This sync is recording only; it is not closure and does not open any new unit
 
 ## Allowed Future Remediation Boundary
 

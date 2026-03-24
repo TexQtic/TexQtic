@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (GOV-DEC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-OPENING)
+**Last Updated:** 2026-03-24 (GOVERNANCE-SYNC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -14,7 +14,7 @@
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
 | CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 | Certification transition applicability and lifecycle logging | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-23 |
-| GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | Bounded remediation for migration policy alignment | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
+| GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | Bounded remediation for migration policy alignment | VERIFIED_COMPLETE | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
@@ -22,8 +22,8 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **3**
-- **VERIFIED_COMPLETE** (postured for Close): **0**
+- **OPEN** (all governed units): **2**
+- **VERIFIED_COMPLETE** (postured for Close): **1**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
@@ -41,13 +41,13 @@ implementation-ready unit and `NEXT-ACTION.md` remains unchanged by the concurre
 unit with `DECISION_QUEUE` posture because any later Sentinel tooling rollout, enforcement rollout,
 or broader governance implementation remains separately governed.
 
-`GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` is now also `OPEN` as a bounded governance-only
-remediation-opening unit with `DECISION_QUEUE` posture. It preserves
-`GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` as the authority source for canonical
-migration execution and remote validation policy, preserves `NEXT-ACTION.md` unchanged, preserves
-`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` as the sole `ACTIVE_DELIVERY` authorization, and
-does not authorize package-script edits, migration-doc edits, tooling changes, or migration
-execution in the opening step.
+`GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` is now `VERIFIED_COMPLETE` as a bounded
+governance-only remediation unit with `DECISION_QUEUE` posture. The repo-advertised migration
+entry points now default to the canonical tracked Prisma path, direct SQL remains explicitly
+exception-only, stale forward-looking migration guidance is aligned to the already-decided policy,
+`GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the authority source, `NEXT-ACTION.md`
+remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole
+`ACTIVE_DELIVERY` authorization, and no closure is implied by this sync.
 
 The bounded Sentinel v1 specification package is now implemented inside
 `GOVERNANCE-SENTINEL-V1-SPEC-001`, but that unit remains `OPEN` pending separate verification.

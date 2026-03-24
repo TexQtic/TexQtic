@@ -2735,6 +2735,35 @@ Refs: governance/units/TENANT-EXPERIENCE-RUNTIME-500-002.md · governance/log/EX
 
 ---
 
+### GOVERNANCE-SYNC-GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 — 2026-03-24
+Type: GOVERNANCE / SYNC
+Status: VERIFIED_COMPLETE
+Commit: (this unit — see git log for [GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001] governance sync verified migration policy remediation)
+Title: Record verified completion of the bounded migration policy remediation unit
+Summary: Governance-only sync unit. Recorded `GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001` as
+  `VERIFIED_COMPLETE` after remediation implementation commit `0db8de4` and verification commit
+  `bb358a8`. Layer 0 and Layer 1 are now reconciled while scope remains limited to the bounded
+  migration-policy remediation only: repo-advertised migration entry points now default to the
+  canonical tracked Prisma path, direct SQL remains explicitly exception-only, stale forward-
+  looking migration guidance is aligned to the already-decided canonical migration execution and
+  remote validation policy, `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the
+  authority source, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remains the sole
+  `ACTIVE_DELIVERY` next action, and no closure, migration execution, DB-state change, product
+  code change, or new opening is implied.
+Layer Impact: Layer 0 — OPEN-SET.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: GOVERNANCE_RECONCILIATION_CONFIRMATION. `NEXT-ACTION.md` remains intentionally unchanged,
+  Layer 0 consistency is verified, this is sync only and not closure, and no decisions,
+  package/documentation implementation surfaces, Prisma execution, migrations, env, or unrelated
+  governance files changed in this sync unit.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md ·
+  governance/units/GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOVERNANCE-SYNC-TENANT-EXPERIENCE-RUNTIME-500-002 — 2026-03-22
 Type: GOVERNANCE / SYNC-CLOSE
 Status: CLOSED
