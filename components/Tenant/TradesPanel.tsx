@@ -21,6 +21,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { APIError } from '../../services/apiClient';
 import { getCurrentUser } from '../../services/authService';
 import {
+  createTradeEscrow,
   getTenantTradeDetail,
   listTenantTrades,
   transitionTenantTrade,
@@ -171,6 +172,9 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
   const [transitionReason, setTransitionReason] = useState('');
   const [transitionLoading, setTransitionLoading] = useState<string | null>(null);
   const [transitionOutcome, setTransitionOutcome] = useState<TransitionOutcome | null>(null);
+  const [escrowReason, setEscrowReason] = useState('');
+  const [escrowLoading, setEscrowLoading] = useState(false);
+  const [escrowOutcome, setEscrowOutcome] = useState<string | null>(null);
 
   const loadTrades = useCallback(async () => {
     setLoading(true);
@@ -213,6 +217,8 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
     setSelectedTradeId(tradeId);
     setTransitionReason('');
     setTransitionOutcome(null);
+    setEscrowReason('');
+    setEscrowOutcome(null);
     await loadTradeDetail(tradeId);
   };
 
@@ -223,6 +229,8 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
     setDetailError(null);
     setTransitionReason('');
     setTransitionOutcome(null);
+    setEscrowReason('');
+    setEscrowOutcome(null);
     await loadTrades();
   };
 
@@ -261,6 +269,35 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
       setTransitionOutcome({ kind: 'ERROR', message: friendlyError(err) });
     } finally {
       setTransitionLoading(null);
+    }
+  };
+
+  const handleCreateEscrow = async () => {
+    if (!selectedTrade || !selectedTradeId) {
+      return;
+    }
+
+    if (selectedTrade.escrowId) {
+      setEscrowOutcome(`Trade already linked to escrow ${selectedTrade.escrowId}.`);
+      return;
+    }
+
+    if (!escrowReason.trim()) {
+      setEscrowOutcome('Reason is required before creating escrow from a trade.');
+      return;
+    }
+
+    setEscrowLoading(true);
+    setEscrowOutcome(null);
+    try {
+      const result = await createTradeEscrow(selectedTradeId, { reason: escrowReason.trim() });
+      setEscrowReason('');
+      setEscrowOutcome(`Escrow ${result.escrowId} created and linked to this trade.`);
+      await loadTradeDetail(selectedTradeId);
+    } catch (err) {
+      setEscrowOutcome(friendlyError(err));
+    } finally {
+      setEscrowLoading(false);
     }
   };
 
@@ -305,9 +342,56 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
               <DetailRow label="Buyer Org" value={<span className="font-mono text-xs">{selectedTrade.buyerOrgId}</span>} />
               <DetailRow label="Seller Org" value={<span className="font-mono text-xs">{selectedTrade.sellerOrgId}</span>} />
               <DetailRow label="Currency" value={selectedTrade.currency} />
+              <DetailRow
+                label="Escrow"
+                value={selectedTrade.escrowId ? <span className="font-mono text-xs">{selectedTrade.escrowId}</span> : 'Not linked'}
+              />
               <DetailRow label="Created" value={formatDateTime(selectedTrade.createdAt)} />
               <DetailRow label="Updated" value={formatDateTime(selectedTrade.updatedAt)} />
               <DetailRow label="Trade ID" value={<span className="font-mono text-xs">{selectedTrade.id}</span>} />
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Escrow Continuity</h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Create and attach an escrow directly from this trade context. Currency is derived from the trade on the server.
+                </p>
+              </div>
+
+              {selectedTrade.escrowId ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  This trade is already linked to escrow <span className="font-mono text-xs">{selectedTrade.escrowId}</span>.
+                </div>
+              ) : (
+                <>
+                  <label className="block space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Escrow Creation Reason</span>
+                    <textarea
+                      value={escrowReason}
+                      onChange={event => setEscrowReason(event.target.value)}
+                      rows={3}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-400"
+                      placeholder="Provide the mandatory reason for creating escrow from this trade"
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    disabled={escrowLoading}
+                    onClick={() => void handleCreateEscrow()}
+                    className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {escrowLoading ? 'Creating Escrow…' : 'Create Escrow'}
+                  </button>
+                </>
+              )}
+
+              {escrowOutcome && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  {escrowOutcome}
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">

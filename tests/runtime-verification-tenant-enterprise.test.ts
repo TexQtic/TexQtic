@@ -11,20 +11,32 @@ vi.mock('../services/tenantApiClient', () => ({
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
-import { listTenantTrades, type TenantTradesListResponse } from '../services/tradeService';
+import {
+  createTradeEscrow,
+  listTenantTrades,
+  type CreateTradeEscrowResponse,
+  type TenantTradesListResponse,
+} from '../services/tradeService';
 import { listEdges, listNodes, type EdgeListResponse, type NodeListResponse } from '../services/traceabilityService';
-import { tenantGet } from '../services/tenantApiClient';
+import { tenantGet, tenantPost } from '../services/tenantApiClient';
 
 const tenantGetMock = vi.mocked(tenantGet);
+const tenantPostMock = vi.mocked(tenantPost);
 
 function makeTradeResponse(): TenantTradesListResponse {
   return {
     trades: [
       {
         createdAt: '2026-03-21T08:00:00.000Z',
+        buyerOrgId: 'buyer-1',
+        currency: 'USD',
+        escrowId: null,
+        grossAmount: 1250,
         id: 'trade-1',
         lifecycleState: { stateKey: 'ACTIVE' },
+        sellerOrgId: 'seller-1',
         tenantId: 'tenant-1',
+        tradeReference: 'TRD-001',
         updatedAt: '2026-03-21T09:00:00.000Z',
       },
     ],
@@ -141,6 +153,7 @@ function makeCertificationResponse(): ListCertificationsResponse {
 describe('runtime verification - tenant enterprise service contracts', () => {
   beforeEach(() => {
     tenantGetMock.mockReset();
+    tenantPostMock.mockReset();
   });
 
   it('uses the existing trades endpoint and preserves the read-only envelope', async () => {
@@ -163,6 +176,22 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(tenantGetMock).toHaveBeenCalledWith('/api/tenant/escrows?limit=25&offset=0');
     expect(result).toEqual(response);
     expect(result.escrows[0].lifecycleStateKey).toBe('ACTIVE');
+  });
+
+  it('uses the trade continuity escrow endpoint and preserves the create response envelope', async () => {
+    const response: CreateTradeEscrowResponse = {
+      tradeId: 'trade-1',
+      escrowId: 'escrow-1',
+      currency: 'USD',
+    };
+    tenantPostMock.mockResolvedValue(response);
+
+    const result = await createTradeEscrow('trade-1', { reason: 'Escrow required for controlled release.' });
+
+    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/trades/trade-1/escrow', {
+      reason: 'Escrow required for controlled release.',
+    });
+    expect(result).toEqual(response);
   });
 
   it('uses the existing traceability node and edge endpoints with stable response envelopes', async () => {

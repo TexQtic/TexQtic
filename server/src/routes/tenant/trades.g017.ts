@@ -86,6 +86,7 @@ function getTradeCreateErrorStatusCode(code: string): number {
     case 'FROZEN_BY_ESCALATION':
       return 423;
     case 'RFQ_ALREADY_CONVERTED':
+    case 'ESCROW_ALREADY_LINKED':
       return 409;
     default:
       return 422;
@@ -118,6 +119,14 @@ const createTradeFromRfqBodySchema = z.object({
   buyerOrgId:      z.never({ message: 'buyerOrgId must not be set in RFQ-derived trade creation body' }).optional(),
   sellerOrgId:     z.never({ message: 'sellerOrgId must not be set in RFQ-derived trade creation body' }).optional(),
   tenantId:        z.never({ message: 'tenantId must not be set in request body' }).optional(),
+}).strict();
+
+const createTradeEscrowBodySchema = z.object({
+  reason:          z.string().min(1).max(2000).trim(),
+  createdByUserId: uuidSchema.optional().nullable(),
+  tenantId:        z.never({ message: 'tenantId must not be set in request body' }).optional(),
+  currency:        z.never({ message: 'currency is derived from the trade and must not be set in request body' }).optional(),
+  tradeId:         z.never({ message: 'tradeId is derived from the route path and must not be set in request body' }).optional(),
 }).strict();
 
 const transitionTradeBodySchema = z.object({
@@ -347,6 +356,90 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
       } catch (err) {
         fastify.log.error({ err }, '[G-017] POST /tenant/trades/from-rfq error');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to create trade from RFQ', 500);
+      }
+    },
+  );
+
+  // ─── POST /api/tenant/trades/:id/escrow ──────────────────────────────────
+  /**
+   * Creates a new escrow account derived from an existing tenant trade and
+   * links the resulting escrow to trades.escrow_id atomically.
+   */
+  fastify.post(
+    '/:id/escrow',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const { userId } = request;
+      if (!userId) {
+        return sendError(reply, 'UNAUTHORIZED', 'User ID missing', 401);
+      }
+
+      const paramResult = tradeIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { id: tradeId } = paramResult.data;
+
+      const bodyResult = createTradeEscrowBodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+      const body = bodyResult.data;
+
+      try {
+        const result = await withDbContext(prisma, dbContext, async tx => {
+          const tradeSvc = buildTradeService(tx);
+
+          const createResult = await tradeSvc.createEscrowForTrade({
+            tradeId,
+            tenantId: dbContext.orgId,
+            reason: body.reason,
+            createdByUserId: body.createdByUserId ?? userId,
+          });
+
+          if (createResult.status !== 'CREATED') {
+            return createResult;
+          }
+
+          await writeAuditLog(
+            tx as unknown as PrismaClient,
+            {
+              realm: 'TENANT',
+              tenantId: dbContext.orgId,
+              actorType: 'USER',
+              actorId: userId,
+              action: 'TRADE_ESCROW_LINKED',
+              entity: 'trade',
+              entityId: tradeId,
+              metadataJson: {
+                tradeId,
+                escrowId: createResult.escrowId,
+                currency: createResult.currency,
+                reason: body.reason,
+              },
+            },
+          );
+
+          return createResult;
+        });
+
+        if (result.status !== 'CREATED') {
+          return sendError(reply, result.code, result.message, getTradeCreateErrorStatusCode(result.code));
+        }
+
+        return sendSuccess(reply, {
+          tradeId: result.tradeId,
+          escrowId: result.escrowId,
+          currency: result.currency,
+        }, 201);
+      } catch (err) {
+        fastify.log.error({ err }, '[G-017] POST /tenant/trades/:id/escrow error');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to create trade escrow continuity', 500);
       }
     },
   );

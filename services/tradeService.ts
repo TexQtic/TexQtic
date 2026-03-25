@@ -19,11 +19,17 @@ export interface TenantTrade {
   tradeReference: string;
   buyerOrgId: string;
   sellerOrgId: string;
+  escrowId: string | null;
   grossAmount: number | string;
   currency: string;
   lifecycleState: TenantTradeLifecycleState | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface TenantTradeApi extends Omit<TenantTrade, 'escrowId'> {
+  escrowId?: string | null;
+  escrow_id?: string | null;
 }
 
 export interface TenantTradesListParams {
@@ -57,6 +63,28 @@ export type TransitionTenantTradeResponse =
       approvalId: string | null;
     };
 
+export interface CreateTradeEscrowInput {
+  reason: string;
+}
+
+export interface CreateTradeEscrowResponse {
+  tradeId: string;
+  escrowId: string;
+  currency: string;
+}
+
+interface TenantTradesListApiResponse {
+  trades: TenantTradeApi[];
+  count: number;
+}
+
+function normalizeTenantTrade(trade: TenantTradeApi): TenantTrade {
+  return {
+    ...trade,
+    escrowId: trade.escrowId ?? trade.escrow_id ?? null,
+  };
+}
+
 export async function listTenantTrades(
   params?: TenantTradesListParams
 ): Promise<TenantTradesListResponse> {
@@ -66,7 +94,11 @@ export async function listTenantTrades(
   if (params?.offset != null) searchParams.set('offset', String(params.offset));
   const qs = searchParams.toString();
   const endpoint = qs ? `/api/tenant/trades?${qs}` : '/api/tenant/trades';
-  return tenantGet<TenantTradesListResponse>(endpoint);
+  const response = await tenantGet<TenantTradesListApiResponse>(endpoint);
+  return {
+    trades: response.trades.map(normalizeTenantTrade),
+    count: response.count,
+  };
 }
 
 export async function getTenantTradeDetail(tradeId: string): Promise<TenantTrade> {
@@ -85,4 +117,11 @@ export function transitionTenantTrade(
   input: TransitionTenantTradeInput,
 ): Promise<TransitionTenantTradeResponse> {
   return tenantPost<TransitionTenantTradeResponse>(`/api/tenant/trades/${tradeId}/transition`, input);
+}
+
+export function createTradeEscrow(
+  tradeId: string,
+  input: CreateTradeEscrowInput,
+): Promise<CreateTradeEscrowResponse> {
+  return tenantPost<CreateTradeEscrowResponse>(`/api/tenant/trades/${tradeId}/escrow`, input);
 }

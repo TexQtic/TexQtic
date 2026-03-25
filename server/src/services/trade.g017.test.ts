@@ -20,6 +20,7 @@ interface MockDb {
   lifecycleState: { findFirst: Mock };
   trade: { findFirst: Mock; create: Mock; update: Mock };
   tradeEvent: { create: Mock };
+  $queryRaw: Mock;
   $transaction: Mock;
 }
 
@@ -38,6 +39,7 @@ function makeDb(): MockDb {
     tradeEvent: {
       create: vi.fn(),
     },
+    $queryRaw: vi.fn(),
     // $transaction calls the callback with db itself (same mock handles all methods)
     $transaction: vi.fn((cb: (tx: MockDb) => unknown) => cb(db)),
   };
@@ -120,6 +122,13 @@ const VALID_TRANSITION_INPUT = {
   reason: 'Buyer and seller have agreed on terms.',
 };
 
+const VALID_CREATE_ESCROW_INPUT = {
+  tradeId: TRADE_ROW.id,
+  tenantId: TRADE_ROW.tenantId,
+  reason: 'Escrow required before fulfillment starts.',
+  createdByUserId: 'user-uuid-0000-0000-000000000001',
+};
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('TradeService', () => {
@@ -192,6 +201,56 @@ describe('TradeService', () => {
 
     expect(result.status).toBe('ERROR');
     expect((result as { status: 'ERROR'; code: string }).code).toBe('INVALID_LIFECYCLE_STATE');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('T-05b: createEscrowForTrade creates escrow and links trade atomically', async () => {
+    (db.trade.findFirst as Mock).mockResolvedValueOnce({
+      id: TRADE_ROW.id,
+      tenantId: TRADE_ROW.tenantId,
+      currency: 'USD',
+      escrow_id: null,
+    });
+    (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce({ id: 'escrow-draft-state-uuid-001' });
+    (db.$queryRaw as Mock).mockResolvedValueOnce([{ id: 'escrow-uuid-0000-0000-000000000001' }]);
+    (db.trade.update as Mock).mockResolvedValueOnce({});
+    (db.tradeEvent.create as Mock).mockResolvedValueOnce({ id: 'event-uuid-escrow-001' });
+
+    const result = await svc.createEscrowForTrade(VALID_CREATE_ESCROW_INPUT);
+
+    expect(result.status).toBe('CREATED');
+    expect(result).toMatchObject({
+      status: 'CREATED',
+      tradeId: TRADE_ROW.id,
+      escrowId: 'escrow-uuid-0000-0000-000000000001',
+      currency: 'USD',
+    });
+    expect(db.$transaction).toHaveBeenCalledOnce();
+    expect(db.trade.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: TRADE_ROW.id },
+        data: { escrow_id: 'escrow-uuid-0000-0000-000000000001' },
+      }),
+    );
+    expect(db.tradeEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ eventType: 'TRADE_ESCROW_LINKED' }),
+      }),
+    );
+  });
+
+  it('T-05c: createEscrowForTrade rejects trades that already have an escrow linked', async () => {
+    (db.trade.findFirst as Mock).mockResolvedValueOnce({
+      id: TRADE_ROW.id,
+      tenantId: TRADE_ROW.tenantId,
+      currency: 'USD',
+      escrow_id: 'escrow-uuid-existing-0001',
+    });
+
+    const result = await svc.createEscrowForTrade(VALID_CREATE_ESCROW_INPUT);
+
+    expect(result.status).toBe('ERROR');
+    expect((result as { status: 'ERROR'; code: string }).code).toBe('ESCROW_ALREADY_LINKED');
     expect(db.$transaction).not.toHaveBeenCalled();
   });
 

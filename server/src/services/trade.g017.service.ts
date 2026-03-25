@@ -25,11 +25,14 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import type { StateMachineService } from './stateMachine.service.js';
 import type { EscalationService } from './escalation.service.js';
 import type { MakerCheckerService } from './makerChecker.service.js';
+import { EscrowService } from './escrow.service.js';
 import { GovError } from './escalation.types.js';
 import type { SanctionsService } from './sanctions.service.js';
 import { SanctionBlockError } from './sanctions.service.js';
 import type {
   TradeCreateInput,
+  TradeCreateEscrowInput,
+  TradeCreateEscrowResult,
   TradeCreateFromRfqInput,
   TradeCreateFromRfqResult,
   TradeCreateResult,
@@ -49,6 +52,13 @@ type RfqTradeConversionRow = {
   orgId: string;
   supplierOrgId: string;
   status: string;
+};
+
+type TradeEscrowLinkRow = {
+  id: string;
+  tenantId: string;
+  currency: string;
+  escrow_id: string | null;
 };
 
 function isSourceRfqUniqueConstraintViolation(err: unknown): boolean {
@@ -214,6 +224,116 @@ export class TradeService {
           err instanceof Error
             ? `DB write failed: ${err.message}`
             : 'Unknown error during createTrade.',
+      };
+    }
+  }
+
+  async createEscrowForTrade(
+    input: TradeCreateEscrowInput,
+  ): Promise<TradeCreateEscrowResult> {
+    if (!input.reason || input.reason.trim().length === 0) {
+      return {
+        status: 'ERROR',
+        code: 'REASON_REQUIRED',
+        message: 'reason is required for trade escrow creation. Provide an explicit justification.',
+      };
+    }
+
+    try {
+      const trade = await this.db.trade.findFirst({
+        where: {
+          id: input.tradeId,
+          tenantId: input.tenantId,
+        },
+        select: {
+          id: true,
+          tenantId: true,
+          currency: true,
+          escrow_id: true,
+        },
+      }) as TradeEscrowLinkRow | null;
+
+      if (!trade) {
+        return {
+          status: 'ERROR',
+          code: 'NOT_FOUND',
+          message: `Trade ${input.tradeId} not found for tenant ${input.tenantId}.`,
+        };
+      }
+
+      if (trade.escrow_id) {
+        return {
+          status: 'ERROR',
+          code: 'ESCROW_ALREADY_LINKED',
+          message: `Trade ${input.tradeId} already has escrow ${trade.escrow_id} linked.`,
+        };
+      }
+
+      const result = await this.db.$transaction(async tx => {
+        const txDb = tx as unknown as PrismaClient;
+        const escrowSvc = new EscrowService(
+          txDb,
+          this.stateMachine,
+          this.escalation,
+          this.makerChecker ?? null,
+          this.sanctions ?? null,
+        );
+
+        const createEscrowResult = await escrowSvc.createEscrowAccount({
+          tenantId: input.tenantId,
+          currency: trade.currency,
+          reason: input.reason,
+          createdByUserId: input.createdByUserId ?? null,
+        });
+
+        if (createEscrowResult.status !== 'CREATED') {
+          return createEscrowResult;
+        }
+
+        await txDb.trade.update({
+          where: { id: trade.id },
+          data: { escrow_id: createEscrowResult.escrowId },
+        });
+
+        await txDb.tradeEvent.create({
+          data: {
+            tenantId: input.tenantId,
+            tradeId: trade.id,
+            eventType: 'TRADE_ESCROW_LINKED',
+            metadata: {
+              escrowId: createEscrowResult.escrowId,
+              currency: trade.currency,
+              reason: input.reason,
+            },
+            createdByUserId: input.createdByUserId ?? null,
+          },
+        });
+
+        return {
+          status: 'CREATED' as const,
+          tradeId: trade.id,
+          escrowId: createEscrowResult.escrowId,
+          currency: trade.currency,
+        };
+      });
+
+      if (result.status !== 'CREATED') {
+        return {
+          status: 'ERROR',
+          code: result.code,
+          message: result.message,
+        };
+      }
+
+      return result;
+    } catch (err) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message:
+          err instanceof Error
+            ? `DB write failed: ${err.message}`
+            : 'Unknown error during createEscrowForTrade.',
       };
     }
   }

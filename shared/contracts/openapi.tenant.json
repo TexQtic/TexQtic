@@ -301,6 +301,31 @@
             }
           }
         }
+      },
+      "CreateTradeEscrowRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "createdByUserId": { "type": ["string", "null"], "format": "uuid" }
+        },
+        "additionalProperties": false
+      },
+      "CreateTradeEscrowSuccessResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["tradeId", "escrowId", "currency"],
+            "properties": {
+              "tradeId": { "type": "string", "format": "uuid" },
+              "escrowId": { "type": "string", "format": "uuid" },
+              "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+            }
+          }
+        }
       }
     }
   },
@@ -2821,6 +2846,75 @@
           },
           "422": {
             "description": "Invalid RFQ state or validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/trades/{id}/escrow": {
+      "post": {
+        "summary": "Create and attach escrow from trade context",
+        "description": "Creates a new tenant escrow account derived from the specified trade and links the resulting escrow to that trade atomically. Tenant scope is derived from JWT. tradeId comes from the route path and currency is derived from the trade on the server.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTradeEscrowRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Escrow created and linked to trade",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTradeEscrowSuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Trade not found for authenticated tenant",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Trade already linked to an escrow",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation or escrow creation error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

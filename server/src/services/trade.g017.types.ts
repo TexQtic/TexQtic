@@ -35,6 +35,8 @@ export type TradeServiceErrorCode =
   | 'RFQ_NOT_ELIGIBLE'
   /** The RFQ has already been converted to a trade. */
   | 'RFQ_ALREADY_CONVERTED'
+  /** The trade already has an escrow linked. */
+  | 'ESCROW_ALREADY_LINKED'
   /** The RFQ conversion path is missing required request data. */
   | 'REASON_REQUIRED';
 
@@ -90,6 +92,21 @@ export type TradeCreateFromRfqInput = {
 
 export type TradeCreateFromRfqResult =
   | { status: 'CREATED'; tradeId: string; tradeReference: string; rfqId: string }
+  | { status: 'ERROR'; code: TradeServiceErrorCode; message: string };
+
+export type TradeCreateEscrowInput = {
+  /** UUID of the trade that will own the escrow linkage. */
+  tradeId: string;
+  /** RLS boundary — set by caller from authenticated session. */
+  tenantId: string;
+  /** Mandatory justification for opening trade-linked escrow. */
+  reason: string;
+  /** Soft reference to the creating user. No FK enforced at service layer. */
+  createdByUserId?: string | null;
+};
+
+export type TradeCreateEscrowResult =
+  | { status: 'CREATED'; tradeId: string; escrowId: string; currency: string }
   | { status: 'ERROR'; code: TradeServiceErrorCode; message: string };
 
 // ─── Transition Trade ─────────────────────────────────────────────────────────

@@ -38,8 +38,9 @@ const { MOCK_TRADE_FINDMANY, FAKE_TX, _svc } = vi.hoisted(() => {
   };
   // Module-level service method holders — mutated in beforeEach per-test
   const _svc = {
-    createTrade:     vi.fn() as ReturnType<typeof vi.fn>,
-    transitionTrade: vi.fn() as ReturnType<typeof vi.fn>,
+    createTrade: vi.fn(),
+    createEscrowForTrade: vi.fn(),
+    transitionTrade: vi.fn(),
   };
   return { MOCK_TRADE_FINDMANY, FAKE_TX, _svc };
 });
@@ -169,6 +170,7 @@ describe('G-017 Tenant Trade Routes', () => {
     MOCK_TRADE_FINDMANY.mockResolvedValue([]);
     // Reset _svc method mocks for isolation — factory closure ensures route picks these up
     _svc.createTrade     = vi.fn();
+    _svc.createEscrowForTrade = vi.fn();
     _svc.transitionTrade = vi.fn();
     app = await buildTenantApp();
   });
@@ -194,7 +196,7 @@ describe('G-017 Tenant Trade Routes', () => {
         sellerOrgId:    SELLER_ORG_ID,
         tradeReference: 'TRD-0001',
         currency:       'USD',
-        grossAmount:    1000.00,
+        grossAmount:    1000,
         reason:         'Trade creation reason',
       },
     });
@@ -220,7 +222,7 @@ describe('G-017 Tenant Trade Routes', () => {
         sellerOrgId:    SELLER_ORG_ID,
         tradeReference: 'TRD-0001',
         currency:       'USD',
-        grossAmount:    1000.00,
+        grossAmount:    1000,
         reason:         'Audit emission test',
       },
     });
@@ -295,6 +297,65 @@ describe('G-017 Tenant Trade Routes', () => {
     expect(res.statusCode).toBe(422);
     const body = res.json();
     expect(body.error.code).toBe('DB_ERROR');
+  });
+
+  it('T-005b: POST /tenant/trades/:id/escrow returns 201 when continuity escrow is created', async () => {
+    _svc.createEscrowForTrade.mockResolvedValue({
+      status: 'CREATED',
+      tradeId: TEST_TRADE_ID,
+      escrowId: '77777777-0000-0000-0000-777777777777',
+      currency: 'USD',
+    });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tenant/trades/${TEST_TRADE_ID}/escrow`,
+      payload: {
+        reason: 'Create escrow from trade context',
+      },
+    });
+
+    expect(res.statusCode).toBe(201);
+    const body = res.json();
+    expect(body.data.tradeId).toBe(TEST_TRADE_ID);
+    expect(body.data.escrowId).toBe('77777777-0000-0000-0000-777777777777');
+  });
+
+  it('T-005c: POST /tenant/trades/:id/escrow emits TRADE_ESCROW_LINKED audit', async () => {
+    _svc.createEscrowForTrade.mockResolvedValue({
+      status: 'CREATED',
+      tradeId: TEST_TRADE_ID,
+      escrowId: '77777777-0000-0000-0000-777777777777',
+      currency: 'USD',
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: `/tenant/trades/${TEST_TRADE_ID}/escrow`,
+      payload: {
+        reason: 'Audit escrow linkage',
+      },
+    });
+
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const auditArg = vi.mocked(writeAuditLog).mock.calls[0][1];
+    expect(auditArg.action).toBe('TRADE_ESCROW_LINKED');
+    const meta = auditArg.metadataJson as Record<string, unknown>;
+    expect(meta.escrowId).toBe('77777777-0000-0000-0000-777777777777');
+  });
+
+  it('T-005d: POST /tenant/trades/:id/escrow rejects tenantId in request body', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tenant/trades/${TEST_TRADE_ID}/escrow`,
+      payload: {
+        reason: 'Should fail',
+        tenantId: TEST_TENANT_ID,
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(_svc.createEscrowForTrade).not.toHaveBeenCalled();
   });
 
   // ── POST /tenant/trades/:id/transition ────────────────────────────────────
@@ -493,6 +554,7 @@ describe('G-017 Control Trade Routes', () => {
     vi.clearAllMocks();
     // Reset _svc method mocks for isolation
     _svc.createTrade     = vi.fn();
+    _svc.createEscrowForTrade = vi.fn();
     _svc.transitionTrade = vi.fn();
     MOCK_TRADE_FINDMANY.mockResolvedValue([
       { id: TEST_TRADE_ID, tenantId: TEST_TENANT_ID, lifecycleState: { stateKey: 'DRAFT' } },
