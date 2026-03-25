@@ -576,6 +576,7 @@ model Rfq {
   createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
   supplierResponse RfqSupplierResponse? @relation("rfq_supplier_response")
+  sourceTrade      Trade?               @relation("trade_source_rfq")
   catalogItem      CatalogItem          @relation(fields: [catalogItemId], references: [id], onUpdate: NoAction)
   createdByUser    User?                @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onUpdate: NoAction)
   buyerOrg         Tenant               @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
@@ -810,6 +811,8 @@ model Trade {
   tenantId          String           @map("tenant_id") @db.Uuid
   buyerOrgId        String           @map("buyer_org_id") @db.Uuid
   sellerOrgId       String           @map("seller_org_id") @db.Uuid
+  /// TECS-EXC-003: Optional source RFQ link for bounded RFQ-derived trade conversion.
+  sourceRfqId       String?          @unique(map: "trades_source_rfq_id_key") @map("source_rfq_id") @db.Uuid
   /// G-020: Current lifecycle state. Reuses lifecycle_states registry.
   lifecycleStateId  String           @map("lifecycle_state_id") @db.Uuid
   /// Human-readable external reference. Unique per tenant.
@@ -830,6 +833,7 @@ model Trade {
   events            TradeEvent[]
   buyerOrg          organizations    @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_buyer_org_id")
   sellerOrg         organizations    @relation("TradeSeller", fields: [sellerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_seller_org_id")
+  sourceRfq         Rfq?             @relation("trade_source_rfq", fields: [sourceRfqId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_source_rfq_id_fk")
   escrow_accounts   escrow_accounts? @relation(fields: [escrow_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_escrow_id_fk")
   lifecycleState    LifecycleState   @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
   reasoningLog      ReasoningLog?    @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)

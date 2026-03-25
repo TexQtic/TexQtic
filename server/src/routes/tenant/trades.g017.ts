@@ -66,6 +66,32 @@ function makeTxBoundPrisma(tx: Prisma.TransactionClient): PrismaClient {
   });
 }
 
+function buildTradeService(tx: Prisma.TransactionClient): TradeService {
+  const txBound = makeTxBoundPrisma(tx);
+  const escalationSvc = new EscalationService(txBound);
+  const sanctionsSvc = new SanctionsService(txBound);
+  const smSvc = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
+
+  return new TradeService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
+}
+
+function getTradeCreateErrorStatusCode(code: string): number {
+  switch (code) {
+    case 'UNAUTHORIZED':
+      return 401;
+    case 'FORBIDDEN':
+      return 403;
+    case 'NOT_FOUND':
+      return 404;
+    case 'FROZEN_BY_ESCALATION':
+      return 423;
+    case 'RFQ_ALREADY_CONVERTED':
+      return 409;
+    default:
+      return 422;
+  }
+}
+
 // ─── Zod schemas ──────────────────────────────────────────────────────────────
 
 const createTradeBodySchema = z.object({
@@ -80,6 +106,19 @@ const createTradeBodySchema = z.object({
   // D-017-A: tenantId MUST NOT be accepted from the body
   tenantId:        z.never({ message: 'tenantId must not be set in request body' }).optional(),
 });
+
+const createTradeFromRfqBodySchema = z.object({
+  rfqId:           uuidSchema,
+  tradeReference:  z.string().min(1).max(200).trim(),
+  currency:        z.string().length(3, 'Currency must be an ISO 4217 3-letter code').toUpperCase(),
+  grossAmount:     z.number().positive('grossAmount must be > 0'),
+  reason:          z.string().min(1).max(2000).trim(),
+  reasoningLogId:  uuidSchema.optional().nullable(),
+  createdByUserId: uuidSchema.optional().nullable(),
+  buyerOrgId:      z.never({ message: 'buyerOrgId must not be set in RFQ-derived trade creation body' }).optional(),
+  sellerOrgId:     z.never({ message: 'sellerOrgId must not be set in RFQ-derived trade creation body' }).optional(),
+  tenantId:        z.never({ message: 'tenantId must not be set in request body' }).optional(),
+}).strict();
 
 const transitionTradeBodySchema = z.object({
   toStateKey:  z.string().min(1).max(100).trim().toUpperCase(),
@@ -178,11 +217,7 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
 
       try {
         const result = await withDbContext(prisma, dbContext, async tx => {
-          const txBound         = makeTxBoundPrisma(tx);
-          const escalationSvc   = new EscalationService(txBound);
-          const sanctionsSvc    = new SanctionsService(txBound);
-          const smSvc           = new StateMachineService(txBound, escalationSvc, sanctionsSvc);
-          const tradeSvc        = new TradeService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
+          const tradeSvc = buildTradeService(tx);
 
           const createResult = await tradeSvc.createTrade({
             tenantId:        dbContext.orgId,   // D-017-A: from JWT only
@@ -220,18 +255,98 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         });
 
         if (result.status !== 'CREATED') {
-          const errResult = result as Extract<typeof result, { status: 'ERROR' }>;
-          const statusCode =
-            errResult.code === 'UNAUTHORIZED' ? 401
-            : errResult.code === 'FORBIDDEN'  ? 403
-            : 422;
-          return sendError(reply, errResult.code, errResult.message, statusCode);
+          return sendError(reply, result.code, result.message, getTradeCreateErrorStatusCode(result.code));
         }
 
         return sendSuccess(reply, { tradeId: result.tradeId, tradeReference: result.tradeReference }, 201);
       } catch (err) {
         fastify.log.error({ err }, '[G-017] POST /tenant/trades error');
         return sendError(reply, 'INTERNAL_ERROR', 'Failed to create trade', 500);
+      }
+    },
+  );
+
+  // ─── POST /api/tenant/trades/from-rfq ────────────────────────────────────
+  /**
+   * Create a trade from a buyer-owned RFQ in RESPONDED state.
+   * buyerOrgId/sellerOrgId are derived exclusively from the RFQ context.
+   * tenant scope is derived exclusively from the authenticated JWT (dbContext.orgId).
+   */
+  fastify.post(
+    '/from-rfq',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const { userId } = request;
+      if (!userId) {
+        return sendError(reply, 'UNAUTHORIZED', 'User ID missing', 401);
+      }
+
+      const bodyResult = createTradeFromRfqBodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+      const body = bodyResult.data;
+
+      try {
+        const result = await withDbContext(prisma, dbContext, async tx => {
+          const tradeSvc = buildTradeService(tx);
+
+          const createResult = await tradeSvc.createTradeFromRfq({
+            tenantId:        dbContext.orgId,
+            rfqId:           body.rfqId,
+            tradeReference:  body.tradeReference,
+            currency:        body.currency,
+            grossAmount:     body.grossAmount,
+            reason:          body.reason,
+            reasoningLogId:  body.reasoningLogId ?? null,
+            createdByUserId: body.createdByUserId ?? userId,
+          });
+
+          if (createResult.status !== 'CREATED') {
+            return createResult;
+          }
+
+          await writeAuditLog(
+            tx as unknown as PrismaClient,
+            {
+              realm: 'TENANT',
+              tenantId: dbContext.orgId,
+              actorType: 'USER',
+              actorId: userId,
+              action: 'TRADE_CREATED_FROM_RFQ',
+              entity: 'trade',
+              entityId: createResult.tradeId,
+              metadataJson: {
+                tradeId: createResult.tradeId,
+                tradeReference: createResult.tradeReference,
+                rfqId: createResult.rfqId,
+                grossAmount: body.grossAmount,
+                currency: body.currency,
+                reason: body.reason,
+              },
+            },
+          );
+
+          return createResult;
+        });
+
+        if (result.status !== 'CREATED') {
+          return sendError(reply, result.code, result.message, getTradeCreateErrorStatusCode(result.code));
+        }
+
+        return sendSuccess(reply, {
+          tradeId: result.tradeId,
+          tradeReference: result.tradeReference,
+          rfqId: result.rfqId,
+        }, 201);
+      } catch (err) {
+        fastify.log.error({ err }, '[G-017] POST /tenant/trades/from-rfq error');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to create trade from RFQ', 500);
       }
     },
   );
@@ -341,12 +456,7 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         });
 
         if (result.status === 'ERROR') {
-          const statusCode =
-            result.code === 'UNAUTHORIZED'        ? 401
-            : result.code === 'FORBIDDEN'         ? 403
-            : result.code === 'NOT_FOUND'         ? 404
-            : result.code === 'FROZEN_BY_ESCALATION' ? 423
-            : 422;
+          const statusCode = getTradeCreateErrorStatusCode(result.code);
           return sendError(reply, result.code, result.message, statusCode);
         }
 

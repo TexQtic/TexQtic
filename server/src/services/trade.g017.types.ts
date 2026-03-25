@@ -32,6 +32,10 @@ export type TradeServiceErrorCode =
   /** Prisma/DB write or read failed. */
   | 'DB_ERROR'
   /** reason field is empty or whitespace-only. */
+  | 'RFQ_NOT_ELIGIBLE'
+  /** The RFQ has already been converted to a trade. */
+  | 'RFQ_ALREADY_CONVERTED'
+  /** The RFQ conversion path is missing required request data. */
   | 'REASON_REQUIRED';
 
 // ─── Create Trade ─────────────────────────────────────────────────────────────
@@ -63,6 +67,29 @@ export type TradeCreateInput = {
 
 export type TradeCreateResult =
   | { status: 'CREATED'; tradeId: string; tradeReference: string }
+  | { status: 'ERROR'; code: TradeServiceErrorCode; message: string };
+
+export type TradeCreateFromRfqInput = {
+  /** RLS boundary and RFQ buyer owner — set by caller from authenticated session. */
+  tenantId: string;
+  /** Canonical RFQ identity to convert. */
+  rfqId: string;
+  /** Human-readable external reference. Must be unique per tenant. */
+  tradeReference: string;
+  /** ISO 4217 currency code. */
+  currency: string;
+  /** Must be > 0. Stored as NUMERIC(18,6). */
+  grossAmount: number;
+  /** Mandatory justification for why this RFQ is being converted. */
+  reason: string;
+  /** G-023: Optional link to an AI reasoning_logs row. */
+  reasoningLogId?: string | null;
+  /** Soft reference to the creating user. No FK enforced at service layer. */
+  createdByUserId?: string | null;
+};
+
+export type TradeCreateFromRfqResult =
+  | { status: 'CREATED'; tradeId: string; tradeReference: string; rfqId: string }
   | { status: 'ERROR'; code: TradeServiceErrorCode; message: string };
 
 // ─── Transition Trade ─────────────────────────────────────────────────────────

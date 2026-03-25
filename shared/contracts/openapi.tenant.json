@@ -261,6 +261,46 @@
             }
           }
         }
+      },
+      "CreateTradeFromRfqRequest": {
+        "type": "object",
+        "required": [
+          "rfqId",
+          "tradeReference",
+          "currency",
+          "grossAmount",
+          "reason"
+        ],
+        "properties": {
+          "rfqId": { "type": "string", "format": "uuid" },
+          "tradeReference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+          "grossAmount": { "type": "number", "exclusiveMinimum": 0 },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "reasoningLogId": { "type": ["string", "null"], "format": "uuid" },
+          "createdByUserId": { "type": ["string", "null"], "format": "uuid" }
+        },
+        "additionalProperties": false
+      },
+      "CreateTradeFromRfqSuccessResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["tradeId", "tradeReference", "rfqId"],
+            "properties": {
+              "tradeId": { "type": "string", "format": "uuid" },
+              "tradeReference": { "type": "string" },
+              "rfqId": { "type": "string", "format": "uuid" }
+            }
+          }
+        }
       }
     }
   },
@@ -2720,6 +2760,67 @@
           },
           "422": {
             "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/trades/from-rfq": {
+      "post": {
+        "summary": "Create a trade from a responded RFQ",
+        "description": "Creates a DRAFT trade from a buyer-owned RFQ in RESPONDED status. Tenant scope is derived from JWT. buyerOrgId and sellerOrgId are derived from the RFQ context and must not be supplied by the client.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTradeFromRfqRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trade created from RFQ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTradeFromRfqSuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "RFQ not found for authenticated tenant",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "RFQ already converted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid RFQ state or validation error",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

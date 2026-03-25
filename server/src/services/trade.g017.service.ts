@@ -21,7 +21,7 @@
  *  7. Interpret result: APPLIED / PENDING_APPROVAL / ESCALATION_REQUIRED / DENIED
  */
 
-import type { PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '@prisma/client';
 import type { StateMachineService } from './stateMachine.service.js';
 import type { EscalationService } from './escalation.service.js';
 import type { MakerCheckerService } from './makerChecker.service.js';
@@ -30,10 +30,33 @@ import type { SanctionsService } from './sanctions.service.js';
 import { SanctionBlockError } from './sanctions.service.js';
 import type {
   TradeCreateInput,
+  TradeCreateFromRfqInput,
+  TradeCreateFromRfqResult,
   TradeCreateResult,
   TradeTransitionInput,
   TradeTransitionResult,
 } from './trade.g017.types.js';
+
+class RfqAlreadyConvertedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RfqAlreadyConvertedError';
+  }
+}
+
+type RfqTradeConversionRow = {
+  id: string;
+  orgId: string;
+  supplierOrgId: string;
+  status: string;
+};
+
+function isSourceRfqUniqueConstraintViolation(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError
+    && err.code === 'P2002'
+    && Array.isArray(err.meta?.target)
+    && err.meta.target.includes('source_rfq_id');
+}
 
 // ─── TradeService ─────────────────────────────────────────────────────────────
 
@@ -191,6 +214,273 @@ export class TradeService {
           err instanceof Error
             ? `DB write failed: ${err.message}`
             : 'Unknown error during createTrade.',
+      };
+    }
+  }
+
+  private validateTradeCreateFromRfqInput(
+    input: TradeCreateFromRfqInput,
+  ): Extract<TradeCreateFromRfqResult, { status: 'ERROR' }> | null {
+    if (!input.rfqId || input.rfqId.trim().length === 0) {
+      return {
+        status: 'ERROR',
+        code: 'RFQ_NOT_ELIGIBLE',
+        message: 'rfqId is required for RFQ-derived trade creation.',
+      };
+    }
+
+    if (!input.tradeReference || input.tradeReference.trim().length === 0) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: 'tradeReference is required and must be non-empty.',
+      };
+    }
+
+    if (!input.currency || input.currency.trim().length === 0) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: 'currency is required and must be non-empty.',
+      };
+    }
+
+    if (typeof input.grossAmount !== 'number' || input.grossAmount <= 0) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: 'grossAmount must be a number greater than 0.',
+      };
+    }
+
+    if (!input.reason || input.reason.trim().length === 0) {
+      return {
+        status: 'ERROR',
+        code: 'REASON_REQUIRED',
+        message: 'reason is required for trade creation. Provide an explicit justification.',
+      };
+    }
+
+    return null;
+  }
+
+  private async resolveDraftTradeStateId(): Promise<string | null> {
+    const draftState = await this.db.lifecycleState.findFirst({
+      where: { entityType: 'TRADE', stateKey: 'DRAFT' },
+      select: { id: true },
+    });
+
+    return draftState?.id ?? null;
+  }
+
+  private async loadConvertibleRfq(input: TradeCreateFromRfqInput): Promise<RfqTradeConversionRow | null> {
+    return this.db.rfq.findFirst({
+      where: {
+        id: input.rfqId,
+        orgId: input.tenantId,
+      },
+      select: {
+        id: true,
+        orgId: true,
+        supplierOrgId: true,
+        status: true,
+      },
+    });
+  }
+
+  private async findTradeBySourceRfqId(db: PrismaClient, rfqId: string): Promise<Array<{ id: string }>> {
+    return db.$queryRaw<Array<{ id: string }>>`
+      SELECT id
+      FROM public.trades
+      WHERE source_rfq_id = ${rfqId}
+      LIMIT 1
+    `;
+  }
+
+  private async validateTradeConversionPreconditions(
+    input: TradeCreateFromRfqInput,
+  ): Promise<
+    | { status: 'OK'; draftStateId: string; rfq: RfqTradeConversionRow }
+    | Extract<TradeCreateFromRfqResult, { status: 'ERROR' }>
+  > {
+    const draftStateId = await this.resolveDraftTradeStateId();
+
+    if (!draftStateId) {
+      return {
+        status: 'ERROR',
+        code: 'INVALID_LIFECYCLE_STATE',
+        message:
+          "Stop condition: lifecycle_states row for entityType='TRADE' stateKey='DRAFT' not found. " +
+          'Run the G-020 seed migration before using TradeService.',
+      };
+    }
+
+    const rfq = await this.loadConvertibleRfq(input);
+
+    if (!rfq) {
+      return {
+        status: 'ERROR',
+        code: 'NOT_FOUND',
+        message: `RFQ ${input.rfqId} not found for tenant ${input.tenantId}.`,
+      };
+    }
+
+    if (rfq.status !== 'RESPONDED') {
+      return {
+        status: 'ERROR',
+        code: 'RFQ_NOT_ELIGIBLE',
+        message: `RFQ ${input.rfqId} must be in RESPONDED status before conversion to trade.`,
+      };
+    }
+
+    const existingTrade = await this.findTradeBySourceRfqId(this.db, input.rfqId);
+    if (existingTrade.length > 0) {
+      return {
+        status: 'ERROR',
+        code: 'RFQ_ALREADY_CONVERTED',
+        message: `RFQ ${input.rfqId} has already been converted to a trade.`,
+      };
+    }
+
+    return { status: 'OK', draftStateId, rfq };
+  }
+
+  private async runTradeConversionSanctionsCheck(rfq: RfqTradeConversionRow): Promise<Extract<TradeCreateFromRfqResult, { status: 'ERROR' }> | null> {
+    if (!this.sanctions) {
+      return null;
+    }
+
+    try {
+      await this.sanctions.checkOrgSanction(rfq.orgId);
+      await this.sanctions.checkOrgSanction(rfq.supplierOrgId);
+      return null;
+    } catch (err) {
+      if (err instanceof SanctionBlockError) {
+        return {
+          status: 'ERROR',
+          code: 'DB_ERROR',
+          message: err.message,
+        };
+      }
+
+      throw err;
+    }
+  }
+
+  private async insertTradeFromRfq(
+    db: PrismaClient,
+    input: TradeCreateFromRfqInput,
+    draftStateId: string,
+    rfq: RfqTradeConversionRow,
+  ): Promise<{ id: string; trade_reference: string }> {
+    const duplicate = await this.findTradeBySourceRfqId(db, input.rfqId);
+    if (duplicate.length > 0) {
+      throw new RfqAlreadyConvertedError(`RFQ ${input.rfqId} has already been converted to a trade.`);
+    }
+
+    const inserted = await db.$queryRaw<Array<{ id: string; trade_reference: string }>>`
+      INSERT INTO public.trades (
+        tenant_id,
+        buyer_org_id,
+        seller_org_id,
+        source_rfq_id,
+        lifecycle_state_id,
+        trade_reference,
+        currency,
+        gross_amount,
+        reasoning_log_id,
+        created_by_user_id
+      )
+      VALUES (
+        ${input.tenantId},
+        ${rfq.orgId},
+        ${rfq.supplierOrgId},
+        ${input.rfqId},
+        ${draftStateId},
+        ${input.tradeReference.trim()},
+        ${input.currency.trim()},
+        ${input.grossAmount},
+        ${input.reasoningLogId ?? null},
+        ${input.createdByUserId ?? null}
+      )
+      RETURNING id, trade_reference
+    `;
+
+    const trade = inserted[0];
+
+    await db.tradeEvent.create({
+      data: {
+        tenantId: input.tenantId,
+        tradeId: trade.id,
+        eventType: 'TRADE_CREATED_FROM_RFQ',
+        metadata: {
+          tradeReference: trade.trade_reference,
+          grossAmount: input.grossAmount,
+          currency: input.currency.trim(),
+          reason: input.reason,
+          rfqId: input.rfqId,
+          buyerOrgId: rfq.orgId,
+          sellerOrgId: rfq.supplierOrgId,
+        },
+        createdByUserId: input.createdByUserId ?? null,
+      },
+    });
+
+    return trade;
+  }
+
+  async createTradeFromRfq(input: TradeCreateFromRfqInput): Promise<TradeCreateFromRfqResult> {
+    const validationError = this.validateTradeCreateFromRfqInput(input);
+    if (validationError) {
+      return validationError;
+    }
+
+    const preconditions = await this.validateTradeConversionPreconditions(input);
+    if (preconditions.status === 'ERROR') {
+      return preconditions;
+    }
+
+    try {
+      const sanctionsError = await this.runTradeConversionSanctionsCheck(preconditions.rfq);
+      if (sanctionsError) {
+        return sanctionsError;
+      }
+
+      const created = await this.db.$transaction(async tx => {
+        const txDb = tx as unknown as PrismaClient;
+        return this.insertTradeFromRfq(txDb, input, preconditions.draftStateId, preconditions.rfq);
+      });
+
+      return {
+        status: 'CREATED',
+        tradeId: created.id,
+        tradeReference: created.trade_reference,
+        rfqId: input.rfqId,
+      };
+    } catch (err) {
+      if (err instanceof RfqAlreadyConvertedError) {
+        return {
+          status: 'ERROR',
+          code: 'RFQ_ALREADY_CONVERTED',
+          message: err.message,
+        };
+      }
+
+      if (isSourceRfqUniqueConstraintViolation(err)) {
+        return {
+          status: 'ERROR',
+          code: 'RFQ_ALREADY_CONVERTED',
+          message: `RFQ ${input.rfqId} has already been converted to a trade.`,
+        };
+      }
+
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message:
+          err instanceof Error
+            ? `DB write failed: ${err.message}`
+            : 'Unknown error during RFQ-derived trade creation.',
       };
     }
   }
