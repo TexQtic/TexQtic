@@ -35,6 +35,32 @@ Notes: <constraints or cautions applicable after closure>
   or in Layer 0 closed-baseline, not in a new-style unit record
 
 ---
+### GOVERNANCE-OS-RESET-001 — 2026-03-25
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded governance posture reset
+Summary: Opened one bounded governance-only reset unit after the completed Phase 1, Phase 2, and
+  Phase 3 findings established that live Governance OS behavior must be shrunk and re-anchored so
+  governance remains a drift-control layer around TexQtic platform delivery rather than a
+  portfolio-dominating local sequencing system. `GOVERNANCE-OS-RESET-001` is now the sole
+  `ACTIVE_DELIVERY` unit because it directly affects live sequencing behavior, but no reset
+  implementation was performed in this step and no product-facing unit was opened in this step.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 1 —
+  governance/units/GOVERNANCE-OS-RESET-001.md added; Layer 2 —
+  governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-OPENING.md added; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This opening is governance reset only. It preserves the concurrent `DECISION_QUEUE` and
+  `DESIGN_GATE_QUEUE` items without promoting them, authorizes no product-facing implementation
+  stream, authorizes no execution-log cleanup, authorizes no Sentinel program rewrite, authorizes
+  no candidate-ledger rewrite, and does not auto-resolve doctrine/product-plan authority
+  questions. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/units/GOVERNANCE-OS-RESET-001.md ·
+  governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-OPENING.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
 ### GOV-AUDIT-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002-POST-CLOSE — 2026-03-24
 Type: GOVERNANCE / AUDIT
 Status: CLOSED

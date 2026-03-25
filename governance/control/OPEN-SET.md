@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-24 (TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003 closed; Layer 0 returned to OPERATOR_DECISION_REQUIRED)
+**Last Updated:** 2026-03-25 (GOVERNANCE-OS-RESET-001 opened as sole ACTIVE_DELIVERY)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,6 +13,7 @@
 
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
+| GOVERNANCE-OS-RESET-001 | Governance OS posture reset | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-25 |
 | GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 | Sentinel CHECK-005 recount remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 | Sentinel correction-order artifact emission | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 | Sentinel correction-order reference remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
@@ -27,18 +28,28 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **8**
+- **OPEN** (all governed units): **9**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 0
+- **ACTIVE_DELIVERY**: 1
 - **DECISION_QUEUE**: 8
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 9**
+- **Total non-terminal units: 10**
 
 Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
 does not replace TECS lifecycle, unit status, or authorization.
+
+`GOVERNANCE-OS-RESET-001` is now OPEN as the sole `ACTIVE_DELIVERY` governance unit after the
+completed Phase 1, Phase 2, and Phase 3 reset findings established that Governance OS must be
+shrunk and re-anchored so it remains a drift-control layer around TexQtic platform delivery rather
+than a portfolio-dominating local sequencing system. The bounded reset is governance-only: no
+product-facing implementation unit was opened here, no reset implementation was performed here,
+and no execution-log integrity cleanup, Sentinel program rewrite, candidate-ledger rewrite, or
+human-decision authority resolution was authorized by this opening. The concurrently open
+governance-only units remain `DECISION_QUEUE` only and `TECS-FBW-ADMINRBAC` remains
+`DESIGN_GATE_QUEUE` only.
 
 `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` is now `CLOSED` after the already-complete
 implementation, verification, and governance sync chain confirmed that implementation commit
@@ -47,9 +58,9 @@ implementation, verification, and governance sync chain confirmed that implement
 `App.tsx`, preserved the real-image path when `imageUrl` exists, and rendered a local `Image
 unavailable` state when `imageUrl` is absent. No broader image/media/catalog refactor was
 authorized, no implementation, migration, Prisma, or SQL work occurred in the close step, and no
-successor unit was opened implicitly. `NEXT-ACTION.md` now truthfully returns to
-`OPERATOR_DECISION_REQUIRED` because no implementation-ready or close-ready `ACTIVE_DELIVERY` unit
-remains open.
+successor product-facing unit was opened implicitly. The earlier post-close return to
+`OPERATOR_DECISION_REQUIRED` is now historical only and has been superseded by the later opening
+of `GOVERNANCE-OS-RESET-001` as the sole current `ACTIVE_DELIVERY` unit.
 
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` closed 2026-03-24 after the authoritative
 implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114` remained unchanged, bounded
@@ -94,8 +105,9 @@ unit remains preserved governance truth for bounded migration-policy remediation
 repo-advertised migration entry points now default to the canonical tracked Prisma path, direct
 SQL remains explicitly exception-only, stale forward-looking migration guidance remains aligned to
 the already-decided policy, `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the
-authority source, `NEXT-ACTION.md` remains unchanged, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002`
-remains the sole `ACTIVE_DELIVERY` authorization, and no new migration work, product work,
+authority source, the then-current `NEXT-ACTION.md` remained unchanged at that time,
+`CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` remained the sole `ACTIVE_DELIVERY`
+authorization at that time, and no new migration work, product work,
 migration execution, Prisma execution, SQL execution, or DB-state change was authorized by this
 closure.
 
