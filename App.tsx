@@ -61,11 +61,26 @@ import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
-import { getCatalogItems, CatalogItem, createCatalogItem, createRfq, getBuyerRfqs, getBuyerRfqDetail, BuyerRfqDetail, BuyerRfqListItem } from './services/catalogService';
+import {
+  getCatalogItems,
+  CatalogItem,
+  createCatalogItem,
+  createRfq,
+  getBuyerRfqs,
+  getBuyerRfqDetail,
+  getSupplierRfqInbox,
+  getSupplierRfqDetail,
+  submitSupplierRfqResponse,
+  BuyerRfqDetail,
+  BuyerRfqListItem,
+  SupplierRfqDetail,
+  SupplierRfqListItem,
+  SupplierRfqResponse,
+} from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
-import { BuyerRfqDetailSurface } from './components/Tenant/BuyerRfqDetailSurface';
-import { BuyerRfqListSurface } from './components/Tenant/BuyerRfqListSurface';
+import { BuyerRfqDetailSurface, SupplierRfqDetailSurface } from './components/Tenant/BuyerRfqDetailSurface';
+import { BuyerRfqListSurface, SupplierRfqInboxSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
@@ -363,7 +378,7 @@ const App: React.FC = () => {
   // TECS-FBW-015: 'TRACEABILITY' added for G-016 traceability CRUD panel
   // TECS-FBW-016: 'AUDIT_LOGS' added for tenant audit log read-only panel
   // TECS-FBW-002-B: 'TRADES' added for G-017 tenant trade read-only panel
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS' | 'TRADES' | 'RFQS'>('HOME');
+  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS' | 'TRADES' | 'RFQS' | 'SUPPLIER_RFQ_INBOX'>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -427,6 +442,34 @@ const App: React.FC = () => {
     loading: false,
     error: null,
     rfqs: [],
+  });
+  const [supplierRfqListView, setSupplierRfqListView] = useState<{
+    loading: boolean;
+    error: string | null;
+    rfqs: SupplierRfqListItem[];
+  }>({
+    loading: false,
+    error: null,
+    rfqs: [],
+  });
+  const [supplierRfqDetailView, setSupplierRfqDetailView] = useState<{
+    open: boolean;
+    rfqId: string | null;
+    loading: boolean;
+    error: string | null;
+    submitLoading: boolean;
+    submitError: string | null;
+    data: SupplierRfqDetail | null;
+    response: SupplierRfqResponse | null;
+  }>({
+    open: false,
+    rfqId: null,
+    loading: false,
+    error: null,
+    submitLoading: false,
+    submitError: null,
+    data: null,
+    response: null,
   });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
@@ -1162,6 +1205,166 @@ const App: React.FC = () => {
     setRfqDetailView(view => ({ ...view, open: false }));
   };
 
+  const handleOpenSupplierRfqInbox = async () => {
+    setExpView('SUPPLIER_RFQ_INBOX');
+    setSupplierRfqDetailView({
+      open: false,
+      rfqId: null,
+      loading: false,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: null,
+    });
+    setSupplierRfqListView(view => ({
+      ...view,
+      loading: true,
+      error: null,
+    }));
+
+    try {
+      const response = await getSupplierRfqInbox();
+      setSupplierRfqListView({
+        loading: false,
+        error: null,
+        rfqs: response.rfqs,
+      });
+    } catch (error) {
+      setSupplierRfqListView({
+        loading: false,
+        error: error instanceof APIError ? error.message : 'Unable to load the supplier RFQ inbox right now.',
+        rfqs: [],
+      });
+    }
+  };
+
+  const handleOpenSupplierRfqDetail = async (rfqId: string) => {
+    const existingResponse = supplierRfqDetailView.rfqId === rfqId ? supplierRfqDetailView.response : null;
+
+    if (supplierRfqDetailView.rfqId === rfqId && supplierRfqDetailView.data) {
+      setSupplierRfqDetailView(view => ({
+        ...view,
+        open: true,
+        error: null,
+        submitError: null,
+      }));
+      return;
+    }
+
+    setSupplierRfqDetailView({
+      open: true,
+      rfqId,
+      loading: true,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: existingResponse,
+    });
+
+    try {
+      const response = await getSupplierRfqDetail(rfqId);
+      setSupplierRfqDetailView({
+        open: true,
+        rfqId,
+        loading: false,
+        error: null,
+        submitLoading: false,
+        submitError: null,
+        data: response.rfq,
+        response: existingResponse,
+      });
+    } catch (error) {
+      setSupplierRfqDetailView({
+        open: true,
+        rfqId,
+        loading: false,
+        error: error instanceof APIError ? error.message : 'Unable to load supplier RFQ detail right now.',
+        submitLoading: false,
+        submitError: null,
+        data: null,
+        response: existingResponse,
+      });
+    }
+  };
+
+  const handleReturnToSupplierRfqList = () => {
+    setSupplierRfqDetailView({
+      open: false,
+      rfqId: null,
+      loading: false,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: null,
+    });
+  };
+
+  const handleCloseSupplierRfqInbox = () => {
+    handleReturnToSupplierRfqList();
+    setExpView('HOME');
+  };
+
+  const handleSubmitSupplierRfqResponse = async (message: string) => {
+    const rfqId = supplierRfqDetailView.rfqId;
+    const currentRfq = supplierRfqDetailView.data;
+
+    if (!rfqId || !currentRfq) {
+      return;
+    }
+
+    if (!message.trim()) {
+      setSupplierRfqDetailView(view => ({
+        ...view,
+        submitError: 'Response message is required.',
+      }));
+      return;
+    }
+
+    setSupplierRfqDetailView(view => ({
+      ...view,
+      submitLoading: true,
+      submitError: null,
+    }));
+
+    try {
+      const result = await submitSupplierRfqResponse(rfqId, { message });
+      setSupplierRfqDetailView(view => ({
+        ...view,
+        submitLoading: false,
+        submitError: null,
+        data: view.data
+          ? {
+              ...view.data,
+              status: result.rfq.status,
+              updated_at: result.response.updated_at,
+            }
+          : view.data,
+        response: result.response,
+      }));
+      setSupplierRfqListView(view => ({
+        ...view,
+        rfqs: view.rfqs.map(rfq =>
+          rfq.id === rfqId
+            ? {
+                ...rfq,
+                status: result.rfq.status,
+                updated_at: result.response.updated_at,
+              }
+            : rfq
+        ),
+      }));
+    } catch (error) {
+      setSupplierRfqDetailView(view => ({
+        ...view,
+        submitLoading: false,
+        submitError: error instanceof APIError ? error.message : 'Unable to submit the supplier response right now.',
+      }));
+    }
+  };
+
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
   const renderWLAdminContent = () => {
     if (!currentTenant) return null;
@@ -1333,6 +1536,37 @@ const App: React.FC = () => {
         />
       );
     }
+    if (expView === 'SUPPLIER_RFQ_INBOX') {
+      if (supplierRfqDetailView.open) {
+        return (
+          <SupplierRfqDetailSurface
+            rfq={supplierRfqDetailView.data}
+            response={supplierRfqDetailView.response}
+            loading={supplierRfqDetailView.loading}
+            error={supplierRfqDetailView.error}
+            submitLoading={supplierRfqDetailView.submitLoading}
+            submitError={supplierRfqDetailView.submitError}
+            onBack={handleReturnToSupplierRfqList}
+            onClose={handleCloseSupplierRfqInbox}
+            onSubmitResponse={message => {
+              void handleSubmitSupplierRfqResponse(message);
+            }}
+          />
+        );
+      }
+
+      return (
+        <SupplierRfqInboxSurface
+          rfqs={supplierRfqListView.rfqs}
+          loading={supplierRfqListView.loading}
+          error={supplierRfqListView.error}
+          onViewDetail={rfqId => {
+            void handleOpenSupplierRfqDetail(rfqId);
+          }}
+          onBack={handleCloseSupplierRfqInbox}
+        />
+      );
+    }
     // TECS-FBW-003-A: G-018 tenant escrow read surface (D-020-B: no balance; D-017-A: no tenantId in body)
     if (expView === 'ESCROW') return <EscrowPanel onBack={() => setExpView('HOME')} />;
     // TECS-FBW-006-A: G-022 tenant escalation read surface (read-only; D-017-A compliant)
@@ -1422,6 +1656,15 @@ const App: React.FC = () => {
                 <p className="text-slate-500">Tiered pricing and MOQ enforcement active.</p>
               </div>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleOpenSupplierRfqInbox();
+                  }}
+                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
+                >
+                  Supplier RFQ Inbox
+                </button>
                 <button
                   type="button"
                   onClick={() => {

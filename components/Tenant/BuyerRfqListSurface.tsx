@@ -1,5 +1,5 @@
 import React from 'react';
-import { BuyerRfqListItem } from '../../services/catalogService';
+import { BuyerRfqListItem, SupplierRfqListItem } from '../../services/catalogService';
 
 type BuyerRfqListSurfaceProps = Readonly<{
   rfqs: BuyerRfqListItem[];
@@ -21,7 +21,7 @@ function formatTimestamp(value: string): string {
   }).format(date);
 }
 
-function getStatusTone(status: BuyerRfqListItem['status']): string {
+function getStatusTone(status: BuyerRfqListItem['status'] | SupplierRfqListItem['status']): string {
   switch (status) {
     case 'RESPONDED':
       return 'border-emerald-200 bg-emerald-50 text-emerald-700';
@@ -186,6 +186,172 @@ export function BuyerRfqListSurface({
       <div className="space-y-4">
         {rfqs.map(rfq => (
           <BuyerRfqListCard key={rfq.id} rfq={rfq} onViewDetail={onViewDetail} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type SupplierRfqInboxSurfaceProps = Readonly<{
+  rfqs: SupplierRfqListItem[];
+  loading: boolean;
+  error: string | null;
+  onViewDetail: (rfqId: string) => void;
+  onBack: () => void;
+}>;
+
+function SupplierRfqInboxCard({
+  rfq,
+  onViewDetail,
+}: Readonly<{
+  rfq: SupplierRfqListItem;
+  onViewDetail: (rfqId: string) => void;
+}>) {
+  const statusTone = getStatusTone(rfq.status);
+
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Inbox RFQ</p>
+          <h3 className="text-base font-bold text-slate-900 break-all">{rfq.id}</h3>
+          <p className="text-sm text-slate-600">{rfq.item_name}</p>
+        </div>
+        <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusTone}`}>
+          Status: {rfq.status}
+        </div>
+      </div>
+
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Catalog Item</dt>
+          <dd className="mt-2 text-sm font-medium text-slate-900">{rfq.item_name}</dd>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Item SKU</dt>
+          <dd className="mt-2 text-sm font-medium text-slate-900">{rfq.item_sku?.trim() ? rfq.item_sku : 'SKU unavailable'}</dd>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Requested Quantity</dt>
+          <dd className="mt-2 text-sm font-medium text-slate-900">{rfq.quantity}</dd>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Last Updated</dt>
+          <dd className="mt-2 text-sm font-medium text-slate-900">{formatTimestamp(rfq.updated_at)}</dd>
+        </div>
+      </dl>
+
+      <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-slate-500">Submitted {formatTimestamp(rfq.created_at)}. This supplier inbox supports a first response only and does not enable negotiation.</p>
+        <button
+          type="button"
+          onClick={() => onViewDetail(rfq.id)}
+          className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50 transition"
+        >
+          Open RFQ
+        </button>
+      </div>
+    </article>
+  );
+}
+
+export function SupplierRfqInboxSurface({
+  rfqs,
+  loading,
+  error,
+  onViewDetail,
+  onBack,
+}: SupplierRfqInboxSurfaceProps) {
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Supplier RFQ Inbox</h1>
+          <p className="mt-2 text-sm text-slate-500">Loading supplier-addressed RFQs from the existing inbox contract.</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-sm text-slate-600">
+          Preparing the supplier inbox list and current RFQ statuses.
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Supplier RFQ Inbox</h1>
+          <p className="mt-2 text-sm text-slate-500">The supplier inbox is unavailable right now, but no RFQ response state has changed.</p>
+        </div>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-5 text-sm text-rose-700">
+          {error}
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (rfqs.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Supplier RFQ Inbox</h1>
+          <p className="mt-2 text-sm text-slate-500">Review supplier-addressed RFQs and submit a first response when one arrives.</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-sm text-slate-600">
+          No supplier RFQs are available yet. When a buyer submits one to your tenant, it will appear here for response.
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 px-5 py-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Supplier RFQ Inbox</h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
+            Review buyer-submitted RFQs addressed to your tenant and submit a first response without expanding into negotiation.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition"
+        >
+          Back
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {rfqs.map(rfq => (
+          <SupplierRfqInboxCard key={rfq.id} rfq={rfq} onViewDetail={onViewDetail} />
         ))}
       </div>
     </div>

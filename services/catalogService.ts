@@ -151,6 +151,62 @@ export interface BuyerRfqDetailResponse {
   rfq: BuyerRfqDetail;
 }
 
+export interface SupplierRfqListItem {
+  id: string;
+  status: BuyerRfqStatus;
+  catalog_item_id: string;
+  item_name: string;
+  item_sku: string | null;
+  quantity: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupplierRfqListResponse {
+  rfqs: SupplierRfqListItem[];
+  count: number;
+}
+
+export interface SupplierRfqDetail {
+  id: string;
+  status: BuyerRfqStatus;
+  catalog_item_id: string;
+  item_name: string;
+  item_sku: string | null;
+  quantity: number;
+  created_at: string;
+  updated_at: string;
+  buyer_message: string | null;
+}
+
+export interface SupplierRfqDetailResponse {
+  rfq: SupplierRfqDetail;
+}
+
+export interface SupplierRfqResponse {
+  id: string;
+  rfq_id: string;
+  supplier_org_id: string;
+  message: string;
+  submitted_at: string;
+  created_at: string;
+  updated_at: string;
+  created_by_user_id: string;
+}
+
+export interface SubmitSupplierRfqResponseRequest {
+  message: string;
+}
+
+export interface SubmitSupplierRfqResponseResult {
+  response: SupplierRfqResponse;
+  rfq: {
+    id: string;
+    status: BuyerRfqStatus;
+  };
+  non_binding: boolean;
+}
+
 /**
  * Create a catalog item (OWNER/ADMIN only)
  *
@@ -179,4 +235,19 @@ export async function getBuyerRfqs(): Promise<BuyerRfqListResponse> {
 
 export async function getBuyerRfqDetail(rfqId: string): Promise<BuyerRfqDetailResponse> {
   return tenantGet<BuyerRfqDetailResponse>(`/api/tenant/rfqs/${rfqId}`);
+}
+
+export async function getSupplierRfqInbox(): Promise<SupplierRfqListResponse> {
+  return tenantGet<SupplierRfqListResponse>('/api/tenant/rfqs/inbox');
+}
+
+export async function getSupplierRfqDetail(rfqId: string): Promise<SupplierRfqDetailResponse> {
+  return tenantGet<SupplierRfqDetailResponse>(`/api/tenant/rfqs/inbox/${rfqId}`);
+}
+
+export async function submitSupplierRfqResponse(
+  rfqId: string,
+  payload: SubmitSupplierRfqResponseRequest
+): Promise<SubmitSupplierRfqResponseResult> {
+  return tenantPost<SubmitSupplierRfqResponseResult>(`/api/tenant/rfqs/inbox/${rfqId}/respond`, payload);
 }
