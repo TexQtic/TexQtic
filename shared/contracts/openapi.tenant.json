@@ -113,6 +113,116 @@
             }
           }
         }
+      },
+      "BuyerRfqStatus": {
+        "type": "string",
+        "enum": ["OPEN", "RESPONDED", "CLOSED", "INITIATED"]
+      },
+      "BuyerRfqSupplierResponse": {
+        "type": "object",
+        "required": ["id", "supplier_org_id", "message", "submitted_at", "created_at"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "supplier_org_id": { "type": "string", "format": "uuid" },
+          "message": { "type": "string" },
+          "submitted_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "BuyerRfq": {
+        "type": "object",
+        "required": ["id", "status", "org_id", "catalog_item_id", "item_name", "item_sku", "quantity", "supplier_org_id", "created_at", "updated_at", "buyer_message", "created_by_user_id", "supplier_response"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "$ref": "#/components/schemas/BuyerRfqStatus" },
+          "org_id": { "type": "string", "format": "uuid" },
+          "catalog_item_id": { "type": "string", "format": "uuid" },
+          "item_name": { "type": "string" },
+          "item_sku": { "type": ["string", "null"] },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "supplier_org_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "buyer_message": { "type": ["string", "null"] },
+          "created_by_user_id": { "type": ["string", "null"], "format": "uuid" },
+          "supplier_response": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/BuyerRfqSupplierResponse" },
+              { "type": "null" }
+            ]
+          }
+        }
+      },
+      "BuyerRfqListItem": {
+        "type": "object",
+        "required": ["id", "status", "org_id", "catalog_item_id", "item_name", "item_sku", "quantity", "supplier_org_id", "created_at", "updated_at"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "$ref": "#/components/schemas/BuyerRfqStatus" },
+          "org_id": { "type": "string", "format": "uuid" },
+          "catalog_item_id": { "type": "string", "format": "uuid" },
+          "item_name": { "type": "string" },
+          "item_sku": { "type": ["string", "null"] },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "supplier_org_id": { "type": "string", "format": "uuid" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateBuyerRfqRequest": {
+        "type": "object",
+        "required": ["catalogItemId"],
+        "properties": {
+          "catalogItemId": { "type": "string", "format": "uuid" },
+          "quantity": { "type": "integer", "minimum": 1, "default": 1 },
+          "buyerMessage": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        }
+      },
+      "CreateBuyerRfqResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["rfq"],
+            "properties": {
+              "rfq": { "$ref": "#/components/schemas/BuyerRfq" }
+            }
+          }
+        }
+      },
+      "BuyerRfqListSuccessResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["rfqs", "count"],
+            "properties": {
+              "rfqs": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/BuyerRfqListItem" }
+              },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      },
+      "BuyerRfqDetailSuccessResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["rfq"],
+            "properties": {
+              "rfq": { "$ref": "#/components/schemas/BuyerRfq" }
+            }
+          }
+        }
       }
     }
   },
@@ -510,6 +620,168 @@
           "201": { "description": "Catalog item created" },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/rfqs": {
+      "post": {
+        "summary": "Create a buyer RFQ",
+        "description": "Create a non-binding buyer RFQ for a tenant-visible catalog item. Tenant scope is derived from JWT claims (orgId). The response returns the persisted RFQ object in its live OPEN state.",
+        "security": [{ "tenantJwt": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateBuyerRfqRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "RFQ created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreateBuyerRfqResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (inactive catalog item)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Catalog item not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List buyer RFQs",
+        "description": "List buyer-owned RFQs for the authenticated tenant. Tenant scope is derived from JWT claims (orgId).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/BuyerRfqStatus" },
+            "description": "Optional RFQ status filter"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["updated_at_desc", "created_at_desc"],
+              "default": "updated_at_desc"
+            },
+            "description": "Sort order for RFQ list"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 200 },
+            "description": "Optional RFQ ID, item name, or SKU search"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Buyer RFQs returned",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BuyerRfqListSuccessResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/rfqs/{id}": {
+      "get": {
+        "summary": "Get buyer RFQ detail",
+        "description": "Read a single buyer-owned RFQ for the authenticated tenant, including bounded supplier response visibility when present.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "RFQ ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Buyer RFQ returned",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BuyerRfqDetailSuccessResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "RFQ not found",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

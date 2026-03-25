@@ -76,6 +76,7 @@ type BuyerRfqResponseRow = {
 type BuyerRfqListRow = {
   id: string;
   status: 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
+  orgId: string;
   catalogItemId: string;
   quantity: number;
   supplierOrgId: string;
@@ -125,6 +126,7 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
   return {
     id: rfq.id,
     status: rfq.status,
+    org_id: rfq.orgId,
     catalog_item_id: rfq.catalogItemId,
     item_name: rfq.catalogItem.name,
     item_sku: rfq.catalogItem.sku,
@@ -1211,6 +1213,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         select: {
           id: true,
           status: true,
+          orgId: true,
           catalogItemId: true,
           quantity: true,
           supplierOrgId: true,
@@ -1316,6 +1319,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         select: {
           id: true,
           status: true,
+          orgId: true,
           catalogItemId: true,
           quantity: true,
           buyerMessage: true,
@@ -1555,11 +1559,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
-   * POST /api/tenant/rfq
+   * POST /api/tenant/rfqs
    * Record a non-binding buyer-initiated RFQ submission for a tenant-scoped catalog item.
    * This route is the backend prerequisite for future Request Quote CTA activation only.
    */
-  fastify.post('/tenant/rfq', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+  fastify.post('/tenant/rfqs', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { userId } = request;
 
     const bodySchema = z.object({
@@ -1604,64 +1608,62 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         select: {
           id: true,
           status: true,
-          createdAt: true,
-          quantity: true,
+          orgId: true,
           catalogItemId: true,
+          quantity: true,
           supplierOrgId: true,
+          buyerMessage: true,
+          createdByUserId: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
-
-      const requestId = rfq.id;
-      const submittedAt = rfq.createdAt.toISOString();
 
       await writeAuditLog(tx, {
         realm: 'TENANT',
         tenantId: dbContext.orgId,
         actorType: 'USER',
         actorId: userId ?? null,
-        action: 'rfq.RFQ_INITIATED',
+        action: 'rfq.RFQ_CREATED',
         entity: 'rfq',
-        entityId: requestId,
+        entityId: rfq.id,
         afterJson: {
-          requestId,
+          id: rfq.id,
+          orgId: rfq.orgId,
           catalogItemId: catalogItemTarget.id,
           catalogItemName: catalogItemTarget.name,
           catalogItemSku: catalogItemTarget.sku,
           quantity,
-          buyerMessage: buyerMessage ?? null,
-          status: 'INITIATED',
-          rfqStatus: rfq.status,
+          buyerMessage: rfq.buyerMessage,
+          status: rfq.status,
           supplierOrgId: rfq.supplierOrgId,
           nonBinding: true,
-          submittedAt,
+          createdAt: rfq.createdAt.toISOString(),
         },
         metadataJson: {
-          requestId,
+          rfqId: rfq.id,
           catalogItemId: catalogItemTarget.id,
           quantity,
-          submittedAt,
-          initiatedBy: 'BUYER',
+          createdAt: rfq.createdAt.toISOString(),
+          createdBy: 'BUYER',
           supplierOrgId: rfq.supplierOrgId,
           nonBinding: true,
         },
       });
 
       return {
-        requestId,
-        catalogItemId: rfq.catalogItemId,
-        quantity: rfq.quantity,
-        submittedAt,
+        rfq: mapBuyerRfqDetail({
+          ...rfq,
+          catalogItem: {
+            name: catalogItemTarget.name,
+            sku: catalogItemTarget.sku,
+          },
+          supplierResponse: null,
+        }),
       };
     });
 
-    return sendSuccess(reply, {
-      requestId: result.requestId,
-      status: 'RFQ_INITIATED',
-      nonBinding: true,
-      catalogItemId: result.catalogItemId,
-      quantity: result.quantity,
-      submittedAt: result.submittedAt,
-    }, 201);
+    return sendSuccess(reply, result, 201);
   });
 
   /**

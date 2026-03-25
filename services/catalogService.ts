@@ -100,12 +100,7 @@ export interface CreateRfqRequest {
 }
 
 export interface CreateRfqResponse {
-  requestId: string;
-  status: 'RFQ_INITIATED';
-  nonBinding: true;
-  catalogItemId: string;
-  quantity: number;
-  submittedAt: string;
+  rfq: BuyerRfqDetail;
 }
 
 export type BuyerRfqStatus = 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
@@ -113,6 +108,7 @@ export type BuyerRfqStatus = 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
 export interface BuyerRfqListItem {
   id: string;
   status: BuyerRfqStatus;
+  org_id?: string;
   catalog_item_id: string;
   item_name: string;
   item_sku: string | null;
@@ -138,6 +134,7 @@ export interface BuyerRfqSupplierResponse {
 export interface BuyerRfqDetail {
   id: string;
   status: BuyerRfqStatus;
+  org_id?: string;
   catalog_item_id: string;
   item_name: string;
   item_sku: string;
@@ -173,7 +170,7 @@ export async function createCatalogItem(
 export async function createRfq(
   payload: CreateRfqRequest
 ): Promise<CreateRfqResponse> {
-  return tenantPost<CreateRfqResponse>('/api/tenant/rfq', payload);
+  return tenantPost<CreateRfqResponse>('/api/tenant/rfqs', payload);
 }
 
 export async function getBuyerRfqs(): Promise<BuyerRfqListResponse> {

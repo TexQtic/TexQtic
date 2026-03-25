@@ -392,7 +392,7 @@ const App: React.FC = () => {
     loading: boolean;
     error: string | null;
     success: {
-      requestId: string;
+      rfqId: string;
       quantity: number;
     } | null;
   }>({
@@ -1040,14 +1040,14 @@ const App: React.FC = () => {
         loading: false,
         error: null,
         success: {
-          requestId: response.requestId,
-          quantity: response.quantity,
+          rfqId: response.rfq.id,
+          quantity: response.rfq.quantity,
         },
       }));
       setRfqDetailView({
         open: false,
         source: null,
-        rfqId: response.requestId,
+        rfqId: response.rfq.id,
         loading: false,
         error: null,
         data: null,
@@ -1099,7 +1099,7 @@ const App: React.FC = () => {
   };
 
   const handleOpenRfqDetail = async (rfqId?: string, source: 'dialog' | 'list' = 'dialog') => {
-    const nextRfqId = rfqId ?? rfqDialog.success?.requestId;
+    const nextRfqId = rfqId ?? rfqDialog.success?.rfqId;
     if (!nextRfqId) return;
 
     if (source === 'list') {
@@ -2175,10 +2175,10 @@ const App: React.FC = () => {
   ) : (
     <div className="space-y-4">
       <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-4 text-sm text-emerald-800">
-        Your request for quote was initiated for {rfqDialog.success?.quantity} unit(s). It remains non-binding until a separate quote workflow is provided.
+        Your request for quote was submitted for {rfqDialog.success?.quantity} unit(s). It remains non-binding until a separate quote workflow is provided.
       </div>
       <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-        Reference ID: {rfqDialog.success?.requestId}
+        RFQ ID: {rfqDialog.success?.rfqId}
       </div>
       <div className="flex justify-end gap-3">
         <button
