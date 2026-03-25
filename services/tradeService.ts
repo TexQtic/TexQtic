@@ -4,9 +4,10 @@
  * D-017-A: orgId is NEVER sent by the client. Backend derives tenant scope
  * from the authenticated JWT. tenantGet() enforces the TENANT realm guard.
  *
- * Read-only: listTenantTrades only. No create / update / delete surfaces.
+ * EXC-ENABLER-004: exposes tenant trade detail + lifecycle transition wiring
+ * using the existing tenant routes. No lifecycle rules are invented here.
  */
-import { tenantGet } from './tenantApiClient';
+import { tenantGet, tenantPost } from './tenantApiClient';
 
 export interface TenantTradeLifecycleState {
   stateKey: string;
@@ -15,9 +16,14 @@ export interface TenantTradeLifecycleState {
 export interface TenantTrade {
   id: string;
   tenantId: string;
+  tradeReference: string;
+  buyerOrgId: string;
+  sellerOrgId: string;
+  grossAmount: number | string;
+  currency: string;
   lifecycleState: TenantTradeLifecycleState | null;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 export interface TenantTradesListParams {
@@ -31,6 +37,26 @@ export interface TenantTradesListResponse {
   count: number;
 }
 
+export interface TransitionTenantTradeInput {
+  toStateKey: string;
+  reason: string;
+  actorRole: string;
+}
+
+export type TransitionTenantTradeResponse =
+  | {
+      status: 'APPLIED';
+      fromStateKey: string;
+      toStateKey: string;
+      transitionId: string | null;
+    }
+  | {
+      status: 'PENDING_APPROVAL';
+      fromStateKey: string;
+      requiredActors: string[];
+      approvalId: string | null;
+    };
+
 export async function listTenantTrades(
   params?: TenantTradesListParams
 ): Promise<TenantTradesListResponse> {
@@ -39,7 +65,24 @@ export async function listTenantTrades(
   if (params?.limit != null) searchParams.set('limit', String(params.limit));
   if (params?.offset != null) searchParams.set('offset', String(params.offset));
   const qs = searchParams.toString();
-  return tenantGet<TenantTradesListResponse>(
-    `/api/tenant/trades${qs ? `?${qs}` : ''}`
-  );
+  const endpoint = qs ? `/api/tenant/trades?${qs}` : '/api/tenant/trades';
+  return tenantGet<TenantTradesListResponse>(endpoint);
+}
+
+export async function getTenantTradeDetail(tradeId: string): Promise<TenantTrade> {
+  const result = await listTenantTrades({ limit: 200, offset: 0 });
+  const trade = result.trades.find(item => item.id === tradeId);
+
+  if (!trade) {
+    throw new Error(`Trade ${tradeId} not found for the current tenant.`);
+  }
+
+  return trade;
+}
+
+export function transitionTenantTrade(
+  tradeId: string,
+  input: TransitionTenantTradeInput,
+): Promise<TransitionTenantTradeResponse> {
+  return tenantPost<TransitionTenantTradeResponse>(`/api/tenant/trades/${tradeId}/transition`, input);
 }
