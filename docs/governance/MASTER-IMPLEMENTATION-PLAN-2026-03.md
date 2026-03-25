@@ -1,3 +1,19 @@
+> STATUS — RETAINED AS REFERENCE WITH TARGETED DE-AUTHORIZATION
+>
+> This master plan is preserved as historical planning and implementation context.
+>
+> It is no longer the active authority for:
+> - current product-truth definition
+> - execution sequencing
+> - next-delivery prioritization
+>
+> Current replacement authority for those concerns is:
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+>
+> This banner de-authorizes sequencing use without removing the document's historical record value.
+
 # Texqtic Implementation Master Plan — 2026-03
 
 **TECS:** OPS-IMPLEMENTATION-PLAN-AUDIT-001  

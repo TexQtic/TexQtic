@@ -1,4 +1,20 @@
 
+> STATUS — RETAINED AS REFERENCE WITH TARGETED DE-AUTHORIZATION
+>
+> This top-level README is retained for repository orientation and historical context.
+>
+> It is no longer the active authority for:
+> - product-truth definition
+> - launch-readiness planning
+> - execution sequencing or next-delivery prioritization
+>
+> Current replacement authority for those concerns is:
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+>
+> This banner is a de-authorization step only. The document body is preserved as reference.
+
 TexQtic
 
 TexQtic is a next-generation, multi-tenant platform for the global textile ecosystem — connecting manufacturers, traders, service providers, brands, and retailers across B2B, B2C, and Aggregator experiences, with full white-label storefront support.

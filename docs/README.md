@@ -1,3 +1,19 @@
+> STATUS — RETAINED AS REFERENCE WITH TARGETED DE-AUTHORIZATION
+>
+> This document remains in the repository as reference and documentation context.
+>
+> It is no longer the active authority for:
+> - product-truth definition
+> - implementation sequencing
+> - next-delivery execution planning
+>
+> Current replacement authority for those concerns is:
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+>
+> This banner does not delete the document or erase its historical and technical-reference value.
+
 # TexQtic Documentation
 
 > ⚠️ **BINDING AUTHORITY**: This directory contains the authoritative source of truth for all TexQtic platform implementation decisions. Deviation from executable doctrine requires explicit approval from the Doctrine Council.

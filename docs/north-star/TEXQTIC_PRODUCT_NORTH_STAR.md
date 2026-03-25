@@ -1,3 +1,19 @@
+> STATUS — RETAINED AS REFERENCE WITH TARGETED DE-AUTHORIZATION
+>
+> This north-star document is preserved as historical product-positioning context.
+>
+> It is no longer the active authority for:
+> - current product-truth definition
+> - launch-readiness sequencing
+> - next-delivery execution planning
+>
+> Current replacement authority for those concerns is:
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+>
+> This banner preserves the document as reference rather than removing or rewriting it.
+
 # TEXQTIC — PRODUCT NORTH STAR V2
 ## (Balanced Authority Model)
 
