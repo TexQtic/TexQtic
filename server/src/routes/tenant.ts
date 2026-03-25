@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { StateMachineService } from '../services/stateMachine.service.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
@@ -56,6 +57,86 @@ type RfqCatalogItemTarget = {
   active: boolean;
   supplierOrgId: string;
 };
+
+type TenantSessionIdentity = {
+  id: string;
+  slug: string;
+  name: string;
+  type: string;
+  tenant_category: string;
+  is_white_label: boolean;
+  status: string;
+  plan: string;
+};
+
+async function resolveTenantSessionIdentity(input: {
+  tenantId: string;
+  actorId: string;
+  userRole?: string | null;
+}): Promise<TenantSessionIdentity> {
+  const dbContext: DatabaseContext = {
+    orgId: input.tenantId,
+    actorId: input.actorId,
+    realm: 'tenant',
+    requestId: randomUUID(),
+  };
+
+  return withDbContext(prisma, dbContext, async tx => {
+    await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
+    let org = await tx.organizations.findUnique({
+      where: { id: input.tenantId },
+      select: {
+        id: true,
+        slug: true,
+        legal_name: true,
+        status: true,
+        org_type: true,
+        is_white_label: true,
+        jurisdiction: true,
+        registration_no: true,
+        plan: true,
+      },
+    });
+
+    if (!org) {
+      throw new OrganizationNotFoundError(input.tenantId);
+    }
+
+    const isOwner = input.userRole === 'OWNER';
+    const hasVerificationData = Boolean(org.registration_no?.trim()) && Boolean(org.jurisdiction?.trim());
+
+    if (org.status === 'PENDING_VERIFICATION' && isOwner && hasVerificationData) {
+      org = await tx.organizations.update({
+        where: { id: input.tenantId },
+        data: { status: 'ACTIVE' },
+        select: {
+          id: true,
+          slug: true,
+          legal_name: true,
+          status: true,
+          org_type: true,
+          is_white_label: true,
+          jurisdiction: true,
+          registration_no: true,
+          plan: true,
+        },
+      });
+    }
+
+    return {
+      id: org.id,
+      slug: org.slug,
+      name: org.legal_name,
+      type: org.org_type,
+      tenant_category: org.org_type,
+      is_white_label: org.is_white_label,
+      status: org.status,
+      plan: org.plan,
+    };
+  });
+}
 
 const rfqReadStatusSchema = z.enum(['INITIATED', 'OPEN', 'RESPONDED', 'CLOSED']);
 
@@ -268,20 +349,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     // Preserve response shape: legal_name → name, org_type → type.
     // MUST return a non-null tenant object — returning null causes the frontend
     // workspace spinner to hang indefinitely (tenants[] stays empty).
-    let tenant: { id: string; slug: string; name: string; type: string; tenant_category: string; is_white_label: boolean; status: string; plan: string };
+    let tenant: TenantSessionIdentity;
     try {
-      const org = await getOrganizationIdentity(tenantId, prisma);
-      tenant = {
-        id: org.id,
-        slug: org.slug,
-        name: org.legal_name,
-        type: org.org_type,
-        // B2-REM-2: canonical identity fields
-        tenant_category: org.org_type,
-        is_white_label: org.is_white_label,
-        status: org.status,
-        plan: org.plan,
-      };
+      tenant = await resolveTenantSessionIdentity({
+        tenantId,
+        actorId: userId,
+        userRole,
+      });
     } catch (err) {
       if (err instanceof OrganizationNotFoundError) {
         // Org row not yet provisioned. Return explicit 404 so the UI can show
@@ -2324,12 +2398,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
         await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'false', true)`);
 
+        const ownerExists = invite.tenant.memberships.some(membership => membership.role === 'OWNER');
+        const resolvedRole = ownerExists ? invite.role : 'OWNER';
+
         // Create membership (RLS will enforce tenant_id = org_id)
         const membership = await tx.membership.create({
           data: {
             userId: user.id,
             tenantId: invite.tenantId,
-            role: invite.role,
+            role: resolvedRole,
           },
         });
 
@@ -2350,12 +2427,19 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           entityId: user.id,
           metadataJson: {
             inviteId: invite.id,
-            role: invite.role,
+            role: resolvedRole,
+            firstOwnerActivated: !ownerExists,
             verificationStatus: updatedOrg.status,
           },
         });
 
         return { user, membership, updatedOrg, updatedTenant };
+      });
+
+      const tenant = await resolveTenantSessionIdentity({
+        tenantId: invite.tenantId,
+        actorId: result.user.id,
+        userRole: result.membership.role,
       });
 
       // Issue tenant JWT — same claims as POST /api/auth/login tenant path
@@ -2372,14 +2456,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           email: result.user.email,
         },
         tenant: {
-          id: invite.tenant.id,
-          name: result.updatedTenant?.name ?? result.updatedOrg.legal_name ?? invite.tenant.name,
-          slug: invite.tenant.slug,
-          type: invite.tenant.type,
-          tenant_category: result.updatedOrg.org_type,
-          is_white_label: result.updatedOrg.is_white_label,
-          status: result.updatedOrg.status,
-          plan: result.updatedOrg.plan,
+          id: tenant.id,
+          name: tenant.name,
+          slug: tenant.slug,
+          type: tenant.type,
+          tenant_category: tenant.tenant_category,
+          is_white_label: tenant.is_white_label,
+          status: tenant.status,
+          plan: tenant.plan,
         },
         membership: {
           role: result.membership.role,

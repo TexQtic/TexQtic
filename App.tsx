@@ -2192,20 +2192,25 @@ const App: React.FC = () => {
                     }) as any;
                     // Store JWT so all subsequent tenant API calls are authenticated
                     setToken(raw.token, 'TENANT');
-                    // Seed tenant state from activation response (use server-returned type)
+
+                    const me = await getCurrentUser();
+                    if (!me.tenant) {
+                      throw new Error('Tenant activation completed but canonical tenant state is unavailable.');
+                    }
+
                     setTenants([{
-                      id: raw.tenant.id,
-                      slug: raw.tenant.slug,
-                      name: raw.tenant.name,
-                      type: (raw.tenant.type ?? 'B2B') as TenantType,
-                      tenant_category: raw.tenant.tenant_category ?? raw.tenant.type ?? 'B2B',
-                      is_white_label: raw.tenant.is_white_label ?? false,
-                      status: raw.tenant.status,
-                      plan: raw.tenant.plan ?? 'TRIAL',
+                      id: me.tenant.id,
+                      slug: me.tenant.slug,
+                      name: me.tenant.name,
+                      type: (me.tenant.type ?? 'B2B') as TenantType,
+                      tenant_category: me.tenant.tenant_category ?? me.tenant.type ?? 'B2B',
+                      is_white_label: me.tenant.is_white_label ?? false,
+                      status: me.tenant.status,
+                      plan: me.tenant.plan ?? 'TRIAL',
                       createdAt: '',
                       updatedAt: '',
                     } as Tenant]);
-                    setCurrentTenantId(raw.tenant.id);
+                    setCurrentTenantId(me.tenant.id);
                     setPendingInviteToken(null);
                     setAppState('EXPERIENCE');
                 } else {

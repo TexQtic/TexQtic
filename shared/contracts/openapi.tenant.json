@@ -446,7 +446,7 @@
     "/api/me": {
       "get": {
         "summary": "Get current authenticated user + tenant",
-        "description": "Returns current user profile and tenant details",
+        "description": "Returns current user profile and canonical tenant details from the organization record. When the first OWNER has completed verification submission, this read finalizes the tenant into ACTIVE server-side before returning the response.",
         "security": [{ "tenantJwt": [] }],
         "responses": {
           "200": {
@@ -471,7 +471,7 @@
     "/api/tenant/activate": {
       "post": {
         "summary": "User-assisted tenant activation",
-        "description": "Activate a pre-provisioned tenant using an invite token and submit the initial business verification details. Users cannot create tenants directly.",
+        "description": "Activate a pre-provisioned tenant using an invite token, submit the initial business verification details, and establish the first usable owner state when the tenant is ready. Users cannot create tenants directly.",
         "requestBody": {
           "required": true,
           "content": {
@@ -511,7 +511,7 @@
         },
         "responses": {
           "200": {
-            "description": "Tenant activated successfully and business verification submitted"
+            "description": "Tenant activated successfully. The tenant response reflects the canonical post-activation state, including ACTIVE when the first-owner loop has completed."
           },
           "404": {
             "description": "Invite not found or expired",
