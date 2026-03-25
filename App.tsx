@@ -476,6 +476,10 @@ const App: React.FC = () => {
   const [_tenantsLoading, setTenantsLoading] = useState(false);
   const [_tenantsError, setTenantsError] = useState<string | null>(null);
   const [tenantProvisionError, setTenantProvisionError] = useState<string | null>(null);
+  const [tenantRestorePending, setTenantRestorePending] = useState(() => {
+    const storedRealm = getCurrentAuthRealm('TENANT') ?? 'TENANT';
+    return storedRealm === 'TENANT' && !!localStorage.getItem('texqtic_tenant_token');
+  });
   const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
   const [controlPlaneIdentity, setControlPlaneIdentity] = useState<ControlPlaneIdentity | null>(null);
@@ -921,6 +925,7 @@ const App: React.FC = () => {
     });
 
     if (appState !== 'AUTH' || authRealm !== 'TENANT') {
+      setTenantRestorePending(false);
       appendRehydrationTrace('tenantRestore:effect_skip', {
         reason: 'not_auth_tenant',
         appState,
@@ -931,6 +936,7 @@ const App: React.FC = () => {
 
     const storedTenantToken = localStorage.getItem('texqtic_tenant_token');
     if (!storedTenantToken) {
+      setTenantRestorePending(false);
       appendRehydrationTrace('tenantRestore:effect_skip', {
         reason: 'missing_tenant_token',
         appState,
@@ -942,6 +948,7 @@ const App: React.FC = () => {
     let cancelled = false;
 
     const restoreTenantSession = async () => {
+      setTenantRestorePending(true);
       setTenantProvisionError(null);
 
       const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
@@ -952,6 +959,7 @@ const App: React.FC = () => {
           reason,
           ...details,
         });
+        setTenantRestorePending(false);
         clearAuth();
         setTenants([]);
         setCurrentTenantId('');
@@ -992,6 +1000,7 @@ const App: React.FC = () => {
           role: me.role ?? null,
           tenant: summarizeTenantIdentity(tenant),
         });
+        setTenantRestorePending(false);
         setAppState(nextState);
       } catch (err) {
         if (cancelled) {
@@ -2347,7 +2356,26 @@ const App: React.FC = () => {
 
   const renderCurrentState = () => {
     switch (appState) {
-      case 'AUTH':
+      case 'AUTH': {
+        const shouldShowTenantRestoreGate =
+          authRealm === 'TENANT' &&
+          tenantRestorePending &&
+          !!localStorage.getItem('texqtic_tenant_token');
+
+        if (shouldShowTenantRestoreGate) {
+          return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+              <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white px-8 py-12 text-center shadow-sm">
+                <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+                <h1 className="text-lg font-semibold text-slate-900">Restoring workspace</h1>
+                <p className="mt-3 text-sm text-slate-500">
+                  Your tenant session is still valid. We&apos;re reconnecting you now.
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
             <div className="absolute top-6 flex gap-4">
@@ -2373,6 +2401,7 @@ const App: React.FC = () => {
             </button>
           </div>
         );
+      }
       case 'FORGOT_PASSWORD':
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
