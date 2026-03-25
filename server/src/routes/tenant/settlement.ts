@@ -55,6 +55,14 @@ import {
   type WriteAuditLogFn,
 } from '../../services/settlement/settlement.service.js';
 
+function deriveTenantSettlementActorType(userRole: string | null | undefined): 'TENANT_USER' | 'TENANT_ADMIN' {
+  if (userRole === 'OWNER' || userRole === 'ADMIN' || userRole === 'TENANT_OWNER' || userRole === 'TENANT_ADMIN') {
+    return 'TENANT_ADMIN';
+  }
+
+  return 'TENANT_USER';
+}
+
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
 const uuidSchema = z.string().uuid('Must be a valid UUID');
@@ -94,17 +102,8 @@ const settleBodySchema = z.object({
   referenceId: z.string().min(1, 'referenceId is required').max(500).trim(),
   reason:      z.string().min(1, 'reason is required').max(2000).trim(),
   aiTriggered: z.boolean().optional().default(false),
-  /**
-   * Actor classification for the settlement action.
-   * Drives Maker-Checker enforcement (Step 6) and audit attribution.
-   * Defaults to 'TENANT_USER' if not provided.
-   */
-  actorType: z
-    .enum(['TENANT_USER', 'TENANT_ADMIN', 'SYSTEM_AUTOMATION', 'MAKER', 'CHECKER'])
-    .optional()
-    .default('TENANT_USER'),
-  /** Role snapshot at time of call — not a live FK. */
-  actorRole: z.string().min(1).max(100).trim().optional().default('TENANT_USER'),
+  actorType: z.never({ message: 'actorType is derived server-side and must not be set in request body' }).optional(),
+  actorRole: z.never({ message: 'actorRole is derived server-side and must not be set in request body' }).optional(),
   // D-017-A: tenantId MUST NOT be accepted from the body
   tenantId: z.never({ message: 'tenantId must not be set in request body' }).optional(),
 });
@@ -119,6 +118,7 @@ function settlementErrorToStatus(code: string): number {
     case 'ENTITY_FROZEN':
       return 423;
     case 'TRADE_DISPUTED':
+    case 'TRADE_ESCROW_MISMATCH':
     case 'INSUFFICIENT_ESCROW_FUNDS':
     case 'DUPLICATE_REFERENCE':
     case 'STATE_MACHINE_DENIED':
@@ -175,6 +175,7 @@ const tenantSettlementRoutes: FastifyPluginAsync = async fastify => {
           );
 
           return settlementSvc.previewSettlement({
+            tradeId:  body.tradeId,
             escrowId: body.escrowId,
             tenantId: dbContext.orgId,    // D-017-A: from JWT only
             amount:   body.amount,
@@ -237,6 +238,8 @@ const tenantSettlementRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, bodyResult.error.errors);
       }
       const body = bodyResult.data;
+      const actorType = deriveTenantSettlementActorType(request.userRole);
+      const actorRole = request.userRole ?? actorType;
 
       try {
         const result = await withDbContext(prisma, dbContext, async tx => {
@@ -262,9 +265,9 @@ const tenantSettlementRoutes: FastifyPluginAsync = async fastify => {
             referenceId: body.referenceId,
             reason:      body.reason,
             aiTriggered: body.aiTriggered,
-            actorType:   body.actorType,
+            actorType,
             actorUserId: userId,
-            actorRole:   body.actorRole,
+            actorRole,
           });
         });
 

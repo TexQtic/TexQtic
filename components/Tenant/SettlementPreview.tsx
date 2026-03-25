@@ -8,6 +8,7 @@
  * Constitutional compliance:
  *   D-017-A  No tenantId sent by client — tenantPost() TENANT realm guard is sufficient.
  *            Server derives tenant scope exclusively from JWT claims.
+ *            Actor posture is also derived server-side from the authenticated session.
  *   D-020-B  Preview step is mandatory before commit. The confirm form is only presented
  *            after a successful preview with wouldSucceed=true. Balance values are used
  *            as-is from the API response — never cached, synthesized, or re-used.
@@ -17,7 +18,7 @@
  *   ✅ Settlement confirm (POST /api/tenant/settlements)
  *   ✅ APPLIED / PENDING_APPROVAL / ERROR outcome handling
  *   ❌ aiTriggered=true path — out of scope; AI_HUMAN_CONFIRMATION_REQUIRED surfaced if returned
- *   ❌ Maker/checker role selection UI — out of scope (actorType fixed to TENANT_USER)
+ *   ❌ Maker/checker role selection UI — out of scope
  *   ❌ Control-plane settlement — out of scope
  */
 
@@ -64,6 +65,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'Trade not found. Verify the trade ID and try again.',
   ESCROW_NOT_FOUND:
     'Escrow account not found. Verify the escrow ID and try again.',
+  TRADE_ESCROW_MISMATCH:
+    'The selected escrow account is not linked to the supplied trade. Check the pair and try again.',
   INVALID_AMOUNT:
     'The settlement amount is invalid. Amount must be greater than zero.',
   MAKER_CHECKER_REQUIRED:
@@ -89,7 +92,7 @@ function formatBalance(amount: number, currency: string): string {
 
 // ─── SettlementPreview ────────────────────────────────────────────────────────
 
-export function SettlementPreview({ onBack }: Props) {
+export function SettlementPreview({ onBack }: Readonly<Props>) {
   // Phase 1 form fields
   const [tradeId, setTradeId]   = useState('');
   const [escrowId, setEscrowId] = useState('');
@@ -112,14 +115,14 @@ export function SettlementPreview({ onBack }: Props) {
   const [settlePending, setSettlePending] = useState<SettlePendingResult | null>(null);
   const [settleError, setSettleError]     = useState<string | null>(null);
 
-  const parsedAmount = parseFloat(amount);
-  const isValidAmount = !isNaN(parsedAmount) && parsedAmount > 0;
+  const parsedAmount = Number.parseFloat(amount);
+  const isValidAmount = !Number.isNaN(parsedAmount) && parsedAmount > 0;
 
   // D-020-B: confirm is only available when preview explicitly reported wouldSucceed=true
   const canConfirm = previewResult?.wouldSucceed === true;
 
   // ─── Phase 1: Submit preview ────────────────────────────────────────────────
-  const handlePreview = async (e: React.FormEvent) => {
+  const handlePreview = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!tradeId.trim() || !escrowId.trim() || !isValidAmount || !currency.trim()) return;
 
@@ -149,7 +152,7 @@ export function SettlementPreview({ onBack }: Props) {
   };
 
   // ─── Phase 2: Submit confirm ────────────────────────────────────────────────
-  const handleConfirm = async (e: React.FormEvent) => {
+  const handleConfirm = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!referenceId.trim() || !reason.trim()) return;
 
@@ -166,7 +169,6 @@ export function SettlementPreview({ onBack }: Props) {
         currency:    currency.trim().toUpperCase(),
         referenceId: referenceId.trim(),
         reason:      reason.trim(),
-        actorType:   'TENANT_USER',
       });
       setPhase('SETTLED');
       if (res.status === 'APPLIED') {
@@ -213,7 +215,7 @@ export function SettlementPreview({ onBack }: Props) {
         <div className="flex-1">
           <h1 className="text-xl font-bold text-slate-900">Settlement</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Preview balance impact before confirming a settlement (D-020-B).
+            Preview the validated trade and escrow pair before confirming a settlement (D-020-B).
           </p>
         </div>
         {(phase === 'PREVIEW_DONE' || phase === 'SETTLED') && (
@@ -529,9 +531,9 @@ export function SettlementPreview({ onBack }: Props) {
                   Required Actors
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {settlePending.requiredActors.map((actor, i) => (
+                  {settlePending.requiredActors.map(actor => (
                     <span
-                      key={i}
+                      key={actor}
                       className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded"
                     >
                       {actor}

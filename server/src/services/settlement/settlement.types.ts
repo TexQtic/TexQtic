@@ -12,9 +12,7 @@
  *   TOGGLE_C = C3 (BOTH: DISPUTED semantic + escalation freeze enforcement)
  */
 
-import type { ActorType } from '../stateMachine.types.js';
-
-export type { ActorType };
+export type { ActorType } from '../stateMachine.types.js';
 
 // ─── Error Codes ──────────────────────────────────────────────────────────────
 
@@ -27,6 +25,8 @@ export type SettlementErrorCode =
   | 'TRADE_NOT_FOUND'
   /** Requested escrow account not found (tenant-scoped). */
   | 'ESCROW_NOT_FOUND'
+  /** The supplied escrow does not belong to the supplied trade. */
+  | 'TRADE_ESCROW_MISMATCH'
   /** D-022-B/C: Trade or escrow has an OPEN escalation at severity >= 3. */
   | 'ENTITY_FROZEN'
   /** TOGGLE_C = C3: Trade is in DISPUTED state — settlement is blocked. */
@@ -64,6 +64,8 @@ export type SettlementErrorCode =
  * if settlement is applied.
  */
 export type PreviewSettlementInput = {
+  /** UUID of the trade being previewed when pair validation is required. */
+  tradeId?: string;
   /** UUID of the escrow account to preview. */
   escrowId: string;
   /** RLS boundary — set by caller from authenticated session; never from request body. */

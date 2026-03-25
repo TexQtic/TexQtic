@@ -48,8 +48,8 @@ const { FAKE_TX, _svc } = vi.hoisted(() => {
   };
   // Module-level service method holders — mutated in beforeEach per-test
   const _svc = {
-    previewSettlement: vi.fn() as ReturnType<typeof vi.fn>,
-    settleTrade:       vi.fn() as ReturnType<typeof vi.fn>,
+    previewSettlement: vi.fn(),
+    settleTrade:       vi.fn(),
   };
   return { FAKE_TX, _svc };
 });
@@ -132,7 +132,7 @@ const TEST_REF_ID     = 'SETTLEMENT:batch-001';
 const VALID_SETTLE_PAYLOAD = {
   tradeId:     TEST_TRADE_ID,
   escrowId:    TEST_ESCROW_ID,
-  amount:      1000.00,
+  amount:      1000,
   currency:    'USD',
   referenceId: TEST_REF_ID,
   reason:      'Settlement for trade TRD-001',
@@ -142,7 +142,7 @@ const VALID_SETTLE_PAYLOAD = {
 const VALID_PREVIEW_PAYLOAD = {
   tradeId:  TEST_TRADE_ID,
   escrowId: TEST_ESCROW_ID,
-  amount:   1000.00,
+  amount:   1000,
   currency: 'USD',
 };
 
@@ -210,8 +210,8 @@ describe('G-019 Tenant Settlement Routes', () => {
   it('S-001: POST /tenant/settlements/preview returns 200 with balance snapshot', async () => {
     _svc.previewSettlement.mockResolvedValue({
       status:           'OK',
-      currentBalance:   2500.00,
-      projectedBalance: 1500.00,
+      currentBalance:   2500,
+      projectedBalance: 1500,
       wouldSucceed:     true,
     });
 
@@ -223,13 +223,20 @@ describe('G-019 Tenant Settlement Routes', () => {
 
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body.data.currentBalance).toBe(2500.00);
-    expect(body.data.projectedBalance).toBe(1500.00);
+    expect(body.data.currentBalance).toBe(2500);
+    expect(body.data.projectedBalance).toBe(1500);
     expect(body.data.wouldSucceed).toBe(true);
 
     // Preview is read-only — no audit/ledger writes occur at route layer
     expect(_svc.previewSettlement).toHaveBeenCalledOnce();
     expect(_svc.settleTrade).not.toHaveBeenCalled();
+    expect(_svc.previewSettlement).toHaveBeenCalledWith({
+      tradeId: TEST_TRADE_ID,
+      escrowId: TEST_ESCROW_ID,
+      tenantId: TEST_TENANT_ID,
+      amount: 1000,
+      currency: 'USD',
+    });
   });
 
   // ── S-002: POST /tenant/settlements — APPLIED → 200 ─────────────────────
@@ -254,6 +261,11 @@ describe('G-019 Tenant Settlement Routes', () => {
     expect(body.data.transactionId).toBe(TEST_TX_ID);
     expect(body.data.escrowReleased).toBe(true);
     expect(body.data.tradeClosed).toBe(true);
+    expect(_svc.settleTrade).toHaveBeenCalledWith(expect.objectContaining({
+      actorType: 'TENANT_ADMIN',
+      actorRole: 'TENANT_ADMIN',
+      actorUserId: TEST_USER_ID,
+    }));
   });
 
   // ── S-003: POST /tenant/settlements — PENDING_APPROVAL → 202 ─────────────
@@ -337,6 +349,39 @@ describe('G-019 Tenant Settlement Routes', () => {
     // Service must NOT be called
     expect(_svc.settleTrade).not.toHaveBeenCalled();
   });
+
+  it('S-006B: POST /tenant/settlements rejects client-supplied actorType and actorRole', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tenant/settlements',
+      payload: {
+        ...VALID_SETTLE_PAYLOAD,
+        actorType: 'SYSTEM_AUTOMATION',
+        actorRole: 'SYSTEM_AUTOMATION',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(_svc.settleTrade).not.toHaveBeenCalled();
+  });
+
+  it('S-006C: POST /tenant/settlements/preview returns 409 on TRADE_ESCROW_MISMATCH', async () => {
+    _svc.previewSettlement.mockResolvedValue({
+      status: 'ERROR',
+      code: 'TRADE_ESCROW_MISMATCH',
+      message: 'Escrow does not belong to trade.',
+    });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tenant/settlements/preview',
+      payload: VALID_PREVIEW_PAYLOAD,
+    });
+
+    expect(res.statusCode).toBe(409);
+    const body = res.json();
+    expect(body.error.code).toBe('TRADE_ESCROW_MISMATCH');
+  });
 });
 
 // ── Control Tests ─────────────────────────────────────────────────────────────
@@ -388,8 +433,8 @@ describe('G-019 Control Settlement Routes', () => {
   it('S-008: POST /control/settlements/preview returns 200 with balance snapshot', async () => {
     _svc.previewSettlement.mockResolvedValue({
       status:           'OK',
-      currentBalance:   5000.00,
-      projectedBalance: 4000.00,
+      currentBalance:   5000,
+      projectedBalance: 4000,
       wouldSucceed:     true,
     });
 
@@ -404,8 +449,8 @@ describe('G-019 Control Settlement Routes', () => {
 
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body.data.currentBalance).toBe(5000.00);
-    expect(body.data.projectedBalance).toBe(4000.00);
+    expect(body.data.currentBalance).toBe(5000);
+    expect(body.data.projectedBalance).toBe(4000);
     expect(body.data.wouldSucceed).toBe(true);
     expect(_svc.previewSettlement).toHaveBeenCalledOnce();
     expect(_svc.settleTrade).not.toHaveBeenCalled();

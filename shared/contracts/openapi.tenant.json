@@ -1588,7 +1588,7 @@
     "/api/tenant/settlements/preview": {
       "post": {
         "summary": "Preview a settlement — non-mutating balance check (G-019)",
-        "description": "Checks current escrow ledger balance against the requested settlement amount. Non-mutating — no state changes occur. D-017-A: tenantId is never sent by the client; server derives tenant scope from JWT claims. D-020-B: currentBalance and projectedBalance are always ledger-derived SUM values, never stored server-side. TECS-FBW-004 (2026-03-07).",
+        "description": "Validates the supplied trade and escrow pair, then checks current escrow ledger balance against the requested settlement amount. Non-mutating — no state changes occur. D-017-A: tenantId is never sent by the client; server derives tenant scope from JWT claims. D-020-B: currentBalance and projectedBalance are always ledger-derived SUM values, never stored server-side. TECS-FBW-004 (2026-03-07).",
         "requestBody": {
           "required": true,
           "content": {
@@ -1630,7 +1630,7 @@
           "400": { "description": "INVALID_AMOUNT — amount not positive" },
           "404": { "description": "TRADE_NOT_FOUND or ESCROW_NOT_FOUND" },
           "409": {
-            "description": "INSUFFICIENT_ESCROW_FUNDS, TRADE_DISPUTED, or STATE_MACHINE_DENIED"
+            "description": "TRADE_ESCROW_MISMATCH, INSUFFICIENT_ESCROW_FUNDS, TRADE_DISPUTED, or STATE_MACHINE_DENIED"
           },
           "423": { "description": "ENTITY_FROZEN — trade or escrow is frozen" },
           "500": {
@@ -1647,7 +1647,7 @@
     "/api/tenant/settlements": {
       "post": {
         "summary": "Execute a settlement (state-mutating) — G-019",
-        "description": "Applies a settlement debit to the escrow ledger and transitions trade/escrow state. State-mutating — a successful preview (wouldSucceed=true) is required before this is called (D-020-B). D-017-A: tenantId is never sent by the client; server derives tenant scope from JWT claims. actorType is TENANT_USER for the tenant-plane flow. aiTriggered and HUMAN_CONFIRMED path are excluded from TECS-FBW-004 scope. TECS-FBW-004 (2026-03-07).",
+        "description": "Applies a settlement debit to the escrow ledger and transitions trade/escrow state for a validated trade-escrow pair. State-mutating — a successful preview (wouldSucceed=true) is required before this is called (D-020-B). D-017-A: tenantId is never sent by the client; server derives tenant scope and actor posture from JWT claims. aiTriggered and HUMAN_CONFIRMED path are excluded from TECS-FBW-004 scope. TECS-FBW-004 (2026-03-07).",
         "requestBody": {
           "required": true,
           "content": {
@@ -1678,17 +1678,6 @@
                   "reason": {
                     "type": "string",
                     "description": "Mandatory justification (D-020-D)"
-                  },
-                  "actorType": {
-                    "type": "string",
-                    "enum": [
-                      "TENANT_USER",
-                      "TENANT_ADMIN",
-                      "SYSTEM_AUTOMATION",
-                      "MAKER",
-                      "CHECKER"
-                    ],
-                    "description": "TENANT_USER for tenant-plane flow in TECS-FBW-004"
                   }
                 }
               }

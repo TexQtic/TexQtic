@@ -37,9 +37,10 @@ const TENANT_ID = 'tenant-uuid-0000-0000-000000000001';
 const TXN_ID    = 'txn-settle-uuid-000000000001';
 
 /** Minimal trade row shape returned by db.trade.findFirst with lifecycleState select. */
-const makeTradeRow = (stateKey: string) => ({
+const makeTradeRow = (stateKey: string, escrowId: string = ESCROW_ID) => ({
   id:               TRADE_ID,
   tenantId:         TENANT_ID,
+  escrow_id:        escrowId,
   lifecycleStateId: 'state-uuid-001',
   lifecycleState:   { stateKey },
 });
@@ -155,6 +156,48 @@ function configureGatesUpToLedger(
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('SettlementService.settleTrade [G-019 Day 1]', () => {
+
+  describe('pair integrity enforcement', () => {
+    it('returns TRADE_ESCROW_MISMATCH during preview when trade escrow linkage does not match', async () => {
+      const { mockDb, mockEscrowSvc, svc } = buildMocks();
+
+      (mockDb.trade.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValue(makeTradeRow('SETTLEMENT_PENDING', 'different-escrow-id'));
+      (mockEscrowSvc.getEscrowAccountDetail as ReturnType<typeof vi.fn>)
+        .mockResolvedValue(ESCROW_DETAIL_OK);
+
+      const result = await svc.previewSettlement({
+        tradeId: TRADE_ID,
+        escrowId: ESCROW_ID,
+        tenantId: TENANT_ID,
+        amount: 100,
+        currency: 'USD',
+      });
+
+      expect(result.status).toBe('ERROR');
+      if (result.status === 'ERROR') {
+        expect(result.code).toBe('TRADE_ESCROW_MISMATCH');
+      }
+      expect(mockEscrowSvc.computeDerivedBalance).not.toHaveBeenCalled();
+    });
+
+    it('returns TRADE_ESCROW_MISMATCH during execution before ledger writes', async () => {
+      const { mockDb, mockEscrowSvc, svc } = buildMocks();
+
+      (mockDb.trade.findFirst as ReturnType<typeof vi.fn>)
+        .mockResolvedValue(makeTradeRow('SETTLEMENT_PENDING', 'different-escrow-id'));
+      (mockEscrowSvc.getEscrowAccountDetail as ReturnType<typeof vi.fn>)
+        .mockResolvedValue(ESCROW_DETAIL_OK);
+
+      const result = await svc.settleTrade(VALID_INPUT);
+
+      expect(result.status).toBe('ERROR');
+      if (result.status === 'ERROR') {
+        expect(result.code).toBe('TRADE_ESCROW_MISMATCH');
+      }
+      expect(mockEscrowSvc.recordTransaction).not.toHaveBeenCalled();
+    });
+  });
 
   // ── S-01: Freeze gate blocks before ledger ──────────────────────────────────
 
@@ -331,7 +374,7 @@ describe('SettlementService.settleTrade [G-019 Day 1]', () => {
       );
 
       // Audit entry must include key settlement identifiers
-      const [, auditEntry] = (mockWriteAudit as ReturnType<typeof vi.fn>).mock.calls[0]!;
+      const [, auditEntry] = vi.mocked(mockWriteAudit).mock.calls[0];
       expect(auditEntry.entity).toBe('trade');
       expect(auditEntry.entityId).toBe(TRADE_ID);
       expect(auditEntry.tenantId).toBe(TENANT_ID);

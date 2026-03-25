@@ -100,6 +100,97 @@ export class SettlementService {
     private readonly writeAudit: WriteAuditLogFn,
   ) {}
 
+  private async loadTradeAndEscrowPair(
+    tradeId: string,
+    escrowId: string,
+    tenantId: string,
+  ): Promise<
+    | {
+        status: 'OK';
+        trade: {
+          id: string;
+          tenantId: string;
+          lifecycleStateId: string;
+          lifecycleStateKey: string;
+          escrowId: string | null;
+        };
+        escrow: Awaited<ReturnType<EscrowService['getEscrowAccountDetail']>> extends { status: 'OK'; escrow: infer T }
+          ? T
+          : never;
+      }
+    | { status: 'ERROR'; code: SettlementErrorCode; message: string }
+  > {
+    let trade: {
+      id: string;
+      tenantId: string;
+      lifecycleStateId: string;
+      lifecycleStateKey: string;
+      escrowId: string | null;
+    } | null;
+
+    try {
+      const tradeRow = await this.db.trade.findFirst({
+        where: { id: tradeId, tenantId },
+        select: {
+          id: true,
+          tenantId: true,
+          lifecycleStateId: true,
+          escrow_id: true,
+          lifecycleState: { select: { stateKey: true } },
+        },
+      });
+
+      trade = tradeRow
+        ? {
+            id: tradeRow.id,
+            tenantId: tradeRow.tenantId,
+            lifecycleStateId: tradeRow.lifecycleStateId,
+            lifecycleStateKey: tradeRow.lifecycleState.stateKey,
+            escrowId: tradeRow.escrow_id,
+          }
+        : null;
+    } catch (err) {
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message: err instanceof Error
+          ? `DB error loading trade: ${err.message}`
+          : 'Unknown DB error loading trade.',
+      };
+    }
+
+    if (!trade) {
+      return {
+        status: 'ERROR',
+        code: 'TRADE_NOT_FOUND',
+        message: `Trade ${tradeId} not found for tenant ${tenantId}.`,
+      };
+    }
+
+    const escrowDetail = await this.escrowSvc.getEscrowAccountDetail(escrowId, tenantId);
+    if (escrowDetail.status !== 'OK') {
+      return {
+        status: 'ERROR',
+        code: 'ESCROW_NOT_FOUND',
+        message: escrowDetail.message,
+      };
+    }
+
+    if (trade.escrowId !== escrowId) {
+      return {
+        status: 'ERROR',
+        code: 'TRADE_ESCROW_MISMATCH',
+        message: `Escrow ${escrowId} is not linked to trade ${tradeId}.`,
+      };
+    }
+
+    return {
+      status: 'OK',
+      trade,
+      escrow: escrowDetail.escrow,
+    };
+  }
+
   // ─── Method 1: previewSettlement ─────────────────────────────────────────────
 
   /**
@@ -126,6 +217,13 @@ export class SettlementService {
         code:    'DB_ERROR',
         message: 'currency is required and must be a non-empty string.',
       };
+    }
+
+    if (input.tradeId) {
+      const pairResult = await this.loadTradeAndEscrowPair(input.tradeId, input.escrowId, input.tenantId);
+      if (pairResult.status !== 'OK') {
+        return pairResult;
+      }
     }
 
     const balanceResult = await this.escrowSvc.computeDerivedBalance(input.escrowId);
@@ -194,64 +292,12 @@ export class SettlementService {
     }
 
     // ── Step 2: Load trade + escrow detail (read) ─────────────────────────────
-    let trade: {
-      id: string;
-      tenantId: string;
-      lifecycleStateId: string;
-      lifecycleStateKey: string;
-    } | null;
-
-    try {
-      const tradeRow = await this.db.trade.findFirst({
-        where:  { id: input.tradeId, tenantId: input.tenantId },
-        select: {
-          id:              true,
-          tenantId:        true,
-          lifecycleStateId: true,
-          lifecycleState:  { select: { stateKey: true } },
-        },
-      });
-
-      trade = tradeRow
-        ? {
-            id:                tradeRow.id,
-            tenantId:          tradeRow.tenantId,
-            lifecycleStateId:  tradeRow.lifecycleStateId,
-            lifecycleStateKey: tradeRow.lifecycleState.stateKey,
-          }
-        : null;
-    } catch (err) {
-      return {
-        status: 'ERROR',
-        code:    'DB_ERROR',
-        message: err instanceof Error
-          ? `DB error loading trade: ${err.message}`
-          : 'Unknown DB error loading trade.',
-      };
+    const pairResult = await this.loadTradeAndEscrowPair(input.tradeId, input.escrowId, input.tenantId);
+    if (pairResult.status !== 'OK') {
+      return pairResult;
     }
 
-    if (!trade) {
-      return {
-        status: 'ERROR',
-        code:    'TRADE_NOT_FOUND',
-        message: `Trade ${input.tradeId} not found for tenant ${input.tenantId}.`,
-      };
-    }
-
-    const escrowDetail = await this.escrowSvc.getEscrowAccountDetail(
-      input.escrowId,
-      input.tenantId,
-    );
-
-    if (escrowDetail.status !== 'OK') {
-      return {
-        status: 'ERROR',
-        code:    'ESCROW_NOT_FOUND',
-        message: escrowDetail.message,
-      };
-    }
-
-    const escrow = escrowDetail.escrow;
+    const { trade, escrow } = pairResult;
 
     // ── Step 3: Freeze gate [TOGGLE_C=C3, Layer 2] ────────────────────────────
     // checkEntityFreeze throws GovError('ENTITY_FROZEN') if severity >= 3 OPEN.
@@ -393,11 +439,10 @@ export class SettlementService {
     }
 
     if (ledgerResult.status !== 'RECORDED') {
-      const errResult = ledgerResult as Extract<typeof ledgerResult, { status: 'ERROR' }>;
       return {
         status: 'ERROR',
-        code:    errResult.code as SettlementErrorCode,
-        message: errResult.message,
+        code:    ledgerResult.code as SettlementErrorCode,
+        message: ledgerResult.message,
       };
     }
 

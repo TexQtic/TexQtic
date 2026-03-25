@@ -63,7 +63,7 @@ export type PreviewSettlementResponse = PreviewOkResult | SettlementErrorResult;
  * Input to POST /api/tenant/settlements.
  *
  * D-017-A: tenantId must NOT be sent by the client — server derives from JWT.
- * actorType is fixed to TENANT_USER for this unit (TECS-FBW-004).
+ * Actor posture is derived server-side from the authenticated tenant session.
  * aiTriggered is intentionally omitted — AI-triggered path is out of scope.
  */
 export interface SettleEscrowInput {
@@ -82,8 +82,6 @@ export interface SettleEscrowInput {
    * AI-triggered path (HUMAN_CONFIRMED: prefix) is out of scope for this unit.
    */
   reason: string;
-  /** Actor classification — TENANT_USER for this unit (TECS-FBW-004). */
-  actorType: 'TENANT_USER';
 }
 
 export interface SettleAppliedResult {
@@ -129,7 +127,7 @@ export async function previewSettlement(
  *
  * D-017-A: No orgId / tenantId sent — server derives from JWT.
  *
- * @param input - Full settle payload including referenceId, reason, actorType
+ * @param input - Full settle payload including referenceId and reason
  */
 export async function settleEscrow(
   input: SettleEscrowInput,
