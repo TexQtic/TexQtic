@@ -53,7 +53,7 @@ For this plan, a loop is complete only when the user or operator can traverse th
 |---|---|---|---|---|---|---|
 | 1 | `ONBOARDING-ENTRY-001` | Business verification activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-001` | No exchange or execution work matters if a tenant cannot become verification-complete and trade-capable |
 | 2 | `ONBOARDING-ENTRY-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-002` | A tenant record without clean first-owner activation still breaks real entry into the platform |
-| 3 | `EXCHANGE-CORE-LOOP-001` | RFQ-to-settlement execution continuity loop | `exchange loop`, `trade execution loop` | Waves 2 and 3, preserved in roadmap order | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-002` | TexQtic cannot claim a real exchange core until RFQ flow continues through supplier response, trade creation, trade lifecycle, and escrow/settlement continuity |
+| 3 | `EXCHANGE-CORE-LOOP-001` | RFQ-to-settlement execution continuity loop | `exchange loop`, `trade execution loop` | Waves 2 and 3, completed in roadmap order | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-002` | Closed when RFQ flow continued through supplier response, trade creation, trade lifecycle, and escrow/settlement continuity |
 | 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4 | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Live execution requires credible admin control around finance, compliance, and dispute intervention |
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5 | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | White-label and scope-truth work must close a real operating mode, not remain a mixed collection of partial operator surfaces and overstated capabilities |
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6 | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Misleading authority cannot remain active once the replacement truth set exists and governs execution |
@@ -156,6 +156,12 @@ The unit is "close the provisioning loop so a created tenant reliably becomes an
 
 ## Unit 3 — EXCHANGE-CORE-LOOP-001
 
+- Status: `COMPLETED`
+- Completion Mode: `MICRO_FIXES_THEN_EXECUTION`
+- Closed By: `EXC-ENABLER-001..006`
+- Commit References: `99258252de206d0357ad1934de4fce31197bc8d1`, `3d704188d32e33b7acca12b16941b2dba6ad4664`, `92f6aa0e10adc55a972852e4dac69701cd6c4a4c`, `24588d7d0bb36a1f54020193aa32e670d04b38b4`, `75b05f238b0ae91ede8291e6e337ac414e307e2d`, `fdb14465dacd25ef58fce6510d890c5876d31021`
+- Result: `RFQ -> Supplier Response -> Trade Creation -> Trade Lifecycle -> Escrow -> Settlement continuity established`
+
 ### Unit Name
 
 RFQ-to-settlement execution continuity loop
@@ -180,51 +186,25 @@ This unit follows:
 
 ### Gap Alignment
 
-- `GAP-EXCHANGE-001`
-- `GAP-EXCHANGE-002`
+- `GAP-EXCHANGE-001` through `GAP-EXCHANGE-013`
 
 ### Capability Closure
 
-This unit is not directly executable today as one single bounded implementation step.
-
-Repo truth now requires internal sequencing before the core loop can be treated as executable.
-
-This unit is complete only when the system supports the full path below as one materially usable chain:
-
-1. buyer creates RFQ
-2. supplier receives RFQ in a real inbox
-3. supplier reviews RFQ detail and responds
-4. response outcome creates or advances a trade path
-5. tenant-visible trade creation occurs
-6. tenant-visible trade lifecycle progression occurs
-7. downstream escrow and settlement continuity remains visible and credible as the execution path continues
+Implemented via bounded internal sequencing across `EXC-ENABLER-001..006`.
 
 ### Required Continuity
 
 The loop must explicitly connect:
 
-`RFQ -> supplier response -> trade creation -> trade lifecycle -> escrow/settlement continuity`
-
-This continuity must be true in the product, not just across disconnected backend routes.
+`RFQ -> Supplier Response -> Trade Creation -> Trade Lifecycle -> Escrow -> Settlement`
 
 ### Phase A — Enabling Micro-Fixes
 
-- RFQ contract alignment
-- supplier response UI wiring
-- RFQ to trade linkage
-- trade org derivation safety
-- trade to escrow attach flow
-- settlement validation (trade ↔ escrow)
-- settlement preview alignment
+- Closed by `EXC-ENABLER-001`, `EXC-ENABLER-002`, `EXC-ENABLER-003`, `EXC-ENABLER-005`, `EXC-ENABLER-006`
 
 ### Phase B — Loop Execution
 
-- supplier interaction surfaces
-- buyer visibility continuity
-- RFQ-to-trade conversion UI
-- trade lifecycle UI
-- escrow handoff
-- settlement handoff
+- Closed by `EXC-ENABLER-002`, `EXC-ENABLER-004`, `EXC-ENABLER-005`, `EXC-ENABLER-006`
 
 ### Primary Surfaces
 
@@ -235,15 +215,7 @@ This continuity must be true in the product, not just across disconnected backen
 
 ### Closure Standard
 
-This unit does not close when the enabling micro-fixes exist by themselves.
-
-This unit does not close when supplier response UI exists by itself.
-
-This unit does not close when trade routes exist but tenant users still cannot progress execution visibly.
-
-This unit does not close when trade, escrow, and settlement surfaces exist but the linkage boundaries remain unvalidated.
-
-This unit closes only when TexQtic can truthfully claim that a live exchange path continues from RFQ initiation into trade execution with credible downstream continuity.
+Closure recorded as `COMPLETED` under `EXCHANGE-CORE-LOOP-001`.
 
 ### Why This Is Not A UI Unit
 

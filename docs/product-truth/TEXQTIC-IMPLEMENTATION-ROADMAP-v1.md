@@ -62,8 +62,8 @@ The roadmap order is driven by actual product dependency:
 | Wave | Name | Primary Goal | Included Gap IDs | Dependency Reason |
 |---|---|---|---|---|
 | Wave 1 | Enterability | Make tenant entry and first-owner onboarding materially usable | `GAP-ENTRY-001`, `GAP-ENTRY-002` | No downstream execution matters if tenants cannot reliably enter |
-| Wave 2 | Exchange Enablers and Supplier Operability | Repair authority and product gaps that prevent the exchange core from becoming a usable two-sided path | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-003`, `GAP-EXCHANGE-004`, `GAP-EXCHANGE-005`, `GAP-EXCHANGE-006` | Exchange execution cannot begin directly because the current loop breaks before continuity can advance into trade |
-| Wave 3 | Exchange Core Continuity Execution | Convert the exchange path into credible execution through RFQ linkage, trade integrity, escrow attachment, and settlement validation | `GAP-EXCHANGE-002`, `GAP-EXCHANGE-007`, `GAP-EXCHANGE-008`, `GAP-EXCHANGE-009`, `GAP-EXCHANGE-010`, `GAP-EXCHANGE-011`, `GAP-EXCHANGE-012`, `GAP-EXCHANGE-013` | Execution depends on prerequisite continuity fixes across RFQ linkage, trade creation integrity, escrow attachment, and settlement validation |
+| Wave 2 | Exchange Enablers and Supplier Operability | Repair authority and product gaps that prevent the exchange core from becoming a usable two-sided path | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-003`, `GAP-EXCHANGE-004`, `GAP-EXCHANGE-005`, `GAP-EXCHANGE-006` | Completed via `EXCHANGE-CORE-LOOP-001` |
+| Wave 3 | Exchange Core Continuity Execution | Convert the exchange path into credible execution through RFQ linkage, trade integrity, escrow attachment, and settlement validation | `GAP-EXCHANGE-002`, `GAP-EXCHANGE-007`, `GAP-EXCHANGE-008`, `GAP-EXCHANGE-009`, `GAP-EXCHANGE-010`, `GAP-EXCHANGE-011`, `GAP-EXCHANGE-012`, `GAP-EXCHANGE-013` | Completed via `EXCHANGE-CORE-LOOP-001` |
 | Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Operational control should harden around a working execution loop |
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Mode polish and scope completion follow the core execution path |
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Truth cleanup must not preempt replacement authority |
@@ -101,6 +101,10 @@ TexQtic cannot be launch-ready if the user cannot complete entry into a trade-ca
 
 ## Wave 2 — Two-Sided Exchange Activation
 
+- Execution Status: `COMPLETED`
+- Completed Via: `EXCHANGE-CORE-LOOP-001`
+- Implementation Units: `EXC-ENABLER-001`, `EXC-ENABLER-002`
+
 ### Objective
 
 Complete the first real two-sided exchange loop between buyer and supplier.
@@ -119,7 +123,7 @@ Execution model for the exchange core at this stage is:
 
 ### Rationale
 
-TexQtic already has buyer-side RFQ initiation and backend support for supplier responses, but the exchange core is not directly executable from that fact alone. The first dependency layer is a bounded set of exchange enablers that repairs RFQ authority alignment, create/read contract mismatch, supplier operability, and the thin supplier-response model before execution continuity is pushed downstream.
+TexQtic completed the first dependency layer through bounded exchange enablers that repaired RFQ authority alignment, create/read contract mismatch, supplier operability, and the supplier-response handoff before execution continuity advanced downstream.
 
 The internal Wave 2 sequence is:
 
@@ -138,15 +142,17 @@ The internal Wave 2 sequence is:
 ### Dependencies
 
 - Wave 1 must be complete enough that new tenants can actually reach exchange surfaces.
-- EXCHANGE-CORE-LOOP-001 depends on continuity fixes across RFQ linkage, trade creation integrity, escrow attachment, and settlement validation before execution claims can be treated as true.
+- Wave 3 completed the downstream continuity fixes through `EXCHANGE-CORE-LOOP-001`.
 
 ### Risks If Deferred
 
-- TexQtic remains one-sided despite real backend exchange capability.
-- Marketplace and exchange claims remain only partially true.
-- Trade execution cannot become product-credible because the upstream loop is still incomplete and the continuity defects remain uncorrected.
+- Deferred risk for this wave is closed by completed execution under `EXCHANGE-CORE-LOOP-001`.
 
 ## Wave 3 — Trade Execution Loop
+
+- Execution Status: `COMPLETED`
+- Completed Via: `EXCHANGE-CORE-LOOP-001`
+- Implementation Units: `EXC-ENABLER-003`, `EXC-ENABLER-004`, `EXC-ENABLER-005`, `EXC-ENABLER-006`
 
 ### Objective
 
@@ -165,7 +171,7 @@ Convert the exchange path into visible tenant-side execution only after the cont
 
 ### Rationale
 
-The backend already contains meaningful trade, escrow, and settlement domain slices, but repo truth now shows that the loop fails at the linkage boundaries rather than at raw feature existence. Wave 3 therefore depends on a specific continuity sequence rather than a direct jump from supplier response into execution.
+The backend already contained meaningful trade, escrow, and settlement domain slices, and Wave 3 completed the required continuity sequence across linkage boundaries rather than treating raw feature existence as execution truth.
 
 The internal Wave 3 sequence is:
 
@@ -186,14 +192,12 @@ The internal Wave 3 sequence is:
 
 ### Dependencies
 
-- Wave 2 must complete the exchange enablers and supplier operability layer first.
-- Execution model remains MICRO_FIXES_THEN_EXECUTION until the continuity defects are closed.
+- Wave 2 completed first under `EXCHANGE-CORE-LOOP-001`.
+- Execution Status for the wave is `COMPLETED` under `MICRO_FIXES_THEN_EXECUTION`.
 
 ### Risks If Deferred
 
-- Exchange will stop at response handling rather than execution.
-- TexQtic remains workflow-rich but execution-thin in the tenant experience.
-- Trade, escrow, and settlement slices will continue to overstate product readiness because the handoff boundaries remain untrusted.
+- Deferred risk for this wave is closed by completed execution under `EXCHANGE-CORE-LOOP-001`.
 
 ## Wave 4 — Operational Control Hardening
 
