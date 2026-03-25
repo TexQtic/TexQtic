@@ -105,7 +105,16 @@
                     "description": "Legacy tenant type field. Preserved for backward compatibility. Use tenant_category instead.",
                     "deprecated": true
                   },
-                  "status": { "type": "string" },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "SUSPENDED",
+                      "CLOSED",
+                      "PENDING_VERIFICATION"
+                    ],
+                    "description": "Tenant activation state exposed from the canonical organization record. PENDING_VERIFICATION means onboarding submitted verification and is awaiting approval."
+                  },
                   "plan": { "type": "string" }
                 }
               },
@@ -462,14 +471,14 @@
     "/api/tenant/activate": {
       "post": {
         "summary": "User-assisted tenant activation",
-        "description": "Activate a pre-provisioned tenant using an invite token. Users cannot create tenants directly.",
+        "description": "Activate a pre-provisioned tenant using an invite token and submit the initial business verification details. Users cannot create tenants directly.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["inviteToken", "userData"],
+                "required": ["inviteToken", "userData", "verificationData"],
                 "properties": {
                   "inviteToken": { "type": "string" },
                   "userData": {
@@ -486,6 +495,14 @@
                       "name": { "type": "string" },
                       "industry": { "type": "string" }
                     }
+                  },
+                  "verificationData": {
+                    "type": "object",
+                    "required": ["registrationNumber", "jurisdiction"],
+                    "properties": {
+                      "registrationNumber": { "type": "string" },
+                      "jurisdiction": { "type": "string" }
+                    }
                   }
                 }
               }
@@ -493,7 +510,9 @@
           }
         },
         "responses": {
-          "200": { "description": "Tenant activated successfully" },
+          "200": {
+            "description": "Tenant activated successfully and business verification submitted"
+          },
           "404": {
             "description": "Invite not found or expired",
             "content": {

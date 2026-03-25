@@ -22,9 +22,14 @@ export interface ActivateTenantRequest {
     name?: string;
     industry?: string;
   };
+  verificationData: {
+    registrationNumber: string;
+    jurisdiction: string;
+  };
 }
 
 export interface ActivateTenantResponse {
+  token: string;
   user: {
     id: string;
     email: string;
@@ -33,6 +38,11 @@ export interface ActivateTenantResponse {
     id: string;
     name: string;
     slug: string;
+    type: string;
+    tenant_category?: string | null;
+    is_white_label?: boolean;
+    status: string;
+    plan: string;
   };
   membership: {
     role: string;

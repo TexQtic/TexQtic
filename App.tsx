@@ -97,6 +97,14 @@ const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
   expiresAt: null,
 };
 
+const VERIFICATION_BLOCKED_VIEWS = new Set([
+  'TRADES',
+  'RFQS',
+  'SUPPLIER_RFQ_INBOX',
+  'ESCROW',
+  'SETTLEMENT',
+]);
+
 type StoredImpersonationSession = {
   adminId: string;
   state: ImpersonationState;
@@ -824,16 +832,19 @@ const App: React.FC = () => {
     // Clear any previous provision error from a prior login attempt.
     setTenantProvisionError(null);
 
-    // B2-REM-3: Parse canonical identity fields first; fall back to legacy compat bridge.
-    // tenant_category is the authoritative routing identity (B2-REM-2 backend emits this).
-    // tenantType is retained as compatibility fallback only — NOT the canonical routing signal.
-    const rawCategory: string | null = (data?.tenant_category as string) ?? (data?.tenantType as string) ?? null;
-    const rawIsWhiteLabel: boolean = typeof data?.is_white_label === 'boolean' ? data.is_white_label : false;
-
     // G-WL-TYPE-MISMATCH Wave4-P1: roles that default to the WL Store Admin console.
     // Buyer/Seller/Staff continue to land in the storefront (EXPERIENCE).
     const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
     let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
+
+    const failClosedTenantBootstrap = () => {
+      clearAuth();
+      setTenants([]);
+      setCurrentTenantId('');
+      setStoredAuthRealm('TENANT');
+      setAuthRealm('TENANT');
+      setAppState('AUTH');
+    };
 
     try {
       const me = await getCurrentUser();
@@ -858,32 +869,15 @@ const App: React.FC = () => {
           nextState = 'WL_ADMIN';
         }
       } else {
-        // /api/me returned no tenant — seed stub so currentTenant is never null
-        const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
-        if (tenantId) {
-          setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: rawCategory ?? 'AGGREGATOR', tenant_category: rawCategory, is_white_label: rawIsWhiteLabel, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
-          setCurrentTenantId(tenantId);
-        }
-        // B2-REM-3: WL admin routing uses is_white_label boolean — not stubType === WHITE_LABEL
-        if (rawIsWhiteLabel === true && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
-          nextState = 'WL_ADMIN';
-        }
+        failClosedTenantBootstrap();
+        return;
       }
     } catch (err) {
-      // /api/me failed — seed stub tenant so UI never hangs on Loading workspace spinner
-      const tenantId = data?.membership?.tenantId || data?.user?.tenantId;
-      if (tenantId) {
-        setTenants([{ id: tenantId, slug: tenantId, name: 'Workspace', type: rawCategory ?? 'AGGREGATOR', tenant_category: rawCategory, is_white_label: rawIsWhiteLabel, status: 'ACTIVE', plan: 'TRIAL', createdAt: '', updatedAt: '' } as Tenant]);
-        setCurrentTenantId(tenantId);
-      }
-      // B2-REM-3: WL admin routing uses is_white_label boolean — not stubType === WHITE_LABEL
-      if (rawIsWhiteLabel === true && WL_ADMIN_ROLES.has((data?.user?.role as string) ?? '')) {
-        nextState = 'WL_ADMIN';
-      }
-      // Show deterministic error banner for unprovisioned tenant (404)
       if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
         setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
       }
+      failClosedTenantBootstrap();
+      return;
     }
 
     setAppState(nextState);
@@ -1497,6 +1491,24 @@ const App: React.FC = () => {
           <div className="text-center">
             <div className="text-4xl mb-4">⏳</div>
             <p className="text-slate-500">Loading tenant data...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentTenant.status === 'PENDING_VERIFICATION' && VERIFICATION_BLOCKED_VIEWS.has(expView)) {
+      return (
+        <div className="min-h-[60vh] flex items-center justify-center px-6">
+          <div className="max-w-xl bg-white border border-amber-200 rounded-3xl shadow-xl p-10 text-center space-y-4">
+            <div className="text-4xl">⏳</div>
+            <h2 className="text-2xl font-bold text-slate-900">Business Verification In Review</h2>
+            <p className="text-slate-600">
+              Trade, RFQ, escrow, and settlement capabilities stay disabled until your business
+              verification is approved.
+            </p>
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              Current status: PENDING_VERIFICATION
+            </p>
           </div>
         </div>
       );
@@ -2173,6 +2185,10 @@ const App: React.FC = () => {
                         name: formData.orgName || undefined,
                         industry: formData.industry || undefined,
                       },
+                      verificationData: {
+                        registrationNumber: formData.registrationNumber,
+                        jurisdiction: formData.jurisdiction,
+                      },
                     }) as any;
                     // Store JWT so all subsequent tenant API calls are authenticated
                     setToken(raw.token, 'TENANT');
@@ -2182,8 +2198,10 @@ const App: React.FC = () => {
                       slug: raw.tenant.slug,
                       name: raw.tenant.name,
                       type: (raw.tenant.type ?? 'B2B') as TenantType,
-                      status: 'ACTIVE',
-                      plan: 'TRIAL',
+                      tenant_category: raw.tenant.tenant_category ?? raw.tenant.type ?? 'B2B',
+                      is_white_label: raw.tenant.is_white_label ?? false,
+                      status: raw.tenant.status,
+                      plan: raw.tenant.plan ?? 'TRIAL',
                       createdAt: '',
                       updatedAt: '',
                     } as Tenant]);
@@ -2314,6 +2332,12 @@ const App: React.FC = () => {
                 >
                   Dismiss
                 </button>
+              </div>
+            )}
+            {currentTenant.status === 'PENDING_VERIFICATION' && (
+              <div className="fixed top-0 left-0 right-0 z-[95] bg-blue-50 border-b border-blue-200 px-4 py-3 text-blue-900 text-sm text-center">
+                Business verification has been submitted and is pending review. Trade and fund
+                operations remain disabled until approval is recorded.
               </div>
             )}
             <ExperienceShell {...props}>

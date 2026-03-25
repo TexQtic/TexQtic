@@ -26,11 +26,18 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
     inviteToken: inviteToken || '',
     email: '',
     password: '',
+    registrationNumber: '',
+    jurisdiction: '',
   });
 
   const next = () => setStep(s => s + 1);
 
   const handleComplete = async () => {
+    if (!formData.registrationNumber.trim() || !formData.jurisdiction.trim()) {
+      setSubmitError('Registration number and jurisdiction are required to submit verification.');
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -219,22 +226,49 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
 
         {step === 4 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-            <h2 className="text-3xl font-bold">Business Verification</h2>
+            <h2 className="text-3xl font-bold">Submit Business Verification</h2>
             <p className="text-slate-500">
-              To comply with global financial regulations, we require business documentation. This
-              will be reviewed before trade and fund operations are enabled.
+              Submit your registration details to start business verification review. Trade and
+              fund operations remain disabled until the review is approved.
             </p>
-            <div className="p-12 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center gap-4 text-center hover:border-indigo-500 transition cursor-pointer">
-              <span className="text-4xl">📄</span>
-              <div className="text-sm font-bold text-slate-600">
-                Upload Certificate of Incorporation
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label
+                  htmlFor="registrationNumber"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
+                  Registration Number
+                </label>
+                <input
+                  id="registrationNumber"
+                  type="text"
+                  value={formData.registrationNumber}
+                  onChange={e => setFormData({ ...formData, registrationNumber: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Company registration or incorporation number"
+                />
               </div>
-              <div className="text-[10px] text-slate-400">PDF, JPG, PNG up to 10MB</div>
+              <div className="space-y-1">
+                <label
+                  htmlFor="jurisdiction"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
+                  Jurisdiction
+                </label>
+                <input
+                  id="jurisdiction"
+                  type="text"
+                  value={formData.jurisdiction}
+                  onChange={e => setFormData({ ...formData, jurisdiction: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Country or incorporation jurisdiction"
+                />
+              </div>
             </div>
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
               <p className="text-xs text-amber-800">
-                <strong>Note:</strong> Trade capabilities and fund operations will remain blocked
-                until verification is completed and approved.
+                <strong>Outcome:</strong> Completing activation submits your business for review.
+                Your workspace opens in pending-verification mode until approval is recorded.
               </p>
             </div>
           </div>
@@ -262,7 +296,7 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
               className="px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {step < 4 && 'Continue'}
-              {step === 4 && !submitting && 'Complete Activation'}
+              {step === 4 && !submitting && 'Submit Verification & Activate'}
               {step === 4 && submitting && 'Activating...'}
             </button>
           </div>

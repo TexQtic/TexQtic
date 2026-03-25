@@ -48,7 +48,7 @@ export interface CurrentUserResponse {
     tenant_category?: string | null;
     /** B2-REM-3: white-label capability flag (B2-REM-2). */
     is_white_label?: boolean;
-    status: string;
+    status: 'ACTIVE' | 'SUSPENDED' | 'CLOSED' | 'PENDING_VERIFICATION';
     plan: string;
   };
   role?: string;

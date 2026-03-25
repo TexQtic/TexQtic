@@ -2212,6 +2212,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             industry: z.string().optional(),
           })
           .optional(),
+        verificationData: z.object({
+          registrationNumber: z.string().trim().min(1, 'Registration number is required'),
+          jurisdiction: z.string().trim().min(1, 'Jurisdiction is required'),
+        }),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -2219,7 +2223,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, parseResult.error.errors);
       }
 
-      const { inviteToken, userData } = parseResult.data;
+      const { inviteToken, userData, tenantData, verificationData } = parseResult.data;
 
       // Hash the invite token to look it up
       const crypto = await import('node:crypto');
@@ -2289,6 +2293,37 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
+        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
+        const updatedOrg = await tx.organizations.update({
+          where: { id: invite.tenantId },
+          data: {
+            ...(tenantData?.name?.trim() ? { legal_name: tenantData.name.trim() } : {}),
+            registration_no: verificationData.registrationNumber.trim(),
+            jurisdiction: verificationData.jurisdiction.trim(),
+            status: 'PENDING_VERIFICATION',
+          },
+          select: {
+            legal_name: true,
+            status: true,
+            org_type: true,
+            is_white_label: true,
+            plan: true,
+          },
+        });
+
+        const updatedTenant = tenantData?.name?.trim()
+          ? await tx.tenant.update({
+              where: { id: invite.tenantId },
+              data: { name: tenantData.name.trim() },
+              select: { name: true },
+            })
+          : null;
+
+        await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
+        await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'false', true)`);
+
         // Create membership (RLS will enforce tenant_id = org_id)
         const membership = await tx.membership.create({
           data: {
@@ -2316,10 +2351,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           metadataJson: {
             inviteId: invite.id,
             role: invite.role,
+            verificationStatus: updatedOrg.status,
           },
         });
 
-        return { user, membership };
+        return { user, membership, updatedOrg, updatedTenant };
       });
 
       // Issue tenant JWT — same claims as POST /api/auth/login tenant path
@@ -2337,9 +2373,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
         tenant: {
           id: invite.tenant.id,
-          name: invite.tenant.name,
+          name: result.updatedTenant?.name ?? result.updatedOrg.legal_name ?? invite.tenant.name,
           slug: invite.tenant.slug,
           type: invite.tenant.type,
+          tenant_category: result.updatedOrg.org_type,
+          is_white_label: result.updatedOrg.is_white_label,
+          status: result.updatedOrg.status,
+          plan: result.updatedOrg.plan,
         },
         membership: {
           role: result.membership.role,
