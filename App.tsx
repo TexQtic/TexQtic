@@ -88,6 +88,7 @@ import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRea
 
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
 const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
+const REHYDRATION_TRACE_KEY = 'texqtic_rehydration_trace';
 const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
   isAdmin: false,
   targetTenantId: null,
@@ -109,6 +110,56 @@ type StoredImpersonationSession = {
   adminId: string;
   state: ImpersonationState;
   tenant: Tenant;
+};
+
+type RehydrationTracePayload = Record<string, unknown>;
+
+const summarizeTenantIdentity = (tenant?: {
+  id?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  type?: string | null;
+  tenant_category?: string | null;
+  is_white_label?: boolean | null;
+  status?: string | null;
+  plan?: string | null;
+} | null) => {
+  if (!tenant) {
+    return null;
+  }
+
+  return {
+    id: tenant.id ?? null,
+    slug: tenant.slug ?? null,
+    name: tenant.name ?? null,
+    type: tenant.type ?? null,
+    tenant_category: tenant.tenant_category ?? null,
+    is_white_label: tenant.is_white_label ?? null,
+    status: tenant.status ?? null,
+    plan: tenant.plan ?? null,
+  };
+};
+
+const appendRehydrationTrace = (event: string, payload: RehydrationTracePayload = {}) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const entry = {
+    ts: new Date().toISOString(),
+    event,
+    payload,
+  };
+
+  try {
+    const existing = sessionStorage.getItem(REHYDRATION_TRACE_KEY);
+    const parsed = existing ? JSON.parse(existing) : [];
+    const next = Array.isArray(parsed) ? [...parsed, entry].slice(-100) : [entry];
+    sessionStorage.setItem(REHYDRATION_TRACE_KEY, JSON.stringify(next));
+    console.info('[rehydration-trace]', entry);
+  } catch {
+    console.info('[rehydration-trace]', entry);
+  }
 };
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
@@ -219,11 +270,19 @@ const buildTenantSnapshot = (tenant?: {
   status?: string | null;
   plan?: string | null;
 } | null): Tenant | null => {
+  appendRehydrationTrace('buildTenantSnapshot:input', {
+    tenant: summarizeTenantIdentity(tenant),
+  });
+
   if (!tenant?.id || !tenant.slug || !tenant.name || !tenant.type || !tenant.status || !tenant.plan) {
+    appendRehydrationTrace('buildTenantSnapshot:output', {
+      tenant: null,
+      reason: 'missing_required_fields',
+    });
     return null;
   }
 
-  return {
+  const snapshot = {
     id: tenant.id,
     slug: tenant.slug,
     name: tenant.name,
@@ -235,6 +294,12 @@ const buildTenantSnapshot = (tenant?: {
     createdAt: '',
     updatedAt: '',
   };
+
+  appendRehydrationTrace('buildTenantSnapshot:output', {
+    tenant: summarizeTenantIdentity(snapshot),
+  });
+
+  return snapshot;
 };
 
 const persistImpersonationSession = (session: StoredImpersonationSession | null) => {
@@ -348,6 +413,22 @@ const clearPersistedImpersonationSession = () => {
 };
 
 const App: React.FC = () => {
+
+  useEffect(() => {
+    const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const navigationType = navigationEntry?.type ?? 'unknown';
+
+    if (navigationType === 'reload') {
+      sessionStorage.removeItem(REHYDRATION_TRACE_KEY);
+    }
+
+    appendRehydrationTrace('app:mount', {
+      navigationType,
+      hasTenantToken: !!localStorage.getItem('texqtic_tenant_token'),
+      hasAdminToken: !!localStorage.getItem('texqtic_admin_token'),
+      storedRealm: getCurrentAuthRealm('TENANT'),
+    });
+  }, []);
 
   // Production-grade State Machine
   const [appState, setAppState] = useState<
@@ -600,9 +681,16 @@ const App: React.FC = () => {
   // Convert backend Tenant to TenantConfig for UI compatibility
   const currentTenant: TenantConfig | null = useMemo(() => {
     const tenant = tenants.find(t => t.id === currentTenantId);
-    if (!tenant) return null;
+    if (!tenant) {
+      appendRehydrationTrace('currentTenant:resolved', {
+        currentTenantId,
+        tenant: null,
+        availableTenantIds: tenants.map(t => t.id),
+      });
+      return null;
+    }
 
-    return {
+    const resolvedTenant = {
       id: tenant.id,
       slug: tenant.slug,
       name: tenant.name,
@@ -622,7 +710,27 @@ const App: React.FC = () => {
       billingStatus: 'CURRENT',
       riskScore: 0,
     };
+
+    appendRehydrationTrace('currentTenant:resolved', {
+      currentTenantId,
+      tenant: summarizeTenantIdentity(resolvedTenant),
+    });
+
+    return resolvedTenant;
   }, [tenants, currentTenantId]);
+
+  useEffect(() => {
+    appendRehydrationTrace('app:state', {
+      appState,
+      authRealm,
+      effectiveRealm,
+      currentTenantId,
+      tenantCount: tenants.length,
+      hasTenantToken: !!localStorage.getItem('texqtic_tenant_token'),
+      hasAdminToken: !!localStorage.getItem('texqtic_admin_token'),
+      currentTenant: summarizeTenantIdentity(currentTenant),
+    });
+  }, [appState, authRealm, effectiveRealm, currentTenantId, tenants.length, currentTenant]);
 
   // Check URL for token-based actions on mount (password reset, email verification, invite)
   useEffect(() => {
@@ -804,12 +912,30 @@ const App: React.FC = () => {
   }, [appState]);
 
   useEffect(() => {
+    appendRehydrationTrace('tenantRestore:effect_enter', {
+      appState,
+      authRealm,
+      effectiveRealm,
+      storedRealm: getCurrentAuthRealm('TENANT'),
+      hasTenantToken: !!localStorage.getItem('texqtic_tenant_token'),
+    });
+
     if (appState !== 'AUTH' || authRealm !== 'TENANT') {
+      appendRehydrationTrace('tenantRestore:effect_skip', {
+        reason: 'not_auth_tenant',
+        appState,
+        authRealm,
+      });
       return;
     }
 
     const storedTenantToken = localStorage.getItem('texqtic_tenant_token');
     if (!storedTenantToken) {
+      appendRehydrationTrace('tenantRestore:effect_skip', {
+        reason: 'missing_tenant_token',
+        appState,
+        authRealm,
+      });
       return;
     }
 
@@ -821,7 +947,11 @@ const App: React.FC = () => {
       const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
       let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
 
-      const failClosedTenantBootstrap = () => {
+      const failClosedTenantBootstrap = (reason: string, details: RehydrationTracePayload = {}) => {
+        appendRehydrationTrace('tenantRestore:fail_closed', {
+          reason,
+          ...details,
+        });
         clearAuth();
         setTenants([]);
         setCurrentTenantId('');
@@ -831,31 +961,57 @@ const App: React.FC = () => {
       };
 
       try {
+        appendRehydrationTrace('tenantRestore:getCurrentUser:start');
         const me = await getCurrentUser();
+        appendRehydrationTrace('tenantRestore:getCurrentUser:success', {
+          role: me.role ?? null,
+          tenant: summarizeTenantIdentity(me.tenant),
+        });
         const tenant = buildTenantSnapshot(me.tenant);
 
         if (!tenant || cancelled) {
+          appendRehydrationTrace('tenantRestore:snapshot_invalid', {
+            cancelled,
+            tenant: summarizeTenantIdentity(tenant),
+          });
           throw new Error('Tenant session could not be rehydrated.');
         }
 
         setTenants([tenant]);
         setCurrentTenantId(tenant.id);
+        appendRehydrationTrace('tenantRestore:tenant_applied', {
+          tenant: summarizeTenantIdentity(tenant),
+        });
 
         if (tenant.is_white_label === true && WL_ADMIN_ROLES.has(me.role ?? '')) {
           nextState = 'WL_ADMIN';
         }
 
+        appendRehydrationTrace('tenantRestore:next_state', {
+          nextState,
+          role: me.role ?? null,
+          tenant: summarizeTenantIdentity(tenant),
+        });
         setAppState(nextState);
       } catch (err) {
         if (cancelled) {
+          appendRehydrationTrace('tenantRestore:cancelled');
           return;
         }
+
+        appendRehydrationTrace('tenantRestore:getCurrentUser:error', {
+          message: err instanceof Error ? err.message : 'unknown_error',
+          status: err instanceof APIError ? err.status : null,
+        });
 
         if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
           setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
         }
 
-        failClosedTenantBootstrap();
+        failClosedTenantBootstrap('restore_failed', {
+          message: err instanceof Error ? err.message : 'unknown_error',
+          status: err instanceof APIError ? err.status : null,
+        });
       }
     };
 
