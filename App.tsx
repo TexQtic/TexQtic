@@ -365,9 +365,11 @@ const App: React.FC = () => {
     // TECS-FBW-014: post-checkout confirmation state
     | 'ORDER_CONFIRMED'
   >('AUTH');
-  const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>('TENANT');
+  const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>(
+    () => getCurrentAuthRealm('TENANT') ?? 'TENANT'
+  );
   const effectiveRealm = useMemo(
-    () => getCurrentAuthRealm(appState === 'AUTH' ? authRealm : null) ?? 'TENANT',
+    () => (appState === 'AUTH' ? authRealm : getCurrentAuthRealm() ?? 'TENANT'),
     [appState, authRealm]
   );
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
@@ -605,6 +607,8 @@ const App: React.FC = () => {
       slug: tenant.slug,
       name: tenant.name,
       type: tenant.type as TenantType,
+      tenant_category: tenant.tenant_category ?? tenant.type,
+      is_white_label: tenant.is_white_label ?? false,
       status: tenant.status as any,
       plan: normalizePlan(tenant.plan),
       theme: {
@@ -798,6 +802,69 @@ const App: React.FC = () => {
       cancelled = true;
     };
   }, [appState]);
+
+  useEffect(() => {
+    if (appState !== 'AUTH' || authRealm !== 'TENANT') {
+      return;
+    }
+
+    const storedTenantToken = localStorage.getItem('texqtic_tenant_token');
+    if (!storedTenantToken) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const restoreTenantSession = async () => {
+      setTenantProvisionError(null);
+
+      const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
+      let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
+
+      const failClosedTenantBootstrap = () => {
+        clearAuth();
+        setTenants([]);
+        setCurrentTenantId('');
+        setStoredAuthRealm('TENANT');
+        setAuthRealm('TENANT');
+        setAppState('AUTH');
+      };
+
+      try {
+        const me = await getCurrentUser();
+        const tenant = buildTenantSnapshot(me.tenant);
+
+        if (!tenant || cancelled) {
+          throw new Error('Tenant session could not be rehydrated.');
+        }
+
+        setTenants([tenant]);
+        setCurrentTenantId(tenant.id);
+
+        if (tenant.is_white_label === true && WL_ADMIN_ROLES.has(me.role ?? '')) {
+          nextState = 'WL_ADMIN';
+        }
+
+        setAppState(nextState);
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
+        if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
+          setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
+        }
+
+        failClosedTenantBootstrap();
+      }
+    };
+
+    void restoreTenantSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appState, authRealm]);
 
   const handleAuthSuccess = async (data: any) => {
     const nextRealm = getCurrentAuthRealm(authRealm) ?? 'TENANT';
