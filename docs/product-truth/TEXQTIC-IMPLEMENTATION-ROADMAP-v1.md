@@ -51,7 +51,8 @@ The roadmap order is driven by actual product dependency:
 
 - A broken entry path blocks everything behind it.
 - A one-sided exchange surface cannot become a real marketplace loop.
-- A surfaced RFQ response loop without tenant-visible trade actions still stops before execution.
+- A surfaced RFQ response loop without continuity fixes still stops before execution, even when backend domain slices already exist.
+- EXCHANGE-CORE-LOOP-001 is not directly executable from current repo truth and requires MICRO_FIXES_THEN_EXECUTION.
 - Operational casework hardening matters after execution loops exist, not before.
 - Mode completeness matters after the shared core is credible.
 - Truth cleanup happens last because replacement authority must already exist.
@@ -61,8 +62,8 @@ The roadmap order is driven by actual product dependency:
 | Wave | Name | Primary Goal | Included Gap IDs | Dependency Reason |
 |---|---|---|---|---|
 | Wave 1 | Enterability | Make tenant entry and first-owner onboarding materially usable | `GAP-ENTRY-001`, `GAP-ENTRY-002` | No downstream execution matters if tenants cannot reliably enter |
-| Wave 2 | Two-Sided Exchange Activation | Complete the first real buyer-supplier exchange loop | `GAP-EXCHANGE-001` | The product must become two-sided before trade execution can be meaningfully surfaced |
-| Wave 3 | Trade Execution Loop | Turn exchange into visible tenant-side execution continuity | `GAP-EXCHANGE-002` | Trade execution depends on a completed exchange loop |
+| Wave 2 | Exchange Enablers and Supplier Operability | Repair authority and product gaps that prevent the exchange core from becoming a usable two-sided path | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-003`, `GAP-EXCHANGE-004`, `GAP-EXCHANGE-005`, `GAP-EXCHANGE-006` | Exchange execution cannot begin directly because the current loop breaks before continuity can advance into trade |
+| Wave 3 | Exchange Core Continuity Execution | Convert the exchange path into credible execution through RFQ linkage, trade integrity, escrow attachment, and settlement validation | `GAP-EXCHANGE-002`, `GAP-EXCHANGE-007`, `GAP-EXCHANGE-008`, `GAP-EXCHANGE-009`, `GAP-EXCHANGE-010`, `GAP-EXCHANGE-011`, `GAP-EXCHANGE-012`, `GAP-EXCHANGE-013` | Execution depends on prerequisite continuity fixes across RFQ linkage, trade creation integrity, escrow attachment, and settlement validation |
 | Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Operational control should harden around a working execution loop |
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Mode polish and scope completion follow the core execution path |
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Truth cleanup must not preempt replacement authority |
@@ -104,61 +105,95 @@ TexQtic cannot be launch-ready if the user cannot complete entry into a trade-ca
 
 Complete the first real two-sided exchange loop between buyer and supplier.
 
+Execution model for the exchange core at this stage is:
+
+- MICRO_FIXES_THEN_EXECUTION
+
 ### Included Gaps
 
 - `GAP-EXCHANGE-001`
+- `GAP-EXCHANGE-003`
+- `GAP-EXCHANGE-004`
+- `GAP-EXCHANGE-005`
+- `GAP-EXCHANGE-006`
 
 ### Rationale
 
-TexQtic already has buyer-side RFQ initiation and backend support for supplier responses. The missing dependency is the supplier-facing product surface that turns the repo into an actual two-sided exchange environment.
+TexQtic already has buyer-side RFQ initiation and backend support for supplier responses, but the exchange core is not directly executable from that fact alone. The first dependency layer is a bounded set of exchange enablers that repairs RFQ authority alignment, create/read contract mismatch, supplier operability, and the thin supplier-response model before execution continuity is pushed downstream.
+
+The internal Wave 2 sequence is:
+
+1. Exchange enablers
+2. Supplier operability
 
 ### Exit Criteria
 
 - Supplier RFQ inbox is materially surfaced.
 - Supplier RFQ detail is materially surfaced.
 - Supplier response actions are materially surfaced.
+- RFQ authority and RFQ create/read contract truth are aligned.
+- Supplier response semantics are sufficient to support downstream continuity planning.
 - Buyer-side visibility reflects supplier response outcomes in a usable product loop.
 
 ### Dependencies
 
 - Wave 1 must be complete enough that new tenants can actually reach exchange surfaces.
+- EXCHANGE-CORE-LOOP-001 depends on continuity fixes across RFQ linkage, trade creation integrity, escrow attachment, and settlement validation before execution claims can be treated as true.
 
 ### Risks If Deferred
 
 - TexQtic remains one-sided despite real backend exchange capability.
 - Marketplace and exchange claims remain only partially true.
-- Trade execution cannot become product-credible because the upstream loop is still incomplete.
+- Trade execution cannot become product-credible because the upstream loop is still incomplete and the continuity defects remain uncorrected.
 
 ## Wave 3 — Trade Execution Loop
 
 ### Objective
 
-Convert the now-complete two-sided exchange loop into visible tenant-side trade execution.
+Convert the exchange path into visible tenant-side execution only after the continuity micro-fixes have been applied.
 
 ### Included Gaps
 
 - `GAP-EXCHANGE-002`
+- `GAP-EXCHANGE-007`
+- `GAP-EXCHANGE-008`
+- `GAP-EXCHANGE-009`
+- `GAP-EXCHANGE-010`
+- `GAP-EXCHANGE-011`
+- `GAP-EXCHANGE-012`
+- `GAP-EXCHANGE-013`
 
 ### Rationale
 
-The backend already contains meaningful trade lifecycle capability. Once the product supports two-sided RFQ exchange, the next dependency is tenant-visible trade creation and lifecycle progression so the loop can move from interaction into execution.
+The backend already contains meaningful trade, escrow, and settlement domain slices, but repo truth now shows that the loop fails at the linkage boundaries rather than at raw feature existence. Wave 3 therefore depends on a specific continuity sequence rather than a direct jump from supplier response into execution.
+
+The internal Wave 3 sequence is:
+
+1. RFQ to trade continuity
+2. Trade creation integrity
+3. Trade to escrow continuity
+4. Trade to escrow to settlement continuity
 
 ### Exit Criteria
 
-- Tenant trade creation is materially surfaced.
+- RFQ response can materially advance into trade creation through an explicit continuity path.
+- Tenant trade creation is materially surfaced with safe org derivation and trustworthy creation integrity.
 - Tenant trade lifecycle actions are materially surfaced.
 - Trade progression is visible in the tenant product surface instead of remaining backend-only.
-- Execution continuity between exchange, trade state, and downstream escrow/settlement path is product-credible.
+- Trade can materially attach or hand off into escrow.
+- Settlement preview and settlement execution validate real trade-to-escrow continuity.
+- Execution continuity between exchange, trade state, escrow, and settlement is product-credible.
 
 ### Dependencies
 
-- Wave 2 must complete the two-sided exchange loop first.
+- Wave 2 must complete the exchange enablers and supplier operability layer first.
+- Execution model remains MICRO_FIXES_THEN_EXECUTION until the continuity defects are closed.
 
 ### Risks If Deferred
 
 - Exchange will stop at response handling rather than execution.
 - TexQtic remains workflow-rich but execution-thin in the tenant experience.
-- Backend capability continues to overstate product readiness.
+- Trade, escrow, and settlement slices will continue to overstate product readiness because the handoff boundaries remain untrusted.
 
 ## Wave 4 — Operational Control Hardening
 

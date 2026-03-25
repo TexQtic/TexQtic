@@ -174,12 +174,20 @@ This unit preserves roadmap dependency order by treating exchange activation and
 1. first close the missing two-sided exchange path
 2. then continue that path into visible trade execution continuity
 
+This unit follows:
+
+- MICRO_FIXES_THEN_EXECUTION
+
 ### Gap Alignment
 
 - `GAP-EXCHANGE-001`
 - `GAP-EXCHANGE-002`
 
 ### Capability Closure
+
+This unit is not directly executable today as one single bounded implementation step.
+
+Repo truth now requires internal sequencing before the core loop can be treated as executable.
 
 This unit is complete only when the system supports the full path below as one materially usable chain:
 
@@ -199,6 +207,25 @@ The loop must explicitly connect:
 
 This continuity must be true in the product, not just across disconnected backend routes.
 
+### Phase A — Enabling Micro-Fixes
+
+- RFQ contract alignment
+- supplier response UI wiring
+- RFQ to trade linkage
+- trade org derivation safety
+- trade to escrow attach flow
+- settlement validation (trade ↔ escrow)
+- settlement preview alignment
+
+### Phase B — Loop Execution
+
+- supplier interaction surfaces
+- buyer visibility continuity
+- RFQ-to-trade conversion UI
+- trade lifecycle UI
+- escrow handoff
+- settlement handoff
+
 ### Primary Surfaces
 
 - buyer RFQ surfaces already present in tenant product flows
@@ -208,9 +235,13 @@ This continuity must be true in the product, not just across disconnected backen
 
 ### Closure Standard
 
+This unit does not close when the enabling micro-fixes exist by themselves.
+
 This unit does not close when supplier response UI exists by itself.
 
 This unit does not close when trade routes exist but tenant users still cannot progress execution visibly.
+
+This unit does not close when trade, escrow, and settlement surfaces exist but the linkage boundaries remain unvalidated.
 
 This unit closes only when TexQtic can truthfully claim that a live exchange path continues from RFQ initiation into trade execution with credible downstream continuity.
 
@@ -219,6 +250,11 @@ This unit closes only when TexQtic can truthfully claim that a live exchange pat
 The unit is not "build supplier inbox" or "add trade actions to the trade panel."
 
 The unit is "close the exchange core so the marketplace path becomes a real execution loop rather than a read-only or backend-only chain."
+
+That now requires a bounded internal sequence:
+
+1. enabling micro-fixes
+2. then loop execution
 
 ## Unit 4 — OPS-CASEWORK-001
 
