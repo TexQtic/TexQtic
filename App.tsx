@@ -690,7 +690,7 @@ const App: React.FC = () => {
       return null;
     }
 
-    const resolvedTenant = {
+    const resolvedTenant: TenantConfig = {
       id: tenant.id,
       slug: tenant.slug,
       name: tenant.name,
