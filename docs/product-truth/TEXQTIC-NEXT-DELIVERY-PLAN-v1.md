@@ -51,12 +51,14 @@ For this plan, a loop is complete only when the user or operator can traverse th
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
-| 1 | `ONBOARDING-LOOP-001` | Business verification activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-001` | No exchange or execution work matters if a tenant cannot become verification-complete and trade-capable |
-| 2 | `ONBOARDING-LOOP-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-002` | A tenant record without clean first-owner activation still breaks real entry into the platform |
+| 1 | `ONBOARDING-ENTRY-001` | Business verification activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-001` | No exchange or execution work matters if a tenant cannot become verification-complete and trade-capable |
+| 2 | `ONBOARDING-ENTRY-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-002` | A tenant record without clean first-owner activation still breaks real entry into the platform |
 | 3 | `EXCHANGE-CORE-LOOP-001` | RFQ-to-settlement execution continuity loop | `exchange loop`, `trade execution loop` | Waves 2 and 3, preserved in roadmap order | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-002` | TexQtic cannot claim a real exchange core until RFQ flow continues through supplier response, trade creation, trade lifecycle, and escrow/settlement continuity |
-| 4 | `OPS-CONTROL-LOOP-001` | Live execution casework control loop | `operations control loop` | Wave 4 | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Live execution requires credible admin control around finance, compliance, and dispute intervention |
+| 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4 | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Live execution requires credible admin control around finance, compliance, and dispute intervention |
+| 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5 | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | White-label and scope-truth work must close a real operating mode, not remain a mixed collection of partial operator surfaces and overstated capabilities |
+| 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6 | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Misleading authority cannot remain active once the replacement truth set exists and governs execution |
 
-## Unit 1 — ONBOARDING-LOOP-001
+## Unit 1 — ONBOARDING-ENTRY-001
 
 ### Unit Name
 
@@ -104,7 +106,7 @@ The unit is not "finish the verification screen."
 
 The unit is "close the onboarding loop so verification is operational and activation truthfully continues into product use."
 
-## Unit 2 — ONBOARDING-LOOP-002
+## Unit 2 — ONBOARDING-ENTRY-002
 
 ### Unit Name
 
@@ -218,7 +220,7 @@ The unit is not "build supplier inbox" or "add trade actions to the trade panel.
 
 The unit is "close the exchange core so the marketplace path becomes a real execution loop rather than a read-only or backend-only chain."
 
-## Unit 4 — OPS-CONTROL-LOOP-001
+## Unit 4 — OPS-CASEWORK-001
 
 ### Unit Name
 
@@ -269,6 +271,107 @@ The unit is not "improve finance ops panel" or "add dispute details tab."
 
 The unit is "close the operations control loop so execution has real operator governance behind it."
 
+## Unit 5 — WL-COMPLETE-001
+
+### Unit Name
+
+White-label operating mode completion loop
+
+### System Loops Completed
+
+- `onboarding loop`
+- `operations control loop`
+
+### Roadmap Alignment
+
+Wave 5 — Mode Completeness
+
+### Gap Alignment
+
+- `GAP-MODE-001`
+- `GAP-SCOPE-001`
+- `GAP-SCOPE-002`
+
+### Capability Closure
+
+This unit is complete only when the white-label operating mode becomes consistently usable as a real product mode, and the narrow-scope realities inside that mode are no longer overstated as broader finished capability.
+
+### Required Continuity
+
+The loop must hold across:
+
+1. white-label operator entry into a real admin context
+2. materially usable white-label administration for promised operator tasks
+3. consistent visibility into what DPP/passport and AI governance actually do in this mode
+4. mode operation that no longer depends on mixed real, stub, and overstated surfaces
+
+### Primary Surfaces
+
+- `components/WhiteLabelAdmin/WLStubPanel.tsx`
+- white-label operator surfaces required for consistent admin use
+- product-truth-sensitive mode surfaces where DPP/passport and AI governance are currently overstated or mixed
+
+### Closure Standard
+
+This unit does not close when isolated white-label panels appear complete while the mode still contains stub paths or overstated scope.
+
+It closes only when white-label can be treated as a coherent operating mode with truthful scope boundaries.
+
+### Why This Is Not A UI Unit
+
+The unit is not "finish WL admin screens."
+
+The unit is "close the white-label operating mode so branded entry and operator control become consistently real and truthfully scoped."
+
+## Unit 6 — TRUTH-CLEANUP-001
+
+### Unit Name
+
+Replacement-authority truth cleanup loop
+
+### System Loop Completed
+
+`operations control loop`
+
+### Roadmap Alignment
+
+Wave 6 — Truth Cleanup / Misleading Surface Retirement
+
+### Gap Alignment
+
+- `GAP-TRUTH-001`
+- `GAP-TRUTH-002`
+
+### Capability Closure
+
+This unit is complete only when replacement product-truth documents govern execution and the misleading authority-bearing surfaces no longer function as active planning truth.
+
+### Required Continuity
+
+The loop must hold across:
+
+1. replacement truth documents exist and are internally consistent
+2. fake-complete API-doc and architecture surfaces are explicitly retired, relabeled, or downgraded from authority
+3. execution planning and operator interpretation now follow the replacement truth set
+4. no competing stale authority remains capable of redirecting delivery sequencing
+
+### Primary Surfaces
+
+- product-truth replacement documents that establish current authority
+- misleading authority surfaces that currently read as active execution truth
+
+### Closure Standard
+
+This unit does not close when replacement docs merely exist beside still-active stale authority.
+
+It closes only when truth cleanup completes the control loop around planning authority and removes misleading execution guidance.
+
+### Why This Is Not A UI Unit
+
+The unit is not "update docs screens" or "archive blueprint page text."
+
+The unit is "close the authority cleanup loop so execution truth has one active source and misleading surfaces no longer distort delivery."
+
 ## What Is Explicitly Not A Delivery Unit
 
 The following are not valid unit definitions in this plan:
@@ -281,14 +384,18 @@ The following are not valid unit definitions in this plan:
 
 These may be implementation slices inside a unit, but they are not valid delivery units on their own.
 
-## Out Of Immediate Scope
+## Dependency Guardrail
 
-The following roadmap work remains valid but is not part of the immediate next-delivery unit set:
+Wave 5 and Wave 6 units are part of the mandatory delivery set, but they remain downstream units.
 
-- Wave 5 mode completeness work
-- Wave 6 truth cleanup and misleading-surface retirement work
+They must not be pulled ahead of:
 
-Those items remain downstream of the core loop closures above and must not displace them.
+1. `ONBOARDING-ENTRY-001`
+2. `ONBOARDING-ENTRY-002`
+3. `EXCHANGE-CORE-LOOP-001`
+4. `OPS-CASEWORK-001`
+
+They are included here to preserve the full roadmap-backed unit set, not to weaken dependency-first execution.
 
 ## Plan Use Rules
 
