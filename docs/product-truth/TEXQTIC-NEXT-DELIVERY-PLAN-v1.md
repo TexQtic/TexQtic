@@ -47,6 +47,17 @@ For this plan, a loop is complete only when the user or operator can traverse th
 5. Each unit must identify the repo surfaces that must change for the loop to become true.
 6. If a unit stops at a screen boundary, it is not a valid unit.
 
+## Unit Lifecycle Status
+
+| Unit ID | Status |
+|---|---|
+| `ONBOARDING-ENTRY-001` | `NEXT` |
+| `ONBOARDING-ENTRY-002` | `NEXT` |
+| `EXCHANGE-CORE-LOOP-001` | `COMPLETED` |
+| `OPS-CASEWORK-001` | `NEXT` |
+| `WL-COMPLETE-001` | `PENDING` |
+| `TRUTH-CLEANUP-001` | `PENDING` |
+
 ## Immediate Delivery Sequence
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
@@ -198,13 +209,7 @@ The loop must explicitly connect:
 
 `RFQ -> Supplier Response -> Trade Creation -> Trade Lifecycle -> Escrow -> Settlement`
 
-### Phase A — Enabling Micro-Fixes
-
-- Closed by `EXC-ENABLER-001`, `EXC-ENABLER-002`, `EXC-ENABLER-003`, `EXC-ENABLER-005`, `EXC-ENABLER-006`
-
-### Phase B — Loop Execution
-
-- Closed by `EXC-ENABLER-002`, `EXC-ENABLER-004`, `EXC-ENABLER-005`, `EXC-ENABLER-006`
+Execution completed via `MICRO_FIXES_THEN_EXECUTION` across `EXC-ENABLER-001..006`.
 
 ### Primary Surfaces
 

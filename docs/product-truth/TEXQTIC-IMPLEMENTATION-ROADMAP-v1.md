@@ -57,6 +57,17 @@ The roadmap order is driven by actual product dependency:
 - Mode completeness matters after the shared core is credible.
 - Truth cleanup happens last because replacement authority must already exist.
 
+## Wave Completion Summary
+
+| Wave | Status |
+|---|---|
+| Wave 1 | `PENDING` |
+| Wave 2 | `COMPLETED` |
+| Wave 3 | `COMPLETED` |
+| Wave 4 | `NEXT` |
+| Wave 5 | `PENDING` |
+| Wave 6 | `PENDING` |
+
 ## Roadmap Summary Table
 
 | Wave | Name | Primary Goal | Included Gap IDs | Dependency Reason |
@@ -107,11 +118,7 @@ TexQtic cannot be launch-ready if the user cannot complete entry into a trade-ca
 
 ### Objective
 
-Complete the first real two-sided exchange loop between buyer and supplier.
-
-Execution model for the exchange core at this stage is:
-
-- MICRO_FIXES_THEN_EXECUTION
+Complete-state closure of the first real two-sided exchange loop between buyer and supplier.
 
 ### Included Gaps
 
@@ -121,14 +128,9 @@ Execution model for the exchange core at this stage is:
 - `GAP-EXCHANGE-005`
 - `GAP-EXCHANGE-006`
 
-### Rationale
+### Rationale (Completed State)
 
-TexQtic completed the first dependency layer through bounded exchange enablers that repaired RFQ authority alignment, create/read contract mismatch, supplier operability, and the supplier-response handoff before execution continuity advanced downstream.
-
-The internal Wave 2 sequence is:
-
-1. Exchange enablers
-2. Supplier operability
+Exchange enablers and supplier operability were completed through `EXCHANGE-CORE-LOOP-001`, establishing the two-sided exchange layer required before execution continuity.
 
 ### Exit Criteria
 
@@ -142,7 +144,7 @@ The internal Wave 2 sequence is:
 ### Dependencies
 
 - Wave 1 must be complete enough that new tenants can actually reach exchange surfaces.
-- Wave 3 completed the downstream continuity fixes through `EXCHANGE-CORE-LOOP-001`.
+- Downstream execution continuity is now closed under `EXCHANGE-CORE-LOOP-001`.
 
 ### Risks If Deferred
 
@@ -156,7 +158,7 @@ The internal Wave 2 sequence is:
 
 ### Objective
 
-Convert the exchange path into visible tenant-side execution only after the continuity micro-fixes have been applied.
+Complete-state closure of visible tenant-side execution across the exchange path.
 
 ### Included Gaps
 
@@ -169,16 +171,9 @@ Convert the exchange path into visible tenant-side execution only after the cont
 - `GAP-EXCHANGE-012`
 - `GAP-EXCHANGE-013`
 
-### Rationale
+### Rationale (Completed State)
 
-The backend already contained meaningful trade, escrow, and settlement domain slices, and Wave 3 completed the required continuity sequence across linkage boundaries rather than treating raw feature existence as execution truth.
-
-The internal Wave 3 sequence is:
-
-1. RFQ to trade continuity
-2. Trade creation integrity
-3. Trade to escrow continuity
-4. Trade to escrow to settlement continuity
+Exchange execution continuity was completed through `EXCHANGE-CORE-LOOP-001`, establishing RFQ linkage, trade integrity, escrow continuity, and settlement validation as one credible execution chain.
 
 ### Exit Criteria
 
@@ -193,7 +188,7 @@ The internal Wave 3 sequence is:
 ### Dependencies
 
 - Wave 2 completed first under `EXCHANGE-CORE-LOOP-001`.
-- Execution Status for the wave is `COMPLETED` under `MICRO_FIXES_THEN_EXECUTION`.
+- Execution Status for the wave is `COMPLETED`.
 
 ### Risks If Deferred
 
