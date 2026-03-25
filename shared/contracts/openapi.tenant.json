@@ -120,7 +120,13 @@
       },
       "BuyerRfqSupplierResponse": {
         "type": "object",
-        "required": ["id", "supplier_org_id", "message", "submitted_at", "created_at"],
+        "required": [
+          "id",
+          "supplier_org_id",
+          "message",
+          "submitted_at",
+          "created_at"
+        ],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "supplier_org_id": { "type": "string", "format": "uuid" },
@@ -131,7 +137,21 @@
       },
       "BuyerRfq": {
         "type": "object",
-        "required": ["id", "status", "org_id", "catalog_item_id", "item_name", "item_sku", "quantity", "supplier_org_id", "created_at", "updated_at", "buyer_message", "created_by_user_id", "supplier_response"],
+        "required": [
+          "id",
+          "status",
+          "org_id",
+          "catalog_item_id",
+          "item_name",
+          "item_sku",
+          "quantity",
+          "supplier_org_id",
+          "created_at",
+          "updated_at",
+          "buyer_message",
+          "created_by_user_id",
+          "supplier_response"
+        ],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "status": { "$ref": "#/components/schemas/BuyerRfqStatus" },
@@ -144,7 +164,10 @@
           "created_at": { "type": "string", "format": "date-time" },
           "updated_at": { "type": "string", "format": "date-time" },
           "buyer_message": { "type": ["string", "null"] },
-          "created_by_user_id": { "type": ["string", "null"], "format": "uuid" },
+          "created_by_user_id": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
           "supplier_response": {
             "oneOf": [
               { "$ref": "#/components/schemas/BuyerRfqSupplierResponse" },
@@ -155,7 +178,18 @@
       },
       "BuyerRfqListItem": {
         "type": "object",
-        "required": ["id", "status", "org_id", "catalog_item_id", "item_name", "item_sku", "quantity", "supplier_org_id", "created_at", "updated_at"],
+        "required": [
+          "id",
+          "status",
+          "org_id",
+          "catalog_item_id",
+          "item_name",
+          "item_sku",
+          "quantity",
+          "supplier_org_id",
+          "created_at",
+          "updated_at"
+        ],
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "status": { "$ref": "#/components/schemas/BuyerRfqStatus" },
@@ -175,7 +209,11 @@
         "properties": {
           "catalogItemId": { "type": "string", "format": "uuid" },
           "quantity": { "type": "integer", "minimum": 1, "default": 1 },
-          "buyerMessage": { "type": "string", "minLength": 1, "maxLength": 1000 }
+          "buyerMessage": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
         }
       },
       "CreateBuyerRfqResponse": {
@@ -655,7 +693,9 @@
             "description": "RFQ created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CreateBuyerRfqResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBuyerRfqResponse"
+                }
               }
             }
           },
@@ -726,7 +766,9 @@
             "description": "Buyer RFQs returned",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BuyerRfqListSuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerRfqListSuccessResponse"
+                }
               }
             }
           },
@@ -768,7 +810,9 @@
             "description": "Buyer RFQ returned",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BuyerRfqDetailSuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerRfqDetailSuccessResponse"
+                }
               }
             }
           },
@@ -1356,7 +1400,10 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "escalationEventId": { "type": "string", "format": "uuid" },
+                        "escalationEventId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
                         "createdAt": { "type": "string", "format": "date-time" }
                       }
                     }
@@ -1423,7 +1470,10 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "escalationEventId": { "type": "string", "format": "uuid" },
+                        "escalationEventId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
                         "resolutionStatus": {
                           "type": "string",
                           "enum": ["RESOLVED"]
