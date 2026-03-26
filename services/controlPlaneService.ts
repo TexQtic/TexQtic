@@ -608,9 +608,27 @@ export interface DisputeAuthorityBody {
   notes?: string;
 }
 
+export interface DisputeAuthorityEventPayload {
+  entityType?: 'TRADE';
+  orgId?: string;
+  resolution?: string | null;
+  notes?: string | null;
+  escalationEventId?: string | null;
+  [key: string]: unknown;
+}
+
+export interface DisputeAuthorityEvent {
+  id: string;
+  eventType: string;
+  targetType: string;
+  targetId: string;
+  occurredAt: string;
+  payload: DisputeAuthorityEventPayload;
+}
+
 export interface DisputeAuthorityResponse {
   success: boolean;
-  data?: Record<string, unknown>;
+  data?: DisputeAuthorityEvent;
 }
 
 /**

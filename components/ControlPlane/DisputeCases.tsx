@@ -20,19 +20,35 @@ import { LoadingState } from '../shared/LoadingState';
 import { ErrorState } from '../shared/ErrorState';
 import { EmptyState } from '../shared/EmptyState';
 
+export interface DisputeEscalationBridgeTarget {
+  orgId: string;
+  entityType: 'TRADE';
+  entityId: string;
+  tradeReference: string;
+  escalationEventId: string | null;
+}
+
 type ActionType = 'resolve' | 'escalate';
 
 interface PendingAction {
   type: ActionType;
+  orgId: string;
+  entityType: 'TRADE';
   entityId: string;
+  tradeReference: string;
   disputeLabel: string;
   idempotencyKey: string;
 }
 
-export const DisputeCases: React.FC = () => {
+interface DisputeCasesProps {
+  onOpenEscalationScope?: (_target: DisputeEscalationBridgeTarget) => void;
+}
+
+export const DisputeCases: React.FC<DisputeCasesProps> = ({ onOpenEscalationScope }) => {
   const [disputes, setDisputes] = useState<DisputeDecision[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [escalationBridge, setEscalationBridge] = useState<DisputeEscalationBridgeTarget | null>(null);
 
   // Dialog state
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
@@ -64,7 +80,10 @@ export const DisputeCases: React.FC = () => {
   function handleAction(type: ActionType, dispute: DisputeDecision): void {
     setPendingAction({
       type,
+      orgId: dispute.orgId,
+      entityType: dispute.entityType,
       entityId: dispute.entityId,
+      tradeReference: dispute.tradeReference,
       disputeLabel: dispute.tradeReference || `Trade ${dispute.entityId.slice(0, 8)}`,
       idempotencyKey: globalThis.crypto.randomUUID(),
     });
@@ -93,7 +112,16 @@ export const DisputeCases: React.FC = () => {
     try {
       const fn = pendingAction.type === 'resolve' ? resolveDispute : escalateDispute;
       // 200 (replay) and 201 (new write) are both treated as success.
-      await fn(pendingAction.entityId, body, pendingAction.idempotencyKey);
+      const result = await fn(pendingAction.entityId, body, pendingAction.idempotencyKey);
+      if (pendingAction.type === 'escalate') {
+        setEscalationBridge({
+          orgId: pendingAction.orgId,
+          entityType: pendingAction.entityType,
+          entityId: pendingAction.entityId,
+          tradeReference: pendingAction.tradeReference,
+          escalationEventId: result.data?.payload?.escalationEventId ?? null,
+        });
+      }
       setPendingAction(null);
       setResolution('');
       setNotes('');
@@ -122,6 +150,33 @@ export const DisputeCases: React.FC = () => {
           <p className="text-slate-400 text-sm">Mediate conflicts between buyers and suppliers.</p>
         </div>
       </div>
+
+      {escalationBridge && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <p className="font-semibold">Durable escalation created for {escalationBridge.tradeReference}.</p>
+              <p className="text-xs text-amber-200/80">
+                Canonical scope: org <span className="font-mono">{escalationBridge.orgId}</span> · entity TRADE · target{' '}
+                <span className="font-mono">{escalationBridge.entityId}</span>
+              </p>
+              {escalationBridge.escalationEventId && (
+                <p className="text-xs text-amber-200/80">
+                  Escalation <span className="font-mono">{escalationBridge.escalationEventId}</span>
+                </p>
+              )}
+            </div>
+            {onOpenEscalationScope && (
+              <button
+                onClick={() => onOpenEscalationScope(escalationBridge)}
+                className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-500"
+              >
+                Open in Escalations
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {disputes.length === 0 ? (
         <EmptyState title="No disputes" message="No dispute decisions recorded yet" />

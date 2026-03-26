@@ -55,7 +55,7 @@ import { AiGovernance } from './components/ControlPlane/AiGovernance';
 import { SystemHealth } from './components/ControlPlane/SystemHealth';
 import { FeatureFlags } from './components/ControlPlane/FeatureFlags';
 import { ComplianceQueue } from './components/ControlPlane/ComplianceQueue';
-import { DisputeCases } from './components/ControlPlane/DisputeCases';
+import { DisputeCases, type DisputeEscalationBridgeTarget } from './components/ControlPlane/DisputeCases';
 import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
@@ -577,6 +577,7 @@ const App: React.FC = () => {
   }, [appState, authRealm, effectiveRealm]);
 
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
+  const [disputeEscalationBridge, setDisputeEscalationBridge] = useState<DisputeEscalationBridgeTarget | null>(null);
   const controlPlaneActorLabel = useMemo(() => {
     return formatControlPlaneActorLabel(controlPlaneIdentity);
   }, [controlPlaneIdentity]);
@@ -586,6 +587,7 @@ const App: React.FC = () => {
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
       setSelectedTenant(null);
+      setDisputeEscalationBridge(null);
       setAdminView('TENANTS');
       setAppState('EXPERIENCE');
       return;
@@ -594,6 +596,7 @@ const App: React.FC = () => {
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
+    setDisputeEscalationBridge(null);
     setAdminView('TENANTS');
     setAppState('CONTROL_PLANE');
   };
@@ -602,6 +605,7 @@ const App: React.FC = () => {
     persistControlPlaneIdentity(null);
     setControlPlaneIdentity(null);
     setSelectedTenant(null);
+    setDisputeEscalationBridge(null);
     setAdminView('TENANTS');
   };
 
@@ -611,6 +615,7 @@ const App: React.FC = () => {
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
+    setDisputeEscalationBridge(null);
     setAdminView('TENANTS');
     setAppState('CONTROL_PLANE');
   };
@@ -2248,12 +2253,24 @@ const App: React.FC = () => {
       case 'COMPLIANCE':
         return <ComplianceQueue />;
       case 'CASES':
-        return <DisputeCases />;
+        return (
+          <DisputeCases
+            onOpenEscalationScope={scope => {
+              setDisputeEscalationBridge(scope);
+              setAdminView('ESCALATIONS');
+            }}
+          />
+        );
       case 'TRADES':
         return <TradeOversight />;
       // TECS-FBW-006-A: G-022 control-plane escalation oversight (read-only; orgId-gated)
       case 'ESCALATIONS':
-        return <EscalationOversight />;
+        return (
+          <EscalationOversight
+            initialScope={disputeEscalationBridge}
+            onScopeConsumed={() => setDisputeEscalationBridge(null)}
+          />
+        );
       // TECS-FBW-005: G-019 cross-tenant certification read surface (D-022-C: read-only)
       case 'CERTIFICATIONS':
         return <CertificationsAdmin />;

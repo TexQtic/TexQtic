@@ -24,6 +24,19 @@ import { LoadingState } from '../shared/LoadingState';
 import { ErrorState } from '../shared/ErrorState';
 import { EmptyState } from '../shared/EmptyState';
 
+interface EscalationScopeBridge {
+  orgId: string;
+  entityType: 'TRADE';
+  entityId: string;
+  tradeReference: string;
+  escalationEventId: string | null;
+}
+
+interface EscalationOversightProps {
+  initialScope?: EscalationScopeBridge | null;
+  onScopeConsumed?: () => void;
+}
+
 type BannerTone = 'SUCCESS' | 'ERROR';
 
 interface BannerState {
@@ -129,7 +142,7 @@ function friendlyEscalationError(err: unknown, fallback: string): string {
 
 // ─── EscalationOversight ─────────────────────────────────────────────────────
 
-export const EscalationOversight: React.FC = () => {
+export const EscalationOversight: React.FC<EscalationOversightProps> = ({ initialScope = null, onScopeConsumed }) => {
   const [orgIdInput, setOrgIdInput]         = useState('');
   const [orgId, setOrgId]                   = useState('');
   const [escalations, setEscalations]       = useState<ControlPlaneEscalationEvent[]>([]);
@@ -141,28 +154,52 @@ export const EscalationOversight: React.FC = () => {
   const [actionDialog, setActionDialog]     = useState<ActionDialogState | null>(null);
   const [actionError, setActionError]       = useState<string | null>(null);
   const [actionSubmitting, setActionSubmitting] = useState(false);
+  const [bridgeScope, setBridgeScope]       = useState<EscalationScopeBridge | null>(null);
 
   const isSuperAdmin = adminRole === 'SUPER_ADMIN';
 
-  const handleFetch = useCallback(async (targetOrgId: string) => {
+  const handleFetch = useCallback(async (
+    targetOrgId: string,
+    filters?: { entityType?: string; entityId?: string },
+    scopeOverride?: EscalationScopeBridge | null,
+  ) => {
     if (!targetOrgId.trim()) return;
     setOrgId(targetOrgId.trim());
     setFetchState('LOADING');
     setError(null);
     try {
       const [res, meRes] = await Promise.all([
-        getEscalations(targetOrgId.trim(), { limit: 100 }),
+        getEscalations(targetOrgId.trim(), {
+          limit: 100,
+          entityType: filters?.entityType,
+          entityId: filters?.entityId,
+        }),
         getCurrentUser().catch(() => null),
       ]);
       setEscalations(res.escalations);
       setCount(res.count);
       setAdminRole(meRes?.role ?? null);
+      setBridgeScope(scopeOverride ?? null);
       setFetchState('DONE');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load escalations.');
       setFetchState('ERROR');
     }
   }, []);
+
+  React.useEffect(() => {
+    if (!initialScope) {
+      return;
+    }
+
+    setOrgIdInput(initialScope.orgId);
+    void handleFetch(
+      initialScope.orgId,
+      { entityType: initialScope.entityType, entityId: initialScope.entityId },
+      initialScope,
+    );
+    onScopeConsumed?.();
+  }, [handleFetch, initialScope, onScopeConsumed]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleFetch(orgIdInput);
@@ -372,6 +409,31 @@ export const EscalationOversight: React.FC = () => {
         <p className="mt-2 text-xs text-slate-500">
           GET /api/control/escalations requires orgId — results are scoped to the specified organisation.
         </p>
+        {bridgeScope && (
+          <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <p className="font-semibold">Scoped from dispute {bridgeScope.tradeReference}.</p>
+                <p className="text-xs text-amber-200/80">
+                  Filtering for TRADE <span className="font-mono">{bridgeScope.entityId}</span> in org{' '}
+                  <span className="font-mono">{bridgeScope.orgId}</span>
+                </p>
+                {bridgeScope.escalationEventId && (
+                  <p className="text-xs text-amber-200/80">
+                    Created escalation <span className="font-mono">{bridgeScope.escalationEventId}</span>
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleFetch(bridgeScope.orgId)}
+                className="rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-100 transition hover:bg-amber-500/10"
+              >
+                Show All Org Escalations
+              </button>
+            </div>
+          </div>
+        )}
         {fetchState !== 'IDLE' && !isSuperAdmin && adminRole && (
           <div className="mt-4">
             <Banner tone="ERROR" message="Mutation controls are visible only to SUPER_ADMIN posture. Read access remains available." />
