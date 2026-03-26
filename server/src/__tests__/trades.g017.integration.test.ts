@@ -29,12 +29,29 @@ import fastifyJwt from '@fastify/jwt';
  * vi.hoisted() guarantees these run before ALL vi.mock() factories.
  * Factories reference them by closure so the references survive hoisting.
  */
-const { MOCK_TRADE_FINDMANY, FAKE_TX, _svc } = vi.hoisted(() => {
+const {
+  MOCK_TRADE_FINDMANY,
+  MOCK_TRADE_FINDUNIQUE,
+  MOCK_EVENTLOG_FINDFIRST,
+  MOCK_WRITE_AUTHORITY_INTENT,
+  FAKE_TX,
+  _svc,
+  _escalation,
+} = vi.hoisted(() => {
   const MOCK_TRADE_FINDMANY = vi.fn();
+  const MOCK_TRADE_FINDUNIQUE = vi.fn();
+  const MOCK_EVENTLOG_FINDFIRST = vi.fn();
+  const MOCK_WRITE_AUTHORITY_INTENT = vi.fn();
   const FAKE_TX = {
     $executeRaw:       vi.fn().mockResolvedValue(undefined),
     $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
-    trade: { findMany: MOCK_TRADE_FINDMANY },
+    trade: {
+      findMany: MOCK_TRADE_FINDMANY,
+      findUnique: MOCK_TRADE_FINDUNIQUE,
+    },
+    eventLog: {
+      findFirst: MOCK_EVENTLOG_FINDFIRST,
+    },
   };
   // Module-level service method holders — mutated in beforeEach per-test
   const _svc = {
@@ -42,11 +59,28 @@ const { MOCK_TRADE_FINDMANY, FAKE_TX, _svc } = vi.hoisted(() => {
     createEscrowForTrade: vi.fn(),
     transitionTrade: vi.fn(),
   };
-  return { MOCK_TRADE_FINDMANY, FAKE_TX, _svc };
+  const _escalation = {
+    createEscalation: vi.fn(),
+  };
+  return {
+    MOCK_TRADE_FINDMANY,
+    MOCK_TRADE_FINDUNIQUE,
+    MOCK_EVENTLOG_FINDFIRST,
+    MOCK_WRITE_AUTHORITY_INTENT,
+    FAKE_TX,
+    _svc,
+    _escalation,
+  };
 });
 
 // Mock prisma singleton
-vi.mock('../db/prisma.js', () => ({ prisma: {} }));
+vi.mock('../db/prisma.js', () => ({
+  prisma: {
+    trade: {
+      findUnique: MOCK_TRADE_FINDUNIQUE,
+    },
+  },
+}));
 
 // Mock withDbContext: run callback with a fake tx that has $executeRaw + trade model
 vi.mock('../lib/database-context.js', () => ({
@@ -58,7 +92,7 @@ vi.mock('../lib/database-context.js', () => ({
 // Mock auditLog writer (side-effect only)
 vi.mock('../lib/auditLog.js', () => ({
   writeAuditLog:        vi.fn().mockResolvedValue(undefined),
-  writeAuthorityIntent: vi.fn().mockResolvedValue(undefined),
+  writeAuthorityIntent: MOCK_WRITE_AUTHORITY_INTENT,
   createAdminAudit:     vi.fn().mockReturnValue({}),
 }));
 
@@ -74,7 +108,7 @@ vi.mock('../services/trade.g017.service.js', () => ({
 // Must use `function` keyword — Vitest v4 calls `new impl()`, arrow functions cannot be constructors.
 vi.mock('../services/escalation.service.js', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  EscalationService: vi.fn(function (this: any) { return this; }),
+  EscalationService: vi.fn(function () { return _escalation; }),
 }));
 vi.mock('../services/stateMachine.service.js', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,6 +119,7 @@ vi.mock('../services/stateMachine.service.js', () => ({
 vi.mock('../middleware/auth.js', () => ({
   tenantAuthMiddleware:      vi.fn((_req: unknown, _rep: unknown, done: () => void) => done()),
   adminAuthMiddleware:       vi.fn((_req: unknown, _rep: unknown, done: () => void) => done()),
+  requireAdminRole:          vi.fn(() => (_req: unknown, _rep: unknown, done: () => void) => done()),
   databaseContextMiddleware: vi.fn((_req: unknown, _rep: unknown, done: () => void) => done()),
 }));
 
@@ -95,7 +130,8 @@ vi.mock('../middleware/database-context.middleware.js', () => ({
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
-import { writeAuditLog } from '../lib/auditLog.js';
+import { writeAuditLog, writeAuthorityIntent } from '../lib/auditLog.js';
+import controlRoutes from '../routes/control.js';
 import tenantTradesRoutes from '../routes/tenant/trades.g017.js';
 import controlTradesRoutes from '../routes/control/trades.g017.js';
 
@@ -160,6 +196,28 @@ async function buildControlApp(): Promise<FastifyInstance> {
   return fastify;
 }
 
+async function buildControlRootApp(): Promise<FastifyInstance> {
+  const fastify = Fastify({ logger: false });
+
+  await fastify.register(fastifyCookie);
+  await fastify.register(fastifyJwt, { secret: 'test-secret' });
+
+  fastify.addHook('onRequest', async req => {
+    (req as unknown as Record<string, unknown>).adminId   = TEST_ADMIN_ID;
+    (req as unknown as Record<string, unknown>).adminRole = 'PLATFORM_ADMIN';
+    (req as unknown as Record<string, unknown>).dbContext = {
+      orgId:     TEST_TENANT_ID,
+      actorId:   TEST_ADMIN_ID,
+      realm:     'control',
+      requestId: 'test-req-id',
+    };
+  });
+
+  await fastify.register(controlRoutes, { prefix: '/api/control' });
+  await fastify.ready();
+  return fastify;
+}
+
 // ── Test Suite ────────────────────────────────────────────────────────────────
 
 describe('G-017 Tenant Trade Routes', () => {
@@ -176,7 +234,9 @@ describe('G-017 Tenant Trade Routes', () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   // ── POST /tenant/trades — happy path ──────────────────────────────────────
@@ -665,5 +725,138 @@ describe('G-017 Control Trade Routes', () => {
     });
 
     expect(res.statusCode).toBe(423);
+  });
+});
+
+describe('OPS casework dispute escalation handoff route', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    MOCK_TRADE_FINDMANY.mockResolvedValue([]);
+    MOCK_TRADE_FINDUNIQUE.mockReset();
+    MOCK_EVENTLOG_FINDFIRST.mockReset();
+    _escalation.createEscalation = vi.fn();
+    app = await buildControlRootApp();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('C-005: POST /api/control/disputes/:id/escalate creates one durable escalation and replays idempotently', async () => {
+    const notes = 'Escalate disputed trade to durable casework';
+    const resolution = 'ESCALATE_TO_PLATFORM';
+    const idempotencyKey = 'idem-dispute-escalate-001';
+    const occurredAt = '2026-03-26T00:00:00.000Z';
+    const escalationEventId = '77777777-0000-0000-0000-777777777777';
+    const authorityEvent = {
+      id: '88888888-0000-0000-0000-888888888888',
+      eventType: 'dispute.escalated',
+      targetType: 'trade',
+      targetId: TEST_TRADE_ID,
+      occurredAt,
+      payload: {
+        entityType: 'TRADE',
+        orgId: TEST_TENANT_ID,
+        notes,
+        resolution,
+        escalationEventId,
+      },
+    };
+
+    MOCK_TRADE_FINDUNIQUE.mockResolvedValue({
+      id: TEST_TRADE_ID,
+      tenantId: TEST_TENANT_ID,
+      lifecycleState: { stateKey: 'DISPUTED' },
+    });
+    MOCK_EVENTLOG_FINDFIRST
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: authorityEvent.id,
+        name: authorityEvent.eventType,
+        entityType: authorityEvent.targetType,
+        entityId: authorityEvent.targetId,
+        occurredAt: new Date(occurredAt),
+        payloadJson: authorityEvent.payload,
+      });
+    _escalation.createEscalation.mockResolvedValue({
+      status: 'CREATED',
+      escalationEventId,
+      createdAt: new Date(occurredAt),
+    });
+    vi.mocked(writeAuthorityIntent).mockResolvedValueOnce({
+      event: authorityEvent,
+      wasReplay: false,
+    });
+
+    const firstRes = await app.inject({
+      method: 'POST',
+      url: `/api/control/disputes/${TEST_TRADE_ID}/escalate`,
+      headers: {
+        'idempotency-key': idempotencyKey,
+      },
+      payload: {
+        notes,
+        resolution,
+      },
+    });
+
+    expect(firstRes.statusCode).toBe(201);
+    expect(firstRes.json()).toMatchObject({
+      success: true,
+      data: authorityEvent,
+    });
+    expect(_escalation.createEscalation).toHaveBeenCalledTimes(1);
+    expect(_escalation.createEscalation).toHaveBeenCalledWith({
+      orgId: TEST_TENANT_ID,
+      entityType: 'TRADE',
+      entityId: TEST_TRADE_ID,
+      source: 'MANUAL',
+      severityLevel: 3,
+      triggeredByActorType: 'PLATFORM_ADMIN',
+      triggeredByPrincipal: TEST_ADMIN_ID,
+      reason: expect.stringContaining(notes),
+      freezeRecommendation: false,
+    });
+    expect(writeAuditLog).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(writeAuditLog).mock.calls[0][1]).toMatchObject({
+      realm: 'ADMIN',
+      tenantId: TEST_TENANT_ID,
+      actorType: 'ADMIN',
+      actorId: TEST_ADMIN_ID,
+      action: 'ESCALATION_CREATED',
+      entity: 'escalation_event',
+      entityId: escalationEventId,
+      metadataJson: expect.objectContaining({
+        orgId: TEST_TENANT_ID,
+        entityType: 'TRADE',
+        entityId: TEST_TRADE_ID,
+        escalationId: escalationEventId,
+      }),
+    });
+    expect(writeAuthorityIntent).toHaveBeenCalledTimes(1);
+
+    const replayRes = await app.inject({
+      method: 'POST',
+      url: `/api/control/disputes/${TEST_TRADE_ID}/escalate`,
+      headers: {
+        'idempotency-key': idempotencyKey,
+      },
+      payload: {
+        notes,
+        resolution,
+      },
+    });
+
+    expect(replayRes.statusCode).toBe(200);
+    expect(replayRes.json()).toMatchObject({
+      success: true,
+      data: authorityEvent,
+    });
+    expect(_escalation.createEscalation).toHaveBeenCalledTimes(1);
+    expect(writeAuditLog).toHaveBeenCalledTimes(1);
+    expect(writeAuthorityIntent).toHaveBeenCalledTimes(1);
+    expect(MOCK_EVENTLOG_FINDFIRST).toHaveBeenCalledTimes(2);
   });
 });
