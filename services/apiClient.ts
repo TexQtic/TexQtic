@@ -263,15 +263,24 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   // redirect loop. Skip Authorization + skip the redirect 401 handler for these routes.
   const isAuthRoute = endpoint.includes('/api/auth/');
 
+  const requestHasBody = options.body !== undefined;
+
   // Build headers
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = {};
 
   // Merge with provided headers
   if (options.headers) {
     const providedHeaders = options.headers as Record<string, string>;
     Object.assign(headers, providedHeaders);
+  }
+
+  const hasContentTypeHeader = Object.keys(headers).some(
+    key => key.toLowerCase() === 'content-type'
+  );
+
+  // Only declare JSON when a request body is actually being sent.
+  if (requestHasBody && !hasContentTypeHeader) {
+    headers['Content-Type'] = 'application/json';
   }
 
   // Attach JWT only for non-auth routes
