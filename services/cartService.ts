@@ -131,5 +131,5 @@ export interface CheckoutResult {
  * Callers should call refreshCart() afterwards to clear local cart state.
  */
 export async function checkout(): Promise<CheckoutResult> {
-  return tenantPost<CheckoutResult>('/api/tenant/checkout');
+  return tenantPost<CheckoutResult>('/api/tenant/checkout', {});
 }
