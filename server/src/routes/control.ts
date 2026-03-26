@@ -435,38 +435,85 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/control/disputes
-   * List dispute authority intents (admin only)
-   * Backed by EventLog - returns dispute-related authority decisions
+   * List disputed trades with canonical trade provenance (admin only)
+   * Backed by trade rows in DISPUTED lifecycle state; operator history is attached
+   * only when a dispute authority intent exists for the same canonical trade id.
    */
   fastify.get('/disputes', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
     try {
-      const disputeEvents: EventLog[] = await withAdminContext(async tx => {
-        return await tx.eventLog.findMany({
+      const disputes = await withAdminContext(async tx => {
+        const disputedTrades: Array<{
+          id: string;
+          tenantId: string;
+          tradeReference: string;
+          updatedAt: Date;
+        }> = await tx.trade.findMany({
+          where: {
+            lifecycleState: {
+              stateKey: 'DISPUTED',
+            },
+          },
+          select: {
+            id: true,
+            tenantId: true,
+            tradeReference: true,
+            updatedAt: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 100,
+        });
+
+        if (disputedTrades.length === 0) {
+          return [];
+        }
+
+        const tradeIds = disputedTrades.map((trade: { id: string }) => trade.id);
+        const disputeEvents: EventLog[] = await tx.eventLog.findMany({
           where: {
             name: {
               startsWith: 'dispute.',
             },
+            entityId: {
+              in: tradeIds,
+            },
           },
           orderBy: { occurredAt: 'desc' },
-          take: 100,
+        });
+
+        const latestEventByTradeId = new Map<string, EventLog>();
+        for (const event of disputeEvents) {
+          if (!latestEventByTradeId.has(event.entityId)) {
+            latestEventByTradeId.set(event.entityId, event);
+          }
+        }
+
+        return disputedTrades.map((trade: {
+          id: string;
+          tenantId: string;
+          tradeReference: string;
+          updatedAt: Date;
+        }) => {
+          const latestEvent = latestEventByTradeId.get(trade.id);
+
+          return {
+            entityType: 'TRADE' as const,
+            entityId: trade.id,
+            orgId: trade.tenantId,
+            tradeReference: trade.tradeReference,
+            eventId: latestEvent?.id ?? null,
+            status: 'DISPUTED',
+            decision: latestEvent?.name.split('.').pop()?.toUpperCase() ?? null,
+            decidedAt: latestEvent?.occurredAt.toISOString() ?? null,
+            decidedBy: latestEvent?.actorId ?? null,
+            resolution: (latestEvent?.payloadJson as any)?.resolution ?? null,
+            notes: (latestEvent?.payloadJson as any)?.notes ?? null,
+            metadata: latestEvent?.metadataJson ?? null,
+          };
         });
       });
 
-      // Map events to dispute shape
-      const disputes = disputeEvents.map(event => ({
-        id: event.entityId,
-        eventId: event.id,
-        status: event.name.includes('resolved') ? 'RESOLVED' : 'ESCALATED',
-        decision: event.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
-        decidedAt: event.occurredAt.toISOString(),
-        decidedBy: event.actorId,
-        resolution: (event.payloadJson as any)?.resolution || null,
-        notes: (event.payloadJson as any)?.notes || null,
-        metadata: event.metadataJson,
-      }));
-
-      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.disputes.read', 'event_log', { count: disputes.length }));
+      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.disputes.read', 'trade', { count: disputes.length }));
       return sendSuccess(reply, { disputes });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Disputes List] Error');

@@ -531,11 +531,14 @@ export async function rejectComplianceRequest(
 // ==================== DISPUTE OPERATIONS ====================
 
 export interface DisputeDecision {
-  id: string;
-  eventId: string;
+  entityType: 'TRADE';
+  entityId: string;
+  orgId: string;
+  tradeReference: string;
+  eventId: string | null;
   status: string;
-  decision: string;
-  decidedAt: string;
+  decision: string | null;
+  decidedAt: string | null;
   decidedBy: string | null;
   resolution: string | null;
   notes: string | null;
@@ -588,8 +591,8 @@ export async function revokeControlPlaneAdminAccess(
 }
 
 /**
- * Fetch dispute authority intents (admin only)
- * Backed by EventLog - returns dispute-related authority decisions
+ * Fetch disputed trades with canonical trade provenance (admin only)
+ * Backed by trade rows in DISPUTED lifecycle state.
  */
 export async function getDisputes(): Promise<DisputesResponse> {
   return adminGet<DisputesResponse>('/api/control/disputes');
@@ -617,12 +620,12 @@ export interface DisputeAuthorityResponse {
  * Returns 201 (new write) or 200 (replay); both treated as success.
  */
 export async function resolveDispute(
-  disputeId: string,
+  entityId: string,
   body: DisputeAuthorityBody,
   idempotencyKey: string
 ): Promise<DisputeAuthorityResponse> {
   return adminPostWithHeaders<DisputeAuthorityResponse>(
-    `/api/control/disputes/${disputeId}/resolve`,
+    `/api/control/disputes/${entityId}/resolve`,
     body,
     { 'Idempotency-Key': idempotencyKey }
   );
@@ -635,12 +638,12 @@ export async function resolveDispute(
  * Returns 201 (new write) or 200 (replay); both treated as success.
  */
 export async function escalateDispute(
-  disputeId: string,
+  entityId: string,
   body: DisputeAuthorityBody,
   idempotencyKey: string
 ): Promise<DisputeAuthorityResponse> {
   return adminPostWithHeaders<DisputeAuthorityResponse>(
-    `/api/control/disputes/${disputeId}/escalate`,
+    `/api/control/disputes/${entityId}/escalate`,
     body,
     { 'Idempotency-Key': idempotencyKey }
   );

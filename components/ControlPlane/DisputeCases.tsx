@@ -24,7 +24,7 @@ type ActionType = 'resolve' | 'escalate';
 
 interface PendingAction {
   type: ActionType;
-  disputeId: string;
+  entityId: string;
   disputeLabel: string;
   idempotencyKey: string;
 }
@@ -64,9 +64,9 @@ export const DisputeCases: React.FC = () => {
   function handleAction(type: ActionType, dispute: DisputeDecision): void {
     setPendingAction({
       type,
-      disputeId: dispute.id,
-      disputeLabel: `Dispute ${dispute.id.slice(0, 8)}`,
-      idempotencyKey: window.crypto.randomUUID(),
+      entityId: dispute.entityId,
+      disputeLabel: dispute.tradeReference || `Trade ${dispute.entityId.slice(0, 8)}`,
+      idempotencyKey: globalThis.crypto.randomUUID(),
     });
     setResolution('');
     setNotes('');
@@ -93,7 +93,7 @@ export const DisputeCases: React.FC = () => {
     try {
       const fn = pendingAction.type === 'resolve' ? resolveDispute : escalateDispute;
       // 200 (replay) and 201 (new write) are both treated as success.
-      await fn(pendingAction.disputeId, body, pendingAction.idempotencyKey);
+      await fn(pendingAction.entityId, body, pendingAction.idempotencyKey);
       setPendingAction(null);
       setResolution('');
       setNotes('');
@@ -129,19 +129,20 @@ export const DisputeCases: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {disputes.map(c => (
             <div
-              key={c.eventId}
+              key={c.entityId}
               className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4 hover:border-slate-700 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div
                   className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-widest ${c.status === 'RESOLVED' ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-500 bg-amber-500/10 border-amber-500/20'}`}
                 >
-                  {c.decision}
+                  {c.decision ?? c.status}
                 </div>
-                <div className="text-xs text-slate-500 font-mono">{c.id.slice(0, 8)}...</div>
+                <div className="text-xs text-slate-500 font-mono">{c.entityId.slice(0, 8)}...</div>
               </div>
               <div className="space-y-1">
-                <h3 className="font-bold text-slate-100">Dispute {c.id.slice(0, 8)}</h3>
+                <h3 className="font-bold text-slate-100">{c.tradeReference}</h3>
+                <p className="text-xs text-slate-500 font-mono">Trade {c.entityId}</p>
                 {c.resolution && (
                   <p className="text-sm text-slate-400 leading-relaxed italic">"{c.resolution}"</p>
                 )}
@@ -157,7 +158,7 @@ export const DisputeCases: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-xs text-slate-600">
-                  {new Date(c.decidedAt).toLocaleDateString()}
+                  {c.decidedAt ? new Date(c.decidedAt).toLocaleDateString() : 'No operator action yet'}
                 </div>
               </div>
               {/* Action row — additive only; suppressed for already-resolved disputes */}

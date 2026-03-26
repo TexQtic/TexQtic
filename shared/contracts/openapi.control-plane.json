@@ -2351,8 +2351,8 @@
     },
     "/api/control/disputes": {
       "get": {
-        "summary": "List dispute authority intents (admin)",
-        "description": "Returns dispute-related authority intent events from the event log. Backed by EventLog.",
+        "summary": "List disputed trades with canonical trade provenance (admin)",
+        "description": "Returns canonical disputed trade rows sourced from trades in DISPUTED lifecycle state. Includes canonical dispute provenance fields entityType, entityId, and orgId. Operator decision history is attached only when truthfully derivable from dispute authority events keyed by the canonical trade id.",
         "parameters": [
           {
             "name": "limit",
@@ -2361,7 +2361,75 @@
           }
         ],
         "responses": {
-          "200": { "description": "Dispute list returned" },
+          "200": {
+            "description": "Dispute list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "disputes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "entityType": {
+                                "type": "string",
+                                "enum": ["TRADE"]
+                              },
+                              "entityId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "orgId": { "type": "string", "format": "uuid" },
+                              "tradeReference": { "type": "string" },
+                              "eventId": {
+                                "type": ["string", "null"],
+                                "format": "uuid"
+                              },
+                              "status": { "type": "string" },
+                              "decision": { "type": ["string", "null"] },
+                              "decidedAt": {
+                                "type": ["string", "null"],
+                                "format": "date-time"
+                              },
+                              "decidedBy": {
+                                "type": ["string", "null"],
+                                "format": "uuid"
+                              },
+                              "resolution": { "type": ["string", "null"] },
+                              "notes": { "type": ["string", "null"] },
+                              "metadata": { "type": ["object", "null"] }
+                            },
+                            "required": [
+                              "entityType",
+                              "entityId",
+                              "orgId",
+                              "tradeReference",
+                              "eventId",
+                              "status",
+                              "decision",
+                              "decidedAt",
+                              "decidedBy",
+                              "resolution",
+                              "notes",
+                              "metadata"
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["disputes"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
