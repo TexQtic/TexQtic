@@ -2303,8 +2303,8 @@
     },
     "/api/control/finance/payouts": {
       "get": {
-        "summary": "List finance payout authority intents (admin)",
-        "description": "Returns payout-related authority intent events from the event log. Backed by EventLog.",
+        "summary": "List durable finance records (admin)",
+        "description": "Returns durable finance records sourced from applied settlement ledger rows (escrow_transactions where entry_type=RELEASE and direction=DEBIT). Canonical finance identity is the settlement ledger row id plus escrowId and tenantId. This surface is read-only in this tranche.",
         "parameters": [
           {
             "name": "limit",
@@ -2313,7 +2313,77 @@
           }
         ],
         "responses": {
-          "200": { "description": "Payout list returned" },
+          "200": {
+            "description": "Durable finance record list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "records": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "tenantId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "escrowId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "referenceId": {
+                                "type": ["string", "null"]
+                              },
+                              "amount": {
+                                "type": "string",
+                                "description": "Decimal string — full precision preserved"
+                              },
+                              "currency": { "type": "string" },
+                              "status": {
+                                "type": "string",
+                                "enum": ["APPLIED"]
+                              },
+                              "settlementType": {
+                                "type": "string",
+                                "enum": ["RELEASE_DEBIT"]
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "createdByUserId": {
+                                "type": ["string", "null"],
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "tenantId",
+                              "escrowId",
+                              "amount",
+                              "currency",
+                              "status",
+                              "settlementType",
+                              "createdAt"
+                            ]
+                          }
+                        }
+                      },
+                      "required": ["records"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {

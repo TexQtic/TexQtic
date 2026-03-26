@@ -366,27 +366,29 @@ export async function upsertFeatureFlag(
 
 // ==================== FINANCE OPERATIONS ====================
 
-export interface PayoutDecision {
+export interface FinanceRecord {
   id: string;
-  eventId: string;
+  tenantId: string;
+  escrowId: string;
+  referenceId: string | null;
+  amount: string;
+  currency: string;
   status: string;
-  decision: string;
-  decidedAt: string;
-  decidedBy: string | null;
-  reason: string | null;
-  metadata: Record<string, any> | null;
+  settlementType: 'RELEASE_DEBIT';
+  createdAt: string;
+  createdByUserId: string | null;
 }
 
-export interface PayoutsResponse {
-  payouts: PayoutDecision[];
+export interface FinanceRecordsResponse {
+  records: FinanceRecord[];
 }
 
 /**
- * Fetch payout authority intents (admin only)
- * Backed by EventLog - returns payout-related authority decisions
+ * Fetch durable finance records (admin only)
+ * Backed by settlement ledger rows (RELEASE DEBIT)
  */
-export async function getPayouts(): Promise<PayoutsResponse> {
-  return adminGet<PayoutsResponse>('/api/control/finance/payouts');
+export async function getFinanceRecords(): Promise<FinanceRecordsResponse> {
+  return adminGet<FinanceRecordsResponse>('/api/control/finance/payouts');
 }
 
 // ==================== FINANCE AUTHORITY MUTATIONS ====================

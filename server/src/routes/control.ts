@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest, preHandlerHookHandler } from 'fastify';
 import { z } from 'zod';
-import { Prisma, type EventLog } from '@prisma/client';
+import { Prisma, type EventLog, type PrismaClient } from '@prisma/client';
 import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendForbidden, sendNotFound, sendUnauthorized, sendValidationError } from '../utils/response.js';
 import { randomUUID } from 'node:crypto';
@@ -370,38 +370,57 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/control/finance/payouts
-   * List finance payout authority intents (admin only)
-   * Backed by EventLog - returns payout-related authority decisions
+     * List durable finance records (admin only)
+     * Backed by canonical settlement ledger rows (escrow_transactions RELEASE DEBIT)
    */
   fastify.get('/finance/payouts', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
     try {
-      const payoutEvents: EventLog[] = await withAdminContext(async tx => {
-        return await tx.eventLog.findMany({
+      const financeRecords: Array<{
+        id: string;
+        tenant_id: string;
+        escrow_id: string;
+        reference_id: string | null;
+        amount: Prisma.Decimal;
+        currency: string;
+        created_by_user_id: string | null;
+        created_at: Date;
+      }> = await withAdminContext(async tx => {
+          return await (tx as unknown as PrismaClient).escrow_transactions.findMany({
           where: {
-            name: {
-              startsWith: 'finance.payout.',
-            },
+              entry_type: 'RELEASE',
+              direction: 'DEBIT',
           },
-          orderBy: { occurredAt: 'desc' },
+            orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
           take: 100,
+            select: {
+              id: true,
+              tenant_id: true,
+              escrow_id: true,
+              reference_id: true,
+              amount: true,
+              currency: true,
+              created_by_user_id: true,
+              created_at: true,
+            },
         });
       });
 
-      // Map events to payout-like shape
-      const payouts = payoutEvents.map(event => ({
-        id: event.entityId,
-        eventId: event.id,
-        status: event.name.includes('approved') ? 'APPROVED' : 'REJECTED',
-        decision: event.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
-        decidedAt: event.occurredAt.toISOString(),
-        decidedBy: event.actorId,
-        reason: (event.payloadJson as any)?.reason || null,
-        metadata: event.metadataJson,
-      }));
+      const records = financeRecords.map(row => ({
+        id: row.id,
+        tenantId: row.tenant_id,
+        escrowId: row.escrow_id,
+        referenceId: row.reference_id,
+        amount: row.amount.toString(),
+        currency: row.currency,
+        status: 'APPLIED',
+        settlementType: 'RELEASE_DEBIT',
+          createdAt: row.created_at.toISOString(),
+          createdByUserId: row.created_by_user_id,
+        }));
 
-      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.finance.payouts.read', 'event_log', { count: payouts.length }));
-      return sendSuccess(reply, { payouts });
+        await writeAuditLog(prisma, createAdminAudit(adminId, 'control.finance.payouts.read', 'escrow_transactions', { count: records.length }));
+        return sendSuccess(reply, { records });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Finance Payouts List] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch payouts', 500);
