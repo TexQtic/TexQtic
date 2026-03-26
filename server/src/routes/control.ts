@@ -1007,13 +1007,36 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { resolution, notes } = parseResult.data;
 
+      const trade = await prisma.trade.findUnique({
+        where: { id: dispute_id },
+        select: {
+          id: true,
+          tenantId: true,
+          lifecycleState: { select: { stateKey: true } },
+        },
+      });
+
+      if (!trade) {
+        return sendError(reply, 'TRADE_NOT_FOUND', `Trade ${dispute_id} not found`, 404);
+      }
+
+      if (trade.lifecycleState.stateKey !== 'DISPUTED') {
+        return sendError(reply, 'TRADE_NOT_DISPUTED', `Trade ${dispute_id} is not in DISPUTED state`, 409);
+      }
+
       const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'dispute.resolved',
-          targetType: 'dispute',
-          targetId: dispute_id,
+          targetType: 'trade',
+          targetId: trade.id,
           adminId: adminId,
-          payload: { resolution, notes },
+          tenantId: trade.tenantId,
+          payload: {
+            entityType: 'TRADE',
+            orgId: trade.tenantId,
+            resolution,
+            notes,
+          },
           idempotencyKey,
         });
       });
@@ -1054,13 +1077,36 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       const { resolution, notes } = parseResult.data;
 
+      const trade = await prisma.trade.findUnique({
+        where: { id: dispute_id },
+        select: {
+          id: true,
+          tenantId: true,
+          lifecycleState: { select: { stateKey: true } },
+        },
+      });
+
+      if (!trade) {
+        return sendError(reply, 'TRADE_NOT_FOUND', `Trade ${dispute_id} not found`, 404);
+      }
+
+      if (trade.lifecycleState.stateKey !== 'DISPUTED') {
+        return sendError(reply, 'TRADE_NOT_DISPUTED', `Trade ${dispute_id} is not in DISPUTED state`, 409);
+      }
+
       const result = await withAdminContext(async _tx => {
         return await writeAuthorityIntent(prisma, {
           eventType: 'dispute.escalated',
-          targetType: 'dispute',
-          targetId: dispute_id,
+          targetType: 'trade',
+          targetId: trade.id,
           adminId: adminId,
-          payload: { resolution, notes },
+          tenantId: trade.tenantId,
+          payload: {
+            entityType: 'TRADE',
+            orgId: trade.tenantId,
+            resolution,
+            notes,
+          },
           idempotencyKey,
         });
       });
