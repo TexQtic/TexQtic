@@ -2422,8 +2422,8 @@
     },
     "/api/control/compliance/requests": {
       "get": {
-        "summary": "List compliance request authority intents (admin)",
-        "description": "Returns compliance-related authority intent events from the event log. Backed by EventLog.",
+        "summary": "List certification-backed compliance records (admin)",
+        "description": "Returns compliance records anchored to canonical certification rows. The primary supervised object is the certification record, not synthetic compliance.request event rows.",
         "parameters": [
           {
             "name": "limit",
@@ -2432,6 +2432,72 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Certification-backed compliance records returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "requests": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "certificationId": { "type": "string", "format": "uuid" },
+                              "orgId": { "type": "string", "format": "uuid" },
+                              "certificationType": { "type": "string" },
+                              "stateKey": { "type": "string" },
+                              "issuedAt": { "type": ["string", "null"], "format": "date-time" },
+                              "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+                              "createdAt": { "type": "string", "format": "date-time" },
+                              "updatedAt": { "type": "string", "format": "date-time" },
+                              "latestDecision": {
+                                "type": ["object", "null"],
+                                "properties": {
+                                  "status": { "type": "string", "enum": ["APPROVED", "REJECTED"] },
+                                  "decidedAt": { "type": "string", "format": "date-time" },
+                                  "decidedBy": { "type": ["string", "null"], "format": "uuid" },
+                                  "reason": { "type": ["string", "null"] },
+                                  "eventId": { "type": "string", "format": "uuid" }
+                                },
+                                "required": ["status", "decidedAt", "eventId"]
+                              }
+                            },
+                            "required": ["certificationId", "orgId", "certificationType", "stateKey", "createdAt", "updatedAt"]
+                          }
+                        }
+                      },
+                      "required": ["requests"]
+                    }
+                  },
+                  "required": ["success", "data"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Fetch failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     },
     "/api/control/finance/records/{record_id}/outcome": {
       "post": {

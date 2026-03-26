@@ -494,15 +494,24 @@ export async function rejectPayoutDecision(
 
 // ==================== COMPLIANCE OPERATIONS ====================
 
-export interface ComplianceDecision {
-  id: string;
-  eventId: string;
-  status: string;
-  decision: string;
+export interface ComplianceDecisionState {
+  status: 'APPROVED' | 'REJECTED';
   decidedAt: string;
   decidedBy: string | null;
   reason: string | null;
-  metadata: Record<string, any> | null;
+  eventId: string;
+}
+
+export interface ComplianceDecision {
+  certificationId: string;
+  orgId: string;
+  certificationType: string;
+  stateKey: string;
+  issuedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  latestDecision: ComplianceDecisionState | null;
 }
 
 export interface ComplianceRequestsResponse {

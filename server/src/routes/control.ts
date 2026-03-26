@@ -591,37 +591,53 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/control/compliance/requests
-   * List compliance request authority intents (admin only)
-   * Backed by EventLog - returns compliance-related authority decisions
+   * Re-anchored compliance entry surface (admin only)
+   * Backed by canonical certification rows rather than synthetic compliance.request events.
    */
   fastify.get('/compliance/requests', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
     try {
-      const complianceEvents: EventLog[] = await withAdminContext(async tx => {
-        return await tx.eventLog.findMany({
-          where: {
-            name: {
-              startsWith: 'compliance.request.',
+      const certificationRows: Array<{
+        id: string;
+        orgId: string;
+        certificationType: string;
+        issuedAt: Date | null;
+        expiresAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+        lifecycleState: {
+          stateKey: string;
+        };
+      }> = await withAdminContext(async tx => {
+        return await tx.certification.findMany({
+          include: {
+            lifecycleState: {
+              select: {
+                stateKey: true,
+              },
             },
           },
-          orderBy: { occurredAt: 'desc' },
+          orderBy: { createdAt: 'desc' },
           take: 100,
         });
       });
 
-      // Map events to compliance request shape
-      const requests = complianceEvents.map(event => ({
-        id: event.entityId,
-        eventId: event.id,
-        status: event.name.includes('approved') ? 'APPROVED' : 'REJECTED',
-        decision: event.name.split('.').pop()?.toUpperCase() || 'UNKNOWN',
-        decidedAt: event.occurredAt.toISOString(),
-        decidedBy: event.actorId,
-        reason: (event.payloadJson as any)?.reason || null,
-        metadata: event.metadataJson,
+      const requests = certificationRows.map(certification => ({
+        certificationId: certification.id,
+        orgId: certification.orgId,
+        certificationType: certification.certificationType,
+        stateKey: certification.lifecycleState.stateKey,
+        issuedAt: certification.issuedAt?.toISOString() ?? null,
+        expiresAt: certification.expiresAt?.toISOString() ?? null,
+        createdAt: certification.createdAt.toISOString(),
+        updatedAt: certification.updatedAt.toISOString(),
+        latestDecision: null,
       }));
 
-      await writeAuditLog(prisma, createAdminAudit(adminId, 'control.compliance.requests.read', 'event_log', { count: requests.length }));
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.compliance.requests.read', 'certification', { count: requests.length })
+      );
       return sendSuccess(reply, { requests });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Compliance Requests List] Error');
