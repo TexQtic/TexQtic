@@ -23,7 +23,8 @@ layer_1_installed: true
 layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
-delivery_steering_installed: true
+product_truth_primary_sequencing: true
+layer_0_governance_exception_active: false
 governance_migration_execution_policy_decided: true
 governance_migration_policy_remediation_open: false
 governance_migration_policy_remediation_verified: true
@@ -59,7 +60,7 @@ ops_casework_compliance_closure_sufficient: true
 - **Open governed units: 10**
 - **Verified-complete governed units: 0**
 
-- **GOVERNANCE-OS-RESET-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded governance-only operating-model reset opened 2026-03-25 after the completed Phase 1, Phase 2, and Phase 3 reset findings established that Governance OS must be shrunk and re-anchored so it remains a drift-control layer around TexQtic platform delivery rather than a portfolio-dominating local sequencing system. This unit is the sole `ACTIVE_DELIVERY` because it directly affects live sequencing behavior. It authorizes only the later five-file reset implementation across `governance/control/DOCTRINE.md`, `docs/governance/control/GOV-OS-001-DESIGN.md`, `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/SNAPSHOT.md`; no reset implementation was performed in this opening step, no product-facing unit was opened, and execution-log cleanup plus doctrine/product-plan authority decisions remain out of scope for auto-resolution
+- **GOVERNANCE-OS-RESET-001** — `OPEN` / `DECISION_QUEUE` — Bounded governance-only operating-model reset opened 2026-03-25 after the completed Phase 1, Phase 2, and Phase 3 reset findings established that Governance OS must be shrunk and re-anchored so it remains a drift-control layer around TexQtic platform delivery rather than a portfolio-dominating local sequencing system. The historical opening record remains untouched, but Layer 0 no longer uses this unit as the origin of general product sequencing. No reset implementation was performed in the opening step, no product-facing unit was opened, and execution-log cleanup plus doctrine/product-plan authority decisions remain out of scope for auto-resolution
 
 - **OPS-CASEWORK-001** — `CLOSED` — Bounded operational casework completion unit closed 2026-03-26 after the completed dispute, finance, and compliance slices established materially usable supervision loops on canonical durable objects. Dispute is trade-anchored with durable escalation follow-through; finance is ledger/escrow-anchored with persisted supervision outcome on the canonical finance record; compliance is certification-anchored with persisted supervision outcome on the certification-backed record. The unit is now closure-sufficient across all three required branches and no broader redesign, tenant-shell navigation work, certification lifecycle redesign, or successor opening is implied by this closure.
 
@@ -141,7 +142,7 @@ ops_casework_compliance_closure_sufficient: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**GOVERNANCE-OS-RESET-001 is now OPEN as the sole ACTIVE_DELIVERY and concurrent governance-only units remain DECISION_QUEUE only.** The bounded reset opening is based on completed Phase 1, Phase 2, and Phase 3 findings and exists only to shrink and re-anchor live Governance OS behavior so governance remains a drift-control layer around TexQtic platform delivery rather than a portfolio-dominating local sequencing system. No reset implementation was performed in the opening step, no product-facing unit was opened, execution-log cleanup remains separate and out of scope, doctrine/product-plan authority questions remain human-decided only, and concurrent governance-only units remain non-active. Delivery-steering state: 1 `ACTIVE_DELIVERY` · 8 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
+**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 0 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
@@ -174,23 +175,24 @@ RFQ remains pre-negotiation:
 - no thread or messaging model
 - no Trade, checkout, or order coupling
 
-## Current Next Action
+## Current Next-Action Pointer
 
-`GOVERNANCE-OS-RESET-001`.
-The sole current `ACTIVE_DELIVERY` unit is now the bounded governance-only reset opening
-`GOVERNANCE-OS-RESET-001`. This opening directly affects live sequencing behavior and is therefore
-`ACTIVE_DELIVERY` rather than `DECISION_QUEUE`. It authorizes only the later five-file Governance
-OS reset implementation across `governance/control/DOCTRINE.md`,
-`docs/governance/control/GOV-OS-001-DESIGN.md`, `governance/control/OPEN-SET.md`,
-`governance/control/NEXT-ACTION.md`, and `governance/control/SNAPSHOT.md`.
-No reset implementation was performed in this opening step, no product-facing implementation unit
-was opened, no execution-log cleanup was authorized, and no doctrine/product-plan authority item
-was auto-resolved.
-GOVERNANCE-SENTINEL-V1-SPEC-001 is now OPEN as a separate bounded governance-only Sentinel v1 specification unit, but it does not replace NEXT-ACTION and does not change the sole ACTIVE_DELIVERY authorization.
-GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 is now OPEN as a separate bounded governance-workflow unit and makes manual Sentinel v1 invocation mandatory by workflow before governance progression at the already-decided checkpoints only. It preserves the same sole ACTIVE_DELIVERY authorization and does not authorize auto-trigger wiring, CI integration, hooks, or broader tooling rollout.
+Layer 0 currently carries a derived product-truth pointer rather than an independent sequencing
+decision.
+
+Derived product delivery priority: `ONBOARDING-ENTRY-001`.
+Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` and
+`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
+Current governance posture: no active Layer 0 governance exception displaces that product-truth
+sequence.
+
+`GOVERNANCE-OS-RESET-001` remains OPEN in the governed open set as a bounded governance record
+only. It does not operate as a standalone product-sequencing origin in Layer 0.
+GOVERNANCE-SENTINEL-V1-SPEC-001 is now OPEN as a separate bounded governance-only Sentinel v1 specification unit, but it does not replace the derived Layer 0 next-action pointer and does not displace product-truth sequencing.
+GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 is now OPEN as a separate bounded governance-workflow unit and makes manual Sentinel v1 invocation mandatory by workflow before governance progression at the already-decided checkpoints only. It preserves the same non-displacing governance posture and does not authorize auto-trigger wiring, CI integration, hooks, or broader tooling rollout.
 GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 is now OPEN as a separate bounded governance remediation unit preserving the already-corrected close allowlist blocker history only. It does not reopen certification delivery and does not authorize Sentinel doctrine expansion, hooks, CI, bots, or auto-trigger rollout.
 GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 is now OPEN as a separate bounded governance remediation unit preserving the resolved close-retry blocker history only. It does not reopen certification delivery and does not authorize Sentinel doctrine expansion, hooks, CI, bots, or auto-trigger rollout.
-GOVERNANCE-SENTINEL-V1-AUTOMATION-001 is now CLOSED as a separate bounded governance-tooling Sentinel automation unit. Its bounded automation implementation remains implemented and verified, governance sync remains completed, sync enforcement proof is reconciled and PASS, and the closure does not replace NEXT-ACTION or create any new ACTIVE_DELIVERY authorization.
+GOVERNANCE-SENTINEL-V1-AUTOMATION-001 is now CLOSED as a separate bounded governance-tooling Sentinel automation unit. Its bounded automation implementation remains implemented and verified, governance sync remains completed, sync enforcement proof is reconciled and PASS, and the closure does not replace NEXT-ACTION or create any new governance exception.
 CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the opening authority for the now-closed child CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.
 TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 is now `CLOSED` after strict remote verification PASS on the exact `App.tsx:1522` surface only.
 TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 is now `CLOSED` after bounded production verification PASS on the exercised image-capability slice only. The two units remain strictly separate and neither widens the other by implication.

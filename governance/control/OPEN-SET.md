@@ -2,18 +2,18 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-26 (GOV-CLOSE-OPS-CASEWORK-001)
+**Last Updated:** 2026-03-26 (GOVERNANCE-AUTHORITY-REALIGN-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
-> Read this file before any sequencing or next-unit-selection decision.  
-> For detailed blocker/deferred/gated context, see `BLOCKED.md`.
+> Read this file to confirm governed-unit state and any active governance exception posture.  
+> Product execution sequencing and next-delivery priority come from the product-truth authority stack. For detailed blocker/deferred/gated context, see `BLOCKED.md`.
 
 ---
 
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
-| GOVERNANCE-OS-RESET-001 | Governance OS posture reset | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-25 |
+| GOVERNANCE-OS-RESET-001 | Governance OS posture reset | OPEN | DECISION_QUEUE | W5 | 2026-03-25 |
 | GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 | Sentinel CHECK-005 recount remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 | Sentinel correction-order artifact emission | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-REFERENCE-REMEDIATION-001 | Sentinel correction-order reference remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
@@ -33,23 +33,24 @@
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 8
+- **ACTIVE_DELIVERY**: 0
+- **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 1
 - **Total non-terminal units: 10**
 
-Delivery-steering doctrine is now active for Layer 0. Delivery class steers sequencing only and
-does not replace TECS lifecycle, unit status, or authorization.
+Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
+exceptions. It no longer originates general product execution sequencing. Product execution
+sequencing and next-delivery priority are derived from the product-truth authority stack:
+`docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`,
+`docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`, and
+`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
 
-`GOVERNANCE-OS-RESET-001` is now OPEN as the sole `ACTIVE_DELIVERY` governance unit after the
-completed Phase 1, Phase 2, and Phase 3 reset findings established that Governance OS must be
-shrunk and re-anchored so it remains a drift-control layer around TexQtic platform delivery rather
-than a portfolio-dominating local sequencing system. The bounded reset is governance-only: no
-product-facing implementation unit was opened here, no reset implementation was performed here,
-and no execution-log integrity cleanup, Sentinel program rewrite, candidate-ledger rewrite, or
-human-decision authority resolution was authorized by this opening. The concurrently open
-governance-only units remain `DECISION_QUEUE` only and `TECS-FBW-ADMINRBAC` remains
-`DESIGN_GATE_QUEUE` only.
+`GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record after the completed Phase 1,
+Phase 2, and Phase 3 reset findings established that Governance OS must be shrunk and re-anchored
+so it remains a drift-control layer around TexQtic platform delivery rather than a
+portfolio-dominating local sequencing system. No current Layer 0 governance exception displaces
+the product-truth sequence. The concurrently open governance-only units remain `DECISION_QUEUE`
+only and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE_QUEUE` only.
 
 `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` is now `CLOSED` after the already-complete
 implementation, verification, and governance sync chain confirmed that implementation commit
@@ -59,8 +60,8 @@ implementation, verification, and governance sync chain confirmed that implement
 unavailable` state when `imageUrl` is absent. No broader image/media/catalog refactor was
 authorized, no implementation, migration, Prisma, or SQL work occurred in the close step, and no
 successor product-facing unit was opened implicitly. The earlier post-close return to
-`OPERATOR_DECISION_REQUIRED` is now historical only and has been superseded by the later opening
-of `GOVERNANCE-OS-RESET-001` as the sole current `ACTIVE_DELIVERY` unit.
+`OPERATOR_DECISION_REQUIRED` is now historical only and was later followed by the separate opening
+of `GOVERNANCE-OS-RESET-001` before this authority realignment.
 
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` closed 2026-03-24 after the authoritative
 implementation baseline `5cd6f74bc813c1b264f3228dcfca926826a36114` remained unchanged, bounded

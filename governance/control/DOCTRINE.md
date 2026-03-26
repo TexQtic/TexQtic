@@ -12,21 +12,29 @@
 
 ---
 
-## CONTROL-PLANE-FIRST OPERATING RULE
+## CONTROL-PLANE GOVERNANCE READING RULE
 
 **MANDATORY for ALL prompts — governance, implementation, verification, and design alike.**
 
-Before consulting any large legacy governance artifact, read these files first:
+Before taking a governance action or checking governed-unit state, read these files first:
 
 1. `governance/control/OPEN-SET.md` — exact current governed open set
-2. `governance/control/NEXT-ACTION.md` — exactly one authorized next action
+2. `governance/control/NEXT-ACTION.md` — derived Layer 0 pointer or active governance exception
 3. `governance/control/BLOCKED.md` — blocked, deferred, and design-gated posture
 4. `governance/control/SNAPSHOT.md` — carry-forward session context (for session restores)
 
-**Rule:** No sequencing-critical governance truth may depend on scanning archive-scale or
-long-form governance documents. Files like `governance/gap-register.md` and
-`docs/governance/IMPLEMENTATION-TRACKER-*.md` are historical secondary references only.
-They must not be used to derive "what is open" or "what is next."
+For general product execution sequencing and next-delivery priority, use the product-truth
+authority stack:
+
+1. `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
+2. `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
+3. `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+
+**Rule:** Layer 0 owns governed-unit state, blockers, audit posture, and governance exceptions.
+The product-truth authority stack owns general product execution sequencing. Files like
+`governance/gap-register.md` and `docs/governance/IMPLEMENTATION-TRACKER-*.md` are historical
+secondary references only. They must not be used to derive what is open, what governance
+exception is active, or what product delivery comes next outside the product-truth stack.
 
 ---
 

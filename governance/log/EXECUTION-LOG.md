@@ -155,6 +155,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOVERNANCE-AUTHORITY-REALIGN-001 — 2026-03-26
+Type: GOVERNANCE / REALIGNMENT
+Status: CLOSED
+Commit: (this unit — see git log for [GOVERNANCE-AUTHORITY-REALIGN-001] realign Layer 0 authority to product-truth sequencing)
+Title: Realign Layer 0 authority routing to product-truth sequencing
+Summary: Realigned Layer 0 so it no longer acts as the origin of general product execution
+  sequencing after the product-truth reset. `OPEN-SET.md`, `NEXT-ACTION.md`, `SNAPSHOT.md`,
+  `DOCTRINE.md`, and `docs/governance/control/GOV-OS-001-DESIGN.md` now treat the product-truth
+  stack as the source of next-delivery priority, while Layer 0 remains authoritative for governed
+  state, blockers, audit posture, and governance exceptions. Historical opening records,
+  execution-log history, product-truth documents, and stale-doc routing surfaces were
+  intentionally left untouched in this bounded pass.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md, DOCTRINE.md updated; design
+  authority — docs/governance/control/GOV-OS-001-DESIGN.md updated; Layer 3 — EXECUTION-LOG.md
+  appended
+Notes: This realignment is governance-only. No product or application code changed, no
+  product-truth document was edited, no history entry was rewritten, and no product delivery unit
+  was opened by implication. `GOVERNANCE-OS-RESET-001` remains an open governance record, but it
+  no longer operates as the sole current `ACTIVE_DELIVERY` authority in Layer 0. LAYER 0
+  CONSISTENCY: REALIGNED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/control/DOCTRINE.md ·
+  docs/governance/control/GOV-OS-001-DESIGN.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ## Completed Governance Milestones
 
 Entries are ordered chronologically by closure date. Oldest first.

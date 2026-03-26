@@ -101,7 +101,8 @@ The Governance OS partitions governance truth into five structurally separated l
 ```
 
 **Layer rules:**
-- Only Layer 0 determines operational control-plane truth
+- Layer 0 determines governance control-plane truth; product-truth documents determine general
+  product execution sequencing
 - Layer 1 is the single source of truth for individual unit status
 - Layer 2 decisions are referenced by Layer 1 unit records — never duplicated
 - Layer 3 receives entries; never loses them; never becomes operational
@@ -111,13 +112,16 @@ The Governance OS partitions governance truth into five structurally separated l
 
 The control plane consists of exactly **five files**, all in `governance/control/`. Each file has a hard-enforced maximum size.
 
+Layer 0 is not the origin of general product delivery order. Product-truth documents hold that
+role. Layer 0 carries governed-unit state, governance exceptions, and audit/control posture.
+
 | File | Max Size | Owns |
 |---|---|---|
-| `OPEN-SET.md` | ≤ 50 lines | Exact list of currently open governed units (ID + one-line title + status) |
-| `NEXT-ACTION.md` | ≤ 20 lines | Exactly one authorized next action with unit ID and type |
+| `OPEN-SET.md` | ≤ 50 lines | Exact list of currently open governed units and current governance posture |
+| `NEXT-ACTION.md` | ≤ 20 lines | Derived Layer 0 next-action pointer or explicit active governance exception |
 | `BLOCKED.md` | ≤ 80 lines | All currently blocked or deferred units with explicit blocker reason |
 | `DOCTRINE.md` | ≤ 150 lines | Active doctrine invariants. Points to canonical doctrine sources. |
-| `SNAPSHOT.md` | ≤ 100 lines | Carry-forward context for session restoration. Refreshed at end of each governance unit. |
+| `SNAPSHOT.md` | ≤ 100 lines | Restore-grade carry-forward context for session restoration. Refreshed at end of each governance unit. |
 
 **Size limits are structural gates, not suggestions.** If a file exceeds its limit, a maintenance governance unit must be run to compact or archive entries before further updates are made to that file.
 
@@ -136,12 +140,11 @@ Example:
 #### NEXT-ACTION.md schema
 
 ```yaml
-unit_id: <UNIT-ID>
-type: IMPLEMENTATION | VERIFICATION | GOVERNANCE | DESIGN
-title: <one-line description>
-prerequisites_met: true | false
-authorized_by: Paresh | GPT-CTO | auto-sequenced
-date_authorized: YYYY-MM-DD
+mode: DERIVED_PRODUCT_TRUTH_POINTER | GOVERNANCE_EXCEPTION
+governance_exception_active: true | false
+product_delivery_priority: <delivery-unit-id> | none
+product_truth_sources: <comma-separated doc paths> | omit when exception-only
+layer_0_action: <governance-facing pointer or exception statement>
 notes: <≤3 lines if needed, else omit>
 ```
 
@@ -492,7 +495,7 @@ These rules apply when documents are missing, oversized, or inconsistent.
 governance/
 ├── control/                         ← LAYER 0 — Control Plane (≤5 small files)
 │   ├── OPEN-SET.md                  ← Exact current open set (≤50 lines)
-│   ├── NEXT-ACTION.md               ← Exactly one authorized next action (≤20 lines)
+│   ├── NEXT-ACTION.md               ← Derived Layer 0 pointer or governance exception (≤20 lines)
 │   ├── BLOCKED.md                   ← Blocked + deferred register (≤80 lines)
 │   ├── DOCTRINE.md                  ← Active doctrine invariants (≤150 lines)
 │   └── SNAPSHOT.md                  ← Carry-forward context (≤100 lines)
