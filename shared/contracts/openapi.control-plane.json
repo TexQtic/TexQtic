@@ -2361,6 +2361,31 @@
                               "createdByUserId": {
                                 "type": ["string", "null"],
                                 "format": "uuid"
+                              },
+                              "supervision": {
+                                "type": ["object", "null"],
+                                "properties": {
+                                  "status": {
+                                    "type": "string",
+                                    "enum": ["VERIFIED", "FOLLOW_UP_REQUIRED"]
+                                  },
+                                  "reason": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "recordedAt": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "recordedBy": {
+                                    "type": ["string", "null"],
+                                    "format": "uuid"
+                                  },
+                                  "eventId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  }
+                                },
+                                "required": ["status", "recordedAt", "eventId"]
                               }
                             },
                             "required": [
@@ -2407,6 +2432,80 @@
           }
         ],
         "responses": {
+    },
+    "/api/control/finance/records/{record_id}/outcome": {
+      "post": {
+        "summary": "Record finance supervision outcome (admin only)",
+        "description": "Records a bounded control-plane supervision outcome against a canonical finance record. This is casework state only and does not move funds or mutate settlement or escrow truth.",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["outcome", "reason"],
+                "properties": {
+                  "outcome": {
+                    "type": "string",
+                    "enum": ["VERIFIED", "FOLLOW_UP_REQUIRED"]
+                  },
+                  "reason": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Supervision outcome recorded" },
+          "200": { "description": "Idempotent replay returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Finance record not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Outcome recording failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
           "200": { "description": "Compliance request list returned" },
           "401": {
             "description": "Unauthorized",

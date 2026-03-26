@@ -71,6 +71,33 @@ const requireSuperAdminReadAccess: preHandlerHookHandler = (
   done();
 };
 
+const financeSupervisionEventTypeByOutcome = {
+  VERIFIED: 'finance.record.verified',
+  FOLLOW_UP_REQUIRED: 'finance.record.follow_up_required',
+} as const;
+
+const financeSupervisionEventTypes = Object.values(financeSupervisionEventTypeByOutcome);
+
+function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
+  switch (name) {
+    case financeSupervisionEventTypeByOutcome.VERIFIED:
+      return 'VERIFIED';
+    case financeSupervisionEventTypeByOutcome.FOLLOW_UP_REQUIRED:
+      return 'FOLLOW_UP_REQUIRED';
+    default:
+      return null;
+  }
+}
+
+function getFinanceSupervisionReason(payload: Prisma.JsonValue): string | null {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return null;
+  }
+
+  const reason = (payload as Record<string, unknown>).reason;
+  return typeof reason === 'string' ? reason : null;
+}
+
 const controlRoutes: FastifyPluginAsync = async fastify => {
   // All control routes require admin auth
   fastify.addHook('onRequest', adminAuthMiddleware);
@@ -406,24 +433,159 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         });
       });
 
-      const records = financeRecords.map(row => ({
-        id: row.id,
-        tenantId: row.tenant_id,
-        escrowId: row.escrow_id,
-        referenceId: row.reference_id,
-        amount: row.amount.toString(),
-        currency: row.currency,
-        status: 'APPLIED',
-        settlementType: 'RELEASE_DEBIT',
+        const financeRecordIds = financeRecords.map(row => row.id);
+        const supervisionEvents = financeRecordIds.length === 0
+          ? []
+          : await withAdminContext(async tx => {
+              return await tx.eventLog.findMany({
+                where: {
+                  entityType: 'escrow_transaction',
+                  entityId: { in: financeRecordIds },
+                  name: { in: financeSupervisionEventTypes },
+                },
+                orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
+              });
+            });
+
+        const latestSupervisionEventByRecordId = new Map<string, EventLog>();
+        for (const event of supervisionEvents) {
+          if (!latestSupervisionEventByRecordId.has(event.entityId)) {
+            latestSupervisionEventByRecordId.set(event.entityId, event);
+          }
+        }
+
+      const records = financeRecords.map(row => {
+        const supervisionEvent = latestSupervisionEventByRecordId.get(row.id);
+        const supervisionStatus = supervisionEvent ? mapFinanceSupervisionStatus(supervisionEvent.name) : null;
+
+        return {
+          id: row.id,
+          tenantId: row.tenant_id,
+          escrowId: row.escrow_id,
+          referenceId: row.reference_id,
+          amount: row.amount.toString(),
+          currency: row.currency,
+          status: 'APPLIED',
+          settlementType: 'RELEASE_DEBIT',
           createdAt: row.created_at.toISOString(),
           createdByUserId: row.created_by_user_id,
-        }));
+          supervision: supervisionEvent && supervisionStatus ? {
+            status: supervisionStatus,
+            reason: getFinanceSupervisionReason(supervisionEvent.payloadJson),
+            recordedAt: supervisionEvent.occurredAt.toISOString(),
+            recordedBy: supervisionEvent.actorId,
+            eventId: supervisionEvent.id,
+          } : null,
+        };
+      });
 
         await writeAuditLog(prisma, createAdminAudit(adminId, 'control.finance.payouts.read', 'escrow_transactions', { count: records.length }));
         return sendSuccess(reply, { records });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Finance Payouts List] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch payouts', 500);
+    }
+  });
+
+  /**
+   * Record a finance supervision outcome against a canonical finance record.
+   * Control-plane casework only: no fund movement, no settlement mutation.
+   */
+  fastify.post('/finance/records/:record_id/outcome', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    try {
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
+      const paramsSchema = z.object({
+        record_id: z.string().uuid('Invalid finance record id format'),
+      });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        outcome: z.enum(['VERIFIED', 'FOLLOW_UP_REQUIRED']),
+        reason: z.string().trim().min(1, 'Reason is required').max(2000),
+      });
+      const bodyResult = bodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+
+      const { record_id } = paramsResult.data;
+      const { outcome, reason } = bodyResult.data;
+
+      const outcomeResult = await withAdminContext(async tx => {
+        const financeRecord = await (tx as unknown as PrismaClient).escrow_transactions.findFirst({
+          where: {
+            id: record_id,
+            entry_type: 'RELEASE',
+            direction: 'DEBIT',
+          },
+          select: {
+            id: true,
+            tenant_id: true,
+            escrow_id: true,
+            reference_id: true,
+          },
+        });
+
+        if (!financeRecord) {
+          return null;
+        }
+
+        const result = await writeAuthorityIntent(tx, {
+          eventType: financeSupervisionEventTypeByOutcome[outcome],
+          targetType: 'escrow_transaction',
+          targetId: financeRecord.id,
+          adminId,
+          tenantId: financeRecord.tenant_id,
+          payload: {
+            outcome,
+            reason,
+            escrowId: financeRecord.escrow_id,
+            referenceId: financeRecord.reference_id,
+          },
+          idempotencyKey,
+        });
+
+        return {
+          financeRecord,
+          result,
+        };
+      });
+
+      if (!outcomeResult) {
+        return sendNotFound(reply, 'Finance record not found');
+      }
+
+      return reply.code(outcomeResult.result.wasReplay ? 200 : 201).send({
+        success: true,
+        data: {
+          financeRecordId: outcomeResult.financeRecord.id,
+          tenantId: outcomeResult.financeRecord.tenant_id,
+          escrowId: outcomeResult.financeRecord.escrow_id,
+          referenceId: outcomeResult.financeRecord.reference_id,
+          outcome,
+          reason,
+          eventId: (outcomeResult.result.event as { id: string }).id,
+          recordedAt: (outcomeResult.result.event as { occurredAt: string }).occurredAt,
+          wasReplay: outcomeResult.result.wasReplay,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Finance Supervision Outcome] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to record finance supervision outcome', 500);
     }
   });
 

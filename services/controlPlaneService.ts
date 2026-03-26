@@ -377,10 +377,36 @@ export interface FinanceRecord {
   settlementType: 'RELEASE_DEBIT';
   createdAt: string;
   createdByUserId: string | null;
+  supervision: FinanceSupervisionOutcome | null;
+}
+
+export interface FinanceSupervisionOutcome {
+  status: 'VERIFIED' | 'FOLLOW_UP_REQUIRED';
+  reason: string | null;
+  recordedAt: string;
+  recordedBy: string | null;
+  eventId: string;
 }
 
 export interface FinanceRecordsResponse {
   records: FinanceRecord[];
+}
+
+export interface FinanceSupervisionOutcomeRequest {
+  outcome: 'VERIFIED' | 'FOLLOW_UP_REQUIRED';
+  reason: string;
+}
+
+export interface FinanceSupervisionOutcomeResponse {
+  financeRecordId: string;
+  tenantId: string;
+  escrowId: string;
+  referenceId: string | null;
+  outcome: 'VERIFIED' | 'FOLLOW_UP_REQUIRED';
+  reason: string;
+  eventId: string;
+  recordedAt: string;
+  wasReplay: boolean;
 }
 
 /**
@@ -389,6 +415,22 @@ export interface FinanceRecordsResponse {
  */
 export async function getFinanceRecords(): Promise<FinanceRecordsResponse> {
   return adminGet<FinanceRecordsResponse>('/api/control/finance/payouts');
+}
+
+/**
+ * Record a bounded finance supervision outcome against a canonical finance record.
+ * Control-plane only — this does not move funds or mutate settlement truth.
+ */
+export async function recordFinanceSupervisionOutcome(
+  financeRecordId: string,
+  body: FinanceSupervisionOutcomeRequest,
+  idempotencyKey: string,
+): Promise<FinanceSupervisionOutcomeResponse> {
+  return adminPostWithHeaders<FinanceSupervisionOutcomeResponse>(
+    `/api/control/finance/records/${financeRecordId}/outcome`,
+    body,
+    { 'Idempotency-Key': idempotencyKey },
+  );
 }
 
 // ==================== FINANCE AUTHORITY MUTATIONS ====================
