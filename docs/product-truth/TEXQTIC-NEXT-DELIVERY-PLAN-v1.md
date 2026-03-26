@@ -47,18 +47,11 @@ For this plan, a loop is complete only when the user or operator can traverse th
 5. Each unit must identify the repo surfaces that must change for the loop to become true.
 6. If a unit stops at a screen boundary, it is not a valid unit.
 
-## Unit Lifecycle Status
-
-| Unit ID | Status |
-|---|---|
-| `ONBOARDING-ENTRY-001` | `NEXT` |
-| `ONBOARDING-ENTRY-002` | `NEXT` |
-| `EXCHANGE-CORE-LOOP-001` | `COMPLETED` |
-| `OPS-CASEWORK-001` | `NEXT` |
-| `WL-COMPLETE-001` | `PENDING` |
-| `TRUTH-CLEANUP-001` | `PENDING` |
-
 ## Immediate Delivery Sequence
+
+The numbered order below is the sequencing source for this plan.
+Completed units remain listed in sequence as baseline continuity; they are not separate live
+`NEXT` posture.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|

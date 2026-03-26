@@ -57,16 +57,9 @@ The roadmap order is driven by actual product dependency:
 - Mode completeness matters after the shared core is credible.
 - Truth cleanup happens last because replacement authority must already exist.
 
-## Wave Completion Summary
-
-| Wave | Status |
-|---|---|
-| Wave 1 | `PENDING` |
-| Wave 2 | `COMPLETED` |
-| Wave 3 | `COMPLETED` |
-| Wave 4 | `NEXT` |
-| Wave 5 | `PENDING` |
-| Wave 6 | `PENDING` |
+The ordered wave list below is the sequencing source for this roadmap.
+Completed waves remain listed in sequence as baseline context, and this roadmap does not use a
+separate live-status table for current priority.
 
 ## Roadmap Summary Table
 
