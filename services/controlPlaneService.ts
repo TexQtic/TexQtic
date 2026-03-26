@@ -960,6 +960,26 @@ export interface AdminEscrowListResponse {
   offset: number;
 }
 
+export interface AdminEscrowDetailTransaction {
+  id: string;
+  tenantId: string;
+  escrowId: string;
+  entryType: string;
+  direction: string;
+  amount: string;
+  currency: string;
+  referenceId: string | null;
+  metadata: Record<string, unknown>;
+  createdByUserId: string | null;
+  createdAt: string;
+}
+
+export interface AdminEscrowDetailResponse {
+  escrow: AdminEscrowAccount;
+  balance: number;
+  recentTransactions: AdminEscrowDetailTransaction[];
+}
+
 /**
  * List escrow accounts across all tenants (admin only).
  * Route: GET /api/control/escrows
@@ -976,6 +996,19 @@ export async function adminListEscrows(
   const qs = q.toString();
   const url = qs ? `/api/control/escrows?${qs}` : '/api/control/escrows';
   return adminGet<AdminEscrowListResponse>(url);
+}
+
+/**
+ * Load a single escrow account detail across all tenants (admin only).
+ * Route: GET /api/control/escrows/:escrowId
+ * D-020-B: balance is server-derived and returned read-only.
+ */
+export async function adminGetEscrowDetail(
+  escrowId: string,
+): Promise<AdminEscrowDetailResponse> {
+  return adminGet<AdminEscrowDetailResponse>(
+    `/api/control/escrows/${encodeURIComponent(escrowId)}`,
+  );
 }
 
 // ==================== G-021 MAKER-CHECKER ADMIN READ (PW5-W4) ====================
