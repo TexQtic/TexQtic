@@ -2448,27 +2448,61 @@
                           "items": {
                             "type": "object",
                             "properties": {
-                              "certificationId": { "type": "string", "format": "uuid" },
+                              "certificationId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
                               "orgId": { "type": "string", "format": "uuid" },
                               "certificationType": { "type": "string" },
                               "stateKey": { "type": "string" },
-                              "issuedAt": { "type": ["string", "null"], "format": "date-time" },
-                              "expiresAt": { "type": ["string", "null"], "format": "date-time" },
-                              "createdAt": { "type": "string", "format": "date-time" },
-                              "updatedAt": { "type": "string", "format": "date-time" },
-                              "latestDecision": {
+                              "issuedAt": {
+                                "type": ["string", "null"],
+                                "format": "date-time"
+                              },
+                              "expiresAt": {
+                                "type": ["string", "null"],
+                                "format": "date-time"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "supervision": {
                                 "type": ["object", "null"],
                                 "properties": {
-                                  "status": { "type": "string", "enum": ["APPROVED", "REJECTED"] },
-                                  "decidedAt": { "type": "string", "format": "date-time" },
-                                  "decidedBy": { "type": ["string", "null"], "format": "uuid" },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": ["VERIFIED", "FOLLOW_UP_REQUIRED"]
+                                  },
                                   "reason": { "type": ["string", "null"] },
-                                  "eventId": { "type": "string", "format": "uuid" }
+                                  "recordedAt": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  "recordedBy": {
+                                    "type": ["string", "null"],
+                                    "format": "uuid"
+                                  },
+                                  "eventId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  }
                                 },
-                                "required": ["status", "decidedAt", "eventId"]
+                                "required": ["status", "recordedAt", "eventId"]
                               }
                             },
-                            "required": ["certificationId", "orgId", "certificationType", "stateKey", "createdAt", "updatedAt"]
+                            "required": [
+                              "certificationId",
+                              "orgId",
+                              "certificationType",
+                              "stateKey",
+                              "createdAt",
+                              "updatedAt"
+                            ]
                           }
                         }
                       },
@@ -2490,6 +2524,80 @@
           },
           "500": {
             "description": "Fetch failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/control/compliance/records/{certification_id}/outcome": {
+      "post": {
+        "summary": "Record compliance supervision outcome (admin only)",
+        "description": "Records a bounded control-plane supervision outcome against a certification-backed compliance record. This is casework state only and does not redesign certification lifecycle semantics.",
+        "parameters": [
+          {
+            "name": "certification_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["outcome", "reason"],
+                "properties": {
+                  "outcome": {
+                    "type": "string",
+                    "enum": ["VERIFIED", "FOLLOW_UP_REQUIRED"]
+                  },
+                  "reason": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Supervision outcome recorded" },
+          "200": { "description": "Idempotent replay returned" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Certification record not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Outcome recording failed",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }
@@ -2564,17 +2672,6 @@
           },
           "500": {
             "description": "Outcome recording failed",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
-        }
-      }
-          "200": { "description": "Compliance request list returned" },
-          "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

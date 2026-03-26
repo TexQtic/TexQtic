@@ -78,6 +78,13 @@ const financeSupervisionEventTypeByOutcome = {
 
 const financeSupervisionEventTypes = Object.values(financeSupervisionEventTypeByOutcome);
 
+const complianceSupervisionEventTypeByOutcome = {
+  VERIFIED: 'compliance.record.verified',
+  FOLLOW_UP_REQUIRED: 'compliance.record.follow_up_required',
+} as const;
+
+const complianceSupervisionEventTypes = Object.values(complianceSupervisionEventTypeByOutcome);
+
 function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
   switch (name) {
     case financeSupervisionEventTypeByOutcome.VERIFIED:
@@ -96,6 +103,17 @@ function getFinanceSupervisionReason(payload: Prisma.JsonValue): string | null {
 
   const reason = (payload as Record<string, unknown>).reason;
   return typeof reason === 'string' ? reason : null;
+}
+
+function mapComplianceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
+  switch (name) {
+    case complianceSupervisionEventTypeByOutcome.VERIFIED:
+      return 'VERIFIED';
+    case complianceSupervisionEventTypeByOutcome.FOLLOW_UP_REQUIRED:
+      return 'FOLLOW_UP_REQUIRED';
+    default:
+      return null;
+  }
 }
 
 const controlRoutes: FastifyPluginAsync = async fastify => {
@@ -622,17 +640,49 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         });
       });
 
-      const requests = certificationRows.map(certification => ({
-        certificationId: certification.id,
-        orgId: certification.orgId,
-        certificationType: certification.certificationType,
-        stateKey: certification.lifecycleState.stateKey,
-        issuedAt: certification.issuedAt?.toISOString() ?? null,
-        expiresAt: certification.expiresAt?.toISOString() ?? null,
-        createdAt: certification.createdAt.toISOString(),
-        updatedAt: certification.updatedAt.toISOString(),
-        latestDecision: null,
-      }));
+      const certificationIds = certificationRows.map(certification => certification.id);
+      const supervisionEvents = certificationIds.length === 0
+        ? []
+        : await withAdminContext(async tx => {
+            return await tx.eventLog.findMany({
+              where: {
+                entityType: 'certification',
+                entityId: { in: certificationIds },
+                name: { in: complianceSupervisionEventTypes },
+              },
+              orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
+            });
+          });
+
+      const latestSupervisionEventByCertificationId = new Map<string, EventLog>();
+      for (const event of supervisionEvents) {
+        if (!latestSupervisionEventByCertificationId.has(event.entityId)) {
+          latestSupervisionEventByCertificationId.set(event.entityId, event);
+        }
+      }
+
+      const requests = certificationRows.map(certification => {
+        const supervisionEvent = latestSupervisionEventByCertificationId.get(certification.id);
+        const supervisionStatus = supervisionEvent ? mapComplianceSupervisionStatus(supervisionEvent.name) : null;
+
+        return {
+          certificationId: certification.id,
+          orgId: certification.orgId,
+          certificationType: certification.certificationType,
+          stateKey: certification.lifecycleState.stateKey,
+          issuedAt: certification.issuedAt?.toISOString() ?? null,
+          expiresAt: certification.expiresAt?.toISOString() ?? null,
+          createdAt: certification.createdAt.toISOString(),
+          updatedAt: certification.updatedAt.toISOString(),
+          supervision: supervisionEvent && supervisionStatus ? {
+            status: supervisionStatus,
+            reason: getFinanceSupervisionReason(supervisionEvent.payloadJson),
+            recordedAt: supervisionEvent.occurredAt.toISOString(),
+            recordedBy: supervisionEvent.actorId,
+            eventId: supervisionEvent.id,
+          } : null,
+        };
+      });
 
       await writeAuditLog(
         prisma,
@@ -642,6 +692,106 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Compliance Requests List] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to fetch compliance requests', 500);
+    }
+  });
+
+  /**
+   * Record a compliance supervision outcome against a certification-backed record.
+   * Control-plane casework only: no certification lifecycle mutation.
+   */
+  fastify.post('/compliance/records/:certification_id/outcome', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    try {
+      if (!request.adminId) {
+        return sendError(reply, 'UNAUTHORIZED', 'Admin ID missing', 401);
+      }
+      const adminId = request.adminId;
+
+      const paramsSchema = z.object({
+        certification_id: z.string().uuid('Invalid certification id format'),
+      });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      const idempotencyKey = request.headers['idempotency-key'] as string;
+      if (!idempotencyKey) {
+        return sendValidationError(reply, [
+          { message: 'Idempotency-Key header is required', path: ['headers', 'idempotency-key'] },
+        ]);
+      }
+
+      const bodySchema = z.object({
+        outcome: z.enum(['VERIFIED', 'FOLLOW_UP_REQUIRED']),
+        reason: z.string().trim().min(1, 'Reason is required').max(2000),
+      });
+      const bodyResult = bodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+
+      const { certification_id } = paramsResult.data;
+      const { outcome, reason } = bodyResult.data;
+
+      const outcomeResult = await withAdminContext(async tx => {
+        const certification = await tx.certification.findUnique({
+          where: { id: certification_id },
+          select: {
+            id: true,
+            orgId: true,
+            certificationType: true,
+            lifecycleState: {
+              select: {
+                stateKey: true,
+              },
+            },
+          },
+        });
+
+        if (!certification) {
+          return null;
+        }
+
+        const result = await writeAuthorityIntent(tx, {
+          eventType: complianceSupervisionEventTypeByOutcome[outcome],
+          targetType: 'certification',
+          targetId: certification.id,
+          adminId,
+          tenantId: certification.orgId,
+          payload: {
+            outcome,
+            reason,
+            certificationType: certification.certificationType,
+            stateKey: certification.lifecycleState.stateKey,
+          },
+          idempotencyKey,
+        });
+
+        return {
+          certification,
+          result,
+        };
+      });
+
+      if (!outcomeResult) {
+        return sendNotFound(reply, 'Certification record not found');
+      }
+
+      return reply.code(outcomeResult.result.wasReplay ? 200 : 201).send({
+        success: true,
+        data: {
+          certificationId: outcomeResult.certification.id,
+          orgId: outcomeResult.certification.orgId,
+          outcome,
+          reason,
+          eventId: (outcomeResult.result.event as { id: string }).id,
+          recordedAt: (outcomeResult.result.event as { occurredAt: string }).occurredAt,
+          wasReplay: outcomeResult.result.wasReplay,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error }, '[Compliance Supervision Outcome] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to record compliance supervision outcome', 500);
     }
   });
 

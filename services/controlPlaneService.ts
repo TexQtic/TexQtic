@@ -494,15 +494,15 @@ export async function rejectPayoutDecision(
 
 // ==================== COMPLIANCE OPERATIONS ====================
 
-export interface ComplianceDecisionState {
-  status: 'APPROVED' | 'REJECTED';
-  decidedAt: string;
-  decidedBy: string | null;
+export interface ComplianceSupervisionOutcome {
+  status: 'VERIFIED' | 'FOLLOW_UP_REQUIRED';
   reason: string | null;
+  recordedAt: string;
+  recordedBy: string | null;
   eventId: string;
 }
 
-export interface ComplianceDecision {
+export interface ComplianceRecord {
   certificationId: string;
   orgId: string;
   certificationType: string;
@@ -511,11 +511,26 @@ export interface ComplianceDecision {
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
-  latestDecision: ComplianceDecisionState | null;
+  supervision: ComplianceSupervisionOutcome | null;
 }
 
 export interface ComplianceRequestsResponse {
-  requests: ComplianceDecision[];
+  requests: ComplianceRecord[];
+}
+
+export interface ComplianceSupervisionOutcomeRequest {
+  outcome: 'VERIFIED' | 'FOLLOW_UP_REQUIRED';
+  reason: string;
+}
+
+export interface ComplianceSupervisionOutcomeResponse {
+  certificationId: string;
+  orgId: string;
+  outcome: 'VERIFIED' | 'FOLLOW_UP_REQUIRED';
+  reason: string;
+  eventId: string;
+  recordedAt: string;
+  wasReplay: boolean;
 }
 
 /**
@@ -524,6 +539,22 @@ export interface ComplianceRequestsResponse {
  */
 export async function getComplianceRequests(): Promise<ComplianceRequestsResponse> {
   return adminGet<ComplianceRequestsResponse>('/api/control/compliance/requests');
+}
+
+/**
+ * Record a bounded compliance supervision outcome against a certification-backed record.
+ * Control-plane only — this does not mutate certification lifecycle truth.
+ */
+export async function recordComplianceSupervisionOutcome(
+  certificationId: string,
+  body: ComplianceSupervisionOutcomeRequest,
+  idempotencyKey: string,
+): Promise<ComplianceSupervisionOutcomeResponse> {
+  return adminPostWithHeaders<ComplianceSupervisionOutcomeResponse>(
+    `/api/control/compliance/records/${certificationId}/outcome`,
+    body,
+    { 'Idempotency-Key': idempotencyKey },
+  );
 }
 
 // ==================== COMPLIANCE AUTHORITY MUTATIONS ====================
