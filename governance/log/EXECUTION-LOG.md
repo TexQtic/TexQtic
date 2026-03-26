@@ -111,6 +111,50 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-AUDIT-OPS-CASEWORK-001-POST-CLOSE — 2026-03-26
+Type: GOVERNANCE / AUDIT
+Status: DECISION_REQUIRED
+Commit: (this unit — see git log for [OPS-CASEWORK-001] close bounded dispute-finance-compliance casework completion)
+Title: Mandatory post-close audit for bounded operational casework completion closure completeness
+Summary: Mandatory post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied: dispute, finance, and compliance are
+  each closure-sufficient within the bounded casework standard; no out-of-scope files were
+  changed by the close operation; Layer 0 remains internally consistent; `OPS-CASEWORK-001` is
+  removed from the non-terminal open set and recorded as `CLOSED`; no new implementation unit is
+  opened implicitly; and the separate tenant-shell finance navigation observation remains a
+  distinct later candidate rather than part of this closure. Recommendation is not authorization.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended
+Notes: Audit is advisory only. Any next execution unit requires separate governance review/opening.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-CLOSE-OPS-CASEWORK-001 — 2026-03-26
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [OPS-CASEWORK-001] close bounded dispute-finance-compliance casework completion)
+Title: Close the bounded operational casework completion unit after durable dispute, finance, and compliance loop completion
+Summary: Governance-only close unit. Recorded `OPS-CASEWORK-001` as `CLOSED` after the bounded
+  dispute durability path completed, finance re-anchor/follow-through/closure path completed under
+  commits `20b965f`, `5cbb511`, `8ceb642`, and `28d0535`, and compliance re-anchor/follow-through
+  path completed under commits `07bead6` and `48b15bb`. The completed unit now satisfies its
+  closure standard: live execution can be supervised through materially usable dispute, finance,
+  and compliance casework loops on canonical durable objects with persisted operator follow-through
+  outcomes, without relying on synthetic authority surfaces as the primary supervised objects.
+  This closure is record-state only and does not authorize broader product redesign,
+  tenant-shell finance navigation work, certification lifecycle redesign, or any successor opening
+  by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, SNAPSHOT.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: `NEXT-ACTION.md` remains unchanged unless a separate governance decision changes authorized
+  next action. Closure is bounded to OPS-CASEWORK-001 only. Recommendation is not authorization.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ## Completed Governance Milestones
 
 Entries are ordered chronologically by closure date. Oldest first.

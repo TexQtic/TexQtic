@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-25 (GOVERNANCE-OS-RESET-001 opened as sole ACTIVE_DELIVERY)
+**Last Updated:** 2026-03-26 (GOV-CLOSE-OPS-CASEWORK-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -97,6 +97,19 @@ identified stale, mixed, or historically consumed candidate-state records that s
 reused casually as new openings. This bounded governance-only normalization unit exists only to
 normalize candidate-state truth before any later operator choice and does not authorize a
 successor `ACTIVE_DELIVERY` stream or reopen any consumed historical unit by implication.
+
+`OPS-CASEWORK-001` closed 2026-03-26 after dispute completion, finance closure completion,
+compliance re-anchor completion (`07bead6`), and final certification-anchored compliance
+supervision outcome completion (`48b15bb`). The completed unit remains bounded to operational
+casework loop completion only: dispute is now trade-anchored with durable escalation handoff,
+finance is now ledger/escrow-anchored with persisted supervision outcome on the canonical finance
+record, compliance is now certification-anchored with persisted supervision outcome on the
+certification-backed compliance record, and live execution supervision is now materially usable
+across dispute, finance, and compliance without reliance on synthetic authority surfaces as the
+primary supervised objects. This closure does not authorize tenant-shell navigation work, broader
+certification lifecycle redesign, finance/settlement redesign, dispute redesign, compliance
+redesign beyond the bounded implemented supervision path, or any new implementation opening by
+implication.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
@@ -193,6 +206,7 @@ CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 is now `VERIFIED_COMPLETE` after 
 | IMPERSONATION-SESSION-REHYDRATION-001 | CLOSED | 2026-03-22 | this decision record |
 | CONTROL-PLANE-IDENTITY-TRUTH-002 | CLOSED | 2026-03-22 | 44db73c · this close record |
 | CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 | CLOSED | 2026-03-22 | 2538901 · this close record |
+| OPS-CASEWORK-001 | CLOSED | 2026-03-26 | 20b965f · 5cbb511 · 8ceb642 · 28d0535 · 07bead6 · 48b15bb · this close record |
 | GOV-NAV-01 | CLOSED | 2026-03-21 | 81b44f3 · cdcb26c · 079a30d · 1366bee · see git log |
 | CONTROL-PLANE-IDENTITY-TRUTH-001 | CLOSED | 2026-03-22 | see git log |
 | AUTH-IDENTITY-TRUTH-DEPLOYED-001 | CLOSED | 2026-03-22 | see git log |

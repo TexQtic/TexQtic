@@ -11,10 +11,10 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-25
+snapshot_date: 2026-03-26
 last_unit_opened: GOVERNANCE-OS-RESET-001
-last_unit_closed: TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003
-last_commit: "[GOVERNANCE-OS-RESET-001] decide and open bounded governance posture reset"
+last_unit_closed: OPS-CASEWORK-001
+last_commit: "[OPS-CASEWORK-001] close bounded dispute-finance-compliance casework completion"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -45,6 +45,11 @@ governance_sentinel_v1_automation_verified: true
 governance_sentinel_v1_automation_sync_complete: true
 governance_sentinel_v1_automation_sync_enforcement_reconciled: true
 governance_sentinel_v1_automation_closed: true
+ops_casework_001_open: false
+ops_casework_001_closed: true
+ops_casework_dispute_closure_sufficient: true
+ops_casework_finance_closure_sufficient: true
+ops_casework_compliance_closure_sufficient: true
 ```
 
 ---
@@ -56,7 +61,11 @@ governance_sentinel_v1_automation_closed: true
 
 - **GOVERNANCE-OS-RESET-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded governance-only operating-model reset opened 2026-03-25 after the completed Phase 1, Phase 2, and Phase 3 reset findings established that Governance OS must be shrunk and re-anchored so it remains a drift-control layer around TexQtic platform delivery rather than a portfolio-dominating local sequencing system. This unit is the sole `ACTIVE_DELIVERY` because it directly affects live sequencing behavior. It authorizes only the later five-file reset implementation across `governance/control/DOCTRINE.md`, `docs/governance/control/GOV-OS-001-DESIGN.md`, `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/SNAPSHOT.md`; no reset implementation was performed in this opening step, no product-facing unit was opened, and execution-log cleanup plus doctrine/product-plan authority decisions remain out of scope for auto-resolution
 
+- **OPS-CASEWORK-001** — `CLOSED` — Bounded operational casework completion unit closed 2026-03-26 after the completed dispute, finance, and compliance slices established materially usable supervision loops on canonical durable objects. Dispute is trade-anchored with durable escalation follow-through; finance is ledger/escrow-anchored with persisted supervision outcome on the canonical finance record; compliance is certification-anchored with persisted supervision outcome on the certification-backed record. The unit is now closure-sufficient across all three required branches and no broader redesign, tenant-shell navigation work, certification lifecycle redesign, or successor opening is implied by this closure.
+
 - **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003** — `CLOSED` — Bounded product-facing delivery unit closed 2026-03-24 after implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, bounded verification, governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68`, and mandatory post-close audit in the same closure operation. The closed bounded outcome remains limited to the exact B2C `New Arrivals` branch in `App.tsx`, where the remote `https://via.placeholder.com/400x500` fallback was removed, the real-image path was preserved when `imageUrl` exists, and a local `Image unavailable` state renders when `imageUrl` is absent. No broader image/media/catalog refactor was authorized and no successor implementation authorization was created by closure
+
+- GOV-CLOSE-OPS-CASEWORK-001 (2026-03-26): closed `OPS-CASEWORK-001` after the already-completed dispute durability path, finance read re-anchor (`20b965f`), finance escrow bridge (`5cbb511`), finance escrow detail surface (`8ceb642`), finance supervision outcome (`28d0535`), compliance certification re-anchor (`07bead6`), and certification-anchored compliance supervision outcome (`48b15bb`). The bounded unit is now complete: live execution supervision is materially usable across dispute, finance, and compliance through canonical durable object paths with persisted operator follow-through outcomes. This closure does not authorize tenant-shell finance navigation remediation, broader compliance redesign, broader certification redesign, finance mutation redesign, or any new implementation unit.
 
 - **GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001** — `CLOSED` — Bounded governance-only remediation unit closed 2026-03-24 after implementation commit `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory post-close audit emitted in the same closure operation. Repo-advertised migration entry points now default to the canonical tracked Prisma path, direct SQL remains explicitly exception-only, stale forward-looking migration guidance is aligned to the already-decided canonical migration execution and remote validation policy, `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the authority source, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` was the sole `ACTIVE_DELIVERY` at that time, and this closure changed governance record state only rather than delivery sequencing
 
