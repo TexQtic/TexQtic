@@ -8407,3 +8407,47 @@ Before Wave 5 architecture work begins, the Platform Map must be produced and re
 - All UI routes enumerated (expView union values, adminView union values, WL admin panels)
 - All missing / stub / partial / blocked surfaces identified
 - Pending VER items (VER-003, VER-004, VER-006, VER-007, VER-008, VER-009, VER-010) resolved or explicitly deferred
+
+## GOVERNANCE-SYNC-WL-RELOAD-REHYDRATION-REGRESSION-002
+
+**Date:** 2026-03-26  
+**Unit:** `WL-RELOAD-REHYDRATION-REGRESSION-002`  
+**Type:** Closeout-only governance/doc sync for already-verified regression closure
+
+### Bounded Problem Statement
+
+Close the already-verified white-label reload/rehydration regression unit only after the canonical
+governance records capture the exact defect boundary, exact repair trail, exact production
+verification evidence, and an explicit statement that no broader routing/domain or white-label
+cleanup work was merged into the unit.
+
+### Exact Commit Trail
+
+- `7d28671` — restore tenant session rehydration on reload
+- `e9660c3` — instrumentation / proof step
+- `60a0bd6` — suppress tenant auth flash during rehydration
+
+### Bounded Fix Summary
+
+- tenant-session reload rehydration was restored in `App.tsx`
+- deployed instrumentation proved the visible fallback was an AUTH-surface flash during async
+  restore rather than a later fail-closed reset
+- the final repair suppressed the AUTH login surface while valid tenant rehydration is actively
+  pending, without widening into auth redesign or backend identity changes
+
+### Production Verification Evidence
+
+- white-label fresh login: PASS
+- white-label reload: PASS
+- control-plane fresh login: PASS
+- control-plane reload: PASS
+- logged-out `/api/me` boundary: `401` PASS
+- logged-out `/api/control/tenants` boundary: `401` PASS
+
+### Closure Result
+
+`WL-RELOAD-REHYDRATION-REGRESSION-002` is now `VERIFIED_COMPLETE` and `CLOSED` on the bounded
+reload/rehydration regression slice only.
+
+No broader routing/domain work, white-label cleanup, auth redesign, or `is_white_label` follow-on
+defect reopening was included in this closure evidence.
