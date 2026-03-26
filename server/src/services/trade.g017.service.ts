@@ -26,6 +26,7 @@ import type { StateMachineService } from './stateMachine.service.js';
 import type { EscalationService } from './escalation.service.js';
 import type { MakerCheckerService } from './makerChecker.service.js';
 import { EscrowService } from './escrow.service.js';
+import type { EscrowServiceErrorCode } from './escrow.types.js';
 import { GovError } from './escalation.types.js';
 import type { SanctionsService } from './sanctions.service.js';
 import { SanctionBlockError } from './sanctions.service.js';
@@ -36,6 +37,7 @@ import type {
   TradeCreateFromRfqInput,
   TradeCreateFromRfqResult,
   TradeCreateResult,
+  TradeServiceErrorCode,
   TradeTransitionInput,
   TradeTransitionResult,
 } from './trade.g017.types.js';
@@ -66,6 +68,29 @@ function isSourceRfqUniqueConstraintViolation(err: unknown): boolean {
     && err.code === 'P2002'
     && Array.isArray(err.meta?.target)
     && err.meta.target.includes('source_rfq_id');
+}
+
+function mapEscrowErrorToTradeErrorCode(code: EscrowServiceErrorCode): TradeServiceErrorCode {
+  switch (code) {
+    case 'ENTITY_FROZEN':
+      return 'FROZEN_BY_ESCALATION';
+    case 'INVALID_LIFECYCLE_STATE':
+      return 'INVALID_LIFECYCLE_STATE';
+    case 'REASON_REQUIRED':
+      return 'REASON_REQUIRED';
+    case 'AI_HUMAN_CONFIRMATION_REQUIRED':
+    case 'MAKER_CHECKER_REQUIRED':
+    case 'STATE_MACHINE_DENIED':
+      return 'STATE_MACHINE_ERROR';
+    case 'ESCROW_NOT_FOUND':
+    case 'CURRENCY_MISMATCH':
+    case 'INVALID_AMOUNT':
+    case 'INVALID_ENTRY_TYPE':
+    case 'INVALID_DIRECTION':
+    case 'DUPLICATE_REFERENCE':
+    case 'DB_ERROR':
+      return 'DB_ERROR';
+  }
 }
 
 // ─── TradeService ─────────────────────────────────────────────────────────────
@@ -320,7 +345,7 @@ export class TradeService {
       if (result.status !== 'CREATED') {
         return {
           status: 'ERROR',
-          code: result.code,
+          code: mapEscrowErrorToTradeErrorCode(result.code),
           message: result.message,
         };
       }

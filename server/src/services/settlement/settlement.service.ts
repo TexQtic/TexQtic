@@ -54,6 +54,7 @@ import type { TradeService } from '../trade.g017.service.js';
 import type { EscrowService } from '../escrow.service.js';
 import type { EscalationService } from '../escalation.service.js';
 import { GovError } from '../escalation.types.js';
+import type { EscrowAccountRow } from '../escrow.types.js';
 import type { AuditEntry } from '../../lib/auditLog.js';
 import {
   validateAmount,
@@ -114,9 +115,7 @@ export class SettlementService {
           lifecycleStateKey: string;
           escrowId: string | null;
         };
-        escrow: Awaited<ReturnType<EscrowService['getEscrowAccountDetail']>> extends { status: 'OK'; escrow: infer T }
-          ? T
-          : never;
+        escrow: EscrowAccountRow;
       }
     | { status: 'ERROR'; code: SettlementErrorCode; message: string }
   > {

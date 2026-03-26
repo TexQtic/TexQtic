@@ -12,6 +12,8 @@
  *   TOGGLE_C = C3 (BOTH: DISPUTED semantic + escalation freeze enforcement)
  */
 
+import type { ActorType } from '../stateMachine.types.js';
+
 export type { ActorType } from '../stateMachine.types.js';
 
 // ─── Error Codes ──────────────────────────────────────────────────────────────

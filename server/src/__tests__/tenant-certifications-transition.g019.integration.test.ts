@@ -31,15 +31,15 @@ vi.mock('../services/certification.g019.service.js', () => ({
 }));
 
 vi.mock('../services/stateMachine.service.js', () => ({
-  StateMachineService: vi.fn(function () { return this; }),
+  StateMachineService: vi.fn(function (this: object) { return this; }),
 }));
 
 vi.mock('../services/escalation.service.js', () => ({
-  EscalationService: vi.fn(function () { return this; }),
+  EscalationService: vi.fn(function (this: object) { return this; }),
 }));
 
 vi.mock('../services/sanctions.service.js', () => ({
-  SanctionsService: vi.fn(function () { return this; }),
+  SanctionsService: vi.fn(function (this: object) { return this; }),
 }));
 
 vi.mock('../middleware/auth.js', () => ({

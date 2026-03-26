@@ -328,6 +328,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/me', { onRequest: tenantAuthMiddleware }, async (request, reply) => {
     const { userId, tenantId, userRole } = request;
 
+    if (!userId) {
+      return sendError(reply, 'UNAUTHORIZED', 'User context missing from token', 401);
+    }
+
     // Guard: tenantId must be present (set by tenantAuthMiddleware from JWT).
     // Missing tenantId means the token is malformed or for wrong realm.
     if (!tenantId) {
