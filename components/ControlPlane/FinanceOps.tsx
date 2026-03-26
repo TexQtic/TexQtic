@@ -14,9 +14,20 @@ import { LoadingState } from '../shared/LoadingState';
 import { ErrorState } from '../shared/ErrorState';
 import { EmptyState } from '../shared/EmptyState';
 
+export interface FinanceEscrowBridgeTarget {
+  financeRecordId: string;
+  tenantId: string;
+  escrowId: string;
+  referenceId: string | null;
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export const FinanceOps: React.FC = () => {
+interface FinanceOpsProps {
+  onOpenEscrowScope?: (_target: FinanceEscrowBridgeTarget) => void;
+}
+
+export const FinanceOps: React.FC<FinanceOpsProps> = ({ onOpenEscrowScope }) => {
   const [records, setRecords] = useState<FinanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +114,7 @@ export const FinanceOps: React.FC = () => {
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Reference</th>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Amount</th>
                 <th className="px-6 py-3 font-bold uppercase text-[10px]">Recorded At</th>
+                <th className="px-6 py-3 font-bold uppercase text-[10px]">Follow-Through</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -132,6 +144,23 @@ export const FinanceOps: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-slate-500 text-xs">
                     {new Date(record.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    {onOpenEscrowScope ? (
+                      <button
+                        onClick={() => onOpenEscrowScope({
+                          financeRecordId: record.id,
+                          tenantId: record.tenantId,
+                          escrowId: record.escrowId,
+                          referenceId: record.referenceId,
+                        })}
+                        className="rounded border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-300 transition-colors hover:bg-sky-500/20"
+                      >
+                        Open Escrow
+                      </button>
+                    ) : (
+                      <span className="text-slate-600 text-xs">—</span>
+                    )}
                   </td>
                 </tr>
               ))}

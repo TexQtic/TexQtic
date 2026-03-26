@@ -28,6 +28,13 @@ import {
 import { LoadingState } from '../shared/LoadingState';
 import { EmptyState } from '../shared/EmptyState';
 
+interface EscrowAdminScopeBridge {
+  financeRecordId: string;
+  tenantId: string;
+  escrowId: string;
+  referenceId: string | null;
+}
+
 // ─── State key badge colours ──────────────────────────────────────────────────
 
 const STATE_COLORS: Record<string, string> = {
@@ -39,7 +46,7 @@ const STATE_COLORS: Record<string, string> = {
   PENDING_APPROVAL: 'bg-violet-900/50 text-violet-300',
 };
 
-function StateBadge({ stateKey }: { stateKey: string | null }) {
+function StateBadge({ stateKey }: Readonly<{ stateKey: string | null }>) {
   if (!stateKey) {
     return <span className="text-slate-500 text-xs">—</span>;
   }
@@ -70,24 +77,35 @@ type FetchState = 'IDLE' | 'LOADING' | 'ERROR' | 'DONE';
 
 // ─── EscrowAdminPanel ────────────────────────────────────────────────────────
 
-export const EscrowAdminPanel: React.FC = () => {
+interface EscrowAdminPanelProps {
+  initialScope?: EscrowAdminScopeBridge | null;
+  onScopeConsumed?: () => void;
+}
+
+export const EscrowAdminPanel: React.FC<EscrowAdminPanelProps> = ({
+  initialScope = null,
+  onScopeConsumed,
+}) => {
   const [tenantIdInput, setTenantIdInput] = useState('');
   const [escrows, setEscrows]             = useState<AdminEscrowAccount[]>([]);
   const [count, setCount]                 = useState(0);
   const [fetchState, setFetchState]       = useState<FetchState>('IDLE');
   const [error, setError]                 = useState<string | null>(null);
+  const [bridgeScope, setBridgeScope]     = useState<EscrowAdminScopeBridge | null>(null);
 
-  const handleFetch = useCallback(async () => {
+  const handleFetch = useCallback(async (tenantOverride?: string, scopeOverride?: EscrowAdminScopeBridge | null) => {
+    const targetTenantId = tenantOverride ?? tenantIdInput.trim();
     setFetchState('LOADING');
     setError(null);
     try {
       const res = await adminListEscrows({
-        tenantId: tenantIdInput.trim() || undefined,
+        tenantId: targetTenantId || undefined,
         limit:    100,
         offset:   0,
       });
       setEscrows(res.escrows);
       setCount(res.count);
+      setBridgeScope(scopeOverride ?? null);
       setFetchState('DONE');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load escrow accounts.');
@@ -95,9 +113,36 @@ export const EscrowAdminPanel: React.FC = () => {
     }
   }, [tenantIdInput]);
 
+  React.useEffect(() => {
+    if (!initialScope) {
+      return;
+    }
+
+    setTenantIdInput(initialScope.tenantId);
+    void handleFetch(initialScope.tenantId, initialScope);
+    onScopeConsumed?.();
+  }, [handleFetch, initialScope, onScopeConsumed]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleFetch();
   };
+
+  const visibleEscrows = bridgeScope
+    ? escrows.filter(escrow => escrow.id === bridgeScope.escrowId)
+    : escrows;
+
+  const accountSuffix = count === 1 ? '' : 's';
+  let resultSummary = `Showing ${visibleEscrows.length} of ${count} account${accountSuffix}.`;
+  if (count === 0) {
+    resultSummary = 'No escrow accounts found.';
+  }
+  if (bridgeScope) {
+    if (visibleEscrows.length === 0) {
+      resultSummary = 'Scoped escrow was not found in the current tenant result set.';
+    } else {
+      resultSummary = `Showing scoped escrow 1 of ${count} account${accountSuffix}.`;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -120,6 +165,30 @@ export const EscrowAdminPanel: React.FC = () => {
         transaction ledger by the server and is only available on the detail endpoint.
       </div>
 
+      {bridgeScope && (
+        <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <p className="font-semibold">Scoped from finance record {bridgeScope.financeRecordId.slice(0, 8)}...</p>
+              <p className="text-xs text-sky-200/80">
+                Tenant <span className="font-mono">{bridgeScope.tenantId}</span> · Escrow <span className="font-mono">{bridgeScope.escrowId}</span>
+              </p>
+              {bridgeScope.referenceId && (
+                <p className="text-xs text-sky-200/80">
+                  Reference <span className="font-mono">{bridgeScope.referenceId}</span>
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setBridgeScope(null)}
+              className="rounded-lg border border-sky-400/30 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-100 transition-colors hover:bg-sky-500/10"
+            >
+              Show All Tenant Escrows
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex flex-col gap-1">
@@ -140,7 +209,9 @@ export const EscrowAdminPanel: React.FC = () => {
           />
         </div>
         <button
-          onClick={handleFetch}
+          onClick={() => {
+            void handleFetch();
+          }}
           disabled={fetchState === 'LOADING'}
           className="h-9 px-5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-100 text-sm font-semibold rounded-lg transition"
         >
@@ -150,9 +221,7 @@ export const EscrowAdminPanel: React.FC = () => {
 
       {/* Result count */}
       {fetchState === 'DONE' && (
-        <p className="text-slate-400 text-xs">
-          {count === 0 ? 'No escrow accounts found.' : `Showing ${escrows.length} of ${count} account${count !== 1 ? 's' : ''}.`}
-        </p>
+        <p className="text-slate-400 text-xs">{resultSummary}</p>
       )}
 
       {/* States */}
@@ -164,7 +233,9 @@ export const EscrowAdminPanel: React.FC = () => {
         <div className="rounded-lg border border-rose-800/50 bg-rose-900/10 px-4 py-3 text-rose-400 text-sm">
           {error}
           <button
-            onClick={handleFetch}
+            onClick={() => {
+              void handleFetch();
+            }}
             className="ml-3 underline text-rose-300 hover:text-rose-200 text-xs"
           >
             Retry
@@ -173,10 +244,10 @@ export const EscrowAdminPanel: React.FC = () => {
       )}
 
       {/* Table */}
-      {fetchState === 'DONE' && escrows.length === 0 && (
+      {fetchState === 'DONE' && visibleEscrows.length === 0 && (
         <EmptyState title="No escrow accounts" message="No escrow accounts match the current filter." />
       )}
-      {fetchState === 'DONE' && escrows.length > 0 && (
+      {fetchState === 'DONE' && visibleEscrows.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-slate-800">
           <table className="w-full text-sm text-left text-slate-300">
             <thead className="text-[10px] uppercase tracking-widest text-slate-500 border-b border-slate-800 bg-slate-900/60">
@@ -190,8 +261,8 @@ export const EscrowAdminPanel: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {escrows.map(escrow => (
-                <tr key={escrow.id} className="hover:bg-slate-800/30 transition">
+              {visibleEscrows.map(escrow => (
+                <tr key={escrow.id} className={`transition ${bridgeScope?.escrowId === escrow.id ? 'bg-sky-500/10' : 'hover:bg-slate-800/30'}`}>
                   <td className="px-4 py-3 font-mono text-xs text-slate-400" title={escrow.id}>
                     {truncateId(escrow.id)}
                   </td>

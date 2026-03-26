@@ -50,7 +50,7 @@ import { WLStorefront } from './components/WL/WLStorefront';
 import { TenantRegistry } from './components/ControlPlane/TenantRegistry';
 import { TenantDetails } from './components/ControlPlane/TenantDetails';
 import { AuditLogs } from './components/ControlPlane/AuditLogs';
-import { FinanceOps } from './components/ControlPlane/FinanceOps';
+import { FinanceOps, type FinanceEscrowBridgeTarget } from './components/ControlPlane/FinanceOps';
 import { AiGovernance } from './components/ControlPlane/AiGovernance';
 import { SystemHealth } from './components/ControlPlane/SystemHealth';
 import { FeatureFlags } from './components/ControlPlane/FeatureFlags';
@@ -578,6 +578,7 @@ const App: React.FC = () => {
 
   const [adminView, setAdminView] = useState<AdminView>('TENANTS');
   const [disputeEscalationBridge, setDisputeEscalationBridge] = useState<DisputeEscalationBridgeTarget | null>(null);
+  const [financeEscrowBridge, setFinanceEscrowBridge] = useState<FinanceEscrowBridgeTarget | null>(null);
   const controlPlaneActorLabel = useMemo(() => {
     return formatControlPlaneActorLabel(controlPlaneIdentity);
   }, [controlPlaneIdentity]);
@@ -588,6 +589,7 @@ const App: React.FC = () => {
       setAuthRealm('TENANT');
       setSelectedTenant(null);
       setDisputeEscalationBridge(null);
+      setFinanceEscrowBridge(null);
       setAdminView('TENANTS');
       setAppState('EXPERIENCE');
       return;
@@ -597,6 +599,7 @@ const App: React.FC = () => {
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
+    setFinanceEscrowBridge(null);
     setAdminView('TENANTS');
     setAppState('CONTROL_PLANE');
   };
@@ -606,6 +609,7 @@ const App: React.FC = () => {
     setControlPlaneIdentity(null);
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
+    setFinanceEscrowBridge(null);
     setAdminView('TENANTS');
   };
 
@@ -616,6 +620,7 @@ const App: React.FC = () => {
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
+    setFinanceEscrowBridge(null);
     setAdminView('TENANTS');
     setAppState('CONTROL_PLANE');
   };
@@ -2243,7 +2248,14 @@ const App: React.FC = () => {
       case 'LOGS':
         return <AuditLogs />;
       case 'FINANCE':
-        return <FinanceOps />;
+        return (
+          <FinanceOps
+            onOpenEscrowScope={scope => {
+              setFinanceEscrowBridge(scope);
+              setAdminView('ESCROW_ADMIN');
+            }}
+          />
+        );
       case 'AI':
         return <AiGovernance />;
       case 'HEALTH':
@@ -2282,7 +2294,12 @@ const App: React.FC = () => {
         return <CartSummariesPanel />;
       // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
       case 'ESCROW_ADMIN':
-        return <EscrowAdminPanel />;
+        return (
+          <EscrowAdminPanel
+            initialScope={financeEscrowBridge}
+            onScopeConsumed={() => setFinanceEscrowBridge(null)}
+          />
+        );
       // PW5-W3-FE: Settlement admin read panel (backend route: 14aea49)
       case 'SETTLEMENT_ADMIN':
         return <SettlementAdminPanel />;
