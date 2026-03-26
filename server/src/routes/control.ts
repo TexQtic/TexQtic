@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
+import { EscalationService } from '../services/escalation.service.js';
 import controlEscalationRoutes from './control/escalation.g022.js';
 import controlTradesRoutes from './control/trades.g017.js';
 import controlEscrowRoutes from './control/escrow.g018.js';
@@ -31,6 +32,20 @@ async function withAdminContext<T>(callback: (tx: any) => Promise<T>): Promise<T
   };
   return withDbContext(prisma, ctx, async tx => {
     // Admin RLS bypass: flag checked by _admin_all policies
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+    return callback(tx);
+  });
+}
+
+async function withOrgAdminContext<T>(orgId: string, adminId: string, callback: (tx: any) => Promise<T>): Promise<T> {
+  const ctx: DatabaseContext = {
+    orgId,
+    actorId: adminId,
+    realm: 'control',
+    requestId: randomUUID(),
+  };
+
+  return withDbContext(prisma, ctx, async tx => {
     await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
     return callback(tx);
   });
@@ -1094,18 +1109,86 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'TRADE_NOT_DISPUTED', `Trade ${dispute_id} is not in DISPUTED state`, 409);
       }
 
-      const result = await withAdminContext(async _tx => {
-        return await writeAuthorityIntent(prisma, {
+      const result = await withOrgAdminContext(trade.tenantId, adminId, async tx => {
+        const existingEvent = await tx.eventLog.findFirst({
+          where: {
+            name: 'dispute.escalated',
+            entityId: trade.id,
+            payloadJson: {
+              path: ['metadata', 'idempotencyKey'],
+              equals: idempotencyKey,
+            },
+          },
+          orderBy: { occurredAt: 'desc' },
+        });
+
+        if (existingEvent) {
+          return {
+            event: {
+              id: existingEvent.id,
+              eventType: existingEvent.name,
+              targetType: existingEvent.entityType,
+              targetId: existingEvent.entityId,
+              occurredAt: existingEvent.occurredAt.toISOString(),
+              payload: existingEvent.payloadJson,
+            },
+            wasReplay: true,
+          };
+        }
+
+        const escalationService = new EscalationService(tx);
+        const reason = [notes, resolution ? `resolution:${resolution}` : null]
+          .filter((value): value is string => Boolean(value && value.trim().length > 0))
+          .join(' | ') || 'Disputed trade escalated from control dispute surface';
+
+        const escalationResult = await escalationService.createEscalation({
+          orgId: trade.tenantId,
+          entityType: 'TRADE',
+          entityId: trade.id,
+          source: 'MANUAL',
+          severityLevel: 3,
+          triggeredByActorType: 'PLATFORM_ADMIN',
+          triggeredByPrincipal: adminId,
+          reason,
+          freezeRecommendation: false,
+        });
+
+        if (escalationResult.status !== 'CREATED') {
+          throw new Error(escalationResult.message);
+        }
+
+        await writeAuditLog(tx, {
+          realm: 'ADMIN',
+          tenantId: trade.tenantId,
+          actorType: 'ADMIN',
+          actorId: adminId,
+          action: 'ESCALATION_CREATED',
+          entity: 'escalation_event',
+          entityId: escalationResult.escalationEventId,
+          metadataJson: {
+            orgId: trade.tenantId,
+            entityType: 'TRADE',
+            entityId: trade.id,
+            severityLevel: 3,
+            source: 'MANUAL',
+            reason,
+            escalationId: escalationResult.escalationEventId,
+            disputeEventType: 'dispute.escalated',
+          },
+        });
+
+        return await writeAuthorityIntent(tx, {
           eventType: 'dispute.escalated',
           targetType: 'trade',
           targetId: trade.id,
-          adminId: adminId,
+          adminId,
           tenantId: trade.tenantId,
           payload: {
             entityType: 'TRADE',
             orgId: trade.tenantId,
             resolution,
             notes,
+            escalationEventId: escalationResult.escalationEventId,
           },
           idempotencyKey,
         });
