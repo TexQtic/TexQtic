@@ -203,6 +203,27 @@ type SupplierRfqResponseRow = {
   createdByUserId: string;
 };
 
+function normalizeCatalogItemPrice<T extends { catalogItem: { price: unknown } }>(item: T) {
+  return {
+    ...item,
+    catalogItem: {
+      ...item.catalogItem,
+      price: Number(item.catalogItem.price),
+    },
+  };
+}
+
+function serializeCartResponse<T extends { items: Array<{ catalogItem: { price: unknown } }> } | null>(cart: T) {
+  if (!cart) {
+    return cart;
+  }
+
+  return {
+    ...cart,
+    items: cart.items.map(normalizeCatalogItemPrice),
+  };
+}
+
 function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
   return {
     id: rfq.id,
@@ -1023,7 +1044,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return cart;
     });
 
-    return sendSuccess(reply, { cart: result }, 201);
+    return sendSuccess(reply, { cart: serializeCartResponse(result) }, 201);
   });
 
   /**
@@ -1068,7 +1089,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(reply, { cart: null });
     }
 
-    return sendSuccess(reply, { cart });
+    return sendSuccess(reply, { cart: serializeCartResponse(cart) });
   });
 
   /**
@@ -1125,6 +1146,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
+        let cartWasCreated = false;
+
         if (!cart) {
           cart = await tx.cart.create({
             data: {
@@ -1133,17 +1156,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               status: 'ACTIVE',
             },
           });
-
-          await writeAuditLog(tx, {
-            realm: 'TENANT',
-            tenantId: dbContext.orgId,
-            actorType: 'USER',
-            actorId: userId ?? null,
-            action: 'cart.CART_CREATED',
-            entity: 'cart',
-            entityId: cart.id,
-            metadataJson: { cartId: cart.id, tenantId: dbContext.orgId, userId },
-          });
+          cartWasCreated = true;
         }
 
         // Upsert cart item
@@ -1209,6 +1222,19 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           });
         }
 
+        if (cartWasCreated) {
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+            actorType: 'USER',
+            actorId: userId ?? null,
+            action: 'cart.CART_CREATED',
+            entity: 'cart',
+            entityId: cart.id,
+            metadataJson: { cartId: cart.id, tenantId: dbContext.orgId, userId },
+          });
+        }
+
         // Audit: item added
         await writeAuditLog(tx, {
           realm: 'TENANT',
@@ -1226,7 +1252,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        return { cartItem };
+        return { cartItem: normalizeCatalogItemPrice(cartItem) };
       });
 
       if ('error' in result) {
@@ -1870,7 +1896,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        return { cartItem: updatedCartItem };
+        return { cartItem: normalizeCatalogItemPrice(updatedCartItem) };
       });
 
       if ('error' in result) {
@@ -1910,6 +1936,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     const dbContext = request.dbContext;
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+    if (!userId) {
+      return sendError(reply, 'UNAUTHORIZED', 'User context missing', 401);
     }
     const t0 = Date.now();
 
@@ -1955,7 +1984,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const order = await tx.order.create({
         data: {
           tenantId: dbContext.orgId,
-          userId: userId!,
+          userId,
           cartId: cart.id,
           status: 'PAYMENT_PENDING',
           currency: totals.currency,
@@ -2043,21 +2072,42 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // The Prisma select is deterministic — these are the only 4 fields requested.
   type OLLSelectRow = { from_state: string | null; to_state: string; realm: string; created_at: Date };
 
+  function serializeTenantOrder(
+    rawOrder: Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }
+  ) {
+    const { order_lifecycle_logs, ...order } = rawOrder;
+    const total = order.total;
+
+    return {
+      ...order,
+      grandTotal: typeof total === 'number' ? total : total ?? null,
+      lifecycleState: order_lifecycle_logs[0]?.to_state ?? null,
+      lifecycleLogs: order_lifecycle_logs.map(l => ({
+        fromState: l.from_state,
+        toState: l.to_state,
+        realm: l.realm,
+        createdAt: l.created_at.toISOString(),
+      })),
+    };
+  }
+
   /**
    * GET /api/tenant/orders
    * List orders for current tenant user (RLS-enforced)
    */
   fastify.get('/tenant/orders', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
-    const { userId } = request;
+    const { userId, userRole } = request;
     // Database context injected by databaseContextMiddleware (G-005)
     const dbContext = request.dbContext;
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    const canReadTenantWideOrders = userRole === 'OWNER' || userRole === 'ADMIN';
+
     const rawOrders = await withDbContext(prisma, dbContext, async tx => {
       return tx.order.findMany({
-        where: { userId },
+        where: canReadTenantWideOrders ? undefined : { userId },
         include: {
           items: true,
           // GAP-ORDER-LC-001 B6a: expose canonical lifecycle state + recent log history.
@@ -2074,20 +2124,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }) as Array<Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }>;
     });
 
-    // Map to camelCase lifecycle shape; preserve all existing fields unchanged.
-    const orders = rawOrders.map(rawOrder => {
-      const { order_lifecycle_logs, ...order } = rawOrder;
-      return {
-        ...order,
-        lifecycleState: order_lifecycle_logs[0]?.to_state ?? null,
-        lifecycleLogs: order_lifecycle_logs.map(l => ({
-          fromState: l.from_state,
-          toState: l.to_state,
-          realm: l.realm,
-          createdAt: l.created_at.toISOString(),
-        })),
-      };
-    });
+    const orders = rawOrders.map(serializeTenantOrder);
 
     return sendSuccess(reply, { orders, count: orders.length });
   });
@@ -2108,9 +2145,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    const { userId, userRole } = request;
+    const canReadTenantWideOrders = userRole === 'OWNER' || userRole === 'ADMIN';
+
     const rawOrder = await withDbContext(prisma, dbContext, async tx => {
-      return tx.order.findUnique({
-        where: { id: orderId },
+      return tx.order.findFirst({
+        where: canReadTenantWideOrders ? { id: orderId } : { id: orderId, userId },
         include: {
           items: true,
           // GAP-ORDER-LC-001 B6a: expose canonical lifecycle state + recent log history.
@@ -2125,17 +2165,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
     if (!rawOrder) return sendNotFound(reply, 'Order not found');
 
-    const { order_lifecycle_logs, ...orderFields } = rawOrder;
-    const order = {
-      ...orderFields,
-      lifecycleState: order_lifecycle_logs[0]?.to_state ?? null,
-      lifecycleLogs: order_lifecycle_logs.map(l => ({
-        fromState: l.from_state,
-        toState: l.to_state,
-        realm: l.realm,
-        createdAt: l.created_at.toISOString(),
-      })),
-    };
+    const order = serializeTenantOrder(rawOrder);
 
     return sendSuccess(reply, { order });
   });
