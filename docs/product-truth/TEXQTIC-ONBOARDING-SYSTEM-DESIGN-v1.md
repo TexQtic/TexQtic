@@ -55,6 +55,7 @@ What remains incomplete:
 
 - verification submission reaches `PENDING_VERIFICATION`
 - the user can enter the workspace in a blocked state
+- current repo truth is internally inconsistent because activation writes `PENDING_VERIFICATION` but at least one tenant session-resolution path can auto-promote that state to `ACTIVE` for an owner when verification fields exist, without a recorded review outcome
 - the system does not yet present a complete, authoritative verification outcome continuity model from submission to operator review to approved or rejected result
 - activation does not yet close truthfully into a stable trade-capable state based on a real recorded verification outcome
 
@@ -74,10 +75,17 @@ The onboarding domain should be understood as five connected models:
 
 ### 4.2 Tenant identity model
 
-Tenant identity is structural. The bounded onboarding decision is which tenant container the user is entering:
+Tenant identity is structural. In current repo truth, the structural identity model is:
 
-- enterprise tenant
-- white-label tenant
+- `tenant_category`
+- `is_white_label`
+
+For bounded onboarding design purposes, the practical decision is which tenant container the user is entering:
+
+- non-white-label business tenant container
+- white-label tenant container
+
+In this document, `enterprise` is product shorthand for the first class above. It is not a current canonical enum or persisted identity field in the repo.
 
 This identity determines the platform container being activated, the operating shell family, and downstream provisioning expectations.
 
@@ -111,7 +119,9 @@ Activation should be treated as:
 - first-user creation or association
 - membership activation
 - verification submission capture
-- entry into a pending or ready tenant state depending on verification outcome
+- entry into a pending tenant state in current repo behavior, with later transition into a trade-capable state only when a real review outcome is recorded
+
+Current repo truth contains a conflicting helper path that can auto-promote `PENDING_VERIFICATION` to `ACTIVE` during session resolution for an owner with verification fields present. `ONBOARDING-ENTRY-001` must resolve that conflict rather than inherit it.
 
 ### 4.6 Trade-capable tenant-state model
 
@@ -129,7 +139,7 @@ At minimum, trade-capable means the tenant is no longer blocked from:
 
 The system design must preserve three independent axes:
 
-- tenant identity: enterprise or white-label
+- tenant identity: current repo `tenant_category` plus `is_white_label`, with `enterprise` used in this document only as product shorthand for non-white-label business tenant containers
 - behavior or mode: B2B or B2C style experience behavior where applicable
 - subscription or capability tier: commercial and feature posture after activation
 
@@ -146,11 +156,11 @@ Onboarding must branch on tenant container type.
 Intent:
 
 - join the TexQtic network
-- activate an enterprise tenant within the shared platform context
+- activate a non-white-label business tenant within the shared platform context
 
 Outcome:
 
-- enterprise tenant container exists and is entered by its first usable user
+- non-white-label business tenant container exists and is entered by its first usable user
 - verification determines whether that tenant can move from blocked entry to trade-capable use
 
 #### White-label branch
@@ -178,6 +188,8 @@ The branch decides tenant container identity only.
 ### 5.3 Repo-fit note
 
 The current onboarding UI includes a broader platform-experience selector that exposes `AGGREGATOR`, `B2B`, `B2C`, and `WHITE_LABEL` style options. For this design, that broader selector is treated as current implementation reality, not as target onboarding truth. The target onboarding truth for `ONBOARDING-ENTRY-001` is narrower: enterprise versus white-label is the structural branch, while behavior and experience mapping remain separate downstream concerns.
+
+Repo-accurate clarification: the canonical structural fields already present are `tenant_category` and `is_white_label`. The design uses `enterprise` only as shorthand for the non-white-label business-tenant side of that current model and does not introduce a new persisted identity field.
 
 ## 6. Business Verification Loop
 
@@ -230,11 +242,13 @@ Status visibility cannot be limited to a banner that only says pending forever. 
 
 An operator or admin review path must be able to record a real outcome against the submitted verification state.
 
-Required outcome classes for design purposes:
+Target implementation outcome classes for the closed onboarding loop are:
 
 - approved
 - rejected
 - needs more information
+
+Current repo truth supports submission into `PENDING_VERIFICATION` and later exposure of tenant status, but it does not yet establish a grounded onboarding-specific review path for these outcome classes. Until that path exists, these are target loop states rather than already available onboarding states.
 
 The design does not require schema or workflow implementation detail yet. It requires that onboarding truthfully depends on a recorded outcome, not on placeholder status text.
 
@@ -285,15 +299,17 @@ The bounded onboarding state model should be treated as follows.
 
 #### Approved
 
-- verification outcome is recorded as approved
+- target implementation state: verification outcome is recorded as approved
 - tenant becomes trade-capable
 - blocked surfaces become available according to tenant type and feature posture
 
 #### Rejected or blocked
 
-- verification outcome is recorded as rejected or otherwise blocked
+- target implementation state: verification outcome is recorded as rejected, returned for more information, or otherwise blocked
 - tenant remains non-trade-capable
 - user sees outcome and next-step instruction rather than an indefinite pending posture
+
+Current repo-supported onboarding state is clearly `PENDING_VERIFICATION`, with `ACTIVE` also currently present in tenant status propagation. `ONBOARDING-ENTRY-001` must make the transition between those states depend on a real review outcome rather than the current auto-promotion shortcut.
 
 ### 7.3 Product meaning of trade-capable
 
@@ -337,12 +353,14 @@ Tenant type and subscription tier are independent axes:
 
 ### 8.4 Proposed simple tier model
 
-At system-design level only:
+At system-design level only, and as conceptual planning labels rather than canonical repo enums:
 
 - Free / Starter: baseline verified access and limited capabilities
 - Growth: expanded operational capability for active tenants
 - Pro / White-label: higher capability posture and white-label-aligned feature envelope
 - Enterprise+: highest capability posture, enterprise-scale service model, and negotiated feature scope
+
+Implementation must not bind to these names unless they are later made canonical. Current repo plan values are separate existing enums and should not be silently overwritten by this design language.
 
 ### 8.5 Rules for this onboarding design
 
@@ -459,7 +477,7 @@ No schema migration or route contract design is included here.
 
 The following items must be validated against repo truth before implementation work is started.
 
-- current repo appears to have a genuine pending-verification gate in the frontend experience, but at least one backend tenant-identity helper appears to auto-promote `PENDING_VERIFICATION` to `ACTIVE` when owner context and verification fields exist; this must be resolved because it conflicts with the intended approval loop
+- current repo has a genuine pending-verification gate in the frontend experience, but it also has at least one backend tenant session-resolution/helper path that auto-promotes `PENDING_VERIFICATION` to `ACTIVE` when owner context and verification fields exist; this is a live repo-truth conflict, not a hypothetical edge case, and `ONBOARDING-ENTRY-001` must resolve it
 - current onboarding UI exposes broader platform-experience choices than this bounded design treats as structural onboarding identity; implementation must confirm whether that selector is temporary, overloaded, or authoritative
 - operator or admin verification outcome path is not yet confirmed as a real repo surface for onboarding review decisions
 - the exact user-visible outcome surface for approved, rejected, and needs-more-info states is not yet confirmed
