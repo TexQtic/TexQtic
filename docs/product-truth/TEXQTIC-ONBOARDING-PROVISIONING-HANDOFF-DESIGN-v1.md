@@ -49,13 +49,14 @@ Current baseline already established in product truth and repo truth:
 - tenant-facing continuity for non-approved outcomes exists
 - approved onboarding can be explicitly transitioned to `ACTIVE`
 - approved activation has a usable in-product control-plane trigger
+- canonical provisioning already creates the primary user and `OWNER` membership
 
 Current baseline does not yet establish a closed provisioning / first-owner handoff loop.
 
 What remains incomplete:
 
 - approved onboarding does not by itself guarantee a coherent first-owner-ready tenant state
-- tenant provisioning continuity may still break between control-plane tenant creation, first-owner assignment, invite continuity, membership readiness, and actual tenant entry
+- tenant provisioning continuity may still break after control-plane tenant creation and owner provisioning truth already exist, because owner-entry handoff remains split across overlapping repo paths
 - session truth, membership truth, and practical tenant usability may not yet resolve as one coherent owner-ready path
 - a newly approved tenant can still stop at an ambiguous “approved” posture instead of becoming materially usable by the intended first owner
 
@@ -75,7 +76,7 @@ The remaining onboarding provisioning domain should be understood as five connec
 
 ### 4.2 Approved onboarding state
 
-Approved onboarding is the starting condition for this unit, not the end condition.
+Approved onboarding is a prerequisite condition for this unit, not the end condition.
 
 At the product level, approved onboarding means:
 
@@ -83,7 +84,7 @@ At the product level, approved onboarding means:
 - the tenant is eligible to become usable
 - the system should be able to hand off into owner-ready continuity without reopening verification logic
 
-Approved onboarding is therefore a prerequisite state for this unit, not the closure standard for this unit.
+Approved onboarding is therefore a prerequisite state in product-truth sequencing for this unit, not the closure standard for this unit.
 
 ### 4.3 Tenant usability state
 
@@ -102,19 +103,19 @@ First-owner readiness is the product-level condition where the intended first op
 This requires alignment between:
 
 - the tenant record being ready for use
-- the intended first owner being correctly associated or activatable
-- the relevant membership or invite continuity being materially true
+- the intended first owner already provisioned by the canonical path being able to use that provisioned truth through the supported entry path
+- the relevant membership, invite, and entry surfaces resolving coherently rather than as detached alternatives
 - the session-entry path resolving into the owner-ready tenant context
 
 ### 4.5 Membership and activation continuity
 
-Membership and activation continuity covers the path from provisioning intent into usable owner access.
+Membership and activation continuity covers the path from existing provisioning truth into usable owner access.
 
 This continuity must answer:
 
 - who the intended first owner is
-- how that owner reaches activatable or activated membership state
-- whether any invite or assignment handoff remains broken or detached
+- how that owner reaches usable entry once canonical provisioning has already created the primary user and `OWNER` membership
+- whether the current invite-based path and the canonical provisioned-owner path still remain broken or detached from each other
 - how membership truth becomes practical entry truth
 
 ### 4.6 Session entry and owner-ready handoff
@@ -123,8 +124,8 @@ Session entry is where provisioning continuity becomes visible product truth.
 
 The system must preserve a coherent handoff from:
 
-- approved tenant eligibility
-- to first-owner-ready membership state
+- approved tenant eligibility and existing provisioning truth
+- to first-owner-ready entry state
 - to authenticated entry into the tenant context
 
 The loop remains incomplete if approval is true but the supported session-entry path still fails to produce a practically usable owner-ready tenant state.
@@ -145,26 +146,26 @@ This design must preserve four independent axes:
 The provisioning / handoff loop is:
 
 1. approved onboarding exists
-2. tenant provisioning continuity begins
-3. first-owner assignment or activation continuity resolves
+2. tenant provisioning and owner-creation truth already exist through the canonical control-plane path
+3. owner-entry handoff continuity resolves across the repo's overlapping paths
 4. membership and session truth become coherent
 5. first owner reaches usable owner-ready tenant entry
 
 ### 5.2 Starting point
 
-This loop begins after approved onboarding already exists.
+This loop begins after approved onboarding already exists in product truth, while current repo truth may already contain a provisioned tenant, user, and `OWNER` membership.
 
 The starting truth is not “verification was submitted.” The starting truth is “verification is approved and the tenant is eligible to become materially usable.”
 
 ### 5.3 Provisioning continuity
 
-Provisioning continuity means the tenant does not fall into a detached intermediate state after approval.
+Provisioning continuity means the tenant does not fall into a detached intermediate state after approval and after canonical provisioning truth already exists.
 
 The system must preserve a coherent path between:
 
 - control-plane tenant creation or prepared tenant context
-- intended first-owner association or invite continuity
-- owner activation or acceptance path
+- canonical owner provisioning truth
+- invite-based activation path where it still exists in repo truth
 - actual owner-ready tenant usability
 
 ### 5.4 First-owner usable outcome
@@ -174,8 +175,8 @@ The loop is closed only when the intended first owner can actually use the tenan
 The loop does not close when:
 
 - approval exists only as a recorded status
-- the tenant record exists but the first-owner handoff is deferred elsewhere
-- the operator is told to complete a later detached step that is not part of one coherent path
+- the tenant, user, and `OWNER` membership already exist but the first-owner handoff is still deferred elsewhere
+- the operator is told to complete a later detached invite step that is not part of one coherent owner-entry path
 
 ### 5.5 Why this is a loop and not a screen
 
@@ -199,8 +200,8 @@ First-owner activation means the intended initial operator of a newly approved t
 It includes:
 
 - owner identity continuity
-- owner association or invite continuity
-- activation or acceptance continuity
+- coherence between canonical owner provisioning and any separate invite-token activation path
+- activation or acceptance continuity where the repo still uses it
 - practical entry into the tenant context as the first operating owner
 
 ### 6.2 Product meaning of owner-ready state
@@ -215,8 +216,8 @@ Owner-ready state means:
 
 At a behavior and contract level, this requires:
 
-- a coherent first-owner identity or invite target
-- a continuity path that brings that target into valid membership or activation state
+- a coherent first-owner entry target after canonical provisioning has already created the primary user and `OWNER` membership
+- a continuity path that turns existing provisioned truth into valid owner entry rather than re-solving owner creation
 - a tenant entry path that resolves to the owner-ready tenant context
 - removal of ambiguous states where approval is true but practical owner usability is not
 
@@ -225,12 +226,12 @@ At a behavior and contract level, this requires:
 Current product truth indicates likely ambiguity between:
 
 - tenant approval and actual first-owner usability
-- tenant record existence and owner-ready handoff completion
-- membership or invite truth and real session-entry usability
+- tenant, user, and `OWNER` membership existence and owner-ready handoff completion
+- split handoff models across canonical provisioning, invite-token activation, and control-plane guidance
 
 ### 6.5 What this unit should normalize
 
-This unit should normalize the product-level handoff so that approved tenant truth, first-owner continuity, and practical owner entry become one coherent loop instead of separate partial truths.
+This unit should normalize the product-level handoff so that approved tenant truth, canonical provisioning truth, and practical owner entry become one coherent loop instead of separate partial truths.
 
 ## 7. Tenant Provisioning Continuity Model
 
@@ -241,7 +242,7 @@ Provisioning continuity means the newly approved tenant remains on one coherent 
 The tenant must not become stranded between:
 
 - provisioned structure
-- owner assignment intent
+- canonical owner provisioning truth
 - membership readiness
 - usable tenant entry
 
@@ -326,7 +327,7 @@ This boundary is necessary so provisioning continuity can be addressed without d
 High-level frontend surfaces already implicated by current repo shape:
 
 - control-plane tenant creation and tenant detail surfaces
-- first-owner invite or activation entry surfaces
+- first-owner invite or activation entry surfaces where those still exist alongside canonical provisioning
 - tenant entry surfaces used after activation or acceptance
 - any owner-facing onboarding handoff surface required to make the continuity materially usable
 
@@ -335,7 +336,7 @@ High-level frontend surfaces already implicated by current repo shape:
 High-level backend surfaces already implicated by current repo shape:
 
 - control-plane provisioning write surfaces
-- invite or first-owner assignment continuity surfaces
+- split handoff surfaces spanning canonical provisioning and invite-token activation
 - tenant activation and membership activation surfaces
 - authenticated tenant identity and session-entry surfaces used after provisioning handoff
 
@@ -345,8 +346,8 @@ The loop likely spans:
 
 - tenant record readiness
 - user creation or association
-- membership creation or activation
-- invite or owner-assignment continuity
+- membership creation already performed by canonical provisioning, plus later entry continuity
+- invite or owner-entry continuity where invite is still one repo path rather than the only model
 - tenant session hydration into a usable owner-ready context
 
 ### 10.4 Owner-ready continuity contract shape
@@ -375,10 +376,10 @@ No schema migration design is included here.
 The following items must be validated against repo truth before implementation work is started.
 
 - the exact point where approved tenant state becomes practically usable owner-ready state is not yet confirmed as one coherent repo path
-- the repo may still contain a mismatch between `ACTIVE` tenant state and actual first-owner usability
+- the repo may still contain a mismatch between `ACTIVE` tenant state and actual first-owner usability, because public tenant discovery returns `ACTIVE` tenants only and tenant login requires `ACTIVE` tenant state, while onboarding continuity and tenant session hydration read org-backed status
 - session truth may appear complete before practical tenant usability is materially true, or the reverse
-- the current control-plane provisioning surface may still split tenant creation from real first-owner activation continuity
-- the exact owner-targeting mechanism, invite continuity, or membership activation continuity must be confirmed directly before implementation
+- the current control-plane provisioning surface may still split canonical owner provisioning from real first-owner entry continuity
+- the exact boundary between the canonical provisioned-owner path and the separate invite-token path must be confirmed directly before implementation
 - enterprise versus white-label structural identity should remain preserved, but white-label completeness beyond provisioning continuity remains out of scope
 
 ## 12. Acceptance Model
@@ -387,9 +388,9 @@ The following items must be validated against repo truth before implementation w
 
 The acceptance model is:
 
-- approved onboarding can hand off into tenant provisioning continuity
+- approved onboarding can hand off coherently across the repo's existing provisioning and owner-entry surfaces
 - the intended first owner can reach a materially usable owner-ready state
-- session, membership, and tenant usability truth align coherently enough for real entry
+- session, membership, and tenant usability truth align coherently enough for real entry across org-backed status, `ACTIVE` eligibility, and tenant session hydration
 - no ambiguous “approved but not actually usable” tenant state remains
 - the loop closes because a newly approved tenant can become an entered owner-ready tenant, not because approval status merely exists in the system
 
