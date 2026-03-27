@@ -13,8 +13,8 @@
 ```yaml
 snapshot_date: 2026-03-27
 last_unit_opened: GOVERNANCE-OS-RESET-001
-last_unit_closed: EXCHANGE-CORE-LOOP-001
-last_commit: "[EXCHANGE-CORE-LOOP-001] close bounded exchange core loop activation"
+last_unit_closed: ONBOARDING-ENTRY-001
+last_commit: "[ONBOARDING-ENTRY-001] close bounded onboarding verification activation loop"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -57,6 +57,13 @@ exchange_core_loop_catalog_to_checkout_proven: true
 exchange_core_loop_order_creation_proven: true
 exchange_core_loop_buyer_order_visibility_proven: true
 exchange_core_loop_admin_capable_same_tenant_visibility_proven: true
+onboarding_entry_001_open: false
+onboarding_entry_001_closed: true
+onboarding_entry_001_pending_truth_proven: true
+onboarding_entry_001_outcome_persistence_proven: true
+onboarding_entry_001_non_approved_continuity_proven: true
+onboarding_entry_001_approved_activation_transition_proven: true
+onboarding_entry_001_approved_trigger_path_proven: true
 ```
 
 ---
@@ -72,11 +79,15 @@ exchange_core_loop_admin_capable_same_tenant_visibility_proven: true
 
 - **EXCHANGE-CORE-LOOP-001** — `CLOSED` — Bounded exchange-core activation unit closed 2026-03-27 after live production verification proved the end-to-end loop from catalog through add-to-cart, checkout, order creation, buyer-visible order rendering, correct totals rendering, and admin-capable same-tenant controls in the authenticated owner session. This closure does not imply dedicated WL_ADMIN shell proof, shell rehydration redesign, seller-fulfillment expansion, or broader marketplace redesign.
 
+- **ONBOARDING-ENTRY-001** — `CLOSED` — Bounded onboarding verification activation loop closed 2026-03-27 after repo truth confirmed truthful pending entry, stable pending preservation, persisted onboarding outcomes, tenant-facing non-approved continuity, explicit approved-to-active activation, and a usable in-product approved activation trigger. This closure does not imply provisioning redesign, `ONBOARDING-ENTRY-002` completion, subscription implementation, white-label completeness, or reviewer-console redesign.
+
 - **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003** — `CLOSED` — Bounded product-facing delivery unit closed 2026-03-24 after implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, bounded verification, governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68`, and mandatory post-close audit in the same closure operation. The closed bounded outcome remains limited to the exact B2C `New Arrivals` branch in `App.tsx`, where the remote `https://via.placeholder.com/400x500` fallback was removed, the real-image path was preserved when `imageUrl` exists, and a local `Image unavailable` state renders when `imageUrl` is absent. No broader image/media/catalog refactor was authorized and no successor implementation authorization was created by closure
 
 - GOV-CLOSE-OPS-CASEWORK-001 (2026-03-26): closed `OPS-CASEWORK-001` after the already-completed dispute durability path, finance read re-anchor (`20b965f`), finance escrow bridge (`5cbb511`), finance escrow detail surface (`8ceb642`), finance supervision outcome (`28d0535`), compliance certification re-anchor (`07bead6`), and certification-anchored compliance supervision outcome (`48b15bb`). The bounded unit is now complete: live execution supervision is materially usable across dispute, finance, and compliance through canonical durable object paths with persisted operator follow-through outcomes. This closure does not authorize tenant-shell finance navigation remediation, broader compliance redesign, broader certification redesign, finance mutation redesign, or any new implementation unit.
 
 - GOV-CLOSE-EXCHANGE-CORE-LOOP-001 (2026-03-27): closed `EXCHANGE-CORE-LOOP-001` after the bounded repair chain and final live production verification. Production proof confirmed: white-label tenant session authenticated, catalog loaded, add-to-cart succeeded, checkout succeeded, Order Placed rendered, new order row appeared immediately in the live orders panel, totals rendered correctly as `$3.00`, and the rendered row exposed `Confirm` / `Cancel` controls in the authenticated owner session. Separate explicit WL_ADMIN shell proof remains outside this unit and is not required for exchange-core closure.
+
+- GOV-CLOSE-ONBOARDING-ENTRY-001 (2026-03-27): closed `ONBOARDING-ENTRY-001` after the completed slice chain established the full bounded onboarding verification activation loop: pending gating normalization (`33ae6d8`), outcome persistence (`d280c68`), tenant-facing continuity (`f541383`), explicit approved activation transition (`e02407c`), and approved trigger wiring (`e1ef18f`). The loop is now materially completable end to end in repo truth without out-of-band/manual API steps.
 
 - **GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001** — `CLOSED` — Bounded governance-only remediation unit closed 2026-03-24 after implementation commit `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory post-close audit emitted in the same closure operation. Repo-advertised migration entry points now default to the canonical tracked Prisma path, direct SQL remains explicitly exception-only, stale forward-looking migration guidance is aligned to the already-decided canonical migration execution and remote validation policy, `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the authority source, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` was the sole `ACTIVE_DELIVERY` at that time, and this closure changed governance record state only rather than delivery sequencing
 

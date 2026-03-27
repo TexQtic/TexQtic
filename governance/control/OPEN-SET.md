@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-27 (GOV-CLOSE-EXCHANGE-CORE-LOOP-001)
+**Last Updated:** 2026-03-27 (GOV-CLOSE-ONBOARDING-ENTRY-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -121,6 +121,15 @@ This closure is bounded to exchange-core execution only. It does not authorize w
 shell/routing redesign, dedicated WL_ADMIN shell proof work, broader marketplace redesign,
 downstream seller-fulfillment expansion, or any new implementation opening by implication.
 
+`ONBOARDING-ENTRY-001` closed 2026-03-27 after the bounded onboarding verification activation loop
+was completed in repo truth. The completed loop now truthfully supports pending verification
+entry, stable pending state preservation, persisted onboarding review outcomes, tenant-facing
+continuity for non-approved outcomes, an explicit approved-to-active backend activation
+transition, and a usable in-product control-plane trigger for approved activation. This closure is
+bounded to the business verification activation loop only. It does not authorize provisioning
+redesign, `ONBOARDING-ENTRY-002` work, subscription implementation, white-label completeness work,
+or reviewer-console redesign.
+
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
 post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed
@@ -205,6 +214,7 @@ CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 is now `VERIFIED_COMPLETE` after 
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| ONBOARDING-ENTRY-001 | CLOSED | 2026-03-27 | 33ae6d8 · d280c68 · f541383 · e02407c · e1ef18f · this close record |
 | GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | CLOSED | 2026-03-24 | 0db8de4 · bb358a8 · 112bf9e · this close record |
 | TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 | CLOSED | 2026-03-23 | f0f58ea · this close record |
 | TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 | CLOSED | 2026-03-23 | 2f1b28d · ab52404 · this close record |

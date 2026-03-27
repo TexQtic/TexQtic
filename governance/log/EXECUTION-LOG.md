@@ -205,6 +205,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### GOV-CLOSE-ONBOARDING-ENTRY-001 — 2026-03-27
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [ONBOARDING-ENTRY-001] close bounded onboarding verification activation loop)
+Title: Close the bounded onboarding verification activation loop after full slice-chain completion
+Summary: Governance-only close unit. Recorded `ONBOARDING-ENTRY-001` as `CLOSED` after the bounded slice chain completed the onboarding verification activation loop in repo truth. The completed loop now supports truthful pending entry, stable pending preservation, persisted review outcomes, tenant-facing continuity for non-approved states, an explicit approved-to-active backend transition, and a usable in-product approved activation trigger. This satisfies the bounded closure standard for `ONBOARDING-ENTRY-001`. This close does not authorize `ONBOARDING-ENTRY-002`, provisioning redesign, subscription implementation, white-label completeness work, or reviewer-console redesign.
+Layer Impact: Layer 0 — OPEN-SET.md, SNAPSHOT.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Closure is bounded to `ONBOARDING-ENTRY-001` only. Product-truth doc maintenance, if needed, should be handled separately.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-ONBOARDING-ENTRY-001-POST-CLOSE — 2026-03-27
+Type: GOVERNANCE / AUDIT
+Status: DECISION_REQUIRED
+Commit: (this unit — see git log for [ONBOARDING-ENTRY-001] close bounded onboarding verification activation loop)
+Title: Mandatory post-close audit for onboarding verification activation loop closure completeness
+Summary: Mandatory post-close audit emitted in the same closure operation. Audit result: `DECISION_REQUIRED`. Closure completeness is satisfied for the bounded `ONBOARDING-ENTRY-001` standard: truthful pending entry and preservation are in place, review outcomes persist, non-approved continuity is tenant-visible, approved activation is explicit, and the final approved activation step is usable in-product. Remaining provisioning, subscription, white-label completeness, and reviewer-console concerns remain outside this unit and do not block closure.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended
+Notes: Audit is advisory only. Any next unit requires separate decision/opening and should not be implied by this close.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ## Completed Governance Milestones
 
 Entries are ordered chronologically by closure date. Oldest first.
