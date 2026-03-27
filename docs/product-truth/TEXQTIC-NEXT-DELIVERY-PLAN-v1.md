@@ -53,16 +53,24 @@ The numbered order below is the sequencing source for this plan.
 Completed units remain listed in sequence as baseline continuity; they are not separate live
 `NEXT` posture.
 
+After closure of `ONBOARDING-ENTRY-001`, `EXCHANGE-CORE-LOOP-001`, and `OPS-CASEWORK-001`, the
+next remaining unit in dependency order is `ONBOARDING-ENTRY-002`.
+
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
-| 1 | `ONBOARDING-ENTRY-001` | Business verification activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-001` | No exchange or execution work matters if a tenant cannot become verification-complete and trade-capable |
-| 2 | `ONBOARDING-ENTRY-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1 | `GAP-ENTRY-002` | A tenant record without clean first-owner activation still breaks real entry into the platform |
+| 1 | `ONBOARDING-ENTRY-001` | Business verification activation loop | `onboarding loop` | Wave 1, completed | `GAP-ENTRY-001` | Closed when onboarding truthfully progressed from verification submission through approved trade-capable activation continuity |
+| 2 | `ONBOARDING-ENTRY-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1, next remaining unit | `GAP-ENTRY-002` | A tenant record without clean first-owner activation still breaks real entry into the platform |
 | 3 | `EXCHANGE-CORE-LOOP-001` | RFQ-to-settlement execution continuity loop | `exchange loop`, `trade execution loop` | Waves 2 and 3, completed in roadmap order | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-002` | Closed when RFQ flow continued through supplier response, trade creation, trade lifecycle, and escrow/settlement continuity |
-| 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4 | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Live execution requires credible admin control around finance, compliance, and dispute intervention |
+| 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4, completed | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Closed when live execution gained materially usable finance, compliance, and dispute casework control |
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5 | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | White-label and scope-truth work must close a real operating mode, not remain a mixed collection of partial operator surfaces and overstated capabilities |
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6 | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Misleading authority cannot remain active once the replacement truth set exists and governs execution |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
+
+- Status: `COMPLETED`
+- Closed By: `ONBOARDING-ENTRY-001-SLICE-1..5`
+- Commit References: `33ae6d8`, `d280c68`, `f541383`, `e02407c`, `e1ef18f`
+- Result: `Verification submission -> pending preservation -> persisted outcome -> explicit approved activation continuity established`
 
 ### Unit Name
 
@@ -82,7 +90,7 @@ Wave 1 — Enterability
 
 ### Capability Closure
 
-This unit is complete only when a new tenant user can move from onboarding entry through business verification, receive a real verification outcome, and reach a trade-capable state without the verification step remaining a placeholder.
+Closure recorded as `COMPLETED` under `ONBOARDING-ENTRY-001` after the bounded onboarding verification activation loop became materially usable from submission through approved trade-capable activation continuity.
 
 ### Required Continuity
 
@@ -123,6 +131,8 @@ Tenant provisioning to first-owner activation loop
 ### Roadmap Alignment
 
 Wave 1 — Enterability
+
+This is now the next remaining Wave 1 unit after closure of `ONBOARDING-ENTRY-001`.
 
 ### Gap Alignment
 
@@ -228,6 +238,10 @@ That now requires a bounded internal sequence:
 
 ## Unit 4 — OPS-CASEWORK-001
 
+- Status: `COMPLETED`
+- Closed By: `OPS-CASEWORK-001`
+- Result: `Dispute, finance, and compliance casework control continuity established on canonical durable records`
+
 ### Unit Name
 
 Live execution casework control loop
@@ -248,7 +262,7 @@ Wave 4 — Operational Control Hardening
 
 ### Capability Closure
 
-This unit is complete only when live execution can be supervised through materially usable financial, compliance, and dispute casework rather than thin event-backed oversight.
+Closure recorded as `COMPLETED` under `OPS-CASEWORK-001` after live execution became supervisable through materially usable financial, compliance, and dispute casework rather than thin event-backed oversight.
 
 ### Required Continuity
 
@@ -396,10 +410,7 @@ Wave 5 and Wave 6 units are part of the mandatory delivery set, but they remain 
 
 They must not be pulled ahead of:
 
-1. `ONBOARDING-ENTRY-001`
-2. `ONBOARDING-ENTRY-002`
-3. `EXCHANGE-CORE-LOOP-001`
-4. `OPS-CASEWORK-001`
+1. `ONBOARDING-ENTRY-002`
 
 They are included here to preserve the full roadmap-backed unit set, not to weaken dependency-first execution.
 

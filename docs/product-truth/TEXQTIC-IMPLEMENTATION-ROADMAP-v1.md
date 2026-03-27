@@ -65,14 +65,18 @@ separate live-status table for current priority.
 
 | Wave | Name | Primary Goal | Included Gap IDs | Dependency Reason |
 |---|---|---|---|---|
-| Wave 1 | Enterability | Make tenant entry and first-owner onboarding materially usable | `GAP-ENTRY-001`, `GAP-ENTRY-002` | No downstream execution matters if tenants cannot reliably enter |
+| Wave 1 | Enterability | Make tenant entry and first-owner onboarding materially usable | `GAP-ENTRY-001`, `GAP-ENTRY-002` | Partially completed: `GAP-ENTRY-001` closed via `ONBOARDING-ENTRY-001`; `GAP-ENTRY-002` remains the next enterability dependency |
 | Wave 2 | Exchange Enablers and Supplier Operability | Repair authority and product gaps that prevent the exchange core from becoming a usable two-sided path | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-003`, `GAP-EXCHANGE-004`, `GAP-EXCHANGE-005`, `GAP-EXCHANGE-006` | Completed via `EXCHANGE-CORE-LOOP-001` |
 | Wave 3 | Exchange Core Continuity Execution | Convert the exchange path into credible execution through RFQ linkage, trade integrity, escrow attachment, and settlement validation | `GAP-EXCHANGE-002`, `GAP-EXCHANGE-007`, `GAP-EXCHANGE-008`, `GAP-EXCHANGE-009`, `GAP-EXCHANGE-010`, `GAP-EXCHANGE-011`, `GAP-EXCHANGE-012`, `GAP-EXCHANGE-013` | Completed via `EXCHANGE-CORE-LOOP-001` |
-| Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Operational control should harden around a working execution loop |
+| Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Completed via `OPS-CASEWORK-001` |
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Mode polish and scope completion follow the core execution path |
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Truth cleanup must not preempt replacement authority |
 
 ## Wave 1 — Enterability
+
+- Execution Status: `PARTIALLY_COMPLETED`
+- Completed Unit: `ONBOARDING-ENTRY-001`
+- Remaining Unit: `ONBOARDING-ENTRY-002`
 
 ### Objective
 
@@ -85,11 +89,11 @@ Make first-use entry materially usable for a newly provisioned tenant and first 
 
 ### Rationale
 
-TexQtic cannot be launch-ready if the user cannot complete entry into a trade-capable tenant context. Enterability is the first dependency in the product chain.
+TexQtic cannot be launch-ready if the user cannot complete entry into a trade-capable tenant context. The business-verification activation branch is now closed under `ONBOARDING-ENTRY-001`, but enterability remains the first dependency layer because first-owner provisioning handoff is still broken under `GAP-ENTRY-002`.
 
 ### Exit Criteria
 
-- Business verification in onboarding is materially operational rather than placeholder-only.
+- Business verification in onboarding is materially operational rather than placeholder-only. Completed via `ONBOARDING-ENTRY-001`.
 - Tenant provisioning reaches a coherent first-owner activation handoff.
 - First-owner onboarding no longer depends on broken intermediate steps or manual detours that undermine launch usability.
 
@@ -189,6 +193,9 @@ Exchange execution continuity was completed through `EXCHANGE-CORE-LOOP-001`, es
 
 ## Wave 4 — Operational Control Hardening
 
+- Execution Status: `COMPLETED`
+- Completed Via: `OPS-CASEWORK-001`
+
 ### Objective
 
 Harden live admin casework around the execution loop so financial, compliance, and dispute operations are materially usable.
@@ -201,7 +208,7 @@ Harden live admin casework around the execution loop so financial, compliance, a
 
 ### Rationale
 
-Once entry, exchange, and trade execution are credible, the next dependency is operational control around real exceptions and decisions. These surfaces are already wired, but they remain thinner than their labels imply.
+Operational control hardening is now completed through `OPS-CASEWORK-001`, which established materially usable finance, compliance, and dispute casework on canonical durable records after the core execution loop became credible.
 
 ### Exit Criteria
 
@@ -212,13 +219,11 @@ Once entry, exchange, and trade execution are credible, the next dependency is o
 
 ### Dependencies
 
-- Waves 1 through 3 must establish a real product loop worth controlling.
+- Waves 1 through 3 established the real product loop that `OPS-CASEWORK-001` hardened.
 
 ### Risks If Deferred
 
-- Operational teams inherit weak control surfaces around real execution.
-- Launch risk rises as the product moves into live exceptions without durable casework.
-- Control-plane depth will lag behind product-visible execution.
+- Deferred risk for this wave is closed by completed execution under `OPS-CASEWORK-001`.
 
 ## Wave 5 — Mode Completeness
 
