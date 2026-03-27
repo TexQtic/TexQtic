@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-26 (GOVERNANCE-AUTHORITY-REALIGN-001)
+**Last Updated:** 2026-03-27 (GOV-CLOSE-EXCHANGE-CORE-LOOP-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -112,6 +112,15 @@ certification lifecycle redesign, finance/settlement redesign, dispute redesign,
 redesign beyond the bounded implemented supervision path, or any new implementation opening by
 implication.
 
+`EXCHANGE-CORE-LOOP-001` closed 2026-03-27 after live production verification proved the bounded
+exchange core loop end to end: authenticated tenant session restored, production catalog loaded,
+add-to-cart succeeded, checkout succeeded, Order Placed confirmation rendered, the newly created
+order appeared immediately in the live orders panel, totals rendered correctly, and the same
+rendered order row exposed admin-capable same-tenant controls in the authenticated owner session.
+This closure is bounded to exchange-core execution only. It does not authorize white-label
+shell/routing redesign, dedicated WL_ADMIN shell proof work, broader marketplace redesign,
+downstream seller-fulfillment expansion, or any new implementation opening by implication.
+
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
 post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed
@@ -208,6 +217,7 @@ CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 is now `VERIFIED_COMPLETE` after 
 | CONTROL-PLANE-IDENTITY-TRUTH-002 | CLOSED | 2026-03-22 | 44db73c · this close record |
 | CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 | CLOSED | 2026-03-22 | 2538901 · this close record |
 | OPS-CASEWORK-001 | CLOSED | 2026-03-26 | 20b965f · 5cbb511 · 8ceb642 · 28d0535 · 07bead6 · 48b15bb · this close record |
+| EXCHANGE-CORE-LOOP-001 | CLOSED | 2026-03-27 | 6b2443d · 1bc9fdc · 216b0a0 · 4f5bb59 · 67f358d · d03eced · this close record |
 | GOV-NAV-01 | CLOSED | 2026-03-21 | 81b44f3 · cdcb26c · 079a30d · 1366bee · see git log |
 | CONTROL-PLANE-IDENTITY-TRUTH-001 | CLOSED | 2026-03-22 | see git log |
 | AUTH-IDENTITY-TRUTH-DEPLOYED-001 | CLOSED | 2026-03-22 | see git log |

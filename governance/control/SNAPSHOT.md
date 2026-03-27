@@ -11,10 +11,10 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-26
+snapshot_date: 2026-03-27
 last_unit_opened: GOVERNANCE-OS-RESET-001
-last_unit_closed: OPS-CASEWORK-001
-last_commit: "[OPS-CASEWORK-001] close bounded dispute-finance-compliance casework completion"
+last_unit_closed: EXCHANGE-CORE-LOOP-001
+last_commit: "[EXCHANGE-CORE-LOOP-001] close bounded exchange core loop activation"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -51,6 +51,12 @@ ops_casework_001_closed: true
 ops_casework_dispute_closure_sufficient: true
 ops_casework_finance_closure_sufficient: true
 ops_casework_compliance_closure_sufficient: true
+exchange_core_loop_001_open: false
+exchange_core_loop_001_closed: true
+exchange_core_loop_catalog_to_checkout_proven: true
+exchange_core_loop_order_creation_proven: true
+exchange_core_loop_buyer_order_visibility_proven: true
+exchange_core_loop_admin_capable_same_tenant_visibility_proven: true
 ```
 
 ---
@@ -64,9 +70,13 @@ ops_casework_compliance_closure_sufficient: true
 
 - **OPS-CASEWORK-001** — `CLOSED` — Bounded operational casework completion unit closed 2026-03-26 after the completed dispute, finance, and compliance slices established materially usable supervision loops on canonical durable objects. Dispute is trade-anchored with durable escalation follow-through; finance is ledger/escrow-anchored with persisted supervision outcome on the canonical finance record; compliance is certification-anchored with persisted supervision outcome on the certification-backed record. The unit is now closure-sufficient across all three required branches and no broader redesign, tenant-shell navigation work, certification lifecycle redesign, or successor opening is implied by this closure.
 
+- **EXCHANGE-CORE-LOOP-001** — `CLOSED` — Bounded exchange-core activation unit closed 2026-03-27 after live production verification proved the end-to-end loop from catalog through add-to-cart, checkout, order creation, buyer-visible order rendering, correct totals rendering, and admin-capable same-tenant controls in the authenticated owner session. This closure does not imply dedicated WL_ADMIN shell proof, shell rehydration redesign, seller-fulfillment expansion, or broader marketplace redesign.
+
 - **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003** — `CLOSED` — Bounded product-facing delivery unit closed 2026-03-24 after implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, bounded verification, governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68`, and mandatory post-close audit in the same closure operation. The closed bounded outcome remains limited to the exact B2C `New Arrivals` branch in `App.tsx`, where the remote `https://via.placeholder.com/400x500` fallback was removed, the real-image path was preserved when `imageUrl` exists, and a local `Image unavailable` state renders when `imageUrl` is absent. No broader image/media/catalog refactor was authorized and no successor implementation authorization was created by closure
 
 - GOV-CLOSE-OPS-CASEWORK-001 (2026-03-26): closed `OPS-CASEWORK-001` after the already-completed dispute durability path, finance read re-anchor (`20b965f`), finance escrow bridge (`5cbb511`), finance escrow detail surface (`8ceb642`), finance supervision outcome (`28d0535`), compliance certification re-anchor (`07bead6`), and certification-anchored compliance supervision outcome (`48b15bb`). The bounded unit is now complete: live execution supervision is materially usable across dispute, finance, and compliance through canonical durable object paths with persisted operator follow-through outcomes. This closure does not authorize tenant-shell finance navigation remediation, broader compliance redesign, broader certification redesign, finance mutation redesign, or any new implementation unit.
+
+- GOV-CLOSE-EXCHANGE-CORE-LOOP-001 (2026-03-27): closed `EXCHANGE-CORE-LOOP-001` after the bounded repair chain and final live production verification. Production proof confirmed: white-label tenant session authenticated, catalog loaded, add-to-cart succeeded, checkout succeeded, Order Placed rendered, new order row appeared immediately in the live orders panel, totals rendered correctly as `$3.00`, and the rendered row exposed `Confirm` / `Cancel` controls in the authenticated owner session. Separate explicit WL_ADMIN shell proof remains outside this unit and is not required for exchange-core closure.
 
 - **GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001** — `CLOSED` — Bounded governance-only remediation unit closed 2026-03-24 after implementation commit `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory post-close audit emitted in the same closure operation. Repo-advertised migration entry points now default to the canonical tracked Prisma path, direct SQL remains explicitly exception-only, stale forward-looking migration guidance is aligned to the already-decided canonical migration execution and remote validation policy, `GOV-DEC-GOVERNANCE-MIGRATION-EXECUTION-POLICY-001` remains the authority source, `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002` was the sole `ACTIVE_DELIVERY` at that time, and this closure changed governance record state only rather than delivery sequencing
 

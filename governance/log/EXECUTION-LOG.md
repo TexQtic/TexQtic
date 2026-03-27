@@ -181,6 +181,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-EXCHANGE-CORE-LOOP-001 — 2026-03-27
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [EXCHANGE-CORE-LOOP-001] close bounded exchange core loop activation)
+Title: Close the bounded exchange core loop activation unit after live production end-to-end proof
+Summary: Governance-only close unit. Recorded `EXCHANGE-CORE-LOOP-001` as `CLOSED` after the bounded repair chain and final production verification proved the live exchange loop end to end. Production proof established that the authenticated tenant session restored successfully, the catalog loaded, add-to-cart succeeded, checkout succeeded, Order Placed rendered, the newly created order appeared in the live orders panel, totals rendered correctly, and the same rendered row exposed admin-capable same-tenant controls in the authenticated owner session. This satisfies the bounded closure standard for exchange-core execution. Dedicated WL_ADMIN shell proof remains a distinct shell/routing concern and is not part of this closure.
+Layer Impact: Layer 0 — OPEN-SET.md, SNAPSHOT.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Closure is bounded to exchange-core execution only. This close does not authorize shell/routing redesign, seller-fulfillment expansion, broader marketplace redesign, or a successor implementation unit by implication.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-EXCHANGE-CORE-LOOP-001-POST-CLOSE — 2026-03-27
+Type: GOVERNANCE / AUDIT
+Status: DECISION_REQUIRED
+Commit: (this unit — see git log for [EXCHANGE-CORE-LOOP-001] close bounded exchange core loop activation)
+Title: Mandatory post-close audit for exchange-core loop closure completeness
+Summary: Mandatory post-close audit emitted in the same closure operation. Audit result: `DECISION_REQUIRED`. Closure completeness is satisfied for the bounded exchange-core standard: live production proves catalog-to-checkout-to-order completion, buyer-visible order rendering, correct totals rendering, and admin-capable same-tenant order controls. No broader shell/routing proof is implied, and the unproven dedicated WL_ADMIN shell path remains a separate candidate concern rather than part of this unit. Recommendation is not authorization.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended
+Notes: Audit is advisory only. Any follow-on shell/routing investigation or next execution unit requires separate decision/opening.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ## Completed Governance Milestones
 
 Entries are ordered chronologically by closure date. Oldest first.
