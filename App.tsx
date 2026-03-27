@@ -106,6 +106,47 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
   'SETTLEMENT',
 ]);
 
+const ONBOARDING_STATUS_CONTINUITY = {
+  PENDING_VERIFICATION: {
+    title: 'Business Verification In Review',
+    detail:
+      'Trade, RFQ, escrow, and settlement capabilities stay disabled until your business verification is approved.',
+    bannerClassName: 'bg-blue-50 border-b border-blue-200 text-blue-900',
+    panelClassName: 'bg-white border border-amber-200',
+    badgeClassName: 'text-amber-800 bg-amber-50 border border-amber-200',
+    bannerText:
+      'Business verification has been submitted and is pending review. Trade and fund operations remain disabled until approval is recorded.',
+  },
+  VERIFICATION_REJECTED: {
+    title: 'Business Verification Not Approved',
+    detail:
+      'Trade, RFQ, escrow, and settlement capabilities remain disabled because your submitted business verification was rejected.',
+    bannerClassName: 'bg-rose-50 border-b border-rose-200 text-rose-900',
+    panelClassName: 'bg-white border border-rose-200',
+    badgeClassName: 'text-rose-800 bg-rose-50 border border-rose-200',
+    bannerText:
+      'Your business verification was not approved. Trade and fund operations remain disabled until a new approval outcome is recorded.',
+  },
+  VERIFICATION_NEEDS_MORE_INFO: {
+    title: 'More Verification Information Required',
+    detail:
+      'Trade, RFQ, escrow, and settlement capabilities remain disabled until additional business verification information is provided and reviewed.',
+    bannerClassName: 'bg-amber-50 border-b border-amber-300 text-amber-900',
+    panelClassName: 'bg-white border border-amber-300',
+    badgeClassName: 'text-amber-900 bg-amber-50 border border-amber-300',
+    bannerText:
+      'Your business verification requires more information. Trade and fund operations remain disabled until the verification review is completed.',
+  },
+} as const;
+
+const getOnboardingStatusContinuity = (status: string | null | undefined) => {
+  if (!status) {
+    return null;
+  }
+
+  return ONBOARDING_STATUS_CONTINUITY[status as keyof typeof ONBOARDING_STATUS_CONTINUITY] ?? null;
+};
+
 type StoredImpersonationSession = {
   adminId: string;
   state: ImpersonationState;
@@ -1738,18 +1779,19 @@ const App: React.FC = () => {
       );
     }
 
-    if (currentTenant.status === 'PENDING_VERIFICATION' && VERIFICATION_BLOCKED_VIEWS.has(expView)) {
+    const onboardingStatusContinuity = getOnboardingStatusContinuity(currentTenant.status);
+
+    if (onboardingStatusContinuity && VERIFICATION_BLOCKED_VIEWS.has(expView)) {
       return (
         <div className="min-h-[60vh] flex items-center justify-center px-6">
-          <div className="max-w-xl bg-white border border-amber-200 rounded-3xl shadow-xl p-10 text-center space-y-4">
+          <div className={`max-w-xl rounded-3xl shadow-xl p-10 text-center space-y-4 ${onboardingStatusContinuity.panelClassName}`}>
             <div className="text-4xl">⏳</div>
-            <h2 className="text-2xl font-bold text-slate-900">Business Verification In Review</h2>
+            <h2 className="text-2xl font-bold text-slate-900">{onboardingStatusContinuity.title}</h2>
             <p className="text-slate-600">
-              Trade, RFQ, escrow, and settlement capabilities stay disabled until your business
-              verification is approved.
+              {onboardingStatusContinuity.detail}
             </p>
-            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              Current status: PENDING_VERIFICATION
+            <p className={`text-sm rounded-xl px-4 py-3 ${onboardingStatusContinuity.badgeClassName}`}>
+              Current status: {currentTenant.status}
             </p>
           </div>
         </div>
@@ -2625,10 +2667,9 @@ const App: React.FC = () => {
                 </button>
               </div>
             )}
-            {currentTenant.status === 'PENDING_VERIFICATION' && (
-              <div className="fixed top-0 left-0 right-0 z-[95] bg-blue-50 border-b border-blue-200 px-4 py-3 text-blue-900 text-sm text-center">
-                Business verification has been submitted and is pending review. Trade and fund
-                operations remain disabled until approval is recorded.
+            {getOnboardingStatusContinuity(currentTenant.status) && (
+              <div className={`fixed top-0 left-0 right-0 z-[95] px-4 py-3 text-sm text-center ${getOnboardingStatusContinuity(currentTenant.status)?.bannerClassName}`}>
+                {getOnboardingStatusContinuity(currentTenant.status)?.bannerText}
               </div>
             )}
             <ExperienceShell {...props}>
