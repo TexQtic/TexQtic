@@ -1053,18 +1053,18 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Gate D.2: RLS-enforced, manual tenant filter removed
    */
   fastify.get('/tenant/cart', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
-    const { userId } = request;
-
     // Database context injected by databaseContextMiddleware (G-005)
     const dbContext = request.dbContext;
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    const cartOwnerUserId = dbContext.actorId;
+
     const cart = await withDbContext(prisma, dbContext, async tx => {
       return await tx.cart.findFirst({
         where: {
-          userId,
+          userId: cartOwnerUserId,
           status: 'ACTIVE',
         },
         include: {
@@ -1101,8 +1101,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     '/tenant/cart/items',
     { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
     async (request, reply) => {
-      const { userId } = request;
-
       // Validate body
       const bodySchema = z.object({
         catalogItemId: z.string().uuid(),
@@ -1121,6 +1119,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (!dbContext) {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
+
+      const cartOwnerUserId = dbContext.actorId;
 
       const result = await withDbContext(prisma, dbContext, async tx => {
         // Validate catalog item exists and is active (RLS enforces tenant boundary)
@@ -1141,7 +1141,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         // Ensure active cart exists (create if missing, RLS enforces tenant boundary)
         let cart = await tx.cart.findFirst({
           where: {
-            userId,
+            userId: cartOwnerUserId,
             status: 'ACTIVE',
           },
         });
@@ -1152,7 +1152,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           cart = await tx.cart.create({
             data: {
               tenantId: dbContext.orgId,
-              userId: userId,
+              userId: cartOwnerUserId,
               status: 'ACTIVE',
             },
           });
@@ -1227,7 +1227,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           realm: 'TENANT',
           tenantId: dbContext.orgId,
           actorType: 'USER',
-          actorId: userId ?? null,
+          actorId: cartOwnerUserId,
           action: 'cart.CART_ITEM_ADDED',
           entity: 'cart_item',
           entityId: cartItem.id,
@@ -1274,11 +1274,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               realm: 'TENANT',
               tenantId: dbContext.orgId,
               actorType: 'USER',
-              actorId: userId ?? null,
+              actorId: cartOwnerUserId,
               action: 'cart.CART_CREATED',
               entity: 'cart',
               entityId: result.cartId,
-              metadataJson: { cartId: result.cartId, tenantId: dbContext.orgId, userId },
+              metadataJson: {
+                cartId: result.cartId,
+                tenantId: dbContext.orgId,
+                userId: cartOwnerUserId,
+              },
             });
           });
         } catch (error) {
