@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { TenantConfig } from '../../types';
+import { activateApprovedOnboarding } from '../../services/controlPlaneService';
 
 interface TenantDetailsProps {
   tenant: TenantConfig;
@@ -10,6 +11,28 @@ interface TenantDetailsProps {
 
 export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, onImpersonate }) => {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PLAN' | 'FEATURES' | 'BILLING' | 'RISK' | 'AUDIT'>('OVERVIEW');
+  const [onboardingStatus, setOnboardingStatus] = useState<string | null>(tenant.onboarding_status ?? null);
+  const [activationLoading, setActivationLoading] = useState(false);
+  const [activationError, setActivationError] = useState<string | null>(null);
+  const [activationNotice, setActivationNotice] = useState<string | null>(null);
+
+  const canActivateApproved = onboardingStatus === 'VERIFICATION_APPROVED';
+
+  const handleActivateApproved = async () => {
+    setActivationLoading(true);
+    setActivationError(null);
+    setActivationNotice(null);
+
+    try {
+      const result = await activateApprovedOnboarding(tenant.id);
+      setOnboardingStatus(result.tenant.status);
+      setActivationNotice('Approved onboarding activation recorded. Tenant is now trade-capable.');
+    } catch (error: any) {
+      setActivationError(error?.message || 'Failed to activate approved onboarding state.');
+    } finally {
+      setActivationLoading(false);
+    }
+  };
 
   const tabs = [
     { id: 'OVERVIEW', label: 'Overview' },
@@ -32,6 +55,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   <DetailItem label="Full Name" value={tenant.name} />
                   <DetailItem label="Slug" value={tenant.slug} />
                   <DetailItem label="Tenant ID" value={tenant.id} />
+                  <DetailItem label="Onboarding Status" value={onboardingStatus ?? 'N/A'} />
                   <DetailItem label="Created At" value="2024-01-12 08:30 UTC" />
                 </div>
               </div>
@@ -58,10 +82,29 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Lifecycle Management</h3>
                 <div className="space-y-3">
+                  {canActivateApproved && (
+                    <button
+                      onClick={handleActivateApproved}
+                      disabled={activationLoading}
+                      className="w-full py-2 bg-emerald-600 text-white rounded font-bold text-xs uppercase transition disabled:opacity-60 disabled:cursor-not-allowed hover:bg-emerald-700"
+                    >
+                      {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
+                    </button>
+                  )}
                   <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold text-xs uppercase transition">Reinstate Tenant</button>
                   <button className="w-full py-2 bg-amber-600/10 border border-amber-600/30 text-amber-500 hover:bg-amber-600/20 rounded font-bold text-xs uppercase transition">Suspend Tenant</button>
                   <button className="w-full py-2 bg-rose-600/10 border border-rose-600/30 text-rose-500 hover:bg-rose-600/20 rounded font-bold text-xs uppercase transition">Delete Tenant (Safeguarded)</button>
                 </div>
+                {activationError && (
+                  <div className="mt-4 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                    {activationError}
+                  </div>
+                )}
+                {activationNotice && (
+                  <div className="mt-4 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+                    {activationNotice}
+                  </div>
+                )}
               </div>
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800 flex flex-col items-center justify-center text-center">
                  <div className={`text-4xl font-black mb-1 ${tenant.riskScore > 50 ? 'text-rose-500' : 'text-emerald-500'}`}>{tenant.riskScore}</div>

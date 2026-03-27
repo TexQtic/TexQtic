@@ -22,6 +22,8 @@ export interface Tenant {
   /** B2-REM-3: white-label capability flag. Optional — control-plane list queries may not populate. */
   is_white_label?: boolean;
   status: string;
+  /** Org-backed onboarding lifecycle status used by onboarding completion flow. */
+  onboarding_status?: string | null;
   plan: string;
   createdAt: string;
   updatedAt: string;
@@ -86,6 +88,26 @@ export async function getTenants(): Promise<TenantsResponse> {
  */
 export async function getTenantById(tenantId: string): Promise<TenantDetailResponse> {
   return adminGet<TenantDetailResponse>(`/api/control/tenants/${tenantId}`);
+}
+
+export interface ActivateApprovedOnboardingResponse {
+  tenant: {
+    id: string;
+    name: string;
+    status: string;
+  };
+}
+
+/**
+ * Explicitly activate an approved onboarding outcome into ACTIVE trade-capable state.
+ */
+export async function activateApprovedOnboarding(
+  tenantId: string
+): Promise<ActivateApprovedOnboardingResponse> {
+  return adminPost<ActivateApprovedOnboardingResponse>(
+    `/api/control/tenants/${tenantId}/onboarding/activate-approved`,
+    {}
+  );
 }
 
 // ==================== AUDIT LOGS ====================

@@ -49,6 +49,8 @@ export interface TenantConfig {
   /** B2-REM-3: white-label capability flag (B2-REM-2). Authoritative WL routing signal. */
   is_white_label?: boolean;
   status: TenantStatus;
+  /** Org-backed onboarding lifecycle status used for onboarding completion. */
+  onboarding_status?: string | null;
   plan: 'TRIAL' | 'PAID' | 'ENTERPRISE';
   theme: {
     primaryColor: string;

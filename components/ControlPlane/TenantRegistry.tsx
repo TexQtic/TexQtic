@@ -119,6 +119,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     slug: tenant.slug,
     type: tenant.type as any,
     status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
+    onboarding_status: tenant.onboarding_status ?? null,
     plan: (tenant.plan === 'BASIC' ? 'TRIAL' : tenant.plan || 'TRIAL') as
       | 'TRIAL'
       | 'PAID'

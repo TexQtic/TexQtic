@@ -137,11 +137,16 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/tenants', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
-    const tenants = await withAdminContext(async tx => {
+    const tenantRecords = await withAdminContext(async tx => {
       return await tx.tenant.findMany({
         include: {
           domains: true,
           branding: true,
+          organizations: {
+            select: {
+              status: true,
+            },
+          },
           _count: {
             select: {
               memberships: true,
@@ -151,6 +156,14 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         },
         orderBy: { createdAt: 'desc' },
       });
+    });
+
+    const tenants = tenantRecords.map((tenantRecord: (typeof tenantRecords)[number]) => {
+      const { organizations, ...tenant } = tenantRecord;
+      return {
+        ...tenant,
+        onboarding_status: organizations?.status ?? null,
+      };
     });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read', 'tenant', { count: tenants.length }));
@@ -165,13 +178,18 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const { id } = request.params as { id: string };
     const adminId = request.adminId ?? 'unknown';
 
-    const tenant = await withAdminContext(async tx => {
+    const tenantRecord = await withAdminContext(async tx => {
       return await tx.tenant.findUnique({
         where: { id },
         include: {
           domains: true,
           branding: true,
           aiBudget: true,
+          organizations: {
+            select: {
+              status: true,
+            },
+          },
           memberships: {
             include: {
               user: {
@@ -187,15 +205,21 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     });
 
-    if (!tenant) {
+    if (!tenantRecord) {
       return reply.code(404).send({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Tenant not found' },
       });
     }
 
+    const { organizations, ...tenant } = tenantRecord;
+    const tenantWithOnboardingStatus = {
+      ...tenant,
+      onboarding_status: organizations?.status ?? null,
+    };
+
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));
-    return sendSuccess(reply, { tenant });
+    return sendSuccess(reply, { tenant: tenantWithOnboardingStatus });
   });
 
   /**
