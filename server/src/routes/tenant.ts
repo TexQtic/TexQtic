@@ -1949,21 +1949,19 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Gate PR-A: RLS-enforced via withDbContext
    */
   fastify.post('/tenant/checkout', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
-    const { userId } = request;
     // Database context injected by databaseContextMiddleware (G-005)
     const dbContext = request.dbContext;
     if (!dbContext) {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
-    if (!userId) {
-      return sendError(reply, 'UNAUTHORIZED', 'User context missing', 401);
-    }
+
+    const checkoutUserId = dbContext.actorId;
     const t0 = Date.now();
 
     const result = await withDbContext(prisma, dbContext, async tx => {
       // Load active cart with items + catalog metadata
       const cart = await tx.cart.findFirst({
-        where: { userId, status: 'ACTIVE' },
+        where: { userId: checkoutUserId, status: 'ACTIVE' },
         include: {
           items: {
             include: {
@@ -2002,7 +2000,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const order = await tx.order.create({
         data: {
           tenantId: dbContext.orgId,
-          userId,
+          userId: checkoutUserId,
           cartId: cart.id,
           status: 'PAYMENT_PENDING',
           currency: totals.currency,
@@ -2031,7 +2029,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         realm: 'TENANT',
         tenantId: dbContext.orgId,
         actorType: 'USER',
-        actorId: userId ?? null,
+        actorId: checkoutUserId,
         action: 'order.CHECKOUT_COMPLETED',
         entity: 'order',
         entityId: order.id,
@@ -2051,9 +2049,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           tenant_id: dbContext.orgId,
           from_state: null,
           to_state: 'PAYMENT_PENDING',
-          actor_id: userId ?? null,
+          actor_id: checkoutUserId,
           realm: 'tenant',
-          request_id: null,
+          request_id: dbContext.requestId,
         },
       });
 
