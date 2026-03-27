@@ -104,27 +104,6 @@ async function resolveTenantSessionIdentity(input: {
       throw new OrganizationNotFoundError(input.tenantId);
     }
 
-    const isOwner = input.userRole === 'OWNER';
-    const hasVerificationData = Boolean(org.registration_no?.trim()) && Boolean(org.jurisdiction?.trim());
-
-    if (org.status === 'PENDING_VERIFICATION' && isOwner && hasVerificationData) {
-      org = await tx.organizations.update({
-        where: { id: input.tenantId },
-        data: { status: 'ACTIVE' },
-        select: {
-          id: true,
-          slug: true,
-          legal_name: true,
-          status: true,
-          org_type: true,
-          is_white_label: true,
-          jurisdiction: true,
-          registration_no: true,
-          plan: true,
-        },
-      });
-    }
-
     return {
       id: org.id,
       slug: org.slug,
