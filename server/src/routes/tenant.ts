@@ -1222,19 +1222,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           });
         }
 
-        if (cartWasCreated) {
-          await writeAuditLog(tx, {
-            realm: 'TENANT',
-            tenantId: dbContext.orgId,
-            actorType: 'USER',
-            actorId: userId ?? null,
-            action: 'cart.CART_CREATED',
-            entity: 'cart',
-            entityId: cart.id,
-            metadataJson: { cartId: cart.id, tenantId: dbContext.orgId, userId },
-          });
-        }
-
         // Audit: item added
         await writeAuditLog(tx, {
           realm: 'TENANT',
@@ -1252,7 +1239,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
-        return { cartItem: normalizeCatalogItemPrice(cartItem) };
+        return {
+          cartItem: normalizeCatalogItemPrice(cartItem),
+          cartWasCreated,
+          cartId: cart.id,
+        };
       });
 
       if ('error' in result) {
@@ -1272,6 +1263,29 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               requiredMoq: result.requiredMoq,
               finalQty: result.finalQty,
             },
+          });
+        }
+      }
+
+      if (result.cartWasCreated) {
+        try {
+          await withDbContext(prisma, dbContext, async tx => {
+            await writeAuditLog(tx, {
+              realm: 'TENANT',
+              tenantId: dbContext.orgId,
+              actorType: 'USER',
+              actorId: userId ?? null,
+              action: 'cart.CART_CREATED',
+              entity: 'cart',
+              entityId: result.cartId,
+              metadataJson: { cartId: result.cartId, tenantId: dbContext.orgId, userId },
+            });
+          });
+        } catch (error) {
+          console.warn('[cart][post_commit_cart_created_audit_failed]', {
+            cartId: result.cartId,
+            tenantId: dbContext.orgId,
+            error,
           });
         }
       }
