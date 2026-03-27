@@ -85,6 +85,17 @@ const complianceSupervisionEventTypeByOutcome = {
 
 const complianceSupervisionEventTypes = Object.values(complianceSupervisionEventTypeByOutcome);
 
+const onboardingOutcomeStatusByOutcome = {
+  APPROVED: 'VERIFICATION_APPROVED',
+  REJECTED: 'VERIFICATION_REJECTED',
+  NEEDS_MORE_INFO: 'VERIFICATION_NEEDS_MORE_INFO',
+} as const;
+
+const mutableOnboardingStatuses = new Set<string>([
+  'PENDING_VERIFICATION',
+  ...Object.values(onboardingOutcomeStatusByOutcome),
+]);
+
 function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
   switch (name) {
     case financeSupervisionEventTypeByOutcome.VERIFIED:
@@ -185,6 +196,126 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));
     return sendSuccess(reply, { tenant });
+  });
+
+  /**
+   * POST /api/control/tenants/:id/onboarding/outcome
+   * Persist a bounded onboarding verification outcome on organizations.status.
+   *
+   * Slice boundary:
+   * - writes only org-level onboarding status
+   * - does not mutate tenant.status or auth/domain activation surfaces
+   */
+  fastify.post('/tenants/:id/onboarding/outcome', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const bodySchema = z.object({
+      outcome: z.enum(['APPROVED', 'REJECTED', 'NEEDS_MORE_INFO']),
+      reason: z.string().trim().min(1).max(500).optional(),
+      notes: z.string().trim().min(1).max(2000).optional(),
+    });
+
+    const bodyResult = bodySchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return sendValidationError(reply, bodyResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+    const { outcome, reason, notes } = bodyResult.data;
+    const nextStatus = onboardingOutcomeStatusByOutcome[outcome];
+
+    try {
+      const result = await withOrgAdminContext(id, adminId, async tx => {
+        const currentOrg = await tx.organizations.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            legal_name: true,
+            status: true,
+          },
+        });
+
+        if (!currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (!mutableOnboardingStatuses.has(currentOrg.status)) {
+          return {
+            kind: 'invalid_state' as const,
+            currentOrg,
+          };
+        }
+
+        const updatedOrg = currentOrg.status === nextStatus
+          ? currentOrg
+          : await tx.organizations.update({
+              where: { id },
+              data: {
+                status: nextStatus,
+              },
+              select: {
+                id: true,
+                legal_name: true,
+                status: true,
+              },
+            });
+
+        return {
+          kind: 'ok' as const,
+          currentOrg,
+          updatedOrg,
+        };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'invalid_state') {
+        return sendError(
+          reply,
+          'ONBOARDING_STATUS_CONFLICT',
+          `Tenant onboarding outcome cannot be recorded from status ${result.currentOrg.status}`,
+          409
+        );
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.onboarding_outcome.recorded', 'organization', {
+          tenantId: result.updatedOrg.id,
+          legalName: result.updatedOrg.legal_name,
+          previousStatus: result.currentOrg.status,
+          nextStatus: result.updatedOrg.status,
+          outcome,
+          reason,
+          notes,
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenant: {
+          id: result.updatedOrg.id,
+          name: result.updatedOrg.legal_name,
+          status: result.updatedOrg.status,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId, outcome }, '[Onboarding Outcome Persist] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to record onboarding outcome', 500);
+    }
   });
 
   /**
