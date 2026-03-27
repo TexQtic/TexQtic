@@ -308,7 +308,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
             <div>
               <h2 className="text-lg font-bold">Provision New Tenant</h2>
               <p className="text-sm text-slate-500 mt-1">
-                Creates a new tenant organisation and owner account. The owner will receive an invite link.
+                Creates a new tenant organisation and provisions the primary owner account with an OWNER membership.
               </p>
             </div>
 
@@ -320,8 +320,10 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   <div className="text-xs text-slate-600 font-mono">Slug: {provisionResult.slug}.texqtic.com</div>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800">
-                  <strong>Next step:</strong> Use the Invite Member flow within the tenant to generate an invite link for the owner. Share the link:
-                  <br /><code className="font-mono">?token={"<invite_token>"}&action=invite</code>
+                  <strong>Authoritative handoff:</strong> The provisioned primary owner should enter through the tenant sign-in flow using the provisioned email and password once onboarding has been approved and the tenant has been activated to <code className="font-mono">ACTIVE</code>.
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700">
+                  <strong>Separate path only:</strong> Invite-token activation remains available for explicit invite-based membership flows, but it is not the default handoff for the already provisioned primary owner.
                 </div>
                 <button
                   onClick={() => { setShowProvisionModal(false); setProvisionResult(null); }}
