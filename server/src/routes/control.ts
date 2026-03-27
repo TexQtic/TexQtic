@@ -319,6 +319,127 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   });
 
   /**
+   * POST /api/control/tenants/:id/onboarding/activate-approved
+   * Explicitly transition an approved onboarding org into trade-capable ACTIVE state.
+   *
+   * Slice boundary:
+   * - requires a persisted VERIFICATION_APPROVED source state
+   * - updates org-backed tenant session state only through an explicit backend write
+   * - never derives ACTIVE during read-time session resolution
+   */
+  fastify.post('/tenants/:id/onboarding/activate-approved', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+
+    try {
+      const result = await withOrgAdminContext(id, adminId, async tx => {
+        const currentOrg = await tx.organizations.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            legal_name: true,
+            status: true,
+          },
+        });
+
+        if (!currentOrg) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (currentOrg.status === 'ACTIVE') {
+          return {
+            kind: 'already_active' as const,
+            currentOrg,
+          };
+        }
+
+        if (currentOrg.status !== onboardingOutcomeStatusByOutcome.APPROVED) {
+          return {
+            kind: 'invalid_state' as const,
+            currentOrg,
+          };
+        }
+
+        const updatedOrg = await tx.organizations.update({
+          where: { id },
+          data: {
+            status: 'ACTIVE',
+          },
+          select: {
+            id: true,
+            legal_name: true,
+            status: true,
+          },
+        });
+
+        return {
+          kind: 'activated' as const,
+          currentOrg,
+          updatedOrg,
+        };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'invalid_state') {
+        return sendError(
+          reply,
+          'ONBOARDING_ACTIVATION_CONFLICT',
+          `Tenant cannot become trade-capable from status ${result.currentOrg.status}`,
+          409
+        );
+      }
+
+      if (result.kind === 'already_active') {
+        return sendSuccess(reply, {
+          tenant: {
+            id: result.currentOrg.id,
+            name: result.currentOrg.legal_name,
+            status: result.currentOrg.status,
+          },
+        });
+      }
+
+      await writeAuditLog(
+        prisma,
+        createAdminAudit(adminId, 'control.tenants.onboarding_activation.recorded', 'organization', {
+          tenantId: result.updatedOrg.id,
+          legalName: result.updatedOrg.legal_name,
+          previousStatus: result.currentOrg.status,
+          nextStatus: result.updatedOrg.status,
+          transition: 'APPROVED_TO_ACTIVE',
+        })
+      );
+
+      return sendSuccess(reply, {
+        tenant: {
+          id: result.updatedOrg.id,
+          name: result.updatedOrg.legal_name,
+          status: result.updatedOrg.status,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId }, '[Onboarding Approved Activation] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to activate approved onboarding state', 500);
+    }
+  });
+
+  /**
    * GET /api/control/audit-logs
    * List all audit logs (admin only)
    *
