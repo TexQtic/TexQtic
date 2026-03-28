@@ -44,6 +44,12 @@ In scope because it still preserves a current-surface authority signal by listin
 Blueprints and API Docs as implemented control-center modules. That creates residual ambiguity
 after nav removal and conflicts with the replacement product-truth classification.
 
+### `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`
+
+In scope because it still presents Architecture Blueprints and API Docs as current SuperAdmin shell
+views inside a current-state status document. That preserves an additional current-authority signal
+that would remain misleading if the unit only changed the component files and taxonomy document.
+
 ## Out of Scope
 
 - product or runtime behavior changes
@@ -99,6 +105,19 @@ after nav removal and conflicts with the replacement product-truth classificatio
   The product-truth gap register plus the preserved historical record that the panels were removed
   from nav and are no longer current planning authority.
 
+### `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`
+
+- Current authority signal:
+  Presents Architecture Blueprints and API Docs as current SuperAdmin shell views inside a
+  current-state status summary.
+- Why misleading:
+  Repo-truth validation against current TypeScript sources shows no live code reference to either
+  surface outside the component files themselves, while preserved governance history records that
+  these placeholder panels were removed from SuperAdmin nav and left on disk only.
+- Replacement authority:
+  The product-truth gap register, the current Layer 0 opening basis for `TRUTH-CLEANUP-001`, and
+  the preserved governance history that records nav removal.
+
 ## Action Classification
 
 ### `components/ControlPlane/ApiDocs.tsx`
@@ -121,6 +140,14 @@ after nav removal and conflicts with the replacement product-truth classificatio
 - Rationale:
   The document should stop preserving a current implemented-authority interpretation for the two
   in-scope surfaces and should align with the replacement product-truth classification.
+
+### `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`
+
+- Required action: `reconcile`
+- Rationale:
+  The document should stop preserving a current-state shell-view interpretation for the two
+  downgraded surfaces and should align with the bounded repo truth that they are preserved on disk
+  but not current active planning or navigation authority.
 
 ## Slice Plan
 
@@ -145,7 +172,12 @@ current architecture or roadmap authority.
 Reconcile `docs/strategy/CONTROL_CENTER_TAXONOMY.md` so it no longer describes the two downgraded
 surfaces as current implemented authority-bearing control-center modules.
 
-### Slice 5 — Bounded truth verification and governance sync
+### Slice 5 — Current-state status reconciliation
+
+Reconcile `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md` so it no longer preserves a current
+SuperAdmin-view authority signal for the downgraded surfaces.
+
+### Slice 6 — Bounded truth verification and governance sync
 
 Verify that the replacement product-truth stack is the sole active authority for this bounded
 scope, then perform governance sync and close only if no misleading active authority signal
