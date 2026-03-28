@@ -348,7 +348,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    *
    * Slice boundary:
    * - requires a persisted VERIFICATION_APPROVED source state
-   * - updates org-backed tenant session state only through an explicit backend write
+    * - updates the org-backed session state and tenant ACTIVE auth/discovery state together
    * - never derives ACTIVE during read-time session resolution
    */
   fastify.post('/tenants/:id/onboarding/activate-approved', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
@@ -370,23 +370,52 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
     try {
       const result = await withOrgAdminContext(id, adminId, async tx => {
-        const currentOrg = await tx.organizations.findUnique({
-          where: { id },
-          select: {
-            id: true,
-            legal_name: true,
-            status: true,
-          },
-        });
+        const [currentOrg, currentTenant] = await Promise.all([
+          tx.organizations.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              legal_name: true,
+              status: true,
+            },
+          }),
+          tx.tenant.findUnique({
+            where: { id },
+            select: {
+              status: true,
+            },
+          }),
+        ]);
 
-        if (!currentOrg) {
+        if (!currentOrg || !currentTenant) {
           return { kind: 'not_found' as const };
         }
 
         if (currentOrg.status === 'ACTIVE') {
+          if (currentTenant.status !== 'ACTIVE') {
+            const updatedTenant = await tx.tenant.update({
+              where: { id },
+              data: {
+                status: 'ACTIVE',
+              },
+              select: {
+                status: true,
+              },
+            });
+
+            return {
+              kind: 'synced_active' as const,
+              currentOrg,
+              currentTenant,
+              updatedOrg: currentOrg,
+              updatedTenant,
+            };
+          }
+
           return {
             kind: 'already_active' as const,
             currentOrg,
+            currentTenant,
           };
         }
 
@@ -394,6 +423,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           return {
             kind: 'invalid_state' as const,
             currentOrg,
+            currentTenant,
           };
         }
 
@@ -409,10 +439,22 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           },
         });
 
+        const updatedTenant = await tx.tenant.update({
+          where: { id },
+          data: {
+            status: 'ACTIVE',
+          },
+          select: {
+            status: true,
+          },
+        });
+
         return {
           kind: 'activated' as const,
           currentOrg,
+          currentTenant,
           updatedOrg,
+          updatedTenant,
         };
       });
 
@@ -439,6 +481,29 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         });
       }
 
+      if (result.kind === 'synced_active') {
+        await writeAuditLog(
+          prisma,
+          createAdminAudit(adminId, 'control.tenants.onboarding_activation.recorded', 'organization', {
+            tenantId: result.updatedOrg.id,
+            legalName: result.updatedOrg.legal_name,
+            previousStatus: result.currentOrg.status,
+            nextStatus: result.updatedOrg.status,
+            previousTenantStatus: result.currentTenant.status,
+            nextTenantStatus: result.updatedTenant.status,
+            transition: 'ACTIVE_TENANT_STATUS_SYNC',
+          })
+        );
+
+        return sendSuccess(reply, {
+          tenant: {
+            id: result.updatedOrg.id,
+            name: result.updatedOrg.legal_name,
+            status: result.updatedOrg.status,
+          },
+        });
+      }
+
       await writeAuditLog(
         prisma,
         createAdminAudit(adminId, 'control.tenants.onboarding_activation.recorded', 'organization', {
@@ -446,6 +511,8 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           legalName: result.updatedOrg.legal_name,
           previousStatus: result.currentOrg.status,
           nextStatus: result.updatedOrg.status,
+          previousTenantStatus: result.currentTenant.status,
+          nextTenantStatus: result.updatedTenant.status,
           transition: 'APPROVED_TO_ACTIVE',
         })
       );
