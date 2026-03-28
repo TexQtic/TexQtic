@@ -186,7 +186,7 @@ verification_no_close_without_verification: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 1 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
+**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 0 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
@@ -236,7 +236,7 @@ closure assessment found no blocker. The ordered product-truth sequence therefor
 `TRUTH-CLEANUP-001` as the next lawful unit, but no new implementation or opening has started in
 this closure step.
 
-Verification discipline carried forward for this active unit is fixed as `implement -> commit ->
+Verification discipline carried forward for any later opened unit is fixed as `implement -> commit ->
 deploy -> verify -> close`; backend units require tests, frontend/auth/mode-entry units require
 Vercel verification, shared-shell changes require neighbor-path smoke checks, and no unit closes
 without verification.
