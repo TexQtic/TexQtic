@@ -15,7 +15,6 @@ import { OnboardingFlow } from './components/Onboarding/OnboardingFlow';
 import { TeamManagement } from './components/Tenant/TeamManagement';
 import { InviteMemberForm } from './components/Tenant/InviteMemberForm';
 import { WhiteLabelSettings } from './components/Tenant/WhiteLabelSettings';
-import { WLStubPanel } from './components/WhiteLabelAdmin/WLStubPanel';
 import { WLOrdersPanel } from './components/WhiteLabelAdmin/WLOrdersPanel';
 import { WLCollectionsPanel } from './components/WhiteLabelAdmin/WLCollectionsPanel';
 import { WLDomainsPanel } from './components/WhiteLabelAdmin/WLDomainsPanel';
@@ -105,6 +104,17 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
   'ESCROW',
   'SETTLEMENT',
 ]);
+
+const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
+type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
+
+const normalizeWlAdminView = (view: string): WLAdminView => {
+  if ((WL_ADMIN_VIEWS as readonly string[]).includes(view)) {
+    return view as WLAdminView;
+  }
+
+  return 'BRANDING';
+};
 
 const ONBOARDING_STATUS_CONTINUITY = {
   PENDING_VERIFICATION: {
@@ -496,7 +506,6 @@ const App: React.FC = () => {
   );
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
-  type WLAdminView = 'BRANDING' | 'STAFF' | 'PRODUCTS' | 'COLLECTIONS' | 'ORDERS' | 'DOMAINS';
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
   // TECS-FBW-020: WL-admin-local invite substate — keeps invite inside WhiteLabelAdminShell;
   // prevents INVITE_MEMBER appState from falling into the EXPERIENCE case group.
@@ -1647,7 +1656,7 @@ const App: React.FC = () => {
     if (!currentTenant) return null;
     // TECS-FBW-020: render InviteMemberForm in-shell; onBack returns to STAFF without leaving WL_ADMIN.
     if (wlAdminInviting) return <InviteMemberForm onBack={() => setWlAdminInviting(false)} />;
-    switch (wlAdminView) {
+    switch (normalizeWlAdminView(wlAdminView)) {
       // TECS-FBW-008: pass onNavigateDomains so WL Settings routes to real Domains panel
       case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
       case 'STAFF':       return <TeamManagement onInvite={() => setWlAdminInviting(true)} />;
@@ -1763,7 +1772,7 @@ const App: React.FC = () => {
       case 'COLLECTIONS': return <WLCollectionsPanel />;
       case 'ORDERS':      return <WLOrdersPanel />;
       case 'DOMAINS':     return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
-      default:            return <WLStubPanel title="Coming Soon" description="This panel is under construction." />;
+      default:            return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
     }
   };
 
@@ -2603,8 +2612,8 @@ const App: React.FC = () => {
             )}
             <WhiteLabelAdminShell
               tenant={currentTenant}
-              activeView={wlAdminView}
-              onViewChange={(v) => { setWlAdminView(v as WLAdminView); setWlAdminInviting(false); }}
+              activeView={normalizeWlAdminView(wlAdminView)}
+              onViewChange={(v) => { setWlAdminView(normalizeWlAdminView(v)); setWlAdminInviting(false); }}
               onNavigateStorefront={() => setAppState('EXPERIENCE')}
             >
               {renderWLAdminContent()}
