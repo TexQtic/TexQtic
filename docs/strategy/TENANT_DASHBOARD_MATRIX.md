@@ -33,22 +33,26 @@ Every tenant dashboard is organized into **5 Dashboard Domains**. The same 5 dom
 
 **Shell:** `B2BShell` in `layouts/Shells.tsx`
 
+**Current repo-truth note:** The B2B tenant surface is materially broader than the original Wave 4
+stub baseline reflected in earlier planning. The reconciled rows below remove the stale authority
+signals that would otherwise understate current tenant reality.
+
 | Domain | Module | Description | Wave 4 | Status |
 |--------|--------|-------------|--------|--------|
 | **TA — Admin** | Org Profile | Name, type, status, plan | P1 | ⏳ Stub |
 | | Domains & Branding | Custom domain, logo, theme | P1 | ✅ API done; UI partial |
 | | Membership & RBAC | Invite, role management, revoke | P1 | ✅ API done; UI exists |
 | | Integrations | Webhook endpoints, API keys | P3 | ⏳ Not started |
-| **TO — Operations** | Order List | View all orders + status | P1 | ⏳ Stub |
-| | RFQ Management | Create, respond, track RFQs | P1 | ⏳ Stub — product-defined |
+| **TO — Operations** | Order List | View all orders + status | P1 | ✅ Present in current tenant surface |
+| | RFQ Management | Create, respond, track RFQs | P1 | ✅ Materially real in current tenant surface |
 | | Negotiation Workspace | Counter-offers, approvals, version history | P2 | ⏳ Stub — product-defined |
 | | Fulfillment Tracker | Shipment status, logistics updates | P2 | ⏳ Not started |
-| | Compliance Tasks | Tenant-facing compliance items pending action | P1 | ⏳ Stub |
+| | Compliance Tasks | Tenant-facing compliance items pending action | P1 | ✅ Present in current tenant surface |
 | **TF — Finance** | Invoice List | Issue and track invoices | P2 | ⏳ Stub — product-defined |
 | | Fee Visibility | Platform fees applied to orders | P2 | ⏳ Not started |
 | | Settlement Status | Acknowledge payment events (no fund move) | P2 | ⏳ Not started |
 | | Payout Records | History of settlement acknowledgements | P3 | ⏳ Not started |
-| **TS — Sales/Products** | Catalog Management | List, create, edit catalog items + pricing | P1 | ✅ API done; UI partial |
+| **TS — Sales/Products** | Catalog Management | List, create, edit catalog items + pricing | P1 | ✅ Materially real in current tenant surface |
 | | Pricing Rules | MOQ, tiered pricing, bulk discounts | P2 | ⏳ Stub |
 | | Collection Groups | Logical product groupings | P3 | ⏳ Not started |
 | **TC — Client Comms** | Message Threads | Buyer/supplier communications | P2 | ⏳ Not started |
@@ -64,21 +68,24 @@ Every tenant dashboard is organized into **5 Dashboard Domains**. The same 5 dom
 
 **Shell:** `WhiteLabelShell` in `layouts/Shells.tsx`
 
-**Context:** WL tenants own a branded storefront. They need a **Store Admin** back-office as a primary interface — the current shell has only storefront-first navigation. **This is a product decision: WL gets a Store Admin panel.**
+**Context:** WL tenants own a branded storefront and already have a real operator/admin back-
+office surface alongside storefront-facing navigation. This matrix covers the brand-operator
+surface only and should no longer be read as if WL Store Admin were still a future-add product
+decision.
 
 | Domain | Module | Description | Wave 4 | Status |
 |--------|--------|-------------|--------|--------|
-| **TA — Admin** | Store Profile | Brand name, logo, theme colors, domain | P1 | ⏳ Stub — branding API exists |
+| **TA — Admin** | Store Profile | Brand name, logo, theme colors, domain | P1 | ✅ Present in current WL admin surface |
 | | Membership | Invite and manage store staff | P1 | ✅ API done |
 | | Integrations | Webhook, inventory sync hooks | P3 | ⏳ Not started |
-| **TO — Operations** | Order Management | View all storefront orders + status | P1 | ⏳ Stub |
+| **TO — Operations** | Order Management | View all storefront orders + status | P1 | ✅ Present in current WL admin surface |
 | | Returns & Fulfillment | Track outbound + handle return requests | P2 | ⏳ Not started |
 | | Compliance Tasks | Brand/product compliance requirements | P2 | ⏳ Not started |
 | **TF — Finance** | Revenue Dashboard | Orders revenue summary (not fund movement) | P2 | ⏳ Not started |
 | | Fee Visibility | Platform fees on storefront orders | P2 | ⏳ Not started |
 | | Payouts (visibility) | Settlement acknowledgements | P3 | ⏳ Not started |
-| **TS — Sales/Products** | Catalog / Products | Manage storefront product listings | P1 | ⏳ Stub — catalog API exists |
-| | Collections | Curated product collections / campaigns | P1 | ⏳ Stub |
+| **TS — Sales/Products** | Catalog / Products | Manage storefront product listings | P1 | ✅ Present in current WL admin surface |
+| | Collections | Curated product collections / campaigns | P1 | ✅ Present in current WL admin surface |
 | | Pricing & Promotions | Price rules, discount codes | P2 | ⏳ Not started |
 | | Merchandising | Homepage layout, featured products | P2 | ⏳ Not started |
 | **TC — Client Comms** | Customer Messages | Handle customer inquiries | P2 | ⏳ Not started |
