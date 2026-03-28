@@ -157,12 +157,40 @@ export async function provisionTenant(
         slug,
         // B2-REM-5A: canonical identity fields wired from provisioning request
         // type = Prisma field name for tenant_category API field
-        type: tenant_category as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL',
+        type: tenant_category,
         isWhiteLabel: is_white_label ?? false,
       },
       select: {
         id: true,
         slug: true,
+        type: true,
+        status: true,
+        plan: true,
+      },
+    });
+
+    // Runtime tenant identity reads organizations.is_white_label via getOrganizationIdentity().
+    // Provisioning must therefore write the WL flag into the canonical organizations row,
+    // not only the transitional tenants mirror, so newly provisioned tenants rehydrate correctly.
+    await tx.organizations.upsert({
+      where: { id: tenant.id },
+      create: {
+        id: tenant.id,
+        slug: tenant.slug,
+        legal_name: orgName,
+        org_type: tenant.type,
+        status: tenant.status,
+        plan: tenant.plan,
+        is_white_label: is_white_label ?? false,
+      },
+      update: {
+        slug: tenant.slug,
+        legal_name: orgName,
+        org_type: tenant.type,
+        status: tenant.status,
+        plan: tenant.plan,
+        is_white_label: is_white_label ?? false,
+        updated_at: new Date(),
       },
     });
 
