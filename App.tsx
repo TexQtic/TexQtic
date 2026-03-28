@@ -802,7 +802,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if ((appState === 'EXPERIENCE' || appState === 'SETTINGS') && currentTenant) {
+    if ((appState === 'EXPERIENCE' || appState === 'SETTINGS') && currentTenant && !currentTenant.is_white_label) {
       const fetchInsight = async () => {
         setAiInsight('Thinking...');
         const insight = await getPlatformInsights(
@@ -1805,7 +1805,19 @@ const App: React.FC = () => {
     // RCP-1 TECS 3: Orders panel — rendered before the tenant-type switch so it
     // overlays any tenant type's home view. Reset to HOME via onBack / onNavigateHome.
     // G-025 TECS 4D: DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
-    if (expView === 'DPP') return <DPPPassport onBack={() => setExpView('HOME')} />;
+    if (expView === 'DPP') {
+      return (
+        <DPPPassport
+          onBack={() => setExpView('HOME')}
+          title={currentTenant?.is_white_label ? 'DPP Snapshot' : undefined}
+          subtitle={
+            currentTenant?.is_white_label
+              ? 'Read-only supply chain snapshot by traceability node ID.'
+              : undefined
+          }
+        />
+      );
+    }
     if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
     if (expView === 'RFQS') {
       if (rfqDetailView.open && rfqDetailView.source === 'list') {
@@ -1932,14 +1944,16 @@ const App: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <div className="bg-blue-900 text-white p-6 rounded-2xl">
-                <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                  <span>🤖</span> AI Market Analysis
-                </h3>
-                <div className="text-sm leading-relaxed text-blue-100 font-serif italic">
-                  "{aiInsight}"
+              {!currentTenant.is_white_label && (
+                <div className="bg-blue-900 text-white p-6 rounded-2xl">
+                  <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                    <span>🤖</span> AI Market Analysis
+                  </h3>
+                  <div className="text-sm leading-relaxed text-blue-100 font-serif italic">
+                    "{aiInsight}"
+                  </div>
                 </div>
-              </div>
+              )}
             </section>
           </div>
         );

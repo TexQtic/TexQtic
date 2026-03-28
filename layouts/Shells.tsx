@@ -149,7 +149,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavi
         <button onClick={onNavigateHome} className="hover:opacity-40 transition-opacity">Portfolio</button>
         <button onClick={onNavigateTeam} className="hover:opacity-40 transition-opacity">Access Control</button>
         {onNavigateOrders && <button onClick={onNavigateOrders} className="hover:opacity-40 transition-opacity">Orders</button>}
-        {onNavigateDpp && <button onClick={onNavigateDpp} className="hover:opacity-40 transition-opacity">DPP Passport</button>}
+        {onNavigateDpp && <button onClick={onNavigateDpp} className="hover:opacity-40 transition-opacity">DPP Snapshot</button>}
         {onNavigateEscrow && <button onClick={onNavigateEscrow} className="hover:opacity-40 transition-opacity">Escrow</button>}
         {onNavigateEscalations && <button onClick={onNavigateEscalations} className="hover:opacity-40 transition-opacity">Escalations</button>}
         {onNavigateSettlement && <button onClick={onNavigateSettlement} className="hover:opacity-40 transition-opacity">Settlement</button>}

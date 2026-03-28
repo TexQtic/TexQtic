@@ -74,11 +74,13 @@ function isValidUuid(s: string): boolean {
 interface Props {
   /** Called when the user navigates back to the storefront home view. */
   onBack: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function DPPPassport({ onBack }: Props) {
+export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digital Product Passport — Supply Chain Snapshot' }: Readonly<Props>) {
   const [nodeIdInput, setNodeIdInput] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -163,8 +165,8 @@ export function DPPPassport({ onBack }: Props) {
           ← Back
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">DPP Passport</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Digital Product Passport — Supply Chain Snapshot</p>
+          <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
+          <p className="text-slate-500 text-sm mt-0.5">{subtitle}</p>
         </div>
       </div>
 
