@@ -179,6 +179,8 @@ export async function provisionTenant(
         data: {
           email: primaryAdminEmail,
           passwordHash,
+          emailVerified: true,
+          emailVerifiedAt: new Date(),
         },
         select: { id: true },
       });
