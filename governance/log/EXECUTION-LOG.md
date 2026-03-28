@@ -301,6 +301,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### TRUTH-CLEANUP-001 — 2026-03-28
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded replacement-authority truth cleanup
+Summary: Opened one bounded product-facing ACTIVE_DELIVERY unit after the final authority-stack
+  re-check confirmed that the replacement product-truth set is materially in place, the
+  pre-opening contradiction chain has been repaired in repo truth, and the remaining misleading
+  authority surfaces are explicitly bounded by `GAP-TRUTH-001` and `GAP-TRUTH-002`.
+  `TRUTH-CLEANUP-001` is now the sole ACTIVE_DELIVERY. No implementation was performed in this
+  step, no consumed historical candidate was reopened, and no broader product, control-plane,
+  routing, DB/schema, or doctrine-rewrite work was authorized.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: Delivery-first opening only. Scope is limited to retiring, relabeling, or otherwise
+  de-authorizing the fake-complete API-doc and architecture-blueprint surfaces so they no longer
+  function as active planning truth. No product code, runtime code, tests, schema, migrations,
+  Prisma, contracts, or governance-system redesign changed in this opening step. LAYER 0
+  CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-ONBOARDING-ENTRY-002-POST-CLOSE — 2026-03-28
 Type: GOVERNANCE / AUDIT
 Status: DECISION_REQUIRED

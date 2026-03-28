@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-28 (GOV-CLOSE-WL-COMPLETE-001)
+**Last Updated:** 2026-03-28 (GOV-OPEN-TRUTH-CLEANUP-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -22,21 +22,22 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
+| TRUTH-CLEANUP-001 | Replacement-authority truth cleanup loop | OPEN | ACTIVE_DELIVERY | W6 | 2026-03-28 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **9**
+- **OPEN** (all governed units): **10**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 0
+- **ACTIVE_DELIVERY**: 1
 - **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 10**
+- **Total non-terminal units: 11**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -50,7 +51,8 @@ Phase 2, and Phase 3 reset findings established that Governance OS must be shrun
 so it remains a drift-control layer around TexQtic platform delivery rather than a
 portfolio-dominating local sequencing system. No current Layer 0 governance exception displaces
 the product-truth sequence. The concurrently open governance-only units remain `DECISION_QUEUE`
-only and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE_QUEUE` only.
+only, `TRUTH-CLEANUP-001` is now the sole `ACTIVE_DELIVERY`, and `TECS-FBW-ADMINRBAC` remains
+`DESIGN_GATE_QUEUE` only.
 
 `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` is now `CLOSED` after the already-complete
 implementation, verification, and governance sync chain confirmed that implementation commit
@@ -150,8 +152,17 @@ finished WL-owned operator capability, neighboring runtime coherence was restore
 mattered, and Collections plus Domains are live and runtime-sound. Residual blueprint noise,
 historical stale-page behavior, direct WL_ADMIN access-path nuance, and tenant data emptiness
 remain non-blocking residuals, historical notes, or outside-unit-scope conditions only. No Layer 0
-governance exception displaces product-truth sequencing, and the derived next lawful product unit
-is now `TRUTH-CLEANUP-001` without opening implementation implicitly.
+governance exception displaces product-truth sequencing, and the bounded successor opening is now
+separate and explicit under `TRUTH-CLEANUP-001`.
+
+`TRUTH-CLEANUP-001` is now `OPEN` as the sole `ACTIVE_DELIVERY` unit after the final authority-
+stack re-check confirmed that the replacement product-truth set is materially in place, the
+pre-opening contradiction chain has been repaired, and the remaining misleading authority surfaces
+are explicitly bounded by `GAP-TRUTH-001` and `GAP-TRUTH-002`. This opening is limited to the
+replacement-authority truth cleanup loop only: retiring, relabeling, or otherwise de-authorizing
+the fake-complete API-doc and architecture-blueprint surfaces so they no longer function as active
+planning truth. No implementation was performed in this opening step, and no broader control-
+plane, product, routing, DB/schema, or doctrine-rewrite scope is authorized by implication.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory

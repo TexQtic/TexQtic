@@ -12,9 +12,9 @@
 
 ```yaml
 snapshot_date: 2026-03-28
-last_unit_opened: WL-COMPLETE-001
+last_unit_opened: TRUTH-CLEANUP-001
 last_unit_closed: WL-COMPLETE-001
-last_commit: "[GOVERNANCE] close WL-COMPLETE-001 and sync planning artifacts"
+last_commit: "[GOVERNANCE] open TRUTH-CLEANUP-001"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -76,8 +76,9 @@ wl_complete_001_active_delivery: false
 wl_complete_001_closed: true
 wl_complete_001_boundary_fixed: true
 wl_complete_001_next_step_bounded_design_only: false
-truth_cleanup_001_open: false
-truth_cleanup_001_next_delivery_candidate: true
+truth_cleanup_001_open: true
+truth_cleanup_001_active_delivery: true
+truth_cleanup_001_next_delivery_candidate: false
 verification_commit_deploy_verify_close_required: true
 verification_backend_tests_mandatory: true
 verification_frontend_auth_mode_entry_vercel_required: true
@@ -89,8 +90,10 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 10**
+- **Open governed units: 11**
 - **Verified-complete governed units: 0**
+
+- **TRUTH-CLEANUP-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded replacement-authority truth cleanup unit opened 2026-03-28 after the final authority-stack re-check confirmed that the replacement product-truth set now exists, the pre-opening contradiction chain has been repaired, and the remaining misleading authority surfaces are explicitly bounded by `GAP-TRUTH-001` and `GAP-TRUTH-002`. Scope is limited to retiring, relabeling, or otherwise de-authorizing the fake-complete API-doc and architecture-blueprint surfaces so they no longer function as active planning truth. No implementation was performed in the opening step, and no broader product, control-plane, routing, DB/schema, or doctrine-rewrite scope is authorized.
 
 - **WL-COMPLETE-001** — `CLOSED` — Bounded white-label operating mode completion unit closed 2026-03-28 after the slice chain plus targeted runtime verification established the exact closure basis required by the white-label operating-mode design anchor: real WL-qualified runtime entry, real WL admin/operator continuity, no required-path dependence on generic stub continuity, truth-bounded DPP/passport scope in WL mode, no false crediting of AI governance as a finished WL-owned operator capability, restored neighboring runtime coherence where it mattered, and live runtime soundness for Collections and Domains. Residual blueprint interference, historical stale-page behavior, direct WL_ADMIN access-path nuance, and empty tenant data remain non-blocking residuals, historical notes, or outside-unit-scope conditions only. This closure does not authorize broad WL redesign, domain-routing redesign, DPP expansion, AI subsystem redesign, auth/onboarding/provisioning rewrite, or successor implementation by implication.
 
@@ -186,7 +189,7 @@ verification_no_close_without_verification: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 0 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
+**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `TRUTH-CLEANUP-001` is now the sole `ACTIVE_DELIVERY` unit, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 1 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
@@ -221,25 +224,27 @@ RFQ remains pre-negotiation:
 
 ## Current Next-Action Pointer
 
-Layer 0 currently carries a derived product-truth pointer rather than an independent sequencing
-decision.
+Layer 0 currently carries one product-facing `ACTIVE_DELIVERY` unit derived from the product-
+truth authority stack rather than an independent sequencing decision.
 
-Derived product delivery priority: `TRUTH-CLEANUP-001`.
+Authorized product delivery unit: `TRUTH-CLEANUP-001`.
 Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
 
-The derived pointer no longer keeps an `ACTIVE_DELIVERY` unit open in Layer 0 because
-`WL-COMPLETE-001` is now governance-closed after bounded implementation, verification, and final
-closure assessment found no blocker. The ordered product-truth sequence therefore advances to
-`TRUTH-CLEANUP-001` as the next lawful unit, but no new implementation or opening has started in
-this closure step.
+`TRUTH-CLEANUP-001` is now OPEN as the sole `ACTIVE_DELIVERY` unit after the final authority-stack
+re-check confirmed that the replacement product-truth set is materially in place and internally
+consistent enough to govern the bounded truth-cleanup loop. Scope is limited to retiring,
+relabeling, or otherwise de-authorizing the fake-complete API-doc and architecture-blueprint
+surfaces so they no longer function as active planning truth. No implementation was performed in
+this governance opening step, and no broader product, architecture, doctrine, or governance-
+system rewrite is implied.
 
-Verification discipline carried forward for any later opened unit is fixed as `implement -> commit ->
-deploy -> verify -> close`; backend units require tests, frontend/auth/mode-entry units require
-Vercel verification, shared-shell changes require neighbor-path smoke checks, and no unit closes
-without verification.
+Verification discipline carried forward for this opened unit and for any later opened unit is fixed
+as `implement -> commit -> deploy -> verify -> close`; backend units require tests,
+frontend/auth/mode-entry units require Vercel verification, shared-shell changes require
+neighbor-path smoke checks, and no unit closes without verification.
 
 `GOVERNANCE-OS-RESET-001` remains OPEN in the governed open set as a bounded governance record
 only. It does not operate as a standalone product-sequencing origin in Layer 0.
