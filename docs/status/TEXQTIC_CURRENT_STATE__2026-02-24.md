@@ -38,9 +38,12 @@ The SuperAdmin shell has the most complete navigation surface. The following sid
 | **Tenants**       | Tenant Registry, Tenant Details                                                        |
 | **Governance**    | Feature Flags, Compliance Queue, Dispute Cases, Audit Logs                             |
 | **Finance**       | Finance Ops                                                                            |
-| **Operations**    | System Health, Event Stream, Admin RBAC, Architecture Blueprints                       |
+| **Operations**    | System Health, Event Stream, Admin RBAC                                                |
 | **AI**            | AI Governance                                                                          |
-| **Platform**      | API Docs, Data Model, Middleware Scaffold, Backend Skeleton                            |
+| **Platform**      | Data Model, Middleware Scaffold, Backend Skeleton                                      |
+
+Architecture Blueprints and API Docs remain on disk as preserved placeholder surfaces,
+but they are not current SuperAdmin shell destinations or current-state authority-bearing views.
 
 Reference: `components/ControlPlane/`
 
