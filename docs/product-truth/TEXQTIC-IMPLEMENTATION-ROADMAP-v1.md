@@ -71,6 +71,7 @@ separate live-status table for current priority.
 | Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Completed via `OPS-CASEWORK-001` |
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Completed via `WL-COMPLETE-001` |
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Completed via `TRUTH-CLEANUP-001` |
+| Wave 7 | Tenant Truth Cleanup / Shared Tenant Authority Reconciliation | Reconcile remaining tenant-facing misleading authority after shared runtime truth exists | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened via `TENANT-TRUTH-CLEANUP-001` after Wave 6 confirmed the prior truth-cleanup scope was control-plane only |
 
 ## Wave 1 — Enterability
 
@@ -287,6 +288,50 @@ Truth cleanup was necessary, but it could only happen after replacement authorit
 ### Risks If Deferred
 
 - Deferred risk for this wave is closed by completed execution under `TRUTH-CLEANUP-001`.
+
+## Wave 7 — Tenant Truth Cleanup / Shared Tenant Authority Reconciliation
+
+- Execution Status: `OPEN`
+- Opened Via: `TENANT-TRUTH-CLEANUP-001`
+
+### Objective
+
+Retire the remaining tenant-facing misleading authority only after bounded runtime truth for the
+enterprise and white-label tenant surfaces is already materially present.
+
+### Included Gaps
+
+- `GAP-TRUTH-003`
+- `GAP-TRUTH-004`
+- `GAP-TRUTH-005`
+
+### Rationale
+
+The tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was correctly bounded to the
+control-plane authority cleanup only and that the remaining misleading authority is now a shared
+tenant doc-authority drift problem rather than a separate runtime placeholder problem. Wave 7 is
+therefore one bounded tenant truth-cleanup wave limited to the tenant dashboard matrix, the
+cross-surface control/tenant/WL dashboard matrix, and the tenant-facing authority sections of the
+current-state document.
+
+### Exit Criteria
+
+- Tenant-facing authority docs describe current enterprise and white-label runtime truth without
+	stale stub-era claims.
+- Cross-surface dashboard authority no longer understates or misstates the bounded WL and tenant
+	surfaces already present in repo reality.
+- Current-state tenant authority is reconciled without widening into runtime implementation,
+	architecture rewrite, or broader stale-doc cleanup.
+
+### Dependencies
+
+- Waves 1 through 6 complete enough that the shared tenant runtime truth already exists.
+- `TRUTH-CLEANUP-001` remains closed on its bounded control-plane-only basis.
+
+### Risks If Deferred
+
+- Tenant-facing planning and status authority will continue to misstate enterprise and white-label
+	repo truth even though the bounded runtime closure chain already changed the product reality.
 
 ## What Not To Do
 

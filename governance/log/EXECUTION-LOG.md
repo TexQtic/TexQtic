@@ -301,6 +301,34 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### TENANT-TRUTH-CLEANUP-001 — 2026-03-28
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open shared tenant authority truth cleanup
+Summary: Opened one bounded product-facing ACTIVE_DELIVERY unit after the tenant follow-up
+  investigation confirmed that `TRUTH-CLEANUP-001` was control-plane bounded only, no separate
+  enterprise-versus-white-label runtime cleanup unit is required, and the remaining active
+  misleading authority is shared doc drift across `docs/strategy/TENANT_DASHBOARD_MATRIX.md`,
+  `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`, and the tenant-facing authority sections of
+  `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`. `TENANT-TRUTH-CLEANUP-001` is now the sole
+  ACTIVE_DELIVERY. No design or implementation was performed in this step, no runtime or shell
+  work was authorized, and no closed historical unit was reopened by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v1.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md,
+  TEXQTIC-NEXT-DELIVERY-PLAN-v1.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Opening is governance-only and bounded to one shared tenant doc-authority cleanup unit
+  only. Scope is limited to the tenant dashboard matrix, the cross-surface control/tenant/WL
+  dashboard matrix, and the tenant-facing authority sections of current-state. No runtime code,
+  shell work, test work, schema work, migration work, or broader stale-doc cleanup is authorized
+  by this opening. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TRUTH-CLEANUP-001 — 2026-03-28
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN

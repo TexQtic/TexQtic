@@ -54,8 +54,9 @@ Completed units remain listed in sequence as baseline continuity; they are not s
 `NEXT` posture.
 
 After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`,
-`OPS-CASEWORK-001`, `WL-COMPLETE-001`, and `TRUTH-CLEANUP-001`, no next remaining unit is
-currently defined in dependency order inside this plan.
+`OPS-CASEWORK-001`, `WL-COMPLETE-001`, and `TRUTH-CLEANUP-001`, the next remaining unit in
+dependency order is now `TENANT-TRUTH-CLEANUP-001`, opened as one bounded shared tenant
+doc-authority cleanup only.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
@@ -65,6 +66,7 @@ currently defined in dependency order inside this plan.
 | 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4, completed | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Closed when live execution gained materially usable finance, compliance, and dispute casework control |
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5, completed | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Closed when WL mode became coherently real and truthfully scoped on the bounded supported path |
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, completed | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Closed when misleading authority no longer remained active beside the replacement truth set |
+| 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, open | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened after investigation confirmed one shared tenant doc-authority cleanup remains across enterprise and white-label surfaces with no separate runtime unit required |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
 
@@ -402,6 +404,66 @@ It closes only when truth cleanup completes the control loop around planning aut
 The unit is not "update docs screens" or "archive blueprint page text."
 
 The unit is "close the authority cleanup loop so execution truth has one active source and misleading surfaces no longer distort delivery."
+
+## Unit 7 — TENANT-TRUTH-CLEANUP-001
+
+- Status: `OPEN`
+- Opened By: `TENANT-TRUTH-CLEANUP-001`
+- Opening Basis: `Shared tenant doc-authority drift confirmed across enterprise and white-label surfaces`
+
+### Unit Name
+
+Shared tenant authority truth cleanup loop
+
+### System Loop Completed
+
+`operations control loop`
+
+### Roadmap Alignment
+
+Wave 7 — Tenant Truth Cleanup / Shared Tenant Authority Reconciliation
+
+### Gap Alignment
+
+- `GAP-TRUTH-003`
+- `GAP-TRUTH-004`
+- `GAP-TRUTH-005`
+
+### Capability Closure
+
+This unit closes when tenant-facing planning and status authority becomes materially truthful for
+the current enterprise and white-label runtime surface set without widening into runtime
+implementation or broader stale-doc cleanup.
+
+### Required Continuity
+
+The loop must hold across:
+
+1. the tenant dashboard matrix
+2. the cross-surface control/tenant/WL dashboard matrix
+3. the tenant-facing authority sections of current-state
+4. one coherent tenant-facing truth posture that no longer preserves stale stub-era claims as
+	active repo truth
+
+### Primary Surfaces
+
+- `docs/strategy/TENANT_DASHBOARD_MATRIX.md`
+- `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`
+- tenant-facing authority sections of `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`
+
+### Closure Standard
+
+This unit does not close when replacement tenant truth merely exists somewhere else in the repo.
+
+It closes only when the active tenant-facing authority documents themselves stop misdirecting
+enterprise and white-label execution understanding.
+
+### Why This Is Not A UI Unit
+
+The unit is not "refresh tenant docs" or "rewrite current-state text."
+
+The unit is "close the tenant authority cleanup loop so active tenant-facing planning truth matches
+current repo reality."
 
 ## What Is Explicitly Not A Delivery Unit
 

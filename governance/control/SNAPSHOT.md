@@ -12,9 +12,9 @@
 
 ```yaml
 snapshot_date: 2026-03-28
-last_unit_opened: TRUTH-CLEANUP-001
+last_unit_opened: TENANT-TRUTH-CLEANUP-001
 last_unit_closed: TRUTH-CLEANUP-001
-last_commit: "[GOVERNANCE] close TRUTH-CLEANUP-001"
+last_commit: "[GOVERNANCE] open TENANT-TRUTH-CLEANUP-001"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -76,6 +76,9 @@ wl_complete_001_active_delivery: false
 wl_complete_001_closed: true
 wl_complete_001_boundary_fixed: true
 wl_complete_001_next_step_bounded_design_only: false
+tenant_truth_cleanup_001_open: true
+tenant_truth_cleanup_001_active_delivery: true
+tenant_truth_cleanup_001_closed: false
 truth_cleanup_001_active_delivery: false
 truth_cleanup_001_closed: true
 truth_cleanup_001_open: false
@@ -91,8 +94,10 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 10**
+- **Open governed units: 11**
 - **Verified-complete governed units: 0**
+
+- **TENANT-TRUTH-CLEANUP-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded shared tenant truth-cleanup unit opened 2026-03-28 after the tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was control-plane bounded only and that the remaining active misleading authority is one shared tenant doc-authority drift. This opening is limited to reconciling `docs/strategy/TENANT_DASHBOARD_MATRIX.md`, `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`, and the tenant-facing authority sections of `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`. No design or implementation was performed in the opening step, no runtime or shell work is authorized, and no broader tenant cleanup or closed-unit reopening is implied.
 
 - **TRUTH-CLEANUP-001** — `CLOSED` — Bounded replacement-authority truth cleanup unit closed 2026-03-28 after final repo-truth verification confirmed that the treated API-doc, architecture-blueprint, taxonomy, and current-state surfaces no longer function as competing active authority for the opened scope, and the bounded hidden-neighbor recheck found no additional active blocker surface. The preserved component surfaces now frame themselves as non-authoritative placeholders, the active planning/status docs now classify them as preserved non-current surfaces, and the replacement product-truth stack is now the sole active authority for this bounded scope. This closure does not authorize broader stale-doc cleanup, product/runtime work, routing work, DB/schema work, or any successor implementation by implication.
 
@@ -190,7 +195,7 @@ verification_no_close_without_verification: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. No product-facing `ACTIVE_DELIVERY` unit remains open after bounded governance close of `TRUTH-CLEANUP-001`, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 0 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
+**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `TENANT-TRUTH-CLEANUP-001` is now the sole product-facing `ACTIVE_DELIVERY`, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, concurrent governance-only units remain `DECISION_QUEUE` only, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 1 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
@@ -228,17 +233,17 @@ RFQ remains pre-negotiation:
 Layer 0 currently carries one product-facing `ACTIVE_DELIVERY` unit derived from the product-
 truth authority stack rather than an independent sequencing decision.
 
-Authorized product delivery unit: none currently open.
+Authorized product delivery unit: `TENANT-TRUTH-CLEANUP-001`.
 Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
 
-`TRUTH-CLEANUP-001` is now CLOSED after final repo-truth verification confirmed that the treated
-API-doc, architecture-blueprint, taxonomy, and current-state surfaces no longer function as
-competing active authority for the opened scope and that no additional active blocker surface
-remains in the bounded neighbor check. No successor implementation unit is opened by this close,
-and resulting Layer 0 posture returns to no current product-facing ACTIVE_DELIVERY pointer.
+`TENANT-TRUTH-CLEANUP-001` is now OPEN after bounded opening review confirmed that the remaining
+tenant-facing misleading authority is shared doc drift only and is limited to the tenant dashboard
+matrix, the cross-surface control/tenant/WL dashboard matrix, and the tenant-facing authority
+sections of current-state. No design or implementation is performed in this opening step, and no
+broader tenant/runtime/unit reopening is implied.
 
 Verification discipline carried forward for this opened unit and for any later opened unit is fixed
 as `implement -> commit -> deploy -> verify -> close`; backend units require tests,
