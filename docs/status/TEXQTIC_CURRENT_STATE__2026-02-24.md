@@ -52,9 +52,9 @@ Reference: `components/ControlPlane/`
 | Shell Type      | Current State                                                                                                                             |
 |-----------------|-------------------------------------------------------------------------------------------------------------------------------------------|
 | **AGGREGATOR**  | Aggregator-specific shell; scope not yet fully audited for G-W3                                                                           |
-| **B2B**         | Catalog + Members + floating Settings + Cart present; Negotiations/Invoices/RFQs were **historically stubbed** in audit baseline          |
+| **B2B**         | Catalog + Members + floating Settings + Cart present; current repo truth also materially includes Orders, RFQs, Compliance Tasks, and Catalog Management beyond the earlier stub-era audit framing |
 | **B2C**         | Basic consumer flow; audit baseline showed limited sidebar depth                                                                          |
-| **WHITE_LABEL** | Storefront-first experience. Audit baseline showed **no real "dashboard" navigation surface** beyond shell navigation patterns             |
+| **WHITE_LABEL** | Storefront-first experience, but current repo truth also includes materially real WL admin/operator surfaces for Store Profile, Order Management, Products, and Collections |
 
 Reference: `docs/audits/G-W3-AUDIT-001-ui-routing-contract.md`
 
@@ -95,8 +95,8 @@ Reference: `docs/audits/G-W3-AUDIT-001-ui-routing-contract.md`
 
 | Area                     | Gap                                                                                                  | Source                      |
 |--------------------------|------------------------------------------------------------------------------------------------------|-----------------------------|
-| B2B sidebar modules      | Negotiations, Invoices, RFQs, Client Comms are stubbbed/missing — these need product definition, not just wiring | Audit baseline G-W3-AUDIT-001 |
-| WHITE_LABEL back-office  | No "Store Admin" surface exists (catalog/collections/orders/branding in WL context)                  | Audit baseline G-W3-AUDIT-001 |
+| B2B sidebar modules      | Negotiations, Invoices, and Client Comms still need product definition; this gap should not be read as meaning the broader B2B tenant surface is still stubbed overall | Audit baseline G-W3-AUDIT-001 + current repo truth |
+| WHITE_LABEL back-office  | WL admin/operator surfaces exist, but their bounded v1 scope and authority still need product clarification | Audit baseline G-W3-AUDIT-001 + current repo truth |
 | Checkout (tenant)        | `POST /api/tenant/checkout` returning HTTP 500 — pre-existing bug, not a routing issue              | Local smoke test 2026-02-24   |
 | Cart item count          | `POST /api/tenant/cart/items` returns `items: []` in response (item is saved, response shape is off) | Local smoke test 2026-02-24   |
 | AGGREGATOR shell         | Scope not formally audited in G-W3 gate                                                             | —                             |
@@ -132,8 +132,8 @@ These choices determine:
 | 2 | Monetization model          | Subscription only? Commission only? Hybrid?                                                                          | Hybrid (subscription + tx fee)       | ⏳ OPEN    |
 | 3 | Settlement ownership        | Escrow? Direct tenant-to-tenant? Platform-managed?                                                                   | Direct T2T now; managed hook later   | ⏳ OPEN    |
 | 4 | AI stance                   | Advisory only? Automated lifecycle decisions?                                                                        | Advisory now; gated automation later | ⏳ OPEN    |
-| 5 | WL back-office scope        | Does WhiteLabel tenant get a "Store Admin" panel in v1?                                                              | Yes — minimal (catalog/orders/brand) | ⏳ OPEN    |
-| 6 | B2B module surface          | Which of Negotiations/Invoices/RFQs/Client Comms enter Wave 4 vs Wave 5+?                                           | TBD after positioning locked         | ⏳ OPEN    |
+| 5 | WL back-office scope        | How should the already-present WL admin/operator surface be bounded in v1?                                           | Minimal bounded scope (catalog/orders/brand) | ⏳ OPEN    |
+| 6 | B2B module surface          | Which still-incomplete B2B modules beyond the already materially real Orders/RFQs/Compliance/Catalog surfaces enter Wave 4 vs Wave 5+? | TBD after positioning locked         | ⏳ OPEN    |
 | 7 | Checkout ownership          | Fix `POST /api/tenant/checkout` bug in Wave 4 or defer?                                                             | Fix before any commerce-related Wave | ⏳ OPEN    |
 
 ---
@@ -211,13 +211,13 @@ Reference: `docs/DOCTRINE_V1_4_MAPPING_AUDIT.md`
 
 ## H. Next Iteration Outputs (Pre-Wave 4 Gate)
 
-Three documents must be produced before Wave 4 begins. Stubs are in `docs/strategy/`:
+Three documents remain part of the pre-Wave 4 gate. Two remain stubbed in `docs/strategy/`; the tenant dashboard matrix is now an active reconciled authority surface that still requires review against the Decision Backlog (Section E) and Module Declaration guardrails (Section F):
 
 | Output | File | Status |
 |--------|------|--------|
 | 1 — Platform Doctrine Addendum (Positioning & Money) | [`docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md`](../strategy/PLATFORM_DOCTRINE_ADDENDUM.md) | ⏳ STUB |
 | 2 — Control Center Taxonomy | [`docs/strategy/CONTROL_CENTER_TAXONOMY.md`](../strategy/CONTROL_CENTER_TAXONOMY.md) | ⏳ STUB |
-| 3 — Tenant Dashboard Matrix | [`docs/strategy/TENANT_DASHBOARD_MATRIX.md`](../strategy/TENANT_DASHBOARD_MATRIX.md) | ⏳ STUB |
+| 3 — Tenant Dashboard Matrix | [`docs/strategy/TENANT_DASHBOARD_MATRIX.md`](../strategy/TENANT_DASHBOARD_MATRIX.md) | ACTIVE / RECONCILED AUTHORITY |
 
 All three must be reviewed against the Decision Backlog (Section E) and the Module Declaration guardrails (Section F) before any Wave 4 implementation ticket is assigned.
 
@@ -234,5 +234,5 @@ All three must be reviewed against the Decision Backlog (Section E) and the Modu
 
 ---
 
-*Document last updated: 2026-02-24*
+*Document last updated: 2026-03-28*
 *Next update trigger: Decision Backlog items resolved OR Wave 4 scope locked*
