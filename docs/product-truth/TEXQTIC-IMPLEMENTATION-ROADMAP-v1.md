@@ -70,7 +70,7 @@ separate live-status table for current priority.
 | Wave 3 | Exchange Core Continuity Execution | Convert the exchange path into credible execution through RFQ linkage, trade integrity, escrow attachment, and settlement validation | `GAP-EXCHANGE-002`, `GAP-EXCHANGE-007`, `GAP-EXCHANGE-008`, `GAP-EXCHANGE-009`, `GAP-EXCHANGE-010`, `GAP-EXCHANGE-011`, `GAP-EXCHANGE-012`, `GAP-EXCHANGE-013` | Completed via `EXCHANGE-CORE-LOOP-001` |
 | Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Completed via `OPS-CASEWORK-001` |
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Completed via `WL-COMPLETE-001` |
-| Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Next lawful wave after `WL-COMPLETE-001` governance close |
+| Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Completed via `TRUTH-CLEANUP-001` |
 
 ## Wave 1 — Enterability
 
@@ -257,6 +257,9 @@ White-label completeness and narrower-than-marketed product scope did not preced
 
 ## Wave 6 — Truth Cleanup / Misleading Surface Retirement
 
+- Execution Status: `COMPLETED`
+- Completed Via: `TRUTH-CLEANUP-001`
+
 ### Objective
 
 Retire misleading authority-bearing and fake-complete surfaces only after the replacement truth set exists and is in use.
@@ -268,7 +271,7 @@ Retire misleading authority-bearing and fake-complete surfaces only after the re
 
 ### Rationale
 
-Truth cleanup is necessary, but it must happen after replacement authority exists. The product-truth doc set is the replacement base; misleading surfaces can be retired only after that base is complete and internally consistent.
+Truth cleanup was necessary, but it could only happen after replacement authority existed. The wave is now completed through `TRUTH-CLEANUP-001`, which verified that the treated API-doc, architecture-blueprint, taxonomy, and current-state surfaces no longer function as competing active authority and that the replacement product-truth stack is the sole active authority for this bounded scope.
 
 ### Exit Criteria
 
@@ -283,9 +286,7 @@ Truth cleanup is necessary, but it must happen after replacement authority exist
 
 ### Risks If Deferred
 
-- Misleading authority survives alongside the new truth set.
-- Future execution can still be misrouted by fake-complete or stack-misaligned surfaces.
-- Planning truth remains split between replacement docs and stale surfaces.
+- Deferred risk for this wave is closed by completed execution under `TRUTH-CLEANUP-001`.
 
 ## What Not To Do
 

@@ -54,8 +54,8 @@ Completed units remain listed in sequence as baseline continuity; they are not s
 `NEXT` posture.
 
 After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`,
-`OPS-CASEWORK-001`, and `WL-COMPLETE-001`, the next remaining unit in dependency order is
-`TRUTH-CLEANUP-001`.
+`OPS-CASEWORK-001`, `WL-COMPLETE-001`, and `TRUTH-CLEANUP-001`, no next remaining unit is
+currently defined in dependency order inside this plan.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
@@ -64,7 +64,7 @@ After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-
 | 3 | `EXCHANGE-CORE-LOOP-001` | RFQ-to-settlement execution continuity loop | `exchange loop`, `trade execution loop` | Waves 2 and 3, completed in roadmap order | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-002` | Closed when RFQ flow continued through supplier response, trade creation, trade lifecycle, and escrow/settlement continuity |
 | 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4, completed | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Closed when live execution gained materially usable finance, compliance, and dispute casework control |
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5, completed | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Closed when WL mode became coherently real and truthfully scoped on the bounded supported path |
-| 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, next remaining unit | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Misleading authority cannot remain active once the replacement truth set exists and governs execution |
+| 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, completed | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Closed when misleading authority no longer remained active beside the replacement truth set |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
 
@@ -352,7 +352,9 @@ The unit is "close the white-label operating mode so branded entry and operator 
 
 ## Unit 6 — TRUTH-CLEANUP-001
 
-This is now the next remaining unit after governance close of `WL-COMPLETE-001`.
+- Status: `COMPLETED`
+- Closed By: `TRUTH-CLEANUP-001`
+- Result: `Replacement product-truth is now the sole active authority for the bounded misleading-surface scope`
 
 ### Unit Name
 
@@ -373,7 +375,7 @@ Wave 6 — Truth Cleanup / Misleading Surface Retirement
 
 ### Capability Closure
 
-This unit is complete only when replacement product-truth documents govern execution and the misleading authority-bearing surfaces no longer function as active planning truth.
+Closure recorded as `COMPLETED` under `TRUTH-CLEANUP-001` after replacement product-truth documents became the sole active authority for the bounded scope and the misleading authority-bearing surfaces no longer functioned as active planning truth.
 
 ### Required Continuity
 

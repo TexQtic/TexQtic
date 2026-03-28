@@ -327,6 +327,33 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
 
 ---
 
+### GOV-CLOSE-TRUTH-CLEANUP-001 — 2026-03-28
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [GOVERNANCE] close TRUTH-CLEANUP-001)
+Title: Close the bounded replacement-authority truth cleanup unit after final repo-truth convergence verification
+Summary: Governance-only close unit. Recorded `TRUTH-CLEANUP-001` as `CLOSED` after final
+  repo-truth verification confirmed that `ApiDocs.tsx` and `ArchitectureBlueprints.tsx` now frame
+  themselves as preserved non-authoritative placeholders, `CONTROL_CENTER_TAXONOMY.md` and
+  `TEXQTIC_CURRENT_STATE__2026-02-24.md` no longer present those surfaces as current implemented
+  or current-view authority, and the bounded hidden-neighbor recheck found no additional active
+  blocker surface. The replacement product-truth stack is now the sole active authority for this
+  bounded scope. This closure is record-state only, starts no successor implementation, and does
+  not authorize broader stale-doc cleanup, product/runtime work, routing work, DB/schema work, or
+  doctrine rewrite by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v1.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md,
+  TEXQTIC-NEXT-DELIVERY-PLAN-v1.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Closure is governance-only and records state only. No successor product-facing unit is
+  opened by this close, no prior closed unit is reopened, and no governance exception is created.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-AUDIT-ONBOARDING-ENTRY-002-POST-CLOSE — 2026-03-28
 Type: GOVERNANCE / AUDIT
 Status: DECISION_REQUIRED
