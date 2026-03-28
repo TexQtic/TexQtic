@@ -2640,8 +2640,8 @@ const App: React.FC = () => {
           tenant: currentTenant,
           onNavigateTeam: () => setAppState('TEAM_MGMT'),
           onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
-          onNavigateOrders: () => setExpView('ORDERS'),
-          onNavigateDpp: () => setExpView('DPP'),
+          onNavigateOrders: () => { setAppState('EXPERIENCE'); setExpView('ORDERS'); },
+          onNavigateDpp: () => { setAppState('EXPERIENCE'); setExpView('DPP'); },
           onNavigateEscrow: () => setExpView('ESCROW'),
           // TECS-FBW-006-A: G-022 tenant escalation read panel (read-only)
           onNavigateEscalations: () => setExpView('ESCALATIONS'),
