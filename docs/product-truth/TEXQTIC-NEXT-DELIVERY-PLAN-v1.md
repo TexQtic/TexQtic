@@ -53,17 +53,18 @@ The numbered order below is the sequencing source for this plan.
 Completed units remain listed in sequence as baseline continuity; they are not separate live
 `NEXT` posture.
 
-After closure of `ONBOARDING-ENTRY-001`, `EXCHANGE-CORE-LOOP-001`, and `OPS-CASEWORK-001`, the
-next remaining unit in dependency order is `ONBOARDING-ENTRY-002`.
+After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`,
+`OPS-CASEWORK-001`, and `WL-COMPLETE-001`, the next remaining unit in dependency order is
+`TRUTH-CLEANUP-001`.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
 | 1 | `ONBOARDING-ENTRY-001` | Business verification activation loop | `onboarding loop` | Wave 1, completed | `GAP-ENTRY-001` | Closed when onboarding truthfully progressed from verification submission through approved trade-capable activation continuity |
-| 2 | `ONBOARDING-ENTRY-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1, next remaining unit | `GAP-ENTRY-002` | A tenant record without clean first-owner activation still breaks real entry into the platform |
+| 2 | `ONBOARDING-ENTRY-002` | Tenant provisioning to first-owner activation loop | `onboarding loop` | Wave 1, completed | `GAP-ENTRY-002` | Closed when tenant creation and canonical first-owner activation formed one coherent operating path |
 | 3 | `EXCHANGE-CORE-LOOP-001` | RFQ-to-settlement execution continuity loop | `exchange loop`, `trade execution loop` | Waves 2 and 3, completed in roadmap order | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-002` | Closed when RFQ flow continued through supplier response, trade creation, trade lifecycle, and escrow/settlement continuity |
 | 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4, completed | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Closed when live execution gained materially usable finance, compliance, and dispute casework control |
-| 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5 | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | White-label and scope-truth work must close a real operating mode, not remain a mixed collection of partial operator surfaces and overstated capabilities |
-| 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6 | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Misleading authority cannot remain active once the replacement truth set exists and governs execution |
+| 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5, completed | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Closed when WL mode became coherently real and truthfully scoped on the bounded supported path |
+| 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, next remaining unit | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Misleading authority cannot remain active once the replacement truth set exists and governs execution |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
 
@@ -120,6 +121,10 @@ The unit is "close the onboarding loop so verification is operational and activa
 
 ## Unit 2 — ONBOARDING-ENTRY-002
 
+- Status: `COMPLETED`
+- Closed By: `ONBOARDING-ENTRY-002`
+- Result: `Canonical provisioned first-owner activation handoff and tenant entry continuity established`
+
 ### Unit Name
 
 Tenant provisioning to first-owner activation loop
@@ -130,9 +135,7 @@ Tenant provisioning to first-owner activation loop
 
 ### Roadmap Alignment
 
-Wave 1 — Enterability
-
-This is now the next remaining Wave 1 unit after closure of `ONBOARDING-ENTRY-001`.
+Wave 1 — Enterability, completed.
 
 ### Gap Alignment
 
@@ -140,7 +143,7 @@ This is now the next remaining Wave 1 unit after closure of `ONBOARDING-ENTRY-00
 
 ### Capability Closure
 
-This unit is complete only when tenant provisioning reaches a coherent first-owner handoff and the newly created tenant can be entered by the intended first operator without a broken manual detour.
+Closure recorded as `COMPLETED` under `ONBOARDING-ENTRY-002` after tenant provisioning reached a coherent canonical first-owner handoff and the newly created tenant could be entered by the intended first operator without a broken manual detour on the supported path.
 
 ### Required Continuity
 
@@ -293,6 +296,10 @@ The unit is "close the operations control loop so execution has real operator go
 
 ## Unit 5 — WL-COMPLETE-001
 
+- Status: `COMPLETED`
+- Closed By: `WL-COMPLETE-001-S1`, `WL-COMPLETE-001-S2`, `WL-COMPLETE-001-S3`
+- Result: `WL-qualified runtime entry, operator/admin continuity, scope-truth correction, stub removal, neighboring runtime coherence, and Collections/Domains runtime soundness established on the bounded supported path`
+
 ### Unit Name
 
 White-label operating mode completion loop
@@ -314,7 +321,7 @@ Wave 5 — Mode Completeness
 
 ### Capability Closure
 
-This unit is complete only when the white-label operating mode becomes consistently usable as a real product mode, and the narrow-scope realities inside that mode are no longer overstated as broader finished capability.
+Closure recorded as `COMPLETED` under `WL-COMPLETE-001` after the white-label operating mode became coherently real and truthfully scoped on the bounded supported path.
 
 ### Required Continuity
 
@@ -344,6 +351,8 @@ The unit is not "finish WL admin screens."
 The unit is "close the white-label operating mode so branded entry and operator control become consistently real and truthfully scoped."
 
 ## Unit 6 — TRUTH-CLEANUP-001
+
+This is now the next remaining unit after governance close of `WL-COMPLETE-001`.
 
 ### Unit Name
 

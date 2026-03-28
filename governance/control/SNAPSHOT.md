@@ -13,8 +13,8 @@
 ```yaml
 snapshot_date: 2026-03-28
 last_unit_opened: WL-COMPLETE-001
-last_unit_closed: ONBOARDING-ENTRY-002
-last_commit: "[GOVERNANCE] close ONBOARDING-ENTRY-002 and promote next active unit"
+last_unit_closed: WL-COMPLETE-001
+last_commit: "[GOVERNANCE] close WL-COMPLETE-001 and sync planning artifacts"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -71,10 +71,13 @@ onboarding_entry_002_active_login_discovery_session_coherent: true
 onboarding_entry_002_first_owner_usability_proven: true
 onboarding_entry_002_frontend_bootstrap_path_proven: true
 onboarding_entry_002_invite_fallback_not_required_for_canonical_path: true
-wl_complete_001_open: true
-wl_complete_001_active_delivery: true
+wl_complete_001_open: false
+wl_complete_001_active_delivery: false
+wl_complete_001_closed: true
 wl_complete_001_boundary_fixed: true
-wl_complete_001_next_step_bounded_design_only: true
+wl_complete_001_next_step_bounded_design_only: false
+truth_cleanup_001_open: false
+truth_cleanup_001_next_delivery_candidate: true
 verification_commit_deploy_verify_close_required: true
 verification_backend_tests_mandatory: true
 verification_frontend_auth_mode_entry_vercel_required: true
@@ -86,10 +89,10 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 11**
+- **Open governed units: 10**
 - **Verified-complete governed units: 0**
 
-- **WL-COMPLETE-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded white-label operating mode completion unit opened 2026-03-28 after Layer 0 confirmed product-truth sequencing now lawfully advances from the completed `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`, and `OPS-CASEWORK-001` closures into Wave 5 mode completeness. The opening remains bounded to real white-label operator entry and operating continuity only: usable admin context for promised operator tasks, truthful scope visibility for the narrower-than-marketed DPP/passport surface, and truthful scope visibility for the mixed real/static AI governance surface. No implementation was performed by this opening, no broad WL redesign/auth/onboarding/provisioning rewrite was authorized, no full DPP or AI-governance expansion was authorized, and the next lawful step is bounded design / plan only.
+- **WL-COMPLETE-001** — `CLOSED` — Bounded white-label operating mode completion unit closed 2026-03-28 after the slice chain plus targeted runtime verification established the exact closure basis required by the white-label operating-mode design anchor: real WL-qualified runtime entry, real WL admin/operator continuity, no required-path dependence on generic stub continuity, truth-bounded DPP/passport scope in WL mode, no false crediting of AI governance as a finished WL-owned operator capability, restored neighboring runtime coherence where it mattered, and live runtime soundness for Collections and Domains. Residual blueprint interference, historical stale-page behavior, direct WL_ADMIN access-path nuance, and empty tenant data remain non-blocking residuals, historical notes, or outside-unit-scope conditions only. This closure does not authorize broad WL redesign, domain-routing redesign, DPP expansion, AI subsystem redesign, auth/onboarding/provisioning rewrite, or successor implementation by implication.
 
 - **GOVERNANCE-OS-RESET-001** — `OPEN` / `DECISION_QUEUE` — Bounded governance-only operating-model reset opened 2026-03-25 after the completed Phase 1, Phase 2, and Phase 3 reset findings established that Governance OS must be shrunk and re-anchored so it remains a drift-control layer around TexQtic platform delivery rather than a portfolio-dominating local sequencing system. The historical opening record remains untouched, but Layer 0 no longer uses this unit as the origin of general product sequencing. No reset implementation was performed in the opening step, no product-facing unit was opened, and execution-log cleanup plus doctrine/product-plan authority decisions remain out of scope for auto-resolution
 
@@ -221,17 +224,17 @@ RFQ remains pre-negotiation:
 Layer 0 currently carries a derived product-truth pointer rather than an independent sequencing
 decision.
 
-Derived product delivery priority: `WL-COMPLETE-001`.
+Derived product delivery priority: `TRUTH-CLEANUP-001`.
 Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
 
-The derived pointer is now actively opened in Layer 0 because `ONBOARDING-ENTRY-002` is closed in
-governance after the canonical provisioned primary-owner path was proven coherent end to end for
-the supported entry path, while `EXCHANGE-CORE-LOOP-001` and `OPS-CASEWORK-001` are already closed
-in roadmap order. The next lawful delivery unit in the ordered roadmap is therefore
-`WL-COMPLETE-001`, and the next lawful execution step is bounded design / plan only.
+The derived pointer no longer keeps an `ACTIVE_DELIVERY` unit open in Layer 0 because
+`WL-COMPLETE-001` is now governance-closed after bounded implementation, verification, and final
+closure assessment found no blocker. The ordered product-truth sequence therefore advances to
+`TRUTH-CLEANUP-001` as the next lawful unit, but no new implementation or opening has started in
+this closure step.
 
 Verification discipline carried forward for this active unit is fixed as `implement -> commit ->
 deploy -> verify -> close`; backend units require tests, frontend/auth/mode-entry units require

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-28 (GOV-OPEN-WL-COMPLETE-001)
+**Last Updated:** 2026-03-28 (GOV-CLOSE-WL-COMPLETE-001)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -13,7 +13,6 @@
 
 | UNIT-ID | Title | Status | Delivery Class | Wave | Last Updated |
 | --- | --- | --- | --- | --- | --- |
-| WL-COMPLETE-001 | White-label operating mode completion loop | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-28 |
 | GOVERNANCE-OS-RESET-001 | Governance OS posture reset | OPEN | DECISION_QUEUE | W5 | 2026-03-25 |
 | GOVERNANCE-SENTINEL-CHECK-005-RECOUNT-REMEDIATION-001 | Sentinel CHECK-005 recount remediation | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-CORRECTION-ORDER-ARTIFACT-EMISSION-001 | Sentinel correction-order artifact emission | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
@@ -29,15 +28,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **10**
+- **OPEN** (all governed units): **9**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 1
+- **ACTIVE_DELIVERY**: 0
 - **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 11**
+- **Total non-terminal units: 10**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -142,20 +141,17 @@ redesign, white-label or domain-routing work, and subscription or billing work r
 for this closed unit. No current Layer 0 governance exception displaces the next lawful
 product-truth delivery candidate `WL-COMPLETE-001`.
 
-`WL-COMPLETE-001` opened 2026-03-28 as the sole `ACTIVE_DELIVERY` unit because the product-truth
-authority stack already fixes it as the next lawful dependency-ordered delivery unit after the
-completed `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`, and `OPS-CASEWORK-001` closures.
-The unit remains bounded to white-label operating mode completion only: real white-label operator
-entry into a usable admin context, materially usable promised operator administration, and truthful
-scope visibility for the narrower-than-marketed DPP/passport and mixed real/static AI governance
-surfaces. This opening does not authorize broad white-label redesign, auth/onboarding/provisioning
-rewrite, domain-routing expansion unless later repo truth proves it strictly required for mode
-continuity, full DPP expansion, full AI-governance subsystem buildout, or `TRUTH-CLEANUP-001`
-work. The next lawful step after this opening is bounded design and plan only, and the carried
-verification discipline is fixed as `implement -> commit -> deploy -> verify -> close`, with
-backend tests mandatory for backend units, Vercel verification mandatory for frontend/auth/mode-
-entry units, neighbor-path smoke checks mandatory for shared-shell changes, and no unit eligible
-to close without verification.
+`WL-COMPLETE-001` is now `CLOSED` after the bounded white-label operating-mode completion loop was
+implemented, runtime-verified, and closure-assessed as ready to close with no blocker. The bounded
+closure basis is preserved exactly: real WL-qualified runtime entry exists, real WL admin/operator
+continuity exists, the required operator path no longer depends on generic stub continuity,
+DPP/passport is truth-bounded inside WL mode, AI-governance is no longer falsely credited as a
+finished WL-owned operator capability, neighboring runtime coherence was restored where it
+mattered, and Collections plus Domains are live and runtime-sound. Residual blueprint noise,
+historical stale-page behavior, direct WL_ADMIN access-path nuance, and tenant data emptiness
+remain non-blocking residuals, historical notes, or outside-unit-scope conditions only. No Layer 0
+governance exception displaces product-truth sequencing, and the derived next lawful product unit
+is now `TRUTH-CLEANUP-001` without opening implementation implicitly.
 
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory

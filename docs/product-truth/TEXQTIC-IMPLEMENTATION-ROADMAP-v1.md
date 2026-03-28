@@ -69,14 +69,13 @@ separate live-status table for current priority.
 | Wave 2 | Exchange Enablers and Supplier Operability | Repair authority and product gaps that prevent the exchange core from becoming a usable two-sided path | `GAP-EXCHANGE-001`, `GAP-EXCHANGE-003`, `GAP-EXCHANGE-004`, `GAP-EXCHANGE-005`, `GAP-EXCHANGE-006` | Completed via `EXCHANGE-CORE-LOOP-001` |
 | Wave 3 | Exchange Core Continuity Execution | Convert the exchange path into credible execution through RFQ linkage, trade integrity, escrow attachment, and settlement validation | `GAP-EXCHANGE-002`, `GAP-EXCHANGE-007`, `GAP-EXCHANGE-008`, `GAP-EXCHANGE-009`, `GAP-EXCHANGE-010`, `GAP-EXCHANGE-011`, `GAP-EXCHANGE-012`, `GAP-EXCHANGE-013` | Completed via `EXCHANGE-CORE-LOOP-001` |
 | Wave 4 | Operational Control Hardening | Strengthen live admin casework around financial, compliance, and dispute operations | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Completed via `OPS-CASEWORK-001` |
-| Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Mode polish and scope completion follow the core execution path |
-| Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Truth cleanup must not preempt replacement authority |
+| Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Completed via `WL-COMPLETE-001` |
+| Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Next lawful wave after `WL-COMPLETE-001` governance close |
 
 ## Wave 1 — Enterability
 
-- Execution Status: `PARTIALLY_COMPLETED`
-- Completed Unit: `ONBOARDING-ENTRY-001`
-- Remaining Unit: `ONBOARDING-ENTRY-002`
+- Execution Status: `COMPLETED`
+- Completed Units: `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`
 
 ### Objective
 
@@ -89,7 +88,7 @@ Make first-use entry materially usable for a newly provisioned tenant and first 
 
 ### Rationale
 
-TexQtic cannot be launch-ready if the user cannot complete entry into a trade-capable tenant context. The business-verification activation branch is now closed under `ONBOARDING-ENTRY-001`, but enterability remains the first dependency layer because first-owner provisioning handoff is still broken under `GAP-ENTRY-002`.
+TexQtic could not be launch-ready while entry into a trade-capable tenant context remained broken. Wave 1 is now completed through the bounded closures of `ONBOARDING-ENTRY-001` and `ONBOARDING-ENTRY-002`, which together established truthful business-verification activation continuity and a coherent canonical first-owner activation handoff.
 
 ### Exit Criteria
 
@@ -103,9 +102,7 @@ TexQtic cannot be launch-ready if the user cannot complete entry into a trade-ca
 
 ### Risks If Deferred
 
-- Every downstream delivery remains launch-constrained.
-- Exchange and execution improvements remain partially unusable because entry into the product remains broken.
-- Launch readiness continues to be overstated.
+- Deferred risk for this wave is closed by the completed enterability chain under `ONBOARDING-ENTRY-001` and `ONBOARDING-ENTRY-002`.
 
 ## Wave 2 — Two-Sided Exchange Activation
 
@@ -227,6 +224,9 @@ Operational control hardening is now completed through `OPS-CASEWORK-001`, which
 
 ## Wave 5 — Mode Completeness
 
+- Execution Status: `COMPLETED`
+- Completed Via: `WL-COMPLETE-001`
+
 ### Objective
 
 Close the most important mode-specific incompleteness and narrow-scope truth gaps after the shared core loop is working.
@@ -239,7 +239,7 @@ Close the most important mode-specific incompleteness and narrow-scope truth gap
 
 ### Rationale
 
-White-label completeness and narrower-than-marketed product scope matter, but they do not precede enterability, two-sided exchange, or execution-loop credibility. They are the next layer of truthful product completion after the core is working.
+White-label completeness and narrower-than-marketed product scope did not precede enterability, two-sided exchange, or execution-loop credibility. The wave is now completed through `WL-COMPLETE-001`, which closed the bounded WL operating-mode loop by proving real WL-qualified entry, real operator/admin continuity, removal of closure-critical generic stub dependence, truth-bounded DPP/passport scope, non-overcredited AI governance, restored neighboring Orders/DPP coherence, and live runtime soundness for Collections and Domains.
 
 ### Exit Criteria
 
@@ -253,9 +253,7 @@ White-label completeness and narrower-than-marketed product scope matter, but th
 
 ### Risks If Deferred
 
-- Mode-specific launch claims remain uneven.
-- White-label remains partially credible rather than consistently credible.
-- Scope-truth confusion continues around DPP and AI governance.
+- Deferred risk for this wave is closed by completed execution under `WL-COMPLETE-001`.
 
 ## Wave 6 — Truth Cleanup / Misleading Surface Retirement
 
