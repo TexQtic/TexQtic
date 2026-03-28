@@ -301,6 +301,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### WL-BLUEPRINT-RUNTIME-RESIDUE-001 — 2026-03-28
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: N/A
+Title: Decide and open bounded white-label blueprint runtime residue follow-up
+Summary: Opened one bounded concurrent `DECISION_QUEUE` follow-up unit after runtime-residue
+  investigation confirmed that a live non-control-plane `Blueprint` control in `App.tsx` still
+  exposes the tenant-facing `Platform Architecture Overview` overlay from
+  `components/ArchitectureDiagram.tsx` in current white-label runtime. This residue is outside the
+  lawful boundary of `TENANT-TRUTH-CLEANUP-001`, which remains document-only and continues as the
+  sole product-facing `ACTIVE_DELIVERY`. No design or implementation was performed in this step,
+  no code files were changed, and no closed historical unit was reopened by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v1.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md,
+  TEXQTIC-NEXT-DELIVERY-PLAN-v1.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Opening is governance-only and bounded to one separate white-label runtime-residue unit
+  only. Scope is limited to `App.tsx` and `components/ArchitectureDiagram.tsx`, remains separate
+  from the already-closed control-plane blueprint cleanup under `TRUTH-CLEANUP-001`, and does not
+  widen `TENANT-TRUTH-CLEANUP-001` into runtime or shell work. `TENANT-TRUTH-CLEANUP-001`
+  remains the sole product-facing `ACTIVE_DELIVERY`. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md · docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md · docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRUTH-CLEANUP-001 — 2026-03-28
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN

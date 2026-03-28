@@ -55,8 +55,11 @@ Completed units remain listed in sequence as baseline continuity; they are not s
 
 After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`,
 `OPS-CASEWORK-001`, `WL-COMPLETE-001`, and `TRUTH-CLEANUP-001`, the next remaining unit in
-dependency order is now `TENANT-TRUTH-CLEANUP-001`, opened as one bounded shared tenant
-doc-authority cleanup only.
+dependency order remains `TENANT-TRUTH-CLEANUP-001`, opened as one bounded shared tenant
+doc-authority cleanup only. A later runtime-residue investigation has now also justified opening
+the separate bounded follow-up unit `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, but that follow-up does
+not replace the current active-delivery priority and remains outside the lawful boundary of
+`TENANT-TRUTH-CLEANUP-001`.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
@@ -66,7 +69,8 @@ doc-authority cleanup only.
 | 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4, completed | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Closed when live execution gained materially usable finance, compliance, and dispute casework control |
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5, completed | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Closed when WL mode became coherently real and truthfully scoped on the bounded supported path |
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, completed | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Closed when misleading authority no longer remained active beside the replacement truth set |
-| 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, open | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened after investigation confirmed one shared tenant doc-authority cleanup remains across enterprise and white-label surfaces with no separate runtime unit required |
+| 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, open | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened after investigation confirmed one shared tenant doc-authority cleanup remains across enterprise and white-label surfaces; later runtime residue remained separately governable outside this document-only boundary |
+| 8 | `WL-BLUEPRINT-RUNTIME-RESIDUE-001` | White-label blueprint runtime residue loop | `operations control loop` | Wave 8, open | `GAP-TRUTH-006` | Opened after later runtime investigation proved that a live non-control-plane blueprint overlay remains tenant-facing in WL runtime outside the lawful boundary of `TENANT-TRUTH-CLEANUP-001` |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
 
@@ -474,6 +478,10 @@ The following are not valid unit definitions in this plan:
 - "tenant registry polish"
 - "finance dashboard refresh"
 - any unit that names a component instead of a closed system path
+
+`WL-BLUEPRINT-RUNTIME-RESIDUE-001` remains valid because it is not defined as a component-only
+shipment. It is the bounded closure of one tenant-facing runtime-authority residue path carried by
+`App.tsx` and `components/ArchitectureDiagram.tsx` together.
 
 These may be implementation slices inside a unit, but they are not valid delivery units on their own.
 

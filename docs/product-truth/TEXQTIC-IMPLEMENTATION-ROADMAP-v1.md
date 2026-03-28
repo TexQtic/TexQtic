@@ -72,6 +72,7 @@ separate live-status table for current priority.
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Completed via `WL-COMPLETE-001` |
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Completed via `TRUTH-CLEANUP-001` |
 | Wave 7 | Tenant Truth Cleanup / Shared Tenant Authority Reconciliation | Reconcile remaining tenant-facing misleading authority after shared runtime truth exists | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened via `TENANT-TRUTH-CLEANUP-001` after Wave 6 confirmed the prior truth-cleanup scope was control-plane only |
+| Wave 8 | White-Label Blueprint Runtime Residue | Retire the separately proven live WL blueprint runtime authority residue without widening into broad WL cleanup | `GAP-TRUTH-006` | Opened via `WL-BLUEPRINT-RUNTIME-RESIDUE-001` after runtime investigation proved the residue is outside `TENANT-TRUTH-CLEANUP-001` |
 
 ## Wave 1 — Enterability
 
@@ -307,12 +308,12 @@ enterprise and white-label tenant surfaces is already materially present.
 
 ### Rationale
 
-The tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was correctly bounded to the
-control-plane authority cleanup only and that the remaining misleading authority is now a shared
-tenant doc-authority drift problem rather than a separate runtime placeholder problem. Wave 7 is
-therefore one bounded tenant truth-cleanup wave limited to the tenant dashboard matrix, the
-cross-surface control/tenant/WL dashboard matrix, and the tenant-facing authority sections of the
-current-state document.
+The initial tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was correctly
+bounded to the control-plane authority cleanup only and that the remaining then-open misleading
+authority was a shared tenant doc-authority drift problem. Later runtime investigation proved one
+separate white-label blueprint runtime residue outside this document-only boundary, so Wave 7
+remains limited to the tenant dashboard matrix, the cross-surface control/tenant/WL dashboard
+matrix, and the tenant-facing authority sections of the current-state document only.
 
 ### Exit Criteria
 
@@ -332,6 +333,45 @@ current-state document.
 
 - Tenant-facing planning and status authority will continue to misstate enterprise and white-label
 	repo truth even though the bounded runtime closure chain already changed the product reality.
+
+## Wave 8 — White-Label Blueprint Runtime Residue
+
+- Execution Status: `OPEN`
+- Opened Via: `WL-BLUEPRINT-RUNTIME-RESIDUE-001`
+
+### Objective
+
+Retire the separately proven live non-control-plane blueprint authority residue that remains
+tenant-facing in current white-label runtime.
+
+### Included Gaps
+
+- `GAP-TRUTH-006`
+
+### Rationale
+
+Later runtime investigation proved that the white-label tenant runtime still exposes a live
+`Blueprint` control in `App.tsx` and a tenant-facing `Platform Architecture Overview` overlay from
+`components/ArchitectureDiagram.tsx`. That residue is not part of the Wave 7 document-authority
+cleanup boundary and therefore requires one separate bounded follow-up wave rather than widening
+`TENANT-TRUTH-CLEANUP-001` into runtime work.
+
+### Exit Criteria
+
+- White-label tenant runtime no longer exposes a live non-control-plane blueprint authority surface.
+- The bounded runtime residue is resolved without widening into broad white-label shell or
+	architecture redesign.
+- Wave 7 document-authority cleanup remains separate from this runtime-residue follow-up.
+
+### Dependencies
+
+- Waves 1 through 7 remain separate and preserve their already-decided boundaries.
+- `TENANT-TRUTH-CLEANUP-001` remains a document-authority unit only.
+
+### Risks If Deferred
+
+- White-label runtime will continue to expose a tenant-facing architecture-authority residue even
+	after the bounded doc-authority cleanup chain is complete.
 
 ## What Not To Do
 
