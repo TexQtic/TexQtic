@@ -87,6 +87,10 @@ The SuperAdmin control center is organized into **4 Control Towers**. Each tower
 **Actor roles:** `OWNER`, `ADMIN`, `MEMBER`  
 **Plan:** PROFESSIONAL (primary target for Wave 4 module completion)
 
+**Current repo-truth note:** The B2B tenant surface is materially broader than the original Wave 4
+stub baseline reflected here. The reconciled rows below remove the stale authority signals that
+would otherwise understate current tenant reality.
+
 ---
 
 ### TA — Admin
@@ -108,10 +112,10 @@ The SuperAdmin control center is organized into **4 Control Towers**. Each tower
 
 | Module               | Description                                               | Wave 4 | Status                         |
 |----------------------|-----------------------------------------------------------|--------|--------------------------------|
-| Orders               | View all orders + status tracking                         | P1     | ⏳ Stub                        |
-| RFQs                 | Create, respond to, and track RFQs                        | P1     | ⏳ Stub — product-defined first |
+| Orders               | View all orders + status tracking                         | P1     | ✅ Present in current tenant surface |
+| RFQs                 | Create, respond to, and track RFQs                        | P1     | ✅ Materially real in current tenant surface |
 | Negotiations         | Counter-offers, approvals, version history                | P2     | ⏳ Stub — product-defined first |
-| Compliance Tasks     | Tenant-facing compliance items pending action             | P1     | ⏳ Stub                        |
+| Compliance Tasks     | Tenant-facing compliance items pending action             | P1     | ✅ Present in current tenant surface |
 | Fulfillment          | Shipment status, logistics updates                        | P2     | ⏳ Not started                 |
 
 ---
@@ -134,7 +138,7 @@ The SuperAdmin control center is organized into **4 Control Towers**. Each tower
 
 | Module         | Description                                              | Wave 4 | Status                   |
 |----------------|----------------------------------------------------------|--------|--------------------------|
-| Catalog        | List, create, edit catalog items + pricing               | P1     | ✅ API done; UI partial  |
+| Catalog        | List, create, edit catalog items + pricing               | P1     | ✅ Materially real in current tenant surface  |
 | Pricing Rules  | MOQ, tiered pricing, bulk discounts                      | P2     | ⏳ Stub                  |
 | MOQ            | Minimum order quantity rules per catalog item            | P2     | ⏳ Stub                  |
 | Collections    | Logical product groupings                                | P3     | ⏳ Not started           |
@@ -160,7 +164,9 @@ The SuperAdmin control center is organized into **4 Control Towers**. Each tower
 **Shell:** `WhiteLabelShell` in `layouts/Shells.tsx`  
 **Actor roles:** `OWNER`, `ADMIN`, `MEMBER` (back-office) · `BUYER`, `GUEST` (storefront consumers)
 
-WL tenants require **two distinct surfaces**. The storefront consumer UX is a separate rendering concern.
+WL tenants require **two distinct surfaces**. The storefront consumer UX is a separate rendering
+concern, and the operator/admin back-office surface is already materially present in current repo
+truth.
 
 ---
 
@@ -179,7 +185,8 @@ WL tenants require **two distinct surfaces**. The storefront consumer UX is a se
 
 ### 2️⃣ Store Admin — Back-Office
 
-> **Product decision (Wave 4 P1):** WL tenants receive a Store Admin panel. Current shell has storefront-only navigation — this back-office entry point must be added.
+> **Current repo-truth note:** WL tenants already have a real operator/admin back-office surface.
+> This section should no longer be read as if WL Store Admin were still a future-add entry point.
 
 ---
 
@@ -187,7 +194,7 @@ WL tenants require **two distinct surfaces**. The storefront consumer UX is a se
 
 | Module          | Description                                        | Wave 4 | Status                          |
 |-----------------|----------------------------------------------------|--------|---------------------------------|
-| Store Profile   | Brand name, logo, theme colors                     | P1     | ⏳ Stub — branding API exists   |
+| Store Profile   | Brand name, logo, theme colors                     | P1     | ✅ Present in current WL admin surface   |
 | Branding        | Theme, logo, storefront appearance                 | P1     | ✅ API done; UI stub            |
 | Domain          | Custom domain config and verification              | P1     | ⏳ Stub                         |
 | Staff           | Invite and manage store staff (ADMIN / MEMBER)     | P1     | ✅ API done                     |
@@ -198,7 +205,7 @@ WL tenants require **two distinct surfaces**. The storefront consumer UX is a se
 
 | Module               | Description                                         | Wave 4 | Status         |
 |----------------------|-----------------------------------------------------|--------|----------------|
-| Order Management     | View all storefront orders + status                 | P1     | ⏳ Stub        |
+| Order Management     | View all storefront orders + status                 | P1     | ✅ Present in current WL admin surface        |
 | Fulfillment          | Track outbound shipping, logistics updates          | P2     | ⏳ Not started |
 | Returns              | Handle consumer return requests                     | P2     | ⏳ Not started |
 
@@ -217,8 +224,8 @@ WL tenants require **two distinct surfaces**. The storefront consumer UX is a se
 
 | Module         | Description                                              | Wave 4 | Status                      |
 |----------------|----------------------------------------------------------|--------|-----------------------------|
-| Products       | Manage storefront product listings                       | P1     | ⏳ Stub — catalog API exists |
-| Collections    | Curated product collections / campaigns                  | P1     | ⏳ Stub                     |
+| Products       | Manage storefront product listings                       | P1     | ✅ Present in current WL admin surface |
+| Collections    | Curated product collections / campaigns                  | P1     | ✅ Present in current WL admin surface                     |
 | Promotions     | Discount codes, sale prices                              | P2     | ⏳ Not started              |
 
 ---
@@ -243,7 +250,7 @@ WL tenants require **two distinct surfaces**. The storefront consumer UX is a se
 | **P1**   | ALL tenants    | TC     | Notifications center                                      |
 | **P1**   | WHITE_LABEL    | TA     | Store Branding UI (API exists)                            |
 | **P1**   | WHITE_LABEL    | TS     | Collections (WL-specific)                                 |
-| **P1**   | WHITE_LABEL    | TA/TO  | Store Admin back-office entry point (new surface)         |
+| **P1**   | WHITE_LABEL    | TA/TO  | Continue reconciling live Store Admin operator surface truth |
 | **P1**   | B2B            | TO     | Compliance Tasks surface                                  |
 | **P1**   | B2B            | TO     | RFQ Management (product definition gate first)            |
 | **P1**   | Control Plane  | Finance | Tenant Plans + Fee Ledger stubs                          |
