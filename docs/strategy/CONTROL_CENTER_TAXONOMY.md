@@ -33,8 +33,8 @@ The SuperAdmin is **not** a power user of a tenant feature set. The SuperAdmin i
 | Feature Flags         | Global + per-tenant flag management (`OP_*` + product flags) | ✅ Implemented       | `FeatureFlags.tsx`               |
 | Domain Management     | Verify/manage tenant custom domains                    | ⏳ Stub / partial          | —                                |
 | Release / Kill-Switch | Platform-wide kill switches (`KILL_SWITCH_ALL`, `OP_PLATFORM_READ_ONLY`) | ✅ Flags exist; UI ✅ | `FeatureFlags.tsx` |
-| Architecture Blueprints | Internal infra documentation surface               | ✅ Implemented            | `ArchitectureBlueprints.tsx`     |
-| API Docs              | Internal OpenAPI viewer                                | ✅ Implemented            | `ApiDocs.tsx`                    |
+| Architecture Blueprints | Preserved placeholder panel retained on disk; removed from active nav and not current architecture authority | ⚠️ Preserved placeholder | `ArchitectureBlueprints.tsx`     |
+| API Docs              | Preserved placeholder panel retained on disk; removed from active nav and not current API authority | ⚠️ Preserved placeholder | `ApiDocs.tsx`                    |
 
 **Data authority:** `tenants`, `tenant_domains`, `feature_flags`, `tenant_feature_overrides`
 
@@ -129,8 +129,7 @@ SuperAdmin Control Center
 ├── 🏗️  Platform Control
 │   ├── Tenant Registry
 │   ├── Tenant Details
-│   ├── Feature Flags
-│   └── Architecture / Docs
+│   └── Feature Flags
 │
 ├── ⚖️  Governance & Risk
 │   ├── Compliance Queue
