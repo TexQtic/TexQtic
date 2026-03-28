@@ -229,6 +229,53 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### GOV-CLOSE-ONBOARDING-ENTRY-002 — 2026-03-28
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [GOVERNANCE] close ONBOARDING-ENTRY-002 and promote next active unit)
+Title: Close the bounded approved-tenant enterability unit after canonical first-owner handoff proof
+Summary: Governance-only close unit. Recorded `ONBOARDING-ENTRY-002` as `CLOSED` after the bounded
+  slice chain established the canonical approved-onboarding to first-owner entry loop for the
+  supported path: owner-entry source-of-truth normalization (`6447c73`), ACTIVE/login/discovery/
+  session coherence (`d39d6df`), and first-owner usability proof plus the final provisioning
+  blocker fix (`486f386`). Final proof-only certification required no further code delta and
+  confirmed that activation, login, public discovery, session hydration, and frontend bootstrap no
+  longer contradict one another for the canonical provisioned primary-owner path, and canonical
+  first-owner usability no longer depends on invite fallback. This closure is bounded to the
+  canonical supported first-owner path only and does not authorize reused existing-user
+  provisioning edge cases, non-canonical invite-token redesign, broader auth or provisioning
+  redesign, white-label or domain-routing work, or subscription or billing work.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Layer 3 — EXECUTION-LOG.md
+  appended
+Notes: Closure is governance-only and records state only. The close step changed no product/runtime
+  files and creates no Layer 0 governance exception. The derived next product-delivery pointer now
+  advances to `WL-COMPLETE-001`. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### GOV-AUDIT-ONBOARDING-ENTRY-002-POST-CLOSE — 2026-03-28
+Type: GOVERNANCE / AUDIT
+Status: DECISION_REQUIRED
+Commit: (this unit — see git log for [GOVERNANCE] close ONBOARDING-ENTRY-002 and promote next active unit)
+Title: Mandatory post-close audit for approved-tenant enterability closure completeness
+Summary: Mandatory post-close audit emitted in the same closure operation. Audit result:
+  `DECISION_REQUIRED`. Closure completeness is satisfied for the bounded `ONBOARDING-ENTRY-002`
+  standard: approved onboarding now hands off coherently into usable tenant entry for the
+  canonical provisioned primary-owner path, the canonical provisioned owner can log in, public
+  discovery and `/api/me` no longer contradict `ACTIVE` eligibility on the supported path, frontend
+  bootstrap enters usable tenant state, and invite fallback is no longer required for canonical
+  first-owner usability. Residual reused existing-user provisioning edge cases, non-canonical
+  invite-token behaviors, broader auth or provisioning redesign, white-label or domain-routing
+  work, and subscription or billing work remain separate and do not block this closure.
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended
+Notes: Audit is advisory only. Any follow-on product or governance unit requires separate
+  decision/opening and must preserve the bounded residual boundary recorded here. LAYER 0
+  CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ## Completed Governance Milestones
 
 Entries are ordered chronologically by closure date. Oldest first.

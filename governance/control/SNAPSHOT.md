@@ -11,10 +11,10 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-27
+snapshot_date: 2026-03-28
 last_unit_opened: GOVERNANCE-OS-RESET-001
-last_unit_closed: ONBOARDING-ENTRY-001
-last_commit: "[ONBOARDING-ENTRY-001] close bounded onboarding verification activation loop"
+last_unit_closed: ONBOARDING-ENTRY-002
+last_commit: "[GOVERNANCE] close ONBOARDING-ENTRY-002 and promote next active unit"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -64,6 +64,13 @@ onboarding_entry_001_outcome_persistence_proven: true
 onboarding_entry_001_non_approved_continuity_proven: true
 onboarding_entry_001_approved_activation_transition_proven: true
 onboarding_entry_001_approved_trigger_path_proven: true
+onboarding_entry_002_open: false
+onboarding_entry_002_closed: true
+onboarding_entry_002_owner_handoff_source_of_truth_normalized: true
+onboarding_entry_002_active_login_discovery_session_coherent: true
+onboarding_entry_002_first_owner_usability_proven: true
+onboarding_entry_002_frontend_bootstrap_path_proven: true
+onboarding_entry_002_invite_fallback_not_required_for_canonical_path: true
 ```
 
 ---
@@ -80,6 +87,8 @@ onboarding_entry_001_approved_trigger_path_proven: true
 - **EXCHANGE-CORE-LOOP-001** — `CLOSED` — Bounded exchange-core activation unit closed 2026-03-27 after live production verification proved the end-to-end loop from catalog through add-to-cart, checkout, order creation, buyer-visible order rendering, correct totals rendering, and admin-capable same-tenant controls in the authenticated owner session. This closure does not imply dedicated WL_ADMIN shell proof, shell rehydration redesign, seller-fulfillment expansion, or broader marketplace redesign.
 
 - **ONBOARDING-ENTRY-001** — `CLOSED` — Bounded onboarding verification activation loop closed 2026-03-27 after repo truth confirmed truthful pending entry, stable pending preservation, persisted onboarding outcomes, tenant-facing non-approved continuity, explicit approved-to-active activation, and a usable in-product approved activation trigger. This closure does not imply provisioning redesign, `ONBOARDING-ENTRY-002` completion, subscription implementation, white-label completeness, or reviewer-console redesign.
+
+- **ONBOARDING-ENTRY-002** — `CLOSED` — Bounded approved-tenant enterability unit closed 2026-03-28 after the completed slice chain and final proof-only certification established a coherent canonical provisioned primary-owner path from approved onboarding to usable tenant entry. Activation, login, public discovery, session hydration, and frontend bootstrap no longer contradict one another for the supported path, and canonical first-owner usability no longer depends on invite fallback. Closure applies only to the canonical supported first-owner path; reused existing-user provisioning edge cases, non-canonical invite-token behaviors, broader auth or provisioning redesign, white-label or domain-routing work, and subscription or billing work remain out of scope.
 
 - **TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003** — `CLOSED` — Bounded product-facing delivery unit closed 2026-03-24 after implementation commit `d50b20834adf0e54fb628a93fa3613109da26388`, bounded verification, governance sync commit `9500d9c7c54702aa7b83e1d1793d5f2ae5ddfa68`, and mandatory post-close audit in the same closure operation. The closed bounded outcome remains limited to the exact B2C `New Arrivals` branch in `App.tsx`, where the remote `https://via.placeholder.com/400x500` fallback was removed, the real-image path was preserved when `imageUrl` exists, and a local `Image unavailable` state renders when `imageUrl` is absent. No broader image/media/catalog refactor was authorized and no successor implementation authorization was created by closure
 
@@ -201,11 +210,15 @@ RFQ remains pre-negotiation:
 Layer 0 currently carries a derived product-truth pointer rather than an independent sequencing
 decision.
 
-Derived product delivery priority: `ONBOARDING-ENTRY-001`.
+Derived product delivery priority: `WL-COMPLETE-001`.
 Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
+
+The derived pointer advances because `ONBOARDING-ENTRY-002` is now closed in governance after the
+canonical provisioned primary-owner path was proven coherent end to end for the supported entry
+path. The next lawful delivery unit in the ordered roadmap is therefore `WL-COMPLETE-001`.
 
 `GOVERNANCE-OS-RESET-001` remains OPEN in the governed open set as a bounded governance record
 only. It does not operate as a standalone product-sequencing origin in Layer 0.

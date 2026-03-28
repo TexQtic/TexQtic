@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-27 (GOV-CLOSE-ONBOARDING-ENTRY-001)
+**Last Updated:** 2026-03-28 (GOV-CLOSE-ONBOARDING-ENTRY-002)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -130,6 +130,17 @@ bounded to the business verification activation loop only. It does not authorize
 redesign, `ONBOARDING-ENTRY-002` work, subscription implementation, white-label completeness work,
 or reviewer-console redesign.
 
+`ONBOARDING-ENTRY-002` closed 2026-03-28 after the bounded approved-tenant enterability chain was
+completed in repo truth. The canonical provisioned primary-owner path now supports a coherent
+end-to-end handoff from approved onboarding to usable tenant entry: activation, login, public
+discovery, session hydration, and frontend bootstrap no longer contradict one another for the
+supported path, and canonical first-owner usability no longer depends on invite fallback. This
+closure applies to the canonical supported first-owner path only. Reused existing-user
+provisioning edge cases, non-canonical invite-token behaviors, broader auth or provisioning
+redesign, white-label or domain-routing work, and subscription or billing work remain out of scope
+for this closed unit. No current Layer 0 governance exception displaces the next lawful
+product-truth delivery candidate `WL-COMPLETE-001`.
+
 GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 closed 2026-03-24 after implementation commit
 `0db8de4`, verification commit `bb358a8`, governance-sync commit `112bf9e`, and the mandatory
 post-close audit result `DECISION_REQUIRED` emitted in the same closure operation. The completed
@@ -214,6 +225,7 @@ CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002 is now `VERIFIED_COMPLETE` after 
 
 | UNIT-ID | Status | Closed | Commit |
 | --- | --- | --- | --- |
+| ONBOARDING-ENTRY-002 | CLOSED | 2026-03-28 | 6447c73 · d39d6df · 486f386 · this close record |
 | ONBOARDING-ENTRY-001 | CLOSED | 2026-03-27 | 33ae6d8 · d280c68 · f541383 · e02407c · e1ef18f · this close record |
 | GOVERNANCE-MIGRATION-POLICY-REMEDIATION-001 | CLOSED | 2026-03-24 | 0db8de4 · bb358a8 · 112bf9e · this close record |
 | TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 | CLOSED | 2026-03-23 | f0f58ea · this close record |
