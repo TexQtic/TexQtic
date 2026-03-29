@@ -11,10 +11,10 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-28
+snapshot_date: 2026-03-29
 last_unit_opened: WL-BLUEPRINT-RUNTIME-RESIDUE-001
 last_unit_closed: TRUTH-CLEANUP-001
-last_commit: "[GOVERNANCE] open WL-BLUEPRINT-RUNTIME-RESIDUE-001"
+last_commit: "[GOVERNANCE] record enterprise-admin investigation decision"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -82,6 +82,9 @@ tenant_truth_cleanup_001_closed: false
 wl_blueprint_runtime_residue_001_open: true
 wl_blueprint_runtime_residue_001_active_delivery: false
 wl_blueprint_runtime_residue_001_closed: false
+enterprise_admin_experience_investigation_001_closed: true
+enterprise_admin_redesign_unit_justified_now: false
+launch_readiness_admin_experience_evaluation_note_recorded: true
 truth_cleanup_001_active_delivery: false
 truth_cleanup_001_closed: true
 truth_cleanup_001_open: false

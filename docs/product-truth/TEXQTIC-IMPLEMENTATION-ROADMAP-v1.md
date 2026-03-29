@@ -373,6 +373,17 @@ cleanup boundary and therefore requires one separate bounded follow-up wave rath
 - White-label runtime will continue to expose a tenant-facing architecture-authority residue even
 	after the bounded doc-authority cleanup chain is complete.
 
+## Future Strategic Evaluation Note
+
+- Status: `RECORDED`
+- Timing: near TexQtic platform launch readiness
+- Current posture: no enterprise-admin redesign or role-separation follow-up unit is justified now
+- Evaluation scope: a later product-strategy review may consider whether a stronger
+  operator/admin experience is desirable or required across both enterprise admin experience and
+  white-label admin experience
+- Delivery impact: this is a future strategic evaluation note only, not an active delivery unit,
+  and it does not change the current execution sequence
+
 ## What Not To Do
 
 To prevent fragmented feature execution, do not:
