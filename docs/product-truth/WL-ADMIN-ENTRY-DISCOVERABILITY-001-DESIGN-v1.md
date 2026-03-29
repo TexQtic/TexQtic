@@ -73,9 +73,9 @@ white-label-only mismatch between:
 
 Repo truth currently implies the following bounded owner/admin path:
 
-1. WL owner/admin authenticates in tenant realm.
-2. `App.tsx` tenant bootstrap calls `/api/me`, hydrates the current tenant, and checks WL admin
-   admission eligibility.
+1. WL owner/admin either restores an existing tenant session or authenticates in tenant realm.
+2. `App.tsx` tenant session restore and post-login tenant bootstrap both call `/api/me`, hydrate the
+  current tenant, and each check WL admin admission eligibility.
 3. If `tenant.is_white_label === true` and the authenticated role is one of
    `TENANT_OWNER`, `TENANT_ADMIN`, `OWNER`, or `ADMIN`, app state should route to `WL_ADMIN`.
 4. When `appState === 'WL_ADMIN'`, the app renders `WhiteLabelAdminShell`.
@@ -85,11 +85,19 @@ That expected path is already present in repo truth and is not itself a speculat
 
 ### Current bounded findings by surface
 
+#### `App.tsx:1012`
+
+- Owns tenant session restore admission logic for persisted tenant sessions.
+- Defines `WL_ADMIN_ROLES` and a restore-time `nextState` decision between `EXPERIENCE` and
+  `WL_ADMIN`.
+- This is implementation-relevant because restore-time entry can land a WL owner/admin directly in
+  `WL_ADMIN` before any fresh login flow occurs.
+
 #### `App.tsx:1127`
 
 - Owns login-time WL owner/admin admission logic inside tenant bootstrap.
 - Defines `WL_ADMIN_ROLES` and the `nextState` decision between `EXPERIENCE` and `WL_ADMIN`.
-- This is the canonical routing-admission surface for post-login WL admin entry.
+- This is the canonical post-login routing-admission surface for WL admin entry.
 
 #### `App.tsx:2587`
 
@@ -121,6 +129,7 @@ to establish design truth.
 
 The listed surfaces already cover:
 
+- tenant session restore admission routing
 - login-time admission routing
 - WL admin render selection
 - storefront affordance visibility
@@ -133,6 +142,7 @@ proves one is strictly necessary.
 
 This unit is bounded to the already investigated WL admin-entry surfaces only:
 
+- `App.tsx:1012` — tenant session restore WL admin admission and restore-time `nextState` routing
 - `App.tsx:1127` — login-time WL admin admission and `nextState` routing
 - `App.tsx:2587` — `WL_ADMIN` render branch and neighboring storefront-shell branch behavior
 - `layouts/Shells.tsx:150` — storefront-shell discoverability affordances and admin-shell symmetry
@@ -169,8 +179,8 @@ At design level only, that means:
 
 1. preserve the existing repo-truth WL admin model rather than redesigning it
 2. preserve the existing WL-only separation from enterprise admin
-3. ensure owner/admin admission can still route directly into `WL_ADMIN` when the login-time truth
-   conditions are met
+3. ensure owner/admin admission can still route directly into `WL_ADMIN` when either the tenant
+  session restore path or the post-login bootstrap path meets the WL admission truth conditions
 4. ensure the storefront/experience side exposes one truthful, bounded admin-entry affordance for
    eligible WL owner/admin users rather than only implying that White Label Admin exists
 5. ensure settings copy no longer points to a practically unreachable admin surface on the bounded
@@ -185,8 +195,8 @@ new shell architecture.
 
 ### Slice 1 — Admission path confirmation in `App.tsx`
 
-Confirm and, if needed, minimally repair the WL owner/admin post-login route so the existing
-`WL_ADMIN` admission path remains truthful and fail-closed.
+Confirm and, if needed, minimally repair both WL owner/admin admission branches in `App.tsx` so
+the existing restore-time and post-login `WL_ADMIN` routes remain truthful and fail-closed.
 
 ### Slice 2 — Storefront discoverability repair
 
@@ -214,7 +224,7 @@ The verification discipline for this unit is frontend verification first.
 
 Required verification questions:
 
-1. Does a WL owner/admin login still route truthfully into `WL_ADMIN`?
+1. Does a WL owner/admin restore or login still route truthfully into `WL_ADMIN`?
 2. If runtime lands in storefront instead, is there now one bounded, discoverable owner/admin path
    into `WL_ADMIN`?
 3. Does the settings surface truthfully align with that path?
@@ -225,6 +235,7 @@ Required verification questions:
 
 Required smoke checks after implementation:
 
+- WL owner/admin restore path
 - WL owner/admin login path
 - WL storefront home
 - WL storefront `Access Control` path if still present
@@ -254,6 +265,7 @@ The lawful first implementation entry file is `App.tsx`.
 
 Rationale:
 
+- It already owns tenant session restore WL admin admission.
 - It already owns login-time WL admin admission.
 - It already owns `WL_ADMIN` render selection.
 - It already owns the neighboring storefront-shell state transitions that shape discoverability.

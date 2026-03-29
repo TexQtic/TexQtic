@@ -302,6 +302,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 ---
 
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: GOVERNANCE / DESIGN-ADJUSTMENT
+Status: OPEN
+Commit: (this commit — see git log for [GOVERNANCE] patch WL-ADMIN-ENTRY-DISCOVERABILITY-001 design for restore-path truth)
+Title: Patch WL admin-entry design for App.tsx restore-path truth
+Summary: Adjusted `docs/product-truth/WL-ADMIN-ENTRY-DISCOVERABILITY-001-DESIGN-v1.md` after
+  design-against-repo verification proved one bounded same-file omission: the design already
+  recorded the post-login WL admission branch in `App.tsx`, but did not explicitly record the
+  tenant session restore admission branch that also decides between `EXPERIENCE` and `WL_ADMIN`.
+  The design now records both App.tsx admission authorities, keeps `App.tsx` as the lawful first
+  implementation entry, and remains otherwise unchanged in bounded WL-only scope. No implementation
+  was started, no runtime code changed, and `TENANT-TRUTH-CLEANUP-001` remains the sole
+  product-facing `ACTIVE_DELIVERY`.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product truth —
+  WL-ADMIN-ENTRY-DISCOVERABILITY-001-DESIGN-v1.md patched; Layer 3 — EXECUTION-LOG.md appended
+  (this entry)
+Notes: This is one bounded same-file design correction only. No new file-level scope was added,
+  no implementation authority was widened beyond the existing bounded file set, enterprise redesign
+  remains closed, and OPEN-SET.md plus NEXT-ACTION.md remain unchanged because no non-terminal unit
+  status or sequencing pointer changed.
+Refs: governance/control/SNAPSHOT.md · docs/product-truth/WL-ADMIN-ENTRY-DISCOVERABILITY-001-DESIGN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: GOVERNANCE / DESIGN-RECORD
 Status: OPEN
 Commit: (this commit — see git log for [GOVERNANCE] add WL-ADMIN-ENTRY-DISCOVERABILITY-001 design v1)
