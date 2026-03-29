@@ -35,6 +35,34 @@ Notes: <constraints or cautions applicable after closure>
   or in Layer 0 closed-baseline, not in a new-style unit record
 
 ---
+### GOV-RECORD-A1-A3-V2-STACK-001 — 2026-03-29
+Type: GOVERNANCE / RECORDING + STACK SEEDING
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] record A1-A3 findings and seed v2 planning stack)
+Title: Record the A1-A3 product-truth discovery cycle and seed the fresh v2 planning stack
+Summary: Governance-only recording phase. Recorded the externally generated A1 fresh discovery,
+  A2 synthesis, and A3 prioritization findings inside the repo, seeded
+  `TEXQTIC-GAP-REGISTER-v2.md`, `TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`, and
+  `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`, and updated Layer 0 pointers so the exhausted `-v1` stack
+  remains historical while the new `-v2` stack becomes the fresh bounded product-truth basis.
+  The recorded first recommended next opening candidate is
+  `TENANT-CATALOG-MANAGEMENT-CONTINUITY`, but no product-facing unit was opened in this phase,
+  `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` remains design-gate only, and the recent WL /
+  tenant-truth closures remain closed and separate.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; product-truth planning
+  surfaces — TEXQTIC-GAP-REGISTER-v2.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, and
+  TEXQTIC-NEXT-DELIVERY-PLAN-v2.md added; Layer 3 — EXECUTION-LOG.md appended
+Notes: This phase records and seeds the next planning cycle only. No runtime code changed, no
+  product-facing unit was opened, no recently closed WL or tenant-truth unit was reopened,
+  TECS-FBW-ADMINRBAC remains DESIGN_GATE only, enterprise redesign remains closed / not justified,
+  and the candidate families remain distinct rather than merged into a mega-program.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md ·
+  docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
+
+---
 ### GOV-CLOSE-WL-BLUEPRINT-RUNTIME-RESIDUE-001 — 2026-03-29
 Type: GOVERNANCE / CLOSE
 Status: CLOSED
@@ -62,6 +90,7 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
   docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md ·
   docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md ·
   docs/product-truth/WL-BLUEPRINT-RUNTIME-RESIDUE-001-DESIGN-v1.md
+
 
 ---
 ### WL-BLUEPRINT-RUNTIME-RESIDUE-001 — 2026-03-29

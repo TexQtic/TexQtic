@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-29 (candidate-state normalization)
+**Last Updated:** 2026-03-29 (v2 product-truth stack seeded)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -41,15 +41,22 @@
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
 sequencing and next-delivery priority are derived from the product-truth authority stack:
-`docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`,
-`docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`, and
-`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
+`docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`,
+`docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`, and
+`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`.
 
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as historical carry-forward
 context only. They do not authorize or imply a current product-facing delivery unit. Current
 product-facing posture remains `ACTIVE_DELIVERY: 0` with no named product unit open until a
 separate fresh bounded product-truth decision is lawfully opened.
+
+The completed `-v1` planning stack remains historical baseline only after the fresh A1/A2/A3
+discovery, synthesis, and prioritization cycle was recorded into the new `-v2` stack. The new
+recommended next opening candidate recorded in that `-v2` stack is
+`TENANT-CATALOG-MANAGEMENT-CONTINUITY`, but no product-facing unit has been opened by that
+recording step, `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` remains design-gate only, and the
+recently closed WL / tenant-truth units remain closed and separate.
 
 `TENANT-TRUTH-CLEANUP-001` is now `CLOSED` after the exact three tenant-facing document-authority
 surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE` on
