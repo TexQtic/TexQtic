@@ -250,7 +250,6 @@ truth.
 | **P1**   | ALL tenants    | TC     | Notifications center                                      |
 | **P1**   | WHITE_LABEL    | TA     | Store Branding UI (API exists)                            |
 | **P1**   | WHITE_LABEL    | TS     | Collections (WL-specific)                                 |
-| **P1**   | WHITE_LABEL    | TA/TO  | Continue reconciling live Store Admin operator surface truth |
 | **P1**   | B2B            | TO     | Compliance Tasks surface                                  |
 | **P1**   | B2B            | TO     | RFQ Management (product definition gate first)            |
 | **P1**   | Control Plane  | Finance | Tenant Plans + Fee Ledger stubs                          |

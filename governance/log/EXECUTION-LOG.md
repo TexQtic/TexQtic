@@ -554,6 +554,30 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### TENANT-TRUTH-CLEANUP-001 — 2026-03-29
+Type: IMPLEMENTATION / FINAL-DOC-RECONCILIATION
+Status: OPEN
+Commit: (this commit — see git log for [TENANT-TRUTH-CLEANUP-001] remove stale cross-surface WL priority residue)
+Title: Remove stale cross-surface WL priority residue from tenant truth cleanup
+Summary: Patched `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md` to remove the stale Wave 4 priority-summary
+  row that still implied a remaining live WL Store Admin truth-reconciliation track, even though
+  the matrix body already reflects materially real WL operator/admin surfaces and the later
+  WL-only admin-entry unit is now closed separately. The tenant dashboard matrix and the
+  tenant-facing current-state sections remain unchanged in this phase because their reconciled B2B
+  and WL authority language already matches current repo truth within the unit boundary. No runtime
+  code, shell behavior, blueprint-residue work, enterprise redesign work, or broader documentation
+  cleanup was pulled into this step.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product truth —
+  docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: This is one bounded same-file tenant document-authority correction only. `TENANT-TRUTH-CLEANUP-001`
+  remains OPEN / ACTIVE_DELIVERY pending the next lawful repo-truth verification phase. The
+  separate `WL-BLUEPRINT-RUNTIME-RESIDUE-001` runtime-residue unit remains open and untouched,
+  `WL-ADMIN-ENTRY-DISCOVERABILITY-001` remains closed and untouched, and enterprise redesign
+  remains closed / not justified. LAYER 0 CONSISTENCY: PRESERVED.
+Refs: governance/control/SNAPSHOT.md · docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-TRUTH-CLEANUP-001 — 2026-03-28
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN
