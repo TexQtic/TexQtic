@@ -301,6 +301,34 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### GOV-CLOSE-WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this commit — see git log for [GOVERNANCE] close WL-ADMIN-ENTRY-DISCOVERABILITY-001)
+Title: Close the bounded WL-only admin-entry discoverability unit after verified-complete live production proof
+Summary: Governance-only close unit. Recorded `WL-ADMIN-ENTRY-DISCOVERABILITY-001` as `CLOSED`
+  after the bounded WL-only repair and authoritative `VERIFIED_COMPLETE` live production
+  verification proved that both WL admission branches now route truthfully into `WL_ADMIN`,
+  storefront discoverability now truthfully reaches WL admin, settings discoverability now
+  truthfully reaches WL admin Domains, the `WL_ADMIN -> Storefront` return path remains healthy,
+  enterprise behavior remains unchanged, and no active scoped defect remains inside this unit. The
+  closure remains separate from `TENANT-TRUTH-CLEANUP-001`, separate from
+  `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not reopen enterprise redesign, and authorizes no broad
+  tenant/admin cleanup or white-label runtime cleanup by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v1.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md,
+  TEXQTIC-NEXT-DELIVERY-PLAN-v1.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Closure is governance-only and records state only. No runtime code changed in the close
+  step, `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`,
+  `WL-BLUEPRINT-RUNTIME-RESIDUE-001` remains separately open, enterprise redesign stays closed,
+  and no new unit was opened. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: IMPLEMENTATION / FOLLOW-UP
 Status: OPEN

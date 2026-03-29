@@ -13,8 +13,8 @@
 ```yaml
 snapshot_date: 2026-03-29
 last_unit_opened: WL-ADMIN-ENTRY-DISCOVERABILITY-001
-last_unit_closed: TRUTH-CLEANUP-001
-last_commit: "[WL-ADMIN-ENTRY-DISCOVERABILITY-001] fix remaining WL production admission gaps"
+last_unit_closed: WL-ADMIN-ENTRY-DISCOVERABILITY-001
+last_commit: "[GOVERNANCE] close WL-ADMIN-ENTRY-DISCOVERABILITY-001"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -82,15 +82,16 @@ tenant_truth_cleanup_001_closed: false
 wl_blueprint_runtime_residue_001_open: true
 wl_blueprint_runtime_residue_001_active_delivery: false
 wl_blueprint_runtime_residue_001_closed: false
-wl_admin_entry_discoverability_001_open: true
+wl_admin_entry_discoverability_001_open: false
 wl_admin_entry_discoverability_001_active_delivery: false
-wl_admin_entry_discoverability_001_closed: false
+wl_admin_entry_discoverability_001_closed: true
 wl_admin_entry_discoverability_001_design_created: true
 wl_admin_entry_discoverability_001_design_restore_path_aligned: true
 wl_admin_entry_discoverability_001_app_tsx_only_implemented: true
 wl_admin_entry_discoverability_001_production_gap_followup_implemented: true
 wl_admin_entry_discoverability_001_build_fix_implemented: true
 wl_admin_entry_discoverability_001_second_followup_implemented: true
+wl_admin_entry_discoverability_001_live_verified_complete: true
 enterprise_admin_experience_investigation_001_closed: true
 enterprise_admin_redesign_unit_justified_now: false
 launch_readiness_admin_experience_evaluation_note_recorded: true
@@ -109,14 +110,14 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 13**
+- **Open governed units: 12**
 - **Verified-complete governed units: 0**
 
 - **TENANT-TRUTH-CLEANUP-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded shared tenant truth-cleanup unit opened 2026-03-28 after the tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was control-plane bounded only and that the remaining active misleading authority is one shared tenant doc-authority drift. This opening is limited to reconciling `docs/strategy/TENANT_DASHBOARD_MATRIX.md`, `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`, and the tenant-facing authority sections of `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`. No design or implementation was performed in the opening step, no runtime or shell work is authorized, and no broader tenant cleanup or closed-unit reopening is implied.
 
 - **WL-BLUEPRINT-RUNTIME-RESIDUE-001** — `OPEN` / `DECISION_QUEUE` — Bounded white-label runtime-residue follow-up unit opened 2026-03-28 after the runtime-residue investigation confirmed that a live non-control-plane `Blueprint` control in `App.tsx` still exposes the tenant-facing `Platform Architecture Overview` overlay from `components/ArchitectureDiagram.tsx` in white-label runtime. This opening remains outside `TENANT-TRUTH-CLEANUP-001` because that active unit is document-only and excludes runtime or shell implementation. The opened scope is limited to `App.tsx` and `components/ArchitectureDiagram.tsx`, no design or implementation was performed in the opening step, `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`, and no broad white-label runtime cleanup or closed-unit reopening is implied.
 
-- **WL-ADMIN-ENTRY-DISCOVERABILITY-001** — `OPEN` / `DECISION_QUEUE` — Bounded white-label admin-entry/discoverability follow-up unit opened 2026-03-29 after the latest admin-entry investigation confirmed that enterprise admin remains intentionally integrated, the real `WL_ADMIN` runtime still exists in repo truth, and the remaining problem is a WL-only owner/admin entry path that is not discoverable or not reliably reaching `WL_ADMIN` in live runtime. This opening remains outside `TENANT-TRUTH-CLEANUP-001` because that active unit is document-only, and outside `WL-BLUEPRINT-RUNTIME-RESIDUE-001` because that open unit is limited to the live blueprint authority residue path. The opened scope is limited to the already-investigated admin-entry surfaces in `App.tsx`, `layouts/Shells.tsx`, and `components/Tenant/WhiteLabelSettings.tsx`, no design or implementation was performed in the opening step, `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`, and no broad white-label UX, shell, or runtime cleanup or closed-unit reopening is implied.
+- **WL-ADMIN-ENTRY-DISCOVERABILITY-001** — `CLOSED` — Bounded white-label admin-entry/discoverability follow-up unit closed 2026-03-29 after the bounded WL-only repair and `VERIFIED_COMPLETE` live production verification proved that both WL admission branches now route truthfully into `WL_ADMIN`, storefront discoverability now truthfully reaches WL admin, settings discoverability now truthfully reaches WL admin Domains, the `WL_ADMIN -> Storefront` return path remains healthy, enterprise behavior remains unchanged, and no active scoped defect remains inside this unit. This closure remains outside `TENANT-TRUTH-CLEANUP-001`, remains outside `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin cleanup or white-label runtime cleanup.
 
 - **TRUTH-CLEANUP-001** — `CLOSED` — Bounded replacement-authority truth cleanup unit closed 2026-03-28 after final repo-truth verification confirmed that the treated API-doc, architecture-blueprint, taxonomy, and current-state surfaces no longer function as competing active authority for the opened scope, and the bounded hidden-neighbor recheck found no additional active blocker surface. The preserved component surfaces now frame themselves as non-authoritative placeholders, the active planning/status docs now classify them as preserved non-current surfaces, and the replacement product-truth stack is now the sole active authority for this bounded scope. This closure does not authorize broader stale-doc cleanup, product/runtime work, routing work, DB/schema work, or any successor implementation by implication.
 
@@ -214,7 +215,7 @@ verification_no_close_without_verification: true
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`, `WL-BLUEPRINT-RUNTIME-RESIDUE-001` and `WL-ADMIN-ENTRY-DISCOVERABILITY-001` are now open concurrently as separate bounded `DECISION_QUEUE` follow-up units only, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 1 `ACTIVE_DELIVERY` · 11 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
+**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`, `WL-BLUEPRINT-RUNTIME-RESIDUE-001` remains open as one separate bounded `DECISION_QUEUE` follow-up unit, `WL-ADMIN-ENTRY-DISCOVERABILITY-001` is now closed after bounded WL-only admin-entry/discoverability repair and verified-complete live production behavior, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 1 `ACTIVE_DELIVERY` · 10 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
