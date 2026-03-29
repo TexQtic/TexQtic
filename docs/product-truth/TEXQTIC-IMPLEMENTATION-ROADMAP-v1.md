@@ -73,6 +73,7 @@ separate live-status table for current priority.
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Completed via `TRUTH-CLEANUP-001` |
 | Wave 7 | Tenant Truth Cleanup / Shared Tenant Authority Reconciliation | Reconcile remaining tenant-facing misleading authority after shared runtime truth exists | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened via `TENANT-TRUTH-CLEANUP-001` after Wave 6 confirmed the prior truth-cleanup scope was control-plane only |
 | Wave 8 | White-Label Blueprint Runtime Residue | Retire the separately proven live WL blueprint runtime authority residue without widening into broad WL cleanup | `GAP-TRUTH-006` | Opened via `WL-BLUEPRINT-RUNTIME-RESIDUE-001` after runtime investigation proved the residue is outside `TENANT-TRUTH-CLEANUP-001` |
+| Wave 9 | White-Label Admin Entry Discoverability | Restore reliable owner/admin entry into the real WL admin runtime without widening into broad WL redesign | `GAP-MODE-002` | Opened via `WL-ADMIN-ENTRY-DISCOVERABILITY-001` after WL-only admin-entry investigation proved the issue is separate from enterprise admin and separate from the blueprint-residue path |
 
 ## Wave 1 — Enterability
 
@@ -372,6 +373,48 @@ cleanup boundary and therefore requires one separate bounded follow-up wave rath
 
 - White-label runtime will continue to expose a tenant-facing architecture-authority residue even
 	after the bounded doc-authority cleanup chain is complete.
+
+## Wave 9 — White-Label Admin Entry Discoverability
+
+- Execution Status: `OPEN`
+- Opened Via: `WL-ADMIN-ENTRY-DISCOVERABILITY-001`
+
+### Objective
+
+Restore reliable, discoverable WL owner/admin entry into the real `WL_ADMIN` runtime without
+widening into broad white-label UX, shell, or runtime redesign.
+
+### Included Gaps
+
+- `GAP-MODE-002`
+
+### Rationale
+
+The latest WL-only admin-entry investigation confirmed that enterprise admin remains intentionally
+integrated and does not justify a shared redesign unit, while repo truth still shows a real
+`WL_ADMIN` runtime, login-time WL admin routing, and WL admin-only panels. The remaining problem
+is therefore one separate bounded WL-only admin-entry and discoverability defect rather than a
+tenant truth-cleanup problem or a blueprint-residue problem.
+
+### Exit Criteria
+
+- WL owner/admin users can discoverably and reliably reach `WL_ADMIN` on the bounded owner-facing
+  path.
+- The repair remains limited to the investigated WL admin-entry surfaces and does not widen into
+  broad shell or white-label UX redesign.
+- Wave 7 tenant doc-authority cleanup and Wave 8 blueprint-residue cleanup remain separate from
+  this WL admin-entry follow-up.
+
+### Dependencies
+
+- Waves 1 through 8 remain separate and preserve their already-decided boundaries.
+- `TENANT-TRUTH-CLEANUP-001` remains a document-authority unit only.
+- `WL-BLUEPRINT-RUNTIME-RESIDUE-001` remains limited to the live blueprint-authority residue path.
+
+### Risks If Deferred
+
+- White-label owner/admin users will continue to have a real admin runtime in repo truth without a
+  reliably discoverable bounded live entry path.
 
 ## Future Strategic Evaluation Note
 

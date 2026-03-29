@@ -59,7 +59,10 @@ dependency order remains `TENANT-TRUTH-CLEANUP-001`, opened as one bounded share
 doc-authority cleanup only. A later runtime-residue investigation has now also justified opening
 the separate bounded follow-up unit `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, but that follow-up does
 not replace the current active-delivery priority and remains outside the lawful boundary of
-`TENANT-TRUTH-CLEANUP-001`.
+`TENANT-TRUTH-CLEANUP-001`. A later WL-only admin-entry investigation has now also justified
+opening the separate bounded follow-up unit `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, and that
+follow-up likewise does not replace the current active-delivery priority and remains separate from
+both `TENANT-TRUTH-CLEANUP-001` and `WL-BLUEPRINT-RUNTIME-RESIDUE-001`.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
@@ -71,6 +74,7 @@ not replace the current active-delivery priority and remains outside the lawful 
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, completed | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Closed when misleading authority no longer remained active beside the replacement truth set |
 | 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, open | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened after investigation confirmed one shared tenant doc-authority cleanup remains across enterprise and white-label surfaces; later runtime residue remained separately governable outside this document-only boundary |
 | 8 | `WL-BLUEPRINT-RUNTIME-RESIDUE-001` | White-label blueprint runtime residue loop | `operations control loop` | Wave 8, open | `GAP-TRUTH-006` | Opened after later runtime investigation proved that a live non-control-plane blueprint overlay remains tenant-facing in WL runtime outside the lawful boundary of `TENANT-TRUTH-CLEANUP-001` |
+| 9 | `WL-ADMIN-ENTRY-DISCOVERABILITY-001` | White-label admin entry discoverability loop | `operations control loop` | Wave 9, open | `GAP-MODE-002` | Opened after later WL-only investigation proved that a real WL admin runtime exists but the owner/admin entry path remains non-discoverable in live runtime outside the lawful boundaries of both `TENANT-TRUTH-CLEANUP-001` and `WL-BLUEPRINT-RUNTIME-RESIDUE-001` |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
 

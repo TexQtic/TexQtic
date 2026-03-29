@@ -301,6 +301,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 
 ---
 
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: (this commit — see git log for [GOVERNANCE] open WL-ADMIN-ENTRY-DISCOVERABILITY-001)
+Title: Decide and open bounded white-label admin-entry discoverability follow-up
+Summary: Opened one bounded concurrent `DECISION_QUEUE` follow-up unit after the latest admin-
+  entry investigation confirmed that enterprise admin remains intentionally integrated, the real
+  `WL_ADMIN` runtime still exists in repo truth, and the remaining problem is a WL-only
+  owner/admin entry and discoverability path that is not reliably reaching `WL_ADMIN` in live
+  runtime. The bounded opening scope is limited to the already-investigated admin-entry surfaces
+  in `App.tsx`, `layouts/Shells.tsx`, and `components/Tenant/WhiteLabelSettings.tsx`. No design
+  or implementation was performed in this step, no code files were changed, and no closed
+  historical unit was reopened by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v1.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md,
+  TEXQTIC-NEXT-DELIVERY-PLAN-v1.md updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: Opening is governance-only and bounded to one separate white-label admin-entry and
+  discoverability unit only. It is not shared with enterprise admin, does not widen
+  `TENANT-TRUTH-CLEANUP-001`, does not overlap the blueprint-authority path owned by
+  `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, preserves `TENANT-TRUTH-CLEANUP-001` as the sole
+  product-facing `ACTIVE_DELIVERY`, and authorizes no broad white-label UX, shell, or runtime
+  cleanup by implication. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md · docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md · docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### ENTERPRISE-ADMIN-EXPERIENCE-INVESTIGATION-001 — 2026-03-29
 Type: GOVERNANCE / RECORD_ONLY
 Status: CLOSED
