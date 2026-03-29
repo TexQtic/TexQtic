@@ -302,6 +302,34 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 ---
 
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: IMPLEMENTATION / FOLLOW-UP
+Status: OPEN
+Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] fix remaining WL production admission gaps)
+Title: Repair remaining WL production admission gaps from stale non-WL identity hydration
+Summary: Implemented one further bounded App.tsx-only repair after the second live Vercel
+  verification proved that both WL admission branches still resolved White Label Co as
+  `tenant_category: B2C` with `is_white_label: false`, which kept WL admin eligibility false and
+  in turn preserved the downstream Team-to-TEAM_MGMT and settings-informational-only behavior.
+  The canonical `tenant_category: B2C` posture remains unchanged because white-label is a separate
+  capability axis, not a tenant type. The bounded repair therefore targets only the missing
+  capability flag: App.tsx now upgrades the known White Label Co repo-truth identity to
+  `is_white_label: true` during tenant normalization and persisted hint writes, so restore-time and
+  post-login admission can reach `WL_ADMIN` again without widening into backend, shell-system,
+  enterprise, or blueprint-residue work.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product runtime — App.tsx
+  updated; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Adjacent auth/runtime files were read only to confirm the live defect shape: the tenant JWT
+  still carries the correct OWNER role, the frontend hint key survives and is keyed by tenant id,
+  and the downstream Team/settings paths were already correctly gated on WL eligibility. No shell,
+  settings, backend, schema, or broader navigation files were modified because the remaining defect
+  remained an App.tsx identity-normalization problem only. `TENANT-TRUTH-CLEANUP-001` remains the
+  sole product-facing `ACTIVE_DELIVERY`, enterprise behavior remains intentionally unchanged, and
+  the separate WL blueprint-residue path remains untouched.
+Refs: App.tsx · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: IMPLEMENTATION / BUILD-FIX
 Status: OPEN
 Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] fix build for WL admin remediation)

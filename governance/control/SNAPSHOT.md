@@ -14,7 +14,7 @@
 snapshot_date: 2026-03-29
 last_unit_opened: WL-ADMIN-ENTRY-DISCOVERABILITY-001
 last_unit_closed: TRUTH-CLEANUP-001
-last_commit: "[WL-ADMIN-ENTRY-DISCOVERABILITY-001] fix build for WL admin remediation"
+last_commit: "[WL-ADMIN-ENTRY-DISCOVERABILITY-001] fix remaining WL production admission gaps"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -90,6 +90,7 @@ wl_admin_entry_discoverability_001_design_restore_path_aligned: true
 wl_admin_entry_discoverability_001_app_tsx_only_implemented: true
 wl_admin_entry_discoverability_001_production_gap_followup_implemented: true
 wl_admin_entry_discoverability_001_build_fix_implemented: true
+wl_admin_entry_discoverability_001_second_followup_implemented: true
 enterprise_admin_experience_investigation_001_closed: true
 enterprise_admin_redesign_unit_justified_now: false
 launch_readiness_admin_experience_evaluation_note_recorded: true

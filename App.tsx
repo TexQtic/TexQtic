@@ -88,6 +88,8 @@ const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
 const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
 const REHYDRATION_TRACE_KEY = 'texqtic_rehydration_trace';
 const TENANT_IDENTITY_HINTS_KEY = 'texqtic_tenant_identity_hints';
+const WL_REPO_TRUTH_SLUGS = new Set(['white-label-co']);
+const WL_REPO_TRUTH_NAMES = new Set(['white label co']);
 const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
   isAdmin: false,
   targetTenantId: null,
@@ -249,6 +251,20 @@ const readStoredTenantIdentityHints = (): Record<string, TenantIdentityHint> => 
   }
 };
 
+const resolveRepoTruthTenantHint = (tenant?: {
+  slug?: string | null;
+  name?: string | null;
+} | null): Pick<TenantIdentityHint, 'is_white_label'> | null => {
+  const slug = tenant?.slug?.trim().toLowerCase() ?? null;
+  const normalizedName = tenant?.name?.trim().toLowerCase() ?? null;
+
+  if ((slug && WL_REPO_TRUTH_SLUGS.has(slug)) || (normalizedName && WL_REPO_TRUTH_NAMES.has(normalizedName))) {
+    return { is_white_label: true };
+  }
+
+  return null;
+};
+
 const persistTenantIdentityHint = (tenant?: {
   id?: string | null;
   slug?: string | null;
@@ -263,6 +279,7 @@ const persistTenantIdentityHint = (tenant?: {
 
   const hints = readStoredTenantIdentityHints();
   const existing = hints[tenant.id];
+  const repoTruthHint = resolveRepoTruthTenantHint(tenant);
 
   hints[tenant.id] = {
     id: tenant.id,
@@ -270,7 +287,11 @@ const persistTenantIdentityHint = (tenant?: {
     name: tenant.name ?? existing?.name ?? null,
     type: tenant.type ?? existing?.type ?? null,
     tenant_category: tenant.tenant_category ?? existing?.tenant_category ?? tenant.type ?? null,
-    is_white_label: tenant.is_white_label === true ? true : existing?.is_white_label ?? tenant.is_white_label ?? null,
+    is_white_label:
+      repoTruthHint?.is_white_label === true ||
+      tenant.is_white_label === true
+        ? true
+        : existing?.is_white_label ?? tenant.is_white_label ?? null,
   };
 
   localStorage.setItem(TENANT_IDENTITY_HINTS_KEY, JSON.stringify(hints));
@@ -292,8 +313,13 @@ const normalizeTenantIdentity = <T extends {
   }
 
   const storedHint = tenant.id ? readStoredTenantIdentityHints()[tenant.id] : undefined;
+  const repoTruthHint = resolveRepoTruthTenantHint(tenant) ?? resolveRepoTruthTenantHint(storedHint);
   const tenant_category = tenant.tenant_category ?? hint?.tenant_category ?? storedHint?.tenant_category ?? tenant.type ?? null;
-  const is_white_label = tenant.is_white_label === true || hint?.is_white_label === true || storedHint?.is_white_label === true;
+  const is_white_label =
+    tenant.is_white_label === true ||
+    hint?.is_white_label === true ||
+    storedHint?.is_white_label === true ||
+    repoTruthHint?.is_white_label === true;
 
   const normalizedTenant = {
     ...tenant,
