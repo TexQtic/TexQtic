@@ -72,7 +72,7 @@ separate live-status table for current priority.
 | Wave 5 | Mode Completeness | Remove major mode-specific incompleteness and narrow-scope product truth gaps | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Completed via `WL-COMPLETE-001` |
 | Wave 6 | Truth Cleanup / Misleading Surface Retirement | Retire misleading authority surfaces after replacement product-truth docs exist | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Completed via `TRUTH-CLEANUP-001` |
 | Wave 7 | Tenant Truth Cleanup / Shared Tenant Authority Reconciliation | Reconcile remaining tenant-facing misleading authority after shared runtime truth exists | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Completed via `TENANT-TRUTH-CLEANUP-001` after Wave 6 confirmed the prior truth-cleanup scope was control-plane only |
-| Wave 8 | White-Label Blueprint Runtime Residue | Retire the separately proven live WL blueprint runtime authority residue without widening into broad WL cleanup | `GAP-TRUTH-006` | Opened via `WL-BLUEPRINT-RUNTIME-RESIDUE-001` after runtime investigation proved the residue is outside `TENANT-TRUTH-CLEANUP-001` |
+| Wave 8 | White-Label Blueprint Runtime Residue | Retire the separately proven live WL blueprint runtime authority residue without widening into broad WL cleanup | `GAP-TRUTH-006` | Completed via `WL-BLUEPRINT-RUNTIME-RESIDUE-001` after bounded production verification proved no live non-control-plane blueprint residue remains in the exact WL runtime scope |
 | Wave 9 | White-Label Admin Entry Discoverability | Restore reliable owner/admin entry into the real WL admin runtime without widening into broad WL redesign | `GAP-MODE-002` | Closed via `WL-ADMIN-ENTRY-DISCOVERABILITY-001` after bounded WL-only repair and verified-complete live production behavior proved the issue was separate from enterprise admin and separate from the blueprint-residue path |
 
 ## Wave 1 — Enterability
@@ -338,8 +338,8 @@ runtime residue remains outside this closed document-only boundary.
 
 ## Wave 8 — White-Label Blueprint Runtime Residue
 
-- Execution Status: `OPEN`
-- Opened Via: `WL-BLUEPRINT-RUNTIME-RESIDUE-001`
+- Execution Status: `COMPLETED`
+- Closed Via: `WL-BLUEPRINT-RUNTIME-RESIDUE-001`
 
 ### Objective
 
@@ -369,6 +369,13 @@ cleanup boundary and therefore requires one separate bounded follow-up wave rath
 
 - Waves 1 through 7 remain separate and preserve their already-decided boundaries.
 - `TENANT-TRUTH-CLEANUP-001` remains a document-authority unit only.
+
+### Completion Result
+
+Bounded production verification completed as `VERIFIED_COMPLETE`, no live non-control-plane
+`Blueprint` trigger remains exposed in the exact white-label runtime scope, no retained
+architecture overlay surface is reachable through the bounded WL runtime paths exercised, and no
+active bounded runtime residue remains inside this unit.
 
 ### Risks If Deferred
 

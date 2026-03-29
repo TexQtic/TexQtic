@@ -55,14 +55,16 @@ Completed units remain listed in sequence as baseline continuity; they are not s
 
 After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`,
 `OPS-CASEWORK-001`, `WL-COMPLETE-001`, `TRUTH-CLEANUP-001`, and now
-`TENANT-TRUTH-CLEANUP-001`, the next remaining unit in dependency order is the already-open
-bounded follow-up unit `WL-BLUEPRINT-RUNTIME-RESIDUE-001`. `TENANT-TRUTH-CLEANUP-001` is now
-closed on its exact three-surface document-authority scope only and remains separate from the
-runtime-residue follow-up. The later WL-only admin-entry follow-up,
+`TENANT-TRUTH-CLEANUP-001`, the later bounded follow-up unit `WL-BLUEPRINT-RUNTIME-RESIDUE-001`
+has now also closed on its exact two-surface runtime-residue scope after VERIFIED_COMPLETE bounded
+production verification. `TENANT-TRUTH-CLEANUP-001` remains closed on its exact three-surface
+document-authority scope only and remains separate from that now-closed runtime-residue unit. The
+later WL-only admin-entry follow-up,
 `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, remains closed after bounded WL-only repair and
 verified-complete live production behavior; that bounded closure likewise remains separate from
-both the now-closed `TENANT-TRUTH-CLEANUP-001` and the still-open
-`WL-BLUEPRINT-RUNTIME-RESIDUE-001`.
+both the now-closed `TENANT-TRUTH-CLEANUP-001` and the now-closed
+`WL-BLUEPRINT-RUNTIME-RESIDUE-001`. No current product-facing delivery unit remains open in this
+immediate dependency sequence.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
 |---|---|---|---|---|---|---|
@@ -73,7 +75,7 @@ both the now-closed `TENANT-TRUTH-CLEANUP-001` and the still-open
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5, completed | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Closed when WL mode became coherently real and truthfully scoped on the bounded supported path |
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, completed | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Closed when misleading authority no longer remained active beside the replacement truth set |
 | 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, completed | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Closed after the exact three tenant authority surfaces were reconciled, bounded repo-truth verification completed as VERIFIED_COMPLETE, and no active bounded reconciliation remained inside the document-only unit |
-| 8 | `WL-BLUEPRINT-RUNTIME-RESIDUE-001` | White-label blueprint runtime residue loop | `operations control loop` | Wave 8, open | `GAP-TRUTH-006` | Opened after later runtime investigation proved that a live non-control-plane blueprint overlay remains tenant-facing in WL runtime outside the lawful boundary of the now-closed `TENANT-TRUTH-CLEANUP-001` |
+| 8 | `WL-BLUEPRINT-RUNTIME-RESIDUE-001` | White-label blueprint runtime residue loop | `operations control loop` | Wave 8, completed | `GAP-TRUTH-006` | Closed after bounded production verification proved that no live non-control-plane blueprint trigger or reachable retained architecture overlay remains in the exact WL runtime scope outside the lawful boundary of the now-closed `TENANT-TRUTH-CLEANUP-001` |
 | 9 | `WL-ADMIN-ENTRY-DISCOVERABILITY-001` | White-label admin entry discoverability loop | `operations control loop` | Wave 9, completed | `GAP-MODE-002` | Closed after bounded WL-only repair and verified-complete live production behavior proved truthful WL admin admission, truthful storefront and settings entry into WL admin, a healthy WL_ADMIN return path, unchanged enterprise behavior, and no remaining scoped defect inside the unit |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
