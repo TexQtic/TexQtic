@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-29 (WL-ADMIN-ENTRY-DISCOVERABILITY-001 closure)
+**Last Updated:** 2026-03-29 (TENANT-TRUTH-CLEANUP-001 closure)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -22,23 +22,22 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
-| TENANT-TRUTH-CLEANUP-001 | Shared tenant authority truth cleanup | OPEN | ACTIVE_DELIVERY | W7 | 2026-03-28 |
-| WL-BLUEPRINT-RUNTIME-RESIDUE-001 | White-label blueprint runtime residue | OPEN | DECISION_QUEUE | W8 | 2026-03-28 |
+| WL-BLUEPRINT-RUNTIME-RESIDUE-001 | White-label blueprint runtime residue | OPEN | ACTIVE_DELIVERY | W8 | 2026-03-29 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **11**
+- **OPEN** (all governed units): **10**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
 - **ACTIVE_DELIVERY**: 1
-- **DECISION_QUEUE**: 10
+- **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 12**
+- **Total non-terminal units: 11**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -47,27 +46,28 @@ sequencing and next-delivery priority are derived from the product-truth authori
 `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`, and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
 
-`TENANT-TRUTH-CLEANUP-001` is now OPEN as the sole product-facing `ACTIVE_DELIVERY` after the
-bounded tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was control-plane only
-and that the then-open remaining active misleading authority was one shared tenant doc-authority
-drift bounded to
-`docs/strategy/TENANT_DASHBOARD_MATRIX.md`, `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`, and the
-tenant-facing authority sections of `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`. This
-opening is governance-only, performs no design or implementation, does not reopen
-`TRUTH-CLEANUP-001` or `WL-COMPLETE-001`, and authorizes no runtime, routing, schema, or broader
-doctrine rewrite by implication. The later separately opened `WL-BLUEPRINT-RUNTIME-RESIDUE-001`
-now governs the newly proven white-label runtime residue outside this document-only unit boundary.
+`TENANT-TRUTH-CLEANUP-001` is now `CLOSED` after the exact three tenant-facing document-authority
+surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE` on
+the exact shared tenant authority scope. No stale stub-era or missing-admin contradiction remains
+inside `docs/strategy/TENANT_DASHBOARD_MATRIX.md`,
+`docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`, or the tenant-facing authority sections of
+`docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`, no active bounded reconciliation remains
+inside this unit, and this closure remains document-authority only. It does not include runtime
+or shell implementation, does not absorb `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not absorb
+`WL-ADMIN-ENTRY-DISCOVERABILITY-001`, does not reopen enterprise redesign, and does not imply
+broad tenant/admin/platform completion outside this bounded three-surface scope.
 
-`WL-BLUEPRINT-RUNTIME-RESIDUE-001` is now OPEN as one concurrent bounded `DECISION_QUEUE`
+`WL-BLUEPRINT-RUNTIME-RESIDUE-001` is now OPEN as the sole product-facing `ACTIVE_DELIVERY`
 follow-up unit after the runtime-residue investigation confirmed that a live non-control-plane
 `Blueprint` control in `App.tsx` still exposes the tenant-facing `Platform Architecture Overview`
 overlay from `components/ArchitectureDiagram.tsx` in current white-label runtime. This residue is
-outside the lawful boundary of `TENANT-TRUTH-CLEANUP-001`, remains separate from the already-
-closed control-plane blueprint cleanup under `TRUTH-CLEANUP-001`, and is opened only as a bounded
+outside the lawful boundary of the now-closed `TENANT-TRUTH-CLEANUP-001`, remains separate from
+the already-closed control-plane blueprint cleanup under `TRUTH-CLEANUP-001`, and is opened only as a bounded
 white-label runtime-residue unit with scope limited to `App.tsx` and
-`components/ArchitectureDiagram.tsx`. This opening is governance-only, starts no design or
-implementation, preserves `TENANT-TRUTH-CLEANUP-001` as the sole product-facing `ACTIVE_DELIVERY`,
-and authorizes no broad white-label runtime cleanup by implication.
+`components/ArchitectureDiagram.tsx`. This open unit now inherits the next lawful product-facing
+priority after the bounded close of `TENANT-TRUTH-CLEANUP-001`, remains separate from the already-
+closed WL-only admin-entry/discoverability unit, and authorizes no broad white-label runtime
+cleanup by implication.
 
 `WL-ADMIN-ENTRY-DISCOVERABILITY-001` is now `CLOSED` after the bounded WL-only admin-entry/
 discoverability repair and authoritative `VERIFIED_COMPLETE` live production verification proved
@@ -84,10 +84,10 @@ Phase 2, and Phase 3 reset findings established that Governance OS must be shrun
 so it remains a drift-control layer around TexQtic platform delivery rather than a
 portfolio-dominating local sequencing system. No current Layer 0 governance exception displaces
 the product-truth sequence. The concurrently open governance-only units remain `DECISION_QUEUE`
-only, `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`,
-`WL-BLUEPRINT-RUNTIME-RESIDUE-001` remains the separate bounded white-label follow-up unit still
-open concurrently, `WL-ADMIN-ENTRY-DISCOVERABILITY-001` is now closed on its bounded WL-only
-repair standard, and `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE_QUEUE` only.
+only, `WL-BLUEPRINT-RUNTIME-RESIDUE-001` is now the sole product-facing `ACTIVE_DELIVERY`,
+`TENANT-TRUTH-CLEANUP-001` is now closed on its bounded three-surface document-authority standard,
+`WL-ADMIN-ENTRY-DISCOVERABILITY-001` remains closed on its bounded WL-only repair standard, and
+`TECS-FBW-ADMINRBAC` remains `DESIGN_GATE_QUEUE` only.
 
 `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-003` is now `CLOSED` after the already-complete
 implementation, verification, and governance sync chain confirmed that implementation commit

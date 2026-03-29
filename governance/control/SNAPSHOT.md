@@ -13,8 +13,8 @@
 ```yaml
 snapshot_date: 2026-03-29
 last_unit_opened: WL-ADMIN-ENTRY-DISCOVERABILITY-001
-last_unit_closed: WL-ADMIN-ENTRY-DISCOVERABILITY-001
-last_commit: "[GOVERNANCE] verify TENANT-TRUTH-CLEANUP-001"
+last_unit_closed: TENANT-TRUTH-CLEANUP-001
+last_commit: "[GOVERNANCE] close TENANT-TRUTH-CLEANUP-001"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -76,16 +76,17 @@ wl_complete_001_active_delivery: false
 wl_complete_001_closed: true
 wl_complete_001_boundary_fixed: true
 wl_complete_001_next_step_bounded_design_only: false
-tenant_truth_cleanup_001_open: true
-tenant_truth_cleanup_001_active_delivery: true
-tenant_truth_cleanup_001_closed: false
+tenant_truth_cleanup_001_open: false
+tenant_truth_cleanup_001_active_delivery: false
+tenant_truth_cleanup_001_closed: true
 tenant_truth_cleanup_001_tenant_dashboard_matrix_reconciled: true
 tenant_truth_cleanup_001_cross_surface_dashboard_matrix_reconciled: true
 tenant_truth_cleanup_001_current_state_sections_reconciled: true
 tenant_truth_cleanup_001_verified_complete: true
 tenant_truth_cleanup_001_close_ready: true
+tenant_truth_cleanup_001_no_active_bounded_reconciliation_remaining: true
 wl_blueprint_runtime_residue_001_open: true
-wl_blueprint_runtime_residue_001_active_delivery: false
+wl_blueprint_runtime_residue_001_active_delivery: true
 wl_blueprint_runtime_residue_001_closed: false
 wl_admin_entry_discoverability_001_open: false
 wl_admin_entry_discoverability_001_active_delivery: false
@@ -115,12 +116,12 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 12**
+- **Open governed units: 11**
 - **Verified-complete governed units: 0**
 
-- **TENANT-TRUTH-CLEANUP-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded shared tenant truth-cleanup unit opened 2026-03-28 after the tenant follow-up investigation confirmed that `TRUTH-CLEANUP-001` was control-plane bounded only and that the remaining active misleading authority is one shared tenant doc-authority drift. This opening is limited to reconciling `docs/strategy/TENANT_DASHBOARD_MATRIX.md`, `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`, and the tenant-facing authority sections of `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`. No design or implementation was performed in the opening step, no runtime or shell work is authorized, and no broader tenant cleanup or closed-unit reopening is implied.
+- **TENANT-TRUTH-CLEANUP-001** — `CLOSED` — Bounded shared tenant truth-cleanup unit closed 2026-03-29 after the exact three tenant document-authority surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE`. No stale stub-era or missing-admin contradiction remains inside the tenant dashboard matrix, the cross-surface control/tenant/WL dashboard matrix, or the tenant-facing authority sections of current-state; no active bounded reconciliation remains inside this unit; and this closure remains document-authority only. This closure does not include runtime or shell implementation, does not absorb `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not absorb `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin/platform completion outside the bounded three-surface scope.
 
-- **WL-BLUEPRINT-RUNTIME-RESIDUE-001** — `OPEN` / `DECISION_QUEUE` — Bounded white-label runtime-residue follow-up unit opened 2026-03-28 after the runtime-residue investigation confirmed that a live non-control-plane `Blueprint` control in `App.tsx` still exposes the tenant-facing `Platform Architecture Overview` overlay from `components/ArchitectureDiagram.tsx` in white-label runtime. This opening remains outside `TENANT-TRUTH-CLEANUP-001` because that active unit is document-only and excludes runtime or shell implementation. The opened scope is limited to `App.tsx` and `components/ArchitectureDiagram.tsx`, no design or implementation was performed in the opening step, `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`, and no broad white-label runtime cleanup or closed-unit reopening is implied.
+- **WL-BLUEPRINT-RUNTIME-RESIDUE-001** — `OPEN` / `ACTIVE_DELIVERY` — Bounded white-label runtime-residue follow-up unit remains open after the runtime-residue investigation confirmed that a live non-control-plane `Blueprint` control in `App.tsx` still exposes the tenant-facing `Platform Architecture Overview` overlay from `components/ArchitectureDiagram.tsx` in white-label runtime. This unit remains outside the now-closed `TENANT-TRUTH-CLEANUP-001` because that closed unit was document-only and excluded runtime or shell implementation. The opened scope remains limited to `App.tsx` and `components/ArchitectureDiagram.tsx`, no design or implementation was performed in the opening step, and no broad white-label runtime cleanup or closed-unit reopening is implied.
 
 - **WL-ADMIN-ENTRY-DISCOVERABILITY-001** — `CLOSED` — Bounded white-label admin-entry/discoverability follow-up unit closed 2026-03-29 after the bounded WL-only repair and `VERIFIED_COMPLETE` live production verification proved that both WL admission branches now route truthfully into `WL_ADMIN`, storefront discoverability now truthfully reaches WL admin, settings discoverability now truthfully reaches WL admin Domains, the `WL_ADMIN -> Storefront` return path remains healthy, enterprise behavior remains unchanged, and no active scoped defect remains inside this unit. This closure remains outside `TENANT-TRUTH-CLEANUP-001`, remains outside `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin cleanup or white-label runtime cleanup.
 

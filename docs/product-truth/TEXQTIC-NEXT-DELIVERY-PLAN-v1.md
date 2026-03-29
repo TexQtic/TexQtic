@@ -54,15 +54,14 @@ Completed units remain listed in sequence as baseline continuity; they are not s
 `NEXT` posture.
 
 After closure of `ONBOARDING-ENTRY-001`, `ONBOARDING-ENTRY-002`, `EXCHANGE-CORE-LOOP-001`,
-`OPS-CASEWORK-001`, `WL-COMPLETE-001`, and `TRUTH-CLEANUP-001`, the next remaining unit in
-dependency order remains `TENANT-TRUTH-CLEANUP-001`, opened as one bounded shared tenant
-doc-authority cleanup only. A later runtime-residue investigation has now also justified opening
-the separate bounded follow-up unit `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, but that follow-up does
-not replace the current active-delivery priority and remains outside the lawful boundary of
-`TENANT-TRUTH-CLEANUP-001`. The later WL-only admin-entry follow-up,
-`WL-ADMIN-ENTRY-DISCOVERABILITY-001`, is now closed after bounded WL-only repair and
-verified-complete live production behavior; that bounded closure likewise does not replace the
-current active-delivery priority and remains separate from both `TENANT-TRUTH-CLEANUP-001` and
+`OPS-CASEWORK-001`, `WL-COMPLETE-001`, `TRUTH-CLEANUP-001`, and now
+`TENANT-TRUTH-CLEANUP-001`, the next remaining unit in dependency order is the already-open
+bounded follow-up unit `WL-BLUEPRINT-RUNTIME-RESIDUE-001`. `TENANT-TRUTH-CLEANUP-001` is now
+closed on its exact three-surface document-authority scope only and remains separate from the
+runtime-residue follow-up. The later WL-only admin-entry follow-up,
+`WL-ADMIN-ENTRY-DISCOVERABILITY-001`, remains closed after bounded WL-only repair and
+verified-complete live production behavior; that bounded closure likewise remains separate from
+both the now-closed `TENANT-TRUTH-CLEANUP-001` and the still-open
 `WL-BLUEPRINT-RUNTIME-RESIDUE-001`.
 
 | Order | Unit ID | Unit Name | System Loop Completed | Roadmap Alignment | Gap IDs | Why This Unit Exists |
@@ -73,8 +72,8 @@ current active-delivery priority and remains separate from both `TENANT-TRUTH-CL
 | 4 | `OPS-CASEWORK-001` | Live execution casework control loop | `operations control loop` | Wave 4, completed | `GAP-OPS-001`, `GAP-OPS-002`, `GAP-OPS-003` | Closed when live execution gained materially usable finance, compliance, and dispute casework control |
 | 5 | `WL-COMPLETE-001` | White-label operating mode completion loop | `onboarding loop`, `operations control loop` | Wave 5, completed | `GAP-MODE-001`, `GAP-SCOPE-001`, `GAP-SCOPE-002` | Closed when WL mode became coherently real and truthfully scoped on the bounded supported path |
 | 6 | `TRUTH-CLEANUP-001` | Replacement-authority truth cleanup loop | `operations control loop` | Wave 6, completed | `GAP-TRUTH-001`, `GAP-TRUTH-002` | Closed when misleading authority no longer remained active beside the replacement truth set |
-| 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, open | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Opened after investigation confirmed one shared tenant doc-authority cleanup remains across enterprise and white-label surfaces; later runtime residue remained separately governable outside this document-only boundary |
-| 8 | `WL-BLUEPRINT-RUNTIME-RESIDUE-001` | White-label blueprint runtime residue loop | `operations control loop` | Wave 8, open | `GAP-TRUTH-006` | Opened after later runtime investigation proved that a live non-control-plane blueprint overlay remains tenant-facing in WL runtime outside the lawful boundary of `TENANT-TRUTH-CLEANUP-001` |
+| 7 | `TENANT-TRUTH-CLEANUP-001` | Shared tenant authority truth cleanup loop | `operations control loop` | Wave 7, completed | `GAP-TRUTH-003`, `GAP-TRUTH-004`, `GAP-TRUTH-005` | Closed after the exact three tenant authority surfaces were reconciled, bounded repo-truth verification completed as VERIFIED_COMPLETE, and no active bounded reconciliation remained inside the document-only unit |
+| 8 | `WL-BLUEPRINT-RUNTIME-RESIDUE-001` | White-label blueprint runtime residue loop | `operations control loop` | Wave 8, open | `GAP-TRUTH-006` | Opened after later runtime investigation proved that a live non-control-plane blueprint overlay remains tenant-facing in WL runtime outside the lawful boundary of the now-closed `TENANT-TRUTH-CLEANUP-001` |
 | 9 | `WL-ADMIN-ENTRY-DISCOVERABILITY-001` | White-label admin entry discoverability loop | `operations control loop` | Wave 9, completed | `GAP-MODE-002` | Closed after bounded WL-only repair and verified-complete live production behavior proved truthful WL admin admission, truthful storefront and settings entry into WL admin, a healthy WL_ADMIN return path, unchanged enterprise behavior, and no remaining scoped defect inside the unit |
 
 ## Unit 1 — ONBOARDING-ENTRY-001
@@ -416,9 +415,9 @@ The unit is "close the authority cleanup loop so execution truth has one active 
 
 ## Unit 7 — TENANT-TRUTH-CLEANUP-001
 
-- Status: `OPEN`
-- Opened By: `TENANT-TRUTH-CLEANUP-001`
-- Opening Basis: `Shared tenant doc-authority drift confirmed across enterprise and white-label surfaces`
+- Status: `COMPLETED`
+- Closed By: `TENANT-TRUTH-CLEANUP-001`
+- Result: `Exact three-surface tenant document-authority reconciliation completed with VERIFIED_COMPLETE bounded repo-truth verification`
 
 ### Unit Name
 
@@ -440,8 +439,9 @@ Wave 7 — Tenant Truth Cleanup / Shared Tenant Authority Reconciliation
 
 ### Capability Closure
 
-This unit closes when tenant-facing planning and status authority becomes materially truthful for
-the current enterprise and white-label runtime surface set without widening into runtime
+Closure recorded as `COMPLETED` under `TENANT-TRUTH-CLEANUP-001` after tenant-facing planning and
+status authority became materially truthful for the current enterprise and white-label runtime
+surface set on the exact bounded three-surface scope, without widening into runtime
 implementation or broader stale-doc cleanup.
 
 ### Required Continuity
@@ -462,10 +462,12 @@ The loop must hold across:
 
 ### Closure Standard
 
-This unit does not close when replacement tenant truth merely exists somewhere else in the repo.
+This unit did not close when replacement tenant truth merely existed somewhere else in the repo.
 
-It closes only when the active tenant-facing authority documents themselves stop misdirecting
-enterprise and white-label execution understanding.
+It closed only after the active tenant-facing authority documents themselves stopped misdirecting
+enterprise and white-label execution understanding, no stale stub-era or missing-admin
+contradiction remained inside the exact bounded scope, and no active bounded reconciliation
+remained inside the unit.
 
 ### Why This Is Not A UI Unit
 
