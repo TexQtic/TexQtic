@@ -87,6 +87,7 @@ import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRea
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
 const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
 const REHYDRATION_TRACE_KEY = 'texqtic_rehydration_trace';
+const TENANT_IDENTITY_HINTS_KEY = 'texqtic_tenant_identity_hints';
 const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
   isAdmin: false,
   targetTenantId: null,
@@ -167,6 +168,15 @@ type StoredImpersonationSession = {
   tenant: Tenant;
 };
 
+type TenantIdentityHint = {
+  id: string;
+  slug: string | null;
+  name: string | null;
+  type: string | null;
+  tenant_category: string | null;
+  is_white_label: boolean | null;
+};
+
 type RehydrationTracePayload = Record<string, unknown>;
 
 const summarizeTenantIdentity = (tenant?: {
@@ -196,7 +206,7 @@ const summarizeTenantIdentity = (tenant?: {
 };
 
 const appendRehydrationTrace = (event: string, payload: RehydrationTracePayload = {}) => {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     return;
   }
 
@@ -215,6 +225,136 @@ const appendRehydrationTrace = (event: string, payload: RehydrationTracePayload 
   } catch {
     console.info('[rehydration-trace]', entry);
   }
+};
+
+const readStoredTenantIdentityHints = (): Record<string, TenantIdentityHint> => {
+  if (typeof globalThis.window === 'undefined') {
+    return {};
+  }
+
+  const raw = localStorage.getItem(TENANT_IDENTITY_HINTS_KEY);
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') {
+      return {};
+    }
+
+    return parsed as Record<string, TenantIdentityHint>;
+  } catch {
+    return {};
+  }
+};
+
+const persistTenantIdentityHint = (tenant?: {
+  id?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  type?: string | null;
+  tenant_category?: string | null;
+  is_white_label?: boolean | null;
+} | null) => {
+  if (typeof globalThis.window === 'undefined' || !tenant?.id) {
+    return;
+  }
+
+  const hints = readStoredTenantIdentityHints();
+  const existing = hints[tenant.id];
+
+  hints[tenant.id] = {
+    id: tenant.id,
+    slug: tenant.slug ?? existing?.slug ?? null,
+    name: tenant.name ?? existing?.name ?? null,
+    type: tenant.type ?? existing?.type ?? null,
+    tenant_category: tenant.tenant_category ?? existing?.tenant_category ?? tenant.type ?? null,
+    is_white_label: tenant.is_white_label === true ? true : existing?.is_white_label ?? tenant.is_white_label ?? null,
+  };
+
+  localStorage.setItem(TENANT_IDENTITY_HINTS_KEY, JSON.stringify(hints));
+};
+
+const normalizeTenantIdentity = <T extends {
+  id?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  type?: string | null;
+  tenant_category?: string | null;
+  is_white_label?: boolean | null;
+}>(
+  tenant?: T | null,
+  hint?: Partial<TenantIdentityHint> | null
+): (T & { tenant_category: string | null; is_white_label: boolean }) | null => {
+  if (!tenant) {
+    return null;
+  }
+
+  const storedHint = tenant.id ? readStoredTenantIdentityHints()[tenant.id] : undefined;
+  const tenant_category = tenant.tenant_category ?? hint?.tenant_category ?? storedHint?.tenant_category ?? tenant.type ?? null;
+  const is_white_label = tenant.is_white_label === true || hint?.is_white_label === true || storedHint?.is_white_label === true;
+
+  const normalizedTenant = {
+    ...tenant,
+    tenant_category,
+    is_white_label,
+  };
+
+  persistTenantIdentityHint(normalizedTenant);
+
+  return normalizedTenant;
+};
+
+const readStoredTenantJwtClaims = (): { userId: string | null; tenantId: string | null; role: string | null } | null => {
+  if (typeof globalThis.window === 'undefined') {
+    return null;
+  }
+
+  const token = localStorage.getItem('texqtic_tenant_token');
+  if (!token) {
+    return null;
+  }
+
+  const [, payload] = token.split('.');
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalized = payload.replaceAll('-', '+').replaceAll('_', '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = JSON.parse(globalThis.atob(padded)) as {
+      userId?: unknown;
+      tenantId?: unknown;
+      role?: unknown;
+    };
+
+    return {
+      userId: typeof decoded.userId === 'string' ? decoded.userId : null,
+      tenantId: typeof decoded.tenantId === 'string' ? decoded.tenantId : null,
+      role: typeof decoded.role === 'string' ? decoded.role : null,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const resolveTenantRole = (role: string | null | undefined, tenantId?: string | null) => {
+  if (role) {
+    return role;
+  }
+
+  const claims = readStoredTenantJwtClaims();
+  if (!claims) {
+    return null;
+  }
+
+  if (tenantId && claims.tenantId && claims.tenantId !== tenantId) {
+    return null;
+  }
+
+  return claims.role;
 };
 
 // B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
@@ -295,7 +435,7 @@ const readStoredAdminJwtClaims = (): { adminId: string; role: string | null; exp
   try {
     const normalized = payload.replaceAll('-', '+').replaceAll('_', '/');
     const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const decoded = JSON.parse(window.atob(padded)) as {
+    const decoded = JSON.parse(globalThis.atob(padded)) as {
       adminId?: unknown;
       role?: unknown;
       exp?: unknown;
@@ -350,11 +490,13 @@ const buildTenantSnapshot = (tenant?: {
     updatedAt: '',
   };
 
+  const normalizedSnapshot = normalizeTenantIdentity(snapshot);
+
   appendRehydrationTrace('buildTenantSnapshot:output', {
-    tenant: summarizeTenantIdentity(snapshot),
+    tenant: summarizeTenantIdentity(normalizedSnapshot),
   });
 
-  return snapshot;
+  return normalizedSnapshot;
 };
 
 const persistImpersonationSession = (session: StoredImpersonationSession | null) => {
@@ -959,8 +1101,9 @@ const App: React.FC = () => {
 
       try {
         const me = await getCurrentUser();
-        const tenant = buildTenantSnapshot(me.tenant) ?? storedImpersonation.tenant;
-        const hasWlAdminAccess = canAccessWlAdmin(tenant?.is_white_label, me.role ?? null);
+        const tenant = buildTenantSnapshot(me.tenant) ?? normalizeTenantIdentity(storedImpersonation.tenant);
+        const resolvedRole = resolveTenantRole(me.role ?? null, tenant?.id ?? null);
+        const hasWlAdminAccess = canAccessWlAdmin(tenant?.is_white_label, resolvedRole);
 
         if (tenant?.id !== storedImpersonation.state.targetTenantId || cancelled) {
           throw new Error('Stored impersonation tenant is invalid.');
@@ -973,7 +1116,7 @@ const App: React.FC = () => {
         setWlAdminEligible(hasWlAdminAccess);
         setTenantProvisionError(null);
         setImpersonation(storedImpersonation.state);
-        setAppState('EXPERIENCE');
+        setAppState(hasWlAdminAccess ? 'WL_ADMIN' : 'EXPERIENCE');
       } catch {
         if (cancelled) {
           return;
@@ -1048,11 +1191,12 @@ const App: React.FC = () => {
       try {
         appendRehydrationTrace('tenantRestore:getCurrentUser:start');
         const me = await getCurrentUser();
+        const tenant = buildTenantSnapshot(me.tenant);
+        const resolvedRole = resolveTenantRole(me.role ?? null, tenant?.id ?? null);
         appendRehydrationTrace('tenantRestore:getCurrentUser:success', {
-          role: me.role ?? null,
+          role: resolvedRole,
           tenant: summarizeTenantIdentity(me.tenant),
         });
-        const tenant = buildTenantSnapshot(me.tenant);
 
         if (!tenant || cancelled) {
           appendRehydrationTrace('tenantRestore:snapshot_invalid', {
@@ -1064,7 +1208,7 @@ const App: React.FC = () => {
 
         setTenants([tenant]);
         setCurrentTenantId(tenant.id);
-        const hasWlAdminAccess = canAccessWlAdmin(tenant.is_white_label, me.role ?? null);
+  const hasWlAdminAccess = canAccessWlAdmin(tenant.is_white_label, resolvedRole);
         setWlAdminEligible(hasWlAdminAccess);
         appendRehydrationTrace('tenantRestore:tenant_applied', {
           tenant: summarizeTenantIdentity(tenant),
@@ -1076,7 +1220,7 @@ const App: React.FC = () => {
 
         appendRehydrationTrace('tenantRestore:next_state', {
           nextState,
-          role: me.role ?? null,
+          role: resolvedRole,
           tenant: summarizeTenantIdentity(tenant),
         });
         setTenantRestorePending(false);
@@ -1136,6 +1280,17 @@ const App: React.FC = () => {
     clearControlPlaneIdentityState();
     setStoredAuthRealm('TENANT');
     setAuthRealm('TENANT');
+    const loginTenantHint = data?.user?.tenantId
+      ? {
+          id: data.user.tenantId,
+          tenant_category: data?.tenant_category ?? data?.tenantType ?? null,
+          is_white_label: data?.is_white_label ?? null,
+        }
+      : null;
+
+    if (loginTenantHint) {
+      persistTenantIdentityHint(loginTenantHint);
+    }
 
     // TENANT realm: call /api/me to hydrate tenant context before transitioning.
     // This prevents the "Loading workspace..." hang caused by tenants[] being empty
@@ -1159,7 +1314,7 @@ const App: React.FC = () => {
       const me = await getCurrentUser();
       if (me.tenant) {
         const t = me.tenant;
-        setTenants([{
+        const normalizedTenant = normalizeTenantIdentity({
           id: t.id,
           slug: t.slug,
           name: t.name,
@@ -1171,9 +1326,11 @@ const App: React.FC = () => {
           plan: t.plan,
           createdAt: '',
           updatedAt: '',
-        } as Tenant]);
-        setCurrentTenantId(t.id);
-        const hasWlAdminAccess = canAccessWlAdmin(t.is_white_label ?? false, me.role ?? null);
+        } as Tenant, loginTenantHint);
+        setTenants([normalizedTenant as Tenant]);
+        setCurrentTenantId(normalizedTenant.id);
+        const resolvedRole = resolveTenantRole(me.role ?? null, normalizedTenant.id);
+        const hasWlAdminAccess = canAccessWlAdmin(normalizedTenant.is_white_label, resolvedRole);
         setWlAdminEligible(hasWlAdminAccess);
         // B2-REM-3: WL routing uses is_white_label boolean — not type === WHITE_LABEL
         if (hasWlAdminAccess) {

@@ -302,6 +302,35 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 ---
 
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: IMPLEMENTATION / FOLLOW-UP
+Status: OPEN
+Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] remediate production WL admin entry gaps)
+Title: Remediate production-proven WL admin entry and discoverability gaps
+Summary: Implemented one bounded follow-up repair inside the existing WL-only unit after Vercel
+  production verification proved that both WL admission branches, storefront discoverability, and
+  settings discoverability still failed in live runtime. The follow-up remains `App.tsx` only on
+  runtime surfaces: it now preserves an authoritative white-label identity hint from tenant login,
+  reuses that hint during tenant-session restore when `/api/me` under-reports white-label truth,
+  and derives WL admin eligibility from the normalized tenant identity plus the tenant JWT role so
+  eligible WL owner/admin users can truthfully reach `WL_ADMIN` through restore, post-login, Team,
+  and settings paths. No shell redesign, backend/auth/schema work, enterprise redesign, or
+  blueprint-residue cleanup was touched, and `TENANT-TRUTH-CLEANUP-001` remains the sole
+  product-facing `ACTIVE_DELIVERY`.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product runtime — App.tsx
+  updated; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Production verification established that the live tenant JWT carried the correct OWNER role
+  while the hydrated tenant identity for the WL tenant still under-reported `is_white_label`, so
+  the follow-up repair stays bounded to frontend tenant-identity normalization in `App.tsx` only.
+  `layouts/Shells.tsx` and `components/Tenant/WhiteLabelSettings.tsx` remain unchanged because the
+  existing affordance and callback contracts were sufficient once App.tsx consumed the corrected WL
+  truth. No scope widening occurred, enterprise behavior remains unchanged by intent, the separate
+  WL blueprint-residue path remains untouched, and this entry does not claim verification or
+  closure.
+Refs: App.tsx · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: IMPLEMENTATION
 Status: OPEN
 Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] implement bounded WL admin entry discoverability fix)
