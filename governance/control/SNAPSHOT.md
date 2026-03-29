@@ -14,7 +14,7 @@
 snapshot_date: 2026-03-29
 last_unit_opened: WL-ADMIN-ENTRY-DISCOVERABILITY-001
 last_unit_closed: WL-BLUEPRINT-RUNTIME-RESIDUE-001
-last_commit: "[GOVERNANCE] close WL-BLUEPRINT-RUNTIME-RESIDUE-001"
+last_commit: "[GOVERNANCE] normalize candidate state after completed delivery waves"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -24,6 +24,11 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
+current_product_active_delivery_count: 0
+current_product_delivery_priority: NONE
+current_product_delivery_unit_open: false
+future_product_opening_requires_fresh_bounded_product_decision: true
+candidate_state_historical_references_non_authoritative: true
 layer_0_governance_exception_active: false
 governance_migration_execution_policy_decided: true
 governance_migration_policy_remediation_open: false
@@ -121,6 +126,13 @@ verification_no_close_without_verification: true
 
 - **Open governed units: 10**
 - **Verified-complete governed units: 0**
+
+Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
+`DECISION_REQUIRED`, or earlier successor openings remain preserved as carry-forward context only.
+They do not authorize or imply a current product-facing delivery unit. Current product-facing
+posture remains `ACTIVE_DELIVERY: 0`, `product_delivery_priority: NONE`, and no currently open
+product-facing delivery unit until a separate fresh bounded product-truth decision is lawfully
+opened.
 
 - **TENANT-TRUTH-CLEANUP-001** — `CLOSED` — Bounded shared tenant truth-cleanup unit closed 2026-03-29 after the exact three tenant document-authority surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE`. No stale stub-era or missing-admin contradiction remains inside the tenant dashboard matrix, the cross-surface control/tenant/WL dashboard matrix, or the tenant-facing authority sections of current-state; no active bounded reconciliation remains inside this unit; and this closure remains document-authority only. This closure does not include runtime or shell implementation, does not absorb `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not absorb `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin/platform completion outside the bounded three-surface scope.
 
@@ -268,57 +280,21 @@ Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADM
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
 
-`TENANT-TRUTH-CLEANUP-001` is now OPEN after bounded opening review confirmed that the remaining
-tenant-facing misleading authority is shared doc drift only and is limited to the tenant dashboard
-matrix, the cross-surface control/tenant/WL dashboard matrix, and the tenant-facing authority
-sections of current-state. No design or implementation is performed in this opening step, and no
-broader tenant/runtime/unit reopening is implied.
+Current product-opening posture is paused pending a fresh bounded product-truth decision and a
+separate lawful opening step. No current or historical candidate-state reference in this file is
+itself sufficient to create a product-facing queue.
 
-Verification discipline carried forward for this opened unit and for any later opened unit is fixed
-as `implement -> commit -> deploy -> verify -> close`; backend units require tests,
+Open governance-only units remain the `DECISION_QUEUE` set recorded in `OPEN-SET.md`, including
+`GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001` and the bounded Sentinel/governance posture units.
+`TECS-FBW-ADMINRBAC` remains `DESIGN_GATE` only and is not implementation-ready.
+Enterprise redesign remains closed / not justified.
+
+Verification discipline carried forward for any later separately opened unit remains
+`implement -> commit -> deploy -> verify -> close`; backend units require tests,
 frontend/auth/mode-entry units require Vercel verification, shared-shell changes require
 neighbor-path smoke checks, and no unit closes without verification.
 
-`GOVERNANCE-OS-RESET-001` remains OPEN in the governed open set as a bounded governance record
-only. It does not operate as a standalone product-sequencing origin in Layer 0.
-GOVERNANCE-SENTINEL-V1-SPEC-001 is now OPEN as a separate bounded governance-only Sentinel v1 specification unit, but it does not replace the derived Layer 0 next-action pointer and does not displace product-truth sequencing.
-GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 is now OPEN as a separate bounded governance-workflow unit and makes manual Sentinel v1 invocation mandatory by workflow before governance progression at the already-decided checkpoints only. It preserves the same non-displacing governance posture and does not authorize auto-trigger wiring, CI integration, hooks, or broader tooling rollout.
-GOVERNANCE-SENTINEL-CLOSE-ALLOWLIST-REMEDIATION-001 is now OPEN as a separate bounded governance remediation unit preserving the already-corrected close allowlist blocker history only. It does not reopen certification delivery and does not authorize Sentinel doctrine expansion, hooks, CI, bots, or auto-trigger rollout.
-GOVERNANCE-SENTINEL-CLOSE-RETRY-REMEDIATION-001 is now OPEN as a separate bounded governance remediation unit preserving the resolved close-retry blocker history only. It does not reopen certification delivery and does not authorize Sentinel doctrine expansion, hooks, CI, bots, or auto-trigger rollout.
-GOVERNANCE-SENTINEL-V1-AUTOMATION-001 is now CLOSED as a separate bounded governance-tooling Sentinel automation unit. Its bounded automation implementation remains implemented and verified, governance sync remains completed, sync enforcement proof is reconciled and PASS, and the closure does not replace NEXT-ACTION or create any new governance exception.
-CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the opening authority for the now-closed child CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-002.
-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002 is now `CLOSED` after strict remote verification PASS on the exact `App.tsx:1522` surface only.
-TENANT-CATALOG-IMAGE-UPLOAD-GAP-002 is now `CLOSED` after bounded production verification PASS on the exercised image-capability slice only. The two units remain strictly separate and neither widens the other by implication.
-TENANT-CATALOG-IMAGE-UPLOAD-GAP-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
-TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and is the decision authority for the now-closed child slice.
-TENANT-EXPERIENCE-RUNTIME-500-002 is now `CLOSED` after bounded remote runtime verification PASS on the exact `/api/ai/insights?tenantType=B2B&experience=market_trends` surface. The closure is limited to the removal of the observed hard `500` on that exercised AI insights path only.
-TENANT-EXPERIENCE-RUNTIME-500-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child slice.
-Placeholder image DNS failures remain bounded to the now-closed child `TENANT-CATALOG-PLACEHOLDER-IMAGE-DNS-002` only and must not be merged into the now-closed upload-gap unit or the closed AI insights unit.
-IMPERSONATION-SESSION-REHYDRATION-002 is now `CLOSED` after implementation commit `1d9657a`, bounded deployed verification PASS, Layer 0 sync, and the mandatory post-close audit in the same closure operation. The unit is closed only on its bounded reload/rehydration slice.
-IMPERSONATION-SESSION-REHYDRATION-001 remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the original decision authority for the now-closed child slice.
-TECS-FBW-ADMINRBAC remains `DESIGN_GATE`.
-CONTROL-PLANE-IDENTITY-TRUTH-002 is now `CLOSED` after bounded identity-truth verification PASS. The identity-truth defect is fully resolved within scope and no broader auth, tenant-shell, white-label, impersonation-stop-cleanup, DB/schema, or API authorization was created by this closure.
-The active-impersonation reload-loss observation remains separate from the closed identity-truth unit and is now resolved within the closed child `IMPERSONATION-SESSION-REHYDRATION-002` only.
-The observed tenant-experience runtime `500` behavior was resolved only on the bounded AI insights surface exercised for TENANT-EXPERIENCE-RUNTIME-500-002 and must not be generalized into broader tenant-shell correctness without separate proof.
-CONTROL-PLANE-AUTH-SHELL-TRANSITION-001 is now `CLOSED` with result `OPENING_CANDIDATE` only. The newly proven transition defect remains separate from banner identity truth, no implementation opening was created by that decision, and one later separate bounded opening may be considered if operator sequencing chooses to unblock the verification path.
-CONTROL-PLANE-AUTH-SHELL-TRANSITION-002 is now `CLOSED` after implementation commit `2538901`, deployed runtime PASS, and the mandatory post-close audit emitted in the same closure operation. The bounded shell-transition slice is complete and no broader auth or identity-truth claims were authorized by this closure.
-CONTROL-PLANE-IDENTITY-TRUTH-001 is now `CLOSED` with result `OPENING_CANDIDATE` only and is superseded by the separate opening artifact `CONTROL-PLANE-IDENTITY-TRUTH-002`.
-AUTH-IDENTITY-TRUTH-DEPLOYED-001 is now `CLOSED` with result `SPLIT_REQUIRED`. The broader mixed identity-truth family remains non-open outside this separate control-plane-only implementation unit.
-REALM-BOUNDARY-SHELL-AFFORDANCE-001 is now `CLOSED` after the bounded implementation chain culminated in deployed verification PASS on the exact `ddeb579` build. That closed unit remains bounded and does not authorize further auth, impersonation, or broader control-plane work by implication.
-GOV-CLOSE-GOV-NAV-01 is now recorded as a bounded governance-only closure result. GOV-NAV-01 is now `CLOSED`, no implementation-ready unit is `OPEN`, the portfolio returns to `OPERATOR_DECISION_REQUIRED`, and no doctrine rewrite, governance-lint change, tooling rollout, Playwright rollout, test rollout, verifier-tooling, CI rollout, product/schema work, AdminRBAC reopening, G-026 reopening, navigation-layer implementation beyond design, or second-unit authorization was created by this closure.
-GOV-AUDIT-GOV-NAV-01-POST-CLOSE is now recorded in the same closure operation. Audit result: `DECISION_REQUIRED`. Natural next-step candidates remain bounded only, the ranked recommendation is `DECISION_REQUIRED`, recommendation is not authorization, TECS-FBW-ADMINRBAC remains `DESIGN_GATE`, broad G-026 remains unopened unless separately changed elsewhere, and navigation-layer implementation is not opened by this closure.
-GOV-DEC-NAVIGATION-LAYER-UPGRADATION-OPENING is now recorded as the historical opening-only governance artifact for the now-closed `GOV-NAV-01`. That opening was consumed by the completed bounded governance-navigation lifecycle, no implementation-ready unit is now open from that artifact, and `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.
-GOV-DEC-NAVIGATION-LAYER-CHILD-OPENING-DISPOSITION is now recorded as a decision-only governance artifact. The bounded navigation-layer upgradation child is now `READY_FOR_OPENING` only for one later separate bounded opening step to address governance navigation friction while preserving doctrine. `READY_FOR_OPENING` is not `OPEN`, no implementation-ready unit is opened, no navigation-layer implementation is authorized, and resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
-GOV-DEC-NAVIGATION-LAYER-UPGRADATION-DISPOSITION is now recorded as a decision-only governance artifact. The decision recognizes one later separate bounded navigation-layer upgradation `OPENING_CANDIDATE` only to address navigation efficiency for low-risk governance meta-steps while preserving doctrine. `OPENING_CANDIDATE` is not `OPEN`, no implementation-ready unit is opened, no navigation-layer implementation is authorized, and resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
-GOV-DEC-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION is now recorded as a decision-only governance artifact. No implementation-ready unit is OPEN, `TECS-FBW-ADMINRBAC` remains `DESIGN_GATE`, and the decision recognizes at most one later separate bounded automated verification policy-design opening candidate only. That candidate is limited to declared verification profiles and closure evidence requirements by unit type and acceptance boundary, does not open any policy or implementation unit, does not authorize Playwright, CI, scripts, tests, or governance-lint expansion, and does not reopen AdminRBAC or G-026 sequencing. Resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
-GOV-APPROVE-MANDATORY-AUTOMATED-VERIFICATION-POLICY-DISPOSITION is now recorded as an approval-only governance step. The recorded decision is approved as valid governance state without expansion, no opening was created, no implementation was authorized, operator sequencing remains unchanged, and recent navigation friction for small meta-steps is recorded as observation only with no authorization effect. Resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
-GOV-DEC-AUTOMATED-VERIFICATION-POLICY-CHILD-OPENING-DISPOSITION is now recorded as a decision-only governance artifact. The bounded automated-verification policy-design child is now `READY_FOR_OPENING` only for one later separate bounded opening step, but no opening is created by this decision, no implementation-ready unit is OPEN, no implementation is authorized, and `READY_FOR_OPENING` is not `OPEN`. The future opening boundary remains limited to declared verification profiles and closure evidence requirements by unit type and acceptance boundary only. Playwright implementation, tests, verifier tooling, CI, governance-lint refinement, product changes, schema changes, AdminRBAC reopening, G-026 reopening, and broad QA or CI transformation remain excluded. Resulting Layer 0 posture remains `OPERATOR_DECISION_REQUIRED`.
-GOV-DEC-AUTOMATED-VERIFICATION-POLICY-OPENING is now recorded as the historical opening-only governance artifact for the now-closed `GOV-VERIFY-01`. That opening was consumed by the completed bounded governance/policy-design lifecycle, no implementation-ready unit is now open from that artifact, and `NEXT-ACTION` remains `OPERATOR_DECISION_REQUIRED`.
-GOV-VERIFY-01 policy-design implementation is now preserved as completed historical policy content only. The bounded policy-design lifecycle is now closed, no tooling or product implementation was authorized, and no second unit was opened.
-VERIFY-GOV-VERIFY-01 is now recorded as the bounded governance-only verification result for the now-closed `GOV-VERIFY-01`. The bounded policy-design content returned `VERIFIED_PASS`, that verification evidence was later consumed by governance sync and close, and no tooling or product implementation was authorized.
-GOVERNANCE-SYNC-GOV-VERIFY-01 is now recorded as the bounded governance-only sync result for the now-closed `GOV-VERIFY-01`. Implementation and verification were canonically reconciled within the opened boundary before the separate close step, and no tooling or product implementation was authorized.
-GOV-CLOSE-GOV-VERIFY-01 is now recorded as a bounded governance-only closure result. GOV-VERIFY-01 is now `CLOSED`, no implementation-ready unit is `OPEN`, the portfolio returns to `OPERATOR_DECISION_REQUIRED`, and no tooling, Playwright, test, verifier-tooling, CI, governance-lint, product, schema, AdminRBAC, G-026, navigation-layer, or second-unit authorization was created by this closure.
-See `NEXT-ACTION.md`.
+See `NEXT-ACTION.md` for the authoritative current Layer 0 pointer.
 
 ## Active Blockers
 

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-29 (WL-BLUEPRINT-RUNTIME-RESIDUE-001 closure)
+**Last Updated:** 2026-03-29 (candidate-state normalization)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -44,6 +44,12 @@ sequencing and next-delivery priority are derived from the product-truth authori
 `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`,
 `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`, and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
+
+Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
+`DECISION_REQUIRED`, or earlier successor openings remain preserved as historical carry-forward
+context only. They do not authorize or imply a current product-facing delivery unit. Current
+product-facing posture remains `ACTIVE_DELIVERY: 0` with no named product unit open until a
+separate fresh bounded product-truth decision is lawfully opened.
 
 `TENANT-TRUTH-CLEANUP-001` is now `CLOSED` after the exact three tenant-facing document-authority
 surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE` on
@@ -173,8 +179,8 @@ supported path, and canonical first-owner usability no longer depends on invite 
 closure applies to the canonical supported first-owner path only. Reused existing-user
 provisioning edge cases, non-canonical invite-token behaviors, broader auth or provisioning
 redesign, white-label or domain-routing work, and subscription or billing work remain out of scope
-for this closed unit. No current Layer 0 governance exception displaces the next lawful
-product-truth delivery candidate `WL-COMPLETE-001`.
+for this closed unit. The earlier successor-unit reference from this closure chain is historical
+only and does not create a current product-facing priority.
 
 `WL-COMPLETE-001` is now `CLOSED` after the bounded white-label operating-mode completion loop was
 implemented, runtime-verified, and closure-assessed as ready to close with no blocker. The bounded
@@ -185,8 +191,8 @@ finished WL-owned operator capability, neighboring runtime coherence was restore
 mattered, and Collections plus Domains are live and runtime-sound. Residual blueprint noise,
 historical stale-page behavior, direct WL_ADMIN access-path nuance, and tenant data emptiness
 remain non-blocking residuals, historical notes, or outside-unit-scope conditions only. No Layer 0
-governance exception displaces product-truth sequencing, and the bounded successor opening is now
-separate and explicit under `TRUTH-CLEANUP-001`.
+governance exception displaces product-truth sequencing, and the earlier successor-opening
+reference in this closure chain is historical only and creates no current product-facing priority.
 
 `TRUTH-CLEANUP-001` is now `CLOSED` after bounded repo-truth verification confirmed that the
 treated API-doc, architecture-blueprint, taxonomy, and current-state surfaces no longer function
