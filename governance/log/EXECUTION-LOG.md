@@ -302,6 +302,29 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 ---
 
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: GOVERNANCE / DESIGN-RECORD
+Status: OPEN
+Commit: (this commit — see git log for [GOVERNANCE] add WL-ADMIN-ENTRY-DISCOVERABILITY-001 design v1)
+Title: Define the bounded WL admin-entry discoverability design
+Summary: Created `docs/product-truth/WL-ADMIN-ENTRY-DISCOVERABILITY-001-DESIGN-v1.md` for the
+  already-open bounded WL-only follow-up unit. The design records the expected WL owner/admin
+  entry path into `WL_ADMIN`, the exact roles of the investigated surfaces in routing,
+  discoverability, and settings messaging, the minimum lawful remediation shape, the slice plan,
+  and the required frontend verification and neighbor-path smoke checks. No implementation was
+  started, no runtime code changed, and `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing
+  `ACTIVE_DELIVERY`.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product truth —
+  WL-ADMIN-ENTRY-DISCOVERABILITY-001-DESIGN-v1.md created; Layer 3 — EXECUTION-LOG.md appended
+  (this entry)
+Notes: OPEN-SET.md and NEXT-ACTION.md remain unchanged because no non-terminal unit status changed
+  and no sequencing pointer changed. This design remains bounded to the WL-only admin-entry and
+  discoverability path, does not widen into enterprise admin redesign, tenant truth cleanup, or
+  blueprint-residue cleanup, and authorizes no implementation by implication.
+Refs: governance/control/SNAPSHOT.md · docs/product-truth/WL-ADMIN-ENTRY-DISCOVERABILITY-001-DESIGN-v1.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN
 Commit: (this commit — see git log for [GOVERNANCE] open WL-ADMIN-ENTRY-DISCOVERABILITY-001)
