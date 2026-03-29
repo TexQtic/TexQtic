@@ -302,6 +302,32 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 ---
 
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: IMPLEMENTATION
+Status: OPEN
+Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] implement bounded WL admin entry discoverability fix)
+Title: Implement bounded WL-only admin entry discoverability repair
+Summary: Implemented the minimum bounded WL-only admin-entry/discoverability repair in `App.tsx`
+  only. The implementation preserves both App.tsx WL admission authorities, keeps restore-time and
+  post-login routing aligned on the same WL-admin eligibility truth, adds one bounded storefront
+  discoverability path by routing the existing white-label `Access Control` affordance into
+  `WL_ADMIN` for eligible WL owner/admin users, and aligns the experience settings path by passing
+  the existing real Domains callback only when that same WL-admin path is reachable. No backend,
+  shell-system, enterprise-admin, or blueprint-residue work was touched, no secondary frontend
+  files were required, and `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing
+  `ACTIVE_DELIVERY` pending later verification.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product runtime — App.tsx
+  updated; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: Bounded file set touched in implementation phase: `App.tsx` only on runtime surfaces,
+  plus governance trace in `SNAPSHOT.md` and `EXECUTION-LOG.md`. `layouts/Shells.tsx` and
+  `components/Tenant/WhiteLabelSettings.tsx` were not modified because App.tsx-first
+  implementation proved sufficient. No scope widening occurred, enterprise behavior remains
+  unchanged by intent, the separate WL blueprint-residue path remains untouched, and this entry does
+  not claim verification or closure.
+Refs: App.tsx · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: GOVERNANCE / DESIGN-ADJUSTMENT
 Status: OPEN
 Commit: (this commit — see git log for [GOVERNANCE] patch WL-ADMIN-ENTRY-DISCOVERABILITY-001 design for restore-path truth)

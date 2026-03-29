@@ -106,6 +106,11 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
 
 const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
 type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
+const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
+
+const canAccessWlAdmin = (isWhiteLabel: boolean | null | undefined, role: string | null | undefined) => (
+  isWhiteLabel === true && WL_ADMIN_ROLES.has(role ?? '')
+);
 
 const normalizeWlAdminView = (view: string): WLAdminView => {
   if ((WL_ADMIN_VIEWS as readonly string[]).includes(view)) {
@@ -506,6 +511,7 @@ const App: React.FC = () => {
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
+  const [wlAdminEligible, setWlAdminEligible] = useState(false);
   // TECS-FBW-020: WL-admin-local invite substate — keeps invite inside WhiteLabelAdminShell;
   // prevents INVITE_MEMBER appState from falling into the EXPERIENCE case group.
   const [wlAdminInviting, setWlAdminInviting] = useState(false);
@@ -563,6 +569,12 @@ const App: React.FC = () => {
     error: null,
     success: null,
   });
+
+  const enterWlAdmin = (view: WLAdminView = 'BRANDING') => {
+    setWlAdminView(normalizeWlAdminView(view));
+    setWlAdminInviting(false);
+    setAppState('WL_ADMIN');
+  };
   const [rfqDetailView, setRfqDetailView] = useState<{
     open: boolean;
     source: 'dialog' | 'list' | null;
@@ -633,6 +645,7 @@ const App: React.FC = () => {
 
   const enterControlPlane = () => {
     if (getCurrentAuthRealm() !== 'CONTROL_PLANE') {
+      setWlAdminEligible(false);
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
       setSelectedTenant(null);
@@ -643,6 +656,7 @@ const App: React.FC = () => {
       return;
     }
 
+    setWlAdminEligible(false);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
@@ -655,6 +669,7 @@ const App: React.FC = () => {
   const clearControlPlaneIdentityState = () => {
     persistControlPlaneIdentity(null);
     setControlPlaneIdentity(null);
+    setWlAdminEligible(false);
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
     setFinanceEscrowBridge(null);
@@ -664,6 +679,7 @@ const App: React.FC = () => {
   const applyControlPlaneShellEntry = (identity: ControlPlaneIdentity) => {
     persistControlPlaneIdentity(identity);
     setControlPlaneIdentity(identity);
+    setWlAdminEligible(false);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
@@ -944,6 +960,7 @@ const App: React.FC = () => {
       try {
         const me = await getCurrentUser();
         const tenant = buildTenantSnapshot(me.tenant) ?? storedImpersonation.tenant;
+        const hasWlAdminAccess = canAccessWlAdmin(tenant?.is_white_label, me.role ?? null);
 
         if (tenant?.id !== storedImpersonation.state.targetTenantId || cancelled) {
           throw new Error('Stored impersonation tenant is invalid.');
@@ -953,6 +970,7 @@ const App: React.FC = () => {
         setControlPlaneIdentity(actorIdentity);
         setTenants([tenant]);
         setCurrentTenantId(tenant.id);
+        setWlAdminEligible(hasWlAdminAccess);
         setTenantProvisionError(null);
         setImpersonation(storedImpersonation.state);
         setAppState('EXPERIENCE');
@@ -963,6 +981,7 @@ const App: React.FC = () => {
 
         clearPersistedImpersonationSession();
         setImpersonation(EMPTY_IMPERSONATION_STATE);
+        setWlAdminEligible(false);
       }
     };
 
@@ -1009,7 +1028,6 @@ const App: React.FC = () => {
       setTenantRestorePending(true);
       setTenantProvisionError(null);
 
-      const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
       let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
 
       const failClosedTenantBootstrap = (reason: string, details: RehydrationTracePayload = {}) => {
@@ -1021,6 +1039,7 @@ const App: React.FC = () => {
         clearAuth();
         setTenants([]);
         setCurrentTenantId('');
+        setWlAdminEligible(false);
         setStoredAuthRealm('TENANT');
         setAuthRealm('TENANT');
         setAppState('AUTH');
@@ -1045,11 +1064,13 @@ const App: React.FC = () => {
 
         setTenants([tenant]);
         setCurrentTenantId(tenant.id);
+        const hasWlAdminAccess = canAccessWlAdmin(tenant.is_white_label, me.role ?? null);
+        setWlAdminEligible(hasWlAdminAccess);
         appendRehydrationTrace('tenantRestore:tenant_applied', {
           tenant: summarizeTenantIdentity(tenant),
         });
 
-        if (tenant.is_white_label === true && WL_ADMIN_ROLES.has(me.role ?? '')) {
+        if (hasWlAdminAccess) {
           nextState = 'WL_ADMIN';
         }
 
@@ -1122,15 +1143,13 @@ const App: React.FC = () => {
     // Clear any previous provision error from a prior login attempt.
     setTenantProvisionError(null);
 
-    // G-WL-TYPE-MISMATCH Wave4-P1: roles that default to the WL Store Admin console.
-    // Buyer/Seller/Staff continue to land in the storefront (EXPERIENCE).
-    const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
     let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
 
     const failClosedTenantBootstrap = () => {
       clearAuth();
       setTenants([]);
       setCurrentTenantId('');
+      setWlAdminEligible(false);
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
       setAppState('AUTH');
@@ -1154,8 +1173,10 @@ const App: React.FC = () => {
           updatedAt: '',
         } as Tenant]);
         setCurrentTenantId(t.id);
+        const hasWlAdminAccess = canAccessWlAdmin(t.is_white_label ?? false, me.role ?? null);
+        setWlAdminEligible(hasWlAdminAccess);
         // B2-REM-3: WL routing uses is_white_label boolean — not type === WHITE_LABEL
-        if ((t.is_white_label === true) && WL_ADMIN_ROLES.has(me.role ?? '')) {
+        if (hasWlAdminAccess) {
           nextState = 'WL_ADMIN';
         }
       } else {
@@ -1225,6 +1246,7 @@ const App: React.FC = () => {
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
       setCurrentTenantId(tenant.id);
+      setWlAdminEligible(canAccessWlAdmin(tenant.is_white_label ?? false, target.role ?? null));
       setImpersonation(nextImpersonationState);
       persistImpersonationSession({
         adminId: actorAdminId,
@@ -1251,6 +1273,7 @@ const App: React.FC = () => {
 
   /** G-W3-ROUTING-001: Stop impersonation via server API, then restore admin session */
   const handleExitImpersonation = async () => {
+    setWlAdminEligible(false);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
 
@@ -1808,7 +1831,14 @@ const App: React.FC = () => {
     if (appState === 'TEAM_MGMT') return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
     if (appState === 'INVITE_MEMBER')
       return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;
-    if (appState === 'SETTINGS') return <WhiteLabelSettings tenant={currentTenant} />;
+    if (appState === 'SETTINGS') {
+      return (
+        <WhiteLabelSettings
+          tenant={currentTenant}
+          onNavigateDomains={currentTenant.is_white_label === true && wlAdminEligible ? () => enterWlAdmin('DOMAINS') : undefined}
+        />
+      );
+    }
     // RCP-1 TECS 3: Orders panel — rendered before the tenant-type switch so it
     // overlays any tenant type's home view. Reset to HOME via onBack / onNavigateHome.
     // G-025 TECS 4D: DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
@@ -2634,9 +2664,17 @@ const App: React.FC = () => {
           );
         }
 
+        const canDiscoverWlAdmin = currentTenant.is_white_label === true && wlAdminEligible;
         const props = {
           tenant: currentTenant,
-          onNavigateTeam: () => setAppState('TEAM_MGMT'),
+          onNavigateTeam: () => {
+            if (canDiscoverWlAdmin) {
+              enterWlAdmin('STAFF');
+              return;
+            }
+
+            setAppState('TEAM_MGMT');
+          },
           onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
           onNavigateOrders: () => { setAppState('EXPERIENCE'); setExpView('ORDERS'); },
           onNavigateDpp: () => { setAppState('EXPERIENCE'); setExpView('DPP'); },
@@ -3008,8 +3046,9 @@ const App: React.FC = () => {
               <button
                 onClick={() => {
                   clearAuth();
-                    clearPersistedImpersonationSession();
-                    setImpersonation(EMPTY_IMPERSONATION_STATE);
+                  clearPersistedImpersonationSession();
+                  setImpersonation(EMPTY_IMPERSONATION_STATE);
+                  setWlAdminEligible(false);
                   clearControlPlaneIdentityState();
                   setAppState('AUTH');
                 }}
