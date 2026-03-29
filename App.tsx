@@ -1327,6 +1327,10 @@ const App: React.FC = () => {
           createdAt: '',
           updatedAt: '',
         } as Tenant, loginTenantHint);
+        if (!normalizedTenant) {
+          failClosedTenantBootstrap();
+          return;
+        }
         setTenants([normalizedTenant as Tenant]);
         setCurrentTenantId(normalizedTenant.id);
         const resolvedRole = resolveTenantRole(me.role ?? null, normalizedTenant.id);

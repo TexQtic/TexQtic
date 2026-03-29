@@ -302,6 +302,28 @@ Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md · gov
 ---
 
 ### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
+Type: IMPLEMENTATION / BUILD-FIX
+Status: OPEN
+Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] fix build for WL admin remediation)
+Title: Fix App.tsx build failure in WL admin remediation lineage
+Summary: Applied one bounded compile-safety fix inside the existing WL-only unit after Vercel
+  proved that the prior follow-up remediation failed TypeScript null-safety at the frontend build
+  step. The fix remains `App.tsx` only on runtime surfaces: it adds a local null guard before the
+  post-login branch dereferences `normalizedTenant`, preserving the prior WL-only identity-hint
+  and admission behavior while making the branch provably safe for `tsc && vite build`. No shell,
+  backend, enterprise, blueprint-residue, or broader navigation changes were made, and
+  `TENANT-TRUTH-CLEANUP-001` remains the sole product-facing `ACTIVE_DELIVERY`.
+Layer Impact: Layer 0 — SNAPSHOT.md refreshed for carry-forward posture; Product runtime — App.tsx
+  updated; Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: This phase fixes build readiness only. It does not claim that production WL behavior is now
+  verified, and it does not start the next production verification pass. `layouts/Shells.tsx` and
+  `components/Tenant/WhiteLabelSettings.tsx` remain unchanged because the failure was isolated to
+  App.tsx nullability only. No scope widening occurred.
+Refs: App.tsx · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
+### WL-ADMIN-ENTRY-DISCOVERABILITY-001 — 2026-03-29
 Type: IMPLEMENTATION / FOLLOW-UP
 Status: OPEN
 Commit: (this commit — see git log for [WL-ADMIN-ENTRY-DISCOVERABILITY-001] remediate production WL admin entry gaps)
