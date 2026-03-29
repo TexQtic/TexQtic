@@ -13,8 +13,12 @@ const ArchitectureDiagram: React.FC = () => {
   return (
     <div className="bg-slate-900 text-slate-100 p-8 rounded-xl shadow-2xl space-y-6">
       <h3 className="text-xl font-bold border-b border-slate-700 pb-2 flex items-center gap-2">
-        <span className="text-blue-400">🏗️</span> Platform Architecture Overview
+        <span className="text-amber-400">🏗️</span> Preserved Architecture Reference
       </h3>
+      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        Preserved reference only. This component is not current platform architecture authority and
+        does not define active implementation, sequencing, or runtime truth.
+      </div>
       <div className="space-y-4">
         {layers.map((layer, idx) => (
           <div key={idx} className="relative">
@@ -36,7 +40,8 @@ const ArchitectureDiagram: React.FC = () => {
       </div>
       <div className="mt-8 pt-4 border-t border-slate-800">
         <div className="text-xs text-slate-500 font-mono italic">
-          * Powered by Domain-Driven Design & Multi-tenant RLS (Row Level Security)
+          * Preserved historical/conceptual reference only. Current authority lives in the
+          product-truth stack, not in this retained component.
         </div>
       </div>
     </div>
