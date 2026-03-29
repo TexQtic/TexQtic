@@ -14,7 +14,7 @@
 snapshot_date: 2026-03-29
 last_unit_opened: WL-ADMIN-ENTRY-DISCOVERABILITY-001
 last_unit_closed: TENANT-TRUTH-CLEANUP-001
-last_commit: "[GOVERNANCE] close TENANT-TRUTH-CLEANUP-001"
+last_commit: "[GOVERNANCE] verify WL-BLUEPRINT-RUNTIME-RESIDUE-001"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -88,6 +88,8 @@ tenant_truth_cleanup_001_no_active_bounded_reconciliation_remaining: true
 wl_blueprint_runtime_residue_001_open: true
 wl_blueprint_runtime_residue_001_active_delivery: true
 wl_blueprint_runtime_residue_001_closed: false
+wl_blueprint_runtime_residue_001_verified_complete: true
+wl_blueprint_runtime_residue_001_close_ready: true
 wl_admin_entry_discoverability_001_open: false
 wl_admin_entry_discoverability_001_active_delivery: false
 wl_admin_entry_discoverability_001_closed: true
