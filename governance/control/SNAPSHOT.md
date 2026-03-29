@@ -14,7 +14,7 @@
 snapshot_date: 2026-03-29
 last_unit_opened: WL-ADMIN-ENTRY-DISCOVERABILITY-001
 last_unit_closed: WL-ADMIN-ENTRY-DISCOVERABILITY-001
-last_commit: "[TENANT-TRUTH-CLEANUP-001] remove stale cross-surface WL priority residue"
+last_commit: "[GOVERNANCE] verify TENANT-TRUTH-CLEANUP-001"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -82,6 +82,8 @@ tenant_truth_cleanup_001_closed: false
 tenant_truth_cleanup_001_tenant_dashboard_matrix_reconciled: true
 tenant_truth_cleanup_001_cross_surface_dashboard_matrix_reconciled: true
 tenant_truth_cleanup_001_current_state_sections_reconciled: true
+tenant_truth_cleanup_001_verified_complete: true
+tenant_truth_cleanup_001_close_ready: true
 wl_blueprint_runtime_residue_001_open: true
 wl_blueprint_runtime_residue_001_active_delivery: false
 wl_blueprint_runtime_residue_001_closed: false

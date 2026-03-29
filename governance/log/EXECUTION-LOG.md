@@ -35,6 +35,30 @@ Notes: <constraints or cautions applicable after closure>
   or in Layer 0 closed-baseline, not in a new-style unit record
 
 ---
+### TENANT-TRUTH-CLEANUP-001 — 2026-03-29
+Type: VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: N/A (governance-file verification record)
+Title: Verify bounded tenant document-authority reconciliation
+Summary: Read-only verification of the bounded `TENANT-TRUTH-CLEANUP-001` document-authority
+  surface after implementation commit `609ff9e`. Confirmed that
+  `docs/strategy/TENANT_DASHBOARD_MATRIX.md`, `docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md`,
+  and the tenant-facing authority sections of
+  `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md` now align with current repo truth on the
+  materially real B2B Orders/RFQs/Compliance/Catalog surface and the materially real WL
+  admin/operator surface, with no remaining bounded statement that reads WL Store Admin as
+  absent, future-only, or still awaiting reconciliation. Verification result: VERIFIED_COMPLETE.
+Layer Impact: Layer 0 — SNAPSHOT.md updated for post-verification posture; Layer 3 —
+  EXECUTION-LOG.md appended (this entry)
+Notes: `TENANT-TRUTH-CLEANUP-001` remains `OPEN` pending separate governance sync/close, but it is
+  now close-ready on its exact bounded three-surface scope. No runtime or shell implementation,
+  no WL blueprint runtime residue work, no WL admin discoverability reopening, no enterprise
+  redesign reopening, and no broader tenant authority cleanup was authorized or implied.
+Refs: docs/strategy/TENANT_DASHBOARD_MATRIX.md · docs/DASHBOARD_MATRIX_CONTROL_TENANT_WL.md ·
+  docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
 ### GOVERNANCE-OS-RESET-001 — 2026-03-25
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN
