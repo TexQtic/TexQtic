@@ -58,7 +58,6 @@ import { DisputeCases, type DisputeEscalationBridgeTarget } from './components/C
 import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
-import ArchitectureDiagram from './components/ArchitectureDiagram';
 import { getPlatformInsights } from './services/aiService';
 import {
   getCatalogItems,
@@ -618,7 +617,6 @@ const App: React.FC = () => {
   });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
-  const [showArchitecture, setShowArchitecture] = useState(false);
 
   useEffect(() => {
     if (appState === 'AUTH' && authRealm !== effectiveRealm) {
@@ -2990,11 +2988,6 @@ const App: React.FC = () => {
         appState !== 'VERIFY_EMAIL' &&
         appState !== 'ONBOARDING' && (
           <div className="fixed bottom-6 right-6 z-[999] flex flex-col items-end gap-3">
-            {showArchitecture && (
-              <div className="mb-4 w-[600px] animate-in slide-in-from-bottom-4 duration-300">
-                <ArchitectureDiagram />
-              </div>
-            )}
             <div className="glass shadow-2xl rounded-2xl border border-slate-200 p-2 flex gap-2">
               {canAccessControlPlane && !impersonation.isAdmin && (
                 <button
@@ -3027,12 +3020,6 @@ const App: React.FC = () => {
               {appState !== 'CONTROL_PLANE' && (
                 <>
                   <div className="h-8 w-px bg-slate-200 my-auto mx-1"></div>
-                  <button
-                    onClick={() => setShowArchitecture(!showArchitecture)}
-                    className="px-4 py-2 bg-slate-100 text-slate-900 rounded-xl text-[10px] font-bold uppercase hover:bg-slate-200 transition"
-                  >
-                    Blueprint
-                  </button>
                   {!impersonation.isAdmin && tenants.length > 0 && (
                     <select
                       title="tenant-picker"
