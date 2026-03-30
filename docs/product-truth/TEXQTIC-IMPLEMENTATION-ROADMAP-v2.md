@@ -6,7 +6,8 @@ This document is the fresh implementation roadmap for the next TexQtic product-t
 
 It starts after the `-v1` roadmap completed and the fresh A1/A2/A3 cycle identified the next
 bounded candidate families. The `-v1` roadmap remains historical and complete; this `-v2` roadmap
-defines the next ordered wave structure and now records the sole currently opened first wave.
+defines the next ordered wave structure and now records the bounded first wave as completed and
+closed.
 
 ## Roadmap North Star
 
@@ -29,7 +30,7 @@ The next cycle prioritizes bounded product-facing continuity work that:
 
 | Wave | Name | Posture | Primary Goal | Included Candidate Family | Dependency Reason |
 |---|---|---|---|---|---|
-| Wave 1 | Tenant Catalog Management Continuity | `ACTIVE_DELIVERY` | Close the clearest tenant-facing catalog lifecycle completeness gap | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | Strongest bounded frontend/backend completeness gap and now the sole current product-facing open unit |
+| Wave 1 | Tenant Catalog Management Continuity | `CLOSED` | Close the clearest tenant-facing catalog lifecycle completeness gap | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | Strongest bounded frontend/backend completeness gap; now completed and closed in bounded form |
 | Wave 2 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Should remain separate from catalog continuity and follow the stronger commerce-operability gap |
 | Wave 3 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work, but narrower and less foundational than Wave 1 |
 | Design Gate | Aggregator Operating Mode Scope Truth | `DESIGN_GATE_ONLY` | Define the exact bounded aggregator operating model before any implementation opening | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | Current repo truth is insufficiently specific to support a lawful implementation opening |
@@ -48,15 +49,20 @@ The `-v1` roadmap is now the completed historical sequence for:
 
 No `-v1` wave is reopened by this `-v2` roadmap.
 
+There is currently no open product-facing `ACTIVE_DELIVERY` wave in the `-v2` stack. Any future
+product-facing opening requires a fresh bounded product decision against the remaining recorded
+later-ready and design-gate candidates.
+
 ## Wave 1 — Tenant Catalog Management Continuity
 
-- Posture: `ACTIVE_DELIVERY`
+- Posture: `CLOSED`
 - Candidate Family: `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
 
 ### Objective
 
-Close the bounded tenant catalog lifecycle continuity gap so real tenant-owned product surfaces are
-not materially create-and-read only when backend lifecycle support already exists.
+The bounded tenant catalog lifecycle continuity gap is now closed so real tenant-owned product
+surfaces are no longer materially create-and-read only when backend lifecycle support already
+exists.
 
 ### Why First
 
@@ -67,14 +73,15 @@ not materially create-and-read only when backend lifecycle support already exist
 
 ### Opening Posture
 
-This wave is now the sole current product-facing `ACTIVE_DELIVERY`. The opening remained
-governance-only: no design or implementation was performed in the opening step.
+This wave was the sole current product-facing `ACTIVE_DELIVERY` and is now closed after bounded
+implementation, the bounded B2B surfaced affordance follow-up, and recorded `VERIFIED_COMPLETE`
+production verification established tenant catalog item update/delete continuity in bounded form.
 
 ### Boundaries
 
 - Do not widen this wave into marketplace redesign, merchandising, search, or broad B2C strategy.
 - Do not absorb control-plane tenant operations reality.
-- Do not treat this wave as a reopen of the completed WL completeness cycle.
+- Do not treat this closed wave as a reopen of the completed WL completeness cycle.
 
 ## Wave 2 — Control-Plane Tenant Operations Reality
 

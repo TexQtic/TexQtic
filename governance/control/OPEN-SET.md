@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-30 (TENANT-CATALOG-MANAGEMENT-CONTINUITY opening)
+**Last Updated:** 2026-03-30 (TENANT-CATALOG-MANAGEMENT-CONTINUITY close)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -22,22 +22,21 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
-| TENANT-CATALOG-MANAGEMENT-CONTINUITY | Tenant catalog item lifecycle continuity | OPEN | ACTIVE_DELIVERY | V2 | 2026-03-30 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **10**
+- **OPEN** (all governed units): **9**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 1
+- **ACTIVE_DELIVERY**: 0
 - **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 11**
+- **Total non-terminal units: 10**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -49,18 +48,21 @@ sequencing and next-delivery priority are derived from the product-truth authori
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as historical carry-forward
 context only. They do not authorize or imply current-ready product openings outside active Layer 0
-truth. Current product-facing posture now carries one sole `ACTIVE_DELIVERY` unit,
-`TENANT-CATALOG-MANAGEMENT-CONTINUITY`, opened on the bounded backend/frontend completeness
-asymmetry already evidenced in repo truth.
+truth. Current product-facing posture now carries no open `ACTIVE_DELIVERY` unit. Future
+product-facing opening requires a fresh bounded product decision against the preserved `-v2`
+planning stack.
 
-The completed `-v1` planning stack remains historical baseline only. The `-v2` stack is the fresh
-active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now the sole open
-product-facing `ACTIVE_DELIVERY` under that `-v2` sequence. This opening remains limited to
-tenant catalog item lifecycle continuity only: the missing materially usable update/delete path
-across tenant product surface and client-service layer. It is not marketplace redesign, not
-merchandising redesign, not search redesign, not B2C storefront continuity, not control-plane
-tenant operations reality, not aggregator mode scope work, and not a reopen of the recently
-closed WL / tenant-truth units.
+The completed `-v1` planning stack remains historical baseline only. The `-v2` stack remains the
+active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded
+implementation, the bounded B2B surfaced affordance follow-up, and recorded `VERIFIED_COMPLETE`
+production verification. Tenant catalog item update/delete continuity is now completed in bounded
+form: Acme B2B now exposes Edit/Delete and verified update/delete end to end, local state
+reconciles truthfully, WL Products remained non-regressed, and no active bounded defect remains
+inside this unit. The separately recorded image-upload adjacent finding remains investigation-only,
+the separately recorded RFQ / negotiation adjacent finding remains investigation-only,
+CONTROL-PLANE-TENANT-OPERATIONS-REALITY and MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain
+later-ready and separate, MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only,
+and no recently closed WL / tenant-truth unit is reopened by this close.
 
 `TENANT-TRUTH-CLEANUP-001` is now `CLOSED` after the exact three tenant-facing document-authority
 surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE` on

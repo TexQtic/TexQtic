@@ -13,8 +13,8 @@
 ```yaml
 snapshot_date: 2026-03-30
 last_unit_opened: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_unit_closed: WL-BLUEPRINT-RUNTIME-RESIDUE-001
-last_commit: "[GOVERNANCE] record RFQ-negotiation finding and classify scope"
+last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
+last_commit: "[GOVERNANCE] close TENANT-CATALOG-MANAGEMENT-CONTINUITY"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -24,22 +24,22 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
-current_product_active_delivery_count: 1
-current_product_delivery_priority: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-current_product_delivery_unit_open: true
-current_product_active_delivery_unit: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-future_product_opening_requires_fresh_bounded_product_decision: false
+current_product_active_delivery_count: 0
+current_product_delivery_priority: NONE
+current_product_delivery_unit_open: false
+current_product_active_delivery_unit: NONE
+future_product_opening_requires_fresh_bounded_product_decision: true
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
 product_truth_v2_roadmap_present: true
 product_truth_v2_next_delivery_plan_present: true
-recommended_next_opening_candidate: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-recommended_next_opening_candidate_recorded: true
-recommended_next_opening_candidate_opened: true
-tenant_catalog_management_continuity_ready_for_opening: true
-tenant_catalog_management_continuity_open: true
-tenant_catalog_management_continuity_active_delivery: true
+recommended_next_opening_candidate: NONE
+recommended_next_opening_candidate_recorded: false
+recommended_next_opening_candidate_opened: false
+tenant_catalog_management_continuity_ready_for_opening: false
+tenant_catalog_management_continuity_open: false
+tenant_catalog_management_continuity_active_delivery: false
 tenant_catalog_management_continuity_opened_from_v2_recommendation: true
 tenant_catalog_management_continuity_design_created: true
 tenant_catalog_management_continuity_implementation_started: true
@@ -47,6 +47,8 @@ tenant_catalog_management_continuity_update_delete_continuity_implemented: true
 tenant_catalog_management_continuity_production_verification_complete: true
 tenant_catalog_management_continuity_verified_complete: true
 tenant_catalog_management_continuity_close_ready: true
+tenant_catalog_management_continuity_closed: true
+tenant_catalog_management_continuity_no_active_bounded_followup_remaining: true
 tenant_catalog_management_continuity_backend_frontend_asymmetry_confirmed: true
 tenant_catalog_management_continuity_b2b_edit_delete_minor_fix_remaining: false
 tenant_catalog_management_continuity_b2b_followup_exposure_fix_implemented: true
@@ -157,45 +159,33 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 11**
+- **Open governed units: 10**
 - **Verified-complete governed units: 0**
 
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as carry-forward context only.
 They do not authorize or imply current-ready openings outside active Layer 0 truth. Current
-product-facing posture is now `ACTIVE_DELIVERY: 1`, `product_delivery_priority:
-TENANT-CATALOG-MANAGEMENT-CONTINUITY`, and the sole currently open product-facing unit is
-`TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
+product-facing posture is now `ACTIVE_DELIVERY: 0`, no current product-facing unit is open, and
+any future product-facing opening requires a fresh bounded product decision against the preserved
+`-v2` planning stack.
 
 The prior `-v1` product-truth planning stack remains the completed historical baseline. The `-v2`
-stack is now the active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` has moved from
-recorded recommendation into the sole current product-facing `ACTIVE_DELIVERY`. The opening basis
-remains strictly bounded to tenant catalog item lifecycle continuity only: the missing materially
-usable update/delete path across tenant product surface and client-service layer on an already
-evidenced backend/frontend asymmetry. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
+stack is now the active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` has now moved
+from recorded recommendation to bounded completed closure. The bounded unit remained strictly
+limited to tenant catalog item lifecycle continuity only: the missing materially usable
+update/delete path across tenant product surface and client-service layer on an already evidenced
+backend/frontend asymmetry. The bounded implementation slice executed on `services/catalogService.ts`
+and `App.tsx` only, the bounded B2B surfaced affordance follow-up made existing edit/delete
+continuity visibly reachable, and authoritative live production verification completed as
+`VERIFIED_COMPLETE`: Acme B2B visibly exposes Edit/Delete, update continuity works end to end,
+delete continuity works end to end, local state reconciles truthfully, create/read/RFQ remain
+intact in bounded scope, and WL Products remained non-regressed. No active bounded defect remains
+inside this unit. The separate image-upload adjacent finding remains investigation-only and outside
+this close, the separate RFQ / negotiation adjacent finding remains investigation-only and outside
+this close, CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
 MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
 MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the recently closed WL /
-tenant-truth units remain closed and separate. The bounded design artifact now exists for this
-unit, and the bounded implementation slice for tenant catalog update/delete continuity has now
-been executed on `services/catalogService.ts` and `App.tsx` only with no search, storefront CTA,
-merchandising, B2C continuity, or control-plane drift. Production verification also established
-that the currently proven remaining fix inside this unit is the surfaced B2B edit/delete
-continuity gap only. A separate adjacent finding was recorded for apparent missing materially
-usable product image upload continuity in Add Item flows, but bounded repo-truth investigation
-classified that finding as pending later unit assignment rather than an automatic expansion of the
-current update/delete continuity unit. A bounded follow-up implementation has now adjusted the B2B
-catalog card composition in `App.tsx` so the existing shared edit/delete action row is surfaced as
-an explicit footer alongside the existing RFQ CTA, with no service-layer changes, no image-upload
-work, and no widening into search, browse, storefront CTA continuity, merchandising, broader B2C,
-or control-plane surfaces. Live production verification has now completed as `VERIFIED_COMPLETE`
-for the bounded catalog continuity scope, so the unit is close-ready on update/delete continuity
-while remaining the sole currently open product-facing `ACTIVE_DELIVERY` pending a separate close
-phase. A second adjacent finding has now also been recorded for RFQ / negotiation continuity and
-mode-parity truth: white-label runtime currently shows no evidenced RFQ affordance in the reviewed
-storefront surfaces, enterprise runtime exposes bounded RFQ initiation plus buyer/supplier
-follow-up surfaces that remain explicitly pre-negotiation / first-response-only, and repo truth
-currently supports treating that as one separate adjacent candidate family rather than auto-merging
-it into the current catalog unit.
+tenant-truth units remain closed and separate.
 
 - **TENANT-TRUTH-CLEANUP-001** — `CLOSED` — Bounded shared tenant truth-cleanup unit closed 2026-03-29 after the exact three tenant document-authority surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE`. No stale stub-era or missing-admin contradiction remains inside the tenant dashboard matrix, the cross-surface control/tenant/WL dashboard matrix, or the tenant-facing authority sections of current-state; no active bounded reconciliation remains inside this unit; and this closure remains document-authority only. This closure does not include runtime or shell implementation, does not absorb `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not absorb `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin/platform completion outside the bounded three-surface scope.
 

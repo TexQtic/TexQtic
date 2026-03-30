@@ -6,13 +6,14 @@ This document defines the immediate next-cycle delivery ordering for TexQtic aft
 `-v1` planning stack.
 
 It records the fresh A3 prioritization result without opening a unit by itself. The `-v1` plan
-remains historical and complete; this `-v2` plan now records the current opened unit plus the
-remaining next-cycle ordering.
+remains historical and complete; this `-v2` plan now records the bounded first delivery as closed
+and preserves the remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- The current open product-facing delivery unit is `TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
-- Product-facing priority now points to `TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
+- There is currently no open product-facing delivery unit.
+- `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
+- Any future product-facing opening requires a fresh bounded product decision against the preserved remaining candidates.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 
 ## Delivery Ordering Rules
@@ -26,12 +27,11 @@ remaining next-cycle ordering.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | `ACTIVE_DELIVERY` | Strongest bounded frontend/backend completeness gap and now the sole current product-facing open unit |
-| 2 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Strong later-ready operator truth gap, but less foundational than tenant catalog lifecycle continuity |
-| 3 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that should remain later than the catalog continuity candidate |
-| 4 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
+| 1 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Strong later-ready operator truth gap, but any opening still requires a fresh bounded product decision after Wave 1 closure |
+| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the control-plane truth candidate |
+| 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
 
-## Current Active Delivery
+## Recently Closed First Delivery
 
 ### Candidate Family
 
@@ -40,14 +40,16 @@ remaining next-cycle ordering.
 ### Recorded Opening
 
 After the A3 prioritization cycle established the lawful first opening basis, the bounded unit
-`TENANT-CATALOG-MANAGEMENT-CONTINUITY` was opened as the sole current product-facing
-`ACTIVE_DELIVERY`.
+`TENANT-CATALOG-MANAGEMENT-CONTINUITY` was opened as the sole product-facing `ACTIVE_DELIVERY`,
+completed in bounded form, and is now closed after recorded `VERIFIED_COMPLETE` production
+verification.
 
 ### Boundaries
 
-- Record only the bounded opening state.
-- Do not treat this plan as design or implementation.
-- Do not widen the candidate into general marketplace, search, merchandising, or B2C redesign.
+- Record only the bounded close state.
+- Do not treat this plan as implementation authority for any successor opening.
+- Do not widen the closed candidate into general marketplace, search, merchandising, B2C redesign,
+  image-upload continuity, or RFQ / negotiation continuity.
 
 ## Later Candidates
 
