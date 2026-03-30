@@ -36,6 +36,31 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TENANT-CATALOG-MANAGEMENT-CONTINUITY-DESIGN-v1 — 2026-03-30
+Type: GOVERNANCE / DESIGN
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] add TENANT-CATALOG-MANAGEMENT-CONTINUITY design v1)
+Title: Define the bounded design for tenant catalog item update/delete continuity
+Summary: Design-only phase. Added the bounded product-truth design artifact for
+  `TENANT-CATALOG-MANAGEMENT-CONTINUITY` after re-confirming repo truth that tenant backend PATCH
+  and DELETE catalog lifecycle support already exists while tenant-facing service/client continuity
+  and the reviewed surfaced tenant catalog path remain materially create/read only. The design
+  fixes the unit boundary around update/delete continuity only, names the exact implementation
+  surfaces, preserves neighboring v2 candidate separation, and records that no implementation has
+  started in this phase.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product truth —
+  TENANT-CATALOG-MANAGEMENT-CONTINUITY-DESIGN-v1.md added; Layer 3 — EXECUTION-LOG.md appended
+Notes: This design remains strictly bounded to tenant catalog item lifecycle continuity only: the
+  missing materially usable update/delete path across tenant product surface and client-service
+  layer. It does not authorize create/read redesign, search redesign, browse/storefront CTA work,
+  B2C storefront continuity, control-plane tenant operations reality, aggregator mode scope work,
+  WL / tenant-truth reopenings, or enterprise redesign. `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
+  remains the sole current product-facing `ACTIVE_DELIVERY`. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: docs/product-truth/TENANT-CATALOG-MANAGEMENT-CONTINUITY-DESIGN-v1.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-CATALOG-MANAGEMENT-CONTINUITY — 2026-03-30
 Type: GOVERNANCE / DECISION + OPENING
 Status: OPEN
