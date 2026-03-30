@@ -36,6 +36,32 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### WL-RFQ-EXPOSURE-CONTINUITY-DESIGN-v1 — 2026-03-30
+
+Type: GOVERNANCE / DESIGN
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] add WL-RFQ-EXPOSURE-CONTINUITY design v1)
+Title: Define the bounded WL RFQ exposure continuity design
+Summary: Design-only phase. Current repo truth now fixes the exact WL journey and stop point for
+  the open unit: the reviewed WL path goes from storefront browse into product detail and then
+  stops at add-to-cart/back actions without any RFQ initiation or WL buyer follow-up entry. The
+  design records the smallest lawful remediation shape as reuse of the existing App-level RFQ
+  orchestration plus a WL product-detail RFQ entry and the minimum WL buyer follow-up re-entry into
+  existing buyer RFQ list/detail continuity. No runtime code changed and no implementation started
+  in this phase.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product truth —
+  WL-RFQ-EXPOSURE-CONTINUITY-DESIGN-v1.md added; Layer 3 — EXECUTION-LOG.md appended
+Notes: This design remains strictly bounded to WL RFQ initiation exposure and minimum WL buyer
+  follow-up continuity only. It is not enterprise RFQ-to-negotiation bridge work, not broad
+  negotiation redesign, not trade redesign, not quote/counter-offer redesign, not image/media
+  continuity, not search/merchandising/B2C continuity, not control-plane work, and not enterprise
+  redesign. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and unopened, and
+  no closed WL / tenant-truth unit is reopened. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: docs/product-truth/WL-RFQ-EXPOSURE-CONTINUITY-DESIGN-v1.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### WL-RFQ-EXPOSURE-CONTINUITY — 2026-03-30
 
 Type: GOVERNANCE / OPENING

@@ -15,7 +15,7 @@ snapshot_date: 2026-03-30
 last_unit_opened: WL-RFQ-EXPOSURE-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
 last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[GOVERNANCE] open WL-RFQ-EXPOSURE-CONTINUITY"
+last_commit: "[GOVERNANCE] add WL-RFQ-EXPOSURE-CONTINUITY design v1"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -41,8 +41,13 @@ recommended_next_opening_candidate_opened: false
 wl_rfq_exposure_continuity_open: true
 wl_rfq_exposure_continuity_active_delivery: true
 wl_rfq_exposure_continuity_opened_from_rfq_negotiation_design_gate: true
+wl_rfq_exposure_continuity_design_v1_created: true
+wl_rfq_exposure_continuity_implementation_started: false
 wl_rfq_exposure_continuity_bounded_to_wl_storefront_product_detail_path: true
 wl_rfq_exposure_continuity_bounded_to_minimum_rfq_followup_entry: true
+wl_rfq_exposure_continuity_reuses_existing_buyer_rfq_create_list_detail: true
+wl_rfq_exposure_continuity_app_orchestration_surface_required: true
+wl_rfq_exposure_continuity_hidden_wl_card_surface_required_first_pass: false
 wl_rfq_exposure_continuity_not_enterprise_rfq_to_negotiation_bridge: true
 wl_rfq_exposure_continuity_not_negotiation_trade_redesign: true
 wl_rfq_exposure_continuity_not_image_media_continuity: true
@@ -217,7 +222,10 @@ enterprise RFQ journeys, the exact continuity stop points, and the recommended f
 two bounded implementation units. The first of those split units is now lawfully opened as
 `WL-RFQ-EXPOSURE-CONTINUITY`, bounded only to WL RFQ initiation exposure on the reviewed
 storefront/product-detail path and the minimum lawful RFQ follow-up entry needed so the WL path no
-longer stops before RFQ begins. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains
+longer stops before RFQ begins. The bounded design for that open unit now exists and fixes the
+lawful first implementation entry at `App.tsx` so the WL path reuses the existing RFQ
+orchestration rather than creating a parallel flow. No implementation has started in this design
+phase. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains
 separate and unopened. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
 MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
 MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the recently closed WL /
