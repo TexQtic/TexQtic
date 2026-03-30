@@ -36,6 +36,36 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### WL-RFQ-EXPOSURE-CONTINUITY — 2026-03-30
+
+Type: GOVERNANCE / OPENING
+Status: OPEN
+Commit: (this unit — see git log for [GOVERNANCE] open WL-RFQ-EXPOSURE-CONTINUITY)
+Title: Open the bounded WL RFQ exposure continuity unit from the RFQ design gate
+Summary: Opening-only phase. Layer 0, the active `-v2` planning stack, the authoritative
+  `RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1` artifact, and current repo truth all still support
+  this bounded WL unit: the reviewed white-label storefront/product-detail path exposes browse,
+  product detail, add-to-cart, and cart continuity but still stops before RFQ begins. The newly
+  opened unit is therefore limited to WL RFQ initiation exposure on that reviewed path plus the
+  minimum lawful RFQ follow-up entry needed so the WL path no longer stops before RFQ begins. No
+  design document was added, no runtime code changed, and no implementation started in this step.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v2.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, and
+  TEXQTIC-NEXT-DELIVERY-PLAN-v2.md updated for live-opening consistency; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This opening is not enterprise RFQ-to-negotiation bridge work, not broad negotiation
+  redesign, not trade redesign, not quote/counter-offer redesign, not image-upload/media
+  continuity, not search/merchandising/B2C continuity, not control-plane work, and not enterprise
+  redesign. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and unopened; the
+  broader `RFQ-NEGOTIATION-CONTINUITY` family remains preserved as the design-gate authority.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1 — 2026-03-30
 
 Type: GOVERNANCE / DESIGN_GATE

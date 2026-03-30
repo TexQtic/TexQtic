@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-30 (RFQ-NEGOTIATION-CONTINUITY candidate decision)
+**Last Updated:** 2026-03-30 (WL-RFQ-EXPOSURE-CONTINUITY opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -24,20 +24,21 @@
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 | RFQ-NEGOTIATION-CONTINUITY | RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-30 |
+| WL-RFQ-EXPOSURE-CONTINUITY | WL reviewed storefront/product-detail RFQ exposure continuity | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-30 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **9**
+- **OPEN** (all governed units): **10**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 2 (TECS-FBW-ADMINRBAC, RFQ-NEGOTIATION-CONTINUITY)
-- **ACTIVE_DELIVERY**: 0
+- **ACTIVE_DELIVERY**: 1
 - **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 2
-- **Total non-terminal units: 11**
+- **Total non-terminal units: 12**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -49,9 +50,10 @@ sequencing and next-delivery priority are derived from the product-truth authori
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as historical carry-forward
 context only. They do not authorize or imply current-ready product openings outside active Layer 0
-truth. Current product-facing posture now carries no open `ACTIVE_DELIVERY` unit. Future
-product-facing opening requires a fresh bounded product decision against the preserved `-v2`
-planning stack.
+truth. Current product-facing posture now carries exactly one open `ACTIVE_DELIVERY` unit:
+`WL-RFQ-EXPOSURE-CONTINUITY`. That opening was a fresh bounded product decision taken against the
+preserved `-v2` planning stack and the authoritative
+`RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1` artifact.
 
 The completed `-v1` planning stack remains historical baseline only. The `-v2` stack remains the
 active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded
@@ -61,12 +63,20 @@ form: Acme B2B now exposes Edit/Delete and verified update/delete end to end, lo
 reconciles truthfully, WL Products remained non-regressed, and no active bounded defect remains
 inside this unit. The separately recorded image-upload adjacent finding remains investigation-only,
 the separately recorded image-upload finding remains separate and unassigned,
-the newly formalized `RFQ-NEGOTIATION-CONTINUITY` candidate remains `DESIGN_GATE` only because
-current repo truth supports one bounded cross-mode RFQ / negotiation continuity family but does
-not yet evidence an implementation-ready target state,
-CONTROL-PLANE-TENANT-OPERATIONS-REALITY and MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain
-later-ready and separate, MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only,
-and no recently closed WL / tenant-truth unit is reopened by this close.
+the formalized `RFQ-NEGOTIATION-CONTINUITY` family remains `DESIGN_GATE` as the preserved
+cross-mode authority for the broader RFQ / negotiation chain, and the first lawful split unit from
+that family is now open as `WL-RFQ-EXPOSURE-CONTINUITY` because current repo truth still shows the
+reviewed WL storefront/product-detail path stopping before RFQ begins while the design-gate
+artifact already defines the minimum bounded WL outcome. This opening remains strictly about WL RFQ
+initiation exposure and the minimum lawful RFQ follow-up entry needed so the WL path no longer
+stops before RFQ begins. It is not enterprise RFQ-to-negotiation bridge work, not broad
+negotiation or trade redesign, not quote/counter-offer redesign, not image/media continuity, not
+search or merchandising work, not B2C storefront continuity, not control-plane work, and not
+enterprise redesign. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and not
+opened by implication, CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
+MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
+MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and no recently closed WL /
+tenant-truth unit is reopened by this opening.
 
 `TENANT-TRUTH-CLEANUP-001` is now `CLOSED` after the exact three tenant-facing document-authority
 surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE` on
@@ -104,7 +114,8 @@ Phase 2, and Phase 3 reset findings established that Governance OS must be shrun
 so it remains a drift-control layer around TexQtic platform delivery rather than a
 portfolio-dominating local sequencing system. No current Layer 0 governance exception displaces
 the product-truth sequence. The concurrently open governance-only units remain `DECISION_QUEUE`
-only, no current product-facing `ACTIVE_DELIVERY` remains after bounded close of
+only, `WL-RFQ-EXPOSURE-CONTINUITY` is now the sole current product-facing `ACTIVE_DELIVERY` after
+the later lawful opening from the RFQ design gate, bounded close of
 `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, `TENANT-TRUTH-CLEANUP-001` is now closed on its bounded
 three-surface document-authority standard,
 `WL-ADMIN-ENTRY-DISCOVERABILITY-001` remains closed on its bounded WL-only repair standard, and

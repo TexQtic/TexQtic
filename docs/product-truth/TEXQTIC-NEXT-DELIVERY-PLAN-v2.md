@@ -11,9 +11,10 @@ and preserves the remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- There is currently no open product-facing delivery unit.
+- `WL-RFQ-EXPOSURE-CONTINUITY` is now the sole open product-facing delivery unit.
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
-- Any future product-facing opening requires a fresh bounded product decision against the preserved remaining candidates.
+- The currently open unit was lawfully opened from the authoritative RFQ design gate because current repo truth still shows the reviewed WL storefront/product-detail path stopping before RFQ begins.
+- Any additional future product-facing opening requires a fresh bounded product decision against the preserved remaining candidates.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 - `RFQ-NEGOTIATION-CONTINUITY` is now recorded as a separate design-gate candidate rather than an unassigned adjacent finding.
 
@@ -28,9 +29,10 @@ and preserves the remaining next-cycle ordering.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Strong later-ready operator truth gap, but any opening still requires a fresh bounded product decision after Wave 1 closure |
-| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the control-plane truth candidate |
-| 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
+| 1 | `WL-RFQ-EXPOSURE-CONTINUITY` | `OPEN / ACTIVE_DELIVERY` | First lawful bounded split unit from the RFQ design gate because the reviewed WL storefront/product-detail path still stops before RFQ begins and the minimum WL target is already defined |
+| 2 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Real later-ready operator truth gap, but not higher priority than the active WL RFQ exposure unit |
+| 3 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the active WL RFQ exposure unit |
+| 4 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
 
 ## Recently Closed First Delivery
 
@@ -52,6 +54,27 @@ verification.
 - Do not widen the closed candidate into general marketplace, search, merchandising, B2C redesign,
   image-upload continuity, or RFQ / negotiation continuity.
 
+## Current Open Delivery
+
+### Candidate Family
+
+`WL-RFQ-EXPOSURE-CONTINUITY`
+
+### Recorded Opening
+
+After the RFQ design-gate artifact defined the lawful split recommendation, the bounded unit
+`WL-RFQ-EXPOSURE-CONTINUITY` was opened as the sole product-facing `ACTIVE_DELIVERY` because the
+reviewed WL storefront/product-detail path still exposes browse, product detail, add-to-cart, and
+cart continuity while stopping before RFQ begins.
+
+### Boundaries
+
+- This unit is limited to WL RFQ initiation exposure on the reviewed storefront/product-detail path
+    and the minimum lawful RFQ follow-up entry needed so that path no longer stops before RFQ begins.
+- Do not widen this unit into enterprise RFQ-to-negotiation bridge work, negotiation redesign,
+    trade redesign, quote/counter-offer redesign, image/media continuity, search, merchandising, B2C
+    storefront continuity, control-plane work, or enterprise redesign.
+
 ## Later Candidates
 
 ### `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
@@ -71,9 +94,9 @@ immediate delivery sequence.
 
 ### `RFQ-NEGOTIATION-CONTINUITY`
 
-Keep at design-gate only. Repo truth now supports one bounded cross-mode RFQ / negotiation
-continuity family, but the exact minimally true target state still requires design clarification
-before any implementation-ready opening is lawful.
+Keep the broader family at design-gate authority level. Repo truth still supports one bounded
+cross-mode RFQ / negotiation continuity family, but only the WL RFQ exposure split unit is now
+opened. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and unopened.
 
 ## Relationship To v1
 

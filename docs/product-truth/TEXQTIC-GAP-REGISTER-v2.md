@@ -84,11 +84,19 @@ Every v2 gap entry uses the following fields:
 
 ### Current Open Unit
 
-- No current open product-facing unit is recorded in the `-v2` stack.
-- `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded implementation,
+- `WL-RFQ-EXPOSURE-CONTINUITY` is now the sole current open product-facing unit in the `-v2`
+	stack.
+- This unit was opened lawfully from the authoritative
+	`RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1` recommendation after current repo truth reconfirmed
+	that the reviewed WL storefront/product-detail path still stops before RFQ begins.
+- The opening remains strictly bounded to WL RFQ initiation exposure on the reviewed
+	storefront/product-detail path and the minimum lawful RFQ follow-up entry needed so the WL path
+	no longer stops before RFQ begins.
+- `TENANT-CATALOG-MANAGEMENT-CONTINUITY` remains `CLOSED` after bounded implementation,
 	recorded `VERIFIED_COMPLETE` production verification, and bounded governance close.
-- Any future product-facing opening requires a fresh bounded product decision against the
-	preserved remaining `-v2` candidates.
+- The broader `RFQ-NEGOTIATION-CONTINUITY` family remains preserved in `NEEDS_DESIGN_GATE`
+	posture for the family-level cross-mode continuity problem and the still-separate future unit
+	`ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`.
 
 ### Adjacent Finding Pending Unit Assignment
 
@@ -113,6 +121,15 @@ Every v2 gap entry uses the following fields:
 
 - `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
 - `GAP-V2-003` / `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
+
+### Live Split-Unit Separation Rule
+
+- `WL-RFQ-EXPOSURE-CONTINUITY` does not collapse the broader `RFQ-NEGOTIATION-CONTINUITY` family
+	into implementation-complete posture.
+- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and unopened.
+- This live unit is not image-upload/media continuity, not search or merchandising work, not B2C
+	storefront continuity, not control-plane tenant operations reality, not aggregator scope truth,
+	and not enterprise redesign.
 
 ### Design-Gate Only Candidate
 

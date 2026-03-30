@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-03-30
-last_unit_opened: TENANT-CATALOG-MANAGEMENT-CONTINUITY
+last_unit_opened: WL-RFQ-EXPOSURE-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
 last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[GOVERNANCE] add RFQ-NEGOTIATION-CONTINUITY design gate v1"
+last_commit: "[GOVERNANCE] open WL-RFQ-EXPOSURE-CONTINUITY"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -25,11 +25,11 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
-current_product_active_delivery_count: 0
-current_product_delivery_priority: NONE
-current_product_delivery_unit_open: false
-current_product_active_delivery_unit: NONE
-future_product_opening_requires_fresh_bounded_product_decision: true
+current_product_active_delivery_count: 1
+current_product_delivery_priority: WL-RFQ-EXPOSURE-CONTINUITY
+current_product_delivery_unit_open: true
+current_product_active_delivery_unit: WL-RFQ-EXPOSURE-CONTINUITY
+future_product_opening_requires_fresh_bounded_product_decision: false
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
@@ -38,6 +38,16 @@ product_truth_v2_next_delivery_plan_present: true
 recommended_next_opening_candidate: NONE
 recommended_next_opening_candidate_recorded: false
 recommended_next_opening_candidate_opened: false
+wl_rfq_exposure_continuity_open: true
+wl_rfq_exposure_continuity_active_delivery: true
+wl_rfq_exposure_continuity_opened_from_rfq_negotiation_design_gate: true
+wl_rfq_exposure_continuity_bounded_to_wl_storefront_product_detail_path: true
+wl_rfq_exposure_continuity_bounded_to_minimum_rfq_followup_entry: true
+wl_rfq_exposure_continuity_not_enterprise_rfq_to_negotiation_bridge: true
+wl_rfq_exposure_continuity_not_negotiation_trade_redesign: true
+wl_rfq_exposure_continuity_not_image_media_continuity: true
+wl_rfq_exposure_continuity_not_search_merchandising_b2c_control_plane: true
+wl_rfq_exposure_continuity_not_enterprise_redesign: true
 tenant_catalog_management_continuity_ready_for_opening: false
 tenant_catalog_management_continuity_open: false
 tenant_catalog_management_continuity_active_delivery: false
@@ -70,6 +80,9 @@ rfq_negotiation_continuity_wl_rfq_journey_defined: true
 rfq_negotiation_continuity_negotiation_is_trades_adjacent_scaffolding: true
 rfq_negotiation_continuity_future_split_recommended: true
 rfq_negotiation_continuity_future_split_shape: "WL-RFQ-EXPOSURE-CONTINUITY + ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY"
+rfq_negotiation_continuity_first_split_unit_opened: true
+rfq_negotiation_continuity_first_split_unit: WL-RFQ-EXPOSURE-CONTINUITY
+rfq_negotiation_continuity_enterprise_bridge_still_separate: true
 rfq_negotiation_continuity_separate_from_catalog_continuity: true
 rfq_negotiation_continuity_separate_from_image_upload_finding: true
 rfq_negotiation_continuity_separate_from_b2c_storefront_continuity: true
@@ -182,9 +195,9 @@ verification_no_close_without_verification: true
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as carry-forward context only.
 They do not authorize or imply current-ready openings outside active Layer 0 truth. Current
-product-facing posture is now `ACTIVE_DELIVERY: 0`, no current product-facing unit is open, and
-any future product-facing opening requires a fresh bounded product decision against the preserved
-`-v2` planning stack.
+product-facing posture is now `ACTIVE_DELIVERY: 1`, `WL-RFQ-EXPOSURE-CONTINUITY` is the sole open
+product-facing unit, and any additional future product-facing opening still requires a fresh
+bounded product decision against the preserved `-v2` planning stack.
 
 The prior `-v1` product-truth planning stack remains the completed historical baseline. The `-v2`
 stack is now the active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` has now moved
@@ -198,11 +211,14 @@ continuity visibly reachable, and authoritative live production verification com
 delete continuity works end to end, local state reconciles truthfully, create/read/RFQ remain
 intact in bounded scope, and WL Products remained non-regressed. No active bounded defect remains
 inside this unit. The separate image-upload adjacent finding remains investigation-only and outside
-this close, while the separate RFQ / negotiation finding is now formalized as the bounded
-`RFQ-NEGOTIATION-CONTINUITY` candidate in `DESIGN_GATE` posture and now has a dedicated
-design-gate artifact defining the current WL and enterprise RFQ journeys, the exact continuity
-stop points, and the recommended future split into two bounded implementation units. That
-design-gate candidate remains outside this close. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
+this close, while the separate RFQ / negotiation family remains preserved as the bounded
+`RFQ-NEGOTIATION-CONTINUITY` design gate with a dedicated artifact defining the current WL and
+enterprise RFQ journeys, the exact continuity stop points, and the recommended future split into
+two bounded implementation units. The first of those split units is now lawfully opened as
+`WL-RFQ-EXPOSURE-CONTINUITY`, bounded only to WL RFQ initiation exposure on the reviewed
+storefront/product-detail path and the minimum lawful RFQ follow-up entry needed so the WL path no
+longer stops before RFQ begins. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains
+separate and unopened. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
 MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
 MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the recently closed WL /
 tenant-truth units remain closed and separate.
