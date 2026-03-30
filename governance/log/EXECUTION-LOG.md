@@ -36,6 +36,35 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TENANT-CATALOG-MANAGEMENT-CONTINUITY-RFQ-NEGOTIATION-ADJACENT-FINDING — 2026-03-30
+
+Type: GOVERNANCE / RECORDING + INVESTIGATION
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] record RFQ-negotiation finding and classify scope)
+Title: Record adjacent RFQ-negotiation finding and preserve the bounded catalog unit
+Summary: After bounded production verification completed for `TENANT-CATALOG-MANAGEMENT-CONTINUITY`,
+  a separate repo-truth investigation found that white-label reviewed storefront runtime exposes no
+  evidenced RFQ affordance while enterprise runtime exposes `Request Quote` plus buyer/supplier RFQ
+  follow-up surfaces that are explicitly pre-negotiation and first-response-only. Repo truth also
+  shows a separate tenant `Trades` workspace and backend trade-from-RFQ support, but no materially
+  continuous frontend RFQ-to-negotiation bridge was evidenced in the reviewed surfaces. The finding
+  was therefore recorded as one adjacent RFQ / negotiation continuity candidate family with
+  mode-parity sub-findings, pending later unit assignment rather than auto-merging into the current
+  tenant catalog update/delete continuity unit.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product truth — TEXQTIC-GAP-REGISTER-v2.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: `TENANT-CATALOG-MANAGEMENT-CONTINUITY` remains the sole current product-facing
+  `ACTIVE_DELIVERY`, but bounded live production verification is now complete and the unit is
+  close-ready on update/delete continuity pending a separate close phase. The newly recorded RFQ /
+  negotiation finding remains separate from the current catalog unit, remains separate from the
+  adjacent catalog image-upload finding, and must not be widened by implication into search,
+  browse, merchandising, broad white-label redesign, enterprise redesign, or control-plane work.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-CATALOG-MANAGEMENT-CONTINUITY-B2B-FOLLOWUP-IMPLEMENTATION — 2026-03-30
 
 Type: GOVERNANCE / IMPLEMENTATION

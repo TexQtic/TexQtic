@@ -91,6 +91,21 @@ Every v2 gap entry uses the following fields:
 	not be auto-merged into the current update/delete continuity unit without later bounded
 	repo-truth confirmation.
 
+- Observed during bounded repo-truth investigation after `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
+	verification: RFQ / negotiation continuity and mode parity appear materially incomplete across
+	white-label and enterprise tenant runtime.
+- Current posture: investigation required before unit assignment, but current bounded classification
+	is one adjacent candidate family rather than two separate openings.
+- Reason: repo truth currently shows that white-label storefront runtime exposes browse,
+	product-detail, add-to-cart, and a separate `Trades` shell entry but no evidenced `Request Quote`
+	or RFQ affordance, while enterprise runtime exposes `Request Quote`, buyer RFQ detail/list, and
+	supplier RFQ inbox/detail surfaces that are explicitly described as pre-negotiation and
+	first-response-only. A separate tenant `Trades` workspace and backend trade-from-RFQ route exist,
+	but the reviewed frontend surfaces did not evidence a materially continuous RFQ-to-negotiation
+	bridge. This therefore reads as one bounded adjacent RFQ / negotiation continuity family with
+	mode-parity sub-findings, and must not be auto-merged into the current tenant catalog
+	update/delete continuity unit.
+
 ### Later Ready Candidates
 
 - `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`

@@ -14,7 +14,7 @@
 snapshot_date: 2026-03-30
 last_unit_opened: TENANT-CATALOG-MANAGEMENT-CONTINUITY
 last_unit_closed: WL-BLUEPRINT-RUNTIME-RESIDUE-001
-last_commit: "[TENANT-CATALOG-MANAGEMENT-CONTINUITY] fix bounded B2B edit-delete continuity gap"
+last_commit: "[GOVERNANCE] record RFQ-negotiation finding and classify scope"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -44,11 +44,18 @@ tenant_catalog_management_continuity_opened_from_v2_recommendation: true
 tenant_catalog_management_continuity_design_created: true
 tenant_catalog_management_continuity_implementation_started: true
 tenant_catalog_management_continuity_update_delete_continuity_implemented: true
+tenant_catalog_management_continuity_production_verification_complete: true
+tenant_catalog_management_continuity_verified_complete: true
+tenant_catalog_management_continuity_close_ready: true
 tenant_catalog_management_continuity_backend_frontend_asymmetry_confirmed: true
 tenant_catalog_management_continuity_b2b_edit_delete_minor_fix_remaining: false
 tenant_catalog_management_continuity_b2b_followup_exposure_fix_implemented: true
 tenant_catalog_image_upload_adjacent_finding_recorded: true
 tenant_catalog_image_upload_investigation_required_before_unit_assignment: true
+rfq_negotiation_adjacent_finding_recorded: true
+rfq_negotiation_adjacent_finding_investigation_required_before_unit_assignment: true
+rfq_negotiation_adjacent_finding_single_candidate_family_classification: true
+rfq_negotiation_adjacent_finding_not_current_unit_scope: true
 control_plane_tenant_operations_reality_ready_for_opening: true
 control_plane_tenant_operations_reality_later_ready: true
 mode_completeness_b2c_storefront_continuity_ready_for_opening: true
@@ -180,7 +187,15 @@ current update/delete continuity unit. A bounded follow-up implementation has no
 catalog card composition in `App.tsx` so the existing shared edit/delete action row is surfaced as
 an explicit footer alongside the existing RFQ CTA, with no service-layer changes, no image-upload
 work, and no widening into search, browse, storefront CTA continuity, merchandising, broader B2C,
-or control-plane surfaces.
+or control-plane surfaces. Live production verification has now completed as `VERIFIED_COMPLETE`
+for the bounded catalog continuity scope, so the unit is close-ready on update/delete continuity
+while remaining the sole currently open product-facing `ACTIVE_DELIVERY` pending a separate close
+phase. A second adjacent finding has now also been recorded for RFQ / negotiation continuity and
+mode-parity truth: white-label runtime currently shows no evidenced RFQ affordance in the reviewed
+storefront surfaces, enterprise runtime exposes bounded RFQ initiation plus buyer/supplier
+follow-up surfaces that remain explicitly pre-negotiation / first-response-only, and repo truth
+currently supports treating that as one separate adjacent candidate family rather than auto-merging
+it into the current catalog unit.
 
 - **TENANT-TRUTH-CLEANUP-001** — `CLOSED` — Bounded shared tenant truth-cleanup unit closed 2026-03-29 after the exact three tenant document-authority surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE`. No stale stub-era or missing-admin contradiction remains inside the tenant dashboard matrix, the cross-surface control/tenant/WL dashboard matrix, or the tenant-facing authority sections of current-state; no active bounded reconciliation remains inside this unit; and this closure remains document-authority only. This closure does not include runtime or shell implementation, does not absorb `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not absorb `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin/platform completion outside the bounded three-surface scope.
 
