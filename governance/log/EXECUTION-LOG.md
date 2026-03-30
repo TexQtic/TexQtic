@@ -36,6 +36,36 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### WL-RFQ-EXPOSURE-CONTINUITY-ADJACENT-FINDINGS — 2026-03-30
+
+Type: GOVERNANCE / RECORDING + INVESTIGATION
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] record WL cart and RFQ-detail findings)
+Title: Record adjacent WL cart and RFQ-detail findings without widening the active RFQ exposure unit
+Summary: During bounded live production verification of `WL-RFQ-EXPOSURE-CONTINUITY`, two adjacent
+  findings were surfaced and investigated against current repo truth: WL Add to Cart returned a
+  live production 500-backed error, and the RFQ follow-up detail surface appeared static /
+  non-scrollable. Repo truth shows the cart failure traces through a distinct WL storefront/cart
+  path via `CartContext`, `cartService`, and the tenant cart endpoints, while the RFQ-detail issue
+  is plausibly structural because the follow-up detail renders inside a fixed RFQ dialog overlay
+  whose current container lacks explicit viewport-height and overflow scrolling controls. Both
+  findings were therefore recorded as separate adjacent candidates pending later bounded synthesis
+  rather than being auto-merged into the current RFQ exposure unit.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product truth — TEXQTIC-GAP-REGISTER-v2.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: `WL-RFQ-EXPOSURE-CONTINUITY` remains OPEN and the sole current product-facing
+  `ACTIVE_DELIVERY`. Its bounded production verification still succeeded for WL RFQ initiation
+  exposure, immediate WL RFQ follow-up continuity, and storefront RFQ re-entry continuity. The WL
+  Add to Cart 500 remains a separate storefront/cart continuity finding, the RFQ-detail
+  scrollability issue remains a separate RFQ-detail UI continuity finding, and neither finding is
+  auto-merged into the active unit without later bounded repo-truth confirmation. No runtime code
+  changed, no design doc was created, no new unit was opened, neighboring candidates remain
+  separate, and closed units remain closed. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### WL-RFQ-EXPOSURE-CONTINUITY-DESIGN-v1 — 2026-03-30
 
 Type: GOVERNANCE / DESIGN

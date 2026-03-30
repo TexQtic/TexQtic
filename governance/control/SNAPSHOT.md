@@ -15,7 +15,7 @@ snapshot_date: 2026-03-30
 last_unit_opened: WL-RFQ-EXPOSURE-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
 last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[WL-RFQ-EXPOSURE-CONTINUITY] implement bounded WL RFQ exposure continuity"
+last_commit: "[GOVERNANCE] record WL cart and RFQ-detail findings"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -52,11 +52,21 @@ wl_rfq_exposure_continuity_runtime_files_touched: "App.tsx, components/WL/WLStor
 wl_rfq_exposure_continuity_wl_rfq_entry_implemented: true
 wl_rfq_exposure_continuity_wl_buyer_followup_reentry_implemented: true
 wl_rfq_exposure_continuity_existing_buyer_rfq_continuity_reused: true
+wl_rfq_exposure_continuity_production_verification_bounded_success: true
 wl_rfq_exposure_continuity_not_enterprise_rfq_to_negotiation_bridge: true
 wl_rfq_exposure_continuity_not_negotiation_trade_redesign: true
 wl_rfq_exposure_continuity_not_image_media_continuity: true
 wl_rfq_exposure_continuity_not_search_merchandising_b2c_control_plane: true
 wl_rfq_exposure_continuity_not_enterprise_redesign: true
+wl_add_to_cart_adjacent_finding_recorded: true
+wl_add_to_cart_investigation_required_before_unit_assignment: true
+wl_add_to_cart_not_current_unit_scope: true
+wl_add_to_cart_distinct_storefront_cart_path_confirmed: true
+rfq_detail_scrollability_adjacent_finding_recorded: true
+rfq_detail_scrollability_investigation_required_before_unit_assignment: true
+rfq_detail_scrollability_not_current_unit_scope: true
+rfq_detail_scrollability_structural_ui_continuity_risk_confirmed: true
+wl_cart_and_rfq_detail_findings_classified_as_two_separate_adjacent_candidates: true
 tenant_catalog_management_continuity_ready_for_opening: false
 tenant_catalog_management_continuity_open: false
 tenant_catalog_management_continuity_active_delivery: false

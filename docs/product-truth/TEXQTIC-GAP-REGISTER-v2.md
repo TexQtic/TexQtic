@@ -117,6 +117,22 @@ Every v2 gap entry uses the following fields:
 	implementation-ready target state still requires design clarification before a lawful delivery
 	opening.
 
+- Observed during `WL-RFQ-EXPOSURE-CONTINUITY` production verification: WL Add to Cart returned a
+	live production 500-backed error.
+- Current posture: investigation required before unit assignment.
+- Reason: repo truth shows a distinct WL storefront/cart runtime path through the cart service and
+	tenant cart endpoints, so this may indicate a separate storefront/cart continuity defect and must
+	not be auto-merged into `WL-RFQ-EXPOSURE-CONTINUITY` without later bounded repo-truth
+	confirmation.
+
+- Observed during `WL-RFQ-EXPOSURE-CONTINUITY` production verification: the RFQ follow-up detail
+	surface appeared static / not scrollable.
+- Current posture: investigation required before unit assignment.
+- Reason: repo truth shows this follow-up surface renders inside a fixed RFQ dialog overlay whose
+	container currently lacks explicit viewport-height and overflow scrolling controls, so this may
+	indicate a separate RFQ-detail UI continuity / usability defect and must not be auto-merged into
+	`WL-RFQ-EXPOSURE-CONTINUITY` without later bounded repo-truth confirmation.
+
 ### Later Ready Candidates
 
 - `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
