@@ -81,6 +81,16 @@ Every v2 gap entry uses the following fields:
 
 - `GAP-V2-001` / `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
 
+### Adjacent Finding Pending Unit Assignment
+
+- Observed during `TENANT-CATALOG-MANAGEMENT-CONTINUITY` verification: the Add Item flow appears
+	to lack materially usable product image upload capability.
+- Current posture: investigation required before unit assignment.
+- Reason: repo truth currently shows URL-based image reference support rather than end-to-end file
+	upload/storage continuity, so this may indicate a separate catalog media continuity gap and must
+	not be auto-merged into the current update/delete continuity unit without later bounded
+	repo-truth confirmation.
+
 ### Later Ready Candidates
 
 - `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`

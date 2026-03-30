@@ -36,6 +36,32 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TENANT-CATALOG-MANAGEMENT-CONTINUITY-ADJACENT-IMAGE-UPLOAD-FINDING — 2026-03-30
+
+Type: GOVERNANCE / RECORDING + INVESTIGATION
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] record catalog image-upload finding and classify scope)
+Title: Record adjacent catalog image-upload finding and preserve current unit boundary
+Summary: During bounded verification follow-up for `TENANT-CATALOG-MANAGEMENT-CONTINUITY`, an
+  adjacent finding was recorded that the Add Item flow appears to lack materially usable product
+  image upload capability. Bounded repo-truth investigation confirmed existing catalog support for
+  URL-based `imageUrl` ingestion and rendering, but found no evidenced end-to-end file upload or
+  storage pipeline on the reviewed tenant catalog surfaces. The finding was therefore recorded in
+  the v2 gap register as investigation-required before unit assignment and was not auto-merged into
+  the currently open update/delete continuity unit.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product truth — TEXQTIC-GAP-REGISTER-v2.md updated;
+  Layer 3 — EXECUTION-LOG.md appended
+Notes: `TENANT-CATALOG-MANAGEMENT-CONTINUITY` remains the sole current product-facing
+  `ACTIVE_DELIVERY` and remains bounded to tenant catalog item update/delete continuity, with the
+  proven remaining fix still limited to the surfaced B2B edit/delete continuity gap. The adjacent
+  image-upload finding remains separate pending later bounded synthesis and must not be merged by
+  implication into search, browse, merchandising, storefront continuity, B2C continuity, or
+  control-plane work. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-CATALOG-MANAGEMENT-CONTINUITY-IMPLEMENTATION-v1 — 2026-03-30
 Type: GOVERNANCE / IMPLEMENTATION
 Status: COMPLETED

@@ -14,7 +14,7 @@
 snapshot_date: 2026-03-30
 last_unit_opened: TENANT-CATALOG-MANAGEMENT-CONTINUITY
 last_unit_closed: WL-BLUEPRINT-RUNTIME-RESIDUE-001
-last_commit: "[TENANT-CATALOG-MANAGEMENT-CONTINUITY] implement bounded catalog update-delete continuity"
+last_commit: "[GOVERNANCE] record catalog image-upload finding and classify scope"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -45,6 +45,9 @@ tenant_catalog_management_continuity_design_created: true
 tenant_catalog_management_continuity_implementation_started: true
 tenant_catalog_management_continuity_update_delete_continuity_implemented: true
 tenant_catalog_management_continuity_backend_frontend_asymmetry_confirmed: true
+tenant_catalog_management_continuity_b2b_edit_delete_minor_fix_remaining: true
+tenant_catalog_image_upload_adjacent_finding_recorded: true
+tenant_catalog_image_upload_investigation_required_before_unit_assignment: true
 control_plane_tenant_operations_reality_ready_for_opening: true
 control_plane_tenant_operations_reality_later_ready: true
 mode_completeness_b2c_storefront_continuity_ready_for_opening: true
@@ -167,7 +170,12 @@ MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the rec
 tenant-truth units remain closed and separate. The bounded design artifact now exists for this
 unit, and the bounded implementation slice for tenant catalog update/delete continuity has now
 been executed on `services/catalogService.ts` and `App.tsx` only with no search, storefront CTA,
-merchandising, B2C continuity, or control-plane drift.
+merchandising, B2C continuity, or control-plane drift. Production verification also established
+that the currently proven remaining fix inside this unit is the surfaced B2B edit/delete
+continuity gap only. A separate adjacent finding was recorded for apparent missing materially
+usable product image upload continuity in Add Item flows, but bounded repo-truth investigation
+classified that finding as pending later unit assignment rather than an automatic expansion of the
+current update/delete continuity unit.
 
 - **TENANT-TRUTH-CLEANUP-001** — `CLOSED` — Bounded shared tenant truth-cleanup unit closed 2026-03-29 after the exact three tenant document-authority surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE`. No stale stub-era or missing-admin contradiction remains inside the tenant dashboard matrix, the cross-surface control/tenant/WL dashboard matrix, or the tenant-facing authority sections of current-state; no active bounded reconciliation remains inside this unit; and this closure remains document-authority only. This closure does not include runtime or shell implementation, does not absorb `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, does not absorb `WL-ADMIN-ENTRY-DISCOVERABILITY-001`, does not reopen enterprise redesign, and does not imply broad tenant/admin/platform completion outside the bounded three-surface scope.
 
