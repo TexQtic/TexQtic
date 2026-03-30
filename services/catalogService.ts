@@ -6,7 +6,7 @@
  * - Search catalog
  */
 
-import { tenantGet, tenantPost } from './tenantApiClient';
+import { tenantDelete, tenantGet, tenantPatch, tenantPost } from './tenantApiClient';
 
 export interface CatalogItem {
   id: string;
@@ -91,6 +91,24 @@ export interface CreateCatalogItemRequest {
 
 export interface CreateCatalogItemResponse {
   item: CatalogItem;
+}
+
+export interface UpdateCatalogItemRequest {
+  name?: string;
+  sku?: string | null;
+  description?: string | null;
+  price?: number;
+  moq?: number;
+  active?: boolean;
+}
+
+export interface UpdateCatalogItemResponse {
+  item: CatalogItem;
+}
+
+export interface DeleteCatalogItemResponse {
+  id: string;
+  deleted: boolean;
 }
 
 export interface CreateRfqRequest {
@@ -217,6 +235,17 @@ export async function createCatalogItem(
   payload: CreateCatalogItemRequest
 ): Promise<CreateCatalogItemResponse> {
   return tenantPost<CreateCatalogItemResponse>('/api/tenant/catalog/items', payload);
+}
+
+export async function updateCatalogItem(
+  itemId: string,
+  payload: UpdateCatalogItemRequest
+): Promise<UpdateCatalogItemResponse> {
+  return tenantPatch<UpdateCatalogItemResponse>(`/api/tenant/catalog/items/${itemId}`, payload);
+}
+
+export async function deleteCatalogItem(itemId: string): Promise<DeleteCatalogItemResponse> {
+  return tenantDelete<DeleteCatalogItemResponse>(`/api/tenant/catalog/items/${itemId}`);
 }
 
 /**

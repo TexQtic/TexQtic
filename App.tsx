@@ -63,6 +63,8 @@ import {
   getCatalogItems,
   CatalogItem,
   createCatalogItem,
+  updateCatalogItem,
+  deleteCatalogItem,
   createRfq,
   getBuyerRfqs,
   getBuyerRfqDetail,
@@ -888,6 +890,14 @@ const App: React.FC = () => {
   const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '' });
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
+  const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
+  const [editItemFormData, setEditItemFormData] = useState({ name: '', price: '', sku: '' });
+  const [editItemLoading, setEditItemLoading] = useState(false);
+  const [editItemError, setEditItemError] = useState<string | null>(null);
+  const [deleteItemLoadingId, setDeleteItemLoadingId] = useState<string | null>(null);
+  const editingCatalogItem = editingCatalogItemId
+    ? products.find(product => product.id === editingCatalogItemId) ?? null
+    : null;
 
   // Fetch tenants from backend (for tenant picker in bottom-right)
   // GUARD: Only load control-plane tenants when in Staff Control Plane view
@@ -1514,6 +1524,114 @@ const App: React.FC = () => {
     }
   };
 
+  const resetEditItemState = () => {
+    setEditingCatalogItemId(null);
+    setEditItemFormData({ name: '', price: '', sku: '' });
+    setEditItemError(null);
+  };
+
+  const handleOpenEditItem = (product: CatalogItem) => {
+    setShowAddItemForm(false);
+    setAddItemError(null);
+    setCatalogError(null);
+    setEditingCatalogItemId(product.id);
+    setEditItemFormData({
+      name: product.name,
+      price: product.price.toString(),
+      sku: product.sku || '',
+    });
+    setEditItemError(null);
+  };
+
+  const handleCloseEditItem = () => {
+    if (editItemLoading) {
+      return;
+    }
+
+    resetEditItemState();
+  };
+
+  const handleUpdateItem = async () => {
+
+    if (!editingCatalogItemId) {
+      return;
+    }
+
+    setEditItemLoading(true);
+    setEditItemError(null);
+
+    try {
+      const priceVal = Number.parseFloat(editItemFormData.price);
+      if (Number.isNaN(priceVal) || priceVal <= 0) throw new Error('Price must be a positive number.');
+      if (!editItemFormData.name.trim()) throw new Error('Name is required.');
+
+      const result = await updateCatalogItem(editingCatalogItemId, {
+        name: editItemFormData.name.trim(),
+        price: priceVal,
+        ...(editItemFormData.sku.trim() ? { sku: editItemFormData.sku.trim() } : {}),
+      });
+
+      setProducts(prev => prev.map(product => (
+        product.id === editingCatalogItemId ? result.item : product
+      )));
+      resetEditItemState();
+    } catch (err: any) {
+      setEditItemError(err?.message || 'Failed to update item.');
+    } finally {
+      setEditItemLoading(false);
+    }
+  };
+
+  const handleDeleteItem = async (product: CatalogItem) => {
+    const confirmed = globalThis.confirm(`Delete ${product.name}? This cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleteItemLoadingId(product.id);
+    setCatalogError(null);
+
+    try {
+      await deleteCatalogItem(product.id);
+      setProducts(prev => prev.filter(item => item.id !== product.id));
+
+      if (editingCatalogItemId === product.id) {
+        resetEditItemState();
+      }
+    } catch (error) {
+      setCatalogError(error instanceof APIError ? error.message : 'Failed to delete item.');
+    } finally {
+      setDeleteItemLoadingId(null);
+    }
+  };
+
+  const renderCatalogItemMutationActions = (product: CatalogItem) => {
+    const isDeleting = deleteItemLoadingId === product.id;
+
+    return (
+      <div className="flex items-center gap-2 pt-2">
+        <button
+          type="button"
+          onClick={() => handleOpenEditItem(product)}
+          disabled={editItemLoading || isDeleting}
+          className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            void handleDeleteItem(product);
+          }}
+          disabled={isDeleting}
+          className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition disabled:opacity-50"
+        >
+          {isDeleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
+    );
+  };
+
   const handleOpenRfqDialog = (product: CatalogItem) => {
     setRfqDialog({
       open: true,
@@ -1971,6 +2089,7 @@ const App: React.FC = () => {
                     <span className="text-emerald-700 font-bold text-sm">${p.price}</span>
                     <span className="text-xs text-slate-400">MOQ: {p.moq || 1}</span>
                   </div>
+                    {renderCatalogItemMutationActions(p)}
                 </div>
               ))}
             </div>
@@ -2339,6 +2458,7 @@ const App: React.FC = () => {
                         <div className="text-emerald-600 font-bold">${p.price}/unit</div>
                         <div className="text-xs text-slate-400">MOQ: {p.moq || 1}</div>
                       </div>
+                      {renderCatalogItemMutationActions(p)}
                       <B2BAddToCartButton product={p} />
                     </div>
                   </div>
@@ -2491,6 +2611,7 @@ const App: React.FC = () => {
                         <h4 className="font-medium text-slate-800">{p.name}</h4>
                         <div className="text-slate-500 font-bold">${p.price}.00</div>
                       </div>
+                      {renderCatalogItemMutationActions(p)}
                       <B2CAddToCartButton product={p} />
                     </div>
                   ))}
@@ -3048,6 +3169,89 @@ const App: React.FC = () => {
 
   return (
     <div className="relative font-sans">
+      {editingCatalogItem && (
+        <div className="fixed inset-0 bg-slate-950/45 z-[195] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Edit Catalog Item</h2>
+              <p className="text-sm text-slate-500 mt-2">
+                Update the existing tenant catalog item without widening into search, storefront, or control-plane work.
+              </p>
+            </div>
+
+            <form className="space-y-5" onSubmit={event => {
+              event.preventDefault();
+              void handleUpdateItem();
+            }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1 md:col-span-3">
+                  <label htmlFor="edit-item-name" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Name
+                  </label>
+                  <input
+                    id="edit-item-name"
+                    required
+                    value={editItemFormData.name}
+                    onChange={e => setEditItemFormData(data => ({ ...data, name: e.target.value }))}
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-price" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Price
+                  </label>
+                  <input
+                    id="edit-item-price"
+                    required
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={editItemFormData.price}
+                    onChange={e => setEditItemFormData(data => ({ ...data, price: e.target.value }))}
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <label htmlFor="edit-item-sku" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    SKU
+                  </label>
+                  <input
+                    id="edit-item-sku"
+                    value={editItemFormData.sku}
+                    onChange={e => setEditItemFormData(data => ({ ...data, sku: e.target.value }))}
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder="Optional SKU"
+                  />
+                </div>
+              </div>
+
+              {editItemError && (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm text-rose-700">
+                  {editItemError}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={handleCloseEditItem}
+                  disabled={editItemLoading}
+                  className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editItemLoading}
+                  className="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {editItemLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {rfqDialog.open && rfqDialog.product && (
         <div className="fixed inset-0 bg-slate-950/45 z-[190] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">

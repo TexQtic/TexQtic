@@ -36,6 +36,29 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TENANT-CATALOG-MANAGEMENT-CONTINUITY-IMPLEMENTATION-v1 — 2026-03-30
+Type: GOVERNANCE / IMPLEMENTATION
+Status: COMPLETED
+Commit: (this unit — see git log for [TENANT-CATALOG-MANAGEMENT-CONTINUITY] implement bounded catalog update-delete continuity)
+Title: Implement bounded tenant catalog update/delete continuity
+Summary: Implementation phase executed only on the bounded frontend surfaces already authorized by
+  design: `services/catalogService.ts` now exposes typed tenant update/delete client continuity for
+  the existing backend PATCH/DELETE contract, and `App.tsx` now exposes materially usable edit and
+  delete affordances plus truthful local item-state reconciliation on the existing WL admin, B2B,
+  and tenant-owned B2C catalog loops. No backend route changes, no control-plane work, no search,
+  storefront CTA, merchandising, or broader B2C continuity work occurred.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product surfaces — services/catalogService.ts and
+  App.tsx updated; Layer 3 — EXECUTION-LOG.md appended
+Notes: `TENANT-CATALOG-MANAGEMENT-CONTINUITY` remains the sole current product-facing
+  `ACTIVE_DELIVERY`. The bounded implementation remains limited to tenant catalog item
+  update/delete continuity only and preserves the separation of CONTROL-PLANE-TENANT-OPERATIONS-REALITY,
+  MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY, and MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: services/catalogService.ts · App.tsx · governance/control/SNAPSHOT.md ·
+  governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-CATALOG-MANAGEMENT-CONTINUITY-DESIGN-v1 — 2026-03-30
 Type: GOVERNANCE / DESIGN
 Status: COMPLETED
