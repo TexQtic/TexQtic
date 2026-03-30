@@ -32,8 +32,9 @@ The next cycle prioritizes bounded product-facing continuity work that:
 |---|---|---|---|---|---|
 | Wave 1 | Tenant Catalog Management Continuity | `CLOSED` | Close the clearest tenant-facing catalog lifecycle completeness gap | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | Strongest bounded frontend/backend completeness gap; now completed and closed in bounded form |
 | Wave 2 | WL RFQ Exposure Continuity | `CLOSED` | Make the reviewed WL storefront/product-detail path truthfully reach RFQ instead of stopping before RFQ begins | `WL-RFQ-EXPOSURE-CONTINUITY` | First lawful split unit from the RFQ design gate; now completed and closed in bounded form |
-| Wave 3 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Remains separate from the closed WL RFQ exposure unit and still requires a fresh bounded opening decision |
-| Wave 4 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work that remains later and separate after closure of the WL RFQ exposure unit |
+| Wave 3 | Enterprise RFQ to Negotiation Bridge Continuity | `ACTIVE_DELIVERY` | Bridge the reviewed enterprise responded-RFQ stop point into the existing trade / negotiation continuity without broad redesign | `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` | Second lawful split unit from the RFQ design gate; now opened in bounded form after closure of the WL split unit |
+| Wave 4 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Remains separate from the active enterprise RFQ bridge unit and still later-ready |
+| Wave 5 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work that remains later and separate after opening of the enterprise RFQ bridge unit |
 | Design Gate | Aggregator Operating Mode Scope Truth | `DESIGN_GATE_ONLY` | Define the exact bounded aggregator operating model before any implementation opening | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | Current repo truth is insufficiently specific to support a lawful implementation opening |
 | Design Gate | RFQ / Negotiation Continuity | `DESIGN_GATE_ONLY` | Define the exact bounded cross-mode RFQ-to-negotiation continuity target before any implementation opening | `RFQ-NEGOTIATION-CONTINUITY` | Repo truth proves one bounded family exists, but the exact target continuity between WL exposure, enterprise RFQ depth, and trade continuation is not yet implementation-ready |
 
@@ -51,13 +52,13 @@ The `-v1` roadmap is now the completed historical sequence for:
 
 No `-v1` wave is reopened by this `-v2` roadmap.
 
-There is currently no open product-facing `ACTIVE_DELIVERY` wave in the `-v2` stack.
-`WL-RFQ-EXPOSURE-CONTINUITY` is now closed after bounded implementation and successful bounded
-live production verification established WL RFQ initiation exposure plus the minimum lawful WL
-buyer RFQ follow-up continuity on the reviewed storefront/product-detail path. The separately
-recorded image-upload finding, WL Add to Cart 500 finding, and RFQ-detail scrollability finding
-remain separate. `RFQ-NEGOTIATION-CONTINUITY` remains the preserved family-level design gate for
-the broader cross-mode chain.
+`ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now the sole open product-facing
+`ACTIVE_DELIVERY` wave in the `-v2` stack. `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after
+bounded implementation and successful bounded live production verification established WL RFQ
+initiation exposure plus the minimum lawful WL buyer RFQ follow-up continuity on the reviewed
+storefront/product-detail path. The separately recorded image-upload finding, WL Add to Cart 500
+finding, and RFQ-detail scrollability finding remain separate. `RFQ-NEGOTIATION-CONTINUITY`
+remains the preserved family-level design gate for the broader cross-mode chain.
 
 ## Wave 1 — Tenant Catalog Management Continuity
 
@@ -120,7 +121,38 @@ begins.
   500 finding, the separately recorded RFQ-detail scrollability finding, search, merchandising,
   B2C storefront continuity, control-plane work, or enterprise redesign.
 
-## Wave 3 — Control-Plane Tenant Operations Reality
+## Wave 3 — Enterprise RFQ to Negotiation Bridge Continuity
+
+- Posture: `ACTIVE_DELIVERY`
+- Candidate Family: `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`
+
+### Objective
+
+Resolve the reviewed enterprise RFQ stop point after first response by adding the minimum lawful
+bridge from responded RFQ into the existing trade / negotiation continuity that already exists in
+repo truth.
+
+### Opening Basis
+
+- The authoritative `RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1` artifact recommended this exact
+  bounded split unit as the second future implementation unit.
+- Current repo truth still shows the reviewed enterprise runtime already exposing Request Quote,
+  buyer RFQ list/detail, supplier RFQ inbox/detail, and one first response.
+- Current repo truth still shows the reviewed frontend stopping before any sufficient bridge into
+  the existing Trades workspace and backend `POST /api/tenant/trades/from-rfq` route.
+- This unit therefore opens cleanly without reopening WL RFQ exposure work or widening into broad
+  negotiation / trade redesign.
+
+### Boundaries
+
+- Do not widen this unit into WL RFQ exposure work.
+- Do not widen this unit into broad negotiation redesign, trade redesign, or quote /
+  counter-offer redesign.
+- Do not merge this unit into image/media continuity, the separately recorded WL Add to Cart 500
+  finding, the separately recorded RFQ-detail scrollability finding, search, merchandising, B2C
+  storefront continuity, control-plane work, or enterprise redesign.
+
+## Wave 4 — Control-Plane Tenant Operations Reality
 
 - Posture: `READY_LATER`
 - Candidate Family: `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
@@ -132,11 +164,12 @@ widening into general control-plane modernization.
 
 ### Why Later
 
-- It is a valid ready candidate, but it is more supervisory than the first-order tenant catalog
-  lifecycle continuity gap.
-- It should follow rather than absorb Wave 1.
+- It remains a valid later-ready candidate, but the bounded enterprise RFQ bridge now has an
+  explicit design-gate-backed opening basis and a more immediate product-facing continuity stop
+  point.
+- It should remain separate and later than the active enterprise RFQ bridge wave.
 
-## Wave 4 — B2C Storefront Continuity
+## Wave 5 — B2C Storefront Continuity
 
 - Posture: `READY_LATER`
 - Candidate Family: `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
@@ -148,8 +181,10 @@ overstate live behavior.
 
 ### Why Later
 
-- It is real and launch-relevant, but narrower in platform impact than Wave 1.
-- It should remain separate from tenant catalog lifecycle work.
+- It is real and launch-relevant, but it remains separate and later than the active enterprise RFQ
+  bridge work.
+- It should remain separate from tenant catalog lifecycle work and from the RFQ / negotiation
+  family.
 
 ## Design Gate — Aggregator Operating Mode Scope Truth
 
@@ -182,11 +217,13 @@ support before any implementation-ready opening is considered.
 - White-label reviewed runtime lacks evidenced RFQ exposure, enterprise reviewed RFQ surfaces remain
   explicitly pre-negotiation and first-response-only, and the reviewed frontend does not yet show
   a materially continuous RFQ-to-negotiation bridge.
-- The exact minimally true closure target therefore still needs definition before implementation
-  work can be opened lawfully.
-- The first lawful split unit from this family is now opened separately as
-  `WL-RFQ-EXPOSURE-CONTINUITY`, but that does not open or define the still-separate future unit
-  `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`.
+- The family-level exact minimally true closure target still remains broader than either split unit,
+  so the family itself must stay at design-gate posture even though bounded split-unit openings can
+  proceed when separately justified.
+- The first lawful split unit from this family is now closed separately as
+  `WL-RFQ-EXPOSURE-CONTINUITY`, and the second lawful split unit is now opened separately as
+  `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` without collapsing the family-level design
+  gate into broad implementation-complete posture.
 
 ### Explicit Rule
 

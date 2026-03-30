@@ -36,6 +36,41 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY-OPENING — 2026-03-30
+
+Type: GOVERNANCE / OPENING
+Status: OPEN
+Commit: (this unit — see git log for [GOVERNANCE] open ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY)
+Title: Open the bounded enterprise RFQ-to-negotiation bridge continuity unit from the RFQ design gate
+Summary: Opening-only phase. Layer 0, the active `-v2` planning stack, the authoritative
+  `RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1` artifact, and current repo truth all still support
+  this bounded enterprise split unit: the reviewed enterprise runtime already exposes Request
+  Quote, buyer RFQ list/detail, supplier RFQ inbox/detail, and one first response, while the
+  reviewed frontend still stops short of a sufficient bridge from responded RFQ into the existing
+  trade / negotiation continuity that already exists separately through the Trades workspace and
+  the backend RFQ-derived trade creation route. The newly opened unit is therefore limited to the
+  minimum lawful bridge from responded RFQ into existing trade / negotiation continuity and the
+  reviewed enterprise RFQ stop point after first response only. No design document was added, no
+  runtime code changed, and no implementation started in this step.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v2.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, and
+  TEXQTIC-NEXT-DELIVERY-PLAN-v2.md updated for live-opening consistency; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This opening is not WL RFQ exposure work, not broad negotiation redesign, not trade
+  redesign, not quote / counter-offer redesign, not image-upload/media continuity, not the
+  separately recorded WL Add to Cart 500 finding, not the separately recorded RFQ-detail
+  scrollability finding, not search / merchandising / B2C continuity, not control-plane work, and
+  not enterprise redesign. `WL-RFQ-EXPOSURE-CONTINUITY` remains closed and separate, the broader
+  `RFQ-NEGOTIATION-CONTINUITY` family remains preserved as the design-gate authority, neighboring
+  candidates remain separate, recently closed units remain closed, and no runtime code changed.
+  LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-CLOSE-WL-RFQ-EXPOSURE-CONTINUITY — 2026-03-30
 
 Type: GOVERNANCE / CLOSE

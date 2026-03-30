@@ -11,10 +11,10 @@ and preserves the remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- There is currently no open product-facing delivery unit.
+- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now the sole open product-facing delivery unit.
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
 - `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after bounded implementation and successful bounded live production verification established that the reviewed WL storefront/product-detail path no longer stops before RFQ begins.
-- Any additional future product-facing opening requires a fresh bounded product decision against the preserved remaining candidates.
+- The active opening is bounded to the minimum lawful enterprise bridge from responded RFQ into existing trade / negotiation continuity and the reviewed enterprise RFQ stop point after first response only.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 - `RFQ-NEGOTIATION-CONTINUITY` is now recorded as a separate design-gate candidate rather than an unassigned adjacent finding.
 
@@ -29,10 +29,11 @@ and preserves the remaining next-cycle ordering.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | No product-facing unit is currently open; this remains the first preserved later-ready candidate pending a fresh bounded product decision |
-| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than control-plane tenant operations reality |
-| 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
-| 4 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from the closed WL split unit and still requires later design-gate-driven follow-on decisions |
+| 1 | `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` | `ACTIVE_DELIVERY` | The RFQ design gate already recommended this exact second split unit, the WL split unit is closed, and current repo truth still shows a bounded enterprise stop point after first response with existing trade scaffolding already present |
+| 2 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Remains a valid later-ready candidate but stays separate and later than the active enterprise RFQ bridge unit |
+| 3 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the active enterprise RFQ bridge unit |
+| 4 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
+| 5 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from both split units and still governs family-level scope boundaries |
 
 ## Recently Closed First Delivery
 
@@ -78,12 +79,39 @@ buyer RFQ follow-up continuity needed so the path no longer stops before RFQ beg
     trade redesign, quote/counter-offer redesign, search, merchandising, B2C storefront continuity,
     control-plane work, or enterprise redesign.
 
+## Current Active Delivery
+
+### Candidate Family
+
+`ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`
+
+### Recorded Opening
+
+After the RFQ design-gate artifact defined the lawful split recommendation and the WL split unit
+was completed and closed, the bounded unit `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` was
+opened as the sole product-facing `ACTIVE_DELIVERY`. The opening basis is the reviewed enterprise
+RFQ stop point after first response: current repo truth already exposes Request Quote, buyer RFQ
+list/detail, supplier RFQ inbox/detail, one first response, the separate Trades workspace, and
+the backend `POST /api/tenant/trades/from-rfq` route, but the reviewed frontend still does not
+expose a sufficient bridge from responded RFQ into that existing trade / negotiation continuity.
+
+### Boundaries
+
+- This unit is limited to the minimum lawful bridge from responded RFQ into existing trade /
+    negotiation continuity and the reviewed enterprise RFQ stop point after first response only.
+- It is not WL RFQ exposure work, not broad negotiation redesign, not trade redesign, not quote /
+    counter-offer redesign, not image/media continuity, not the separately recorded WL Add to Cart
+    500 finding, not the separately recorded RFQ-detail scrollability finding, not search /
+    merchandising / B2C continuity, not control-plane work, and not enterprise redesign.
+- `WL-RFQ-EXPOSURE-CONTINUITY` remains closed and separate, and the broader
+    `RFQ-NEGOTIATION-CONTINUITY` family remains design-gate authority.
+
 ## Later Candidates
 
 ### `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
 
-Keep as the first preserved later-ready candidate in order now that no product-facing delivery
-unit is open. It remains a real later-ready family and still requires a fresh bounded opening
+Keep as the first preserved later-ready candidate in order behind the active enterprise RFQ bridge
+unit. It remains a real later-ready family and still requires its own fresh bounded opening
 decision.
 
 ### `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
@@ -100,8 +128,9 @@ immediate delivery sequence.
 ### `RFQ-NEGOTIATION-CONTINUITY`
 
 Keep the broader family at design-gate authority level. Repo truth still supports one bounded
-cross-mode RFQ / negotiation continuity family, but the WL RFQ exposure split unit is now closed
-after bounded completion. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and unopened.
+cross-mode RFQ / negotiation continuity family, the WL RFQ exposure split unit is now closed after
+bounded completion, and `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now opened separately
+without collapsing the family-level design gate.
 
 ## Relationship To v1
 
