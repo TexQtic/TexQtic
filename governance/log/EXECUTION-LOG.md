@@ -36,6 +36,37 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### RFQ-NEGOTIATION-CONTINUITY — 2026-03-30
+
+Type: GOVERNANCE / DECISION + OPENING
+Status: DESIGN_GATE
+Commit: (this unit — see git log for [GOVERNANCE] open RFQ-negotiation candidate decision)
+Title: Formalize bounded RFQ / negotiation continuity as one design-gate candidate family
+Summary: Governance-only decision phase. Current repo truth supports one bounded cross-mode RFQ /
+  negotiation continuity family rather than two separate candidates: white-label reviewed runtime
+  exposes browse, product detail, add-to-cart, and a separate `Trades` shell entry but no
+  evidenced RFQ affordance, while enterprise runtime exposes `Request Quote`, buyer RFQ
+  detail/list, and supplier inbox/detail surfaces that remain explicitly pre-negotiation and
+  first-response-only. A backend trade-from-RFQ route and tenant `Trades` workspace exist, but the
+  reviewed frontend still does not evidence a materially continuous RFQ-to-negotiation bridge, so
+  the family is now formalized as `DESIGN_GATE` only rather than implementation-ready.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v2.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, and
+  TEXQTIC-NEXT-DELIVERY-PLAN-v2.md updated for candidate-posture consistency; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This bounded candidate remains separate from TENANT-CATALOG-MANAGEMENT-CONTINUITY, the
+  image-upload/catalog-media adjacent finding, MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY,
+  CONTROL-PLANE-TENANT-OPERATIONS-REALITY, and MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE. No
+  runtime code changed, no design artifact was added, no implementation opened, no closed WL /
+  tenant-truth unit was reopened, and enterprise redesign remains unjustified. LAYER 0
+  CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-CLOSE-TENANT-CATALOG-MANAGEMENT-CONTINUITY — 2026-03-30
 
 Type: GOVERNANCE / CLOSE

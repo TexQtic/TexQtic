@@ -13,8 +13,9 @@
 ```yaml
 snapshot_date: 2026-03-30
 last_unit_opened: TENANT-CATALOG-MANAGEMENT-CONTINUITY
+last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
 last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[GOVERNANCE] close TENANT-CATALOG-MANAGEMENT-CONTINUITY"
+last_commit: "[GOVERNANCE] open RFQ-negotiation candidate decision"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -55,9 +56,19 @@ tenant_catalog_management_continuity_b2b_followup_exposure_fix_implemented: true
 tenant_catalog_image_upload_adjacent_finding_recorded: true
 tenant_catalog_image_upload_investigation_required_before_unit_assignment: true
 rfq_negotiation_adjacent_finding_recorded: true
-rfq_negotiation_adjacent_finding_investigation_required_before_unit_assignment: true
+rfq_negotiation_adjacent_finding_investigation_required_before_unit_assignment: false
 rfq_negotiation_adjacent_finding_single_candidate_family_classification: true
 rfq_negotiation_adjacent_finding_not_current_unit_scope: true
+rfq_negotiation_continuity_candidate_opened: true
+rfq_negotiation_continuity_design_gate_only: true
+rfq_negotiation_continuity_implementation_ready_now: false
+rfq_negotiation_continuity_one_cross_mode_family: true
+rfq_negotiation_continuity_requires_design_before_opening: true
+rfq_negotiation_continuity_separate_from_catalog_continuity: true
+rfq_negotiation_continuity_separate_from_image_upload_finding: true
+rfq_negotiation_continuity_separate_from_b2c_storefront_continuity: true
+rfq_negotiation_continuity_separate_from_control_plane_tenant_operations_reality: true
+rfq_negotiation_continuity_separate_from_aggregator_scope_truth: true
 control_plane_tenant_operations_reality_ready_for_opening: true
 control_plane_tenant_operations_reality_later_ready: true
 mode_completeness_b2c_storefront_continuity_ready_for_opening: true
@@ -181,8 +192,10 @@ continuity visibly reachable, and authoritative live production verification com
 delete continuity works end to end, local state reconciles truthfully, create/read/RFQ remain
 intact in bounded scope, and WL Products remained non-regressed. No active bounded defect remains
 inside this unit. The separate image-upload adjacent finding remains investigation-only and outside
-this close, the separate RFQ / negotiation adjacent finding remains investigation-only and outside
-this close, CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
+this close, while the separate RFQ / negotiation finding is now formalized as the bounded
+`RFQ-NEGOTIATION-CONTINUITY` candidate in `DESIGN_GATE` posture because current repo truth
+supports one cross-mode continuity family but not an implementation-ready target state. That new
+design-gate candidate remains outside this close. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
 MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
 MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the recently closed WL /
 tenant-truth units remain closed and separate.

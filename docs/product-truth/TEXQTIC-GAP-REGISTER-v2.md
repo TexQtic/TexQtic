@@ -25,12 +25,14 @@ The governing assumptions for this register are:
 
 ## Cycle Summary
 
-The A1/A2/A3 cycle established four fresh candidate families for the next planning cycle:
+The A1/A2/A3 cycle established four fresh candidate families for the next planning cycle, and a
+later bounded decision phase formalized one additional design-gate candidate family:
 
 1. `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
 2. `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
 3. `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
 4. `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE`
+5. `RFQ-NEGOTIATION-CONTINUITY`
 
 The cycle also established these postures:
 
@@ -38,6 +40,7 @@ The cycle also established these postures:
 - `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` — `READY_FOR_OPENING`
 - `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` — `READY_FOR_OPENING`
 - `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` — `NEEDS_DESIGN_GATE`
+- `RFQ-NEGOTIATION-CONTINUITY` — `NEEDS_DESIGN_GATE`
 
 ## Candidate Posture Taxonomy
 
@@ -75,6 +78,7 @@ Every v2 gap entry uses the following fields:
 | `GAP-V2-002` | Control-plane tenant operations surface is fake-complete | `LATER_READY_CANDIDATE` | `OS` | `OPS_CASEWORK` | Overstates operator readiness around tenant lifecycle, onboarding outcome review, billing, and risk administration | The Tenant Details surface exposes one real activation action alongside unwired tenant lifecycle controls, UI-only billing / risk affordances, and under-construction tab depth | The bounded tenant deep-dive becomes truthful and materially usable for tenant lifecycle and onboarding-review operations without widening into general control-plane modernization | `components/ControlPlane/TenantDetails.tsx` | Separate from the catalog continuity family and from any broad admin/platform completeness reopen |
 | `GAP-V2-003` | B2C storefront continuity is partially decorative | `LATER_READY_CANDIDATE` | `OS` | `MODE_COMPLETENESS` | Leaves a public-facing B2C storefront shell with browse / search affordances that overstate real continuity | The B2C shell exposes search, `Shop Now`, and `See All` affordances, but those primary controls remain unwired or presentation-only in the bounded reviewed surface | The bounded B2C storefront path becomes truthful and materially continuous for browse-oriented entry without widening into broad B2C strategy or catalog management redesign | `App.tsx` | Separate from tenant catalog management continuity because the affected behavior is storefront continuity rather than item lifecycle management |
 | `GAP-V2-004` | Aggregator operating mode remains a scope-truth problem | `NEEDS_DESIGN_GATE` | `OS` | `PRODUCT_SCOPE_TRUTH` | Keeps a named tenant mode in repo truth materially thinner than its declared operating role | Aggregator runtime remains largely promotional and discovery-oriented while the broader operating model remains under-defined and partially stubbed | Product truth must first define the exact bounded aggregator operating model before any implementation-ready unit is opened | `App.tsx` | Must remain design-gate only; do not treat as implementation-ready and do not merge into a broad enterprise or mode redesign |
+| `GAP-V2-005` | RFQ / negotiation continuity is mode-incomplete and still pre-negotiation | `NEEDS_DESIGN_GATE` | `WORKFLOW` | `MODE_COMPLETENESS` | Overstates exchange continuity by exposing partial RFQ surfaces without a materially continuous RFQ-to-negotiation path across the reviewed white-label and enterprise runtime | White-label reviewed runtime exposes browse, product detail, add-to-cart, and a separate `Trades` shell entry but no evidenced RFQ affordance, while enterprise runtime exposes `Request Quote`, buyer RFQ detail/list, and supplier RFQ inbox/detail surfaces that are explicitly pre-negotiation and first-response-only. Backend trade-from-RFQ support exists, but the reviewed frontend does not evidence a materially continuous RFQ-to-negotiation bridge | Product truth must define the exact bounded cross-mode RFQ / negotiation continuity target before any implementation-ready opening is authorized | `App.tsx` | One bounded cross-mode candidate family with WL missing RFQ exposure and enterprise negotiation-depth limitations as sub-findings. Remains separate from tenant catalog management continuity, image-upload/media continuity, B2C storefront continuity, control-plane tenant operations reality, aggregator scope truth, and enterprise redesign |
 
 ## Opening Posture Summary
 
@@ -97,19 +101,13 @@ Every v2 gap entry uses the following fields:
 	repo-truth confirmation.
 
 - Observed during bounded repo-truth investigation after `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
-	verification: RFQ / negotiation continuity and mode parity appear materially incomplete across
+	verification: RFQ / negotiation continuity and mode parity appeared materially incomplete across
 	white-label and enterprise tenant runtime.
-- Current posture: investigation required before unit assignment, but current bounded classification
-	is one adjacent candidate family rather than two separate openings.
-- Reason: repo truth currently shows that white-label storefront runtime exposes browse,
-	product-detail, add-to-cart, and a separate `Trades` shell entry but no evidenced `Request Quote`
-	or RFQ affordance, while enterprise runtime exposes `Request Quote`, buyer RFQ detail/list, and
-	supplier RFQ inbox/detail surfaces that are explicitly described as pre-negotiation and
-	first-response-only. A separate tenant `Trades` workspace and backend trade-from-RFQ route exist,
-	but the reviewed frontend surfaces did not evidence a materially continuous RFQ-to-negotiation
-	bridge. This therefore reads as one bounded adjacent RFQ / negotiation continuity family with
-	mode-parity sub-findings, and must not be auto-merged into the current tenant catalog
-	update/delete continuity unit.
+- Current posture: this finding has now been formalized as `GAP-V2-005` /
+	`RFQ-NEGOTIATION-CONTINUITY` in `NEEDS_DESIGN_GATE` posture rather than remaining unassigned.
+- Reason: current repo truth supports one bounded cross-mode candidate family, but the exact
+	implementation-ready target state still requires design clarification before a lawful delivery
+	opening.
 
 ### Later Ready Candidates
 
@@ -119,6 +117,7 @@ Every v2 gap entry uses the following fields:
 ### Design-Gate Only Candidate
 
 - `GAP-V2-004` / `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE`
+- `GAP-V2-005` / `RFQ-NEGOTIATION-CONTINUITY`
 
 ## Explicit Non-Merge / Non-Reopen Rules
 

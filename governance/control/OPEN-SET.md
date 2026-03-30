@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-30 (TENANT-CATALOG-MANAGEMENT-CONTINUITY close)
+**Last Updated:** 2026-03-30 (RFQ-NEGOTIATION-CONTINUITY candidate decision)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -23,6 +23,7 @@
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
+| RFQ-NEGOTIATION-CONTINUITY | RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-30 |
 
 ---
 
@@ -32,11 +33,11 @@
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
-- **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
+- **DESIGN_GATE**: 2 (TECS-FBW-ADMINRBAC, RFQ-NEGOTIATION-CONTINUITY)
 - **ACTIVE_DELIVERY**: 0
 - **DECISION_QUEUE**: 9
-- **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 10**
+- **DESIGN_GATE_QUEUE**: 2
+- **Total non-terminal units: 11**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -59,7 +60,10 @@ production verification. Tenant catalog item update/delete continuity is now com
 form: Acme B2B now exposes Edit/Delete and verified update/delete end to end, local state
 reconciles truthfully, WL Products remained non-regressed, and no active bounded defect remains
 inside this unit. The separately recorded image-upload adjacent finding remains investigation-only,
-the separately recorded RFQ / negotiation adjacent finding remains investigation-only,
+the separately recorded image-upload finding remains separate and unassigned,
+the newly formalized `RFQ-NEGOTIATION-CONTINUITY` candidate remains `DESIGN_GATE` only because
+current repo truth supports one bounded cross-mode RFQ / negotiation continuity family but does
+not yet evidence an implementation-ready target state,
 CONTROL-PLANE-TENANT-OPERATIONS-REALITY and MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain
 later-ready and separate, MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only,
 and no recently closed WL / tenant-truth unit is reopened by this close.

@@ -15,6 +15,7 @@ and preserves the remaining next-cycle ordering.
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
 - Any future product-facing opening requires a fresh bounded product decision against the preserved remaining candidates.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
+- `RFQ-NEGOTIATION-CONTINUITY` is now recorded as a separate design-gate candidate rather than an unassigned adjacent finding.
 
 ## Delivery Ordering Rules
 
@@ -67,6 +68,12 @@ catalog continuity candidate and remain separate from it.
 
 Keep at design-gate only. This candidate must not be reframed as implementation-ready in the
 immediate delivery sequence.
+
+### `RFQ-NEGOTIATION-CONTINUITY`
+
+Keep at design-gate only. Repo truth now supports one bounded cross-mode RFQ / negotiation
+continuity family, but the exact minimally true target state still requires design clarification
+before any implementation-ready opening is lawful.
 
 ## Relationship To v1
 

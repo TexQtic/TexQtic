@@ -34,6 +34,7 @@ The next cycle prioritizes bounded product-facing continuity work that:
 | Wave 2 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Should remain separate from catalog continuity and follow the stronger commerce-operability gap |
 | Wave 3 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work, but narrower and less foundational than Wave 1 |
 | Design Gate | Aggregator Operating Mode Scope Truth | `DESIGN_GATE_ONLY` | Define the exact bounded aggregator operating model before any implementation opening | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | Current repo truth is insufficiently specific to support a lawful implementation opening |
+| Design Gate | RFQ / Negotiation Continuity | `DESIGN_GATE_ONLY` | Define the exact bounded cross-mode RFQ-to-negotiation continuity target before any implementation opening | `RFQ-NEGOTIATION-CONTINUITY` | Repo truth proves one bounded family exists, but the exact target continuity between WL exposure, enterprise RFQ depth, and trade continuation is not yet implementation-ready |
 
 ## Historical Carry-Forward
 
@@ -51,7 +52,8 @@ No `-v1` wave is reopened by this `-v2` roadmap.
 
 There is currently no open product-facing `ACTIVE_DELIVERY` wave in the `-v2` stack. Any future
 product-facing opening requires a fresh bounded product decision against the remaining recorded
-later-ready and design-gate candidates.
+later-ready and design-gate candidates. `RFQ-NEGOTIATION-CONTINUITY` is now one of those recorded
+design-gate candidates and remains separate from the adjacent image-upload finding.
 
 ## Wave 1 — Tenant Catalog Management Continuity
 
@@ -128,3 +130,29 @@ any implementation-ready opening is considered.
 
 This candidate must remain design-gate only in the `-v2` cycle until the required bounded outcome
 is explicitly defined. It must not be promoted into an implementation wave by implication.
+
+## Design Gate — RFQ / Negotiation Continuity
+
+- Posture: `DESIGN_GATE_ONLY`
+- Candidate Family: `RFQ-NEGOTIATION-CONTINUITY`
+
+### Objective
+
+Define the exact bounded cross-mode RFQ / negotiation continuity target that repo truth should
+support before any implementation-ready opening is considered.
+
+### Why Design Gate Only
+
+- Repo truth supports one bounded candidate family rather than two separate openings.
+- White-label reviewed runtime lacks evidenced RFQ exposure, enterprise reviewed RFQ surfaces remain
+  explicitly pre-negotiation and first-response-only, and the reviewed frontend does not yet show
+  a materially continuous RFQ-to-negotiation bridge.
+- The exact minimally true closure target therefore still needs definition before implementation
+  work can be opened lawfully.
+
+### Explicit Rule
+
+This candidate must remain design-gate only until the bounded target continuity is explicitly
+defined. It must not be promoted into an implementation wave by implication and must remain
+separate from catalog continuity, image/media continuity, B2C storefront continuity, control-plane
+tenant operations reality, aggregator scope truth, and enterprise redesign.
