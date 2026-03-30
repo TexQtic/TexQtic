@@ -6,7 +6,7 @@ This document is the fresh implementation roadmap for the next TexQtic product-t
 
 It starts after the `-v1` roadmap completed and the fresh A1/A2/A3 cycle identified the next
 bounded candidate families. The `-v1` roadmap remains historical and complete; this `-v2` roadmap
-defines the next ordered wave structure without opening any unit by itself.
+defines the next ordered wave structure and now records the sole currently opened first wave.
 
 ## Roadmap North Star
 
@@ -20,8 +20,8 @@ The next cycle prioritizes bounded product-facing continuity work that:
 ## Governing Rules
 
 1. The completed `-v1` roadmap remains historical and is not rewritten here.
-2. A recorded recommendation does not itself open a unit.
-3. Later-ready candidates remain distinct from the first recommended opening.
+2. A recorded recommendation does not itself open a unit; opening requires a separate lawful governance move.
+3. Later-ready candidates remain distinct from the current active wave.
 4. Design-gate candidates must not be promoted into implementation-ready work without a separate decision.
 5. Recently closed WL / tenant-truth units remain closed and separate from this roadmap.
 
@@ -29,7 +29,7 @@ The next cycle prioritizes bounded product-facing continuity work that:
 
 | Wave | Name | Posture | Primary Goal | Included Candidate Family | Dependency Reason |
 |---|---|---|---|---|---|
-| Wave 1 | Tenant Catalog Management Continuity | `FIRST_RECOMMENDED_OPENING` | Close the clearest tenant-facing catalog lifecycle completeness gap | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | Strongest bounded frontend/backend completeness gap and safest next opening |
+| Wave 1 | Tenant Catalog Management Continuity | `ACTIVE_DELIVERY` | Close the clearest tenant-facing catalog lifecycle completeness gap | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | Strongest bounded frontend/backend completeness gap and now the sole current product-facing open unit |
 | Wave 2 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Should remain separate from catalog continuity and follow the stronger commerce-operability gap |
 | Wave 3 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work, but narrower and less foundational than Wave 1 |
 | Design Gate | Aggregator Operating Mode Scope Truth | `DESIGN_GATE_ONLY` | Define the exact bounded aggregator operating model before any implementation opening | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | Current repo truth is insufficiently specific to support a lawful implementation opening |
@@ -50,7 +50,7 @@ No `-v1` wave is reopened by this `-v2` roadmap.
 
 ## Wave 1 — Tenant Catalog Management Continuity
 
-- Posture: `FIRST_RECOMMENDED_OPENING`
+- Posture: `ACTIVE_DELIVERY`
 - Candidate Family: `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
 
 ### Objective
@@ -64,6 +64,11 @@ not materially create-and-read only when backend lifecycle support already exist
 - It is safer to open than the control-plane truth gap and more foundational than the B2C
   storefront continuity gap.
 - It does not require a product-scope redesign.
+
+### Opening Posture
+
+This wave is now the sole current product-facing `ACTIVE_DELIVERY`. The opening remained
+governance-only: no design or implementation was performed in the opening step.
 
 ### Boundaries
 

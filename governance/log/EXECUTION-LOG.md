@@ -35,6 +35,37 @@ Notes: <constraints or cautions applicable after closure>
   or in Layer 0 closed-baseline, not in a new-style unit record
 
 ---
+
+### TENANT-CATALOG-MANAGEMENT-CONTINUITY — 2026-03-30
+Type: GOVERNANCE / DECISION + OPENING
+Status: OPEN
+Commit: (this unit — see git log for [GOVERNANCE] open TENANT-CATALOG-MANAGEMENT-CONTINUITY)
+Title: Decide and open bounded tenant catalog item lifecycle continuity
+Summary: Opened one bounded product-facing ACTIVE_DELIVERY unit after Layer 0 and the active v2
+  planning stack consistently confirmed `TENANT-CATALOG-MANAGEMENT-CONTINUITY` as the first lawful
+  next opening and current repo truth still confirmed the same bounded backend/frontend
+  completeness asymmetry: tenant catalog PATCH and DELETE routes already exist, while
+  tenant-facing service/client continuity and reviewed product flows remain materially create/read
+  only. `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now the sole ACTIVE_DELIVERY. No design or
+  implementation was performed in this step, no runtime code changed, and no broader commerce,
+  B2C, WL, control-plane, aggregator, or prior closed-unit work was reopened by implication.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v2.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md,
+  TEXQTIC-NEXT-DELIVERY-PLAN-v2.md updated for live-opening consistency; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: Opening is governance-only and bounded to tenant catalog item lifecycle continuity only:
+  the missing materially usable update/delete path across tenant product surface and client-service
+  layer. This unit is not marketplace redesign, not merchandising redesign, not search redesign,
+  not B2C storefront continuity, not control-plane tenant operations reality, not aggregator mode
+  scope work, and not a reopen of WL-BLUEPRINT-RUNTIME-RESIDUE-001,
+  TENANT-TRUTH-CLEANUP-001, or WL-ADMIN-ENTRY-DISCOVERABILITY-001. Neighboring v2 candidates
+  remain separate and aggregator remains design-gate only. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md · governance/log/EXECUTION-LOG.md
+
+---
 ### GOV-RECORD-A1-A3-V2-STACK-001 — 2026-03-29
 Type: GOVERNANCE / RECORDING + STACK SEEDING
 Status: COMPLETED

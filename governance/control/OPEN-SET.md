@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-29 (v2 product-truth stack seeded)
+**Last Updated:** 2026-03-30 (TENANT-CATALOG-MANAGEMENT-CONTINUITY opening)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -22,21 +22,22 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
+| TENANT-CATALOG-MANAGEMENT-CONTINUITY | Tenant catalog item lifecycle continuity | OPEN | ACTIVE_DELIVERY | V2 | 2026-03-30 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 
 ---
 
 ## Summary
 
-- **OPEN** (all governed units): **9**
+- **OPEN** (all governed units): **10**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 1 (TECS-FBW-ADMINRBAC)
-- **ACTIVE_DELIVERY**: 0
+- **ACTIVE_DELIVERY**: 1
 - **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 1
-- **Total non-terminal units: 10**
+- **Total non-terminal units: 11**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -47,16 +48,19 @@ sequencing and next-delivery priority are derived from the product-truth authori
 
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as historical carry-forward
-context only. They do not authorize or imply a current product-facing delivery unit. Current
-product-facing posture remains `ACTIVE_DELIVERY: 0` with no named product unit open until a
-separate fresh bounded product-truth decision is lawfully opened.
+context only. They do not authorize or imply current-ready product openings outside active Layer 0
+truth. Current product-facing posture now carries one sole `ACTIVE_DELIVERY` unit,
+`TENANT-CATALOG-MANAGEMENT-CONTINUITY`, opened on the bounded backend/frontend completeness
+asymmetry already evidenced in repo truth.
 
-The completed `-v1` planning stack remains historical baseline only after the fresh A1/A2/A3
-discovery, synthesis, and prioritization cycle was recorded into the new `-v2` stack. The new
-recommended next opening candidate recorded in that `-v2` stack is
-`TENANT-CATALOG-MANAGEMENT-CONTINUITY`, but no product-facing unit has been opened by that
-recording step, `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` remains design-gate only, and the
-recently closed WL / tenant-truth units remain closed and separate.
+The completed `-v1` planning stack remains historical baseline only. The `-v2` stack is the fresh
+active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now the sole open
+product-facing `ACTIVE_DELIVERY` under that `-v2` sequence. This opening remains limited to
+tenant catalog item lifecycle continuity only: the missing materially usable update/delete path
+across tenant product surface and client-service layer. It is not marketplace redesign, not
+merchandising redesign, not search redesign, not B2C storefront continuity, not control-plane
+tenant operations reality, not aggregator mode scope work, and not a reopen of the recently
+closed WL / tenant-truth units.
 
 `TENANT-TRUTH-CLEANUP-001` is now `CLOSED` after the exact three tenant-facing document-authority
 surfaces were reconciled and bounded repo-truth verification completed as `VERIFIED_COMPLETE` on

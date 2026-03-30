@@ -6,13 +6,13 @@ This document defines the immediate next-cycle delivery ordering for TexQtic aft
 `-v1` planning stack.
 
 It records the fresh A3 prioritization result without opening a unit by itself. The `-v1` plan
-remains historical and complete; this `-v2` plan is the fresh bounded basis for the next lawful
-opening decision.
+remains historical and complete; this `-v2` plan now records the current opened unit plus the
+remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- No current product-facing delivery unit is open.
-- The first recommended next opening is `TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
+- The current open product-facing delivery unit is `TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
+- Product-facing priority now points to `TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 
 ## Delivery Ordering Rules
@@ -26,26 +26,27 @@ opening decision.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | `FIRST_RECOMMENDED_OPENING` | Strongest bounded frontend/backend completeness gap and safest next product-facing opening |
+| 1 | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | `ACTIVE_DELIVERY` | Strongest bounded frontend/backend completeness gap and now the sole current product-facing open unit |
 | 2 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Strong later-ready operator truth gap, but less foundational than tenant catalog lifecycle continuity |
 | 3 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that should remain later than the catalog continuity candidate |
 | 4 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
 
-## First Recommended Opening
+## Current Active Delivery
 
 ### Candidate Family
 
 `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
 
-### Recorded Recommendation
+### Recorded Opening
 
-The A3 prioritization cycle concluded that one fresh product-facing unit should now be opened and
-that the first lawful opening recommendation is `TENANT-CATALOG-MANAGEMENT-CONTINUITY`.
+After the A3 prioritization cycle established the lawful first opening basis, the bounded unit
+`TENANT-CATALOG-MANAGEMENT-CONTINUITY` was opened as the sole current product-facing
+`ACTIVE_DELIVERY`.
 
 ### Boundaries
 
-- Record the recommendation only.
-- Do not treat this plan as the opening itself.
+- Record only the bounded opening state.
+- Do not treat this plan as design or implementation.
 - Do not widen the candidate into general marketplace, search, merchandising, or B2C redesign.
 
 ## Later Candidates
