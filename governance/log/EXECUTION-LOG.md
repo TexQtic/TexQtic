@@ -36,6 +36,37 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### GOV-CLOSE-WL-RFQ-EXPOSURE-CONTINUITY — 2026-03-30
+
+Type: GOVERNANCE / CLOSE
+Status: CLOSED
+Commit: (this unit — see git log for [GOVERNANCE] close WL-RFQ-EXPOSURE-CONTINUITY)
+Title: Close the bounded WL RFQ exposure continuity unit after successful bounded production proof
+Summary: Governance-only close phase. Recorded `WL-RFQ-EXPOSURE-CONTINUITY` as `CLOSED` after the
+  already-completed bounded implementation and successful bounded live production verification
+  established that the reviewed WL storefront/product-detail path now exposes RFQ initiation,
+  supports the minimum lawful buyer RFQ follow-up continuity, and no longer stops before RFQ
+  begins. No active bounded defect remains inside this unit.
+Layer Impact: Layer 0 — OPEN-SET.md, NEXT-ACTION.md, SNAPSHOT.md updated; Product truth —
+  TEXQTIC-GAP-REGISTER-v2.md, TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, and
+  TEXQTIC-NEXT-DELIVERY-PLAN-v2.md updated for bounded close synchronization; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: This close remains limited to WL RFQ initiation exposure and the minimum lawful WL buyer
+  RFQ follow-up continuity only. The separately recorded WL Add to Cart 500 finding remains a
+  separate storefront/cart adjacent finding, the separately recorded RFQ-detail scrollability issue
+  remains a separate RFQ-detail UI continuity finding, the separately recorded image/media finding
+  remains separate, and `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains separate and
+  unopened. `RFQ-NEGOTIATION-CONTINUITY` remains the preserved cross-mode `DESIGN_GATE` family,
+  neighboring candidates remain separate, recently closed units remain closed, no runtime code
+  changed, and no broader RFQ / negotiation / trade / platform completion is implied. LAYER 0
+  CONSISTENCY: VERIFIED.
+Refs: governance/control/OPEN-SET.md · governance/control/NEXT-ACTION.md ·
+  governance/control/SNAPSHOT.md · docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md ·
+  docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md ·
+  docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### WL-RFQ-EXPOSURE-CONTINUITY-ADJACENT-FINDINGS — 2026-03-30
 
 Type: GOVERNANCE / RECORDING + INVESTIGATION

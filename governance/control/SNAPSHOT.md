@@ -14,8 +14,8 @@
 snapshot_date: 2026-03-30
 last_unit_opened: WL-RFQ-EXPOSURE-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
-last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[GOVERNANCE] record WL cart and RFQ-detail findings"
+last_unit_closed: WL-RFQ-EXPOSURE-CONTINUITY
+last_commit: "[GOVERNANCE] close WL-RFQ-EXPOSURE-CONTINUITY"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -25,11 +25,11 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
-current_product_active_delivery_count: 1
-current_product_delivery_priority: WL-RFQ-EXPOSURE-CONTINUITY
-current_product_delivery_unit_open: true
-current_product_active_delivery_unit: WL-RFQ-EXPOSURE-CONTINUITY
-future_product_opening_requires_fresh_bounded_product_decision: false
+current_product_active_delivery_count: 0
+current_product_delivery_priority: NONE
+current_product_delivery_unit_open: false
+current_product_active_delivery_unit: NONE
+future_product_opening_requires_fresh_bounded_product_decision: true
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
@@ -38,8 +38,8 @@ product_truth_v2_next_delivery_plan_present: true
 recommended_next_opening_candidate: NONE
 recommended_next_opening_candidate_recorded: false
 recommended_next_opening_candidate_opened: false
-wl_rfq_exposure_continuity_open: true
-wl_rfq_exposure_continuity_active_delivery: true
+wl_rfq_exposure_continuity_open: false
+wl_rfq_exposure_continuity_active_delivery: false
 wl_rfq_exposure_continuity_opened_from_rfq_negotiation_design_gate: true
 wl_rfq_exposure_continuity_design_v1_created: true
 wl_rfq_exposure_continuity_implementation_started: true
@@ -53,11 +53,19 @@ wl_rfq_exposure_continuity_wl_rfq_entry_implemented: true
 wl_rfq_exposure_continuity_wl_buyer_followup_reentry_implemented: true
 wl_rfq_exposure_continuity_existing_buyer_rfq_continuity_reused: true
 wl_rfq_exposure_continuity_production_verification_bounded_success: true
+wl_rfq_exposure_continuity_verified_complete: true
+wl_rfq_exposure_continuity_close_ready: true
+wl_rfq_exposure_continuity_closed: true
+wl_rfq_exposure_continuity_no_active_bounded_followup_remaining: true
 wl_rfq_exposure_continuity_not_enterprise_rfq_to_negotiation_bridge: true
 wl_rfq_exposure_continuity_not_negotiation_trade_redesign: true
 wl_rfq_exposure_continuity_not_image_media_continuity: true
 wl_rfq_exposure_continuity_not_search_merchandising_b2c_control_plane: true
 wl_rfq_exposure_continuity_not_enterprise_redesign: true
+wl_rfq_exposure_continuity_no_longer_stops_before_rfq_begins: true
+wl_rfq_exposure_continuity_add_to_cart_adjacent_finding_remains_separate: true
+wl_rfq_exposure_continuity_rfq_detail_scrollability_finding_remains_separate: true
+wl_rfq_exposure_continuity_image_media_finding_remains_separate: true
 wl_add_to_cart_adjacent_finding_recorded: true
 wl_add_to_cart_investigation_required_before_unit_assignment: true
 wl_add_to_cart_not_current_unit_scope: true
@@ -101,6 +109,7 @@ rfq_negotiation_continuity_future_split_recommended: true
 rfq_negotiation_continuity_future_split_shape: "WL-RFQ-EXPOSURE-CONTINUITY + ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY"
 rfq_negotiation_continuity_first_split_unit_opened: true
 rfq_negotiation_continuity_first_split_unit: WL-RFQ-EXPOSURE-CONTINUITY
+rfq_negotiation_continuity_first_split_unit_closed: true
 rfq_negotiation_continuity_enterprise_bridge_still_separate: true
 rfq_negotiation_continuity_separate_from_catalog_continuity: true
 rfq_negotiation_continuity_separate_from_image_upload_finding: true
