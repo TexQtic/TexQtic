@@ -1632,6 +1632,15 @@ const App: React.FC = () => {
     );
   };
 
+  const renderB2BCatalogCardFooter = (product: CatalogItem) => {
+    return (
+      <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
+        {renderCatalogItemMutationActions(product)}
+        <B2BAddToCartButton product={product} />
+      </div>
+    );
+  };
+
   const handleOpenRfqDialog = (product: CatalogItem) => {
     setRfqDialog({
       open: true,
@@ -2458,8 +2467,7 @@ const App: React.FC = () => {
                         <div className="text-emerald-600 font-bold">${p.price}/unit</div>
                         <div className="text-xs text-slate-400">MOQ: {p.moq || 1}</div>
                       </div>
-                      {renderCatalogItemMutationActions(p)}
-                      <B2BAddToCartButton product={p} />
+                      {renderB2BCatalogCardFooter(p)}
                     </div>
                   </div>
                 ))}
@@ -2743,7 +2751,7 @@ const App: React.FC = () => {
       <button
         type="button"
         onClick={() => handleOpenRfqDialog(product)}
-        className="w-full mt-4 border border-slate-200 py-2 rounded text-sm font-semibold hover:bg-slate-50 transition"
+        className="w-full border border-slate-200 py-2 rounded text-sm font-semibold hover:bg-slate-50 transition"
       >
         Request Quote
       </button>

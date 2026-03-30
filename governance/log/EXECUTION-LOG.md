@@ -36,6 +36,26 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TENANT-CATALOG-MANAGEMENT-CONTINUITY-B2B-FOLLOWUP-IMPLEMENTATION — 2026-03-30
+
+Type: GOVERNANCE / IMPLEMENTATION
+Status: COMPLETED
+Commit: (this unit — see git log for [TENANT-CATALOG-MANAGEMENT-CONTINUITY] fix bounded B2B edit-delete continuity gap)
+Title: Repair bounded B2B edit/delete affordance exposure inside the open continuity unit
+Summary: Follow-up implementation remained inside `TENANT-CATALOG-MANAGEMENT-CONTINUITY` and
+  changed `App.tsx` only to make the B2B catalog card footer explicitly surface the already-wired
+  shared edit/delete action row alongside the existing RFQ CTA. No service-layer changes, no
+  backend changes, no image-upload changes, and no widening into search, browse, storefront CTA,
+  merchandising, broader B2C continuity, or control-plane work occurred.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product surfaces — App.tsx updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: `TENANT-CATALOG-MANAGEMENT-CONTINUITY` remains the sole current product-facing
+  `ACTIVE_DELIVERY` and remains open pending subsequent verification. The adjacent image-upload
+  finding remains separate and untouched in this follow-up phase. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: App.tsx · governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TENANT-CATALOG-MANAGEMENT-CONTINUITY-ADJACENT-IMAGE-UPLOAD-FINDING — 2026-03-30
 
 Type: GOVERNANCE / RECORDING + INVESTIGATION
