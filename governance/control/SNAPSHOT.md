@@ -15,7 +15,7 @@ snapshot_date: 2026-03-30
 last_unit_opened: TENANT-CATALOG-MANAGEMENT-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
 last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[GOVERNANCE] open RFQ-negotiation candidate decision"
+last_commit: "[GOVERNANCE] add RFQ-NEGOTIATION-CONTINUITY design gate v1"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -64,6 +64,12 @@ rfq_negotiation_continuity_design_gate_only: true
 rfq_negotiation_continuity_implementation_ready_now: false
 rfq_negotiation_continuity_one_cross_mode_family: true
 rfq_negotiation_continuity_requires_design_before_opening: true
+rfq_negotiation_continuity_design_gate_v1_created: true
+rfq_negotiation_continuity_enterprise_rfq_journey_defined: true
+rfq_negotiation_continuity_wl_rfq_journey_defined: true
+rfq_negotiation_continuity_negotiation_is_trades_adjacent_scaffolding: true
+rfq_negotiation_continuity_future_split_recommended: true
+rfq_negotiation_continuity_future_split_shape: "WL-RFQ-EXPOSURE-CONTINUITY + ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY"
 rfq_negotiation_continuity_separate_from_catalog_continuity: true
 rfq_negotiation_continuity_separate_from_image_upload_finding: true
 rfq_negotiation_continuity_separate_from_b2c_storefront_continuity: true
@@ -193,8 +199,9 @@ delete continuity works end to end, local state reconciles truthfully, create/re
 intact in bounded scope, and WL Products remained non-regressed. No active bounded defect remains
 inside this unit. The separate image-upload adjacent finding remains investigation-only and outside
 this close, while the separate RFQ / negotiation finding is now formalized as the bounded
-`RFQ-NEGOTIATION-CONTINUITY` candidate in `DESIGN_GATE` posture because current repo truth
-supports one cross-mode continuity family but not an implementation-ready target state. That new
+`RFQ-NEGOTIATION-CONTINUITY` candidate in `DESIGN_GATE` posture and now has a dedicated
+design-gate artifact defining the current WL and enterprise RFQ journeys, the exact continuity
+stop points, and the recommended future split into two bounded implementation units. That
 design-gate candidate remains outside this close. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
 MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
 MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the recently closed WL /

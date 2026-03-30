@@ -36,6 +36,32 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1 — 2026-03-30
+
+Type: GOVERNANCE / DESIGN_GATE
+Status: COMPLETED
+Commit: (this unit — see git log for [GOVERNANCE] add RFQ-NEGOTIATION-CONTINUITY design gate v1)
+Title: Define the bounded product-truth shape of RFQ-NEGOTIATION-CONTINUITY
+Summary: Design-gate-only phase. Current repo truth now defines the exact bounded RFQ journeys by
+  mode: enterprise supports non-binding RFQ initiation, buyer RFQ list/detail, supplier inbox, and
+  one first response, while reviewed WL storefront runtime still stops before RFQ begins. Repo
+  truth further shows negotiation mostly as trades-adjacent scaffolding because tenant trade
+  lifecycle states, backend RFQ-to-trade creation, and AI negotiation advice exist, but the
+  reviewed frontend does not evidence a materially continuous RFQ-to-negotiation bridge. The
+  design-gate conclusion preserves one candidate family but recommends any later implementation be
+  split into two bounded units: WL RFQ exposure continuity and enterprise RFQ-to-negotiation
+  bridge continuity.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Product truth —
+  RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1.md added; Layer 3 — EXECUTION-LOG.md appended
+Notes: This phase does not open implementation, does not widen into catalog continuity,
+  image/media continuity, B2C storefront continuity, control-plane work, aggregator scope truth,
+  or enterprise redesign, and does not reopen any closed unit. The candidate remains
+  `DESIGN_GATE` only. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: docs/product-truth/RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1.md ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### RFQ-NEGOTIATION-CONTINUITY — 2026-03-30
 
 Type: GOVERNANCE / DECISION + OPENING
