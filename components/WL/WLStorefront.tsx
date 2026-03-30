@@ -56,6 +56,11 @@ import { ProductGrid } from './ProductGrid';
 import { WLProductDetailPage } from './WLProductDetailPage';
 import { WLSearchBar } from './WLSearchBar';
 
+type WLStorefrontProps = Readonly<{
+  onRequestQuote?: (item: CatalogItem) => void;
+  onViewBuyerRfqs?: () => void | Promise<void>;
+}>;
+
 // ─── Category helpers ────────────────────────────────────────────────────────
 
 const UNCATEGORISED = 'Uncategorised';
@@ -82,7 +87,7 @@ function deriveCategories(items: CatalogItem[]): CategoryCount[] {
 
 // ─── WLStorefront ────────────────────────────────────────────────────────────
 
-export function WLStorefront() {
+export function WLStorefront({ onRequestQuote, onViewBuyerRfqs }: WLStorefrontProps) {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -146,10 +151,13 @@ export function WLStorefront() {
 
   // PW5-WL3: derive selected product from already-fetched items — no new fetch.
   // WLStorefront remains the exclusive owner of catalog data.
-  const selectedItem = useMemo(
-    () => (selectedItemId !== null ? (items.find((i) => i.id === selectedItemId) ?? null) : null),
-    [items, selectedItemId]
-  );
+  const selectedItem = useMemo(() => {
+    if (selectedItemId === null) {
+      return null;
+    }
+
+    return items.find(i => i.id === selectedItemId) ?? null;
+  }, [items, selectedItemId]);
 
   const handleSelectItem = useCallback((id: string) => {
     setSelectedItemId(id);
@@ -221,6 +229,7 @@ export function WLStorefront() {
         item={selectedItem}
         onBack={handleBackFromDetail}
         onAddToCart={addToCart}
+        onRequestQuote={onRequestQuote ? () => onRequestQuote(selectedItem) : undefined}
       />
     );
   }
@@ -229,13 +238,26 @@ export function WLStorefront() {
   return (
     <div className="animate-in fade-in duration-300">
       {/* Page heading */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Products
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Browse the catalogue
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Products
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Browse the catalogue
+          </p>
+        </div>
+        {onViewBuyerRfqs && (
+          <button
+            type="button"
+            onClick={() => {
+              void onViewBuyerRfqs();
+            }}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            View My RFQs
+          </button>
+        )}
       </div>
 
       {/* Search input — PW5-WL4. Client-side only; no fetch on keystroke. */}

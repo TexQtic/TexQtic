@@ -15,7 +15,7 @@ snapshot_date: 2026-03-30
 last_unit_opened: WL-RFQ-EXPOSURE-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
 last_unit_closed: TENANT-CATALOG-MANAGEMENT-CONTINUITY
-last_commit: "[GOVERNANCE] add WL-RFQ-EXPOSURE-CONTINUITY design v1"
+last_commit: "[WL-RFQ-EXPOSURE-CONTINUITY] implement bounded WL RFQ exposure continuity"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -42,12 +42,16 @@ wl_rfq_exposure_continuity_open: true
 wl_rfq_exposure_continuity_active_delivery: true
 wl_rfq_exposure_continuity_opened_from_rfq_negotiation_design_gate: true
 wl_rfq_exposure_continuity_design_v1_created: true
-wl_rfq_exposure_continuity_implementation_started: false
+wl_rfq_exposure_continuity_implementation_started: true
 wl_rfq_exposure_continuity_bounded_to_wl_storefront_product_detail_path: true
 wl_rfq_exposure_continuity_bounded_to_minimum_rfq_followup_entry: true
 wl_rfq_exposure_continuity_reuses_existing_buyer_rfq_create_list_detail: true
 wl_rfq_exposure_continuity_app_orchestration_surface_required: true
 wl_rfq_exposure_continuity_hidden_wl_card_surface_required_first_pass: false
+wl_rfq_exposure_continuity_runtime_files_touched: "App.tsx, components/WL/WLStorefront.tsx, components/WL/WLProductDetailPage.tsx"
+wl_rfq_exposure_continuity_wl_rfq_entry_implemented: true
+wl_rfq_exposure_continuity_wl_buyer_followup_reentry_implemented: true
+wl_rfq_exposure_continuity_existing_buyer_rfq_continuity_reused: true
 wl_rfq_exposure_continuity_not_enterprise_rfq_to_negotiation_bridge: true
 wl_rfq_exposure_continuity_not_negotiation_trade_redesign: true
 wl_rfq_exposure_continuity_not_image_media_continuity: true

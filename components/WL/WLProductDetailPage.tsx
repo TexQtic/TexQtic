@@ -46,6 +46,8 @@ interface WLProductDetailPageProps {
   item: CatalogItem;
   /** Returns the shopper to the storefront grid/category context. */
   onBack: () => void;
+  /** Opens the existing App-level RFQ orchestration for this product. */
+  onRequestQuote?: () => void;
   /**
    * PW5-WL5: Live add-to-cart handler provided by WLStorefront via CartContext.
    * When absent the button is suppressed (backwards-compatible).
@@ -54,8 +56,9 @@ interface WLProductDetailPageProps {
   onAddToCart?: (catalogItemId: string, quantity: number) => Promise<void>;
 }
 
-export function WLProductDetailPage({ item, onBack, onAddToCart }: WLProductDetailPageProps) {
+export function WLProductDetailPage({ item, onBack, onRequestQuote, onAddToCart }: Readonly<WLProductDetailPageProps>) {
   const category = resolveCategory(item);
+  const inactiveItemTitle = item.active ? undefined : 'This product is not currently available';
 
   // PW5-WL5: quantity state. Defaults to MOQ (min order qty) if present, else 1.
   const minQty = item.moq != null && item.moq > 1 ? item.moq : 1;
@@ -207,44 +210,58 @@ export function WLProductDetailPage({ item, onBack, onAddToCart }: WLProductDeta
           </div>
 
           {/* PW5-WL5: Live Add to Cart — handler provided by WLStorefront via CartContext */}
-          {onAddToCart ? (
+          {onAddToCart || onRequestQuote ? (
             <div className="flex flex-col items-end gap-2">
-              {/* Quantity selector */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(q => Math.max(minQty, q - 1))}
-                  disabled={adding || quantity <= minQty}
-                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors text-slate-700"
-                  aria-label="Decrease quantity"
-                >
-                  −
-                </button>
-                <span className="w-8 text-center font-bold text-slate-800 tabular-nums">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(q => q + 1)}
-                  disabled={adding}
-                  className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors text-slate-700"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
+              {onAddToCart && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(q => Math.max(minQty, q - 1))}
+                    disabled={adding || quantity <= minQty}
+                    className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors text-slate-700"
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center font-bold text-slate-800 tabular-nums">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(q => q + 1)}
+                    disabled={adding}
+                    className="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-bold transition-colors text-slate-700"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-wrap justify-end gap-2">
+                {onRequestQuote && (
+                  <button
+                    type="button"
+                    onClick={onRequestQuote}
+                    disabled={!item.active || adding}
+                    title={inactiveItemTitle}
+                    className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Request Quote
+                  </button>
+                )}
+                {onAddToCart && (
+                  <button
+                    type="button"
+                    onClick={() => void handleAddToCart()}
+                    disabled={adding || !item.active}
+                    title={inactiveItemTitle}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {addButtonLabel}
+                  </button>
+                )}
               </div>
-              {/* Add to Cart button */}
-              <button
-                type="button"
-                onClick={() => void handleAddToCart()}
-                disabled={adding || !item.active}
-                title={!item.active ? 'This product is not currently available' : undefined}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {addButtonLabel}
-              </button>
-              {/* Inline feedback */}
-              {addError && (
+              {onAddToCart && addError && (
                 <p className="text-xs text-rose-600">{addError}</p>
               )}
             </div>

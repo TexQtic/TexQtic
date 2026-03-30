@@ -62,6 +62,30 @@ Refs: docs/product-truth/WL-RFQ-EXPOSURE-CONTINUITY-DESIGN-v1.md ·
 
 ---
 
+### WL-RFQ-EXPOSURE-CONTINUITY-IMPLEMENTATION-v1 — 2026-03-30
+
+Type: GOVERNANCE / IMPLEMENTATION
+Status: COMPLETED
+Commit: (this unit — see git log for [WL-RFQ-EXPOSURE-CONTINUITY] implement bounded WL RFQ exposure continuity)
+Title: Implement the bounded WL RFQ exposure continuity runtime repair
+Summary: Implementation phase. The WL path now reuses the existing App-level RFQ orchestration,
+  exposes a Request Quote entry at the WL product-detail stop point, and adds a minimum WL
+  storefront re-entry into the existing buyer RFQ list/detail continuity. Runtime changes stayed
+  bounded to App.tsx, WLStorefront.tsx, and WLProductDetailPage.tsx only. No enterprise RFQ bridge
+  work, negotiation/trade redesign, image/media continuity, or adjacent scope widening occurred.
+Layer Impact: Layer 0 — SNAPSHOT.md updated; Runtime — App.tsx,
+  components/WL/WLStorefront.tsx, components/WL/WLProductDetailPage.tsx updated; Layer 3 —
+  EXECUTION-LOG.md appended
+Notes: ACTIVE_DELIVERY remains WL-RFQ-EXPOSURE-CONTINUITY. This implementation remains strictly
+  bounded to WL RFQ initiation exposure and the minimum WL buyer follow-up re-entry only. It does
+  not open or imply ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY, does not redesign supplier,
+  negotiation, trade, image/media, search, merchandising, B2C, or control-plane surfaces, and
+  does not reopen any closed unit. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: App.tsx · components/WL/WLStorefront.tsx · components/WL/WLProductDetailPage.tsx ·
+  governance/control/SNAPSHOT.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### WL-RFQ-EXPOSURE-CONTINUITY — 2026-03-30
 
 Type: GOVERNANCE / OPENING
