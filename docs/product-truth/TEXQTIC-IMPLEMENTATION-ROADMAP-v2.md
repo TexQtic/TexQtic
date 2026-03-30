@@ -26,6 +26,23 @@ The next cycle prioritizes bounded product-facing continuity work that:
 4. Design-gate candidates must not be promoted into implementation-ready work without a separate decision.
 5. Recently closed WL / tenant-truth units remain closed and separate from this roadmap.
 
+## Launch Overlay Alignment
+
+This `-v2` roadmap remains the active broad product-truth roadmap.
+
+For launch-specific posture, also see:
+
+- `docs/product-truth/TEXQTIC-LAUNCH-READINESS-REQUIREMENTS-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-SCOPE-DECISION-RECORD-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-PLANNING-SPLIT-v1.md`
+
+This roadmap is not superseded wholesale; launch-specific interpretation is supplemented by the
+launch overlay. Future implementation-design movement for launch-required families must therefore
+respect the launch planning split before any fresh design or opening decision. In launch-specific
+terms, B2B remains the primary launch anchor, B2C and subscription/commercial packaging remain
+normalization-first, Aggregator remains design-gate-first, and platform-admin/control-center
+surfaces remain bounded rather than redesign-wide.
+
 ## v2 Roadmap Summary Table
 
 | Wave | Name | Posture | Primary Goal | Included Candidate Family | Dependency Reason |
@@ -168,6 +185,9 @@ widening into general control-plane modernization.
   explicit design-gate-backed opening basis and a more immediate product-facing continuity stop
   point.
 - It should remain separate and later than the active enterprise RFQ bridge wave.
+- For launch-specific posture, also see the launch overlay, which keeps platform-admin/control-
+  center surfaces in launch scope in bounded form and requires a boundary-normalization artifact
+  before any broader implementation-design movement is inferred.
 
 ## Wave 5 — B2C Storefront Continuity
 
@@ -185,6 +205,8 @@ overstate live behavior.
   bridge work.
 - It should remain separate from tenant catalog lifecycle work and from the RFQ / negotiation
   family.
+- For launch-specific posture, also see the launch overlay, which keeps B2C locked in launch scope
+  while preserving its normalization-required status before later implementation-design movement.
 
 ## Design Gate — Aggregator Operating Mode Scope Truth
 
@@ -200,6 +222,9 @@ any implementation-ready opening is considered.
 
 This candidate must remain design-gate only in the `-v2` cycle until the required bounded outcome
 is explicitly defined. It must not be promoted into an implementation wave by implication.
+
+For launch-specific posture, also see the launch overlay, which keeps Aggregator in launch scope
+but still requires the design-gate artifact first before any implementation-design movement.
 
 ## Design Gate — RFQ / Negotiation Continuity
 

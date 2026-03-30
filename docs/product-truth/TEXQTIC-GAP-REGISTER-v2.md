@@ -23,6 +23,22 @@ The governing assumptions for this register are:
 - a recommendation to open a candidate does not itself open a unit
 - a design-gate candidate must not be treated as implementation-ready work
 
+## Launch Overlay Note
+
+This `-v2` gap register remains the active broad product-truth base for next-cycle candidate-family
+truth.
+
+For launch-specific posture, also see:
+
+- `docs/product-truth/TEXQTIC-LAUNCH-READINESS-REQUIREMENTS-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-SCOPE-DECISION-RECORD-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-PLANNING-SPLIT-v1.md`
+
+This document is not superseded wholesale; launch-specific interpretation is supplemented by those
+launch-overlay artifacts. In particular, launch-specific scope/status for B2B, B2C, Aggregator,
+platform-admin/control-center boundaries, and subscription/commercial packaging is further
+constrained by the launch overlay.
+
 ## Cycle Summary
 
 The A1/A2/A3 cycle established four fresh candidate families for the next planning cycle, and a
@@ -148,6 +164,21 @@ Every v2 gap entry uses the following fields:
 - `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
 - `GAP-V2-003` / `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
 
+### Launch-Specific Interpretation Note
+
+- For launch-specific posture, `GAP-V2-003` / `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` is not
+	an optional later-mode if B2C remains inside launch scope; the launch overlay locks B2C in scope
+	while preserving its normalization-required posture.
+- For launch-specific posture, `GAP-V2-004` / `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` remains
+	locked in launch scope but design-gated first; shell/routing presence must not be read as
+	implementation-design readiness.
+- For launch-specific posture, `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` should be
+	read alongside the bounded platform-admin launch boundary recorded in the launch overlay, not as
+	a broad admin redesign stream.
+- Subscription / commercial packaging is not modeled here as a standalone `-v2` candidate family,
+	but launch-specific interpretation of commercial truth now also depends on the launch overlay,
+	which records that commercial packaging is locked in launch scope and normalization-required.
+
 ### Live Split-Unit Separation Rule
 
 - Closed `WL-RFQ-EXPOSURE-CONTINUITY` does not collapse the broader `RFQ-NEGOTIATION-CONTINUITY`
@@ -170,6 +201,8 @@ Every v2 gap entry uses the following fields:
 - Do not reopen `WL-BLUEPRINT-RUNTIME-RESIDUE-001`, `TENANT-TRUTH-CLEANUP-001`, or `WL-ADMIN-ENTRY-DISCOVERABILITY-001` through this v2 stack.
 - Do not treat `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` as implementation-ready.
 - Do not reopen enterprise redesign through any v2 candidate unless later repo truth explicitly justifies it.
+- Do not read launch-specific lane assignment, normalization-first posture, or design-gate-first
+	posture without also consulting the launch overlay documents listed above.
 
 ## Relationship To v1
 

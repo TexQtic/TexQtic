@@ -25,6 +25,23 @@ and preserves the remaining next-cycle ordering.
 3. Do not reopen the completed `-v1` units through this new plan.
 4. Keep the aggregator candidate at design-gate posture only.
 
+## Launch Overlay Alignment Note
+
+This `-v2` next-delivery plan remains the active broad product-truth delivery pointer, and the
+current active delivery posture remains unchanged.
+
+For launch-specific posture, also see:
+
+- `docs/product-truth/TEXQTIC-LAUNCH-READINESS-REQUIREMENTS-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-SCOPE-DECISION-RECORD-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-PLANNING-SPLIT-v1.md`
+
+This plan is not replaced wholesale; launch-specific interpretation is supplemented by the launch
+overlay. Future launch-relevant planning or opening beyond the current active unit must therefore
+respect the launch overlay, including the ordered follow-on planning-artifact queue and the
+distinction between implementation-design-ready, normalization-first, and design-gate-first
+families.
+
 ## New Immediate Delivery Sequence
 
 | Order | Candidate Family | Posture | Why It Sits Here |
@@ -114,16 +131,26 @@ Keep as the first preserved later-ready candidate in order behind the active ent
 unit. It remains a real later-ready family and still requires its own fresh bounded opening
 decision.
 
+For launch-specific posture, also see the launch overlay, which treats platform-admin/control-
+center surfaces as launch-required in bounded form and routes them through a launch-boundary
+normalization artifact before broader movement is inferred.
+
 ### `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
 
 Keep as the second preserved later-ready candidate in order. It remains bounded and real, but
 should remain separate from control-plane tenant operations reality and the closed WL RFQ exposure
 unit.
 
+For launch-specific posture, also see the launch overlay, which keeps B2C locked in launch scope
+while preserving its normalization-required status.
+
 ### `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE`
 
 Keep at design-gate only. This candidate must not be reframed as implementation-ready in the
 immediate delivery sequence.
+
+For launch-specific posture, also see the launch overlay, which keeps Aggregator in launch scope
+but still requires the design-gate artifact first.
 
 ### `RFQ-NEGOTIATION-CONTINUITY`
 
