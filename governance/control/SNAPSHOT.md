@@ -11,11 +11,11 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-30
+snapshot_date: 2026-03-31
 last_unit_opened: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
 last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
-last_unit_closed: WL-RFQ-EXPOSURE-CONTINUITY
-last_commit: "[GOVERNANCE] open ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY"
+last_unit_closed: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
+last_commit: "[GOVERNANCE] close ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -25,19 +25,19 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
-current_product_active_delivery_count: 1
-current_product_delivery_priority: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
-current_product_delivery_unit_open: true
-current_product_active_delivery_unit: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
+current_product_active_delivery_count: 0
+current_product_delivery_priority: NONE
+current_product_delivery_unit_open: false
+current_product_active_delivery_unit: NONE
 future_product_opening_requires_fresh_bounded_product_decision: true
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
 product_truth_v2_roadmap_present: true
 product_truth_v2_next_delivery_plan_present: true
-recommended_next_opening_candidate: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
-recommended_next_opening_candidate_recorded: true
-recommended_next_opening_candidate_opened: true
+recommended_next_opening_candidate: NONE
+recommended_next_opening_candidate_recorded: false
+recommended_next_opening_candidate_opened: false
 wl_rfq_exposure_continuity_open: false
 wl_rfq_exposure_continuity_active_delivery: false
 wl_rfq_exposure_continuity_opened_from_rfq_negotiation_design_gate: true
@@ -113,11 +113,11 @@ rfq_negotiation_continuity_first_split_unit_closed: true
 rfq_negotiation_continuity_second_split_unit_opened: true
 rfq_negotiation_continuity_second_split_unit: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
 rfq_negotiation_continuity_enterprise_bridge_still_separate: true
-enterprise_rfq_to_negotiation_bridge_continuity_open: true
-enterprise_rfq_to_negotiation_bridge_continuity_active_delivery: true
+enterprise_rfq_to_negotiation_bridge_continuity_open: false
+enterprise_rfq_to_negotiation_bridge_continuity_active_delivery: false
 enterprise_rfq_to_negotiation_bridge_continuity_opened_from_rfq_negotiation_design_gate: true
 enterprise_rfq_to_negotiation_bridge_continuity_design_started: false
-enterprise_rfq_to_negotiation_bridge_continuity_implementation_started: false
+enterprise_rfq_to_negotiation_bridge_continuity_implementation_started: true
 enterprise_rfq_to_negotiation_bridge_continuity_bounded_to_responded_rfq_stop_point: true
 enterprise_rfq_to_negotiation_bridge_continuity_bounded_to_minimum_trade_negotiation_bridge: true
 enterprise_rfq_to_negotiation_bridge_continuity_reuses_existing_trades_workspace_and_from_rfq_route: true
@@ -129,10 +129,18 @@ enterprise_rfq_to_negotiation_bridge_continuity_not_wl_add_to_cart_remediation: 
 enterprise_rfq_to_negotiation_bridge_continuity_not_rfq_detail_scrollability_remediation: true
 enterprise_rfq_to_negotiation_bridge_continuity_not_search_merchandising_b2c_control_plane: true
 enterprise_rfq_to_negotiation_bridge_continuity_not_enterprise_redesign: true
-enterprise_rfq_to_negotiation_bridge_continuity_runtime_files_read_only_in_opening: "App.tsx, components/Tenant/BuyerRfqListSurface.tsx, components/Tenant/BuyerRfqDetailSurface.tsx, components/Tenant/TradesPanel.tsx, services/tradeService.ts, server/src/routes/tenant.ts, server/src/routes/tenant/trades.g017.ts, server/src/services/trade.g017.service.ts"
-enterprise_rfq_to_negotiation_bridge_continuity_reviewed_frontend_bridge_missing: true
+enterprise_rfq_to_negotiation_bridge_continuity_runtime_files_touched: "App.tsx, components/Tenant/BuyerRfqDetailSurface.tsx, components/Tenant/TradesPanel.tsx, services/tradeService.ts, server/src/routes/tenant.ts, server/src/routes/tenant/trades.g017.ts, server/src/services/trade.g017.service.ts, server/tests/rfq-detail-route.shared.test.ts, server/src/__tests__/trades.g017.integration.test.ts"
+enterprise_rfq_to_negotiation_bridge_continuity_reviewed_frontend_bridge_missing: false
 enterprise_rfq_to_negotiation_bridge_continuity_backend_from_rfq_support_present: true
 enterprise_rfq_to_negotiation_bridge_continuity_opening_lawful_now: true
+enterprise_rfq_to_negotiation_bridge_continuity_production_verification_bounded_success: true
+enterprise_rfq_to_negotiation_bridge_continuity_verified_complete: true
+enterprise_rfq_to_negotiation_bridge_continuity_close_ready: true
+enterprise_rfq_to_negotiation_bridge_continuity_closed: true
+enterprise_rfq_to_negotiation_bridge_continuity_no_active_bounded_followup_remaining: true
+enterprise_rfq_to_negotiation_bridge_continuity_continue_to_trade_lands_in_persisted_trade_detail: true
+enterprise_rfq_to_negotiation_bridge_continuity_rfq_reentry_shows_linked_trade_continuity: true
+enterprise_rfq_to_negotiation_bridge_continuity_open_existing_trade_reuses_existing_trade: true
 rfq_negotiation_continuity_separate_from_catalog_continuity: true
 rfq_negotiation_continuity_separate_from_image_upload_finding: true
 rfq_negotiation_continuity_separate_from_b2c_storefront_continuity: true
@@ -239,15 +247,15 @@ verification_no_close_without_verification: true
 
 ## Current Open Set Summary
 
-- **Open governed units: 10**
+- **Open governed units: 9**
 - **Verified-complete governed units: 0**
 
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as carry-forward context only.
 They do not authorize or imply current-ready openings outside active Layer 0 truth. Current
-product-facing posture is now `ACTIVE_DELIVERY: 1`, `WL-RFQ-EXPOSURE-CONTINUITY` is the sole open
-product-facing unit, and any additional future product-facing opening still requires a fresh
-bounded product decision against the preserved `-v2` planning stack.
+product-facing posture is now `ACTIVE_DELIVERY: 0`, no product-facing unit is currently open, and
+any additional future product-facing opening still requires a fresh bounded product decision
+against the preserved `-v2` planning stack.
 
 The prior `-v1` product-truth planning stack remains the completed historical baseline. The `-v2`
 stack is now the active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` has now moved
@@ -270,8 +278,9 @@ storefront/product-detail path and the minimum lawful RFQ follow-up entry needed
 longer stops before RFQ begins. The bounded design for that open unit now exists and fixes the
 lawful first implementation entry at `App.tsx` so the WL path reuses the existing RFQ
 orchestration rather than creating a parallel flow. No implementation has started in this design
-phase. `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` remains
-separate and unopened. CONTROL-PLANE-TENANT-OPERATIONS-REALITY and
+phase. That earlier design-stage carry-forward is now historical only: both recommended split
+units have since opened, completed in bounded form, and closed. CONTROL-PLANE-TENANT-OPERATIONS-
+REALITY and
 MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY remain later-ready and separate,
 MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE remains design-gate only, and the recently closed WL /
 tenant-truth units remain closed and separate.
@@ -414,11 +423,11 @@ RFQ remains pre-negotiation:
 ## Current Next-Action Pointer
 
 Layer 0 currently carries no product-facing `ACTIVE_DELIVERY` unit after bounded close of
-`WL-BLUEPRINT-RUNTIME-RESIDUE-001`.
+`ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`.
 
 Authorized product delivery unit: none currently open.
-Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` and
-`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`.
+Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` and
+`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`.
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
 

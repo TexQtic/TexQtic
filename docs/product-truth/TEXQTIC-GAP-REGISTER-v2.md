@@ -100,15 +100,10 @@ Every v2 gap entry uses the following fields:
 
 ### Current Open Unit
 
-- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now the sole open product-facing
-	`ACTIVE_DELIVERY` unit in the `-v2` stack.
-- This opening is bounded to the minimum lawful enterprise bridge from responded RFQ into existing
-	trade / negotiation continuity and the reviewed enterprise RFQ stop point after first response
-	only.
-- Current repo truth still shows Request Quote, buyer RFQ list/detail, supplier RFQ inbox/detail,
-	and one first response already present, while the reviewed frontend still does not expose a
-	sufficient bridge from responded RFQ into the existing trade / negotiation continuity that is
-	already separately present through the Trades workspace and the backend RFQ-derived trade route.
+- No current product-facing `ACTIVE_DELIVERY` unit is open in the `-v2` stack.
+- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now `CLOSED` after bounded implementation
+	and bounded live production verification established that the reviewed enterprise responded-RFQ
+	path now truthfully bridges into the existing trade / negotiation continuity.
 - `WL-RFQ-EXPOSURE-CONTINUITY` is now `CLOSED` after bounded implementation and successful
 	bounded live production verification established that the reviewed WL storefront/product-detail
 	path now exposes RFQ initiation, supports the minimum lawful buyer RFQ follow-up continuity, and
@@ -117,12 +112,10 @@ Every v2 gap entry uses the following fields:
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` remains `CLOSED` after bounded implementation,
 	recorded `VERIFIED_COMPLETE` production verification, and bounded governance close.
 - The broader `RFQ-NEGOTIATION-CONTINUITY` family remains preserved in `NEEDS_DESIGN_GATE`
-	posture for the family-level cross-mode continuity problem even though its second recommended
-	split unit is now opened separately.
-- This active unit is not WL RFQ exposure work, not image-upload/media continuity, not the
-	separately recorded WL Add to Cart 500 finding, not the separately recorded RFQ-detail
-	scrollability finding, not search / merchandising / B2C continuity, not control-plane work, and
-	not enterprise redesign.
+	posture for the family-level cross-mode continuity problem even though its two recommended split
+	units are now closed separately.
+- Any future product-facing opening still requires a fresh bounded product decision against the
+	preserved `-v2` stack.
 
 ### Adjacent Finding Pending Unit Assignment
 

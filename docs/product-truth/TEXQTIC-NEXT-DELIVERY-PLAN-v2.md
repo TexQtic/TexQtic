@@ -11,10 +11,10 @@ and preserves the remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now the sole open product-facing delivery unit.
+- No current product-facing delivery unit is open.
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
 - `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after bounded implementation and successful bounded live production verification established that the reviewed WL storefront/product-detail path no longer stops before RFQ begins.
-- The active opening is bounded to the minimum lawful enterprise bridge from responded RFQ into existing trade / negotiation continuity and the reviewed enterprise RFQ stop point after first response only.
+- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed after bounded implementation and bounded live production verification established that the reviewed enterprise responded-RFQ path now truthfully bridges into the existing trade / negotiation continuity.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 - `RFQ-NEGOTIATION-CONTINUITY` is now recorded as a separate design-gate candidate rather than an unassigned adjacent finding.
 
@@ -27,8 +27,8 @@ and preserves the remaining next-cycle ordering.
 
 ## Launch Overlay Alignment Note
 
-This `-v2` next-delivery plan remains the active broad product-truth delivery pointer, and the
-current active delivery posture remains unchanged.
+This `-v2` next-delivery plan remains the active broad product-truth delivery pointer, and no
+current active delivery is open.
 
 For launch-specific posture, also see:
 
@@ -37,8 +37,8 @@ For launch-specific posture, also see:
 - `docs/product-truth/TEXQTIC-LAUNCH-PLANNING-SPLIT-v1.md`
 
 This plan is not replaced wholesale; launch-specific interpretation is supplemented by the launch
-overlay. Future launch-relevant planning or opening beyond the current active unit must therefore
-respect the launch overlay, including the ordered follow-on planning-artifact queue and the
+overlay. Future launch-relevant planning or opening beyond the current closed delivery chain must
+therefore respect the launch overlay, including the ordered follow-on planning-artifact queue and the
 distinction between implementation-design-ready, normalization-first, and design-gate-first
 families.
 
@@ -46,11 +46,10 @@ families.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` | `ACTIVE_DELIVERY` | The RFQ design gate already recommended this exact second split unit, the WL split unit is closed, and current repo truth still shows a bounded enterprise stop point after first response with existing trade scaffolding already present |
-| 2 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Remains a valid later-ready candidate but stays separate and later than the active enterprise RFQ bridge unit |
-| 3 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the active enterprise RFQ bridge unit |
-| 4 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
-| 5 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from both split units and still governs family-level scope boundaries |
+| 1 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Remains the first preserved later-ready candidate after closure of the three bounded product-facing deliveries already completed in this `-v2` stack |
+| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the closed enterprise RFQ bridge unit |
+| 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
+| 4 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from its now-closed split units and still governs family-level scope boundaries |
 
 ## Recently Closed First Delivery
 
@@ -96,30 +95,30 @@ buyer RFQ follow-up continuity needed so the path no longer stops before RFQ beg
     trade redesign, quote/counter-offer redesign, search, merchandising, B2C storefront continuity,
     control-plane work, or enterprise redesign.
 
-## Current Active Delivery
+## Recently Closed Third Delivery
 
 ### Candidate Family
 
 `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`
 
-### Recorded Opening
+### Recorded Closure
 
 After the RFQ design-gate artifact defined the lawful split recommendation and the WL split unit
 was completed and closed, the bounded unit `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` was
-opened as the sole product-facing `ACTIVE_DELIVERY`. The opening basis is the reviewed enterprise
-RFQ stop point after first response: current repo truth already exposes Request Quote, buyer RFQ
-list/detail, supplier RFQ inbox/detail, one first response, the separate Trades workspace, and
-the backend `POST /api/tenant/trades/from-rfq` route, but the reviewed frontend still does not
-expose a sufficient bridge from responded RFQ into that existing trade / negotiation continuity.
+implemented in bounded form and is now closed after bounded live production verification proved
+that the reviewed enterprise responded-RFQ path no longer stops after first response: RFQ detail
+loads, `Continue to Trade` lands in a persisted trade detail, RFQ re-entry shows linked
+continuity, and `Open Existing Trade` reuses the existing trade rather than creating another
+bridge.
 
 ### Boundaries
 
-- This unit is limited to the minimum lawful bridge from responded RFQ into existing trade /
+- This unit was limited to the minimum lawful bridge from responded RFQ into existing trade /
     negotiation continuity and the reviewed enterprise RFQ stop point after first response only.
-- It is not WL RFQ exposure work, not broad negotiation redesign, not trade redesign, not quote /
-    counter-offer redesign, not image/media continuity, not the separately recorded WL Add to Cart
-    500 finding, not the separately recorded RFQ-detail scrollability finding, not search /
-    merchandising / B2C continuity, not control-plane work, and not enterprise redesign.
+- It does not close WL RFQ exposure work, broad negotiation redesign, trade redesign, quote /
+    counter-offer redesign, image/media continuity, the separately recorded WL Add to Cart 500
+    finding, the separately recorded RFQ-detail scrollability finding, search / merchandising /
+    B2C continuity, control-plane work, or enterprise redesign.
 - `WL-RFQ-EXPOSURE-CONTINUITY` remains closed and separate, and the broader
     `RFQ-NEGOTIATION-CONTINUITY` family remains design-gate authority.
 
@@ -127,8 +126,8 @@ expose a sufficient bridge from responded RFQ into that existing trade / negotia
 
 ### `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
 
-Keep as the first preserved later-ready candidate in order behind the active enterprise RFQ bridge
-unit. It remains a real later-ready family and still requires its own fresh bounded opening
+Keep as the first preserved later-ready candidate in order behind the now-closed enterprise RFQ
+bridge unit. It remains a real later-ready family and still requires its own fresh bounded opening
 decision.
 
 For launch-specific posture, also see the launch overlay, which treats platform-admin/control-
@@ -156,7 +155,7 @@ but still requires the design-gate artifact first.
 
 Keep the broader family at design-gate authority level. Repo truth still supports one bounded
 cross-mode RFQ / negotiation continuity family, the WL RFQ exposure split unit is now closed after
-bounded completion, and `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now opened separately
+bounded completion, and `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed separately
 without collapsing the family-level design gate.
 
 ## Relationship To v1

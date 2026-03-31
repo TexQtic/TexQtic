@@ -49,9 +49,9 @@ surfaces remain bounded rather than redesign-wide.
 |---|---|---|---|---|---|
 | Wave 1 | Tenant Catalog Management Continuity | `CLOSED` | Close the clearest tenant-facing catalog lifecycle completeness gap | `TENANT-CATALOG-MANAGEMENT-CONTINUITY` | Strongest bounded frontend/backend completeness gap; now completed and closed in bounded form |
 | Wave 2 | WL RFQ Exposure Continuity | `CLOSED` | Make the reviewed WL storefront/product-detail path truthfully reach RFQ instead of stopping before RFQ begins | `WL-RFQ-EXPOSURE-CONTINUITY` | First lawful split unit from the RFQ design gate; now completed and closed in bounded form |
-| Wave 3 | Enterprise RFQ to Negotiation Bridge Continuity | `ACTIVE_DELIVERY` | Bridge the reviewed enterprise responded-RFQ stop point into the existing trade / negotiation continuity without broad redesign | `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` | Second lawful split unit from the RFQ design gate; now opened in bounded form after closure of the WL split unit |
-| Wave 4 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Remains separate from the active enterprise RFQ bridge unit and still later-ready |
-| Wave 5 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work that remains later and separate after opening of the enterprise RFQ bridge unit |
+| Wave 3 | Enterprise RFQ to Negotiation Bridge Continuity | `CLOSED` | Bridge the reviewed enterprise responded-RFQ stop point into the existing trade / negotiation continuity without broad redesign | `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` | Second lawful split unit from the RFQ design gate; now completed and closed in bounded form after successful production proof |
+| Wave 4 | Control-Plane Tenant Operations Reality | `READY_LATER` | Make the tenant deep-dive operator surface truthful and materially usable | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | Remains separate and later-ready after closure of the enterprise RFQ bridge unit |
+| Wave 5 | B2C Storefront Continuity | `READY_LATER` | Make bounded B2C browse-entry affordances truthful and materially continuous | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | Important public-facing continuity work that remains later and separate after closure of the enterprise RFQ bridge unit |
 | Design Gate | Aggregator Operating Mode Scope Truth | `DESIGN_GATE_ONLY` | Define the exact bounded aggregator operating model before any implementation opening | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | Current repo truth is insufficiently specific to support a lawful implementation opening |
 | Design Gate | RFQ / Negotiation Continuity | `DESIGN_GATE_ONLY` | Define the exact bounded cross-mode RFQ-to-negotiation continuity target before any implementation opening | `RFQ-NEGOTIATION-CONTINUITY` | Repo truth proves one bounded family exists, but the exact target continuity between WL exposure, enterprise RFQ depth, and trade continuation is not yet implementation-ready |
 
@@ -69,8 +69,10 @@ The `-v1` roadmap is now the completed historical sequence for:
 
 No `-v1` wave is reopened by this `-v2` roadmap.
 
-`ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now the sole open product-facing
-`ACTIVE_DELIVERY` wave in the `-v2` stack. `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after
+No product-facing `ACTIVE_DELIVERY` wave is currently open in the `-v2` stack.
+`ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed after bounded implementation and
+bounded live production verification established truthful enterprise continuity from responded RFQ
+into the existing trade / negotiation flow. `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after
 bounded implementation and successful bounded live production verification established WL RFQ
 initiation exposure plus the minimum lawful WL buyer RFQ follow-up continuity on the reviewed
 storefront/product-detail path. The separately recorded image-upload finding, WL Add to Cart 500
@@ -140,7 +142,7 @@ begins.
 
 ## Wave 3 — Enterprise RFQ to Negotiation Bridge Continuity
 
-- Posture: `ACTIVE_DELIVERY`
+- Posture: `CLOSED`
 - Candidate Family: `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`
 
 ### Objective
@@ -149,23 +151,23 @@ Resolve the reviewed enterprise RFQ stop point after first response by adding th
 bridge from responded RFQ into the existing trade / negotiation continuity that already exists in
 repo truth.
 
-### Opening Basis
+### Closure Basis
 
 - The authoritative `RFQ-NEGOTIATION-CONTINUITY-DESIGN-GATE-v1` artifact recommended this exact
-  bounded split unit as the second future implementation unit.
-- Current repo truth still shows the reviewed enterprise runtime already exposing Request Quote,
-  buyer RFQ list/detail, supplier RFQ inbox/detail, and one first response.
-- Current repo truth still shows the reviewed frontend stopping before any sufficient bridge into
-  the existing Trades workspace and backend `POST /api/tenant/trades/from-rfq` route.
-- This unit therefore opens cleanly without reopening WL RFQ exposure work or widening into broad
-  negotiation / trade redesign.
+  bounded split unit as the second future implementation unit, and that bounded implementation is
+  now complete.
+- Bounded live production verification established that the reviewed enterprise responded-RFQ path
+  no longer stops after first response: RFQ detail loads, `Continue to Trade` lands in a persisted
+  trade detail, RFQ re-entry shows linked continuity, and `Open Existing Trade` reuses the
+  existing trade.
+- No active bounded defect remains inside this unit.
 
 ### Boundaries
 
-- Do not widen this unit into WL RFQ exposure work.
-- Do not widen this unit into broad negotiation redesign, trade redesign, or quote /
+- Do not widen this closed unit into WL RFQ exposure work.
+- Do not widen this closed unit into broad negotiation redesign, trade redesign, or quote /
   counter-offer redesign.
-- Do not merge this unit into image/media continuity, the separately recorded WL Add to Cart 500
+- Do not merge this closed unit into image/media continuity, the separately recorded WL Add to Cart 500
   finding, the separately recorded RFQ-detail scrollability finding, search, merchandising, B2C
   storefront continuity, control-plane work, or enterprise redesign.
 
