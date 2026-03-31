@@ -15,7 +15,7 @@ snapshot_date: 2026-03-31
 last_unit_opened: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
 last_candidate_opened: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
 last_unit_closed: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
-last_commit: "[GOVERNANCE] close PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP"
+last_commit: "[GOVERNANCE] add platform-ops launch boundary artifact"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -35,6 +35,12 @@ product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
 product_truth_v2_roadmap_present: true
 product_truth_v2_next_delivery_plan_present: true
+platform_ops_launch_boundary_artifact_present: true
+platform_ops_launch_boundary_artifact_file: "docs/product-truth/PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md"
+platform_ops_launch_boundary_artifact_created: true
+control_plane_tenant_operations_reality_boundary_artifact_missing: false
+control_plane_tenant_operations_reality_future_eligibility_review_pending: true
+b2c_launch_continuity_artifact_missing: true
 recommended_next_opening_candidate: NONE
 recommended_next_opening_candidate_recorded: false
 recommended_next_opening_candidate_opened: false
