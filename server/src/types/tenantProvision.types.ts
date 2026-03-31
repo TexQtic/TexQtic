@@ -16,18 +16,22 @@
  * Never trusted from tenant-plane callers.
  */
 export interface TenantProvisionRequest {
-  /** Display name for the new organization */
-  orgName: string;
+  /** Provisioning branch; defaults to legacy admin provisioning when omitted. */
+  provisioningMode?: 'LEGACY_ADMIN' | 'APPROVED_ONBOARDING';
 
-  /** Email address for the primary admin user (created if not exists) */
-  primaryAdminEmail: string;
+  /** Display name for the new organization. Legacy admin provisioning only. */
+  orgName?: string;
+
+  /** Email address for the primary admin user. Legacy admin provisioning only. */
+  primaryAdminEmail?: string;
 
   /**
    * Password for the primary admin user.
    * Accepted as plaintext and hashed with bcrypt inside the service.
    * NEVER logged, NEVER echoed in response.
+   * Legacy admin provisioning only.
    */
-  primaryAdminPassword: string;
+  primaryAdminPassword?: string;
 
   /**
    * Canonical tenant identity category.
@@ -42,6 +46,25 @@ export interface TenantProvisionRequest {
    * Maps to Prisma Tenant.isWhiteLabel (DB column: is_white_label).
    */
   is_white_label?: boolean;
+
+  /** Cross-system orchestration reference owned by the onboarding case. */
+  orchestrationReference?: string;
+
+  /** Approved onboarding organization payload used to seed platform identity. */
+  organization?: {
+    legalName: string;
+    displayName?: string;
+    jurisdiction: string;
+    registrationNumber?: string;
+  };
+
+  /** First-owner contact payload used to prepare platform-side access. */
+  firstOwner?: {
+    email: string;
+  };
+
+  /** Optional bounded metadata carried with the approved onboarding handoff. */
+  approvedOnboardingMetadata?: Record<string, unknown>;
 }
 
 /**
@@ -50,17 +73,42 @@ export interface TenantProvisionRequest {
  * Returns org_id (not tenant_id) as the canonical tenant boundary identifier.
  */
 export interface TenantProvisionResult {
+  /** Provisioning branch that produced the platform runtime roots. */
+  provisioningMode: 'LEGACY_ADMIN' | 'APPROVED_ONBOARDING';
+
   /** Canonical org identifier (app.org_id) */
   orgId: string;
 
-  /** URL-safe slug generated from orgName */
+  /** URL-safe slug generated from the organization display name */
   slug: string;
 
-  /** UUID of the created (or found) primary admin user */
-  userId: string;
+  /** UUID of the created (or found) primary admin user, if any */
+  userId: string | null;
 
-  /** UUID of the created OWNER membership record */
-  membershipId: string;
+  /** UUID of the created OWNER membership record, if any */
+  membershipId: string | null;
+
+  /** External orchestration reference persisted on the platform anchors */
+  orchestrationReference: string | null;
+
+  /** Seeded organization identity returned for later CRM consumption */
+  organization: {
+    legalName: string;
+    jurisdiction: string;
+    registrationNumber: string | null;
+    status: string;
+  };
+
+  /** Platform-local first-owner access-preparation artifact, if created */
+  firstOwnerAccessPreparation: {
+    artifactType: 'PLATFORM_INVITE';
+    inviteId: string;
+    invitePurpose: 'FIRST_OWNER_PREPARATION';
+    email: string;
+    role: 'OWNER';
+    expiresAt: Date;
+    inviteToken: string;
+  } | null;
 }
 
 /**

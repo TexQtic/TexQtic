@@ -124,37 +124,127 @@
     "/api/control/tenants/provision": {
       "post": {
         "summary": "Provision a new tenant (admin only)",
-        "description": "Admin-initiated tenant creation. This is the ONLY way to create tenants - no public signup.",
+        "description": "Admin-initiated tenant creation. Supports legacy admin provisioning and the bounded approved-onboarding handoff foundation used to create tenant plus organization plus a platform invite artifact.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "slug",
-                  "tenant_category",
-                  "ownerEmail",
-                  "ownerPassword"
-                ],
-                "properties": {
-                  "name": { "type": "string" },
-                  "slug": { "type": "string" },
-                  "tenant_category": {
-                    "type": "string",
-                    "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"]
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "orgName",
+                      "primaryAdminEmail",
+                      "primaryAdminPassword",
+                      "tenant_category"
+                    ],
+                    "properties": {
+                      "provisioningMode": { "type": "string", "enum": ["LEGACY_ADMIN"] },
+                      "orgName": { "type": "string", "minLength": 2, "maxLength": 200 },
+                      "primaryAdminEmail": { "type": "string", "format": "email" },
+                      "primaryAdminPassword": { "type": "string", "minLength": 8 },
+                      "tenant_category": {
+                        "type": "string",
+                        "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"]
+                      },
+                      "is_white_label": { "type": "boolean" }
+                    }
                   },
-                  "is_white_label": { "type": "boolean" },
-                  "ownerEmail": { "type": "string", "format": "email" },
-                  "ownerPassword": { "type": "string", "minLength": 6 }
-                }
+                  {
+                    "type": "object",
+                    "required": [
+                      "provisioningMode",
+                      "orchestrationReference",
+                      "tenant_category",
+                      "organization",
+                      "firstOwner"
+                    ],
+                    "properties": {
+                      "provisioningMode": { "type": "string", "enum": ["APPROVED_ONBOARDING"] },
+                      "orchestrationReference": { "type": "string", "maxLength": 255 },
+                      "tenant_category": {
+                        "type": "string",
+                        "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"]
+                      },
+                      "is_white_label": { "type": "boolean" },
+                      "organization": {
+                        "type": "object",
+                        "required": ["legalName", "jurisdiction"],
+                        "properties": {
+                          "legalName": { "type": "string", "maxLength": 500 },
+                          "displayName": { "type": "string", "maxLength": 200 },
+                          "jurisdiction": { "type": "string", "maxLength": 100 },
+                          "registrationNumber": { "type": "string", "maxLength": 200 }
+                        }
+                      },
+                      "firstOwner": {
+                        "type": "object",
+                        "required": ["email"],
+                        "properties": {
+                          "email": { "type": "string", "format": "email" }
+                        }
+                      },
+                      "approvedOnboardingMetadata": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                ]
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Tenant provisioned successfully" },
+          "201": {
+            "description": "Tenant provisioned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "provisioningMode": {
+                          "type": "string",
+                          "enum": ["LEGACY_ADMIN", "APPROVED_ONBOARDING"]
+                        },
+                        "orgId": { "type": "string", "format": "uuid" },
+                        "slug": { "type": "string" },
+                        "userId": { "type": ["string", "null"], "format": "uuid" },
+                        "membershipId": { "type": ["string", "null"], "format": "uuid" },
+                        "orchestrationReference": { "type": ["string", "null"] },
+                        "organization": {
+                          "type": "object",
+                          "properties": {
+                            "legalName": { "type": "string" },
+                            "jurisdiction": { "type": "string" },
+                            "registrationNumber": { "type": ["string", "null"] },
+                            "status": { "type": "string" }
+                          }
+                        },
+                        "firstOwnerAccessPreparation": {
+                          "type": ["object", "null"],
+                          "properties": {
+                            "artifactType": { "type": "string", "enum": ["PLATFORM_INVITE"] },
+                            "inviteId": { "type": "string", "format": "uuid" },
+                            "invitePurpose": { "type": "string", "enum": ["FIRST_OWNER_PREPARATION"] },
+                            "email": { "type": "string", "format": "email" },
+                            "role": { "type": "string", "enum": ["OWNER"] },
+                            "expiresAt": { "type": "string", "format": "date-time" },
+                            "inviteToken": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {

@@ -32,7 +32,8 @@ import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
  * - primaryAdminEmail: valid email format
  * - primaryAdminPassword: minimum 8 chars (bcrypt hashing in service)
  */
-const provisionBodySchema = z.object({
+const legacyProvisionBodySchema = z.object({
+  provisioningMode: z.literal('LEGACY_ADMIN').optional(),
   orgName: z
     .string()
     .min(2, 'orgName must be at least 2 characters')
@@ -51,6 +52,38 @@ const provisionBodySchema = z.object({
   is_white_label: z.boolean().optional().default(false),
 });
 
+const approvedOnboardingProvisionBodySchema = z.object({
+  provisioningMode: z.literal('APPROVED_ONBOARDING'),
+  orchestrationReference: z.string().trim().min(1).max(255),
+  tenant_category: z.enum(['AGGREGATOR', 'B2B', 'B2C', 'INTERNAL'], {
+    errorMap: () => ({ message: 'tenant_category must be one of: AGGREGATOR, B2B, B2C, INTERNAL' }),
+  }),
+  is_white_label: z.boolean().optional().default(false),
+  organization: z.object({
+    legalName: z.string().trim().min(2).max(500),
+    displayName: z.string().trim().min(2).max(200).optional(),
+    jurisdiction: z.string().trim().min(2).max(100),
+    registrationNumber: z.string().trim().min(1).max(200).optional(),
+  }),
+  firstOwner: z.object({
+    email: z.string().email('firstOwner.email must be a valid email address').toLowerCase(),
+  }),
+  approvedOnboardingMetadata: z.record(z.unknown()).optional(),
+});
+
+function parseProvisionRequestBody(body: unknown) {
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    'provisioningMode' in body &&
+    (body as { provisioningMode?: string }).provisioningMode === 'APPROVED_ONBOARDING'
+  ) {
+    return approvedOnboardingProvisionBodySchema.safeParse(body);
+  }
+
+  return legacyProvisionBodySchema.safeParse(body);
+}
+
 /**
  * tenantProvisionRoutes — Fastify plugin for admin tenant provisioning
  *
@@ -63,6 +96,8 @@ const provisionBodySchema = z.object({
 const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
   // All routes in this plugin require admin authentication
   fastify.addHook('onRequest', adminAuthMiddleware);
+
+  const requireSuperAdmin = requireAdminRole('SUPER_ADMIN');
 
   /**
    * POST /tenants/provision
@@ -86,7 +121,13 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
    *   409 — slug or user constraint conflict
    *   500 — internal / DB error
    */
-  fastify.post('/tenants/provision', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+  fastify.post('/tenants/provision', {
+    preHandler: (request, reply, done) => {
+      void Promise.resolve(requireSuperAdmin(request, reply))
+        .then(() => done())
+        .catch(done);
+    },
+  }, async (request, reply) => {
     // ── Route-level admin enforcement (defense-in-depth) ──────────────────────
     // adminAuthMiddleware guards the plugin, but we assert isAdmin explicitly
     // before touching any service logic (fail-closed posture).
@@ -100,17 +141,17 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
     }
 
     // ── Input validation ──────────────────────────────────────────────────────
-    const parseResult = provisionBodySchema.safeParse(request.body);
+    const parseResult = parseProvisionRequestBody(request.body);
     if (!parseResult.success) {
       return sendValidationError(reply, parseResult.error.errors);
     }
 
-    const { orgName, primaryAdminEmail, primaryAdminPassword, tenant_category, is_white_label } = parseResult.data;
+    const provisionRequest = parseResult.data;
 
     // ── Invoke provisioning service ───────────────────────────────────────────
     try {
       const result = await provisionTenant(
-        { orgName, primaryAdminEmail, primaryAdminPassword, tenant_category, is_white_label },
+        provisionRequest,
         {
           requestId:    request.id ?? randomUUID(),
           adminActorId: request.adminId,
@@ -125,9 +166,13 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
           'control.tenants.provisioned',
           'tenant',
           {
-            orgId:   result.orgId,
-            slug:    result.slug,
-            orgName,
+            orgId: result.orgId,
+            slug: result.slug,
+            orgName: result.organization.legalName,
+            provisioningMode: result.provisioningMode,
+            orchestrationReference: result.orchestrationReference,
+            inviteId: result.firstOwnerAccessPreparation?.inviteId ?? null,
+            invitePurpose: result.firstOwnerAccessPreparation?.invitePurpose ?? null,
           }
         )
       );
@@ -137,10 +182,14 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
       return sendSuccess(
         reply,
         {
+          provisioningMode: result.provisioningMode,
           orgId:        result.orgId,
           slug:         result.slug,
           userId:       result.userId,
           membershipId: result.membershipId,
+          orchestrationReference: result.orchestrationReference,
+          organization: result.organization,
+          firstOwnerAccessPreparation: result.firstOwnerAccessPreparation,
         },
         201
       );
@@ -161,7 +210,7 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
         return sendError(
           reply,
           'CONFLICT',
-          'An organization with this name (slug) already exists, or the user already holds a membership in this tenant',
+          'An organization with this name, orchestration reference, or existing membership already exists',
           409
         );
       }

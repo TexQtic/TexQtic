@@ -14,6 +14,7 @@
  */
 
 import bcrypt from 'bcryptjs';
+import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/prisma.js';
 import type {
   TenantProvisionRequest,
@@ -30,6 +31,8 @@ const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
 /** bcrypt cost factor (matches auth.ts pattern) */
 const BCRYPT_ROUNDS = 12;
 
+const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
 /**
  * Generate a URL-safe slug from an org name.
  * Truncated to 90 chars to leave room for uniqueness suffix if needed.
@@ -40,6 +43,50 @@ function slugify(name: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .substring(0, 90);
+}
+
+type LegacyProvisionRequest = TenantProvisionRequest & {
+  provisioningMode?: 'LEGACY_ADMIN';
+  orgName: string;
+  primaryAdminEmail: string;
+  primaryAdminPassword: string;
+};
+
+type ApprovedOnboardingProvisionRequest = TenantProvisionRequest & {
+  provisioningMode: 'APPROVED_ONBOARDING';
+  orchestrationReference: string;
+  organization: {
+    legalName: string;
+    displayName?: string;
+    jurisdiction: string;
+    registrationNumber?: string;
+  };
+  firstOwner: {
+    email: string;
+  };
+};
+
+function isApprovedOnboardingProvisionRequest(
+  request: TenantProvisionRequest
+): request is ApprovedOnboardingProvisionRequest {
+  return request.provisioningMode === 'APPROVED_ONBOARDING';
+}
+
+function assertLegacyProvisionRequest(request: TenantProvisionRequest): LegacyProvisionRequest {
+  if (!request.orgName || !request.primaryAdminEmail || !request.primaryAdminPassword) {
+    throw new Error('PROVISION_ABORT: Legacy admin provisioning requires orgName, primaryAdminEmail, and primaryAdminPassword');
+  }
+
+  return request as LegacyProvisionRequest;
+}
+
+function buildInviteArtifact() {
+  const inviteToken = randomBytes(32).toString('hex');
+  return {
+    inviteToken,
+    tokenHash: createHash('sha256').update(inviteToken).digest('hex'),
+    expiresAt: new Date(Date.now() + INVITE_EXPIRY_MS),
+  };
 }
 
 /**
@@ -80,10 +127,35 @@ export async function provisionTenant(
   request: TenantProvisionRequest,
   ctx: ProvisionContext
 ): Promise<TenantProvisionResult> {
-  const { orgName, primaryAdminEmail, primaryAdminPassword, tenant_category, is_white_label } = request;
+  const isApprovedOnboarding = isApprovedOnboardingProvisionRequest(request);
+  const approvedOnboardingRequest = isApprovedOnboarding ? request : null;
+  const legacyRequest = isApprovedOnboarding ? null : assertLegacyProvisionRequest(request);
 
-  // Hash password BEFORE opening transaction (CPU-bound; avoids tx timeout risk)
-  const passwordHash = await bcrypt.hash(primaryAdminPassword, BCRYPT_ROUNDS);
+  let passwordHash: string | null = null;
+  let orgDisplayName: string;
+  let orgLegalName: string;
+  let orchestrationReference: string | null;
+  let approvedOnboardingJurisdiction = 'UNKNOWN';
+  let approvedOnboardingRegistrationNumber: string | undefined;
+
+  if (approvedOnboardingRequest) {
+    orgDisplayName = approvedOnboardingRequest.organization.displayName?.trim() || approvedOnboardingRequest.organization.legalName.trim();
+    orgLegalName = approvedOnboardingRequest.organization.legalName.trim();
+    orchestrationReference = approvedOnboardingRequest.orchestrationReference.trim();
+    approvedOnboardingJurisdiction = approvedOnboardingRequest.organization.jurisdiction.trim();
+    approvedOnboardingRegistrationNumber = approvedOnboardingRequest.organization.registrationNumber?.trim();
+  } else {
+    const legacyProvisionRequest = legacyRequest;
+
+    if (!legacyProvisionRequest) {
+      throw new Error('PROVISION_ABORT: Legacy admin provisioning context was not resolved');
+    }
+
+    passwordHash = await bcrypt.hash(legacyProvisionRequest.primaryAdminPassword, BCRYPT_ROUNDS);
+    orgDisplayName = legacyProvisionRequest.orgName.trim();
+    orgLegalName = legacyProvisionRequest.orgName.trim();
+    orchestrationReference = null;
+  }
 
   return prisma.$transaction(async tx => {
     // ─────────────────────────────────────────────────────────────────────────
@@ -149,16 +221,17 @@ export async function provisionTenant(
 
     // ── Create organization (tenant) ─────────────────────────────────────────
     // Runs as postgres (BYPASSRLS) — tenants is a control-plane table.
-    const slug = slugify(orgName);
+    const slug = slugify(orgDisplayName);
 
     const tenant = await tx.tenant.create({
       data: {
-        name: orgName,
+        name: orgDisplayName,
         slug,
+        externalOrchestrationRef: orchestrationReference ?? undefined,
         // B2-REM-5A: canonical identity fields wired from provisioning request
         // type = Prisma field name for tenant_category API field
-        type: tenant_category,
-        isWhiteLabel: is_white_label ?? false,
+        type: request.tenant_category,
+        isWhiteLabel: request.is_white_label ?? false,
       },
       select: {
         id: true,
@@ -172,41 +245,109 @@ export async function provisionTenant(
     // Runtime tenant identity reads organizations.is_white_label via getOrganizationIdentity().
     // Provisioning must therefore write the WL flag into the canonical organizations row,
     // not only the transitional tenants mirror, so newly provisioned tenants rehydrate correctly.
-    await tx.organizations.upsert({
+    const organization = await tx.organizations.upsert({
       where: { id: tenant.id },
       create: {
         id: tenant.id,
         slug: tenant.slug,
-        legal_name: orgName,
+        legal_name: orgLegalName,
+        external_orchestration_ref: orchestrationReference ?? undefined,
+        jurisdiction: isApprovedOnboarding ? approvedOnboardingJurisdiction : 'UNKNOWN',
+        registration_no: isApprovedOnboarding ? approvedOnboardingRegistrationNumber : undefined,
         org_type: tenant.type,
-        status: tenant.status,
+        status: isApprovedOnboarding ? 'PENDING_VERIFICATION' : tenant.status,
         plan: tenant.plan,
-        is_white_label: is_white_label ?? false,
+        is_white_label: request.is_white_label ?? false,
       },
       update: {
         slug: tenant.slug,
-        legal_name: orgName,
+        legal_name: orgLegalName,
+        external_orchestration_ref: orchestrationReference ?? undefined,
+        jurisdiction: isApprovedOnboarding ? approvedOnboardingJurisdiction : 'UNKNOWN',
+        registration_no: isApprovedOnboarding ? approvedOnboardingRegistrationNumber : undefined,
         org_type: tenant.type,
-        status: tenant.status,
+        status: isApprovedOnboarding ? 'PENDING_VERIFICATION' : tenant.status,
         plan: tenant.plan,
-        is_white_label: is_white_label ?? false,
+        is_white_label: request.is_white_label ?? false,
         updated_at: new Date(),
       },
+      select: {
+        legal_name: true,
+        jurisdiction: true,
+        registration_no: true,
+        status: true,
+      },
     });
+
+    if (approvedOnboardingRequest) {
+      const inviteArtifact = buildInviteArtifact();
+
+      await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
+      await tx.$executeRawUnsafe(
+        `SELECT set_config('app.org_id', $1, true)`,
+        tenant.id
+      );
+      await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'tenant', true)`);
+
+      const invite = await tx.invite.create({
+        data: {
+          tenantId: tenant.id,
+          email: approvedOnboardingRequest.firstOwner.email,
+          externalOrchestrationRef: orchestrationReference,
+          invitePurpose: 'FIRST_OWNER_PREPARATION',
+          role: 'OWNER',
+          tokenHash: inviteArtifact.tokenHash,
+          expiresAt: inviteArtifact.expiresAt,
+        },
+        select: {
+          id: true,
+          email: true,
+          expiresAt: true,
+        },
+      });
+
+      return {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orgId: tenant.id,
+        slug: tenant.slug,
+        userId: null,
+        membershipId: null,
+        orchestrationReference,
+        organization: {
+          legalName: organization.legal_name,
+          jurisdiction: organization.jurisdiction,
+          registrationNumber: organization.registration_no ?? null,
+          status: organization.status,
+        },
+        firstOwnerAccessPreparation: {
+          artifactType: 'PLATFORM_INVITE',
+          inviteId: invite.id,
+          invitePurpose: 'FIRST_OWNER_PREPARATION',
+          email: invite.email,
+          role: 'OWNER',
+          expiresAt: invite.expiresAt,
+          inviteToken: inviteArtifact.inviteToken,
+        },
+      };
+    }
+
+    if (!legacyRequest) {
+      throw new Error('PROVISION_ABORT: Legacy admin provisioning request missing after approved-onboarding branch');
+    }
 
     // ── Create or find primary admin user ─────────────────────────────────────
     // Runs as postgres (BYPASSRLS) — users is a global table (no tenant_id column).
     // texqtic_app cannot INSERT into users (no applicable INSERT policy).
     let user = await tx.user.findUnique({
-      where: { email: primaryAdminEmail },
+      where: { email: legacyRequest.primaryAdminEmail },
       select: { id: true },
     });
 
     if (!user) {
       user = await tx.user.create({
         data: {
-          email: primaryAdminEmail,
-          passwordHash,
+          email: legacyRequest.primaryAdminEmail,
+          passwordHash: passwordHash!,
           emailVerified: true,
           emailVerifiedAt: new Date(),
         },
@@ -249,10 +390,19 @@ export async function provisionTenant(
     // The pooler connection is returned clean.
 
     return {
+      provisioningMode: 'LEGACY_ADMIN',
       orgId:        tenant.id,
       slug:         tenant.slug,
       userId:       user.id,
       membershipId: membership.id,
+      orchestrationReference: null,
+      organization: {
+        legalName: organization.legal_name,
+        jurisdiction: organization.jurisdiction,
+        registrationNumber: organization.registration_no ?? null,
+        status: organization.status,
+      },
+      firstOwnerAccessPreparation: null,
     };
   });
 }
