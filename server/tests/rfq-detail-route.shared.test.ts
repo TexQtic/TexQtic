@@ -489,6 +489,50 @@ async function main() {
       'Supplier response remains healthy after the shared detail fix.',
     );
 
+    const createTradeFromRfq = await fixture.server.inject({
+      method: 'POST',
+      url: '/api/tenant/trades/from-rfq',
+      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
+      payload: {
+        rfqId: createdRfqId,
+        tradeReference: `TRD-BRIDGE-${fixture.testRunId}`,
+        currency: 'USD',
+        grossAmount: 700,
+        reason: 'Bridge responded RFQ into existing trade continuity.',
+      },
+    });
+    assert.equal(createTradeFromRfq.statusCode, 201);
+
+    const createTradeFromRfqBody = JSON.parse(createTradeFromRfq.body);
+    const createdTradeId = createTradeFromRfqBody.data.tradeId as string;
+
+    const duplicateTradeFromRfq = await fixture.server.inject({
+      method: 'POST',
+      url: '/api/tenant/trades/from-rfq',
+      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
+      payload: {
+        rfqId: createdRfqId,
+        tradeReference: `TRD-BRIDGE-DUP-${fixture.testRunId}`,
+        currency: 'USD',
+        grossAmount: 700,
+        reason: 'Duplicate bridge attempt should be blocked.',
+      },
+    });
+    assert.equal(duplicateTradeFromRfq.statusCode, 409);
+
+    const buyerReadAfterTradeBridge = await fixture.server.inject({
+      method: 'GET',
+      url: `/api/tenant/rfqs/${createdRfqId}`,
+      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
+    });
+    assert.equal(buyerReadAfterTradeBridge.statusCode, 200);
+
+    const buyerReadAfterTradeBridgeBody = JSON.parse(buyerReadAfterTradeBridge.body);
+    assert.deepEqual(buyerReadAfterTradeBridgeBody.data.rfq.trade_continuity, {
+      trade_id: createdTradeId,
+      trade_reference: `TRD-BRIDGE-${fixture.testRunId}`,
+    });
+
     const tradesList = await fixture.server.inject({
       method: 'GET',
       url: '/api/tenant/trades?limit=50',
@@ -497,6 +541,8 @@ async function main() {
     assert.equal(tradesList.statusCode, 200);
 
     await withBypassForSeed(prisma, async tx => {
+      await tx.tradeEvent.deleteMany({ where: { tradeId: createdTradeId } });
+      await tx.trade.deleteMany({ where: { id: createdTradeId } });
       await tx.rfqSupplierResponse.deleteMany({ where: { rfqId: createdRfqId } });
       await tx.rfq.deleteMany({ where: { id: createdRfqId } });
     });

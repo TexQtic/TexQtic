@@ -441,7 +441,7 @@ export class TradeService {
     return db.$queryRaw<RfqLinkedTradeRow[]>`
       SELECT id
       FROM public.trades
-      WHERE source_rfq_id = ${rfqId}
+      WHERE source_rfq_id = CAST(${rfqId} AS uuid)
       LIMIT 1
     `;
   }
@@ -469,9 +469,9 @@ export class TradeService {
       SELECT t.id
       FROM public.trade_events te
       INNER JOIN public.trades t ON t.id = te.trade_id
-      WHERE t.tenant_id = ${tenantId}
+      WHERE t.tenant_id = CAST(${tenantId} AS uuid)
         AND te.event_type = 'TRADE_CREATED_FROM_RFQ'
-        AND te.metadata ->> 'rfqId' = ${rfqId}
+        AND te.metadata ->> 'rfqId' = CAST(${rfqId} AS text)
       ORDER BY te.created_at DESC
       LIMIT 1
     `;
@@ -587,16 +587,16 @@ export class TradeService {
             created_by_user_id
           )
           VALUES (
-            ${input.tenantId},
-            ${rfq.orgId},
-            ${rfq.supplierOrgId},
-            ${input.rfqId},
-            ${draftStateId},
+            CAST(${input.tenantId} AS uuid),
+            CAST(${rfq.orgId} AS uuid),
+            CAST(${rfq.supplierOrgId} AS uuid),
+            CAST(${input.rfqId} AS uuid),
+            CAST(${draftStateId} AS uuid),
             ${input.tradeReference.trim()},
             ${input.currency.trim()},
             ${input.grossAmount},
-            ${input.reasoningLogId ?? null},
-            ${input.createdByUserId ?? null}
+            CAST(${input.reasoningLogId ?? null} AS uuid),
+            CAST(${input.createdByUserId ?? null} AS uuid)
           )
           RETURNING id, trade_reference
         `
@@ -613,15 +613,15 @@ export class TradeService {
             created_by_user_id
           )
           VALUES (
-            ${input.tenantId},
-            ${rfq.orgId},
-            ${rfq.supplierOrgId},
-            ${draftStateId},
+            CAST(${input.tenantId} AS uuid),
+            CAST(${rfq.orgId} AS uuid),
+            CAST(${rfq.supplierOrgId} AS uuid),
+            CAST(${draftStateId} AS uuid),
             ${input.tradeReference.trim()},
             ${input.currency.trim()},
             ${input.grossAmount},
-            ${input.reasoningLogId ?? null},
-            ${input.createdByUserId ?? null}
+            CAST(${input.reasoningLogId ?? null} AS uuid),
+            CAST(${input.createdByUserId ?? null} AS uuid)
           )
           RETURNING id, trade_reference
         `;
