@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-03-31
-last_unit_opened: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
-last_candidate_opened: RFQ-NEGOTIATION-CONTINUITY
+last_unit_opened: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
+last_candidate_opened: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
 last_unit_closed: ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY
-last_commit: "[GOVERNANCE] close ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY"
+last_commit: "[GOVERNANCE] open PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -25,19 +25,25 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
-current_product_active_delivery_count: 0
-current_product_delivery_priority: NONE
-current_product_delivery_unit_open: false
-current_product_active_delivery_unit: NONE
+current_product_active_delivery_count: 1
+current_product_delivery_priority: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
+current_product_delivery_unit_open: true
+current_product_active_delivery_unit: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
 future_product_opening_requires_fresh_bounded_product_decision: true
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
 product_truth_v2_roadmap_present: true
 product_truth_v2_next_delivery_plan_present: true
-recommended_next_opening_candidate: NONE
-recommended_next_opening_candidate_recorded: false
-recommended_next_opening_candidate_opened: false
+recommended_next_opening_candidate: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
+recommended_next_opening_candidate_recorded: true
+recommended_next_opening_candidate_opened: true
+product_modal_image_edit_capability_gap_open: true
+product_modal_image_edit_capability_gap_active_delivery: true
+product_modal_image_edit_capability_gap_shared_edit_modal_present: true
+product_modal_image_edit_capability_gap_image_url_update_missing: true
+product_modal_image_edit_capability_gap_wl_storefront_detail_no_edit_affordance: true
+product_modal_image_edit_capability_gap_not_wl_storefront_role_redesign: true
 wl_rfq_exposure_continuity_open: false
 wl_rfq_exposure_continuity_active_delivery: false
 wl_rfq_exposure_continuity_opened_from_rfq_negotiation_design_gate: true
