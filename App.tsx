@@ -3288,6 +3288,11 @@ const App: React.FC = () => {
       error={rfqDetailView.error}
       onBack={handleCloseRfqDetail}
       onClose={handleCloseRfqDialog}
+      onOpenTradeContinuity={() => {
+        void handleOpenTradeContinuityFromRfq();
+      }}
+      tradeContinuityLoading={buyerRfqTradeBridge.loading}
+      tradeContinuityError={buyerRfqTradeBridge.error}
     />
   ) : (
     <div className="space-y-4">
