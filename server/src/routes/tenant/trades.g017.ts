@@ -34,7 +34,7 @@ import { TradeService } from '../../services/trade.g017.service.js';
 import { EscalationService } from '../../services/escalation.service.js';
 import { StateMachineService } from '../../services/stateMachine.service.js';
 import { MakerCheckerService } from '../../services/makerChecker.service.js';
-import { SanctionsService } from '../../services/sanctions.service.js';
+import { SanctionsService, SanctionBlockError } from '../../services/sanctions.service.js';
 import {
   createTradeCreatedAudit,
   createTradeTransitionAppliedAudit,
@@ -74,6 +74,8 @@ function buildTradeService(tx: Prisma.TransactionClient): TradeService {
 
   return new TradeService(txBound, smSvc, escalationSvc, undefined, sanctionsSvc);
 }
+
+const routeSanctionsService = new SanctionsService(prisma);
 
 function getTradeCreateErrorStatusCode(code: string): number {
   switch (code) {
@@ -316,53 +318,63 @@ const tenantTradesRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, bodyResult.error.errors);
       }
       const body = bodyResult.data;
+      const input = {
+        tenantId:        dbContext.orgId,
+        rfqId:           body.rfqId,
+        tradeReference:  body.tradeReference,
+        currency:        body.currency,
+        grossAmount:     body.grossAmount,
+        reason:          body.reason,
+        reasoningLogId:  body.reasoningLogId ?? null,
+        createdByUserId: body.createdByUserId ?? userId,
+      };
 
       try {
+        const preflight = await withDbContext(prisma, dbContext, async tx => {
+          const tradeSvc = buildTradeService(tx);
+          return tradeSvc.prepareTradeFromRfq(input);
+        });
+
+        if (preflight.status !== 'READY') {
+          return sendError(reply, preflight.code, preflight.message, getTradeCreateErrorStatusCode(preflight.code));
+        }
+
+        try {
+          await routeSanctionsService.checkOrgSanction(preflight.rfq.orgId);
+          await routeSanctionsService.checkOrgSanction(preflight.rfq.supplierOrgId);
+        } catch (err) {
+          if (err instanceof SanctionBlockError) {
+            return sendError(reply, 'DB_ERROR', err.message, getTradeCreateErrorStatusCode('DB_ERROR'));
+          }
+          throw err;
+        }
+
         const result = await withDbContext(prisma, dbContext, async tx => {
           const tradeSvc = buildTradeService(tx);
-
-          const createResult = await tradeSvc.createTradeFromRfq({
-            tenantId:        dbContext.orgId,
-            rfqId:           body.rfqId,
-            tradeReference:  body.tradeReference,
-            currency:        body.currency,
-            grossAmount:     body.grossAmount,
-            reason:          body.reason,
-            reasoningLogId:  body.reasoningLogId ?? null,
-            createdByUserId: body.createdByUserId ?? userId,
-          });
-
-          if (createResult.status !== 'CREATED') {
-            return createResult;
-          }
-
-          await writeAuditLog(
-            tx as unknown as PrismaClient,
-            {
-              realm: 'TENANT',
-              tenantId: dbContext.orgId,
-              actorType: 'USER',
-              actorId: userId,
-              action: 'TRADE_CREATED_FROM_RFQ',
-              entity: 'trade',
-              entityId: createResult.tradeId,
-              metadataJson: {
-                tradeId: createResult.tradeId,
-                tradeReference: createResult.tradeReference,
-                rfqId: createResult.rfqId,
-                grossAmount: body.grossAmount,
-                currency: body.currency,
-                reason: body.reason,
-              },
-            },
-          );
-
-          return createResult;
+          return tradeSvc.finalizeTradeFromPreparedRfq(input, preflight);
         });
 
         if (result.status !== 'CREATED') {
           return sendError(reply, result.code, result.message, getTradeCreateErrorStatusCode(result.code));
         }
+
+        await writeAuditLog(prisma, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId,
+          action: 'TRADE_CREATED_FROM_RFQ',
+          entity: 'trade',
+          entityId: result.tradeId,
+          metadataJson: {
+            tradeId: result.tradeId,
+            tradeReference: result.tradeReference,
+            rfqId: result.rfqId,
+            grossAmount: body.grossAmount,
+            currency: body.currency,
+            reason: body.reason,
+          },
+        });
 
         return sendSuccess(reply, {
           tradeId: result.tradeId,

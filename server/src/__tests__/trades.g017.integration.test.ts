@@ -37,6 +37,7 @@ const {
   FAKE_TX,
   _svc,
   _escalation,
+  _sanctions,
 } = vi.hoisted(() => {
   const MOCK_TRADE_FINDMANY = vi.fn();
   const MOCK_TRADE_FINDUNIQUE = vi.fn();
@@ -58,9 +59,14 @@ const {
     createTrade: vi.fn(),
     createEscrowForTrade: vi.fn(),
     transitionTrade: vi.fn(),
+    prepareTradeFromRfq: vi.fn(),
+    finalizeTradeFromPreparedRfq: vi.fn(),
   };
   const _escalation = {
     createEscalation: vi.fn(),
+  };
+  const _sanctions = {
+    checkOrgSanction: vi.fn(),
   };
   return {
     MOCK_TRADE_FINDMANY,
@@ -70,6 +76,7 @@ const {
     FAKE_TX,
     _svc,
     _escalation,
+    _sanctions,
   };
 });
 
@@ -104,6 +111,20 @@ vi.mock('../services/trade.g017.service.js', () => ({
   TradeService: vi.fn(function () { return _svc; }),
 }));
 
+vi.mock('../services/sanctions.service.js', () => {
+  class SanctionBlockError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'SanctionBlockError';
+    }
+  }
+
+  return {
+    SanctionsService: vi.fn(function () { return _sanctions; }),
+    SanctionBlockError,
+  };
+});
+
 // Mock EscalationService + StateMachineService (dependencies of TradeService ctor)
 // Must use `function` keyword — Vitest v4 calls `new impl()`, arrow functions cannot be constructors.
 vi.mock('../services/escalation.service.js', () => ({
@@ -131,6 +152,7 @@ vi.mock('../middleware/database-context.middleware.js', () => ({
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
 import { writeAuditLog, writeAuthorityIntent } from '../lib/auditLog.js';
+import { withDbContext } from '../lib/database-context.js';
 import controlRoutes from '../routes/control.js';
 import tenantTradesRoutes from '../routes/tenant/trades.g017.js';
 import controlTradesRoutes from '../routes/control/trades.g017.js';
@@ -143,6 +165,7 @@ const TEST_TRADE_ID   = '33333333-0000-0000-0000-333333333333';
 const TEST_ADMIN_ID   = '44444444-0000-0000-0000-444444444444';
 const BUYER_ORG_ID    = '55555555-0000-0000-0000-555555555555';
 const SELLER_ORG_ID   = '66666666-0000-0000-0000-666666666666';
+const TEST_RFQ_ID     = '77777777-0000-0000-0000-777777777777';
 
 /**
  * Build a minimal Fastify instance with JWT + cookie plugins that inject
@@ -230,6 +253,9 @@ describe('G-017 Tenant Trade Routes', () => {
     _svc.createTrade     = vi.fn();
     _svc.createEscrowForTrade = vi.fn();
     _svc.transitionTrade = vi.fn();
+    _svc.prepareTradeFromRfq = vi.fn();
+    _svc.finalizeTradeFromPreparedRfq = vi.fn();
+    _sanctions.checkOrgSanction = vi.fn().mockResolvedValue(undefined);
     app = await buildTenantApp();
   });
 
@@ -416,6 +442,51 @@ describe('G-017 Tenant Trade Routes', () => {
 
     expect(res.statusCode).toBe(400);
     expect(_svc.createEscrowForTrade).not.toHaveBeenCalled();
+  });
+
+  it('T-005e: POST /tenant/trades/from-rfq keeps preflight and write in separate db contexts', { timeout: 15000 }, async () => {
+    _svc.prepareTradeFromRfq.mockImplementation(async () => {
+      await new Promise(resolve => setTimeout(resolve, 5500));
+      return {
+        status: 'READY',
+        draftStateId: 'draft-state-id',
+        rfq: {
+          id: TEST_RFQ_ID,
+          orgId: BUYER_ORG_ID,
+          supplierOrgId: SELLER_ORG_ID,
+          status: 'RESPONDED',
+        },
+      };
+    });
+
+    _svc.finalizeTradeFromPreparedRfq.mockResolvedValue({
+      status: 'CREATED',
+      tradeId: TEST_TRADE_ID,
+      tradeReference: 'TRD-RFQ-0001',
+      rfqId: TEST_RFQ_ID,
+    });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tenant/trades/from-rfq',
+      payload: {
+        rfqId: TEST_RFQ_ID,
+        tradeReference: 'TRD-RFQ-0001',
+        currency: 'USD',
+        grossAmount: 1000,
+        reason: 'Bridge responded RFQ into trade continuity.',
+      },
+    });
+
+    expect(res.statusCode).toBe(201);
+    expect(_svc.prepareTradeFromRfq).toHaveBeenCalledOnce();
+    expect(_svc.finalizeTradeFromPreparedRfq).toHaveBeenCalledOnce();
+    expect(_sanctions.checkOrgSanction).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(withDbContext)).toHaveBeenCalledTimes(2);
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    const body = res.json();
+    expect(body.data.tradeId).toBe(TEST_TRADE_ID);
+    expect(body.data.rfqId).toBe(TEST_RFQ_ID);
   });
 
   // ── POST /tenant/trades/:id/transition ────────────────────────────────────

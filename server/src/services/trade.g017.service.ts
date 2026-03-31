@@ -67,6 +67,12 @@ type RfqLinkedTradeRow = {
   id: string;
 };
 
+type TradeCreateFromRfqPrepared = {
+  status: 'READY';
+  draftStateId: string;
+  rfq: RfqTradeConversionRow;
+};
+
 function isSourceRfqUniqueConstraintViolation(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError
     && err.code === 'P2002'
@@ -537,6 +543,26 @@ export class TradeService {
     return { status: 'OK', draftStateId, rfq };
   }
 
+  async prepareTradeFromRfq(
+    input: TradeCreateFromRfqInput,
+  ): Promise<TradeCreateFromRfqPrepared | Extract<TradeCreateFromRfqResult, { status: 'ERROR' }>> {
+    const validationError = this.validateTradeCreateFromRfqInput(input);
+    if (validationError) {
+      return validationError;
+    }
+
+    const preconditions = await this.validateTradeConversionPreconditions(input);
+    if (preconditions.status === 'ERROR') {
+      return preconditions;
+    }
+
+    return {
+      status: 'READY',
+      draftStateId: preconditions.draftStateId,
+      rfq: preconditions.rfq,
+    };
+  }
+
   private async runTradeConversionSanctionsCheck(rfq: RfqTradeConversionRow): Promise<Extract<TradeCreateFromRfqResult, { status: 'ERROR' }> | null> {
     if (!this.sanctions) {
       return null;
@@ -649,26 +675,14 @@ export class TradeService {
     return trade;
   }
 
-  async createTradeFromRfq(input: TradeCreateFromRfqInput): Promise<TradeCreateFromRfqResult> {
-    const validationError = this.validateTradeCreateFromRfqInput(input);
-    if (validationError) {
-      return validationError;
-    }
-
-    const preconditions = await this.validateTradeConversionPreconditions(input);
-    if (preconditions.status === 'ERROR') {
-      return preconditions;
-    }
-
+  async finalizeTradeFromPreparedRfq(
+    input: TradeCreateFromRfqInput,
+    prepared: TradeCreateFromRfqPrepared,
+  ): Promise<TradeCreateFromRfqResult> {
     try {
-      const sanctionsError = await this.runTradeConversionSanctionsCheck(preconditions.rfq);
-      if (sanctionsError) {
-        return sanctionsError;
-      }
-
       const created = await this.db.$transaction(async tx => {
         const txDb = tx as unknown as PrismaClient;
-        return this.insertTradeFromRfq(txDb, input, preconditions.draftStateId, preconditions.rfq);
+        return this.insertTradeFromRfq(txDb, input, prepared.draftStateId, prepared.rfq);
       });
 
       return {
@@ -694,6 +708,31 @@ export class TradeService {
         };
       }
 
+      return {
+        status: 'ERROR',
+        code: 'DB_ERROR',
+        message:
+          err instanceof Error
+            ? `DB write failed: ${err.message}`
+            : 'Unknown error during RFQ-derived trade creation.',
+      };
+    }
+  }
+
+  async createTradeFromRfq(input: TradeCreateFromRfqInput): Promise<TradeCreateFromRfqResult> {
+    const prepared = await this.prepareTradeFromRfq(input);
+    if (prepared.status !== 'READY') {
+      return prepared;
+    }
+
+    try {
+      const sanctionsError = await this.runTradeConversionSanctionsCheck(prepared.rfq);
+      if (sanctionsError) {
+        return sanctionsError;
+      }
+
+      return this.finalizeTradeFromPreparedRfq(input, prepared);
+    } catch (err) {
       return {
         status: 'ERROR',
         code: 'DB_ERROR',
