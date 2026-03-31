@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-31 (PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP opening)
+**Last Updated:** 2026-03-31 (PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP close)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -22,7 +22,6 @@
 | GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001 | Mandatory manual Sentinel invocation workflow integration | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
-| PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP | Shared catalog edit modal image update gap | OPEN | ACTIVE_DELIVERY | W5 | 2026-03-31 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 | RFQ-NEGOTIATION-CONTINUITY | RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-30 |
 
@@ -30,15 +29,15 @@
 
 ## Summary
 
-- **OPEN** (all governed units): **10**
+- **OPEN** (all governed units): **9**
 - **VERIFIED_COMPLETE** (postured for Close): **0**
 - **BLOCKED**: 0
 - **DEFERRED**: 0
 - **DESIGN_GATE**: 2 (TECS-FBW-ADMINRBAC, RFQ-NEGOTIATION-CONTINUITY)
-- **ACTIVE_DELIVERY**: 1
+- **ACTIVE_DELIVERY**: 0
 - **DECISION_QUEUE**: 9
 - **DESIGN_GATE_QUEUE**: 2
-- **Total non-terminal units: 12**
+- **Total non-terminal units: 11**
 
 Layer 0 governs non-terminal governed-unit truth, governance posture, blockers, and governance
 exceptions. It no longer originates general product execution sequencing. Product execution
@@ -50,10 +49,10 @@ sequencing and next-delivery priority are derived from the product-truth authori
 Historical references elsewhere in this file to `OPENING_CANDIDATE`, `READY_FOR_OPENING`,
 `DECISION_REQUIRED`, or earlier successor openings remain preserved as historical carry-forward
 context only. They do not authorize or imply current-ready product openings outside active Layer 0
-truth. `PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP` is now the sole current product-facing
-`ACTIVE_DELIVERY` after fresh bounded product decision confirmed that the truthful next unit is the
-shared catalog edit-modal image update gap only, not a broader WL storefront/admin parity or role
-redesign.
+truth. No current product-facing `ACTIVE_DELIVERY` unit remains open after bounded verification and
+close of `PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP`; any future opening again requires a fresh
+bounded product decision against the preserved `-v2` planning stack and the authoritative
+product-truth artifacts.
 
 The completed `-v1` planning stack remains historical baseline only. The `-v2` stack remains the
 active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded

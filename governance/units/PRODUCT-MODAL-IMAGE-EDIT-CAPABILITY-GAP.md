@@ -2,15 +2,15 @@
 unit_id: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
 title: Shared catalog edit modal image update gap
 type: ACTIVE_DELIVERY
-status: OPEN
+status: CLOSED
 delivery_class: ACTIVE_DELIVERY
 wave: W5
 plane: TENANT
 opened: 2026-03-31
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_CONFIRMATION: current Layer 0 had no open product-facing ACTIVE_DELIVERY and NEXT-ACTION was OPERATOR_DECISION_REQUIRED before this opening · REPO_TRUTH_CONFIRMATION: App.tsx exposes shared catalog Edit actions on enterprise catalog cards and WL_ADMIN Products, but the shared edit modal and submit handler only carry name, price, and sku · CLIENT_CONTRACT_CONFIRMATION: services/catalogService.ts UpdateCatalogItemRequest omits imageUrl · SERVER_CONTRACT_CONFIRMATION: server/src/routes/tenant.ts PATCH /tenant/catalog/items/:id omits imageUrl from the update schema and persistence path · NARROWING_CONFIRMATION: components/WL/WLProductDetailPage.tsx is a shopper detail surface with no edit affordance, so the truthful bounded defect is the shared edit-modal image update gap, not a broad WL admin parity failure"
+closed: 2026-03-31
+verified: 2026-03-31
+commit: "996a712"
+evidence: "OPENING_CONFIRMATION: current Layer 0 had no open product-facing ACTIVE_DELIVERY and NEXT-ACTION was OPERATOR_DECISION_REQUIRED before this opening · IMPLEMENTATION_COMMIT: 996a712 fix(catalog): enable image url editing in shared product modal touched only App.tsx, services/catalogService.ts, and server/src/routes/tenant.ts · REPO_TRUTH_CONFIRMATION: App.tsx shared edit state now includes imageUrl, the shared modal now exposes Image URL, the save path now sends imageUrl, services/catalogService.ts UpdateCatalogItemRequest now includes imageUrl, and server/src/routes/tenant.ts PATCH /tenant/catalog/items/:id now accepts and persists imageUrl · LOCAL_VALIDATION_CONFIRMATION: typecheck passed and tenant-catalog-items.rls.integration.test.ts passed 10/10 · PRODUCTION_VERIFICATION_CONFIRMATION: texqtic.com enterprise and WL_ADMIN edit flows both saved and re-opened with persisted imageUrl truthfully, storefront reflected persisted WL update while remaining non-editable, and required neighbor smoke checks passed"
 doctrine_constraints:
   - D-004: this is one bounded ACTIVE_DELIVERY unit only; it must not be merged with WL storefront shopper-surface edits, broader catalog-management redesign, media-platform redesign, or governance-system work
   - D-007: no product/server/schema/migration/test/package/CI/hook surface outside the exact future implementation allowlist is authorized
@@ -28,19 +28,22 @@ blockers: []
 It exists only to remediate the shared catalog edit-modal image update gap on already-exposed
 product-management surfaces.
 
-Current repo truth confirms that the shared `Edit` affordance already exists on enterprise catalog
-cards and on the `WL_ADMIN` `PRODUCTS` surface, but the current modal and update path cannot edit
-or persist `imageUrl`.
+Result: `CLOSED`.
+
+Current repo and governance truth now confirm that the bounded shared edit path supports image URL
+editing and persistence on the already-exposed enterprise and `WL_ADMIN` product-management
+surfaces, with required live verification completed and no active bounded defect remaining inside
+this unit.
 
 ## Source Truth
 
-Current repo truth preserves exactly one bounded openable candidate here:
+Current repo truth now records the bounded implemented outcome here:
 
 - `App.tsx` shared catalog mutation actions render `Edit` on enterprise catalog cards and on
   `WL_ADMIN` `PRODUCTS`
-- the shared edit modal in `App.tsx` exposes `Name`, `Price`, and `SKU` only
-- `services/catalogService.ts` `UpdateCatalogItemRequest` does not include `imageUrl`
-- `server/src/routes/tenant.ts` PATCH `/tenant/catalog/items/:id` does not accept or persist
+- the shared edit modal in `App.tsx` now exposes `Image URL` alongside the existing editable fields
+- `services/catalogService.ts` `UpdateCatalogItemRequest` now includes `imageUrl`
+- `server/src/routes/tenant.ts` PATCH `/tenant/catalog/items/:id` now accepts and persists
   `imageUrl`
 - `components/WL/WLProductDetailPage.tsx` remains a shopper detail surface with no edit affordance
 
@@ -56,14 +59,14 @@ This exact candidate is separate from all of the following:
 
 ## Acceptance Criteria
 
-- [ ] The shared edit modal in `App.tsx` is inspected and updated only as needed for image editing
-- [ ] The minimum directly coupled client update contract accepts bounded `imageUrl` edits
-- [ ] The minimum directly coupled tenant PATCH route accepts and persists bounded `imageUrl`
+- [x] The shared edit modal in `App.tsx` is inspected and updated only as needed for image editing
+- [x] The minimum directly coupled client update contract accepts bounded `imageUrl` edits
+- [x] The minimum directly coupled tenant PATCH route accepts and persists bounded `imageUrl`
       updates
-- [ ] Enterprise catalog edit surfaces and `WL_ADMIN` Products edit surfaces both retain existing
+- [x] Enterprise catalog edit surfaces and `WL_ADMIN` Products edit surfaces both retain existing
       edit behavior while gaining bounded image update capability
-- [ ] WL storefront shopper detail remains non-editable and unchanged in role boundary
-- [ ] No broader catalog, shell, modal-system, role, auth, DB/schema, or media-platform redesign is
+- [x] WL storefront shopper detail remains non-editable and unchanged in role boundary
+- [x] No broader catalog, shell, modal-system, role, auth, DB/schema, or media-platform redesign is
       introduced
 
 ## Files Allowlisted (Modify)
@@ -132,12 +135,54 @@ necessary, implementation must halt and report blocker rather than widen scope.
   - existing delete flow remains non-regressed
   - WL storefront shopper detail remains non-editable and unchanged
 
-## Governance Posture After Opening
+## Implementation Record
 
-Resulting governance posture after this opening:
+- implementation commit: `996a712`
+- message: `fix(catalog): enable image url editing in shared product modal`
+- bounded runtime files touched:
+  - `App.tsx`
+  - `services/catalogService.ts`
+  - `server/src/routes/tenant.ts`
+- exact bounded implementation result:
+  - shared edit state includes `imageUrl`
+  - shared edit modal exposes `Image URL`
+  - edit submit path sends `imageUrl`
+  - tenant PATCH route accepts and persists `imageUrl`
 
-- one product-facing `ACTIVE_DELIVERY` unit is now `OPEN`
-- that unit is `PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP`
+## Verification Record
+
+- local validation:
+  - `npm run typecheck` passed
+  - `server/src/__tests__/tenant-catalog-items.rls.integration.test.ts` passed `10/10`
+- live production verification on `https://www.texqtic.com/`:
+  - enterprise product edit flow passed
+  - `WL_ADMIN` product edit flow passed
+  - WL storefront reflected the persisted WL update truthfully while remaining non-editable
+- required neighbor smoke checks passed:
+  - create/add-item open/cancel remains non-regressed
+  - delete confirm guard remains non-regressed
+  - enterprise modal open/close remains healthy
+  - `WL_ADMIN` modal open/close remains healthy
+  - WL storefront shopper detail remains non-editable
+  - no shared shell/runtime regression observed in the exercised paths
+
+## Close Record
+
+- close date: `2026-03-31`
+- resulting status: `CLOSED`
+- close basis:
+  - repo truth matches the bounded implementation claim
+  - implementation commit stayed within the declared bounded file scope
+  - required local validation exists
+  - required live Vercel verification exists
+  - required neighbor-path smoke checks exist
+  - no unresolved contradiction or adjacent defect blocks closure for this unit
+
+## Governance Posture After Close
+
+Resulting governance posture after this close:
+
+- no product-facing `ACTIVE_DELIVERY` unit remains `OPEN`
 - previously closed catalog/image units remain closed and unchanged in scope
-- no implementation has been executed yet
-- the next canonical phase is later bounded implementation for this unit only
+- this unit no longer authorizes further implementation by implication
+- any future product opening again requires a fresh bounded governance decision
