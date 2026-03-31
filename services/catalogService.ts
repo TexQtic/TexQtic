@@ -96,6 +96,7 @@ export interface CreateCatalogItemResponse {
 export interface UpdateCatalogItemRequest {
   name?: string;
   sku?: string | null;
+  imageUrl?: string | null;
   description?: string | null;
   price?: number;
   moq?: number;

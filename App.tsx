@@ -955,7 +955,7 @@ const App: React.FC = () => {
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
   const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
-  const [editItemFormData, setEditItemFormData] = useState({ name: '', price: '', sku: '' });
+  const [editItemFormData, setEditItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '' });
   const [editItemLoading, setEditItemLoading] = useState(false);
   const [editItemError, setEditItemError] = useState<string | null>(null);
   const [deleteItemLoadingId, setDeleteItemLoadingId] = useState<string | null>(null);
@@ -1614,7 +1614,7 @@ const App: React.FC = () => {
 
   const resetEditItemState = () => {
     setEditingCatalogItemId(null);
-    setEditItemFormData({ name: '', price: '', sku: '' });
+    setEditItemFormData({ name: '', price: '', sku: '', imageUrl: '' });
     setEditItemError(null);
   };
 
@@ -1627,6 +1627,7 @@ const App: React.FC = () => {
       name: product.name,
       price: product.price.toString(),
       sku: product.sku || '',
+      imageUrl: product.imageUrl || '',
     });
     setEditItemError(null);
   };
@@ -1650,13 +1651,22 @@ const App: React.FC = () => {
 
     try {
       const priceVal = Number.parseFloat(editItemFormData.price);
+      const trimmedImageUrl = editItemFormData.imageUrl.trim();
       if (Number.isNaN(priceVal) || priceVal <= 0) throw new Error('Price must be a positive number.');
       if (!editItemFormData.name.trim()) throw new Error('Name is required.');
+      if (trimmedImageUrl) {
+        try {
+          new URL(trimmedImageUrl);
+        } catch {
+          throw new Error('Image URL must be a valid URL.');
+        }
+      }
 
       const result = await updateCatalogItem(editingCatalogItemId, {
         name: editItemFormData.name.trim(),
         price: priceVal,
         ...(editItemFormData.sku.trim() ? { sku: editItemFormData.sku.trim() } : {}),
+        imageUrl: trimmedImageUrl || null,
       });
 
       setProducts(prev => prev.map(product => (
@@ -3450,6 +3460,19 @@ const App: React.FC = () => {
                     onChange={e => setEditItemFormData(data => ({ ...data, sku: e.target.value }))}
                     className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                     placeholder="Optional SKU"
+                  />
+                </div>
+                <div className="space-y-1 md:col-span-3">
+                  <label htmlFor="edit-item-image-url" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Image URL
+                  </label>
+                  <input
+                    id="edit-item-image-url"
+                    type="url"
+                    value={editItemFormData.imageUrl}
+                    onChange={e => setEditItemFormData(data => ({ ...data, imageUrl: e.target.value }))}
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder="https://example.com/product-image.jpg"
                   />
                 </div>
               </div>

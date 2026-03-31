@@ -840,6 +840,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const bodySchema = z.object({
         name: z.string().min(1).max(255).optional(),
         sku: z.string().min(1).max(100).nullable().optional(),
+        imageUrl: z.string().url().max(2048).nullable().optional(),
         description: z.string().nullable().optional(),
         price: z.number().positive().optional(),
         moq: z.number().int().min(1).optional(),
@@ -873,6 +874,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           data: {
             ...(data.name !== undefined ? { name: data.name } : {}),
             ...(data.sku !== undefined ? { sku: data.sku } : {}),
+            ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl } : {}),
             ...(data.description !== undefined ? { description: data.description } : {}),
             ...(data.price !== undefined ? { price: data.price } : {}),
             ...(data.moq !== undefined ? { moq: data.moq } : {}),
