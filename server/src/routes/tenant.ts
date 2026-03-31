@@ -356,17 +356,17 @@ async function resolveBuyerRfqTradeContinuity(
       ? await tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
           SELECT id, trade_reference
           FROM public.trades
-          WHERE tenant_id = ${dbContext.orgId}
-            AND source_rfq_id = ${rfqId}
+          WHERE tenant_id = CAST(${dbContext.orgId} AS uuid)
+            AND source_rfq_id = CAST(${rfqId} AS uuid)
           LIMIT 1
         `
       : await tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
           SELECT t.id, t.trade_reference
           FROM public.trade_events te
           INNER JOIN public.trades t ON t.id = te.trade_id
-          WHERE t.tenant_id = ${dbContext.orgId}
+          WHERE t.tenant_id = CAST(${dbContext.orgId} AS uuid)
             AND te.event_type = 'TRADE_CREATED_FROM_RFQ'
-            AND te.metadata ->> 'rfqId' = ${rfqId}
+            AND te.metadata ->> 'rfqId' = CAST(${rfqId} AS text)
           ORDER BY te.created_at DESC
           LIMIT 1
         `;
