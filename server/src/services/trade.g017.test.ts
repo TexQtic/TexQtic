@@ -18,6 +18,7 @@ import { GovError } from './escalation.types.js';
 
 interface MockDb {
   lifecycleState: { findFirst: Mock };
+  rfq: { findFirst: Mock };
   trade: { findFirst: Mock; create: Mock; update: Mock };
   tradeEvent: { create: Mock };
   $queryRaw: Mock;
@@ -29,6 +30,9 @@ interface MockDb {
 function makeDb(): MockDb {
   const db: MockDb = {
     lifecycleState: {
+      findFirst: vi.fn(),
+    },
+    rfq: {
       findFirst: vi.fn(),
     },
     trade: {
@@ -127,6 +131,22 @@ const VALID_CREATE_ESCROW_INPUT = {
   tenantId: TRADE_ROW.tenantId,
   reason: 'Escrow required before fulfillment starts.',
   createdByUserId: 'user-uuid-0000-0000-000000000001',
+};
+
+const RFQ_ROW = {
+  id: 'rfq-uuid-0000-0000-000000000001',
+  orgId: TRADE_ROW.tenantId,
+  supplierOrgId: 'supplier-org-uuid-0000-000000000001',
+  status: 'RESPONDED',
+};
+
+const VALID_CREATE_FROM_RFQ_INPUT = {
+  tenantId: TRADE_ROW.tenantId,
+  rfqId: RFQ_ROW.id,
+  tradeReference: 'TRD-RFQ-0001',
+  currency: 'USD',
+  grossAmount: 2400,
+  reason: 'Bridge responded RFQ into existing trade continuity.',
 };
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -251,6 +271,51 @@ describe('TradeService', () => {
 
     expect(result.status).toBe('ERROR');
     expect((result as { status: 'ERROR'; code: string }).code).toBe('ESCROW_ALREADY_LINKED');
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('T-05d: createTradeFromRfq falls back to trade_events linkage when source_rfq_id is unavailable', async () => {
+    (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce(DRAFT_STATE);
+    (db.rfq.findFirst as Mock).mockResolvedValueOnce(RFQ_ROW);
+    (db.$queryRaw as Mock)
+      .mockResolvedValueOnce([{ exists: false }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ exists: false }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: TRADE_ROW.id, trade_reference: VALID_CREATE_FROM_RFQ_INPUT.tradeReference }]);
+    (db.tradeEvent.create as Mock).mockResolvedValueOnce({ id: 'event-rfq-001' });
+
+    const result = await svc.createTradeFromRfq(VALID_CREATE_FROM_RFQ_INPUT);
+
+    expect(result.status).toBe('CREATED');
+    expect(result).toMatchObject({
+      status: 'CREATED',
+      tradeId: TRADE_ROW.id,
+      tradeReference: VALID_CREATE_FROM_RFQ_INPUT.tradeReference,
+      rfqId: RFQ_ROW.id,
+    });
+    expect(db.tradeEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          eventType: 'TRADE_CREATED_FROM_RFQ',
+          tenantId: VALID_CREATE_FROM_RFQ_INPUT.tenantId,
+          tradeId: TRADE_ROW.id,
+        }),
+      }),
+    );
+  });
+
+  it('T-05e: createTradeFromRfq blocks duplicate conversion via trade_events fallback when source_rfq_id is unavailable', async () => {
+    (db.lifecycleState.findFirst as Mock).mockResolvedValueOnce(DRAFT_STATE);
+    (db.rfq.findFirst as Mock).mockResolvedValueOnce(RFQ_ROW);
+    (db.$queryRaw as Mock)
+      .mockResolvedValueOnce([{ exists: false }])
+      .mockResolvedValueOnce([{ id: TRADE_ROW.id }]);
+
+    const result = await svc.createTradeFromRfq(VALID_CREATE_FROM_RFQ_INPUT);
+
+    expect(result.status).toBe('ERROR');
+    expect((result as { status: 'ERROR'; code: string }).code).toBe('RFQ_ALREADY_CONVERTED');
     expect(db.$transaction).not.toHaveBeenCalled();
   });
 

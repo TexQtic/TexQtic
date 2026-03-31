@@ -587,6 +587,17 @@ describe('G-017 Tenant Trade Routes', () => {
     const res = await app.inject({ method: 'GET', url: '/tenant/trades' });
 
     expect(res.statusCode).toBe(200);
+    expect(MOCK_TRADE_FINDMANY).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          tradeReference: true,
+          tenantId: true,
+          lifecycleState: expect.objectContaining({
+            select: expect.objectContaining({ stateKey: true }),
+          }),
+        }),
+      }),
+    );
     const body = res.json();
     expect(Array.isArray(body.data.trades)).toBe(true);
     expect(body.data.count).toBe(1);

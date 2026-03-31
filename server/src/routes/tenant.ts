@@ -340,13 +340,36 @@ async function resolveBuyerRfqTradeContinuity(
   rfqId: string,
 ): Promise<{ id: string; tradeReference: string } | null> {
   return withDbContext(prisma, dbContext, async tx => {
-    const rows = await tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
-      SELECT id, trade_reference
-      FROM public.trades
-      WHERE tenant_id = ${dbContext.orgId}
-        AND source_rfq_id = ${rfqId}
-      LIMIT 1
+    const sourceRfqLinkageCapability = await tx.$queryRaw<Array<{ exists: boolean }>>`
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'trades'
+          AND column_name = 'source_rfq_id'
+      ) AS "exists"
     `;
+
+    const hasSourceRfqLinkage = sourceRfqLinkageCapability[0]?.exists === true;
+
+    const rows = hasSourceRfqLinkage
+      ? await tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
+          SELECT id, trade_reference
+          FROM public.trades
+          WHERE tenant_id = ${dbContext.orgId}
+            AND source_rfq_id = ${rfqId}
+          LIMIT 1
+        `
+      : await tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
+          SELECT t.id, t.trade_reference
+          FROM public.trade_events te
+          INNER JOIN public.trades t ON t.id = te.trade_id
+          WHERE t.tenant_id = ${dbContext.orgId}
+            AND te.event_type = 'TRADE_CREATED_FROM_RFQ'
+            AND te.metadata ->> 'rfqId' = ${rfqId}
+          ORDER BY te.created_at DESC
+          LIMIT 1
+        `;
 
     const trade = rows[0];
     if (!trade) {

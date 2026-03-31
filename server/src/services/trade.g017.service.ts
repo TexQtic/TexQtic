@@ -63,6 +63,10 @@ type TradeEscrowLinkRow = {
   escrow_id: string | null;
 };
 
+type RfqLinkedTradeRow = {
+  id: string;
+};
+
 function isSourceRfqUniqueConstraintViolation(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError
     && err.code === 'P2002'
@@ -434,12 +438,55 @@ export class TradeService {
   }
 
   private async findTradeBySourceRfqId(db: PrismaClient, rfqId: string): Promise<Array<{ id: string }>> {
-    return db.$queryRaw<Array<{ id: string }>>`
+    return db.$queryRaw<RfqLinkedTradeRow[]>`
       SELECT id
       FROM public.trades
       WHERE source_rfq_id = ${rfqId}
       LIMIT 1
     `;
+  }
+
+  private async hasSourceRfqLinkageColumn(db: PrismaClient): Promise<boolean> {
+    const rows = await db.$queryRaw<Array<{ exists: boolean }>>`
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'trades'
+          AND column_name = 'source_rfq_id'
+      ) AS "exists"
+    `;
+
+    return rows[0]?.exists === true;
+  }
+
+  private async findTradeByRfqEventLink(
+    db: PrismaClient,
+    tenantId: string,
+    rfqId: string,
+  ): Promise<RfqLinkedTradeRow[]> {
+    return db.$queryRaw<RfqLinkedTradeRow[]>`
+      SELECT t.id
+      FROM public.trade_events te
+      INNER JOIN public.trades t ON t.id = te.trade_id
+      WHERE t.tenant_id = ${tenantId}
+        AND te.event_type = 'TRADE_CREATED_FROM_RFQ'
+        AND te.metadata ->> 'rfqId' = ${rfqId}
+      ORDER BY te.created_at DESC
+      LIMIT 1
+    `;
+  }
+
+  private async findTradeByRfqLink(
+    db: PrismaClient,
+    tenantId: string,
+    rfqId: string,
+  ): Promise<RfqLinkedTradeRow[]> {
+    if (await this.hasSourceRfqLinkageColumn(db)) {
+      return this.findTradeBySourceRfqId(db, rfqId);
+    }
+
+    return this.findTradeByRfqEventLink(db, tenantId, rfqId);
   }
 
   private async validateTradeConversionPreconditions(
@@ -478,7 +525,7 @@ export class TradeService {
       };
     }
 
-    const existingTrade = await this.findTradeBySourceRfqId(this.db, input.rfqId);
+    const existingTrade = await this.findTradeByRfqLink(this.db, input.tenantId, input.rfqId);
     if (existingTrade.length > 0) {
       return {
         status: 'ERROR',
@@ -518,38 +565,66 @@ export class TradeService {
     draftStateId: string,
     rfq: RfqTradeConversionRow,
   ): Promise<{ id: string; trade_reference: string }> {
-    const duplicate = await this.findTradeBySourceRfqId(db, input.rfqId);
+    const duplicate = await this.findTradeByRfqLink(db, input.tenantId, input.rfqId);
     if (duplicate.length > 0) {
       throw new RfqAlreadyConvertedError(`RFQ ${input.rfqId} has already been converted to a trade.`);
     }
 
-    const inserted = await db.$queryRaw<Array<{ id: string; trade_reference: string }>>`
-      INSERT INTO public.trades (
-        tenant_id,
-        buyer_org_id,
-        seller_org_id,
-        source_rfq_id,
-        lifecycle_state_id,
-        trade_reference,
-        currency,
-        gross_amount,
-        reasoning_log_id,
-        created_by_user_id
-      )
-      VALUES (
-        ${input.tenantId},
-        ${rfq.orgId},
-        ${rfq.supplierOrgId},
-        ${input.rfqId},
-        ${draftStateId},
-        ${input.tradeReference.trim()},
-        ${input.currency.trim()},
-        ${input.grossAmount},
-        ${input.reasoningLogId ?? null},
-        ${input.createdByUserId ?? null}
-      )
-      RETURNING id, trade_reference
-    `;
+    const hasSourceRfqLinkage = await this.hasSourceRfqLinkageColumn(db);
+
+    const inserted = hasSourceRfqLinkage
+      ? await db.$queryRaw<Array<{ id: string; trade_reference: string }>>`
+          INSERT INTO public.trades (
+            tenant_id,
+            buyer_org_id,
+            seller_org_id,
+            source_rfq_id,
+            lifecycle_state_id,
+            trade_reference,
+            currency,
+            gross_amount,
+            reasoning_log_id,
+            created_by_user_id
+          )
+          VALUES (
+            ${input.tenantId},
+            ${rfq.orgId},
+            ${rfq.supplierOrgId},
+            ${input.rfqId},
+            ${draftStateId},
+            ${input.tradeReference.trim()},
+            ${input.currency.trim()},
+            ${input.grossAmount},
+            ${input.reasoningLogId ?? null},
+            ${input.createdByUserId ?? null}
+          )
+          RETURNING id, trade_reference
+        `
+      : await db.$queryRaw<Array<{ id: string; trade_reference: string }>>`
+          INSERT INTO public.trades (
+            tenant_id,
+            buyer_org_id,
+            seller_org_id,
+            lifecycle_state_id,
+            trade_reference,
+            currency,
+            gross_amount,
+            reasoning_log_id,
+            created_by_user_id
+          )
+          VALUES (
+            ${input.tenantId},
+            ${rfq.orgId},
+            ${rfq.supplierOrgId},
+            ${draftStateId},
+            ${input.tradeReference.trim()},
+            ${input.currency.trim()},
+            ${input.grossAmount},
+            ${input.reasoningLogId ?? null},
+            ${input.createdByUserId ?? null}
+          )
+          RETURNING id, trade_reference
+        `;
 
     const trade = inserted[0];
 

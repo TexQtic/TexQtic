@@ -24,6 +24,7 @@ function makeBuyerRfqDetail(overrides: Partial<BuyerRfqDetail> = {}): BuyerRfqDe
     supplier_org_id: '33333333-3333-3333-3333-333333333333',
     created_at: '2026-03-01T10:00:00.000Z',
     updated_at: '2026-03-03T15:30:00.000Z',
+    item_unit_price: 18.75,
     buyer_message: 'Need delivery timing and packaging notes.',
     created_by_user_id: '44444444-4444-4444-4444-444444444444',
     supplier_response: {
@@ -33,6 +34,7 @@ function makeBuyerRfqDetail(overrides: Partial<BuyerRfqDetail> = {}): BuyerRfqDe
       submitted_at: '2026-03-03T15:00:00.000Z',
       created_at: '2026-03-03T15:00:00.000Z',
     },
+    trade_continuity: null,
     ...overrides,
   };
 }
@@ -45,6 +47,9 @@ function renderHtml(rfq: BuyerRfqDetail | null, options?: { loading?: boolean; e
       error={options?.error ?? null}
       onBack={() => undefined}
       onClose={() => undefined}
+      onOpenTradeContinuity={() => undefined}
+      tradeContinuityLoading={false}
+      tradeContinuityError={null}
     />
   );
 }
