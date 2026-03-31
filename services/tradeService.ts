@@ -73,6 +73,20 @@ export interface CreateTradeEscrowResponse {
   currency: string;
 }
 
+export interface CreateTradeFromRfqInput {
+  rfqId: string;
+  tradeReference: string;
+  currency: string;
+  grossAmount: number;
+  reason: string;
+}
+
+export interface CreateTradeFromRfqResponse {
+  tradeId: string;
+  tradeReference: string;
+  rfqId: string;
+}
+
 interface TenantTradesListApiResponse {
   trades: TenantTradeApi[];
   count: number;
@@ -124,4 +138,10 @@ export function createTradeEscrow(
   input: CreateTradeEscrowInput,
 ): Promise<CreateTradeEscrowResponse> {
   return tenantPost<CreateTradeEscrowResponse>(`/api/tenant/trades/${tradeId}/escrow`, input);
+}
+
+export function createTradeFromRfq(
+  input: CreateTradeFromRfqInput,
+): Promise<CreateTradeFromRfqResponse> {
+  return tenantPost<CreateTradeFromRfqResponse>('/api/tenant/trades/from-rfq', input);
 }

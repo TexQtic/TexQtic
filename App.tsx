@@ -59,6 +59,7 @@ import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { getPlatformInsights } from './services/aiService';
+import { createTradeFromRfq } from './services/tradeService';
 import {
   getCatalogItems,
   CatalogItem,
@@ -108,6 +109,11 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
   'ESCROW',
   'SETTLEMENT',
 ]);
+const ENTERPRISE_TRADE_BRIDGE_CURRENCY = 'USD';
+
+function buildTradeReferenceFromRfq(rfqId: string): string {
+  return `TRD-RFQ-${rfqId.replaceAll('-', '').slice(0, 8).toUpperCase()}`;
+}
 
 const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
 type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
@@ -796,6 +802,15 @@ const App: React.FC = () => {
     submitError: null,
     data: null,
     response: null,
+  });
+  const [buyerRfqTradeBridge, setBuyerRfqTradeBridge] = useState<{
+    loading: boolean;
+    error: string | null;
+    initialTradeId: string | null;
+  }>({
+    loading: false,
+    error: null,
+    initialTradeId: null,
   });
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
@@ -1728,6 +1743,7 @@ const App: React.FC = () => {
 
   const handleOpenBuyerRfqs = async () => {
     setExpView('RFQS');
+    setBuyerRfqTradeBridge(view => ({ ...view, error: null, initialTradeId: null }));
     setRfqDetailView(view =>
       view.source === 'list'
         ? {
@@ -1765,6 +1781,8 @@ const App: React.FC = () => {
   const handleOpenRfqDetail = async (rfqId?: string, source: 'dialog' | 'list' = 'dialog') => {
     const nextRfqId = rfqId ?? rfqDialog.success?.rfqId;
     if (!nextRfqId) return;
+
+    setBuyerRfqTradeBridge(view => ({ ...view, error: null }));
 
     if (source === 'list') {
       setExpView('RFQS');
@@ -1807,6 +1825,7 @@ const App: React.FC = () => {
   };
 
   const handleReturnToBuyerRfqList = () => {
+    setBuyerRfqTradeBridge(view => ({ ...view, loading: false, error: null }));
     setRfqDetailView({
       open: false,
       source: null,
@@ -1823,7 +1842,103 @@ const App: React.FC = () => {
   };
 
   const handleCloseRfqDetail = () => {
+    setBuyerRfqTradeBridge(view => ({ ...view, loading: false, error: null }));
     setRfqDetailView(view => ({ ...view, open: false }));
+  };
+
+  const handleOpenTradeContinuityFromRfq = async () => {
+    const rfq = rfqDetailView.data;
+
+    if (rfq?.status !== 'RESPONDED') {
+      return;
+    }
+
+    if (rfq.trade_continuity) {
+      setBuyerRfqTradeBridge({
+        loading: false,
+        error: null,
+        initialTradeId: rfq.trade_continuity.trade_id,
+      });
+      setRfqDetailView(view => ({ ...view, open: false }));
+      setExpView('TRADES');
+      return;
+    }
+
+    const grossAmount = Number(rfq.item_unit_price) * rfq.quantity;
+    if (!Number.isFinite(grossAmount) || grossAmount <= 0) {
+      setBuyerRfqTradeBridge({
+        loading: false,
+        error: 'Unable to derive a valid trade amount from the responded RFQ detail.',
+        initialTradeId: null,
+      });
+      return;
+    }
+
+    setBuyerRfqTradeBridge({
+      loading: true,
+      error: null,
+      initialTradeId: null,
+    });
+
+    try {
+      const result = await createTradeFromRfq({
+        rfqId: rfq.id,
+        tradeReference: buildTradeReferenceFromRfq(rfq.id),
+        currency: ENTERPRISE_TRADE_BRIDGE_CURRENCY,
+        grossAmount,
+        reason: `Bridge responded RFQ ${rfq.id} into existing trade continuity.`,
+      });
+
+      setRfqDetailView(view => ({
+        ...view,
+        open: false,
+        data: view.data
+          ? {
+              ...view.data,
+              trade_continuity: {
+                trade_id: result.tradeId,
+                trade_reference: result.tradeReference,
+              },
+            }
+          : view.data,
+      }));
+      setBuyerRfqTradeBridge({
+        loading: false,
+        error: null,
+        initialTradeId: result.tradeId,
+      });
+      setExpView('TRADES');
+    } catch (error) {
+      if (error instanceof APIError && error.code === 'RFQ_ALREADY_CONVERTED') {
+        try {
+          const refreshed = await getBuyerRfqDetail(rfq.id);
+          if (refreshed.rfq.trade_continuity) {
+            setRfqDetailView(view => ({
+              ...view,
+              open: false,
+              loading: false,
+              error: null,
+              data: refreshed.rfq,
+            }));
+            setBuyerRfqTradeBridge({
+              loading: false,
+              error: null,
+              initialTradeId: refreshed.rfq.trade_continuity.trade_id,
+            });
+            setExpView('TRADES');
+            return;
+          }
+        } catch {
+          // Fall through to the bounded user-facing error below.
+        }
+      }
+
+      setBuyerRfqTradeBridge({
+        loading: false,
+        error: error instanceof APIError ? error.message : 'Unable to continue this responded RFQ into the existing trade flow right now.',
+        initialTradeId: null,
+      });
+    }
   };
 
   const handleOpenSupplierRfqInbox = async () => {
@@ -2180,6 +2295,11 @@ const App: React.FC = () => {
             error={rfqDetailView.error}
             onBack={handleReturnToBuyerRfqList}
             onClose={handleCloseBuyerRfqs}
+            onOpenTradeContinuity={() => {
+              void handleOpenTradeContinuityFromRfq();
+            }}
+            tradeContinuityLoading={buyerRfqTradeBridge.loading}
+            tradeContinuityError={buyerRfqTradeBridge.error}
           />
         );
       }
@@ -2240,7 +2360,20 @@ const App: React.FC = () => {
     // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only; no filters/pagination; server take:50)
     if (expView === 'AUDIT_LOGS') return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
     // TECS-FBW-002-B: G-017 tenant trade read-only panel (D-017-A / D-020-B compliant)
-    if (expView === 'TRADES') return <TradesPanel onBack={() => setExpView('HOME')} />;
+    if (expView === 'TRADES') {
+      return (
+        <TradesPanel
+          onBack={() => {
+            setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+            setExpView('HOME');
+          }}
+          initialTradeId={buyerRfqTradeBridge.initialTradeId}
+          onInitialTradeHandled={() => {
+            setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+          }}
+        />
+      );
+    }
 
     // PW5-WL1-WIRE: WL storefront HOME — renders ProductGrid for is_white_label tenants.
     // tenantId is NEVER passed by the client. Server resolves tenant scope from JWT (D-017-A compliant).
@@ -3013,7 +3146,10 @@ const App: React.FC = () => {
           // TECS-FBW-016: tenant audit log read-only panel navigation
           onNavigateAuditLogs: () => setExpView('AUDIT_LOGS'),
           // TECS-FBW-002-B: G-017 tenant trade read-only panel navigation
-          onNavigateTrades: () => setExpView('TRADES'),
+          onNavigateTrades: () => {
+            setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+            setExpView('TRADES');
+          },
           // B3-REM-1: wire B2CShell header cart icon to same cart-open action as CartToggleButton
           onNavigateCart: () => setShowCart(true),
         };

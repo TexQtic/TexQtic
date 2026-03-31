@@ -17,7 +17,7 @@
  *   ❌ Backend contract changes
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { APIError } from '../../services/apiClient';
 import { getCurrentUser } from '../../services/authService';
 import {
@@ -33,6 +33,8 @@ import { EmptyState } from '../shared/EmptyState';
 
 interface Props {
   onBack: () => void;
+  initialTradeId?: string | null;
+  onInitialTradeHandled?: () => void;
 }
 
 // ─── Lifecycle State → Badge color map ───────────────────────────────────────
@@ -158,7 +160,7 @@ function DetailRow({ label, value }: Readonly<{ label: string; value: React.Reac
 
 // ─── TradesPanel ─────────────────────────────────────────────────────────────
 
-export function TradesPanel({ onBack }: Readonly<Props>) {
+export function TradesPanel({ onBack, initialTradeId = null, onInitialTradeHandled }: Readonly<Props>) {
   const [panelView, setPanelView] = useState<PanelView>('LIST');
   const [trades, setTrades] = useState<TenantTrade[]>([]);
   const [count, setCount] = useState(0);
@@ -175,6 +177,7 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
   const [escrowReason, setEscrowReason] = useState('');
   const [escrowLoading, setEscrowLoading] = useState(false);
   const [escrowOutcome, setEscrowOutcome] = useState<string | null>(null);
+  const initialTradeHandledRef = useRef<string | null>(null);
 
   const loadTrades = useCallback(async () => {
     setLoading(true);
@@ -211,6 +214,22 @@ export function TradesPanel({ onBack }: Readonly<Props>) {
   useEffect(() => {
     void loadTrades();
   }, [loadTrades]);
+
+  useEffect(() => {
+    if (!initialTradeId || initialTradeHandledRef.current === initialTradeId) {
+      return;
+    }
+
+    initialTradeHandledRef.current = initialTradeId;
+    setPanelView('DETAIL');
+    setSelectedTradeId(initialTradeId);
+    setTransitionReason('');
+    setTransitionOutcome(null);
+    setEscrowReason('');
+    setEscrowOutcome(null);
+    void loadTradeDetail(initialTradeId);
+    onInitialTradeHandled?.();
+  }, [initialTradeId, loadTradeDetail, onInitialTradeHandled]);
 
   const openTradeDetail = async (tradeId: string) => {
     setPanelView('DETAIL');

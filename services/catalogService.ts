@@ -149,6 +149,11 @@ export interface BuyerRfqSupplierResponse {
   created_at: string;
 }
 
+export interface BuyerRfqTradeContinuity {
+  trade_id: string;
+  trade_reference: string;
+}
+
 export interface BuyerRfqDetail {
   id: string;
   status: BuyerRfqStatus;
@@ -160,9 +165,11 @@ export interface BuyerRfqDetail {
   supplier_org_id: string;
   created_at: string;
   updated_at: string;
+  item_unit_price: number;
   buyer_message: string | null;
   created_by_user_id: string;
   supplier_response: BuyerRfqSupplierResponse | null;
+  trade_continuity: BuyerRfqTradeContinuity | null;
 }
 
 export interface BuyerRfqDetailResponse {

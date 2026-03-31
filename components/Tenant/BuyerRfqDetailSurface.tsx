@@ -7,6 +7,9 @@ type BuyerRfqDetailSurfaceProps = Readonly<{
   error: string | null;
   onBack: () => void;
   onClose: () => void;
+  onOpenTradeContinuity: () => void;
+  tradeContinuityLoading: boolean;
+  tradeContinuityError: string | null;
 }>;
 
 type RfqStatusTone = {
@@ -60,12 +63,27 @@ function DetailRow({ label, value }: Readonly<{ label: string; value: string }>)
   );
 }
 
+function formatCurrency(value: number, currency: string): string {
+  if (!Number.isFinite(value)) {
+    return `${currency} -`;
+  }
+
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 export function BuyerRfqDetailSurface({
   rfq,
   loading,
   error,
   onBack,
   onClose,
+  onOpenTradeContinuity,
+  tradeContinuityLoading,
+  tradeContinuityError,
 }: BuyerRfqDetailSurfaceProps) {
   if (loading) {
     return (
@@ -164,6 +182,16 @@ export function BuyerRfqDetailSurface({
   }
 
   const statusTone = getStatusTone(rfq.status);
+  const canContinueToTrade = rfq.status === 'RESPONDED';
+  const tradeGrossAmount = rfq.item_unit_price * rfq.quantity;
+  const linkedTrade = rfq.trade_continuity;
+  let tradeContinuityButtonLabel = 'Continue to Trade';
+  if (linkedTrade) {
+    tradeContinuityButtonLabel = 'Open Existing Trade';
+  }
+  if (tradeContinuityLoading) {
+    tradeContinuityButtonLabel = 'Continuing...';
+  }
 
   return (
     <div className="space-y-6">
@@ -172,7 +200,7 @@ export function BuyerRfqDetailSurface({
           <div>
             <h3 className="text-lg font-bold text-slate-900">RFQ Detail</h3>
             <p className="mt-2 text-sm text-slate-500">
-              Review the submitted RFQ summary and bounded supplier response visibility. This surface remains read-only and pre-negotiation.
+              Review the submitted RFQ summary, supplier response visibility, and continue into the existing trade continuity path when the RFQ has been responded to.
             </p>
           </div>
           <div className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusTone.badge} ${statusTone.text}`}>
@@ -187,6 +215,8 @@ export function BuyerRfqDetailSurface({
         <DetailRow label="Item Name" value={rfq.item_name} />
         <DetailRow label="Item SKU" value={rfq.item_sku} />
         <DetailRow label="Quantity" value={String(rfq.quantity)} />
+        <DetailRow label="Unit Price" value={formatCurrency(rfq.item_unit_price, 'USD')} />
+        <DetailRow label="Trade Gross Amount" value={formatCurrency(tradeGrossAmount, 'USD')} />
         <DetailRow label="Supplier Organization ID" value={rfq.supplier_org_id} />
         <DetailRow label="Submitted On" value={formatTimestamp(rfq.created_at)} />
         <DetailRow label="Last Updated" value={formatTimestamp(rfq.updated_at)} />
@@ -230,6 +260,44 @@ export function BuyerRfqDetailSurface({
           </div>
         )}
       </section>
+
+      {canContinueToTrade && (
+        <section className="rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-5 space-y-4 shadow-sm">
+          <div>
+            <h4 className="text-sm font-bold text-slate-900">Trade Continuity</h4>
+            <p className="mt-1 text-xs text-slate-600">
+              This RFQ has received a supplier response and can continue into the existing trade workspace without creating a parallel negotiation flow.
+            </p>
+          </div>
+
+          {linkedTrade ? (
+            <div className="rounded-xl border border-indigo-200 bg-white px-4 py-4 text-sm text-slate-700">
+              Existing trade continuity is already linked to this RFQ: <span className="font-semibold text-slate-900">{linkedTrade.trade_reference}</span>.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-indigo-200 bg-white px-4 py-4 text-sm text-slate-700">
+              Continue this responded RFQ into the existing trade continuity path using the current enterprise trade flow and the RFQ-derived trade route.
+            </div>
+          )}
+
+          {tradeContinuityError && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {tradeContinuityError}
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onOpenTradeContinuity}
+              disabled={tradeContinuityLoading}
+              className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              {tradeContinuityButtonLabel}
+            </button>
+          </div>
+        </section>
+      )}
 
       <div className="flex justify-end gap-3">
         <button

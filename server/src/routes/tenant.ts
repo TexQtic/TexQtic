@@ -54,6 +54,7 @@ type RfqCatalogItemTarget = {
   id: string;
   name: string;
   sku: string | null;
+  price: number;
   active: boolean;
   supplierOrgId: string;
 };
@@ -145,6 +146,7 @@ type BuyerRfqListRow = {
   catalogItem: {
     name: string;
     sku: string | null;
+    price?: number;
   };
 };
 
@@ -152,6 +154,10 @@ type BuyerRfqDetailRow = BuyerRfqListRow & {
   buyerMessage: string | null;
   createdByUserId: string | null;
   supplierResponse: BuyerRfqResponseRow | null;
+  tradeContinuity: {
+    id: string;
+    tradeReference: string;
+  } | null;
 };
 
 type SupplierRfqListRow = {
@@ -231,9 +237,16 @@ function mapBuyerRfqResponse(response: BuyerRfqResponseRow) {
 function mapBuyerRfqDetail(rfq: BuyerRfqDetailRow) {
   return {
     ...mapBuyerRfqListItem(rfq),
+    item_unit_price: Number(rfq.catalogItem.price ?? 0),
     buyer_message: rfq.buyerMessage,
     created_by_user_id: rfq.createdByUserId,
     supplier_response: rfq.supplierResponse ? mapBuyerRfqResponse(rfq.supplierResponse) : null,
+    trade_continuity: rfq.tradeContinuity
+      ? {
+          trade_id: rfq.tradeContinuity.id,
+          trade_reference: rfq.tradeContinuity.tradeReference,
+        }
+      : null,
   };
 }
 
@@ -282,6 +295,7 @@ async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCa
         id: true,
         name: true,
         sku: true,
+        price: true,
         active: true,
         tenantId: true,
       },
@@ -295,6 +309,7 @@ async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCa
       id: catalogItem.id,
       name: catalogItem.name,
       sku: catalogItem.sku,
+      price: Number(catalogItem.price),
       active: catalogItem.active,
       supplierOrgId: catalogItem.tenantId,
     };
@@ -317,6 +332,31 @@ async function resolveBuyerRfqSupplierResponse(rfqId: string): Promise<BuyerRfqR
         createdAt: true,
       },
     });
+  });
+}
+
+async function resolveBuyerRfqTradeContinuity(
+  dbContext: DatabaseContext,
+  rfqId: string,
+): Promise<{ id: string; tradeReference: string } | null> {
+  return withDbContext(prisma, dbContext, async tx => {
+    const rows = await tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
+      SELECT id, trade_reference
+      FROM public.trades
+      WHERE tenant_id = ${dbContext.orgId}
+        AND source_rfq_id = ${rfqId}
+      LIMIT 1
+    `;
+
+    const trade = rows[0];
+    if (!trade) {
+      return null;
+    }
+
+    return {
+      id: trade.id,
+      tradeReference: trade.trade_reference,
+    };
   });
 }
 
@@ -1646,6 +1686,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const supplierResponse = await resolveBuyerRfqSupplierResponse(rfq.id);
+    const tradeContinuity = await resolveBuyerRfqTradeContinuity(dbContext, rfq.id);
 
     return sendSuccess(reply, {
       rfq: mapBuyerRfqDetail({
@@ -1653,8 +1694,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         catalogItem: {
           name: catalogItem.name,
           sku: catalogItem.sku,
+          price: catalogItem.price,
         },
         supplierResponse,
+        tradeContinuity,
       }),
     });
   });
