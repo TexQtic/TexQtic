@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { TenantType, TenantConfig, ImpersonationState } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell, WhiteLabelAdminShell } from './layouts/Shells';
 import {
@@ -812,6 +812,55 @@ const App: React.FC = () => {
     error: null,
     initialTradeId: null,
   });
+  const lastTenantViewScopeKeyRef = useRef<string | null>(null);
+
+  const resetTenantScopedRouteState = () => {
+    setExpView('HOME');
+    setShowCart(false);
+    setConfirmedOrderId(null);
+    setRfqDialog({
+      open: false,
+      product: null,
+      quantity: '1',
+      buyerMessage: '',
+      loading: false,
+      error: null,
+      success: null,
+    });
+    setRfqDetailView({
+      open: false,
+      source: null,
+      rfqId: null,
+      loading: false,
+      error: null,
+      data: null,
+    });
+    setBuyerRfqListView({
+      loading: false,
+      error: null,
+      rfqs: [],
+    });
+    setSupplierRfqListView({
+      loading: false,
+      error: null,
+      rfqs: [],
+    });
+    setSupplierRfqDetailView({
+      open: false,
+      rfqId: null,
+      loading: false,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: null,
+    });
+    setBuyerRfqTradeBridge({
+      loading: false,
+      error: null,
+      initialTradeId: null,
+    });
+  };
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
 
@@ -989,6 +1038,30 @@ const App: React.FC = () => {
 
     return resolvedTenant;
   }, [tenants, currentTenantId]);
+
+  const tenantViewScopeKey = useMemo(() => {
+    if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
+      return null;
+    }
+
+    return currentTenantId;
+  }, [appState, effectiveRealm, currentTenantId]);
+
+  useEffect(() => {
+    const previousTenantViewScopeKey = lastTenantViewScopeKeyRef.current;
+
+    if (tenantViewScopeKey === null) {
+      lastTenantViewScopeKeyRef.current = null;
+      return;
+    }
+
+    if (previousTenantViewScopeKey === tenantViewScopeKey) {
+      return;
+    }
+
+    resetTenantScopedRouteState();
+    lastTenantViewScopeKeyRef.current = tenantViewScopeKey;
+  }, [tenantViewScopeKey]);
 
   useEffect(() => {
     appendRehydrationTrace('app:state', {
@@ -3082,7 +3155,7 @@ const App: React.FC = () => {
           );
         }
         return (
-          <CartProvider>
+          <CartProvider key={`tenant-shell:${currentTenant.id}`}>
             {tenantProvisionError && (
               <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
                 ⚠️ {tenantProvisionError}
@@ -3173,7 +3246,7 @@ const App: React.FC = () => {
         }
         const ExperienceShell = resolvedShell;
         return (
-          <CartProvider>
+          <CartProvider key={`tenant-shell:${currentTenant.id}`}>
             {tenantProvisionError && (
               <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
                 ⚠️ {tenantProvisionError}
@@ -3592,6 +3665,7 @@ const App: React.FC = () => {
               )}
               <button
                 onClick={() => {
+                  resetTenantScopedRouteState();
                   clearAuth();
                   clearPersistedImpersonationSession();
                   setImpersonation(EMPTY_IMPERSONATION_STATE);
