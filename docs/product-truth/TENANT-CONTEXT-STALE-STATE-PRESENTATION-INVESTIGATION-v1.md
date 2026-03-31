@@ -3,10 +3,25 @@
 ## Status
 
 - Unit: `TENANT-CONTEXT-STALE-STATE-PRESENTATION-INVESTIGATION`
-- Phase: `INVESTIGATION_OPENING`
-- State: `OPEN` / investigation defined
+- Phase: `INVESTIGATION_COMPLETED`
+- State: `CLOSED` / investigation completed and preserved as historical classification context
 - Delivery posture: investigation only; no implementation authorized by this artifact
 - Active-delivery impact: no product-facing `ACTIVE_DELIVERY` unit is open, and this artifact does not create one
+
+## Closure Result
+
+This investigation is now closed as historical context only.
+
+The bounded production investigation classified the concern as `CACHE_OR_ROUTE_RESTORE_DEFECT`
+rather than confirmed cross-tenant retrieval, and the separately opened bounded follow-on
+`TENANT-CONTEXT-STATE-RESET-INVESTIGATION-AND-FIX-TRACK` is now also closed after bounded
+frontend/state-reset repair plus bounded live production re-verification established that the
+previously reproduced wrong enterprise route/content restore under WL shell did not recur in the
+exercised production sequences.
+
+This closure remains limited to classification and historical context preservation. It does not
+claim broader tenant-isolation certification, does not certify absence of every stale-state issue,
+and does not reopen `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`.
 
 ## Purpose And Authority
 
@@ -180,7 +195,9 @@ production evidence:
 - `INSUFFICIENT_EVIDENCE`
 
 The final classification must cite the production evidence that supports it and must not overstate
-severity beyond what that evidence proves.
+severity beyond what that evidence proves. That bounded classification was completed as
+`CACHE_OR_ROUTE_RESTORE_DEFECT`, after which the separate bounded frontend/state-reset follow-on
+track was opened and later closed on bounded production proof.
 
 ## Completion Checklist
 
@@ -199,9 +216,10 @@ severity beyond what that evidence proves.
 
 ## Boundary Preservation
 
-This artifact opens one separate investigation only. It does not authorize implementation, does
-not change Layer 0 posture, does not create a new active delivery, and does not merge this concern
-into the broader `RFQ-NEGOTIATION-CONTINUITY` family beyond preserving separation context.
+This artifact is now preserved as one completed historical investigation record only. It did not
+authorize implementation by itself, did not change Layer 0 posture, did not create a new active
+delivery, and did not merge this concern into the broader `RFQ-NEGOTIATION-CONTINUITY` family
+beyond preserving separation context.
 
 It preserves the current truthful posture:
 
