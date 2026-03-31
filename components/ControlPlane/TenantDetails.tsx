@@ -15,6 +15,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
   const [activationLoading, setActivationLoading] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
   const [activationNotice, setActivationNotice] = useState<string | null>(null);
+  const tenantCreatedAt = getTenantCreatedAtDisplay(tenant);
 
   const canActivateApproved = onboardingStatus === 'VERIFICATION_APPROVED';
 
@@ -58,7 +59,10 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   <DetailItem label="Slug" value={tenant.slug} />
                   <DetailItem label="Tenant ID" value={tenant.id} />
                   <DetailItem label="Onboarding Status" value={onboardingStatus ?? 'N/A'} />
-                  <DetailItem label="Created At" value="2024-01-12 08:30 UTC" />
+                  {tenantCreatedAt && <DetailItem label="Created At" value={tenantCreatedAt} />}
+                </div>
+                <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
+                  This overview supports tenant inspection, approved activation when eligible, and bounded impersonation entry only.
                 </div>
               </div>
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
@@ -93,9 +97,32 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                       {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
                     </button>
                   )}
-                  <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold text-xs uppercase transition">Reinstate Tenant</button>
-                  <button className="w-full py-2 bg-amber-600/10 border border-amber-600/30 text-amber-500 hover:bg-amber-600/20 rounded font-bold text-xs uppercase transition">Suspend Tenant</button>
-                  <button className="w-full py-2 bg-rose-600/10 border border-rose-600/30 text-rose-500 hover:bg-rose-600/20 rounded font-bold text-xs uppercase transition">Delete Tenant (Safeguarded)</button>
+                  <div className="space-y-2 rounded border border-dashed border-slate-700/80 bg-slate-950/40 p-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                      Other lifecycle actions are not available in this surface.
+                    </div>
+                    <button
+                      disabled
+                      aria-disabled="true"
+                      className="w-full cursor-not-allowed rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 opacity-70"
+                    >
+                      Reinstate Tenant
+                    </button>
+                    <button
+                      disabled
+                      aria-disabled="true"
+                      className="w-full cursor-not-allowed rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 opacity-70"
+                    >
+                      Suspend Tenant
+                    </button>
+                    <button
+                      disabled
+                      aria-disabled="true"
+                      className="w-full cursor-not-allowed rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 opacity-70"
+                    >
+                      Delete Tenant
+                    </button>
+                  </div>
                 </div>
                 {activationError && (
                   <div className="mt-4 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
@@ -185,3 +212,22 @@ const DetailItem = ({ label, value }: { label: string, value: string }) => (
     <span className="font-mono text-slate-300">{value}</span>
   </div>
 );
+
+const getTenantCreatedAtDisplay = (tenant: TenantConfig) => {
+  const createdAt = (tenant as TenantConfig & { createdAt?: string | null }).createdAt;
+
+  if (!createdAt) {
+    return null;
+  }
+
+  const parsed = new Date(createdAt);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return createdAt;
+  }
+
+  return `${parsed.toLocaleDateString()} ${parsed.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
+};
