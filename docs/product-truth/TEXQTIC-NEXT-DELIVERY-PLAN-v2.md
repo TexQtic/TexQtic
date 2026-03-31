@@ -11,7 +11,10 @@ and preserves the remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- No current product-facing delivery unit is open.
+- `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` is now open as the sole current product-facing
+    `ACTIVE_DELIVERY` after the platform-ops boundary artifact and bounded eligibility reconciliation
+    established that the broader `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` family remained too wide
+    to open directly.
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
 - `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after bounded implementation and successful bounded live production verification established that the reviewed WL storefront/product-detail path no longer stops before RFQ begins.
 - `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed after bounded implementation and bounded live production verification established that the reviewed enterprise responded-RFQ path now truthfully bridges into the existing trade / negotiation continuity.
@@ -46,8 +49,8 @@ families.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `READY_LATER` | Remains the first preserved later-ready candidate after closure of the three bounded product-facing deliveries already completed in this `-v2` stack |
-| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the closed enterprise RFQ bridge unit |
+| 1 | `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` | `ACTIVE_DELIVERY` | First lawful bounded child opening from the preserved control-plane tenant operations family after boundary definition and bounded narrowing |
+| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the newly opened control-plane tenant deep-dive unit |
 | 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
 | 4 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from its now-closed split units and still governs family-level scope boundaries |
 
@@ -126,13 +129,55 @@ bridge.
 
 ### `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
 
-Keep as the first preserved later-ready candidate in order behind the now-closed enterprise RFQ
-bridge unit. It remains a real later-ready family and still requires its own fresh bounded opening
-decision.
+The broad family remains preserved, but it should not be opened directly. Its first lawful bounded
+opening is now `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`, which isolates the tenant deep-dive
+truthfulness defect from registry redesign, audit-log depth work, impersonation-program breadth,
+billing/risk workflow completion, and AdminRBAC authority work.
 
 For launch-specific posture, also see the launch overlay, which treats platform-admin/control-
 center surfaces as launch-required in bounded form and routes them through a launch-boundary
 normalization artifact before broader movement is inferred.
+
+### `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`
+
+This is now the sole current product-facing `ACTIVE_DELIVERY` unit.
+
+It is limited to tenant deep-dive truthfulness only on the reviewed control-plane surface:
+
+- overview truth
+- approved-onboarding activation truth
+- truthful handling of non-real or under-construction deep tabs
+- truthful exclusion of billing/risk/lifecycle/admin-authority depth that repo truth does not
+    support
+
+It must remain separate from registry redesign, audit-log search/filter completion, full
+impersonation lifecycle work, billing workflow completion, risk-report completion, and all
+AdminRBAC invite/revoke/role-partition work.
+
+Vercel/runtime verification remains mandatory before any future close because this is a control-
+plane runtime UX unit.
+
+## Current Open Delivery
+
+### Candidate Family
+
+`CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`
+
+### Recorded Opening
+
+After creation of `PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md` and a bounded eligibility
+reconciliation confirmed that the broader `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` family was too
+wide to open directly, the narrowed unit `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` was opened
+as the sole current product-facing `ACTIVE_DELIVERY`.
+
+### Boundaries
+
+- This unit is limited to truthfulness of the tenant deep-dive surface only.
+- It does not authorize registry redesign, audit-log search/filter completion, full impersonation
+    lifecycle work, billing workflow completion, risk-report completion, or AdminRBAC invite/revoke/
+    role-partition work.
+- It does not reopen the broad `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` family as one umbrella
+    implementation stream.
 
 ### `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
 
