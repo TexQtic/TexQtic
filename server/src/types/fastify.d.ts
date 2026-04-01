@@ -19,6 +19,9 @@ export {};
 
 declare module 'fastify' {
   interface FastifyRequest {
+    serviceCallerId?: string;
+    serviceCallerType?: 'APPROVED_ONBOARDING';
+
     /**
      * Verify JWT token using admin realm
      * Added by @fastify/jwt with namespace: 'admin'

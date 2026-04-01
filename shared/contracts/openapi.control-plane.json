@@ -123,8 +123,8 @@
     },
     "/api/control/tenants/provision": {
       "post": {
-        "summary": "Provision a new tenant (admin only)",
-        "description": "Admin-initiated tenant creation. Supports legacy admin provisioning and the bounded approved-onboarding handoff foundation used to create tenant plus organization plus a platform invite artifact.",
+        "summary": "Provision a new tenant (admin or approved-onboarding service)",
+        "description": "Control-plane tenant creation. Legacy admin provisioning requires a SUPER_ADMIN admin JWT. Approved-onboarding provisioning also accepts the dedicated platform service bearer contract for the CRM integration seam only; that service credential is limited to APPROVED_ONBOARDING payloads and does not grant broader control-plane access.",
         "requestBody": {
           "required": true,
           "content": {
@@ -140,10 +140,23 @@
                       "tenant_category"
                     ],
                     "properties": {
-                      "provisioningMode": { "type": "string", "enum": ["LEGACY_ADMIN"] },
-                      "orgName": { "type": "string", "minLength": 2, "maxLength": 200 },
-                      "primaryAdminEmail": { "type": "string", "format": "email" },
-                      "primaryAdminPassword": { "type": "string", "minLength": 8 },
+                      "provisioningMode": {
+                        "type": "string",
+                        "enum": ["LEGACY_ADMIN"]
+                      },
+                      "orgName": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 200
+                      },
+                      "primaryAdminEmail": {
+                        "type": "string",
+                        "format": "email"
+                      },
+                      "primaryAdminPassword": {
+                        "type": "string",
+                        "minLength": 8
+                      },
                       "tenant_category": {
                         "type": "string",
                         "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"]
@@ -161,8 +174,14 @@
                       "firstOwner"
                     ],
                     "properties": {
-                      "provisioningMode": { "type": "string", "enum": ["APPROVED_ONBOARDING"] },
-                      "orchestrationReference": { "type": "string", "maxLength": 255 },
+                      "provisioningMode": {
+                        "type": "string",
+                        "enum": ["APPROVED_ONBOARDING"]
+                      },
+                      "orchestrationReference": {
+                        "type": "string",
+                        "maxLength": 255
+                      },
                       "tenant_category": {
                         "type": "string",
                         "enum": ["AGGREGATOR", "B2B", "B2C", "INTERNAL"]
@@ -174,8 +193,14 @@
                         "properties": {
                           "legalName": { "type": "string", "maxLength": 500 },
                           "displayName": { "type": "string", "maxLength": 200 },
-                          "jurisdiction": { "type": "string", "maxLength": 100 },
-                          "registrationNumber": { "type": "string", "maxLength": 200 }
+                          "jurisdiction": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "registrationNumber": {
+                            "type": "string",
+                            "maxLength": 200
+                          }
                         }
                       },
                       "firstOwner": {
@@ -214,27 +239,46 @@
                         },
                         "orgId": { "type": "string", "format": "uuid" },
                         "slug": { "type": "string" },
-                        "userId": { "type": ["string", "null"], "format": "uuid" },
-                        "membershipId": { "type": ["string", "null"], "format": "uuid" },
-                        "orchestrationReference": { "type": ["string", "null"] },
+                        "userId": {
+                          "type": ["string", "null"],
+                          "format": "uuid"
+                        },
+                        "membershipId": {
+                          "type": ["string", "null"],
+                          "format": "uuid"
+                        },
+                        "orchestrationReference": {
+                          "type": ["string", "null"]
+                        },
                         "organization": {
                           "type": "object",
                           "properties": {
                             "legalName": { "type": "string" },
                             "jurisdiction": { "type": "string" },
-                            "registrationNumber": { "type": ["string", "null"] },
+                            "registrationNumber": {
+                              "type": ["string", "null"]
+                            },
                             "status": { "type": "string" }
                           }
                         },
                         "firstOwnerAccessPreparation": {
                           "type": ["object", "null"],
                           "properties": {
-                            "artifactType": { "type": "string", "enum": ["PLATFORM_INVITE"] },
+                            "artifactType": {
+                              "type": "string",
+                              "enum": ["PLATFORM_INVITE"]
+                            },
                             "inviteId": { "type": "string", "format": "uuid" },
-                            "invitePurpose": { "type": "string", "enum": ["FIRST_OWNER_PREPARATION"] },
+                            "invitePurpose": {
+                              "type": "string",
+                              "enum": ["FIRST_OWNER_PREPARATION"]
+                            },
                             "email": { "type": "string", "format": "email" },
                             "role": { "type": "string", "enum": ["OWNER"] },
-                            "expiresAt": { "type": "string", "format": "date-time" },
+                            "expiresAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
                             "inviteToken": { "type": "string" }
                           }
                         }

@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 dotenv.config();
 
+const optionalOpaqueTokenHash = z.string().trim().length(64).optional();
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().transform(Number).default('3001'),
@@ -14,6 +16,7 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ADMIN_ACCESS_SECRET: z.string().min(32),
   JWT_ADMIN_REFRESH_SECRET: z.string().min(32),
+  APPROVED_ONBOARDING_SERVICE_TOKEN_HASH: optionalOpaqueTokenHash,
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
 

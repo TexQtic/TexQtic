@@ -17,8 +17,9 @@
 
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { adminAuthMiddleware, requireAdminRole } from '../../middleware/auth.js';
+import { config } from '../../config/index.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { provisionTenant } from '../../services/tenantProvision.service.js';
 import { prisma } from '../../db/prisma.js';
@@ -84,6 +85,37 @@ function parseProvisionRequestBody(body: unknown) {
   return legacyProvisionBodySchema.safeParse(body);
 }
 
+function hasConfiguredApprovedOnboardingServiceToken(): boolean {
+  return Boolean(config.APPROVED_ONBOARDING_SERVICE_TOKEN_HASH);
+}
+
+function isApprovedOnboardingRequestBody(body: unknown): boolean {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'provisioningMode' in body &&
+    (body as { provisioningMode?: string }).provisioningMode === 'APPROVED_ONBOARDING'
+  );
+}
+
+function extractBearerToken(authorizationHeader: string | string[] | undefined): string | null {
+  if (typeof authorizationHeader !== 'string') {
+    return null;
+  }
+
+  const [scheme, token, ...rest] = authorizationHeader.trim().split(/\s+/);
+  if (scheme !== 'Bearer' || !token || rest.length > 0) {
+    return null;
+  }
+
+  return token;
+}
+
+function tokenMatchesConfiguredHash(token: string, expectedHash: string): boolean {
+  const actualHash = createHash('sha256').update(token).digest('hex');
+  return timingSafeEqual(Buffer.from(actualHash, 'utf8'), Buffer.from(expectedHash, 'utf8'));
+}
+
 /**
  * tenantProvisionRoutes — Fastify plugin for admin tenant provisioning
  *
@@ -94,9 +126,6 @@ function parseProvisionRequestBody(body: unknown) {
  * Authorization gate: request.isAdmin check (defense-in-depth)
  */
 const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
-  // All routes in this plugin require admin authentication
-  fastify.addHook('onRequest', adminAuthMiddleware);
-
   const requireSuperAdmin = requireAdminRole('SUPER_ADMIN');
 
   /**
@@ -123,15 +152,45 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.post('/tenants/provision', {
     preHandler: (request, reply, done) => {
-      void Promise.resolve(requireSuperAdmin(request, reply))
+      const bearerToken = extractBearerToken(request.headers.authorization);
+      const hasServiceToken = Boolean(
+        bearerToken &&
+        hasConfiguredApprovedOnboardingServiceToken() &&
+        tokenMatchesConfiguredHash(bearerToken, config.APPROVED_ONBOARDING_SERVICE_TOKEN_HASH!)
+      );
+
+      if (hasServiceToken) {
+        if (!isApprovedOnboardingRequestBody(request.body)) {
+          void Promise.resolve(sendError(
+            reply,
+            'FORBIDDEN',
+            'Service credential is restricted to approved-onboarding provisioning',
+            403
+          )).then(() => done());
+          return;
+        }
+
+        request.serviceCallerId = 'crm-approved-onboarding';
+        request.serviceCallerType = 'APPROVED_ONBOARDING';
+        done();
+        return;
+      }
+
+      void Promise.resolve(adminAuthMiddleware(request, reply))
+        .then(() => {
+          if (reply.sent) {
+            return;
+          }
+
+          return requireSuperAdmin(request, reply);
+        })
         .then(() => done())
         .catch(done);
     },
   }, async (request, reply) => {
-    // ── Route-level admin enforcement (defense-in-depth) ──────────────────────
-    // adminAuthMiddleware guards the plugin, but we assert isAdmin explicitly
-    // before touching any service logic (fail-closed posture).
-    if (!request.isAdmin || !request.adminId) {
+    const isServiceCaller = request.serviceCallerType === 'APPROVED_ONBOARDING';
+
+    if (!isServiceCaller && (!request.isAdmin || !request.adminId)) {
       return sendError(
         reply,
         'FORBIDDEN',
@@ -148,13 +207,26 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
 
     const provisionRequest = parseResult.data;
 
+    if (isServiceCaller && provisionRequest.provisioningMode !== 'APPROVED_ONBOARDING') {
+      return sendError(
+        reply,
+        'FORBIDDEN',
+        'Service credential is restricted to approved-onboarding provisioning',
+        403
+      );
+    }
+
+    const actorId = isServiceCaller
+      ? (request.serviceCallerId ?? 'crm-approved-onboarding')
+      : (request.adminId ?? 'unknown-admin');
+
     // ── Invoke provisioning service ───────────────────────────────────────────
     try {
       const result = await provisionTenant(
         provisionRequest,
         {
           requestId:    request.id ?? randomUUID(),
-          adminActorId: request.adminId,
+          adminActorId: actorId,
         }
       );
 
@@ -162,7 +234,7 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
       await writeAuditLog(
         prisma,
         createAdminAudit(
-          request.adminId,
+          actorId,
           'control.tenants.provisioned',
           'tenant',
           {
@@ -173,6 +245,9 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
             orchestrationReference: result.orchestrationReference,
             inviteId: result.firstOwnerAccessPreparation?.inviteId ?? null,
             invitePurpose: result.firstOwnerAccessPreparation?.invitePurpose ?? null,
+            authMode: isServiceCaller ? 'SERVICE_BEARER' : 'ADMIN_JWT',
+            serviceCallerId: request.serviceCallerId ?? null,
+            serviceCallerType: request.serviceCallerType ?? null,
           }
         )
       );
