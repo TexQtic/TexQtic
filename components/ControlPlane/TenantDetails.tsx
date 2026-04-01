@@ -7,6 +7,13 @@ type TenantDetailsTabId = 'OVERVIEW' | 'PLAN' | 'FEATURES' | 'BILLING' | 'RISK' 
 
 type TenantDetailsTabState = 'FULL' | 'LIMITED' | 'PREVIEW' | 'SEPARATE';
 
+interface TenantDetailsTab {
+  id: TenantDetailsTabId;
+  label: string;
+  state: TenantDetailsTabState;
+  note: string;
+}
+
 interface TenantDetailsProps {
   tenant: TenantConfig;
   onBack: () => void;
@@ -41,7 +48,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
     }
   };
 
-  const tabs = [
+  const tabs: TenantDetailsTab[] = [
     { id: 'OVERVIEW', label: 'Overview', state: 'FULL', note: 'Live' },
     { id: 'PLAN', label: 'Plan & Quotas', state: 'LIMITED', note: 'Limited' },
     { id: 'FEATURES', label: 'Feature Flags', state: 'LIMITED', note: 'Limited' },
@@ -109,31 +116,26 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                       {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
                     </button>
                   )}
-                  <div className="space-y-2 rounded border border-dashed border-slate-700/80 bg-slate-950/40 p-3">
+                  <div className="space-y-3 rounded border border-dashed border-slate-700/80 bg-slate-950/40 p-3">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                       Other lifecycle actions are not available in this surface.
                     </div>
-                    <button
-                      disabled
-                      aria-disabled="true"
-                      className="w-full cursor-not-allowed rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 opacity-70"
-                    >
-                      Reinstate Tenant
-                    </button>
-                    <button
-                      disabled
-                      aria-disabled="true"
-                      className="w-full cursor-not-allowed rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 opacity-70"
-                    >
-                      Suspend Tenant
-                    </button>
-                    <button
-                      disabled
-                      aria-disabled="true"
-                      className="w-full cursor-not-allowed rounded border border-slate-700 bg-slate-900 px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500 opacity-70"
-                    >
-                      Delete Tenant
-                    </button>
+                    <div className="rounded border border-slate-800 bg-slate-950/70 px-3 py-3 text-[11px] text-slate-400">
+                      <div className="font-semibold uppercase tracking-wide text-slate-500">Unavailable here</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {['Reinstate tenant', 'Suspend tenant', 'Delete tenant'].map(action => (
+                          <span
+                            key={action}
+                            className="rounded border border-slate-800 px-2 py-1 font-semibold uppercase tracking-wide text-slate-500"
+                          >
+                            {action}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
+                        No broad lifecycle suite is available from this deep-dive.
+                      </div>
+                    </div>
                   </div>
                 </div>
                 {activationError && (
@@ -243,16 +245,25 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
         </div>
       </div>
 
-      <div className="flex border-b border-slate-800">
+      <div className="rounded-xl border border-slate-800/80 bg-slate-950/30 px-4 py-3">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          Deep-dive boundary
+        </div>
+        <div className="mt-1 text-xs text-slate-400">
+          Overview is the live inspection surface. Other tabs preserve topology with limited, preview, or separate-surface framing only.
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
         {tabs.map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as TenantDetailsTabId)}
-            className={`flex flex-col items-start gap-1 px-6 py-3 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${activeTab === tab.id ? 'border-rose-600 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+            onClick={() => setActiveTab(tab.id)}
+            className={getTabClass(tab, activeTab === tab.id)}
           >
             <span>{tab.label}</span>
             {tab.id !== 'OVERVIEW' && (
-              <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest ${getTabBadgeClass(tab.state as TenantDetailsTabState)}`}>
+              <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest ${getTabBadgeClass(tab.state)}`}>
                 {tab.note}
               </span>
             )}
@@ -306,6 +317,14 @@ const getTabBadgeClass = (state: TenantDetailsTabState) => {
     default:
       return 'border-slate-700 text-slate-400';
   }
+};
+
+const getTabClass = (tab: TenantDetailsTab, isActive: boolean) => {
+  if (tab.id === 'OVERVIEW') {
+    return `flex min-w-[10rem] flex-col items-start gap-1 rounded-t-lg border px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all ${isActive ? 'border-rose-600/60 bg-slate-900 text-white shadow-[0_0_0_1px_rgba(225,29,72,0.15)]' : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700 hover:text-slate-200'}`;
+  }
+
+  return `flex min-w-[10rem] flex-col items-start gap-1 rounded-t-lg border px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all ${isActive ? 'border-slate-700 bg-slate-900/70 text-slate-200' : 'border-slate-900 bg-slate-950/20 text-slate-600 hover:border-slate-800 hover:text-slate-400'} opacity-85`;
 };
 
 const renderTabNoticePanel = ({
