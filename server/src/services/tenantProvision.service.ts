@@ -246,7 +246,7 @@ export async function provisionTenant(
     // Runtime tenant identity reads organizations.is_white_label via getOrganizationIdentity().
     // Provisioning must therefore write the WL flag into the canonical organizations row,
     // not only the transitional tenants mirror, so newly provisioned tenants rehydrate correctly.
-    const organizationStatus = tenant.status;
+    const organizationStatus = isApprovedOnboarding ? 'VERIFICATION_APPROVED' : tenant.status;
 
     const organization = await tx.organizations.upsert({
       where: { id: tenant.id },

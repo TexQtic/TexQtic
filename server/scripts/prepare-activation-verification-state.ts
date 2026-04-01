@@ -39,16 +39,6 @@ type ProvisionResponse = {
   };
 };
 
-type OutcomeResponse = {
-  data?: {
-    tenant?: {
-      id: string;
-      name: string;
-      status: string;
-    };
-  };
-};
-
 type ParsedArgs = {
   flags: Record<string, string | boolean>;
 };
@@ -99,13 +89,13 @@ function normalizeBaseUrl(baseUrl: string): string {
 function slugify(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
     .slice(0, 80);
 }
 
 function defaultRunTag(): string {
-  return new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  return new Date().toISOString().replaceAll(/[:.]/g, '-').slice(0, 19);
 }
 
 function buildOptions(argv: string[]): RuntimeOptions {
@@ -169,8 +159,8 @@ function printUsage(): void {
     '',
     'Purpose:',
     '  Prepare one ephemeral verification tenant through the approved-onboarding provisioning seam',
-    '  and persist APPROVED onboarding outcome so a later close-readiness run can exercise the',
-    '  existing activate-approved control-plane path.',
+    '  so a later close-readiness run can exercise the existing activate-approved control-plane path',
+    '  from a persisted VERIFICATION_APPROVED source state.',
     '',
     'Default mode:',
     '  dry-run (no mutation)',
@@ -225,22 +215,6 @@ function buildProvisionBody(options: RuntimeOptions) {
       cleanupPlan: options.cleanupPlan,
       runTag: options.runTag,
     },
-  };
-}
-
-function buildOutcomeBody(options: RuntimeOptions) {
-  return {
-    outcome: 'APPROVED' as const,
-    reason: `Activation verification state prepared for ${options.closeGate}`,
-    notes: [
-      `purpose=${options.purpose}`,
-      `owner=${options.owner}`,
-      'classification=EPHEMERAL',
-      `retention_intent=${options.retentionIntent}`,
-      `cleanup_plan=${options.cleanupPlan}`,
-      `run_tag=${options.runTag}`,
-      'prepared_by=prepare-activation-verification-state.ts',
-    ].join(' | '),
   };
 }
 
@@ -318,7 +292,7 @@ function printPlan(options: RuntimeOptions): void {
     },
     sequence: [
       'POST /api/control/tenants/provision with provisioningMode=APPROVED_ONBOARDING',
-      'POST /api/control/tenants/:id/onboarding/outcome with outcome=APPROVED',
+      'Verify the provisioning response reports organization.status=VERIFICATION_APPROVED',
       'Open the tenant in control-plane deep-dive and verify the activation control is visible before later activate-approved proof',
       'After close-grade verification, apply the recorded cleanup or rollback plan',
     ],
@@ -344,15 +318,13 @@ async function executePlan(options: RuntimeOptions): Promise<void> {
     throw new Error('Provisioning response did not include orgId and slug');
   }
 
-  const outcome = await requestJson<OutcomeResponse>(`${options.baseUrl}/api/control/tenants/${tenantId}/onboarding/outcome`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'X-Texqtic-Realm': 'control',
-    },
-    body: JSON.stringify(buildOutcomeBody(options)),
-  });
+  const preparedStatus = provision.data?.organization?.status;
+
+  if (preparedStatus !== 'VERIFICATION_APPROVED') {
+    throw new Error(
+      `Provisioning did not prepare VERIFICATION_APPROVED state for ${tenantId}; received ${preparedStatus ?? 'UNKNOWN'}`
+    );
+  }
 
   console.log(JSON.stringify({
     mode: options.mode,
@@ -360,7 +332,7 @@ async function executePlan(options: RuntimeOptions): Promise<void> {
       id: tenantId,
       slug: tenantSlug,
       classification: 'EPHEMERAL',
-      targetState: outcome.data?.tenant?.status ?? 'UNKNOWN',
+      targetState: preparedStatus,
     },
     governanceTrail: {
       owner: options.owner,
@@ -390,8 +362,10 @@ async function main(): Promise<void> {
   await executePlan(options);
 }
 
-main().catch(error => {
+try {
+  await main();
+} catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   console.error(message);
   process.exit(1);
-});
+}

@@ -20,7 +20,6 @@ Why this is the smallest lawful option:
    polluted with ad hoc verification state
 2. repo truth already supports the required lifecycle seams:
    - approved-onboarding provisioning
-   - onboarding outcome persistence
    - approved activation from the control plane
 3. the helper can stop at `VERIFICATION_APPROVED`, which is the exact precondition later required
    by the reviewed deep-dive activation smoke check
@@ -28,7 +27,6 @@ Why this is the smallest lawful option:
 ## Existing Repo Seams Used
 
 - provisioning seam: `POST /api/control/tenants/provision` with `provisioningMode=APPROVED_ONBOARDING`
-- onboarding outcome seam: `POST /api/control/tenants/:id/onboarding/outcome` with `outcome=APPROVED`
 - later close-grade activation seam: `POST /api/control/tenants/:id/onboarding/activate-approved`
 - deep-dive control gate: `components/ControlPlane/TenantDetails.tsx` shows the activation control
   only for `VERIFICATION_APPROVED`
@@ -46,7 +44,7 @@ Dry-run prints:
 - the governance trail fields that must be recorded
 - the planned ephemeral tenant identity
 - the exact HTTP sequence that will be used when executed
-- confirmation that the mechanism stops at `VERIFICATION_APPROVED`
+- confirmation that approved-onboarding provisioning itself must return `VERIFICATION_APPROVED`
 
 Execution mode is enabled only with `--execute` and requires admin authentication material.
 
@@ -82,7 +80,7 @@ Expected dry-run result:
 - emits one JSON plan
 - classifies the tenant as `EPHEMERAL`
 - shows the provisioning request shape
-- shows the onboarding outcome transition to `VERIFICATION_APPROVED`
+- shows verification that provisioning itself must leave the org in `VERIFICATION_APPROVED`
 - leaves actual activation for the later close-grade run
 
 ## Execute Example
@@ -126,9 +124,10 @@ pnpm -C server exec tsx scripts/prepare-activation-verification-state.ts \
 Successful execution prepares:
 
 - one ephemeral tenant created through the approved-onboarding provisioning seam
-- one persisted onboarding outcome of `VERIFICATION_APPROVED`
+- one org already persisted in `VERIFICATION_APPROVED` by that provisioning seam
 
 The helper does **not** call `activate-approved`.
+The helper does **not** call onboarding outcome persistence because that ACTIVE-to-APPROVED mutation is not part of the lawful preparation path.
 
 That final activation remains part of the later close-grade verification run that needs to prove the
 existing control-plane deep-dive activation path.

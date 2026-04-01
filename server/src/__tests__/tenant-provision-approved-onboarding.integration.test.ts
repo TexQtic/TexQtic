@@ -65,7 +65,7 @@ describe('approved-onboarding tenant provisioning route', () => {
         legalName: 'Acme Textiles LLC',
         jurisdiction: 'US-DE',
         registrationNumber: 'REG-123',
-        status: 'PENDING_VERIFICATION',
+        status: 'VERIFICATION_APPROVED',
       },
       firstOwnerAccessPreparation: {
         artifactType: 'PLATFORM_INVITE',
@@ -133,6 +133,7 @@ describe('approved-onboarding tenant provisioning route', () => {
       organization: {
         legalName: 'Acme Textiles LLC',
         jurisdiction: 'US-DE',
+        status: 'VERIFICATION_APPROVED',
       },
       firstOwnerAccessPreparation: {
         artifactType: 'PLATFORM_INVITE',

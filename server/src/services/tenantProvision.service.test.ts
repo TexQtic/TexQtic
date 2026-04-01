@@ -86,6 +86,13 @@ describe('tenantProvision.service', () => {
   });
 
   it('creates tenant plus organization plus distinct first-owner invite for approved onboarding', async () => {
+    tx.organizations.upsert.mockResolvedValueOnce({
+      legal_name: 'Acme Textiles LLC',
+      jurisdiction: 'US-DE',
+      registration_no: 'REG-123',
+      status: 'VERIFICATION_APPROVED',
+    });
+
     const result = await provisionTenant(
       {
         provisioningMode: 'APPROVED_ONBOARDING',
@@ -126,7 +133,7 @@ describe('tenantProvision.service', () => {
           jurisdiction: 'US-DE',
           registration_no: 'REG-123',
           external_orchestration_ref: 'ocase_12345',
-          status: 'ACTIVE',
+          status: 'VERIFICATION_APPROVED',
         }),
       })
     );
@@ -146,6 +153,7 @@ describe('tenantProvision.service', () => {
     expect(tx.membership.create).not.toHaveBeenCalled();
     expect(result.provisioningMode).toBe('APPROVED_ONBOARDING');
     expect(result.orchestrationReference).toBe('ocase_12345');
+    expect(result.organization.status).toBe('VERIFICATION_APPROVED');
     expect(result.firstOwnerAccessPreparation).toMatchObject({
       artifactType: 'PLATFORM_INVITE',
       inviteId: 'invite-uuid-0000-0000-0000-000000000001',
