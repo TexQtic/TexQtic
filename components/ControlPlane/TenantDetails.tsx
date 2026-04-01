@@ -66,7 +66,7 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   {tenantCreatedAt && <DetailItem label="Created At" value={tenantCreatedAt} />}
                 </div>
                 <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-                  This overview supports tenant inspection, approved activation when eligible, and bounded impersonation entry only.
+                  This overview supports tenant inspection, approved activation when eligible, and bounded tenant-context entry only.
                 </div>
               </div>
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
@@ -139,10 +139,14 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   </div>
                 )}
               </div>
-              <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800 flex flex-col items-center justify-center text-center">
-                 <div className={`text-4xl font-black mb-1 ${tenant.riskScore > 50 ? 'text-rose-500' : 'text-emerald-500'}`}>{tenant.riskScore}</div>
-                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Risk Score Preview</div>
-                 <div className="mt-4 text-[11px] text-slate-400">Detailed risk reporting is not available in this surface.</div>
+              <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800 text-center">
+                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Risk Visibility</div>
+                 <div className="mt-4 rounded border border-dashed border-slate-700/80 bg-slate-950/40 px-4 py-5">
+                   <div className="text-sm font-bold text-slate-200">Detailed risk scoring is not presented here.</div>
+                   <div className="mt-2 text-[11px] text-slate-400">
+                     This tenant deep-dive does not provide a tenant-real risk score or launch-ready risk workflow depth.
+                   </div>
+                 </div>
               </div>
             </div>
           </div>
@@ -163,29 +167,19 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
         });
       case 'BILLING':
         return (
-          <div className="bg-slate-900/50 p-8 rounded-xl border border-slate-800 space-y-8 animate-in slide-in-from-right-4 duration-300">
-             <div className="space-y-3">
-               <div className="flex flex-wrap items-center gap-3">
-                 <div className="text-xl font-bold">Billing Snapshot: <span className={tenant.billingStatus === 'CURRENT' ? 'text-emerald-400' : 'text-rose-500'}>{tenant.billingStatus}</span></div>
-                 <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Preview</span>
-               </div>
-               <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-                 Billing values shown here are a tenant-detail snapshot only. Statement generation and invoice workflow handling are not available in this surface.
-               </div>
+          <div className="bg-slate-900/50 p-8 rounded-xl border border-slate-800 space-y-6 animate-in slide-in-from-right-4 duration-300">
+             <div className="flex flex-wrap items-center gap-3">
+               <h3 className="text-xl font-bold text-white">Billing</h3>
+               <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Limited</span>
              </div>
-             <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4 bg-slate-950 rounded-lg">
-                  <div className="text-xs text-slate-500 uppercase font-bold mb-1">Displayed MTR</div>
-                  <div className="text-xl font-bold">$1,450.00</div>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-lg">
-                  <div className="text-xs text-slate-500 uppercase font-bold mb-1">Displayed Invoice State</div>
-                  <div className="text-xl font-bold text-slate-400">Paid</div>
-                </div>
-                <div className="p-4 bg-slate-950 rounded-lg">
-                  <div className="text-xs text-slate-500 uppercase font-bold mb-1">Displayed Usage</div>
-                  <div className="text-xl font-bold text-amber-400">$215.10</div>
-                </div>
+             <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
+               This tenant deep-dive does not expose tenant-real billing operations, invoice state handling, statement generation, or usage-backed financial detail.
+             </div>
+             <div className="rounded-xl border border-dashed border-slate-700/80 bg-slate-950/40 p-6 space-y-3">
+               <div className="text-sm font-bold text-slate-200">Billing depth remains outside this surface.</div>
+               <div className="text-sm text-slate-400">
+                 Use this tab as a boundary reminder only: billing workflow completion and operator billing actions are not available from the tenant deep-dive.
+               </div>
              </div>
           </div>
         );
@@ -194,14 +188,16 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
           <div className="bg-slate-900/50 p-8 rounded-xl border border-slate-800 space-y-6 animate-in slide-in-from-right-4 duration-300">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="text-xl font-bold text-white">Risk Snapshot</h3>
-              <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Preview</span>
+              <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Limited</span>
             </div>
             <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-              This tenant deep-dive shows a limited risk snapshot only. Detailed risk reporting and follow-up actions are not available in this surface.
+              This tenant deep-dive preserves risk-surface topology only. Detailed risk scoring, reporting, and follow-up actions are not available in this surface.
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950 p-6 text-center">
-              <div className={`text-4xl font-black mb-2 ${tenant.riskScore > 50 ? 'text-rose-500' : 'text-emerald-500'}`}>{tenant.riskScore}</div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Displayed Risk Score</div>
+            <div className="rounded-xl border border-dashed border-slate-700/80 bg-slate-950/40 p-6 text-center">
+              <div className="text-sm font-bold text-slate-200">No tenant-real risk score is presented here.</div>
+              <div className="mt-2 text-sm text-slate-400">
+                This tab does not certify launch-ready risk workflow depth and should not be read as a complete operator risk surface.
+              </div>
             </div>
           </div>
         );
@@ -226,7 +222,17 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
           {tenant.theme.logo} {tenant.name}
           <span className="text-xs font-normal text-slate-500 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">{tenant.id}</span>
         </h1>
-        <button onClick={() => onImpersonate(tenant)} className="ml-auto bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold uppercase hover:bg-blue-700 transition">Impersonate Tenant</button>
+        <div className="ml-auto flex flex-col items-end gap-1">
+          <button
+            onClick={() => onImpersonate(tenant)}
+            className="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold uppercase hover:bg-blue-700 transition"
+          >
+            Enter Tenant Context
+          </button>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            Bounded entry only
+          </span>
+        </div>
       </div>
 
       <div className="flex border-b border-slate-800">
