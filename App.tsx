@@ -227,10 +227,10 @@ const appendRehydrationTrace = (event: string, payload: RehydrationTracePayload 
   };
 
   try {
-    const existing = sessionStorage.getItem(REHYDRATION_TRACE_KEY);
+    const existing = window.sessionStorage.getItem(REHYDRATION_TRACE_KEY);
     const parsed = existing ? JSON.parse(existing) : [];
     const next = Array.isArray(parsed) ? [...parsed, entry].slice(-100) : [entry];
-    sessionStorage.setItem(REHYDRATION_TRACE_KEY, JSON.stringify(next));
+    window.sessionStorage.setItem(REHYDRATION_TRACE_KEY, JSON.stringify(next));
     console.info('[rehydration-trace]', entry);
   } catch {
     console.info('[rehydration-trace]', entry);
@@ -646,11 +646,13 @@ const clearPersistedImpersonationSession = () => {
 const App: React.FC = () => {
 
   useEffect(() => {
-    const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const navigationEntry = window.performance.getEntriesByType('navigation')[0] as
+      | { type?: string }
+      | undefined;
     const navigationType = navigationEntry?.type ?? 'unknown';
 
     if (navigationType === 'reload') {
-      sessionStorage.removeItem(REHYDRATION_TRACE_KEY);
+      window.sessionStorage.removeItem(REHYDRATION_TRACE_KEY);
     }
 
     appendRehydrationTrace('app:mount', {
@@ -1376,7 +1378,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [appState, authRealm]);
+  }, [appState, authRealm, effectiveRealm]);
 
   const handleAuthSuccess = async (data: any) => {
     const nextRealm = getCurrentAuthRealm(authRealm) ?? 'TENANT';
@@ -1591,7 +1593,7 @@ const App: React.FC = () => {
       const imageUrl = addItemFormData.imageUrl.trim();
       if (imageUrl) {
         try {
-          new URL(imageUrl);
+          new window.URL(imageUrl);
         } catch {
           throw new Error('Image URL must be a valid URL.');
         }
@@ -1656,7 +1658,7 @@ const App: React.FC = () => {
       if (!editItemFormData.name.trim()) throw new Error('Name is required.');
       if (trimmedImageUrl) {
         try {
-          new URL(trimmedImageUrl);
+          new window.URL(trimmedImageUrl);
         } catch {
           throw new Error('Image URL must be a valid URL.');
         }

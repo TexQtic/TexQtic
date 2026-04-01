@@ -122,7 +122,7 @@ export function SettlementPreview({ onBack }: Readonly<Props>) {
   const canConfirm = previewResult?.wouldSucceed === true;
 
   // ─── Phase 1: Submit preview ────────────────────────────────────────────────
-  const handlePreview = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handlePreview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tradeId.trim() || !escrowId.trim() || !isValidAmount || !currency.trim()) return;
 
@@ -152,7 +152,7 @@ export function SettlementPreview({ onBack }: Readonly<Props>) {
   };
 
   // ─── Phase 2: Submit confirm ────────────────────────────────────────────────
-  const handleConfirm = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!referenceId.trim() || !reason.trim()) return;
 
