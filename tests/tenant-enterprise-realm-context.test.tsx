@@ -31,6 +31,33 @@ function installStorageMock() {
   });
 }
 
+function persistImpersonationSession(expiresAt: string) {
+  localStorage.setItem(
+    'texqtic_impersonation_session',
+    JSON.stringify({
+      adminId: 'admin-1',
+      tenant: {
+        id: 'tenant-1',
+        slug: 'white-label-co',
+        name: 'White Label Co',
+        type: 'B2C',
+        tenant_category: 'B2C',
+        is_white_label: true,
+        status: 'ACTIVE',
+        plan: 'ENTERPRISE',
+      },
+      state: {
+        isAdmin: true,
+        targetTenantId: 'tenant-1',
+        startTime: '2026-04-01T00:00:00.000Z',
+        impersonationId: 'imp-1',
+        token: 'tenant-impersonation-jwt',
+        expiresAt,
+      },
+    })
+  );
+}
+
 describe('tenant-enterprise realm context hotfix', () => {
   beforeEach(() => {
     installStorageMock();
@@ -55,6 +82,24 @@ describe('tenant-enterprise realm context hotfix', () => {
 
     expect(getAuthRealm()).toBe('TENANT');
     expect(getToken()).toBe('tenant-jwt');
+  });
+
+  it('preserves tenant realm during active impersonation when the stored realm key is missing', () => {
+    setToken('admin-jwt', 'CONTROL_PLANE');
+    persistImpersonationSession('2099-04-01T00:00:00.000Z');
+
+    localStorage.removeItem('texqtic_auth_realm');
+
+    expect(getAuthRealm()).toBe('TENANT');
+  });
+
+  it('does not infer tenant realm from an expired impersonation session', () => {
+    setToken('admin-jwt', 'CONTROL_PLANE');
+    persistImpersonationSession('2000-04-01T00:00:00.000Z');
+
+    localStorage.removeItem('texqtic_auth_realm');
+
+    expect(getAuthRealm()).toBe('CONTROL_PLANE');
   });
 
   it('surfaces explicit realm mismatch messages instead of collapsing them into a generic network error', () => {

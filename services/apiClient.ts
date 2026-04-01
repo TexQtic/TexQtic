@@ -39,6 +39,7 @@ const API_BASE_URL = (() => {
 const TENANT_TOKEN_KEY = 'texqtic_tenant_token';
 const ADMIN_TOKEN_KEY = 'texqtic_admin_token';
 const AUTH_REALM_KEY = 'texqtic_auth_realm';
+const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
 
 // G-W3-ROUTING-001: Impersonation token override.
 // When set, replaces the stored tenant token for non-auth requests.
@@ -71,6 +72,39 @@ export function setStoredAuthRealm(realm: AuthRealm | null): void {
   localStorage.removeItem(AUTH_REALM_KEY);
 }
 
+function hasActivePersistedImpersonationSession(): boolean {
+  const raw = localStorage.getItem(IMPERSONATION_SESSION_KEY);
+  if (!raw) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as {
+      state?: {
+        isAdmin?: unknown;
+        targetTenantId?: unknown;
+        token?: unknown;
+        expiresAt?: unknown;
+      };
+    };
+
+    const state = parsed.state;
+    if (
+      state?.isAdmin !== true ||
+      typeof state.targetTenantId !== 'string' ||
+      typeof state.token !== 'string' ||
+      typeof state.expiresAt !== 'string'
+    ) {
+      return false;
+    }
+
+    const expiry = Date.parse(state.expiresAt);
+    return Number.isFinite(expiry) && expiry > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 function resolveStoredAuthRealm(fallbackRealm: AuthRealm | null = null): AuthRealm | null {
   const storedRealm = localStorage.getItem(AUTH_REALM_KEY) as AuthRealm | null;
   if (storedRealm) {
@@ -81,6 +115,10 @@ function resolveStoredAuthRealm(fallbackRealm: AuthRealm | null = null): AuthRea
   const hasAdminToken = !!localStorage.getItem(ADMIN_TOKEN_KEY);
 
   if (hasTenantToken && !hasAdminToken) {
+    return 'TENANT';
+  }
+
+  if (hasActivePersistedImpersonationSession()) {
     return 'TENANT';
   }
 
