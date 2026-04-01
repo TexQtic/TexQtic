@@ -35,7 +35,7 @@ const envSchema = z.object({
   // CORS
   CORS_ALLOWED_ORIGINS: z
     .string()
-    .default('http://localhost:5173,https://www.texqtic.com,https://texqtic.com'),
+    .default('http://localhost:5173,https://www.texqtic.com,https://texqtic.com,https://app.texqtic.com'),
 
   // G-026 — Domain resolver HMAC secret (≥ 32 chars).
   // Must be set in all environments. Shared with the Vercel Edge function.
@@ -69,10 +69,10 @@ const _parsedFrontendUrl = z.string().url().safeParse(_frontendUrlClean);
 
 const FRONTEND_URL_VALUE = _parsedFrontendUrl.success
   ? _parsedFrontendUrl.data
-  : 'https://www.texqtic.com';
+  : 'https://app.texqtic.com';
 
 if (!_parsedFrontendUrl.success) {
-  console.warn('[config] FRONTEND_URL invalid/missing; using fallback https://www.texqtic.com', {
+  console.warn('[config] FRONTEND_URL invalid/missing; using fallback https://app.texqtic.com', {
     value: _frontendUrlRaw,
   });
 }

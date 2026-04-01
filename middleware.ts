@@ -29,7 +29,7 @@
  *
  *   TEXQTIC_RESOLVER_SECRET — shared HMAC secret (min 32 chars)
  *   TEXQTIC_PLATFORM_DOMAINS — comma-separated passthrough hosts
- *                              (default: texqtic.app,texqtic.com,www.texqtic.app,www.texqtic.com)
+ *                              (default: texqtic.app,texqtic.com,app.texqtic.com,www.texqtic.app,www.texqtic.com)
  *
  * ─── Header injection mechanism ─────────────────────────────────────────────
  *
@@ -160,7 +160,14 @@ function parsePlatformHostEdge(host: string): PlatformHostResult {
 // ─── Platform passthrough list ────────────────────────────────────────────────
 
 function buildPassthroughSet(): Set<string> {
-  const defaults = ['texqtic.app', 'texqtic.com', 'www.texqtic.app', 'www.texqtic.com', 'api.texqtic.app'];
+  const defaults = [
+    'texqtic.app',
+    'texqtic.com',
+    'app.texqtic.com',
+    'www.texqtic.app',
+    'www.texqtic.com',
+    'api.texqtic.app',
+  ];
   const custom =
     (typeof process !== 'undefined' && process.env?.TEXQTIC_PLATFORM_DOMAINS)
       ? process.env.TEXQTIC_PLATFORM_DOMAINS.split(',').map(h => h.trim()).filter(Boolean)
