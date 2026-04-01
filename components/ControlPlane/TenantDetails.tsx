@@ -70,7 +70,13 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                 </div>
               </div>
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Branding Config</h3>
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Branding Snapshot</h3>
+                  <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Partial</span>
+                </div>
+                <div className="mb-4 rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
+                  This panel shows a lightweight branding snapshot only. Displayed logo and colors may include fallback values and do not represent a full branding configuration workflow.
+                </div>
                 <div className="flex items-center gap-6">
                   <div className="w-16 h-16 rounded-xl bg-slate-800 flex items-center justify-center text-4xl border border-slate-700">
                     {tenant.theme.logo}
@@ -78,11 +84,13 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded" style={{ backgroundColor: tenant.theme.primaryColor }}></div>
-                      <span className="text-xs font-mono">{tenant.theme.primaryColor}</span>
+                      <span className="text-xs text-slate-500">Displayed primary color</span>
+                      <span className="text-xs font-mono text-slate-300">{tenant.theme.primaryColor}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded" style={{ backgroundColor: tenant.theme.secondaryColor }}></div>
-                      <span className="text-xs font-mono">{tenant.theme.secondaryColor}</span>
+                      <span className="text-xs text-slate-500">Displayed secondary color</span>
+                      <span className="text-xs font-mono text-slate-300">{tenant.theme.secondaryColor}</span>
                     </div>
                   </div>
                 </div>
