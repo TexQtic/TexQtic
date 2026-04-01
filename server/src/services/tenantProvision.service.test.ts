@@ -73,7 +73,7 @@ describe('tenantProvision.service', () => {
       legal_name: 'Acme Textiles LLC',
       jurisdiction: 'US-DE',
       registration_no: 'REG-123',
-      status: 'PENDING_VERIFICATION',
+      status: 'ACTIVE',
     });
     tx.user.findUnique.mockResolvedValue(null);
     tx.user.create.mockResolvedValue({ id: 'user-uuid-0000-0000-0000-000000000001' });
@@ -126,7 +126,7 @@ describe('tenantProvision.service', () => {
           jurisdiction: 'US-DE',
           registration_no: 'REG-123',
           external_orchestration_ref: 'ocase_12345',
-          status: 'PENDING_VERIFICATION',
+          status: 'ACTIVE',
         }),
       })
     );

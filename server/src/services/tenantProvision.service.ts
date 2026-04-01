@@ -32,6 +32,7 @@ const ADMIN_SENTINEL_ID = '00000000-0000-0000-0000-000000000001';
 const BCRYPT_ROUNDS = 12;
 
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+const PROVISION_TRANSACTION_TIMEOUT_MS = 20_000;
 
 /**
  * Generate a URL-safe slug from an org name.
@@ -245,6 +246,8 @@ export async function provisionTenant(
     // Runtime tenant identity reads organizations.is_white_label via getOrganizationIdentity().
     // Provisioning must therefore write the WL flag into the canonical organizations row,
     // not only the transitional tenants mirror, so newly provisioned tenants rehydrate correctly.
+    const organizationStatus = tenant.status;
+
     const organization = await tx.organizations.upsert({
       where: { id: tenant.id },
       create: {
@@ -255,7 +258,7 @@ export async function provisionTenant(
         jurisdiction: isApprovedOnboarding ? approvedOnboardingJurisdiction : 'UNKNOWN',
         registration_no: isApprovedOnboarding ? approvedOnboardingRegistrationNumber : undefined,
         org_type: tenant.type,
-        status: isApprovedOnboarding ? 'PENDING_VERIFICATION' : tenant.status,
+        status: organizationStatus,
         plan: tenant.plan,
         is_white_label: request.is_white_label ?? false,
       },
@@ -266,7 +269,7 @@ export async function provisionTenant(
         jurisdiction: isApprovedOnboarding ? approvedOnboardingJurisdiction : 'UNKNOWN',
         registration_no: isApprovedOnboarding ? approvedOnboardingRegistrationNumber : undefined,
         org_type: tenant.type,
-        status: isApprovedOnboarding ? 'PENDING_VERIFICATION' : tenant.status,
+        status: organizationStatus,
         plan: tenant.plan,
         is_white_label: request.is_white_label ?? false,
         updated_at: new Date(),
@@ -282,7 +285,6 @@ export async function provisionTenant(
     if (approvedOnboardingRequest) {
       const inviteArtifact = buildInviteArtifact();
 
-      await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
       await tx.$executeRawUnsafe(
         `SELECT set_config('app.org_id', $1, true)`,
         tenant.id
@@ -362,9 +364,6 @@ export async function provisionTenant(
     // Switch org_id to the new tenant — tx-local, same transaction.
     // ─────────────────────────────────────────────────────────────────────────
 
-    // Enforce RLS for tenant-scoped membership write
-    await tx.$executeRawUnsafe(`SET LOCAL ROLE texqtic_app`);
-
     // Switch canonical org boundary to new tenant (tx-local=true)
     await tx.$executeRawUnsafe(
       `SELECT set_config('app.org_id', $1, true)`,
@@ -404,5 +403,7 @@ export async function provisionTenant(
       },
       firstOwnerAccessPreparation: null,
     };
+  }, {
+    timeout: PROVISION_TRANSACTION_TIMEOUT_MS,
   });
 }
