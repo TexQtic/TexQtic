@@ -298,7 +298,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const nextStatus = onboardingOutcomeStatusByOutcome[outcome];
 
     try {
-      const result = await withOrgAdminContext(id, adminId, async tx => {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
         const currentOrg = await tx.organizations.findUnique({
           where: { id },
           select: {
