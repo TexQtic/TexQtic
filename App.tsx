@@ -1046,10 +1046,11 @@ const App: React.FC = () => {
   }, [tenants, currentTenantId]);
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
   const normalizedTenantCategory = currentTenant?.tenant_category ?? currentTenant?.type;
+  const isNonWhiteLabelB2CTenant = normalizedTenantCategory === TenantType.B2C
+    && currentTenant?.is_white_label !== true;
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
-    && normalizedTenantCategory === TenantType.B2C
-    && currentTenant?.is_white_label !== true;
+    && isNonWhiteLabelB2CTenant;
 
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
@@ -2404,7 +2405,7 @@ const App: React.FC = () => {
     if (appState === 'TEAM_MGMT') return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
     if (appState === 'INVITE_MEMBER')
       return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;
-    if (appState === 'SETTINGS') {
+    if (appState === 'SETTINGS' && !isNonWhiteLabelB2CTenant) {
       return (
         <WhiteLabelSettings
           tenant={currentTenant}
@@ -3294,13 +3295,15 @@ const App: React.FC = () => {
             <ExperienceShell {...props}>
               <div className="absolute top-4 right-4 z-[60] flex gap-2">
                 <CartToggleButton setShowCart={setShowCart} />
-                <button
-                  onClick={() => setAppState('SETTINGS')}
-                  className="bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hover:text-indigo-600 transition"
-                  title="Storefront Settings"
-                >
-                  ⚙️
-                </button>
+                {!isNonWhiteLabelB2CTenant && (
+                  <button
+                    onClick={() => setAppState('SETTINGS')}
+                    className="bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hover:text-indigo-600 transition"
+                    title="Storefront Settings"
+                  >
+                    ⚙️
+                  </button>
+                )}
               </div>
               {renderExperienceContent()}
             </ExperienceShell>
