@@ -111,9 +111,12 @@
                       "ACTIVE",
                       "SUSPENDED",
                       "CLOSED",
-                      "PENDING_VERIFICATION"
+                      "PENDING_VERIFICATION",
+                      "VERIFICATION_APPROVED",
+                      "VERIFICATION_REJECTED",
+                      "VERIFICATION_NEEDS_MORE_INFO"
                     ],
-                    "description": "Tenant activation state exposed from the canonical organization record. PENDING_VERIFICATION means onboarding submitted verification and is awaiting approval."
+                    "description": "Tenant lifecycle and onboarding state exposed from the canonical organization record. PENDING_VERIFICATION means verification has been submitted and is awaiting review. VERIFICATION_APPROVED, VERIFICATION_REJECTED, and VERIFICATION_NEEDS_MORE_INFO represent recorded review outcomes before or instead of ACTIVE trade-capable runtime use."
                   },
                   "plan": { "type": "string" }
                 }
@@ -446,7 +449,7 @@
     "/api/me": {
       "get": {
         "summary": "Get current authenticated user + tenant",
-        "description": "Returns current user profile and canonical tenant details from the organization record. When the first OWNER has completed verification submission, this read finalizes the tenant into ACTIVE server-side before returning the response.",
+        "description": "Returns current user profile and canonical tenant details from the organization record. The tenant response reflects the persisted organization lifecycle/onboarding state; this read does not define a separate status vocabulary.",
         "security": [{ "tenantJwt": [] }],
         "responses": {
           "200": {
@@ -511,7 +514,7 @@
         },
         "responses": {
           "200": {
-            "description": "Tenant activated successfully. The tenant response reflects the canonical post-activation state, including ACTIVE when the first-owner loop has completed."
+            "description": "Tenant activated successfully. The tenant response reflects the canonical post-activation onboarding state, which is expected to be PENDING_VERIFICATION until a real review outcome is recorded."
           },
           "404": {
             "description": "Invite not found or expired",

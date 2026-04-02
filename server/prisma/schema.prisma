@@ -995,6 +995,10 @@ model organizations {
   registration_no       String?               @db.VarChar(200)
   org_type              String                @default("B2B") @db.VarChar(50)
   risk_score            Int                   @default(0) @db.SmallInt
+  /// Canonical organization lifecycle + onboarding state.
+  /// Enforced by SQL check constraint and migration history, not a native Prisma enum.
+  /// Legal values: ACTIVE | SUSPENDED | CLOSED | PENDING_VERIFICATION |
+  /// VERIFICATION_APPROVED | VERIFICATION_REJECTED | VERIFICATION_NEEDS_MORE_INFO
   status                String                @default("ACTIVE") @db.VarChar(30)
   plan                  String                @default("FREE") @db.VarChar(30)
   effective_at          DateTime              @default(now()) @db.Timestamptz(6)
