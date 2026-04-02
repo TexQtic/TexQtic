@@ -72,7 +72,7 @@ async function withOrgAdminContext<T>(orgId: string, adminId: string, callback: 
   const ctx: DatabaseContext = {
     orgId,
     actorId: adminId,
-    realm: 'control',
+    realm: 'admin',
     requestId: randomUUID(),
   };
 
