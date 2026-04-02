@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY close sync)
+**Last Updated:** 2026-04-02 (OUT-OF-SCOPE-FINDING-CAPTURE-001 record-only audit)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -75,6 +75,15 @@ exists. This close remains bounded to public B2C browse-entry continuity only. I
 full B2C completeness, merchandising depth, seller/admin correctness, or checkout/cart continuity.
 The known `+ Add Item` seller/admin drift remains separate as an adjacent candidate only, and
 cleanup of the EPHEMERAL proof tenant remains a separate later unit.
+
+`OUT-OF-SCOPE-FINDING-CAPTURE-001` re-ran the recent B2C and control-plane close history as a
+record-only governance pass. Result: the already-recorded adjacent candidate
+`MODE-COMPLETENESS-B2C-STOREFRONT-SELLER-ADMIN-AFFORDANCE-SEPARATION-001` remains preserved
+without duplication, and one previously unnamed separate follow-up candidate is now preserved
+explicitly as `EPHEMERAL-VERIFICATION-TENANT-CLEANUP-002` for the exact closed B2C proof tenant
+`743c73aa-1b55-4560-a018-e8e554ca65f6` (`b2c-browse-proof-20260402080229`). This pass opened no
+new `ACTIVE_DELIVERY` unit, performed no implementation or runtime mutation, and found no other
+missing out-of-scope candidate from the reviewed recent chain.
 
 `EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001` is now `CLOSED` after bounded runtime cleanup and
 production validation confirmed the exact EPHEMERAL proof artifact no longer exists by exact UUID,

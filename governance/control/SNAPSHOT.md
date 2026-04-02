@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-04-02
-last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-BUILD-BLOCKER-FIX-001
+last_unit_opened: OUT-OF-SCOPE-FINDING-CAPTURE-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
-last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY
-last_commit: "[GOVERNANCE] MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY close sync"
+last_unit_closed: OUT-OF-SCOPE-FINDING-CAPTURE-001
+last_commit: "[OUT-OF-SCOPE-FINDING-CAPTURE-001] record missing out-of-scope candidates"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -65,7 +65,19 @@ mode_completeness_b2c_storefront_continuity_closed: true
 mode_completeness_b2c_storefront_continuity_proof_tenant_id: "743c73aa-1b55-4560-a018-e8e554ca65f6"
 mode_completeness_b2c_storefront_continuity_proof_tenant_slug: "b2c-browse-proof-20260402080229"
 mode_completeness_b2c_storefront_continuity_add_item_adjacent_finding_remains_separate: true
+mode_completeness_b2c_storefront_continuity_add_item_adjacent_candidate_unit: "MODE-COMPLETENESS-B2C-STOREFRONT-SELLER-ADMIN-AFFORDANCE-SEPARATION-001"
+mode_completeness_b2c_storefront_continuity_add_item_adjacent_candidate_readiness: implementation-ready
 mode_completeness_b2c_storefront_continuity_ephemeral_proof_tenant_cleanup_pending_reviewed_step: true
+mode_completeness_b2c_storefront_continuity_ephemeral_proof_tenant_cleanup_candidate_recorded: true
+mode_completeness_b2c_storefront_continuity_ephemeral_proof_tenant_cleanup_candidate_unit: "EPHEMERAL-VERIFICATION-TENANT-CLEANUP-002"
+mode_completeness_b2c_storefront_continuity_ephemeral_proof_tenant_cleanup_candidate_readiness: decision-gated
+mode_completeness_b2c_storefront_continuity_ephemeral_proof_tenant_cleanup_candidate_likely_minimum_file_allowlist: "governance/control/OPEN-SET.md, governance/control/NEXT-ACTION.md, governance/control/SNAPSHOT.md"
+out_of_scope_finding_capture_001_completed: true
+out_of_scope_finding_capture_001_no_active_delivery_opened: true
+out_of_scope_finding_capture_001_review_scope: "recent B2C and control-plane close/verification chain only"
+out_of_scope_finding_capture_001_missing_candidate_count: 1
+out_of_scope_finding_capture_001_missing_candidate_units: "EPHEMERAL-VERIFICATION-TENANT-CLEANUP-002"
+out_of_scope_finding_capture_001_already_recorded_candidate_units: "MODE-COMPLETENESS-B2C-STOREFRONT-SELLER-ADMIN-AFFORDANCE-SEPARATION-001, CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001, CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001"
 control_plane_tenant_deep_dive_truthfulness_open: false
 control_plane_tenant_deep_dive_truthfulness_active_delivery: false
 control_plane_tenant_deep_dive_truthfulness_opened_from_control_plane_tenant_operations_reality: true
