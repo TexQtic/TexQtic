@@ -1,5 +1,11 @@
 # TEXQTIC-WHITE-LABEL-OPERATING-MODE-DESIGN-v1
 
+> Supersession / authority note: This artifact remains the bounded historical design authority for
+> `WL-COMPLETE-001` and its operating-loop closure only. It is not the canonical family
+> classification anchor for white-label under the adopted platform model. Current white-label
+> family classification and adjacent-family boundary authority now lives in
+> `docs/product-truth/WHITE-LABEL-OVERLAY-NORMALIZATION-v1.md`.
+
 ## 1. Title / Status / Purpose
 
 - Title: `TEXQTIC-WHITE-LABEL-OPERATING-MODE-DESIGN-v1`
