@@ -98,13 +98,19 @@ Supersession note:
 
 ---
 
-## 3. Delivery Model
+## 3. Governed Commercial Access Models
 
-| Mode                    | Description                                                                            |
-|-------------------------|----------------------------------------------------------------------------------------|
-| **B2B Governed Exchange** | Multi-party supply chain participants operating under platform governance rules        |
-| **White-Label SaaS**    | Brand-owned storefronts and back-offices running on TexQtic infrastructure             |
-| **Platform API**        | Headless API access for advanced integrations (future; governed by rate-limit + subscription tier) |
+| Model | Description |
+|-------|-------------|
+| **B2B Exchange** | The primary governed trade and commerce mode for authenticated business participants, covering structured discovery, commercial engagement, transaction continuity, and downstream workflow. |
+| **B2C Tenant-Branded Commerce** | A tenant-branded consumer commerce mode that may expose public-safe discovery and entry surfaces, while transactional continuity remains authenticated and tenant-scoped under current truth unless later expanded by explicit board authorization. |
+| **Aggregator Directory Discovery + Intent Handoff** | A curated discovery, qualification, and intent-routing mode that helps participants find relevant counterparties and routes qualified demand into downstream governed execution paths. It is not the primary owner of downstream transaction execution, settlement, or workflow orchestration. |
+
+Additional structural notes:
+
+- White-label is an overlay capability and deployment/experience model, not a separate commercial access model.
+- Platform API is an integration surface, not a fourth commercial access model.
+- Control-plane, superadmin, and WL-admin surfaces remain governance/operations surfaces rather than commercial pillars.
 
 ---
 

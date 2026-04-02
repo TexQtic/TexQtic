@@ -128,7 +128,7 @@ These choices determine:
 
 | # | Decision                    | Question                                                                                                             | Best Default (see Section F)         | Status     |
 |---|-----------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------|------------|
-| 1 | Platform positioning        | Infrastructure layer? Governed exchange? SaaS? Open bazaar?                                                         | Hybrid B2B + White-label SaaS        | ⏳ OPEN    |
+| 1 | Platform positioning        | Infrastructure layer? Governed exchange? SaaS? Open bazaar?                                                         | Operating system + governed infrastructure, expressed through B2B Exchange / B2C Tenant-Branded Commerce / Aggregator Directory Discovery + Intent Handoff | SUPERSEDED |
 | 2 | Monetization model          | Subscription only? Commission only? Hybrid?                                                                          | Hybrid (subscription + tx fee)       | ⏳ OPEN    |
 | 3 | Settlement ownership        | Escrow? Direct tenant-to-tenant? Platform-managed?                                                                   | Direct T2T now; managed hook later   | ⏳ OPEN    |
 | 4 | AI stance                   | Advisory only? Automated lifecycle decisions?                                                                        | Advisory now; gated automation later | ⏳ OPEN    |
@@ -147,7 +147,7 @@ Any new dashboard module introduced in Wave 4+ **must** declare all of the follo
 
 - **Realm:** control | tenant | public
 - **Actor roles:** SUPER_ADMIN | SUPPORT | OWNER | ADMIN | MEMBER | BUYER | GUEST
-- **Tenant types applicable:** ALL | AGGREGATOR | B2B | B2C | WHITE_LABEL
+- **Tenant types applicable:** ALL | AGGREGATOR | B2B | B2C (+ white-label overlay where applicable)
 - **Data authority boundary:** Which DB tables, which RLS role context
 - **Audit events required:** [list SNAKE_CASE event names]
 - **Monetization touchpoint:** subscription value | transaction fee trigger | none
@@ -163,12 +163,15 @@ Any new dashboard module introduced in Wave 4+ **must** declare all of the follo
 
 ### 1. Platform Positioning
 
-**Best default: Infrastructure layer + governed exchange, delivered as Hybrid B2B + White-label SaaS.**
+**Best default: Operating-system-first governed infrastructure, expressed through B2B Exchange, B2C Tenant-Branded Commerce, and Aggregator Directory Discovery + Intent Handoff.**
 
 TexQtic is **not** an open listing site. It is a workflow + compliance + authority system across the supply chain (yarn → fabric → garment), where trade is:
 - **Permissioned** — only vetted actors participate
 - **Structured** — RFQ → negotiation → compliance gate → fulfillment
 - **Governed** — every state transition is auditable
+
+White-label is an overlay capability and deployment/experience model, not a fourth platform pillar.
+Enterprise remains a depth posture within B2B operating reality, not a separate platform mode.
 
 This directly prevents "common bazaar" drift: the platform creates no value unless trade is structured.
 

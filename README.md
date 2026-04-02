@@ -26,31 +26,38 @@
 
 TexQtic
 
-TexQtic is a next-generation, multi-tenant platform for the global textile ecosystem — connecting manufacturers, traders, service providers, brands, and retailers across B2B, B2C, and Aggregator experiences, with full white-label storefront support.
+TexQtic is a next-generation, multi-tenant governed platform for the global textile ecosystem. It
+operates as the operating system for trusted textile supply chains and expresses that operating
+system through three governed commercial access models: B2B Exchange, B2C Tenant-Branded
+Commerce, and Aggregator Directory Discovery + Intent Handoff. White-label storefront capability
+remains an overlay rather than a separate pillar.
 
 This repository represents a clean rebuild of the TexQtic platform, intentionally started from scratch to eliminate architectural debt and enforce strong governance from day one.
 
 🧭 Platform Vision
 
-TexQtic is designed as a three-sided platform:
+TexQtic is organized around three governed commercial access models subordinate to a single
+platform spine:
 
-Aggregator / Directory
+Aggregator Directory Discovery + Intent Handoff
 
-Discovery of manufacturers, traders, service providers, consultants, logistics, compliance agencies, etc.
+Curated discovery, qualification, and routing into downstream governed execution paths.
 
-B2B Marketplace
+B2B Exchange
 
-Manufacturer ↔ wholesaler commerce
+Structured manufacturer, trader, wholesaler, and business-participant commerce under platform
+governance.
 
-RFQs, negotiations, contracts, bulk pricing
+B2C Tenant-Branded Commerce
 
-B2C / D2C Marketplace
+Tenant-branded public-safe discovery and entry surfaces with authenticated tenant-scoped
+transactional continuity under current truth.
 
-Retail storefronts for brands and sellers
+White-label remains an overlay capability on top of these governed access models rather than a
+separate board-level pillar.
 
-Optional white-label, Shopify-like experience
-
-All experiences are powered by a single platform spine with strict multi-tenancy, security, and governance.
+All experiences are subordinate expressions of a single governed platform spine with strict
+multi-tenancy, security, and governance.
 
 🏗️ Architectural Philosophy
 

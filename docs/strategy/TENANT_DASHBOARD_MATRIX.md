@@ -9,6 +9,10 @@
 
 > This matrix defines the canonical dashboard surfaces for each tenant type. It is the product scope boundary for all Wave 4+ frontend work. **No tenant dashboard module ships without a row in this matrix.**
 
+> Canonical model note: B2B, B2C, and Aggregator are the governed commercial access models.
+> White-label is an overlay capability and deployment/experience model, not a separate board-level
+> pillar or primary tenant-mode family.
+
 ---
 
 ## Organization Principle
@@ -62,16 +66,18 @@ signals that would otherwise understate current tenant reality.
 
 ---
 
-### Tenant Type: WHITE_LABEL (Brand-Owned Storefront Operator)
+### White-Label Overlay (Brand-Owned Storefront Operator)
 
 **Actor roles:** OWNER, ADMIN, MEMBER
 
-**Shell:** `WhiteLabelShell` in `layouts/Shells.tsx`
+**Applies to:** B2B or B2C tenants with white-label capability enabled
+
+**Shells:** `WhiteLabelShell` and `WhiteLabelAdminShell` in `layouts/Shells.tsx`
 
 **Context:** WL tenants own a branded storefront and already have a real operator/admin back-
 office surface alongside storefront-facing navigation. This matrix covers the brand-operator
-surface only and should no longer be read as if WL Store Admin were still a future-add product
-decision.
+overlay only and should not be read as if white-label were a separate canonical tenant type or
+board-level pillar.
 
 | Domain | Module | Description | Wave 4 | Status |
 |--------|--------|-------------|--------|--------|
@@ -95,13 +101,16 @@ decision.
 
 ---
 
-### Tenant Type: AGGREGATOR (Platform Orchestrator)
+### Tenant Type: AGGREGATOR (Directory Discovery + Intent Handoff)
 
 **Actor roles:** OWNER, ADMIN, MEMBER
 
 **Shell:** `AggregatorShell` in `layouts/Shells.tsx`
 
-**Context:** Aggregators orchestrate across suppliers and buyers. They need the widest operational surface — they are mini-platform operators within the TexQtic governed exchange.
+**Context:** Aggregators provide curated discovery, qualification, and intent routing across
+suppliers and buyers. They may expose network visibility and routing support, but they are not the
+primary owners of downstream transaction execution, settlement, or platform workflow
+orchestration.
 
 | Domain | Module | Description | Wave 4 | Status |
 |--------|--------|-------------|--------|--------|
@@ -124,13 +133,15 @@ decision.
 
 ---
 
-### Tenant Type: B2C (End Consumer / Retail)
+### Tenant Type: B2C (Tenant-Branded Commerce)
 
-**Actor roles:** OWNER, ADMIN, MEMBER (and BUYER / GUEST for storefront consumers)
+**Actor roles:** OWNER, ADMIN, MEMBER (with separate public-safe storefront visitors on the consumer-facing surface)
 
 **Shell:** `B2CShell` in `layouts/Shells.tsx`
 
-**Context:** B2C tenants are consumer-facing. The operator back-office is simpler; the majority of surface is storefront-consumer-facing (out of scope for this matrix).
+**Context:** B2C tenants may expose public-safe storefront discovery and entry surfaces. Under
+current truth, transactional continuity remains authenticated and tenant-scoped, while the
+operator back-office stays simpler than B2B.
 
 | Domain | Module | Description | Wave 4 | Status |
 |--------|--------|-------------|--------|--------|
@@ -165,7 +176,7 @@ For each module, access is determined by the actor's role within the tenant:
 ## Module Declaration: [Module Name]
 
 - **Domain:** TA | TO | TF | TS | TC
-- **Tenant types:** ALL | B2B | WHITE_LABEL | AGGREGATOR | B2C
+- **Tenant types:** ALL | B2B | AGGREGATOR | B2C (+ white-label overlay where applicable)
 - **Actor roles:** OWNER | ADMIN | MEMBER (+ access level per role)
 - **Realm:** tenant
 - **Data authority:** [tables + RLS context required]
@@ -188,8 +199,8 @@ For each module, access is determined by the actor's role within the tenant:
 | P1 | ALL | TA | Membership (UI completion for ADMIN invite flow) |
 | P1 | ALL | TS | Catalog Management (UI completion — API exists) |
 | P1 | ALL | TO | Order List (basic) |
-| P1 | WHITE_LABEL | TA | Store Branding (UI for branding PUT — API exists) |
-| P1 | WHITE_LABEL | TS | Collections (WL-specific) |
+| P1 | B2B/B2C + WL overlay | TA | Store Branding (UI for branding PUT — API exists) |
+| P1 | B2B/B2C + WL overlay | TS | Collections (WL-specific) |
 | P1 | B2B | TO | Compliance Tasks surface |
 | P1 | B2B | TO | RFQ Management (product definition first) |
 | P1 | ALL | TC | Notifications center |
