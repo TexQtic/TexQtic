@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-04-02
-last_unit_opened: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
-last_candidate_opened: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
-last_unit_closed: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
-last_commit: "[GOVERNANCE] CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS close sync"
+last_unit_opened: EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001
+last_candidate_opened: EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001
+last_unit_closed: EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001
+last_commit: "[GOVERNANCE] EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001 cleanup sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -64,7 +64,9 @@ control_plane_tenant_deep_dive_truthfulness_close_ready: true
 control_plane_tenant_deep_dive_truthfulness_closed: true
 control_plane_tenant_deep_dive_truthfulness_adjacent_onboarding_outcome_write_context_separate: true
 control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_id: "05d7a469-8ec3-4685-8a24-803933a88f79"
-control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_pending_reviewed_step: true
+control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_pending_reviewed_step: false
+control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_completed: true
+control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_unit: "EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001"
 product_modal_image_edit_capability_gap_open: false
 product_modal_image_edit_capability_gap_active_delivery: false
 product_modal_image_edit_capability_gap_shared_edit_modal_present: true

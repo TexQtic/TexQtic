@@ -147,9 +147,9 @@ deep-dive handling, implementation must halt and report blocker rather than wide
 - Adjacent finding only: `server/src/routes/control.ts:287` likely still uses the older
   write-context pattern on the onboarding outcome route and may require a separate bounded
   hardening unit if production use of that route needs explicit safety
-- Ephemeral proof tenant only: `05d7a469-8ec3-4685-8a24-803933a88f79` remains classified as
-  `EPHEMERAL` and should be removed only through a separate reviewed cleanup step after close /
-  governance sync acceptance
+- Ephemeral proof tenant cleanup completed separately: `05d7a469-8ec3-4685-8a24-803933a88f79`
+  was classified as `EPHEMERAL` and was removed by
+  `EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001` after close / governance sync acceptance
 
 ## Exact Verification Profile
 
