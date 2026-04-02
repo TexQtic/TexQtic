@@ -11,10 +11,10 @@ and preserves the remaining next-cycle ordering.
 
 ## Immediate Posture
 
-- `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` is now open as the sole current product-facing
-    `ACTIVE_DELIVERY` after the platform-ops boundary artifact and bounded eligibility reconciliation
-    established that the broader `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` family remained too wide
-    to open directly.
+- `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` is now closed after bounded implementation and the
+    complete production proof chain established truthful eligible activation visibility,
+    successful real approved activation, truthful post-activation `ACTIVE` state, and clean
+    neighbor-path continuity.
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now closed after bounded implementation and recorded `VERIFIED_COMPLETE` production verification.
 - `WL-RFQ-EXPOSURE-CONTINUITY` is now closed after bounded implementation and successful bounded live production verification established that the reviewed WL storefront/product-detail path no longer stops before RFQ begins.
 - `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed after bounded implementation and bounded live production verification established that the reviewed enterprise responded-RFQ path now truthfully bridges into the existing trade / negotiation continuity.
@@ -49,7 +49,7 @@ families.
 
 | Order | Candidate Family | Posture | Why It Sits Here |
 |---|---|---|---|
-| 1 | `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` | `ACTIVE_DELIVERY` | First lawful bounded child opening from the preserved control-plane tenant operations family after boundary definition and bounded narrowing |
+| 1 | `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` | `CLOSED` | Bounded control-plane tenant deep-dive truthfulness child now closed after complete production proof |
 | 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the newly opened control-plane tenant deep-dive unit |
 | 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
 | 4 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from its now-closed split units and still governs family-level scope boundaries |
@@ -140,9 +140,9 @@ normalization artifact before broader movement is inferred.
 
 ### `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`
 
-This is now the sole current product-facing `ACTIVE_DELIVERY` unit.
+This bounded child is now closed after complete production proof.
 
-It is limited to tenant deep-dive truthfulness only on the reviewed control-plane surface:
+It was limited to tenant deep-dive truthfulness only on the reviewed control-plane surface:
 
 - overview truth
 - approved-onboarding activation truth
@@ -154,25 +154,39 @@ It must remain separate from registry redesign, audit-log search/filter completi
 impersonation lifecycle work, billing workflow completion, risk-report completion, and all
 AdminRBAC invite/revoke/role-partition work.
 
-Vercel/runtime verification remains mandatory before any future close because this is a control-
-plane runtime UX unit.
+Close basis now recorded:
 
-## Current Open Delivery
+- lawful `VERIFICATION_APPROVED` preparation was established on the reviewed proof path
+- control-plane read truth was restored so the eligible tenant surfaced truthfully
+- the real `Activate Approved Tenant` path completed successfully in production
+- post-activation deep-dive truth remained correct as `ACTIVE`
+- neighbor-path checks remained clean for shell continuity, registry continuity, bounded
+    tenant-context entry continuity, and separate audit posture
+
+Separate notes retained outside this close:
+
+- adjacent finding only: `server/src/routes/control.ts:287` likely still uses the older
+    write-context pattern on the onboarding outcome route and may require a separate bounded
+    hardening unit if production use of that route needs explicit safety
+- cleanup note only: proof tenant `05d7a469-8ec3-4685-8a24-803933a88f79` remains `EPHEMERAL` and
+    should be removed only through a separate reviewed cleanup step
+
+## Recently Closed Fourth Delivery
 
 ### Candidate Family
 
 `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`
 
-### Recorded Opening
+### Recorded Closure
 
-After creation of `PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md` and a bounded eligibility
-reconciliation confirmed that the broader `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` family was too
-wide to open directly, the narrowed unit `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` was opened
-as the sole current product-facing `ACTIVE_DELIVERY`.
+After creation of `PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md`, bounded eligibility
+reconciliation, bounded runtime truth restoration, and bounded activation-path repair, the narrowed
+unit `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` is now closed after complete production proof
+on the lawful reviewed tenant path.
 
 ### Boundaries
 
-- This unit is limited to truthfulness of the tenant deep-dive surface only.
+- This unit was limited to truthfulness of the tenant deep-dive surface only.
 - It does not authorize registry redesign, audit-log search/filter completion, full impersonation
     lifecycle work, billing workflow completion, risk-report completion, or AdminRBAC invite/revoke/
     role-partition work.

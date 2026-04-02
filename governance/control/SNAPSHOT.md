@@ -11,11 +11,11 @@
 ---
 
 ```yaml
-snapshot_date: 2026-03-31
+snapshot_date: 2026-04-02
 last_unit_opened: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
 last_candidate_opened: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
-last_unit_closed: PRODUCT-MODAL-IMAGE-EDIT-CAPABILITY-GAP
-last_commit: "[GOVERNANCE] open CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS"
+last_unit_closed: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
+last_commit: "[GOVERNANCE] CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS close sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -25,10 +25,10 @@ layer_2_installed: true
 layer_3_installed: true
 layer_4_installed: true
 product_truth_primary_sequencing: true
-current_product_active_delivery_count: 1
-current_product_delivery_priority: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
-current_product_delivery_unit_open: true
-current_product_active_delivery_unit: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
+current_product_active_delivery_count: 0
+current_product_delivery_priority: none
+current_product_delivery_unit_open: false
+current_product_active_delivery_unit: none
 future_product_opening_requires_fresh_bounded_product_decision: false
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
@@ -46,11 +46,11 @@ crm_platform_cross_system_repo_routing_locked: true
 control_plane_tenant_operations_reality_boundary_artifact_missing: false
 control_plane_tenant_operations_reality_future_eligibility_review_pending: true
 b2c_launch_continuity_artifact_missing: true
-recommended_next_opening_candidate: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
+recommended_next_opening_candidate: MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY
 recommended_next_opening_candidate_recorded: true
-recommended_next_opening_candidate_opened: true
-control_plane_tenant_deep_dive_truthfulness_open: true
-control_plane_tenant_deep_dive_truthfulness_active_delivery: true
+recommended_next_opening_candidate_opened: false
+control_plane_tenant_deep_dive_truthfulness_open: false
+control_plane_tenant_deep_dive_truthfulness_active_delivery: false
 control_plane_tenant_deep_dive_truthfulness_opened_from_control_plane_tenant_operations_reality: true
 control_plane_tenant_deep_dive_truthfulness_broad_family_opened_directly: false
 control_plane_tenant_deep_dive_truthfulness_tenant_details_surface_required: true
@@ -59,6 +59,12 @@ control_plane_tenant_deep_dive_truthfulness_audit_log_depth_out_of_scope: true
 control_plane_tenant_deep_dive_truthfulness_impersonation_program_breadth_out_of_scope: true
 control_plane_tenant_deep_dive_truthfulness_billing_and_risk_workflow_completion_out_of_scope: true
 control_plane_tenant_deep_dive_truthfulness_adminrbac_work_out_of_scope: true
+control_plane_tenant_deep_dive_truthfulness_production_verification_complete: true
+control_plane_tenant_deep_dive_truthfulness_close_ready: true
+control_plane_tenant_deep_dive_truthfulness_closed: true
+control_plane_tenant_deep_dive_truthfulness_adjacent_onboarding_outcome_write_context_separate: true
+control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_id: "05d7a469-8ec3-4685-8a24-803933a88f79"
+control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_pending_reviewed_step: true
 product_modal_image_edit_capability_gap_open: false
 product_modal_image_edit_capability_gap_active_delivery: false
 product_modal_image_edit_capability_gap_shared_edit_modal_present: true

@@ -2,15 +2,15 @@
 unit_id: CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS
 title: Control-plane tenant deep-dive truthfulness
 type: ACTIVE_DELIVERY
-status: OPEN
+status: CLOSED
 delivery_class: ACTIVE_DELIVERY
 wave: W5
 plane: CONTROL
 opened: 2026-03-31
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_CONFIRMATION: current Layer 0 had no open product-facing ACTIVE_DELIVERY and NEXT-ACTION was OPERATOR_DECISION_REQUIRED before this opening · FAMILY_REJECTION_CONFIRMATION: CONTROL-PLANE-TENANT-OPERATIONS-REALITY remained too wide to open directly after bounded eligibility reconciliation · BOUNDARY_CONFIRMATION: PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md now controls this lane and limits it to tenant deep-dive truthfulness rather than broad control-plane completion · REPO_TRUTH_CONFIRMATION: SuperAdminShell and TenantRegistry are materially real neighbors, while TenantDetails exposes real overview and approved activation alongside thin or under-construction deeper tabs and adjacent billing/risk/lifecycle overclaim risk · ADMINRBAC_EXCLUSION_CONFIRMATION: TECS-FBW-ADMINRBAC remains DESIGN_GATE and is excluded from this unit"
+closed: 2026-04-02
+verified: 2026-04-02
+commit: "9166ac7"
+evidence: "OPENING_CONFIRMATION: current Layer 0 had no open product-facing ACTIVE_DELIVERY and NEXT-ACTION was OPERATOR_DECISION_REQUIRED before this opening · FAMILY_REJECTION_CONFIRMATION: CONTROL-PLANE-TENANT-OPERATIONS-REALITY remained too wide to open directly after bounded eligibility reconciliation · BOUNDARY_CONFIRMATION: PLATFORM-OPS-LAUNCH-BOUNDARY-ARTIFACT-v1.md now controls this lane and limits it to tenant deep-dive truthfulness rather than broad control-plane completion · PRODUCTION_PROOF_CHAIN_CONFIRMATION: lawful VERIFICATION_APPROVED preparation was established, control-plane read truth was restored, Activate Approved Tenant became visible on the lawful path, and the real production button-driven activation succeeded on tenant 05d7a469-8ec3-4685-8a24-803933a88f79 · POST_ACTIVATION_TRUTH_CONFIRMATION: deep-dive post-state remained truthful as ACTIVE and neighbor-path checks remained clean for shell continuity, registry continuity, bounded tenant-context entry, and separate audit posture · ADJACENT_FINDING_SEPARATION_CONFIRMATION: control.ts:287 likely still uses the older write-context pattern on the onboarding outcome route and remains a separate bounded follow-up candidate only"
 doctrine_constraints:
   - D-004: this is one bounded ACTIVE_DELIVERY unit only; it must not be merged with broad control-plane tenant operations reality, registry redesign, audit-log depth, impersonation breadth, or AdminRBAC work
   - D-007: no product/server/schema/migration/test/package/CI/hook surface outside the exact future implementation allowlist is authorized
@@ -27,6 +27,14 @@ blockers: []
 
 It exists only to make the control-plane tenant deep-dive surface truthful on the reviewed runtime
 path without widening into broader control-plane modernization.
+
+Result: `CLOSED`.
+
+Current repo, runtime, and governance truth now confirm that the deep-dive is truthful on the
+reviewed production path: lawful `VERIFICATION_APPROVED` preparation was established, the eligible
+tenant surfaced truthfully, the real approved-activation control completed successfully in
+production, the post-activation deep-dive remained truthful as `ACTIVE`, and the required
+neighbor-path checks remained clean.
 
 Current repo and governance truth support this bounded unit because the control-plane shell and
 tenant registry are materially real enough for launch supervision, but the tenant deep-dive still
@@ -122,6 +130,26 @@ Do not widen this unit into:
 
 If exact repo truth during implementation proves a neighbor surface must be changed beyond truthful
 deep-dive handling, implementation must halt and report blocker rather than widen scope.
+
+## Close Record
+
+- lawful `VERIFICATION_APPROVED` preparation was established for the reviewed proof path
+- control-plane read truth was restored so list, detail, and deep-dive surfaces aligned on the
+  lawful eligible tenant path
+- the real `Activate Approved Tenant` path was exercised successfully in production on tenant
+  `05d7a469-8ec3-4685-8a24-803933a88f79`
+- post-activation deep-dive truth remained correct as `ACTIVE`
+- neighbor-path checks remained clean for shell continuity, registry continuity, bounded
+  tenant-context entry, and separate audit posture
+
+## Separate Notes
+
+- Adjacent finding only: `server/src/routes/control.ts:287` likely still uses the older
+  write-context pattern on the onboarding outcome route and may require a separate bounded
+  hardening unit if production use of that route needs explicit safety
+- Ephemeral proof tenant only: `05d7a469-8ec3-4685-8a24-803933a88f79` remains classified as
+  `EPHEMERAL` and should be removed only through a separate reviewed cleanup step after close /
+  governance sync acceptance
 
 ## Exact Verification Profile
 
