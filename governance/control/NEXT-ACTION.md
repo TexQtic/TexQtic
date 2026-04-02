@@ -21,6 +21,12 @@ notes: |
   platform definition in docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md: TexQtic is the operating
   system for trusted textile supply chains, with B2B Exchange, B2C Tenant-Branded Commerce, and
   Aggregator Directory Discovery + Intent Handoff as subordinate governed commercial access
-  models. TEXQTIC-PLATFORM-MODEL-TO-REPO-REALIGNMENT-001 may now reference that recorded
-  definition rather than restating it.
+  models. TEXQTIC-PLATFORM-MODEL-TO-REPO-REALIGNMENT-001 is now complete as an analysis-only
+  realignment investigation and found that current repo/runtime structure broadly fits the adopted
+  canonical model better than some older wording and planning documents do. Remaining drift is now
+  primarily doctrine/document wording drift and planning/taxonomy drift. The only approved next
+  planning units are TEXQTIC-CANONICAL-MODEL-NORMALIZATION-AND-DOCTRINE-ALIGNMENT-001 and
+  TEXQTIC-GOVERNANCE-AND-PLANNING-STACK-REALIGNMENT-001. Implementation remains deferred until
+  after those normalization units complete, and later residue reviews remain deferred candidates
+  only rather than approved openings.
 ```
