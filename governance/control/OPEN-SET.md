@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS close sync)
+**Last Updated:** 2026-04-02 (EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001 final close sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -54,6 +54,13 @@ proof chain completed: lawful `VERIFICATION_APPROVED` preparation was establishe
 tenant read truth was restored, the real approved-activation control succeeded in production, the
 post-activation deep-dive remained truthful as `ACTIVE`, and required neighbor-path checks remained
 clean. No current product-facing `ACTIVE_DELIVERY` unit is open in Layer 0.
+
+`EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001` is now `CLOSED` after bounded runtime cleanup and
+production validation confirmed the exact EPHEMERAL proof artifact no longer exists by exact UUID,
+exact slug, mirrored organization id, or invite residue. This cleanup remains separate from the
+already-closed parent unit, remains separate from the adjacent write-context finding at
+`server/src/routes/control.ts:287`, and does not authorize any new product-facing opening by
+implication.
 
 The completed `-v1` planning stack remains historical baseline only. The `-v2` stack remains the
 active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded
