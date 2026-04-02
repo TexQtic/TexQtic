@@ -26,6 +26,8 @@ interface ShellProps {
   onNavigateTrades?: () => void;
   /** B3-REM-1: wire B2CShell header cart icon (PW5-V4-DEF-001 fix) */
   onNavigateCart?: () => void;
+  b2cSearchValue?: string;
+  onB2CSearchChange?: (value: string) => void;
 }
 
 export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades }) => (
@@ -95,7 +97,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades, onNavigateCart }) => {
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades, onNavigateCart, b2cSearchValue, onB2CSearchChange }) => {
   const { itemCount } = useCart();
   return (
   <div className="min-h-screen bg-white font-sans">
@@ -108,7 +110,14 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
            {tenant.theme.logo} {tenant.name}
         </button>
         <div className="flex-1 max-w-md mx-8">
-          <input title="search" type="text" placeholder="Search our collection..." className="w-full bg-slate-100 border-none rounded-full px-6 py-2.5 focus:ring-2 focus:ring-indigo-500 text-sm" />
+          <input
+            title="search"
+            type="text"
+            value={b2cSearchValue ?? ''}
+            onChange={event => onB2CSearchChange?.(event.target.value)}
+            placeholder="Search our collection..."
+            className="w-full bg-slate-100 border-none rounded-full px-6 py-2.5 focus:ring-2 focus:ring-indigo-500 text-sm"
+          />
         </div>
         <div className="flex gap-6 items-center">
           {onNavigateOrders && <button onClick={onNavigateOrders} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}

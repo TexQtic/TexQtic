@@ -944,6 +944,10 @@ const App: React.FC = () => {
   const [products, setProducts] = useState<CatalogItem[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogNextCursor, setCatalogNextCursor] = useState<string | null>(null);
+  const [b2cSearchQuery, setB2cSearchQuery] = useState('');
+  const [b2cVisibleCount, setB2cVisibleCount] = useState(8);
+  const [b2cLoadingMore, setB2cLoadingMore] = useState(false);
   const [showCart, setShowCart] = useState(false);
   // TECS-FBW-014: stores orderId from successful checkout for ORDER_CONFIRMED display
   const [confirmedOrderId, setConfirmedOrderId] = useState<string | null>(null);
@@ -964,6 +968,12 @@ const App: React.FC = () => {
   const editingCatalogItem = editingCatalogItemId
     ? products.find(product => product.id === editingCatalogItemId) ?? null
     : null;
+  const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
+  const normalizedTenantCategory = currentTenant?.tenant_category ?? currentTenant?.type;
+  const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
+    && expView === 'HOME'
+    && normalizedTenantCategory === TenantType.B2C
+    && currentTenant?.is_white_label !== true;
 
   // Fetch tenants from backend (for tenant picker in bottom-right)
   // GUARD: Only load control-plane tenants when in Staff Control Plane view
@@ -1112,19 +1122,67 @@ const App: React.FC = () => {
         setCatalogLoading(true);
         setCatalogError(null);
         try {
-          const response = await getCatalogItems({ limit: 20 });
+          const query = isB2CBrowseEntrySurface ? b2cSearchQuery.trim() : '';
+          const response = await getCatalogItems({
+            limit: 20,
+            ...(query ? { q: query } : {}),
+          });
           setProducts(response.items);
+          setCatalogNextCursor(response.nextCursor);
+          setB2cVisibleCount(query ? response.items.length : Math.min(8, response.items.length || 8));
         } catch (error) {
           console.error('Failed to load catalog:', error);
           setCatalogError('Failed to load catalog. Please try again.');
           setProducts([]);
+          setCatalogNextCursor(null);
         } finally {
           setCatalogLoading(false);
         }
       };
+
+      if (isB2CBrowseEntrySurface) {
+        const debounceId = window.setTimeout(fetchCatalog, 200);
+        return () => globalThis.clearTimeout(debounceId);
+      }
+
       fetchCatalog();
     }
-  }, [appState]);
+  }, [appState, expView, isB2CBrowseEntrySurface, b2cSearchQuery]);
+
+  const handleB2CShopNow = () => {
+    b2cCatalogSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleB2CLoadMore = async () => {
+    const hasHiddenLoadedProducts = products.length > b2cVisibleCount;
+    if (hasHiddenLoadedProducts) {
+      setB2cVisibleCount(products.length);
+      return;
+    }
+
+    if (!catalogNextCursor || b2cLoadingMore) {
+      return;
+    }
+
+    setB2cLoadingMore(true);
+    setCatalogError(null);
+    try {
+      const query = b2cSearchQuery.trim();
+      const response = await getCatalogItems({
+        limit: 20,
+        cursor: catalogNextCursor,
+        ...(query ? { q: query } : {}),
+      });
+      setProducts(prev => [...prev, ...response.items]);
+      setCatalogNextCursor(response.nextCursor);
+      setB2cVisibleCount(prev => prev + response.items.length);
+    } catch (error) {
+      console.error('Failed to load more catalog items:', error);
+      setCatalogError('Failed to load more products. Please try again.');
+    } finally {
+      setB2cLoadingMore(false);
+    }
+  };
 
   // REALM-BOUNDARY-SHELL-AFFORDANCE-001:
   // Tenant sessions must never remain in control-plane state.
@@ -2701,6 +2759,17 @@ const App: React.FC = () => {
           </div>
         );
       case TenantType.B2C:
+        {
+          const visibleB2CProducts = products.slice(0, b2cVisibleCount);
+          const hasHiddenLoadedProducts = products.length > b2cVisibleCount;
+          const canLoadMoreB2CProducts = catalogNextCursor !== null;
+          let b2cBrowseActionLabel = 'All Visible';
+          if (hasHiddenLoadedProducts) {
+            b2cBrowseActionLabel = 'See All';
+          } else if (canLoadMoreB2CProducts) {
+            b2cBrowseActionLabel = b2cLoadingMore ? 'Loading...' : 'Load More';
+          }
+
         return (
           <div className="space-y-12 animate-in fade-in duration-500">
             <section className="relative h-[400px] rounded-3xl overflow-hidden flex items-center px-12">
@@ -2714,15 +2783,26 @@ const App: React.FC = () => {
                 <p className="text-lg opacity-90">
                   Sustainably sourced, ethically manufactured. Delivered to your door.
                 </p>
-                <button className="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-xl hover:bg-indigo-50 transition">
+                <button
+                  type="button"
+                  onClick={handleB2CShopNow}
+                  className="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-xl hover:bg-indigo-50 transition"
+                >
                   Shop Now
                 </button>
               </div>
             </section>
 
-            <section>
+            <section ref={b2cCatalogSectionRef}>
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold">New Arrivals</h2>
+                <div>
+                  <h2 className="text-2xl font-bold">New Arrivals</h2>
+                  {b2cSearchQuery.trim() && !catalogLoading && !catalogError && (
+                    <p className="mt-1 text-sm text-slate-500">
+                      Showing results for "{b2cSearchQuery.trim()}".
+                    </p>
+                  )}
+                </div>
                 <div className="flex gap-3 items-center">
                   <button
                     onClick={() => setShowAddItemForm(v => !v)}
@@ -2732,9 +2812,11 @@ const App: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => { void handleB2CLoadMore(); }}
+                    disabled={b2cLoadingMore || (!hasHiddenLoadedProducts && !canLoadMoreB2CProducts)}
                     className="text-indigo-600 font-semibold underline underline-offset-4"
                   >
-                    See All
+                    {b2cBrowseActionLabel}
                   </button>
                 </div>
               </div>
@@ -2821,7 +2903,7 @@ const App: React.FC = () => {
 
               {!catalogLoading && !catalogError && products.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                  {products.slice(0, 8).map(p => (
+                  {visibleB2CProducts.map(p => (
                     <div key={p.id} className="space-y-3">
                       <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100">
                         {p.imageUrl ? (
@@ -2853,6 +2935,7 @@ const App: React.FC = () => {
             </section>
           </div>
         );
+        }
         // PW5-U2: TenantType.WHITE_LABEL dead storefront case removed.
         // WHITE_LABEL is a @deprecated enum value superseded by is_white_label boolean flag (B2-REM-3/B2-REM-5).
         // No tenant has tenant_category='WHITE_LABEL' post-canonicalization; this case was unreachable
@@ -3237,6 +3320,8 @@ const App: React.FC = () => {
           },
           // B3-REM-1: wire B2CShell header cart icon to same cart-open action as CartToggleButton
           onNavigateCart: () => setShowCart(true),
+          b2cSearchValue: isB2CBrowseEntrySurface ? b2cSearchQuery : '',
+          onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
         };
         // B2-REM-3: Shell resolution via canonical policy function — no silent default fallback.
         const resolvedShell = resolveExperienceShell(
