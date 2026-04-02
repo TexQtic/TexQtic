@@ -1,5 +1,10 @@
 # TENANT-CATALOG-MANAGEMENT-CONTINUITY-DESIGN-v1
 
+> Authority note: This artifact remains a bounded historical/unit-level catalog lifecycle design
+> for one tenant-owned continuity seam. It is not the canonical whole-family definition for
+> cross-mode catalog/discovery/product-data ownership. Current family-definition authority now
+> lives in `docs/product-truth/CATALOG-DISCOVERY-PRODUCT-DATA-CONTINUITY-FAMILY-DESIGN-v1.md`.
+
 ## Status
 
 - Unit: `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
