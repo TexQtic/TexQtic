@@ -15,6 +15,15 @@
 >
 > This banner is a de-authorization step only. The document body is preserved as reference.
 
+> SUPERSESSION NOTE — BOARD-CANONICAL-MODEL-ADOPTION-001
+>
+> Current controlling platform identity is recorded in `docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md`.
+> TexQtic is the operating system for trusted textile supply chains, expressed through three
+> subordinate governed commercial access models: B2B Exchange, B2C Tenant-Branded Commerce, and
+> Aggregator Directory Discovery + Intent Handoff. White-label is an overlay capability, not a
+> fourth pillar. Enterprise is depth within B2B, not a separate platform mode. Any broader or
+> older marketplace-first wording below is retained as historical orientation only.
+
 TexQtic
 
 TexQtic is a next-generation, multi-tenant platform for the global textile ecosystem — connecting manufacturers, traders, service providers, brands, and retailers across B2B, B2C, and Aggregator experiences, with full white-label storefront support.

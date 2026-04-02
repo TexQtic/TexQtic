@@ -43,6 +43,13 @@ crm_platform_data_reality_reconciliation_investigation_artifact_file: "CRM-PLATF
 crm_platform_canonical_business_model_handoff_contract_artifact_present: true
 crm_platform_canonical_business_model_handoff_contract_artifact_file: "CRM-PLATFORM-CANONICAL-BUSINESS-MODEL-AND-HANDOFF-CONTRACT-v1.md"
 crm_platform_cross_system_repo_routing_locked: true
+board_canonical_platform_model_adopted: true
+board_canonical_platform_model_adoption_unit: "TEXQTIC-BOARD-CANONICAL-MODEL-ADOPTION-001"
+board_canonical_platform_model_authority_file: "docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md"
+board_canonical_platform_model_statement: "TexQtic is the operating system for trusted textile supply chains; B2B Exchange, B2C Tenant-Branded Commerce, and Aggregator Directory Discovery + Intent Handoff are subordinate governed commercial access models."
+board_canonical_platform_model_white_label_is_overlay: true
+board_canonical_platform_model_enterprise_within_b2b: true
+board_canonical_platform_model_control_surfaces_not_commercial_pillars: true
 control_plane_tenant_operations_reality_boundary_artifact_missing: false
 control_plane_tenant_operations_reality_future_eligibility_review_pending: true
 b2c_launch_continuity_artifact_present: true

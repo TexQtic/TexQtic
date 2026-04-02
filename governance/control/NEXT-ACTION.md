@@ -17,5 +17,10 @@ notes: |
   tenant confirmed the public seam no longer exposes the top-right Storefront Settings gear and no
   longer routes into Storefront Configuration. The exact B2C proof-tenant cleanup remains
   separately preserved as EPHEMERAL-VERIFICATION-TENANT-CLEANUP-002, and no current product-facing
-  ACTIVE_DELIVERY unit is open.
+  ACTIVE_DELIVERY unit is open. BOARD-CANONICAL-MODEL-ADOPTION-001 now records the controlling
+  platform definition in docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md: TexQtic is the operating
+  system for trusted textile supply chains, with B2B Exchange, B2C Tenant-Branded Commerce, and
+  Aggregator Directory Discovery + Intent Handoff as subordinate governed commercial access
+  models. TEXQTIC-PLATFORM-MODEL-TO-REPO-REALIGNMENT-001 may now reference that recorded
+  definition rather than restating it.
 ```

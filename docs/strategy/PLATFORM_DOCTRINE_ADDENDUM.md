@@ -42,6 +42,60 @@ It delivers value as a workflow + compliance + authority system, not as a conten
 
 If the answer is "open listing → reject or redesign."
 
+### Board Canonical Model Adoption (2026-04-02)
+
+The following board-approved model now controls subsequent planning, repo realignment,
+governance normalization, and doctrine normalization unless a later board-level artifact
+supersedes it explicitly.
+
+**TexQtic is the operating system for trusted textile supply chains.**
+
+It is a governed infrastructure layer that enables verified participants to discover
+counterparties, conduct commerce, and move through auditable workflow with controlled
+permissions, tenant-scoped continuity, compliance-aware operations, and evidence-ready trade
+execution.
+
+TexQtic expresses this operating system through three governed commercial access models:
+
+1. **B2B Exchange**
+	The primary governed trade and commerce mode for authenticated business participants,
+	covering structured discovery, commercial engagement, transaction continuity, and downstream
+	workflow.
+2. **B2C Tenant-Branded Commerce**
+	A tenant-branded consumer commerce mode that may expose public-safe discovery and entry
+	surfaces, while transactional continuity such as identity, cart persistence, checkout,
+	orders, and governed post-purchase operations remains authenticated and tenant-scoped unless
+	later expanded by explicit board authorization.
+3. **Aggregator Directory Discovery + Intent Handoff**
+	A curated discovery, qualification, and intent-routing mode that helps participants find
+	relevant counterparties and routes qualified demand into downstream governed execution paths.
+	It is not the primary owner of downstream transaction execution, settlement, or workflow
+	orchestration.
+
+Structural clarifiers:
+
+- The operating-system layer is primary.
+- The three commercial access models are subordinate expressions of that operating-system layer.
+- White-label is an overlay capability and deployment/experience model, not a fourth board-level pillar.
+- Enterprise is a depth posture within B2B operating reality, not a separate platform mode.
+- Control-plane, superadmin, and WL-admin surfaces are governance/operations surfaces, not commercial pillars.
+
+Non-drift guardrails:
+
+- TexQtic is not an open bazaar-style marketplace.
+- TexQtic is not marketplace-first in identity.
+- TexQtic is not infrastructure-only in expression.
+- B2C must not be described as a fully anonymous public retail model under current truth.
+- Aggregator must not be described as a full transaction-owning marketplace orchestrator under current truth.
+- White-label must not be elevated into a fourth canonical pillar.
+
+Supersession note:
+
+- Earlier shorthand such as "three-sided platform", "hybrid B2B + white-label SaaS", or broad
+  marketplace wording remains historical unless it conforms to the canonical model above.
+- This adoption records platform-layer-first identity with three subordinate governed commercial
+  access models as the controlling definition.
+
 ---
 
 ## 3. Delivery Model
