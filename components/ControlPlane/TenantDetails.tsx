@@ -36,8 +36,8 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
     setActivationNotice(null);
 
     try {
-      const result = await activateApprovedOnboarding(tenant.id);
-      setOnboardingStatus(result.tenant.status);
+      await activateApprovedOnboarding(tenant.id);
+      setOnboardingStatus('ACTIVE');
       setActivationNotice(
         'Approved onboarding activation recorded. Tenant is now ACTIVE. The provisioned primary owner should now use tenant sign-in with the provisioned credentials; invite-token activation remains a separate invite-based path.'
       );

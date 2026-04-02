@@ -37,6 +37,37 @@ async function withAdminContext<T>(callback: (tx: any) => Promise<T>): Promise<T
   });
 }
 
+async function readOrganizationStatuses(organizationIds: string[]): Promise<Map<string, string>> {
+  if (organizationIds.length === 0) {
+    return new Map();
+  }
+
+  const ctx: DatabaseContext = {
+    orgId: ADMIN_SENTINEL_ID,
+    actorId: ADMIN_SENTINEL_ID,
+    realm: 'admin',
+    requestId: randomUUID(),
+  };
+
+  return withDbContext(prisma, ctx, async tx => {
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+
+    const organizations = await tx.organizations.findMany({
+      where: {
+        id: {
+          in: organizationIds,
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    return new Map(organizations.map((organization: { id: string; status: string }) => [organization.id, organization.status]));
+  });
+}
+
 async function withOrgAdminContext<T>(orgId: string, adminId: string, callback: (tx: any) => Promise<T>): Promise<T> {
   const ctx: DatabaseContext = {
     orgId,
@@ -142,11 +173,6 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         include: {
           domains: true,
           branding: true,
-          organizations: {
-            select: {
-              status: true,
-            },
-          },
           _count: {
             select: {
               memberships: true,
@@ -158,11 +184,14 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     });
 
+    const organizationStatuses = await readOrganizationStatuses(
+      tenantRecords.map((tenantRecord: (typeof tenantRecords)[number]) => tenantRecord.id)
+    );
+
     const tenants = tenantRecords.map((tenantRecord: (typeof tenantRecords)[number]) => {
-      const { organizations, ...tenant } = tenantRecord;
       return {
-        ...tenant,
-        onboarding_status: organizations?.status ?? null,
+        ...tenantRecord,
+        onboarding_status: organizationStatuses.get(tenantRecord.id) ?? null,
       };
     });
 
@@ -185,11 +214,6 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           domains: true,
           branding: true,
           aiBudget: true,
-          organizations: {
-            select: {
-              status: true,
-            },
-          },
           memberships: {
             include: {
               user: {
@@ -212,10 +236,9 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     }
 
-    const { organizations, ...tenant } = tenantRecord;
     const tenantWithOnboardingStatus = {
-      ...tenant,
-      onboarding_status: organizations?.status ?? null,
+      ...tenantRecord,
+      onboarding_status: (await readOrganizationStatuses([tenantRecord.id])).get(tenantRecord.id) ?? null,
     };
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));
