@@ -82,6 +82,20 @@ async function withOrgAdminContext<T>(orgId: string, adminId: string, callback: 
   });
 }
 
+async function withOrgAdminWriteContext<T>(orgId: string, adminId: string, callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  return prisma.$transaction(async tx => {
+    // organizations is a control-plane write surface; keep the native connection role
+    // and apply admin GUCs instead of switching into texqtic_app.
+    await tx.$executeRawUnsafe(`SELECT set_config('app.org_id', $1, true)`, orgId);
+    await tx.$executeRawUnsafe(`SELECT set_config('app.actor_id', $1, true)`, adminId);
+    await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
+    await tx.$executeRawUnsafe(`SELECT set_config('app.request_id', $1, true)`, randomUUID());
+    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'off', true)`);
+    await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
+    return callback(tx);
+  });
+}
+
 const requireSuperAdminReadAccess: preHandlerHookHandler = (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -392,7 +406,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const { id } = paramsResult.data;
 
     try {
-      const result = await withOrgAdminContext(id, adminId, async tx => {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
         const [currentOrg, currentTenant] = await Promise.all([
           tx.organizations.findUnique({
             where: { id },
