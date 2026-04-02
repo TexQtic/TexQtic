@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-04-02
-last_unit_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
+last_unit_opened: B2C-LAUNCH-CONTINUITY-ARTIFACT-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
-last_unit_closed: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
-last_commit: "[GOVERNANCE] CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001 close sync"
+last_unit_closed: B2C-LAUNCH-CONTINUITY-ARTIFACT-001
+last_commit: "[GOVERNANCE] B2C-LAUNCH-CONTINUITY-ARTIFACT-001 close sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -45,10 +45,14 @@ crm_platform_canonical_business_model_handoff_contract_artifact_file: "CRM-PLATF
 crm_platform_cross_system_repo_routing_locked: true
 control_plane_tenant_operations_reality_boundary_artifact_missing: false
 control_plane_tenant_operations_reality_future_eligibility_review_pending: true
-b2c_launch_continuity_artifact_missing: true
+b2c_launch_continuity_artifact_present: true
+b2c_launch_continuity_artifact_file: "docs/product-truth/B2C-LAUNCH-CONTINUITY-ARTIFACT-v1.md"
+b2c_launch_continuity_artifact_created: true
+b2c_launch_continuity_artifact_missing: false
 recommended_next_opening_candidate: MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY
 recommended_next_opening_candidate_recorded: true
 recommended_next_opening_candidate_opened: false
+mode_completeness_b2c_storefront_continuity_launch_artifact_gate_cleared: true
 control_plane_tenant_deep_dive_truthfulness_open: false
 control_plane_tenant_deep_dive_truthfulness_active_delivery: false
 control_plane_tenant_deep_dive_truthfulness_opened_from_control_plane_tenant_operations_reality: true

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001 close sync)
+**Last Updated:** 2026-04-02 (B2C-LAUNCH-CONTINUITY-ARTIFACT-001 close sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -54,6 +54,14 @@ proof chain completed: lawful `VERIFICATION_APPROVED` preparation was establishe
 tenant read truth was restored, the real approved-activation control succeeded in production, the
 post-activation deep-dive remained truthful as `ACTIVE`, and required neighbor-path checks remained
 clean. No current product-facing `ACTIVE_DELIVERY` unit is open in Layer 0.
+
+`B2C-LAUNCH-CONTINUITY-ARTIFACT-001` is now `CLOSED` after the missing launch-overlay artifact was
+created as `docs/product-truth/B2C-LAUNCH-CONTINUITY-ARTIFACT-v1.md` and the minimum truthful B2C
+browse-entry launch boundary was fixed in bounded form. The previously missing B2C launch
+continuity prerequisite is now resolved, and `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` is no
+longer blocked by that artifact gap. This artifact close does not itself open storefront
+implementation, does not replace `NEXT-ACTION`, and does not widen into broader B2C redesign,
+search/merchandising work, or launch-planning rewrite.
 
 `EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001` is now `CLOSED` after bounded runtime cleanup and
 production validation confirmed the exact EPHEMERAL proof artifact no longer exists by exact UUID,
