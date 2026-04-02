@@ -1,5 +1,11 @@
 # TexQtic — Control Center Taxonomy
 
+> Supersession / authority note: This artifact remains the descriptive navigation and tower-taxonomy
+> reference for control-center grouping. It is not the canonical family-definition authority for
+> platform control-plane under the adopted platform model. Current family-level control-plane
+> classification and adjacent-family boundary authority now lives in
+> `docs/product-truth/PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-v1.md`.
+
 | Field     | Value                                                            |
 |-----------|------------------------------------------------------------------|
 | **Date**  | 2026-02-24                                                       |
