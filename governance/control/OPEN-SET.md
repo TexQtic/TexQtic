@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (OUT-OF-SCOPE-FINDING-CAPTURE-001 record-only audit)
+**Last Updated:** 2026-04-02 (MODE-COMPLETENESS-B2C-STOREFRONT-SELLER-ADMIN-AFFORDANCE-SEPARATION-001 close sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -75,6 +75,21 @@ exists. This close remains bounded to public B2C browse-entry continuity only. I
 full B2C completeness, merchandising depth, seller/admin correctness, or checkout/cart continuity.
 The known `+ Add Item` seller/admin drift remains separate as an adjacent candidate only, and
 cleanup of the EPHEMERAL proof tenant remains a separate later unit.
+
+`MODE-COMPLETENESS-B2C-STOREFRONT-SELLER-ADMIN-AFFORDANCE-SEPARATION-001` is now `CLOSED` after a
+bounded one-file storefront separation fix removed the out-of-scope B2C-branch `+ Add Item`
+button and inline add-item form from the exact non-white-label B2C `HOME` seam in `App.tsx` via
+commit `5b35eb3`. Accepted live proof on the same governed proof tenant
+`743c73aa-1b55-4560-a018-e8e554ca65f6` (`b2c-browse-proof-20260402080229`) confirmed that `+ Add
+Item` is absent from the governed `New Arrivals` seam, the removed inline add-item form is gone,
+no replacement catalog-management affordance appeared in that same seam, and bounded browse-entry
+continuity remained coherent after the separation fix. This close remains strictly limited to
+public-surface seller/admin affordance separation only. It does not claim full seller/admin
+correctness, WL admin correctness, B2B catalog-management correctness, or broad B2C redesign
+completion. The newly surfaced `Storefront Settings` gear on the same runtime surface remains a
+separate candidate only under
+`MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001`, and proof-tenant cleanup
+remains a separate later unit.
 
 `OUT-OF-SCOPE-FINDING-CAPTURE-001` re-ran the recent B2C and control-plane close history as a
 record-only governance pass. Result: the already-recorded adjacent candidate
