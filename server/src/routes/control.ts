@@ -385,7 +385,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    *
    * Slice boundary:
    * - requires a persisted VERIFICATION_APPROVED source state
-    * - updates the org-backed session state and tenant ACTIVE auth/discovery state together
+   * - updates the org-backed session state and tenant ACTIVE auth/discovery state together
    * - never derives ACTIVE during read-time session resolution
    */
   fastify.post('/tenants/:id/onboarding/activate-approved', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
@@ -429,26 +429,6 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         }
 
         if (currentOrg.status === 'ACTIVE') {
-          if (currentTenant.status !== 'ACTIVE') {
-            const updatedTenant = await tx.tenant.update({
-              where: { id },
-              data: {
-                status: 'ACTIVE',
-              },
-              select: {
-                status: true,
-              },
-            });
-
-            return {
-              kind: 'synced_active' as const,
-              currentOrg,
-              currentTenant,
-              updatedOrg: currentOrg,
-              updatedTenant,
-            };
-          }
-
           return {
             kind: 'already_active' as const,
             currentOrg,
@@ -509,36 +489,14 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       }
 
       if (result.kind === 'already_active') {
-        return sendSuccess(reply, {
-          tenant: {
-            id: result.currentOrg.id,
-            name: result.currentOrg.legal_name,
-            status: result.currentOrg.status,
-          },
-        });
-      }
-
-      if (result.kind === 'synced_active') {
-        await writeAuditLog(
-          prisma,
-          createAdminAudit(adminId, 'control.tenants.onboarding_activation.recorded', 'organization', {
-            tenantId: result.updatedOrg.id,
-            legalName: result.updatedOrg.legal_name,
-            previousStatus: result.currentOrg.status,
-            nextStatus: result.updatedOrg.status,
-            previousTenantStatus: result.currentTenant.status,
-            nextTenantStatus: result.updatedTenant.status,
-            transition: 'ACTIVE_TENANT_STATUS_SYNC',
-          })
+        return sendError(
+          reply,
+          'ONBOARDING_ACTIVATION_CONFLICT',
+          result.currentTenant.status === 'ACTIVE'
+            ? 'Tenant is already ACTIVE'
+            : `Tenant cannot become trade-capable from status ${result.currentOrg.status}`,
+          409
         );
-
-        return sendSuccess(reply, {
-          tenant: {
-            id: result.updatedOrg.id,
-            name: result.updatedOrg.legal_name,
-            status: result.updatedOrg.status,
-          },
-        });
       }
 
       await writeAuditLog(
