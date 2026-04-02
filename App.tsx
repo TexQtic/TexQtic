@@ -2805,12 +2805,6 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex gap-3 items-center">
                   <button
-                    onClick={() => setShowAddItemForm(v => !v)}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-indigo-700 transition"
-                  >
-                    + Add Item
-                  </button>
-                  <button
                     type="button"
                     onClick={() => { void handleB2CLoadMore(); }}
                     disabled={b2cLoadingMore || (!hasHiddenLoadedProducts && !canLoadMoreB2CProducts)}
@@ -2820,69 +2814,6 @@ const App: React.FC = () => {
                   </button>
                 </div>
               </div>
-
-              {/* RU-003: Inline Add Item form */}
-              {showAddItemForm && (
-                <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4 mb-8">
-                  <h3 className="font-bold text-slate-800">New Catalog Item</h3>
-                  {addItemError && (
-                    <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label htmlFor="b2c-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
-                      <input
-                        id="b2c-add-name"
-                        required
-                        value={addItemFormData.name}
-                        onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Product name"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label htmlFor="b2c-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
-                      <input
-                        id="b2c-add-price"
-                        required
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={addItemFormData.price}
-                        onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label htmlFor="b2c-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
-                      <input
-                        id="b2c-add-sku"
-                        value={addItemFormData.sku}
-                        onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Optional SKU"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="submit"
-                      disabled={addItemLoading}
-                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-50"
-                    >
-                      {addItemLoading ? 'Saving...' : 'Save Item'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
-                      className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
 
               {catalogLoading && (
                 <div className="text-center py-12">
