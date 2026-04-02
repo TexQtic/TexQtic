@@ -968,12 +968,6 @@ const App: React.FC = () => {
   const editingCatalogItem = editingCatalogItemId
     ? products.find(product => product.id === editingCatalogItemId) ?? null
     : null;
-  const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
-  const normalizedTenantCategory = currentTenant?.tenant_category ?? currentTenant?.type;
-  const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
-    && expView === 'HOME'
-    && normalizedTenantCategory === TenantType.B2C
-    && currentTenant?.is_white_label !== true;
 
   // Fetch tenants from backend (for tenant picker in bottom-right)
   // GUARD: Only load control-plane tenants when in Staff Control Plane view
@@ -1050,6 +1044,12 @@ const App: React.FC = () => {
 
     return resolvedTenant;
   }, [tenants, currentTenantId]);
+  const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
+  const normalizedTenantCategory = currentTenant?.tenant_category ?? currentTenant?.type;
+  const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
+    && expView === 'HOME'
+    && normalizedTenantCategory === TenantType.B2C
+    && currentTenant?.is_white_label !== true;
 
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
