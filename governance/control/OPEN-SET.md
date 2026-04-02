@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001 close sync)
+**Last Updated:** 2026-04-02 (CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001 close sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -65,8 +65,19 @@ implication.
 `CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001` is now `CLOSED` after a bounded
 one-file backend hardening fix removed the proven organizations write-permission failure from the
 onboarding-outcome route. The change remained confined to `server/src/routes/control.ts`, preserved
-route semantics, passed focused validation, and left the separate adjacent finding at
-`server/src/routes/control.ts:387` unchanged and unopened.
+route semantics, and passed focused validation.
+
+`CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001` is now `CLOSED` after a bounded
+one-file backend enforcement change restored the canonical approved-only contract on the live
+`activate-approved` route. Repo truth confirmed the route had previously allowed broader success
+behavior than the governing contract through hidden `ACTIVE` success branches; commit
+`6a6880ec108a228da71842212a30d4661a930d4e` removed those branches from
+`server/src/routes/control.ts`, so `organizations.status = ACTIVE` no longer succeeds on
+`activate-approved`, while the lawful persisted `VERIFICATION_APPROVED -> ACTIVE` mutation path,
+existing success envelope, and `APPROVED_TO_ACTIVE` audit transition remained intact. The change
+stayed confined to `server/src/routes/control.ts`, the bounded validation basis of clean server
+typecheck plus focused route-level code-path proof was accepted as sufficient for close, and no
+new adjacent finding was introduced.
 
 The completed `-v1` planning stack remains historical baseline only. The `-v2` stack remains the
 active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded

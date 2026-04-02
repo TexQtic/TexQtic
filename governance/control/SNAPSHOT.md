@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-04-02
-last_unit_opened: CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001
-last_candidate_opened: CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001
-last_unit_closed: CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001
-last_commit: "[GOVERNANCE] CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001 close sync"
+last_unit_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
+last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
+last_unit_closed: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
+last_commit: "[GOVERNANCE] CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001 close sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -67,6 +67,14 @@ control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_id: "05d7a469
 control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_pending_reviewed_step: false
 control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_completed: true
 control_plane_tenant_deep_dive_truthfulness_ephemeral_proof_tenant_cleanup_unit: "EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001"
+control_plane_activate_approved_runtime_enforcement_open: false
+control_plane_activate_approved_runtime_enforcement_active_delivery: false
+control_plane_activate_approved_runtime_enforcement_bounded_to_control_ts_only: true
+control_plane_activate_approved_runtime_enforcement_approved_only_contract_restored: true
+control_plane_activate_approved_runtime_enforcement_hidden_active_success_branches_removed: true
+control_plane_activate_approved_runtime_enforcement_approved_to_active_path_preserved: true
+control_plane_activate_approved_runtime_enforcement_validation_basis_typecheck_plus_code_path_accepted: true
+control_plane_activate_approved_runtime_enforcement_closed: true
 product_modal_image_edit_capability_gap_open: false
 product_modal_image_edit_capability_gap_active_delivery: false
 product_modal_image_edit_capability_gap_shared_edit_modal_present: true
