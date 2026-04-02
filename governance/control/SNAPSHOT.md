@@ -15,7 +15,7 @@ snapshot_date: 2026-04-02
 last_unit_opened: EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001
 last_candidate_opened: EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001
 last_unit_closed: EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001
-last_commit: "[GOVERNANCE] EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001 cleanup sync"
+last_commit: "[GOVERNANCE] EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001 final close sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
