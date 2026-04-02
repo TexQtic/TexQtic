@@ -24,9 +24,17 @@ notes: |
   models. TEXQTIC-PLATFORM-MODEL-TO-REPO-REALIGNMENT-001 is now complete as an analysis-only
   realignment investigation and found that current repo/runtime structure broadly fits the adopted
   canonical model better than some older wording and planning documents do. Remaining drift is now
-  primarily doctrine/document wording drift and planning/taxonomy drift. The only approved next
-  planning units are TEXQTIC-CANONICAL-MODEL-NORMALIZATION-AND-DOCTRINE-ALIGNMENT-001 and
-  TEXQTIC-GOVERNANCE-AND-PLANNING-STACK-REALIGNMENT-001. Implementation remains deferred until
-  after those normalization units complete, and later residue reviews remain deferred candidates
-  only rather than approved openings.
+  primarily planning-authority drift, family-classification drift, and artifact sufficiency drift.
+  TEXQTIC-CANONICAL-MODEL-NORMALIZATION-AND-DOCTRINE-ALIGNMENT-001 and
+  TEXQTIC-GOVERNANCE-AND-PLANNING-STACK-REALIGNMENT-001 are now complete as planning-only
+  normalization/replanning passes. The final TexQtic family map is now established, overlooked
+  families AI Governance / Advisory Automation, Feature Governance / Release Controls /
+  Kill-Switches, and Domain / Tenant Routing / Brand Surface Management are now preserved in
+  future planning scope, and the redesign queue plus Wave 1 / Wave 2 / Wave 3 sequence are now
+  established in carry-forward state. The next safest bounded family-specific units are
+  TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001,
+  TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001, and
+  TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001. Implementation remains deferred, broad
+  planning-stack rewrites remain deferred, and future work should continue through bounded
+  family-specific units unless a later authority review changes sequence.
 ```

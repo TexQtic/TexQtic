@@ -15,7 +15,7 @@ snapshot_date: 2026-04-02
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "[MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001] close sync"
+last_commit: "[GOVERNANCE-AND-PLANNING-STACK-REALIGNMENT-CARRY-FORWARD-001] carry-forward sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -60,6 +60,28 @@ step2_platform_model_to_repo_realignment_next_unit_1: "TEXQTIC-CANONICAL-MODEL-N
 step2_platform_model_to_repo_realignment_next_unit_2: "TEXQTIC-GOVERNANCE-AND-PLANNING-STACK-REALIGNMENT-001"
 step2_platform_model_to_repo_realignment_implementation_deferred_until_after_normalization: true
 step2_platform_model_to_repo_realignment_deferred_residue_candidates: "WHITE_LABEL typing residue, INTERNAL -> AggregatorShell mapping review, enterprise wording/presentation residue, Aggregator intent-handoff normalization follow-through, later B2C transactional expansion only if explicitly authorized"
+step3b_governance_and_planning_stack_realignment_completed: true
+step3b_governance_and_planning_stack_realignment_analysis_only: true
+step3b_governance_and_planning_stack_realignment_continuation_completed: true
+step3b_governance_and_planning_stack_realignment_no_write_decision_pass: true
+step3b_final_family_map_established: true
+step3b_family_map_structural: "B2B Exchange Core, Enterprise Depth Within B2B, White-Label Overlay Runtime/Admin"
+step3b_family_map_modes_and_commercial: "B2C Tenant-Branded Commerce, Aggregator Directory Discovery + Intent Handoff, Subscriptions / Commercial Packaging / Entitlements"
+step3b_family_map_operating_families: "Tenant Admin / Tenant Back Office, Platform Control-Plane / Superadmin / Platform Admin, Onboarding / Tenant Provisioning / CRM Coordination, RFQ / Quotation / Transaction Initiation, Payments / Escrow / Settlement / Fee Visibility, Tenant-to-Tenant Messaging / Communications / Notifications, Compliance / Certifications / Traceability / Audit, Catalog / Discovery / Product Data Continuity, Orders / Checkout / Post-Purchase Continuity, Identity / Tenancy / Permissions / Workspace Continuity, Workflow / Evidence / Governed Operational State, AI Governance / Advisory Automation, Feature Governance / Release Controls / Kill-Switches, Domain / Tenant Routing / Brand Surface Management"
+step3b_lawful_family_interpretation_notes: "Enterprise subordinate to B2B; White-label remains overlay; RFQ separate from Orders and Messaging; Payments / Escrow / Settlement separate from Subscriptions; Workflow / Evidence / Governed Operational State separate from feature families"
+step3b_overlooked_families_discovered: "AI Governance / Advisory Automation; Feature Governance / Release Controls / Kill-Switches; Domain / Tenant Routing / Brand Surface Management"
+step3b_priority_artifact_missing_families: "B2B Exchange Core, Enterprise Depth Within B2B, White-Label Overlay Runtime/Admin, Tenant Admin / Tenant Back Office, Platform Control-Plane / Superadmin / Platform Admin, Catalog / Discovery / Product Data Continuity"
+step3b_artifact_creation_required_before_later_implementation: "B2C Tenant-Branded Commerce, Orders / Checkout / Post-Purchase Continuity, Payments / Escrow / Settlement / Fee Visibility, Identity / Tenancy / Permissions / Workspace Continuity, Tenant-to-Tenant Messaging / Communications / Notifications, Domain / Tenant Routing / Brand Surface Management"
+step3b_redesign_queue_established: true
+step3b_redesign_wave_1: "structural classification correction: B2B core, enterprise within B2B, white-label overlay"
+step3b_redesign_wave_2: "high-surface operating families: tenant back office, platform control-plane, catalog/discovery cross-mode"
+step3b_redesign_wave_3: "downstream transactional families: B2C broader family, orders/checkout/post-purchase, payments/escrow/settlement, identity/tenancy/workspace, messaging/notifications"
+step3b_next_unit_1: "TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001"
+step3b_next_unit_2: "TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001"
+step3b_next_unit_3: "TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001"
+step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
+step3b_implementation_remains_deferred: true
+step3b_broad_planning_stack_rewrites_remain_deferred: true
 control_plane_tenant_operations_reality_boundary_artifact_missing: false
 control_plane_tenant_operations_reality_future_eligibility_review_pending: true
 b2c_launch_continuity_artifact_present: true
