@@ -12,10 +12,10 @@
 
 ```yaml
 snapshot_date: 2026-04-02
-last_unit_opened: B2C-LAUNCH-CONTINUITY-ARTIFACT-001
+last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-BUILD-BLOCKER-FIX-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
-last_unit_closed: B2C-LAUNCH-CONTINUITY-ARTIFACT-001
-last_commit: "[GOVERNANCE] B2C-LAUNCH-CONTINUITY-ARTIFACT-001 close sync"
+last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY
+last_commit: "[GOVERNANCE] MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY close sync"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -51,8 +51,21 @@ b2c_launch_continuity_artifact_created: true
 b2c_launch_continuity_artifact_missing: false
 recommended_next_opening_candidate: MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY
 recommended_next_opening_candidate_recorded: true
-recommended_next_opening_candidate_opened: false
+recommended_next_opening_candidate_opened: true
 mode_completeness_b2c_storefront_continuity_launch_artifact_gate_cleared: true
+mode_completeness_b2c_storefront_continuity_open: false
+mode_completeness_b2c_storefront_continuity_active_delivery: false
+mode_completeness_b2c_storefront_continuity_runtime_files_touched: "App.tsx, layouts/Shells.tsx"
+mode_completeness_b2c_storefront_continuity_build_blocker_fix_commit: "c7de462"
+mode_completeness_b2c_storefront_continuity_runtime_alignment_restored: true
+mode_completeness_b2c_storefront_continuity_production_verification_complete: true
+mode_completeness_b2c_storefront_continuity_verified_complete: true
+mode_completeness_b2c_storefront_continuity_close_ready: true
+mode_completeness_b2c_storefront_continuity_closed: true
+mode_completeness_b2c_storefront_continuity_proof_tenant_id: "743c73aa-1b55-4560-a018-e8e554ca65f6"
+mode_completeness_b2c_storefront_continuity_proof_tenant_slug: "b2c-browse-proof-20260402080229"
+mode_completeness_b2c_storefront_continuity_add_item_adjacent_finding_remains_separate: true
+mode_completeness_b2c_storefront_continuity_ephemeral_proof_tenant_cleanup_pending_reviewed_step: true
 control_plane_tenant_deep_dive_truthfulness_open: false
 control_plane_tenant_deep_dive_truthfulness_active_delivery: false
 control_plane_tenant_deep_dive_truthfulness_opened_from_control_plane_tenant_operations_reality: true

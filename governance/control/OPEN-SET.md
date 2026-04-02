@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (B2C-LAUNCH-CONTINUITY-ARTIFACT-001 close sync)
+**Last Updated:** 2026-04-02 (MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY close sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -62,6 +62,19 @@ continuity prerequisite is now resolved, and `MODE-COMPLETENESS-B2C-STOREFRONT-C
 longer blocked by that artifact gap. This artifact close does not itself open storefront
 implementation, does not replace `NEXT-ACTION`, and does not widen into broader B2C redesign,
 search/merchandising work, or launch-planning rewrite.
+
+`MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` is now `CLOSED` after the bounded implementation in
+`App.tsx` and `layouts/Shells.tsx`, the separate build-blocker fix in `App.tsx` (commit
+`c7de462`), successful production redeploy, and repeated close-grade verification on the exact
+non-white-label B2C proof tenant `743c73aa-1b55-4560-a018-e8e554ca65f6`
+(`b2c-browse-proof-20260402080229`). The accepted bounded production proof chain confirmed that
+shell search now issues a live catalog request and surfaces visible query-state text, `Shop Now`
+now performs the intended same-surface browse-entry scroll, and the empty-state browse action now
+truthfully renders `All Visible` as a disabled control when no hidden or paginated inventory
+exists. This close remains bounded to public B2C browse-entry continuity only. It does not claim
+full B2C completeness, merchandising depth, seller/admin correctness, or checkout/cart continuity.
+The known `+ Add Item` seller/admin drift remains separate as an adjacent candidate only, and
+cleanup of the EPHEMERAL proof tenant remains a separate later unit.
 
 `EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001` is now `CLOSED` after bounded runtime cleanup and
 production validation confirmed the exact EPHEMERAL proof artifact no longer exists by exact UUID,
