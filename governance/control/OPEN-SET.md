@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-02 (EPHEMERAL-VERIFICATION-TENANT-CLEANUP-001 final close sync)
+**Last Updated:** 2026-04-02 (CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001 close sync)
 **Max Size:** 50 lines (structural gate)
 
 > This is the canonical list of all non-terminal governed units.  
@@ -61,6 +61,12 @@ exact slug, mirrored organization id, or invite residue. This cleanup remains se
 already-closed parent unit, remains separate from the adjacent write-context finding at
 `server/src/routes/control.ts:287`, and does not authorize any new product-facing opening by
 implication.
+
+`CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001` is now `CLOSED` after a bounded
+one-file backend hardening fix removed the proven organizations write-permission failure from the
+onboarding-outcome route. The change remained confined to `server/src/routes/control.ts`, preserved
+route semantics, passed focused validation, and left the separate adjacent finding at
+`server/src/routes/control.ts:387` unchanged and unopened.
 
 The completed `-v1` planning stack remains historical baseline only. The `-v2` stack remains the
 active planning basis, and `TENANT-CATALOG-MANAGEMENT-CONTINUITY` is now `CLOSED` after bounded
