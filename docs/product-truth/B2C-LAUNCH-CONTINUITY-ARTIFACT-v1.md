@@ -1,5 +1,10 @@
 # B2C-LAUNCH-CONTINUITY-ARTIFACT-v1
 
+> Authority note: This artifact remains the bounded launch-truth and browse-entry continuity
+> authority for one specific B2C public seam. It is not the canonical whole-family definition for
+> B2C Tenant-Branded Commerce. Current family-definition authority now lives in
+> `docs/product-truth/B2C-OPERATING-MODE-DESIGN-v1.md`.
+
 Status: Approved normalization artifact for launch-truth alignment
 
 ## 1. Purpose and Authority
