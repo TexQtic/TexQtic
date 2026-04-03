@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-CATALOG-DISCOVERY-PRODUCT-DATA-CONTINUITY-FAMILY-DESIGN-CREATION-001: record Catalog / Discovery / Product Data family truth and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-ORDERS-CHECKOUT-POST-PURCHASE-CONTINUITY-FAMILY-DESIGN-CREATION-001: record Orders / Checkout / Post-Purchase family truth and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -165,6 +165,24 @@ catalog_discovery_product_data_next_unit_at_report_time: "TEXQTIC-ORDERS-CHECKOU
 catalog_discovery_product_data_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 catalog_discovery_product_data_adjacent_findings_separate: "catalogService.ts colocating catalog CRUD/read helpers and RFQ helper functions remains a separate later service-boundary candidate; the B2C New Arrivals card path rendering shared catalog mutation controls remains a separate continuity/presentation boundary question; the already-known Aggregator overstatement residue remains separate and unchanged"
 catalog_discovery_product_data_fresh_repo_truth_validation_required_at_opening: true
+orders_checkout_post_purchase_family_design_source_report: "TEXTIC-ORDERS-CHECKOUT-POST-PURCHASE-CONTINUITY-FAMILY-DESIGN-CREATION-001"
+orders_checkout_post_purchase_source_report_review_only_no_repo_mutation: true
+orders_checkout_post_purchase_distinct_cross_mode_downstream_transaction_family_confirmed: true
+orders_checkout_post_purchase_downstream_seam_materially_real_in_repo_truth: true
+orders_checkout_post_purchase_family_classification_supported_by_anchor_runtime_backend_alignment: true
+orders_checkout_post_purchase_current_proof_strongest_in: "tenant EXPERIENCE; White-Label-adjacent storefront/cart continuity; tenant and White-Label order panels"
+orders_checkout_post_purchase_not_equal_depth_across_every_parent_mode_today: true
+orders_checkout_post_purchase_inheritance_boundary: "cart-state continuity; add/remove/update quantity behavior; checkout initiation and submission; order creation and order read continuity; canonical order-status visibility; bounded post-order progression where already evidenced; confirmation and fulfillment-adjacent lifecycle surfaces where already evidenced"
+orders_checkout_post_purchase_adjacent_boundaries_remain_separate: "B2B and B2C remain parent commercial family contexts rather than downstream family ownership; Catalog / Discovery / Product Data remains upstream and may feed this family without owning it; White-Label may overlay or expose this family without owning it; Tenant Back Office remains tenant-owned admin/ops continuity; Platform Control-Plane remains platform-owned cross-tenant supervision/governance; Payments / Escrow / Settlement remains a separate downstream finance-state family; deeper shipment, returns, settlement, reconciliation, and finance-ops work must not be silently absorbed; implementation completeness is not implied"
+orders_checkout_post_purchase_child_planning_may_proceed: true
+orders_checkout_post_purchase_family_design_resolves_drift: "treating one order panel, one shell nav item, one endpoint, or one White-Label or tenant surface as if it were sufficient by itself to define ownership"
+orders_checkout_post_purchase_no_implementation_authority: true
+orders_checkout_post_purchase_runtime_completeness_not_implied: true
+orders_checkout_post_purchase_unsettled_scope_remains_separate: "deeper shipping, returns, settlement, reconciliation, and finance-state work"
+orders_checkout_post_purchase_next_unit_at_report_time: "TEXTIC-PAYMENTS-ESCROW-SETTLEMENT-FAMILY-DESIGN-CREATION-001"
+orders_checkout_post_purchase_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+orders_checkout_post_purchase_adjacent_findings_separate: "catalog/discovery ownership questions remain separate; White-Label overlay classification residue remains separate; Tenant Back Office and Platform Control-Plane administration or supervision residue remains separate; downstream Payments / Escrow / Settlement finance-state conclusions remain separate; deeper shipment, returns, reconciliation, settlement, or finance-ops boundary work remains separate; previously preserved adjacent findings remain separate unless a later bounded review proves inseparability"
+orders_checkout_post_purchase_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
