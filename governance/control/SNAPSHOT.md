@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-001: record Platform Control-Plane family truth and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-CATALOG-DISCOVERY-PRODUCT-DATA-CONTINUITY-FAMILY-DESIGN-CREATION-001: record Catalog / Discovery / Product Data family truth and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -148,6 +148,23 @@ platform_control_plane_next_unit_at_report_time: "TEXQTIC-CATALOG-DISCOVERY-PROD
 platform_control_plane_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 platform_control_plane_adjacent_findings_separate: "generic admin shell presence / mixed-era taxonomy remains a separate drift class already classified by the family replan; no Tenant Back Office local seam is reopened; no White-Label local seam is reopened; no closed runtime seam is reopened"
 platform_control_plane_fresh_repo_truth_validation_required_at_opening: true
+catalog_discovery_product_data_family_design_source_report: "TEXTIC-CATALOG-DISCOVERY-PRODUCT-DATA-CONTINUITY-FAMILY-DESIGN-CREATION-001"
+catalog_discovery_product_data_cross_mode_shared_family_confirmed: true
+catalog_discovery_product_data_not_parent_commercial_family_ownership: true
+catalog_discovery_product_data_not_white_label_presentation_ownership: true
+catalog_discovery_product_data_not_tenant_back_office_ownership: true
+catalog_discovery_product_data_not_platform_control_plane_ownership: true
+catalog_discovery_product_data_runtime_evidences_shared_product_data_reuse_across_b2b_b2c_white_label: true
+catalog_discovery_product_data_inheritance_boundary: "truthful product and catalog records; product attributes and read-facing display fields; browse, search, list, detail, preview, and collection continuity; continuity from tenant-owned catalog records into downstream read surfaces; structured, permissioned discovery truthfulness"
+catalog_discovery_product_data_adjacent_boundaries_remain_separate: "B2B remains parent commercial family for authenticated business exchange; B2C remains parent family for tenant-branded consumer commerce; White-Label remains overlay/presentation and overlay-owned collections/grouping where applicable; Tenant Back Office remains tenant-owned admin/ops continuity; Platform Control-Plane remains platform-owned cross-tenant supervision/governance; Aggregator qualification and handoff remains separate; downstream whole-family authorities such as Orders / Checkout / Post-Purchase, Payments / Escrow / Settlement, Messaging / Notifications, Identity / Tenancy / Permissions / Workspace, Domain / Tenant Routing / Brand Surface Management, search-engine redesign, media/upload redesign, and implementation work remain separate"
+catalog_discovery_product_data_child_planning_may_proceed: true
+catalog_discovery_product_data_family_design_resolves_drift: "treating B2B catalog strength, B2C browse-entry, White-Label collections/product presentation, tenant catalog CRUD, or Aggregator directory language as if any one were the whole family"
+catalog_discovery_product_data_no_implementation_authority: true
+catalog_discovery_product_data_unsettled_scope_remains_separate: "runtime completeness; search/ranking architecture; media/upload design; Aggregator implementation depth; tenant CRUD presentation correctness; downstream transaction continuity"
+catalog_discovery_product_data_next_unit_at_report_time: "TEXQTIC-ORDERS-CHECKOUT-POST-PURCHASE-CONTINUITY-FAMILY-DESIGN-CREATION-001"
+catalog_discovery_product_data_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+catalog_discovery_product_data_adjacent_findings_separate: "catalogService.ts colocating catalog CRUD/read helpers and RFQ helper functions remains a separate later service-boundary candidate; the B2C New Arrivals card path rendering shared catalog mutation controls remains a separate continuity/presentation boundary question; the already-known Aggregator overstatement residue remains separate and unchanged"
+catalog_discovery_product_data_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
