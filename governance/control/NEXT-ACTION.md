@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-PAYMENTS-ESCROW-SETTLEMENT-FAMILY-DESIGN-CREATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-IDENTITY-TENANCY-WORKSPACE-CONTINUITY-DESIGN-CREATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -78,6 +78,13 @@ notes: |
   ownership, and Platform Control-Plane ownership, and preserved
   TEXQTIC-IDENTITY-TENANCY-WORKSPACE-CONTINUITY-DESIGN-CREATION-001 as the exact next lawful
   adjacent family-specific unit at that stage, planning + repo-truth validation only and not
+  implementation authority. The later Identity / Tenancy / Permissions / Workspace Continuity
+  family design creation then confirmed Identity / Tenancy / Permissions / Workspace Continuity
+  as a distinct cross-cutting family distinct from Tenant Back Office ownership, Platform Control-
+  Plane ownership, White-Label overlay ownership, parent B2B and B2C family ownership, Orders /
+  Checkout / Post-Purchase ownership, and Payments / Escrow / Settlement ownership, and preserved
+  TEXTIC-MESSAGING-NOTIFICATIONS-FAMILY-DESIGN-CREATION-001 as the exact next lawful adjacent
+  family-specific unit at that stage, planning + repo-truth validation only and not
   implementation authority. Future work should continue through bounded family-specific units
   unless a later authority review changes sequence.
 ```

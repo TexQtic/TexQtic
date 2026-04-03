@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-PAYMENTS-ESCROW-SETTLEMENT-FAMILY-DESIGN-CREATION-001: record Payments / Escrow / Settlement family truth and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-IDENTITY-TENANCY-WORKSPACE-CONTINUITY-DESIGN-CREATION-001: record Identity / Tenancy / Workspace family truth and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -200,6 +200,24 @@ payments_escrow_settlement_next_unit_at_report_time: "TEXQTIC-IDENTITY-TENANCY-W
 payments_escrow_settlement_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 payments_escrow_settlement_adjacent_findings_separate: "control-plane payout authority intent routes are not tenant settlement execution, control-plane settlement exception execution, or finance supervision casework; if later formal family classification is needed, preserve TEXQTIC-FINANCE-AUTHORITY-PAYOUT-INTENT-BOUNDARY-REVIEW-001 as a separate bounded adjacent candidate and do not merge it into this payments family-design unit"
 payments_escrow_settlement_fresh_repo_truth_validation_required_at_opening: true
+identity_tenancy_workspace_family_design_source_report: "TEXTIC-IDENTITY-TENANCY-WORKSPACE-CONTINUITY-DESIGN-CREATION-001"
+identity_tenancy_workspace_source_report_review_only_planning_only_no_repo_mutation: true
+identity_tenancy_workspace_distinct_cross_cutting_family_confirmed: true
+identity_tenancy_workspace_repo_truth_materially_supports_classification: true
+identity_tenancy_workspace_no_material_contradiction_found: true
+identity_tenancy_workspace_runtime_alignment: "realm-aware token persistence; explicit tenant-vs-control login separation; endpoint-realm enforcement; membership-checked tenant auth; canonical org_id and actor DB context; centralized workspace rehydration; tenant session identity resolution; bounded impersonation restore"
+identity_tenancy_workspace_inheritance_boundary: "realm isolation; tenant-bound identity continuity; org_id tenancy continuity; membership continuity; activation continuity; role and permission continuity; workspace entry; workspace restore; bounded impersonation entry; prepared-identity to usable workspace-context continuity where evidenced"
+identity_tenancy_workspace_adjacent_boundaries_remain_separate: "Tenant Back Office keeps tenant-owned org/workspace administration, team/member administration as tenant-admin surface, settings, branding, integrations, and tenant-run operational controls; Platform Control-Plane keeps cross-tenant supervision, tenant registry and deep-dive, onboarding oversight, admin RBAC, governance casework, finance/compliance oversight, and platform-owned impersonation authority; White-Label keeps branded storefront and admin overlay behavior, overlay-owned operator surfaces, and branded presentation/deployment concerns; B2B keeps governed exchange entry, RFQ, negotiation, trade, and exchange-specific commercial posture; B2C keeps tenant-branded consumer parent-context truth and public-safe discovery/entry posture; Orders / Checkout / Post-Purchase keeps cart, checkout, order creation and visibility, and bounded post-purchase execution; Payments / Escrow / Settlement keeps payment acknowledgement, escrow-state, settlement-state, fee visibility, and bounded finance-state progression; onboarding/provisioning handoff remains separate; Messaging/Notifications remains separate; Domain / Tenant Routing / Brand-Surface Management remains separate"
+identity_tenancy_workspace_child_planning_may_proceed: true
+identity_tenancy_workspace_family_design_resolves_drift: "realm, membership, permission, and workspace continuity classification drift"
+identity_tenancy_workspace_no_implementation_authority: true
+identity_tenancy_workspace_redesigns_remain_separate: "auth redesign; permissions-engine redesign; route redesign; schema redesign"
+identity_tenancy_workspace_runtime_completeness_not_proven: true
+identity_tenancy_workspace_implementation_readiness_not_established: true
+identity_tenancy_workspace_next_unit_at_report_time: "TEXTIC-MESSAGING-NOTIFICATIONS-FAMILY-DESIGN-CREATION-001"
+identity_tenancy_workspace_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+identity_tenancy_workspace_adjacent_findings_separate: "TEXTIC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001 remains separate; runtime evidence in tenant resolution and pre-login tenant lookup belongs to the route/brand-surface family rather than the identity family; onboarding/provisioning handoff remains separate; first-owner readiness is a feeder seam into enduring identity/workspace continuity rather than the owner of it; no adjacent finding surfaced that needs to open before the selected messaging unit"
+identity_tenancy_workspace_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
