@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-MESSAGING-NOTIFICATIONS-FAMILY-DESIGN-CREATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -96,6 +96,19 @@ notes: |
   remaining separate, and preserved
   TEXTIC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001 as the exact
   next lawful adjacent family-specific unit at that stage, planning + repo-truth validation only
-  and not implementation authority. Future work should continue through bounded family-specific
-  units unless a later authority review changes sequence.
+  and not implementation authority. The later Compliance / Certifications / Traceability / Audit
+  family design creation then confirmed Compliance / Certifications / Traceability / Audit as a
+  distinct cross-cutting governance-evidence family and preserved Outcome A because current repo
+  truth is materially strong enough for family-level confirmation through canonical audit and
+  event-history primitives, canonical certification state and immutable certification lifecycle
+  logs, canonical traceability graph continuity, explicit certification-to-node linkage, live
+  tenant-plane evidence continuity, live control-plane supervision continuity, certification
+  lifecycle logging in the state machine, and adjacent-family reuse without adjacent-family
+  ownership transfer; implementation authority, policy-engine redesign, schema expansion, and
+  broader runtime-completeness claims remain separate, residual stale certification-deferred
+  test/documentation posture remains separate drift only, and
+  TEXTIC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001 is preserved as the
+  exact next lawful adjacent family-specific unit at that stage, planning + repo-truth
+  validation only and not implementation authority. Future work should continue through bounded
+  family-specific units unless a later authority review changes sequence.
 ```

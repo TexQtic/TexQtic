@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-MESSAGING-NOTIFICATIONS-FAMILY-DESIGN-CREATION-001: record Messaging / Notifications Outcome B boundary and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001: record Compliance family truth, Outcome A, and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -235,6 +235,25 @@ messaging_notifications_next_unit_at_report_time: "TEXTIC-COMPLIANCE-CERTIFICATI
 messaging_notifications_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 messaging_notifications_adjacent_findings_separate: "RFQ inbox / supplier-response continuity remains a bounded exchange seam, not whole-family ownership; transactional email sender plumbing remains delivery infrastructure, not proof of a full shared Messaging family; invite delivery remains adjacent/transactional, not proof of canonical messaging-family ownership; TEXTIC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001 remains separate; no surfaced finding from this unit lawfully overrides the next-unit queue toward Domain; any future shared notification center, message/thread model, or communication architecture review must arise from later bounded family/design work"
 messaging_notifications_fresh_repo_truth_validation_required_at_opening: true
+compliance_certifications_traceability_audit_family_design_source_report: "TEXTIC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001"
+compliance_certifications_traceability_audit_source_report_review_only_no_repo_mutation: true
+compliance_certifications_traceability_audit_distinct_cross_cutting_governance_evidence_family_confirmed: true
+compliance_certifications_traceability_audit_outcome_a_preserved_exactly: true
+compliance_certifications_traceability_audit_current_repo_truth_materially_strong_enough_for_family_level_confirmation: true
+compliance_certifications_traceability_audit_live_repo_support: "canonical audit and event-history primitives; canonical certification state and immutable certification lifecycle logs; canonical traceability graph continuity; explicit certification-to-node linkage; live tenant-plane evidence continuity; live control-plane supervision continuity; certification lifecycle logging in the state machine; adjacent-family reuse without adjacent-family ownership transfer"
+compliance_certifications_traceability_audit_inheritance_boundary: "certification continuity; certification lifecycle continuity; compliance-state continuity; traceability continuity; traceability graph continuity; audit continuity; governance-evidence continuity; immutable evidence/lifecycle logging where tied to compliance/certification/traceability truth; certification-to-node linkage and evidence reuse where it supports durable family truth; tenant-plane evidence continuity; control-plane supervision surfaces over this evidence family without transferring whole-family ownership"
+compliance_certifications_traceability_audit_adjacent_boundaries_remain_separate: "B2B remains parent commercial/exchange authority; B2C remains parent consumer-commerce authority; White-Label remains overlay/presentation authority; Tenant Back Office remains tenant-owned admin/ops continuity; Platform Control-Plane remains supervision/governance authority over the compliance family rather than owner of the whole family; Identity / Tenancy / Permissions / Workspace remains identity/workspace continuity; Catalog / Discovery / Product Data remains product-data/read/discovery continuity; Orders / Checkout / Post-Purchase remains downstream transaction continuity; Payments / Escrow / Settlement remains downstream finance-state continuity; Messaging / Notifications remains communication-state continuity; Domain / Tenant Routing / Brand-Surface Management remains separate"
+compliance_certifications_traceability_audit_child_planning_may_proceed: true
+compliance_certifications_traceability_audit_no_implementation_authority: true
+compliance_certifications_traceability_audit_no_policy_engine_redesign_authority: true
+compliance_certifications_traceability_audit_no_schema_expansion_authority: true
+compliance_certifications_traceability_audit_runtime_completeness_not_proven_in_full: true
+compliance_certifications_traceability_audit_residual_drift_separate: "legacy tests/docs still carrying the old certification-is-deferred posture; stale test expectations around CERTIFICATION_LOG_DEFERRED; drift no longer matches live certification lifecycle logging behavior"
+compliance_certifications_traceability_audit_residual_drift_real_but_not_outcome_contradiction: true
+compliance_certifications_traceability_audit_next_unit_at_report_time: "TEXTIC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001"
+compliance_certifications_traceability_audit_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+compliance_certifications_traceability_audit_adjacent_findings_separate: "platform control-plane supervision surfaces; tenant/admin shell routing into certification, traceability, and audit surfaces; B2B/trade reuse of DPP/certification/traceability evidence; residual stale test/documentation posture around deferred certification logging; any future policy-engine redesign; any future schema expansion; any broader runtime-completeness claims"
+compliance_certifications_traceability_audit_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
