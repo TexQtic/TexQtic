@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
-import { TenantStatus, TenantConfig } from '../../types';
+import { TenantStatus, TenantConfig, type CommercialPlan } from '../../types';
 import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
@@ -112,6 +112,29 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     suspended: tenants.filter(t => t.status?.toUpperCase() === 'SUSPENDED').length,
   };
 
+  const normalizePlan = (plan: string | null | undefined): CommercialPlan => {
+    const normalizedPlan = plan?.trim().toUpperCase();
+
+    if (
+      normalizedPlan === 'FREE' ||
+      normalizedPlan === 'STARTER' ||
+      normalizedPlan === 'PROFESSIONAL' ||
+      normalizedPlan === 'ENTERPRISE'
+    ) {
+      return normalizedPlan;
+    }
+
+    if (normalizedPlan === 'TRIAL' || normalizedPlan === 'BASIC') {
+      return 'FREE';
+    }
+
+    if (normalizedPlan === 'PAID') {
+      return 'PROFESSIONAL';
+    }
+
+    return 'FREE';
+  };
+
   // Map backend Tenant to frontend TenantConfig format for compatibility
   const mapToTenantConfig = (tenant: Tenant): TenantConfig => ({
     id: tenant.id,
@@ -120,10 +143,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     type: tenant.type as any,
     status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
     onboarding_status: tenant.onboarding_status ?? null,
-    plan: (tenant.plan === 'BASIC' ? 'TRIAL' : tenant.plan || 'TRIAL') as
-      | 'TRIAL'
-      | 'PAID'
-      | 'ENTERPRISE',
+    plan: normalizePlan(tenant.plan),
     theme: {
       primaryColor: tenant.branding?.primaryColor || '#4F46E5',
       secondaryColor: '#10B981',
@@ -169,9 +189,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Tenants', value: loading ? '...' : stats.total.toString() },
-          { label: 'Active (Paid)', value: loading ? '...' : stats.active.toString() },
+          { label: 'Active', value: loading ? '...' : stats.active.toString() },
           { label: 'Suspended', value: loading ? '...' : stats.suspended.toString() },
-          { label: 'Trialing', value: loading ? '...' : stats.trial.toString() },
+          { label: 'Trial', value: loading ? '...' : stats.trial.toString() },
         ].map((stat, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
             <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">

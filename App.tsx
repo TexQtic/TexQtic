@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { TenantType, TenantConfig, ImpersonationState } from './types';
+import { TenantType, TenantConfig, ImpersonationState, type CommercialPlan } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell, WhiteLabelAdminShell } from './layouts/Shells';
 import {
   SuperAdminShell,
@@ -998,10 +998,27 @@ const App: React.FC = () => {
   }, [appState, canAccessControlPlane]);
 
   // Helper to normalize plan string to strict union type
-  const normalizePlan = (plan: string | null | undefined): 'TRIAL' | 'PAID' | 'ENTERPRISE' => {
-    if (plan === 'TRIAL' || plan === 'PAID' || plan === 'ENTERPRISE') return plan;
-    if (plan === 'PROFESSIONAL') return 'PAID'; // Map PROFESSIONAL -> PAID
-    return 'TRIAL'; // Safe default
+  const normalizePlan = (plan: string | null | undefined): CommercialPlan => {
+    const normalizedPlan = plan?.trim().toUpperCase();
+
+    if (
+      normalizedPlan === 'FREE' ||
+      normalizedPlan === 'STARTER' ||
+      normalizedPlan === 'PROFESSIONAL' ||
+      normalizedPlan === 'ENTERPRISE'
+    ) {
+      return normalizedPlan;
+    }
+
+    if (normalizedPlan === 'TRIAL' || normalizedPlan === 'BASIC') {
+      return 'FREE';
+    }
+
+    if (normalizedPlan === 'PAID') {
+      return 'PROFESSIONAL';
+    }
+
+    return 'FREE';
   };
 
   // Convert backend Tenant to TenantConfig for UI compatibility
@@ -3141,7 +3158,7 @@ const App: React.FC = () => {
                       tenant_category: me.tenant.tenant_category ?? me.tenant.type ?? 'B2B',
                       is_white_label: me.tenant.is_white_label ?? false,
                       status: me.tenant.status,
-                      plan: me.tenant.plan ?? 'TRIAL',
+                      plan: normalizePlan(me.tenant.plan),
                       createdAt: '',
                       updatedAt: '',
                     } as Tenant]);

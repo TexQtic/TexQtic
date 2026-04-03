@@ -30,6 +30,8 @@ export enum UserRole {
   STAFF = 'STAFF'
 }
 
+export type CommercialPlan = 'FREE' | 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE';
+
 export interface User {
   id: string;
   email: string;
@@ -51,7 +53,7 @@ export interface TenantConfig {
   status: TenantStatus;
   /** Org-backed onboarding lifecycle status used for onboarding completion. */
   onboarding_status?: string | null;
-  plan: 'TRIAL' | 'PAID' | 'ENTERPRISE';
+  plan: CommercialPlan;
   theme: {
     primaryColor: string;
     secondaryColor: string;
