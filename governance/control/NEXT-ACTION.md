@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -51,6 +51,12 @@ notes: |
   as a tenant-owned cross-mode administrative and operational family distinct from B2B and B2C
   parent authority, White-Label overlay authority, and Platform Control-Plane supervision /
   governance, and preserved TEXQTIC-PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-001 as the exact next
+  lawful adjacent family-specific unit at that stage, planning + repo-truth validation only and
+  not implementation authority. The later Platform Control-Plane family replan then confirmed
+  Platform Control-Plane as a platform-owned cross-tenant supervision and governance family
+  distinct from parent commercial families, White-Label overlay administration, and Tenant Back
+  Office tenant-owned administration, and preserved
+  TEXQTIC-CATALOG-DISCOVERY-PRODUCT-DATA-CONTINUITY-FAMILY-DESIGN-CREATION-001 as the exact next
   lawful adjacent family-specific unit at that stage, planning + repo-truth validation only and
   not implementation authority. Future work should continue through bounded family-specific units
   unless a later authority review changes sequence.

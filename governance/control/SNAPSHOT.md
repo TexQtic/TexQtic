@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001: record Tenant Back Office family truth and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-001: record Platform Control-Plane family truth and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -132,6 +132,22 @@ tenant_back_office_next_unit_at_report_time: "TEXQTIC-PLATFORM-CONTROL-PLANE-FAM
 tenant_back_office_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 tenant_back_office_adjacent_findings_separate: "generic tenant SETTINGS route reusing WhiteLabelSettings.tsx is classification residue only; no RFQ or AdminRBAC design gate is absorbed into this unit; no closed local seam is reopened"
 tenant_back_office_fresh_repo_truth_validation_required_at_opening: true
+platform_control_plane_family_replan_source_report: "TEXTIC-PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-001"
+platform_control_plane_platform_owned_cross_tenant_supervision_governance_family_confirmed: true
+platform_control_plane_not_commercial_access_model: true
+platform_control_plane_not_white_label_overlay_administration_substitute: true
+platform_control_plane_not_tenant_back_office_substitute: true
+platform_control_plane_runtime_evidences_distinct_control_plane_shell_and_supervision_surfaces: true
+platform_control_plane_inheritance_boundary: "cross-tenant supervision; tenant registry and tenant deep-dive inspection; onboarding oversight and approved activation; platform finance visibility; disputes, escalations, compliance queue, and audit visibility; platform RBAC, feature flags, AI governance, event stream, and health/operational monitoring"
+platform_control_plane_adjacent_boundaries_remain_separate: "B2B remains parent commercial family for authenticated business exchange; B2C remains parent family for tenant-branded consumer commerce; White-Label remains overlay and overlay-owned administration where applicable; Tenant Back Office remains tenant-owned admin/ops continuity; downstream whole-family authorities such as identity/workspace, domain/routing/brand-surface, catalog/discovery/product-data, orders, payments, messaging, and RFQ continuity remain separate"
+platform_control_plane_child_planning_may_proceed: true
+platform_control_plane_replan_resolves_drift: "control-center taxonomy drift; launch-boundary overread drift; generic-admin-shell inference drift"
+platform_control_plane_no_implementation_authority: true
+platform_control_plane_unsettled_broader_family_scope_remains_separate: "full identity/workspace family scope; full domain/routing/brand-surface family scope; broader AI / feature-governance families beyond bounded control-plane surfaces already evidenced"
+platform_control_plane_next_unit_at_report_time: "TEXQTIC-CATALOG-DISCOVERY-PRODUCT-DATA-CONTINUITY-FAMILY-DESIGN-CREATION-001"
+platform_control_plane_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+platform_control_plane_adjacent_findings_separate: "generic admin shell presence / mixed-era taxonomy remains a separate drift class already classified by the family replan; no Tenant Back Office local seam is reopened; no White-Label local seam is reopened; no closed runtime seam is reopened"
+platform_control_plane_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
