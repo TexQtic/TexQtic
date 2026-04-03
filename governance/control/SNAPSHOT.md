@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-ORDERS-CHECKOUT-POST-PURCHASE-CONTINUITY-FAMILY-DESIGN-CREATION-001: record Orders / Checkout / Post-Purchase family truth and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-PAYMENTS-ESCROW-SETTLEMENT-FAMILY-DESIGN-CREATION-001: record Payments / Escrow / Settlement family truth and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -183,6 +183,23 @@ orders_checkout_post_purchase_next_unit_at_report_time: "TEXTIC-PAYMENTS-ESCROW-
 orders_checkout_post_purchase_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 orders_checkout_post_purchase_adjacent_findings_separate: "catalog/discovery ownership questions remain separate; White-Label overlay classification residue remains separate; Tenant Back Office and Platform Control-Plane administration or supervision residue remains separate; downstream Payments / Escrow / Settlement finance-state conclusions remain separate; deeper shipment, returns, reconciliation, settlement, or finance-ops boundary work remains separate; previously preserved adjacent findings remain separate unless a later bounded review proves inseparability"
 orders_checkout_post_purchase_fresh_repo_truth_validation_required_at_opening: true
+payments_escrow_settlement_family_design_source_report: "TEXTIC-PAYMENTS-ESCROW-SETTLEMENT-FAMILY-DESIGN-CREATION-001"
+payments_escrow_settlement_source_report_review_only_no_implementation_changes_proposed: true
+payments_escrow_settlement_distinct_downstream_finance_state_family_confirmed: true
+payments_escrow_settlement_family_anchor_and_live_tenant_finance_state_seams_support_classification: true
+payments_escrow_settlement_repo_truth_not_materially_contradict_family_model: true
+payments_escrow_settlement_control_plane_oversight_does_not_transfer_canonical_ownership: true
+payments_escrow_settlement_inheritance_boundary: "payment acknowledgement and payment-state visibility; escrow account continuity; ledger continuity; derived balance continuity; settlement preview; settlement execution; durable finance-event recording including release/debit style records where evidenced; fee visibility; bounded finance-event progression under the ledger/system-of-record posture"
+payments_escrow_settlement_adjacent_boundaries_remain_separate: "B2B remains parent commercial family authority for authenticated business exchange; B2C remains parent family authority for tenant-branded consumer commerce; Orders / Checkout / Post-Purchase retains cart, checkout initiation, order creation/read continuity, and bounded post-order lifecycle before finance-state continuity begins; Catalog / Discovery / Product Data retains product-data truth, browse, search, list, detail, collection, and inspection continuity; White-Label retains branded presentation, White-Label runtime differences, White-Label admin/operator presentation, and overlay delivery concerns; Tenant Back Office retains org/workspace administration, memberships, staffing, tenant settings, integrations, and workspace-operating configuration; Platform Control-Plane retains finance oversight, cross-tenant inspection, supervision outcomes, admin exception paths, and platform authority-intent recording; subscription/commercial packaging/entitlements remains separate; identity/tenancy/permissions/workspace continuity remains separate; messaging/notifications remains separate; domain/tenant routing/brand-surface management remains separate; broader finance-ops/reconciliation-platform work remains separate; PSP or funds-movement/custody activation remains separate"
+payments_escrow_settlement_child_planning_may_proceed: true
+payments_escrow_settlement_family_design_resolves_drift: "orders and finance ownership; B2B/B2C parent posture and finance-family ownership; control-plane finance oversight and finance-family ownership; generic shell labels and lawful family authority"
+payments_escrow_settlement_no_implementation_authority: true
+payments_escrow_settlement_no_psp_custody_or_funds_movement_authority: true
+payments_escrow_settlement_subscription_billing_and_payout_authority_questions_remain_separate: true
+payments_escrow_settlement_next_unit_at_report_time: "TEXQTIC-IDENTITY-TENANCY-WORKSPACE-CONTINUITY-DESIGN-CREATION-001"
+payments_escrow_settlement_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+payments_escrow_settlement_adjacent_findings_separate: "control-plane payout authority intent routes are not tenant settlement execution, control-plane settlement exception execution, or finance supervision casework; if later formal family classification is needed, preserve TEXQTIC-FINANCE-AUTHORITY-PAYOUT-INTENT-BOUNDARY-REVIEW-001 as a separate bounded adjacent candidate and do not merge it into this payments family-design unit"
+payments_escrow_settlement_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
