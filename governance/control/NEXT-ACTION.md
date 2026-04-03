@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-02 (MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001 close sync)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -37,6 +37,11 @@ notes: |
   and TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001 remaining later adjacent family
   candidates only. That preserved opening remained planning + repo-truth validation only, no
   bounded family-level implementation-opening candidate was eligible, EPHEMERAL-VERIFICATION-
-  TENANT-CLEANUP-002 remained separate, and future work should continue through bounded
-  family-specific units unless a later authority review changes sequence.
+  TENANT-CLEANUP-002 remained separate. The later B2B Exchange Core / Enterprise Depth
+  realignment then confirmed B2B Exchange Core as the controlling parent commercial family,
+  enterprise as subordinate depth within B2B rather than a peer operating family, and preserved
+  TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001 as the exact next lawful adjacent family-specific
+  unit at that stage, planning + repo-truth validation only and not implementation authority.
+  Future work should continue through bounded family-specific units unless a later authority review
+  changes sequence.
 ```

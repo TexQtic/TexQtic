@@ -11,11 +11,11 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-02
+snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "[GOVERNANCE-AND-PLANNING-STACK-REALIGNMENT-CARRY-FORWARD-001] carry-forward sync"
+last_commit: "GOVERNANCE-SYNC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001: record B2B parent-family and enterprise-depth realignment"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -29,7 +29,7 @@ current_product_active_delivery_count: 0
 current_product_delivery_priority: none
 current_product_delivery_unit_open: false
 current_product_active_delivery_unit: none
-future_product_opening_requires_fresh_bounded_product_decision: false
+future_product_opening_requires_fresh_bounded_product_decision: true
 product_truth_v1_stack_historical_complete: true
 product_truth_v2_stack_seeded: true
 product_truth_v2_gap_register_present: true
@@ -88,6 +88,19 @@ step3b_next_family_authority_exact_next_unit_at_report_time: "TEXQTIC-B2B-EXCHAN
 step3b_next_family_authority_exact_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 step3b_next_family_authority_adjacent_findings_separate: "supplier-detail buyer-summary local seam; EPHEMERAL-VERIFICATION-TENANT-CLEANUP-002; CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001; CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001; RFQ-detail scrollability; image-upload / catalog-media continuity; WL Add to Cart 500; closed B2C adjacent candidates remain closed"
 step3b_next_family_authority_fresh_repo_truth_validation_required_at_opening: true
+b2b_exchange_core_enterprise_depth_realignment_source_report: "TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001"
+b2b_exchange_core_parent_commercial_family_confirmed: true
+b2b_exchange_core_enterprise_subordinate_depth_confirmed: true
+b2b_exchange_core_enterprise_not_peer_operating_family: true
+b2b_exchange_core_runtime_types_not_materially_contradict_enterprise_within_b2b: true
+b2b_exchange_core_inheritance_boundary: "authenticated business exchange entry; governed discovery and commercial engagement; business-facing catalog and commercial continuity; bounded RFQ initiation plus buyer/supplier RFQ continuity; bounded bridge into trade where repo truth supports it; downstream trade and transaction continuity; compliance-aware exchange participation"
+b2b_exchange_core_adjacent_boundaries_remain_separate: "White-Label remains overlay; Tenant Back Office remains tenant-owned admin/ops; Platform Control-Plane remains platform-owned supervision/governance; RFQ-NEGOTIATION-CONTINUITY remains separately design-gated; TECS-FBW-ADMINRBAC remains separately design-gated; Aggregator remains its own discovery-and-handoff model; B2C remains its own parent family; downstream whole-family authorities such as catalog, orders, payments, identity, messaging, and domain/routing remain separate later-family authorities"
+b2b_exchange_core_child_planning_may_proceed: true
+b2b_exchange_core_no_implementation_authority: true
+b2b_exchange_core_next_unit_at_report_time: "TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001"
+b2b_exchange_core_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+b2b_exchange_core_adjacent_findings_separate: "enterprise wording/presentation residue in Shells.tsx remains local taxonomy residue only; RFQ-NEGOTIATION-CONTINUITY remains separately design-gated; TECS-FBW-ADMINRBAC remains separately design-gated"
+b2b_exchange_core_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
