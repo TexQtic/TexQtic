@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-WHITE-LABEL-OVERLAY-NORMALIZATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -41,7 +41,12 @@ notes: |
   realignment then confirmed B2B Exchange Core as the controlling parent commercial family,
   enterprise as subordinate depth within B2B rather than a peer operating family, and preserved
   TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001 as the exact next lawful adjacent family-specific
-  unit at that stage, planning + repo-truth validation only and not implementation authority.
-  Future work should continue through bounded family-specific units unless a later authority review
-  changes sequence.
+  unit at that stage, planning + repo-truth validation only and not implementation authority. The
+  later White-Label overlay normalization then confirmed White-Label as an overlay capability,
+  deployment/experience model, and branded tenant/operator presentation layer rather than a
+  separate commercial access model or peer operating family, and preserved
+  TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001 as the exact next lawful adjacent family-
+  specific unit at that stage, planning + repo-truth validation only and not implementation
+  authority. Future work should continue through bounded family-specific units unless a later
+  authority review changes sequence.
 ```
