@@ -32,7 +32,10 @@ import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
 import { enqueueSourceIngestion, enqueueSourceDeletion } from '../services/vectorIngestion.js';
-import { getCounterpartyProfileAggregation } from '../services/counterpartyProfileAggregation.service.js';
+import {
+  getCounterpartyProfileAggregation,
+  type CounterpartyProfileAggregation,
+} from '../services/counterpartyProfileAggregation.service.js';
 
 // ─── SM Transaction Helper ────────────────────────────────────────────────────
 /**
@@ -121,10 +124,6 @@ async function resolveTenantSessionIdentity(input: {
 
 const rfqReadStatusSchema = z.enum(['INITIATED', 'OPEN', 'RESPONDED', 'CLOSED']);
 
-const counterpartyProfileParamsSchema = z.object({
-  orgId: z.string().uuid('orgId must be a valid UUID'),
-});
-
 const rfqListQuerySchema = z.object({
   status: rfqReadStatusSchema.optional(),
   sort: z.enum(['updated_at_desc', 'created_at_desc']).optional().default('updated_at_desc'),
@@ -163,6 +162,7 @@ type BuyerRfqDetailRow = BuyerRfqListRow & {
     id: string;
     tradeReference: string;
   } | null;
+  supplierCounterpartySummary: CounterpartyProfileAggregation | null;
 };
 
 type SupplierRfqListRow = {
@@ -246,6 +246,7 @@ function mapBuyerRfqDetail(rfq: BuyerRfqDetailRow) {
     buyer_message: rfq.buyerMessage,
     created_by_user_id: rfq.createdByUserId,
     supplier_response: rfq.supplierResponse ? mapBuyerRfqResponse(rfq.supplierResponse) : null,
+    supplier_counterparty_summary: rfq.supplierCounterpartySummary,
     trade_continuity: rfq.tradeContinuity
       ? {
           trade_id: rfq.tradeContinuity.id,
@@ -443,38 +444,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       role: userRole,
     });
   });
-
-  /**
-   * GET /api/tenant/counterparty-profile/:orgId
-   * Return a bounded read-only counterparty profile aggregation for one selected org.
-   */
-  fastify.get(
-    '/tenant/counterparty-profile/:orgId',
-    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
-    async (request, reply) => {
-      const dbContext = request.dbContext;
-      if (!dbContext) {
-        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
-      }
-
-      const paramsResult = counterpartyProfileParamsSchema.safeParse(request.params);
-      if (!paramsResult.success) {
-        return sendValidationError(reply, paramsResult.error.errors);
-      }
-
-      try {
-        const profile = await getCounterpartyProfileAggregation(paramsResult.data.orgId, prisma);
-        return sendSuccess(reply, { profile });
-      } catch (error) {
-        if (error instanceof OrganizationNotFoundError) {
-          return sendNotFound(reply, 'Counterparty profile not found');
-        }
-
-        request.log.error({ err: error }, '[counterparty-profile] GET failed');
-        return sendError(reply, 'INTERNAL_ERROR', 'Failed to load counterparty profile', 500);
-      }
-    },
-  );
 
   /**
    * GET /api/tenant/audit-logs
@@ -1747,8 +1716,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendNotFound(reply, 'RFQ not found');
     }
 
-    const supplierResponse = await resolveBuyerRfqSupplierResponse(rfq.id);
-    const tradeContinuity = await resolveBuyerRfqTradeContinuity(dbContext, rfq.id);
+    const [supplierResponse, tradeContinuity, supplierCounterpartySummary] = await Promise.all([
+      resolveBuyerRfqSupplierResponse(rfq.id),
+      resolveBuyerRfqTradeContinuity(dbContext, rfq.id),
+      getCounterpartyProfileAggregation(rfq.supplierOrgId, prisma).catch(error => {
+        if (error instanceof OrganizationNotFoundError) {
+          return null;
+        }
+
+        throw error;
+      }),
+    ]);
 
     return sendSuccess(reply, {
       rfq: mapBuyerRfqDetail({
@@ -1759,6 +1737,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           price: catalogItem.price,
         },
         supplierResponse,
+        supplierCounterpartySummary,
         tradeContinuity,
       }),
     });
