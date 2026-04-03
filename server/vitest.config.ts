@@ -26,6 +26,7 @@ export default defineConfig({
     // ── Discovery ───────────────────────────────────────────────────────────
     include: [
       'src/__tests__/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+      'tests/rfq-detail-route.shared.test.ts',
       '../tests/**/*.{test,spec}.?(c|m)[jt]s?(x)',
     ],
 

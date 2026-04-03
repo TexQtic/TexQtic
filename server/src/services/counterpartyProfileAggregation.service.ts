@@ -110,28 +110,37 @@ async function readEvidenceSummary(
   prismaClient: PrismaClient,
 ): Promise<EvidenceSummary> {
   return withAdminContext(prismaClient, async tx => {
-    const [traceabilityCount, nodeTypeRows, visibilityRows] = await Promise.all([
-      tx.traceabilityNode.count({
-        where: { orgId },
-      }),
-      tx.traceabilityNode.findMany({
-        where: { orgId },
-        select: { nodeType: true },
-        distinct: ['nodeType'],
-        orderBy: { nodeType: 'asc' },
-        take: TRACEABILITY_SUMMARY_LIMIT,
-      }),
-      tx.traceabilityNode.findMany({
-        where: { orgId },
-        select: { visibility: true },
-        distinct: ['visibility'],
-        orderBy: { visibility: 'asc' },
-        take: TRACEABILITY_SUMMARY_LIMIT,
-      }),
-    ]);
+    const traceabilityEvidence = await tx.traceabilityNode.findFirst({
+      where: { orgId },
+      select: { id: true },
+    });
+
+    if (!traceabilityEvidence) {
+      return {
+        hasTraceabilityEvidence: false,
+        nodeTypePresence: [],
+        visibilityIndicators: [],
+      };
+    }
+
+    const nodeTypeRows = await tx.traceabilityNode.findMany({
+      where: { orgId },
+      select: { nodeType: true },
+      distinct: ['nodeType'],
+      orderBy: { nodeType: 'asc' },
+      take: TRACEABILITY_SUMMARY_LIMIT,
+    });
+
+    const visibilityRows = await tx.traceabilityNode.findMany({
+      where: { orgId },
+      select: { visibility: true },
+      distinct: ['visibility'],
+      orderBy: { visibility: 'asc' },
+      take: TRACEABILITY_SUMMARY_LIMIT,
+    });
 
     return {
-      hasTraceabilityEvidence: traceabilityCount > 0,
+      hasTraceabilityEvidence: true,
       nodeTypePresence: nodeTypeRows.map((row: { nodeType: string }) => row.nodeType),
       visibilityIndicators: visibilityRows.map((row: { visibility: string }) => row.visibility),
     };

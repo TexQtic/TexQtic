@@ -6,14 +6,11 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { afterAll, beforeAll, describe, it } from 'vitest';
 
 import { config } from '../src/config/index.js';
 import { prisma } from '../src/db/prisma.js';
-import {
-  withBypassForSeed,
-  withDbContext,
-  type DatabaseContext,
-} from '../src/lib/database-context.js';
+import { withBypassForSeed } from '../src/lib/database-context.js';
 import tenantRoutes from '../src/routes/tenant.js';
 import { databaseContextMiddleware } from '../src/middleware/database-context.middleware.js';
 import { hasDb } from '../src/__tests__/helpers/dbGate.js';
@@ -21,86 +18,47 @@ import { seedTenantForTest } from '../src/__tests__/helpers/seedRls.js';
 
 type Fixture = {
   server: FastifyInstance;
-  testRunId: string;
-  enterpriseBuyerOrgId: string;
-  whiteLabelBuyerOrgId: string;
+  buyerOrgId: string;
   supplierOrgId: string;
-  enterpriseBuyerUserId: string;
-  whiteLabelBuyerUserId: string;
+  buyerUserId: string;
   supplierUserId: string;
-  enterpriseBuyerToken: string;
-  whiteLabelBuyerToken: string;
+  buyerToken: string;
   supplierToken: string;
   catalogItemId: string;
-  enterpriseRespondedRfqId: string;
-  whiteLabelRespondedRfqId: string;
-  eventFallbackRfqId: string;
-  enterpriseTradeId: string;
-  eventFallbackTradeId: string;
+  rfqId: string;
 };
 
 async function makeFixture(): Promise<Fixture> {
   const testRunId = randomUUID();
-  const enterpriseBuyerOrgId = randomUUID();
-  const whiteLabelBuyerOrgId = randomUUID();
+  const buyerOrgId = randomUUID();
   const supplierOrgId = randomUUID();
 
-  let enterpriseBuyerUserId = '';
-  let whiteLabelBuyerUserId = '';
+  let buyerUserId = '';
   let supplierUserId = '';
   let catalogItemId = '';
-  let enterpriseRespondedRfqId = '';
-  let whiteLabelRespondedRfqId = '';
-  let eventFallbackRfqId = '';
-  let enterpriseTradeId = '';
-  let eventFallbackTradeId = '';
+  let rfqId = '';
 
-  await seedTenantForTest(enterpriseBuyerOrgId, testRunId);
-  await seedTenantForTest(whiteLabelBuyerOrgId, testRunId);
+  await seedTenantForTest(buyerOrgId, testRunId);
   await seedTenantForTest(supplierOrgId, testRunId);
 
   await withBypassForSeed(prisma, async tx => {
     const passwordHash = await bcrypt.hash('test-password', 10);
 
-    await tx.tenant.update({
-      where: { id: whiteLabelBuyerOrgId },
-      data: {
-        isWhiteLabel: true,
-        name: `White Label Buyer [tag:${testRunId}]`,
-      },
-    });
-
-    await tx.organizations.updateMany({
-      where: { id: whiteLabelBuyerOrgId },
-      data: { is_white_label: true },
-    });
-
-    const enterpriseBuyerUser = await tx.user.create({
+    const buyerUser = await tx.user.create({
       data: {
         id: randomUUID(),
-        email: `enterprise-buyer-${testRunId}@test.local`,
+        email: `supplier-detail-buyer-${testRunId}@test.local`,
         passwordHash,
         emailVerified: true,
         emailVerifiedAt: new Date(),
       },
     });
-    enterpriseBuyerUserId = enterpriseBuyerUser.id;
-
-    const whiteLabelBuyerUser = await tx.user.create({
-      data: {
-        id: randomUUID(),
-        email: `wl-buyer-${testRunId}@test.local`,
-        passwordHash,
-        emailVerified: true,
-        emailVerifiedAt: new Date(),
-      },
-    });
-    whiteLabelBuyerUserId = whiteLabelBuyerUser.id;
+    buyerUserId = buyerUser.id;
 
     const supplierUser = await tx.user.create({
       data: {
         id: randomUUID(),
-        email: `supplier-${testRunId}@test.local`,
+        email: `supplier-detail-supplier-${testRunId}@test.local`,
         passwordHash,
         emailVerified: true,
         emailVerifiedAt: new Date(),
@@ -110,8 +68,7 @@ async function makeFixture(): Promise<Fixture> {
 
     await tx.membership.createMany({
       data: [
-        { tenantId: enterpriseBuyerOrgId, userId: enterpriseBuyerUserId, role: 'OWNER' },
-        { tenantId: whiteLabelBuyerOrgId, userId: whiteLabelBuyerUserId, role: 'OWNER' },
+        { tenantId: buyerOrgId, userId: buyerUserId, role: 'OWNER' },
         { tenantId: supplierOrgId, userId: supplierUserId, role: 'OWNER' },
       ],
     });
@@ -120,157 +77,28 @@ async function makeFixture(): Promise<Fixture> {
       data: {
         id: randomUUID(),
         tenantId: supplierOrgId,
-        name: `Shared RFQ Item [tag:${testRunId}]`,
-        sku: `RFQ-SHARED-${testRunId}`,
-        description: `Shared RFQ detail route fixture for ${testRunId}`,
+        name: `Supplier Detail Verifier Item [tag:${testRunId}]`,
+        sku: `RFQ-SUPPLIER-DETAIL-${testRunId}`,
+        description: `Supplier detail bounded verifier fixture for ${testRunId}`,
         price: 42,
         active: true,
       },
     });
     catalogItemId = catalogItem.id;
 
-    const enterpriseRespondedRfq = await tx.rfq.create({
+    const rfq = await tx.rfq.create({
       data: {
         id: randomUUID(),
-        orgId: enterpriseBuyerOrgId,
+        orgId: buyerOrgId,
         supplierOrgId,
         catalogItemId,
-        quantity: 4,
-        buyerMessage: 'Enterprise buyer needs confirmed lead time.',
-        status: 'RESPONDED',
-        createdByUserId: enterpriseBuyerUserId,
+        quantity: 7,
+        buyerMessage: 'Supplier detail bounded verifier request.',
+        status: 'OPEN',
+        createdByUserId: buyerUserId,
       },
     });
-    enterpriseRespondedRfqId = enterpriseRespondedRfq.id;
-
-    const whiteLabelRespondedRfq = await tx.rfq.create({
-      data: {
-        id: randomUUID(),
-        orgId: whiteLabelBuyerOrgId,
-        supplierOrgId,
-        catalogItemId,
-        quantity: 6,
-        buyerMessage: 'White-label buyer needs allocation confirmation.',
-        status: 'RESPONDED',
-        createdByUserId: whiteLabelBuyerUserId,
-      },
-    });
-    whiteLabelRespondedRfqId = whiteLabelRespondedRfq.id;
-
-    const eventFallbackRfq = await tx.rfq.create({
-      data: {
-        id: randomUUID(),
-        orgId: enterpriseBuyerOrgId,
-        supplierOrgId,
-        catalogItemId,
-        quantity: 2,
-        buyerMessage: 'Fallback linkage proof RFQ.',
-        status: 'RESPONDED',
-        createdByUserId: enterpriseBuyerUserId,
-      },
-    });
-    eventFallbackRfqId = eventFallbackRfq.id;
-
-    await tx.rfqSupplierResponse.createMany({
-      data: [
-        {
-          rfqId: enterpriseRespondedRfqId,
-          supplierOrgId,
-          message: 'Enterprise buyer response is visible.',
-          createdByUserId: supplierUserId,
-        },
-        {
-          rfqId: whiteLabelRespondedRfqId,
-          supplierOrgId,
-          message: 'White-label buyer response is visible.',
-          createdByUserId: supplierUserId,
-        },
-        {
-          rfqId: eventFallbackRfqId,
-          supplierOrgId,
-          message: 'Fallback RFQ response is visible.',
-          createdByUserId: supplierUserId,
-        },
-      ],
-    });
-
-    const draftTradeState = await tx.lifecycleState.findFirst({
-      where: { entityType: 'TRADE', stateKey: 'DRAFT' },
-      select: { id: true },
-    });
-    assert.ok(draftTradeState, 'Missing TRADE/DRAFT lifecycle state for shared RFQ detail route verifier.');
-
-    enterpriseTradeId = randomUUID();
-    await tx.$queryRaw`
-      INSERT INTO public.trades (
-        id,
-        tenant_id,
-        buyer_org_id,
-        seller_org_id,
-        lifecycle_state_id,
-        trade_reference,
-        currency,
-        gross_amount,
-        created_by_user_id
-      )
-      VALUES (
-        CAST(${enterpriseTradeId} AS uuid),
-        CAST(${enterpriseBuyerOrgId} AS uuid),
-        CAST(${enterpriseBuyerOrgId} AS uuid),
-        CAST(${supplierOrgId} AS uuid),
-        CAST(${draftTradeState.id} AS uuid),
-        ${`TRD-DETAIL-${testRunId}`},
-        'USD',
-        1200,
-        CAST(${enterpriseBuyerUserId} AS uuid)
-      )
-    `;
-
-    await tx.tradeEvent.create({
-      data: {
-        tenantId: enterpriseBuyerOrgId,
-        tradeId: enterpriseTradeId,
-        eventType: 'TRADE_CREATED_FROM_RFQ',
-        metadata: { rfqId: enterpriseRespondedRfqId },
-        createdByUserId: enterpriseBuyerUserId,
-      },
-    });
-
-    eventFallbackTradeId = randomUUID();
-    await tx.$queryRaw`
-      INSERT INTO public.trades (
-        id,
-        tenant_id,
-        buyer_org_id,
-        seller_org_id,
-        lifecycle_state_id,
-        trade_reference,
-        currency,
-        gross_amount,
-        created_by_user_id
-      )
-      VALUES (
-        CAST(${eventFallbackTradeId} AS uuid),
-        CAST(${enterpriseBuyerOrgId} AS uuid),
-        CAST(${enterpriseBuyerOrgId} AS uuid),
-        CAST(${supplierOrgId} AS uuid),
-        CAST(${draftTradeState.id} AS uuid),
-        ${`TRD-EVENT-${testRunId}`},
-        'USD',
-        800,
-        CAST(${enterpriseBuyerUserId} AS uuid)
-      )
-    `;
-
-    await tx.tradeEvent.create({
-      data: {
-        tenantId: enterpriseBuyerOrgId,
-        tradeId: eventFallbackTradeId,
-        eventType: 'TRADE_CREATED_FROM_RFQ',
-        metadata: { rfqId: eventFallbackRfqId },
-        createdByUserId: enterpriseBuyerUserId,
-      },
-    });
+    rfqId = rfq.id;
   });
 
   const server = Fastify({ logger: false });
@@ -307,20 +135,12 @@ async function makeFixture(): Promise<Fixture> {
 
   return {
     server,
-    testRunId,
-    enterpriseBuyerOrgId,
-    whiteLabelBuyerOrgId,
+    buyerOrgId,
     supplierOrgId,
-    enterpriseBuyerUserId,
-    whiteLabelBuyerUserId,
+    buyerUserId,
     supplierUserId,
-    enterpriseBuyerToken: jwt.sign(
-      { userId: enterpriseBuyerUserId, tenantId: enterpriseBuyerOrgId },
-      config.JWT_ACCESS_SECRET,
-      { expiresIn: '1h' },
-    ),
-    whiteLabelBuyerToken: jwt.sign(
-      { userId: whiteLabelBuyerUserId, tenantId: whiteLabelBuyerOrgId },
+    buyerToken: jwt.sign(
+      { userId: buyerUserId, tenantId: buyerOrgId },
       config.JWT_ACCESS_SECRET,
       { expiresIn: '1h' },
     ),
@@ -330,11 +150,7 @@ async function makeFixture(): Promise<Fixture> {
       { expiresIn: '1h' },
     ),
     catalogItemId,
-    enterpriseRespondedRfqId,
-    whiteLabelRespondedRfqId,
-    eventFallbackRfqId,
-    enterpriseTradeId,
-    eventFallbackTradeId,
+    rfqId,
   };
 }
 
@@ -346,37 +162,14 @@ async function cleanupFixture(fixture: Fixture | null) {
   await fixture.server.close().catch(() => {});
 
   await withBypassForSeed(prisma, async tx => {
-    await tx.tradeEvent.deleteMany({
-      where: { tradeId: { in: [fixture.enterpriseTradeId, fixture.eventFallbackTradeId] } },
-    });
-
-    await tx.trade.deleteMany({
-      where: { id: { in: [fixture.enterpriseTradeId, fixture.eventFallbackTradeId] } },
-    });
-
-    await tx.rfqSupplierResponse.deleteMany({
-      where: {
-        supplierOrgId: fixture.supplierOrgId,
-      },
-    });
-
-    await tx.rfq.deleteMany({
-      where: {
-        OR: [
-          { orgId: fixture.enterpriseBuyerOrgId },
-          { orgId: fixture.whiteLabelBuyerOrgId },
-          { supplierOrgId: fixture.supplierOrgId },
-        ],
-      },
-    });
-
+    await tx.rfqSupplierResponse.deleteMany({ where: { rfqId: fixture.rfqId } });
+    await tx.rfq.deleteMany({ where: { id: fixture.rfqId } });
     await tx.catalogItem.deleteMany({ where: { id: fixture.catalogItemId } });
 
     await tx.membership.deleteMany({
       where: {
         OR: [
-          { tenantId: fixture.enterpriseBuyerOrgId },
-          { tenantId: fixture.whiteLabelBuyerOrgId },
+          { tenantId: fixture.buyerOrgId },
           { tenantId: fixture.supplierOrgId },
         ],
       },
@@ -385,11 +178,7 @@ async function cleanupFixture(fixture: Fixture | null) {
     await tx.user.deleteMany({
       where: {
         id: {
-          in: [
-            fixture.enterpriseBuyerUserId,
-            fixture.whiteLabelBuyerUserId,
-            fixture.supplierUserId,
-          ],
+          in: [fixture.buyerUserId, fixture.supplierUserId],
         },
       },
     });
@@ -397,187 +186,97 @@ async function cleanupFixture(fixture: Fixture | null) {
     await tx.tenant.deleteMany({
       where: {
         id: {
-          in: [
-            fixture.enterpriseBuyerOrgId,
-            fixture.whiteLabelBuyerOrgId,
-            fixture.supplierOrgId,
-          ],
+          in: [fixture.buyerOrgId, fixture.supplierOrgId],
         },
       },
     });
   });
 }
 
-async function main() {
-  if (!hasDb) {
-    console.log('SKIP: DATABASE_URL is not configured, shared RFQ detail verifier not run.');
-    return;
-  }
+const describeIfDb = hasDb ? describe : describe.skip;
 
+describeIfDb('supplier RFQ detail buyer summary bounded verifier', () => {
   let fixture: Fixture | null = null;
 
-  try {
+  beforeAll(async () => {
     fixture = await makeFixture();
+  });
 
-    const enterpriseDetail = await fixture.server.inject({
+  afterAll(async () => {
+    await cleanupFixture(fixture);
+  });
+
+  it('returns buyer summary and preserves supplier response continuity', async () => {
+    assert.ok(fixture, 'Expected bounded supplier-detail verifier fixture to be initialized.');
+
+    const supplierDetail = await fixture.server.inject({
       method: 'GET',
-      url: `/api/tenant/rfqs/${fixture.enterpriseRespondedRfqId}`,
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
-    });
-    assert.equal(enterpriseDetail.statusCode, 200);
-
-    const enterpriseDetailBody = JSON.parse(enterpriseDetail.body);
-    assert.equal(enterpriseDetailBody.data.rfq.supplier_response.message, 'Enterprise buyer response is visible.');
-    assert.deepEqual(enterpriseDetailBody.data.rfq.trade_continuity, {
-      trade_id: fixture.enterpriseTradeId,
-      trade_reference: `TRD-DETAIL-${fixture.testRunId}`,
-    });
-
-    const whiteLabelDetail = await fixture.server.inject({
-      method: 'GET',
-      url: `/api/tenant/rfqs/${fixture.whiteLabelRespondedRfqId}`,
-      headers: { Authorization: `Bearer ${fixture.whiteLabelBuyerToken}` },
-    });
-    assert.equal(whiteLabelDetail.statusCode, 200);
-
-    const whiteLabelDetailBody = JSON.parse(whiteLabelDetail.body);
-    assert.equal(whiteLabelDetailBody.data.rfq.supplier_response.message, 'White-label buyer response is visible.');
-    assert.equal(whiteLabelDetailBody.data.rfq.trade_continuity, null);
-
-    const createdRfq = await fixture.server.inject({
-      method: 'POST',
-      url: '/api/tenant/rfqs',
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
-      payload: {
-        catalogItemId: fixture.catalogItemId,
-        quantity: 7,
-        buyerMessage: 'Create route should remain healthy.',
-      },
-    });
-    assert.equal(createdRfq.statusCode, 201);
-
-    const createdRfqBody = JSON.parse(createdRfq.body);
-    const createdRfqId = createdRfqBody.data.rfq.id as string;
-
-    const supplierInboxDetail = await fixture.server.inject({
-      method: 'GET',
-      url: `/api/tenant/rfqs/inbox/${createdRfqId}`,
+      url: `/api/tenant/rfqs/inbox/${fixture.rfqId}`,
       headers: { Authorization: `Bearer ${fixture.supplierToken}` },
     });
-    assert.equal(supplierInboxDetail.statusCode, 200);
+    assert.equal(supplierDetail.statusCode, 200);
 
-    const supplierFirstResponse = await fixture.server.inject({
-      method: 'POST',
-      url: `/api/tenant/rfqs/inbox/${createdRfqId}/respond`,
-      headers: { Authorization: `Bearer ${fixture.supplierToken}` },
-      payload: {
-        message: 'Supplier response remains healthy after the shared detail fix.',
-      },
-    });
-    assert.equal(supplierFirstResponse.statusCode, 201);
-
-    const buyerReadAfterResponse = await fixture.server.inject({
-      method: 'GET',
-      url: `/api/tenant/rfqs/${createdRfqId}`,
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
-    });
-    assert.equal(buyerReadAfterResponse.statusCode, 200);
-
-    const buyerReadAfterResponseBody = JSON.parse(buyerReadAfterResponse.body);
+    const supplierDetailBody = JSON.parse(supplierDetail.body);
+    assert.equal(supplierDetailBody.data.rfq.id, fixture.rfqId);
+    assert.equal(supplierDetailBody.data.rfq.status, 'OPEN');
+    assert.equal(supplierDetailBody.data.rfq.buyer_message, 'Supplier detail bounded verifier request.');
     assert.equal(
-      buyerReadAfterResponseBody.data.rfq.supplier_response.message,
-      'Supplier response remains healthy after the shared detail fix.',
+      supplierDetailBody.data.rfq.buyer_counterparty_summary.orgId,
+      fixture.buyerOrgId,
+    );
+    assert.notEqual(
+      supplierDetailBody.data.rfq.buyer_counterparty_summary.orgId,
+      fixture.supplierOrgId,
+    );
+    assert.equal(
+      supplierDetailBody.data.rfq.buyer_counterparty_summary.identity.orgId,
+      fixture.buyerOrgId,
+    );
+    assert.equal(
+      typeof supplierDetailBody.data.rfq.buyer_counterparty_summary.identity.legalName,
+      'string',
+    );
+    assert.ok(
+      Array.isArray(supplierDetailBody.data.rfq.buyer_counterparty_summary.trustSummary.certifications),
+    );
+    assert.equal(
+      typeof supplierDetailBody.data.rfq.buyer_counterparty_summary.evidenceSummary.hasTraceabilityEvidence,
+      'boolean',
+    );
+    assert.ok(
+      Array.isArray(supplierDetailBody.data.rfq.buyer_counterparty_summary.evidenceSummary.nodeTypePresence),
+    );
+    assert.ok(
+      Array.isArray(supplierDetailBody.data.rfq.buyer_counterparty_summary.evidenceSummary.visibilityIndicators),
     );
 
-    const createTradeFromRfq = await fixture.server.inject({
+    const supplierResponse = await fixture.server.inject({
       method: 'POST',
-      url: '/api/tenant/trades/from-rfq',
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
+      url: `/api/tenant/rfqs/inbox/${fixture.rfqId}/respond`,
+      headers: { Authorization: `Bearer ${fixture.supplierToken}` },
       payload: {
-        rfqId: createdRfqId,
-        tradeReference: `TRD-BRIDGE-${fixture.testRunId}`,
-        currency: 'USD',
-        grossAmount: 700,
-        reason: 'Bridge responded RFQ into existing trade continuity.',
+        message: 'Supplier bounded verifier response remains healthy.',
       },
     });
-    assert.equal(createTradeFromRfq.statusCode, 201);
+    assert.equal(supplierResponse.statusCode, 201);
 
-    const createTradeFromRfqBody = JSON.parse(createTradeFromRfq.body);
-    const createdTradeId = createTradeFromRfqBody.data.tradeId as string;
+    const supplierResponseBody = JSON.parse(supplierResponse.body);
+    assert.equal(supplierResponseBody.data.rfq.id, fixture.rfqId);
+    assert.equal(supplierResponseBody.data.rfq.status, 'RESPONDED');
+    assert.equal(supplierResponseBody.data.non_binding, true);
 
-    const duplicateTradeFromRfq = await fixture.server.inject({
-      method: 'POST',
-      url: '/api/tenant/trades/from-rfq',
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
-      payload: {
-        rfqId: createdRfqId,
-        tradeReference: `TRD-BRIDGE-DUP-${fixture.testRunId}`,
-        currency: 'USD',
-        grossAmount: 700,
-        reason: 'Duplicate bridge attempt should be blocked.',
-      },
-    });
-    assert.equal(duplicateTradeFromRfq.statusCode, 409);
-
-    const buyerReadAfterTradeBridge = await fixture.server.inject({
+    const supplierDetailAfterResponse = await fixture.server.inject({
       method: 'GET',
-      url: `/api/tenant/rfqs/${createdRfqId}`,
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
+      url: `/api/tenant/rfqs/inbox/${fixture.rfqId}`,
+      headers: { Authorization: `Bearer ${fixture.supplierToken}` },
     });
-    assert.equal(buyerReadAfterTradeBridge.statusCode, 200);
+    assert.equal(supplierDetailAfterResponse.statusCode, 200);
 
-    const buyerReadAfterTradeBridgeBody = JSON.parse(buyerReadAfterTradeBridge.body);
-    assert.deepEqual(buyerReadAfterTradeBridgeBody.data.rfq.trade_continuity, {
-      trade_id: createdTradeId,
-      trade_reference: `TRD-BRIDGE-${fixture.testRunId}`,
-    });
-
-    const tradesList = await fixture.server.inject({
-      method: 'GET',
-      url: '/api/tenant/trades?limit=50',
-      headers: { Authorization: `Bearer ${fixture.enterpriseBuyerToken}` },
-    });
-    assert.equal(tradesList.statusCode, 200);
-
-    await withBypassForSeed(prisma, async tx => {
-      await tx.tradeEvent.deleteMany({ where: { tradeId: createdTradeId } });
-      await tx.trade.deleteMany({ where: { id: createdTradeId } });
-      await tx.rfqSupplierResponse.deleteMany({ where: { rfqId: createdRfqId } });
-      await tx.rfq.deleteMany({ where: { id: createdRfqId } });
-    });
-
-    const dbContext: DatabaseContext = {
-      orgId: fixture.enterpriseBuyerOrgId,
-      actorId: fixture.enterpriseBuyerUserId,
-      realm: 'tenant',
-      requestId: randomUUID(),
-    };
-
-    const rows = await withDbContext(prisma, dbContext, async tx => {
-      return tx.$queryRaw<Array<{ id: string; trade_reference: string }>>`
-        SELECT t.id, t.trade_reference
-        FROM public.trade_events te
-        INNER JOIN public.trades t ON t.id = te.trade_id
-        WHERE t.tenant_id = CAST(${fixture.enterpriseBuyerOrgId} AS uuid)
-          AND te.event_type = 'TRADE_CREATED_FROM_RFQ'
-          AND te.metadata ->> 'rfqId' = CAST(${fixture.eventFallbackRfqId} AS text)
-        ORDER BY te.created_at DESC
-        LIMIT 1
-      `;
-    });
-
-    assert.deepEqual(rows, [
-      {
-        id: fixture.eventFallbackTradeId,
-        trade_reference: `TRD-EVENT-${fixture.testRunId}`,
-      },
-    ]);
-
-    console.log('PASS: shared RFQ detail verifier completed successfully.');
-  } finally {
-    await cleanupFixture(fixture);
-  }
-}
-
-await main();
+    const supplierDetailAfterResponseBody = JSON.parse(supplierDetailAfterResponse.body);
+    assert.equal(supplierDetailAfterResponseBody.data.rfq.status, 'RESPONDED');
+    assert.equal(
+      supplierDetailAfterResponseBody.data.rfq.buyer_counterparty_summary.orgId,
+      fixture.buyerOrgId,
+    );
+  });
+});

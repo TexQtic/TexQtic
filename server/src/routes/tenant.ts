@@ -180,6 +180,7 @@ type SupplierRfqListRow = {
 
 type SupplierRfqDetailRow = SupplierRfqListRow & {
   buyerMessage: string | null;
+  buyerCounterpartySummary: CounterpartyProfileAggregation | null;
 };
 
 type SupplierRfqResponseRow = {
@@ -273,6 +274,7 @@ function mapSupplierRfqDetail(rfq: SupplierRfqDetailRow) {
   return {
     ...mapSupplierRfqListItem(rfq),
     buyer_message: rfq.buyerMessage,
+    buyer_counterparty_summary: rfq.buyerCounterpartySummary,
   };
 }
 
@@ -1511,7 +1513,20 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendNotFound(reply, 'RFQ not found');
     }
 
-    return sendSuccess(reply, { rfq: mapSupplierRfqDetail(rfq) });
+    const buyerCounterpartySummary = await getCounterpartyProfileAggregation(rfq.orgId, prisma).catch(error => {
+      if (error instanceof OrganizationNotFoundError) {
+        return null;
+      }
+
+      throw error;
+    });
+
+    return sendSuccess(reply, {
+      rfq: mapSupplierRfqDetail({
+        ...rfq,
+        buyerCounterpartySummary,
+      }),
+    });
   });
 
   /**
