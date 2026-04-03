@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-IDENTITY-TENANCY-WORKSPACE-CONTINUITY-DESIGN-CREATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-MESSAGING-NOTIFICATIONS-FAMILY-DESIGN-CREATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -85,6 +85,17 @@ notes: |
   Checkout / Post-Purchase ownership, and Payments / Escrow / Settlement ownership, and preserved
   TEXTIC-MESSAGING-NOTIFICATIONS-FAMILY-DESIGN-CREATION-001 as the exact next lawful adjacent
   family-specific unit at that stage, planning + repo-truth validation only and not
-  implementation authority. Future work should continue through bounded family-specific units
-  unless a later authority review changes sequence.
+  implementation authority. The later Messaging / Notifications family design creation then
+  confirmed Messaging / Notifications as a distinct cross-cutting planning family boundary while
+  preserving Outcome B because current repo truth does not yet prove a materially complete shared
+  runtime Messaging / Notifications family; live evidence remains narrow and mostly bounded to
+  supplier RFQ inbox/detail/respond continuity, bounded first-response communication, and
+  transactional email delivery plumbing, with B2B, B2C, Identity / Tenancy / Permissions /
+  Workspace, Orders / Checkout / Post-Purchase, Payments / Escrow / Settlement, Tenant Back
+  Office, Platform Control-Plane, and Domain / Tenant Routing / Brand-Surface Management
+  remaining separate, and preserved
+  TEXTIC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001 as the exact
+  next lawful adjacent family-specific unit at that stage, planning + repo-truth validation only
+  and not implementation authority. Future work should continue through bounded family-specific
+  units unless a later authority review changes sequence.
 ```
