@@ -15,7 +15,7 @@ snapshot_date: 2026-04-03
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-WHITE-LABEL-OVERLAY-NORMALIZATION-001: record White-Label overlay family truth and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001: record Tenant Back Office family truth and next-unit posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -118,6 +118,20 @@ white_label_overlay_next_unit_at_report_time: "TEXQTIC-TENANT-BACK-OFFICE-FAMILY
 white_label_overlay_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 white_label_overlay_adjacent_findings_separate: "deprecated WHITE_LABEL identity handling / historical terminology residue in types.ts; later domain / tenant-routing / brand-surface clarification remains separate unless a future bounded review proves inseparability"
 white_label_overlay_fresh_repo_truth_validation_required_at_opening: true
+tenant_back_office_family_design_source_report: "TEXTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001"
+tenant_back_office_tenant_owned_cross_mode_admin_operational_family_confirmed: true
+tenant_back_office_not_commercial_access_model: true
+tenant_back_office_not_white_label_overlay_substitute: true
+tenant_back_office_not_platform_control_plane_substitute: true
+tenant_back_office_runtime_evidences_membership_invite_role_settings_branding_continuity: true
+tenant_back_office_inheritance_boundary: "tenant-owned membership and staff administration; tenant-owned workspace identity, bounded settings, and branding configuration; cross-mode tenant-owned admin continuity; bounded integrations and broader operational configuration where tenant-owned"
+tenant_back_office_adjacent_boundaries_remain_separate: "B2B remains parent commercial family for business exchange; B2C remains parent family for tenant-branded consumer commerce; White-Label remains overlay and overlay-owned admin only where specifically overlay-owned; Platform Control-Plane remains platform-owned cross-tenant supervision/governance; downstream whole-family authorities such as identity/workspace, domain/routing/brand-surface, catalog, orders, payments, and messaging remain separate"
+tenant_back_office_child_planning_may_proceed: true
+tenant_back_office_no_implementation_authority: true
+tenant_back_office_next_unit_at_report_time: "TEXQTIC-PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-001"
+tenant_back_office_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+tenant_back_office_adjacent_findings_separate: "generic tenant SETTINGS route reusing WhiteLabelSettings.tsx is classification residue only; no RFQ or AdminRBAC design gate is absorbed into this unit; no closed local seam is reopened"
+tenant_back_office_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
