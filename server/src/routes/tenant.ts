@@ -32,6 +32,7 @@ import { sendInviteMemberEmail } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
 import { enqueueSourceIngestion, enqueueSourceDeletion } from '../services/vectorIngestion.js';
+import { getCounterpartyProfileAggregation } from '../services/counterpartyProfileAggregation.service.js';
 
 // ─── SM Transaction Helper ────────────────────────────────────────────────────
 /**
@@ -119,6 +120,10 @@ async function resolveTenantSessionIdentity(input: {
 }
 
 const rfqReadStatusSchema = z.enum(['INITIATED', 'OPEN', 'RESPONDED', 'CLOSED']);
+
+const counterpartyProfileParamsSchema = z.object({
+  orgId: z.string().uuid('orgId must be a valid UUID'),
+});
 
 const rfqListQuerySchema = z.object({
   status: rfqReadStatusSchema.optional(),
@@ -438,6 +443,38 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       role: userRole,
     });
   });
+
+  /**
+   * GET /api/tenant/counterparty-profile/:orgId
+   * Return a bounded read-only counterparty profile aggregation for one selected org.
+   */
+  fastify.get(
+    '/tenant/counterparty-profile/:orgId',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const paramsResult = counterpartyProfileParamsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      try {
+        const profile = await getCounterpartyProfileAggregation(paramsResult.data.orgId, prisma);
+        return sendSuccess(reply, { profile });
+      } catch (error) {
+        if (error instanceof OrganizationNotFoundError) {
+          return sendNotFound(reply, 'Counterparty profile not found');
+        }
+
+        request.log.error({ err: error }, '[counterparty-profile] GET failed');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to load counterparty profile', 500);
+      }
+    },
+  );
 
   /**
    * GET /api/tenant/audit-logs
