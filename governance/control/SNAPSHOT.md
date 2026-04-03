@@ -79,6 +79,15 @@ step3b_redesign_wave_3: "downstream transactional families: B2C broader family, 
 step3b_next_unit_1: "TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001"
 step3b_next_unit_2: "TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001"
 step3b_next_unit_3: "TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001"
+step3b_next_family_authority_opening_classification_source_report: "TEXTIC-NEXT-FAMILY-AUTHORITY-AND-OPENING-CLASSIFICATION-REVIEW-001"
+step3b_family_design_authority_planning_only: true
+step3b_next_family_authority_design_authority_only: "RFQ / Negotiation Continuity; TECS-FBW-ADMINRBAC; Aggregator Directory Discovery + Intent Handoff; Subscription / Commercial Packaging (family-level); AI Governance / Advisory Automation / Feature Governance / Release Controls / Kill-Switches"
+step3b_next_family_authority_planning_verification_eligible: "B2B Exchange Core + Enterprise Within B2B; White-Label Overlay; Tenant Back Office; B2C Tenant-Branded Commerce; Platform Control-Plane; Catalog / Discovery / Product Data; Orders / Checkout / Post-Purchase; Payments / Escrow / Settlement; Identity / Tenancy / Workspace; Messaging / Notifications; Compliance / Certifications / Traceability / Audit; Domain / Tenant Routing / Brand-Surface Management; Subscription Frontend Canonical Vocabulary Alignment (staged child candidate; fresh opening-time revalidation required)"
+step3b_next_family_authority_bounded_implementation_opening_eligible: "none"
+step3b_next_family_authority_exact_next_unit_at_report_time: "TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001"
+step3b_next_family_authority_exact_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+step3b_next_family_authority_adjacent_findings_separate: "supplier-detail buyer-summary local seam; EPHEMERAL-VERIFICATION-TENANT-CLEANUP-002; CONTROL-PLANE-ONBOARDING-OUTCOME-WRITE-CONTEXT-HARDENING-001; CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001; RFQ-detail scrollability; image-upload / catalog-media continuity; WL Add to Cart 500; closed B2C adjacent candidates remain closed"
+step3b_next_family_authority_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true

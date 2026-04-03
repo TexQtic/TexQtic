@@ -31,10 +31,12 @@ notes: |
   families AI Governance / Advisory Automation, Feature Governance / Release Controls /
   Kill-Switches, and Domain / Tenant Routing / Brand Surface Management are now preserved in
   future planning scope, and the redesign queue plus Wave 1 / Wave 2 / Wave 3 sequence are now
-  established in carry-forward state. The next safest bounded family-specific units are
-  TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001,
-  TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001, and
-  TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001. Implementation remains deferred, broad
-  planning-stack rewrites remain deferred, and future work should continue through bounded
+  established in carry-forward state. The next-family authority / opening-classification review
+  preserved TEXQTIC-B2B-EXCHANGE-CORE-AND-ENTERPRISE-DEPTH-REALIGNMENT-001 as the exact next
+  lawful family-specific opening at that stage, with TEXQTIC-WHITE-LABEL-OVERLAY-NORMALIZATION-001
+  and TEXQTIC-TENANT-BACK-OFFICE-FAMILY-DESIGN-CREATION-001 remaining later adjacent family
+  candidates only. That preserved opening remained planning + repo-truth validation only, no
+  bounded family-level implementation-opening candidate was eligible, EPHEMERAL-VERIFICATION-
+  TENANT-CLEANUP-002 remained separate, and future work should continue through bounded
   family-specific units unless a later authority review changes sequence.
 ```
