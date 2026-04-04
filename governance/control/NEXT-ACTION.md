@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-PLANNING-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -10,7 +10,7 @@ mode: DERIVED_PRODUCT_TRUTH_POINTER
 governance_exception_active: false
 product_delivery_priority: none
 product_truth_sources: docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
-layer_0_action: No current product-facing ACTIVE_DELIVERY unit is open after MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001 closed as a live-verified bounded public-surface separation unit. Any successor product or cleanup movement still requires a fresh bounded opening decision.
+layer_0_action: No current product-facing ACTIVE_DELIVERY unit is open. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001 is now verified/closed after authenticated production proof on https://app.texqtic.com, and any successor product or cleanup movement still requires a fresh bounded opening decision.
 notes: |
   MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001 is now CLOSED after the
   bounded App.tsx-only storefront separation fix and accepted live proof on the exact non-WL B2C
@@ -178,8 +178,20 @@ notes: |
   public/login endpoint or shell-selection behavior changes. Verified remains the routing gate for
   this implementation surface, primary remains separate, and widening into shared helpers, auth
   middleware, public/login routes, App shell files, schema, or cache emitters would exceed the
-  bounded contract. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001 is now
-  preserved as the exact next lawful successor, bounded implementation only and not broader
-  redesign authority. Future work should continue through bounded family-specific units unless a
-  later authority review changes sequence.
+  bounded contract. The later bounded implementation then completed through the approved runtime
+  and test allowlist and added the verified custom-domain host-to-tenant positive path through the
+  existing trust chain without widening into router, auth, schema, public/login, or infrastructure
+  redesign. The separate production build regression recovery then replaced the unsupported tagged-
+  template middleware matcher expression with a parser-safe literal form, restoring Vercel
+  production build acceptance without changing the bounded routing behavior. Live authenticated
+  production verification on https://app.texqtic.com then confirmed Enterprise tenant login
+  landing in Enterprise Management for Acme Corporation, White-Label tenant login landing in Store
+  Admin for White Label Co, and Super Admin login landing in Control Plane / Tenant Registry, with
+  logout return to the production sign-in surface remaining healthy and no blocking runtime
+  regression observed in the bounded seam. A browser-console 401 was observed during control-plane
+  load, but it did not block login or render and current evidence is insufficient to classify it
+  as a routing/middleware regression from this unit. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-
+  POSITIVE-PATH-IMPLEMENTATION-001 is therefore now closed as a verified bounded implementation.
+  No automatic successor is implied by this closure; any follow-on work must open as a separate
+  lawful unit with fresh repo-truth validation.
 ```
