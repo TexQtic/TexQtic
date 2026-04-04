@@ -116,6 +116,10 @@ Every v2 gap entry uses the following fields:
 	units are now closed separately.
 - Any future product-facing opening still requires a fresh bounded product decision against the
 	preserved `-v2` stack.
+- Under the cleaned authority base, the approved bounded Subscription commercial-truth slice is
+	now the current carry-forward candidate for fresh lawful opening consideration. This does not
+	rebuild Subscription as a broad standalone `-v2` family program and does not open implementation
+	by itself.
 
 ### Adjacent Finding Pending Unit Assignment
 
@@ -168,9 +172,10 @@ Every v2 gap entry uses the following fields:
 - For launch-specific posture, `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` should be
 	read alongside the bounded platform-admin launch boundary recorded in the launch overlay, not as
 	a broad admin redesign stream.
-- Subscription / commercial packaging is not modeled here as a standalone `-v2` candidate family,
-	but launch-specific interpretation of commercial truth now also depends on the launch overlay,
-	which records that commercial packaging is locked in launch scope and normalization-required.
+- Subscription / commercial packaging is still not rebuilt here as a broad standalone `-v2`
+	family program, but launch-specific interpretation of commercial truth now also carries the
+	approved bounded Subscription commercial-truth slice as the current carry-forward candidate for
+	fresh lawful opening consideration under the cleaned authority base.
 
 ### Live Split-Unit Separation Rule
 
@@ -196,6 +201,8 @@ Every v2 gap entry uses the following fields:
 - Do not reopen enterprise redesign through any v2 candidate unless later repo truth explicitly justifies it.
 - Do not read launch-specific lane assignment, normalization-first posture, or design-gate-first
 	posture without also consulting the launch overlay documents listed above.
+- Do not misread the bounded Subscription carry-forward clarification as a broad new `-v2` family
+	program rewrite or as implementation authority by itself.
 
 ## Relationship To v1
 

@@ -35,6 +35,7 @@ ordering.
 2. Do not merge catalog continuity, control-plane tenant operations reality, B2C storefront continuity, and aggregator scope truth into one program.
 3. Do not reopen the completed `-v1` units through this new plan.
 4. Keep the aggregator candidate at design-gate posture only.
+5. Treat already-closed bounded launch anchors as frozen anchors, not as unresolved current opening candidates.
 
 ## Launch Overlay Alignment Note
 
@@ -55,6 +56,29 @@ families.
 
 The implementation roadmap remains useful for wave grouping and planning context, but it must not
 be used as a competing live sequencing authority while this file is current.
+
+## Bounded Opening-Basis Realignment Note
+
+Under the current zero-open Layer 0 posture, already-closed bounded launch anchors must remain
+frozen anchors rather than unresolved current opening candidates. That frozen set includes:
+
+- `TENANT-CATALOG-MANAGEMENT-CONTINUITY`
+- `WL-RFQ-EXPOSURE-CONTINUITY`
+- `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`
+- `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`
+- the bounded B2C browse-entry seam
+- canonical onboarding / first-owner handoff continuity
+- bounded white-label overlay continuity / identity
+- B2B Exchange Core as the primary commercial family anchor
+
+With those anchors frozen and the cleaned authority base preserved, the bounded Subscription
+commercial-truth slice carried by
+`docs/product-truth/SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT-LAWFUL-OPENING-STEP-v1.md`
+is now the current carry-forward candidate entering fresh lawful opening consideration.
+
+This clarification is a bounded opening-basis realignment only. It does not reorder the preserved
+`-v2` candidate slate wholesale, does not reopen any frozen anchor, does not open implementation,
+and does not replace the separate lawful-opening decision still required by Governance OS.
 
 ## New Immediate Delivery Sequence
 

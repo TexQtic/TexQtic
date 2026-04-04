@@ -67,19 +67,19 @@ Authority stack honored by this artifact:
 
 Current posture remains conditional, bounded, and not execution-open for this Subscription candidate.
 
-- Layer 0 still records one sole open product-facing `ACTIVE_DELIVERY`: `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`
-- `NEXT-ACTION.md` still points to that same sole active product-facing delivery
-- `SNAPSHOT.md` still records `current_product_active_delivery_count: 1`
-- `SNAPSHOT.md` still records `future_product_opening_requires_fresh_bounded_product_decision: true`
-- current broad `-v2` product-truth stack still preserves the active enterprise RFQ bridge as the present product-facing delivery priority
+- Layer 0 now records that no current product-facing `ACTIVE_DELIVERY` unit is open
+- `NEXT-ACTION.md` now preserves the explicit zero-open posture and requires a fresh bounded governance decision for any later product-facing opening
+- `SNAPSHOT.md` now records `current_product_active_delivery_count: 0`
+- `SNAPSHOT.md` now records `future_product_opening_requires_fresh_bounded_decision: true`
+- the current broad `-v2` product-truth stack does not itself open this Subscription candidate, but now carries it into fresh lawful opening consideration through bounded opening-basis realignment only
 - the Subscription family has completed the required planning chain but has not become implementation-open merely because those planning artifacts now exist
 
 The resulting governance truth is strict:
 
-- the approved Subscription candidate exists in `APPROVED NEXT CANDIDATE` posture only
-- it is not currently a lawful second open product-facing unit
-- it may be prepared for later opening posture
-- it may not be treated as active execution while the current sole active product-facing delivery remains unresolved
+- the approved Subscription candidate now exists in bounded carry-forward posture for fresh lawful opening consideration
+- it is not currently implementation-open
+- it may support a separate lawful-opening decision next
+- it may not be treated as active execution merely because approval and bounded carry-forward now both exist
 
 ## 3. Why This Step Is Conditional Rather Than Automatically Executable
 
@@ -91,15 +91,15 @@ The candidate has already been approved as:
 
 That approval does not itself authorize implementation or active execution.
 
-Current governance posture still preserves one sole active product-facing delivery. Because that delivery remains open, no wording in this artifact may imply that a second product-facing unit can now be lawfully opened by default.
+Current governance posture no longer turns on a sole-active-delivery bar. It now preserves a zero-open Layer 0 posture plus the rule that any later product-facing opening still requires a fresh bounded governance decision. No wording in this artifact may imply that bounded carry-forward converts into lawful opening by default.
 
-This artifact therefore exists to prepare lawful opening posture only.
+This artifact therefore exists to prepare lawful opening posture only so the candidate can move next into a separate lawful-opening decision if current governance still permits it.
 
 It must preserve the following conditional rule in substance:
 
-- if current Layer 0 still records another sole active product-facing delivery, this Subscription candidate remains prepared-but-not-open
-- no wording may imply that approval automatically converts into execution authority
-- any actual governed opening or bounded implementation step is lawful only when TECS and current governance posture permit it
+- if current Layer 0 later records some other open product-facing delivery or otherwise withholds a fresh bounded opening decision, this Subscription candidate remains prepared-but-not-open
+- no wording may imply that approval or bounded carry-forward automatically converts into execution authority
+- the next governed move after this artifact is a separate lawful-opening decision, and any actual governed opening or bounded implementation step is lawful only when TECS and current governance posture permit it
 
 This is an opening-step preparation artifact, not an automatic opening event.
 
@@ -207,7 +207,7 @@ Required preconditions:
 
 1. the candidate remains approved only as the next bounded Subscription opening candidate and not as an already-open execution unit
 2. TECS still permits the move from planning-only posture into a governed opening step
-3. current Layer 0 posture permits a lawful new product-facing opening rather than preserving the current sole active delivery only
+3. current Layer 0 posture still permits a lawful new product-facing opening through a fresh bounded governance decision rather than through stale one-open-delivery assumptions
 4. the approved boundary remains unchanged after fresh repo-truth review
 5. the work can still stay inside the preferred frontend-first file/surface family, or any necessary deviation is separately re-bounded before execution
 6. no schema, persistence, migration, or broad contract redesign dependency is discovered
@@ -216,8 +216,8 @@ Required preconditions:
 
 Conditional execution rule:
 
-- if current Layer 0 still records another sole active product-facing delivery, this candidate remains staged and approved, but not open
-- lawful governed opening or bounded implementation may proceed only when current governance posture permits it
+- if current Layer 0 later records another open product-facing delivery or withholds a fresh bounded opening decision, this candidate remains staged and approved, but not open
+- lawful governed opening or bounded implementation may proceed only after a separate lawful-opening decision confirms that current governance posture permits it
 
 ## 8. Execution-Blocking Rejection / Halt / Re-Bound Triggers
 
