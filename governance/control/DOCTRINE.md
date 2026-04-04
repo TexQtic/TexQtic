@@ -90,6 +90,11 @@ DB URLs, `.env` contents, passwords, JWTs, and API keys must never be logged or 
 ### D-013 — Closure Requires Explicit Closure Basis
 A governance close is incomplete unless the close writeback records the closure basis, evidence class, resulting Layer 0 posture, and exact next authorized class or explicit no-successor posture. Separate post-close audit artifacts are mandatory only for strict-path units, failed-gate reruns, sequencing-authority changes, or closes that materially change broader queue posture.
 
+### D-014 — Implementation Openings Require Root-Cause Dependency Readiness
+No implementation opening is lawful on target-family maturity alone. A proposed opening is lawful only if the target unit is sufficiently mature for the intended opening and every material dependency or support family passes the readiness threshold required for that opening.
+Before approving any future implementation opening, Governance OS must require a bounded dependency-readiness investigation covering the target opening, its material dependency/support-family map, the required readiness threshold for each family, the current readiness state for each family, and a pass/fail result for each family. This applies to family implementation openings, cross-family openings, supporting-family openings, control-plane openings, and any other opening where dependency or support-family maturity materially affects lawful execution.
+If any family fails, Governance OS must return the failing family, the missing chain element(s), the deepest root blocker reached by recursive trace, and the minimum bounded next move required to make the opening lawful. Dependencies do not all need full implementation first, but each must be ready at the threshold appropriate to the opening.
+
 ---
 
 ## Operating Paths
@@ -97,6 +102,7 @@ A governance close is incomplete unless the close writeback records the closure 
 ### Normal Bounded Path
 
 - Read `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md`; read the live sequencing authority when product-facing.
+- Before approving any implementation opening, run the D-014 dependency-readiness investigation and either record a lawful opening basis or return the minimum bounded prerequisite move.
 - Open with one unit record plus the required Layer 0 update.
 - During work, update the unit record only when scope, blockers, or verification posture materially change.
 - Close with one compact governance writeback plus verification evidence.

@@ -400,6 +400,7 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 | Drafting verification prompt | Add: `units/<UNIT-ID>.md` |
 | Governance closure | `units/<UNIT-ID>.md` + Layer 0 files |
 | Product/design decision | Relevant decision file + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
+| Implementation-opening readiness investigation | Layer 0 files + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
 | Strict-path / authority-shaping work | Layer 0 files + `SNAPSHOT.md` + the minimum Layer 1 / Layer 2 / Layer 3 sources required for that authority check |
 | Candidate-normalization exception | Relevant analysis artifact + `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md` |
 | Audit query | `EXECUTION-LOG.md` (read-only) |
@@ -412,6 +413,114 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 - Using normalization ledgers as standing operating truth for ordinary bounded work
 
 If the control-plane files do not contain enough context, a governance unit must be run to update them — not a broad scan.
+
+### 4.5A Implementation Opening Root-Cause Dependency Readiness Rule
+
+#### 1. Rule Purpose
+
+This rule prevents implementation openings from being approved merely because the target family or
+unit looks mature in isolation. It requires Governance OS to evaluate target-opening maturity
+together with the dependency and support-family maturity that the opening materially relies on,
+and to return an exact non-drift next move when readiness fails.
+
+#### 2. Rule Statement
+
+The formal Governance OS rule is:
+
+- no implementation opening is lawful on target-family maturity alone
+- a proposed implementation opening is lawful only if the target unit is sufficiently mature for
+  the intended opening and all material dependency or support families are at the readiness level
+  required for that opening
+- this rule applies to family implementation openings, cross-family openings, supporting-family
+  openings, control-plane openings, and any other opening where dependency or support-family
+  maturity materially affects lawful execution
+- not every dependency must already be fully implemented, but every dependency or support family
+  must meet the readiness threshold appropriate to that opening, including thresholds such as
+  `implemented`, `implementation-ready`, `opening-ready`, `normalized and bounded`, or
+  `design-planned with stable interfaces/boundaries`
+
+#### 3. Opening-Evaluation Logic
+
+When a future implementation opening is proposed, Governance OS must:
+
+1. identify the opening target
+2. identify the material dependency families the opening relies on
+3. identify the material support families the opening relies on
+4. define the required readiness threshold for each target, dependency, and support family
+5. determine the current readiness state for each family
+6. record a pass/fail result for each family against its required threshold
+7. approve the opening only if the target unit and all material dependency/support families pass
+
+#### 4. Required Investigation / Audit Pattern
+
+Before any implementation opening is approved, Copilot must perform a bounded dependency-readiness
+investigation or audit.
+
+That investigation must return:
+
+1. opening target
+2. dependency/support-family map
+3. required readiness threshold per family
+4. current readiness per family
+5. pass/fail result per family
+
+Copilot must not lawfully recommend or open a future implementation unit without first performing
+this investigation.
+
+#### 5. Root-Cause Readiness Trace Logic
+
+If the proposed opening fails readiness, Governance OS must not stop at `not ready`, `blocked`,
+or `needs more planning`.
+
+It must:
+
+1. identify the first failing dependency or support family
+2. identify the missing chain element(s) causing that failure
+3. determine whether those missing elements themselves depend on intermediate blocked or
+   insufficient families
+4. continue tracing until the deepest root readiness blocker is found
+5. return the minimum bounded next move required to resolve that blocker without widening into
+   exploratory follow-on work
+
+#### 6. Required Governance OS Outputs
+
+Every implementation-opening readiness investigation must return all of the following:
+
+1. `Opening target`
+2. `Dependency/support-family map`
+3. `Required readiness threshold per family`
+4. `Current readiness per family`
+5. `Pass/fail result per family`
+6. `Root-cause readiness trace`
+7. `Minimum bounded next move`
+8. `Why that next move is the lawful non-drift step`
+
+If the opening passes, Governance OS may produce a valid bounded opening basis.
+
+If the opening fails, Governance OS must return the exact pre-opening work required first rather
+than a surface-level non-ready outcome.
+
+#### 7. Anti-Drift Rationale
+
+This rule exists to prevent:
+
+- premature openings
+- dependency-blind sequencing
+- rework caused by moving targets
+- false starts
+- drift into broad exploratory follow-up work
+- `most mature family wins` opening errors
+
+#### 8. Adoption Consequence
+
+Once this rule is adopted:
+
+- future implementation openings must pass the dependency-readiness investigation before approval
+- Governance OS may not approve a future implementation opening on target-family maturity alone
+- a failed opening investigation must still return the minimum bounded next move needed to make a
+  later opening lawful
+- the default operational behavior for future opening decisions becomes dependency-aware,
+  root-cause-traced, and drift-resistant
 
 ### 4.6 Edit-Scope Enforcement
 
