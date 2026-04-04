@@ -15,7 +15,7 @@ snapshot_date: 2026-04-04
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-CUSTOM-DOMAIN-RUNTIME-CONTINUITY-DESIGN-VALIDATION-001: record Outcome B continuity break and positive-path successor posture"
+last_commit: "GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001: record Outcome A minimum contract and implementation-planning successor posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -290,6 +290,27 @@ custom_domain_runtime_continuity_design_validation_next_unit_at_report_time: "TE
 custom_domain_runtime_continuity_design_validation_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 custom_domain_runtime_continuity_design_validation_adjacent_findings_separate: "WL admin domain-management surfaces; tenant branding/settings administration; control-plane inspection and tenant-detail oversight; slug-based and email-based public/auth entry; onboarding/default-domain bootstrap; DNS, certificates, hosting, and infrastructure concerns; generic router or auth refactor opportunities; any future custom-domain implementation work"
 custom_domain_runtime_continuity_design_validation_fresh_repo_truth_validation_required_at_opening: true
+custom_domain_host_to_tenant_positive_path_design_source_report: "TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001"
+custom_domain_host_to_tenant_positive_path_design_source_report_review_only_no_repo_mutation: true
+custom_domain_host_to_tenant_positive_path_design_outcome_a_preserved_exactly: true
+custom_domain_host_to_tenant_positive_path_design_current_repo_truth_supports_clear_minimum_contract: true
+custom_domain_host_to_tenant_positive_path_design_live_break_explicit: "non-platform hosts are rejected before resolution; the resolver is only called for platform subdomains; the propagated source is hard-coded as subdomain; request-time validation still accepts only the platform-subdomain branch"
+custom_domain_host_to_tenant_positive_path_design_authoritative_mapping_point: "existing internal resolver"
+custom_domain_host_to_tenant_positive_path_design_existing_signed_trust_chain_reused: true
+custom_domain_host_to_tenant_positive_path_design_validator_needs_parallel_custom_domain_acceptance_branch: true
+custom_domain_host_to_tenant_positive_path_design_downstream_shell_entry_reusable_once_tenant_context_exists: true
+custom_domain_host_to_tenant_positive_path_design_public_and_auth_entry_remain_separate: true
+custom_domain_host_to_tenant_positive_path_design_test_constraints: "existing tests prove custom domains currently fail closed, the only live positive path today is platform-subdomain routing, and the propagated source is currently subdomain"
+custom_domain_host_to_tenant_positive_path_design_minimum_contract: "after host normalization and passthrough filtering, Edge should treat remaining normalized non-passthrough hosts as candidates for the existing internal resolver rather than as automatic 404s; authoritative host-to-tenant mapping remains in that resolver; the platform-subdomain branch remains unchanged; the custom-domain branch is a bounded extension that looks up stored verified custom-domain truth by normalized host with an ACTIVE joined tenant and returns the same resolved payload shape; propagated runtime context remains inside the existing signed chain with tenantId, tenantSlug, tenantSource = custom_domain, resolver timestamp, and resolver signature; the request-time validator needs a parallel custom-domain acceptance branch; canonicalHost remains the accepted inbound custom host for this bounded design; fail-closed behavior remains unchanged"
+custom_domain_host_to_tenant_positive_path_design_limiting_nuance: "verified is the routing gate for this bounded design; primary is not needed for the minimum positive-path contract and remains separate for later canonical redirect or presentation policy; this unit does not redesign public/login UX, DNS/certificates/hosting, or router/auth/schema/infra"
+custom_domain_host_to_tenant_positive_path_design_child_planning_may_proceed: true
+custom_domain_host_to_tenant_positive_path_design_no_implementation_authority: true
+custom_domain_host_to_tenant_positive_path_design_resolves: "where authoritative mapping must occur; what minimal custom-domain lookup rule is needed; what signed data path can stay unchanged; what validator change is actually required; what downstream shell/auth seams are already reusable; what negative behavior must remain fail closed"
+custom_domain_host_to_tenant_positive_path_design_does_not_resolve: "whether implementation should open now; the exact file allowlist and proof matrix for implementation; host-aware login or public-entry behavior on custom domains; canonical redirect policy for primary domains; DNS and certificate lifecycle operations"
+custom_domain_host_to_tenant_positive_path_design_next_unit_at_report_time: "TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-PLANNING-001"
+custom_domain_host_to_tenant_positive_path_design_next_unit_scope: "planning only; not implementation authority"
+custom_domain_host_to_tenant_positive_path_design_adjacent_findings_separate: "WL admin domain CRUD and verified/pending UI state; public slug/email tenant discovery and host-aware login UX; verification workflow that flips a domain from pending to verified; primary-domain semantics and canonical redirect behavior; DNS, certificates, Vercel attachment, and hosting operations; cache topology redesign beyond the current bounded posture; broad router or auth refactor opportunities"
+custom_domain_host_to_tenant_positive_path_design_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true

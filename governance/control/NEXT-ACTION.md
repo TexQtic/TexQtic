@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-RUNTIME-CONTINUITY-DESIGN-VALIDATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -134,8 +134,27 @@ notes: |
   resolver path returns not_found because it only accepts platform hosts and performs slug lookup,
   request-time validation still requires tenantSource = subdomain and a platform-host slug match,
   and public/auth entry remains slug-based or email-membership-based rather than host-based.
-  TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001 is preserved as the exact next
-  lawful successor, planning + repo-truth validation only and not implementation authority.
-  Future work should continue through bounded family-specific units unless a later authority
-  review changes sequence.
+  TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001 then preserved Outcome A because
+  current repo truth supports a clear minimum positive-path design without requiring broad
+  router/auth/schema/infra redesign. The decisive live break remains explicit: non-platform hosts
+  are rejected before resolution, the resolver is only called for platform subdomains, the
+  propagated source is hard-coded as subdomain, and request-time validation still accepts only the
+  platform-subdomain branch. The minimum contract remains bounded: after host normalization and
+  passthrough filtering, Edge should treat remaining normalized non-passthrough hosts as
+  candidates for the existing internal resolver rather than as automatic 404s; authoritative host-
+  to-tenant mapping remains in that resolver; the platform-subdomain branch remains unchanged; the
+  custom-domain branch is a bounded extension that looks up stored verified custom-domain truth by
+  normalized host with an ACTIVE joined tenant and returns the same resolved payload shape;
+  propagated runtime context remains inside the existing signed chain with tenantId, tenantSlug,
+  tenantSource = custom_domain, resolver timestamp, and resolver signature; the request-time
+  validator needs a parallel custom-domain acceptance branch; canonicalHost remains the accepted
+  inbound custom host for this bounded design; and fail-closed behavior remains unchanged.
+  Verified remains the routing gate for this bounded design, while primary remains separate for
+  later redirect or presentation policy. Public/login UX, verification workflow, primary-domain
+  redirect policy, DNS/certificates/hosting, cache-topology redesign, and any broad
+  router/auth/schema/infra redesign remain separate. Later child planning may lawfully proceed,
+  but implementation authority still does not exist. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-
+  POSITIVE-PATH-IMPLEMENTATION-PLANNING-001 is preserved as the exact next lawful successor,
+  planning only and not implementation authority. Future work should continue through bounded
+  family-specific units unless a later authority review changes sequence.
 ```
