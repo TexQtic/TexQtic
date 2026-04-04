@@ -5,7 +5,8 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.4 (preserved; this design extends, does not replace)  
+**Doctrine Version:** v1.7 (reset-amended; original layer model preserved)  
+**Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 
 ---
 
@@ -14,14 +15,22 @@
 GOV-OS-001 is CLOSED as DESIGN-ONLY.
 
 A Governance Operating Model for TexQtic has been designed that:
-- Partitions governance into four structurally separated layers
+- Partitions governance into five structurally separated layers
 - Defines a small operational control plane (≤5 small files)
 - Defines one canonical unit record per governed unit
-- Defines a finite controlled status vocabulary (7 statuses)
+- Defines a finite controlled status vocabulary (8 statuses)
 - Defines legal state transitions and explicitly forbidden transitions
 - Defines an Enforcement Model that applies equally to human operator (Paresh), GPT planner (TexQtic CTO), and VS Code Copilot executor
 - Defines a phased migration path that preserves all history
 - Does not execute migration in this unit
+
+Reset amendment ratified on 2026-04-04 preserves this design and narrows its live operating burden:
+- Layer 0 owns present operational posture only
+- `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` is the sole live sequencing authority for ordinary product-facing next-opening selection
+- `TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only
+- candidate normalization is exception-only rather than a standing prerequisite
+- Sentinel gating is control-critical only
+- separate post-close audit artifacts are reserved for strict-path or broader queue-shaping closes
 
 No application code, schema, migration, API, or test files were modified.  
 No product unit status was changed as part of this governance design.
@@ -101,8 +110,10 @@ The Governance OS partitions governance truth into five structurally separated l
 ```
 
 **Layer rules:**
-- Layer 0 determines governance control-plane truth; product-truth documents determine general
-  product execution sequencing
+- Layer 0 owns current governed posture only: open set, next action, blockers, and restore-grade snapshot state
+- `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` is the sole live sequencing authority for ordinary product execution selection
+- `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` remains canonical candidate/family truth
+- `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only and must not compete as live sequencing authority
 - Layer 1 is the single source of truth for individual unit status
 - Layer 2 decisions are referenced by Layer 1 unit records — never duplicated
 - Layer 3 receives entries; never loses them; never becomes operational
@@ -112,8 +123,7 @@ The Governance OS partitions governance truth into five structurally separated l
 
 The control plane consists of exactly **five files**, all in `governance/control/`. Each file has a hard-enforced maximum size.
 
-Layer 0 is not the origin of general product delivery order. Product-truth documents hold that
-role. Layer 0 carries governed-unit state, governance exceptions, and audit/control posture.
+Layer 0 is not the origin of general product delivery order. Layer 0 owns current governed posture only. The live product-sequencing source is `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`; the gap register owns canonical candidate/family truth; the implementation roadmap is derived planning context only; `SNAPSHOT.md` is restore-grade context only.
 
 | File | Max Size | Owns |
 |---|---|---|
@@ -143,10 +153,14 @@ Example:
 mode: DERIVED_PRODUCT_TRUTH_POINTER | GOVERNANCE_EXCEPTION
 governance_exception_active: true | false
 product_delivery_priority: <delivery-unit-id> | none
-product_truth_sources: <comma-separated doc paths> | omit when exception-only
+live_product_sequencing_authority: <doc path> | omit when exception-only
+candidate_truth_authority: <doc path> | omit when exception-only
+derived_planning_context: <doc path> | omit when exception-only
 layer_0_action: <governance-facing pointer or exception statement>
 notes: <≤3 lines if needed, else omit>
 ```
+
+**Rule:** ordinary bounded next-opening decisions must not require multi-document sequencing triangulation.
 
 #### BLOCKED.md schema (per entry)
 
@@ -294,13 +308,15 @@ All other `docs/governance/*.md` design documents remain in place as design refe
 
 | Prompt Type | Required reads (before any action) |
 |---|---|
-| Next-unit selection | `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md` |
-| Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`) |
+| Next-unit selection | `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when the selection is product-facing |
+| Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`); add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
 | Verification prompt drafting | `OPEN-SET.md` + target unit file |
-| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` |
-| Any session restoration | `SNAPSHOT.md` + `OPEN-SET.md` + `NEXT-ACTION.md` |
+| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md` |
+| Any session restoration | `OPEN-SET.md` + `NEXT-ACTION.md`; add `SNAPSHOT.md` only when current context is missing, stale, or historically ambiguous |
 
 **Prohibition:** Archive files, historical tracker files, and the execution log MUST NOT be used as operational truth for sequencing decisions. If a unit's status is not in Layer 0 or Layer 1, it is assumed UNKNOWN and must be resolved before acting.
+
+**Operating-path rule:** ordinary bounded work uses the minimum read set above. Strict-path work (DB, RLS, auth/session, sequencing-authority changes, control-plane rebases, cross-family authority shifts, or production-critical entry truth) must additionally read `SNAPSHOT.md` and the specific Layer 1 / Layer 2 / Layer 3 sources needed to verify historical and authority context.
 
 ### 4.2 Rigid Schema Model
 
@@ -379,17 +395,21 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 
 | Operation | Authorized read scope |
 |---|---|
-| Session open / context restoration | `SNAPSHOT.md`, `OPEN-SET.md`, `NEXT-ACTION.md` |
-| Drafting implementation prompt | Add: `units/<UNIT-ID>.md` |
+| Session open / context restoration | `OPEN-SET.md`, `NEXT-ACTION.md`, `BLOCKED.md`; add `SNAPSHOT.md` only when restore context or historical ambiguity matters |
+| Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
 | Drafting verification prompt | Add: `units/<UNIT-ID>.md` |
 | Governance closure | `units/<UNIT-ID>.md` + Layer 0 files |
-| Product/design decision | `DESIGN-DECISIONS.md` or `PRODUCT-DECISIONS.md` |
+| Product/design decision | Relevant decision file + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
+| Strict-path / authority-shaping work | Layer 0 files + `SNAPSHOT.md` + the minimum Layer 1 / Layer 2 / Layer 3 sources required for that authority check |
+| Candidate-normalization exception | Relevant analysis artifact + `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md` |
 | Audit query | `EXECUTION-LOG.md` (read-only) |
 
 **Prohibited:**
 - Reading the full `gap-register.md` (or archive) for sequencing decisions
 - Reading the full `IMPLEMENTATION-TRACKER-*.md` for next-unit selection
 - Scanning all governance files to determine "what's open"
+- Using `TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` as a competing live sequencing authority
+- Using normalization ledgers as standing operating truth for ordinary bounded work
 
 If the control-plane files do not contain enough context, a governance unit must be run to update them — not a broad scan.
 
@@ -449,28 +469,31 @@ These gates should be checked before every commit. They are designed to be autom
 
 ### 4.9 Carry-Forward Protection
 
-At the end of every governance unit, `governance/control/SNAPSHOT.md` is updated with the following structure:
+`governance/control/SNAPSHOT.md` is a restore-grade surface, not a mandatory narrative sink for every ordinary bounded close.
+
+Refresh `SNAPSHOT.md` when:
+- a strict-path or authority-shaping unit closes
+- restore context would otherwise be lost between sessions
+- Layer 0 ownership, queue posture, or sequencing authority materially changes
+
+Normal bounded units may complete with compact closure writeback alone when restore-grade context does not materially change.
+
+Representative structure:
 
 ```yaml
----
 snapshot_date: YYYY-MM-DD
-last_unit_closed: <UNIT-ID>
-last_commit: <SHA>
----
-
-## Current Open Set Summary
-<3-5 bullet points: unit ID + status + one-line description>
-## Current Next Action
-<unit_id>, <type>, <one-line title>
-## Active Blockers
-<unit ID + blocker type — or "None">
-## Active Design Gates
-<unit ID + decision needed — or "None">
-## Session Notes
-<≤3 lines of context that would be lost between sessions>
+snapshot_unit: <UNIT-ID>
+live_product_sequencing_authority: <doc path>
+candidate_truth_authority: <doc path>
+current_open_counts:
+  open: <n>
+  decision_queue: <n>
+  design_gate: <n>
+normal_path_reset_active: true | false
+session_restore_notes: <≤3 short lines>
 ```
 
-**Rule:** Any session that begins work without reading `SNAPSHOT.md` is operating without authorized context. If `SNAPSHOT.md` is missing or more than 30 days old, a governance maintenance unit must be run before implementation work resumes.
+**Rule:** ordinary bounded work is authorized when Layer 0 current-state files are sufficient. If restore or strict-path work depends on context not captured in current Layer 0 state, refresh `SNAPSHOT.md` first.
 
 ### 4.10 Operational Fallback Rules
 
@@ -480,7 +503,7 @@ These rules apply when documents are missing, oversized, or inconsistent.
 |---|---|
 | `OPEN-SET.md` is missing | STOP. Run a governance maintenance unit to reconstruct it before any other work |
 | `NEXT-ACTION.md` is missing | STOP. Do not infer the next action from historical files. Run a governance sequencing unit |
-| `SNAPSHOT.md` is missing or stale (>30 days) | Run a governance snapshot unit before implementation |
+| `SNAPSHOT.md` is missing or stale | If current Layer 0 files are sufficient for ordinary bounded work, continue. If restore or strict-path work needs it, run a governance snapshot refresh first |
 | A unit file does not exist for a known unit | Create the unit file as a governance unit before allowing implementation |
 | `OPEN-SET.md` exceeds 50 lines | Run a compaction governance unit; move completed entries to EXECUTION-LOG.md |
 | Two files disagree on a unit's status | Layer 1 unit file is authoritative; Layer 0 is updated to match it in a governance unit |

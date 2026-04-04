@@ -2,9 +2,9 @@
 
 Date: 2026-03-23
 Type: GOVERNANCE ANALYSIS LEDGER
-Status: SUPERSEDED / TRANSITIONAL_REFERENCE
+Status: SUPERSEDED / HISTORICAL_ONLY_REFERENCE
 Superseded By: `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md`
-Scope: Transitional pointer preserving the previously recorded Step 2 normalization contents until a later migration/sync unit completes canonical ledger consolidation. No implementation authorized. No Layer 0 status transition.
+Scope: Historical reference preserving the previously recorded Step 2 normalization contents after canonical supersession. Not authoritative for new normalization, new progression, or live sequencing. No implementation authorized. No Layer 0 status transition.
 
 ## Supersession Decision
 
@@ -14,8 +14,8 @@ canonical normalization ledger.
 Approved posture for this file:
 
 - status: `superseded`
-- retained temporarily for transition/reference: `yes`
-- later follow-up governance sync / migration still required: `yes`
+- retained for historical reference: `yes`
+- later follow-up governance sync / migration still required: `no`
 
 Permanent canonical replacement:
 
@@ -23,21 +23,16 @@ Permanent canonical replacement:
 
 ## Purpose
 
-This ledger exists because current repo practice already supports bounded governance-analysis
-artifacts under `governance/analysis/`, but no canonical Step 2 pending-candidate ledger existed.
+This file now exists only to preserve the earlier Step 2 normalization record after supersession.
 
-The least-disruptive canonical pattern in the current repo is therefore:
+It must not be used for:
 
-1. keep Step 2 pending-candidate validation records in one bounded ledger artifact under
-   `governance/analysis/`
-2. keep supporting validation reasoning in the individual analysis artifact for the specific
-   candidate
-3. append the execution log when a governance-analysis artifact of this class is created or updated
-4. leave Layer 0 control files unchanged unless a later governance unit explicitly requires Layer 0
-   operational truth to change
+1. new candidate normalization
+2. new candidate progression or sequencing authority
+3. live Layer 0 operating decisions
+4. Sentinel canonical normalization checks
 
-This file is the canonical ledger for that Step 2 record class unless later superseded by an
-explicit governance decision.
+New exception-only normalization uses `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md`.
 
 ## Ledger Fields
 
@@ -73,7 +68,7 @@ Layer 0 remains unchanged by this ledger artifact:
 
 ## Sentinel v1 Transitional Access Rule
 
-Sentinel v1 may read this file for transition/history context only.
+Sentinel v1 may read this file for historical context only.
 
 It must not treat this file as the authoritative normalization source for new progression. If a
 new candidate progression, opening, sync, close, or clean-governance claim cites this file as the
@@ -83,5 +78,6 @@ fails.
 
 ## Maintenance Rule
 
-Future Step 2 pending-candidate validation results should be added to this ledger rather than
-starting parallel ledger files, unless an explicit later governance decision replaces this pattern.
+Do not add future Step 2 pending-candidate validation results to this ledger.
+Use `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md` only when exception-only normalization
+is explicitly required.

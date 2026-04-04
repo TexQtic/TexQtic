@@ -5,9 +5,17 @@
 This document defines the immediate next-cycle delivery ordering for TexQtic after the completed
 `-v1` planning stack.
 
-It records the fresh A3 prioritization result without opening a unit by itself. The `-v1` plan
-remains historical and complete; this `-v2` plan now records the bounded first delivery as closed
-and preserves the remaining next-cycle ordering.
+It is the sole live product-truth sequencing authority for ordinary product-facing next-opening
+selection, without opening a unit by itself. The `-v1` plan remains historical and complete; this
+`-v2` plan now records the bounded first delivery as closed and preserves the remaining next-cycle
+ordering.
+
+## Authority Note
+
+- Use this file for ordinary product-facing next-opening selection.
+- Use `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` for canonical candidate and family truth.
+- Treat `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` as derived planning context only.
+- No successor opening is implied by this file alone; a separate bounded governance move is still required.
 
 ## Immediate Posture
 
@@ -30,8 +38,8 @@ and preserves the remaining next-cycle ordering.
 
 ## Launch Overlay Alignment Note
 
-This `-v2` next-delivery plan remains the active broad product-truth delivery pointer, and no
-current active delivery is open.
+This `-v2` next-delivery plan is the canonical live product-truth delivery pointer, and no current
+active delivery is open.
 
 For launch-specific posture, also see:
 
@@ -44,6 +52,9 @@ overlay. Future launch-relevant planning or opening beyond the current closed de
 therefore respect the launch overlay, including the ordered follow-on planning-artifact queue and the
 distinction between implementation-design-ready, normalization-first, and design-gate-first
 families.
+
+The implementation roadmap remains useful for wave grouping and planning context, but it must not
+be used as a competing live sequencing authority while this file is current.
 
 ## New Immediate Delivery Sequence
 
@@ -221,4 +232,6 @@ without collapsing the family-level design gate.
 ## Relationship To v1
 
 The `-v1` delivery plan remains the completed historical record of the prior cycle. This `-v2`
-plan starts the next-cycle ordering without rewriting or reopening those completed outcomes.
+plan starts the next-cycle ordering without rewriting or reopening those completed outcomes. This
+file remains the live sequencing authority unless and until a later bounded governance move
+explicitly replaces it.

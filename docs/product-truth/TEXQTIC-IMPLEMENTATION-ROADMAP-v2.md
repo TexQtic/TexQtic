@@ -6,8 +6,11 @@ This document is the fresh implementation roadmap for the next TexQtic product-t
 
 It starts after the `-v1` roadmap completed and the fresh A1/A2/A3 cycle identified the next
 bounded candidate families. The `-v1` roadmap remains historical and complete; this `-v2` roadmap
-defines the next ordered wave structure and now records the bounded first wave as completed and
-closed.
+defines derived wave structure and planning context and now records the bounded first wave as
+completed and closed.
+
+This roadmap is not the live sequencing authority for ordinary next-opening selection. Use
+`docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` for that purpose.
 
 ## Roadmap North Star
 
@@ -25,10 +28,11 @@ The next cycle prioritizes bounded product-facing continuity work that:
 3. Later-ready candidates remain distinct from the current active wave.
 4. Design-gate candidates must not be promoted into implementation-ready work without a separate decision.
 5. Recently closed WL / tenant-truth units remain closed and separate from this roadmap.
+6. This roadmap provides derived planning context only and must not be used as a competing live sequencing authority.
 
 ## Launch Overlay Alignment
 
-This `-v2` roadmap remains the active broad product-truth roadmap.
+This `-v2` roadmap remains derived broad product-truth planning context.
 
 For launch-specific posture, also see:
 
@@ -42,6 +46,9 @@ respect the launch planning split before any fresh design or opening decision. I
 terms, B2B remains the primary launch anchor, B2C and subscription/commercial packaging remain
 normalization-first, Aggregator remains design-gate-first, and platform-admin/control-center
 surfaces remain bounded rather than redesign-wide.
+
+Use `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` as the live sequencing authority while
+this roadmap continues to provide wave grouping, dependency context, and historical carry-forward.
 
 ## v2 Roadmap Summary Table
 

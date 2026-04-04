@@ -2,29 +2,38 @@
 
 Date: 2026-03-23
 Type: GOVERNANCE ANALYSIS LEDGER
-Status: ACTIVE / CANONICAL
-Authority: `GOVERNANCE-SENTINEL-AND-DELIVERY-OS-001`
+Status: ACTIVE / CANONICAL_EXCEPTION_REFERENCE
+Authority: `GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001`
 Supersedes: `governance/analysis/STEP2-PENDING-CANDIDATE-LEDGER.md`
-Scope: Permanent canonical ledger for bounded candidate normalization, disposition recording,
-delivery classification, negative-evidence recording, and broad-label retirement. No
-implementation authorized. No Layer 0 status transition by implication.
+Scope: Canonical exception-only ledger for bounded candidate normalization, disposition recording,
+delivery classification, negative-evidence recording, and broad-label retirement when a specific
+governance move explicitly invokes normalization. No implementation authorized. No Layer 0 status
+transition by implication.
 
 ## Canonical Role
 
-This ledger is the standing normalization layer for TexQtic candidate governance.
+This ledger is the canonical exception ledger for TexQtic candidate normalization.
 
-It is the canonical place to record:
+Ordinary bounded openings, closes, and next-opening selection do not require a normalization pass
+through this file.
 
-- exact bounded candidate naming
-- candidate kind taxonomy
-- validation disposition and delivery classification
-- negative evidence that blocks over-broad carry-forward
-- broad-label retirement results
-- links to validation artifacts and execution-log references
+It is the canonical place to record normalized results when governance must:
+
+- retire or split a broad label
+- resolve bounded ambiguity between multiple candidates
+- record negative evidence that blocks over-broad carry-forward
+- preserve exact normalized disposition and delivery classification
+- link the normalized result to validation artifacts and execution-log references
 
 This ledger does not itself open units, close units, or authorize implementation.
 
 ## Governance Role Relative To Other Surfaces
+
+### Relative to ordinary delivery flow
+
+The default operating flow uses Layer 0 plus live product-truth sequencing.
+
+This ledger is consulted only when normalization is explicitly in scope for a governance move.
 
 ### Relative to Layer 0
 
@@ -55,7 +64,7 @@ retired broad label without new exact validation evidence.
 ## Delivery-Steering Doctrine
 
 Hold-first / operator-stall posture is replaced at doctrine level by delivery-steering queue
-governance.
+governance when a normalization exercise is explicitly invoked.
 
 Approved delivery classes:
 
@@ -199,7 +208,8 @@ Required secret-safe sweep rules:
 
 ## Governance Sentinel Relationship
 
-Governance Sentinel uses this ledger as the canonical input for:
+When a governance move explicitly invokes normalization, Governance Sentinel uses this ledger as
+the canonical input for:
 
 - taxonomy/schema linting
 - broad-label retirement enforcement
@@ -208,7 +218,8 @@ Governance Sentinel uses this ledger as the canonical input for:
 
 ## Sentinel v1 Validation Contract
 
-For any Sentinel v1 run that reviews candidate-bearing work:
+For any Sentinel v1 run that reviews candidate-bearing work where normalization is explicitly in
+scope:
 
 - this ledger is the authoritative `normalization_reference`
 - Sentinel must validate the exact row fields required by this ledger before progression
@@ -230,6 +241,8 @@ For any Sentinel v1 run that reviews candidate-bearing work:
 
 ## Maintenance Rule
 
-Future normalization results must update this ledger instead of starting parallel canonical ledgers.
-Per-candidate analysis artifacts may still be added as separate evidence documents, but this file
-remains the canonical normalized view.
+Future normalization results must update this ledger instead of starting parallel canonical ledgers,
+but only when exception-only normalization is explicitly required.
+Per-candidate analysis artifacts may still be added as separate evidence documents. This file
+remains the canonical normalized view for those exception cases and must not be treated as a
+standing precondition for ordinary bounded work.
