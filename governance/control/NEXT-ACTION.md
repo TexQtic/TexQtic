@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOV-RECONCILE-LAYER0-CONTROL-FILE-CONSISTENCY-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -9,8 +9,8 @@
 mode: DERIVED_PRODUCT_TRUTH_POINTER
 governance_exception_active: false
 product_delivery_priority: none
-product_truth_sources: docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
-layer_0_action: No current product-facing ACTIVE_DELIVERY unit is open. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001 is now verified/closed after authenticated production proof on https://app.texqtic.com, and any successor product or cleanup movement still requires a fresh bounded opening decision.
+product_truth_sources: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md, docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md, docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
+layer_0_action: No current product-facing ACTIVE_DELIVERY unit is open. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001 is now verified/closed after authenticated production proof on https://app.texqtic.com. No automatic successor is implied, no new opening is currently compelled, and any later product or cleanup movement requires a fresh bounded opening decision from reconciled Layer 0 truth and the v2 product-truth authority stack.
 notes: |
   MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001 is now CLOSED after the
   bounded App.tsx-only storefront separation fix and accepted live proof on the exact non-WL B2C

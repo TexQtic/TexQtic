@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-03-19 (GOV-RECONCILE-LAYER0-TECS-FBW-003-B)
+**Last Updated:** 2026-04-04 (GOV-RECONCILE-LAYER0-CONTROL-FILE-CONSISTENCY-001)
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
@@ -27,11 +27,12 @@ without explicit product authorization recorded in `governance/decisions/PRODUCT
 
 ---
 
-## Section 3 — DESIGN_GATE (requires product + security decision before any work may begin)
+## Section 3 — DESIGN_GATE (requires explicit gate resolution before any work may begin)
 
 | UNIT-ID | Gate Type | Gate Description | Registered |
 |---|---|---|---|
 | TECS-FBW-ADMINRBAC | Product + Security | HIGH security posture; must not proceed without explicit product + security approval | 2026-03-09 |
+| RFQ-NEGOTIATION-CONTINUITY | Design Gate | Cross-mode RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | 2026-03-30 |
 
 **To ungate TECS-FBW-ADMINRBAC:**  
 A product decision and a security posture decision must both be recorded in:
@@ -41,6 +42,12 @@ A product decision and a security posture decision must both be recorded in:
 Only after both decisions are approved may backend design begin.  
 **Note:** PW5-U3 applied dead-button gating as a pre-authorization stop-gap only.
 That is not the same as ADMINRBAC implementation authorization.
+
+**RFQ-NEGOTIATION-CONTINUITY posture:**  
+This broader RFQ / negotiation family remains design-gated across WL and enterprise runtime.
+Closed bounded child slices do not ungate the parent family, and any later RFQ / negotiation
+work must open through a separate bounded unit rather than by promoting the parent gate directly
+to `OPEN`.
 
 ---
 

@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.5  
-**Last Updated:** 2026-03-20 (GOV-DOCTRINE-MANDATORY-CLOSURE-AUDIT-ENFORCEMENT)  
+**Doctrine Version:** v1.6  
+**Last Updated:** 2026-04-04 (GOV-RECONCILE-LAYER0-CONTROL-FILE-CONSISTENCY-001)  
 **Max Size:** 150 lines (structural gate)
 
 > This file is the canonical summary of active doctrine invariants.  
@@ -26,9 +26,12 @@ Before taking a governance action or checking governed-unit state, read these fi
 For general product execution sequencing and next-delivery priority, use the product-truth
 authority stack:
 
-1. `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
-2. `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
-3. `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+1. `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+2. `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+3. `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+
+The `-v1` product-truth stack is historical baseline only. It must not be used as current
+sequencing authority unless a later governance unit explicitly restores it.
 
 **Rule:** Layer 0 owns governed-unit state, blockers, audit posture, and governance exceptions.
 The product-truth authority stack owns general product execution sequencing. Files like

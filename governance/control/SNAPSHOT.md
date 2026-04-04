@@ -15,7 +15,7 @@ snapshot_date: 2026-04-04
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001: record verified implementation closure and production-authenticated verification"
+last_commit: "GOV-RECONCILE-LAYER0-CONTROL-FILE-CONSISTENCY-001: reconcile control-file gate posture and sequencing authority"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -814,7 +814,7 @@ tenant-truth units remain closed and separate.
 - **TECS-FBW-ADMINRBAC-REGISTRY-READ-001** — `CLOSED` — Control-plane admin access registry read surface closed 2026-03-20 after implementation commit 38419b5651ea736c2b569d6182002b9bd25c6eb3, runtime frontend verification commit 50d1e36adacb3a58ae714741193d61d5e65696e5, and governance sync commit 82dae2397df9674baa934a5e6610cb447fe741a8; backend runtime proof, frontend runtime proof, and type-level proof complete; the installed slice remains read-only, control-plane only, and preserves TenantAdmin / PlatformAdmin / SuperAdmin separation without opening invite, revoke, role-change mutation, session invalidation, or blanket read-everything scope
 - **TECS-FBW-ADMINRBAC** — `DESIGN_GATE` — Broad AdminRBAC parent stream remains non-open because it still bundles invite, revoke, role assignment/change, and broader authority concerns beyond the bounded first child slice
 
-**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the product-truth authority stack. `TENANT-TRUTH-CLEANUP-001` remains closed on its bounded document-authority scope, `WL-BLUEPRINT-RUNTIME-RESIDUE-001` is now closed on its bounded two-surface runtime-residue scope, `WL-ADMIN-ENTRY-DISCOVERABILITY-001` is now closed after bounded WL-only admin-entry/discoverability repair and verified-complete live production behavior, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 0 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 1 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
+**Layer 0 now carries governed-unit state and governance exception posture without originating general product sequencing.** Product execution sequencing is derived from the active `-v2` product-truth authority stack. `TENANT-TRUTH-CLEANUP-001` remains closed on its bounded document-authority scope, `WL-BLUEPRINT-RUNTIME-RESIDUE-001` is now closed on its bounded two-surface runtime-residue scope, `WL-ADMIN-ENTRY-DISCOVERABILITY-001` is now closed after bounded WL-only admin-entry/discoverability repair and verified-complete live production behavior, `GOVERNANCE-OS-RESET-001` remains OPEN as a bounded governance record, and no current Layer 0 governance exception displaces product-truth next-delivery priority. Current Layer 0 delivery posture: 0 `ACTIVE_DELIVERY` · 9 `DECISION_QUEUE` · 2 `DESIGN_GATE_QUEUE` · 0 `BLOCKED_QUEUE` · 0 `DEFERRED_QUEUE`.
 `CERTIFICATION-LIFECYCLE-TRANSITION-LOGGING-001` remains `CLOSED` with result `OPENING_CANDIDATE` only. The candidate is limited to the already-exposed certification transition path plus the missing lifecycle-log persistence that currently blocks application, and it must not be merged with certification metadata PATCH UI, maker-checker mutation work, broad certification redesign, or unrelated AI/logging streams.
 `TENANT-CATALOG-IMAGE-UPLOAD-GAP-001` remains `CLOSED` with result `OPENING_CANDIDATE` only and remains the decision authority for the now-closed child `TENANT-CATALOG-IMAGE-UPLOAD-GAP-002`.
 
@@ -853,14 +853,16 @@ Layer 0 currently carries no product-facing `ACTIVE_DELIVERY` unit after bounded
 `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY`.
 
 Authorized product delivery unit: none currently open.
-Source of sequencing authority: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` and
+Source of sequencing authority: `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`,
+`docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`, and
 `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`.
 Current governance posture: no active Layer 0 governance exception displaces that product-truth
 sequence.
 
-Current product-opening posture is paused pending a fresh bounded product-truth decision and a
-separate lawful opening step. No current or historical candidate-state reference in this file is
-itself sufficient to create a product-facing queue.
+Current product-opening posture remains no-opening pending a fresh bounded product-truth decision
+and a separate lawful opening step. No automatic successor is implied by the recent custom-domain
+closure, and no current or historical candidate-state reference in this file is itself sufficient
+to create a product-facing queue.
 
 Open governance-only units remain the `DECISION_QUEUE` set recorded in `OPEN-SET.md`, including
 `GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001` and the bounded Sentinel/governance posture units.
@@ -880,8 +882,8 @@ None. BLK-013-001 resolved 2026-03-18; see BLOCKED.md Section 4.
 
 ## Active Design Gates
 
-- **TECS-FBW-ADMINRBAC** — Requires explicit product + security decision before any work
-- **TECS-FBW-ADMINRBAC** — Broad parent remains non-open; later mutation slices require separate bounded sequencing
+- **TECS-FBW-ADMINRBAC** — Requires explicit product + security decision before any broader AdminRBAC work
+- **RFQ-NEGOTIATION-CONTINUITY** — Broader RFQ / negotiation continuity remains design-gated across WL and enterprise runtime; closed bounded child slices do not ungate the parent family
 
 ## Closed Baseline (must not be reopened)
 
