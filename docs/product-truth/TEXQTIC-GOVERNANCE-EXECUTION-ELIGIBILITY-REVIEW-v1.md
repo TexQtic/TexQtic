@@ -1,8 +1,18 @@
+> HISTORY-ONLY NOTE — POST-OVERLAY ELIGIBILITY SNAPSHOT
+>
+> This artifact is preserved as the historical execution-eligibility review from the pre-reset /
+> pre-cleanup posture. It no longer decides current opening status, sequencing posture, or current
+> family-readiness interpretation.
+>
+> Current opening, sequencing, and family-readiness authority now lives in Layer 0, the active
+> `-v2` stack, `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`,
+> and the current reconciliation layer in `docs/product-truth/`.
+
 # TEXQTIC-GOVERNANCE-EXECUTION-ELIGIBILITY-REVIEW-v1
 
-Status: GOVERNANCE RECONCILIATION / EXECUTION-ELIGIBILITY REVIEW ONLY
+Status: GOVERNANCE RECONCILIATION / EXECUTION-ELIGIBILITY REVIEW ONLY / HISTORY-ONLY
 Date: 2026-03-30
-Authority posture: repo-truth-first, authority-driven, non-opening
+Authority posture: historical review only; not current opening authority
 
 ## 1. Purpose and Authority
 

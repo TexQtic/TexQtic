@@ -8,11 +8,15 @@
 > - next-delivery prioritization
 >
 > Current replacement authority for those concerns is:
-> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
-> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
-> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+> - Layer 0 posture in `governance/control/OPEN-SET.md` and `governance/control/NEXT-ACTION.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
 >
-> This banner de-authorizes sequencing use without removing the document's historical record value.
+> This banner de-authorizes sequencing use and corrects stale replacement pointers without removing
+> the document's historical record value.
 
 # Texqtic Implementation Master Plan — 2026-03
 

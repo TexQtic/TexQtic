@@ -1,3 +1,20 @@
+> CLEANUP NOTE — RECONCILED LAUNCH-SCOPE OVERLAY RECORD
+>
+> This artifact is preserved as the 2026-03-30 launch-scope decision baseline inside the launch
+> overlay. It is not the sole current scope or sequencing authority after the post-reset authority
+> realignment.
+>
+> Current active authority for current posture, sequencing, and cross-family interpretation now
+> lives in:
+> - Layer 0 posture in `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/BLOCKED.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
+>
+> This banner narrows authority only. The historical scope record below is preserved.
+
 # TEXQTIC-LAUNCH-SCOPE-DECISION-RECORD-v1
 
 ## Status
@@ -5,12 +22,12 @@
 - Mode: `PRODUCT-TRUTH / SCOPE-LOCK ONLY`
 - Authority posture: `REPO-REALITY-FIRST`
 - Creation date: `2026-03-30`
-- File purpose: explicit launch-scope lock for the currently retained TexQtic launch families
+- File purpose: preserved launch-scope decision record for the then-current retained launch families
 
 ## 1. Purpose
 
-This document records the launch-owner scope decision that follows from current repo truth and from
-the launch-readiness requirements register.
+This document records the launch-owner scope decision that followed from then-current repo truth and
+from the launch-readiness requirements register.
 
 It answers one bounded question:
 

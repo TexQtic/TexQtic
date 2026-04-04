@@ -1,14 +1,30 @@
+> STATUS — RETAINED AS HISTORY-ONLY DELIVERY-PLAN BASELINE
+>
+> This `-v1` delivery plan is preserved as the completed next-delivery baseline for the prior
+> planning cycle. It is no longer the active immediate delivery or sequencing authority.
+>
+> Current replacement authority for current next-delivery selection and sequencing posture now
+> lives in:
+> - Layer 0 posture in `governance/control/OPEN-SET.md` and `governance/control/NEXT-ACTION.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
+>
+> This banner narrows authority only. The historical delivery plan below is preserved.
+
 # TEXQTIC-NEXT-DELIVERY-PLAN-v1
 
 ## Purpose
 
-This document defines the next bounded delivery units for TexQtic.
+This document preserves the next bounded delivery units that defined the completed prior planning cycle for TexQtic.
 
 It converts the dependency-first roadmap in [docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md](docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md) into execution units that close system capabilities rather than screens, panels, or isolated UI tasks.
 
 This is not a governance wave tracker, not a doctrine sequence, and not a design wishlist.
 
-It is the immediate delivery plan for closing the next real product loops in dependency order.
+It is the preserved immediate delivery plan for that completed prior cycle of product-loop closure in dependency order.
 
 ## Authority and Inputs
 

@@ -1,3 +1,12 @@
+> SUPERSEDED — CLEANUP EXECUTION NOW SITS ON A NEWER AUTHORITY BASE
+>
+> This artifact is preserved as the historical pre-execution retirement-planning note for the
+> earlier `-v1` replacement cycle. It has been overtaken by the post-reset `-v2` stack, the
+> launch-family baseline, the reconciliation layer, and the later documentation-divergence /
+> authority-conflict audit.
+>
+> It should not be used as current cleanup, replacement-mapping, or supersession authority.
+
 # TEXQTIC-STALE-AUTHORITY-RETIREMENT-PLAN-v1
 
 ## Purpose
@@ -24,7 +33,7 @@ Its purpose is to classify existing documents by authority role and determine wh
 
 ## Current Replacement Authority Base
 
-The following product-truth documents now exist as the replacement authority base:
+The following product-truth documents were the replacement authority base used by this earlier plan:
 
 - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
 - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`

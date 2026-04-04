@@ -1,3 +1,20 @@
+> CLEANUP NOTE — RECONCILED LAUNCH-OVERLAY BASELINE
+>
+> This artifact is preserved as the 2026-03-30 launch-readiness baseline and historical
+> launch-overlay input. It is not the sole current launch-readiness authority after the post-reset
+> authority realignment.
+>
+> Current active authority for current posture, sequencing, and cross-family interpretation now
+> lives in:
+> - Layer 0 posture in `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/BLOCKED.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
+>
+> This banner narrows authority only. The historical analysis below is preserved.
+
 # TEXQTIC-LAUNCH-READINESS-REQUIREMENTS-v1
 
 ## Status
@@ -5,11 +22,11 @@
 - Mode: `PRODUCT-TRUTH / DESIGN-PLANNING ONLY`
 - Authority posture: `REPO-REALITY-FIRST`
 - Creation date: `2026-03-30`
-- File purpose: canonical launch-readiness requirements register derived from current repo truth
+- File purpose: preserved launch-readiness requirements baseline derived from then-current repo truth
 
 ## 1. Purpose and Authority
 
-This document is the canonical launch-readiness requirements register for TexQtic.
+This document preserves the launch-readiness requirements baseline produced for TexQtic on `2026-03-30`.
 
 It is product-truth-first and repo-reality-first. It exists to answer one bounded planning question:
 

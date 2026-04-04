@@ -1,14 +1,29 @@
+> STATUS — RETAINED AS HISTORY-ONLY ROADMAP BASELINE
+>
+> This `-v1` roadmap is preserved as the completed dependency-ordered roadmap for the prior
+> planning cycle. It is no longer the active execution or sequencing roadmap.
+>
+> Current replacement authority for current sequencing and candidate posture now lives in:
+> - Layer 0 posture in `governance/control/OPEN-SET.md` and `governance/control/NEXT-ACTION.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
+>
+> This banner narrows authority only. The historical roadmap below is preserved.
+
 # TEXQTIC-IMPLEMENTATION-ROADMAP-v1
 
 ## Purpose
 
-This document is the dependency-ordered implementation roadmap for TexQtic.
+This document preserves the dependency-ordered implementation roadmap for the completed prior planning cycle of TexQtic.
 
 It translates the verified gap reality recorded in [docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md](docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md) into an execution-first sequence that prioritizes launch enterability, two-sided exchange, and credible execution loops before secondary control polish or truth-retirement work.
 
 This roadmap is not a governance tracker, not a doctrine wave plan, and not a broad strategy narrative.
 
-It is a bounded execution roadmap derived from current repo truth.
+It is a preserved historical execution roadmap derived from then-current repo truth.
 
 ## Roadmap North Star
 

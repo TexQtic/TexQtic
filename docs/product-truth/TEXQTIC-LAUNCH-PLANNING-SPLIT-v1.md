@@ -1,3 +1,20 @@
+> CLEANUP NOTE — RECONCILED LAUNCH-PLANNING-SPLIT BASELINE
+>
+> This artifact is preserved as the 2026-03-30 launch planning-split baseline inside the launch
+> overlay. It is not the sole current planning-split or sequencing authority after the post-reset
+> authority realignment.
+>
+> Current active authority for current posture, sequencing, and cross-family interpretation now
+> lives in:
+> - Layer 0 posture in `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/BLOCKED.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
+>
+> This banner narrows authority only. The historical planning split below is preserved.
+
 # TEXQTIC-LAUNCH-PLANNING-SPLIT-v1
 
 ## Status
@@ -5,12 +22,12 @@
 - Mode: `PRODUCT-TRUTH / PLANNING-SPLIT ONLY`
 - Authority posture: `REPO-REALITY-FIRST`
 - Creation date: `2026-03-30`
-- File purpose: convert the locked launch scope into a truthful planning-lane split and ordered follow-on planning artifact queue
+- File purpose: preserved planning-split baseline for the then-current launch overlay and ordered follow-on artifact queue
 
 ## 1. Purpose and Authority
 
-This document is the canonical launch planning-split artifact for TexQtic after launch scope has
-been locked.
+This document preserves the launch planning-split baseline produced for TexQtic after launch scope
+had been locked on `2026-03-30`.
 
 It exists to answer one bounded planning question:
 

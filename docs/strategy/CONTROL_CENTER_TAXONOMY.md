@@ -1,10 +1,12 @@
 # TexQtic — Control Center Taxonomy
 
 > Supersession / authority note: This artifact remains the descriptive navigation and tower-taxonomy
-> reference for control-center grouping. It is not the canonical family-definition authority for
-> platform control-plane under the adopted platform model. Current family-level control-plane
-> classification and adjacent-family boundary authority now lives in
-> `docs/product-truth/PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-v1.md`.
+> reference for control-center grouping and historical navigation language. It is descriptive only.
+> It is not the canonical family-definition authority, launch-readiness authority, or current
+> control-plane sequencing authority for platform control-plane under the adopted platform model.
+> Current family-level control-plane classification and adjacent-family boundary authority now lives
+> in `docs/product-truth/PLATFORM-CONTROL-PLANE-FAMILY-REPLAN-v1.md` and
+> `docs/product-truth/PLATFORM-CONTROL-PLANE-FAMILY-RECONCILIATION-v1.md`.
 
 | Field     | Value                                                            |
 |-----------|------------------------------------------------------------------|
@@ -13,7 +15,7 @@
 | **Realm** | control (SuperAdmin only)                                        |
 | **Links** | `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`, `docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md` |
 
-> The SuperAdmin control center is organized into **4 Control Towers**. Each tower is a distinct governance concern. No tower bleeds into another's domain. This taxonomy governs which views live where in `layouts/SuperAdminShell.tsx` and `components/ControlPlane/`.
+> The SuperAdmin control center is described here through **4 Control Towers** as a navigation and grouping lens. Each tower is a distinct governance concern. No tower bleeds into another's domain. This taxonomy does not by itself govern current family authority, launch posture, or implementation sequencing.
 
 ---
 

@@ -8,31 +8,40 @@
 > - next-delivery execution planning
 >
 > Current replacement authority for those concerns is:
-> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md`
-> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md`
-> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`
+> - Layer 0 posture in `governance/control/OPEN-SET.md` and `governance/control/NEXT-ACTION.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
 >
-> This banner does not delete the document or erase its historical and technical-reference value.
+> This banner narrows authority and corrects stale pointers only. The document remains preserved as reference.
 
 # TexQtic Documentation
 
-> ⚠️ **BINDING AUTHORITY**: This directory contains the authoritative source of truth for all TexQtic platform implementation decisions. Deviation from executable doctrine requires explicit approval from the Doctrine Council.
+> ⚠️ **CURRENT DIRECTORY NOTE**: This directory is not a single uniform authority surface. Current authority is layered by document type, supersession state, and current Layer 0 / product-truth pointers.
+>
+> Use this directory in the following order:
+> - Layer 0 in `governance/control/` for current operational posture
+> - the active product-truth stack in `docs/product-truth/` for current sequencing and family posture
+> - executable doctrine for implementation-binding technical rules within its scope
+> - historical, superseded, and reference documents as preserved context only
 
 ---
 
 ## 1. Purpose of This Directory
 
-This directory contains the **complete governance, architectural, and operational doctrine** for the TexQtic platform.
+This directory contains the governance, architectural, operational, product-truth, and historical documentation for the TexQtic platform.
 
-All engineering decisions—schema design, API contracts, event naming, RLS policies, feature flags, AI guardrails, and operational procedures—must trace back to an executable doctrine document in this directory.
+Not every document in this directory carries the same authority. Current use depends on document type, current supersession notes, and the active Layer 0 / product-truth stack.
 
-**This is not aspirational documentation.** This is **implementation law**.
+Use this directory as a layered documentation map rather than as a blanket single-source execution authority.
 
 ---
 
 ## 2. Mandatory Reading (All Engineers)
 
-Every engineer (human or AI) working on TexQtic **MUST** read the following documents **before** writing any code:
+Every engineer (human or AI) working on TexQtic **MUST** start with the current authority pointers above, then read the relevant documents below based on scope **before** writing any code:
 
 ### Required Foundation Documents
 

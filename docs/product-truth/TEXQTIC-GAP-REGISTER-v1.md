@@ -1,8 +1,23 @@
+> STATUS — RETAINED AS HISTORY-ONLY BASELINE
+>
+> This `-v1` gap register is preserved as the completed baseline of the prior product-truth
+> planning cycle. It is no longer the active canonical gap register.
+>
+> Current replacement authority for current gap, sequencing, and family posture now lives in:
+> - Layer 0 posture in `governance/control/OPEN-SET.md` and `governance/control/NEXT-ACTION.md`
+> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+> - the current reconciliation layer in `docs/product-truth/`
+>
+> This banner narrows authority only. The historical gap body below is preserved.
+
 # TEXQTIC-GAP-REGISTER-v1
 
 ## Purpose
 
-This document is the canonical product-truth gap register for TexQtic.
+This document preserves the canonical product-truth gap register used for the completed prior planning cycle of TexQtic.
 
 It exists to record the gap state between:
 
@@ -27,7 +42,7 @@ The governing assumptions for this register are:
 - static, conceptual, or shallow surfaces must be recorded explicitly when they create misleading delivery signals
 - launch-critical execution loops take precedence over surface completeness
 
-This document should be used as the primary gap reference for product-facing execution planning until it is explicitly superseded.
+This document was the primary gap reference for the prior cycle and is now preserved as baseline only beside the active `-v2` stack, launch-family baseline, and reconciliation layer.
 
 ## Operating Rules
 
