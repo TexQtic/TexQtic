@@ -381,6 +381,6 @@ async function buildInjectedPassthrough(
 
 export const config = {
   matcher: [
-    String.raw`/((?!api/internal|_next/static|_next/image|favicon\.ico|assets/).*)`,
+    '/((?!api/internal|_next/static|_next/image|favicon.ico|assets/).*)',
   ],
 };
