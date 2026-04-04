@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-RUNTIME-CONTINUITY-DESIGN-VALIDATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -123,6 +123,19 @@ notes: |
   platform-subdomain-only, while custom-domain continuity remains reserved/designed and partially
   managed rather than proven end to end. Bounded custom-domain runtime continuity design and
   validation is preserved as the exact next lawful successor from this review, planning +
-  repo-truth validation only and not implementation authority. Future work should continue
-  through bounded family-specific units unless a later authority review changes sequence.
+  repo-truth validation only and not implementation authority. The later bounded custom-domain
+  runtime continuity design validation then preserved Outcome B because current repo truth does
+  not yet support end-to-end custom-domain runtime continuity today, even though the bounded
+  continuity candidate is materially real through persisted tenant custom-domain truth,
+  tenant-scoped custom-domain CRUD, WL admin domain management, invalidation signaling, and
+  downstream tenant-driven shell behavior once tenant context exists. The exact continuity break
+  remains between persisted custom-domain truth and runtime host-to-tenant resolution: the edge
+  path does not convert a custom host into a candidate tenant for positive resolution, the live
+  resolver path returns not_found because it only accepts platform hosts and performs slug lookup,
+  request-time validation still requires tenantSource = subdomain and a platform-host slug match,
+  and public/auth entry remains slug-based or email-membership-based rather than host-based.
+  TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001 is preserved as the exact next
+  lawful successor, planning + repo-truth validation only and not implementation authority.
+  Future work should continue through bounded family-specific units unless a later authority
+  review changes sequence.
 ```

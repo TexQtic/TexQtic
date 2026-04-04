@@ -15,7 +15,7 @@ snapshot_date: 2026-04-04
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001: record Domain family truth, Outcome A, and bounded custom-domain successor posture"
+last_commit: "GOVERNANCE-SYNC-CUSTOM-DOMAIN-RUNTIME-CONTINUITY-DESIGN-VALIDATION-001: record Outcome B continuity break and positive-path successor posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -272,6 +272,24 @@ domain_tenant_routing_brand_surface_management_next_unit_at_report_time: "bounde
 domain_tenant_routing_brand_surface_management_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 domain_tenant_routing_brand_surface_management_adjacent_findings_separate: "WL admin domain-management surfaces; tenant branding settings/admin surfaces; control-plane inspection/tenant-detail oversight surfaces; generic identity/session entry logic; onboarding/bootstrap/default-domain assignment logic; any future custom-domain implementation work; any future router/auth/schema/infra redesign unit"
 domain_tenant_routing_brand_surface_management_fresh_repo_truth_validation_required_at_opening: true
+custom_domain_runtime_continuity_design_validation_source_report: "TEXTIC-CUSTOM-DOMAIN-RUNTIME-CONTINUITY-DESIGN-VALIDATION-001"
+custom_domain_runtime_continuity_design_validation_source_report_review_only_no_repo_mutation: true
+custom_domain_runtime_continuity_design_validation_outcome_b_preserved_exactly: true
+custom_domain_runtime_continuity_design_validation_end_to_end_runtime_continuity_not_supported_today: true
+custom_domain_runtime_continuity_design_validation_bounded_candidate_materially_real: true
+custom_domain_runtime_continuity_design_validation_live_repo_support: "persisted tenant custom-domain state; tenant-scoped custom-domain CRUD; WL admin domain management; domain CRUD invalidation signaling; tenant-driven shell and surface selection once tenant context is resolved"
+custom_domain_runtime_continuity_design_validation_reserved_or_designed_not_live: "custom_domain and fallback source reservation; future resolver path for custom domains; custom-domain runtime continuity beyond platform subdomains"
+custom_domain_runtime_continuity_design_validation_only_live_end_to_end_host_resolution_chain_today: "platform-subdomain chain"
+custom_domain_runtime_continuity_design_validation_exact_continuity_break: "break is between persisted custom-domain truth and runtime host-to-tenant resolution; a custom domain can be stored and mutated in tenant state, but the edge path never converts a custom host into a candidate tenant for positive resolution; the live resolver path returns not_found because it only accepts platform hosts and performs slug lookup; request-time validation still requires tenantSource = subdomain and a platform-host slug match; public/auth entry remains slug-based or email-membership-based rather than host-based; downstream app entry and shell targeting are reusable once tenant context exists, but they are not proof of live custom-domain entry continuity"
+custom_domain_runtime_continuity_design_validation_inheritance_boundary: "stored custom-domain truth; domain CRUD and invalidation behavior; host normalization/parsing behavior for custom hosts; whether runtime resolution uses custom-domain rows; whether trusted route-context propagation can carry a custom-domain source; whether a resolved custom host can reach the already-live tenant-driven shell path; negative-path and test evidence for or against that continuity"
+custom_domain_runtime_continuity_design_validation_adjacent_boundaries_remain_separate: "broader Domain family authority remains already confirmed; WL admin domain-management surfaces remain separate; tenant branding/settings administration remains separate; control-plane inspection/tenant-detail oversight remains separate; slug-based and email-based public/auth entry remain separate; onboarding/default-domain bootstrap remains separate; DNS, certificates, hosting, and infrastructure concerns remain separate; generic router or auth refactor opportunities remain separate; any future custom-domain implementation work remains separate"
+custom_domain_runtime_continuity_design_validation_child_planning_may_proceed_in_bounded_design_form: true
+custom_domain_runtime_continuity_design_validation_no_implementation_authority: true
+custom_domain_runtime_continuity_design_validation_runtime_completeness_not_proven: true
+custom_domain_runtime_continuity_design_validation_next_unit_at_report_time: "TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001"
+custom_domain_runtime_continuity_design_validation_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+custom_domain_runtime_continuity_design_validation_adjacent_findings_separate: "WL admin domain-management surfaces; tenant branding/settings administration; control-plane inspection and tenant-detail oversight; slug-based and email-based public/auth entry; onboarding/default-domain bootstrap; DNS, certificates, hosting, and infrastructure concerns; generic router or auth refactor opportunities; any future custom-domain implementation work"
+custom_domain_runtime_continuity_design_validation_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
