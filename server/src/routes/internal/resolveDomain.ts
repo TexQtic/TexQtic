@@ -14,8 +14,10 @@
  * Resolution logic (§D6.4):
  *   1. Platform subdomain  <slug>.texqtic.app
  *      → lookup tenant by slug WHERE status = ACTIVE
- *   2. Any other hostname
- *      → bounded v1 runtime path returns not_found
+ *   2. Verified custom domain
+ *      → lookup tenant_domain by normalized host WHERE verified = true AND tenant.status = ACTIVE
+ *   3. Any other hostname
+ *      → bounded runtime path returns not_found
  *
  * DB execution (§D4):
  *   Runs inside a Prisma $transaction with SET LOCAL ROLE texqtic_service,
@@ -127,17 +129,33 @@ async function resolveHostToTenant(host: string): Promise<ResolvedTenant | null>
 
     const platformParseResult = parsePlatformHost(host);
 
-    if (!platformParseResult.isPlatform) {
-      return null;
+    if (platformParseResult.isPlatform) {
+      const tenant = await tx.tenant.findFirst({
+        where: { slug: platformParseResult.slug, status: 'ACTIVE' },
+        select: { id: true, slug: true },
+      });
+
+      if (!tenant) return null;
+      return { tenantId: tenant.id, tenantSlug: tenant.slug };
     }
 
-    const tenant = await tx.tenant.findFirst({
-      where: { slug: platformParseResult.slug, status: 'ACTIVE' },
-      select: { id: true, slug: true },
+    const customDomain = await tx.tenantDomain.findFirst({
+      where: {
+        domain: host,
+        verified: true,
+        tenant: {
+          status: 'ACTIVE',
+        },
+      },
+      select: {
+        tenant: {
+          select: { id: true, slug: true },
+        },
+      },
     });
 
-    if (!tenant) return null;
-    return { tenantId: tenant.id, tenantSlug: tenant.slug };
+    if (!customDomain?.tenant) return null;
+    return { tenantId: customDomain.tenant.id, tenantSlug: customDomain.tenant.slug };
   });
 }
 

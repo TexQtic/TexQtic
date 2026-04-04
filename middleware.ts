@@ -61,6 +61,8 @@ interface CacheEntry {
   expiresAt: number;
 }
 
+type TenantSource = 'subdomain' | 'custom_domain';
+
 type PlatformHostResult =
   | { isPlatform: true; slug: string }
   | { isPlatform: false };
@@ -189,7 +191,7 @@ function isDevHost(host: string): boolean {
 async function fetchResolvedTenant(
   baseUrl: string,
   normalizedHost: string,
-  expectedSlug: string,
+  expectedSlug: string | null,
   secret: string,
 ): Promise<ResolvedTenant | null> {
   // Resolver HMAC: "resolve:{host}:{tsMs}" (epoch milliseconds)
@@ -220,7 +222,7 @@ async function fetchResolvedTenant(
     if (body.status !== 'resolved') return null;
     if (!body.tenantId || !body.tenantSlug) return null;
     if (body.canonicalHost !== normalizedHost) return null;
-    if (body.tenantSlug !== expectedSlug) return null;
+    if (expectedSlug !== null && body.tenantSlug !== expectedSlug) return null;
     return body;
   } catch {
     return null;
@@ -285,25 +287,34 @@ export default async function middleware(request: Request): Promise<Response> {
   }
 
   const platformHost = parsePlatformHostEdge(normalizedHost);
-  if (!platformHost.isPlatform) {
-    return notFoundResponse();
-  }
+  const tenantSource: TenantSource = platformHost.isPlatform ? 'subdomain' : 'custom_domain';
+  const expectedSlug = platformHost.isPlatform ? platformHost.slug : null;
 
   // 4. Cache lookup.
   const cached = cacheGet(normalizedHost);
   if (cached) {
-    if (cached.canonicalHost !== normalizedHost || cached.tenantSlug !== platformHost.slug) {
-      resolutionCache.delete(normalizedHost);
-    } else {
-      return buildInjectedPassthrough(normalizedHost, cached.tenantId, cached.tenantSlug, secret);
+    const cacheEntryMatches =
+      cached.canonicalHost === normalizedHost &&
+      (!platformHost.isPlatform || cached.tenantSlug === platformHost.slug);
+
+    if (cacheEntryMatches) {
+      return buildInjectedPassthrough(
+        normalizedHost,
+        cached.tenantId,
+        cached.tenantSlug,
+        tenantSource,
+        secret,
+      );
     }
+
+    resolutionCache.delete(normalizedHost);
   }
 
   // 5. Cache miss → call backend resolver.
   const requestUrl = new URL(request.url);
   const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
 
-  const resolved = await fetchResolvedTenant(baseUrl, normalizedHost, platformHost.slug, secret);
+  const resolved = await fetchResolvedTenant(baseUrl, normalizedHost, expectedSlug, secret);
 
   if (!resolved) {
     // Not found or resolver error — fail-closed (D8): return generic 404.
@@ -318,7 +329,13 @@ export default async function middleware(request: Request): Promise<Response> {
   });
 
   // 7. Inject headers and pass through.
-  return buildInjectedPassthrough(normalizedHost, resolved.tenantId, resolved.tenantSlug, secret);
+  return buildInjectedPassthrough(
+    normalizedHost,
+    resolved.tenantId,
+    resolved.tenantSlug,
+    tenantSource,
+    secret,
+  );
 }
 
 // ─── Header injection helper ─────────────────────────────────────────────────
@@ -327,6 +344,7 @@ async function buildInjectedPassthrough(
   normalizedHost: string,
   tenantId: string,
   tenantSlug: string,
+  tenantSource: TenantSource,
   secret: string,
 ): Promise<Response> {
   // Edge→Backend signature: "edge:{host}:{tenantId}:{tsSeconds}"
@@ -345,7 +363,7 @@ async function buildInjectedPassthrough(
       'x-middleware-next': '1',
       'x-middleware-request-x-texqtic-tenant-id': tenantId,
       'x-middleware-request-x-texqtic-tenant-slug': tenantSlug,
-      'x-middleware-request-x-texqtic-tenant-source': 'subdomain',
+      'x-middleware-request-x-texqtic-tenant-source': tenantSource,
       'x-middleware-request-x-texqtic-resolver-sig': edgeSig,
       'x-middleware-request-x-texqtic-resolver-ts': String(tsSeconds),
     },
@@ -363,6 +381,6 @@ async function buildInjectedPassthrough(
 
 export const config = {
   matcher: [
-    '/((?!api/internal|_next/static|_next/image|favicon\\.ico|assets/).*)',
+    String.raw`/((?!api/internal|_next/static|_next/image|favicon\.ico|assets/).*)`,
   ],
 };

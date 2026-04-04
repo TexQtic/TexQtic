@@ -160,8 +160,19 @@ export async function tenantResolutionHook(
   const platformParse = parsePlatformHost(normalizedHost);
   const tenantSource = request.headers[TENANT_SOURCE_HEADER] as string | undefined;
   const tenantSlug = request.headers[TENANT_SLUG_HEADER] as string | undefined;
+  const hasTenantSlug = typeof tenantSlug === 'string' && tenantSlug.trim().length > 0;
 
-  if (!platformParse.isPlatform || tenantSource !== 'subdomain' || tenantSlug !== platformParse.slug) {
+  const isValidSubdomainContext =
+    platformParse.isPlatform &&
+    tenantSource === 'subdomain' &&
+    tenantSlug === platformParse.slug;
+
+  const isValidCustomDomainContext =
+    !platformParse.isPlatform &&
+    tenantSource === 'custom_domain' &&
+    hasTenantSlug;
+
+  if (!isValidSubdomainContext && !isValidCustomDomainContext) {
     request.log.warn(
       {
         host: normalizedHost,
