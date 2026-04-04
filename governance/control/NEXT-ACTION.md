@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-03 (GOVERNANCE-SYNC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -109,6 +109,20 @@ notes: |
   test/documentation posture remains separate drift only, and
   TEXTIC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001 is preserved as the
   exact next lawful adjacent family-specific unit at that stage, planning + repo-truth
-  validation only and not implementation authority. Future work should continue through bounded
-  family-specific units unless a later authority review changes sequence.
+  validation only and not implementation authority. The later Domain / Tenant Routing /
+  Brand-Surface Management family design creation then confirmed Domain / Tenant Routing /
+  Brand-Surface Management as a distinct cross-cutting enabling family and preserved Outcome A
+  because current repo truth is materially strong enough for family-level confirmation through
+  dedicated host-to-tenant routing paths at edge and backend, request-time tenant-context
+  enforcement, durable tenant-scoped domain and branding persistence, public tenant targeting and
+  tenant normalization, canonical shell and surface selection after lawful resolution,
+  cross-surface branded shell rendering, and adjacent-family reuse without adjacent-family
+  ownership transfer; implementation authority, router redesign, auth redesign, schema redesign,
+  infra redesign, and broader runtime-completeness claims remain separate. The key bounded
+  unresolved seam remains end-to-end custom-domain runtime continuity: live routing proof is still
+  platform-subdomain-only, while custom-domain continuity remains reserved/designed and partially
+  managed rather than proven end to end. Bounded custom-domain runtime continuity design and
+  validation is preserved as the exact next lawful successor from this review, planning +
+  repo-truth validation only and not implementation authority. Future work should continue
+  through bounded family-specific units unless a later authority review changes sequence.
 ```

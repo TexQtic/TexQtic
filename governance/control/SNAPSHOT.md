@@ -11,11 +11,11 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-03
+snapshot_date: 2026-04-04
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-COMPLIANCE-CERTIFICATIONS-TRACEABILITY-AUDIT-FAMILY-DESIGN-CREATION-001: record Compliance family truth, Outcome A, and next-unit posture"
+last_commit: "GOVERNANCE-SYNC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001: record Domain family truth, Outcome A, and bounded custom-domain successor posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -254,6 +254,24 @@ compliance_certifications_traceability_audit_next_unit_at_report_time: "TEXTIC-D
 compliance_certifications_traceability_audit_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
 compliance_certifications_traceability_audit_adjacent_findings_separate: "platform control-plane supervision surfaces; tenant/admin shell routing into certification, traceability, and audit surfaces; B2B/trade reuse of DPP/certification/traceability evidence; residual stale test/documentation posture around deferred certification logging; any future policy-engine redesign; any future schema expansion; any broader runtime-completeness claims"
 compliance_certifications_traceability_audit_fresh_repo_truth_validation_required_at_opening: true
+domain_tenant_routing_brand_surface_management_family_design_source_report: "TEXTIC-DOMAIN-TENANT-ROUTING-BRAND-SURFACE-MANAGEMENT-DESIGN-CREATION-001"
+domain_tenant_routing_brand_surface_management_source_report_review_only_no_repo_mutation: true
+domain_tenant_routing_brand_surface_management_distinct_cross_cutting_enabling_family_confirmed: true
+domain_tenant_routing_brand_surface_management_outcome_a_preserved_exactly: true
+domain_tenant_routing_brand_surface_management_current_repo_truth_materially_strong_enough_for_family_level_confirmation: true
+domain_tenant_routing_brand_surface_management_live_repo_support: "dedicated host-to-tenant routing paths at edge and backend; request-time tenant-context enforcement; durable tenant-scoped domain and branding persistence; public tenant targeting and tenant normalization; canonical shell and surface selection after lawful resolution; cross-surface branded shell rendering; adjacent-family reuse without adjacent-family ownership transfer; strong routing and isolation test evidence"
+domain_tenant_routing_brand_surface_management_inheritance_boundary: "tenant/domain-bound route resolution; host-to-tenant mapping continuity; signed or trusted route-context propagation where evidenced; tenant domain continuity; tenant branding continuity where the seam is routed entry or surface targeting; canonical shell and surface selection after lawful tenant/domain resolution; custom-domain continuity only to the extent current repo truth supports management or use; cross-cutting brand-surface targeting continuity across public and authenticated entry surfaces where evidenced"
+domain_tenant_routing_brand_surface_management_adjacent_boundaries_remain_separate: "White-Label remains the overlay family rather than owner of the whole domain/routing/brand-surface family; Identity / Tenancy / Permissions / Workspace remains the identity/session/workspace family; Tenant Back Office remains tenant-owned admin/ops continuity; Platform Control-Plane remains platform-owned supervision/inspection authority; Onboarding / Provisioning remains a separate family/handoff area; B2B, B2C, and Aggregator remain parent families; Messaging / Notifications remains communication-state continuity; Compliance / Certifications / Traceability / Audit remains governance-evidence continuity; any router, auth, schema, or infra redesign claim remains separate"
+domain_tenant_routing_brand_surface_management_child_planning_may_proceed: true
+domain_tenant_routing_brand_surface_management_no_implementation_authority: true
+domain_tenant_routing_brand_surface_management_no_router_auth_schema_infra_redesign_authority: true
+domain_tenant_routing_brand_surface_management_runtime_completeness_not_proven_in_full: true
+domain_tenant_routing_brand_surface_management_custom_domain_limiting_nuance_preserved: "live runtime routing proof remains platform-subdomain-only; the protocol reserves custom_domain and fallback values; current host parsing and tests still prove only the slug.texqtic.app path and explicit not_found posture for custom domains; this matches the architecture anchor, which scoped v1 to platform subdomains and deferred custom domains"
+domain_tenant_routing_brand_surface_management_custom_domain_limiting_nuance_not_outcome_contradiction: true
+domain_tenant_routing_brand_surface_management_next_unit_at_report_time: "bounded custom-domain runtime continuity design and validation"
+domain_tenant_routing_brand_surface_management_next_unit_scope: "planning + repo-truth validation only; not implementation authority"
+domain_tenant_routing_brand_surface_management_adjacent_findings_separate: "WL admin domain-management surfaces; tenant branding settings/admin surfaces; control-plane inspection/tenant-detail oversight surfaces; generic identity/session entry logic; onboarding/bootstrap/default-domain assignment logic; any future custom-domain implementation work; any future router/auth/schema/infra redesign unit"
+domain_tenant_routing_brand_surface_management_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
