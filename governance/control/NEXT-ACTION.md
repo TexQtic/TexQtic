@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-04 (GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-PLANNING-001)
 > This file is a Layer 0 governance-facing pointer. It does not originate general product execution sequencing. Changing this requires a governance unit.
 
 ---
@@ -155,6 +155,31 @@ notes: |
   router/auth/schema/infra redesign remain separate. Later child planning may lawfully proceed,
   but implementation authority still does not exist. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-
   POSITIVE-PATH-IMPLEMENTATION-PLANNING-001 is preserved as the exact next lawful successor,
-  planning only and not implementation authority. Future work should continue through bounded
-  family-specific units unless a later authority review changes sequence.
+  planning only and not implementation authority. The later bounded implementation-planning unit
+  then preserved Outcome A because current repo truth supports a clear bounded implementation plan
+  for the minimum positive-path contract. The smallest lawful runtime file allowlist is exactly
+  middleware.ts, server/src/routes/internal/resolveDomain.ts, and
+  server/src/hooks/tenantResolutionHook.ts. The smallest lawful test allowlist candidate is
+  exactly server/src/__tests__/g026-platform-subdomain-routing.spec.ts, while persistence-
+  isolation coverage remains unchanged and outside the minimum implementation surface. Key
+  downstream seams remain untouched: server/src/middleware/auth.ts, server/src/lib/tenantHeaders.ts,
+  server/src/lib/hostNormalize.ts, server/src/routes/tenant.ts,
+  server/src/lib/cacheInvalidateEmitter.ts, server/prisma/schema.prisma, App.tsx,
+  server/src/routes/public.ts, and services/authService.ts. The future bounded implementation must
+  preserve the fail-closed regression matrix: platform root/dev/.vercel.app passthrough remains
+  unchanged; platform subdomain success and unresolved-platform 404 behavior remain unchanged;
+  normalized non-platform custom hosts stop being auto-rejected by Edge and are admitted to the
+  existing resolver path; verified custom domains with ACTIVE tenant records resolve through the
+  same signed chain and existing resolved-tenant reuse path without App shell changes; unresolved
+  and unverified custom domains still return generic 404; invalid resolver HMAC or stale resolver
+  timestamp still return 401; invalid Edge-injected HMAC or stale Edge timestamp still return 401;
+  resolved-tenant versus JWT mismatch still returns 403; the resolved payload shape and signed
+  primitive remain unchanged; tenant-domain CRUD and invalidation behavior remain untouched; and no
+  public/login endpoint or shell-selection behavior changes. Verified remains the routing gate for
+  this implementation surface, primary remains separate, and widening into shared helpers, auth
+  middleware, public/login routes, App shell files, schema, or cache emitters would exceed the
+  bounded contract. TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001 is now
+  preserved as the exact next lawful successor, bounded implementation only and not broader
+  redesign authority. Future work should continue through bounded family-specific units unless a
+  later authority review changes sequence.
 ```

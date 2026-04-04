@@ -15,7 +15,7 @@ snapshot_date: 2026-04-04
 last_unit_opened: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
 last_candidate_opened: CONTROL-PLANE-ACTIVATE-APPROVED-RUNTIME-ENFORCEMENT-001
 last_unit_closed: MODE-COMPLETENESS-B2C-STOREFRONT-SETTINGS-AFFORDANCE-SEPARATION-001
-last_commit: "GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-DESIGN-001: record Outcome A minimum contract and implementation-planning successor posture"
+last_commit: "GOVERNANCE-SYNC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-PLANNING-001: record Outcome A bounded implementation plan and implementation successor posture"
 doctrine_version: v1.6
 rls_maturity: "5.0 / 5"
 migrations_applied: "82 / 82"
@@ -311,6 +311,24 @@ custom_domain_host_to_tenant_positive_path_design_next_unit_at_report_time: "TEX
 custom_domain_host_to_tenant_positive_path_design_next_unit_scope: "planning only; not implementation authority"
 custom_domain_host_to_tenant_positive_path_design_adjacent_findings_separate: "WL admin domain CRUD and verified/pending UI state; public slug/email tenant discovery and host-aware login UX; verification workflow that flips a domain from pending to verified; primary-domain semantics and canonical redirect behavior; DNS, certificates, Vercel attachment, and hosting operations; cache topology redesign beyond the current bounded posture; broad router or auth refactor opportunities"
 custom_domain_host_to_tenant_positive_path_design_fresh_repo_truth_validation_required_at_opening: true
+custom_domain_host_to_tenant_positive_path_implementation_planning_source_report: "TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-PLANNING-001"
+custom_domain_host_to_tenant_positive_path_implementation_planning_source_report_planning_only_no_repo_mutation: true
+custom_domain_host_to_tenant_positive_path_implementation_planning_outcome_a_preserved_exactly: true
+custom_domain_host_to_tenant_positive_path_implementation_planning_current_repo_truth_supports_clear_bounded_implementation_plan: true
+custom_domain_host_to_tenant_positive_path_implementation_planning_smallest_runtime_allowlist: "middleware.ts; server/src/routes/internal/resolveDomain.ts; server/src/hooks/tenantResolutionHook.ts"
+custom_domain_host_to_tenant_positive_path_implementation_planning_runtime_files_explicitly_unchanged: "server/src/middleware/auth.ts; server/src/lib/tenantHeaders.ts; server/src/lib/hostNormalize.ts; server/src/routes/tenant.ts; server/src/lib/cacheInvalidateEmitter.ts; server/prisma/schema.prisma; App.tsx; server/src/routes/public.ts; services/authService.ts"
+custom_domain_host_to_tenant_positive_path_implementation_planning_smallest_test_allowlist_candidate: "server/src/__tests__/g026-platform-subdomain-routing.spec.ts"
+custom_domain_host_to_tenant_positive_path_implementation_planning_persistence_isolation_tests_unchanged: "tenant-domain persistence isolation coverage remains unchanged and outside the minimum implementation surface"
+custom_domain_host_to_tenant_positive_path_implementation_planning_proof_obligations: "platform root domains, dev hosts, and .vercel.app passthrough remain unchanged; platform subdomain routing still resolves successfully through the existing resolver path; unresolved platform subdomains still return generic 404; normalized non-platform custom hosts stop being auto-rejected by Edge and are admitted to the existing resolver path; verified custom domains with ACTIVE tenant records resolve successfully through the same signed chain and reach the existing resolved-tenant reuse path without App shell changes; unresolved custom domains still return generic 404; unverified custom domains still return generic 404; invalid resolver HMAC and stale resolver timestamp on an otherwise valid host still return 401; invalid Edge-injected HMAC and stale Edge timestamp on an otherwise valid host still return 401; resolved tenant versus JWT tenant mismatch still returns 403; the resolved payload shape from the internal resolver remains unchanged; the signed primitive remains unchanged; tenant domain CRUD and invalidation behavior remain untouched; no public/login endpoint behavior changes; no shell-selection behavior changes"
+custom_domain_host_to_tenant_positive_path_implementation_planning_limiting_nuance: "the smallest lawful runtime allowlist is three files only; the smallest lawful test allowlist is one existing routing spec only; extending into shared helpers, auth middleware, public/login routes, App shell files, schema, or cache emitters would widen the opening beyond the current contract; verified is the routing gate for this implementation surface; primary remains separate and must not be pulled into the bounded opening"
+custom_domain_host_to_tenant_positive_path_implementation_planning_child_planning_not_required_before_bounded_implementation_opening: true
+custom_domain_host_to_tenant_positive_path_implementation_planning_no_implementation_authority: true
+custom_domain_host_to_tenant_positive_path_implementation_planning_resolves: "the smallest runtime file allowlist; the smallest test file allowlist candidate; the exact proof obligations and fail-closed regression matrix; the exact runtime seams that can remain untouched"
+custom_domain_host_to_tenant_positive_path_implementation_planning_does_not_resolve: "implementation execution itself; live verification evidence for implementation; host-aware login or public-entry behavior on custom domains; primary-domain redirect policy; domain verification workflow; DNS or certificate operations"
+custom_domain_host_to_tenant_positive_path_implementation_planning_next_unit_at_report_time: "TEXTIC-CUSTOM-DOMAIN-HOST-TO-TENANT-POSITIVE-PATH-IMPLEMENTATION-001"
+custom_domain_host_to_tenant_positive_path_implementation_planning_next_unit_scope: "bounded implementation only; not broader redesign authority"
+custom_domain_host_to_tenant_positive_path_implementation_planning_adjacent_findings_separate: "host-aware login and public-entry UX; primary-domain and canonical redirect policy; domain verification workflow; DNS, certificates, Vercel attachment, and hosting operations; cache redesign beyond the current TTL and invalidation posture; WL admin UI improvements; broad router or auth refactor opportunities"
+custom_domain_host_to_tenant_positive_path_implementation_planning_fresh_repo_truth_validation_required_at_opening: true
 step3b_future_families_follow_later_unless_repo_truth_changes_priority: true
 step3b_implementation_remains_deferred: true
 step3b_broad_planning_stack_rewrites_remain_deferred: true
