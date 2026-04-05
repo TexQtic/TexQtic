@@ -10,19 +10,19 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-04
-snapshot_unit: GOVERNANCE-OS-RESET-WRITEBACK-001
+snapshot_date: 2026-04-05
+snapshot_unit: SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT-OPENING-WRITEBACK-001
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 implementation_roadmap_posture: derived_only
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: none
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 9
+  open: 10
   decision_queue: 9
   design_gate: 2
   blocked: 0
@@ -47,6 +47,15 @@ sentinel_mode: control_critical_only
 routine_close_audit_mode: compact_in_close_writeback
 historical_truth_owner: governance/units/ + governance/log/
 ```
+
+## Current Product Delivery Note
+
+- `SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT` is now the sole open product-facing
+  `ACTIVE_DELIVERY` unit.
+- The unit is bounded to frontend canonical vocabulary alignment, truthful commercial/package
+  identity, and directly coupled admin-visible plan truth only.
+- This opening does not authorize implementation outside exact future allowlists and does not
+  imply any successor opening.
 
 ## Restore Notes
 
