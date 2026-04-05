@@ -319,19 +319,37 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
           };
         }
 
-        const updatedOrg = currentOrg.status === nextStatus
-          ? currentOrg
-          : await tx.organizations.update({
-              where: { id },
-              data: {
-                status: nextStatus,
-              },
-              select: {
-                id: true,
-                legal_name: true,
-                status: true,
-              },
-            });
+        if (currentOrg.status === nextStatus) {
+          return {
+            kind: 'already_recorded' as const,
+            currentOrg,
+          };
+        }
+
+        const updatedOrg = await tx.organizations.update({
+          where: { id },
+          data: {
+            status: nextStatus,
+          },
+          select: {
+            id: true,
+            legal_name: true,
+            status: true,
+          },
+        });
+
+        await writeAuditLog(
+          tx,
+          createAdminAudit(adminId, 'control.tenants.onboarding_outcome.recorded', 'organization', {
+            tenantId: updatedOrg.id,
+            legalName: updatedOrg.legal_name,
+            previousStatus: currentOrg.status,
+            nextStatus: updatedOrg.status,
+            outcome,
+            reason,
+            notes,
+          })
+        );
 
         return {
           kind: 'ok' as const,
@@ -353,18 +371,14 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         );
       }
 
-      await writeAuditLog(
-        prisma,
-        createAdminAudit(adminId, 'control.tenants.onboarding_outcome.recorded', 'organization', {
-          tenantId: result.updatedOrg.id,
-          legalName: result.updatedOrg.legal_name,
-          previousStatus: result.currentOrg.status,
-          nextStatus: result.updatedOrg.status,
-          outcome,
-          reason,
-          notes,
-        })
-      );
+      if (result.kind === 'already_recorded') {
+        return sendError(
+          reply,
+          'ONBOARDING_STATUS_CONFLICT',
+          `Tenant onboarding outcome already recorded as ${result.currentOrg.status}`,
+          409
+        );
+      }
 
       return sendSuccess(reply, {
         tenant: {
