@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-05
-snapshot_unit: CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING-CLOSE-WRITEBACK-001
+snapshot_unit: GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-OPENING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
@@ -22,8 +22,8 @@ current_product_active_delivery_count: 0
 current_product_active_delivery_unit: none
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 9
-  decision_queue: 9
+  open: 10
+  decision_queue: 10
   design_gate: 2
   blocked: 0
   deferred: 0
@@ -37,6 +37,7 @@ current_open_governance_units:
   - GOVERNANCE-SENTINEL-MANUAL-WORKFLOW-001
   - GOVERNANCE-SENTINEL-V1-SPEC-001
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
+  - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
   - RFQ-NEGOTIATION-CONTINUITY
@@ -61,8 +62,10 @@ historical_truth_owner: governance/units/ + governance/log/
 - Preserved governance investigation outcome: `PLANNING_STACK_NEEDS_RESHAPING`.
 - The underlying need remains valid for a thin launch-acceleration overlay above governance, but
   the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.
-- The next possible governance move is a separate design-only shaping decision only; no product-
-  facing or broad planning-stack opening is implied by this preservation step.
+- `LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001` is now OPEN as a concurrent governance-only
+  design unit to shape that thin overlay only.
+- This opening does not authorize a broad planning stack, thin-overlay implementation, roadmap
+  regeneration, product-facing opening, or any new overlay opening authority.
 
 ## Restore Notes
 
