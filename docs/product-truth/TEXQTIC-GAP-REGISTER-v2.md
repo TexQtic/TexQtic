@@ -122,6 +122,10 @@ Every v2 gap entry uses the following fields:
 	`CONTROL-PLANE-TENANT-OPERATIONS-REALITY` and `GAP-V2-003` /
 	`MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`, but each remains a broad family remainder rather
 	than one exact bounded next unit.
+- Within `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`, current repo truth now also
+  records the exact bounded child candidate
+  `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING` for later lawful-opening evaluation only;
+  this does not change the current global no-selection posture.
 - Subscription / commercial packaging retains no currently selected second bounded slice in the
 	active `-v2` stack after closure of the first bounded subscription unit.
 
@@ -162,7 +166,9 @@ Every v2 gap entry uses the following fields:
 
 ### Later Ready Candidates
 
-- `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY`
+- `GAP-V2-002` / `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` remains the preserved later-ready family
+  remainder; exact bounded child candidate now recorded inside this family:
+  `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING`.
 - `GAP-V2-003` / `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
 
 ### Launch-Specific Interpretation Note

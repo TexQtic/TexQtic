@@ -91,6 +91,10 @@ still required by Governance OS.
 - The strongest preserved later-ready family remainders remain
     `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` and `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`,
     but each is still a broad preserved family remainder rather than one exact bounded next unit.
+- Within the preserved `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` family, current repo truth now
+    preserves one exact bounded child candidate:
+    `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING`. This remains child-candidate
+    authority only and does not by itself select the global next bounded opening.
 - `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` and `RFQ-NEGOTIATION-CONTINUITY` remain
     design-gate authority only.
 
@@ -173,6 +177,14 @@ The broad family remains preserved, but it should not be opened directly. Its fi
 opening is now `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS`, which isolates the tenant deep-dive
 truthfulness defect from registry redesign, audit-log depth work, impersonation-program breadth,
 billing/risk workflow completion, and AdminRBAC authority work.
+
+Current bounded child-candidate authority inside this preserved family is now
+`CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING`. Repo truth supports this narrowed child
+because the bounded launch-operator lane explicitly includes onboarding outcome handling, the
+closed deep-dive unit preserved a separate adjacent hardening note on the onboarding outcome route,
+and the concrete route remains separable from bounded tenant-entry continuity / impersonation depth
+and audit-visibility depth. Preserve this as later lawful-opening authority only; it does not
+reopen the broad family and does not select the global next bounded opening.
 
 For launch-specific posture, also see the launch overlay, which treats platform-admin/control-
 center surfaces as launch-required in bounded form and routes them through a launch-boundary
