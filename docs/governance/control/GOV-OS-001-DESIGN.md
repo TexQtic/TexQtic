@@ -5,7 +5,7 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.7 (reset-amended; original layer model preserved)  
+**Doctrine Version:** v1.8 (reset-amended; original layer model preserved)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 
 ---
@@ -31,6 +31,8 @@ Reset amendment ratified on 2026-04-04 preserves this design and narrows its liv
 - candidate normalization is exception-only rather than a standing prerequisite
 - Sentinel gating is control-critical only
 - separate post-close audit artifacts are reserved for strict-path or broader queue-shaping closes
+- product-facing closes that change active-delivery or next-candidate posture require post-close authority reconciliation before any fresh opening decision
+- zero-open product-delivery post-close posture returns to explicit next-opening decision control; closed units preserve lineage only
 
 No application code, schema, migration, API, or test files were modified.  
 No product unit status was changed as part of this governance design.
@@ -311,7 +313,7 @@ All other `docs/governance/*.md` design documents remain in place as design refe
 | Next-unit selection | `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when the selection is product-facing |
 | Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`); add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
 | Verification prompt drafting | `OPEN-SET.md` + target unit file |
-| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md` |
+| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` when a product-facing close changes active-delivery or next-candidate posture |
 | Any session restoration | `OPEN-SET.md` + `NEXT-ACTION.md`; add `SNAPSHOT.md` only when current context is missing, stale, or historically ambiguous |
 
 **Prohibition:** Archive files, historical tracker files, and the execution log MUST NOT be used as operational truth for sequencing decisions. If a unit's status is not in Layer 0 or Layer 1, it is assumed UNKNOWN and must be resolved before acting.
@@ -398,7 +400,7 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 | Session open / context restoration | `OPEN-SET.md`, `NEXT-ACTION.md`, `BLOCKED.md`; add `SNAPSHOT.md` only when restore context or historical ambiguity matters |
 | Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
 | Drafting verification prompt | Add: `units/<UNIT-ID>.md` |
-| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files |
+| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` when a product-facing close changes active-delivery or next-candidate posture |
 | Product/design decision | Relevant decision file + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
 | Implementation-opening readiness investigation | Layer 0 files + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
 | Strict-path / authority-shaping work | Layer 0 files + `SNAPSHOT.md` + the minimum Layer 1 / Layer 2 / Layer 3 sources required for that authority check |
@@ -521,6 +523,62 @@ Once this rule is adopted:
   later opening lawful
 - the default operational behavior for future opening decisions becomes dependency-aware,
   root-cause-traced, and drift-resistant
+
+### 4.5B Post-Close Authority Reconciliation And Zero-Open Re-Entry
+
+#### 1. Rule Purpose
+
+This rule prevents a just-closed product-facing unit from remaining the implied current-next
+authority after Layer 0 has already moved to a different posture.
+
+#### 2. Post-Close Authority Reconciliation Rule
+
+After any product-facing close, Governance OS must reconcile the resulting Layer 0 posture against
+the live sequencing authority when the close:
+
+- removes the only active product-delivery unit
+- changes the current next-candidate posture
+- invalidates carry-forward wording that named or implied the closed unit as the next move
+
+The minimum reconciliation read set is:
+
+- `OPEN-SET.md`
+- `NEXT-ACTION.md`
+- `BLOCKED.md`
+- the closing unit file
+- `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
+- `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+
+`docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` may be read only for strict
+consistency checks. It is not live sequencing authority.
+
+#### 3. Zero-Open Product-Delivery Re-Entry Rule
+
+If the close leaves zero active product-delivery units, Governance OS must return to explicit
+next-opening decision control.
+
+No successor may be inferred from:
+
+- the just-closed unit
+- broader family adjacency alone
+- prior carry-forward wording
+- historical tracker posture
+
+#### 4. Closed-Unit Carry-Forward Prohibition
+
+A closed unit preserves lineage and closure evidence only. It does not remain a current-next
+candidate or proxy for broader family completion unless a new authority artifact explicitly selects
+a new bounded successor.
+
+#### 5. Compact Transition Chain
+
+For the product-facing close case, the normal chain is:
+
+1. close the bounded unit
+2. update Layer 0 posture
+3. run post-close reconciliation when the rule is triggered
+4. if zero active product-delivery units remain, return to explicit next-opening decision control
+5. open nothing further until a new lawful bounded decision is recorded
 
 ### 4.6 Edit-Scope Enforcement
 

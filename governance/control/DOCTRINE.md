@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.7  
-**Last Updated:** 2026-04-04 (GOVERNANCE-OS-RESET-WRITEBACK-001)  
+**Doctrine Version:** v1.8  
+**Last Updated:** 2026-04-05 (post-close reconciliation / zero-open re-entry)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -95,6 +95,15 @@ No implementation opening is lawful on target-family maturity alone. A proposed 
 Before approving any future implementation opening, Governance OS must require a bounded dependency-readiness investigation covering the target opening, its material dependency/support-family map, the required readiness threshold for each family, the current readiness state for each family, and a pass/fail result for each family. This applies to family implementation openings, cross-family openings, supporting-family openings, control-plane openings, and any other opening where dependency or support-family maturity materially affects lawful execution.
 If any family fails, Governance OS must return the failing family, the missing chain element(s), the deepest root blocker reached by recursive trace, and the minimum bounded next move required to make the opening lawful. Dependencies do not all need full implementation first, but each must be ready at the threshold appropriate to the opening.
 
+### D-015 — Post-Close Authority Reconciliation Is Mandatory
+After any product-facing close that changes active-delivery or next-candidate posture, Governance OS must reconcile Layer 0 posture with `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` and `TEXQTIC-GAP-REGISTER-v2.md` before any new opening decision.
+
+### D-016 — Zero-Open Product-Delivery Re-Entry Returns To Decision Control
+If a close leaves zero active product-delivery units, Governance OS returns to explicit next-opening decision control. No successor may be inferred from the closed unit, family proximity, or stale carry-forward wording.
+
+### D-017 — Closed Units Preserve Lineage Only
+Closed units preserve lineage and evidence only. They do not remain current-next authority or imply broader family completion unless a new authority artifact explicitly selects a successor.
+
 ---
 
 ## Operating Paths
@@ -106,6 +115,8 @@ If any family fails, Governance OS must return the failing family, the missing c
 - Open with one unit record plus the required Layer 0 update.
 - During work, update the unit record only when scope, blockers, or verification posture materially change.
 - Close with one compact governance writeback plus verification evidence.
+- For product-facing closes that change active-delivery or next-candidate posture, run the D-015 reconciliation before any new opening decision.
+- If no active product-delivery unit remains after close, return to D-016 decision control rather than carrying forward a presumed successor.
 - Normal bounded units do not automatically require candidate normalization, strict Sentinel gating, separate post-close audit artifacts, or multi-surface sequencing overlays.
 
 ### Strict High-Risk Path
