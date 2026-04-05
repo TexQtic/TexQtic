@@ -58,6 +58,11 @@ historical_truth_owner: governance/units/ + governance/log/
 - This close does not imply broader tenant-operations depth, tenant-entry / impersonation depth,
   audit workflow completion, AdminRBAC, feature governance, AI governance, billing/risk thinness,
   broader control-plane modernization, or any successor opening.
+- Preserved governance investigation outcome: `PLANNING_STACK_NEEDS_RESHAPING`.
+- The underlying need remains valid for a thin launch-acceleration overlay above governance, but
+  the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.
+- The next possible governance move is a separate design-only shaping decision only; no product-
+  facing or broad planning-stack opening is implied by this preservation step.
 
 ## Restore Notes
 
