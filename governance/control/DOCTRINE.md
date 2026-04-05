@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.8  
-**Last Updated:** 2026-04-05 (post-close reconciliation / zero-open re-entry)  
+**Doctrine Version:** v1.9  
+**Last Updated:** 2026-04-05 (structural-breadth family reduction)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -104,6 +104,10 @@ If a close leaves zero active product-delivery units, Governance OS returns to e
 ### D-017 — Closed Units Preserve Lineage Only
 Closed units preserve lineage and evidence only. They do not remain current-next authority or imply broader family completion unless a new authority artifact explicitly selects a successor.
 
+### D-018 — Structural-Breadth Family Remainders Require Same-Family Bounded Reduction
+After one preserved family remainder has already been chosen for reduction, if current repo truth is coherent but that family still contains multiple unreduced subareas and therefore does not yield one exact bounded child unit, Governance OS must treat the condition as structural breadth rather than a repo-conflict blocker.
+The required next move is one further bounded child-reduction decision or one narrowly scoped design-clarification step inside that same family only, for the sole purpose of exact-child emergence. This condition must not be routed into whole-family design completion, cross-family documentation completion, roadmap expansion, lawful opening, or implementation start.
+
 ---
 
 ## Operating Paths
@@ -117,6 +121,7 @@ Closed units preserve lineage and evidence only. They do not remain current-next
 - Close with one compact governance writeback plus verification evidence.
 - For product-facing closes that change active-delivery or next-candidate posture, run the D-015 reconciliation before any new opening decision.
 - If no active product-delivery unit remains after close, return to D-016 decision control rather than carrying forward a presumed successor.
+- If a chosen family remainder remains coherent but structurally broad, apply D-018 and route to one further same-family bounded child-reduction or narrow design-clarification step only.
 - Normal bounded units do not automatically require candidate normalization, strict Sentinel gating, separate post-close audit artifacts, or multi-surface sequencing overlays.
 
 ### Strict High-Risk Path

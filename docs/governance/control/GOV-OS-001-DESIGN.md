@@ -5,7 +5,7 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.8 (reset-amended; original layer model preserved)  
+**Doctrine Version:** v1.9 (reset-amended; original layer model preserved)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 
 ---
@@ -33,6 +33,7 @@ Reset amendment ratified on 2026-04-04 preserves this design and narrows its liv
 - separate post-close audit artifacts are reserved for strict-path or broader queue-shaping closes
 - product-facing closes that change active-delivery or next-candidate posture require post-close authority reconciliation before any fresh opening decision
 - zero-open product-delivery post-close posture returns to explicit next-opening decision control; closed units preserve lineage only
+- structurally broad but coherent chosen family remainders must route to one further same-family bounded reduction or narrow design-clarification step only
 
 No application code, schema, migration, API, or test files were modified.  
 No product unit status was changed as part of this governance design.
@@ -579,6 +580,62 @@ For the product-facing close case, the normal chain is:
 3. run post-close reconciliation when the rule is triggered
 4. if zero active product-delivery units remain, return to explicit next-opening decision control
 5. open nothing further until a new lawful bounded decision is recorded
+
+### 4.5C Structural-Breadth Family-Reduction Rule
+
+#### 1. Rule Purpose
+
+This rule prevents Governance OS from misreading a coherent but still-broad chosen family remainder
+as either a repo-conflict blocker or permission to widen into whole-family completion work.
+
+#### 2. Trigger Condition
+
+After one preserved family remainder has already been chosen for reduction, Governance OS enters a
+structural-breadth condition when:
+
+- current repo truth remains coherent
+- the chosen family still contains multiple unreduced subareas
+- no one exact bounded child unit yet emerges from that family
+
+This is not a stale-authority or repo-conflict blocker by itself.
+
+#### 3. Required Response
+
+When this condition is present, Governance OS must route to exactly one of the following inside the
+same chosen family only:
+
+- one further bounded child-reduction decision
+- one narrowly scoped design-clarification step
+
+The sole purpose of that next step is to establish:
+
+- exact child-unit hierarchy
+- exact candidate boundary
+- whether one exact bounded child can now be named
+
+#### 4. Explicit Anti-Drift Prohibitions
+
+This condition must not be used to justify:
+
+- whole-family design completion
+- cross-family documentation completion
+- roadmap or planning-stack expansion
+- lawful opening
+- implementation start
+
+#### 5. Structural-Breadth Vs Repo-Conflict Distinction
+
+- Structural breadth: repo truth is coherent, but the chosen family still does not reduce to one
+  exact bounded child. Resolve by same-family bounded reduction or narrow design clarification.
+- Repo-conflict blocker: current authority surfaces materially disagree or cannot support one
+  coherent reading. Resolve by authority reconciliation or repo-truth correction before further
+  reduction.
+
+#### 6. Decision-Control Compatibility
+
+This rule preserves zero-open decision control, exact-target discipline, one logical unit at a
+time, and closed-seam lineage-only treatment. Closed seams may inform the reduction map, but they
+do not become successor authority by implication.
 
 ### 4.6 Edit-Scope Enforcement
 
