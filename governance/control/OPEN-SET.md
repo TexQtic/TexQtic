@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-05 (GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-OPENING)  
+**Last Updated:** 2026-04-05 (GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-RESHAPE)  
 **Max Size:** 50 lines (structural gate)
 
 > This file is the canonical list of all non-terminal governed units and current delivery class only.  
@@ -48,5 +48,5 @@
 - Canonical candidate/family truth: `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
 - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only.
 - Current open product-facing `ACTIVE_DELIVERY`: `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS`.
-- Current concurrent verification-support governance unit: `AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001`.
+- Current concurrent verification-support governance unit: `AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001`, now narrowly reshaped to authorize one minimal `server/vitest.config.ts` discovery adjustment for the exact Aggregator backend integration test path only.
 - Current open `DECISION_QUEUE` governance records remain real non-terminal truth, but they do not define the default governance burden for future bounded units after this reset.

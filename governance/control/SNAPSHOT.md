@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-05
-snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-OPENING
+snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-RESHAPE
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
@@ -81,6 +81,10 @@ historical_truth_owner: governance/units/ + governance/log/
 - This concurrent support unit does not change product scope, does not authorize package/CI/tooling
   modernization, and does not absorb the unrelated `g026-platform-subdomain-routing.spec.ts`
   typecheck failure.
+- The unit is now narrowly reshaped so that one minimal `server/vitest.config.ts` discovery include
+  adjustment may be authorized for the exact Aggregator backend integration test path only, while
+  broader Vitest cleanup, package/toolchain changes, unrelated test migration, and `g026` remain
+  out of scope.
 
 ## Restore Notes
 
