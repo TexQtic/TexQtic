@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-05 (GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-OPENING)  
+**Last Updated:** 2026-04-05 (GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-OPENING)  
 **Max Size:** 50 lines (structural gate)
 
 > This file is the canonical list of all non-terminal governed units and current delivery class only.  
@@ -22,6 +22,7 @@
 | GOVERNANCE-SENTINEL-V1-SPEC-001 | Sentinel v1 specification artifacts and gate design | OPEN | DECISION_QUEUE | W5 | 2026-03-23 |
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001 | Thin launch-acceleration overlay reshape design | OPEN | DECISION_QUEUE | W5 | 2026-04-05 |
+| LAUNCH-ACCELERATION-OVERLAY-001 | Thin launch-acceleration visibility overlay | OPEN | DECISION_QUEUE | W5 | 2026-04-05 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 | RFQ-NEGOTIATION-CONTINUITY | RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-30 |
 
@@ -29,14 +30,14 @@
 
 ## Summary
 
-- **OPEN**: **10**
+- **OPEN**: **11**
 - **DESIGN_GATE**: **2**
 - **BLOCKED**: **0**
 - **DEFERRED**: **0**
 - **ACTIVE_DELIVERY**: **0**
-- **DECISION_QUEUE**: **10**
+- **DECISION_QUEUE**: **11**
 - **DESIGN_GATE_QUEUE**: **2**
-- **Total non-terminal units**: **12**
+- **Total non-terminal units**: **13**
 
 ## Operating Notes
 

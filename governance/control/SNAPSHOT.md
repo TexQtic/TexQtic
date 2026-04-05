@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-05
-snapshot_unit: GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-OPENING
+snapshot_unit: GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-OPENING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
@@ -22,8 +22,8 @@ current_product_active_delivery_count: 0
 current_product_active_delivery_unit: none
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 10
-  decision_queue: 10
+  open: 11
+  decision_queue: 11
   design_gate: 2
   blocked: 0
   deferred: 0
@@ -38,6 +38,7 @@ current_open_governance_units:
   - GOVERNANCE-SENTINEL-V1-SPEC-001
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
   - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
+  - LAUNCH-ACCELERATION-OVERLAY-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
   - RFQ-NEGOTIATION-CONTINUITY
@@ -64,8 +65,13 @@ historical_truth_owner: governance/units/ + governance/log/
   the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.
 - `LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001` is now OPEN as a concurrent governance-only
   design unit to shape that thin overlay only.
-- This opening does not authorize a broad planning stack, thin-overlay implementation, roadmap
-  regeneration, product-facing opening, or any new overlay opening authority.
+- `LAUNCH-ACCELERATION-OVERLAY-001` is now OPEN as a concurrent governance/planning visibility-
+  only unit bounded to the Launch Critical Path Register, Next-Opening Shortlist Matrix, and
+  Rolling Launch Window Note, plus one embedded stagnation rule and one explicit non-duplication
+  clause only.
+- This opening does not authorize a broad planning stack, roadmap regeneration, product-facing
+  opening, candidate-state authority, forecast commitment, or any new overlay opening authority
+  beyond the bounded visibility unit recorded here.
 
 ## Restore Notes
 
