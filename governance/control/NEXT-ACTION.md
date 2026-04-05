@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Next-Action Pointer (Layer 0 · Max: 20 lines)
 
-**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-05 (GOV-DEC-AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-OPENING)
+**Authority:** GOV-OS-001-DESIGN.md · **Updated:** 2026-04-05 (GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-OPENING)
 > This file is the Layer 0 pointer for the currently authorized next move or explicit no-open posture.
 
 ---
@@ -12,7 +12,7 @@ product_delivery_priority: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 derived_planning_context: docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
-layer_0_action: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS is now OPEN as the sole current bounded product-facing ACTIVE_DELIVERY unit. It is limited to Aggregator home/discovery surface truthfulness, curated discovery entries, minimal trust-signaled discovery cues, minimum read-only data shaping, conditional narrow backend read support only if unavoidable, and optional secondary AI insight reuse only if subordinate; LAUNCH-ACCELERATION-OVERLAY-001 remains OPEN as a bounded concurrent visibility-only unit and does not hold opening authority.
+layer_0_action: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS remains OPEN as the sole current bounded product-facing ACTIVE_DELIVERY unit. A separate concurrent governance-only verification-support unit, AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001, is now OPEN with DECISION_QUEUE posture only to normalize backend test discovery for the existing Aggregator discovery read test without changing product behavior, package/toolchain posture, or unrelated repo failures; LAUNCH-ACCELERATION-OVERLAY-001 remains OPEN as a bounded concurrent visibility-only unit and does not hold opening authority.
 notes: |
   Preserved governance result remains PLANNING_STACK_NEEDS_RESHAPING.
   LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001 remains the source of overlay design truth.
@@ -24,4 +24,7 @@ notes: |
   counterparty detail continuity, intent capture, handoff creation, downstream RFQ/trade/order
   changes, negotiation/matching/routing, broad directory or schema redesign, settlement/revenue/
   orchestrator behavior, or any other Aggregator slice.
+  The new verification-support unit is bounded to backend test-discovery normalization for the
+  existing Aggregator discovery integration test only. The reproduced g026-platform-subdomain-
+  routing typecheck failure remains unrelated and outside that unit.
 ```

@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-05
-snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-OPENING
+snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-OPENING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
@@ -22,8 +22,8 @@ current_product_active_delivery_count: 1
 current_product_active_delivery_unit: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 12
-  decision_queue: 11
+  open: 13
+  decision_queue: 12
   design_gate: 2
   blocked: 0
   deferred: 0
@@ -39,6 +39,7 @@ current_open_governance_units:
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
   - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
   - LAUNCH-ACCELERATION-OVERLAY-001
+  - AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
   - RFQ-NEGOTIATION-CONTINUITY
@@ -74,6 +75,12 @@ historical_truth_owner: governance/units/ + governance/log/
 - This opening does not authorize a broad planning stack, roadmap regeneration, product-facing
   opening, candidate-state authority, forecast commitment, or any new overlay opening authority
   beyond the bounded visibility unit recorded here.
+- `AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001` is now OPEN as one concurrent
+  governance-only verification-support unit bounded to backend test discovery normalization for the
+  existing Aggregator discovery integration test only.
+- This concurrent support unit does not change product scope, does not authorize package/CI/tooling
+  modernization, and does not absorb the unrelated `g026-platform-subdomain-routing.spec.ts`
+  typecheck failure.
 
 ## Restore Notes
 
