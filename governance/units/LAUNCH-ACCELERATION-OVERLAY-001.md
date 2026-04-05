@@ -181,7 +181,7 @@ Corrective validation on `2026-04-05` removed `CONTROL-PLANE-ONBOARDING-OUTCOME-
 | `LCP-002` | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `FAMILY` | `SNAPSHOT.md + TEXQTIC-NEXT-DELIVERY-PLAN-v2.md + TEXQTIC-GAP-REGISTER-v2.md` | `LATER_READY_CANDIDATE` | `SUPPORTING` | `no current exact bounded control-plane child remains live after the earlier child closed` | `recover one new exact bounded control-plane slice before opening consideration` | `SERIAL` | `MEDIUM` | `2026-04-05` |
 | `LCP-003` | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `FAMILY` | `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md + TEXQTIC-GAP-REGISTER-v2.md` | `LATER_READY_CANDIDATE` | `CRITICAL` | `exact bounded browse-entry slice not yet selected` | `reduce the family to one exact bounded browse-entry continuity slice` | `SERIAL` | `HIGH` | `2026-04-05` |
 | `LCP-004` | `Subscription / Commercial Packaging / Entitlement` | `FAMILY` | `TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md + TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` | `approved-next family posture; no current bounded slice selected` | `CRITICAL` | `exact bounded commercial-truth slice not yet selected` | `recover one exact bounded normalization slice before opening consideration` | `SERIAL` | `HIGH` | `2026-04-05` |
-| `LCP-005` | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `FAMILY` | `TEXQTIC-GAP-REGISTER-v2.md + TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md + TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` | `NEEDS_DESIGN_GATE` | `CRITICAL` | `exact bounded operating model still undefined` | `complete the design-gate target definition before implementation-ready consideration` | `SERIAL` | `MEDIUM` | `2026-04-05` |
+| `LCP-005` | `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` | `CHILD_CANDIDATE` | `AGGREGATOR-BOUNDED-TECS-OPENING-CANDIDATE-ANALYSIS-v1.md + AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS.md + AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-BOUNDED-PRODUCT-DECISION-v1.md + GOV-DEC-AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-OPENING.md` | `OPEN ACTIVE_DELIVERY` | `CRITICAL` | `none` | `complete bounded implementation, focused verification, governance sync, and close without widening` | `SERIAL` | `HIGH` | `2026-04-05` |
 | `LCP-006` | `RFQ-NEGOTIATION-CONTINUITY` | `FAMILY` | `BLOCKED.md + TEXQTIC-GAP-REGISTER-v2.md + TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` | `NEEDS_DESIGN_GATE` | `SUPPORTING` | `family-level target remains broader than the closed split units` | `reconcile one exact family-level target before any further opening consideration` | `SERIAL` | `MEDIUM` | `2026-04-05` |
 
 ### Next-Opening Shortlist Matrix
@@ -190,10 +190,9 @@ Corrective validation on `2026-04-05` removed `CONTROL-PLANE-ONBOARDING-OUTCOME-
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `NSM-002` | `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` | `SNAPSHOT.md + TEXQTIC-NEXT-DELIVERY-PLAN-v2.md + TEXQTIC-GAP-REGISTER-v2.md` | `NEEDS_REDUCTION` | `5` | `4` | `XL` | `2` | `2` | `4` | `none` | `The family remains broad and the earlier bounded child is already closed-complete.` |
 | `NSM-003` | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md + TEXQTIC-GAP-REGISTER-v2.md` | `NEEDS_REDUCTION` | `5` | `4` | `L` | `2` | `3` | `4` | `none` | `The preserved family remainder is real, but no exact bounded child is yet selected.` |
-| `NSM-004` | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `TEXQTIC-GAP-REGISTER-v2.md + TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` | `NOT_LAWFUL` | `4` | `3` | `XL` | `1` | `2` | `3` | `none` | `The candidate remains design-gate-first and is not implementation-ready.` |
 | `NSM-005` | `RFQ-NEGOTIATION-CONTINUITY` | `BLOCKED.md + TEXQTIC-GAP-REGISTER-v2.md + TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` | `NOT_LAWFUL` | `4` | `3` | `XL` | `1` | `2` | `3` | `none` | `The parent family remains design-gated even though the split child units are closed.` |
 
-Current shortlist state after corrective validation: no contender currently meets `PASS`, so no `recommended_rank` is currently assigned.
+Current shortlist state after lawful opening: no contender is currently ranked for the next opening because `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` is now OPEN as the sole current product-facing `ACTIVE_DELIVERY` unit. This remains visibility only; the overlay did not create the opening.
 
 ### Rolling Launch Window Note
 
@@ -214,10 +213,11 @@ risk_adjusted_window: 2027-10 to 2028-12
 assumptions:
   - No current authority restores CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING as a live contender after its recorded same-day close.
   - MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY still needs reduction from family remainder to one exact browse-entry continuity slice before lawful opening.
-  - Subscription / Commercial Packaging / Entitlement still requires one exact bounded normalization slice even though no such slice is currently selected in live sequencing authority.
-  - MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE and RFQ-NEGOTIATION-CONTINUITY remain design-gated and do not bypass those gates.
+  - Subscription / Commercial Packaging / Entitlement still requires one fresh exact bounded normalization slice after the earlier exact subscription slice closed.
+  - AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS is now OPEN as the sole current product-facing ACTIVE_DELIVERY unit and broader Aggregator family work remains out of scope.
+  - RFQ-NEGOTIATION-CONTINUITY remains design-gated and does not bypass that gate.
   - No new adjacent finding or future product-facing close materially reorders the current critical path.
-refresh_reason: Corrective validation after first initialization found the previously cited PASS contender already closed-complete in direct repo truth.
-confidence_note: Very low confidence and visibility-only; no current PASS contender remains, so the range bands are broader and remain non-commitment only.
-change_since_last_note: Removed CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING from the current critical-path and shortlist views because direct repo truth records it closed.
+refresh_reason: Separate lawful opening decision execution confirmed the recovered Aggregator child can now open as the sole current bounded product-facing unit.
+confidence_note: Low confidence and visibility-only; one bounded product-facing unit is now open, while broader B2C, control-plane, Subscription, and RFQ family reductions remain unresolved for later selection.
+change_since_last_note: Opened AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS as the sole current ACTIVE_DELIVERY and removed it from the next-opening shortlist.
 ```

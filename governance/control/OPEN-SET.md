@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-05 (GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-OPENING)  
+**Last Updated:** 2026-04-05 (GOV-DEC-AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-OPENING)  
 **Max Size:** 50 lines (structural gate)
 
 > This file is the canonical list of all non-terminal governed units and current delivery class only.  
@@ -23,6 +23,7 @@
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001 | Thin launch-acceleration overlay reshape design | OPEN | DECISION_QUEUE | W5 | 2026-04-05 |
 | LAUNCH-ACCELERATION-OVERLAY-001 | Thin launch-acceleration visibility overlay | OPEN | DECISION_QUEUE | W5 | 2026-04-05 |
+| AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS | Aggregator discovery workspace truthfulness | OPEN | ACTIVE_DELIVERY | W5 | 2026-04-05 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 | RFQ-NEGOTIATION-CONTINUITY | RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-30 |
 
@@ -30,14 +31,14 @@
 
 ## Summary
 
-- **OPEN**: **11**
+- **OPEN**: **12**
 - **DESIGN_GATE**: **2**
 - **BLOCKED**: **0**
 - **DEFERRED**: **0**
-- **ACTIVE_DELIVERY**: **0**
+- **ACTIVE_DELIVERY**: **1**
 - **DECISION_QUEUE**: **11**
 - **DESIGN_GATE_QUEUE**: **2**
-- **Total non-terminal units**: **13**
+- **Total non-terminal units**: **14**
 
 ## Operating Notes
 
@@ -45,4 +46,5 @@
 - Live product sequencing authority: `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
 - Canonical candidate/family truth: `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
 - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only.
+- Current open product-facing `ACTIVE_DELIVERY`: `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS`.
 - Current open `DECISION_QUEUE` governance records remain real non-terminal truth, but they do not define the default governance burden for future bounded units after this reset.

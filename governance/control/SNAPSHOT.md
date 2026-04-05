@@ -11,18 +11,18 @@
 
 ```yaml
 snapshot_date: 2026-04-05
-snapshot_unit: GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-OPENING
+snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-OPENING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 implementation_roadmap_posture: derived_only
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: none
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 11
+  open: 12
   decision_queue: 11
   design_gate: 2
   blocked: 0
@@ -52,14 +52,16 @@ historical_truth_owner: governance/units/ + governance/log/
 
 ## Current Product Delivery Note
 
-- No current product-facing `ACTIVE_DELIVERY` unit is open after
-  `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING` closed.
-- The closed unit remained bounded to org-level onboarding outcome persistence, bounded status
-  transition handling, and directly coupled audit-event emission on the existing super-admin
-  onboarding-outcome route.
-- This close does not imply broader tenant-operations depth, tenant-entry / impersonation depth,
-  audit workflow completion, AdminRBAC, feature governance, AI governance, billing/risk thinness,
-  broader control-plane modernization, or any successor opening.
+- `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` is now OPEN as the sole current product-facing
+  `ACTIVE_DELIVERY` unit.
+- The opened unit remains bounded to Aggregator home/discovery surface truthfulness, curated
+  discovery entries, minimal trust-signaled discovery cues, minimum read-only data shaping,
+  conditional narrow backend read support only if unavoidable, and optional secondary AI insight
+  reuse only if subordinate.
+- This opening does not reopen the broader design-gated Aggregator family and does not authorize
+  counterparty detail continuity, intent capture, handoff creation, downstream RFQ/trade/order
+  changes, negotiation/matching/routing, broad directory or schema redesign, settlement/revenue/
+  orchestrator behavior, or any successor opening.
 - Preserved governance investigation outcome: `PLANNING_STACK_NEEDS_RESHAPING`.
 - The underlying need remains valid for a thin launch-acceleration overlay above governance, but
   the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.
