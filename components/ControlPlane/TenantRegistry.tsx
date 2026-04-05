@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
-import { TenantStatus, TenantConfig, type CommercialPlan } from '../../types';
+import { TenantStatus, TenantConfig, normalizeCommercialPlan } from '../../types';
 import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
@@ -112,29 +112,6 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     suspended: tenants.filter(t => t.status?.toUpperCase() === 'SUSPENDED').length,
   };
 
-  const normalizePlan = (plan: string | null | undefined): CommercialPlan => {
-    const normalizedPlan = plan?.trim().toUpperCase();
-
-    if (
-      normalizedPlan === 'FREE' ||
-      normalizedPlan === 'STARTER' ||
-      normalizedPlan === 'PROFESSIONAL' ||
-      normalizedPlan === 'ENTERPRISE'
-    ) {
-      return normalizedPlan;
-    }
-
-    if (normalizedPlan === 'TRIAL' || normalizedPlan === 'BASIC') {
-      return 'FREE';
-    }
-
-    if (normalizedPlan === 'PAID') {
-      return 'PROFESSIONAL';
-    }
-
-    return 'FREE';
-  };
-
   // Map backend Tenant to frontend TenantConfig format for compatibility
   const mapToTenantConfig = (tenant: Tenant): TenantConfig => ({
     id: tenant.id,
@@ -143,7 +120,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     type: tenant.type as any,
     status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
     onboarding_status: tenant.onboarding_status ?? null,
-    plan: normalizePlan(tenant.plan),
+    plan: normalizeCommercialPlan(tenant.plan),
     theme: {
       primaryColor: tenant.branding?.primaryColor || '#4F46E5',
       secondaryColor: '#10B981',
@@ -276,7 +253,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-xs text-slate-300 font-bold">{tenant.plan}</div>
+                      <div className="text-xs text-slate-300 font-bold">{mappedTenant.plan}</div>
                       <div className="text-[9px] text-slate-500 uppercase">{tenant.type}</div>
                     </td>
                     <td className="px-6 py-4">

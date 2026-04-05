@@ -32,6 +32,29 @@ export enum UserRole {
 
 export type CommercialPlan = 'FREE' | 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE';
 
+export const normalizeCommercialPlan = (plan: string | null | undefined): CommercialPlan => {
+  const normalizedPlan = plan?.trim().toUpperCase();
+
+  if (
+    normalizedPlan === 'FREE' ||
+    normalizedPlan === 'STARTER' ||
+    normalizedPlan === 'PROFESSIONAL' ||
+    normalizedPlan === 'ENTERPRISE'
+  ) {
+    return normalizedPlan;
+  }
+
+  if (normalizedPlan === 'TRIAL' || normalizedPlan === 'BASIC') {
+    return 'FREE';
+  }
+
+  if (normalizedPlan === 'PAID') {
+    return 'PROFESSIONAL';
+  }
+
+  return 'FREE';
+};
+
 export interface User {
   id: string;
   email: string;

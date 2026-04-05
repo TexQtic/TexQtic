@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { TenantType, TenantConfig, ImpersonationState, type CommercialPlan } from './types';
+import { TenantType, TenantConfig, ImpersonationState, normalizeCommercialPlan } from './types';
 import { AggregatorShell, B2BShell, B2CShell, WhiteLabelShell, WhiteLabelAdminShell } from './layouts/Shells';
 import {
   SuperAdminShell,
@@ -312,6 +312,7 @@ const normalizeTenantIdentity = <T extends {
   type?: string | null;
   tenant_category?: string | null;
   is_white_label?: boolean | null;
+  plan?: string | null;
 }>(
   tenant?: T | null,
   hint?: Partial<TenantIdentityHint> | null
@@ -333,6 +334,9 @@ const normalizeTenantIdentity = <T extends {
     ...tenant,
     tenant_category,
     is_white_label,
+    ...(Object.hasOwn(tenant, 'plan')
+      ? { plan: normalizeCommercialPlan(tenant.plan) }
+      : {}),
   };
 
   persistTenantIdentityHint(normalizedTenant);
@@ -997,30 +1001,6 @@ const App: React.FC = () => {
     fetchTenants();
   }, [appState, canAccessControlPlane]);
 
-  // Helper to normalize plan string to strict union type
-  const normalizePlan = (plan: string | null | undefined): CommercialPlan => {
-    const normalizedPlan = plan?.trim().toUpperCase();
-
-    if (
-      normalizedPlan === 'FREE' ||
-      normalizedPlan === 'STARTER' ||
-      normalizedPlan === 'PROFESSIONAL' ||
-      normalizedPlan === 'ENTERPRISE'
-    ) {
-      return normalizedPlan;
-    }
-
-    if (normalizedPlan === 'TRIAL' || normalizedPlan === 'BASIC') {
-      return 'FREE';
-    }
-
-    if (normalizedPlan === 'PAID') {
-      return 'PROFESSIONAL';
-    }
-
-    return 'FREE';
-  };
-
   // Convert backend Tenant to TenantConfig for UI compatibility
   const currentTenant: TenantConfig | null = useMemo(() => {
     const tenant = tenants.find(t => t.id === currentTenantId);
@@ -1041,7 +1021,7 @@ const App: React.FC = () => {
       tenant_category: tenant.tenant_category ?? tenant.type,
       is_white_label: tenant.is_white_label ?? false,
       status: tenant.status as any,
-      plan: normalizePlan(tenant.plan),
+      plan: normalizeCommercialPlan(tenant.plan),
       theme: {
         primaryColor: tenant.branding?.primaryColor || '#4F46E5',
         secondaryColor: '#10B981',
@@ -3158,7 +3138,7 @@ const App: React.FC = () => {
                       tenant_category: me.tenant.tenant_category ?? me.tenant.type ?? 'B2B',
                       is_white_label: me.tenant.is_white_label ?? false,
                       status: me.tenant.status,
-                      plan: normalizePlan(me.tenant.plan),
+                      plan: normalizeCommercialPlan(me.tenant.plan),
                       createdAt: '',
                       updatedAt: '',
                     } as Tenant]);
