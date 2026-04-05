@@ -5,7 +5,7 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.9 (reset-amended; original layer model preserved)  
+**Doctrine Version:** v1.10 (reset-amended; original layer model preserved)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 
 ---
@@ -34,6 +34,7 @@ Reset amendment ratified on 2026-04-04 preserves this design and narrows its liv
 - product-facing closes that change active-delivery or next-candidate posture require post-close authority reconciliation before any fresh opening decision
 - zero-open product-delivery post-close posture returns to explicit next-opening decision control; closed units preserve lineage only
 - structurally broad but coherent chosen family remainders must route to one further same-family bounded reduction or narrow design-clarification step only
+- coherent narrowed same-family remainders with explicit residual lanes must route to one same-remainder lane-separation clarification step only
 
 No application code, schema, migration, API, or test files were modified.  
 No product unit status was changed as part of this governance design.
@@ -636,6 +637,65 @@ This condition must not be used to justify:
 This rule preserves zero-open decision control, exact-target discipline, one logical unit at a
 time, and closed-seam lineage-only treatment. Closed seams may inform the reduction map, but they
 do not become successor authority by implication.
+
+### 4.5D Residual-Lane Same-Family Decomposition Rule
+
+#### 1. Rule Purpose
+
+This rule prevents Governance OS from widening a coherent but still lane-mixed narrowed same-family
+remainder into broad family completion work or from overreading conditional lineage notes as if
+they were already current live authority.
+
+#### 2. Trigger Condition
+
+After one preserved family remainder has already been chosen and narrowed at least once,
+Governance OS enters a residual-lane decomposition condition when:
+
+- current repo truth remains coherent
+- the narrowed same-family remainder still contains a small number of explicit residual lanes
+- no one exact bounded child unit yet emerges from that narrowed remainder
+
+This is not a repo-conflict blocker and does not re-widen the task back to whole-family reduction.
+
+#### 3. Required Response
+
+When this condition is present, Governance OS must route to one bounded lane-separation
+design-clarification step inside that same narrowed remainder only.
+
+The sole purpose of that step is to:
+
+- separate the residual lanes cleanly
+- test whether one lane qualifies as an exact bounded child
+- determine whether one lane can be elevated into candidate form
+
+#### 4. Explicit Anti-Drift Prohibitions
+
+This condition must not be used to justify:
+
+- whole-family design completion
+- cross-family documentation completion
+- roadmap or planning-stack expansion
+- lawful opening
+- implementation start
+- treating conditional lineage notes as if they were already current live authority
+
+#### 5. Residual-Lane Decomposition Vs Structural-Breadth Vs Repo-Conflict
+
+- Structural breadth: the chosen family remainder is still too broad to yield one exact bounded
+  child. Resolve by same-family bounded child reduction or narrow same-family design clarification.
+- Residual-lane decomposition: a chosen family remainder has already been narrowed, repo truth is
+  coherent, but the narrowed remainder still contains a small number of explicit residual lanes.
+  Resolve by one same-remainder lane-separation clarification step.
+- Repo-conflict blocker: current authority surfaces materially disagree or cannot support one
+  coherent reading. Resolve by authority reconciliation or repo-truth correction before further
+  reduction.
+
+#### 6. Decision-Control Compatibility
+
+This rule preserves zero-open decision control, exact-target discipline, one logical unit at a
+time, closed-seam lineage-only treatment, and D-018 structural-breadth routing. Conditional
+lineage notes may help identify possible lanes, but they cannot by themselves elevate a lane into a
+current candidate.
 
 ### 4.6 Edit-Scope Enforcement
 

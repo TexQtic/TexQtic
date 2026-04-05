@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.9  
-**Last Updated:** 2026-04-05 (structural-breadth family reduction)  
+**Doctrine Version:** v1.10  
+**Last Updated:** 2026-04-05 (residual-lane same-family decomposition)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -108,6 +108,10 @@ Closed units preserve lineage and evidence only. They do not remain current-next
 After one preserved family remainder has already been chosen for reduction, if current repo truth is coherent but that family still contains multiple unreduced subareas and therefore does not yield one exact bounded child unit, Governance OS must treat the condition as structural breadth rather than a repo-conflict blocker.
 The required next move is one further bounded child-reduction decision or one narrowly scoped design-clarification step inside that same family only, for the sole purpose of exact-child emergence. This condition must not be routed into whole-family design completion, cross-family documentation completion, roadmap expansion, lawful opening, or implementation start.
 
+### D-019 — Residual-Lane Same-Family Decomposition Requires Same-Remainder Lane Separation
+After one preserved family remainder has already been chosen and narrowed at least once, if the remaining same-family remainder is coherent in repo truth but still contains a small number of explicit residual lanes and therefore does not yet yield one exact bounded child unit, Governance OS must treat the condition as residual-lane decomposition rather than repo conflict or renewed family-level expansion.
+The required next move is one bounded lane-separation design-clarification step inside that same narrowed remainder only, for the sole purpose of separating the residual lanes, testing whether one lane qualifies as an exact bounded child, and determining whether one lane can be elevated into candidate form. This condition must not be routed into whole-family design completion, cross-family documentation completion, roadmap expansion, lawful opening, implementation start, or treating conditional lineage notes as current live authority.
+
 ---
 
 ## Operating Paths
@@ -122,6 +126,7 @@ The required next move is one further bounded child-reduction decision or one na
 - For product-facing closes that change active-delivery or next-candidate posture, run the D-015 reconciliation before any new opening decision.
 - If no active product-delivery unit remains after close, return to D-016 decision control rather than carrying forward a presumed successor.
 - If a chosen family remainder remains coherent but structurally broad, apply D-018 and route to one further same-family bounded child-reduction or narrow design-clarification step only.
+- If a chosen same-family remainder has already been narrowed but still contains explicit residual lanes, apply D-019 and run one same-remainder lane-separation design-clarification step only.
 - Normal bounded units do not automatically require candidate normalization, strict Sentinel gating, separate post-close audit artifacts, or multi-surface sequencing overlays.
 
 ### Strict High-Risk Path
