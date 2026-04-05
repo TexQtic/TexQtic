@@ -59,6 +59,10 @@ import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { getPlatformInsights } from './services/aiService';
+import {
+  getAggregatorDiscoveryEntries,
+  type AggregatorDiscoveryEntry,
+} from './services/aggregatorDiscoveryService';
 import { createTradeFromRfq } from './services/tradeService';
 import {
   getCatalogItems,
@@ -80,6 +84,7 @@ import {
 } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
+import { AggregatorDiscoveryWorkspace } from './components/Tenant/AggregatorDiscoveryWorkspace';
 import { BuyerRfqDetailSurface, SupplierRfqDetailSurface } from './components/Tenant/BuyerRfqDetailSurface';
 import { BuyerRfqListSurface, SupplierRfqInboxSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
@@ -949,6 +954,10 @@ const App: React.FC = () => {
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [catalogNextCursor, setCatalogNextCursor] = useState<string | null>(null);
+  const [aggregatorDiscoveryEntries, setAggregatorDiscoveryEntries] = useState<AggregatorDiscoveryEntry[]>([]);
+  const [aggregatorDiscoveryLoading, setAggregatorDiscoveryLoading] = useState(false);
+  const [aggregatorDiscoveryError, setAggregatorDiscoveryError] = useState<string | null>(null);
+  const [aggregatorDiscoveryRefreshKey, setAggregatorDiscoveryRefreshKey] = useState(0);
   const [b2cSearchQuery, setB2cSearchQuery] = useState('');
   const [b2cVisibleCount, setB2cVisibleCount] = useState(8);
   const [b2cLoadingMore, setB2cLoadingMore] = useState(false);
@@ -1048,6 +1057,9 @@ const App: React.FC = () => {
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
     && isNonWhiteLabelB2CTenant;
+  const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
+    && expView === 'HOME'
+    && (normalizedTenantCategory === TenantType.AGGREGATOR || normalizedTenantCategory === TenantType.INTERNAL);
 
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
@@ -1112,6 +1124,48 @@ const App: React.FC = () => {
       fetchInsight();
     }
   }, [currentTenant, appState]);
+
+  useEffect(() => {
+    if (!currentTenant || !isAggregatorDiscoveryEntrySurface) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchAggregatorDiscovery = async () => {
+      setAggregatorDiscoveryLoading(true);
+      setAggregatorDiscoveryError(null);
+
+      try {
+        const response = await getAggregatorDiscoveryEntries({ limit: 6 });
+
+        if (cancelled) {
+          return;
+        }
+
+        setAggregatorDiscoveryEntries(response.items);
+      } catch (error) {
+        console.error('Failed to load aggregator discovery entries:', error);
+
+        if (cancelled) {
+          return;
+        }
+
+        setAggregatorDiscoveryEntries([]);
+        setAggregatorDiscoveryError('Failed to load curated discovery records. Please try again.');
+      } finally {
+        if (!cancelled) {
+          setAggregatorDiscoveryLoading(false);
+        }
+      }
+    };
+
+    void fetchAggregatorDiscovery();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentTenant, isAggregatorDiscoveryEntrySurface, aggregatorDiscoveryRefreshKey]);
 
   // Fetch catalog items when entering experience mode (or WL_ADMIN Products panel)
   useEffect(() => {
@@ -2536,59 +2590,14 @@ const App: React.FC = () => {
         // eslint-disable-next-line no-fallthrough
       case TenantType.AGGREGATOR:
         return (
-          <div className="p-8 space-y-8 animate-in fade-in duration-500">
-            <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-              <h1 className="text-4xl font-bold mb-4">Discover Verified Global Suppliers</h1>
-              <p className="text-slate-600 max-w-2xl text-lg mb-8">
-                Access over 50,000 manufacturers and wholesalers across 120 countries with deep
-                capability profiles and trust indicators.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { label: 'Manufacturers', count: '12,400+', color: 'blue' },
-                  { label: 'Wholesalers', count: '38,200+', color: 'emerald' },
-                  { label: 'Trading Houses', count: '4,100+', color: 'amber' },
-                ].map((stat, i) => (
-                  <div key={i} className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-                    <div className={`text-2xl font-bold text-slate-900`}>{stat.count}</div>
-                    <div className="text-sm text-slate-500 font-medium">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Trending Industries</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    'Industrial Chemicals',
-                    'Solar Infrastructure',
-                    'Agricultural Tech',
-                    'Bio-Plastics',
-                  ].map((cat, i) => (
-                    <div
-                      key={i}
-                      className="group cursor-pointer bg-white p-4 rounded-xl border border-slate-200 hover:border-blue-500 transition-all"
-                    >
-                      <div className="font-semibold group-hover:text-blue-600">{cat}</div>
-                      <div className="text-xs text-slate-400">120+ Active Leads</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {!currentTenant.is_white_label && (
-                <div className="bg-blue-900 text-white p-6 rounded-2xl">
-                  <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                    <span>🤖</span> AI Market Analysis
-                  </h3>
-                  <div className="text-sm leading-relaxed text-blue-100 font-serif italic">
-                    "{aiInsight}"
-                  </div>
-                </div>
-              )}
-            </section>
-          </div>
+          <AggregatorDiscoveryWorkspace
+            tenantName={currentTenant.name}
+            entries={aggregatorDiscoveryEntries}
+            loading={aggregatorDiscoveryLoading}
+            error={aggregatorDiscoveryError}
+            aiInsight={!currentTenant.is_white_label ? aiInsight : null}
+            onRetry={() => setAggregatorDiscoveryRefreshKey(value => value + 1)}
+          />
         );
       case TenantType.B2B:
         return (

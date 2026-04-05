@@ -19,6 +19,8 @@ type EvidenceSummary = {
   nodeTypePresence: string[];
   visibilityIndicators: string[];
 };
+const DISCOVERY_ELIGIBLE_ORG_TYPES = ['B2B'] as const;
+const DISCOVERY_ELIGIBLE_STATUSES = ['ACTIVE', 'VERIFICATION_APPROVED'] as const;
 
 export type CounterpartyProfileAggregation = {
   orgId: string;
@@ -35,6 +37,18 @@ export type CounterpartyProfileAggregation = {
     certifications: TrustCertificationSummary[];
   };
   evidenceSummary: EvidenceSummary;
+};
+export type CounterpartyDiscoveryEntry = {
+  orgId: string;
+  slug: string;
+  legalName: string;
+  orgType: string;
+  jurisdiction: string;
+  status: string;
+  certificationCount: number;
+  certificationTypes: string[];
+  hasTraceabilityEvidence: boolean;
+  visibilityIndicators: string[];
 };
 
 function toIdentitySummary(
@@ -67,6 +81,50 @@ export async function getCounterpartyProfileAggregation(
     trustSummary,
     evidenceSummary,
   };
+}
+function toDiscoveryEntry(
+  profile: CounterpartyProfileAggregation,
+): CounterpartyDiscoveryEntry {
+  return {
+    orgId: profile.orgId,
+    slug: profile.identity.slug,
+    legalName: profile.identity.legalName,
+    orgType: profile.identity.orgType,
+    jurisdiction: profile.identity.jurisdiction,
+    status: profile.identity.status,
+    certificationCount: profile.trustSummary.certifications.length,
+    certificationTypes: Array.from(
+      new Set(profile.trustSummary.certifications.map(certification => certification.certificationType)),
+    ).slice(0, TRACEABILITY_SUMMARY_LIMIT),
+    hasTraceabilityEvidence: profile.evidenceSummary.hasTraceabilityEvidence,
+    visibilityIndicators: profile.evidenceSummary.visibilityIndicators,
+  };
+}
+
+export async function listCounterpartyDiscoveryEntries(
+  currentOrgId: string,
+  prismaClient: PrismaClient,
+  limit: number,
+): Promise<CounterpartyDiscoveryEntry[]> {
+  const organizations = await withAdminContext(prismaClient, async tx => {
+    return tx.organizations.findMany({
+      where: {
+        id: { not: currentOrgId },
+        is_white_label: false,
+        org_type: { in: [...DISCOVERY_ELIGIBLE_ORG_TYPES] },
+        status: { in: [...DISCOVERY_ELIGIBLE_STATUSES] },
+      },
+      select: { id: true },
+      orderBy: [{ updated_at: 'desc' }, { created_at: 'desc' }],
+      take: limit,
+    });
+  });
+
+  const profiles = await Promise.all(
+    organizations.map((organization: { id: string }) => getCounterpartyProfileAggregation(organization.id, prismaClient)),
+  );
+
+  return profiles.map(toDiscoveryEntry);
 }
 
 async function readTrustSummary(

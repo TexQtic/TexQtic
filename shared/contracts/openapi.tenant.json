@@ -126,6 +126,59 @@
           }
         }
       },
+      "AggregatorDiscoveryEntry": {
+        "type": "object",
+        "required": [
+          "orgId",
+          "slug",
+          "legalName",
+          "orgType",
+          "jurisdiction",
+          "status",
+          "certificationCount",
+          "certificationTypes",
+          "hasTraceabilityEvidence",
+          "visibilityIndicators"
+        ],
+        "properties": {
+          "orgId": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "legalName": { "type": "string" },
+          "orgType": { "type": "string" },
+          "jurisdiction": { "type": "string" },
+          "status": { "type": "string" },
+          "certificationCount": { "type": "integer", "minimum": 0 },
+          "certificationTypes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "hasTraceabilityEvidence": { "type": "boolean" },
+          "visibilityIndicators": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "AggregatorDiscoveryListResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["items", "count"],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AggregatorDiscoveryEntry"
+                }
+              },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      },
       "BuyerRfqStatus": {
         "type": "string",
         "enum": ["OPEN", "RESPONDED", "CLOSED", "INITIATED"]
@@ -745,6 +798,62 @@
           "201": { "description": "Catalog item created" },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/aggregator/discovery": {
+      "get": {
+        "summary": "List bounded Aggregator discovery entries",
+        "description": "Return read-only curated company discovery entries with list-level trust cues for Aggregator tenants only.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12,
+              "default": 6
+            },
+            "description": "Maximum number of curated discovery entries to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregator discovery entries retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AggregatorDiscoveryListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

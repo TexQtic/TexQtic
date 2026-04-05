@@ -34,10 +34,10 @@ import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
 import { enqueueSourceIngestion, enqueueSourceDeletion } from '../services/vectorIngestion.js';
 import {
   getCounterpartyProfileAggregation,
+  listCounterpartyDiscoveryEntries,
+  type CounterpartyDiscoveryEntry,
   type CounterpartyProfileAggregation,
 } from '../services/counterpartyProfileAggregation.service.js';
-
-// ─── SM Transaction Helper ────────────────────────────────────────────────────
 /**
  * Wraps a Prisma TransactionClient as PrismaClient for services that require
  * the full client type. Redirects $transaction() to execute the callback
@@ -661,6 +661,58 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       return sendSuccess(reply, { membership: result.membership });
+    }
+  );
+
+  /**
+   * GET /api/tenant/aggregator/discovery
+   * Read bounded Aggregator discovery entries with list-level trust signals.
+   */
+  fastify.get(
+    '/tenant/aggregator/discovery',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
+
+      const querySchema = z.object({
+        limit: z.coerce.number().int().min(1).max(12).default(6),
+      });
+
+      const parseResult = querySchema.safeParse(request.query);
+      if (!parseResult.success) {
+        return sendValidationError(reply, parseResult.error.errors);
+      }
+
+      const { limit } = parseResult.data;
+
+      let tenantIdentity: Awaited<ReturnType<typeof getOrganizationIdentity>>;
+
+      try {
+        tenantIdentity = await getOrganizationIdentity(request.dbContext.orgId, prisma);
+      } catch (error) {
+        if (error instanceof OrganizationNotFoundError) {
+          return sendNotFound(reply, 'Tenant not found');
+        }
+
+        throw error;
+      }
+
+      if (!['AGGREGATOR', 'INTERNAL'].includes(tenantIdentity.org_type)) {
+        return sendError(reply, 'FORBIDDEN', 'Aggregator discovery is available only to Aggregator tenants', 403);
+      }
+
+      const items: CounterpartyDiscoveryEntry[] = await listCounterpartyDiscoveryEntries(
+        request.dbContext.orgId,
+        prisma,
+        limit,
+      );
+
+      return sendSuccess(reply, {
+        items,
+        count: items.length,
+      });
     }
   );
 
@@ -1513,7 +1565,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendNotFound(reply, 'RFQ not found');
     }
 
-    const buyerCounterpartySummary = await getCounterpartyProfileAggregation(rfq.orgId, prisma).catch(error => {
+    const buyerCounterpartySummary = await getCounterpartyProfileAggregation(rfq.orgId, prisma).catch((error: unknown) => {
       if (error instanceof OrganizationNotFoundError) {
         return null;
       }
@@ -1734,7 +1786,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     const [supplierResponse, tradeContinuity, supplierCounterpartySummary] = await Promise.all([
       resolveBuyerRfqSupplierResponse(rfq.id),
       resolveBuyerRfqTradeContinuity(dbContext, rfq.id),
-      getCounterpartyProfileAggregation(rfq.supplierOrgId, prisma).catch(error => {
+      getCounterpartyProfileAggregation(rfq.supplierOrgId, prisma).catch((error: unknown) => {
         if (error instanceof OrganizationNotFoundError) {
           return null;
         }
