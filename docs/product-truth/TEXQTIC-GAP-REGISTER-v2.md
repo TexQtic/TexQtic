@@ -53,8 +53,8 @@ later bounded decision phase formalized one additional design-gate candidate fam
 The cycle also established these postures:
 
 - `TENANT-CATALOG-MANAGEMENT-CONTINUITY` — `CLOSED` after lawful opening, bounded implementation, recorded `VERIFIED_COMPLETE` production verification, and bounded governance close
-- `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` — `READY_FOR_OPENING`
-- `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` — `READY_FOR_OPENING`
+- `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` — `LATER_READY_CANDIDATE`
+- `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` — `LATER_READY_CANDIDATE`
 - `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` — `NEEDS_DESIGN_GATE`
 - `RFQ-NEGOTIATION-CONTINUITY` — `NEEDS_DESIGN_GATE`
 
@@ -116,10 +116,14 @@ Every v2 gap entry uses the following fields:
 	units are now closed separately.
 - Any future product-facing opening still requires a fresh bounded product decision against the
 	preserved `-v2` stack.
-- Under the cleaned authority base, the approved bounded Subscription commercial-truth slice is
-	now the current carry-forward candidate for fresh lawful opening consideration. This does not
-	rebuild Subscription as a broad standalone `-v2` family program and does not open implementation
-	by itself.
+- No exact bounded next candidate is currently selected in controlling repo truth after
+	`SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT` closed.
+- The strongest preserved later-ready contenders remain `GAP-V2-002` /
+	`CONTROL-PLANE-TENANT-OPERATIONS-REALITY` and `GAP-V2-003` /
+	`MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`, but each remains a broad family remainder rather
+	than one exact bounded next unit.
+- Subscription / commercial packaging retains no currently selected second bounded slice in the
+	active `-v2` stack after closure of the first bounded subscription unit.
 
 ### Adjacent Finding Pending Unit Assignment
 
@@ -173,9 +177,8 @@ Every v2 gap entry uses the following fields:
 	read alongside the bounded platform-admin launch boundary recorded in the launch overlay, not as
 	a broad admin redesign stream.
 - Subscription / commercial packaging is still not rebuilt here as a broad standalone `-v2`
-	family program, but launch-specific interpretation of commercial truth now also carries the
-	approved bounded Subscription commercial-truth slice as the current carry-forward candidate for
-	fresh lawful opening consideration under the cleaned authority base.
+	family program, and no second bounded subscription slice is currently selected in the active
+	`-v2` stack after closure of the first bounded subscription unit.
 
 ### Live Split-Unit Separation Rule
 

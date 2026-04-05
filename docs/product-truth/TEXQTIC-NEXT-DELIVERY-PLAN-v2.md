@@ -7,8 +7,8 @@ This document defines the immediate next-cycle delivery ordering for TexQtic aft
 
 It is the sole live product-truth sequencing authority for ordinary product-facing next-opening
 selection, without opening a unit by itself. The `-v1` plan remains historical and complete; this
-`-v2` plan now records the bounded first delivery as closed and preserves the remaining next-cycle
-ordering.
+`-v2` plan now records the bounded closed deliveries and preserves the remaining next-cycle family
+posture without naming a fresh bounded next candidate until one is lawfully selected.
 
 ## Authority Note
 
@@ -28,6 +28,8 @@ ordering.
 - `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed after bounded implementation and bounded live production verification established that the reviewed enterprise responded-RFQ path now truthfully bridges into the existing trade / negotiation continuity.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 - `RFQ-NEGOTIATION-CONTINUITY` is now recorded as a separate design-gate candidate rather than an unassigned adjacent finding.
+- No exact bounded next candidate is currently selected in this live sequencing authority after the
+    closure of `SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT`.
 
 ## Delivery Ordering Rules
 
@@ -57,7 +59,7 @@ families.
 The implementation roadmap remains useful for wave grouping and planning context, but it must not
 be used as a competing live sequencing authority while this file is current.
 
-## Bounded Opening-Basis Realignment Note
+## Post-Subscription Close Sequencing Reconciliation Note
 
 Under the current zero-open Layer 0 posture, already-closed bounded launch anchors must remain
 frozen anchors rather than unresolved current opening candidates. That frozen set includes:
@@ -71,23 +73,26 @@ frozen anchors rather than unresolved current opening candidates. That frozen se
 - bounded white-label overlay continuity / identity
 - B2B Exchange Core as the primary commercial family anchor
 
-With those anchors frozen and the cleaned authority base preserved, the bounded Subscription
-commercial-truth slice carried by
-`docs/product-truth/SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT-LAWFUL-OPENING-STEP-v1.md`
-is now the current carry-forward candidate entering fresh lawful opening consideration.
+With those anchors frozen and the cleaned authority base preserved, the previously carried
+Subscription commercial-truth slice is no longer a current next-opening pointer because
+`SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT` is now closed. The strongest preserved
+broad contenders remain `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` and
+`MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`, but neither has yet been reduced in current repo
+truth to one exact bounded next unit.
 
-This clarification is a bounded opening-basis realignment only. It does not reorder the preserved
+This clarification is a bounded sequencing reconciliation only. It does not reorder the preserved
 `-v2` candidate slate wholesale, does not reopen any frozen anchor, does not open implementation,
-and does not replace the separate lawful-opening decision still required by Governance OS.
+and does not replace the separate later bounded candidate-selection or lawful-opening decision
+still required by Governance OS.
 
-## New Immediate Delivery Sequence
+## Immediate Next-Candidate Posture
 
-| Order | Candidate Family | Posture | Why It Sits Here |
-|---|---|---|---|
-| 1 | `CONTROL-PLANE-TENANT-DEEP-DIVE-TRUTHFULNESS` | `CLOSED` | Bounded control-plane tenant deep-dive truthfulness child now closed after complete production proof |
-| 2 | `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY` | `READY_LATER` | Valid public-facing continuity gap that remains separate and later than the newly opened control-plane tenant deep-dive unit |
-| 3 | `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` | `DESIGN_GATE_ONLY` | Must remain design-gate only until the exact bounded operating model is defined |
-| 4 | `RFQ-NEGOTIATION-CONTINUITY` | `DESIGN_GATE_ONLY` | The broader cross-mode RFQ family remains separate from its now-closed split units and still governs family-level scope boundaries |
+- No exact bounded next candidate is currently selected in the live sequencing authority.
+- The strongest preserved later-ready family remainders remain
+    `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` and `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`,
+    but each is still a broad preserved family remainder rather than one exact bounded next unit.
+- `MODE-SCOPE-TRUTH-AGGREGATOR-OPERATING-MODE` and `RFQ-NEGOTIATION-CONTINUITY` remain
+    design-gate authority only.
 
 ## Recently Closed First Delivery
 
@@ -231,7 +236,7 @@ on the lawful reviewed tenant path.
 
 ### `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`
 
-Keep as the second preserved later-ready candidate in order. It remains bounded and real, but
+Preserve as one of the remaining later-ready family remainders. It remains bounded and real, but
 should remain separate from control-plane tenant operations reality and the closed WL RFQ exposure
 unit.
 
