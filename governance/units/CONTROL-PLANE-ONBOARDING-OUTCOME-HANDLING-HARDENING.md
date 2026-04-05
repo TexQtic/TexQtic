@@ -2,17 +2,19 @@
 unit_id: CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING
 title: Control-plane onboarding outcome handling hardening
 type: ACTIVE_DELIVERY
-status: OPEN
+status: CLOSED
 delivery_class: ACTIVE_DELIVERY
 wave: W5
 plane: CONTROL
 opened: 2026-04-05
-evidence: "OPENING_CONFIRMATION: current Layer 0 had no open product-facing ACTIVE_DELIVERY and bounded lawful-opening evaluation returned LAWFUL_TO_OPEN for this exact unit · TARGET_CONFIRMATION: current live authority now supports this unit as the exact bounded next candidate and preserves it as separate from the broader control-plane remainder · BOUNDARY_CONFIRMATION: the unit remains centered on server/src/routes/control.ts:270 and is limited to org-level onboarding outcome persistence, bounded status transition handling, and directly coupled audit-event emission only · SUPPORT_READINESS_CONFIRMATION: the required control-plane shell, super-admin route, org-status write path, and bounded audit emission threshold already exist for this slice · NON_GOAL_CONFIRMATION: broader tenant-operations depth, tenant-entry / impersonation depth, audit workflow completion, AdminRBAC, feature governance, AI governance, billing/risk thinness, and broader control-plane modernization remain outside this opening"
+closed: 2026-04-05
+verified: 2026-04-05
+evidence: "OPENING_CONFIRMATION: current Layer 0 had no open product-facing ACTIVE_DELIVERY and bounded lawful-opening evaluation returned LAWFUL_TO_OPEN for this exact unit · TARGET_CONFIRMATION: current live authority now supports this unit as the exact bounded next candidate and preserves it as separate from the broader control-plane remainder · BOUNDARY_CONFIRMATION: the unit remains centered on server/src/routes/control.ts:270 and is limited to org-level onboarding outcome persistence, bounded status transition handling, and directly coupled audit-event emission only · IMPLEMENTATION_CONFIRMATION: bounded route hardening completed in commit 5456044 within the exact route-bounded slice only · FOCUSED_VERIFICATION_CONFIRMATION: targeted route tests passed and no new lint errors were introduced in the exact implementation surfaces · PRODUCTION_VERIFICATION_CONFIRMATION: auditable runtime verification confirmed successful transition behavior, duplicate no-op rejection, persistence of onboarding status, directly coupled audit-event emission, and immediate route stability in production · BASELINE_RESTORATION_CONFIRMATION: the proof tenant used during runtime verification was restored to its original onboarding status before completion · NON_GOAL_CONFIRMATION: broader tenant-operations depth, tenant-entry / impersonation depth, audit workflow completion, AdminRBAC, feature governance, AI governance, billing/risk thinness, and broader control-plane modernization remain outside this close"
 doctrine_constraints:
   - D-004: this is one bounded ACTIVE_DELIVERY unit only; it must not be merged with broader control-plane tenant operations depth or any other family remainder
-  - D-013: this opening records authorization only and does not itself satisfy implementation, verification, governance sync, or close
-  - D-014: opening was approved only because the support threshold required for this bounded slice is already met; if implementation proves otherwise, halt and report the exact failing dependency
-  - D-016: the prior zero-open posture was consumed by this opening only; no successor or parallel product opening is implied
+  - D-013: this close is justified only by bounded implementation completion, focused verification completion, auditable production runtime verification, and restored proof-tenant baseline state
+  - D-014: the opening threshold for this bounded slice was satisfied without requiring broader control-plane dependency maturity, and this close does not convert broader family remainder truth into completion
+  - D-016: zero-open posture now returns to explicit decision control; no successor or parallel product opening is implied by this close
 blockers: []
 ---
 
@@ -23,7 +25,7 @@ blockers: []
 It exists only to harden the existing super-admin onboarding-outcome route without widening into
 broader control-plane tenant-operations depth or platform modernization.
 
-Current result: `OPEN`.
+Current result: `CLOSED`.
 
 ## Opening Basis
 
@@ -66,6 +68,20 @@ This unit does **not** authorize:
 
 No implementation files are modified by this opening writeback alone.
 
-The next lawful step is the separate bounded implementation unit for this exact opened slice. If
-implementation later proves the route hardening requires broader control-plane, auth, DB/schema, or
-family-level changes, implementation must halt and report blocker rather than widen this unit.
+Implementation completed in bounded form within the exact route-bounded slice only.
+
+## Close Record
+
+- bounded implementation completed in commit `5456044`
+- focused local verification passed for the exact route slice
+- auditable production runtime verification confirmed successful onboarding-outcome write,
+  duplicate no-op rejection, bounded persistence behavior, directly coupled audit-event emission,
+  and immediate route stability
+- proof-tenant baseline state was restored after runtime verification
+- no unresolved defect attributable to this bounded unit remains
+
+## Explicit Non-Claims
+
+This close does **not** claim completion of broader tenant-operations depth, tenant-entry /
+impersonation depth, audit workflow completion, AdminRBAC, feature governance, AI governance,
+billing/risk thinness, broader control-plane modernization, or any successor unit.

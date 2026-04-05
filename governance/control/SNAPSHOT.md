@@ -11,18 +11,18 @@
 
 ```yaml
 snapshot_date: 2026-04-05
-snapshot_unit: CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING-OPENING-WRITEBACK-001
+snapshot_unit: CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING-CLOSE-WRITEBACK-001
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 implementation_roadmap_posture: derived_only
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING
-future_product_opening_requires_fresh_bounded_decision: false
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: none
+future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 10
+  open: 9
   decision_queue: 9
   design_gate: 2
   blocked: 0
@@ -50,14 +50,14 @@ historical_truth_owner: governance/units/ + governance/log/
 
 ## Current Product Delivery Note
 
-- `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING` is now the sole current product-facing
-  `ACTIVE_DELIVERY` unit after bounded lawful-opening evaluation confirmed the onboarding-outcome
-  handling lane is exact, bounded, and ready at the threshold required for this slice.
-- The opening is limited to org-level onboarding outcome persistence, bounded status transition
-  handling, and directly coupled audit-event emission on the existing super-admin route.
-- This opening does not authorize broader tenant-operations depth, tenant-entry / impersonation
-  depth, audit workflow completion, AdminRBAC, feature governance, AI governance, billing/risk
-  thinness, or broader control-plane modernization.
+- No current product-facing `ACTIVE_DELIVERY` unit is open after
+  `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING` closed.
+- The closed unit remained bounded to org-level onboarding outcome persistence, bounded status
+  transition handling, and directly coupled audit-event emission on the existing super-admin
+  onboarding-outcome route.
+- This close does not imply broader tenant-operations depth, tenant-entry / impersonation depth,
+  audit workflow completion, AdminRBAC, feature governance, AI governance, billing/risk thinness,
+  broader control-plane modernization, or any successor opening.
 
 ## Restore Notes
 
