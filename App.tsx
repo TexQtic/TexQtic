@@ -1602,6 +1602,7 @@ const App: React.FC = () => {
     const tenant = impersonationDialog.tenant;
     if (!tenant) return;
     const reason = impersonationDialog.reason.trim();
+    let startedImpersonationId: string | null = null;
     if (reason.length < 10) {
       setImpersonationDialog(d => ({ ...d, error: 'Reason must be at least 10 characters.' }));
       return;
@@ -1630,6 +1631,17 @@ const App: React.FC = () => {
         userId: target.user.id,
         reason,
       });
+      startedImpersonationId = result.impersonationId;
+      const targetTenantSnapshot = buildTenantSnapshot({
+        id: tenant.id,
+        slug: tenant.slug,
+        name: tenant.name,
+        type: String(tenant.type),
+        tenant_category: tenant.tenant_category ?? null,
+        is_white_label: tenant.is_white_label ?? false,
+        status: String(tenant.status),
+        plan: String(tenant.plan),
+      });
       const nextImpersonationState: ImpersonationState = {
         isAdmin: true,
         targetTenantId: tenant.id,
@@ -1643,27 +1655,46 @@ const App: React.FC = () => {
       setImpersonationToken(result.token);
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
-      setCurrentTenantId(tenant.id);
-      setWlAdminEligible(canAccessWlAdmin(tenant.is_white_label ?? false, target.role ?? null));
+
+      const me = await getCurrentUser();
+      const bootstrappedTenant = buildTenantSnapshot(me.tenant) ?? targetTenantSnapshot;
+
+      if (!bootstrappedTenant || bootstrappedTenant.id !== tenant.id) {
+        throw new Error('Tenant context bootstrap returned the wrong tenant.');
+      }
+
+      const resolvedRole = resolveTenantRole(me.role ?? target.role ?? null, bootstrappedTenant.id);
+      const hasWlAdminAccess = canAccessWlAdmin(bootstrappedTenant.is_white_label, resolvedRole);
+
+      setTenants([bootstrappedTenant]);
+      setCurrentTenantId(bootstrappedTenant.id);
+      setWlAdminEligible(hasWlAdminAccess);
+      setTenantProvisionError(null);
       setImpersonation(nextImpersonationState);
       persistImpersonationSession({
         adminId: actorAdminId,
         state: nextImpersonationState,
-        tenant:
-          buildTenantSnapshot({
-            id: tenant.id,
-            slug: tenant.slug,
-            name: tenant.name,
-            type: String(tenant.type),
-            tenant_category: tenant.tenant_category ?? null,
-            is_white_label: tenant.is_white_label ?? false,
-            status: String(tenant.status),
-            plan: String(tenant.plan),
-          })!,
+        tenant: bootstrappedTenant,
       });
       setImpersonationDialog({ open: false, tenant: null, reason: '', loading: false, error: null });
-      setAppState('EXPERIENCE');
+      setAppState(hasWlAdminAccess ? 'WL_ADMIN' : 'EXPERIENCE');
     } catch (err: any) {
+      if (startedImpersonationId) {
+        clearPersistedImpersonationSession();
+        setStoredAuthRealm('CONTROL_PLANE');
+        setAuthRealm('CONTROL_PLANE');
+        try {
+          await stopImpersonationSession({
+            impersonationId: startedImpersonationId,
+            reason: 'Tenant bootstrap failed after impersonation start.',
+          });
+        } catch (stopError) {
+          console.error('[Impersonation] bootstrap cleanup failed:', stopError);
+        }
+      }
+      clearPersistedImpersonationSession();
+      setImpersonation(EMPTY_IMPERSONATION_STATE);
+      setWlAdminEligible(false);
       const msg = err?.message || 'Failed to start impersonation session.';
       setImpersonationDialog(d => ({ ...d, loading: false, error: msg }));
     }
@@ -3707,8 +3738,10 @@ const App: React.FC = () => {
                 <button
                   onClick={() => {
                     if (appState === 'CONTROL_PLANE') {
-                      setSelectedTenant(null);
-                      setAppState('EXPERIENCE');
+                      const targetTenant = selectedTenant ?? currentTenant;
+                      if (targetTenant) {
+                        handleImpersonate(targetTenant);
+                      }
                       return;
                     }
 
