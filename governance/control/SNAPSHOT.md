@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-06
-snapshot_unit: GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-OPENING
+snapshot_unit: GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-OPENING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
@@ -22,8 +22,8 @@ current_product_active_delivery_count: 1
 current_product_active_delivery_unit: MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 12
-  decision_queue: 11
+  open: 13
+  decision_queue: 12
   design_gate: 2
   blocked: 0
   deferred: 0
@@ -39,6 +39,7 @@ current_open_governance_units:
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
   - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
   - LAUNCH-ACCELERATION-OVERLAY-001
+  - CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
   - RFQ-NEGOTIATION-CONTINUITY
@@ -54,9 +55,15 @@ historical_truth_owner: governance/units/ + governance/log/
 
 - `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now `OPEN` as the sole
   product-facing `ACTIVE_DELIVERY` unit.
+- `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` is now `OPEN` as a concurrent
+  support blocker-removal unit only. It exists solely to unblock truthful production verification
+  of the active B2C unit after the live control-plane tenant-context entry path failed with the
+  exact realm-mismatch error already recorded in production verification.
 - This unit is bounded to separating authenticated-only shell affordances from the exact non-WL
   B2C `HOME` path while preserving the shared branded entry-facing frame, home return, and
   browse-entry search continuity.
+- The concurrent support unit does not change `product_delivery_priority`, does not reopen broader
+  auth/control-plane redesign, and does not absorb the separate enterprise Orders token finding.
 - This opening does not reopen the closed public browse-entry seam, seller/admin separation, or
   settings separation units and does not open orders/cart/checkout continuity or adjacent-family
   redesign.

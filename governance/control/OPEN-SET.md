@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-06 (GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-OPENING)  
+**Last Updated:** 2026-04-06 (GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-OPENING)  
 **Max Size:** 50 lines (structural gate)
 
 > This file is the canonical list of all non-terminal governed units and current delivery class only.  
@@ -23,6 +23,7 @@
 | GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001 | Candidate state normalization | OPEN | DECISION_QUEUE | W5 | 2026-03-24 |
 | LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001 | Thin launch-acceleration overlay reshape design | OPEN | DECISION_QUEUE | W5 | 2026-04-05 |
 | LAUNCH-ACCELERATION-OVERLAY-001 | Thin launch-acceleration visibility overlay | OPEN | DECISION_QUEUE | W5 | 2026-04-05 |
+| CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001 | Control-plane B2C tenant-context entry realm mismatch | OPEN | DECISION_QUEUE | W5 | 2026-04-06 |
 | MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION | B2C shell authenticated-affordance separation | OPEN | ACTIVE_DELIVERY | W5 | 2026-04-06 |
 | TECS-FBW-ADMINRBAC | AdminRBAC invite + revoke authority | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-17 |
 | RFQ-NEGOTIATION-CONTINUITY | RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | DESIGN_GATE | DESIGN_GATE_QUEUE | W5 | 2026-03-30 |
@@ -31,14 +32,14 @@
 
 ## Summary
 
-- **OPEN**: **12**
+- **OPEN**: **13**
 - **DESIGN_GATE**: **2**
 - **BLOCKED**: **0**
 - **DEFERRED**: **0**
 - **ACTIVE_DELIVERY**: **1**
-- **DECISION_QUEUE**: **11**
+- **DECISION_QUEUE**: **12**
 - **DESIGN_GATE_QUEUE**: **2**
-- **Total non-terminal units**: **14**
+- **Total non-terminal units**: **15**
 
 ## Operating Notes
 
@@ -47,6 +48,7 @@
 - Canonical candidate/family truth: `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
 - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only.
 - Current open product-facing `ACTIVE_DELIVERY`: `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION`.
+- Concurrent support unit `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` is open only to unblock truthful production verification of that B2C unit; the separate enterprise Orders token finding remains excluded.
 - That opened child is bounded to authenticated-only shell-affordance separation on the exact non-WL B2C `HOME` path while preserving the shared branded entry-facing frame, home return, and browse-entry search continuity.
 - The broader `-v2` B2C family posture remains preserved at family resolution; this exact opening is the fresh bounded decision now selected from the newer B2C decision chain and does not widen into public-shell redesign, orders/cart/checkout continuity, adjacent-family redesign, or `g026` work.
 - Current open `DECISION_QUEUE` governance records remain real non-terminal truth, but they do not define the default governance burden for future bounded units after this reset.
