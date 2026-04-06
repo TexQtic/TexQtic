@@ -1057,6 +1057,7 @@ const App: React.FC = () => {
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
     && isNonWhiteLabelB2CTenant;
+  const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
     && (normalizedTenantCategory === TenantType.AGGREGATOR || normalizedTenantCategory === TenantType.INTERNAL);
@@ -3260,6 +3261,7 @@ const App: React.FC = () => {
           onNavigateCart: () => setShowCart(true),
           b2cSearchValue: isB2CBrowseEntrySurface ? b2cSearchQuery : '',
           onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
+          showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
         };
         // B2-REM-3: Shell resolution via canonical policy function — no silent default fallback.
         const resolvedShell = resolveExperienceShell(
@@ -3299,18 +3301,22 @@ const App: React.FC = () => {
               </div>
             )}
             <ExperienceShell {...props}>
-              <div className="absolute top-4 right-4 z-[60] flex gap-2">
-                <CartToggleButton setShowCart={setShowCart} />
-                {!isNonWhiteLabelB2CTenant && (
-                  <button
-                    onClick={() => setAppState('SETTINGS')}
-                    className="bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hover:text-indigo-600 transition"
-                    title="Storefront Settings"
-                  >
-                    ⚙️
-                  </button>
-                )}
-              </div>
+              {(showB2CHomeAuthenticatedAffordances || !isNonWhiteLabelB2CTenant) && (
+                <div className="absolute top-4 right-4 z-[60] flex gap-2">
+                  {showB2CHomeAuthenticatedAffordances && (
+                    <CartToggleButton setShowCart={setShowCart} />
+                  )}
+                  {!isNonWhiteLabelB2CTenant && (
+                    <button
+                      onClick={() => setAppState('SETTINGS')}
+                      className="bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hover:text-indigo-600 transition"
+                      title="Storefront Settings"
+                    >
+                      ⚙️
+                    </button>
+                  )}
+                </div>
+              )}
               {renderExperienceContent()}
             </ExperienceShell>
             {showCart && (

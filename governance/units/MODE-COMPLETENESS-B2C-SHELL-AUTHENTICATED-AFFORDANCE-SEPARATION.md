@@ -72,6 +72,7 @@ This unit authorizes modification of these files only:
 - `governance/units/MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION.md`
 - `App.tsx`
 - `layouts/Shells.tsx`
+- `tests/b2c-shell-authenticated-affordance-separation.test.tsx`
 
 ## Exact In-Scope Boundary
 

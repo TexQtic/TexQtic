@@ -26,6 +26,7 @@ interface ShellProps {
   onNavigateTrades?: () => void;
   /** B3-REM-1: wire B2CShell header cart icon (PW5-V4-DEF-001 fix) */
   onNavigateCart?: () => void;
+  showAuthenticatedAffordances?: boolean;
   b2cSearchValue?: string;
   onB2CSearchChange?: (value: string) => void;
 }
@@ -97,7 +98,7 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades, onNavigateCart, b2cSearchValue, onB2CSearchChange }) => {
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades, onNavigateCart, showAuthenticatedAffordances = true, b2cSearchValue, onB2CSearchChange }) => {
   const { itemCount } = useCart();
   return (
   <div className="min-h-screen bg-white font-sans">
@@ -119,26 +120,28 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
             className="w-full bg-slate-100 border-none rounded-full px-6 py-2.5 focus:ring-2 focus:ring-indigo-500 text-sm"
           />
         </div>
-        <div className="flex gap-6 items-center">
-          {onNavigateOrders && <button onClick={onNavigateOrders} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}
-          {onNavigateDpp && <button onClick={onNavigateDpp} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">DPP Passport</button>}
-          {onNavigateEscrow && <button onClick={onNavigateEscrow} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escrow</button>}
-          {onNavigateEscalations && <button onClick={onNavigateEscalations} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escalations</button>}
-          {onNavigateSettlement && <button onClick={onNavigateSettlement} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Settlement</button>}
-          {onNavigateCertifications && <button onClick={onNavigateCertifications} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Certifications</button>}
-          {onNavigateTraceability && <button onClick={onNavigateTraceability} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
-          {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
-          {onNavigateTrades && <button onClick={onNavigateTrades} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Trades</button>}
-          <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
-          <button onClick={onNavigateCart} className="relative cursor-pointer" title="Shopping Cart">
-            <span className="text-2xl">🛒</span>
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                {itemCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {showAuthenticatedAffordances && (
+          <div className="flex gap-6 items-center">
+            {onNavigateOrders && <button onClick={onNavigateOrders} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}
+            {onNavigateDpp && <button onClick={onNavigateDpp} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">DPP Passport</button>}
+            {onNavigateEscrow && <button onClick={onNavigateEscrow} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escrow</button>}
+            {onNavigateEscalations && <button onClick={onNavigateEscalations} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escalations</button>}
+            {onNavigateSettlement && <button onClick={onNavigateSettlement} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Settlement</button>}
+            {onNavigateCertifications && <button onClick={onNavigateCertifications} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Certifications</button>}
+            {onNavigateTraceability && <button onClick={onNavigateTraceability} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
+            {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
+            {onNavigateTrades && <button onClick={onNavigateTrades} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Trades</button>}
+            <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
+            <button onClick={onNavigateCart} className="relative cursor-pointer" title="Shopping Cart">
+              <span className="text-2xl">🛒</span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </header>
     <main className="max-w-7xl mx-auto p-6 relative">{children}</main>
