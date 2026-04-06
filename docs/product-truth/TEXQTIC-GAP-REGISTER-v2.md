@@ -39,6 +39,16 @@ launch-overlay artifacts. In particular, launch-specific scope/status for B2B, B
 platform-admin/control-center boundaries, and subscription/commercial packaging is further
 constrained by the launch overlay.
 
+## Final Family Inventory Normalization Note
+
+Current final family-placement normalization now also lives in
+`docs/product-truth/TEXQTIC-FINAL-FAMILY-INVENTORY-PLACEMENT-NORMALIZATION-v1.md`.
+
+That note clarifies final family placement for weak, latent, or under-artifacted family areas.
+
+It does not create new `-v2` candidate families, change any current candidate posture recorded in
+this register, or authorize any opening by implication.
+
 ## Cycle Summary
 
 The A1/A2/A3 cycle established four fresh candidate families for the next planning cycle, and a

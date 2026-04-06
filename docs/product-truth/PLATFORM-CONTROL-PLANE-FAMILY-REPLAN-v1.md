@@ -138,6 +138,69 @@ The following belong inside the control-plane family boundary:
 - health, event-stream, system-level observability, and platform-scope operational monitoring
 - cross-tenant operational visibility required to run the platform safely
 
+### 5.7 Minimum explicit planning depth for currently thin control-plane subfamilies
+
+The following lanes are explicit subfamilies inside
+`Platform Control-Plane and Platform Operations Supervision`.
+
+This subsection adds the minimum family-planning depth needed so later Governance OS reduction work
+can inherit a stable boundary without promoting these lanes to standalone top-level families or
+creating opening authority.
+
+#### Dispute / Escalation / Resolution
+
+- Purpose: platform-owned interruption, escalation, and dispute casework around governed trade or
+  tenant operations
+- In scope: dispute case intake/list/detail continuity, escalation-state visibility, operator
+  review, and audit-linked casework where repo truth already supports them
+- Exclusions: whole compliance-family ownership, payments/settlement ownership, and generic
+  messaging or customer-support ownership
+- Current posture: explicit platform subfamily; materially real; later bounded refinement only if
+  deeper resolution-loop depth is required
+
+#### Admin Authority / Control-Plane RBAC
+
+- Purpose: platform-admin access authority, role partition, and bounded existing-admin governance
+- In scope: registry-read continuity, bounded invite/revoke/remove authority, and role-boundary
+  visibility where repo truth already supports them
+- Exclusions: whole identity/workspace ownership, tenant-owned memberships, and commercial-access-
+  model permission ownership in full
+- Current posture: explicit platform subfamily with partial runtime and a retained design-gate for
+  broader admin-authority depth
+
+#### Feature Governance / Release Controls / Kill-Switches
+
+- Purpose: operator-owned feature flags, kill-switches, and release levers used to operate TexQtic
+  safely
+- In scope: bounded runtime control surfaces, release-control visibility, and emergency disable
+  posture distinct from tenant-owned settings
+- Exclusions: a full release-management program, roadmap governance, or tenant configuration as the
+  whole family substitute
+- Current posture: explicit platform subfamily; real bounded operating lever; broader release-
+  governance depth remains later
+
+#### AI Governance / Advisory Automation
+
+- Purpose: platform-owned AI oversight, budget/usage governance, bounded advisory control, and
+  future automation gating
+- In scope: current control-plane AI insights/oversight and doctrinally gated future automation
+  posture
+- Exclusions: autonomous decision-making program ownership, product-wide AI strategy ownership, and
+  model/runtime redesign
+- Current posture: explicit platform subfamily; present bounded oversight is real; future
+  automation remains gated
+
+#### Billing / Tenant Billing / Commercial Admin Operations
+
+- Purpose: platform finance visibility and billing-status supervision needed to operate TexQtic
+  safely
+- In scope: fee visibility, billing-status supervision, finance casework, and commercial-admin
+  oversight where repo truth already supports them
+- Exclusions: payments/settlement ownership, subscription/commercial-packaging ownership, and full
+  tenant billing or reconciliation program ownership
+- Current posture: explicit platform subfamily; current supervision is materially real; tenant
+  billing and reconciliation depth remain later or explicitly deferred
+
 ## 6. What Does Not Belong Inside Platform Control-Plane Scope
 
 The following are adjacent or later families and must not be silently absorbed into control-plane

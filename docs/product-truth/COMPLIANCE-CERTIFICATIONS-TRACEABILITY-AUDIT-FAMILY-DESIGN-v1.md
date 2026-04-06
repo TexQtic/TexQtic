@@ -170,6 +170,33 @@ The following belong inside the compliance/audit family boundary:
 - downstream orders or finance reuse of evidence state where they depend on auditability or
   certification posture without becoming the family owner
 
+### 5.6 DPP / regulator-facing disclosure as an explicit subfamily
+
+`DPP / Regulator-Facing Disclosure` belongs inside this family as an explicit named subfamily.
+
+At minimum, that subfamily means:
+
+- regulator-facing read-layer continuity that assembles traceability, certification, audit, and
+  evidence-backed risk posture into a lawful disclosure surface
+- DPP snapshot/read views, disclosure packaging, and regulatory-risk visibility derived from this
+  family rather than treated as a separate commercial pillar
+- reuse of compliance-family evidence across regulator-facing, brand-facing, or admin-facing
+  surfaces without changing family ownership
+
+It does not mean:
+
+- a separate top-level family outside `Compliance / Certifications / Traceability / Audit`
+- a replacement for the underlying traceability, certification, or audit evidence family
+- a logistics, fulfillment, routing, or commercial access family
+- a runtime completeness claim, export redesign, or schema redesign
+
+Current posture:
+
+- DPP is now explicit enough to be treated as a named compliance-family subfamily for later
+  bounded reduction
+- implementation/design depth remains separately gated by DPP-specific authorities such as
+  `docs/architecture/DPP-SNAPSHOT-VIEWS-DESIGN.md`
+
 ## 6. What Does Not Belong Inside Compliance / Certifications / Traceability / Audit Scope
 
 The following are adjacent or separate families and must not be silently absorbed into compliance-

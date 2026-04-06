@@ -72,6 +72,14 @@ by:
 This document therefore records the current best cross-family baseline before later reconciliation
 work.
 
+Final-family placement normalization now also lives in
+`docs/product-truth/TEXQTIC-FINAL-FAMILY-INVENTORY-PLACEMENT-NORMALIZATION-v1.md`.
+
+That normalization note is controlling for explicit final family placement only.
+
+It does not erase the preserved baseline readings here around chain maturity, split posture,
+under-artifacted families, or sequencing friction.
+
 ---
 
 ## Scope rule for this baseline
