@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.10  
-**Last Updated:** 2026-04-05 (residual-lane same-family decomposition)  
+**Doctrine Version:** v1.11  
+**Last Updated:** 2026-04-06 (successor-chain preservation and revalidate-not-rediscover)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -88,7 +88,7 @@ Cross-tenant queries are forbidden outside the control-plane super-admin context
 DB URLs, `.env` contents, passwords, JWTs, and API keys must never be logged or echoed.
 
 ### D-013 — Closure Requires Explicit Closure Basis
-A governance close is incomplete unless the close writeback records the closure basis, evidence class, resulting Layer 0 posture, and exact next authorized class or explicit no-successor posture. Separate post-close audit artifacts are mandatory only for strict-path units, failed-gate reruns, sequencing-authority changes, or closes that materially change broader queue posture.
+A governance close is incomplete unless the close writeback records the closure basis, evidence class, resulting Layer 0 posture, exact next authorized class or explicit no-successor posture, and exactly one carry-forward result: `SUCCESSOR_CHAIN_PRESERVED` with a valid `D-020` artifact created or refreshed in the same close path, or `EXPLICIT_NO_SUCCESSOR`.
 
 ### D-014 — Implementation Openings Require Root-Cause Dependency Readiness
 No implementation opening is lawful on target-family maturity alone. A proposed opening is lawful only if the target unit is sufficiently mature for the intended opening and every material dependency or support family passes the readiness threshold required for that opening.
@@ -99,10 +99,10 @@ If any family fails, Governance OS must return the failing family, the missing c
 After any product-facing close that changes active-delivery or next-candidate posture, Governance OS must reconcile Layer 0 posture with `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` and `TEXQTIC-GAP-REGISTER-v2.md` before any new opening decision.
 
 ### D-016 — Zero-Open Product-Delivery Re-Entry Returns To Decision Control
-If a close leaves zero active product-delivery units, Governance OS returns to explicit next-opening decision control. No successor may be inferred from the closed unit, family proximity, or stale carry-forward wording.
+If a close leaves zero active product-delivery units, Governance OS returns to explicit next-opening decision control and no successor may be inferred from the closed unit, family proximity, or stale carry-forward wording. When a valid `D-020` artifact remains compatible and no `D-023` invalidation trigger has fired, decision control may begin from `D-021` narrow revalidation only, never implied opening.
 
 ### D-017 — Closed Units Preserve Lineage Only
-Closed units preserve lineage and evidence only. They do not remain current-next authority or imply broader family completion unless a new authority artifact explicitly selects a successor.
+Closed units preserve lineage and evidence only. Any `D-020` successor-chain artifact is separate non-opening carry-forward authority and does not convert a closed unit into current-next authority.
 
 ### D-018 — Structural-Breadth Family Remainders Require Same-Family Bounded Reduction
 After one preserved family remainder has already been chosen for reduction, if current repo truth is coherent but that family still contains multiple unreduced subareas and therefore does not yield one exact bounded child unit, Governance OS must treat the condition as structural breadth rather than a repo-conflict blocker.
@@ -111,6 +111,18 @@ The required next move is one further bounded child-reduction decision or one na
 ### D-019 — Residual-Lane Same-Family Decomposition Requires Same-Remainder Lane Separation
 After one preserved family remainder has already been chosen and narrowed at least once, if the remaining same-family remainder is coherent in repo truth but still contains a small number of explicit residual lanes and therefore does not yet yield one exact bounded child unit, Governance OS must treat the condition as residual-lane decomposition rather than repo conflict or renewed family-level expansion.
 The required next move is one bounded lane-separation design-clarification step inside that same narrowed remainder only, for the sole purpose of separating the residual lanes, testing whether one lane qualifies as an exact bounded child, and determining whether one lane can be elevated into candidate form. This condition must not be routed into whole-family design completion, cross-family documentation completion, roadmap expansion, lawful opening, implementation start, or treating conditional lineage notes as current live authority.
+
+### D-020 — Successor-Chain Preservation Is Non-Opening Carry-Forward Authority Only
+Governance OS may preserve one bounded successor-chain artifact after a lawful next-unit determination, same-family bounded reduction, residual-lane decomposition, or product-facing close that preserves one coherent same-family follow-on path. The artifact is non-opening carry-forward authority only and must retain preservation basis, exact authority set, current remainder, next likely `1` to `3` exact slices, stable/transitional/volatile truths, dependency assumptions, excluded adjacencies, invalidation triggers, and `NO_OPENING_AUTHORITY`; otherwise it is incomplete and cannot support `D-021`.
+
+### D-021 — Revalidate-Not-Rediscover Is Conditional
+Governance OS may begin from narrow successor revalidation instead of broad rediscovery only when a complete `D-020` artifact exists, Layer 0 remains compatible, no `D-023` invalidation trigger has fired, no material contradiction exists, and the proposed slice stays inside the preserved family or narrowed remainder. The minimum revalidation read set is Layer 0, the artifact, live sequencing authority, candidate/family truth, named volatile truths, and named dependency or support-family readiness surfaces; failure returns to the smallest lawful broader rediscovery level.
+
+### D-022 — Truth Volatility Tiers
+Governance OS must distinguish stable truth, transitional truth, and volatile truth. Stable truth covers normalized family/design anchors and preserved repo-truth evidence; transitional truth covers remainder outputs, successor-chain artifacts, and bounded visibility artifacts; volatile truth covers Layer 0 posture, blockers, runtime proof, adjacency, readiness, and current gates. Only stable truth may be reused without revalidation, transitional truth requires `D-021`, and volatile truth must always be freshly checked.
+
+### D-023 — Invalidation Triggers Force Rediscovery
+A `D-020` artifact is invalid for `D-021` if planning or family authority changed materially, readiness or runtime proof breaks an assumption, adjacency now intersects the slice, the remainder changed materially, the artifact is stale or incomplete, Layer 0 contradicts it, live sequencing or candidate truth supersedes it, or blocker/design-gate change materially resizes the slice. Any trigger forces rediscovery at the smallest lawful broader level.
 
 ---
 
@@ -124,7 +136,7 @@ The required next move is one bounded lane-separation design-clarification step 
 - During work, update the unit record only when scope, blockers, or verification posture materially change.
 - Close with one compact governance writeback plus verification evidence.
 - For product-facing closes that change active-delivery or next-candidate posture, run the D-015 reconciliation before any new opening decision.
-- If no active product-delivery unit remains after close, return to D-016 decision control rather than carrying forward a presumed successor.
+- For every product-facing close, emit the D-013 carry-forward result; if no active product-delivery unit remains, return to D-016 decision control and use D-021 narrow revalidation only when a valid D-020 artifact survives D-023.
 - If a chosen family remainder remains coherent but structurally broad, apply D-018 and route to one further same-family bounded child-reduction or narrow design-clarification step only.
 - If a chosen same-family remainder has already been narrowed but still contains explicit residual lanes, apply D-019 and run one same-remainder lane-separation design-clarification step only.
 - Normal bounded units do not automatically require candidate normalization, strict Sentinel gating, separate post-close audit artifacts, or multi-surface sequencing overlays.

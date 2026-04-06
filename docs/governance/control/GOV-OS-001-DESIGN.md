@@ -5,7 +5,7 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.10 (reset-amended; original layer model preserved)  
+**Doctrine Version:** v1.11 (reset-amended with successor-chain preservation; original layer model preserved)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 
 ---
@@ -696,6 +696,198 @@ This rule preserves zero-open decision control, exact-target discipline, one log
 time, closed-seam lineage-only treatment, and D-018 structural-breadth routing. Conditional
 lineage notes may help identify possible lanes, but they cannot by themselves elevate a lane into a
 current candidate.
+
+### 4.5E Successor-Chain Preservation And Non-Opening Carry-Forward Authority
+
+#### 1. Rule Purpose
+
+This rule allows Governance OS to preserve one lawful near-term carry-forward starting point after
+a determination, reduction, or close without creating implicit opening authority.
+
+#### 2. What A Successor-Chain Artifact Is
+
+A successor-chain artifact is one bounded governance artifact that preserves:
+
+- the current family remainder or narrowed same-family remainder
+- the next likely `1` to `3` exact slices only
+- the truths that remain stable enough to reuse
+- the truths that must be rechecked
+- the conditions that invalidate the carry-forward
+
+It is non-opening carry-forward authority only.
+
+#### 3. What It Must Never Be Read As
+
+A successor-chain artifact must not be read as:
+
+- an opening decision
+- a current-next opening authorization
+- a substitute for Layer 0
+- a substitute for live sequencing authority
+- a bypass of dependency-readiness investigation
+- a bypass of repo-truth validation at opening time
+
+#### 4. Mandatory Contents
+
+A valid artifact must contain all of the following:
+
+- preservation date
+- preservation basis and exact authority set used
+- current family remainder or narrowed same-family remainder
+- next likely `1` to `3` exact slices only
+- stable truths relied on
+- transitional truths relied on
+- volatile truths that must be rechecked
+- explicit adjacent findings excluded from the next slice
+- dependency or support-family readiness assumptions
+- invalidation triggers
+- explicit statement: `NO_OPENING_AUTHORITY`
+
+Anything beyond the next `1` to `3` exact slices is advisory only and is not valid carry-forward
+authority.
+
+#### 5. Allowed Creation Points
+
+The artifact may be created or updated only after:
+
+- lawful next-unit determination
+- lawful same-family bounded reduction
+- lawful residual-lane decomposition
+- product-facing close that leaves one coherent preserved next-path
+
+#### 6. Zero-Open Compatibility
+
+If zero-open posture follows a close, Layer 0 still returns to explicit decision control.
+
+The preserved artifact changes only what that decision control may begin from.
+
+It does not create any opening by implication.
+
+### 4.5F Revalidate-Not-Rediscover Rule
+
+#### 1. Rule Purpose
+
+This rule allows Governance OS to avoid repeating broad family rediscovery when one valid
+non-opening successor-chain artifact already exists and current truth has not invalidated it.
+
+#### 2. Allowed Trigger Condition
+
+Governance OS may begin from narrow successor revalidation only when:
+
+- a valid successor-chain artifact exists
+- the artifact is complete
+- current Layer 0 posture is compatible
+- no invalidation trigger has fired
+- no contradiction exists between current repo truth and the preserved chain
+- the proposed next slice remains inside the same preserved family or narrowed same-family
+  remainder
+
+#### 3. Minimum Revalidation Read Set
+
+The minimum revalidation read set is:
+
+- `OPEN-SET.md`
+- `NEXT-ACTION.md`
+- `BLOCKED.md`
+- the preserved successor-chain artifact
+- live sequencing authority
+- candidate/family truth
+- each volatile truth named in the artifact
+- each dependency-readiness surface named in the artifact
+
+#### 4. Pass Result
+
+If revalidation passes, Governance OS may treat the preserved next likely exact slice as the
+bounded starting candidate for ordinary next-opening investigation only.
+
+No opening is authorized by the pass itself.
+
+#### 5. Fail Result
+
+If revalidation fails, Governance OS must:
+
+- record the failure reason
+- record whether the failure is volatility-only or structure-changing
+- return to the smallest lawful broader rediscovery level required by the failure
+
+#### 6. Explicit Anti-Drift Prohibitions
+
+This rule must not be used to justify:
+
+- skipping repo-truth validation
+- skipping dependency-readiness investigation
+- skipping adjacent-finding separation
+- skipping verification-before-close
+- broad family opening by carry-forward convenience
+- treating a preserved chain as live opening authority
+
+### 4.5G Truth Volatility Tiers And Invalidation Triggers
+
+#### 1. Stable Truth
+
+Stable truth is truth expected to survive across multiple cycles unless materially superseded.
+
+Examples:
+
+- family placement normalization
+- family-design anchors
+- preserved repo-truth evidence records
+- stable family or subfamily exclusions and boundary definitions
+
+#### 2. Transitional Truth
+
+Transitional truth is reusable but not self-authorizing.
+
+Examples:
+
+- family remainder notes
+- same-family reduction outputs
+- residual-lane outputs
+- successor-chain artifacts
+- shortlist or critical-path visibility artifacts
+
+Transitional truth must be revalidated before reuse.
+
+#### 3. Volatile Truth
+
+Volatile truth must always be freshly rechecked.
+
+Examples:
+
+- Layer 0 posture
+- active blockers
+- current runtime verification state
+- adjacent findings
+- support-family readiness
+- current design-gates
+- any new close or opening that changes sequencing posture
+
+#### 4. Invalidation Triggers
+
+A preserved successor-chain artifact becomes invalid if:
+
+- planning authority changed materially
+- family placement or family-design authority changed materially
+- support-family readiness failed
+- an adjacent finding now intersects the proposed next slice
+- runtime proof invalidates a chain assumption
+- the same-family remainder changed materially
+- the artifact is stale or incomplete
+- Layer 0 posture contradicts the preserved chain assumption
+- live sequencing or candidate truth supersedes the preserved chain
+- blocker or design-gate posture materially changes the proposed next slice
+
+#### 5. Required Result When Triggered
+
+If any invalidation trigger fires, Governance OS must stop narrow revalidation and return to the
+smallest lawful broader rediscovery level required by the trigger.
+
+#### 6. Decision-Control Compatibility
+
+This rule preserves zero-open decision control, exact bounded openings, same-family bounded
+reduction, and closed-unit non-authority.
+
+It changes only the lawful starting scope for decision control after current truth is checked.
 
 ### 4.6 Edit-Scope Enforcement
 
