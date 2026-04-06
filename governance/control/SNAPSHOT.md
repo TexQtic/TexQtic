@@ -11,18 +11,18 @@
 
 ```yaml
 snapshot_date: 2026-04-06
-snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-CLOSE
+snapshot_unit: GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-OPENING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 implementation_roadmap_posture: derived_only
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: null
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 11
+  open: 12
   decision_queue: 11
   design_gate: 2
   blocked: 0
@@ -52,16 +52,17 @@ historical_truth_owner: governance/units/ + governance/log/
 
 ## Current Product Delivery Note
 
-- No product-facing `ACTIVE_DELIVERY` unit is currently open.
-- `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` is now `CLOSED` complete after bounded
-  implementation within scope, green frontend verification, discoverable/runnable backend
-  verification, bounded backend runtime remediation, and a passing exact Aggregator backend
-  integration test.
-- `AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001` is now `CLOSED` complete after
-  fulfilling its sole remit: make the approved Aggregator backend verification path discoverable
-  and runnable, then hand off the remaining non-discovery blocker back to the product unit.
-- These closures do not authorize any implicit successor opening and do not reopen the broader
-  design-gated Aggregator family.
+- `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now `OPEN` as the sole
+  product-facing `ACTIVE_DELIVERY` unit.
+- This unit is bounded to separating authenticated-only shell affordances from the exact non-WL
+  B2C `HOME` path while preserving the shared branded entry-facing frame, home return, and
+  browse-entry search continuity.
+- This opening does not reopen the closed public browse-entry seam, seller/admin separation, or
+  settings separation units and does not open orders/cart/checkout continuity or adjacent-family
+  redesign.
+- `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` and `TEXQTIC-GAP-REGISTER-v2.md` still preserve B2C at
+  broader family resolution; the current exact opening is the narrower fresh bounded decision
+  supplied by the newer B2C decision chain.
 - Preserved governance investigation outcome: `PLANNING_STACK_NEEDS_RESHAPING`.
 - The underlying need remains valid for a thin launch-acceleration overlay above governance, but
   the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.
@@ -75,7 +76,7 @@ historical_truth_owner: governance/units/ + governance/log/
   opening, candidate-state authority, forecast commitment, or any new overlay opening authority
   beyond the bounded visibility unit recorded here.
 - The reproduced `g026-platform-subdomain-routing.spec.ts` typecheck failure remains explicit,
-  unrelated residue outside the closed Aggregator units and does not block their closure.
+  unrelated residue outside this B2C opening and does not block it.
 
 ## Restore Notes
 
