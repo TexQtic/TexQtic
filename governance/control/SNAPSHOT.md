@@ -11,18 +11,19 @@
 
 ```yaml
 snapshot_date: 2026-04-06
-snapshot_unit: GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-OPENING
+snapshot_unit: GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 implementation_roadmap_posture: derived_only
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: null
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 13
+  open: 11
+  verified_complete: 1
   decision_queue: 12
   design_gate: 2
   blocked: 0
@@ -39,6 +40,7 @@ current_open_governance_units:
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
   - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
   - LAUNCH-ACCELERATION-OVERLAY-001
+current_verified_complete_units:
   - CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
@@ -53,17 +55,18 @@ historical_truth_owner: governance/units/ + governance/log/
 
 ## Current Product Delivery Note
 
-- `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now `OPEN` as the sole
-  product-facing `ACTIVE_DELIVERY` unit.
-- `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` is now `OPEN` as a concurrent
-  support blocker-removal unit only. It exists solely to unblock truthful production verification
-  of the active B2C unit after the live control-plane tenant-context entry path failed with the
-  exact realm-mismatch error already recorded in production verification.
-- This unit is bounded to separating authenticated-only shell affordances from the exact non-WL
-  B2C `HOME` path while preserving the shared branded entry-facing frame, home return, and
-  browse-entry search continuity.
-- The concurrent support unit does not change `product_delivery_priority`, does not reopen broader
-  auth/control-plane redesign, and does not absorb the separate enterprise Orders token finding.
+- No product-facing `ACTIVE_DELIVERY` unit is currently open.
+- `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now `CLOSED` after bounded
+  live production proof on the exact non-WL B2C `HOME` path and a separate close decision that
+  preserved the stop-path `404` as a non-blocking adjacent finding only.
+- `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` remains `VERIFIED_COMPLETE` as the
+  separate support blocker-removal unit and is pending its own separate close pass only.
+- The earlier blocked `REALM_MISMATCH` / `Loading workspace...` / `Starting...` symptom chain no
+  longer reproduces.
+- The earlier enterprise Orders neighbor-smoke issue did not reproduce on rerun and remains
+  separate and excluded from both the closed B2C unit and the still-open support unit.
+- `IMPERSONATION-STOP-CLEANUP-404-001` is now preserved as a separate decision-gated adjacent
+  finding only. It does not block the B2C close and does not create an opening by implication.
 - This opening does not reopen the closed public browse-entry seam, seller/admin separation, or
   settings separation units and does not open orders/cart/checkout continuity or adjacent-family
   redesign.

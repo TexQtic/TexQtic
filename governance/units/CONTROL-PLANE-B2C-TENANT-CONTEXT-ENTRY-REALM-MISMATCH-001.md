@@ -2,15 +2,15 @@
 unit_id: CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001
 title: Control-plane B2C tenant-context entry realm mismatch
 type: GOVERNANCE
-status: OPEN
+status: VERIFIED_COMPLETE
 delivery_class: DECISION_QUEUE
 wave: W5
 plane: BOTH
 opened: 2026-04-06
 closed: null
-verified: null
-commit: null
-evidence: "BLOCKER_CONFIRMATION: GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-PRODUCTION-VERIFICATION already recorded the exact live control-plane tenant-context entry failure on the B2C proof tenant only · SEPARATION_CONFIRMATION: closed auth-shell transition, impersonation rehydration, and realm-boundary shell-affordance units do not govern this remaining entry blocker and TENANT-ELIGIBILITY-REPO-TRUTH-VALIDATION-001 preserves empty-membership handling as separate · BOUNDARY_CONFIRMATION: current repo truth centers the unit on TenantDetails -> App.tsx impersonation-start handoff -> directly coupled tenant bootstrap only · SUPPORT_OPENING_CONFIRMATION: the active B2C shell unit remains the sole product-facing ACTIVE_DELIVERY and this unit opens only to unblock truthful production verification"
+verified: 2026-04-06
+commit: a637998
+evidence: "BLOCKER_CONFIRMATION: GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-PRODUCTION-VERIFICATION recorded the exact live control-plane tenant-context entry failure on the B2C proof tenant only · REMEDIATION_CONFIRMATION: commit `a637998` corrected the bounded App.tsx impersonation-start -> tenant bootstrap handoff without widening into shared realm-client or enterprise Orders-token files · LIVE_RERUN_CONFIRMATION: the exact proof tenant is now reachable from both bounded control-plane entry surfaces in production, the earlier REALM_MISMATCH / Loading workspace / Starting symptom chain no longer reproduces, and the active B2C shell unit can now complete truthful production verification · SEPARATION_CONFIRMATION: the earlier enterprise Orders neighbor-smoke issue did not reproduce on rerun and remains excluded here, while the impersonation-stop `404` observation remains a separate adjacent finding only · POST_CLOSE_RELATION_CONFIRMATION: after GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING closed the active B2C unit, this support unit remains separately VERIFIED_COMPLETE and pending its own bounded close only"
 doctrine_constraints:
   - D-004: this is one bounded governance-only support unit only; it must not merge B2C shell reopening, broader auth/session redesign, control-plane tenant-operations redesign, or the separate enterprise Orders token finding
   - D-007: any later implementation and verification must remain confined to the exact remediation surface and approved governance sync files only
@@ -31,7 +31,7 @@ production verification of the open B2C shell unit.
 
 This unit does not replace or supersede the active B2C shell unit.
 
-Current result: `OPEN`.
+Current result: `VERIFIED_COMPLETE`.
 
 ## Scope Statement
 
@@ -121,3 +121,39 @@ widen this unit implicitly.
   - enterprise Orders-token smoke remains separate
   - broader auth/session claims remain separate
   - broad control-plane tenant-operations truth remains separate
+
+## Verification Record
+
+- verification result: `VERIFIED_COMPLETE`
+- verification date: `2026-04-06`
+- remediation baseline: `a637998`
+- live rerun evidence summary:
+  - the control-plane tenant registry loaded successfully on `https://app.texqtic.com/`
+  - the exact proof tenant `B2C Browse Proof 20260402080229` remained discoverable in the live registry
+  - bounded row-level impersonation / `Enter Tenant Context` now succeeded for that tenant
+  - bounded `App Shells` entry now also succeeded for that same tenant
+  - the earlier `REALM_MISMATCH`, `Loading workspace...`, and `Starting...` blocker no longer reproduced
+  - truthful production verification of the active B2C unit resumed and completed separately
+  - the earlier enterprise `Orders` neighbor-smoke issue did not reproduce on rerun and remains excluded from this unit
+  - the observed impersonation-stop `404` during exit remains a separate adjacent finding only and is not investigated or absorbed here
+
+## Governance Sync
+
+- governance sync phase: completed
+- status transition: `OPEN` -> `VERIFIED_COMPLETE`
+- next lawful lifecycle step after this sync: separate Close for `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` only
+- active product relationship after sync:
+  - `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now separately `CLOSED`
+  - this support unit fulfilled its sole blocker-removal remit and does not supersede or absorb the active B2C unit
+  - no closure is implied by this sync
+
+## Last Governance Confirmation
+
+2026-04-06 — after `GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING` closed the active B2C unit,
+this support unit remains separately `VERIFIED_COMPLETE` and pending its own close only. Commit
+`a637998` had already removed the exact control-plane B2C tenant-context entry blocker that had
+prevented truthful production verification of the active B2C shell unit, both bounded
+control-plane entry surfaces reach the exact proof tenant successfully, the earlier blocked symptom
+chain no longer reproduces, and the observed impersonation-stop `404` remains separate and
+non-blocking. This support-unit record still does not reopen broader auth or control-plane
+redesign and still does not widen into the separate enterprise Orders-token path.
