@@ -10,20 +10,20 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-05
-snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-RESHAPE
+snapshot_date: 2026-04-06
+snapshot_unit: GOV-DEC-AGGREGATOR-DISCOVERY-CLOSE
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
 live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
 implementation_roadmap_posture: derived_only
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: null
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
-  open: 13
-  decision_queue: 12
+  open: 11
+  decision_queue: 11
   design_gate: 2
   blocked: 0
   deferred: 0
@@ -39,7 +39,6 @@ current_open_governance_units:
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
   - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
   - LAUNCH-ACCELERATION-OVERLAY-001
-  - AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
   - RFQ-NEGOTIATION-CONTINUITY
@@ -53,16 +52,16 @@ historical_truth_owner: governance/units/ + governance/log/
 
 ## Current Product Delivery Note
 
-- `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` is now OPEN as the sole current product-facing
-  `ACTIVE_DELIVERY` unit.
-- The opened unit remains bounded to Aggregator home/discovery surface truthfulness, curated
-  discovery entries, minimal trust-signaled discovery cues, minimum read-only data shaping,
-  conditional narrow backend read support only if unavoidable, and optional secondary AI insight
-  reuse only if subordinate.
-- This opening does not reopen the broader design-gated Aggregator family and does not authorize
-  counterparty detail continuity, intent capture, handoff creation, downstream RFQ/trade/order
-  changes, negotiation/matching/routing, broad directory or schema redesign, settlement/revenue/
-  orchestrator behavior, or any successor opening.
+- No product-facing `ACTIVE_DELIVERY` unit is currently open.
+- `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` is now `CLOSED` complete after bounded
+  implementation within scope, green frontend verification, discoverable/runnable backend
+  verification, bounded backend runtime remediation, and a passing exact Aggregator backend
+  integration test.
+- `AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001` is now `CLOSED` complete after
+  fulfilling its sole remit: make the approved Aggregator backend verification path discoverable
+  and runnable, then hand off the remaining non-discovery blocker back to the product unit.
+- These closures do not authorize any implicit successor opening and do not reopen the broader
+  design-gated Aggregator family.
 - Preserved governance investigation outcome: `PLANNING_STACK_NEEDS_RESHAPING`.
 - The underlying need remains valid for a thin launch-acceleration overlay above governance, but
   the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.
@@ -75,16 +74,8 @@ historical_truth_owner: governance/units/ + governance/log/
 - This opening does not authorize a broad planning stack, roadmap regeneration, product-facing
   opening, candidate-state authority, forecast commitment, or any new overlay opening authority
   beyond the bounded visibility unit recorded here.
-- `AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001` is now OPEN as one concurrent
-  governance-only verification-support unit bounded to backend test discovery normalization for the
-  existing Aggregator discovery integration test only.
-- This concurrent support unit does not change product scope, does not authorize package/CI/tooling
-  modernization, and does not absorb the unrelated `g026-platform-subdomain-routing.spec.ts`
-  typecheck failure.
-- The unit is now narrowly reshaped so that one minimal `server/vitest.config.ts` discovery include
-  adjustment may be authorized for the exact Aggregator backend integration test path only, while
-  broader Vitest cleanup, package/toolchain changes, unrelated test migration, and `g026` remain
-  out of scope.
+- The reproduced `g026-platform-subdomain-routing.spec.ts` typecheck failure remains explicit,
+  unrelated residue outside the closed Aggregator units and does not block their closure.
 
 ## Restore Notes
 

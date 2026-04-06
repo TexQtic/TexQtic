@@ -2,15 +2,15 @@
 unit_id: AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001
 title: Aggregator discovery verification-surface normalization
 type: GOVERNANCE
-status: OPEN
+status: CLOSED
 delivery_class: DECISION_QUEUE
 wave: W5
 plane: CONTROL
 opened: 2026-04-05
-closed: null
-verified: null
-commit: null
-evidence: "BLOCKER_CONFIRMATION: current Aggregator discovery verification remains green on frontend typecheck and focused UI test but backend execution is blocked because server/src/tests/aggregator-discovery-read.integration.test.ts is outside current server Vitest discovery while the approved command points at that path · BOUNDEDNESS_CONFIRMATION: the mismatch is verification-surface only and can be isolated to backend test discovery normalization for the one existing Aggregator discovery integration test without changing product behavior · RESHAPE_CONFIRMATION: GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-RESHAPE confirms the former unit boundary was too narrow because no lawful file-only fix could make the approved command truthful while `server/vitest.config.ts` remained forbidden, so the unit now authorizes one minimal `server/vitest.config.ts` discovery include adjustment for this exact Aggregator backend verification path only · NON_EXPANSION_CONFIRMATION: package/toolchain modernization, general Vitest cleanup, unrelated test migration, and the reproduced g026-platform-subdomain-routing.spec.ts typecheck failure remain out of scope · ACTIVE_PRODUCT_PRESERVATION_CONFIRMATION: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS remains OPEN as the sole product-facing ACTIVE_DELIVERY unit and this support unit does not supersede it"
+closed: 2026-04-06
+verified: 2026-04-06
+commit: 9da32ea
+evidence: "BLOCKER_CONFIRMATION: the unit was lawfully opened to isolate the Aggregator backend verification discoverability mismatch only · RESHAPE_CONFIRMATION: the unit was lawfully reshaped to authorize one minimal `server/vitest.config.ts` discovery include adjustment for the exact Aggregator backend integration test path only · DISCOVERABILITY_NORMALIZATION_CONFIRMATION: commit `9da32ea` fulfilled the unit's sole remit by making the approved Aggregator backend verification path discoverable and runnable · HANDOFF_CONFIRMATION: once the remaining blocker was shown to be a truthful slice-local runtime issue, it was correctly handed back to `AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` rather than absorbed into this support unit · NON_EXPANSION_CONFIRMATION: this unit never widened into product behavior, broader Vitest cleanup, package/toolchain work, or unrelated repo failures · RESIDUE_SEPARATION_CONFIRMATION: the reproduced `g026-platform-subdomain-routing.spec.ts` typecheck failure remains explicitly unrelated and non-blocking for this unit's closure"
 doctrine_constraints:
   - D-004: this is one bounded governance-only verification-support unit only; it must not merge into product implementation or broader testing cleanup
   - D-007: governance-only units must not modify application behavior, schema, package, CI, deployment, or unrelated runtime files
@@ -19,6 +19,8 @@ doctrine_constraints:
 decisions_required:
   - GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-OPENING: DECIDED (2026-04-05, Paresh)
   - GOV-DEC-AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-RESHAPE: DECIDED (2026-04-05, Paresh)
+  - GOV-DEC-AGGREGATOR-DISCOVERY-CLOSURE-READINESS: DECIDED (2026-04-06, Paresh)
+  - GOV-DEC-AGGREGATOR-DISCOVERY-CLOSE: DECIDED (2026-04-06, Paresh)
 blockers: []
 ---
 
@@ -29,6 +31,8 @@ blockers: []
 It exists only to normalize backend test discovery for the existing Aggregator discovery integration test so that backend verification evidence for the open product unit can be produced truthfully.
 
 This unit does not change product behavior.
+
+Current result: `CLOSED`.
 
 ## Scope Statement
 
@@ -85,19 +89,11 @@ The next remediation pass inside this unit may modify only the minimum bounded s
 
 No broader test, package, CI, or application file surface is authorized by this reshape.
 
-## Current Layer 0 Rule
+## Closure Basis
 
-`AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS` remains OPEN as the sole current product-facing `ACTIVE_DELIVERY` unit.
+This unit is now closed as complete because:
 
-`AGGREGATOR-DISCOVERY-VERIFICATION-SURFACE-NORMALIZATION-001` is open concurrently with `DECISION_QUEUE` posture only as a verification-support governance unit.
-
-## Allowed Next Step
-
-The only lawful next work inside this unit is one bounded verification-surface normalization pass for the existing Aggregator backend integration test, including one minimal `server/vitest.config.ts` discovery include adjustment only if that remains necessary.
-
-## Forbidden Next Step
-
-- Do **not** change product behavior
-- Do **not** broaden into general test-infrastructure cleanup
-- Do **not** fix the unrelated g026 server typecheck failure
-- Do **not** modify package, CI, schema, or deployment surfaces
+- the approved Aggregator backend verification path is discoverable and runnable
+- its sole verification-surface remit is fulfilled by the committed `vitest.config.ts` adjustment in `9da32ea`
+- the later runtime blocker was correctly handed back to the product unit rather than absorbed here
+- the remaining `g026-platform-subdomain-routing.spec.ts` residue is explicitly unrelated and does not block this closure

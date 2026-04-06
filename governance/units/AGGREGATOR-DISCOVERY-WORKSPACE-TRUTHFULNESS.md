@@ -2,15 +2,15 @@
 unit_id: AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS
 title: Aggregator discovery workspace truthfulness
 type: ACTIVE_DELIVERY
-status: OPEN
+status: CLOSED
 delivery_class: ACTIVE_DELIVERY
 wave: W5
 plane: TENANT
 opened: 2026-04-05
-closed: null
-verified: null
-commit: null
-evidence: "OPENING_DECISION_CONFIRMATION: current Layer 0 returned zero-open product-facing posture and bounded lawful-opening evaluation returned AGGREGATOR_CHILD_LAWFUL_TO_OPEN for this exact unit · TARGET_CONFIRMATION: current repo truth preserves AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS as the exact child candidate separate from the broader design-gated Aggregator family · BOUNDEDNESS_CONFIRMATION: candidate-analysis, opening draft, and bounded product decision all preserve discovery workspace truthfulness as the first lawful Aggregator slice only · BLOCKER_CONFIRMATION: the former sole-active-delivery blocker recorded in the bounded product decision is now resolved because Layer 0 records current_product_active_delivery_count: 0 before this opening · SCOPE_CONFIRMATION: opening remains limited to Aggregator home/discovery truthfulness, curated discovery entries, minimal trust-signaled cues, minimum read-only data shaping, conditional narrow backend read support only if unavoidable, and optional secondary AI insight reuse only if subordinate · NON_EXPANSION_CONFIRMATION: counterparty detail, intent capture, handoff creation, downstream RFQ/trade/order changes, negotiation/matching/routing, broad directory or schema redesign, settlement/revenue/orchestrator behavior, and broader Aggregator family work remain out of scope"
+closed: 2026-04-06
+verified: 2026-04-06
+commit: cecc339
+evidence: "OPENING_CONFIRMATION: the unit was lawfully opened as the sole current product-facing ACTIVE_DELIVERY slice for Aggregator discovery workspace truthfulness only · SCOPE_PRESERVATION_CONFIRMATION: implementation remained bounded to curated discovery workspace truthfulness, minimal trust-signaled cues, minimum read-only data shaping, and conditional narrow backend read support only if unavoidable · FRONTEND_VERIFICATION_CONFIRMATION: `pnpm exec tsc --noEmit` remained green across the bounded frontend surface · DISCOVERABILITY_CONFIRMATION: commit `9da32ea` made the approved backend verification path discoverable and runnable without widening into broader test/tooling work · RUNTIME_REMEDIATION_CONFIRMATION: commit `cecc339` completed the bounded backend discovery-path remediation inside the read-only service surface only · BACKEND_VERIFICATION_CONFIRMATION: the exact focused Aggregator backend integration test now passes on `src/tests/aggregator-discovery-read.integration.test.ts` · RESIDUE_SEPARATION_CONFIRMATION: the reproduced `g026-platform-subdomain-routing.spec.ts` typecheck failure remains explicitly unrelated and non-blocking for this unit's closure"
 doctrine_constraints:
    - D-004: this is one bounded ACTIVE_DELIVERY unit only; it must not be merged with broader Aggregator family work or any other launch remainder
    - D-013: this record completes decision and opening only; implementation, verification, governance sync, and close remain separate required phases
@@ -18,6 +18,8 @@ doctrine_constraints:
    - D-016: one-logical-unit discipline remains mandatory; no successor or parallel product opening is implied by this opening
 decisions_required:
    - GOV-DEC-AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS-OPENING: DECIDED (2026-04-05, Paresh)
+   - GOV-DEC-AGGREGATOR-DISCOVERY-CLOSURE-READINESS: DECIDED (2026-04-06, Paresh)
+   - GOV-DEC-AGGREGATOR-DISCOVERY-CLOSE: DECIDED (2026-04-06, Paresh)
 blockers: []
 ---
 
@@ -28,7 +30,7 @@ blockers: []
 It exists only to make the Aggregator home/discovery surface materially truthful as a curated
 discovery workspace without widening into broader Aggregator family work.
 
-Current result: `OPEN`.
+Current result: `CLOSED`.
 
 ## Opening Basis
 
@@ -77,6 +79,17 @@ No implementation files are modified by this opening writeback alone.
 
 Future implementation must remain `AGGREGATOR-OWNED`, `READ-FIRST`, and `CONDITIONAL BACKEND
 SUPPORT ONLY`.
+
+## Closure Basis
+
+This unit is now closed as complete because:
+
+- bounded implementation stayed inside the exact discovery-workspace truthfulness slice
+- frontend verification remained green
+- the backend verification path is discoverable and runnable
+- the truthful runtime blocker was remediated in the bounded backend discovery service path only
+- the exact focused backend integration test now passes
+- the remaining `g026-platform-subdomain-routing.spec.ts` residue is explicitly unrelated and does not block this closure
 
 ## Explicit Non-Claims
 
