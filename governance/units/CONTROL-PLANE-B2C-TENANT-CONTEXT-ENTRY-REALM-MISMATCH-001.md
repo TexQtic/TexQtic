@@ -2,15 +2,15 @@
 unit_id: CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001
 title: Control-plane B2C tenant-context entry realm mismatch
 type: GOVERNANCE
-status: VERIFIED_COMPLETE
+status: CLOSED
 delivery_class: DECISION_QUEUE
 wave: W5
 plane: BOTH
 opened: 2026-04-06
-closed: null
+closed: 2026-04-06
 verified: 2026-04-06
 commit: a637998
-evidence: "BLOCKER_CONFIRMATION: GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-PRODUCTION-VERIFICATION recorded the exact live control-plane tenant-context entry failure on the B2C proof tenant only · REMEDIATION_CONFIRMATION: commit `a637998` corrected the bounded App.tsx impersonation-start -> tenant bootstrap handoff without widening into shared realm-client or enterprise Orders-token files · LIVE_RERUN_CONFIRMATION: the exact proof tenant is now reachable from both bounded control-plane entry surfaces in production, the earlier REALM_MISMATCH / Loading workspace / Starting symptom chain no longer reproduces, and the active B2C shell unit can now complete truthful production verification · SEPARATION_CONFIRMATION: the earlier enterprise Orders neighbor-smoke issue did not reproduce on rerun and remains excluded here, while the impersonation-stop `404` observation remains a separate adjacent finding only · POST_CLOSE_RELATION_CONFIRMATION: after GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING closed the active B2C unit, this support unit remains separately VERIFIED_COMPLETE and pending its own bounded close only"
+evidence: "BLOCKER_CONFIRMATION: GOV-DEC-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION-PRODUCTION-VERIFICATION recorded the exact live control-plane tenant-context entry failure on the B2C proof tenant only · REMEDIATION_CONFIRMATION: commit `a637998` corrected the bounded App.tsx impersonation-start -> tenant bootstrap handoff without widening into shared realm-client or enterprise Orders-token files · LIVE_RERUN_CONFIRMATION: the exact proof tenant is now reachable from both bounded control-plane entry surfaces in production, the earlier REALM_MISMATCH / Loading workspace / Starting symptom chain no longer reproduces, and the active B2C shell unit could then complete truthful production verification and separate closure · SEPARATION_CONFIRMATION: the earlier enterprise Orders neighbor-smoke issue did not reproduce on rerun and remains excluded here, while the impersonation-stop `404` observation remains a separate adjacent finding only · CLOSE_CONFIRMATION: GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-CLOSE closed this bounded support unit without absorbing the adjacent finding, enterprise Orders, or unrelated `g026` residue"
 doctrine_constraints:
   - D-004: this is one bounded governance-only support unit only; it must not merge B2C shell reopening, broader auth/session redesign, control-plane tenant-operations redesign, or the separate enterprise Orders token finding
   - D-007: any later implementation and verification must remain confined to the exact remediation surface and approved governance sync files only
@@ -18,6 +18,7 @@ doctrine_constraints:
   - D-016: this support unit does not change product priority and does not imply any broader control-plane, auth, or adjacent-family opening
 decisions_required:
   - GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-OPENING: DECIDED (2026-04-06, Paresh)
+  - GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-CLOSE: DECIDED (2026-04-06, Paresh)
 blockers: []
 ---
 
@@ -26,12 +27,12 @@ blockers: []
 `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` is one bounded governance-only
 support unit.
 
-It exists only to isolate the live control-plane tenant-context entry blocker that prevents truthful
-production verification of the open B2C shell unit.
+It exists only to isolate the live control-plane tenant-context entry blocker that had prevented
+truthful production verification of the bounded B2C shell unit.
 
-This unit does not replace or supersede the active B2C shell unit.
+This unit does not replace or supersede the B2C shell unit.
 
-Current result: `VERIFIED_COMPLETE`.
+Current result: `CLOSED`.
 
 ## Scope Statement
 
@@ -97,14 +98,12 @@ If direct repo truth later proves that shared realm-client files or enterprise O
 must change to resolve this blocker, implementation must halt and reopen classification rather than
 widen this unit implicitly.
 
-## Active Product Relationship
+## Product Unit Relationship
 
-- `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` remains the sole open
-  product-facing `ACTIVE_DELIVERY` unit
-- this unit exists only to remove the blocker that currently prevents truthful production
-  verification of that active B2C unit
-- this unit does not authorize closure, re-scoping, or re-verification of the active B2C unit by
-  implication
+- `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now separately `CLOSED`
+- this unit fulfilled its sole blocker-removal remit that had enabled truthful production
+  verification and separate close of that bounded B2C unit
+- this unit does not reopen or supersede the closed B2C unit by implication
 - the separate enterprise Orders token finding remains unchanged and excluded here
 
 ## Exact Verification Profile
@@ -147,13 +146,49 @@ widen this unit implicitly.
   - this support unit fulfilled its sole blocker-removal remit and does not supersede or absorb the active B2C unit
   - no closure is implied by this sync
 
+## Close Record
+
+- close date: `2026-04-06`
+- resulting status: `CLOSED`
+- close basis:
+  - commit `a637998` had already removed the exact control-plane B2C tenant-context entry blocker
+    on the bounded remediation surface
+  - live production rerun already established `VERIFIED_COMPLETE` on the exact governed path
+  - `GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING` had already closed the B2C product unit that
+    this support unit existed to unblock
+  - `GOV-DEC-IMPERSONATION-STOP-CLEANUP-404-ADJACENT-FINDING` records the observed stop-path
+    `404` as a separate non-blocking adjacent finding only
+- close summary:
+  - both bounded control-plane entry surfaces reach the exact proof tenant successfully
+  - the earlier `REALM_MISMATCH`, `Loading workspace...`, and `Starting...` symptom chain no
+    longer reproduces
+  - the bounded B2C shell unit already completed separate truthful production verification and is
+    already `CLOSED`
+  - the earlier enterprise `Orders` neighbor-smoke issue did not reproduce on rerun and remains
+    separate
+  - the observed impersonation-stop cleanup `404` remains separate and is not absorbed into this
+    closed support unit
+  - no successor opening is implied by this close
+
+## Current Layer 0 Rule
+
+`CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` is now `CLOSED`.
+
+`NEXT-ACTION.md` now returns to a no-open derived-product-truth pointer because no product-facing
+`ACTIVE_DELIVERY` unit is currently open.
+
+The adjacent finding `IMPERSONATION-STOP-CLEANUP-404-001` remains decision-only and does not
+create an opening. `g026-platform-subdomain-routing.spec.ts` remains unrelated and out of scope.
+
 ## Last Governance Confirmation
 
-2026-04-06 — after `GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING` closed the active B2C unit,
-this support unit remains separately `VERIFIED_COMPLETE` and pending its own close only. Commit
-`a637998` had already removed the exact control-plane B2C tenant-context entry blocker that had
-prevented truthful production verification of the active B2C shell unit, both bounded
-control-plane entry surfaces reach the exact proof tenant successfully, the earlier blocked symptom
-chain no longer reproduces, and the observed impersonation-stop `404` remains separate and
-non-blocking. This support-unit record still does not reopen broader auth or control-plane
-redesign and still does not widen into the separate enterprise Orders-token path.
+2026-04-06 — `GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-CLOSE`. Status
+transitioned: `VERIFIED_COMPLETE` -> `CLOSED` after the already-recorded bounded remediation
+baseline, live production rerun proof, separate close of the B2C shell unit this support unit had
+unblocked, and compact Layer 0 sync. Commit `a637998` had already removed the exact control-plane
+B2C tenant-context entry blocker, both bounded control-plane entry surfaces reach the exact proof
+tenant successfully, the earlier blocked symptom chain no longer reproduces, and the observed
+impersonation-stop `404` remains separate and non-blocking under
+`GOV-DEC-IMPERSONATION-STOP-CLEANUP-404-ADJACENT-FINDING`. No broader auth or control-plane
+redesign is reopened here, the earlier enterprise Orders token path remains separate, no successor
+opening is implied, and `g026-platform-subdomain-routing.spec.ts` remains unrelated residue.

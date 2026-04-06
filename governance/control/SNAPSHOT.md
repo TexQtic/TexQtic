@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-06
-snapshot_unit: GOV-DEC-B2C-SHELL-CLOSE-WITH-ADJACENT-FINDING
+snapshot_unit: GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-CLOSE
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
@@ -23,8 +23,7 @@ current_product_active_delivery_unit: null
 future_product_opening_requires_fresh_bounded_decision: true
 current_open_counts:
   open: 11
-  verified_complete: 1
-  decision_queue: 12
+  decision_queue: 11
   design_gate: 2
   blocked: 0
   deferred: 0
@@ -40,8 +39,6 @@ current_open_governance_units:
   - GOVERNANCE-CANDIDATE-STATE-NORMALIZATION-001
   - LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001
   - LAUNCH-ACCELERATION-OVERLAY-001
-current_verified_complete_units:
-  - CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001
 current_design_gates:
   - TECS-FBW-ADMINRBAC
   - RFQ-NEGOTIATION-CONTINUITY
@@ -59,14 +56,18 @@ historical_truth_owner: governance/units/ + governance/log/
 - `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` is now `CLOSED` after bounded
   live production proof on the exact non-WL B2C `HOME` path and a separate close decision that
   preserved the stop-path `404` as a non-blocking adjacent finding only.
-- `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` remains `VERIFIED_COMPLETE` as the
-  separate support blocker-removal unit and is pending its own separate close pass only.
+- `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` is now `CLOSED` after fulfilling
+  its sole blocker-removal remit on the bounded control-plane tenant-context entry path and a
+  separate close decision that preserved the same stop-path `404` and unrelated enterprise Orders
+  rerun outcome as separate truth only.
+- These closures do not authorize any implicit successor opening and do not reopen the broader B2C
+  family.
 - The earlier blocked `REALM_MISMATCH` / `Loading workspace...` / `Starting...` symptom chain no
   longer reproduces.
 - The earlier enterprise Orders neighbor-smoke issue did not reproduce on rerun and remains
-  separate and excluded from both the closed B2C unit and the still-open support unit.
+  separate and excluded from both closed B2C-chain units.
 - `IMPERSONATION-STOP-CLEANUP-404-001` is now preserved as a separate decision-gated adjacent
-  finding only. It does not block the B2C close and does not create an opening by implication.
+  finding only. It does not block these closures and does not create an opening by implication.
 - This opening does not reopen the closed public browse-entry seam, seller/admin separation, or
   settings separation units and does not open orders/cart/checkout continuity or adjacent-family
   redesign.
