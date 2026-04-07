@@ -76,11 +76,21 @@ export interface TenantDetailResponse {
   };
 }
 
+let getTenantsInFlight: Promise<TenantsResponse> | null = null;
+
 /**
  * Fetch all tenants (admin only)
  */
 export async function getTenants(): Promise<TenantsResponse> {
-  return adminGet<TenantsResponse>('/api/control/tenants');
+  if (getTenantsInFlight) {
+    return getTenantsInFlight;
+  }
+
+  getTenantsInFlight = adminGet<TenantsResponse>('/api/control/tenants').finally(() => {
+    getTenantsInFlight = null;
+  });
+
+  return getTenantsInFlight;
 }
 
 /**
