@@ -162,3 +162,134 @@ Truthful close position:
 - restore-path `/api/me` gating = reduced and live-proven in Enterprise and White Label
 - canonical `/api/me` = still authoritative and still slow
 - broader tenant startup weight after shell entry = still out of scope for this unit
+
+## 10. Repeated-Call Containment Follow-up
+
+- Date: 2026-04-07
+- Type: bounded follow-up remediation record
+- Scope: reduce repeated or overlapping `/api/me` reads during tenant bootstrap and early reconciliation only
+
+### 10.1 Confirmed Follow-up Baseline
+
+After the bootstrap-gating remediation above, production restore no longer hard-blocked shell entry on `/api/me`, but the exercised browser probes still showed multiple `/api/me` resource entries during restore.
+
+Repo trace for this follow-up confirmed:
+
+- tenant login reconciliation in `App.tsx` still called canonical `getCurrentUser()`
+- tenant restore in `App.tsx` still called canonical `getCurrentUser()`
+- the shared GET helper in `services/apiClient.ts` automatically retried GET requests, so one logical `/api/me` read could replay into multiple network requests on transient failure
+- no default first-shell `HOME` surface on the exercised Enterprise or White Label entry path mounted a second immediate `/api/me` caller during first paint
+
+### 10.2 Root Cause
+
+The remaining `/api/me` multiplicity on the bootstrap seam came from two bounded causes:
+
+- overlapping bootstrap callers could race the same canonical `/api/me` read
+- the shared GET retry wrapper could replay `/api/me` during the same bootstrap boundary
+
+The issue was not that `/api/me` had become non-canonical; it was that the canonical read still lacked bootstrap-specific containment.
+
+### 10.3 Files Changed In This Follow-up
+
+Product files changed:
+
+- `App.tsx`
+- `services/apiClient.ts`
+- `services/authService.ts`
+
+No backend, schema, migration, env, or governance files were changed in the product commit for this follow-up.
+
+### 10.4 Fix Summary
+
+This follow-up kept `/api/me` authoritative and narrowed the fix to bootstrap callers only:
+
+- `services/apiClient.ts` now allows a GET caller to disable automatic retry for a specific request
+- `services/authService.ts` now supports bounded `getCurrentUser(...)` options and a token-scoped in-flight dedupe path
+- `App.tsx` tenant login reconciliation and tenant restore now call `getCurrentUser({ dedupe: true, retry: false })`
+- this collapses overlapping bootstrap reads onto one in-flight canonical request and prevents retry fan-out for that exact seam
+
+Important boundary note:
+
+- `/api/me` remains canonical
+- this follow-up does not remove later non-bootstrap `/api/me` consumers elsewhere in the tenant product
+- this follow-up does not claim `/api/me` latency itself is solved
+
+### 10.5 Verification Evidence
+
+Targeted local verification completed:
+
+- `pnpm exec tsc --noEmit` -> `EXIT 0`
+
+Product commit and deploy evidence:
+
+- product commit: `39ed76b`
+- product commit message: `fix: contain repeated api me bootstrap reads`
+- push result: `bc09bc0..39ed76b  main -> main`
+
+Production verification completed against `https://app.texqtic.com/` using the seeded Enterprise and White Label owner accounts in live browser sessions.
+
+#### Enterprise production proof
+
+Tenant used:
+
+- `Acme Corporation`
+
+Observed live login continuity before reload:
+
+- tenant email resolution identified `Acme Corporation`
+- login completed into the Enterprise shell
+- the exercised login boundary produced a single `/api/me` resource entry at about `5392.4 ms`
+
+Observed live restore proof after clearing timings and reloading with a valid tenant JWT present:
+
+- `tenantRestore:stub_applied` and `tenantRestore:getCurrentUser:start` were both recorded at `2026-04-07T12:23:40.098Z`
+- app state moved into `EXPERIENCE` immediately after stub application
+- exactly one `/api/me` resource entry was recorded during reload
+- recorded `/api/me` duration was about `5428.4 ms`
+- the visible page reloaded directly into `Enterprise Management` / `Wholesale Catalog`
+- no second or replayed `/api/me` resource entry was observed in this exercised production restore probe
+
+#### White Label production proof
+
+Tenant used:
+
+- `White Label Co`
+
+Observed live login continuity before reload:
+
+- tenant email resolution identified `White Label Co`
+- login completed into the White Label admin shell
+- the exercised login boundary produced a single `/api/me` resource entry at about `5572.8 ms`
+
+Observed live restore proof after clearing timings and reloading with a valid tenant JWT present:
+
+- `tenantRestore:stub_applied` and `tenantRestore:getCurrentUser:start` were both recorded at `2026-04-07T12:24:44.481Z`
+- app state moved into `WL_ADMIN` immediately after stub application
+- exactly one `/api/me` resource entry was recorded during reload
+- recorded `/api/me` duration was about `5552.1 ms`
+- the visible page reloaded directly into `Store Admin`
+- no second or replayed `/api/me` resource entry was observed in this exercised production restore probe
+
+Observed trace note:
+
+- `tenantRestore:snapshot_invalid` with `cancelled: true` still appeared after `tenantRestore:getCurrentUser:success` in both exercised restore probes
+- this reflects the original `AUTH`-scoped restore effect being cleaned up after provisional shell entry changed app state
+- it did not create an extra `/api/me` request in either exercised production restore probe
+
+### 10.6 Current Posture After Follow-up
+
+What is now truthfully proven:
+
+- the exercised Enterprise tenant restore produced one canonical `/api/me` network request
+- the exercised White Label tenant restore produced one canonical `/api/me` network request
+- provisional shell continuity still happens immediately on both paths
+- canonical `/api/me` remains authoritative for reconciliation
+
+What this follow-up does not claim:
+
+- it does not remove non-bootstrap `/api/me` consumers in later panels or later tenant actions
+- it does not claim `/api/me` latency itself is solved
+
+Therefore the truthful runtime result for this bounded follow-up is:
+
+- repeated `/api/me` bootstrap-read multiplicity was contained on the exercised Enterprise and White Label restore paths
