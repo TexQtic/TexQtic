@@ -184,13 +184,26 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const adminId = request.adminId ?? 'unknown';
     const tenantRecords = await withAdminContext(async tx => {
       return await tx.tenant.findMany({
-        include: {
-          domains: true,
-          branding: true,
-          _count: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          type: true,
+          status: true,
+          plan: true,
+          createdAt: true,
+          updatedAt: true,
+          isWhiteLabel: true,
+          branding: {
             select: {
-              memberships: true,
-              auditLogs: true,
+              id: true,
+              logoUrl: true,
+              themeJson: true,
+            },
+          },
+          organizations: {
+            select: {
+              status: true,
             },
           },
         },
@@ -198,16 +211,14 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     });
 
-    const organizationStatuses = await readOrganizationStatuses(
-      tenantRecords.map((tenantRecord: (typeof tenantRecords)[number]) => tenantRecord.id)
+    const tenants = tenantRecords.map(
+      ({ organizations, ...tenantRecord }: (typeof tenantRecords)[number]) => {
+        return {
+          ...tenantRecord,
+          onboarding_status: organizations?.status ?? null,
+        };
+      }
     );
-
-    const tenants = tenantRecords.map((tenantRecord: (typeof tenantRecords)[number]) => {
-      return {
-        ...tenantRecord,
-        onboarding_status: organizationStatuses.get(tenantRecord.id) ?? null,
-      };
-    });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read', 'tenant', { count: tenants.length }));
     return sendSuccess(reply, { tenants });
