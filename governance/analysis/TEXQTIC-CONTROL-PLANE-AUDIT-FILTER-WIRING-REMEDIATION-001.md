@@ -50,6 +50,16 @@ Exact issue:
 - the component never passed `tenantId` or `action` into `getAuditLogs(...)`
 - the UI copy also implied broader “search by admin or action” behavior than the current backend contract actually supports
 
+Refined live-production crash cause confirmed after the wiring fix:
+
+- the live Audit Logs page rendered rows using `log.actorId.substring(0, 8)`
+- the same render path also used `log.tenantId.substring(0, 8)` when no tenant object was present
+- the production audit-log payload can lawfully contain `actorId = null`
+- the production audit-log payload can lawfully contain `tenantId = null`
+- the page therefore crashed in the row render path before the now-wired filter controls could be truthfully exercised
+
+The backend route remained successful during live verification; the failure was null-unsafe frontend rendering against a truthful nullable payload.
+
 The backend route and the control-plane service wrapper did not require change for this unit.
 
 ## 5. Files Changed
@@ -57,6 +67,7 @@ The backend route and the control-plane service wrapper did not require change f
 Product file changed:
 
 - `components/ControlPlane/AuditLogs.tsx`
+- `services/controlPlaneService.ts`
 
 Governance record changed:
 
@@ -77,6 +88,16 @@ Applied the minimum viable frontend fix in `components/ControlPlane/AuditLogs.ts
 - kept the backend/service contract unchanged
 - clarified the UI help text so it reflects the actual backend support instead of implying unsupported actor/admin search behavior
 
+Additional bounded render-safety fix after truthful production failure:
+
+- updated the directly related `AuditLog` type to reflect live nullable `actorId`, `tenantId`, and optional `tenant`
+- replaced direct `substring(...)` calls on nullable audit identifiers with null-safe preview helpers
+- added explicit, truthful fallback display values for nullable fields:
+  - `ACTOR_TYPE:(no actor id)`
+  - `(no tenant context)`
+- hardened metadata preview generation so it does not assume a truthy stringified value
+- preserved the already-implemented exact-match filter/search wiring and current backend semantics
+
 ## 7. Verification Evidence
 
 Code-contract verification completed:
@@ -91,6 +112,8 @@ Code-contract verification completed:
 Targeted validation result:
 
 - `components/ControlPlane/AuditLogs.tsx` -> no errors
+- `services/controlPlaneService.ts` -> no errors
+- `pnpm exec eslint components/ControlPlane/AuditLogs.tsx services/controlPlaneService.ts` -> clean
 
 Runtime verification status:
 
@@ -118,15 +141,38 @@ Adjacent finding kept out of scope:
 
 This remediation should be treated as the bounded fix for the confirmed frontend wiring gap.
 
-Recommended next close step:
+Production verification recheck on 2026-04-07 completed and failed.
 
-- run one authenticated control-plane runtime recheck to confirm:
-  - audit page still loads
-  - action filter request fires with the expected query string
-  - tenant filter request fires with the expected query string
-  - visible results update consistently
+Observed live production truth:
 
-If that runtime pass succeeds, this unit can close as a completed frontend wiring remediation with no backend expansion required.
+- a real authenticated super-admin session was obtained through the production `Staff Control Plane` flow
+- the live `GET /api/control/audit-logs?limit=50` request fired and returned `200`
+- the Audit Logs page then crashed into the error boundary with `Cannot read properties of null (reading 'substring')`
+- the page therefore did not remain usable long enough to truthfully exercise the visible filter controls end to end
+
+Bounded supporting evidence gathered during the same authenticated production session:
+
+- direct authenticated audit-log API reads returned `200`
+- the unfiltered response returned `50` rows
+- the live payload included rows where `actorId` was `null`
+- the live payload included rows where `tenantId` was `null`
+- exact-match backend filtering itself still responded successfully for both:
+  - `tenantId`
+  - `action`
+
+Current close posture:
+
+- production verification result = `FAILED`
+- this unit is not truthfully closed
+- the pushed filter wiring fix cannot be considered production-verified because the live page now fails before filter interaction can be completed
+
+Post-remediation status after the null-safe rendering fix:
+
+- the bounded frontend render-safety fix is now implemented locally
+- targeted diagnostics and targeted lint are clean
+- truthful post-fix production verification is currently `BLOCKED` because the updated frontend code has not yet been deployed to `https://app.texqtic.com`
+- until that deployment happens, the production browser can only observe the previously deployed crashing bundle, not the local remediation
+- this unit is therefore still not truthfully closed
 
 ## 10. Footer
 

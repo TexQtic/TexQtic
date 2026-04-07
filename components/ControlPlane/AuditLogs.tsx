@@ -3,6 +3,35 @@ import { getAuditLogs, AuditLog, AuditLogsQueryParams } from '../../services/con
 import { EmptyState, ErrorState, AuditLogSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
+const MAX_AUDIT_ID_PREVIEW_LENGTH = 8;
+
+function getAuditIdPreview(value: string | null | undefined): string | null {
+  return value ? value.substring(0, MAX_AUDIT_ID_PREVIEW_LENGTH) : null;
+}
+
+function getAuditActorLabel(log: AuditLog): string {
+  const actorIdPreview = getAuditIdPreview(log.actorId);
+  return actorIdPreview ? `${log.actorType}:${actorIdPreview}` : `${log.actorType}:(no actor id)`;
+}
+
+function getAuditMetadataPreview(metadata: AuditLog['metadata']): string {
+  if (!metadata) {
+    return 'No details';
+  }
+
+  const serializedMetadata = JSON.stringify(metadata);
+  return serializedMetadata ? serializedMetadata.substring(0, 100) : 'No details';
+}
+
+function getAuditTenantLabel(log: AuditLog): string {
+  if (log.tenant?.slug) {
+    return log.tenant.slug;
+  }
+
+  const tenantIdPreview = getAuditIdPreview(log.tenantId);
+  return tenantIdPreview ?? '(no tenant context)';
+}
+
 export const AuditLogs: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,15 +218,11 @@ export const AuditLogs: React.FC = () => {
                   {new Date(log.createdAt).toLocaleString()}
                 </div>
                 <div className="text-rose-400 font-bold whitespace-nowrap">[{log.action}]</div>
-                <div className="text-blue-400 whitespace-nowrap">
-                  {log.actorType}:{log.actorId.substring(0, 8)}
-                </div>
+                <div className="text-blue-400 whitespace-nowrap">{getAuditActorLabel(log)}</div>
                 <div className="text-slate-300 flex-1 italic">
-                  {log.metadata ? JSON.stringify(log.metadata).substring(0, 100) : 'No details'}
+                  {getAuditMetadataPreview(log.metadata)}
                 </div>
-                <div className="text-slate-600">
-                  {log.tenant ? `${log.tenant.slug}` : log.tenantId.substring(0, 8)}
-                </div>
+                <div className="text-slate-600">{getAuditTenantLabel(log)}</div>
               </div>
             ))}
           </div>

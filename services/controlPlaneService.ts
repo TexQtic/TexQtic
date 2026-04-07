@@ -115,17 +115,17 @@ export async function activateApprovedOnboarding(
 export interface AuditLog {
   id: string;
   action: string;
-  actorId: string;
+  actorId: string | null;
   actorType: string;
   resourceType: string | null;
   resourceId: string | null;
   metadata: Record<string, any> | null;
-  tenantId: string;
+  tenantId: string | null;
   createdAt: string;
   tenant?: {
-    slug: string;
-    name: string;
-  };
+    slug: string | null;
+    name: string | null;
+  } | null;
 }
 
 export interface AuditLogsResponse {
