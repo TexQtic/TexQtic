@@ -1160,6 +1160,16 @@ const App: React.FC = () => {
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
     && (normalizedTenantCategory === TenantType.AGGREGATOR || normalizedTenantCategory === TenantType.INTERNAL);
+  const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
+    && expView === 'HOME'
+    && normalizedTenantCategory === TenantType.B2B
+    && currentTenant?.is_white_label !== true;
+  const isWlAdminProductsSurface = appState === 'WL_ADMIN'
+    && normalizeWlAdminView(wlAdminView) === 'PRODUCTS'
+    && currentTenant?.is_white_label === true;
+  const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
+    || isB2CBrowseEntrySurface
+    || isWlAdminProductsSurface;
 
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
@@ -1267,39 +1277,41 @@ const App: React.FC = () => {
     };
   }, [currentTenant, isAggregatorDiscoveryEntrySurface, aggregatorDiscoveryRefreshKey]);
 
-  // Fetch catalog items when entering experience mode (or WL_ADMIN Products panel)
+  // Fetch App-owned catalog items only for views that actually render App-owned product state.
   useEffect(() => {
-    if (appState === 'EXPERIENCE' || appState === 'TEAM_MGMT' || appState === 'SETTINGS' || appState === 'WL_ADMIN') {
-      const fetchCatalog = async () => {
-        setCatalogLoading(true);
-        setCatalogError(null);
-        try {
-          const query = isB2CBrowseEntrySurface ? b2cSearchQuery.trim() : '';
-          const response = await getCatalogItems({
-            limit: 20,
-            ...(query ? { q: query } : {}),
-          });
-          setProducts(response.items);
-          setCatalogNextCursor(response.nextCursor);
-          setB2cVisibleCount(query ? response.items.length : Math.min(8, response.items.length || 8));
-        } catch (error) {
-          console.error('Failed to load catalog:', error);
-          setCatalogError('Failed to load catalog. Please try again.');
-          setProducts([]);
-          setCatalogNextCursor(null);
-        } finally {
-          setCatalogLoading(false);
-        }
-      };
-
-      if (isB2CBrowseEntrySurface) {
-        const debounceId = window.setTimeout(fetchCatalog, 200);
-        return () => globalThis.clearTimeout(debounceId);
-      }
-
-      fetchCatalog();
+    if (!shouldLoadAppCatalog) {
+      return;
     }
-  }, [appState, expView, isB2CBrowseEntrySurface, b2cSearchQuery]);
+
+    const fetchCatalog = async () => {
+      setCatalogLoading(true);
+      setCatalogError(null);
+      try {
+        const query = isB2CBrowseEntrySurface ? b2cSearchQuery.trim() : '';
+        const response = await getCatalogItems({
+          limit: 20,
+          ...(query ? { q: query } : {}),
+        });
+        setProducts(response.items);
+        setCatalogNextCursor(response.nextCursor);
+        setB2cVisibleCount(query ? response.items.length : Math.min(8, response.items.length || 8));
+      } catch (error) {
+        console.error('Failed to load catalog:', error);
+        setCatalogError('Failed to load catalog. Please try again.');
+        setProducts([]);
+        setCatalogNextCursor(null);
+      } finally {
+        setCatalogLoading(false);
+      }
+    };
+
+    if (isB2CBrowseEntrySurface) {
+      const debounceId = window.setTimeout(fetchCatalog, 200);
+      return () => globalThis.clearTimeout(debounceId);
+    }
+
+    void fetchCatalog();
+  }, [shouldLoadAppCatalog, isB2CBrowseEntrySurface, b2cSearchQuery, currentTenant?.id]);
 
   const handleB2CShopNow = () => {
     b2cCatalogSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3359,7 +3371,7 @@ const App: React.FC = () => {
           );
         }
         return (
-          <CartProvider key={`tenant-shell:${currentTenant.id}`}>
+          <>
             {tenantProvisionError && (
               <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
                 ⚠️ {tenantProvisionError}
@@ -3379,7 +3391,7 @@ const App: React.FC = () => {
             >
               {renderWLAdminContent()}
             </WhiteLabelAdminShell>
-          </CartProvider>
+          </>
         );
       }
       case 'TEAM_MGMT':
