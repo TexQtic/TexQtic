@@ -89,46 +89,57 @@ Targeted local verification completed:
 - editor diagnostics for `services/controlPlaneService.ts` -> clean
 - `pnpm exec eslint services/controlPlaneService.ts` -> clean
 
-Runtime verification status:
+Push/deploy verification outcome:
 
-- truthful live verification of the modified code was not completed in this unit
-- attempted local browser targets returned connection refusal:
-  - `http://127.0.0.1:5173/` -> `ERR_CONNECTION_REFUSED`
-  - `http://127.0.0.1:4173/` -> `ERR_CONNECTION_REFUSED`
-  - `http://127.0.0.1:3001/health` -> `ERR_CONNECTION_REFUSED`
-- no deploy/push step was in scope for this prompt
+- fix commit `348dbc22df27dee6595439640099208b5d1c8bfc` was pushed to `origin/main`
+- production verification was then completed against `https://app.texqtic.com/`
+
+Production runtime verification completed:
+
+- Staff Control Plane login succeeded
+- Tenant Registry hydrated successfully with live tenant data (`TOTAL TENANTS = 440`)
+- first entry recorded exactly one `/api/control/tenants` request:
+  - `count = 1`
+  - `startMs = 9457`
+  - `durationMs = 9418`
+  - `elapsedMs = 22062`
+- reload also recorded exactly one `/api/control/tenants` request:
+  - `count = 1`
+  - `startMs = 1379`
+  - `durationMs = 9037`
+  - `elapsedMs = 10527`
 
 Therefore runtime result for this unit is:
 
-- `BLOCKED`
+- `PARTIAL_IMPROVEMENT`
 
 ## 8. Current Posture
 
-What is truthfully improved by code inspection and local verification:
+What is now truthfully proven in production:
 
-- overlapping first-entry `getTenants()` callers no longer need to produce overlapping network requests
-- the duplicate-read amplifier has been contained at the narrowest directly relevant layer
+- overlapping first-entry `getTenants()` callers no longer produce overlapping network requests
+- duplicate-read containment is live for both first entry and reload
+- control-plane login and Tenant Registry hydration still succeed after the containment fix
 
-What is not yet truthfully proven:
+What remains unresolved:
 
-- actual live Super Admin entry improvement timing
-- whether tenant-list continuity now feels materially faster in runtime
-- whether further work is still required beyond duplicate-read containment
+- the remaining single `/api/control/tenants` request is still slow at roughly 9 seconds
+- Super Admin tenant-list continuity still fits `SLOW_LOAD_BUT_RECOVERS` at the broader runtime level
+- this unit did not remove the underlying single-request tenant-list latency bottleneck
 
 ## 9. Close Recommendation
 
-This unit should not yet be treated as truthfully closed.
+This unit should not be treated as a full closure of the tenant-list latency problem.
 
 Truthful current posture:
 
 - code fix implemented = yes
 - targeted local verification = passed
-- runtime verification of the modified build = blocked
-- unit close status = not yet closed
-
-The next bounded runtime-sensitive lane remains:
-
-- `/api/me` bootstrap gating
+- push/deploy verification = completed
+- production duplicate-read containment = proven
+- remaining bottleneck = single-request tenant-list latency
+- final runtime result = `PARTIAL_IMPROVEMENT`
+- unit close status = partial improvement only, not full closure
 
 ## 10. Footer
 
