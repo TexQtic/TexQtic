@@ -91,7 +91,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
         { email: cleanEmail, password, tenantId: selectedTenantId ?? undefined },
         realm as AuthRealm
       );
-      await onSuccess(response);
+      await onSuccess({
+        ...response,
+        resolvedTenantHint: selectedTenant,
+      });
     } catch (err: any) {
       if (err.status === 429 || err.code === 'RATE_LIMIT_EXCEEDED') {
         setError('Too many attempts. Wait 10 minutes.');

@@ -190,6 +190,19 @@ type TenantIdentityHint = {
   type: string | null;
   tenant_category: string | null;
   is_white_label: boolean | null;
+  status: string | null;
+  plan: string | null;
+};
+
+type TenantBootstrapSeed = {
+  tenantId?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  type?: string | null;
+  tenant_category?: string | null;
+  is_white_label?: boolean | null;
+  status?: string | null;
+  plan?: string | null;
 };
 
 type RehydrationTracePayload = Record<string, unknown>;
@@ -285,6 +298,8 @@ const persistTenantIdentityHint = (tenant?: {
   type?: string | null;
   tenant_category?: string | null;
   is_white_label?: boolean | null;
+  status?: string | null;
+  plan?: string | null;
 } | null) => {
   if (typeof globalThis.window === 'undefined' || !tenant?.id) {
     return;
@@ -300,6 +315,8 @@ const persistTenantIdentityHint = (tenant?: {
     name: tenant.name ?? existing?.name ?? null,
     type: tenant.type ?? existing?.type ?? null,
     tenant_category: tenant.tenant_category ?? existing?.tenant_category ?? tenant.type ?? null,
+    status: tenant.status ?? existing?.status ?? null,
+    plan: tenant.plan ?? existing?.plan ?? null,
     is_white_label:
       repoTruthHint?.is_white_label === true ||
       tenant.is_white_label === true
@@ -317,10 +334,12 @@ const normalizeTenantIdentity = <T extends {
   type?: string | null;
   tenant_category?: string | null;
   is_white_label?: boolean | null;
+  status?: string | null;
   plan?: string | null;
 }>(
   tenant?: T | null,
-  hint?: Partial<TenantIdentityHint> | null
+  hint?: Partial<TenantIdentityHint> | null,
+  options?: { persist?: boolean }
 ): (T & { tenant_category: string | null; is_white_label: boolean }) | null => {
   if (!tenant) {
     return null;
@@ -344,9 +363,70 @@ const normalizeTenantIdentity = <T extends {
       : {}),
   };
 
-  persistTenantIdentityHint(normalizedTenant);
+  if (options?.persist !== false) {
+    persistTenantIdentityHint(normalizedTenant);
+  }
 
   return normalizedTenant;
+};
+
+const resolveBootstrapTenantType = (
+  tenantCategory: string | null | undefined,
+  tenantType: string | null | undefined,
+  isWhiteLabel: boolean
+): TenantType => {
+  const candidate = tenantCategory ?? tenantType ?? null;
+
+  if (
+    candidate === TenantType.AGGREGATOR ||
+    candidate === TenantType.B2B ||
+    candidate === TenantType.B2C ||
+    candidate === TenantType.INTERNAL
+  ) {
+    return candidate;
+  }
+
+  return isWhiteLabel ? TenantType.B2B : TenantType.AGGREGATOR;
+};
+
+const buildBootstrapTenantStub = (seed?: TenantBootstrapSeed | null): Tenant | null => {
+  const tenantId = seed?.tenantId ?? null;
+  if (!tenantId) {
+    return null;
+  }
+
+  const storedHint = readStoredTenantIdentityHints()[tenantId];
+  const repoTruthHint =
+    resolveRepoTruthTenantHint({
+      slug: seed?.slug ?? storedHint?.slug ?? null,
+      name: seed?.name ?? storedHint?.name ?? null,
+    }) ?? resolveRepoTruthTenantHint(storedHint);
+  const isWhiteLabel =
+    seed?.is_white_label === true ||
+    storedHint?.is_white_label === true ||
+    repoTruthHint?.is_white_label === true;
+  const stubType = resolveBootstrapTenantType(
+    seed?.tenant_category ?? storedHint?.tenant_category ?? null,
+    seed?.type ?? storedHint?.type ?? null,
+    isWhiteLabel
+  );
+
+  return normalizeTenantIdentity(
+    {
+      id: tenantId,
+      slug: seed?.slug ?? storedHint?.slug ?? tenantId,
+      name: seed?.name ?? storedHint?.name ?? 'Workspace',
+      type: stubType,
+      tenant_category: seed?.tenant_category ?? storedHint?.tenant_category ?? stubType,
+      is_white_label: isWhiteLabel,
+      status: seed?.status ?? storedHint?.status ?? 'ACTIVE',
+      plan: seed?.plan ?? storedHint?.plan ?? 'TRIAL',
+      createdAt: '',
+      updatedAt: '',
+    },
+    null,
+    { persist: false }
+  ) as Tenant;
 };
 
 const readStoredTenantJwtClaims = (): { userId: string | null; tenantId: string | null; role: string | null } | null => {
@@ -921,6 +1001,20 @@ const App: React.FC = () => {
     setAdminView('TENANTS');
   };
 
+  const applyTenantBootstrapState = (tenant: Tenant, role: string | null | undefined) => {
+    const resolvedRole = resolveTenantRole(role ?? null, tenant.id);
+    const hasWlAdminAccess = canAccessWlAdmin(tenant.is_white_label, resolvedRole);
+
+    setTenants([tenant]);
+    setCurrentTenantId(tenant.id);
+    setWlAdminEligible(hasWlAdminAccess);
+
+    return {
+      resolvedRole,
+      nextState: hasWlAdminAccess ? 'WL_ADMIN' as const : 'EXPERIENCE' as const,
+    };
+  };
+
   const applyControlPlaneShellEntry = (identity: ControlPlaneIdentity) => {
     persistControlPlaneIdentity(identity);
     setControlPlaneIdentity(identity);
@@ -1408,6 +1502,20 @@ const App: React.FC = () => {
       setTenantRestorePending(true);
       setTenantProvisionError(null);
 
+      const provisionalTenant = buildBootstrapTenantStub({
+        tenantId: readStoredTenantJwtClaims()?.tenantId ?? null,
+      });
+
+      if (provisionalTenant) {
+        const { nextState: provisionalState, resolvedRole } = applyTenantBootstrapState(provisionalTenant, null);
+        appendRehydrationTrace('tenantRestore:stub_applied', {
+          role: resolvedRole,
+          tenant: summarizeTenantIdentity(provisionalTenant),
+        });
+        setTenantRestorePending(false);
+        setAppState(provisionalState);
+      }
+
       let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
 
       const failClosedTenantBootstrap = (reason: string, details: RehydrationTracePayload = {}) => {
@@ -1440,24 +1548,21 @@ const App: React.FC = () => {
             cancelled,
             tenant: summarizeTenantIdentity(tenant),
           });
+          if (provisionalTenant) {
+            return;
+          }
           throw new Error('Tenant session could not be rehydrated.');
         }
 
-        setTenants([tenant]);
-        setCurrentTenantId(tenant.id);
-  const hasWlAdminAccess = canAccessWlAdmin(tenant.is_white_label, resolvedRole);
-        setWlAdminEligible(hasWlAdminAccess);
+        const bootstrapState = applyTenantBootstrapState(tenant, me.role ?? null);
+        nextState = bootstrapState.nextState;
         appendRehydrationTrace('tenantRestore:tenant_applied', {
           tenant: summarizeTenantIdentity(tenant),
         });
 
-        if (hasWlAdminAccess) {
-          nextState = 'WL_ADMIN';
-        }
-
         appendRehydrationTrace('tenantRestore:next_state', {
           nextState,
-          role: resolvedRole,
+          role: bootstrapState.resolvedRole,
           tenant: summarizeTenantIdentity(tenant),
         });
         setTenantRestorePending(false);
@@ -1475,6 +1580,13 @@ const App: React.FC = () => {
 
         if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
           setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
+          if (provisionalTenant) {
+            return;
+          }
+        }
+
+        if (provisionalTenant && !(err instanceof APIError && err.status === 401)) {
+          return;
         }
 
         failClosedTenantBootstrap('restore_failed', {
@@ -1517,9 +1629,13 @@ const App: React.FC = () => {
     clearControlPlaneIdentityState();
     setStoredAuthRealm('TENANT');
     setAuthRealm('TENANT');
+    const resolvedTenantHint = data?.resolvedTenantHint ?? null;
     const loginTenantHint = data?.user?.tenantId
       ? {
           id: data.user.tenantId,
+          slug: resolvedTenantHint?.slug ?? null,
+          name: resolvedTenantHint?.name ?? null,
+          type: data?.tenantType ?? null,
           tenant_category: data?.tenant_category ?? data?.tenantType ?? null,
           is_white_label: data?.is_white_label ?? null,
         }
@@ -1529,11 +1645,24 @@ const App: React.FC = () => {
       persistTenantIdentityHint(loginTenantHint);
     }
 
-    // TENANT realm: call /api/me to hydrate tenant context before transitioning.
-    // This prevents the "Loading workspace..." hang caused by tenants[] being empty
-    // when currentTenant is derived (tenants[] is only fetched for CONTROL_PLANE otherwise).
-    // Clear any previous provision error from a prior login attempt.
+    // TENANT realm: seed a provisional tenant shell immediately when login identity is
+    // already known, then reconcile with canonical /api/me in the background.
+    // This keeps /api/me authoritative without forcing it to block first paint.
     setTenantProvisionError(null);
+
+    const provisionalTenant = buildBootstrapTenantStub({
+      tenantId: data?.user?.tenantId ?? null,
+      slug: resolvedTenantHint?.slug ?? null,
+      name: resolvedTenantHint?.name ?? null,
+      type: data?.tenantType ?? null,
+      tenant_category: data?.tenant_category ?? data?.tenantType ?? null,
+      is_white_label: data?.is_white_label ?? null,
+    });
+
+    if (provisionalTenant) {
+      const { nextState: provisionalState } = applyTenantBootstrapState(provisionalTenant, null);
+      setAppState(provisionalState);
+    }
 
     let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
 
@@ -1550,41 +1679,46 @@ const App: React.FC = () => {
     try {
       const me = await getCurrentUser();
       if (me.tenant) {
-        const t = me.tenant;
-        const normalizedTenant = normalizeTenantIdentity({
-          id: t.id,
-          slug: t.slug,
-          name: t.name,
-          type: t.type,
+        const normalizedTenant = buildTenantSnapshot(me.tenant) ?? normalizeTenantIdentity({
+          id: me.tenant.id,
+          slug: me.tenant.slug,
+          name: me.tenant.name,
+          type: me.tenant.type,
           // B2-REM-3: persist canonical identity fields; fall back to legacy type for compat
-          tenant_category: t.tenant_category ?? t.type,
-          is_white_label: t.is_white_label ?? false,
-          status: t.status,
-          plan: t.plan,
+          tenant_category: me.tenant.tenant_category ?? me.tenant.type,
+          is_white_label: me.tenant.is_white_label ?? false,
+          status: me.tenant.status,
+          plan: me.tenant.plan,
           createdAt: '',
           updatedAt: '',
         } as Tenant, loginTenantHint);
         if (!normalizedTenant) {
+          if (provisionalTenant) {
+            return;
+          }
           failClosedTenantBootstrap();
           return;
         }
-        setTenants([normalizedTenant as Tenant]);
-        setCurrentTenantId(normalizedTenant.id);
-        const resolvedRole = resolveTenantRole(me.role ?? null, normalizedTenant.id);
-        const hasWlAdminAccess = canAccessWlAdmin(normalizedTenant.is_white_label, resolvedRole);
-        setWlAdminEligible(hasWlAdminAccess);
-        // B2-REM-3: WL routing uses is_white_label boolean — not type === WHITE_LABEL
-        if (hasWlAdminAccess) {
-          nextState = 'WL_ADMIN';
-        }
+        nextState = applyTenantBootstrapState(normalizedTenant, me.role ?? null).nextState;
       } else {
+        if (provisionalTenant) {
+          return;
+        }
         failClosedTenantBootstrap();
         return;
       }
     } catch (err) {
       if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
         setTenantProvisionError('Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.');
+        if (provisionalTenant) {
+          return;
+        }
       }
+
+      if (provisionalTenant && !(err instanceof APIError && err.status === 401)) {
+        return;
+      }
+
       failClosedTenantBootstrap();
       return;
     }
