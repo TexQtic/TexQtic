@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
+import { getTenantById, getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
 import { TenantStatus, TenantConfig, normalizeCommercialPlan } from '../../types';
 import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
@@ -29,6 +29,13 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const [provisionLoading, setProvisionLoading] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
   const [provisionResult, setProvisionResult] = useState<{ orgId: string; slug: string; inviteToken?: string } | null>(null);
+  const [detailLoadingTenantId, setDetailLoadingTenantId] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  type TenantSelectionConfig = TenantConfig & {
+    createdAt?: string;
+    updatedAt?: string;
+  };
 
   // RU-002: Handle provision form submission
   const handleProvision = async (e: React.FormEvent) => {
@@ -59,6 +66,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const fetchTenants = async () => {
     setLoading(true);
     setError(null);
+    setDetailError(null);
 
     try {
       const response = await getTenants();
@@ -83,6 +91,45 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const mapToTenantConfig = (tenant: Tenant): TenantSelectionConfig => ({
+    id: tenant.id,
+    name: tenant.name,
+    slug: tenant.slug,
+    type: tenant.type as any,
+    status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
+    onboarding_status: tenant.onboarding_status ?? null,
+    plan: normalizeCommercialPlan(tenant.plan),
+    theme: {
+      primaryColor: tenant.branding?.primaryColor || '#4F46E5',
+      secondaryColor: '#10B981',
+      logo: '🏢',
+    },
+    features: [],
+    aiUsage: tenant.aiBudget?.currentUsage || 0,
+    aiBudget: tenant.aiBudget?.monthlyLimit || 1000,
+    billingStatus: 'CURRENT',
+    riskScore: 0,
+    tenant_category: tenant.tenant_category ?? tenant.type,
+    is_white_label: tenant.is_white_label ?? tenant.isWhiteLabel ?? false,
+    createdAt: tenant.createdAt,
+    updatedAt: tenant.updatedAt,
+  });
+
+  const handleSelectTenant = async (tenant: Tenant) => {
+    setDetailLoadingTenantId(tenant.id);
+    setDetailError(null);
+
+    try {
+      const response = await getTenantById(tenant.id);
+      onSelectTenant(mapToTenantConfig(response.tenant));
+    } catch (err: any) {
+      console.error('Failed to load tenant detail:', err);
+      setDetailError(err?.message || 'Failed to open tenant details. Please try again.');
+    } finally {
+      setDetailLoadingTenantId(current => (current === tenant.id ? null : current));
     }
   };
 
@@ -111,27 +158,6 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     trial: tenants.filter(t => t.status?.toUpperCase() === 'TRIAL').length,
     suspended: tenants.filter(t => t.status?.toUpperCase() === 'SUSPENDED').length,
   };
-
-  // Map backend Tenant to frontend TenantConfig format for compatibility
-  const mapToTenantConfig = (tenant: Tenant): TenantConfig => ({
-    id: tenant.id,
-    name: tenant.name,
-    slug: tenant.slug,
-    type: tenant.type as any,
-    status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
-    onboarding_status: tenant.onboarding_status ?? null,
-    plan: normalizeCommercialPlan(tenant.plan),
-    theme: {
-      primaryColor: tenant.branding?.primaryColor || '#4F46E5',
-      secondaryColor: '#10B981',
-      logo: '🏢',
-    },
-    features: [],
-    aiUsage: tenant.aiBudget?.currentUsage || 0,
-    aiBudget: tenant.aiBudget?.monthlyLimit || 1000,
-    billingStatus: 'CURRENT',
-    riskScore: 0,
-  });
 
   // Error state
   if (error && !loading) {
@@ -179,6 +205,12 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         ))}
       </div>
 
+      {detailError && !loading && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          {detailError}
+        </div>
+      )}
+
       {/* Loading state with skeletons */}
       {loading && (
         <div className="space-y-4">
@@ -219,18 +251,21 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                 const aiUsagePercent = mappedTenant.aiBudget
                   ? (mappedTenant.aiUsage / mappedTenant.aiBudget) * 100
                   : 0;
+                const isDetailLoading = detailLoadingTenantId === tenant.id;
 
                 return (
                   <tr
                     key={tenant.id}
-                    className="hover:bg-slate-800/30 transition-colors group cursor-pointer"
+                    className={`hover:bg-slate-800/30 transition-colors group ${isDetailLoading ? 'cursor-wait opacity-80' : 'cursor-pointer'}`}
                     role="button"
                     tabIndex={0}
-                    onClick={() => onSelectTenant(mappedTenant)}
+                    onClick={() => {
+                      void handleSelectTenant(tenant);
+                    }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        onSelectTenant(mappedTenant);
+                        void handleSelectTenant(tenant);
                       }
                     }}
                   >
@@ -275,16 +310,20 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                         onKeyDown={e => e.stopPropagation()}
                       >
                         <button
-                          onClick={() => onSelectTenant(mappedTenant)}
+                          onClick={() => {
+                            void handleSelectTenant(tenant);
+                          }}
                           title="Config"
                           className="p-1 hover:text-white text-slate-500"
+                          disabled={isDetailLoading}
                         >
-                          ⚙️
+                          {isDetailLoading ? '…' : '⚙️'}
                         </button>
                         <button
                           onClick={() => onImpersonate(mappedTenant)}
                           title="Impersonate"
                           className="p-1 hover:text-blue-500 text-slate-500"
+                          disabled={isDetailLoading}
                         >
                           👤
                         </button>

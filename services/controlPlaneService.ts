@@ -20,13 +20,16 @@ export interface Tenant {
   /** B2-REM-3: canonical tenant identity category. Optional — control-plane list queries may not populate. */
   tenant_category?: string | null;
   /** B2-REM-3: white-label capability flag. Optional — control-plane list queries may not populate. */
-  is_white_label?: boolean;
+  is_white_label?: boolean | null;
+  /** Control-plane list queries may emit the Prisma camelCase field for white-label capability. */
+  isWhiteLabel?: boolean | null;
   status: string;
   /** Org-backed onboarding lifecycle status used by onboarding completion flow. */
   onboarding_status?: string | null;
   plan: string;
-  createdAt: string;
-  updatedAt: string;
+  /** Detail reads populate timestamps; summary list reads may omit them. */
+  createdAt?: string;
+  updatedAt?: string;
   domains?: TenantDomain[];
   branding?: TenantBranding;
   aiBudget?: AiBudget;
@@ -45,9 +48,9 @@ export interface TenantDomain {
 
 export interface TenantBranding {
   id: string;
-  logoUrl: string | null;
-  primaryColor: string;
-  faviconUrl: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  faviconUrl?: string | null;
 }
 
 export interface AiBudget {
