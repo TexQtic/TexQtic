@@ -42,7 +42,7 @@ export class ImpersonationAbortError extends Error {
  *
  * Creates:
  *  - ImpersonationSession row (control-plane, postgres BYPASSRLS)
- *  - IMPERSONATION_START audit log entry (atomic)
+ *  - IMPERSONATION_START audit log entry after the session row persists
  *
  * Returns StartImpersonationResult (JWT signing deferred to route — G-008 pattern).
  */
@@ -53,7 +53,7 @@ export async function startImpersonation(
 ): Promise<StartImpersonationResult> {
   const { orgId, userId, reason } = req;
 
-  return withSuperAdminContext(prisma, async tx => {
+  const result = await withSuperAdminContext(prisma, async tx => {
     // Stop-loss: verify tenant exists and is ACTIVE
     const tenant = await tx.tenant.findUnique({
       where: { id: orgId },
@@ -97,25 +97,6 @@ export async function startImpersonation(
       select: { id: true, expiresAt: true },
     });
 
-    // Audit log — atomic with session create
-    await writeAuditLog(tx, {
-      realm: 'ADMIN',
-      tenantId: orgId,
-      actorType: 'ADMIN',
-      actorId: adminId,
-      action: 'IMPERSONATION_START',
-      entity: 'impersonation_session',
-      entityId: session.id,
-      afterJson: {
-        impersonationId: session.id,
-        orgId,
-        userId, // not in DB session — logged here for audit completeness
-        membershipRole: membership.role,
-        expiresAt: session.expiresAt.toISOString(),
-        reason,
-      },
-    });
-
     return {
       impersonationId: session.id,
       userId,
@@ -124,6 +105,28 @@ export async function startImpersonation(
       expiresAt: session.expiresAt,
     };
   });
+
+  // Persist the session row first; admin audit logging remains best-effort and must
+  // not poison session continuity if audit_logs RLS rejects the insert in a tx-local context.
+  await writeAuditLog(prisma, {
+    realm: 'ADMIN',
+    tenantId: orgId,
+    actorType: 'ADMIN',
+    actorId: adminId,
+    action: 'IMPERSONATION_START',
+    entity: 'impersonation_session',
+    entityId: result.impersonationId,
+    afterJson: {
+      impersonationId: result.impersonationId,
+      orgId,
+      userId,
+      membershipRole: result.membershipRole,
+      expiresAt: result.expiresAt.toISOString(),
+      reason,
+    },
+  });
+
+  return result;
 }
 
 /**
@@ -136,7 +139,7 @@ export async function startImpersonation(
  *  - Session is not expired
  *
  * Sets endedAt = now (control-plane DB state update).
- * Writes IMPERSONATION_STOP audit log entry atomically.
+ * Writes IMPERSONATION_STOP audit log entry after the session row update succeeds.
  *
  * Note: stop reason is written only to the audit log —
  * ImpersonationSession.reason field stores the start reason only (schema constraint).
@@ -148,7 +151,7 @@ export async function stopImpersonation(
   impersonationId: string,
   stopReason: string
 ): Promise<void> {
-  await withSuperAdminContext(prisma, async tx => {
+  const stopped = await withSuperAdminContext(prisma, async tx => {
     const session = await tx.impersonationSession.findUnique({
       where: { id: impersonationId },
       select: {
@@ -196,22 +199,27 @@ export async function stopImpersonation(
       data: { endedAt },
     });
 
-    // Audit log — stop reason written here (not in session row — schema constraint)
-    await writeAuditLog(tx, {
-      realm: 'ADMIN',
-      tenantId: session.tenantId,
-      actorType: 'ADMIN',
-      actorId: adminId,
-      action: 'IMPERSONATION_STOP',
-      entity: 'impersonation_session',
-      entityId: session.id,
-      afterJson: {
-        impersonationId: session.id,
-        orgId: session.tenantId,
-        endedAt: endedAt.toISOString(),
-        stopReason, // persisted in audit log only
-      },
-    });
+    return {
+      impersonationId: session.id,
+      orgId: session.tenantId,
+      endedAt,
+    };
+  });
+
+  await writeAuditLog(prisma, {
+    realm: 'ADMIN',
+    tenantId: stopped.orgId,
+    actorType: 'ADMIN',
+    actorId: adminId,
+    action: 'IMPERSONATION_STOP',
+    entity: 'impersonation_session',
+    entityId: stopped.impersonationId,
+    afterJson: {
+      impersonationId: stopped.impersonationId,
+      orgId: stopped.orgId,
+      endedAt: stopped.endedAt.toISOString(),
+      stopReason,
+    },
   });
 }
 

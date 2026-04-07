@@ -493,7 +493,7 @@ describe.skipIf(!hasDb)('G-W3-A4 Group 4 — Impersonation Integrity (DB-live)',
     ).toContain(ctrlRes.statusCode);
   });
 
-  it('admin can stop impersonation session and status reflects ended=true', async () => {
+  it('admin can resolve active impersonation status, then stop it, then observe ended status', async () => {
     if (!dbAvailable) return;
 
     const adminToken = makeAdminToken(adminId);
@@ -516,6 +516,22 @@ describe.skipIf(!hasDb)('G-W3-A4 Group 4 — Impersonation Integrity (DB-live)',
     const { impersonationId } = (
       JSON.parse(startRes.body) as { data: { impersonationId: string; token: string } }
     ).data;
+
+    // Status while active
+    const activeStatusRes = await server.inject({
+      method: 'GET',
+      url: `/api/control/impersonation/status/${impersonationId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(activeStatusRes.statusCode).toBe(200);
+
+    const activeStatusBody = JSON.parse(activeStatusRes.body) as {
+      success: boolean;
+      data: { active: boolean; endedAt: string | null };
+    };
+    expect(activeStatusBody.success).toBe(true);
+    expect(activeStatusBody.data.active).toBe(true);
+    expect(activeStatusBody.data.endedAt).toBeNull();
 
     // Stop
     const stopRes = await server.inject({
