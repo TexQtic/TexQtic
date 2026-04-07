@@ -4,23 +4,41 @@ import { EmptyState, ErrorState, AuditLogSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
 const MAX_AUDIT_ID_PREVIEW_LENGTH = 8;
+const MAX_AUDIT_METADATA_PREVIEW_LENGTH = 100;
 
 function getAuditIdPreview(value: string | null | undefined): string | null {
-  return value ? value.substring(0, MAX_AUDIT_ID_PREVIEW_LENGTH) : null;
+  return typeof value === 'string' && value.length > 0
+    ? value.slice(0, MAX_AUDIT_ID_PREVIEW_LENGTH)
+    : null;
 }
 
 function getAuditActorLabel(log: AuditLog): string {
+  const actorTypeLabel = typeof log.actorType === 'string' && log.actorType.length > 0
+    ? log.actorType
+    : 'UNKNOWN';
   const actorIdPreview = getAuditIdPreview(log.actorId);
-  return actorIdPreview ? `${log.actorType}:${actorIdPreview}` : `${log.actorType}:(no actor id)`;
+  return actorIdPreview ? `${actorTypeLabel}:${actorIdPreview}` : `${actorTypeLabel}:(no actor id)`;
 }
 
-function getAuditMetadataPreview(metadata: AuditLog['metadata']): string {
+function getAuditMetadataPreview(metadata: AuditLog['metadataJson']): string {
   if (!metadata) {
     return 'No details';
   }
 
-  const serializedMetadata = JSON.stringify(metadata);
-  return serializedMetadata ? serializedMetadata.substring(0, 100) : 'No details';
+  if (typeof metadata === 'string') {
+    return metadata.length > 0
+      ? metadata.slice(0, MAX_AUDIT_METADATA_PREVIEW_LENGTH)
+      : 'No details';
+  }
+
+  try {
+    const serializedMetadata = JSON.stringify(metadata);
+    return typeof serializedMetadata === 'string' && serializedMetadata.length > 0
+      ? serializedMetadata.slice(0, MAX_AUDIT_METADATA_PREVIEW_LENGTH)
+      : 'No details';
+  } catch {
+    return 'Unserializable details';
+  }
 }
 
 function getAuditTenantLabel(log: AuditLog): string {
@@ -30,6 +48,19 @@ function getAuditTenantLabel(log: AuditLog): string {
 
   const tenantIdPreview = getAuditIdPreview(log.tenantId);
   return tenantIdPreview ?? '(no tenant context)';
+}
+
+function getAuditActionLabel(action: AuditLog['action']): string {
+  return typeof action === 'string' && action.length > 0 ? action : 'UNKNOWN_ACTION';
+}
+
+function getAuditCreatedAtLabel(createdAt: AuditLog['createdAt']): string {
+  if (typeof createdAt !== 'string' || createdAt.length === 0) {
+    return '(unknown time)';
+  }
+
+  const parsed = new Date(createdAt);
+  return Number.isNaN(parsed.getTime()) ? createdAt : parsed.toLocaleString();
 }
 
 export const AuditLogs: React.FC = () => {
@@ -212,15 +243,15 @@ export const AuditLogs: React.FC = () => {
         {/* Data state */}
         {!loading && !error && logs.length > 0 && (
           <div className="divide-y divide-slate-800 font-mono text-[11px]">
-            {logs.map(log => (
-              <div key={log.id} className="p-4 flex gap-6 hover:bg-slate-800/20">
+            {logs.map((log, index) => (
+              <div key={log.id ?? `audit-log-${index}`} className="p-4 flex gap-6 hover:bg-slate-800/20">
                 <div className="text-slate-600 whitespace-nowrap">
-                  {new Date(log.createdAt).toLocaleString()}
+                  {getAuditCreatedAtLabel(log.createdAt)}
                 </div>
-                <div className="text-rose-400 font-bold whitespace-nowrap">[{log.action}]</div>
+                <div className="text-rose-400 font-bold whitespace-nowrap">[{getAuditActionLabel(log.action)}]</div>
                 <div className="text-blue-400 whitespace-nowrap">{getAuditActorLabel(log)}</div>
                 <div className="text-slate-300 flex-1 italic">
-                  {getAuditMetadataPreview(log.metadata)}
+                  {getAuditMetadataPreview(log.metadataJson)}
                 </div>
                 <div className="text-slate-600">{getAuditTenantLabel(log)}</div>
               </div>

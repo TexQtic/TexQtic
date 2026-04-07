@@ -98,6 +98,13 @@ export interface ActivateApprovedOnboardingResponse {
   };
 }
 
+type AuditLogJsonValue =
+  | Record<string, unknown>
+  | string
+  | number
+  | boolean
+  | null;
+
 /**
  * Explicitly activate an approved onboarding outcome into ACTIVE trade-capable state.
  */
@@ -114,14 +121,18 @@ export async function activateApprovedOnboarding(
 
 export interface AuditLog {
   id: string;
-  action: string;
+  realm: string | null;
+  action: string | null;
   actorId: string | null;
-  actorType: string;
-  resourceType: string | null;
-  resourceId: string | null;
-  metadata: Record<string, any> | null;
+  actorType: string | null;
+  entity: string | null;
+  entityId: string | null;
+  beforeJson: AuditLogJsonValue;
+  afterJson: AuditLogJsonValue;
+  metadataJson: AuditLogJsonValue;
   tenantId: string | null;
   createdAt: string;
+  reasoningLogId: string | null;
   tenant?: {
     slug: string | null;
     name: string | null;
