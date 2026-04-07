@@ -4,7 +4,7 @@
  * Handles login, logout, and user session management
  */
 
-import { post, get, setToken, clearAuth, getAuthRealm } from './apiClient';
+import { post, get, setToken, clearAuth, getAuthRealm, getToken } from './apiClient';
 import type { AuthRealm } from './apiClient';
 
 // Flip to true locally to inspect login payloads (never commit as true)
@@ -60,6 +60,18 @@ export interface CurrentUserResponse {
   };
   role?: string;
 }
+
+export interface CurrentUserRequestOptions {
+  retry?: boolean;
+  dedupe?: boolean;
+}
+
+let currentUserInFlight:
+  | {
+      token: string | null;
+      request: Promise<CurrentUserResponse>;
+    }
+  | null = null;
 
 /**
  * Login to tenant or admin realm.
@@ -169,8 +181,34 @@ export function logout(): void {
 /**
  * Get current authenticated user details
  */
-export async function getCurrentUser(): Promise<CurrentUserResponse> {
-  return get<CurrentUserResponse>('/api/me');
+export async function getCurrentUser(
+  options: CurrentUserRequestOptions = {}
+): Promise<CurrentUserResponse> {
+  const { retry = true, dedupe = false } = options;
+  const token = getToken();
+
+  if (dedupe && currentUserInFlight?.token === token) {
+    return currentUserInFlight.request;
+  }
+
+  const request = get<CurrentUserResponse>('/api/me', undefined, { retry });
+
+  if (!dedupe) {
+    return request;
+  }
+
+  const trackedRequest = request.finally(() => {
+    if (currentUserInFlight?.request === trackedRequest) {
+      currentUserInFlight = null;
+    }
+  });
+
+  currentUserInFlight = {
+    token,
+    request: trackedRequest,
+  };
+
+  return trackedRequest;
 }
 
 /**

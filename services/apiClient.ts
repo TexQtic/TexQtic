@@ -238,6 +238,10 @@ interface RetryConfig {
   delays: number[]; // Backoff delays in ms
 }
 
+interface GetRequestOptions {
+  retry?: boolean;
+}
+
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxAttempts: 3, // Initial + 2 retries
   delays: [300, 900], // 300ms, 900ms backoff
@@ -454,8 +458,18 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
  * GET request with automatic retry on transient failures
  * @param headers Optional custom headers (e.g., realm hint)
  */
-export async function get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
-  return withRetry(() => apiRequest<T>(endpoint, { method: 'GET', headers }));
+export async function get<T>(
+  endpoint: string,
+  headers?: Record<string, string>,
+  options: GetRequestOptions = {}
+): Promise<T> {
+  const request = () => apiRequest<T>(endpoint, { method: 'GET', headers });
+
+  if (options.retry === false) {
+    return request();
+  }
+
+  return withRetry(request);
 }
 
 /**

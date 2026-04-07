@@ -1015,6 +1015,11 @@ const App: React.FC = () => {
     };
   };
 
+  const tenantBootstrapCurrentUserOptions = {
+    dedupe: true,
+    retry: false,
+  } as const;
+
   const applyControlPlaneShellEntry = (identity: ControlPlaneIdentity) => {
     persistControlPlaneIdentity(identity);
     setControlPlaneIdentity(identity);
@@ -1535,7 +1540,7 @@ const App: React.FC = () => {
 
       try {
         appendRehydrationTrace('tenantRestore:getCurrentUser:start');
-        const me = await getCurrentUser();
+        const me = await getCurrentUser(tenantBootstrapCurrentUserOptions);
         const tenant = buildTenantSnapshot(me.tenant);
         const resolvedRole = resolveTenantRole(me.role ?? null, tenant?.id ?? null);
         appendRehydrationTrace('tenantRestore:getCurrentUser:success', {
@@ -1677,7 +1682,7 @@ const App: React.FC = () => {
     };
 
     try {
-      const me = await getCurrentUser();
+      const me = await getCurrentUser(tenantBootstrapCurrentUserOptions);
       if (me.tenant) {
         const normalizedTenant = buildTenantSnapshot(me.tenant) ?? normalizeTenantIdentity({
           id: me.tenant.id,
