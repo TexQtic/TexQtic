@@ -60,6 +60,13 @@ Refined live-production crash cause confirmed after the wiring fix:
 
 The backend route remained successful during live verification; the failure was null-unsafe frontend rendering against a truthful nullable payload.
 
+Second-pass root cause confirmed after commit `dee2a8d` deployed:
+
+- the deployed Audit Logs bundle still retained `substring()`-based preview helpers in the live row-render path
+- the first pass narrowed obvious null field access, but it did not eliminate `substring()` from the Audit Logs page surface itself
+- the Audit Logs page was also still typed against `metadata` while the live API payload exposes `metadataJson`
+- the narrow truthful fix was therefore to remove `substring()` from the Audit Logs render surface entirely and align the page with the actual audit-log response shape used in production
+
 The backend route and the control-plane service wrapper did not require change for this unit.
 
 ## 5. Files Changed
@@ -98,6 +105,20 @@ Additional bounded render-safety fix after truthful production failure:
 - hardened metadata preview generation so it does not assume a truthy stringified value
 - preserved the already-implemented exact-match filter/search wiring and current backend semantics
 
+Second-pass bounded crash fix after the first deployed null-safety attempt still failed:
+
+- aligned the Audit Logs page to the actual control-plane audit response fields:
+  - `realm`
+  - `entity`
+  - `entityId`
+  - `beforeJson`
+  - `afterJson`
+  - `metadataJson`
+  - `reasoningLogId`
+- removed `substring()` entirely from the Audit Logs render surface and replaced previewing with stricter string guards plus `slice()`-based formatting
+- made action, timestamp, actor-type, tenant, and metadata preview rendering explicit for non-string or empty values
+- preserved the current exact-match `tenantId` and `action` filter semantics unchanged
+
 ## 7. Verification Evidence
 
 Code-contract verification completed:
@@ -117,20 +138,35 @@ Targeted validation result:
 
 Runtime verification status:
 
-- a live authenticated control-plane session was not available in the browser at remediation time
-- therefore the live admin-page recheck could not be truthfully completed in this unit
-
-What is still verified despite that runtime limitation:
-
-- the request contract now matches the backend contract exactly
-- the controls are no longer disabled in code
-- the component now issues requests using supported filter params instead of a hardcoded unfiltered load only
+- post-push production verification was re-run with a real authenticated control-plane super-admin session after second-pass commit `3219873`
+- the deployed production bundle changed from `index-CmAL0DYK.js` to `index-vHRtfJGu.js`
+- Staff Control Plane login succeeded and the control-plane shell remained authenticated after reload
+- the live `GET /api/control/audit-logs?limit=50` request returned `200`
+- the Audit Logs page rendered and stayed usable with no error boundary on the live payload
+- the current unfiltered live payload still contained nullable ids while the page remained stable:
+  - `nullActorIdCount = 2`
+  - `nullTenantIdCount = 40`
+- tenant filter verification via `Apply` succeeded:
+  - request: `GET /api/control/audit-logs?tenantId=960c2e3b-64cf-4ba8-88d1-4e8f72d61782&limit=50`
+  - response: `200`
+  - rendered rows: `50`
+  - visible results updated to the `white-label-co` tenant slice
+- action filter verification via `Enter` succeeded:
+  - request: `GET /api/control/audit-logs?action=ADMIN_AUDIT_LOG_VIEW&limit=50`
+  - response: `200`
+  - rendered rows: `27`
+  - visible results updated to the exact-match `ADMIN_AUDIT_LOG_VIEW` slice
+- `Clear` succeeded:
+  - request: `GET /api/control/audit-logs?limit=50`
+  - response: `200`
+  - both inputs reset to empty
+  - rendered rows returned to the unfiltered `50` row state
 
 ## 8. Residual Limits / Adjacent Findings
 
 Residual limitation in this unit:
 
-- no live authenticated control-plane runtime pass was available to re-observe the control-plane audit page with the new filters in production
+- no remaining page-level blocker was observed in the bounded Audit Logs surface after second-pass deployment
 
 Adjacent finding kept out of scope:
 
@@ -141,38 +177,35 @@ Adjacent finding kept out of scope:
 
 This remediation should be treated as the bounded fix for the confirmed frontend wiring gap.
 
-Production verification recheck on 2026-04-07 completed and failed.
+Production verification recheck on 2026-04-07 completed and passed after the second-pass crash fix.
 
 Observed live production truth:
 
 - a real authenticated super-admin session was obtained through the production `Staff Control Plane` flow
 - the live `GET /api/control/audit-logs?limit=50` request fired and returned `200`
-- the Audit Logs page then crashed into the error boundary with `Cannot read properties of null (reading 'substring')`
-- the page therefore did not remain usable long enough to truthfully exercise the visible filter controls end to end
+- the deployed second-pass bundle rendered the Audit Logs page without crashing on live rows that still contained nullable ids
+- filter/search continuity was truthfully completed end to end on the deployed build:
+  - tenant filter via `Apply`
+  - action filter via `Enter`
+  - `Clear` reset
 
 Bounded supporting evidence gathered during the same authenticated production session:
 
 - direct authenticated audit-log API reads returned `200`
 - the unfiltered response returned `50` rows
-- the live payload included rows where `actorId` was `null`
-- the live payload included rows where `tenantId` was `null`
-- exact-match backend filtering itself still responded successfully for both:
+- the live payload still included rows where `actorId` was `null`
+- the live payload still included rows where `tenantId` was `null`
+- exact-match backend filtering responded successfully for both:
   - `tenantId`
   - `action`
+- second-pass commit created: `3219873`
+- second-pass push result: `main -> main` succeeded
 
 Current close posture:
 
-- production verification result = `FAILED`
-- this unit is not truthfully closed
-- the pushed filter wiring fix cannot be considered production-verified because the live page now fails before filter interaction can be completed
-
-Post-remediation status after the null-safe rendering fix:
-
-- the bounded frontend render-safety fix is now implemented locally
-- targeted diagnostics and targeted lint are clean
-- truthful post-fix production verification is currently `BLOCKED` because the updated frontend code has not yet been deployed to `https://app.texqtic.com`
-- until that deployment happens, the production browser can only observe the previously deployed crashing bundle, not the local remediation
-- this unit is therefore still not truthfully closed
+- production verification result = `PASSED`
+- this unit is now truthfully closed
+- no second remediation artifact was required
 
 ## 10. Footer
 
