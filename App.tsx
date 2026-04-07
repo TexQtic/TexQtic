@@ -115,6 +115,9 @@ const VERIFICATION_BLOCKED_VIEWS = new Set([
   'SETTLEMENT',
 ]);
 const ENTERPRISE_TRADE_BRIDGE_CURRENCY = 'USD';
+const ENTERPRISE_HOME_CATALOG_FIRST_PAINT_LIMIT = 8;
+const ENTERPRISE_HOME_CATALOG_TAIL_LIMIT = 12;
+const ENTERPRISE_HOME_CATALOG_TAIL_DELAY_MS = 250;
 
 function buildTradeReferenceFromRfq(rfqId: string): string {
   return `TRD-RFQ-${rfqId.replaceAll('-', '').slice(0, 8).toUpperCase()}`;
@@ -1223,17 +1226,29 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if ((appState === 'EXPERIENCE' || appState === 'SETTINGS') && currentTenant && !currentTenant.is_white_label) {
-      const fetchInsight = async () => {
-        setAiInsight('Thinking...');
-        const insight = await getPlatformInsights(
-          `Provide a brief market trend analysis for a ${currentTenant.type} platform named ${currentTenant.name}.`
-        );
-        setAiInsight(insight || 'No insights available.');
-      };
-      fetchInsight();
+    if (!currentTenant || !isAggregatorDiscoveryEntrySurface) {
+      return;
     }
-  }, [currentTenant, appState]);
+
+    let cancelled = false;
+
+    const fetchInsight = async () => {
+      setAiInsight('Thinking...');
+      const insight = await getPlatformInsights(
+        `Provide a brief market trend analysis for a ${currentTenant.type} platform named ${currentTenant.name}.`
+      );
+
+      if (!cancelled) {
+        setAiInsight(insight || 'No insights available.');
+      }
+    };
+
+    void fetchInsight();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentTenant, isAggregatorDiscoveryEntrySurface]);
 
   useEffect(() => {
     if (!currentTenant || !isAggregatorDiscoveryEntrySurface) {
@@ -1283,35 +1298,91 @@ const App: React.FC = () => {
       return;
     }
 
+    let cancelled = false;
+    let tailHydrationTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+    const hydrateEnterpriseHomeCatalogTail = async (cursor: string) => {
+      try {
+        const tailResponse = await getCatalogItems({
+          limit: ENTERPRISE_HOME_CATALOG_TAIL_LIMIT,
+          cursor,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        setProducts(prev => [...prev, ...tailResponse.items]);
+        setCatalogNextCursor(tailResponse.nextCursor);
+      } catch (error) {
+        console.warn('Deferred enterprise home catalog hydration failed:', error);
+      }
+    };
+
     const fetchCatalog = async () => {
       setCatalogLoading(true);
       setCatalogError(null);
+
       try {
         const query = isB2CBrowseEntrySurface ? b2cSearchQuery.trim() : '';
+        const initialLimit = isEnterpriseCatalogEntrySurface
+          ? ENTERPRISE_HOME_CATALOG_FIRST_PAINT_LIMIT
+          : 20;
         const response = await getCatalogItems({
-          limit: 20,
+          limit: initialLimit,
           ...(query ? { q: query } : {}),
         });
+
+        if (cancelled) {
+          return;
+        }
+
         setProducts(response.items);
         setCatalogNextCursor(response.nextCursor);
         setB2cVisibleCount(query ? response.items.length : Math.min(8, response.items.length || 8));
+
+        if (isEnterpriseCatalogEntrySurface && response.nextCursor) {
+          tailHydrationTimer = globalThis.setTimeout(() => {
+            void hydrateEnterpriseHomeCatalogTail(response.nextCursor as string);
+          }, ENTERPRISE_HOME_CATALOG_TAIL_DELAY_MS);
+        }
       } catch (error) {
         console.error('Failed to load catalog:', error);
+
+        if (cancelled) {
+          return;
+        }
+
         setCatalogError('Failed to load catalog. Please try again.');
         setProducts([]);
         setCatalogNextCursor(null);
       } finally {
-        setCatalogLoading(false);
+        if (!cancelled) {
+          setCatalogLoading(false);
+        }
       }
     };
 
     if (isB2CBrowseEntrySurface) {
-      const debounceId = window.setTimeout(fetchCatalog, 200);
-      return () => globalThis.clearTimeout(debounceId);
+      const debounceId = globalThis.setTimeout(fetchCatalog, 200);
+      return () => {
+        cancelled = true;
+        if (tailHydrationTimer !== null) {
+          globalThis.clearTimeout(tailHydrationTimer);
+        }
+        globalThis.clearTimeout(debounceId);
+      };
     }
 
     void fetchCatalog();
-  }, [shouldLoadAppCatalog, isB2CBrowseEntrySurface, b2cSearchQuery, currentTenant?.id]);
+
+    return () => {
+      cancelled = true;
+      if (tailHydrationTimer !== null) {
+        globalThis.clearTimeout(tailHydrationTimer);
+      }
+    };
+  }, [shouldLoadAppCatalog, isB2CBrowseEntrySurface, isEnterpriseCatalogEntrySurface, b2cSearchQuery, currentTenant?.id]);
 
   const handleB2CShopNow = () => {
     b2cCatalogSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3465,7 +3536,10 @@ const App: React.FC = () => {
         }
         const ExperienceShell = resolvedShell;
         return (
-          <CartProvider key={`tenant-shell:${currentTenant.id}`}>
+          <CartProvider
+            key={`tenant-shell:${currentTenant.id}`}
+            deferInitialRefresh={isEnterpriseCatalogEntrySurface}
+          >
             {tenantProvisionError && (
               <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
                 ⚠️ {tenantProvisionError}

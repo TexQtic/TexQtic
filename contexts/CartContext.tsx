@@ -4,7 +4,7 @@
  * Global cart state management with backend synchronization
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Cart,
   getCart,
@@ -29,18 +29,17 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  deferInitialRefresh = false,
+}: {
+  children: React.ReactNode;
+  deferInitialRefresh?: boolean;
+}) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Load cart on mount if authenticated
-  useEffect(() => {
-    if (isAuthenticated()) {
-      refreshCart();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const hasInitialRefreshRunRef = useRef(false);
 
   const refreshCart = useCallback(async () => {
     if (!isAuthenticated()) {
@@ -61,6 +60,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (hasInitialRefreshRunRef.current || !isAuthenticated()) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const startRefresh = () => {
+      if (cancelled || hasInitialRefreshRunRef.current) {
+        return;
+      }
+
+      hasInitialRefreshRunRef.current = true;
+      void refreshCart();
+    };
+
+    if (deferInitialRefresh) {
+      const timerId = globalThis.setTimeout(startRefresh, 250);
+      return () => {
+        cancelled = true;
+        globalThis.clearTimeout(timerId);
+      };
+    }
+
+    startRefresh();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deferInitialRefresh, refreshCart]);
 
   const addToCart = useCallback(
     async (catalogItemId: string, quantity: number) => {
