@@ -91,6 +91,12 @@ import { getTenants, getTenantById, startImpersonationSession, stopImpersonation
 import { activateTenant } from './services/tenantService';
 import { getCurrentUser } from './services/authService';
 import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
+import {
+  createControlPlaneSessionRuntimeDescriptor,
+  createTenantSessionRuntimeDescriptor,
+  resolveRuntimeAppStateFromDescriptor,
+  resolveRuntimeShellFamilyFromDescriptor,
+} from './runtime/sessionRuntimeDescriptor';
 
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
 const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
@@ -125,11 +131,6 @@ function buildTradeReferenceFromRfq(rfqId: string): string {
 
 const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
 type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
-const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
-
-const canAccessWlAdmin = (isWhiteLabel: boolean | null | undefined, role: string | null | undefined) => (
-  isWhiteLabel === true && WL_ADMIN_ROLES.has(role ?? '')
-);
 
 const normalizeWlAdminView = (view: string): WLAdminView => {
   if ((WL_ADMIN_VIEWS as readonly string[]).includes(view)) {
@@ -683,6 +684,16 @@ const clearPersistedImpersonationSession = () => {
   persistImpersonationSession(null);
 };
 
+const resolveTenantEntryAppState = (
+  nextState: ReturnType<typeof resolveRuntimeAppStateFromDescriptor>,
+): 'EXPERIENCE' | 'WL_ADMIN' | null => {
+  if (nextState === 'EXPERIENCE' || nextState === 'WL_ADMIN') {
+    return nextState;
+  }
+
+  return null;
+};
+
 const App: React.FC = () => {
 
   useEffect(() => {
@@ -729,7 +740,7 @@ const App: React.FC = () => {
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
-  const [wlAdminEligible, setWlAdminEligible] = useState(false);
+  const setWlAdminEligible = (_value: boolean) => {};
   // TECS-FBW-020: WL-admin-local invite substate — keeps invite inside WhiteLabelAdminShell;
   // prevents INVITE_MEMBER appState from falling into the EXPERIENCE case group.
   const [wlAdminInviting, setWlAdminInviting] = useState(false);
@@ -757,6 +768,7 @@ const App: React.FC = () => {
   const [currentTenantId, setCurrentTenantId] = useState<string>('');
   const [selectedTenant, setSelectedTenant] = useState<TenantConfig | null>(null);
   const [controlPlaneIdentity, setControlPlaneIdentity] = useState<ControlPlaneIdentity | null>(null);
+  const [tenantAuthenticatedRole, setTenantAuthenticatedRole] = useState<string | null>(null);
   const [impersonation, setImpersonation] = useState<ImpersonationState>(EMPTY_IMPERSONATION_STATE);
 
   /** G-W3-ROUTING-001: Reason-input dialog before API-backed impersonation start */
@@ -955,15 +967,25 @@ const App: React.FC = () => {
 
   const applyTenantBootstrapState = (tenant: Tenant, role: string | null | undefined) => {
     const resolvedRole = resolveTenantRole(role ?? null, tenant.id);
-    const hasWlAdminAccess = canAccessWlAdmin(tenant.is_white_label, resolvedRole);
+    const descriptor = createTenantSessionRuntimeDescriptor({
+      tenantId: tenant.id,
+      tenantSlug: tenant.slug,
+      tenantName: tenant.name,
+      tenantCategory: tenant.tenant_category,
+      whiteLabelCapability: tenant.is_white_label,
+      commercialPlan: tenant.plan,
+      authenticatedRole: resolvedRole,
+    });
 
     setTenants([tenant]);
     setCurrentTenantId(tenant.id);
-    setWlAdminEligible(hasWlAdminAccess);
+    setTenantAuthenticatedRole(resolvedRole);
+    setWlAdminEligible(descriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false);
 
     return {
       resolvedRole,
-      nextState: hasWlAdminAccess ? 'WL_ADMIN' as const : 'EXPERIENCE' as const,
+      descriptor,
+      nextState: resolveTenantEntryAppState(resolveRuntimeAppStateFromDescriptor(descriptor)),
     };
   };
 
@@ -973,16 +995,32 @@ const App: React.FC = () => {
   } as const;
 
   const applyControlPlaneShellEntry = (identity: ControlPlaneIdentity) => {
+    const descriptor = createControlPlaneSessionRuntimeDescriptor({
+      actorId: identity.id,
+      actorEmail: identity.email,
+      authenticatedRole: identity.role,
+    });
+    const nextState = resolveRuntimeAppStateFromDescriptor(descriptor);
+
+    if (!nextState) {
+      clearControlPlaneIdentityState();
+      setStoredAuthRealm('CONTROL_PLANE');
+      setAuthRealm('CONTROL_PLANE');
+      setAppState('AUTH');
+      return;
+    }
+
     persistControlPlaneIdentity(identity);
     setControlPlaneIdentity(identity);
     setWlAdminEligible(false);
+    setTenantAuthenticatedRole(null);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
     setFinanceEscrowBridge(null);
     setAdminView('TENANTS');
-    setAppState('CONTROL_PLANE');
+    setAppState(nextState);
   };
 
   const resolveControlPlaneIdentity = async (data?: any) => {
@@ -1061,9 +1099,13 @@ const App: React.FC = () => {
     fetchTenants();
   }, [appState, canAccessControlPlane]);
 
+  const activeTenantRecord = useMemo(() => {
+    return tenants.find(tenant => tenant.id === currentTenantId) ?? null;
+  }, [tenants, currentTenantId]);
+
   // Convert backend Tenant to TenantConfig for UI compatibility
   const currentTenant: TenantConfig | null = useMemo(() => {
-    const tenant = tenants.find(t => t.id === currentTenantId);
+    const tenant = activeTenantRecord;
     if (!tenant) {
       appendRehydrationTrace('currentTenant:resolved', {
         currentTenantId,
@@ -1100,25 +1142,39 @@ const App: React.FC = () => {
     });
 
     return resolvedTenant;
-  }, [tenants, currentTenantId]);
+  }, [activeTenantRecord, currentTenantId, tenants]);
+  const tenantRuntimeDescriptor = useMemo(() => {
+    if (!activeTenantRecord) {
+      return null;
+    }
+
+    return createTenantSessionRuntimeDescriptor({
+      tenantId: activeTenantRecord.id,
+      tenantSlug: activeTenantRecord.slug,
+      tenantName: activeTenantRecord.name,
+      tenantCategory: activeTenantRecord.tenant_category,
+      whiteLabelCapability: activeTenantRecord.is_white_label,
+      commercialPlan: activeTenantRecord.plan,
+      authenticatedRole: tenantAuthenticatedRole,
+    });
+  }, [activeTenantRecord, tenantAuthenticatedRole]);
+  const tenantHasWlAdminOverlay = tenantRuntimeDescriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false;
+  const tenantOperatingMode = tenantRuntimeDescriptor?.operatingMode ?? null;
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
-  const normalizedTenantCategory = currentTenant?.tenant_category ?? currentTenant?.type;
-  const isNonWhiteLabelB2CTenant = normalizedTenantCategory === TenantType.B2C
-    && currentTenant?.is_white_label !== true;
+  const isNonWhiteLabelB2CTenant = tenantOperatingMode === 'B2C_STOREFRONT';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
     && isNonWhiteLabelB2CTenant;
   const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
-    && (normalizedTenantCategory === TenantType.AGGREGATOR || normalizedTenantCategory === TenantType.INTERNAL);
+    && tenantOperatingMode === 'AGGREGATOR_WORKSPACE';
   const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
-    && normalizedTenantCategory === TenantType.B2B
-    && currentTenant?.is_white_label !== true;
+    && tenantOperatingMode === 'B2B_WORKSPACE';
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
     && normalizeWlAdminView(wlAdminView) === 'PRODUCTS'
-    && currentTenant?.is_white_label === true;
+    && tenantHasWlAdminOverlay;
   const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
     || isB2CBrowseEntrySurface
     || isWlAdminProductsSurface;
@@ -1416,19 +1472,14 @@ const App: React.FC = () => {
       setImpersonation(EMPTY_IMPERSONATION_STATE);
       persistControlPlaneIdentity(null);
       setControlPlaneIdentity(null);
+      setTenantAuthenticatedRole(null);
       setSelectedTenant(null);
       setAdminView('TENANTS');
       setAuthRealm('CONTROL_PLANE');
       return;
     }
 
-    persistControlPlaneIdentity(identity);
-    setControlPlaneIdentity(identity);
-    setStoredAuthRealm('CONTROL_PLANE');
-    setAuthRealm('CONTROL_PLANE');
-    setSelectedTenant(null);
-    setAdminView('TENANTS');
-    setAppState('CONTROL_PLANE');
+    applyControlPlaneShellEntry(identity);
   }, [appState]);
 
   useEffect(() => {
@@ -1473,22 +1524,23 @@ const App: React.FC = () => {
       try {
         const me = await getCurrentUser();
         const tenant = resolveCanonicalImpersonationTenant(me.tenant, storedImpersonation.state.targetTenantId);
-        const resolvedRole = resolveTenantRole(me.role ?? null, tenant?.id ?? null);
-        const hasWlAdminAccess = canAccessWlAdmin(tenant?.is_white_label, resolvedRole);
 
         if (!tenant || cancelled) {
           throw new Error('Stored impersonation tenant is invalid.');
         }
 
+        const bootstrapState = applyTenantBootstrapState(tenant, me.role ?? null);
+
+        if (!bootstrapState.nextState) {
+          throw new Error('Stored impersonation descriptor is invalid.');
+        }
+
         persistControlPlaneIdentity(actorIdentity);
         setControlPlaneIdentity(actorIdentity);
-        setTenants([tenant]);
-        setCurrentTenantId(tenant.id);
-        setWlAdminEligible(hasWlAdminAccess);
         setTenantRestorePending(false);
         setTenantProvisionError(null);
         setImpersonation(storedImpersonation.state);
-        setAppState(hasWlAdminAccess ? 'WL_ADMIN' : 'EXPERIENCE');
+        setAppState(bootstrapState.nextState);
       } catch {
         if (cancelled) {
           return;
@@ -1587,6 +1639,10 @@ const App: React.FC = () => {
         }
 
         const bootstrapState = applyTenantBootstrapState(tenant, me.role ?? null);
+        if (!bootstrapState.nextState) {
+          throw new Error('Tenant session descriptor is invalid.');
+        }
+
         nextState = bootstrapState.nextState;
         appendRehydrationTrace('tenantRestore:tenant_applied', {
           tenant: summarizeTenantIdentity(tenant),
@@ -1678,6 +1734,7 @@ const App: React.FC = () => {
       clearAuth();
       setTenants([]);
       setCurrentTenantId('');
+      setTenantAuthenticatedRole(null);
       setWlAdminEligible(false);
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
@@ -1693,7 +1750,13 @@ const App: React.FC = () => {
         return;
       }
 
-      nextState = applyTenantBootstrapState(canonicalTenant, me.role ?? null).nextState;
+      const bootstrapState = applyTenantBootstrapState(canonicalTenant, me.role ?? null);
+      if (!bootstrapState.nextState) {
+        failClosedTenantBootstrap('Tenant workspace identity could not be confirmed. Please sign in again.');
+        return;
+      }
+
+      nextState = bootstrapState.nextState;
     } catch (err) {
       if (err instanceof APIError && err.status === 404 && err.message.includes('Organisation not yet provisioned')) {
         const blockedMessage = 'Tenant not provisioned yet. Your workspace is being set up — please try again in a few minutes.';
@@ -1775,12 +1838,12 @@ const App: React.FC = () => {
         throw new Error('Tenant context bootstrap returned the wrong tenant.');
       }
 
-      const resolvedRole = resolveTenantRole(me.role ?? target.role ?? null, bootstrappedTenant.id);
-      const hasWlAdminAccess = canAccessWlAdmin(bootstrappedTenant.is_white_label, resolvedRole);
+      const bootstrapState = applyTenantBootstrapState(bootstrappedTenant, me.role ?? target.role ?? null);
 
-      setTenants([bootstrappedTenant]);
-      setCurrentTenantId(bootstrappedTenant.id);
-      setWlAdminEligible(hasWlAdminAccess);
+      if (!bootstrapState.nextState) {
+        throw new Error('Tenant runtime descriptor could not be established.');
+      }
+
       setTenantProvisionError(null);
       setImpersonation(nextImpersonationState);
       persistImpersonationSession({
@@ -1788,7 +1851,7 @@ const App: React.FC = () => {
         state: nextImpersonationState,
       });
       setImpersonationDialog({ open: false, tenant: null, reason: '', loading: false, error: null });
-      setAppState(hasWlAdminAccess ? 'WL_ADMIN' : 'EXPERIENCE');
+      setAppState(bootstrapState.nextState);
     } catch (err: any) {
       if (startedImpersonationId) {
         clearPersistedImpersonationSession();
@@ -1805,6 +1868,7 @@ const App: React.FC = () => {
       }
       clearPersistedImpersonationSession();
       setImpersonation(EMPTY_IMPERSONATION_STATE);
+      setTenantAuthenticatedRole(null);
       setWlAdminEligible(false);
       const msg = err?.message || 'Failed to start impersonation session.';
       setImpersonationDialog(d => ({ ...d, loading: false, error: msg }));
@@ -1831,7 +1895,15 @@ const App: React.FC = () => {
     // Clear impersonation token override — admin JWT in localStorage is restored automatically
     clearPersistedImpersonationSession();
     setImpersonation(EMPTY_IMPERSONATION_STATE);
-    setAppState('CONTROL_PLANE');
+    const actorIdentity = controlPlaneIdentity ?? readStoredControlPlaneIdentity();
+
+    if (actorIdentity) {
+      applyControlPlaneShellEntry(actorIdentity);
+      return;
+    }
+
+    clearControlPlaneIdentityState();
+    setAppState('AUTH');
   };
 
   /** RU-003: Handle inline catalog item creation */
@@ -2603,7 +2675,7 @@ const App: React.FC = () => {
       return (
         <WhiteLabelSettings
           tenant={currentTenant}
-          onNavigateDomains={currentTenant.is_white_label === true && wlAdminEligible ? () => enterWlAdmin('DOMAINS') : undefined}
+          onNavigateDomains={tenantHasWlAdminOverlay ? () => enterWlAdmin('DOMAINS') : undefined}
         />
       );
     }
@@ -2716,7 +2788,7 @@ const App: React.FC = () => {
     // PW5-WL1-WIRE: WL storefront HOME — renders ProductGrid for is_white_label tenants.
     // tenantId is NEVER passed by the client. Server resolves tenant scope from JWT (D-017-A compliant).
     // Must stay above the category switch so WL tenants don't fall through to B2B/B2C content.
-    if (currentTenant.is_white_label && expView === 'HOME') {
+    if (tenantOperatingMode === 'WL_STOREFRONT' && expView === 'HOME') {
       return (
         <WLStorefront
           onRequestQuote={handleOpenRfqDialog}
@@ -2725,13 +2797,8 @@ const App: React.FC = () => {
       );
     }
 
-    // B2-REM-3: Content switch reads canonical tenant_category with legacy type as compat fallback.
-    switch (currentTenant.tenant_category ?? currentTenant.type) {
-      case TenantType.INTERNAL:
-        // B2-REM-3: INTERNAL → AggregatorShell content (explicit named policy rule, B2-DESIGN locked).
-        // Falls through to AGGREGATOR content intentionally.
-        // eslint-disable-next-line no-fallthrough
-      case TenantType.AGGREGATOR:
+    switch (tenantOperatingMode) {
+      case 'AGGREGATOR_WORKSPACE':
         return (
           <AggregatorDiscoveryWorkspace
             tenantName={currentTenant.name}
@@ -2742,7 +2809,7 @@ const App: React.FC = () => {
             onRetry={() => setAggregatorDiscoveryRefreshKey(value => value + 1)}
           />
         );
-      case TenantType.B2B:
+      case 'B2B_WORKSPACE':
         return (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
@@ -2908,7 +2975,7 @@ const App: React.FC = () => {
             )}
           </div>
         );
-      case TenantType.B2C:
+      case 'B2C_STOREFRONT':
         {
           const visibleB2CProducts = products.slice(0, b2cVisibleCount);
           const hasHiddenLoadedProducts = products.length > b2cVisibleCount;
@@ -3016,11 +3083,13 @@ const App: React.FC = () => {
           </div>
         );
         }
-        // PW5-U2: TenantType.WHITE_LABEL dead storefront case removed.
-        // WHITE_LABEL is a @deprecated enum value superseded by is_white_label boolean flag (B2-REM-3/B2-REM-5).
-        // No tenant has tenant_category='WHITE_LABEL' post-canonicalization; this case was unreachable
-        // and rendered a decorative "Explore the Collection" button with no onClick handler — a false affordance.
-        // Removed 2026-03-10 (PW5-U2 dead UI gating tranche).
+      case 'WL_STOREFRONT':
+        return (
+          <WLStorefront
+            onRequestQuote={handleOpenRfqDialog}
+            onViewBuyerRfqs={handleOpenBuyerRfqs}
+          />
+        );
       default:
         return <div>Invalid Tenant Configuration</div>;
     }
@@ -3312,25 +3381,19 @@ const App: React.FC = () => {
                     setToken(raw.token, 'TENANT');
 
                     const me = await getCurrentUser();
-                    if (!me.tenant) {
+                    const canonicalTenant = buildTenantSnapshot(me.tenant);
+
+                    if (!canonicalTenant) {
                       throw new Error('Tenant activation completed but canonical tenant state is unavailable.');
                     }
 
-                    setTenants([{
-                      id: me.tenant.id,
-                      slug: me.tenant.slug,
-                      name: me.tenant.name,
-                      type: (me.tenant.type ?? 'B2B') as TenantType,
-                      tenant_category: me.tenant.tenant_category ?? me.tenant.type ?? 'B2B',
-                      is_white_label: me.tenant.is_white_label ?? false,
-                      status: me.tenant.status,
-                      plan: normalizeCommercialPlan(me.tenant.plan),
-                      createdAt: '',
-                      updatedAt: '',
-                    } as Tenant]);
-                    setCurrentTenantId(me.tenant.id);
+                    const bootstrapState = applyTenantBootstrapState(canonicalTenant, me.role ?? null);
+                    if (!bootstrapState.nextState) {
+                      throw new Error('Tenant activation descriptor could not be established.');
+                    }
+
                     setPendingInviteToken(null);
-                    setAppState('EXPERIENCE');
+                    setAppState(bootstrapState.nextState);
                 } else {
                   setAppState('EXPERIENCE');
                 }
@@ -3364,6 +3427,21 @@ const App: React.FC = () => {
             </div>
           );
         }
+
+        if (resolveRuntimeShellFamilyFromDescriptor(tenantRuntimeDescriptor, 'WL_ADMIN') !== 'WhiteLabelAdminShell') {
+          return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+              <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
+                <div className="text-3xl">⚠️</div>
+                <h2 className="font-bold text-slate-900">White-Label Admin Unavailable</h2>
+                <p className="text-slate-600 text-sm">
+                  This tenant session is missing the canonical white-label admin overlay.
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <>
             {tenantProvisionError && (
@@ -3403,7 +3481,7 @@ const App: React.FC = () => {
           );
         }
 
-        const canDiscoverWlAdmin = currentTenant.is_white_label === true && wlAdminEligible;
+        const canDiscoverWlAdmin = tenantHasWlAdminOverlay;
         const props = {
           tenant: currentTenant,
           onNavigateTeam: () => {
@@ -3439,12 +3517,25 @@ const App: React.FC = () => {
           onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
           showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
         };
-        // B2-REM-3: Shell resolution via canonical policy function — no silent default fallback.
-        const resolvedShell = resolveExperienceShell(
-          currentTenant.tenant_category,
-          currentTenant.is_white_label
-        );
-        if (resolvedShell === null) {
+        const resolvedShellFamily = resolveRuntimeShellFamilyFromDescriptor(tenantRuntimeDescriptor, appState);
+        let ExperienceShell: typeof AggregatorShell | typeof B2BShell | typeof B2CShell | typeof WhiteLabelShell | null = null;
+
+        switch (resolvedShellFamily) {
+          case 'AggregatorShell':
+            ExperienceShell = AggregatorShell;
+            break;
+          case 'B2BShell':
+            ExperienceShell = B2BShell;
+            break;
+          case 'B2CShell':
+            ExperienceShell = B2CShell;
+            break;
+          case 'WhiteLabelShell':
+            ExperienceShell = WhiteLabelShell;
+            break;
+        }
+
+        if (!resolvedShellFamily || !ExperienceShell) {
           return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
               <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
@@ -3457,7 +3548,6 @@ const App: React.FC = () => {
             </div>
           );
         }
-        const ExperienceShell = resolvedShell;
         return (
           <CartProvider
             key={`tenant-shell:${currentTenant.id}`}
@@ -3906,6 +3996,7 @@ const App: React.FC = () => {
                   clearAuth();
                   clearPersistedImpersonationSession();
                   setImpersonation(EMPTY_IMPERSONATION_STATE);
+                  setTenantAuthenticatedRole(null);
                   setWlAdminEligible(false);
                   clearControlPlaneIdentityState();
                   setAppState('AUTH');
