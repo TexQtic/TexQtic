@@ -3064,7 +3064,7 @@ const App: React.FC = () => {
       case 'CASES':
         return (
           <DisputeCases
-            onOpenEscalations={scope => {
+            onOpenEscalationScope={(scope: DisputeEscalationBridgeTarget) => {
               setDisputeEscalationBridge(scope);
               setAdminView('ESCALATIONS');
             }}
