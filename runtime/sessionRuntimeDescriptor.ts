@@ -94,9 +94,47 @@ export interface RuntimeManifestEntry {
   defaultAppState: RuntimeAppState;
 }
 
+export type RouteGroupKey =
+  | 'home_landing'
+  | 'catalog_browse'
+  | 'cart_commerce'
+  | 'rfq_sourcing'
+  | 'orders_operations'
+  | 'operational_workspace'
+  | 'admin_branding_domains'
+  | 'control_plane_operations';
+
+export interface RuntimeRouteGroupSelection {
+  manifestKey: RouteManifestKey;
+  routeGroupKey: RouteGroupKey;
+  viewKey: string | null;
+}
+
+export interface RuntimeRouteGroupSelectionInput {
+  expView?: string | null;
+  adminView?: string | null;
+  wlAdminView?: string | null;
+  wlAdminInviting?: boolean;
+  showCart?: boolean;
+  selectedTenantId?: string | null;
+}
+
 export type RuntimeShellState = RuntimeAppState | 'TEAM_MGMT' | 'INVITE_MEMBER' | 'SETTINGS' | null | undefined;
 
 const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
+const OPERATIONAL_WORKSPACE_EXP_VIEWS = new Set([
+  'DPP',
+  'ESCROW',
+  'ESCALATIONS',
+  'SETTLEMENT',
+  'CERTIFICATIONS',
+  'TRACEABILITY',
+  'AUDIT_LOGS',
+  'TRADES',
+]);
+const RFQ_SOURCING_EXP_VIEWS = new Set(['RFQS', 'SUPPLIER_RFQ_INBOX']);
+const WL_ADMIN_CATALOG_VIEWS = new Set(['PRODUCTS', 'COLLECTIONS']);
+const WL_ADMIN_BRANDING_VIEWS = new Set(['BRANDING', 'STAFF', 'DOMAINS']);
 
 const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> = {
   control_plane: {
@@ -314,6 +352,117 @@ const isTenantWorkspaceRuntimeState = (runtimeShellState: RuntimeShellState) => 
   }
 };
 
+const createRouteGroupSelection = (
+  manifestKey: RouteManifestKey,
+  routeGroupKey: RouteGroupKey,
+  viewKey: string | null,
+): RuntimeRouteGroupSelection => ({
+  manifestKey,
+  routeGroupKey,
+  viewKey,
+});
+
+const resolveStorefrontRouteGroup = (
+  manifestKey: 'b2c_storefront' | 'wl_storefront',
+  expView: string,
+  showCart: boolean,
+) => {
+  if (showCart && expView === 'HOME') {
+    return createRouteGroupSelection(manifestKey, 'cart_commerce', 'CART');
+  }
+
+  if (expView === 'ORDERS') {
+    return createRouteGroupSelection(manifestKey, 'orders_operations', expView);
+  }
+
+  if (RFQ_SOURCING_EXP_VIEWS.has(expView)) {
+    return createRouteGroupSelection(manifestKey, 'rfq_sourcing', expView);
+  }
+
+  if (OPERATIONAL_WORKSPACE_EXP_VIEWS.has(expView)) {
+    return createRouteGroupSelection(manifestKey, 'operational_workspace', expView);
+  }
+
+  return createRouteGroupSelection(manifestKey, 'home_landing', expView);
+};
+
+const resolveWorkspaceRouteGroupSelection = (
+  entry: RuntimeManifestEntry,
+  input: RuntimeRouteGroupSelectionInput,
+): RuntimeRouteGroupSelection | null => {
+  const expView = input.expView ?? 'HOME';
+
+  switch (entry.key) {
+    case 'aggregator_workspace':
+      if (expView === 'ORDERS') {
+        return createRouteGroupSelection(entry.key, 'orders_operations', expView);
+      }
+
+      if (RFQ_SOURCING_EXP_VIEWS.has(expView)) {
+        return createRouteGroupSelection(entry.key, 'rfq_sourcing', expView);
+      }
+
+      if (OPERATIONAL_WORKSPACE_EXP_VIEWS.has(expView)) {
+        return createRouteGroupSelection(entry.key, 'operational_workspace', expView);
+      }
+
+      return createRouteGroupSelection(entry.key, 'home_landing', expView);
+    case 'b2b_workspace':
+      if (expView === 'ORDERS') {
+        return createRouteGroupSelection(entry.key, 'orders_operations', expView);
+      }
+
+      if (RFQ_SOURCING_EXP_VIEWS.has(expView)) {
+        return createRouteGroupSelection(entry.key, 'rfq_sourcing', expView);
+      }
+
+      if (OPERATIONAL_WORKSPACE_EXP_VIEWS.has(expView)) {
+        return createRouteGroupSelection(entry.key, 'operational_workspace', expView);
+      }
+
+      return createRouteGroupSelection(entry.key, 'catalog_browse', expView);
+    case 'b2c_storefront':
+      return resolveStorefrontRouteGroup(entry.key, expView, input.showCart === true);
+    case 'wl_storefront':
+      return resolveStorefrontRouteGroup(entry.key, expView, input.showCart === true);
+    default:
+      return null;
+  }
+};
+
+const resolveWlAdminRouteGroupSelection = (
+  entry: RuntimeManifestEntry,
+  input: RuntimeRouteGroupSelectionInput,
+): RuntimeRouteGroupSelection | null => {
+  const wlAdminView = input.wlAdminView ?? 'BRANDING';
+
+  if (input.wlAdminInviting === true) {
+    return createRouteGroupSelection(entry.key, 'admin_branding_domains', 'STAFF');
+  }
+
+  if (wlAdminView === 'ORDERS') {
+    return createRouteGroupSelection(entry.key, 'orders_operations', wlAdminView);
+  }
+
+  if (WL_ADMIN_CATALOG_VIEWS.has(wlAdminView)) {
+    return createRouteGroupSelection(entry.key, 'catalog_browse', wlAdminView);
+  }
+
+  if (WL_ADMIN_BRANDING_VIEWS.has(wlAdminView)) {
+    return createRouteGroupSelection(entry.key, 'admin_branding_domains', wlAdminView);
+  }
+
+  return null;
+};
+
+const resolveControlPlaneRouteGroupSelection = (
+  entry: RuntimeManifestEntry,
+  input: RuntimeRouteGroupSelectionInput,
+) => {
+  const viewKey = input.selectedTenantId ? 'TENANT_DETAIL' : input.adminView ?? 'TENANTS';
+  return createRouteGroupSelection(entry.key, 'control_plane_operations', viewKey);
+};
+
 const resolveTenantWorkspaceManifestKey = (
   descriptor: SessionRuntimeDescriptor,
 ): RouteManifestKey | null => {
@@ -449,6 +598,29 @@ export const resolveRuntimeManifestEntryFromDescriptor = (
   const entry = getRuntimeManifestEntryByKey(manifestKey);
 
   return canSelectRuntimeManifestEntry(descriptor, entry) ? entry : null;
+};
+
+export const resolveRuntimeRouteGroupSelection = (
+  manifestEntry: RuntimeManifestEntry | null,
+  input: RuntimeRouteGroupSelectionInput,
+): RuntimeRouteGroupSelection | null => {
+  if (!manifestEntry) {
+    return null;
+  }
+
+  switch (manifestEntry.key) {
+    case 'control_plane':
+      return resolveControlPlaneRouteGroupSelection(manifestEntry, input);
+    case 'wl_admin':
+      return resolveWlAdminRouteGroupSelection(manifestEntry, input);
+    case 'aggregator_workspace':
+    case 'b2b_workspace':
+    case 'b2c_storefront':
+    case 'wl_storefront':
+      return resolveWorkspaceRouteGroupSelection(manifestEntry, input);
+    default:
+      return null;
+  }
 };
 
 export const resolveRuntimeContentFamilyFromDescriptor = (

@@ -7,6 +7,7 @@ import {
   resolveRuntimeContentFamilyFromDescriptor,
   resolveRuntimeManifestEntryFromDescriptor,
   resolveRuntimeManifestKeyFromDescriptor,
+  resolveRuntimeRouteGroupSelection,
   resolveRuntimeShellFamilyFromDescriptor,
 } from '../runtime/sessionRuntimeDescriptor';
 
@@ -40,6 +41,7 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeContentFamilyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestKeyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestEntryFromDescriptor(null, 'EXPERIENCE')).toBeNull();
+    expect(resolveRuntimeRouteGroupSelection(null, { expView: 'HOME' })).toBeNull();
   });
 
   it('maps aggregator and internal tenants to aggregator workspace mode', () => {
@@ -60,6 +62,18 @@ describe('session runtime descriptor', () => {
         shellFamily: 'AggregatorShell',
       }),
     );
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE'),
+        { expView: 'HOME' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'home_landing', viewKey: 'HOME' }));
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE'),
+        { expView: 'DPP' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'operational_workspace', viewKey: 'DPP' }));
     expect(resolveRuntimeContentFamilyFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE')).toBe('aggregator_workspace');
     expect(internalDescriptor?.operatingMode).toBe('AGGREGATOR_WORKSPACE');
     expect(resolveRuntimeContentFamilyFromDescriptor(internalDescriptor ?? null, 'EXPERIENCE')).toBe('aggregator_workspace');
@@ -84,6 +98,18 @@ describe('session runtime descriptor', () => {
         shellFamily: 'B2BShell',
       }),
     );
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        { expView: 'HOME' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'catalog_browse', viewKey: 'HOME' }));
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        { expView: 'RFQS' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'rfq_sourcing', viewKey: 'RFQS' }));
     expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2b_workspace');
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('B2BShell');
   });
@@ -105,6 +131,18 @@ describe('session runtime descriptor', () => {
         shellFamily: 'B2CShell',
       }),
     );
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        { expView: 'HOME' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'home_landing', viewKey: 'HOME' }));
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        { expView: 'HOME', showCart: true },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'cart_commerce', viewKey: 'CART' }));
     expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2c_storefront');
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('B2CShell');
   });
@@ -128,6 +166,12 @@ describe('session runtime descriptor', () => {
         shellFamily: 'WhiteLabelShell',
       }),
     );
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE'),
+        { expView: 'RFQS' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'rfq_sourcing', viewKey: 'RFQS' }));
     expect(resolveRuntimeContentFamilyFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE')).toBe('wl_storefront');
     expect(resolveRuntimeShellFamilyFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE')).toBe('WhiteLabelShell');
     expect(resolveRuntimeManifestKeyFromDescriptor(storefrontDescriptor ?? null, 'WL_ADMIN')).toBeNull();
@@ -159,6 +203,24 @@ describe('session runtime descriptor', () => {
         overlayDriven: true,
       }),
     );
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN'),
+        { wlAdminView: 'BRANDING' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'admin_branding_domains', viewKey: 'BRANDING' }));
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN'),
+        { wlAdminView: 'PRODUCTS' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'catalog_browse', viewKey: 'PRODUCTS' }));
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN'),
+        { wlAdminView: 'ORDERS' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'orders_operations', viewKey: 'ORDERS' }));
     expect(resolveRuntimeContentFamilyFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN')).toBe('wl_admin');
     expect(resolveRuntimeShellFamilyFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN')).toBe('WhiteLabelAdminShell');
   });
@@ -181,6 +243,12 @@ describe('session runtime descriptor', () => {
         shellFamily: 'SuperAdminShell',
       }),
     );
+    expect(
+      resolveRuntimeRouteGroupSelection(
+        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'CONTROL_PLANE'),
+        { adminView: 'HEALTH' },
+      ),
+    ).toEqual(expect.objectContaining({ routeGroupKey: 'control_plane_operations', viewKey: 'HEALTH' }));
     expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'CONTROL_PLANE')).toBe('control_plane');
     expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBeNull();

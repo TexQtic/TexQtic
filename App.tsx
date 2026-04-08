@@ -96,6 +96,7 @@ import {
   createTenantSessionRuntimeDescriptor,
   resolveRuntimeAppStateFromDescriptor,
   resolveRuntimeManifestEntryFromDescriptor,
+  resolveRuntimeRouteGroupSelection,
   type RouteManifestKey,
 } from './runtime/sessionRuntimeDescriptor';
 
@@ -1190,20 +1191,40 @@ const App: React.FC = () => {
   }, [controlPlaneRuntimeDescriptor, appState]);
   const tenantContentFamily = tenantRuntimeManifestEntry?.key ?? null;
   const controlPlaneContentFamily = controlPlaneRuntimeManifestEntry?.key ?? null;
+  const tenantRouteGroupSelection = useMemo(() => {
+    return resolveRuntimeRouteGroupSelection(tenantRuntimeManifestEntry, {
+      expView,
+      showCart,
+    });
+  }, [tenantRuntimeManifestEntry, expView, showCart]);
+  const wlAdminRouteGroupSelection = useMemo(() => {
+    return appState === 'WL_ADMIN'
+      ? resolveRuntimeRouteGroupSelection(tenantRuntimeManifestEntry, {
+          wlAdminView,
+          wlAdminInviting,
+        })
+      : null;
+  }, [tenantRuntimeManifestEntry, appState, wlAdminView, wlAdminInviting]);
+  const controlPlaneRouteGroupSelection = useMemo(() => {
+    return resolveRuntimeRouteGroupSelection(controlPlaneRuntimeManifestEntry, {
+      adminView,
+      selectedTenantId: selectedTenant?.id ?? null,
+    });
+  }, [controlPlaneRuntimeManifestEntry, adminView, selectedTenant]);
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
   const isNonWhiteLabelB2CTenant = tenantContentFamily === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
-    && expView === 'HOME'
+    && tenantRouteGroupSelection?.routeGroupKey === 'home_landing'
     && isNonWhiteLabelB2CTenant;
   const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
-    && expView === 'HOME'
+    && tenantRouteGroupSelection?.routeGroupKey === 'home_landing'
     && tenantContentFamily === 'aggregator_workspace';
   const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
-    && expView === 'HOME'
+    && tenantRouteGroupSelection?.routeGroupKey === 'catalog_browse'
     && tenantContentFamily === 'b2b_workspace';
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
-    && normalizeWlAdminView(wlAdminView) === 'PRODUCTS'
+    && wlAdminRouteGroupSelection?.routeGroupKey === 'catalog_browse'
     && tenantContentFamily === 'wl_admin';
   const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
     || isB2CBrowseEntrySurface
@@ -2543,127 +2564,142 @@ const App: React.FC = () => {
 
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
   const renderWLAdminContent = () => {
-    if (!currentTenant) return null;
-    // TECS-FBW-020: render InviteMemberForm in-shell; onBack returns to STAFF without leaving WL_ADMIN.
-    if (wlAdminInviting) return <InviteMemberForm onBack={() => setWlAdminInviting(false)} />;
-    switch (normalizeWlAdminView(wlAdminView)) {
-      // TECS-FBW-008: pass onNavigateDomains so WL Settings routes to real Domains panel
-      case 'BRANDING':    return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
-      case 'STAFF':       return <TeamManagement onInvite={() => setWlAdminInviting(true)} />;
-      case 'PRODUCTS': return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-          <div className="flex justify-between items-end">
-            <div>
-              <h2 className="text-xl font-bold text-slate-800">Product Catalog</h2>
-              <p className="text-slate-500 text-sm mt-0.5">Manage your store inventory.</p>
-            </div>
-            <button
-              onClick={() => setShowAddItemForm(v => !v)}
-              className="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-slate-700 transition"
-            >
-              + Add Item
-            </button>
-          </div>
+    if (!currentTenant || !wlAdminRouteGroupSelection) return null;
 
-          {showAddItemForm && (
-            <form onSubmit={handleCreateItem} className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
-              <h3 className="font-bold text-slate-800">New Catalog Item</h3>
-              {addItemError && (
-                <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label htmlFor="wl-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
-                  <input
-                    id="wl-add-name"
-                    required
-                    value={addItemFormData.name}
-                    onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
-                    placeholder="Product name"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="wl-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
-                  <input
-                    id="wl-add-price"
-                    required
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    value={addItemFormData.price}
-                    onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="wl-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
-                  <input
-                    id="wl-add-sku"
-                    value={addItemFormData.sku}
-                    onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
-                    placeholder="Optional SKU"
-                  />
-                </div>
+    switch (wlAdminRouteGroupSelection.routeGroupKey) {
+      case 'admin_branding_domains':
+        if (wlAdminInviting) {
+          return <InviteMemberForm onBack={() => setWlAdminInviting(false)} />;
+        }
+
+        switch (wlAdminRouteGroupSelection.viewKey) {
+          case 'STAFF':
+            return <TeamManagement onInvite={() => setWlAdminInviting(true)} />;
+          case 'DOMAINS':
+            return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
+          case 'BRANDING':
+          default:
+            return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
+        }
+      case 'catalog_browse':
+        if (wlAdminRouteGroupSelection.viewKey === 'COLLECTIONS') {
+          return <WLCollectionsPanel />;
+        }
+
+        return (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex justify-between items-end">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Product Catalog</h2>
+                <p className="text-slate-500 text-sm mt-0.5">Manage your store inventory.</p>
               </div>
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={addItemLoading}
-                  className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-700 transition disabled:opacity-50"
-                >
-                  {addItemLoading ? 'Saving...' : 'Save Item'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
-                  className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-
-          {catalogLoading && (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-800 mx-auto"></div>
-              <p className="mt-4 text-slate-500 text-sm">Loading catalog...</p>
+              <button
+                onClick={() => setShowAddItemForm(v => !v)}
+                className="bg-slate-900 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-slate-700 transition"
+              >
+                + Add Item
+              </button>
             </div>
-          )}
 
-          {catalogError && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">{catalogError}</div>
-          )}
-
-          {!catalogLoading && !catalogError && products.length === 0 && (
-            <div className="text-center py-16 text-slate-400 text-sm">No products yet. Add your first item above.</div>
-          )}
-
-          {!catalogLoading && !catalogError && products.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {products.map(p => (
-                <div key={p.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-1">
-                  <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{p.category || 'General'}</div>
-                  <div className="font-semibold text-slate-800">{p.name}</div>
-                  {p.sku && <div className="text-xs text-slate-400">SKU: {p.sku}</div>}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-emerald-700 font-bold text-sm">${p.price}</span>
-                    <span className="text-xs text-slate-400">MOQ: {p.moq || 1}</span>
+            {showAddItemForm && (
+              <form onSubmit={handleCreateItem} className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm">
+                <h3 className="font-bold text-slate-800">New Catalog Item</h3>
+                {addItemError && (
+                  <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label htmlFor="wl-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                    <input
+                      id="wl-add-name"
+                      required
+                      value={addItemFormData.name}
+                      onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
+                      placeholder="Product name"
+                    />
                   </div>
-                    {renderCatalogItemMutationActions(p)}
+                  <div className="space-y-1">
+                    <label htmlFor="wl-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                    <input
+                      id="wl-add-price"
+                      required
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={addItemFormData.price}
+                      onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="wl-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                    <input
+                      id="wl-add-sku"
+                      value={addItemFormData.sku}
+                      onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
+                      placeholder="Optional SKU"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-      case 'COLLECTIONS': return <WLCollectionsPanel />;
-      case 'ORDERS':      return <WLOrdersPanel />;
-      case 'DOMAINS':     return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
-      default:            return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={addItemLoading}
+                    className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-700 transition disabled:opacity-50"
+                  >
+                    {addItemLoading ? 'Saving...' : 'Save Item'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                    className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {catalogLoading && (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-800 mx-auto"></div>
+                <p className="mt-4 text-slate-500 text-sm">Loading catalog...</p>
+              </div>
+            )}
+
+            {catalogError && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">{catalogError}</div>
+            )}
+
+            {!catalogLoading && !catalogError && products.length === 0 && (
+              <div className="text-center py-16 text-slate-400 text-sm">No products yet. Add your first item above.</div>
+            )}
+
+            {!catalogLoading && !catalogError && products.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {products.map(p => (
+                  <div key={p.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-1">
+                    <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{p.category || 'General'}</div>
+                    <div className="font-semibold text-slate-800">{p.name}</div>
+                    {p.sku && <div className="text-xs text-slate-400">SKU: {p.sku}</div>}
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-emerald-700 font-bold text-sm">${p.price}</span>
+                      <span className="text-xs text-slate-400">MOQ: {p.moq || 1}</span>
+                    </div>
+                    {renderCatalogItemMutationActions(p)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case 'orders_operations':
+        return <WLOrdersPanel />;
+      default:
+        return null;
     }
   };
 
@@ -3019,116 +3055,140 @@ const App: React.FC = () => {
         />
       );
     }
-    // RCP-1 TECS 3: Orders panel — rendered before the tenant-type switch so it
-    // overlays any tenant type's home view. Reset to HOME via onBack / onNavigateHome.
-    // G-025 TECS 4D: DPP Passport view (G-025-DPP-SNAPSHOT-UI-EXPORT-001)
-    if (expView === 'DPP') {
-      return (
-        <DPPPassport
-          onBack={() => setExpView('HOME')}
-          title={currentTenant?.is_white_label ? 'DPP Snapshot' : undefined}
-          subtitle={
-            currentTenant?.is_white_label
-              ? 'Read-only supply chain snapshot by traceability node ID.'
-              : undefined
+    switch (tenantRouteGroupSelection?.routeGroupKey) {
+      case 'orders_operations':
+        return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
+      case 'rfq_sourcing':
+        if (expView === 'RFQS') {
+          if (rfqDetailView.open && rfqDetailView.source === 'list') {
+            return (
+              <BuyerRfqDetailSurface
+                rfq={rfqDetailView.data}
+                loading={rfqDetailView.loading}
+                error={rfqDetailView.error}
+                onBack={handleReturnToBuyerRfqList}
+                onClose={handleCloseBuyerRfqs}
+                onOpenTradeContinuity={() => {
+                  void handleOpenTradeContinuityFromRfq();
+                }}
+                tradeContinuityLoading={buyerRfqTradeBridge.loading}
+                tradeContinuityError={buyerRfqTradeBridge.error}
+              />
+            );
           }
-        />
-      );
-    }
-    if (expView === 'ORDERS') return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
-    if (expView === 'RFQS') {
-      if (rfqDetailView.open && rfqDetailView.source === 'list') {
+
+          return (
+            <BuyerRfqListSurface
+              rfqs={buyerRfqListView.rfqs}
+              loading={buyerRfqListView.loading}
+              error={buyerRfqListView.error}
+              onViewDetail={rfqId => {
+                void handleOpenRfqDetail(rfqId, 'list');
+              }}
+              onBack={handleCloseBuyerRfqs}
+            />
+          );
+        }
+
+        if (expView === 'SUPPLIER_RFQ_INBOX') {
+          if (supplierRfqDetailView.open) {
+            return (
+              <SupplierRfqDetailSurface
+                rfq={supplierRfqDetailView.data}
+                response={supplierRfqDetailView.response}
+                loading={supplierRfqDetailView.loading}
+                error={supplierRfqDetailView.error}
+                submitLoading={supplierRfqDetailView.submitLoading}
+                submitError={supplierRfqDetailView.submitError}
+                onBack={handleReturnToSupplierRfqList}
+                onClose={handleCloseSupplierRfqInbox}
+                onSubmitResponse={message => {
+                  void handleSubmitSupplierRfqResponse(message);
+                }}
+              />
+            );
+          }
+
+          return (
+            <SupplierRfqInboxSurface
+              rfqs={supplierRfqListView.rfqs}
+              loading={supplierRfqListView.loading}
+              error={supplierRfqListView.error}
+              onViewDetail={rfqId => {
+                void handleOpenSupplierRfqDetail(rfqId);
+              }}
+              onBack={handleCloseSupplierRfqInbox}
+            />
+          );
+        }
+
+        return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
+      case 'operational_workspace':
+        switch (expView) {
+          case 'DPP':
+            return (
+              <DPPPassport
+                onBack={() => setExpView('HOME')}
+                title={currentTenant?.is_white_label ? 'DPP Snapshot' : undefined}
+                subtitle={
+                  currentTenant?.is_white_label
+                    ? 'Read-only supply chain snapshot by traceability node ID.'
+                    : undefined
+                }
+              />
+            );
+          case 'ESCROW':
+            return <EscrowPanel onBack={() => setExpView('HOME')} />;
+          case 'ESCALATIONS':
+            return <EscalationsPanel onBack={() => setExpView('HOME')} />;
+          case 'SETTLEMENT':
+            return <SettlementPreview onBack={() => setExpView('HOME')} />;
+          case 'CERTIFICATIONS':
+            return <CertificationsPanel onBack={() => setExpView('HOME')} />;
+          case 'TRACEABILITY':
+            return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
+          case 'AUDIT_LOGS':
+            return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
+          case 'TRADES':
+            return (
+              <TradesPanel
+                onBack={() => {
+                  setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+                  setExpView('HOME');
+                }}
+                initialTradeId={buyerRfqTradeBridge.initialTradeId}
+                onInitialTradeHandled={() => {
+                  setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+                }}
+              />
+            );
+          default:
+            return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
+        }
+      case 'catalog_browse':
+      case 'home_landing':
+      case 'cart_commerce':
+        return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
+      default:
         return (
-          <BuyerRfqDetailSurface
-            rfq={rfqDetailView.data}
-            loading={rfqDetailView.loading}
-            error={rfqDetailView.error}
-            onBack={handleReturnToBuyerRfqList}
-            onClose={handleCloseBuyerRfqs}
-            onOpenTradeContinuity={() => {
-              void handleOpenTradeContinuityFromRfq();
-            }}
-            tradeContinuityLoading={buyerRfqTradeBridge.loading}
-            tradeContinuityError={buyerRfqTradeBridge.error}
-          />
+          <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
+              <div className="text-3xl">⚠️</div>
+              <h2 className="font-bold text-slate-900">Workspace Navigation Unavailable</h2>
+              <p className="text-slate-600 text-sm">
+                TexQtic could not align this workspace view to a manifest-backed route group.
+              </p>
+            </div>
+          </div>
         );
-      }
-
-      return (
-        <BuyerRfqListSurface
-          rfqs={buyerRfqListView.rfqs}
-          loading={buyerRfqListView.loading}
-          error={buyerRfqListView.error}
-          onViewDetail={rfqId => {
-            void handleOpenRfqDetail(rfqId, 'list');
-          }}
-          onBack={handleCloseBuyerRfqs}
-        />
-      );
     }
-    if (expView === 'SUPPLIER_RFQ_INBOX') {
-      if (supplierRfqDetailView.open) {
-        return (
-          <SupplierRfqDetailSurface
-            rfq={supplierRfqDetailView.data}
-            response={supplierRfqDetailView.response}
-            loading={supplierRfqDetailView.loading}
-            error={supplierRfqDetailView.error}
-            submitLoading={supplierRfqDetailView.submitLoading}
-            submitError={supplierRfqDetailView.submitError}
-            onBack={handleReturnToSupplierRfqList}
-            onClose={handleCloseSupplierRfqInbox}
-            onSubmitResponse={message => {
-              void handleSubmitSupplierRfqResponse(message);
-            }}
-          />
-        );
-      }
-
-      return (
-        <SupplierRfqInboxSurface
-          rfqs={supplierRfqListView.rfqs}
-          loading={supplierRfqListView.loading}
-          error={supplierRfqListView.error}
-          onViewDetail={rfqId => {
-            void handleOpenSupplierRfqDetail(rfqId);
-          }}
-          onBack={handleCloseSupplierRfqInbox}
-        />
-      );
-    }
-    // TECS-FBW-003-A: G-018 tenant escrow read surface (D-020-B: no balance; D-017-A: no tenantId in body)
-    if (expView === 'ESCROW') return <EscrowPanel onBack={() => setExpView('HOME')} />;
-    // TECS-FBW-006-A: G-022 tenant escalation read surface (read-only; D-017-A compliant)
-    if (expView === 'ESCALATIONS') return <EscalationsPanel onBack={() => setExpView('HOME')} />;
-    // TECS-FBW-004: G-019 tenant settlement preview-confirm flow (D-017-A / D-020-B compliant)
-    if (expView === 'SETTLEMENT') return <SettlementPreview onBack={() => setExpView('HOME')} />;
-    // TECS-FBW-005: G-019 tenant certification lifecycle panel (D-017-A / D-020-C / D-020-D compliant)
-    if (expView === 'CERTIFICATIONS') return <CertificationsPanel onBack={() => setExpView('HOME')} />;
-    // TECS-FBW-015: G-016 traceability CRUD panel (D-017-A compliant; Phase A: create+read only)
-    if (expView === 'TRACEABILITY') return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
-    // TECS-FBW-016: tenant audit log read-only panel (EXPERIENCE-only; no filters/pagination; server take:50)
-    if (expView === 'AUDIT_LOGS') return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
-    // TECS-FBW-002-B: G-017 tenant trade read-only panel (D-017-A / D-020-B compliant)
-    if (expView === 'TRADES') {
-      return (
-        <TradesPanel
-          onBack={() => {
-            setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
-            setExpView('HOME');
-          }}
-          initialTradeId={buyerRfqTradeBridge.initialTradeId}
-          onInitialTradeHandled={() => {
-            setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
-          }}
-        />
-      );
-    }
-
-    return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
   };
 
   const renderAdminView = () => {
+    if (controlPlaneRouteGroupSelection?.routeGroupKey !== 'control_plane_operations') {
+      return null;
+    }
+
     if (selectedTenant) {
       return (
         <TenantDetails
