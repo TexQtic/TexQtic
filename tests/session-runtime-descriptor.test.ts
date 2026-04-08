@@ -6,6 +6,7 @@ import {
   getRuntimeLocalRouteRegistration,
   resolveRuntimeAppStateFromDescriptor,
   resolveRuntimeContentFamilyFromDescriptor,
+  resolveRuntimeFamilyEntryHandoff,
   resolveRuntimeLocalRouteSelection,
   resolveRuntimeManifestEntryFromDescriptor,
   resolveRuntimeManifestKeyFromDescriptor,
@@ -44,10 +45,78 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeContentFamilyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestKeyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestEntryFromDescriptor(null, 'EXPERIENCE')).toBeNull();
+    expect(resolveRuntimeFamilyEntryHandoff(null, 'EXPERIENCE', { expView: 'HOME' })).toBeNull();
     expect(resolveRuntimeLocalRouteSelection(null, { expView: 'HOME' })).toBeNull();
     expect(getRuntimeLocalRouteRegistration(null, 'home')).toBeNull();
     expect(resolveRuntimeShellNavigationSurface(null, null, ['home'])).toBeNull();
     expect(resolveRuntimeRouteGroupSelection(null, { expView: 'HOME' })).toBeNull();
+  });
+
+  it('builds consolidated family entry handoffs from descriptor truth', () => {
+    const workspaceDescriptor = createTenantSessionRuntimeDescriptor(
+      makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: false }),
+    );
+    const workspaceHandoff = resolveRuntimeFamilyEntryHandoff(workspaceDescriptor ?? null, 'EXPERIENCE', {
+      expView: 'HOME',
+      showCart: false,
+    });
+
+    expect(workspaceHandoff).toEqual(expect.objectContaining({
+      manifestKey: 'b2b_workspace',
+      contentFamily: 'b2b_workspace',
+      shellFamily: 'B2BShell',
+      defaultLocalRouteKey: 'catalog',
+      localRouteSelection: expect.objectContaining({ routeKey: 'catalog' }),
+    }));
+    expect(workspaceHandoff?.navigationSurface).toEqual(expect.objectContaining({
+      activeRouteKey: 'catalog',
+      activeNavigationKey: 'HOME',
+      defaultRouteKey: 'catalog',
+    }));
+
+    const wlAdminDescriptor = createTenantSessionRuntimeDescriptor(
+      makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: true, authenticatedRole: 'TENANT_ADMIN' }),
+    );
+    const wlAdminHandoff = resolveRuntimeFamilyEntryHandoff(wlAdminDescriptor ?? null, 'WL_ADMIN', {
+      wlAdminView: 'STAFF',
+      wlAdminInviting: true,
+    });
+
+    expect(wlAdminHandoff).toEqual(expect.objectContaining({
+      manifestKey: 'wl_admin',
+      contentFamily: 'wl_admin',
+      shellFamily: 'WhiteLabelAdminShell',
+      defaultLocalRouteKey: 'branding',
+      localRouteSelection: expect.objectContaining({ routeKey: 'staff_invite' }),
+    }));
+    expect(wlAdminHandoff?.navigationSurface).toEqual(expect.objectContaining({
+      activeRouteKey: 'staff_invite',
+      activeNavigationKey: 'STAFF',
+      defaultRouteKey: 'branding',
+    }));
+
+    const controlDescriptor = createControlPlaneSessionRuntimeDescriptor({
+      actorId: 'admin-1',
+      actorEmail: 'admin@example.com',
+      authenticatedRole: 'SUPER_ADMIN',
+    });
+    const controlHandoff = resolveRuntimeFamilyEntryHandoff(controlDescriptor ?? null, 'CONTROL_PLANE', {
+      adminView: 'TENANTS',
+      selectedTenantId: 'tenant-1',
+    });
+
+    expect(controlHandoff).toEqual(expect.objectContaining({
+      manifestKey: 'control_plane',
+      contentFamily: 'control_plane',
+      shellFamily: 'SuperAdminShell',
+      defaultLocalRouteKey: 'tenant_registry',
+      localRouteSelection: expect.objectContaining({ routeKey: 'tenant_detail' }),
+    }));
+    expect(controlHandoff?.navigationSurface).toEqual(expect.objectContaining({
+      activeRouteKey: 'tenant_detail',
+      activeNavigationKey: 'TENANTS',
+      defaultRouteKey: 'tenant_registry',
+    }));
   });
 
   it('builds normalized shell navigation surfaces from local route registrations', () => {

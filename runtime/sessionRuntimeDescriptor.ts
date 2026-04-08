@@ -167,6 +167,7 @@ export interface RuntimeManifestEntry {
   defaultLocalRouteKey: RuntimeLocalRouteKey;
   allowedRouteGroups: RouteGroupKey[];
   routeGroups: RuntimeRouteGroupDefinition[];
+  shellNavigation: RuntimeShellNavigationConfig | null;
 }
 
 export interface RuntimeRouteGroupSelection {
@@ -188,6 +189,11 @@ export interface RuntimeLocalRouteSelection extends RuntimeRouteGroupSelection {
 
 export type RuntimeShellNavigationBindingField = 'expView' | 'adminView' | 'wlAdminView';
 
+export interface RuntimeShellNavigationConfig {
+  routeKeys: RuntimeLocalRouteKey[];
+  bindingField?: RuntimeShellNavigationBindingField;
+}
+
 export interface RuntimeShellNavigationItem {
   routeKey: RuntimeLocalRouteKey;
   navigationKey: string;
@@ -200,6 +206,16 @@ export interface RuntimeShellNavigationSurface {
   activeNavigationKey: string | null;
   defaultRouteKey: RuntimeLocalRouteKey | null;
   items: RuntimeShellNavigationItem[];
+}
+
+export interface RuntimeFamilyEntryHandoff {
+  manifestKey: RouteManifestKey;
+  contentFamily: RouteManifestKey;
+  manifestEntry: RuntimeManifestEntry;
+  shellFamily: RuntimeShellFamily;
+  defaultLocalRouteKey: RuntimeLocalRouteKey;
+  localRouteSelection: RuntimeLocalRouteSelection | null;
+  navigationSurface: RuntimeShellNavigationSurface | null;
 }
 
 export interface RuntimeRouteGroupSelectionInput {
@@ -318,6 +334,89 @@ const WL_ADMIN_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations',
   defineRuntimeRoute('orders', 'Orders', 'ORDERS', { wlAdminView: 'ORDERS' }, { defaultForGroup: true }),
 ]);
 
+const AGGREGATOR_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'home',
+  'orders',
+  'dpp',
+  'escrow',
+  'escalations',
+  'settlement',
+  'certifications',
+  'traceability',
+  'audit_logs',
+  'trades',
+];
+
+const B2B_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'catalog',
+  'orders',
+  'dpp',
+  'escrow',
+  'escalations',
+  'settlement',
+  'certifications',
+  'traceability',
+  'audit_logs',
+  'trades',
+];
+
+const B2C_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'home',
+  'orders',
+  'dpp',
+  'escrow',
+  'escalations',
+  'settlement',
+  'certifications',
+  'traceability',
+  'audit_logs',
+  'trades',
+  'cart',
+];
+
+const WL_STOREFRONT_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'home',
+  'orders',
+  'dpp',
+  'escrow',
+  'escalations',
+  'settlement',
+  'certifications',
+  'traceability',
+  'audit_logs',
+  'trades',
+];
+
+const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'branding',
+  'staff',
+  'products',
+  'collections',
+  'orders',
+  'domains',
+];
+
+const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'tenant_registry',
+  'flags',
+  'finance',
+  'trades',
+  'cart_summaries',
+  'escrow_admin',
+  'settlement_admin',
+  'compliance',
+  'cases',
+  'escalations',
+  'certifications',
+  'traceability',
+  'maker_checker',
+  'ai',
+  'events',
+  'logs',
+  'rbac',
+  'health',
+];
+
 const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> = {
   control_plane: {
     key: 'control_plane',
@@ -329,6 +428,10 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     defaultLocalRouteKey: 'tenant_registry',
     allowedRouteGroups: ['control_plane_operations'],
     routeGroups: [CONTROL_PLANE_ROUTE_GROUP],
+    shellNavigation: {
+      routeKeys: CONTROL_PLANE_SHELL_ROUTE_KEYS,
+      bindingField: 'adminView',
+    },
   },
   aggregator_workspace: {
     key: 'aggregator_workspace',
@@ -347,6 +450,9 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
       RFQ_ROUTE_GROUP,
       OPERATIONAL_WORKSPACE_ROUTE_GROUP,
     ],
+    shellNavigation: {
+      routeKeys: AGGREGATOR_SHELL_ROUTE_KEYS,
+    },
   },
   b2b_workspace: {
     key: 'b2b_workspace',
@@ -365,6 +471,9 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
       RFQ_ROUTE_GROUP,
       OPERATIONAL_WORKSPACE_ROUTE_GROUP,
     ],
+    shellNavigation: {
+      routeKeys: B2B_SHELL_ROUTE_KEYS,
+    },
   },
   b2c_storefront: {
     key: 'b2c_storefront',
@@ -386,6 +495,9 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
       RFQ_ROUTE_GROUP,
       OPERATIONAL_WORKSPACE_ROUTE_GROUP,
     ],
+    shellNavigation: {
+      routeKeys: B2C_SHELL_ROUTE_KEYS,
+    },
   },
   wl_storefront: {
     key: 'wl_storefront',
@@ -407,6 +519,9 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
       RFQ_ROUTE_GROUP,
       OPERATIONAL_WORKSPACE_ROUTE_GROUP,
     ],
+    shellNavigation: {
+      routeKeys: WL_STOREFRONT_SHELL_ROUTE_KEYS,
+    },
   },
   wl_admin: {
     key: 'wl_admin',
@@ -422,6 +537,10 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
       WL_ADMIN_CATALOG_ROUTE_GROUP,
       WL_ADMIN_ORDERS_ROUTE_GROUP,
     ],
+    shellNavigation: {
+      routeKeys: WL_ADMIN_SHELL_ROUTE_KEYS,
+      bindingField: 'wlAdminView',
+    },
   },
 };
 
@@ -929,6 +1048,37 @@ export const resolveRuntimeShellNavigationSurface = (
         ? item.routeKey === activeRouteKey
         : item.navigationKey === activeNavigationKey,
     })),
+  };
+};
+
+export const resolveRuntimeFamilyEntryHandoff = (
+  descriptor: SessionRuntimeDescriptor | null,
+  runtimeShellState: RuntimeAppState,
+  input: RuntimeRouteGroupSelectionInput,
+): RuntimeFamilyEntryHandoff | null => {
+  const manifestEntry = resolveRuntimeManifestEntryFromDescriptor(descriptor, runtimeShellState);
+  if (!manifestEntry) {
+    return null;
+  }
+
+  const localRouteSelection = resolveRuntimeLocalRouteSelection(manifestEntry, input);
+  const navigationSurface = manifestEntry.shellNavigation
+    ? resolveRuntimeShellNavigationSurface(
+        manifestEntry,
+        localRouteSelection,
+        manifestEntry.shellNavigation.routeKeys,
+        manifestEntry.shellNavigation.bindingField,
+      )
+    : null;
+
+  return {
+    manifestKey: manifestEntry.key,
+    contentFamily: manifestEntry.key,
+    manifestEntry,
+    shellFamily: manifestEntry.shellFamily,
+    defaultLocalRouteKey: manifestEntry.defaultLocalRouteKey,
+    localRouteSelection,
+    navigationSurface,
   };
 };
 

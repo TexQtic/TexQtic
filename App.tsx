@@ -96,9 +96,8 @@ import {
   createTenantSessionRuntimeDescriptor,
   getRuntimeLocalRouteRegistration,
   resolveRuntimeAppStateFromDescriptor,
+  resolveRuntimeFamilyEntryHandoff,
   resolveRuntimeLocalRouteSelection,
-  resolveRuntimeManifestEntryFromDescriptor,
-  resolveRuntimeShellNavigationSurface,
   type RouteManifestKey,
   type RuntimeLocalRouteKey,
 } from './runtime/sessionRuntimeDescriptor';
@@ -167,43 +166,6 @@ const normalizeExperienceView = (view: string): ExperienceView => {
   }
 
   return 'HOME';
-};
-
-const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
-  'tenant_registry',
-  'flags',
-  'finance',
-  'trades',
-  'cart_summaries',
-  'escrow_admin',
-  'settlement_admin',
-  'compliance',
-  'cases',
-  'escalations',
-  'certifications',
-  'traceability',
-  'maker_checker',
-  'ai',
-  'events',
-  'logs',
-  'rbac',
-  'health',
-];
-
-const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
-  'branding',
-  'staff',
-  'products',
-  'collections',
-  'orders',
-  'domains',
-];
-
-const TENANT_SHELL_ROUTE_KEYS_BY_FAMILY: Record<'AggregatorShell' | 'B2BShell' | 'B2CShell' | 'WhiteLabelShell', RuntimeLocalRouteKey[]> = {
-  AggregatorShell: ['home', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades'],
-  B2BShell: ['catalog', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades'],
-  B2CShell: ['home', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades', 'cart'],
-  WhiteLabelShell: ['home', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades'],
 };
 
 const ONBOARDING_STATUS_CONTINUITY = {
@@ -868,7 +830,7 @@ const App: React.FC = () => {
   });
 
   const enterWlAdmin = (view: WLAdminView = 'BRANDING') => {
-    const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminManifestEntry, {
+    const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminRuntimeHandoff?.manifestEntry ?? null, {
       wlAdminView: normalizeWlAdminView(view),
       wlAdminInviting: false,
     });
@@ -1243,63 +1205,58 @@ const App: React.FC = () => {
     });
   }, [controlPlaneIdentity]);
   const tenantHasWlAdminOverlay = tenantRuntimeDescriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false;
-  const tenantWorkspaceManifestEntry = useMemo(() => {
-    return resolveRuntimeManifestEntryFromDescriptor(tenantRuntimeDescriptor, 'EXPERIENCE');
-  }, [tenantRuntimeDescriptor]);
-  const tenantWlAdminManifestEntry = useMemo(() => {
-    return resolveRuntimeManifestEntryFromDescriptor(tenantRuntimeDescriptor, 'WL_ADMIN');
-  }, [tenantRuntimeDescriptor]);
-  const controlPlaneManifestEntry = useMemo(() => {
-    return resolveRuntimeManifestEntryFromDescriptor(controlPlaneRuntimeDescriptor, 'CONTROL_PLANE');
-  }, [controlPlaneRuntimeDescriptor]);
-  const tenantRuntimeManifestEntry = useMemo(() => {
+  const tenantWorkspaceRuntimeHandoff = useMemo(() => {
+    return resolveRuntimeFamilyEntryHandoff(tenantRuntimeDescriptor, 'EXPERIENCE', {
+      expView,
+      showCart,
+    });
+  }, [tenantRuntimeDescriptor, expView, showCart]);
+  const tenantWlAdminRuntimeHandoff = useMemo(() => {
+    return resolveRuntimeFamilyEntryHandoff(tenantRuntimeDescriptor, 'WL_ADMIN', {
+      wlAdminView,
+      wlAdminInviting,
+    });
+  }, [tenantRuntimeDescriptor, wlAdminView, wlAdminInviting]);
+  const controlPlaneRuntimeHandoff = useMemo(() => {
+    return resolveRuntimeFamilyEntryHandoff(controlPlaneRuntimeDescriptor, 'CONTROL_PLANE', {
+      adminView,
+      selectedTenantId: selectedTenant?.id ?? null,
+    });
+  }, [controlPlaneRuntimeDescriptor, adminView, selectedTenant]);
+  const tenantRuntimeHandoff = useMemo(() => {
     switch (appState) {
       case 'EXPERIENCE':
       case 'TEAM_MGMT':
       case 'INVITE_MEMBER':
       case 'SETTINGS':
-        return tenantWorkspaceManifestEntry;
+        return tenantWorkspaceRuntimeHandoff;
       case 'WL_ADMIN':
-        return tenantWlAdminManifestEntry;
+        return tenantWlAdminRuntimeHandoff;
       default:
         return null;
     }
-  }, [tenantWorkspaceManifestEntry, tenantWlAdminManifestEntry, appState]);
-  const controlPlaneRuntimeManifestEntry = useMemo(() => {
+  }, [tenantWorkspaceRuntimeHandoff, tenantWlAdminRuntimeHandoff, appState]);
+  const activeControlPlaneRuntimeHandoff = useMemo(() => {
     return appState === 'CONTROL_PLANE'
-      ? controlPlaneManifestEntry
+      ? controlPlaneRuntimeHandoff
       : null;
-  }, [controlPlaneManifestEntry, appState]);
-  const tenantContentFamily = tenantRuntimeManifestEntry?.key ?? null;
-  const controlPlaneContentFamily = controlPlaneRuntimeManifestEntry?.key ?? null;
-  const tenantLocalRouteSelection = useMemo(() => {
-    return resolveRuntimeLocalRouteSelection(tenantWorkspaceManifestEntry, {
-      expView,
-      showCart,
-    });
-  }, [tenantWorkspaceManifestEntry, expView, showCart]);
-  const wlAdminLocalRouteSelection = useMemo(() => {
-    return appState === 'WL_ADMIN'
-      ? resolveRuntimeLocalRouteSelection(tenantWlAdminManifestEntry, {
-          wlAdminView,
-          wlAdminInviting,
-        })
-      : null;
-  }, [tenantWlAdminManifestEntry, appState, wlAdminView, wlAdminInviting]);
-  const controlPlaneLocalRouteSelection = useMemo(() => {
-    return appState === 'CONTROL_PLANE'
-      ? resolveRuntimeLocalRouteSelection(controlPlaneManifestEntry, {
-          adminView,
-          selectedTenantId: selectedTenant?.id ?? null,
-        })
-      : null;
-  }, [controlPlaneManifestEntry, appState, adminView, selectedTenant]);
-  const tenantDefaultLocalRouteKey = tenantWorkspaceManifestEntry?.defaultLocalRouteKey ?? null;
+  }, [controlPlaneRuntimeHandoff, appState]);
+  const tenantRuntimeManifestEntry = tenantRuntimeHandoff?.manifestEntry ?? null;
+  const controlPlaneRuntimeManifestEntry = activeControlPlaneRuntimeHandoff?.manifestEntry ?? null;
+  const tenantContentFamily = tenantRuntimeHandoff?.contentFamily ?? null;
+  const controlPlaneContentFamily = activeControlPlaneRuntimeHandoff?.contentFamily ?? null;
+  const tenantLocalRouteSelection = tenantWorkspaceRuntimeHandoff?.localRouteSelection ?? null;
+  const wlAdminLocalRouteSelection = tenantWlAdminRuntimeHandoff?.localRouteSelection ?? null;
+  const controlPlaneLocalRouteSelection = controlPlaneRuntimeHandoff?.localRouteSelection ?? null;
+  const tenantDefaultLocalRouteKey = tenantWorkspaceRuntimeHandoff?.defaultLocalRouteKey ?? null;
   const navigateTenantManifestRoute = (
     routeKey: RuntimeLocalRouteKey,
     options: { resetTradeBridge?: boolean } = {},
   ) => {
-    const registration = getRuntimeLocalRouteRegistration(tenantWorkspaceManifestEntry, routeKey);
+    const registration = getRuntimeLocalRouteRegistration(
+      tenantWorkspaceRuntimeHandoff?.manifestEntry ?? null,
+      routeKey,
+    );
 
     if (!registration) {
       return;
@@ -1324,7 +1281,10 @@ const App: React.FC = () => {
     navigateTenantManifestRoute(tenantDefaultLocalRouteKey, options);
   };
   const navigateWlAdminManifestRoute = (routeKey: RuntimeLocalRouteKey) => {
-    const registration = getRuntimeLocalRouteRegistration(tenantWlAdminManifestEntry, routeKey);
+    const registration = getRuntimeLocalRouteRegistration(
+      tenantWlAdminRuntimeHandoff?.manifestEntry ?? null,
+      routeKey,
+    );
 
     if (!registration) {
       return;
@@ -1335,7 +1295,10 @@ const App: React.FC = () => {
     setAppState('WL_ADMIN');
   };
   const navigateControlPlaneManifestRoute = (routeKey: RuntimeLocalRouteKey) => {
-    const registration = getRuntimeLocalRouteRegistration(controlPlaneManifestEntry, routeKey);
+    const registration = getRuntimeLocalRouteRegistration(
+      controlPlaneRuntimeHandoff?.manifestEntry ?? null,
+      routeKey,
+    );
 
     if (!registration) {
       return;
@@ -1349,47 +1312,22 @@ const App: React.FC = () => {
 
     setAppState('CONTROL_PLANE');
   };
-  const controlPlaneShellNavigation = useMemo(() => {
-    return resolveRuntimeShellNavigationSurface(
-      controlPlaneManifestEntry,
-      controlPlaneLocalRouteSelection,
-      CONTROL_PLANE_SHELL_ROUTE_KEYS,
-      'adminView',
-    );
-  }, [controlPlaneManifestEntry, controlPlaneLocalRouteSelection]);
-  const wlAdminShellNavigation = useMemo(() => {
-    return resolveRuntimeShellNavigationSurface(
-      tenantWlAdminManifestEntry,
-      wlAdminLocalRouteSelection,
-      WL_ADMIN_SHELL_ROUTE_KEYS,
-      'wlAdminView',
-    );
-  }, [tenantWlAdminManifestEntry, wlAdminLocalRouteSelection]);
-  const tenantShellNavigation = useMemo(() => {
-    const shellFamily = tenantWorkspaceManifestEntry?.shellFamily;
-
-    if (!shellFamily || shellFamily === 'SuperAdminShell' || shellFamily === 'WhiteLabelAdminShell') {
-      return null;
-    }
-
-    return resolveRuntimeShellNavigationSurface(
-      tenantWorkspaceManifestEntry,
-      tenantLocalRouteSelection,
-      TENANT_SHELL_ROUTE_KEYS_BY_FAMILY[shellFamily],
-    );
-  }, [tenantWorkspaceManifestEntry, tenantLocalRouteSelection]);
+  const controlPlaneShellNavigation = controlPlaneRuntimeHandoff?.navigationSurface ?? null;
+  const wlAdminShellNavigation = tenantWlAdminRuntimeHandoff?.navigationSurface ?? null;
+  const tenantShellNavigation = tenantWorkspaceRuntimeHandoff?.navigationSurface ?? null;
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
-  const isNonWhiteLabelB2CTenant = tenantWorkspaceManifestEntry?.key === 'b2c_storefront';
+  const tenantWorkspaceContentFamily = tenantWorkspaceRuntimeHandoff?.contentFamily ?? null;
+  const isNonWhiteLabelB2CTenant = tenantWorkspaceContentFamily === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && tenantLocalRouteSelection?.routeKey === 'home'
     && isNonWhiteLabelB2CTenant;
   const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
     && tenantLocalRouteSelection?.routeKey === 'home'
-    && tenantWorkspaceManifestEntry?.key === 'aggregator_workspace';
+    && tenantWorkspaceContentFamily === 'aggregator_workspace';
   const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
     && tenantLocalRouteSelection?.routeKey === 'catalog'
-    && tenantWorkspaceManifestEntry?.key === 'b2b_workspace';
+    && tenantWorkspaceContentFamily === 'b2b_workspace';
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
     && wlAdminLocalRouteSelection?.routeKey === 'products'
     && tenantContentFamily === 'wl_admin';
