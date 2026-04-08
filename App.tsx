@@ -95,8 +95,8 @@ import {
   createControlPlaneSessionRuntimeDescriptor,
   createTenantSessionRuntimeDescriptor,
   resolveRuntimeAppStateFromDescriptor,
-  resolveRuntimeContentFamilyFromDescriptor,
-  resolveRuntimeShellFamilyFromDescriptor,
+  resolveRuntimeManifestEntryFromDescriptor,
+  type RouteManifestKey,
 } from './runtime/sessionRuntimeDescriptor';
 
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
@@ -1171,23 +1171,25 @@ const App: React.FC = () => {
     });
   }, [controlPlaneIdentity]);
   const tenantHasWlAdminOverlay = tenantRuntimeDescriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false;
-  const tenantContentFamily = useMemo(() => {
+  const tenantRuntimeManifestEntry = useMemo(() => {
     switch (appState) {
       case 'EXPERIENCE':
       case 'WL_ADMIN':
       case 'TEAM_MGMT':
       case 'INVITE_MEMBER':
       case 'SETTINGS':
-        return resolveRuntimeContentFamilyFromDescriptor(tenantRuntimeDescriptor, appState);
+        return resolveRuntimeManifestEntryFromDescriptor(tenantRuntimeDescriptor, appState);
       default:
         return null;
     }
   }, [tenantRuntimeDescriptor, appState]);
-  const controlPlaneContentFamily = useMemo(() => {
+  const controlPlaneRuntimeManifestEntry = useMemo(() => {
     return appState === 'CONTROL_PLANE'
-      ? resolveRuntimeContentFamilyFromDescriptor(controlPlaneRuntimeDescriptor, appState)
+      ? resolveRuntimeManifestEntryFromDescriptor(controlPlaneRuntimeDescriptor, appState)
       : null;
   }, [controlPlaneRuntimeDescriptor, appState]);
+  const tenantContentFamily = tenantRuntimeManifestEntry?.key ?? null;
+  const controlPlaneContentFamily = controlPlaneRuntimeManifestEntry?.key ?? null;
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
   const isNonWhiteLabelB2CTenant = tenantContentFamily === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
@@ -2666,7 +2668,7 @@ const App: React.FC = () => {
   };
 
   const renderDescriptorAlignedTenantContentFamily = (
-    contentFamily: ReturnType<typeof resolveRuntimeContentFamilyFromDescriptor>,
+    contentFamily: RouteManifestKey | null,
   ) => {
     if (!currentTenant) {
       return (
@@ -3432,12 +3434,16 @@ const App: React.FC = () => {
             />
           </div>
         );
-      case 'CONTROL_PLANE':
+      case 'CONTROL_PLANE': {
         if (!canAccessControlPlane) {
           return null;
         }
 
-        if (controlPlaneContentFamily !== 'control_plane') {
+        const ControlPlaneShell = controlPlaneRuntimeManifestEntry?.shellFamily === 'SuperAdminShell'
+          ? SuperAdminShell
+          : null;
+
+        if (controlPlaneContentFamily !== 'control_plane' || !ControlPlaneShell) {
           return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
               <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
@@ -3452,15 +3458,16 @@ const App: React.FC = () => {
         }
 
         return (
-          <SuperAdminShell
+          <ControlPlaneShell
             authRealm="CONTROL_PLANE"
             actorIdentity={controlPlaneIdentity}
             activeView={adminView}
             onViewChange={setAdminView}
           >
             {renderAdminView()}
-          </SuperAdminShell>
+          </ControlPlaneShell>
         );
+      }
       case 'WL_ADMIN': {
         if (!currentTenant) {
           return (
@@ -3473,7 +3480,11 @@ const App: React.FC = () => {
           );
         }
 
-        if (tenantContentFamily !== 'wl_admin') {
+        const WlAdminShell = tenantRuntimeManifestEntry?.shellFamily === 'WhiteLabelAdminShell'
+          ? WhiteLabelAdminShell
+          : null;
+
+        if (tenantContentFamily !== 'wl_admin' || !WlAdminShell) {
           return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
               <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
@@ -3500,14 +3511,14 @@ const App: React.FC = () => {
                 </button>
               </div>
             )}
-            <WhiteLabelAdminShell
+            <WlAdminShell
               tenant={currentTenant}
               activeView={normalizeWlAdminView(wlAdminView)}
               onViewChange={(v) => { setWlAdminView(normalizeWlAdminView(v)); setWlAdminInviting(false); }}
               onNavigateStorefront={() => setAppState('EXPERIENCE')}
             >
               {renderWLAdminContent()}
-            </WhiteLabelAdminShell>
+            </WlAdminShell>
           </>
         );
       }
@@ -3580,7 +3591,7 @@ const App: React.FC = () => {
           onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
           showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
         };
-        const resolvedShellFamily = resolveRuntimeShellFamilyFromDescriptor(tenantRuntimeDescriptor, appState);
+        const resolvedShellFamily = tenantRuntimeManifestEntry?.shellFamily ?? null;
         let ExperienceShell: typeof AggregatorShell | typeof B2BShell | typeof B2CShell | typeof WhiteLabelShell | null = null;
 
         switch (resolvedShellFamily) {

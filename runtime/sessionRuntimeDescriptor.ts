@@ -85,9 +85,69 @@ export type RuntimeShellFamily =
   | 'WhiteLabelShell'
   | 'WhiteLabelAdminShell';
 
+export interface RuntimeManifestEntry {
+  key: RouteManifestKey;
+  baseOperatingMode: TenantOperatingMode;
+  requiredOverlays: RuntimeOverlay[];
+  overlayDriven: boolean;
+  shellFamily: RuntimeShellFamily;
+  defaultAppState: RuntimeAppState;
+}
+
 export type RuntimeShellState = RuntimeAppState | 'TEAM_MGMT' | 'INVITE_MEMBER' | 'SETTINGS' | null | undefined;
 
 const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
+
+const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> = {
+  control_plane: {
+    key: 'control_plane',
+    baseOperatingMode: 'CONTROL_PLANE',
+    requiredOverlays: [],
+    overlayDriven: false,
+    shellFamily: 'SuperAdminShell',
+    defaultAppState: 'CONTROL_PLANE',
+  },
+  aggregator_workspace: {
+    key: 'aggregator_workspace',
+    baseOperatingMode: 'AGGREGATOR_WORKSPACE',
+    requiredOverlays: [],
+    overlayDriven: false,
+    shellFamily: 'AggregatorShell',
+    defaultAppState: 'EXPERIENCE',
+  },
+  b2b_workspace: {
+    key: 'b2b_workspace',
+    baseOperatingMode: 'B2B_WORKSPACE',
+    requiredOverlays: [],
+    overlayDriven: false,
+    shellFamily: 'B2BShell',
+    defaultAppState: 'EXPERIENCE',
+  },
+  b2c_storefront: {
+    key: 'b2c_storefront',
+    baseOperatingMode: 'B2C_STOREFRONT',
+    requiredOverlays: [],
+    overlayDriven: false,
+    shellFamily: 'B2CShell',
+    defaultAppState: 'EXPERIENCE',
+  },
+  wl_storefront: {
+    key: 'wl_storefront',
+    baseOperatingMode: 'WL_STOREFRONT',
+    requiredOverlays: [],
+    overlayDriven: false,
+    shellFamily: 'WhiteLabelShell',
+    defaultAppState: 'EXPERIENCE',
+  },
+  wl_admin: {
+    key: 'wl_admin',
+    baseOperatingMode: 'WL_STOREFRONT',
+    requiredOverlays: ['WL_ADMIN'],
+    overlayDriven: true,
+    shellFamily: 'WhiteLabelAdminShell',
+    defaultAppState: 'WL_ADMIN',
+  },
+};
 
 const EMPTY_CAPABILITIES: SessionCapabilities = {
   surface: {
@@ -219,6 +279,60 @@ const resolveCapabilities = (
   return capabilities;
 };
 
+const getRuntimeManifestEntryByKey = (manifestKey: RouteManifestKey | null): RuntimeManifestEntry | null => {
+  if (!manifestKey) {
+    return null;
+  }
+
+  return RUNTIME_MANIFEST_ENTRIES[manifestKey] ?? null;
+};
+
+const canSelectRuntimeManifestEntry = (
+  descriptor: SessionRuntimeDescriptor | null,
+  entry: RuntimeManifestEntry | null,
+) => {
+  if (!descriptor?.operatingMode || !entry) {
+    return false;
+  }
+
+  if (descriptor.operatingMode !== entry.baseOperatingMode) {
+    return false;
+  }
+
+  return entry.requiredOverlays.every(overlay => descriptor.runtimeOverlays.includes(overlay));
+};
+
+const isTenantWorkspaceRuntimeState = (runtimeShellState: RuntimeShellState) => {
+  switch (runtimeShellState) {
+    case 'EXPERIENCE':
+    case 'TEAM_MGMT':
+    case 'INVITE_MEMBER':
+    case 'SETTINGS':
+      return true;
+    default:
+      return false;
+  }
+};
+
+const resolveTenantWorkspaceManifestKey = (
+  descriptor: SessionRuntimeDescriptor,
+): RouteManifestKey | null => {
+  switch (descriptor.operatingMode) {
+    case 'AGGREGATOR_WORKSPACE':
+      return descriptor.routeManifestKey === 'aggregator_workspace' ? descriptor.routeManifestKey : null;
+    case 'B2B_WORKSPACE':
+      return descriptor.routeManifestKey === 'b2b_workspace' ? descriptor.routeManifestKey : null;
+    case 'B2C_STOREFRONT':
+      return descriptor.routeManifestKey === 'b2c_storefront' ? descriptor.routeManifestKey : null;
+    case 'WL_STOREFRONT':
+      return descriptor.routeManifestKey === 'wl_storefront' || descriptor.routeManifestKey === 'wl_admin'
+        ? 'wl_storefront'
+        : null;
+    default:
+      return null;
+  }
+};
+
 export const createTenantSessionRuntimeDescriptor = (
   input: TenantRuntimeDescriptorInput,
 ): SessionRuntimeDescriptor | null => {
@@ -292,22 +406,15 @@ export const createControlPlaneSessionRuntimeDescriptor = (
 export const resolveRuntimeAppStateFromDescriptor = (
   descriptor: SessionRuntimeDescriptor | null,
 ): RuntimeAppState | null => {
-  if (!descriptor?.operatingMode || !descriptor.routeManifestKey) {
+  const entry = getRuntimeManifestEntryByKey(descriptor?.routeManifestKey ?? null);
+  if (!entry || !canSelectRuntimeManifestEntry(descriptor, entry)) {
     return null;
   }
 
-  if (descriptor.realm === 'CONTROL_PLANE') {
-    return 'CONTROL_PLANE';
-  }
-
-  if (descriptor.runtimeOverlays.includes('WL_ADMIN')) {
-    return 'WL_ADMIN';
-  }
-
-  return 'EXPERIENCE';
+  return entry.defaultAppState;
 };
 
-export const resolveRuntimeContentFamilyFromDescriptor = (
+export const resolveRuntimeManifestKeyFromDescriptor = (
   descriptor: SessionRuntimeDescriptor | null,
   runtimeShellState: RuntimeShellState,
 ): RouteManifestKey | null => {
@@ -316,53 +423,44 @@ export const resolveRuntimeContentFamilyFromDescriptor = (
   }
 
   if (descriptor.realm === 'CONTROL_PLANE') {
-    return runtimeShellState === 'CONTROL_PLANE' ? 'control_plane' : null;
+    return runtimeShellState === 'CONTROL_PLANE' && descriptor.routeManifestKey === 'control_plane'
+      ? descriptor.routeManifestKey
+      : null;
   }
 
   if (runtimeShellState === 'WL_ADMIN') {
-    return descriptor.runtimeOverlays.includes('WL_ADMIN') ? 'wl_admin' : null;
+    return descriptor.routeManifestKey === 'wl_admin' && descriptor.runtimeOverlays.includes('WL_ADMIN')
+      ? 'wl_admin'
+      : null;
   }
 
-  switch (descriptor.operatingMode) {
-    case 'AGGREGATOR_WORKSPACE':
-      return 'aggregator_workspace';
-    case 'B2B_WORKSPACE':
-      return 'b2b_workspace';
-    case 'B2C_STOREFRONT':
-      return 'b2c_storefront';
-    case 'WL_STOREFRONT':
-      return 'wl_storefront';
-    default:
-      return null;
+  if (!isTenantWorkspaceRuntimeState(runtimeShellState)) {
+    return null;
   }
+
+  return resolveTenantWorkspaceManifestKey(descriptor);
+};
+
+export const resolveRuntimeManifestEntryFromDescriptor = (
+  descriptor: SessionRuntimeDescriptor | null,
+  runtimeShellState: RuntimeShellState,
+): RuntimeManifestEntry | null => {
+  const manifestKey = resolveRuntimeManifestKeyFromDescriptor(descriptor, runtimeShellState);
+  const entry = getRuntimeManifestEntryByKey(manifestKey);
+
+  return canSelectRuntimeManifestEntry(descriptor, entry) ? entry : null;
+};
+
+export const resolveRuntimeContentFamilyFromDescriptor = (
+  descriptor: SessionRuntimeDescriptor | null,
+  runtimeShellState: RuntimeShellState,
+): RouteManifestKey | null => {
+  return resolveRuntimeManifestEntryFromDescriptor(descriptor, runtimeShellState)?.key ?? null;
 };
 
 export const resolveRuntimeShellFamilyFromDescriptor = (
   descriptor: SessionRuntimeDescriptor | null,
   runtimeShellState: RuntimeShellState,
 ): RuntimeShellFamily | null => {
-  if (!descriptor?.operatingMode || !descriptor.routeManifestKey) {
-    return null;
-  }
-
-  if (descriptor.realm === 'CONTROL_PLANE') {
-    return runtimeShellState === 'CONTROL_PLANE' ? 'SuperAdminShell' : null;
-  }
-
-  if (runtimeShellState === 'WL_ADMIN') {
-    return descriptor.runtimeOverlays.includes('WL_ADMIN') ? 'WhiteLabelAdminShell' : null;
-  }
-
-  switch (descriptor.operatingMode) {
-    case 'AGGREGATOR_WORKSPACE':
-      return 'AggregatorShell';
-    case 'B2B_WORKSPACE':
-      return 'B2BShell';
-    case 'B2C_STOREFRONT':
-      return 'B2CShell';
-    case 'WL_STOREFRONT':
-      return 'WhiteLabelShell';
-    default:
-      return null;
-  }
+  return resolveRuntimeManifestEntryFromDescriptor(descriptor, runtimeShellState)?.shellFamily ?? null;
 };
