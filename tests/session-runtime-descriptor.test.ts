@@ -4,6 +4,7 @@ import {
   createControlPlaneSessionRuntimeDescriptor,
   createTenantSessionRuntimeDescriptor,
   resolveRuntimeAppStateFromDescriptor,
+  resolveRuntimeContentFamilyFromDescriptor,
   resolveRuntimeShellFamilyFromDescriptor,
 } from '../runtime/sessionRuntimeDescriptor';
 
@@ -33,6 +34,8 @@ describe('session runtime descriptor', () => {
         makeTenantInput({ whiteLabelCapability: null }),
       ),
     ).toBeNull();
+
+    expect(resolveRuntimeContentFamilyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
   });
 
   it('maps aggregator and internal tenants to aggregator workspace mode', () => {
@@ -46,7 +49,9 @@ describe('session runtime descriptor', () => {
     expect(aggregatorDescriptor?.operatingMode).toBe('AGGREGATOR_WORKSPACE');
     expect(aggregatorDescriptor?.routeManifestKey).toBe('aggregator_workspace');
     expect(aggregatorDescriptor?.capabilities.platform.discovery).toBe(true);
+    expect(resolveRuntimeContentFamilyFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE')).toBe('aggregator_workspace');
     expect(internalDescriptor?.operatingMode).toBe('AGGREGATOR_WORKSPACE');
+    expect(resolveRuntimeContentFamilyFromDescriptor(internalDescriptor ?? null, 'EXPERIENCE')).toBe('aggregator_workspace');
   });
 
   it('maps non-white-label B2B tenants to workspace routing', () => {
@@ -61,6 +66,7 @@ describe('session runtime descriptor', () => {
     expect(descriptor?.capabilities.feature.rfq).toBe(true);
     expect(descriptor?.capabilities.feature.sellerCatalog).toBe(true);
     expect(resolveRuntimeAppStateFromDescriptor(descriptor ?? null)).toBe('EXPERIENCE');
+    expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2b_workspace');
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('B2BShell');
   });
 
@@ -74,6 +80,7 @@ describe('session runtime descriptor', () => {
     expect(descriptor?.capabilities.surface.storefront).toBe(true);
     expect(descriptor?.capabilities.feature.cart).toBe(true);
     expect(descriptor?.capabilities.feature.buyerCatalog).toBe(true);
+    expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2c_storefront');
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('B2CShell');
   });
 
@@ -89,7 +96,9 @@ describe('session runtime descriptor', () => {
     expect(storefrontDescriptor?.routeManifestKey).toBe('wl_storefront');
     expect(storefrontDescriptor?.runtimeOverlays).toEqual([]);
     expect(resolveRuntimeAppStateFromDescriptor(storefrontDescriptor ?? null)).toBe('EXPERIENCE');
+    expect(resolveRuntimeContentFamilyFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE')).toBe('wl_storefront');
     expect(resolveRuntimeShellFamilyFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE')).toBe('WhiteLabelShell');
+    expect(resolveRuntimeContentFamilyFromDescriptor(storefrontDescriptor ?? null, 'WL_ADMIN')).toBeNull();
     expect(resolveRuntimeShellFamilyFromDescriptor(storefrontDescriptor ?? null, 'WL_ADMIN')).toBeNull();
 
     expect(wlAdminDescriptor?.operatingMode).toBe('WL_STOREFRONT');
@@ -99,6 +108,9 @@ describe('session runtime descriptor', () => {
     expect(wlAdminDescriptor?.capabilities.platform.branding).toBe(true);
     expect(wlAdminDescriptor?.capabilities.platform.domains).toBe(true);
     expect(resolveRuntimeAppStateFromDescriptor(wlAdminDescriptor ?? null)).toBe('WL_ADMIN');
+    expect(resolveRuntimeContentFamilyFromDescriptor(wlAdminDescriptor ?? null, 'EXPERIENCE')).toBe('wl_storefront');
+    expect(resolveRuntimeContentFamilyFromDescriptor(wlAdminDescriptor ?? null, 'SETTINGS')).toBe('wl_storefront');
+    expect(resolveRuntimeContentFamilyFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN')).toBe('wl_admin');
     expect(resolveRuntimeShellFamilyFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN')).toBe('WhiteLabelAdminShell');
   });
 
@@ -113,6 +125,8 @@ describe('session runtime descriptor', () => {
     expect(descriptor?.operatingMode).toBe('CONTROL_PLANE');
     expect(descriptor?.routeManifestKey).toBe('control_plane');
     expect(resolveRuntimeAppStateFromDescriptor(descriptor ?? null)).toBe('CONTROL_PLANE');
+    expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'CONTROL_PLANE')).toBe('control_plane');
+    expect(resolveRuntimeContentFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'CONTROL_PLANE')).toBe('SuperAdminShell');
   });
 });

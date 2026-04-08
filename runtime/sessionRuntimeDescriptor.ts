@@ -307,6 +307,36 @@ export const resolveRuntimeAppStateFromDescriptor = (
   return 'EXPERIENCE';
 };
 
+export const resolveRuntimeContentFamilyFromDescriptor = (
+  descriptor: SessionRuntimeDescriptor | null,
+  runtimeShellState: RuntimeShellState,
+): RouteManifestKey | null => {
+  if (!descriptor?.operatingMode || !descriptor.routeManifestKey) {
+    return null;
+  }
+
+  if (descriptor.realm === 'CONTROL_PLANE') {
+    return runtimeShellState === 'CONTROL_PLANE' ? 'control_plane' : null;
+  }
+
+  if (runtimeShellState === 'WL_ADMIN') {
+    return descriptor.runtimeOverlays.includes('WL_ADMIN') ? 'wl_admin' : null;
+  }
+
+  switch (descriptor.operatingMode) {
+    case 'AGGREGATOR_WORKSPACE':
+      return 'aggregator_workspace';
+    case 'B2B_WORKSPACE':
+      return 'b2b_workspace';
+    case 'B2C_STOREFRONT':
+      return 'b2c_storefront';
+    case 'WL_STOREFRONT':
+      return 'wl_storefront';
+    default:
+      return null;
+  }
+};
+
 export const resolveRuntimeShellFamilyFromDescriptor = (
   descriptor: SessionRuntimeDescriptor | null,
   runtimeShellState: RuntimeShellState,

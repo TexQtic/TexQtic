@@ -95,6 +95,7 @@ import {
   createControlPlaneSessionRuntimeDescriptor,
   createTenantSessionRuntimeDescriptor,
   resolveRuntimeAppStateFromDescriptor,
+  resolveRuntimeContentFamilyFromDescriptor,
   resolveRuntimeShellFamilyFromDescriptor,
 } from './runtime/sessionRuntimeDescriptor';
 
@@ -1158,23 +1159,50 @@ const App: React.FC = () => {
       authenticatedRole: tenantAuthenticatedRole,
     });
   }, [activeTenantRecord, tenantAuthenticatedRole]);
+  const controlPlaneRuntimeDescriptor = useMemo(() => {
+    if (!controlPlaneIdentity) {
+      return null;
+    }
+
+    return createControlPlaneSessionRuntimeDescriptor({
+      actorId: controlPlaneIdentity.id,
+      actorEmail: controlPlaneIdentity.email,
+      authenticatedRole: controlPlaneIdentity.role,
+    });
+  }, [controlPlaneIdentity]);
   const tenantHasWlAdminOverlay = tenantRuntimeDescriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false;
-  const tenantOperatingMode = tenantRuntimeDescriptor?.operatingMode ?? null;
+  const tenantContentFamily = useMemo(() => {
+    switch (appState) {
+      case 'EXPERIENCE':
+      case 'WL_ADMIN':
+      case 'TEAM_MGMT':
+      case 'INVITE_MEMBER':
+      case 'SETTINGS':
+        return resolveRuntimeContentFamilyFromDescriptor(tenantRuntimeDescriptor, appState);
+      default:
+        return null;
+    }
+  }, [tenantRuntimeDescriptor, appState]);
+  const controlPlaneContentFamily = useMemo(() => {
+    return appState === 'CONTROL_PLANE'
+      ? resolveRuntimeContentFamilyFromDescriptor(controlPlaneRuntimeDescriptor, appState)
+      : null;
+  }, [controlPlaneRuntimeDescriptor, appState]);
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
-  const isNonWhiteLabelB2CTenant = tenantOperatingMode === 'B2C_STOREFRONT';
+  const isNonWhiteLabelB2CTenant = tenantContentFamily === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
     && isNonWhiteLabelB2CTenant;
   const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
-    && tenantOperatingMode === 'AGGREGATOR_WORKSPACE';
+    && tenantContentFamily === 'aggregator_workspace';
   const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
     && expView === 'HOME'
-    && tenantOperatingMode === 'B2B_WORKSPACE';
+    && tenantContentFamily === 'b2b_workspace';
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
     && normalizeWlAdminView(wlAdminView) === 'PRODUCTS'
-    && tenantHasWlAdminOverlay;
+    && tenantContentFamily === 'wl_admin';
   const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
     || isB2CBrowseEntrySurface
     || isWlAdminProductsSurface;
@@ -2637,6 +2665,316 @@ const App: React.FC = () => {
     }
   };
 
+  const renderDescriptorAlignedTenantContentFamily = (
+    contentFamily: ReturnType<typeof resolveRuntimeContentFamilyFromDescriptor>,
+  ) => {
+    if (!currentTenant) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="text-4xl mb-4">⏳</div>
+            <p className="text-slate-500">Loading tenant data...</p>
+          </div>
+        </div>
+      );
+    }
+
+    switch (contentFamily) {
+      case 'aggregator_workspace':
+        return (
+          <AggregatorDiscoveryWorkspace
+            tenantName={currentTenant.name}
+            entries={aggregatorDiscoveryEntries}
+            loading={aggregatorDiscoveryLoading}
+            error={aggregatorDiscoveryError}
+            aiInsight={currentTenant.is_white_label ? null : aiInsight}
+            onRetry={() => setAggregatorDiscoveryRefreshKey(value => value + 1)}
+          />
+        );
+      case 'b2b_workspace':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex justify-between items-end">
+              <div>
+                <h1 className="text-2xl font-bold">Wholesale Catalog</h1>
+                <p className="text-slate-500">Tiered pricing and MOQ enforcement active.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleOpenSupplierRfqInbox();
+                  }}
+                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
+                >
+                  Supplier RFQ Inbox
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleOpenBuyerRfqs();
+                  }}
+                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
+                >
+                  View My RFQs
+                </button>
+                <button
+                  onClick={() => setShowAddItemForm(v => !v)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition text-sm"
+                >
+                  + Add Item
+                </button>
+              </div>
+            </div>
+
+            {showAddItemForm && (
+              <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+                <h3 className="font-bold text-slate-800">New Catalog Item</h3>
+                {addItemError && (
+                  <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
+                    <input
+                      id="b2b-add-name"
+                      required
+                      value={addItemFormData.name}
+                      onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Product name"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
+                    <input
+                      id="b2b-add-price"
+                      required
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={addItemFormData.price}
+                      onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
+                    <input
+                      id="b2b-add-sku"
+                      value={addItemFormData.sku}
+                      onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Optional SKU"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="b2b-add-image-url" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Image URL</label>
+                  <input
+                    id="b2b-add-image-url"
+                    type="url"
+                    value={addItemFormData.imageUrl}
+                    onChange={e => setAddItemFormData(d => ({ ...d, imageUrl: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="https://example.com/product-image.jpg"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={addItemLoading}
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-50"
+                  >
+                    {addItemLoading ? 'Saving...' : 'Save Item'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
+                    className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {catalogLoading && (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+                <p className="mt-4 text-slate-500">Loading catalog...</p>
+              </div>
+            )}
+
+            {catalogError && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
+                {catalogError}
+              </div>
+            )}
+
+            {!catalogLoading && !catalogError && products.length === 0 && (
+              <div className="text-center py-12 text-slate-500">No products available.</div>
+            )}
+
+            {!catalogLoading && !catalogError && products.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                {products.map(p => (
+                  <div
+                    key={p.id}
+                    className="bg-white rounded-xl border border-slate-200 overflow-hidden group shadow-sm"
+                  >
+                    {p.imageUrl ? (
+                      <img
+                        src={p.imageUrl}
+                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
+                        alt={p.name}
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-40 bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-400"
+                        aria-label={`${p.name} image unavailable`}
+                        role="img"
+                      >
+                        Image unavailable
+                      </div>
+                    )}
+                    <div className="p-4 space-y-2">
+                      <div className="text-xs text-slate-400 font-bold uppercase">
+                        {p.category || 'General'}
+                      </div>
+                      <h3 className="font-bold">{p.name}</h3>
+                      <div className="flex justify-between items-center mt-4">
+                        <div className="text-emerald-600 font-bold">${p.price}/unit</div>
+                        <div className="text-xs text-slate-400">MOQ: {p.moq || 1}</div>
+                      </div>
+                      {renderB2BCatalogCardFooter(p)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case 'b2c_storefront': {
+        const visibleB2CProducts = products.slice(0, b2cVisibleCount);
+        const hasHiddenLoadedProducts = products.length > b2cVisibleCount;
+        const canLoadMoreB2CProducts = catalogNextCursor !== null;
+        let b2cBrowseActionLabel = 'All Visible';
+        if (hasHiddenLoadedProducts) {
+          b2cBrowseActionLabel = 'See All';
+        } else if (canLoadMoreB2CProducts) {
+          b2cBrowseActionLabel = b2cLoadingMore ? 'Loading...' : 'Load More';
+        }
+
+        return (
+          <div className="space-y-12 animate-in fade-in duration-500">
+            <section className="relative h-[400px] rounded-3xl overflow-hidden flex items-center px-12">
+              <img
+                src="https://picsum.photos/seed/retail/1200/600"
+                className="absolute inset-0 w-full h-full object-cover brightness-50"
+                alt="Spring 2024 retail collections hero banner"
+              />
+              <div className="relative z-10 text-white max-w-lg space-y-4">
+                <h1 className="text-5xl font-black leading-tight">Spring 2024 Collections.</h1>
+                <p className="text-lg opacity-90">
+                  Sustainably sourced, ethically manufactured. Delivered to your door.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleB2CShopNow}
+                  className="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-xl hover:bg-indigo-50 transition"
+                >
+                  Shop Now
+                </button>
+              </div>
+            </section>
+
+            <section ref={b2cCatalogSectionRef}>
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold">New Arrivals</h2>
+                  {b2cSearchQuery.trim() && !catalogLoading && !catalogError && (
+                    <p className="mt-1 text-sm text-slate-500">
+                      Showing results for "{b2cSearchQuery.trim()}".
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-3 items-center">
+                  <button
+                    type="button"
+                    onClick={() => { void handleB2CLoadMore(); }}
+                    disabled={b2cLoadingMore || (!hasHiddenLoadedProducts && !canLoadMoreB2CProducts)}
+                    className="text-indigo-600 font-semibold underline underline-offset-4"
+                  >
+                    {b2cBrowseActionLabel}
+                  </button>
+                </div>
+              </div>
+
+              {catalogLoading && (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="mt-4 text-slate-500">Loading products...</p>
+                </div>
+              )}
+
+              {catalogError && (
+                <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
+                  {catalogError}
+                </div>
+              )}
+
+              {!catalogLoading && !catalogError && products.length === 0 && (
+                <div className="text-center py-12 text-slate-500">No products available.</div>
+              )}
+
+              {!catalogLoading && !catalogError && products.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  {visibleB2CProducts.map(p => (
+                    <div key={p.id} className="space-y-3">
+                      <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100">
+                        {p.imageUrl ? (
+                          <img
+                            src={p.imageUrl}
+                            className="w-full h-full object-cover hover:scale-110 transition duration-700"
+                            alt={p.name}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex items-center justify-center text-sm font-medium text-slate-400"
+                            aria-label={`${p.name} image unavailable`}
+                            role="img"
+                          >
+                            Image unavailable
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-slate-800">{p.name}</h4>
+                        <div className="text-slate-500 font-bold">${p.price}.00</div>
+                      </div>
+                      <B2CAddToCartButton product={p} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      }
+      case 'wl_storefront':
+        return (
+          <WLStorefront
+            onRequestQuote={handleOpenRfqDialog}
+            onViewBuyerRfqs={handleOpenBuyerRfqs}
+          />
+        );
+      default:
+        return <div>Invalid Tenant Configuration</div>;
+    }
+  };
+
   const renderExperienceContent = () => {
     if (!currentTenant) {
       return (
@@ -2785,314 +3123,7 @@ const App: React.FC = () => {
       );
     }
 
-    // PW5-WL1-WIRE: WL storefront HOME — renders ProductGrid for is_white_label tenants.
-    // tenantId is NEVER passed by the client. Server resolves tenant scope from JWT (D-017-A compliant).
-    // Must stay above the category switch so WL tenants don't fall through to B2B/B2C content.
-    if (tenantOperatingMode === 'WL_STOREFRONT' && expView === 'HOME') {
-      return (
-        <WLStorefront
-          onRequestQuote={handleOpenRfqDialog}
-          onViewBuyerRfqs={handleOpenBuyerRfqs}
-        />
-      );
-    }
-
-    switch (tenantOperatingMode) {
-      case 'AGGREGATOR_WORKSPACE':
-        return (
-          <AggregatorDiscoveryWorkspace
-            tenantName={currentTenant.name}
-            entries={aggregatorDiscoveryEntries}
-            loading={aggregatorDiscoveryLoading}
-            error={aggregatorDiscoveryError}
-            aiInsight={!currentTenant.is_white_label ? aiInsight : null}
-            onRetry={() => setAggregatorDiscoveryRefreshKey(value => value + 1)}
-          />
-        );
-      case 'B2B_WORKSPACE':
-        return (
-          <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end">
-              <div>
-                <h1 className="text-2xl font-bold">Wholesale Catalog</h1>
-                <p className="text-slate-500">Tiered pricing and MOQ enforcement active.</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleOpenSupplierRfqInbox();
-                  }}
-                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
-                >
-                  Supplier RFQ Inbox
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleOpenBuyerRfqs();
-                  }}
-                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
-                >
-                  View My RFQs
-                </button>
-                <button
-                  onClick={() => setShowAddItemForm(v => !v)}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition text-sm"
-                >
-                  + Add Item
-                </button>
-              </div>
-            </div>
-
-            {/* RU-003: Inline Add Item form */}
-            {showAddItemForm && (
-              <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
-                <h3 className="font-bold text-slate-800">New Catalog Item</h3>
-                {addItemError && (
-                  <div className="text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{addItemError}</div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label htmlFor="b2b-add-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Name *</label>
-                    <input
-                      id="b2b-add-name"
-                      required
-                      value={addItemFormData.name}
-                      onChange={e => setAddItemFormData(d => ({ ...d, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Product name"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label htmlFor="b2b-add-price" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Price *</label>
-                    <input
-                      id="b2b-add-price"
-                      required
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      value={addItemFormData.price}
-                      onChange={e => setAddItemFormData(d => ({ ...d, price: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label htmlFor="b2b-add-sku" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">SKU</label>
-                    <input
-                      id="b2b-add-sku"
-                      value={addItemFormData.sku}
-                      onChange={e => setAddItemFormData(d => ({ ...d, sku: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Optional SKU"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="b2b-add-image-url" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Image URL</label>
-                  <input
-                    id="b2b-add-image-url"
-                    type="url"
-                    value={addItemFormData.imageUrl}
-                    onChange={e => setAddItemFormData(d => ({ ...d, imageUrl: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="https://example.com/product-image.jpg"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={addItemLoading}
-                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-50"
-                  >
-                    {addItemLoading ? 'Saving...' : 'Save Item'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowAddItemForm(false); setAddItemError(null); }}
-                    className="px-6 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {catalogLoading && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-                <p className="mt-4 text-slate-500">Loading catalog...</p>
-              </div>
-            )}
-
-            {catalogError && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
-                {catalogError}
-              </div>
-            )}
-
-            {!catalogLoading && !catalogError && products.length === 0 && (
-              <div className="text-center py-12 text-slate-500">No products available.</div>
-            )}
-
-            {!catalogLoading && !catalogError && products.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                {products.map(p => (
-                  <div
-                    key={p.id}
-                    className="bg-white rounded-xl border border-slate-200 overflow-hidden group shadow-sm"
-                  >
-                    {p.imageUrl ? (
-                      <img
-                        src={p.imageUrl}
-                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500"
-                        alt={p.name}
-                      />
-                    ) : (
-                      <div
-                        className="w-full h-40 bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-400"
-                        aria-label={`${p.name} image unavailable`}
-                        role="img"
-                      >
-                        Image unavailable
-                      </div>
-                    )}
-                    <div className="p-4 space-y-2">
-                      <div className="text-xs text-slate-400 font-bold uppercase">
-                        {p.category || 'General'}
-                      </div>
-                      <h3 className="font-bold">{p.name}</h3>
-                      <div className="flex justify-between items-center mt-4">
-                        <div className="text-emerald-600 font-bold">${p.price}/unit</div>
-                        <div className="text-xs text-slate-400">MOQ: {p.moq || 1}</div>
-                      </div>
-                      {renderB2BCatalogCardFooter(p)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      case 'B2C_STOREFRONT':
-        {
-          const visibleB2CProducts = products.slice(0, b2cVisibleCount);
-          const hasHiddenLoadedProducts = products.length > b2cVisibleCount;
-          const canLoadMoreB2CProducts = catalogNextCursor !== null;
-          let b2cBrowseActionLabel = 'All Visible';
-          if (hasHiddenLoadedProducts) {
-            b2cBrowseActionLabel = 'See All';
-          } else if (canLoadMoreB2CProducts) {
-            b2cBrowseActionLabel = b2cLoadingMore ? 'Loading...' : 'Load More';
-          }
-
-        return (
-          <div className="space-y-12 animate-in fade-in duration-500">
-            <section className="relative h-[400px] rounded-3xl overflow-hidden flex items-center px-12">
-              <img
-                src="https://picsum.photos/seed/retail/1200/600"
-                className="absolute inset-0 w-full h-full object-cover brightness-50"
-                alt="Spring 2024 retail collections hero banner"
-              />
-              <div className="relative z-10 text-white max-w-lg space-y-4">
-                <h1 className="text-5xl font-black leading-tight">Spring 2024 Collections.</h1>
-                <p className="text-lg opacity-90">
-                  Sustainably sourced, ethically manufactured. Delivered to your door.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleB2CShopNow}
-                  className="bg-white text-indigo-600 px-8 py-3 rounded-full font-bold shadow-xl hover:bg-indigo-50 transition"
-                >
-                  Shop Now
-                </button>
-              </div>
-            </section>
-
-            <section ref={b2cCatalogSectionRef}>
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-2xl font-bold">New Arrivals</h2>
-                  {b2cSearchQuery.trim() && !catalogLoading && !catalogError && (
-                    <p className="mt-1 text-sm text-slate-500">
-                      Showing results for "{b2cSearchQuery.trim()}".
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-3 items-center">
-                  <button
-                    type="button"
-                    onClick={() => { void handleB2CLoadMore(); }}
-                    disabled={b2cLoadingMore || (!hasHiddenLoadedProducts && !canLoadMoreB2CProducts)}
-                    className="text-indigo-600 font-semibold underline underline-offset-4"
-                  >
-                    {b2cBrowseActionLabel}
-                  </button>
-                </div>
-              </div>
-
-              {catalogLoading && (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                  <p className="mt-4 text-slate-500">Loading products...</p>
-                </div>
-              )}
-
-              {catalogError && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
-                  {catalogError}
-                </div>
-              )}
-
-              {!catalogLoading && !catalogError && products.length === 0 && (
-                <div className="text-center py-12 text-slate-500">No products available.</div>
-              )}
-
-              {!catalogLoading && !catalogError && products.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                  {visibleB2CProducts.map(p => (
-                    <div key={p.id} className="space-y-3">
-                      <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100">
-                        {p.imageUrl ? (
-                          <img
-                            src={p.imageUrl}
-                            className="w-full h-full object-cover hover:scale-110 transition duration-700"
-                            alt={p.name}
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex items-center justify-center text-sm font-medium text-slate-400"
-                            aria-label={`${p.name} image unavailable`}
-                            role="img"
-                          >
-                            Image unavailable
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-slate-800">{p.name}</h4>
-                        <div className="text-slate-500 font-bold">${p.price}.00</div>
-                      </div>
-                      <B2CAddToCartButton product={p} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
-        );
-        }
-      case 'WL_STOREFRONT':
-        return (
-          <WLStorefront
-            onRequestQuote={handleOpenRfqDialog}
-            onViewBuyerRfqs={handleOpenBuyerRfqs}
-          />
-        );
-      default:
-        return <div>Invalid Tenant Configuration</div>;
-    }
+    return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
   };
 
   const renderAdminView = () => {
@@ -3406,6 +3437,20 @@ const App: React.FC = () => {
           return null;
         }
 
+        if (controlPlaneContentFamily !== 'control_plane') {
+          return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+              <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
+                <div className="text-3xl">⚠️</div>
+                <h2 className="font-bold text-slate-900">Control Plane Unavailable</h2>
+                <p className="text-slate-600 text-sm">
+                  Control-plane routing truth could not be established for this session.
+                </p>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <SuperAdminShell
             authRealm="CONTROL_PLANE"
@@ -3428,7 +3473,7 @@ const App: React.FC = () => {
           );
         }
 
-        if (resolveRuntimeShellFamilyFromDescriptor(tenantRuntimeDescriptor, 'WL_ADMIN') !== 'WhiteLabelAdminShell') {
+        if (tenantContentFamily !== 'wl_admin') {
           return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
               <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
@@ -3476,6 +3521,24 @@ const App: React.FC = () => {
               <div className="text-center">
                 <div className="text-4xl mb-4">⏳</div>
                 <p className="text-slate-500">Loading workspace...</p>
+              </div>
+            </div>
+          );
+        }
+
+        if (
+          !tenantContentFamily
+          || tenantContentFamily === 'control_plane'
+          || tenantContentFamily === 'wl_admin'
+        ) {
+          return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+              <div className="bg-white border border-amber-300 rounded-2xl p-8 max-w-md text-center space-y-4">
+                <div className="text-3xl">⚠️</div>
+                <h2 className="font-bold text-slate-900">Workspace Content Unavailable</h2>
+                <p className="text-slate-600 text-sm">
+                  TexQtic could not align this tenant session to a workspace content family.
+                </p>
               </div>
             </div>
           );
