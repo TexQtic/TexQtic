@@ -105,9 +105,6 @@ import {
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
 const IMPERSONATION_SESSION_KEY = 'texqtic_impersonation_session';
 const REHYDRATION_TRACE_KEY = 'texqtic_rehydration_trace';
-const TENANT_IDENTITY_HINTS_KEY = 'texqtic_tenant_identity_hints';
-const WL_REPO_TRUTH_SLUGS = new Set(['white-label-co']);
-const WL_REPO_TRUTH_NAMES = new Set(['white label co']);
 const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
   isAdmin: false,
   targetTenantId: null,
@@ -214,28 +211,6 @@ type StoredImpersonationSession = {
   state: ImpersonationState;
 };
 
-type TenantIdentityHint = {
-  id: string;
-  slug: string | null;
-  name: string | null;
-  type: string | null;
-  tenant_category: string | null;
-  is_white_label: boolean | null;
-  status: string | null;
-  plan: string | null;
-};
-
-type TenantBootstrapSeed = {
-  tenantId?: string | null;
-  slug?: string | null;
-  name?: string | null;
-  type?: string | null;
-  tenant_category?: string | null;
-  is_white_label?: boolean | null;
-  status?: string | null;
-  plan?: string | null;
-};
-
 type RehydrationTracePayload = Record<string, unknown>;
 
 const summarizeTenantIdentity = (tenant?: {
@@ -284,84 +259,6 @@ const appendRehydrationTrace = (event: string, payload: RehydrationTracePayload 
   } catch {
     console.info('[rehydration-trace]', entry);
   }
-};
-
-const readStoredTenantIdentityHints = (): Record<string, TenantIdentityHint> => {
-  return {};
-};
-
-const resolveRepoTruthTenantHint = (tenant?: {
-  slug?: string | null;
-  name?: string | null;
-} | null): Pick<TenantIdentityHint, 'is_white_label'> | null => {
-  return null;
-};
-
-const persistTenantIdentityHint = (_tenant?: {
-  id?: string | null;
-  slug?: string | null;
-  name?: string | null;
-  type?: string | null;
-  tenant_category?: string | null;
-  is_white_label?: boolean | null;
-  status?: string | null;
-  plan?: string | null;
-} | null) => {
-};
-
-const normalizeTenantIdentity = <T extends {
-  id?: string | null;
-  slug?: string | null;
-  name?: string | null;
-  type?: string | null;
-  tenant_category?: string | null;
-  is_white_label?: boolean | null;
-  status?: string | null;
-  plan?: string | null;
-}>(
-  tenant?: T | null,
-  hint?: Partial<TenantIdentityHint> | null,
-  options?: { persist?: boolean }
-): (T & { tenant_category: string | null; is_white_label: boolean }) | null => {
-  if (!tenant) {
-    return null;
-  }
-
-  const tenant_category = tenant.tenant_category ?? hint?.tenant_category ?? null;
-  const hintedWhiteLabel = hint?.is_white_label;
-  const whiteLabelCandidate = tenant.is_white_label ?? hintedWhiteLabel ?? null;
-
-  if (!tenant_category || typeof whiteLabelCandidate !== 'boolean') {
-    return null;
-  }
-
-  const normalizedTenant = {
-    ...tenant,
-    type: tenant.type ?? tenant_category,
-    tenant_category,
-    is_white_label: whiteLabelCandidate,
-    ...(Object.hasOwn(tenant, 'plan')
-      ? { plan: normalizeCommercialPlan(tenant.plan) }
-      : {}),
-  };
-
-  if (options?.persist !== false) {
-    persistTenantIdentityHint(normalizedTenant);
-  }
-
-  return normalizedTenant;
-};
-
-const resolveBootstrapTenantType = (
-  _tenantCategory: string | null | undefined,
-  _tenantType: string | null | undefined,
-  _isWhiteLabel: boolean
-): TenantType | null => {
-  return null;
-};
-
-const buildBootstrapTenantStub = (_seed?: TenantBootstrapSeed | null): Tenant | null => {
-  return null;
 };
 
 const readStoredTenantJwtClaims = (): { userId: string | null; tenantId: string | null; role: string | null } | null => {
@@ -414,27 +311,6 @@ const resolveTenantRole = (role: string | null | undefined, tenantId?: string | 
 
   return claims.role;
 };
-
-// B2-REM-3: Canonical shell resolver — explicit policy function (B2-DESIGN locked).
-// Returns null for unknown/null tenantCategory — caller MUST render explicit error state (no silent fallback).
-function resolveExperienceShell(
-  tenantCategory: string | null | undefined,
-  isWhiteLabel: boolean | null | undefined
-) {
-  switch (tenantCategory) {
-    case 'AGGREGATOR':
-      return AggregatorShell;
-    case 'B2B':
-      return isWhiteLabel ? WhiteLabelShell : B2BShell;
-    case 'B2C':
-      return isWhiteLabel ? WhiteLabelShell : B2CShell;
-    case 'INTERNAL':
-      // Explicit named policy rule (B2-DESIGN locked): INTERNAL → AggregatorShell. Never via silent fallback.
-      return AggregatorShell;
-    default:
-      return null; // Unknown identity — caller renders explicit error; FORBIDDEN to fall back silently.
-  }
-}
 
 const buildControlPlaneIdentity = (user?: { id?: string; email?: string }, role?: string | null) => {
   if (!user?.id && !user?.email && !role) {
@@ -535,28 +411,32 @@ const buildTenantSnapshot = (tenant?: {
     return null;
   }
 
-  const normalizedSnapshot = normalizeTenantIdentity(
-    {
+  if (!tenant.tenant_category || typeof tenant.is_white_label !== 'boolean') {
+    appendRehydrationTrace('buildTenantSnapshot:output', {
+      tenant: null,
+      reason: 'incomplete_canonical_identity',
+    });
+    return null;
+  }
+
+  const normalizedSnapshot: Tenant = {
     id: tenant.id,
     slug: tenant.slug,
     name: tenant.name,
-      type: tenant.type ?? tenant.tenant_category ?? null,
-    tenant_category: tenant.tenant_category ?? null,
-      is_white_label: typeof tenant.is_white_label === 'boolean' ? tenant.is_white_label : null,
-    status: tenant.status,
-    plan: tenant.plan,
+    type: (tenant.type ?? tenant.tenant_category) as TenantType,
+    tenant_category: tenant.tenant_category,
+    is_white_label: tenant.is_white_label,
+    status: tenant.status as any,
+    plan: normalizeCommercialPlan(tenant.plan),
     createdAt: '',
     updatedAt: '',
-    },
-    null,
-    { persist: false }
-  );
+  };
 
   appendRehydrationTrace('buildTenantSnapshot:output', {
     tenant: summarizeTenantIdentity(normalizedSnapshot),
   });
 
-  return normalizedSnapshot as Tenant | null;
+  return normalizedSnapshot;
 };
 
 const persistImpersonationSession = (session: StoredImpersonationSession | null) => {
@@ -566,19 +446,6 @@ const persistImpersonationSession = (session: StoredImpersonationSession | null)
   }
 
   localStorage.setItem(IMPERSONATION_SESSION_KEY, JSON.stringify(session));
-};
-
-const readStoredImpersonationTenant = (_tenant: {
-  id?: unknown;
-  slug?: unknown;
-  name?: unknown;
-  type?: unknown;
-  tenant_category?: unknown;
-  is_white_label?: unknown;
-  status?: unknown;
-  plan?: unknown;
-} | undefined) => {
-  return null;
 };
 
 const readStoredImpersonationState = (state: Partial<ImpersonationState> | undefined, tenantId: string | undefined) => {
@@ -618,16 +485,6 @@ const readStoredImpersonationSession = (): StoredImpersonationSession | null => 
     const parsed = JSON.parse(raw) as {
       adminId?: unknown;
       state?: Partial<ImpersonationState>;
-      tenant?: {
-        id?: unknown;
-        slug?: unknown;
-        name?: unknown;
-        type?: unknown;
-        tenant_category?: unknown;
-        is_white_label?: unknown;
-        status?: unknown;
-        plan?: unknown;
-      };
     };
 
     if (typeof parsed.adminId !== 'string') {
@@ -694,32 +551,16 @@ const resolveTenantBootstrapAuthView = ({
 };
 
 export const __PHASE1_FOUNDATION_CORRECTION_TESTING__ = {
-  readStoredTenantIdentityHints,
-  resolveRepoTruthTenantHint,
-  normalizeTenantIdentity,
   readStoredTenantJwtClaims,
-  resolveBootstrapTenantType,
-  buildBootstrapTenantStub,
   buildTenantSnapshot,
   readStoredImpersonationSession,
   resolveCanonicalImpersonationTenant,
   resolveTenantBootstrapAuthView,
-  resolveExperienceShell,
 };
 
 const clearPersistedImpersonationSession = () => {
   setImpersonationToken(null);
   persistImpersonationSession(null);
-};
-
-const resolveTenantEntryAppState = (
-  nextState: ReturnType<typeof resolveRuntimeAppStateFromDescriptor>,
-): 'EXPERIENCE' | 'WL_ADMIN' | null => {
-  if (nextState === 'EXPERIENCE' || nextState === 'WL_ADMIN') {
-    return nextState;
-  }
-
-  return null;
 };
 
 const App: React.FC = () => {
@@ -768,7 +609,6 @@ const App: React.FC = () => {
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
-  const setWlAdminEligible = (_value: boolean) => {};
   // TECS-FBW-020: WL-admin-local invite substate — keeps invite inside WhiteLabelAdminShell;
   // prevents INVITE_MEMBER appState from falling into the EXPERIENCE case group.
   const [wlAdminInviting, setWlAdminInviting] = useState(false);
@@ -969,7 +809,6 @@ const App: React.FC = () => {
 
   const enterControlPlane = () => {
     if (getCurrentAuthRealm() !== 'CONTROL_PLANE') {
-      setWlAdminEligible(false);
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
       setSelectedTenant(null);
@@ -980,7 +819,6 @@ const App: React.FC = () => {
       return;
     }
 
-    setWlAdminEligible(false);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
     setSelectedTenant(null);
@@ -993,7 +831,6 @@ const App: React.FC = () => {
   const clearControlPlaneIdentityState = () => {
     persistControlPlaneIdentity(null);
     setControlPlaneIdentity(null);
-    setWlAdminEligible(false);
     setSelectedTenant(null);
     setDisputeEscalationBridge(null);
     setFinanceEscrowBridge(null);
@@ -1011,16 +848,16 @@ const App: React.FC = () => {
       commercialPlan: tenant.plan,
       authenticatedRole: resolvedRole,
     });
+    const nextState = resolveRuntimeAppStateFromDescriptor(descriptor);
 
     setTenants([tenant]);
     setCurrentTenantId(tenant.id);
     setTenantAuthenticatedRole(resolvedRole);
-    setWlAdminEligible(descriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false);
 
     return {
       resolvedRole,
       descriptor,
-      nextState: resolveTenantEntryAppState(resolveRuntimeAppStateFromDescriptor(descriptor)),
+      nextState: nextState === 'EXPERIENCE' || nextState === 'WL_ADMIN' ? nextState : null,
     };
   };
 
@@ -1047,7 +884,6 @@ const App: React.FC = () => {
 
     persistControlPlaneIdentity(identity);
     setControlPlaneIdentity(identity);
-    setWlAdminEligible(false);
     setTenantAuthenticatedRole(null);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
@@ -1729,7 +1565,6 @@ const App: React.FC = () => {
 
         clearPersistedImpersonationSession();
         setImpersonation(EMPTY_IMPERSONATION_STATE);
-        setWlAdminEligible(false);
         setTenantRestorePending(false);
         applyControlPlaneShellEntry(actorIdentity);
       }
@@ -1794,7 +1629,6 @@ const App: React.FC = () => {
         clearAuth();
         setTenants([]);
         setCurrentTenantId('');
-        setWlAdminEligible(false);
         setStoredAuthRealm('TENANT');
         setAuthRealm('TENANT');
         setTenantBootstrapBlockedMessage(options?.blockedMessage ?? null);
@@ -1916,7 +1750,6 @@ const App: React.FC = () => {
       setTenants([]);
       setCurrentTenantId('');
       setTenantAuthenticatedRole(null);
-      setWlAdminEligible(false);
       setStoredAuthRealm('TENANT');
       setAuthRealm('TENANT');
       setTenantBootstrapBlockedMessage(blockedMessage ?? null);
@@ -2050,7 +1883,6 @@ const App: React.FC = () => {
       clearPersistedImpersonationSession();
       setImpersonation(EMPTY_IMPERSONATION_STATE);
       setTenantAuthenticatedRole(null);
-      setWlAdminEligible(false);
       const msg = err?.message || 'Failed to start impersonation session.';
       setImpersonationDialog(d => ({ ...d, loading: false, error: msg }));
     }
@@ -2058,7 +1890,6 @@ const App: React.FC = () => {
 
   /** G-W3-ROUTING-001: Stop impersonation via server API, then restore admin session */
   const handleExitImpersonation = async () => {
-    setWlAdminEligible(false);
     setStoredAuthRealm('CONTROL_PLANE');
     setAuthRealm('CONTROL_PLANE');
 
@@ -4210,7 +4041,6 @@ const App: React.FC = () => {
                   clearPersistedImpersonationSession();
                   setImpersonation(EMPTY_IMPERSONATION_STATE);
                   setTenantAuthenticatedRole(null);
-                  setWlAdminEligible(false);
                   clearControlPlaneIdentityState();
                   setAppState('AUTH');
                 }}

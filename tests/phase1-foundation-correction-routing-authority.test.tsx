@@ -1,20 +1,35 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { __PHASE1_FOUNDATION_CORRECTION_TESTING__ } from '../App';
+import {
+  createTenantSessionRuntimeDescriptor,
+  resolveRuntimeAppStateFromDescriptor,
+  resolveRuntimeManifestKeyFromDescriptor,
+  resolveRuntimeShellFamilyFromDescriptor,
+} from '../runtime/sessionRuntimeDescriptor';
 
 const {
-  readStoredTenantIdentityHints,
-  resolveRepoTruthTenantHint,
-  normalizeTenantIdentity,
   readStoredTenantJwtClaims,
-  resolveBootstrapTenantType,
-  buildBootstrapTenantStub,
   buildTenantSnapshot,
   readStoredImpersonationSession,
   resolveCanonicalImpersonationTenant,
   resolveTenantBootstrapAuthView,
-  resolveExperienceShell,
 } = __PHASE1_FOUNDATION_CORRECTION_TESTING__;
+
+const buildTenantDescriptor = (
+  tenant: ReturnType<typeof buildTenantSnapshot>,
+  authenticatedRole = 'OWNER',
+) => {
+  return createTenantSessionRuntimeDescriptor({
+    tenantId: tenant?.id ?? null,
+    tenantSlug: tenant?.slug ?? null,
+    tenantName: tenant?.name ?? null,
+    tenantCategory: tenant?.tenant_category ?? null,
+    whiteLabelCapability: tenant?.is_white_label ?? null,
+    commercialPlan: tenant?.plan ?? null,
+    authenticatedRole,
+  });
+};
 
 function installStorageMock() {
   const store = new Map<string, string>();
@@ -103,17 +118,16 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
   });
 
   it('removes slug-only and name-only white-label routing authority', () => {
-    expect(resolveRepoTruthTenantHint({ slug: 'white-label-co' })).toBeNull();
-    expect(resolveRepoTruthTenantHint({ name: 'White Label Co' })).toBeNull();
-
-    const canonicalTenant = normalizeTenantIdentity(makeCanonicalTenant({
+    const canonicalTenant = buildTenantSnapshot(makeCanonicalTenant({
       slug: 'white-label-co',
       name: 'White Label Co',
       is_white_label: false,
-    }), null, { persist: false });
+    }));
+    const descriptor = buildTenantDescriptor(canonicalTenant);
 
     expect(canonicalTenant?.is_white_label).toBe(false);
-    expect(resolveExperienceShell(canonicalTenant?.tenant_category, canonicalTenant?.is_white_label)).not.toBeNull();
+    expect(resolveRuntimeManifestKeyFromDescriptor(descriptor, 'EXPERIENCE')).toBe('b2b_workspace');
+    expect(resolveRuntimeShellFamilyFromDescriptor(descriptor, 'EXPERIENCE')).toBe('B2BShell');
   });
 
   it('ignores persisted tenant hints as routing authority', () => {
@@ -133,22 +147,22 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
       }),
     );
 
-    expect(readStoredTenantIdentityHints()).toEqual({});
-
-    const canonicalTenant = normalizeTenantIdentity(makeCanonicalTenant({
+    const canonicalTenant = buildTenantSnapshot(makeCanonicalTenant({
       type: 'AGGREGATOR',
       tenant_category: 'AGGREGATOR',
       is_white_label: false,
-    }), null, { persist: false });
+    }));
+    const descriptor = buildTenantDescriptor(canonicalTenant);
 
     expect(canonicalTenant?.tenant_category).toBe('AGGREGATOR');
     expect(canonicalTenant?.is_white_label).toBe(false);
+    expect(resolveRuntimeManifestKeyFromDescriptor(descriptor, 'EXPERIENCE')).toBe('aggregator_workspace');
 
-    const hintOnlyTenant = normalizeTenantIdentity(makeCanonicalTenant({
+    const hintOnlyTenant = buildTenantSnapshot(makeCanonicalTenant({
       type: 'B2C',
       tenant_category: null,
       is_white_label: null,
-    }), null, { persist: false });
+    }));
 
     expect(hintOnlyTenant).toBeNull();
   });
@@ -160,16 +174,27 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
     );
 
     const claims = readStoredTenantJwtClaims();
+    const descriptor = createTenantSessionRuntimeDescriptor({
+      tenantId: claims?.tenantId ?? null,
+      tenantSlug: null,
+      tenantName: null,
+      tenantCategory: null,
+      whiteLabelCapability: null,
+      commercialPlan: null,
+      authenticatedRole: claims?.role ?? null,
+    });
 
     expect(claims?.tenantId).toBe('tenant-1');
-    expect(resolveBootstrapTenantType('B2B', 'B2B', true)).toBeNull();
-    expect(buildBootstrapTenantStub({ tenantId: claims?.tenantId ?? null })).toBeNull();
+    expect(descriptor).toBeNull();
+    expect(resolveRuntimeAppStateFromDescriptor(descriptor)).toBeNull();
   });
 
   it('builds tenant shell state only from complete canonical tenant truth', () => {
     const completeSnapshot = buildTenantSnapshot(makeCanonicalTenant());
+    const completeDescriptor = buildTenantDescriptor(completeSnapshot);
+
     expect(completeSnapshot?.tenant_category).toBe('B2B');
-    expect(resolveExperienceShell(completeSnapshot?.tenant_category, completeSnapshot?.is_white_label)).not.toBeNull();
+    expect(resolveRuntimeShellFamilyFromDescriptor(completeDescriptor, 'EXPERIENCE')).toBe('B2BShell');
 
     const incompleteSnapshot = buildTenantSnapshot(makeCanonicalTenant({
       type: 'B2C',
@@ -178,7 +203,6 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
     }));
 
     expect(incompleteSnapshot).toBeNull();
-    expect(resolveExperienceShell(null, false)).toBeNull();
   });
 
   it('keeps restore and refresh anchored to canonical tenant truth when stale hints exist', () => {
@@ -202,17 +226,25 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
       makeJwt({ userId: 'user-1', tenantId: 'tenant-1', role: 'OWNER' }),
     );
 
-    const refreshCandidate = buildBootstrapTenantStub({
+    const jwtOnlyDescriptor = createTenantSessionRuntimeDescriptor({
       tenantId: readStoredTenantJwtClaims()?.tenantId ?? null,
+      tenantSlug: null,
+      tenantName: null,
+      tenantCategory: null,
+      whiteLabelCapability: null,
+      commercialPlan: null,
+      authenticatedRole: readStoredTenantJwtClaims()?.role ?? null,
     });
     const canonicalSnapshot = buildTenantSnapshot(makeCanonicalTenant({
       tenant_category: 'B2B',
       is_white_label: false,
     }));
+    const canonicalDescriptor = buildTenantDescriptor(canonicalSnapshot);
 
-    expect(refreshCandidate).toBeNull();
+    expect(jwtOnlyDescriptor).toBeNull();
     expect(canonicalSnapshot?.tenant_category).toBe('B2B');
     expect(canonicalSnapshot?.is_white_label).toBe(false);
+    expect(resolveRuntimeManifestKeyFromDescriptor(canonicalDescriptor, 'EXPERIENCE')).toBe('b2b_workspace');
   });
 
   it('ignores stored impersonation tenant snapshots until fresh canonical identity is confirmed', () => {
