@@ -10,6 +10,7 @@ import {
   resolveRuntimeManifestEntryFromDescriptor,
   resolveRuntimeManifestKeyFromDescriptor,
   resolveRuntimeRouteGroupSelection,
+  resolveRuntimeShellNavigationSurface,
   resolveRuntimeShellFamilyFromDescriptor,
 } from '../runtime/sessionRuntimeDescriptor';
 
@@ -45,7 +46,79 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeManifestEntryFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeLocalRouteSelection(null, { expView: 'HOME' })).toBeNull();
     expect(getRuntimeLocalRouteRegistration(null, 'home')).toBeNull();
+    expect(resolveRuntimeShellNavigationSurface(null, null, ['home'])).toBeNull();
     expect(resolveRuntimeRouteGroupSelection(null, { expView: 'HOME' })).toBeNull();
+  });
+
+  it('builds normalized shell navigation surfaces from local route registrations', () => {
+    const aggregatorDescriptor = createTenantSessionRuntimeDescriptor(
+      makeTenantInput({ tenantCategory: 'AGGREGATOR' }),
+    );
+    const aggregatorEntry = resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE');
+    const aggregatorSelection = resolveRuntimeLocalRouteSelection(aggregatorEntry, { expView: 'DPP' });
+    const aggregatorSurface = resolveRuntimeShellNavigationSurface(aggregatorEntry, aggregatorSelection, ['home', 'orders', 'dpp']);
+
+    expect(aggregatorSurface).toEqual(expect.objectContaining({
+      activeRouteKey: 'dpp',
+      activeNavigationKey: 'DPP',
+      defaultRouteKey: 'home',
+    }));
+    expect(aggregatorSurface?.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ routeKey: 'home', active: false }),
+      expect.objectContaining({ routeKey: 'dpp', active: true }),
+    ]));
+
+    const wlAdminDescriptor = createTenantSessionRuntimeDescriptor(
+      makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: true, authenticatedRole: 'TENANT_ADMIN' }),
+    );
+    const wlAdminEntry = resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN');
+    const wlAdminSelection = resolveRuntimeLocalRouteSelection(wlAdminEntry, {
+      wlAdminView: 'STAFF',
+      wlAdminInviting: true,
+    });
+    const wlAdminSurface = resolveRuntimeShellNavigationSurface(
+      wlAdminEntry,
+      wlAdminSelection,
+      ['branding', 'staff', 'products', 'collections', 'orders', 'domains'],
+      'wlAdminView',
+    );
+
+    expect(wlAdminSurface).toEqual(expect.objectContaining({
+      activeRouteKey: 'staff_invite',
+      activeNavigationKey: 'STAFF',
+      defaultRouteKey: 'branding',
+    }));
+    expect(wlAdminSurface?.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ routeKey: 'staff', active: true }),
+      expect.objectContaining({ routeKey: 'branding', active: false }),
+    ]));
+
+    const controlDescriptor = createControlPlaneSessionRuntimeDescriptor({
+      actorId: 'admin-1',
+      actorEmail: 'admin@example.com',
+      authenticatedRole: 'SUPER_ADMIN',
+    });
+    const controlEntry = resolveRuntimeManifestEntryFromDescriptor(controlDescriptor ?? null, 'CONTROL_PLANE');
+    const controlSelection = resolveRuntimeLocalRouteSelection(controlEntry, {
+      adminView: 'TENANTS',
+      selectedTenantId: 'tenant-1',
+    });
+    const controlSurface = resolveRuntimeShellNavigationSurface(
+      controlEntry,
+      controlSelection,
+      ['tenant_registry', 'flags', 'health'],
+      'adminView',
+    );
+
+    expect(controlSurface).toEqual(expect.objectContaining({
+      activeRouteKey: 'tenant_detail',
+      activeNavigationKey: 'TENANTS',
+      defaultRouteKey: 'tenant_registry',
+    }));
+    expect(controlSurface?.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ routeKey: 'tenant_registry', active: true }),
+      expect.objectContaining({ routeKey: 'health', active: false }),
+    ]));
   });
 
   it('maps aggregator and internal tenants to aggregator workspace mode', () => {

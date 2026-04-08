@@ -186,6 +186,22 @@ export interface RuntimeLocalRouteSelection extends RuntimeRouteGroupSelection {
   route: RuntimeLocalRouteDefinition;
 }
 
+export type RuntimeShellNavigationBindingField = 'expView' | 'adminView' | 'wlAdminView';
+
+export interface RuntimeShellNavigationItem {
+  routeKey: RuntimeLocalRouteKey;
+  navigationKey: string;
+  routeGroupKey: RouteGroupKey;
+  active: boolean;
+}
+
+export interface RuntimeShellNavigationSurface {
+  activeRouteKey: RuntimeLocalRouteKey | null;
+  activeNavigationKey: string | null;
+  defaultRouteKey: RuntimeLocalRouteKey | null;
+  items: RuntimeShellNavigationItem[];
+}
+
 export interface RuntimeRouteGroupSelectionInput {
   expView?: string | null;
   adminView?: string | null;
@@ -678,6 +694,17 @@ const matchesRuntimeLocalRouteBinding = (
   return true;
 };
 
+const resolveRuntimeNavigationKey = (
+  route: RuntimeLocalRouteDefinition,
+  bindingField?: RuntimeShellNavigationBindingField,
+) => {
+  if (!bindingField) {
+    return route.selectionKey;
+  }
+
+  return route.stateBinding[bindingField] ?? route.selectionKey;
+};
+
 const resolveTenantWorkspaceManifestKey = (
   descriptor: SessionRuntimeDescriptor,
 ): RouteManifestKey | null => {
@@ -851,6 +878,57 @@ export const resolveRuntimeLocalRouteSelection = (
     routeKey: registration.route.key,
     viewKey: registration.route.selectionKey,
     route: registration.route,
+  };
+};
+
+export const resolveRuntimeShellNavigationSurface = (
+  manifestEntry: RuntimeManifestEntry | null,
+  localRouteSelection: RuntimeLocalRouteSelection | null,
+  routeKeys: RuntimeLocalRouteKey[],
+  bindingField?: RuntimeShellNavigationBindingField,
+): RuntimeShellNavigationSurface | null => {
+  if (!manifestEntry) {
+    return null;
+  }
+
+  const items = routeKeys.flatMap(routeKey => {
+    const registration = getRuntimeLocalRouteRegistration(manifestEntry, routeKey);
+
+    if (!registration) {
+      return [];
+    }
+
+    return [{
+      routeKey,
+      navigationKey: resolveRuntimeNavigationKey(registration.route, bindingField),
+      routeGroupKey: registration.routeGroupKey,
+      active: false,
+    }];
+  });
+
+  const defaultRegistration = getRuntimeLocalRouteRegistration(
+    manifestEntry,
+    manifestEntry.defaultLocalRouteKey,
+  );
+  const activeRouteKey = localRouteSelection?.routeKey ?? defaultRegistration?.route.key ?? null;
+  let activeNavigationKey: string | null = null;
+
+  if (localRouteSelection) {
+    activeNavigationKey = resolveRuntimeNavigationKey(localRouteSelection.route, bindingField);
+  } else if (defaultRegistration) {
+    activeNavigationKey = resolveRuntimeNavigationKey(defaultRegistration.route, bindingField);
+  }
+
+  return {
+    activeRouteKey,
+    activeNavigationKey,
+    defaultRouteKey: defaultRegistration?.route.key ?? null,
+    items: items.map(item => ({
+      ...item,
+      active: activeNavigationKey === null
+        ? item.routeKey === activeRouteKey
+        : item.navigationKey === activeNavigationKey,
+    })),
   };
 };
 

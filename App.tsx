@@ -98,6 +98,7 @@ import {
   resolveRuntimeAppStateFromDescriptor,
   resolveRuntimeLocalRouteSelection,
   resolveRuntimeManifestEntryFromDescriptor,
+  resolveRuntimeShellNavigationSurface,
   type RouteManifestKey,
   type RuntimeLocalRouteKey,
 } from './runtime/sessionRuntimeDescriptor';
@@ -166,6 +167,43 @@ const normalizeExperienceView = (view: string): ExperienceView => {
   }
 
   return 'HOME';
+};
+
+const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'tenant_registry',
+  'flags',
+  'finance',
+  'trades',
+  'cart_summaries',
+  'escrow_admin',
+  'settlement_admin',
+  'compliance',
+  'cases',
+  'escalations',
+  'certifications',
+  'traceability',
+  'maker_checker',
+  'ai',
+  'events',
+  'logs',
+  'rbac',
+  'health',
+];
+
+const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
+  'branding',
+  'staff',
+  'products',
+  'collections',
+  'orders',
+  'domains',
+];
+
+const TENANT_SHELL_ROUTE_KEYS_BY_FAMILY: Record<'AggregatorShell' | 'B2BShell' | 'B2CShell' | 'WhiteLabelShell', RuntimeLocalRouteKey[]> = {
+  AggregatorShell: ['home', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades'],
+  B2BShell: ['catalog', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades'],
+  B2CShell: ['home', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades', 'cart'],
+  WhiteLabelShell: ['home', 'orders', 'dpp', 'escrow', 'escalations', 'settlement', 'certifications', 'traceability', 'audit_logs', 'trades'],
 };
 
 const ONBOARDING_STATUS_CONTINUITY = {
@@ -1251,16 +1289,12 @@ const App: React.FC = () => {
   const controlPlaneLocalRouteSelection = useMemo(() => {
     return appState === 'CONTROL_PLANE'
       ? resolveRuntimeLocalRouteSelection(controlPlaneManifestEntry, {
-      adminView,
-      selectedTenantId: selectedTenant?.id ?? null,
+          adminView,
+          selectedTenantId: selectedTenant?.id ?? null,
         })
       : null;
   }, [controlPlaneManifestEntry, appState, adminView, selectedTenant]);
   const tenantDefaultLocalRouteKey = tenantWorkspaceManifestEntry?.defaultLocalRouteKey ?? null;
-  const activeControlPlaneShellView = (controlPlaneLocalRouteSelection?.route.stateBinding.adminView as AdminView | undefined) ?? adminView;
-  const activeWlAdminShellView = normalizeWlAdminView(
-    wlAdminLocalRouteSelection?.route.stateBinding.wlAdminView ?? wlAdminView,
-  );
   const navigateTenantManifestRoute = (
     routeKey: RuntimeLocalRouteKey,
     options: { resetTradeBridge?: boolean } = {},
@@ -1315,31 +1349,35 @@ const App: React.FC = () => {
 
     setAppState('CONTROL_PLANE');
   };
-  const handleControlPlaneShellViewChange = (nextView: AdminView) => {
-    const nextSelection = resolveRuntimeLocalRouteSelection(controlPlaneManifestEntry, {
-      adminView: nextView,
-      selectedTenantId: null,
-    });
+  const controlPlaneShellNavigation = useMemo(() => {
+    return resolveRuntimeShellNavigationSurface(
+      controlPlaneManifestEntry,
+      controlPlaneLocalRouteSelection,
+      CONTROL_PLANE_SHELL_ROUTE_KEYS,
+      'adminView',
+    );
+  }, [controlPlaneManifestEntry, controlPlaneLocalRouteSelection]);
+  const wlAdminShellNavigation = useMemo(() => {
+    return resolveRuntimeShellNavigationSurface(
+      tenantWlAdminManifestEntry,
+      wlAdminLocalRouteSelection,
+      WL_ADMIN_SHELL_ROUTE_KEYS,
+      'wlAdminView',
+    );
+  }, [tenantWlAdminManifestEntry, wlAdminLocalRouteSelection]);
+  const tenantShellNavigation = useMemo(() => {
+    const shellFamily = tenantWorkspaceManifestEntry?.shellFamily;
 
-    if (!nextSelection) {
-      return;
+    if (!shellFamily || shellFamily === 'SuperAdminShell' || shellFamily === 'WhiteLabelAdminShell') {
+      return null;
     }
 
-    navigateControlPlaneManifestRoute(nextSelection.routeKey);
-  };
-  const handleWlAdminShellViewChange = (nextView: string) => {
-    const normalizedView = normalizeWlAdminView(nextView);
-    const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminManifestEntry, {
-      wlAdminView: normalizedView,
-      wlAdminInviting: false,
-    });
-
-    if (!nextSelection) {
-      return;
-    }
-
-    navigateWlAdminManifestRoute(nextSelection.routeKey);
-  };
+    return resolveRuntimeShellNavigationSurface(
+      tenantWorkspaceManifestEntry,
+      tenantLocalRouteSelection,
+      TENANT_SHELL_ROUTE_KEYS_BY_FAMILY[shellFamily],
+    );
+  }, [tenantWorkspaceManifestEntry, tenantLocalRouteSelection]);
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
   const isNonWhiteLabelB2CTenant = tenantWorkspaceManifestEntry?.key === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
@@ -1358,6 +1396,31 @@ const App: React.FC = () => {
   const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
     || isB2CBrowseEntrySurface
     || isWlAdminProductsSurface;
+  const tenantShellContract = useMemo(() => {
+    return {
+      surface: tenantShellNavigation,
+      onNavigateRoute: navigateTenantManifestRoute,
+      onNavigateTeam: () => {
+        if (tenantHasWlAdminOverlay) {
+          enterWlAdmin('STAFF');
+          return;
+        }
+
+        setAppState('TEAM_MGMT');
+      },
+      showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
+      b2cSearchValue: isB2CBrowseEntrySurface ? b2cSearchQuery : '',
+      onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
+    };
+  }, [
+    tenantShellNavigation,
+    navigateTenantManifestRoute,
+    enterWlAdmin,
+    tenantHasWlAdminOverlay,
+    showB2CHomeAuthenticatedAffordances,
+    isB2CBrowseEntrySurface,
+    b2cSearchQuery,
+  ]);
 
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
@@ -3637,8 +3700,8 @@ const App: React.FC = () => {
           <ControlPlaneShell
             authRealm="CONTROL_PLANE"
             actorIdentity={controlPlaneIdentity}
-            activeView={activeControlPlaneShellView}
-            onViewChange={handleControlPlaneShellViewChange}
+            navigation={controlPlaneShellNavigation}
+            onNavigateRoute={navigateControlPlaneManifestRoute}
           >
             {renderAdminView()}
           </ControlPlaneShell>
@@ -3689,9 +3752,9 @@ const App: React.FC = () => {
             )}
             <WlAdminShell
               tenant={currentTenant}
-              activeView={activeWlAdminShellView}
-              onViewChange={handleWlAdminShellViewChange}
-              onNavigateStorefront={() => setAppState('EXPERIENCE')}
+              navigation={wlAdminShellNavigation}
+              onNavigateRoute={navigateWlAdminManifestRoute}
+              onNavigateStorefront={() => navigateTenantDefaultManifestRoute()}
             >
               {renderWLAdminContent()}
             </WlAdminShell>
@@ -3731,39 +3794,6 @@ const App: React.FC = () => {
           );
         }
 
-        const canDiscoverWlAdmin = tenantHasWlAdminOverlay;
-        const props = {
-          tenant: currentTenant,
-          onNavigateTeam: () => {
-            if (canDiscoverWlAdmin) {
-              enterWlAdmin('STAFF');
-              return;
-            }
-
-            setAppState('TEAM_MGMT');
-          },
-          onNavigateHome: () => navigateTenantDefaultManifestRoute(),
-          onNavigateOrders: () => navigateTenantManifestRoute('orders'),
-          onNavigateDpp: () => navigateTenantManifestRoute('dpp'),
-          onNavigateEscrow: () => navigateTenantManifestRoute('escrow'),
-          // TECS-FBW-006-A: G-022 tenant escalation read panel (read-only)
-          onNavigateEscalations: () => navigateTenantManifestRoute('escalations'),
-          // TECS-FBW-004: G-019 tenant settlement panel navigation
-          onNavigateSettlement: () => navigateTenantManifestRoute('settlement'),
-          // TECS-FBW-005: G-019 tenant certification lifecycle panel navigation
-          onNavigateCertifications: () => navigateTenantManifestRoute('certifications'),
-          // TECS-FBW-015: G-016 traceability CRUD panel navigation
-          onNavigateTraceability: () => navigateTenantManifestRoute('traceability'),
-          // TECS-FBW-016: tenant audit log read-only panel navigation
-          onNavigateAuditLogs: () => navigateTenantManifestRoute('audit_logs'),
-          // TECS-FBW-002-B: G-017 tenant trade read-only panel navigation
-          onNavigateTrades: () => navigateTenantManifestRoute('trades', { resetTradeBridge: true }),
-          // B3-REM-1: wire B2CShell header cart icon to same cart-open action as CartToggleButton
-          onNavigateCart: () => navigateTenantManifestRoute('cart'),
-          b2cSearchValue: isB2CBrowseEntrySurface ? b2cSearchQuery : '',
-          onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
-          showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
-        };
         const resolvedShellFamily = tenantRuntimeManifestEntry?.shellFamily ?? null;
         let ExperienceShell: typeof AggregatorShell | typeof B2BShell | typeof B2CShell | typeof WhiteLabelShell | null = null;
 
@@ -3816,7 +3846,7 @@ const App: React.FC = () => {
                 {getOnboardingStatusContinuity(currentTenant.status)?.bannerText}
               </div>
             )}
-            <ExperienceShell {...props}>
+            <ExperienceShell tenant={currentTenant} navigation={tenantShellContract}>
               {(showB2CHomeAuthenticatedAffordances || !isNonWhiteLabelB2CTenant) && (
                 <div className="absolute top-4 right-4 z-[60] flex gap-2">
                   {showB2CHomeAuthenticatedAffordances && (

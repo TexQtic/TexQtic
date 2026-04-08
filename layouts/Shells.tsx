@@ -2,55 +2,47 @@
 import React from 'react';
 import { TenantConfig } from '../types';
 import { useCart } from '../contexts/CartContext';
+import type { RuntimeLocalRouteKey, RuntimeShellNavigationSurface } from '../runtime/sessionRuntimeDescriptor';
 
-interface ShellProps {
-  tenant: TenantConfig;
-  children: React.ReactNode;
+interface TenantShellNavigationContract {
+  surface: RuntimeShellNavigationSurface | null;
+  onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void;
   onNavigateTeam?: () => void;
-  onNavigateHome?: () => void;
-  onNavigateOrders?: () => void;
-  onNavigateDpp?: () => void;
-  /** TECS-FBW-003-A: G-018 tenant escrow read panel navigation (D-017-A / D-020-B compliant) */
-  onNavigateEscrow?: () => void;
-  /** TECS-FBW-006-A: G-022 tenant escalation read panel navigation (read-only) */
-  onNavigateEscalations?: () => void;
-  /** TECS-FBW-004: G-019 tenant settlement preview-confirm flow navigation */
-  onNavigateSettlement?: () => void;
-  /** TECS-FBW-005: G-019 tenant certification lifecycle panel navigation */
-  onNavigateCertifications?: () => void;
-  /** TECS-FBW-015: G-016 traceability CRUD panel navigation (Phase A: create+read) */
-  onNavigateTraceability?: () => void;
-  /** TECS-FBW-016: tenant audit log read-only panel navigation (EXPERIENCE-only) */
-  onNavigateAuditLogs?: () => void;
-  /** TECS-FBW-002-B: G-017 tenant trade read-only panel navigation */
-  onNavigateTrades?: () => void;
-  /** B3-REM-1: wire B2CShell header cart icon (PW5-V4-DEF-001 fix) */
-  onNavigateCart?: () => void;
   showAuthenticatedAffordances?: boolean;
   b2cSearchValue?: string;
   onB2CSearchChange?: (value: string) => void;
 }
 
-export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades }) => (
+interface ShellProps {
+  tenant: TenantConfig;
+  children: React.ReactNode;
+  navigation: TenantShellNavigationContract;
+}
+
+const hasShellRoute = (surface: RuntimeShellNavigationSurface | null, routeKey: RuntimeLocalRouteKey) => {
+  return surface?.items.some(item => item.routeKey === routeKey) ?? false;
+};
+
+export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => (
   <div className="min-h-screen flex flex-col font-sans">
     <header className="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <button type="button" className="flex items-center gap-2 text-xl font-bold cursor-pointer" onClick={onNavigateHome}>
+        <button type="button" className="flex items-center gap-2 text-xl font-bold cursor-pointer" onClick={() => navigation.onNavigateRoute('home')}>
           <span>{tenant.theme.logo}</span>
           <span>{tenant.name}</span>
         </button>
         <nav className="hidden md:flex gap-6 text-sm font-medium">
-          <button onClick={onNavigateHome} className="text-blue-400">Companies</button>
-          {onNavigateCertifications && <button onClick={onNavigateCertifications} className="hover:text-blue-400 transition text-slate-300">Certifications</button>}
-          {onNavigateTraceability && <button onClick={onNavigateTraceability} className="hover:text-blue-400 transition text-slate-300">Traceability</button>}
-          {onNavigateOrders && <button onClick={onNavigateOrders} className="hover:text-blue-400 transition text-slate-300">Orders</button>}
-          {onNavigateDpp && <button onClick={onNavigateDpp} className="hover:text-blue-400 transition text-slate-300">DPP Passport</button>}
-          {onNavigateEscrow && <button onClick={onNavigateEscrow} className="hover:text-blue-400 transition text-slate-300">Escrow</button>}
-          {onNavigateEscalations && <button onClick={onNavigateEscalations} className="hover:text-blue-400 transition text-slate-300">Escalations</button>}
-          {onNavigateSettlement && <button onClick={onNavigateSettlement} className="hover:text-blue-400 transition text-slate-300">Settlement</button>}
-          {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="hover:text-blue-400 transition text-slate-300">Audit Log</button>}
-          {onNavigateTrades && <button onClick={onNavigateTrades} className="hover:text-blue-400 transition text-slate-300">Trades</button>}
-          <button onClick={onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
+          <button onClick={() => navigation.onNavigateRoute('home')} className="text-blue-400">Companies</button>
+          {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="hover:text-blue-400 transition text-slate-300">Certifications</button>}
+          {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="hover:text-blue-400 transition text-slate-300">Traceability</button>}
+          {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="hover:text-blue-400 transition text-slate-300">Orders</button>}
+          {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="hover:text-blue-400 transition text-slate-300">DPP Passport</button>}
+          {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="hover:text-blue-400 transition text-slate-300">Escrow</button>}
+          {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="hover:text-blue-400 transition text-slate-300">Escalations</button>}
+          {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="hover:text-blue-400 transition text-slate-300">Settlement</button>}
+          {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="hover:text-blue-400 transition text-slate-300">Audit Log</button>}
+          {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="hover:text-blue-400 transition text-slate-300">Trades</button>}
+          <button onClick={navigation.onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
         </nav>
       </div>
     </header>
@@ -58,25 +50,25 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, onNavi
   </div>
 );
 
-export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades }) => (
+export const B2BShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => (
   <div className="min-h-screen flex bg-slate-100 font-sans">
     <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
-      <button type="button" className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={onNavigateHome}>
+      <button type="button" className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={() => navigation.onNavigateRoute('catalog')}>
         <span>{tenant.theme.logo}</span> {tenant.name}
       </button>
       <nav className="flex-1 space-y-4">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
-        <button onClick={onNavigateHome} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
-        {onNavigateOrders && <button onClick={onNavigateOrders} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
-        {onNavigateDpp && <button onClick={onNavigateDpp} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔍 DPP Passport</button>}
-        {onNavigateEscrow && <button onClick={onNavigateEscrow} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔒 Escrow</button>}
-        {onNavigateEscalations && <button onClick={onNavigateEscalations} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🚨 Escalations</button>}
-        {onNavigateSettlement && <button onClick={onNavigateSettlement} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">💸 Settlement</button>}
-        {onNavigateCertifications && <button onClick={onNavigateCertifications} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
-        {onNavigateTraceability && <button onClick={onNavigateTraceability} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
-        {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
-        {onNavigateTrades && <button onClick={onNavigateTrades} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Trades</button>}
-        <button onClick={onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
+        <button onClick={() => navigation.onNavigateRoute('catalog')} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
+        {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
+        {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔍 DPP Passport</button>}
+        {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔒 Escrow</button>}
+        {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🚨 Escalations</button>}
+        {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">💸 Settlement</button>}
+        {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
+        {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
+        {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
+        {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Trades</button>}
+        <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
       </nav>
       <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
         v2.4.0 • Enterprise
@@ -98,8 +90,9 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   </div>
 );
 
-export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades, onNavigateCart, showAuthenticatedAffordances = true, b2cSearchValue, onB2CSearchChange }) => {
+export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => {
   const { itemCount } = useCart();
+  const showAuthenticatedAffordances = navigation.showAuthenticatedAffordances ?? true;
   return (
   <div className="min-h-screen bg-white font-sans">
     <div className="bg-indigo-600 text-white text-center py-2 text-[10px] font-bold uppercase tracking-widest">
@@ -107,32 +100,32 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
     </div>
     <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
       <div className="max-w-7xl mx-auto p-4 flex justify-between items-center">
-        <button type="button" className="text-2xl font-black text-indigo-600 tracking-tight flex items-center gap-2 cursor-pointer" onClick={onNavigateHome}>
+        <button type="button" className="text-2xl font-black text-indigo-600 tracking-tight flex items-center gap-2 cursor-pointer" onClick={() => navigation.onNavigateRoute('home')}>
            {tenant.theme.logo} {tenant.name}
         </button>
         <div className="flex-1 max-w-md mx-8">
           <input
             title="search"
             type="text"
-            value={b2cSearchValue ?? ''}
-            onChange={event => onB2CSearchChange?.(event.target.value)}
+            value={navigation.b2cSearchValue ?? ''}
+            onChange={event => navigation.onB2CSearchChange?.(event.target.value)}
             placeholder="Search our collection..."
             className="w-full bg-slate-100 border-none rounded-full px-6 py-2.5 focus:ring-2 focus:ring-indigo-500 text-sm"
           />
         </div>
         {showAuthenticatedAffordances && (
           <div className="flex gap-6 items-center">
-            {onNavigateOrders && <button onClick={onNavigateOrders} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}
-            {onNavigateDpp && <button onClick={onNavigateDpp} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">DPP Passport</button>}
-            {onNavigateEscrow && <button onClick={onNavigateEscrow} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escrow</button>}
-            {onNavigateEscalations && <button onClick={onNavigateEscalations} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escalations</button>}
-            {onNavigateSettlement && <button onClick={onNavigateSettlement} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Settlement</button>}
-            {onNavigateCertifications && <button onClick={onNavigateCertifications} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Certifications</button>}
-            {onNavigateTraceability && <button onClick={onNavigateTraceability} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
-            {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
-            {onNavigateTrades && <button onClick={onNavigateTrades} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Trades</button>}
-            <button onClick={onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
-            <button onClick={onNavigateCart} className="relative cursor-pointer" title="Shopping Cart">
+            {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Orders</button>}
+            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">DPP Passport</button>}
+            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escrow</button>}
+            {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Escalations</button>}
+            {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Settlement</button>}
+            {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Certifications</button>}
+            {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
+            {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
+            {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Trades</button>}
+            <button onClick={navigation.onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
+            <button onClick={() => navigation.onNavigateRoute('cart')} className="relative cursor-pointer" title="Shopping Cart">
               <span className="text-2xl">🛒</span>
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
@@ -149,26 +142,26 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTea
   );
 };
 
-export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavigateTeam, onNavigateHome, onNavigateOrders, onNavigateDpp, onNavigateEscrow, onNavigateEscalations, onNavigateSettlement, onNavigateCertifications, onNavigateTraceability, onNavigateAuditLogs, onNavigateTrades }) => (
+export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => (
   <div className="min-h-screen font-sans" style={{ backgroundColor: '#ffffff' }}>
      <header className="p-12 text-center" style={{ borderBottom: `1px solid #eee` }}>
-       <button type="button" className="text-5xl font-serif italic mb-2 cursor-pointer transition-opacity hover:opacity-80" style={{ color: tenant.theme.primaryColor }} onClick={onNavigateHome}>
+       <button type="button" className="text-5xl font-serif italic mb-2 cursor-pointer transition-opacity hover:opacity-80" style={{ color: tenant.theme.primaryColor }} onClick={() => navigation.onNavigateRoute('home')}>
          {tenant.name}
        </button>
        <div className="text-slate-400 text-[10px] font-bold tracking-[0.3em] uppercase">Maison de Commerce</div>
      </header>
      <nav className="flex justify-center gap-12 py-6 text-[10px] font-bold uppercase tracking-[0.2em] border-b border-slate-100 sticky top-0 bg-white/90 backdrop-blur-sm z-10">
-        <button onClick={onNavigateHome} className="hover:opacity-40 transition-opacity">Portfolio</button>
-        <button onClick={onNavigateTeam} className="hover:opacity-40 transition-opacity">Access Control</button>
-        {onNavigateOrders && <button onClick={onNavigateOrders} className="hover:opacity-40 transition-opacity">Orders</button>}
-        {onNavigateDpp && <button onClick={onNavigateDpp} className="hover:opacity-40 transition-opacity">DPP Snapshot</button>}
-        {onNavigateEscrow && <button onClick={onNavigateEscrow} className="hover:opacity-40 transition-opacity">Escrow</button>}
-        {onNavigateEscalations && <button onClick={onNavigateEscalations} className="hover:opacity-40 transition-opacity">Escalations</button>}
-        {onNavigateSettlement && <button onClick={onNavigateSettlement} className="hover:opacity-40 transition-opacity">Settlement</button>}
-        {onNavigateCertifications && <button onClick={onNavigateCertifications} className="hover:opacity-40 transition-opacity">Certifications</button>}
-        {onNavigateTraceability && <button onClick={onNavigateTraceability} className="hover:opacity-40 transition-opacity">Traceability</button>}
-        {onNavigateAuditLogs && <button onClick={onNavigateAuditLogs} className="hover:opacity-40 transition-opacity">Audit Log</button>}
-        {onNavigateTrades && <button onClick={onNavigateTrades} className="hover:opacity-40 transition-opacity">Trades</button>}
+        <button onClick={() => navigation.onNavigateRoute('home')} className="hover:opacity-40 transition-opacity">Portfolio</button>
+        <button onClick={navigation.onNavigateTeam} className="hover:opacity-40 transition-opacity">Access Control</button>
+        {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="hover:opacity-40 transition-opacity">Orders</button>}
+        {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="hover:opacity-40 transition-opacity">DPP Snapshot</button>}
+        {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="hover:opacity-40 transition-opacity">Escrow</button>}
+        {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="hover:opacity-40 transition-opacity">Escalations</button>}
+        {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="hover:opacity-40 transition-opacity">Settlement</button>}
+        {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="hover:opacity-40 transition-opacity">Certifications</button>}
+        {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="hover:opacity-40 transition-opacity">Traceability</button>}
+        {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="hover:opacity-40 transition-opacity">Audit Log</button>}
+        {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="hover:opacity-40 transition-opacity">Trades</button>}
      </nav>
      <main className="max-w-screen-xl mx-auto py-12 px-6 relative">
        {children}
@@ -184,25 +177,25 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, onNavi
 interface WLAdminShellProps {
   tenant: TenantConfig;
   children: React.ReactNode;
-  activeView: string;
-  onViewChange: (view: string) => void;
+  navigation: RuntimeShellNavigationSurface | null;
+  onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void;
   onNavigateStorefront?: () => void;
 }
 
 const WL_ADMIN_NAV = [
-  { key: 'BRANDING',    label: 'Store Profile',  icon: '🎨' },
-  { key: 'STAFF',       label: 'Staff',           icon: '👥' },
-  { key: 'PRODUCTS',    label: 'Products',        icon: '📦' },
-  { key: 'COLLECTIONS', label: 'Collections',     icon: '🗂️' },
-  { key: 'ORDERS',      label: 'Orders',          icon: '🛍️' },
-  { key: 'DOMAINS',     label: 'Domains',         icon: '🌐' },
+  { routeKey: 'branding',    label: 'Store Profile',  icon: '🎨' },
+  { routeKey: 'staff',       label: 'Staff',          icon: '👥' },
+  { routeKey: 'products',    label: 'Products',       icon: '📦' },
+  { routeKey: 'collections', label: 'Collections',    icon: '🗂️' },
+  { routeKey: 'orders',      label: 'Orders',         icon: '🛍️' },
+  { routeKey: 'domains',     label: 'Domains',        icon: '🌐' },
 ] as const;
 
 export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
   tenant,
   children,
-  activeView,
-  onViewChange,
+  navigation,
+  onNavigateRoute,
   onNavigateStorefront,
 }) => (
   <div className="min-h-screen flex bg-white font-sans">
@@ -217,12 +210,21 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
         </div>
       </div>
       <nav className="flex-1 space-y-1">
-        {WL_ADMIN_NAV.map(({ key, label, icon }) => (
+        {WL_ADMIN_NAV.map(({ routeKey, label, icon }) => {
+          const isVisible = hasShellRoute(navigation, routeKey);
+
+          if (!isVisible) {
+            return null;
+          }
+
+          const isActive = navigation?.items.some(item => item.routeKey === routeKey && item.active) ?? false;
+
+          return (
           <button
-            key={key}
-            onClick={() => onViewChange(key)}
+            key={routeKey}
+            onClick={() => onNavigateRoute(routeKey)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
-              activeView === key
+              isActive
                 ? 'bg-slate-900 text-white font-semibold'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
@@ -230,7 +232,8 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
             <span className="text-base leading-none">{icon}</span>
             <span>{label}</span>
           </button>
-        ))}
+          );
+        })}
       </nav>
       {onNavigateStorefront && (
         <button
@@ -247,7 +250,7 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
     <div className="flex-1 flex flex-col min-h-screen">
       <header className="h-14 border-b border-slate-100 flex items-center px-8 justify-between sticky top-0 bg-white z-10">
         <h2 className="font-semibold text-slate-700 text-sm">
-          {WL_ADMIN_NAV.find(n => n.key === activeView)?.label ?? 'Store Admin'}
+          {WL_ADMIN_NAV.find(item => navigation?.items.some(entry => entry.routeKey === item.routeKey && entry.active))?.label ?? 'Store Admin'}
         </h2>
         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-200 px-3 py-1 rounded-full">
           White Label
