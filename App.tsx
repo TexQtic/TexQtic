@@ -94,10 +94,12 @@ import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRea
 import {
   createControlPlaneSessionRuntimeDescriptor,
   createTenantSessionRuntimeDescriptor,
+  getRuntimeLocalRouteRegistration,
   resolveRuntimeAppStateFromDescriptor,
+  resolveRuntimeLocalRouteSelection,
   resolveRuntimeManifestEntryFromDescriptor,
-  resolveRuntimeRouteGroupSelection,
   type RouteManifestKey,
+  type RuntimeLocalRouteKey,
 } from './runtime/sessionRuntimeDescriptor';
 
 const CONTROL_PLANE_IDENTITY_KEY = 'texqtic_control_plane_identity';
@@ -134,12 +136,36 @@ function buildTradeReferenceFromRfq(rfqId: string): string {
 const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
 type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
 
+const EXPERIENCE_VIEWS = [
+  'HOME',
+  'ORDERS',
+  'DPP',
+  'ESCROW',
+  'ESCALATIONS',
+  'SETTLEMENT',
+  'CERTIFICATIONS',
+  'TRACEABILITY',
+  'AUDIT_LOGS',
+  'TRADES',
+  'RFQS',
+  'SUPPLIER_RFQ_INBOX',
+] as const;
+type ExperienceView = (typeof EXPERIENCE_VIEWS)[number];
+
 const normalizeWlAdminView = (view: string): WLAdminView => {
   if ((WL_ADMIN_VIEWS as readonly string[]).includes(view)) {
     return view as WLAdminView;
   }
 
   return 'BRANDING';
+};
+
+const normalizeExperienceView = (view: string): ExperienceView => {
+  if ((EXPERIENCE_VIEWS as readonly string[]).includes(view)) {
+    return view as ExperienceView;
+  }
+
+  return 'HOME';
 };
 
 const ONBOARDING_STATUS_CONTINUITY = {
@@ -755,7 +781,7 @@ const App: React.FC = () => {
   // TECS-FBW-015: 'TRACEABILITY' added for G-016 traceability CRUD panel
   // TECS-FBW-016: 'AUDIT_LOGS' added for tenant audit log read-only panel
   // TECS-FBW-002-B: 'TRADES' added for G-017 tenant trade read-only panel
-  const [expView, setExpView] = useState<'HOME' | 'ORDERS' | 'DPP' | 'ESCROW' | 'ESCALATIONS' | 'SETTLEMENT' | 'CERTIFICATIONS' | 'TRACEABILITY' | 'AUDIT_LOGS' | 'TRADES' | 'RFQS' | 'SUPPLIER_RFQ_INBOX'>('HOME');
+  const [expView, setExpView] = useState<ExperienceView>('HOME');
 
   // Tenant management state
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -804,9 +830,16 @@ const App: React.FC = () => {
   });
 
   const enterWlAdmin = (view: WLAdminView = 'BRANDING') => {
-    setWlAdminView(normalizeWlAdminView(view));
-    setWlAdminInviting(false);
-    setAppState('WL_ADMIN');
+    const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminManifestEntry, {
+      wlAdminView: normalizeWlAdminView(view),
+      wlAdminInviting: false,
+    });
+
+    if (!nextSelection) {
+      return;
+    }
+
+    navigateWlAdminManifestRoute(nextSelection.routeKey);
   };
   const [rfqDetailView, setRfqDetailView] = useState<{
     open: boolean;
@@ -1172,59 +1205,155 @@ const App: React.FC = () => {
     });
   }, [controlPlaneIdentity]);
   const tenantHasWlAdminOverlay = tenantRuntimeDescriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false;
+  const tenantWorkspaceManifestEntry = useMemo(() => {
+    return resolveRuntimeManifestEntryFromDescriptor(tenantRuntimeDescriptor, 'EXPERIENCE');
+  }, [tenantRuntimeDescriptor]);
+  const tenantWlAdminManifestEntry = useMemo(() => {
+    return resolveRuntimeManifestEntryFromDescriptor(tenantRuntimeDescriptor, 'WL_ADMIN');
+  }, [tenantRuntimeDescriptor]);
+  const controlPlaneManifestEntry = useMemo(() => {
+    return resolveRuntimeManifestEntryFromDescriptor(controlPlaneRuntimeDescriptor, 'CONTROL_PLANE');
+  }, [controlPlaneRuntimeDescriptor]);
   const tenantRuntimeManifestEntry = useMemo(() => {
     switch (appState) {
       case 'EXPERIENCE':
-      case 'WL_ADMIN':
       case 'TEAM_MGMT':
       case 'INVITE_MEMBER':
       case 'SETTINGS':
-        return resolveRuntimeManifestEntryFromDescriptor(tenantRuntimeDescriptor, appState);
+        return tenantWorkspaceManifestEntry;
+      case 'WL_ADMIN':
+        return tenantWlAdminManifestEntry;
       default:
         return null;
     }
-  }, [tenantRuntimeDescriptor, appState]);
+  }, [tenantWorkspaceManifestEntry, tenantWlAdminManifestEntry, appState]);
   const controlPlaneRuntimeManifestEntry = useMemo(() => {
     return appState === 'CONTROL_PLANE'
-      ? resolveRuntimeManifestEntryFromDescriptor(controlPlaneRuntimeDescriptor, appState)
+      ? controlPlaneManifestEntry
       : null;
-  }, [controlPlaneRuntimeDescriptor, appState]);
+  }, [controlPlaneManifestEntry, appState]);
   const tenantContentFamily = tenantRuntimeManifestEntry?.key ?? null;
   const controlPlaneContentFamily = controlPlaneRuntimeManifestEntry?.key ?? null;
-  const tenantRouteGroupSelection = useMemo(() => {
-    return resolveRuntimeRouteGroupSelection(tenantRuntimeManifestEntry, {
+  const tenantLocalRouteSelection = useMemo(() => {
+    return resolveRuntimeLocalRouteSelection(tenantWorkspaceManifestEntry, {
       expView,
       showCart,
     });
-  }, [tenantRuntimeManifestEntry, expView, showCart]);
-  const wlAdminRouteGroupSelection = useMemo(() => {
+  }, [tenantWorkspaceManifestEntry, expView, showCart]);
+  const wlAdminLocalRouteSelection = useMemo(() => {
     return appState === 'WL_ADMIN'
-      ? resolveRuntimeRouteGroupSelection(tenantRuntimeManifestEntry, {
+      ? resolveRuntimeLocalRouteSelection(tenantWlAdminManifestEntry, {
           wlAdminView,
           wlAdminInviting,
         })
       : null;
-  }, [tenantRuntimeManifestEntry, appState, wlAdminView, wlAdminInviting]);
-  const controlPlaneRouteGroupSelection = useMemo(() => {
-    return resolveRuntimeRouteGroupSelection(controlPlaneRuntimeManifestEntry, {
+  }, [tenantWlAdminManifestEntry, appState, wlAdminView, wlAdminInviting]);
+  const controlPlaneLocalRouteSelection = useMemo(() => {
+    return appState === 'CONTROL_PLANE'
+      ? resolveRuntimeLocalRouteSelection(controlPlaneManifestEntry, {
       adminView,
       selectedTenantId: selectedTenant?.id ?? null,
+        })
+      : null;
+  }, [controlPlaneManifestEntry, appState, adminView, selectedTenant]);
+  const tenantDefaultLocalRouteKey = tenantWorkspaceManifestEntry?.defaultLocalRouteKey ?? null;
+  const activeControlPlaneShellView = (controlPlaneLocalRouteSelection?.route.stateBinding.adminView as AdminView | undefined) ?? adminView;
+  const activeWlAdminShellView = normalizeWlAdminView(
+    wlAdminLocalRouteSelection?.route.stateBinding.wlAdminView ?? wlAdminView,
+  );
+  const navigateTenantManifestRoute = (
+    routeKey: RuntimeLocalRouteKey,
+    options: { resetTradeBridge?: boolean } = {},
+  ) => {
+    const registration = getRuntimeLocalRouteRegistration(tenantWorkspaceManifestEntry, routeKey);
+
+    if (!registration) {
+      return;
+    }
+
+    if (options.resetTradeBridge) {
+      setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+    }
+
+    setAppState('EXPERIENCE');
+    setShowCart(registration.route.stateBinding.showCart === true);
+
+    if (registration.route.stateBinding.expView) {
+      setExpView(normalizeExperienceView(registration.route.stateBinding.expView));
+    }
+  };
+  const navigateTenantDefaultManifestRoute = (options: { resetTradeBridge?: boolean } = {}) => {
+    if (!tenantDefaultLocalRouteKey) {
+      return;
+    }
+
+    navigateTenantManifestRoute(tenantDefaultLocalRouteKey, options);
+  };
+  const navigateWlAdminManifestRoute = (routeKey: RuntimeLocalRouteKey) => {
+    const registration = getRuntimeLocalRouteRegistration(tenantWlAdminManifestEntry, routeKey);
+
+    if (!registration) {
+      return;
+    }
+
+    setWlAdminView(normalizeWlAdminView(registration.route.stateBinding.wlAdminView ?? 'BRANDING'));
+    setWlAdminInviting(registration.route.stateBinding.wlAdminInviting === true);
+    setAppState('WL_ADMIN');
+  };
+  const navigateControlPlaneManifestRoute = (routeKey: RuntimeLocalRouteKey) => {
+    const registration = getRuntimeLocalRouteRegistration(controlPlaneManifestEntry, routeKey);
+
+    if (!registration) {
+      return;
+    }
+
+    setSelectedTenant(null);
+
+    if (registration.route.stateBinding.adminView) {
+      setAdminView(registration.route.stateBinding.adminView as AdminView);
+    }
+
+    setAppState('CONTROL_PLANE');
+  };
+  const handleControlPlaneShellViewChange = (nextView: AdminView) => {
+    const nextSelection = resolveRuntimeLocalRouteSelection(controlPlaneManifestEntry, {
+      adminView: nextView,
+      selectedTenantId: null,
     });
-  }, [controlPlaneRuntimeManifestEntry, adminView, selectedTenant]);
+
+    if (!nextSelection) {
+      return;
+    }
+
+    navigateControlPlaneManifestRoute(nextSelection.routeKey);
+  };
+  const handleWlAdminShellViewChange = (nextView: string) => {
+    const normalizedView = normalizeWlAdminView(nextView);
+    const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminManifestEntry, {
+      wlAdminView: normalizedView,
+      wlAdminInviting: false,
+    });
+
+    if (!nextSelection) {
+      return;
+    }
+
+    navigateWlAdminManifestRoute(nextSelection.routeKey);
+  };
   const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
-  const isNonWhiteLabelB2CTenant = tenantContentFamily === 'b2c_storefront';
+  const isNonWhiteLabelB2CTenant = tenantWorkspaceManifestEntry?.key === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
-    && tenantRouteGroupSelection?.routeGroupKey === 'home_landing'
+    && tenantLocalRouteSelection?.routeKey === 'home'
     && isNonWhiteLabelB2CTenant;
   const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
-    && tenantRouteGroupSelection?.routeGroupKey === 'home_landing'
-    && tenantContentFamily === 'aggregator_workspace';
+    && tenantLocalRouteSelection?.routeKey === 'home'
+    && tenantWorkspaceManifestEntry?.key === 'aggregator_workspace';
   const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
-    && tenantRouteGroupSelection?.routeGroupKey === 'catalog_browse'
-    && tenantContentFamily === 'b2b_workspace';
+    && tenantLocalRouteSelection?.routeKey === 'catalog'
+    && tenantWorkspaceManifestEntry?.key === 'b2b_workspace';
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
-    && wlAdminRouteGroupSelection?.routeGroupKey === 'catalog_browse'
+    && wlAdminLocalRouteSelection?.routeKey === 'products'
     && tenantContentFamily === 'wl_admin';
   const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
     || isB2CBrowseEntrySurface
@@ -2203,7 +2332,7 @@ const App: React.FC = () => {
   };
 
   const handleOpenBuyerRfqs = async () => {
-    setExpView('RFQS');
+    navigateTenantManifestRoute('buyer_rfqs');
     setBuyerRfqTradeBridge(view => ({ ...view, error: null, initialTradeId: null }));
     setRfqDetailView(view =>
       view.source === 'list'
@@ -2246,7 +2375,7 @@ const App: React.FC = () => {
     setBuyerRfqTradeBridge(view => ({ ...view, error: null }));
 
     if (source === 'list') {
-      setExpView('RFQS');
+      navigateTenantManifestRoute('buyer_rfqs');
     }
 
     if (rfqDetailView.rfqId === nextRfqId && rfqDetailView.data && rfqDetailView.source === source) {
@@ -2299,7 +2428,7 @@ const App: React.FC = () => {
 
   const handleCloseBuyerRfqs = () => {
     handleReturnToBuyerRfqList();
-    setExpView('HOME');
+    navigateTenantDefaultManifestRoute();
   };
 
   const handleCloseRfqDetail = () => {
@@ -2321,7 +2450,7 @@ const App: React.FC = () => {
         initialTradeId: rfq.trade_continuity.trade_id,
       });
       setRfqDetailView(view => ({ ...view, open: false }));
-      setExpView('TRADES');
+      navigateTenantManifestRoute('trades');
       return;
     }
 
@@ -2368,7 +2497,7 @@ const App: React.FC = () => {
         error: null,
         initialTradeId: result.tradeId,
       });
-      setExpView('TRADES');
+      navigateTenantManifestRoute('trades');
     } catch (error) {
       if (error instanceof APIError && error.code === 'RFQ_ALREADY_CONVERTED') {
         try {
@@ -2386,7 +2515,7 @@ const App: React.FC = () => {
               error: null,
               initialTradeId: refreshed.rfq.trade_continuity.trade_id,
             });
-            setExpView('TRADES');
+            navigateTenantManifestRoute('trades');
             return;
           }
         } catch {
@@ -2403,7 +2532,7 @@ const App: React.FC = () => {
   };
 
   const handleOpenSupplierRfqInbox = async () => {
-    setExpView('SUPPLIER_RFQ_INBOX');
+    navigateTenantManifestRoute('supplier_rfq_inbox');
     setSupplierRfqDetailView({
       open: false,
       rfqId: null,
@@ -2501,7 +2630,7 @@ const App: React.FC = () => {
 
   const handleCloseSupplierRfqInbox = () => {
     handleReturnToSupplierRfqList();
-    setExpView('HOME');
+    navigateTenantDefaultManifestRoute();
   };
 
   const handleSubmitSupplierRfqResponse = async (message: string) => {
@@ -2564,28 +2693,25 @@ const App: React.FC = () => {
 
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
   const renderWLAdminContent = () => {
-    if (!currentTenant || !wlAdminRouteGroupSelection) return null;
+    if (!currentTenant || !wlAdminLocalRouteSelection) return null;
 
-    switch (wlAdminRouteGroupSelection.routeGroupKey) {
-      case 'admin_branding_domains':
-        if (wlAdminInviting) {
-          return <InviteMemberForm onBack={() => setWlAdminInviting(false)} />;
-        }
-
-        switch (wlAdminRouteGroupSelection.viewKey) {
-          case 'STAFF':
-            return <TeamManagement onInvite={() => setWlAdminInviting(true)} />;
-          case 'DOMAINS':
-            return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
-          case 'BRANDING':
-          default:
-            return <WhiteLabelSettings tenant={currentTenant} onNavigateDomains={() => setWlAdminView('DOMAINS')} />;
-        }
-      case 'catalog_browse':
-        if (wlAdminRouteGroupSelection.viewKey === 'COLLECTIONS') {
-          return <WLCollectionsPanel />;
-        }
-
+    switch (wlAdminLocalRouteSelection.routeKey) {
+      case 'staff_invite':
+        return <InviteMemberForm onBack={() => navigateWlAdminManifestRoute('staff')} />;
+      case 'staff':
+        return <TeamManagement onInvite={() => navigateWlAdminManifestRoute('staff_invite')} />;
+      case 'domains':
+        return <WLDomainsPanel tenantSlug={currentTenant.slug} />;
+      case 'branding':
+        return (
+          <WhiteLabelSettings
+            tenant={currentTenant}
+            onNavigateDomains={() => navigateWlAdminManifestRoute('domains')}
+          />
+        );
+      case 'collections':
+        return <WLCollectionsPanel />;
+      case 'products':
         return (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
@@ -2696,7 +2822,7 @@ const App: React.FC = () => {
             )}
           </div>
         );
-      case 'orders_operations':
+      case 'orders':
         return <WLOrdersPanel />;
       default:
         return null;
@@ -3055,119 +3181,107 @@ const App: React.FC = () => {
         />
       );
     }
-    switch (tenantRouteGroupSelection?.routeGroupKey) {
-      case 'orders_operations':
-        return <EXPOrdersPanel onBack={() => setExpView('HOME')} />;
-      case 'rfq_sourcing':
-        if (expView === 'RFQS') {
-          if (rfqDetailView.open && rfqDetailView.source === 'list') {
-            return (
-              <BuyerRfqDetailSurface
-                rfq={rfqDetailView.data}
-                loading={rfqDetailView.loading}
-                error={rfqDetailView.error}
-                onBack={handleReturnToBuyerRfqList}
-                onClose={handleCloseBuyerRfqs}
-                onOpenTradeContinuity={() => {
-                  void handleOpenTradeContinuityFromRfq();
-                }}
-                tradeContinuityLoading={buyerRfqTradeBridge.loading}
-                tradeContinuityError={buyerRfqTradeBridge.error}
-              />
-            );
-          }
-
+    switch (tenantLocalRouteSelection?.routeKey) {
+      case 'orders':
+        return <EXPOrdersPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'buyer_rfqs':
+        if (rfqDetailView.open && rfqDetailView.source === 'list') {
           return (
-            <BuyerRfqListSurface
-              rfqs={buyerRfqListView.rfqs}
-              loading={buyerRfqListView.loading}
-              error={buyerRfqListView.error}
-              onViewDetail={rfqId => {
-                void handleOpenRfqDetail(rfqId, 'list');
+            <BuyerRfqDetailSurface
+              rfq={rfqDetailView.data}
+              loading={rfqDetailView.loading}
+              error={rfqDetailView.error}
+              onBack={handleReturnToBuyerRfqList}
+              onClose={handleCloseBuyerRfqs}
+              onOpenTradeContinuity={() => {
+                void handleOpenTradeContinuityFromRfq();
               }}
-              onBack={handleCloseBuyerRfqs}
+              tradeContinuityLoading={buyerRfqTradeBridge.loading}
+              tradeContinuityError={buyerRfqTradeBridge.error}
             />
           );
         }
 
-        if (expView === 'SUPPLIER_RFQ_INBOX') {
-          if (supplierRfqDetailView.open) {
-            return (
-              <SupplierRfqDetailSurface
-                rfq={supplierRfqDetailView.data}
-                response={supplierRfqDetailView.response}
-                loading={supplierRfqDetailView.loading}
-                error={supplierRfqDetailView.error}
-                submitLoading={supplierRfqDetailView.submitLoading}
-                submitError={supplierRfqDetailView.submitError}
-                onBack={handleReturnToSupplierRfqList}
-                onClose={handleCloseSupplierRfqInbox}
-                onSubmitResponse={message => {
-                  void handleSubmitSupplierRfqResponse(message);
-                }}
-              />
-            );
-          }
-
+        return (
+          <BuyerRfqListSurface
+            rfqs={buyerRfqListView.rfqs}
+            loading={buyerRfqListView.loading}
+            error={buyerRfqListView.error}
+            onViewDetail={rfqId => {
+              void handleOpenRfqDetail(rfqId, 'list');
+            }}
+            onBack={handleCloseBuyerRfqs}
+          />
+        );
+      case 'supplier_rfq_inbox':
+        if (supplierRfqDetailView.open) {
           return (
-            <SupplierRfqInboxSurface
-              rfqs={supplierRfqListView.rfqs}
-              loading={supplierRfqListView.loading}
-              error={supplierRfqListView.error}
-              onViewDetail={rfqId => {
-                void handleOpenSupplierRfqDetail(rfqId);
+            <SupplierRfqDetailSurface
+              rfq={supplierRfqDetailView.data}
+              response={supplierRfqDetailView.response}
+              loading={supplierRfqDetailView.loading}
+              error={supplierRfqDetailView.error}
+              submitLoading={supplierRfqDetailView.submitLoading}
+              submitError={supplierRfqDetailView.submitError}
+              onBack={handleReturnToSupplierRfqList}
+              onClose={handleCloseSupplierRfqInbox}
+              onSubmitResponse={message => {
+                void handleSubmitSupplierRfqResponse(message);
               }}
-              onBack={handleCloseSupplierRfqInbox}
             />
           );
         }
 
-        return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
-      case 'operational_workspace':
-        switch (expView) {
-          case 'DPP':
-            return (
-              <DPPPassport
-                onBack={() => setExpView('HOME')}
-                title={currentTenant?.is_white_label ? 'DPP Snapshot' : undefined}
-                subtitle={
-                  currentTenant?.is_white_label
-                    ? 'Read-only supply chain snapshot by traceability node ID.'
-                    : undefined
-                }
-              />
-            );
-          case 'ESCROW':
-            return <EscrowPanel onBack={() => setExpView('HOME')} />;
-          case 'ESCALATIONS':
-            return <EscalationsPanel onBack={() => setExpView('HOME')} />;
-          case 'SETTLEMENT':
-            return <SettlementPreview onBack={() => setExpView('HOME')} />;
-          case 'CERTIFICATIONS':
-            return <CertificationsPanel onBack={() => setExpView('HOME')} />;
-          case 'TRACEABILITY':
-            return <TraceabilityPanel onBack={() => setExpView('HOME')} />;
-          case 'AUDIT_LOGS':
-            return <TenantAuditLogs onBack={() => setExpView('HOME')} />;
-          case 'TRADES':
-            return (
-              <TradesPanel
-                onBack={() => {
-                  setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
-                  setExpView('HOME');
-                }}
-                initialTradeId={buyerRfqTradeBridge.initialTradeId}
-                onInitialTradeHandled={() => {
-                  setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
-                }}
-              />
-            );
-          default:
-            return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
-        }
-      case 'catalog_browse':
-      case 'home_landing':
-      case 'cart_commerce':
+        return (
+          <SupplierRfqInboxSurface
+            rfqs={supplierRfqListView.rfqs}
+            loading={supplierRfqListView.loading}
+            error={supplierRfqListView.error}
+            onViewDetail={rfqId => {
+              void handleOpenSupplierRfqDetail(rfqId);
+            }}
+            onBack={handleCloseSupplierRfqInbox}
+          />
+        );
+      case 'dpp':
+        return (
+          <DPPPassport
+            onBack={() => navigateTenantDefaultManifestRoute()}
+            title={currentTenant?.is_white_label ? 'DPP Snapshot' : undefined}
+            subtitle={
+              currentTenant?.is_white_label
+                ? 'Read-only supply chain snapshot by traceability node ID.'
+                : undefined
+            }
+          />
+        );
+      case 'escrow':
+        return <EscrowPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'escalations':
+        return <EscalationsPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'settlement':
+        return <SettlementPreview onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'certifications':
+        return <CertificationsPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'traceability':
+        return <TraceabilityPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'audit_logs':
+        return <TenantAuditLogs onBack={() => navigateTenantDefaultManifestRoute()} />;
+      case 'trades':
+        return (
+          <TradesPanel
+            onBack={() => {
+              navigateTenantDefaultManifestRoute({ resetTradeBridge: true });
+            }}
+            initialTradeId={buyerRfqTradeBridge.initialTradeId}
+            onInitialTradeHandled={() => {
+              setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
+            }}
+          />
+        );
+      case 'catalog':
+      case 'home':
+      case 'cart':
         return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
       default:
         return (
@@ -3185,57 +3299,59 @@ const App: React.FC = () => {
   };
 
   const renderAdminView = () => {
-    if (controlPlaneRouteGroupSelection?.routeGroupKey !== 'control_plane_operations') {
+    if (!controlPlaneLocalRouteSelection) {
       return null;
     }
 
-    if (selectedTenant) {
-      return (
-        <TenantDetails
-          tenant={selectedTenant}
-          onBack={() => setSelectedTenant(null)}
-          onImpersonate={handleImpersonate}
-        />
-      );
-    }
+    switch (controlPlaneLocalRouteSelection.routeKey) {
+      case 'tenant_detail':
+        if (!selectedTenant) {
+          return null;
+        }
 
-    switch (adminView) {
-      case 'TENANTS':
+        return (
+          <TenantDetails
+            tenant={selectedTenant}
+            onBack={() => navigateControlPlaneManifestRoute('tenant_registry')}
+            onImpersonate={handleImpersonate}
+          />
+        );
+      case 'tenant_registry':
         return (
           <TenantRegistry onSelectTenant={setSelectedTenant} onImpersonate={handleImpersonate} />
         );
-      case 'LOGS':
+      case 'logs':
         return <AuditLogs />;
-      case 'FINANCE':
+      case 'finance':
         return (
           <FinanceOps
             onOpenEscrowScope={scope => {
               setFinanceEscrowBridge(scope);
-              setAdminView('ESCROW_ADMIN');
+              navigateControlPlaneManifestRoute('escrow_admin');
             }}
           />
         );
-      case 'AI':
+      case 'ai':
         return <AiGovernance />;
-      case 'HEALTH':
+      case 'health':
         return <SystemHealth />;
-      case 'FLAGS':
+      case 'flags':
         return <FeatureFlags />;
-      case 'COMPLIANCE':
+      case 'compliance':
         return <ComplianceQueue />;
-      case 'CASES':
+      case 'cases':
         return (
           <DisputeCases
             onOpenEscalationScope={(scope: DisputeEscalationBridgeTarget) => {
               setDisputeEscalationBridge(scope);
-              setAdminView('ESCALATIONS');
+              navigateControlPlaneManifestRoute('escalations');
             }}
           />
         );
-      case 'TRADES':
+      case 'trades':
         return <TradeOversight />;
       // TECS-FBW-006-A: G-022 control-plane escalation oversight (read-only; orgId-gated)
-      case 'ESCALATIONS':
+      case 'escalations':
         return (
           <EscalationOversight
             initialScope={disputeEscalationBridge}
@@ -3243,16 +3359,16 @@ const App: React.FC = () => {
           />
         );
       // TECS-FBW-005: G-019 cross-tenant certification read surface (D-022-C: read-only)
-      case 'CERTIFICATIONS':
+      case 'certifications':
         return <CertificationsAdmin />;
       // TECS-FBW-015: G-016 cross-tenant traceability inspection (Phase A: read-only)
-      case 'TRACEABILITY':
+      case 'traceability':
         return <TraceabilityAdmin />;
       // TECS-FBW-007: marketplace_cart_summaries projection admin panel (read-only)
-      case 'CART_SUMMARIES':
+      case 'cart_summaries':
         return <CartSummariesPanel />;
       // PW5-W2: G-018 cross-tenant escrow admin read panel (D-020-B: no balance)
-      case 'ESCROW_ADMIN':
+      case 'escrow_admin':
         return (
           <EscrowAdminPanel
             initialScope={financeEscrowBridge}
@@ -3260,14 +3376,14 @@ const App: React.FC = () => {
           />
         );
       // PW5-W3-FE: Settlement admin read panel (backend route: 14aea49)
-      case 'SETTLEMENT_ADMIN':
+      case 'settlement_admin':
         return <SettlementAdminPanel />;
       // PW5-W4: G-021 maker-checker approval queue console (read-only)
-      case 'MAKER_CHECKER':
+      case 'maker_checker':
         return <MakerCheckerConsole />;
-      case 'RBAC':
+      case 'rbac':
         return <AdminRBAC />;
-      case 'EVENTS':
+      case 'events':
         return <EventStream />;
       default:
         return null;
@@ -3521,8 +3637,8 @@ const App: React.FC = () => {
           <ControlPlaneShell
             authRealm="CONTROL_PLANE"
             actorIdentity={controlPlaneIdentity}
-            activeView={adminView}
-            onViewChange={setAdminView}
+            activeView={activeControlPlaneShellView}
+            onViewChange={handleControlPlaneShellViewChange}
           >
             {renderAdminView()}
           </ControlPlaneShell>
@@ -3573,8 +3689,8 @@ const App: React.FC = () => {
             )}
             <WlAdminShell
               tenant={currentTenant}
-              activeView={normalizeWlAdminView(wlAdminView)}
-              onViewChange={(v) => { setWlAdminView(normalizeWlAdminView(v)); setWlAdminInviting(false); }}
+              activeView={activeWlAdminShellView}
+              onViewChange={handleWlAdminShellViewChange}
               onNavigateStorefront={() => setAppState('EXPERIENCE')}
             >
               {renderWLAdminContent()}
@@ -3626,27 +3742,24 @@ const App: React.FC = () => {
 
             setAppState('TEAM_MGMT');
           },
-          onNavigateHome: () => { setAppState('EXPERIENCE'); setExpView('HOME'); },
-          onNavigateOrders: () => { setAppState('EXPERIENCE'); setExpView('ORDERS'); },
-          onNavigateDpp: () => { setAppState('EXPERIENCE'); setExpView('DPP'); },
-          onNavigateEscrow: () => setExpView('ESCROW'),
+          onNavigateHome: () => navigateTenantDefaultManifestRoute(),
+          onNavigateOrders: () => navigateTenantManifestRoute('orders'),
+          onNavigateDpp: () => navigateTenantManifestRoute('dpp'),
+          onNavigateEscrow: () => navigateTenantManifestRoute('escrow'),
           // TECS-FBW-006-A: G-022 tenant escalation read panel (read-only)
-          onNavigateEscalations: () => setExpView('ESCALATIONS'),
+          onNavigateEscalations: () => navigateTenantManifestRoute('escalations'),
           // TECS-FBW-004: G-019 tenant settlement panel navigation
-          onNavigateSettlement: () => setExpView('SETTLEMENT'),
+          onNavigateSettlement: () => navigateTenantManifestRoute('settlement'),
           // TECS-FBW-005: G-019 tenant certification lifecycle panel navigation
-          onNavigateCertifications: () => setExpView('CERTIFICATIONS'),
+          onNavigateCertifications: () => navigateTenantManifestRoute('certifications'),
           // TECS-FBW-015: G-016 traceability CRUD panel navigation
-          onNavigateTraceability: () => setExpView('TRACEABILITY'),
+          onNavigateTraceability: () => navigateTenantManifestRoute('traceability'),
           // TECS-FBW-016: tenant audit log read-only panel navigation
-          onNavigateAuditLogs: () => setExpView('AUDIT_LOGS'),
+          onNavigateAuditLogs: () => navigateTenantManifestRoute('audit_logs'),
           // TECS-FBW-002-B: G-017 tenant trade read-only panel navigation
-          onNavigateTrades: () => {
-            setBuyerRfqTradeBridge(view => ({ ...view, initialTradeId: null }));
-            setExpView('TRADES');
-          },
+          onNavigateTrades: () => navigateTenantManifestRoute('trades', { resetTradeBridge: true }),
           // B3-REM-1: wire B2CShell header cart icon to same cart-open action as CartToggleButton
-          onNavigateCart: () => setShowCart(true),
+          onNavigateCart: () => navigateTenantManifestRoute('cart'),
           b2cSearchValue: isB2CBrowseEntrySurface ? b2cSearchQuery : '',
           onB2CSearchChange: isB2CBrowseEntrySurface ? setB2cSearchQuery : undefined,
           showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
@@ -3773,9 +3886,8 @@ const App: React.FC = () => {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => {
-                    setExpView('ORDERS');
                     setConfirmedOrderId(null);
-                    setAppState('EXPERIENCE');
+                    navigateTenantManifestRoute('orders');
                   }}
                   className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition"
                 >
@@ -3783,9 +3895,8 @@ const App: React.FC = () => {
                 </button>
                 <button
                   onClick={() => {
-                    setExpView('HOME');
                     setConfirmedOrderId(null);
-                    setAppState('EXPERIENCE');
+                    navigateTenantDefaultManifestRoute();
                   }}
                   className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition"
                 >

@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import {
   createControlPlaneSessionRuntimeDescriptor,
   createTenantSessionRuntimeDescriptor,
+  getRuntimeLocalRouteRegistration,
   resolveRuntimeAppStateFromDescriptor,
   resolveRuntimeContentFamilyFromDescriptor,
+  resolveRuntimeLocalRouteSelection,
   resolveRuntimeManifestEntryFromDescriptor,
   resolveRuntimeManifestKeyFromDescriptor,
   resolveRuntimeRouteGroupSelection,
@@ -41,6 +43,8 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeContentFamilyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestKeyFromDescriptor(null, 'EXPERIENCE')).toBeNull();
     expect(resolveRuntimeManifestEntryFromDescriptor(null, 'EXPERIENCE')).toBeNull();
+    expect(resolveRuntimeLocalRouteSelection(null, { expView: 'HOME' })).toBeNull();
+    expect(getRuntimeLocalRouteRegistration(null, 'home')).toBeNull();
     expect(resolveRuntimeRouteGroupSelection(null, { expView: 'HOME' })).toBeNull();
   });
 
@@ -51,26 +55,45 @@ describe('session runtime descriptor', () => {
     const internalDescriptor = createTenantSessionRuntimeDescriptor(
       makeTenantInput({ tenantCategory: 'INTERNAL' }),
     );
+    const aggregatorEntry = resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE');
 
     expect(aggregatorDescriptor?.operatingMode).toBe('AGGREGATOR_WORKSPACE');
     expect(aggregatorDescriptor?.routeManifestKey).toBe('aggregator_workspace');
     expect(aggregatorDescriptor?.capabilities.platform.discovery).toBe(true);
     expect(resolveRuntimeManifestKeyFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE')).toBe('aggregator_workspace');
-    expect(resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE')).toEqual(
+    expect(aggregatorEntry).toEqual(
       expect.objectContaining({
         key: 'aggregator_workspace',
         shellFamily: 'AggregatorShell',
+        defaultLocalRouteKey: 'home',
+        allowedRouteGroups: ['home_landing', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+      }),
+    );
+    expect(getRuntimeLocalRouteRegistration(aggregatorEntry ?? null, 'home')).toEqual(
+      expect.objectContaining({
+        routeGroupKey: 'home_landing',
+        route: expect.objectContaining({
+          selectionKey: 'HOME',
+          stateBinding: expect.objectContaining({ expView: 'HOME' }),
+        }),
+      }),
+    );
+    expect(resolveRuntimeLocalRouteSelection(aggregatorEntry ?? null, { expView: 'DPP' })).toEqual(
+      expect.objectContaining({
+        routeKey: 'dpp',
+        routeGroupKey: 'operational_workspace',
+        viewKey: 'DPP',
       }),
     );
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE'),
+        aggregatorEntry,
         { expView: 'HOME' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'home_landing', viewKey: 'HOME' }));
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(aggregatorDescriptor ?? null, 'EXPERIENCE'),
+        aggregatorEntry,
         { expView: 'DPP' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'operational_workspace', viewKey: 'DPP' }));
@@ -83,6 +106,7 @@ describe('session runtime descriptor', () => {
     const descriptor = createTenantSessionRuntimeDescriptor(
       makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: false }),
     );
+    const entry = resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE');
 
     expect(descriptor?.operatingMode).toBe('B2B_WORKSPACE');
     expect(descriptor?.routeManifestKey).toBe('b2b_workspace');
@@ -92,21 +116,39 @@ describe('session runtime descriptor', () => {
     expect(descriptor?.capabilities.feature.sellerCatalog).toBe(true);
     expect(resolveRuntimeAppStateFromDescriptor(descriptor ?? null)).toBe('EXPERIENCE');
     expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2b_workspace');
-    expect(resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toEqual(
+    expect(entry).toEqual(
       expect.objectContaining({
         key: 'b2b_workspace',
         shellFamily: 'B2BShell',
+        defaultLocalRouteKey: 'catalog',
+        allowedRouteGroups: ['catalog_browse', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+      }),
+    );
+    expect(getRuntimeLocalRouteRegistration(entry ?? null, 'catalog')).toEqual(
+      expect.objectContaining({
+        routeGroupKey: 'catalog_browse',
+        route: expect.objectContaining({
+          selectionKey: 'HOME',
+          stateBinding: expect.objectContaining({ expView: 'HOME' }),
+        }),
+      }),
+    );
+    expect(resolveRuntimeLocalRouteSelection(entry ?? null, { expView: 'RFQS' })).toEqual(
+      expect.objectContaining({
+        routeKey: 'buyer_rfqs',
+        routeGroupKey: 'rfq_sourcing',
+        viewKey: 'RFQS',
       }),
     );
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        entry,
         { expView: 'HOME' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'catalog_browse', viewKey: 'HOME' }));
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        entry,
         { expView: 'RFQS' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'rfq_sourcing', viewKey: 'RFQS' }));
@@ -118,6 +160,7 @@ describe('session runtime descriptor', () => {
     const descriptor = createTenantSessionRuntimeDescriptor(
       makeTenantInput({ tenantCategory: 'B2C', whiteLabelCapability: false }),
     );
+    const entry = resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE');
 
     expect(descriptor?.operatingMode).toBe('B2C_STOREFRONT');
     expect(descriptor?.routeManifestKey).toBe('b2c_storefront');
@@ -125,21 +168,39 @@ describe('session runtime descriptor', () => {
     expect(descriptor?.capabilities.feature.cart).toBe(true);
     expect(descriptor?.capabilities.feature.buyerCatalog).toBe(true);
     expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('b2c_storefront');
-    expect(resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toEqual(
+    expect(entry).toEqual(
       expect.objectContaining({
         key: 'b2c_storefront',
         shellFamily: 'B2CShell',
+        defaultLocalRouteKey: 'home',
+        allowedRouteGroups: ['home_landing', 'cart_commerce', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+      }),
+    );
+    expect(getRuntimeLocalRouteRegistration(entry ?? null, 'cart')).toEqual(
+      expect.objectContaining({
+        routeGroupKey: 'cart_commerce',
+        route: expect.objectContaining({
+          selectionKey: 'CART',
+          stateBinding: expect.objectContaining({ expView: 'HOME', showCart: true }),
+        }),
+      }),
+    );
+    expect(resolveRuntimeLocalRouteSelection(entry ?? null, { expView: 'HOME', showCart: true })).toEqual(
+      expect.objectContaining({
+        routeKey: 'cart',
+        routeGroupKey: 'cart_commerce',
+        viewKey: 'CART',
       }),
     );
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        entry,
         { expView: 'HOME' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'home_landing', viewKey: 'HOME' }));
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'EXPERIENCE'),
+        entry,
         { expView: 'HOME', showCart: true },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'cart_commerce', viewKey: 'CART' }));
@@ -154,21 +215,33 @@ describe('session runtime descriptor', () => {
     const wlAdminDescriptor = createTenantSessionRuntimeDescriptor(
       makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: true, authenticatedRole: 'TENANT_ADMIN' }),
     );
+    const storefrontEntry = resolveRuntimeManifestEntryFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE');
+    const wlAdminEntry = resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN');
 
     expect(storefrontDescriptor?.operatingMode).toBe('WL_STOREFRONT');
     expect(storefrontDescriptor?.routeManifestKey).toBe('wl_storefront');
     expect(storefrontDescriptor?.runtimeOverlays).toEqual([]);
     expect(resolveRuntimeAppStateFromDescriptor(storefrontDescriptor ?? null)).toBe('EXPERIENCE');
     expect(resolveRuntimeManifestKeyFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE')).toBe('wl_storefront');
-    expect(resolveRuntimeManifestEntryFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE')).toEqual(
+    expect(storefrontEntry).toEqual(
       expect.objectContaining({
         key: 'wl_storefront',
         shellFamily: 'WhiteLabelShell',
+        defaultLocalRouteKey: 'home',
+      }),
+    );
+    expect(getRuntimeLocalRouteRegistration(storefrontEntry ?? null, 'buyer_rfqs')).toEqual(
+      expect.objectContaining({
+        routeGroupKey: 'rfq_sourcing',
+        route: expect.objectContaining({
+          selectionKey: 'RFQS',
+          stateBinding: expect.objectContaining({ expView: 'RFQS' }),
+        }),
       }),
     );
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(storefrontDescriptor ?? null, 'EXPERIENCE'),
+        storefrontEntry,
         { expView: 'RFQS' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'rfq_sourcing', viewKey: 'RFQS' }));
@@ -196,28 +269,49 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeContentFamilyFromDescriptor(wlAdminDescriptor ?? null, 'EXPERIENCE')).toBe('wl_storefront');
     expect(resolveRuntimeContentFamilyFromDescriptor(wlAdminDescriptor ?? null, 'SETTINGS')).toBe('wl_storefront');
     expect(resolveRuntimeManifestKeyFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN')).toBe('wl_admin');
-    expect(resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN')).toEqual(
+    expect(wlAdminEntry).toEqual(
       expect.objectContaining({
         key: 'wl_admin',
         shellFamily: 'WhiteLabelAdminShell',
         overlayDriven: true,
+        defaultLocalRouteKey: 'branding',
+        allowedRouteGroups: ['admin_branding_domains', 'catalog_browse', 'orders_operations'],
+      }),
+    );
+    expect(getRuntimeLocalRouteRegistration(wlAdminEntry ?? null, 'staff_invite')).toEqual(
+      expect.objectContaining({
+        routeGroupKey: 'admin_branding_domains',
+        route: expect.objectContaining({
+          selectionKey: 'STAFF_INVITE',
+          stateBinding: expect.objectContaining({
+            wlAdminView: 'STAFF',
+            wlAdminInviting: true,
+          }),
+        }),
+      }),
+    );
+    expect(resolveRuntimeLocalRouteSelection(wlAdminEntry ?? null, { wlAdminView: 'STAFF', wlAdminInviting: true })).toEqual(
+      expect.objectContaining({
+        routeKey: 'staff_invite',
+        routeGroupKey: 'admin_branding_domains',
+        viewKey: 'STAFF_INVITE',
       }),
     );
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN'),
+        wlAdminEntry,
         { wlAdminView: 'BRANDING' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'admin_branding_domains', viewKey: 'BRANDING' }));
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN'),
+        wlAdminEntry,
         { wlAdminView: 'PRODUCTS' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'catalog_browse', viewKey: 'PRODUCTS' }));
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(wlAdminDescriptor ?? null, 'WL_ADMIN'),
+        wlAdminEntry,
         { wlAdminView: 'ORDERS' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'orders_operations', viewKey: 'ORDERS' }));
@@ -231,21 +325,43 @@ describe('session runtime descriptor', () => {
       actorEmail: 'admin@example.com',
       authenticatedRole: 'SUPER_ADMIN',
     });
+    const entry = resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'CONTROL_PLANE');
 
     expect(descriptor?.realm).toBe('CONTROL_PLANE');
     expect(descriptor?.operatingMode).toBe('CONTROL_PLANE');
     expect(descriptor?.routeManifestKey).toBe('control_plane');
     expect(resolveRuntimeAppStateFromDescriptor(descriptor ?? null)).toBe('CONTROL_PLANE');
     expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'CONTROL_PLANE')).toBe('control_plane');
-    expect(resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'CONTROL_PLANE')).toEqual(
+    expect(entry).toEqual(
       expect.objectContaining({
         key: 'control_plane',
         shellFamily: 'SuperAdminShell',
+        defaultLocalRouteKey: 'tenant_registry',
+        allowedRouteGroups: ['control_plane_operations'],
+      }),
+    );
+    expect(getRuntimeLocalRouteRegistration(entry ?? null, 'tenant_detail')).toEqual(
+      expect.objectContaining({
+        routeGroupKey: 'control_plane_operations',
+        route: expect.objectContaining({
+          selectionKey: 'TENANT_DETAIL',
+          stateBinding: expect.objectContaining({
+            adminView: 'TENANTS',
+            requiresSelectedTenant: true,
+          }),
+        }),
+      }),
+    );
+    expect(resolveRuntimeLocalRouteSelection(entry ?? null, { adminView: 'TENANTS', selectedTenantId: 'tenant-1' })).toEqual(
+      expect.objectContaining({
+        routeKey: 'tenant_detail',
+        routeGroupKey: 'control_plane_operations',
+        viewKey: 'TENANT_DETAIL',
       }),
     );
     expect(
       resolveRuntimeRouteGroupSelection(
-        resolveRuntimeManifestEntryFromDescriptor(descriptor ?? null, 'CONTROL_PLANE'),
+        entry,
         { adminView: 'HEALTH' },
       ),
     ).toEqual(expect.objectContaining({ routeGroupKey: 'control_plane_operations', viewKey: 'HEALTH' }));

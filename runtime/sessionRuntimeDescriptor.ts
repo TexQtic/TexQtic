@@ -85,14 +85,7 @@ export type RuntimeShellFamily =
   | 'WhiteLabelShell'
   | 'WhiteLabelAdminShell';
 
-export interface RuntimeManifestEntry {
-  key: RouteManifestKey;
-  baseOperatingMode: TenantOperatingMode;
-  requiredOverlays: RuntimeOverlay[];
-  overlayDriven: boolean;
-  shellFamily: RuntimeShellFamily;
-  defaultAppState: RuntimeAppState;
-}
+export type RouteGroupClassification = 'family-core' | 'feature-gated' | 'platform-gated' | 'overlay-only';
 
 export type RouteGroupKey =
   | 'home_landing'
@@ -104,10 +97,93 @@ export type RouteGroupKey =
   | 'admin_branding_domains'
   | 'control_plane_operations';
 
+export type RuntimeLocalRouteKey =
+  | 'home'
+  | 'catalog'
+  | 'cart'
+  | 'orders'
+  | 'buyer_rfqs'
+  | 'supplier_rfq_inbox'
+  | 'dpp'
+  | 'escrow'
+  | 'escalations'
+  | 'settlement'
+  | 'certifications'
+  | 'traceability'
+  | 'audit_logs'
+  | 'trades'
+  | 'branding'
+  | 'staff'
+  | 'staff_invite'
+  | 'products'
+  | 'collections'
+  | 'domains'
+  | 'tenant_registry'
+  | 'tenant_detail'
+  | 'flags'
+  | 'finance'
+  | 'compliance'
+  | 'cases'
+  | 'ai'
+  | 'health'
+  | 'cart_summaries'
+  | 'escrow_admin'
+  | 'settlement_admin'
+  | 'maker_checker'
+  | 'logs'
+  | 'rbac'
+  | 'events';
+
+export interface RuntimeLocalRouteStateBinding {
+  expView?: string;
+  adminView?: string;
+  wlAdminView?: string;
+  showCart?: boolean;
+  wlAdminInviting?: boolean;
+  requiresSelectedTenant?: boolean;
+}
+
+export interface RuntimeLocalRouteDefinition {
+  key: RuntimeLocalRouteKey;
+  title: string;
+  selectionKey: string;
+  stateBinding: RuntimeLocalRouteStateBinding;
+  defaultForGroup?: boolean;
+}
+
+export interface RuntimeRouteGroupDefinition {
+  key: RouteGroupKey;
+  classification: RouteGroupClassification;
+  routes: RuntimeLocalRouteDefinition[];
+}
+
+export interface RuntimeManifestEntry {
+  key: RouteManifestKey;
+  baseOperatingMode: TenantOperatingMode;
+  requiredOverlays: RuntimeOverlay[];
+  overlayDriven: boolean;
+  shellFamily: RuntimeShellFamily;
+  defaultAppState: RuntimeAppState;
+  defaultLocalRouteKey: RuntimeLocalRouteKey;
+  allowedRouteGroups: RouteGroupKey[];
+  routeGroups: RuntimeRouteGroupDefinition[];
+}
+
 export interface RuntimeRouteGroupSelection {
   manifestKey: RouteManifestKey;
   routeGroupKey: RouteGroupKey;
   viewKey: string | null;
+}
+
+export interface RuntimeLocalRouteRegistration {
+  manifestKey: RouteManifestKey;
+  routeGroupKey: RouteGroupKey;
+  route: RuntimeLocalRouteDefinition;
+}
+
+export interface RuntimeLocalRouteSelection extends RuntimeRouteGroupSelection {
+  routeKey: RuntimeLocalRouteKey;
+  route: RuntimeLocalRouteDefinition;
 }
 
 export interface RuntimeRouteGroupSelectionInput {
@@ -122,19 +198,109 @@ export interface RuntimeRouteGroupSelectionInput {
 export type RuntimeShellState = RuntimeAppState | 'TEAM_MGMT' | 'INVITE_MEMBER' | 'SETTINGS' | null | undefined;
 
 const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
-const OPERATIONAL_WORKSPACE_EXP_VIEWS = new Set([
-  'DPP',
-  'ESCROW',
-  'ESCALATIONS',
-  'SETTLEMENT',
-  'CERTIFICATIONS',
-  'TRACEABILITY',
-  'AUDIT_LOGS',
-  'TRADES',
+const ROUTE_GROUP_CLASSIFICATIONS: Record<RouteGroupKey, RouteGroupClassification> = {
+  home_landing: 'family-core',
+  catalog_browse: 'family-core',
+  cart_commerce: 'feature-gated',
+  rfq_sourcing: 'feature-gated',
+  orders_operations: 'feature-gated',
+  operational_workspace: 'feature-gated',
+  admin_branding_domains: 'overlay-only',
+  control_plane_operations: 'family-core',
+};
+
+const defineRuntimeRoute = (
+  key: RuntimeLocalRouteKey,
+  title: string,
+  selectionKey: string,
+  stateBinding: RuntimeLocalRouteStateBinding,
+  options: { defaultForGroup?: boolean } = {},
+): RuntimeLocalRouteDefinition => ({
+  key,
+  title,
+  selectionKey,
+  stateBinding,
+  ...options,
+});
+
+const defineRuntimeRouteGroup = (
+  key: RouteGroupKey,
+  routes: RuntimeLocalRouteDefinition[],
+): RuntimeRouteGroupDefinition => ({
+  key,
+  classification: ROUTE_GROUP_CLASSIFICATIONS[key],
+  routes,
+});
+
+const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operations', [
+  defineRuntimeRoute('tenant_detail', 'Tenant Detail', 'TENANT_DETAIL', {
+    adminView: 'TENANTS',
+    requiresSelectedTenant: true,
+  }),
+  defineRuntimeRoute('tenant_registry', 'Tenants', 'TENANTS', {
+    adminView: 'TENANTS',
+    requiresSelectedTenant: false,
+  }, { defaultForGroup: true }),
+  defineRuntimeRoute('flags', 'Feature Flags', 'FLAGS', { adminView: 'FLAGS' }),
+  defineRuntimeRoute('finance', 'Finance & Fees', 'FINANCE', { adminView: 'FINANCE' }),
+  defineRuntimeRoute('trades', 'Trade Oversight', 'TRADES', { adminView: 'TRADES' }),
+  defineRuntimeRoute('cart_summaries', 'Cart Summaries', 'CART_SUMMARIES', { adminView: 'CART_SUMMARIES' }),
+  defineRuntimeRoute('escrow_admin', 'Escrow Accounts', 'ESCROW_ADMIN', { adminView: 'ESCROW_ADMIN' }),
+  defineRuntimeRoute('settlement_admin', 'Settlement Admin', 'SETTLEMENT_ADMIN', { adminView: 'SETTLEMENT_ADMIN' }),
+  defineRuntimeRoute('compliance', 'Compliance Queue', 'COMPLIANCE', { adminView: 'COMPLIANCE' }),
+  defineRuntimeRoute('cases', 'Disputes', 'CASES', { adminView: 'CASES' }),
+  defineRuntimeRoute('escalations', 'Escalations', 'ESCALATIONS', { adminView: 'ESCALATIONS' }),
+  defineRuntimeRoute('certifications', 'Cert Lifecycle', 'CERTIFICATIONS', { adminView: 'CERTIFICATIONS' }),
+  defineRuntimeRoute('traceability', 'Traceability', 'TRACEABILITY', { adminView: 'TRACEABILITY' }),
+  defineRuntimeRoute('maker_checker', 'Maker-Checker', 'MAKER_CHECKER', { adminView: 'MAKER_CHECKER' }),
+  defineRuntimeRoute('ai', 'AI Governance', 'AI', { adminView: 'AI' }),
+  defineRuntimeRoute('events', 'Live Event Stream', 'EVENTS', { adminView: 'EVENTS' }),
+  defineRuntimeRoute('logs', 'Audit Logs', 'LOGS', { adminView: 'LOGS' }),
+  defineRuntimeRoute('rbac', 'Access Control', 'RBAC', { adminView: 'RBAC' }),
+  defineRuntimeRoute('health', 'Health Status', 'HEALTH', { adminView: 'HEALTH' }),
 ]);
-const RFQ_SOURCING_EXP_VIEWS = new Set(['RFQS', 'SUPPLIER_RFQ_INBOX']);
-const WL_ADMIN_CATALOG_VIEWS = new Set(['PRODUCTS', 'COLLECTIONS']);
-const WL_ADMIN_BRANDING_VIEWS = new Set(['BRANDING', 'STAFF', 'DOMAINS']);
+
+const WORKSPACE_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations', [
+  defineRuntimeRoute('orders', 'Orders', 'ORDERS', { expView: 'ORDERS' }, { defaultForGroup: true }),
+]);
+
+const RFQ_ROUTE_GROUP = defineRuntimeRouteGroup('rfq_sourcing', [
+  defineRuntimeRoute('buyer_rfqs', 'Buyer RFQs', 'RFQS', { expView: 'RFQS' }, { defaultForGroup: true }),
+  defineRuntimeRoute('supplier_rfq_inbox', 'Supplier RFQ Inbox', 'SUPPLIER_RFQ_INBOX', { expView: 'SUPPLIER_RFQ_INBOX' }),
+]);
+
+const OPERATIONAL_WORKSPACE_ROUTE_GROUP = defineRuntimeRouteGroup('operational_workspace', [
+  defineRuntimeRoute('dpp', 'DPP Passport', 'DPP', { expView: 'DPP' }),
+  defineRuntimeRoute('escrow', 'Escrow', 'ESCROW', { expView: 'ESCROW' }),
+  defineRuntimeRoute('escalations', 'Escalations', 'ESCALATIONS', { expView: 'ESCALATIONS' }),
+  defineRuntimeRoute('settlement', 'Settlement', 'SETTLEMENT', { expView: 'SETTLEMENT' }),
+  defineRuntimeRoute('certifications', 'Certifications', 'CERTIFICATIONS', { expView: 'CERTIFICATIONS' }),
+  defineRuntimeRoute('traceability', 'Traceability', 'TRACEABILITY', { expView: 'TRACEABILITY' }),
+  defineRuntimeRoute('audit_logs', 'Audit Logs', 'AUDIT_LOGS', { expView: 'AUDIT_LOGS' }),
+  defineRuntimeRoute('trades', 'Trades', 'TRADES', { expView: 'TRADES' }),
+]);
+
+const WL_ADMIN_MANAGEMENT_ROUTE_GROUP = defineRuntimeRouteGroup('admin_branding_domains', [
+  defineRuntimeRoute('branding', 'Store Profile', 'BRANDING', { wlAdminView: 'BRANDING' }, { defaultForGroup: true }),
+  defineRuntimeRoute('staff_invite', 'Invite Staff', 'STAFF_INVITE', {
+    wlAdminView: 'STAFF',
+    wlAdminInviting: true,
+  }),
+  defineRuntimeRoute('staff', 'Staff', 'STAFF', {
+    wlAdminView: 'STAFF',
+    wlAdminInviting: false,
+  }),
+  defineRuntimeRoute('domains', 'Domains', 'DOMAINS', { wlAdminView: 'DOMAINS' }),
+]);
+
+const WL_ADMIN_CATALOG_ROUTE_GROUP = defineRuntimeRouteGroup('catalog_browse', [
+  defineRuntimeRoute('products', 'Products', 'PRODUCTS', { wlAdminView: 'PRODUCTS' }, { defaultForGroup: true }),
+  defineRuntimeRoute('collections', 'Collections', 'COLLECTIONS', { wlAdminView: 'COLLECTIONS' }),
+]);
+
+const WL_ADMIN_ORDERS_ROUTE_GROUP = defineRuntimeRouteGroup('orders_operations', [
+  defineRuntimeRoute('orders', 'Orders', 'ORDERS', { wlAdminView: 'ORDERS' }, { defaultForGroup: true }),
+]);
 
 const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> = {
   control_plane: {
@@ -144,6 +310,9 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     overlayDriven: false,
     shellFamily: 'SuperAdminShell',
     defaultAppState: 'CONTROL_PLANE',
+    defaultLocalRouteKey: 'tenant_registry',
+    allowedRouteGroups: ['control_plane_operations'],
+    routeGroups: [CONTROL_PLANE_ROUTE_GROUP],
   },
   aggregator_workspace: {
     key: 'aggregator_workspace',
@@ -152,6 +321,16 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     overlayDriven: false,
     shellFamily: 'AggregatorShell',
     defaultAppState: 'EXPERIENCE',
+    defaultLocalRouteKey: 'home',
+    allowedRouteGroups: ['home_landing', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+    routeGroups: [
+      defineRuntimeRouteGroup('home_landing', [
+        defineRuntimeRoute('home', 'Workspace Home', 'HOME', { expView: 'HOME' }, { defaultForGroup: true }),
+      ]),
+      WORKSPACE_ORDERS_ROUTE_GROUP,
+      RFQ_ROUTE_GROUP,
+      OPERATIONAL_WORKSPACE_ROUTE_GROUP,
+    ],
   },
   b2b_workspace: {
     key: 'b2b_workspace',
@@ -160,6 +339,16 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     overlayDriven: false,
     shellFamily: 'B2BShell',
     defaultAppState: 'EXPERIENCE',
+    defaultLocalRouteKey: 'catalog',
+    allowedRouteGroups: ['catalog_browse', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+    routeGroups: [
+      defineRuntimeRouteGroup('catalog_browse', [
+        defineRuntimeRoute('catalog', 'Catalog', 'HOME', { expView: 'HOME' }, { defaultForGroup: true }),
+      ]),
+      WORKSPACE_ORDERS_ROUTE_GROUP,
+      RFQ_ROUTE_GROUP,
+      OPERATIONAL_WORKSPACE_ROUTE_GROUP,
+    ],
   },
   b2c_storefront: {
     key: 'b2c_storefront',
@@ -168,6 +357,19 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     overlayDriven: false,
     shellFamily: 'B2CShell',
     defaultAppState: 'EXPERIENCE',
+    defaultLocalRouteKey: 'home',
+    allowedRouteGroups: ['home_landing', 'cart_commerce', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+    routeGroups: [
+      defineRuntimeRouteGroup('cart_commerce', [
+        defineRuntimeRoute('cart', 'Cart Drawer', 'CART', { expView: 'HOME', showCart: true }, { defaultForGroup: true }),
+      ]),
+      defineRuntimeRouteGroup('home_landing', [
+        defineRuntimeRoute('home', 'Storefront Home', 'HOME', { expView: 'HOME', showCart: false }, { defaultForGroup: true }),
+      ]),
+      WORKSPACE_ORDERS_ROUTE_GROUP,
+      RFQ_ROUTE_GROUP,
+      OPERATIONAL_WORKSPACE_ROUTE_GROUP,
+    ],
   },
   wl_storefront: {
     key: 'wl_storefront',
@@ -176,6 +378,19 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     overlayDriven: false,
     shellFamily: 'WhiteLabelShell',
     defaultAppState: 'EXPERIENCE',
+    defaultLocalRouteKey: 'home',
+    allowedRouteGroups: ['home_landing', 'cart_commerce', 'orders_operations', 'rfq_sourcing', 'operational_workspace'],
+    routeGroups: [
+      defineRuntimeRouteGroup('cart_commerce', [
+        defineRuntimeRoute('cart', 'Cart Drawer', 'CART', { expView: 'HOME', showCart: true }, { defaultForGroup: true }),
+      ]),
+      defineRuntimeRouteGroup('home_landing', [
+        defineRuntimeRoute('home', 'Storefront Home', 'HOME', { expView: 'HOME', showCart: false }, { defaultForGroup: true }),
+      ]),
+      WORKSPACE_ORDERS_ROUTE_GROUP,
+      RFQ_ROUTE_GROUP,
+      OPERATIONAL_WORKSPACE_ROUTE_GROUP,
+    ],
   },
   wl_admin: {
     key: 'wl_admin',
@@ -184,6 +399,13 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     overlayDriven: true,
     shellFamily: 'WhiteLabelAdminShell',
     defaultAppState: 'WL_ADMIN',
+    defaultLocalRouteKey: 'branding',
+    allowedRouteGroups: ['admin_branding_domains', 'catalog_browse', 'orders_operations'],
+    routeGroups: [
+      WL_ADMIN_MANAGEMENT_ROUTE_GROUP,
+      WL_ADMIN_CATALOG_ROUTE_GROUP,
+      WL_ADMIN_ORDERS_ROUTE_GROUP,
+    ],
   },
 };
 
@@ -352,115 +574,108 @@ const isTenantWorkspaceRuntimeState = (runtimeShellState: RuntimeShellState) => 
   }
 };
 
-const createRouteGroupSelection = (
-  manifestKey: RouteManifestKey,
-  routeGroupKey: RouteGroupKey,
-  viewKey: string | null,
-): RuntimeRouteGroupSelection => ({
-  manifestKey,
-  routeGroupKey,
-  viewKey,
-});
-
-const resolveStorefrontRouteGroup = (
-  manifestKey: 'b2c_storefront' | 'wl_storefront',
-  expView: string,
-  showCart: boolean,
-) => {
-  if (showCart && expView === 'HOME') {
-    return createRouteGroupSelection(manifestKey, 'cart_commerce', 'CART');
-  }
-
-  if (expView === 'ORDERS') {
-    return createRouteGroupSelection(manifestKey, 'orders_operations', expView);
-  }
-
-  if (RFQ_SOURCING_EXP_VIEWS.has(expView)) {
-    return createRouteGroupSelection(manifestKey, 'rfq_sourcing', expView);
-  }
-
-  if (OPERATIONAL_WORKSPACE_EXP_VIEWS.has(expView)) {
-    return createRouteGroupSelection(manifestKey, 'operational_workspace', expView);
-  }
-
-  return createRouteGroupSelection(manifestKey, 'home_landing', expView);
+type NormalizedRuntimeRouteInput = {
+  expView: string | null;
+  adminView: string | null;
+  wlAdminView: string | null;
+  showCart: boolean;
+  wlAdminInviting: boolean;
+  selectedTenantId: string | null;
 };
 
-const resolveWorkspaceRouteGroupSelection = (
-  entry: RuntimeManifestEntry,
+const listRuntimeLocalRouteRegistrations = (
+  manifestEntry: RuntimeManifestEntry,
+): RuntimeLocalRouteRegistration[] => {
+  return manifestEntry.routeGroups.flatMap(group => {
+    return group.routes.map(route => ({
+      manifestKey: manifestEntry.key,
+      routeGroupKey: group.key,
+      route,
+    }));
+  });
+};
+
+const normalizeRuntimeRouteInput = (
+  manifestEntry: RuntimeManifestEntry,
   input: RuntimeRouteGroupSelectionInput,
-): RuntimeRouteGroupSelection | null => {
-  const expView = input.expView ?? 'HOME';
-
-  switch (entry.key) {
-    case 'aggregator_workspace':
-      if (expView === 'ORDERS') {
-        return createRouteGroupSelection(entry.key, 'orders_operations', expView);
-      }
-
-      if (RFQ_SOURCING_EXP_VIEWS.has(expView)) {
-        return createRouteGroupSelection(entry.key, 'rfq_sourcing', expView);
-      }
-
-      if (OPERATIONAL_WORKSPACE_EXP_VIEWS.has(expView)) {
-        return createRouteGroupSelection(entry.key, 'operational_workspace', expView);
-      }
-
-      return createRouteGroupSelection(entry.key, 'home_landing', expView);
-    case 'b2b_workspace':
-      if (expView === 'ORDERS') {
-        return createRouteGroupSelection(entry.key, 'orders_operations', expView);
-      }
-
-      if (RFQ_SOURCING_EXP_VIEWS.has(expView)) {
-        return createRouteGroupSelection(entry.key, 'rfq_sourcing', expView);
-      }
-
-      if (OPERATIONAL_WORKSPACE_EXP_VIEWS.has(expView)) {
-        return createRouteGroupSelection(entry.key, 'operational_workspace', expView);
-      }
-
-      return createRouteGroupSelection(entry.key, 'catalog_browse', expView);
+): NormalizedRuntimeRouteInput => {
+  switch (manifestEntry.key) {
+    case 'control_plane':
+      return {
+        expView: null,
+        adminView: input.adminView ?? 'TENANTS',
+        wlAdminView: null,
+        showCart: false,
+        wlAdminInviting: false,
+        selectedTenantId: input.selectedTenantId ?? null,
+      };
+    case 'wl_admin':
+      return {
+        expView: null,
+        adminView: null,
+        wlAdminView: input.wlAdminView ?? 'BRANDING',
+        showCart: false,
+        wlAdminInviting: input.wlAdminInviting === true,
+        selectedTenantId: null,
+      };
     case 'b2c_storefront':
-      return resolveStorefrontRouteGroup(entry.key, expView, input.showCart === true);
-    case 'wl_storefront':
-      return resolveStorefrontRouteGroup(entry.key, expView, input.showCart === true);
+    case 'wl_storefront': {
+      const expView = input.expView ?? 'HOME';
+
+      return {
+        expView,
+        adminView: null,
+        wlAdminView: null,
+        showCart: input.showCart === true && expView === 'HOME',
+        wlAdminInviting: false,
+        selectedTenantId: null,
+      };
+    }
     default:
-      return null;
+      return {
+        expView: input.expView ?? 'HOME',
+        adminView: null,
+        wlAdminView: null,
+        showCart: false,
+        wlAdminInviting: false,
+        selectedTenantId: null,
+      };
   }
 };
 
-const resolveWlAdminRouteGroupSelection = (
-  entry: RuntimeManifestEntry,
-  input: RuntimeRouteGroupSelectionInput,
-): RuntimeRouteGroupSelection | null => {
-  const wlAdminView = input.wlAdminView ?? 'BRANDING';
-
-  if (input.wlAdminInviting === true) {
-    return createRouteGroupSelection(entry.key, 'admin_branding_domains', 'STAFF');
-  }
-
-  if (wlAdminView === 'ORDERS') {
-    return createRouteGroupSelection(entry.key, 'orders_operations', wlAdminView);
-  }
-
-  if (WL_ADMIN_CATALOG_VIEWS.has(wlAdminView)) {
-    return createRouteGroupSelection(entry.key, 'catalog_browse', wlAdminView);
-  }
-
-  if (WL_ADMIN_BRANDING_VIEWS.has(wlAdminView)) {
-    return createRouteGroupSelection(entry.key, 'admin_branding_domains', wlAdminView);
-  }
-
-  return null;
-};
-
-const resolveControlPlaneRouteGroupSelection = (
-  entry: RuntimeManifestEntry,
-  input: RuntimeRouteGroupSelectionInput,
+const matchesRuntimeLocalRouteBinding = (
+  binding: RuntimeLocalRouteStateBinding,
+  input: NormalizedRuntimeRouteInput,
 ) => {
-  const viewKey = input.selectedTenantId ? 'TENANT_DETAIL' : input.adminView ?? 'TENANTS';
-  return createRouteGroupSelection(entry.key, 'control_plane_operations', viewKey);
+  if (binding.expView !== undefined && binding.expView !== input.expView) {
+    return false;
+  }
+
+  if (binding.adminView !== undefined && binding.adminView !== input.adminView) {
+    return false;
+  }
+
+  if (binding.wlAdminView !== undefined && binding.wlAdminView !== input.wlAdminView) {
+    return false;
+  }
+
+  if (binding.showCart !== undefined && binding.showCart !== input.showCart) {
+    return false;
+  }
+
+  if (binding.wlAdminInviting !== undefined && binding.wlAdminInviting !== input.wlAdminInviting) {
+    return false;
+  }
+
+  if (binding.requiresSelectedTenant !== undefined) {
+    const hasSelectedTenant = !!input.selectedTenantId;
+
+    if (binding.requiresSelectedTenant !== hasSelectedTenant) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 const resolveTenantWorkspaceManifestKey = (
@@ -600,27 +815,60 @@ export const resolveRuntimeManifestEntryFromDescriptor = (
   return canSelectRuntimeManifestEntry(descriptor, entry) ? entry : null;
 };
 
-export const resolveRuntimeRouteGroupSelection = (
+export const getRuntimeLocalRouteRegistration = (
   manifestEntry: RuntimeManifestEntry | null,
-  input: RuntimeRouteGroupSelectionInput,
-): RuntimeRouteGroupSelection | null => {
+  routeKey: RuntimeLocalRouteKey,
+): RuntimeLocalRouteRegistration | null => {
   if (!manifestEntry) {
     return null;
   }
 
-  switch (manifestEntry.key) {
-    case 'control_plane':
-      return resolveControlPlaneRouteGroupSelection(manifestEntry, input);
-    case 'wl_admin':
-      return resolveWlAdminRouteGroupSelection(manifestEntry, input);
-    case 'aggregator_workspace':
-    case 'b2b_workspace':
-    case 'b2c_storefront':
-    case 'wl_storefront':
-      return resolveWorkspaceRouteGroupSelection(manifestEntry, input);
-    default:
-      return null;
+  return listRuntimeLocalRouteRegistrations(manifestEntry).find(registration => {
+    return registration.route.key === routeKey;
+  }) ?? null;
+};
+
+export const resolveRuntimeLocalRouteSelection = (
+  manifestEntry: RuntimeManifestEntry | null,
+  input: RuntimeRouteGroupSelectionInput,
+): RuntimeLocalRouteSelection | null => {
+  if (!manifestEntry) {
+    return null;
   }
+
+  const normalizedInput = normalizeRuntimeRouteInput(manifestEntry, input);
+  const registration = listRuntimeLocalRouteRegistrations(manifestEntry).find(candidate => {
+    return matchesRuntimeLocalRouteBinding(candidate.route.stateBinding, normalizedInput);
+  });
+
+  if (!registration) {
+    return null;
+  }
+
+  return {
+    manifestKey: registration.manifestKey,
+    routeGroupKey: registration.routeGroupKey,
+    routeKey: registration.route.key,
+    viewKey: registration.route.selectionKey,
+    route: registration.route,
+  };
+};
+
+export const resolveRuntimeRouteGroupSelection = (
+  manifestEntry: RuntimeManifestEntry | null,
+  input: RuntimeRouteGroupSelectionInput,
+): RuntimeRouteGroupSelection | null => {
+  const localRouteSelection = resolveRuntimeLocalRouteSelection(manifestEntry, input);
+
+  if (!localRouteSelection) {
+    return null;
+  }
+
+  return {
+    manifestKey: localRouteSelection.manifestKey,
+    routeGroupKey: localRouteSelection.routeGroupKey,
+    viewKey: localRouteSelection.viewKey,
+  };
 };
 
 export const resolveRuntimeContentFamilyFromDescriptor = (
