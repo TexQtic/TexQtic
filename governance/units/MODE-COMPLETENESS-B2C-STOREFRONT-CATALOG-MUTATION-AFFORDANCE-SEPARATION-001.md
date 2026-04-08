@@ -9,8 +9,8 @@ plane: TENANT
 opened: 2026-04-08
 closed: null
 verified: null
-commit: null
-evidence: "OPENING_CONFIRMATION: GOV-DEC-B2C-POST-CLOSE-REMAINDER-REDUCTION already recovered this exact child from current repo truth without reusing stale shell-boundary authority or reopening earlier closed B2C children · REPO_ANCHOR_CONFIRMATION: App.tsx rendered the exact non-WL B2C HOME New Arrivals card grid, previously called renderCatalogItemMutationActions(product) on that path, and previously exposed Edit and Delete there while B2CAddToCartButton remained separately present on the same cards · IMPLEMENTATION_CONFIRMATION: App.tsx no longer renders renderCatalogItemMutationActions(product) on the exact non-WL B2C HOME New Arrivals cards and preserves the product preview surface plus B2CAddToCartButton on that exact path while B2B catalog surfaces remain unchanged · LOCAL_VALIDATION_CONFIRMATION: touched-file diagnostics remained on the pre-existing App.tsx baseline, targeted eslint remained blocked by pre-existing App.tsx findings unrelated to this seam, and static render-path inspection confirmed renderCatalogItemMutationActions(...) now remains only on B2B call sites · RUNTIME_BLOCK_CONFIRMATION: local Vite reached only the sign-in surface without an authenticated B2C proof-tenant session and the current production session remained fixed to the Acme enterprise surface, so truthful exact-path runtime verification for the changed seam could not be completed in this step"
+commit: "2690b07"
+evidence: "OPENING_CONFIRMATION: GOV-DEC-B2C-POST-CLOSE-REMAINDER-REDUCTION already recovered this exact child from current repo truth without reusing stale shell-boundary authority or reopening earlier closed B2C children · REPO_ANCHOR_CONFIRMATION: App.tsx rendered the exact non-WL B2C HOME New Arrivals card grid, previously called renderCatalogItemMutationActions(product) on that path, and previously exposed Edit and Delete there while B2CAddToCartButton remained separately present on the same cards · IMPLEMENTATION_CONFIRMATION: App.tsx no longer renders renderCatalogItemMutationActions(product) on the exact non-WL B2C HOME New Arrivals cards and preserves the product preview surface plus B2CAddToCartButton on that exact path while B2B catalog surfaces remain unchanged · LOCAL_VALIDATION_CONFIRMATION: touched-file diagnostics remained on the pre-existing App.tsx baseline, targeted eslint remained blocked by pre-existing App.tsx findings unrelated to this seam, and static render-path inspection confirmed renderCatalogItemMutationActions(...) now remains only on B2B call sites · RUNTIME_PATH_CONFIRMATION: live production Staff Control Plane login succeeded, Tenant Registry exposed the exact proof tenant `B2C Browse Proof 20260402080229`, and bounded row-level tenant-context entry with the required impersonation reason successfully reached the exact non-WL B2C HOME shell path in production · RUNTIME_BLOCK_CONFIRMATION: the exact HOME surface loaded with the staff-active impersonation banner, branded frame, search input, `Shop Now`, `New Arrivals`, and disabled `All Visible`, but the live proof tenant rendered `No products available`, so no product cards were present to inspect and `Add to Cart` could not be truthfully exercised on rendered cards in this step"
 doctrine_constraints:
   - D-004: this unit is limited to exact card-level catalog-mutation affordance separation on the non-WL B2C HOME New Arrivals grid only and must not widen into seller-admin redesign, shared shell redesign, settings work, or downstream orders-family behavior changes
   - D-007: no surface outside the exact allowlist is authorized
@@ -19,7 +19,7 @@ doctrine_constraints:
 decisions_required:
   - GOV-DEC-B2C-POST-CLOSE-REMAINDER-REDUCTION: DECIDED (2026-04-08, Paresh)
 blockers:
-  - truthful exact-path runtime verification remains pending because the changed local build is not reachable with an authenticated B2C proof-tenant session and the current production session does not expose the exact B2C HOME path
+  - truthful exact card-level runtime verification remains blocked because the live proof tenant now loads the exact non-WL B2C HOME path with an empty `New Arrivals` surface, so no rendered product cards exist on that path to verify product preview continuity and `Add to Cart` presence/usability
 ---
 
 ## Opening Basis
@@ -144,18 +144,33 @@ not yet been completed.
   - the local app reached only the sign-in surface and did not provide an authenticated B2C
     proof-tenant path in this step
 - truthful exact-path runtime verification:
-  - not completed in this step
-  - current production browser access remained fixed to the Acme enterprise surface and did not
-    expose the exact non-WL B2C `HOME` path for the changed code
+  - completed through the live production path:
+    - `Staff Control Plane` login
+    - `Tenant Registry`
+    - proof tenant `B2C Browse Proof 20260402080229`
+    - bounded row-level tenant-context entry with required impersonation reason
+    - resulting exact non-WL B2C `HOME` shell surface
+  - exact runtime observations on the exercised path:
+    - the exact B2C `HOME` path loaded successfully
+    - the branded home-return frame remained present
+    - the search input remained present
+    - `Shop Now` remained present
+    - `New Arrivals` remained present
+    - `Edit` was absent
+    - `Delete` was absent
+    - the live proof tenant rendered `No products available`
+    - no `Add to Cart` affordance was present because no product cards rendered on the exercised path
+  - exact runtime result: `BLOCKED`
 
 ## Current Posture
 
 - current resulting status: `OPEN`
 - bounded implementation is complete at source level for the exact seam
-- truthful exact-path runtime verification remains pending
+- truthful exact-path runtime verification reached the exact governed path but remains blocked at
+  card-level proof because the live proof tenant currently renders no products on that path
 - no closure, Layer 0 sync, or successor opening is implied by this implementation attempt
 
 ## Footer
 
-`EXACT_UNIT_IMPLEMENTATION_ATTEMPTED`
-`TRUTHFUL_RUNTIME_VERIFICATION_PENDING`
+`EXACT_UNIT_RUNTIME_VERIFICATION_ATTEMPTED`
+`RUNTIME_RESULT_BLOCKED`
