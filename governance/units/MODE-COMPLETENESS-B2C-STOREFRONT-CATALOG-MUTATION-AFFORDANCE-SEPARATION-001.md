@@ -10,15 +10,16 @@ opened: 2026-04-08
 closed: null
 verified: null
 commit: null
-evidence: "OPENING_CONFIRMATION: GOV-DEC-B2C-POST-CLOSE-REMAINDER-REDUCTION already recovered this exact child from current repo truth without reusing stale shell-boundary authority or reopening earlier closed B2C children · REPO_ANCHOR_CONFIRMATION: App.tsx still renders the exact non-WL B2C HOME New Arrivals card grid, still calls renderCatalogItemMutationActions(product) on that path, and still exposes Edit and Delete there while B2CAddToCartButton remains separately present on the same cards · OWNERSHIP_CONFIRMATION: current B2C product truth preserves product preview as B2C parent-family entry continuity, seller-admin catalog mutation as separate catalog-management ownership, and Add to Cart as separately owned downstream orders-family continuity"
+evidence: "OPENING_CONFIRMATION: GOV-DEC-B2C-POST-CLOSE-REMAINDER-REDUCTION already recovered this exact child from current repo truth without reusing stale shell-boundary authority or reopening earlier closed B2C children · REPO_ANCHOR_CONFIRMATION: App.tsx rendered the exact non-WL B2C HOME New Arrivals card grid, previously called renderCatalogItemMutationActions(product) on that path, and previously exposed Edit and Delete there while B2CAddToCartButton remained separately present on the same cards · IMPLEMENTATION_CONFIRMATION: App.tsx no longer renders renderCatalogItemMutationActions(product) on the exact non-WL B2C HOME New Arrivals cards and preserves the product preview surface plus B2CAddToCartButton on that exact path while B2B catalog surfaces remain unchanged · LOCAL_VALIDATION_CONFIRMATION: touched-file diagnostics remained on the pre-existing App.tsx baseline, targeted eslint remained blocked by pre-existing App.tsx findings unrelated to this seam, and static render-path inspection confirmed renderCatalogItemMutationActions(...) now remains only on B2B call sites · RUNTIME_BLOCK_CONFIRMATION: local Vite reached only the sign-in surface without an authenticated B2C proof-tenant session and the current production session remained fixed to the Acme enterprise surface, so truthful exact-path runtime verification for the changed seam could not be completed in this step"
 doctrine_constraints:
   - D-004: this unit is limited to exact card-level catalog-mutation affordance separation on the non-WL B2C HOME New Arrivals grid only and must not widen into seller-admin redesign, shared shell redesign, settings work, or downstream orders-family behavior changes
   - D-007: no surface outside the exact allowlist is authorized
   - D-011: prior closed B2C children remain authoritative and must not be reopened or overread as settling this exact card-level mutation seam
-  - D-013: this step opens the exact unit record only and performs no product implementation, verification, or close sequencing by implication
+  - D-013: bounded source implementation does not imply truthful runtime verification, Layer 0 sync, or close sequencing by implication
 decisions_required:
   - GOV-DEC-B2C-POST-CLOSE-REMAINDER-REDUCTION: DECIDED (2026-04-08, Paresh)
-blockers: []
+blockers:
+  - truthful exact-path runtime verification remains pending because the changed local build is not reachable with an authenticated B2C proof-tenant session and the current production session does not expose the exact B2C HOME path
 ---
 
 ## Opening Basis
@@ -108,17 +109,53 @@ This unit does **not** authorize:
 
 ## Opening Posture
 
-This exact unit is now opened as one bounded `ACTIVE_DELIVERY` unit record.
+This exact unit is opened as one bounded `ACTIVE_DELIVERY` unit record and now has one bounded
+source implementation confined to `App.tsx`.
 
-This step is governance-only.
+The unit is not yet close-ready in this record because truthful exact-path runtime verification has
+not yet been completed.
 
-It creates the exact scoped unit record and allowlist only. It does not perform product
-implementation, verification, Layer 0 sync, or close sequencing in this step.
+## Implementation Record
 
-The next lawful move, if later authorized, is a separate bounded implementation step confined to
-the exact allowlist and exact scope stated in this record.
+- bounded implementation surface: `App.tsx`
+- exact bounded product change:
+  - removed the `renderCatalogItemMutationActions(product)` render from the exact non-WL B2C
+    `HOME` `New Arrivals` card grid
+  - preserved the card-level product preview surface unchanged
+  - preserved `B2CAddToCartButton` unchanged on that exact path
+  - preserved catalog-mutation controls on the B2B catalog surfaces unchanged
+
+## Verification Record
+
+- touched-file diagnostics:
+  - `get_errors` on `App.tsx` remained on the pre-existing baseline only; no new diagnostic was
+    surfaced for the exact seam change
+- targeted lint:
+  - `pnpm exec eslint App.tsx` remains blocked by pre-existing `App.tsx` findings unrelated to this
+    seam:
+    - `HTMLElement` `no-undef`
+    - `react-hooks/exhaustive-deps` warning on `tenantBootstrapCurrentUserOptions`
+- static render-path proof:
+  - `renderCatalogItemMutationActions(...)` now remains only on the B2B catalog paths in
+    `App.tsx`
+  - the prior exact B2C card-grid call site is absent
+- local runtime attempt:
+  - local Vite served successfully at `http://127.0.0.1:4173/`
+  - the local app reached only the sign-in surface and did not provide an authenticated B2C
+    proof-tenant path in this step
+- truthful exact-path runtime verification:
+  - not completed in this step
+  - current production browser access remained fixed to the Acme enterprise surface and did not
+    expose the exact non-WL B2C `HOME` path for the changed code
+
+## Current Posture
+
+- current resulting status: `OPEN`
+- bounded implementation is complete at source level for the exact seam
+- truthful exact-path runtime verification remains pending
+- no closure, Layer 0 sync, or successor opening is implied by this implementation attempt
 
 ## Footer
 
-`EXACT_UNIT_OPENED`
-`NO_PRODUCT_IMPLEMENTATION_PERFORMED_IN_THIS_STEP`
+`EXACT_UNIT_IMPLEMENTATION_ATTEMPTED`
+`TRUTHFUL_RUNTIME_VERIFICATION_PENDING`

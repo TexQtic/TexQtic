@@ -3118,7 +3118,6 @@ const App: React.FC = () => {
                         <h4 className="font-medium text-slate-800">{p.name}</h4>
                         <div className="text-slate-500 font-bold">${p.price}.00</div>
                       </div>
-                      {renderCatalogItemMutationActions(p)}
                       <B2CAddToCartButton product={p} />
                     </div>
                   ))}
