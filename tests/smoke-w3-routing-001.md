@@ -15,7 +15,7 @@ TENANT_PASS="<redact before sharing>"
 LOCAL="http://localhost:3001"
 VERCEL="https://<your-deployment>.vercel.app"    # paste your Vercel preview/prod URL
 
-ACME_TENANT_ID="faf2e4a7-5d79-4b00-811b-8d0dce4f4d80"
+QA_B2B_TENANT_ID="faf2e4a7-5d79-4b00-811b-8d0dce4f4d80"
 SMOKE_REASON="Wave3 smoke certification run $(date +%Y-%m-%d)"
 ```
 
@@ -74,20 +74,20 @@ curl -s -X GET "${LOCAL}/api/control/tenants" \
 |-------|-------|--------|
 | HTTP 200 | ☐ | ☐ |
 | `.data.tenants` length ≥ 1 | ☐ | ☐ |
-| `acme-corp` or `white-label-co` slug present | ☐ | ☐ |
+| `qa-b2b` slug present | ☐ | ☐ |
 
 ---
 
 ## Phase 2 — Start Impersonation → Tenant Experience
 
-### Step 2.1 — Fetch Acme Corp membership for userId
+### Step 2.1 — Fetch QA B2B membership for userId
 
 ```bash
-curl -s -X GET "${LOCAL}/api/control/tenants/${ACME_TENANT_ID}" \
+curl -s -X GET "${LOCAL}/api/control/tenants/${QA_B2B_TENANT_ID}" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "X-Texqtic-Realm: control" | jq '.data.tenant.memberships[0].user'
 
-TARGET_USER_ID=$(curl -s -X GET "${LOCAL}/api/control/tenants/${ACME_TENANT_ID}" \
+TARGET_USER_ID=$(curl -s -X GET "${LOCAL}/api/control/tenants/${QA_B2B_TENANT_ID}" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "X-Texqtic-Realm: control" \
   | jq -r '.data.tenant.memberships[0].user.id')
@@ -113,7 +113,7 @@ curl -s -X POST "${LOCAL}/api/control/impersonation/start" \
   -H "X-Texqtic-Realm: control" \
   -H "Content-Type: application/json" \
   -d "{
-    \"orgId\": \"${ACME_TENANT_ID}\",
+    \"orgId\": \"${QA_B2B_TENANT_ID}\",
     \"userId\": \"${TARGET_USER_ID}\",
     \"reason\": \"${SMOKE_REASON}\"
   }" | jq .
@@ -137,7 +137,7 @@ IMP_TOKEN=$(curl -s -X POST "${LOCAL}/api/control/impersonation/start" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "X-Texqtic-Realm: control" \
   -H "Content-Type: application/json" \
-  -d "{\"orgId\":\"${ACME_TENANT_ID}\",\"userId\":\"${TARGET_USER_ID}\",\"reason\":\"${SMOKE_REASON}\"}" \
+  -d "{\"orgId\":\"${QA_B2B_TENANT_ID}\",\"userId\":\"${TARGET_USER_ID}\",\"reason\":\"${SMOKE_REASON}\"}" \
   | jq -r '.data.token // .token')
 
 IMP_SESSION_ID=$(curl -s -X POST "${LOCAL}/api/control/impersonation/start" \
@@ -174,7 +174,7 @@ CATALOG_ITEM_ID=$(curl -s -X GET "${LOCAL}/api/tenant/catalog/items" \
 |-------|-------|--------|
 | HTTP 200 (not 401/403) | ☐ | ☐ |
 | `.data.items` length ≥ 1 | ☐ | ☐ |
-| Response comes from Acme Corp tenant (not admin realm) | ☐ | ☐ |
+| Response comes from QA B2B tenant (not admin realm) | ☐ | ☐ |
 
 ---
 
@@ -264,14 +264,14 @@ curl -s -X POST "${LOCAL}/api/auth/login" \
   -H "Content-Type: application/json" \
   -H "x-realm-hint: tenant" \
   -d "{
-    \"email\": \"owner@acme.example.com\",
+    \"email\": \"qa.b2b@texqtic.com\",
     \"password\": \"${TENANT_PASS}\",
-    \"tenantId\": \"${ACME_TENANT_ID}\"
+    \"tenantId\": \"${QA_B2B_TENANT_ID}\"
   }" | jq '.data.token' | cut -c1-40
 
 TENANT_TOKEN=$(curl -s -X POST "${LOCAL}/api/auth/login" \
   -H "Content-Type: application/json" -H "x-realm-hint: tenant" \
-  -d "{\"email\":\"owner@acme.example.com\",\"password\":\"${TENANT_PASS}\",\"tenantId\":\"${ACME_TENANT_ID}\"}" \
+  -d "{\"email\":\"qa.b2b@texqtic.com\",\"password\":\"${TENANT_PASS}\",\"tenantId\":\"${QA_B2B_TENANT_ID}\"}" \
   | jq -r '.data.token')
 ```
 

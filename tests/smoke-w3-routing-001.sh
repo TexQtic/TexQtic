@@ -18,7 +18,7 @@
 #
 # Required env vars:
 #   ADMIN_PASS   — admin@texqtic.com password
-#   TENANT_PASS  — owner@acme.example.com password
+#   TENANT_PASS  — qa.b2b@texqtic.com password
 # Optional:
 #   VERCEL_URL   — Vercel deployment base URL (no trailing slash)
 #                  Required if TARGET=vercel or TARGET=both
@@ -34,8 +34,8 @@ LOCAL_BASE="http://localhost:3001"
 VERCEL_BASE="${VERCEL_URL:-}"
 
 ADMIN_EMAIL="admin@texqtic.com"
-TENANT_EMAIL="owner@acme.example.com"
-ACME_TENANT_ID="faf2e4a7-5d79-4b00-811b-8d0dce4f4d80"
+TENANT_EMAIL="qa.b2b@texqtic.com"
+QA_B2B_TENANT_ID="faf2e4a7-5d79-4b00-811b-8d0dce4f4d80"
 
 INVITE_EMAIL="smoke-invite-$(date +%s)@texqtic-test.com"
 SMOKE_REASON="Wave3 smoke certification run $(date +%Y-%m-%d)"  # 41 chars — passes min:10
@@ -136,28 +136,28 @@ run_smoke() {
   # ── Phase 2: Impersonation start ────────────────────────────────────────────
   phase "2" "Start impersonation → tenant experience"
 
-  step "GET /api/control/tenants/${ACME_TENANT_ID} for userId" "2.1"
-  local acme_resp
-  acme_resp=$(api_call "$BASE" GET "/api/control/tenants/${ACME_TENANT_ID}" \
+  step "GET /api/control/tenants/${QA_B2B_TENANT_ID} for userId" "2.1"
+  local tenant_detail_resp
+  tenant_detail_resp=$(api_call "$BASE" GET "/api/control/tenants/${QA_B2B_TENANT_ID}" \
     -H "Authorization: Bearer ${ADMIN_TOKEN}" \
     -H "X-Texqtic-Realm: control")
-  expect_status "$STATUS_CODE" "200" "GET tenant details for Acme Corp"
+  expect_status "$STATUS_CODE" "200" "GET tenant details for QA B2B"
 
   local target_user_id
-  target_user_id=$(echo "$acme_resp" \
+  target_user_id=$(echo "$tenant_detail_resp" \
     | jq -r '(.data.tenant // .tenant).memberships[0].user.id // empty')
   if [[ -n "$target_user_id" && "$target_user_id" != "null" ]]; then
     pass "Target userId captured: ${target_user_id:0:8}…"
   else
     fail "Could not extract userId from tenant memberships"
-    echo "  Response: $(echo "$acme_resp" | jq -c '.data.tenant.memberships[:1]')"
+    echo "  Response: $(echo "$tenant_detail_resp" | jq -c '.data.tenant.memberships[:1]')"
     return
   fi
 
   step "POST /api/control/impersonation/start" "2.2"
   local imp_body
   imp_body=$(jq -n \
-    --arg orgId "$ACME_TENANT_ID" \
+    --arg orgId "$QA_B2B_TENANT_ID" \
     --arg userId "$target_user_id" \
     --arg reason "$SMOKE_REASON" \
     '{orgId:$orgId, userId:$userId, reason:$reason}')
@@ -259,7 +259,7 @@ run_smoke() {
   local tenant_login_resp
   tenant_login_resp=$(api_call "$BASE" POST "/api/auth/login" \
     -H "x-realm-hint: tenant" \
-    -d "{\"email\":\"${TENANT_EMAIL}\",\"password\":\"${TENANT_PASS}\",\"tenantId\":\"${ACME_TENANT_ID}\"}")
+    -d "{\"email\":\"${TENANT_EMAIL}\",\"password\":\"${TENANT_PASS}\",\"tenantId\":\"${QA_B2B_TENANT_ID}\"}")
   expect_status "$STATUS_CODE" "200" "Tenant owner login"
 
   TENANT_TOKEN=$(echo "$tenant_login_resp" | jq -r '.data.token // .token // empty')

@@ -16,8 +16,8 @@ Chosen strategy: **ephemeral verification tenant**.
 
 Why this is the smallest lawful option:
 
-1. `Acme Corporation` and `White Label Co` remain the permanent canonical baseline and must not be
-   polluted with ad hoc verification state
+1. the canonical QA baseline (`QA B2B`, `QA B2C`, `QA WL`) remains the permanent seeded reference
+  set and must not be polluted with ad hoc verification state
 2. repo truth already supports the required lifecycle seams:
    - approved-onboarding provisioning
    - approved activation from the control plane

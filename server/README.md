@@ -62,7 +62,7 @@ npm run db:migrate
 npm run db:rls
 
 # Seed database with sample data
-npx prisma db seed
+pnpm -C server exec prisma db seed
 ```
 
 ## Development
@@ -71,7 +71,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Server runs at http://localhost:3001
+Server runs at `http://localhost:3001`
 
 ## Database Management
 
@@ -95,7 +95,7 @@ npx prisma migrate dev --name your_migration_name
 - `npm run db:migrate` - Run database migrations
 - `npm run db:rls` - Apply RLS policies
 - `npm run db:studio` - Open Prisma Studio
-- `npx prisma db seed` - Seed database
+- `pnpm -C server exec prisma db seed` - Seed database
 
 ## API Structure
 
@@ -159,22 +159,32 @@ UPDATE audit_logs SET action = 'MODIFIED' WHERE id = 'some-id';
 
 ## Seeded Data
 
-After running `npx prisma db seed`:
+After running `pnpm -C server exec prisma db seed`:
 
-### Tenants
+### Canonical QA Baseline
 
-- **acme-corp** (B2B, Professional plan)
-  - Owner: owner@acme.example.com
+- **qa-b2b** (QA B2B, B2B, Professional plan)
+  - Owner: `qa.b2b@texqtic.com`
   - Password: Password123!
-- **white-label-co** (B2C, Enterprise plan)
-  - Owner: owner@whitelabel.example.com
+- **qa-b2c** (QA B2C, B2C, Starter plan)
+  - Owner: `qa.b2c@texqtic.com`
+  - Password: Password123!
+- **qa-wl** (QA WL, B2C white-label, Enterprise plan)
+  - Owner: `qa.wl@texqtic.com`
+  - Member: `qa.wl.member@texqtic.com`
+  - Password: Password123!
+- **qa-agg** (QA AGG, Aggregator, Professional plan)
+  - Owner: `qa.agg@texqtic.com`
+  - Password: Password123!
+- **qa-pend** (QA PEND, B2B, pending verification posture)
+  - Owner: `qa.pending@texqtic.com`
   - Password: Password123!
 
 ### Admin Users
 
-- **admin@texqtic.com** (SUPER_ADMIN)
+- **`admin@texqtic.com`** (SUPER_ADMIN)
   - Password: Password123!
-- **support@texqtic.com** (SUPPORT)
+- **`support@texqtic.com`** (SUPPORT)
   - Password: Password123!
   - Note: DEV SEED ONLY
 
@@ -183,7 +193,7 @@ After running `npx prisma db seed`:
 - `KILL_SWITCH_ALL` - Global kill switch (disabled)
 - `AI_INSIGHTS_ENABLED` - AI insights (enabled)
 - `ADVANCED_ANALYTICS` - Advanced analytics (enabled)
-- `MULTI_CURRENCY` - Multi-currency support (disabled globally, enabled for acme-corp)
+- `MULTI_CURRENCY` - Multi-currency support (disabled globally, enabled for qa-b2b)
 
 ## Security
 
@@ -224,9 +234,8 @@ Check DATABASE_URL in `.env` and ensure PostgreSQL is running
 
 ### "Seed fails"
 
-Reset and reseed:
+Re-run the repo-pinned seed command:
 
 ```bash
-npx prisma migrate reset
-npx prisma db seed
+pnpm -C server exec prisma db seed
 ```
