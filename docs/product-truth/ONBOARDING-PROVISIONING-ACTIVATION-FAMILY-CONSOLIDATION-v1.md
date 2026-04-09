@@ -11,11 +11,13 @@ completion, and does not authorize follow-on implementation.
 
 Onboarding / Provisioning / Activation Continuity.
 
-## Current controlling family authority
+## Current bounded family reading set
+
+The live opening-layer canon remains authoritative above this note. This section records downstream onboarding-family reading inputs only.
 
 - `docs/product-truth/TEXQTIC-ONBOARDING-SYSTEM-DESIGN-v1.md`
 - `docs/product-truth/TEXQTIC-ONBOARDING-PROVISIONING-HANDOFF-DESIGN-v1.md`
-- `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
+- `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` as preserved launch-baseline context and sequencing-friction input only, not current onboarding-family authority
 
 Current family posture is distributed across two bounded design authorities:
 

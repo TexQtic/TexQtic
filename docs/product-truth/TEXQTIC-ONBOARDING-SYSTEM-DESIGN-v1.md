@@ -15,7 +15,7 @@ This design covers the onboarding domain from activation entry through business 
 
 Included:
 
-- onboarding branching between enterprise and white-label tenant containers
+- onboarding planning distinction between shared-platform business activation and white-label overlay activation signals
 - business verification submission and persisted verification state
 - user-visible verification status continuity after submission
 - approval, rejection, and needs-more-info outcome handling at the system-design level
@@ -80,21 +80,23 @@ Tenant identity is structural. In current repo truth, the structural identity mo
 - `tenant_category`
 - `is_white_label`
 
-For bounded onboarding design purposes, the practical decision is which tenant container the user is entering:
+For bounded onboarding design purposes, the practical distinction is which structural activation signals are present:
 
-- non-white-label business tenant container
-- white-label tenant container
+- non-white-label business tenant activation on the shared platform
+- white-label overlay-enabled tenant activation
 
-In this document, `enterprise` is product shorthand for the first class above. It is not a current canonical enum or persisted identity field in the repo.
+Earlier versions of this document used `enterprise` as shorthand for the first class above. Under the live opening-layer taxonomy, `enterprise` is B2B depth or billing-plan language only and must not be read here as a separate runtime family, parent access model, or persisted identity field.
 
-This identity determines the platform container being activated, the operating shell family, and downstream provisioning expectations.
+`is_white_label` likewise indicates overlay and runtime-path specificity rather than a separate parent family.
+
+These signals determine the platform container being activated, any overlay specificity, and downstream provisioning expectations without by themselves defining the full downstream runtime-family map.
 
 ### 4.3 Onboarding branch model
 
-Onboarding branches early based on tenant container type, not commercial behavior.
+Onboarding planning distinguishes structural activation signals early, but it must not treat enterprise or white-label as separate parent runtime families or parent commercial access models.
 
-- enterprise branch: user is joining the TexQtic network as an enterprise tenant
-- white-label branch: user is activating a white-label tenant that represents their own platform/container
+- shared-platform business activation path: user is joining TexQtic as a non-white-label business tenant on the shared platform
+- white-label overlay activation path: user is activating a tenant whose runtime and experience include white-label overlay specificity
 
 ### 4.4 Verification model
 
@@ -139,7 +141,7 @@ At minimum, trade-capable means the tenant is no longer blocked from:
 
 The system design must preserve three independent axes:
 
-- tenant identity: current repo `tenant_category` plus `is_white_label`, with `enterprise` used in this document only as product shorthand for non-white-label business tenant containers
+- tenant identity: current repo `tenant_category` plus `is_white_label`, with non-white-label business activation and white-label overlay specificity kept distinct without reintroducing `enterprise` as a separate runtime family
 - behavior or mode: B2B or B2C style experience behavior where applicable
 - subscription or capability tier: commercial and feature posture after activation
 
@@ -151,45 +153,45 @@ The system design must preserve three independent axes:
 
 Onboarding must branch on tenant container type.
 
-#### Enterprise branch
+#### Shared-platform business activation path
 
 Intent:
 
-- join the TexQtic network
+- join the TexQtic network as a non-white-label business tenant
 - activate a non-white-label business tenant within the shared platform context
 
 Outcome:
 
-- non-white-label business tenant container exists and is entered by its first usable user
+- non-white-label business tenant context exists and is entered by its first usable user
 - verification determines whether that tenant can move from blocked entry to trade-capable use
 
-#### White-label branch
+#### White-label overlay activation path
 
 Intent:
 
-- create or activate my own branded platform container
-- operate in a white-label tenant context
+- create or activate my own branded tenant experience with white-label overlay specificity
+- operate in a white-label-enabled tenant context
 
 Outcome:
 
-- white-label tenant container exists and is entered by its first usable user
+- white-label-enabled tenant context exists and is entered by its first usable user
 - verification determines whether that tenant can move from blocked entry to trade-capable use
 
 ### 5.2 What this branch does not mean
 
 This branch does not encode:
 
-- whether the tenant behaves as B2B or B2C in every downstream surface
+- which downstream runtime family or behavior path later governs every surface, for example B2B workspace, B2C storefront, or Aggregator workspace
 - what subscription tier the tenant holds
 - whether white-label admin completion is already done
 
-The branch decides tenant container identity only.
+The bounded distinction here preserves activation and overlay signals only. It does not define the full downstream runtime-family map.
 
 ### 5.3 Repo-fit note
 
-The current onboarding UI includes a broader platform-experience selector that exposes `AGGREGATOR`, `B2B`, `B2C`, and `WHITE_LABEL` style options. For this design, that broader selector is treated as current implementation reality, not as target onboarding truth. The target onboarding truth for `ONBOARDING-ENTRY-001` is narrower: enterprise versus white-label is the structural branch, while behavior and experience mapping remain separate downstream concerns.
+The current onboarding UI includes a broader platform-experience selector that exposes `AGGREGATOR`, `B2B`, `B2C`, and `WHITE_LABEL` style options. For this design, that broader selector is treated as current implementation reality, not as current onboarding planning authority. The bounded onboarding distinction here is narrower: shared-platform business activation versus white-label overlay signaling, while downstream runtime-family mapping remains with the live opening-layer taxonomy and later family authorities.
 
-Repo-accurate clarification: the canonical structural fields already present are `tenant_category` and `is_white_label`. The design uses `enterprise` only as shorthand for the non-white-label business-tenant side of that current model and does not introduce a new persisted identity field.
+Repo-accurate clarification: the canonical structural fields already present are `tenant_category` and `is_white_label`. This design uses non-white-label business wording and white-label overlay wording so onboarding planning does not reintroduce `enterprise` as a separate runtime family or white-label as a separate parent mode.
 
 ## 6. Business Verification Loop
 
@@ -357,8 +359,8 @@ At system-design level only, and as conceptual planning labels rather than canon
 
 - Free / Starter: baseline verified access and limited capabilities
 - Growth: expanded operational capability for active tenants
-- Pro / White-label: higher capability posture and white-label-aligned feature envelope
-- Enterprise+: highest capability posture, enterprise-scale service model, and negotiated feature scope
+- Advanced: higher capability posture; any white-label overlay entitlement remains a separate overlay or capability decision rather than the tier name itself
+- Negotiated enterprise service posture: highest capability posture, enterprise-scale B2B service model, and negotiated feature scope
 
 Implementation must not bind to these names unless they are later made canonical. Current repo plan values are separate existing enums and should not be silently overwritten by this design language.
 
@@ -484,7 +486,7 @@ The following items must be validated against repo truth before implementation w
 - the repo may already contain partial control-plane tenant status controls that are adjacent to, but not sufficient for, the onboarding verification loop
 - current repo may be more advanced in persistence than in user-visible outcome continuity, or more advanced in UI copy than in authoritative backend outcome recording; both must be checked directly in implementation planning
 - current trade-capable gating is known to block key trade-facing views, but the full blocked-surface inventory should be confirmed before code changes
-- white-label branch completeness beyond verification closure remains out of scope and must not be smuggled into `ENTRY-001`
+- white-label overlay completeness beyond verification closure remains out of scope and must not be smuggled into `ENTRY-001`
 
 ## 12. Acceptance Model
 

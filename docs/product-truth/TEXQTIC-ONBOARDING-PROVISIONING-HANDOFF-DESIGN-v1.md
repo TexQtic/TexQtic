@@ -380,7 +380,7 @@ The following items must be validated against repo truth before implementation w
 - session truth may appear complete before practical tenant usability is materially true, or the reverse
 - the current control-plane provisioning surface may still split canonical owner provisioning from real first-owner entry continuity
 - the exact boundary between the canonical provisioned-owner path and the separate invite-token path must be confirmed directly before implementation
-- enterprise versus white-label structural identity should remain preserved, but white-label completeness beyond provisioning continuity remains out of scope
+- current `tenant_category` plus `is_white_label` signals should remain preserved distinctly, without reintroducing `enterprise` as a separate runtime family or white-label as a separate parent mode, but white-label overlay completeness beyond provisioning continuity remains out of scope
 
 ## 12. Acceptance Model
 
