@@ -160,6 +160,14 @@ Why this ordering is still correct:
   risk, so it should start after earlier clarity streams have reduced ambiguity
 - thin-surface maturity work belongs last because it can easily become disguised product expansion
 
+Mandatory Stream 4 -> Stream 5 dependency note:
+
+- no Stream 5 schema-convergence execution may begin until Stream 4 has produced a sufficiently
+  complete contract parity ledger for the affected tenant-plane and control-plane surfaces
+- Stream 5 inventory, classification, and bridge planning may begin earlier, but execution remains
+  blocked until contract confidence is materially strong enough to prevent schema cleanup from
+  outrunning interface truth
+
 ## 6. Short-term / medium-term / long-term breakdown
 
 ### Short-term
@@ -262,6 +270,11 @@ Safest first move:
 3. Design bridge-safe compatibility steps before any persistence or API mutation.
 4. Sequence convergence domain-by-domain rather than table-by-table wherever that reduces partial
    states.
+
+Execution gate:
+
+- no schema-convergence execution is allowed until the Stream 4 contract parity ledger is
+  sufficiently complete for the affected surfaces
 
 Safest first move:
 

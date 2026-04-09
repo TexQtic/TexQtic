@@ -121,19 +121,33 @@ Assessment of alternatives:
 
 ## 8. Opening-layer reset sequence
 
+Minimum viable replacement canon gate:
+
+Before any Layer 0 rebinding or old-pointer de-authorization occurs, the replacement opening-layer
+canon must be explicitly enumerated and approved as a bounded package.
+
+At minimum, that replacement canon should contain:
+
+1. the repo/runtime baseline
+2. the taxonomy-truth baseline
+3. the governance authority and pointer layer
+4. the preserve-versus-recreate matrix
+5. the source-of-truth canon matrix
+6. the current sequencing and next-cycle entry document
+
 The opening-layer reset should proceed in the following order:
 
 1. Freeze the repo-truth baseline as the controlling pre-audit truth record.
 2. Open one bounded governance decision that authorizes opening-layer reset and defines the
    preserve-versus-recreate matrix.
-3. Create a new opening-layer repo/runtime baseline pointer set anchored on the baseline report and
-   the canon matrix in this plan.
-4. Create a new taxonomy-truth opening document that fixes runtime-family, tenancy, and lifecycle
-   language.
+3. Define and approve the exact replacement opening-layer canon and pointer set before any pointer
+  rebinding.
+4. Create the missing opening-layer documents required by that approved canon package.
 5. Create a new governance-authority and pointer-layer document that replaces the old live pointer
-   chain.
-6. Only after those new openings exist, de-authorize the old opening-layer pointer chain as live
-   authority while preserving historical lineage.
+  chain.
+6. Only after the minimum viable replacement canon exists, rebind Layer 0 to the new opening layer.
+7. Only after those new openings exist and Layer 0 is safely rebound, de-authorize the old
+  opening-layer pointer chain as live authority while preserving historical lineage.
 
 Planning rule:
 
@@ -220,12 +234,14 @@ Guardrails:
 
 1. Approve this governance alignment plan.
 2. Open one bounded governance reset authorization record.
-3. Create the new opening-layer truth and pointer documents from repo truth.
-4. Rebind Layer 0 live authority to the new opening layer.
-5. Classify the old opening and planning stack into preserved historical evidence versus candidate
+3. Define the exact replacement opening-layer canon and pointer set.
+4. Create the missing opening-layer truth and pointer documents from that approved canon package.
+5. Rebind Layer 0 live authority to the new opening layer only after the minimum viable
+  replacement canon is complete.
+6. Classify the old opening and planning stack into preserved historical evidence versus candidate
    downstream reconciliation inputs.
-6. Run family-by-family downstream reconciliation in the order defined above.
-7. Only after that reconciliation frame is stable, regenerate delivery-planning truth.
+7. Run family-by-family downstream reconciliation in the order defined above.
+8. Only after that reconciliation frame is stable, regenerate delivery-planning truth.
 
 ## 14. Completion state for this pass
 

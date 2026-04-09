@@ -173,6 +173,25 @@ Current reason to harden:
 
 - WL is currently the easiest place for taxonomy, routing, and ownership drift to mix together
 
+### 7.7 Boundary inventory gate before post-bootstrap hardening
+
+Before any seam-hardening work begins beyond bootstrap unification, TexQtic should complete a
+short boundary inventory for each candidate seam.
+
+That inventory must identify:
+
+- route ownership
+- service ownership
+- shared model dependencies
+- cross-domain writes
+- external contract touchpoints
+
+Purpose of this gate:
+
+- prevent domain hardening from starting with vague ownership assumptions
+- surface where a seam is still only conceptual rather than operationally bounded
+- make later bridge-state and rollback design materially cleaner
+
 ## 8. Prioritized architecture improvements justified now
 
 The following architecture changes are justified now at planning level:
@@ -244,6 +263,7 @@ Recommended assessment of this order:
 
 - it is still the best default order
 - bootstrap unification must come first because it reduces topology ambiguity for later work
+- each post-bootstrap seam should enter the order only after its boundary inventory is complete
 - onboarding and lifecycle come second because they bridge taxonomy, tenancy, and control-plane
   state transitions
 - trust/compliance can harden before the primary transaction cluster because its ownership is
@@ -301,9 +321,12 @@ Cutover discipline:
 
 1. Approve this architecture evolution plan.
 2. Define the bootstrap unification contract as the first bounded architecture planning unit.
-3. Produce a tenancy-convergence inventory and bridge model for later structural work.
-4. Harden internal domain seams in the recommended order above.
-5. Reassess extraction-readiness only after those seams are stable, measured, and operationally
+3. Complete a boundary inventory for each candidate post-bootstrap seam covering route ownership,
+  service ownership, shared model dependencies, cross-domain writes, and external contract
+  touchpoints.
+4. Produce a tenancy-convergence inventory and bridge model for later structural work.
+5. Harden internal domain seams in the recommended order above.
+6. Reassess extraction-readiness only after those seams are stable, measured, and operationally
    justified.
 
 ## 15. Completion state for this pass
