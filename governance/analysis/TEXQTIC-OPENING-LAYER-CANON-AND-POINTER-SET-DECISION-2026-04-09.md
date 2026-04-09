@@ -232,7 +232,10 @@ Layer 0 files may be rebound only when all of the following are true:
    `NEXT-ACTION`, `SNAPSHOT`, and `BLOCKED` should reference.
 7. Historical lineage to the old `-v2` chain remains discoverable before any de-authorization
    writeback occurs.
-8. The rebinding unit explicitly states that it is governance reset only and excludes debt cleanup,
+8. The new governance authority / pointer-layer document contains one short lineage note stating
+  that the old `-v2` chain is retained as historical evidence and reconciliation input only, and
+  not as live opening-layer authority.
+9. The rebinding unit explicitly states that it is governance reset only and excludes debt cleanup,
    contract remediation, schema convergence, and architecture change.
 
 ## 13. Execution sequence after decision approval
@@ -246,11 +249,24 @@ bounded order:
    canon matrix.
 4. Create the new sequencing and next-cycle entry document.
 5. Validate the minimum viable replacement canon against Section 10 of this decision.
-6. Rebind `NEXT-ACTION.md`, `OPEN-SET.md`, `SNAPSHOT.md`, and `BLOCKED.md` in a bounded Layer 0
+6. Rebind `SNAPSHOT.md`, `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md` in a bounded Layer 0
    reset execution unit.
 7. De-authorize the old `-v2` chain as live opening-layer authority only after the new canon is
    live and lineage remains explicit.
 8. Stop the reset unit there.
+
+Recommended Layer 0 rebinding order for that later reset unit:
+
+1. `SNAPSHOT.md`
+  Reason: restore-grade truth should reflect the new opening-layer authority first.
+2. `OPEN-SET.md`
+  Reason: top-level non-terminal posture should then reflect the new opening-layer model.
+3. `NEXT-ACTION.md`
+  Reason: the current next move should point to the cleaned sequencing source only after restore
+  truth and open-posture truth are updated.
+4. `BLOCKED.md`
+  Reason: blocker and design-gate posture is interpretive/supporting rather than root-flow
+  authority and should therefore be rebound last.
 
 Explicit boundary:
 
@@ -289,6 +305,9 @@ Explicit boundary:
    - white-label is overlay capability, not a separate parent commercial mode
 7. Require the new sequencing document to state explicitly that it is a consumer of opening-layer
    authority, not the source of taxonomy or contract truth.
+8. Require the new governance authority / pointer-layer document to contain a short lineage note
+  stating that the old `-v2` chain is retained as historical evidence and reconciliation input
+  only, and not as live opening-layer authority.
 
 ## 15. Decision quality check
 
