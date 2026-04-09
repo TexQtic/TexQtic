@@ -4,9 +4,19 @@
 > pre-cleanup posture. It no longer decides current opening status, sequencing posture, or current
 > family-readiness interpretation.
 >
-> Current opening, sequencing, and family-readiness authority now lives in Layer 0, the active
-> `-v2` stack, `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`,
-> and the current reconciliation layer in `docs/product-truth/`.
+> For current onboarding-family consumer reading specifically, use the live opening-layer canon in
+> `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
+> and `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`,
+> the bounded onboarding reconciliation layer in
+> `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-PLANNING-RECONCILIATION-2026-04-09.md`,
+> `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-REMAINDER-INVENTORY-AND-BOUNDARY-CLASSIFICATION-2026-04-09.md`,
+> and `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-CONSUMER-GUIDANCE-RECONCILIATION-2026-04-09.md`,
+> plus `docs/product-truth/ONBOARDING-PROVISIONING-ACTIVATION-FAMILY-CONSOLIDATION-v1.md` as
+> bounded onboarding-family reading note only.
+>
+> The old `-v2` chain remains historical evidence and must not be read as current onboarding-family authority.
+>
+> This historical eligibility snapshot does not imply whole-family completion, deferred remainder closure, or broader current onboarding-family authority.
 
 # TEXQTIC-GOVERNANCE-EXECUTION-ELIGIBILITY-REVIEW-v1
 

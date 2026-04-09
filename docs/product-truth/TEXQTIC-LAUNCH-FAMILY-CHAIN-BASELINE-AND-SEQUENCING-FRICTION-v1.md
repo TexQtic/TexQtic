@@ -2,7 +2,17 @@
 
 ## Status
 
-Proposed new governance / product-truth baseline authority document
+Preserved launch-family baseline and sequencing-friction context document.
+
+For current onboarding-family consumer reading specifically, this artifact is preserved context and
+sequencing-friction input only. Use the live opening-layer canon, the bounded onboarding
+reconciliation artifacts, and `docs/product-truth/ONBOARDING-PROVISIONING-ACTIVATION-FAMILY-CONSOLIDATION-v1.md`
+for current onboarding-family authority.
+
+It does not function as current onboarding-family authority and does not imply whole-family
+completion or deferred remainder closure.
+
+The old `-v2` chain remains historical evidence and reconciliation input only.
 
 ## Purpose
 

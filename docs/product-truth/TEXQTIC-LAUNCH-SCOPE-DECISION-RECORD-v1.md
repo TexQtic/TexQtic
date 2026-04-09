@@ -4,16 +4,20 @@
 > overlay. It is not the sole current scope or sequencing authority after the post-reset authority
 > realignment.
 >
-> Current active authority for current posture, sequencing, and cross-family interpretation now
-> lives in:
-> - Layer 0 posture in `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/BLOCKED.md`
-> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
-> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
-> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
-> - the current reconciliation layer in `docs/product-truth/`
+> For current onboarding-family consumer reading specifically, use:
 >
-> This banner narrows authority only. The historical scope record below is preserved.
+> - the live opening-layer canon in `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md` and `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-PLANNING-RECONCILIATION-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-REMAINDER-INVENTORY-AND-BOUNDARY-CLASSIFICATION-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-CONSUMER-GUIDANCE-RECONCILIATION-2026-04-09.md`
+> - `docs/product-truth/ONBOARDING-PROVISIONING-ACTIVATION-FAMILY-CONSOLIDATION-v1.md` as bounded onboarding-family reading note only
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` as preserved context and sequencing-friction input only
+>
+> The old `-v2` chain remains historical evidence and must not be read as current onboarding-family authority.
+>
+> This historical scope record does not imply whole-family completion, deferred remainder closure, or broader current onboarding-family authority.
+>
+> This banner narrows onboarding-family reading only. The historical scope record below is preserved.
 
 # TEXQTIC-LAUNCH-SCOPE-DECISION-RECORD-v1
 
