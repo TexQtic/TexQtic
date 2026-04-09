@@ -84,6 +84,10 @@ function hasLegacyPlaceholderHost(url: string | null | undefined) {
   return url?.includes('example.com') ?? false;
 }
 
+function normalizeDefinedStrings(values: Array<string | null | undefined>) {
+  return values.filter((value): value is string => Boolean(value)).sort((left, right) => left.localeCompare(right));
+}
+
 const QA_B2B_SPEC: QaTenantSpec = {
   key: 'QA_B2B',
   displayName: 'QA B2B',
@@ -185,14 +189,121 @@ const QA_PEND_SPEC: QaTenantSpec = {
 
 const QA_B2B_CATALOG: CatalogSeedSpec[] = [
   {
-    name: 'QA B2B Core Yarn Lot',
-    sku: 'QA-B2B-CORE-001',
-    description: 'Canonical QA B2B catalog anchor used for RFQ and order continuity.',
-    price: 120,
-    moq: 5,
-    imageUrl: buildQaPlaceholderAsset('1200x900', '#0F766E', '#FFFFFF', 'QA B2B Core Yarn Lot'),
+    name: 'Organic Cotton Poplin',
+    sku: 'QA-B2B-FAB-001',
+    description: 'Lightweight certified cotton poplin for premium shirting and resortwear programs.',
+    price: 18,
+    moq: 75,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#0F766E', '#FFFFFF', 'Organic Cotton Poplin'),
+  },
+  {
+    name: 'Combed Cotton Twill',
+    sku: 'QA-B2B-FAB-002',
+    description: 'Durable combed cotton twill suited to uniforms, chinos, and utility apparel.',
+    price: 22,
+    moq: 100,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#115E59', '#FFFFFF', 'Combed Cotton Twill'),
+  },
+  {
+    name: 'Stretch Cotton Sateen',
+    sku: 'QA-B2B-FAB-003',
+    description: 'Smooth stretch sateen with a refined hand for trousers, dresses, and soft tailoring.',
+    price: 26,
+    moq: 80,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#1D4ED8', '#FFFFFF', 'Stretch Cotton Sateen'),
+  },
+  {
+    name: 'European Linen Plain Weave',
+    sku: 'QA-B2B-FAB-004',
+    description: 'Breathable midweight linen for relaxed suiting, separates, and warm-weather capsules.',
+    price: 28,
+    moq: 60,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#B45309', '#FFFFFF', 'European Linen Plain Weave'),
+  },
+  {
+    name: 'Linen Cotton Herringbone',
+    sku: 'QA-B2B-FAB-005',
+    description: 'Textured linen-cotton blend with subtle herringbone character for jackets and overshirts.',
+    price: 24,
+    moq: 75,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#7C2D12', '#FFFFFF', 'Linen Cotton Herringbone'),
+  },
+  {
+    name: 'Indigo Denim 11 oz',
+    sku: 'QA-B2B-FAB-006',
+    description: 'Rigid indigo denim built for jeans, chore jackets, and structured workwear lines.',
+    price: 19,
+    moq: 120,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#1E3A8A', '#FFFFFF', 'Indigo Denim 11 oz'),
+  },
+  {
+    name: 'Comfort Stretch Denim 9.5 oz',
+    sku: 'QA-B2B-FAB-007',
+    description: 'Lighter stretch denim optimized for womenswear, childrenswear, and soft-bottom programs.',
+    price: 21,
+    moq: 100,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#334155', '#FFFFFF', 'Comfort Stretch Denim 9.5 oz'),
+  },
+  {
+    name: 'Sandwashed Silk Blend Satin',
+    sku: 'QA-B2B-FAB-008',
+    description: 'Fluid silk-viscose satin with a muted sheen for occasionwear and elevated separates.',
+    price: 36,
+    moq: 40,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#9D174D', '#FFFFFF', 'Sandwashed Silk Blend Satin'),
+  },
+  {
+    name: 'Viscose Crepe Drape',
+    sku: 'QA-B2B-FAB-009',
+    description: 'Soft draping viscose crepe for blouses, dresses, and layered contemporary silhouettes.',
+    price: 17,
+    moq: 90,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#7C3AED', '#FFFFFF', 'Viscose Crepe Drape'),
+  },
+  {
+    name: 'Recycled Polyester Taffeta',
+    sku: 'QA-B2B-FAB-010',
+    description: 'Recycled taffeta for linings, packable outerwear shells, and lightweight accessories.',
+    price: 14,
+    moq: 150,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#047857', '#FFFFFF', 'Recycled Polyester Taffeta'),
+  },
+  {
+    name: 'Technical Softshell 3-Layer',
+    sku: 'QA-B2B-FAB-011',
+    description: 'Bonded weather-resistant shell fabric for commuter outerwear and technical uniforms.',
+    price: 32,
+    moq: 60,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#0F172A', '#FFFFFF', 'Technical Softshell 3-Layer'),
+  },
+  {
+    name: 'Warp Knit Performance Mesh',
+    sku: 'QA-B2B-FAB-012',
+    description: 'Breathable warp-knit mesh for activewear panels, lining inserts, and performance footwear.',
+    price: 16,
+    moq: 120,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#0369A1', '#FFFFFF', 'Warp Knit Performance Mesh'),
+  },
+  {
+    name: 'Floral Viscose Challis Print',
+    sku: 'QA-B2B-FAB-013',
+    description: 'Printed viscose challis for seasonal dress collections and soft blouse assortments.',
+    price: 18,
+    moq: 70,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#BE185D', '#FFFFFF', 'Floral Viscose Challis Print'),
+  },
+  {
+    name: 'Upholstery Chenille Weave',
+    sku: 'QA-B2B-FAB-014',
+    description: 'Heavy chenille upholstery fabric for hospitality seating, cushions, and soft interiors.',
+    price: 34,
+    moq: 50,
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#6B21A8', '#FFFFFF', 'Upholstery Chenille Weave'),
   },
 ];
+
+const QA_B2B_CATALOG_SKUS = QA_B2B_CATALOG.map(item => item.sku);
+const QA_B2B_CATALOG_SORTED_SKUS = [...QA_B2B_CATALOG_SKUS].sort((left, right) => left.localeCompare(right));
 
 const QA_B2C_CATALOG: CatalogSeedSpec[] = [
   {
@@ -1289,10 +1400,12 @@ function validateQaB2bIdentity(
   state: TenantValidationState,
   proof: {
     activeCatalogItems: number;
+    activeCatalogSkus: string[];
+    activeCatalogSkuMatch: boolean;
     rfqs: number;
     orders: number;
     auditLogs: number;
-    legacySeedMediaUrlsPresent: number;
+    invalidActiveMediaUrlsPresent: number;
   },
 ) {
   const hasIdentity =
@@ -1311,10 +1424,11 @@ function validateQaB2bIdentity(
 
   const hasProof =
     proof.activeCatalogItems === QA_B2B_CATALOG.length &&
+    proof.activeCatalogSkuMatch &&
     proof.rfqs >= 1 &&
     proof.orders >= 1 &&
     proof.auditLogs >= 1 &&
-    proof.legacySeedMediaUrlsPresent === 0;
+    proof.invalidActiveMediaUrlsPresent === 0;
 
   return {
     ...baseTenantValidation(state),
@@ -1488,21 +1602,32 @@ async function validateQaBaseline() {
     prisma.user.findUnique({ where: { email: 'owner@acme.example.com' }, select: { id: true } }),
   ]);
 
-  const [qaB2bCatalogCount, qaB2bRfqCount, qaB2bOrderCount, qaB2bAuditCount, qaB2bLegacySeedMediaCount] = qaB2b.tenant
+  const [qaB2bCatalogCount, qaB2bActiveCatalog, qaB2bRfqCount, qaB2bOrderCount, qaB2bAuditCount] = qaB2b.tenant
     ? await Promise.all([
         prisma.catalogItem.count({ where: { tenantId: qaB2b.tenant.id, active: true } }),
+        prisma.catalogItem.findMany({
+          where: { tenantId: qaB2b.tenant.id, active: true },
+          select: {
+            sku: true,
+            imageUrl: true,
+          },
+        }),
         prisma.rfq.count({ where: { orgId: qaB2b.tenant.id } }),
         prisma.order.count({ where: { tenantId: qaB2b.tenant.id } }),
         prisma.auditLog.count({ where: { tenantId: qaB2b.tenant.id } }),
-        prisma.catalogItem.count({
-          where: {
-            tenantId: qaB2b.tenant.id,
-            sku: { in: QA_B2B_CATALOG.map(item => item.sku) },
-            imageUrl: { contains: 'example.com' },
-          },
-        }),
       ])
-    : [0, 0, 0, 0, 0];
+    : [0, [], 0, 0, 0];
+
+  const qaB2bActiveCatalogSkus = normalizeDefinedStrings(qaB2bActiveCatalog.map(item => item.sku));
+  const qaB2bActiveCatalogSkuMatch =
+    JSON.stringify(qaB2bActiveCatalogSkus) === JSON.stringify(QA_B2B_CATALOG_SORTED_SKUS);
+  const qaB2bInvalidActiveMediaCount = qaB2bActiveCatalog.filter(item => {
+    if (!item.imageUrl) {
+      return true;
+    }
+
+    return hasLegacyPlaceholderHost(item.imageUrl) || !item.imageUrl.includes(QA_PLACEHOLDER_HOST);
+  }).length;
 
   const qaB2cActiveCart = qaB2c.tenant && qaB2c.user
     ? await prisma.cart.findFirst({
@@ -1565,10 +1690,12 @@ async function validateQaBaseline() {
     },
     qaB2B: validateQaB2bIdentity(qaB2b, {
       activeCatalogItems: qaB2bCatalogCount,
+      activeCatalogSkus: qaB2bActiveCatalogSkus,
+      activeCatalogSkuMatch: qaB2bActiveCatalogSkuMatch,
       rfqs: qaB2bRfqCount,
       orders: qaB2bOrderCount,
       auditLogs: qaB2bAuditCount,
-      legacySeedMediaUrlsPresent: qaB2bLegacySeedMediaCount,
+      invalidActiveMediaUrlsPresent: qaB2bInvalidActiveMediaCount,
     }),
     qaB2C: validateQaB2cIdentity(qaB2c, {
       activeCatalogItems: qaB2cCatalogCount,
