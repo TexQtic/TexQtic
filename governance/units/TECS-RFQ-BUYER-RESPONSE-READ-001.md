@@ -43,7 +43,7 @@ new buyer or supplier mutation behavior.
 ## Files Allowlisted (Modify)
 
 - `server/src/routes/tenant.ts` or a dedicated tenant RFQ read route module under `server/src/routes/tenant/`
-- `shared/contracts/openapi.tenant.json` — only if required to govern the buyer RFQ detail read contract
+- `shared/contracts/openapi.tenant.json` — update in the same implementation wave if the buyer RFQ detail response contract is newly exposed or its request/response shape changes
 - `server/tests/**` — only files strictly required to verify buyer RFQ response visibility and tenant isolation
 
 ## Files Read-Only

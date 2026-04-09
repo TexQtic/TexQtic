@@ -78,7 +78,7 @@ exposure beyond the decided minimal posture, or Trade coupling belongs here.
 ## Files Allowlisted (Modify)
 
 - `server/src/routes/tenant.ts` or a dedicated tenant RFQ supplier read route module under `server/src/routes/tenant/`
-- `shared/contracts/openapi.tenant.json` — only if required to govern the supplier RFQ list/detail read contract
+- `shared/contracts/openapi.tenant.json` — update in the same implementation wave if the supplier RFQ inbox/detail contract is newly exposed or its request/response shape changes
 - `server/tests/**` — only files strictly required to verify supplier RFQ list/detail read behavior and tenant isolation
 
 ## Files Read-Only
@@ -111,6 +111,7 @@ This unit is **VERIFIED_COMPLETE**. No further implementation work is authorized
 - Supplier RFQ reads remain recipient-scoped by `supplier_org_id`; buyer ownership does not authorize cross-tenant supplier discovery
 - This unit is read-only and backend-only; any frontend work must be sequenced separately
 - Search, filtering, and sorting must remain minimal and bounded to the fields authorized by PRODUCT-DEC-SUPPLIER-RFQ-READS
+- Current preserved tenant OpenAPI authority does not presently expose a supplier inbox/detail path. This unit's implementation/runtime closure remains preserved history only and must not be cited as current OpenAPI parity.
 - If implementation requires response actions, buyer identity exposure, or wider RFQ read surfaces, stop and sequence a separate unit
 
 ## Control-Plane Source of Truth

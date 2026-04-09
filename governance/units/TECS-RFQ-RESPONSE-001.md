@@ -56,7 +56,7 @@ coupling.
 - `server/prisma/schema.prisma` — reflect the canonical supplier RFQ response model after approved SQL application
 - `server/prisma/migrations/**` — supplier RFQ response schema / constraints / RLS SQL only, if required by the implementation plan
 - `server/src/routes/tenant.ts` or a dedicated tenant RFQ response route module under `server/src/routes/tenant/`
-- `shared/contracts/openapi.tenant.json` — only if the supplier RFQ response write contract must be governed explicitly
+- `shared/contracts/openapi.tenant.json` — update in the same implementation wave if the supplier RFQ response write contract is newly exposed or its request/response shape changes
 - `server/tests/**` — only files strictly required to verify supplier RFQ response write behavior, RFQ status transition, and tenant isolation
 
 ## Files Read-Only
@@ -94,6 +94,7 @@ coupling.
   - buyer-created and cross-tenant supplier responses are blocked by recipient scoping
   - `CLOSED`, already `RESPONDED`, and duplicate-response submissions are rejected
   - first valid supplier response sets parent RFQ status to `RESPONDED`
+  - current preserved tenant OpenAPI authority does not presently expose a standalone supplier RFQ response write path; this unit's implementation/runtime closure remains preserved history only and must not be cited as current OpenAPI parity
   - response remains non-binding with no editing, revision history, negotiation threads, counter-offers, pricing, quote acceptance, order conversion, checkout, settlement, AI automation, control-plane RFQ actions, or multi-round negotiation introduced
   - audit evidence is written with action `rfq.RFQ_RESPONDED`, while domain persistence remains the source of truth with coherent RFQ/response linkage
 

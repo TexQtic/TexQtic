@@ -62,7 +62,7 @@ expansion, impersonation or support bypass expansion, or broad auth redesign.
 - `server/src/routes/control.ts` or a dedicated control-plane AdminRBAC revoke/remove module under `server/src/routes/control/`
 - `services/controlPlaneService.ts` or a dedicated AdminRBAC revoke/remove control-plane service file
 - `components/ControlPlane/AdminRBAC.tsx` — only if required to wire the bounded revoke/remove control for the existing control-plane surface
-- `shared/contracts/openapi.control-plane.json` — only if required to govern the bounded revoke/remove contract
+- `shared/contracts/openapi.control-plane.json` — update in the same implementation wave if the bounded revoke/remove endpoint is newly exposed or its request/response contract changes
 - `server/src/__tests__/**` or `server/tests/**` — only files strictly required to verify the bounded revoke/remove control-plane behavior
 - `tests/**` — only files strictly required to verify the bounded control-plane revoke/remove UI behavior
 

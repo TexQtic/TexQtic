@@ -41,7 +41,7 @@ Summary: TECS-FBW-003-B is authorized for implementation with full mutation scop
         Frontend must handle all four result states:
         APPLIED / PENDING_APPROVAL / ESCALATION_REQUIRED / DENIED.
   Constitutional constraints (remain mandatory — not altered by this decision):
-    - D-017-A: tenantId derived from JWT only; never from request body.
+    - D-017-A: tenant authority must derive from the verified JWT/session context only; request bodies must not carry `tenantId`, and canonical request/DB context remains `org_id` / `app.org_id`.
     - D-020-B: balance displayed only as server-derived value; no stored balance.
     - D-020-C: aiTriggered=false enforced in this unit; escrow-strict AI gate not exercised.
     - D-022-B/C: ENTITY_FROZEN error must be handled gracefully in frontend.
@@ -98,7 +98,7 @@ Summary: TECS-FBW-006-B is product-authorized for limited, role-differentiated e
     - bulk / batch / cross-org actions
 
   Constitutional constraints remain mandatory and unchanged:
-    - D-017-A: tenantId derived from JWT only; never from request body
+    - D-017-A: tenant authority must derive from the verified JWT/session context only; request bodies must not carry `tenantId`, and canonical request/DB context remains `org_id` / `app.org_id`
     - D-011: org_id is the canonical tenancy boundary; cannot be weakened
     - D-022-A, D-022-B, D-022-C, D-022-D: escalation doctrine invariants
     - D-002: control-plane override actions must be explicit and audited

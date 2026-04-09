@@ -56,7 +56,7 @@ was introduced.
 - `server/prisma/schema.prisma` — reflect the canonical RFQ model after approved SQL application
 - `server/prisma/migrations/**` — RFQ schema / enum / RLS SQL only, if required by the implementation plan
 - `server/src/routes/tenant.ts` or a dedicated tenant RFQ route module under `server/src/routes/tenant/`
-- `shared/contracts/openapi.tenant.json` — only if the RFQ write-path contract must change to remain correct after persistence
+- `shared/contracts/openapi.tenant.json` — update in the same implementation wave if RFQ persistence changes the exposed tenant RFQ write contract or newly exposes that contract
 - `server/tests/**` — only files strictly required to verify RFQ persistence behavior and tenant isolation
 
 ## Files Read-Only

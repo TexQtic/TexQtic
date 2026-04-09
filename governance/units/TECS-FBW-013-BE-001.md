@@ -52,7 +52,7 @@ belong in this prerequisite unit.
 
 Expected candidates (for future implementation prompt only):
 - `server/src/routes/tenant.ts` or a tenant quote route module — add tenant-plane RFQ submission route
-- `shared/contracts/openapi.tenant.json` — add governed tenant RFQ route contract only if needed by the implementation plan
+- `shared/contracts/openapi.tenant.json` — update in the same implementation wave if the tenant RFQ submission endpoint is newly exposed or its request/response contract changes
 - backend service or audit wiring files strictly required to persist an auditable RFQ submission path
 
 ## Files Read-Only

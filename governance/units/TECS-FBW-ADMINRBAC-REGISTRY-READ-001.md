@@ -54,7 +54,7 @@ membership visibility, white-label staff visibility, or session invalidation mec
 - `server/src/routes/control.ts` or a dedicated control-plane AdminRBAC read module under `server/src/routes/control/`
 - `services/controlPlaneService.ts`
 - `components/ControlPlane/AdminRBAC.tsx`
-- `shared/contracts/openapi.control-plane.json` — only if required to govern the read contract
+- `shared/contracts/openapi.control-plane.json` — update in the same implementation wave if the bounded control-plane read contract is newly exposed or its request/response shape changes
 - `server/src/__tests__/**` or `server/tests/**` — only files strictly required to verify the bounded read surface
 - `tests/**` — only files strictly required to verify the read-only ControlPlane/AdminRBAC surface
 
