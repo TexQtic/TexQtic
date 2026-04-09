@@ -10,14 +10,19 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-06
-snapshot_unit: GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-CLOSE
+snapshot_date: 2026-04-09
+snapshot_unit: TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-09
 governance_model_version: v1.7
 reset_ratification: governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md
 present_posture_owner: governance/control/
-live_product_sequencing_authority: docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
-candidate_truth_authority: docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
-implementation_roadmap_posture: derived_only
+live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
+live_taxonomy_authority: governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md
+live_governance_authority: governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md
+live_sequencing_authority: governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md
+historical_reconciliation_inputs:
+  - docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md
+  - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
+  - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
 current_product_active_delivery_count: 0
 current_product_active_delivery_unit: null
 future_product_opening_requires_fresh_bounded_decision: true
@@ -71,9 +76,10 @@ historical_truth_owner: governance/units/ + governance/log/
 - This opening does not reopen the closed public browse-entry seam, seller/admin separation, or
   settings separation units and does not open orders/cart/checkout continuity or adjacent-family
   redesign.
-- `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` and `TEXQTIC-GAP-REGISTER-v2.md` still preserve B2C at
-  broader family resolution; the current exact opening is the narrower fresh bounded decision
-  supplied by the newer B2C decision chain.
+- The live opening-layer sequencing authority is now
+  `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`.
+- The old `-v2` chain is retained as historical evidence and reconciliation input only, not live
+  opening-layer authority.
 - Preserved governance investigation outcome: `PLANNING_STACK_NEEDS_RESHAPING`.
 - The underlying need remains valid for a thin launch-acceleration overlay above governance, but
   the currently framed broad Launch Acceleration Planning Stack is not lawful to open as proposed.

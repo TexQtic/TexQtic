@@ -2,13 +2,19 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-04 (GOV-RECONCILE-LAYER0-CONTROL-FILE-CONSISTENCY-001)
+**Last Updated:** 2026-04-09 (TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-09)
 **Max Size:** 80 lines (structural gate)
 
 > Detailed register of all non-implementation-ready open units.  
 > For the full open set (summary view), see `OPEN-SET.md`.  
 > These units must NOT be sequenced for implementation without explicit resolution of the
 > blocker, product decision, or design gate recorded below.
+>
+> Live opening-layer authority and sequencing interpretation now route through
+> `TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md` and
+> `TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`.
+> The old `-v2` chain is retained as historical evidence and reconciliation input only, not live
+> opening-layer authority.
 
 ---
 

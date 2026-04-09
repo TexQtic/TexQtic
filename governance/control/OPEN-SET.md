@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-06 (GOV-DEC-CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-CLOSE)  
+**Last Updated:** 2026-04-09 (TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-09)  
 **Max Size:** 50 lines (structural gate)
 
 > This file is the canonical list of all non-terminal governed units and current delivery class only.  
@@ -42,9 +42,16 @@
 ## Operating Notes
 
 - Layer 0 owns current non-terminal posture only.
-- Live product sequencing authority: `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-- Canonical candidate/family truth: `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
-- `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only.
+- Live opening-layer baseline:
+  `governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md`
+- Live taxonomy authority:
+  `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
+- Live opening-layer authority map:
+  `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
+- Live sequencing authority:
+  `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+- The old `-v2` chain is retained as historical evidence and reconciliation input only, not live
+  opening-layer authority.
 - Current open product-facing `ACTIVE_DELIVERY`: none.
 - `MODE-COMPLETENESS-B2C-SHELL-AUTHENTICATED-AFFORDANCE-SEPARATION` and
   `CONTROL-PLANE-B2C-TENANT-CONTEXT-ENTRY-REALM-MISMATCH-001` are now `CLOSED` complete by
