@@ -5,8 +5,9 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.11 (reset-amended with successor-chain preservation; original layer model preserved)  
+**Doctrine Version:** v1.12 (opening-layer canon alignment; original layer model preserved)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
+**Live Authority Alignment:** preserved downstream governance design descendant; live opening-layer routing is governed by the opening-layer canon rather than by this file alone.  
 
 ---
 
@@ -24,14 +25,15 @@ A Governance Operating Model for TexQtic has been designed that:
 - Defines a phased migration path that preserves all history
 - Does not execute migration in this unit
 
-Reset amendment ratified on 2026-04-04 preserves this design and narrows its live operating burden:
+Reset amendment ratified on 2026-04-04 preserves this design as downstream governance lineage and narrows its live operating burden:
 - Layer 0 owns present operational posture only
-- `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` is the sole live sequencing authority for ordinary product-facing next-opening selection
-- `TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only
+- the live opening-layer canon now governs top-level opening-layer routing after Layer 0
+- relevant preserved downstream family/design authorities remain topic-specific descendant truth only
+- the old `-v2` chain is historical evidence and reconciliation input only, not live authority
 - candidate normalization is exception-only rather than a standing prerequisite
 - Sentinel gating is control-critical only
 - separate post-close audit artifacts are reserved for strict-path or broader queue-shaping closes
-- product-facing closes that change active-delivery or next-candidate posture require post-close authority reconciliation before any fresh opening decision
+- product-facing closes that change active-delivery or next-candidate posture require post-close authority reconciliation against the live opening-layer sequencing authority and live opening-layer authority map before any fresh opening decision
 - zero-open product-delivery post-close posture returns to explicit next-opening decision control; closed units preserve lineage only
 - structurally broad but coherent chosen family remainders must route to one further same-family bounded reduction or narrow design-clarification step only
 - coherent narrowed same-family remainders with explicit residual lanes must route to one same-remainder lane-separation clarification step only
@@ -115,9 +117,9 @@ The Governance OS partitions governance truth into five structurally separated l
 
 **Layer rules:**
 - Layer 0 owns current governed posture only: open set, next action, blockers, and restore-grade snapshot state
-- `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` is the sole live sequencing authority for ordinary product execution selection
-- `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` remains canonical candidate/family truth
-- `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` is derived planning context only and must not compete as live sequencing authority
+- the live opening-layer canon governs opening-layer routing after Layer 0
+- relevant preserved downstream family/design authorities provide topic-specific descendant truth
+- the old `-v2` chain remains historical evidence and reconciliation input only and must not compete as live authority
 - Layer 1 is the single source of truth for individual unit status
 - Layer 2 decisions are referenced by Layer 1 unit records — never duplicated
 - Layer 3 receives entries; never loses them; never becomes operational
@@ -127,7 +129,7 @@ The Governance OS partitions governance truth into five structurally separated l
 
 The control plane consists of exactly **five files**, all in `governance/control/`. Each file has a hard-enforced maximum size.
 
-Layer 0 is not the origin of general product delivery order. Layer 0 owns current governed posture only. The live product-sequencing source is `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`; the gap register owns canonical candidate/family truth; the implementation roadmap is derived planning context only; `SNAPSHOT.md` is restore-grade context only.
+Layer 0 is not the origin of root opening-layer or downstream design authority. Layer 0 owns current governed posture only. After Layer 0, live routing follows the opening-layer canon, then the relevant preserved downstream family/design authorities by topic. `SNAPSHOT.md` is restore-grade context only. The old `-v2` chain remains historical evidence and reconciliation input only.
 
 | File | Max Size | Owns |
 |---|---|---|
@@ -154,12 +156,14 @@ Example:
 #### NEXT-ACTION.md schema
 
 ```yaml
-mode: DERIVED_PRODUCT_TRUTH_POINTER | GOVERNANCE_EXCEPTION
+mode: OPENING_LAYER_CANON_POINTER | GOVERNANCE_EXCEPTION
 governance_exception_active: true | false
-product_delivery_priority: <delivery-unit-id> | none
-live_product_sequencing_authority: <doc path> | omit when exception-only
-candidate_truth_authority: <doc path> | omit when exception-only
-derived_planning_context: <doc path> | omit when exception-only
+product_delivery_priority: <delivery-unit-id> | NONE_OPEN
+live_opening_layer_baseline: <doc path> | omit when exception-only
+live_taxonomy_authority: <doc path> | omit when exception-only
+live_governance_authority: <doc path> | omit when exception-only
+live_sequencing_authority: <doc path> | omit when exception-only
+historical_reconciliation_inputs: <doc path list> | omit when exception-only
 layer_0_action: <governance-facing pointer or exception statement>
 notes: <≤3 lines if needed, else omit>
 ```
@@ -312,10 +316,10 @@ All other `docs/governance/*.md` design documents remain in place as design refe
 
 | Prompt Type | Required reads (before any action) |
 |---|---|
-| Next-unit selection | `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when the selection is product-facing |
-| Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`); add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
+| Next-unit selection | `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add the live opening-layer sequencing authority and the live opening-layer authority map when the selection is product-facing |
+| Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`); add the live opening-layer sequencing authority and the relevant preserved downstream family/design authority when product-facing |
 | Verification prompt drafting | `OPEN-SET.md` + target unit file |
-| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` when a product-facing close changes active-delivery or next-candidate posture |
+| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add the live opening-layer sequencing authority + the live opening-layer authority map when a product-facing close changes active-delivery or next-candidate posture |
 | Any session restoration | `OPEN-SET.md` + `NEXT-ACTION.md`; add `SNAPSHOT.md` only when current context is missing, stale, or historically ambiguous |
 
 **Prohibition:** Archive files, historical tracker files, and the execution log MUST NOT be used as operational truth for sequencing decisions. If a unit's status is not in Layer 0 or Layer 1, it is assumed UNKNOWN and must be resolved before acting.
@@ -400,11 +404,11 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 | Operation | Authorized read scope |
 |---|---|
 | Session open / context restoration | `OPEN-SET.md`, `NEXT-ACTION.md`, `BLOCKED.md`; add `SNAPSHOT.md` only when restore context or historical ambiguity matters |
-| Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
+| Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add the live opening-layer sequencing authority and the relevant preserved downstream family/design authority when product-facing |
 | Drafting verification prompt | Add: `units/<UNIT-ID>.md` |
-| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files; add `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` when a product-facing close changes active-delivery or next-candidate posture |
-| Product/design decision | Relevant decision file + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` when product-facing |
-| Implementation-opening readiness investigation | Layer 0 files + `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
+| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files; add the live opening-layer sequencing authority + the live opening-layer authority map when a product-facing close changes active-delivery or next-candidate posture |
+| Product/design decision | Relevant decision file + the live opening-layer sequencing authority + the relevant preserved downstream family/design authority when product-facing |
+| Implementation-opening readiness investigation | Layer 0 files + the live opening-layer sequencing authority + the live opening-layer authority map + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
 | Strict-path / authority-shaping work | Layer 0 files + `SNAPSHOT.md` + the minimum Layer 1 / Layer 2 / Layer 3 sources required for that authority check |
 | Candidate-normalization exception | Relevant analysis artifact + `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md` |
 | Audit query | `EXECUTION-LOG.md` (read-only) |
@@ -536,7 +540,7 @@ authority after Layer 0 has already moved to a different posture.
 #### 2. Post-Close Authority Reconciliation Rule
 
 After any product-facing close, Governance OS must reconcile the resulting Layer 0 posture against
-the live sequencing authority when the close:
+the live opening-layer sequencing authority and live opening-layer authority map when the close:
 
 - removes the only active product-delivery unit
 - changes the current next-candidate posture
@@ -548,11 +552,11 @@ The minimum reconciliation read set is:
 - `NEXT-ACTION.md`
 - `BLOCKED.md`
 - the closing unit file
-- `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-- `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
+- `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
+- `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
 
-`docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` may be read only for strict
-consistency checks. It is not live sequencing authority.
+The old `-v2` product-truth chain may be read only as historical reconciliation input. It is not
+live opening-layer authority.
 
 #### 3. Zero-Open Product-Delivery Re-Entry Rule
 
@@ -790,8 +794,9 @@ The minimum revalidation read set is:
 - `NEXT-ACTION.md`
 - `BLOCKED.md`
 - the preserved successor-chain artifact
-- live sequencing authority
-- candidate/family truth
+- the live opening-layer sequencing authority
+- the live opening-layer authority map
+- the relevant preserved downstream family/design authorities
 - each volatile truth named in the artifact
 - each dependency-readiness surface named in the artifact
 
@@ -874,7 +879,7 @@ A preserved successor-chain artifact becomes invalid if:
 - the same-family remainder changed materially
 - the artifact is stale or incomplete
 - Layer 0 posture contradicts the preserved chain assumption
-- live sequencing or candidate truth supersedes the preserved chain
+- the live opening-layer sequencing authority or the relevant preserved downstream family/design authority supersedes the preserved chain
 - blocker or design-gate posture materially changes the proposed next slice
 
 #### 5. Required Result When Triggered
@@ -959,8 +964,15 @@ Representative structure:
 ```yaml
 snapshot_date: YYYY-MM-DD
 snapshot_unit: <UNIT-ID>
-live_product_sequencing_authority: <doc path>
-candidate_truth_authority: <doc path>
+governance_model_version: <version>
+reset_ratification: <decision path>
+present_posture_owner: governance/control/
+live_opening_layer_baseline: <doc path>
+live_taxonomy_authority: <doc path>
+live_governance_authority: <doc path>
+live_sequencing_authority: <doc path>
+historical_reconciliation_inputs:
+  - <doc path>
 current_open_counts:
   open: <n>
   decision_queue: <n>
