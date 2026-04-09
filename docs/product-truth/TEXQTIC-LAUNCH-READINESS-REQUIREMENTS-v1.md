@@ -45,15 +45,17 @@ Authority order used for this register:
 1. Layer 0 governance posture in `governance/control/*` and `governance/log/EXECUTION-LOG.md`
 2. TECS operating doctrine in `TECS.md`
 3. Product-truth planning stack requested by prompt in the `-v1` files
-4. Active repo authority where repo truth has advanced to the `-v2` stack
+4. Broad product-truth planning stack reviewed in this historical register
 5. Current frontend, backend, service, contract, and schema surfaces
 
 Important repo-authority note:
 
 - The prompt named the `-v1` planning stack, and those files were reviewed.
-- Current Layer 0 explicitly states that the active planning basis is now the `-v2` stack.
-- This document therefore uses the reviewed `-v1` files as historical baseline and the reviewed `-v2`
-  files as the live planning authority.
+- At the time of this historical register, the reviewed `-v2` files were used as broad planning
+   input alongside the requested `-v1` stack.
+- For current onboarding-family reading, the live opening-layer canon and bounded onboarding
+   reconciliation artifacts now control; the old `-v2` chain remains historical evidence and
+   reconciliation input only.
 
 Path-normalization note:
 
@@ -202,8 +204,9 @@ Launch-scope normalization implied by current repo truth:
 
 ## 7. Fresh Repo-Truth Gaps Not Fully Captured in Current Stack
 
-The active `-v2` stack already captures several high-signal gaps correctly. It does not yet fully capture all
-launch-readiness truth that the runtime now exposes.
+The reviewed `-v2` stack captured several high-signal gaps correctly at the time of this
+historical register. It did not fully capture all launch-readiness truth that the runtime then
+exposed.
 
 ## 7.1 Subscription / entitlement normalization is underplanned
 

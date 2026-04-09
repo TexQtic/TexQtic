@@ -40,7 +40,9 @@ This artifact does not:
 - modify Layer 0
 - authorize a second product-facing opening by implication
 
-This review treats the newer launch overlay plus the linked active `-v2` stack as controlling unless a more specific, later, cross-linked family authority artifact proves a narrower controlling posture.
+At the time of this historical review, the newer launch overlay plus the then-linked `-v2` stack
+were treated as controlling unless a more specific, later, cross-linked family authority artifact
+proved a narrower controlling posture.
 
 ## 2. Authority Precedence Used
 
@@ -57,7 +59,7 @@ Authority was reconciled in this order.
    - `docs/product-truth/TEXQTIC-LAUNCH-READINESS-REQUIREMENTS-v1.md`
    - `docs/product-truth/TEXQTIC-LAUNCH-SCOPE-DECISION-RECORD-v1.md`
    - `docs/product-truth/TEXQTIC-LAUNCH-PLANNING-SPLIT-v1.md`
-3. Cross-linked active broad product-truth stack
+3. Cross-linked broad product-truth stack used in this historical review
    - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
    - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
    - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
