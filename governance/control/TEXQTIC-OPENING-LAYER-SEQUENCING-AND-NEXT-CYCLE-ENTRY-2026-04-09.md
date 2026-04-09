@@ -35,6 +35,9 @@ The current lawful next move after reset completion is:
   canon and focused first on downstream governance authority and pointer surfaces that still inherit
   pre-reset opening-layer assumptions
 
+That next unit begins with governance authority and pointer descendants only, not family-level
+design rewrites or delivery-planning regeneration.
+
 This next move does not authorize:
 
 - debt cleanup

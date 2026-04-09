@@ -46,6 +46,8 @@ Additional structural clarifiers:
 - `tenant_category` remains the structural family signal.
 - `is_white_label` remains the white-label capability and overlay signal.
 - `app.tenant_id` is stale and must not be treated as canonical opening-layer truth.
+- hybrid schema residue may still exist, but it does not displace opening-layer constitutional
+  authority.
 
 ## 4. Lifecycle and status truth
 
