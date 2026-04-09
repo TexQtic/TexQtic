@@ -177,7 +177,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   }
 
   return (
-          { label: 'Closed', value: loading ? '...' : stats.closed.toString() },
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">Tenant Registry</h1>
@@ -196,7 +196,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
           { label: 'Total Tenants', value: loading ? '...' : stats.total.toString() },
           { label: 'Active', value: loading ? '...' : stats.active.toString() },
           { label: 'Suspended', value: loading ? '...' : stats.suspended.toString() },
-          { label: 'Trial', value: loading ? '...' : stats.trial.toString() },
+          { label: 'Closed', value: loading ? '...' : stats.closed.toString() },
         ].map((stat, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
             <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
