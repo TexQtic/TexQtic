@@ -10,7 +10,7 @@ opened: 2026-04-05
 closed: 2026-04-05
 verified: 2026-04-05
 commit: "328601e"
-evidence: "OPENING_DECISION_CONFIRMATION: current repo-truth lawful-opening decision concluded LAWFUL_TO_OPEN for Subscription frontend canonical vocabulary alignment under the live Governance OS and D-014 opening rule · TARGET_BOUNDARY_CONFIRMATION: the unit remained limited to frontend canonical vocabulary alignment, truthful commercial/package identity, and directly coupled admin-visible plan truth only · IMPLEMENTATION_CONFIRMATION: bounded implementation remained confined to types.ts, App.tsx, and components/ControlPlane/TenantRegistry.tsx via commit 328601e · CANONICAL_VOCABULARY_CONFIRMATION: canonical commercial vocabulary remained FREE / STARTER / PROFESSIONAL / ENTERPRISE and approved legacy normalization remained TRIAL -> FREE, BASIC -> FREE, PAID -> PROFESSIONAL · DELTA_CLEAN_CONFIRMATION: no remaining defect attributable to this unit's delta remained after immediate remediation and focused diagnostic attribution · VERIFICATION_CONFIRMATION: VERIFIED_COMPLETE on the bounded three-file implementation surface · RUNTIME_VALIDATION_CONFIRMATION: bounded production runtime validation passed on enterprise tenant surfaces, white-label tenant surfaces, and the super-admin tenant registry surface · NON_EXPANSION_CONFIRMATION: broader subscription-family tier seeding/testing remains a separate later-cycle consideration only and does not belong to this close"
+evidence: "OPENING_DECISION_CONFIRMATION: current repo-truth lawful-opening decision concluded LAWFUL_TO_OPEN for Subscription frontend canonical vocabulary alignment under the live Governance OS and D-014 opening rule · TARGET_BOUNDARY_CONFIRMATION: the unit remained limited to frontend canonical vocabulary alignment, truthful commercial/package identity, and directly coupled admin-visible plan truth only · IMPLEMENTATION_CONFIRMATION: bounded implementation remained confined to types.ts, App.tsx, and components/ControlPlane/TenantRegistry.tsx via commit 328601e · CANONICAL_VOCABULARY_CONFIRMATION: canonical commercial vocabulary remained FREE / STARTER / PROFESSIONAL / ENTERPRISE and approved legacy normalization remained TRIAL -> FREE, BASIC -> FREE, PAID -> PROFESSIONAL · DELTA_CLEAN_CONFIRMATION: no remaining defect attributable to this unit's delta remained after immediate remediation and focused diagnostic attribution · VERIFICATION_CONFIRMATION: VERIFIED_COMPLETE on the bounded three-file implementation surface · RUNTIME_VALIDATION_CONFIRMATION: bounded production runtime validation passed on B2B workspace surfaces, white-label overlay surfaces, and the super-admin tenant registry surface · NON_EXPANSION_CONFIRMATION: broader subscription-family tier seeding/testing remains a separate later-cycle consideration only and does not belong to this close"
 doctrine_constraints:
   - D-004: this is one bounded ACTIVE_DELIVERY unit only; it must not widen into billing-platform maturity, broad entitlement architecture, finance-ops redesign, contract redesign, or broad control-plane redesign
   - D-007: no product/server/schema/migration/test/package/CI/hook surface outside the exact future implementation allowlist is authorized
@@ -38,7 +38,7 @@ ENTERPRISE`, the bounded implementation stayed confined to `types.ts`, `App.tsx`
 preserved as `TRIAL -> FREE`, `BASIC -> FREE`, and `PAID -> PROFESSIONAL`, directly coupled
 admin-visible plan truth is aligned, no remaining defect attributable to this unit's delta
 remains, and bounded production runtime validation passed on the in-scope enterprise,
-white-label, and super-admin surfaces.
+white-label overlay, and super-admin surfaces.
 
 ## Source Truth
 
@@ -140,8 +140,8 @@ The lawful opening posture for this unit remained:
 - verification date: `2026-04-05`
 - delta-clean confirmation: no remaining defect attributable to this unit's delta remains
 - bounded production runtime validation:
-  - enterprise tenant surfaces: PASS
-  - white-label tenant surfaces: PASS
+  - B2B workspace surfaces: PASS
+  - white-label overlay surfaces: PASS
   - super-admin tenant registry surface: PASS
 
 ## Close Record

@@ -9,7 +9,7 @@ opened: 2026-03-22
 closed: 2026-03-22
 verified: 2026-03-22
 commit: ddeb579
-evidence: "DEPLOYED_RUNTIME_VERIFICATION: enterprise tenant shell PASS on https://texqtic-godq32ri1-tex-qtic.vercel.app · DEPLOYED_RUNTIME_VERIFICATION: white-label tenant shell PASS on the same verified deployment · DEPLOYED_RUNTIME_VERIFICATION: control-plane login to Tenant Registry PASS on the same verified deployment · DEPLOYMENT_PROOF: Vercel build logs confirmed commit ddeb579 and frontend asset /assets/index-UrHe-g8J.js"
+evidence: "DEPLOYED_RUNTIME_VERIFICATION: B2B workspace shell PASS on https://texqtic-godq32ri1-tex-qtic.vercel.app · DEPLOYED_RUNTIME_VERIFICATION: white-label overlay shell PASS on the same verified deployment · DEPLOYED_RUNTIME_VERIFICATION: control-plane login to Tenant Registry PASS on the same verified deployment · DEPLOYMENT_PROOF: Vercel build logs confirmed commit ddeb579 and frontend asset /assets/index-UrHe-g8J.js"
 doctrine_constraints:
   - D-004: this unit remains one bounded realm-boundary shell affordance repair only; no second runtime defect unit may be mixed in
   - D-007: no governance, schema, migration, Prisma, or broader auth redesign work may be introduced under this implementation unit
@@ -25,7 +25,7 @@ control-plane shell leakage.
 
 The unit is limited to one truth-preserving boundary correction only:
 
-- tenant-enterprise and white-label tenant shells must not expose a `Control Plane` affordance
+- B2B workspace and white-label overlay shells must not expose a `Control Plane` affordance
 - control-plane rendering must remain available only for real control-plane users
 - realm truth must resolve from one canonical source instead of diverging between app state and admin-client checks
 
@@ -34,8 +34,8 @@ new governance artifacts outside the canonical unit record, or any additional de
 
 ## Acceptance Criteria
 
-- [x] Enterprise tenant runtime no longer shows `Control Plane` on the verified deployed build
-- [x] White-label tenant runtime no longer shows `Control Plane` on the verified deployed build
+- [x] B2B workspace runtime no longer shows `Control Plane` on the verified deployed build
+- [x] White-label overlay runtime no longer shows `Control Plane` on the verified deployed build
 - [x] Real control-plane login still reaches the control-plane registry on the verified deployed build
 - [x] Control-plane eligibility now resolves from one canonical realm source
 - [x] Tenant sessions are prevented from entering control-plane rendering paths through app-root affordances
@@ -66,8 +66,8 @@ new governance artifacts outside the canonical unit record, or any additional de
 - Verified deployment URL: `https://texqtic-godq32ri1-tex-qtic.vercel.app`
 - Verified frontend asset on that deployment: `/assets/index-UrHe-g8J.js`
 - Deployed runtime verification PASS:
-  - enterprise tenant account no longer exposed `Control Plane`
-  - white-label tenant account no longer exposed `Control Plane`
+  - B2B workspace account no longer exposed `Control Plane`
+  - white-label overlay account no longer exposed `Control Plane`
   - real control-plane account still reached `Tenant Registry`
 - Final repair scope remained bounded to app-root realm gating plus canonical admin realm resolution only; no schema, migration, Prisma, environment, or unrelated UX work was introduced
 
@@ -151,7 +151,7 @@ deployed-runtime governance candidate.
 2026-03-22 — `GOV-CLOSE-REALM-BOUNDARY-SHELL-AFFORDANCE-001`. Status transitioned:
 `VERIFIED_COMPLETE` -> `CLOSED` after final implementation commit `ddeb579`, verified Vercel
 deployment mapping to `https://texqtic-godq32ri1-tex-qtic.vercel.app`, deployed runtime PASS for
-enterprise tenant crossover, deployed runtime PASS for white-label tenant crossover, preserved
+B2B workspace crossover, deployed runtime PASS for white-label overlay crossover, preserved
 control-plane login PASS to `Tenant Registry`, and mandatory post-close audit result `DECISION`.
 Scope remained bounded to the realm-boundary shell-affordance defect only, no broader auth or
 impersonation redesign was authorized, and the next governance move is decision-only for

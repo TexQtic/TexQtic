@@ -1,7 +1,7 @@
 # GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING
 
 Decision ID: GOV-DEC-RUNTIME-VERIFICATION-HARDENING-OPENING
-Title: Open one bounded runtime verification hardening unit for implemented tenant-enterprise and white-label slices
+Title: Open one bounded runtime verification hardening unit for implemented B2B workspace and white-label overlay slices
 Status: DECIDED
 Date: 2026-03-21
 Authorized by: Paresh
@@ -22,7 +22,7 @@ verification-hardening opening:
 1. tenant realm/session miswiring
 2. frontend/backend response-envelope mismatch
 3. transaction proxy runtime failure
-4. white-label seeded catalog visibility/data-state blocker
+4. white-label overlay storefront/catalog visibility/data-state blocker
 
 These failures do not prove a need for a broad QA program. They prove that the current bounded
 verification posture is still too weak to surface runtime truth automatically for already-
@@ -42,10 +42,10 @@ its actual runtime behavior is still broken.
 Current verification is insufficient because it does not yet guarantee one executable,
 repo-runnable path that exercises runtime truth across the implemented slice boundary:
 
-- rendered tenant-enterprise UI behavior
+- rendered B2B workspace UI behavior
 - realm/session transition behavior
 - frontend/backend response-envelope contract alignment for affected tenant modules
-- white-label seeded storefront/catalog visibility and data-state behavior
+- white-label overlay storefront/catalog visibility and data-state behavior
 
 As a result, verification can remain green while real runtime failures still survive to manual
 operator discovery.
@@ -82,7 +82,7 @@ Reason:
 TexQtic opens exactly one bounded verification-hardening unit:
 
 - `TECS-RUNTIME-VERIFICATION-HARDENING-001`
-- title: `Executable runtime verification hardening for implemented tenant-enterprise and white-label slices`
+- title: `Executable runtime verification hardening for implemented B2B workspace and white-label overlay slices`
 
 This is the sole authorized next implementation-ready unit.
 
@@ -91,10 +91,10 @@ This is the sole authorized next implementation-ready unit.
 The opened unit is limited to one repo-runnable verification path that surfaces runtime truth for
 already-implemented slices only:
 
-- executable tenant-enterprise UI smoke verification for implemented pages in scope
+- executable B2B workspace UI smoke verification for implemented pages in scope
 - realm/session transition verification for those implemented pages
 - frontend/backend response-envelope contract verification for affected tenant modules in scope
-- seeded storefront/catalog visibility and data-state verification for white-label runtime paths in scope
+- seeded storefront/catalog visibility and data-state verification for white-label overlay runtime paths in scope
 - the minimum repo-runnable harness/path required so these checks can execute as normal verification
 
 The purpose of this unit is verification hardening only. It does not authorize feature expansion.
