@@ -1098,6 +1098,13 @@ const App: React.FC = () => {
   const tenantLocalRouteSelection = tenantWorkspaceRuntimeHandoff?.localRouteSelection ?? null;
   const wlAdminLocalRouteSelection = tenantWlAdminRuntimeHandoff?.localRouteSelection ?? null;
   const controlPlaneLocalRouteSelection = controlPlaneRuntimeHandoff?.localRouteSelection ?? null;
+  const currentOnboardingStatusContinuity = useMemo(() => {
+    return getOnboardingStatusContinuity(currentTenant?.status);
+  }, [currentTenant?.status]);
+  const isVerificationBlockedTenantWorkspace = tenantContentFamily === 'b2b_workspace'
+    && currentOnboardingStatusContinuity !== null;
+  const verificationBlockedActionMessage = currentOnboardingStatusContinuity?.detail
+    ?? 'Business verification approval is required before this action is available.';
   const tenantDefaultLocalRouteKey = tenantWorkspaceRuntimeHandoff?.defaultLocalRouteKey ?? null;
   const navigateTenantManifestRoute = (
     routeKey: RuntimeLocalRouteKey,
@@ -1165,7 +1172,7 @@ const App: React.FC = () => {
   const controlPlaneShellNavigation = controlPlaneRuntimeHandoff?.navigationSurface ?? null;
   const wlAdminShellNavigation = tenantWlAdminRuntimeHandoff?.navigationSurface ?? null;
   const tenantShellNavigation = tenantWorkspaceRuntimeHandoff?.navigationSurface ?? null;
-  const b2cCatalogSectionRef = useRef<HTMLElement | null>(null);
+  const b2cCatalogSectionRef = useRef<globalThis.HTMLElement | null>(null);
   const tenantWorkspaceContentFamily = tenantWorkspaceRuntimeHandoff?.contentFamily ?? null;
   const isNonWhiteLabelB2CTenant = tenantWorkspaceContentFamily === 'b2c_storefront';
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
@@ -1209,6 +1216,9 @@ const App: React.FC = () => {
     isB2CBrowseEntrySurface,
     b2cSearchQuery,
   ]);
+  const shouldShowTenantUtilityAffordances = (
+    showB2CHomeAuthenticatedAffordances || !isNonWhiteLabelB2CTenant
+  ) && !isVerificationBlockedTenantWorkspace;
 
   const documentTitle = useMemo(() => {
     if (appState === 'AUTH') {
@@ -1246,6 +1256,14 @@ const App: React.FC = () => {
     }
 
     if (tenantContentFamily === 'b2b_workspace') {
+      if (currentOnboardingStatusContinuity) {
+        return joinDocumentTitle(
+          currentTenant.name,
+          currentOnboardingStatusContinuity.title,
+          DEFAULT_DOCUMENT_TITLE,
+        );
+      }
+
       return joinDocumentTitle(
         normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
         currentTenant.name,
@@ -1275,6 +1293,7 @@ const App: React.FC = () => {
     authRealm,
     currentTenant,
     tenantContentFamily,
+    currentOnboardingStatusContinuity,
     tenantLocalRouteSelection,
     wlAdminLocalRouteSelection,
     controlPlaneLocalRouteSelection,
@@ -2009,6 +2028,12 @@ const App: React.FC = () => {
   /** RU-003: Handle inline catalog item creation */
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isVerificationBlockedTenantWorkspace) {
+      setAddItemError(verificationBlockedActionMessage);
+      return;
+    }
+
     setAddItemLoading(true);
     setAddItemError(null);
     try {
@@ -2046,6 +2071,11 @@ const App: React.FC = () => {
   };
 
   const handleOpenEditItem = (product: CatalogItem) => {
+    if (isVerificationBlockedTenantWorkspace) {
+      setCatalogError(verificationBlockedActionMessage);
+      return;
+    }
+
     setShowAddItemForm(false);
     setAddItemError(null);
     setCatalogError(null);
@@ -2068,6 +2098,11 @@ const App: React.FC = () => {
   };
 
   const handleUpdateItem = async () => {
+
+    if (isVerificationBlockedTenantWorkspace) {
+      setEditItemError(verificationBlockedActionMessage);
+      return;
+    }
 
     if (!editingCatalogItemId) {
       return;
@@ -2108,6 +2143,11 @@ const App: React.FC = () => {
   };
 
   const handleDeleteItem = async (product: CatalogItem) => {
+    if (isVerificationBlockedTenantWorkspace) {
+      setCatalogError(verificationBlockedActionMessage);
+      return;
+    }
+
     const confirmed = globalThis.confirm(`Delete ${product.name}? This cannot be undone.`);
     if (!confirmed) {
       return;
@@ -2167,6 +2207,11 @@ const App: React.FC = () => {
   };
 
   const handleOpenRfqDialog = (product: CatalogItem) => {
+    if (isVerificationBlockedTenantWorkspace) {
+      setCatalogError(verificationBlockedActionMessage);
+      return;
+    }
+
     setRfqDialog({
       open: true,
       product,
@@ -3071,7 +3116,77 @@ const App: React.FC = () => {
       );
     }
 
-    const onboardingStatusContinuity = getOnboardingStatusContinuity(currentTenant.status);
+    const onboardingStatusContinuity = currentOnboardingStatusContinuity;
+
+    if (tenantContentFamily === 'b2b_workspace' && onboardingStatusContinuity) {
+      return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+          <section className={`rounded-3xl border p-8 shadow-sm space-y-6 ${onboardingStatusContinuity.panelClassName}`}>
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+              <div className="space-y-4 max-w-3xl">
+                <div className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] ${onboardingStatusContinuity.badgeClassName}`}>
+                  Pending verification posture
+                </div>
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-bold text-slate-900">{onboardingStatusContinuity.title}</h1>
+                  <p className="text-base leading-7 text-slate-600">{onboardingStatusContinuity.detail}</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 xl:max-w-sm">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Current status</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">
+                  {currentTenant.status.replaceAll('_', ' ')}
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  TexQtic will unlock the full workspace after business verification review is completed.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Workspace posture</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">Read-only review state</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  This tenant stays blocked from active trading workflows until approval is recorded.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">What remains paused</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">Catalog, RFQ, and trade actions</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Add, edit, delete, quote, escrow, and settlement affordances stay unavailable during review.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Next step</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">Wait for TexQtic review</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Once verification is approved, the full B2B workspace and activation-dependent routes can open normally.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Activation-dependent surfaces</div>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-900">Normal workspace actions stay suppressed</h2>
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {[
+                'Catalog management and product edits',
+                'Buyer RFQs and supplier RFQ inbox',
+                'Trade, escrow, and settlement workflows',
+                'Other active B2B management affordances',
+              ].map(item => (
+                <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-medium text-slate-700">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      );
+    }
 
     if (onboardingStatusContinuity && VERIFICATION_BLOCKED_VIEWS.has(expView)) {
       return (
@@ -3703,8 +3818,16 @@ const App: React.FC = () => {
                 {getOnboardingStatusContinuity(currentTenant.status)?.bannerText}
               </div>
             )}
-            <ExperienceShell tenant={currentTenant} navigation={tenantShellContract}>
-              {(showB2CHomeAuthenticatedAffordances || !isNonWhiteLabelB2CTenant) && (
+            <ExperienceShell
+              tenant={currentTenant}
+              navigation={tenantShellContract}
+              shellMode={isVerificationBlockedTenantWorkspace ? 'verification-blocked' : 'default'}
+              shellLabel={isVerificationBlockedTenantWorkspace ? 'Verification Review' : undefined}
+              shellHeaderTitle={isVerificationBlockedTenantWorkspace ? 'TexQtic Verification Review' : undefined}
+              shellFooterLabel={isVerificationBlockedTenantWorkspace ? 'v2.4.0 • TexQtic Verification Review' : undefined}
+              shellStatusLabel={isVerificationBlockedTenantWorkspace ? currentOnboardingStatusContinuity?.title ?? null : null}
+            >
+              {shouldShowTenantUtilityAffordances && (
                 <div className="absolute top-4 right-4 z-[60] flex gap-2">
                   {showB2CHomeAuthenticatedAffordances && (
                     <CartToggleButton setShowCart={setShowCart} />
@@ -3842,7 +3965,7 @@ const App: React.FC = () => {
 
   return (
     <div className="relative font-sans">
-      {editingCatalogItem && (
+      {editingCatalogItem && !isVerificationBlockedTenantWorkspace && (
         <div className="fixed inset-0 bg-slate-950/45 z-[195] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
             <div>
@@ -3938,7 +4061,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      {rfqDialog.open && rfqDialog.product && (
+      {rfqDialog.open && rfqDialog.product && !isVerificationBlockedTenantWorkspace && (
         <div className="fixed inset-0 bg-slate-950/45 z-[190] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
             <div>

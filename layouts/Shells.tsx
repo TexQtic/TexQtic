@@ -19,6 +19,14 @@ interface ShellProps {
   navigation: TenantShellNavigationContract;
 }
 
+interface B2BShellProps extends ShellProps {
+  shellMode?: 'default' | 'verification-blocked';
+  shellLabel?: string;
+  shellHeaderTitle?: string;
+  shellFooterLabel?: string;
+  shellStatusLabel?: string | null;
+}
+
 const hasShellRoute = (surface: RuntimeShellNavigationSurface | null, routeKey: RuntimeLocalRouteKey) => {
   return surface?.items.some(item => item.routeKey === routeKey) ?? false;
 };
@@ -93,49 +101,79 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, naviga
   </div>
 );
 
-export const B2BShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => (
-  <div className="min-h-screen flex bg-slate-100 font-sans">
-    <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
-      <div className="mb-8 space-y-3">
-        <PlatformSignature label="B2B Workspace" tone="dark" />
-        <button type="button" className="flex items-center gap-3 text-white font-bold text-lg cursor-pointer" onClick={() => navigation.onNavigateRoute('catalog')}>
-          <TenantMark tenant={tenant} />
-          <span>{tenant.name}</span>
-        </button>
-      </div>
-      <nav className="flex-1 space-y-4">
-        <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
-        <button onClick={() => navigation.onNavigateRoute('catalog')} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
-        {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
-        {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔍 DPP Passport</button>}
-        {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔒 Escrow</button>}
-        {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🚨 Escalations</button>}
-        {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">💸 Settlement</button>}
-        {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
-        {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
-        {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
-        {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Trades</button>}
-        <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
-      </nav>
-      <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
-        v2.4.0 • TexQtic B2B Workspace
-      </div>
-    </aside>
-    <div className="flex-1 flex flex-col relative">
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8 justify-between sticky top-0 z-10">
-        <h2 className="font-semibold text-slate-600">TexQtic B2B Workspace</h2>
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <div className="text-xs font-bold text-slate-900">Alex Rivera</div>
-            <div className="text-[10px] text-slate-500 uppercase">Administrator</div>
-          </div>
-          <div className="w-9 h-9 rounded-xl bg-slate-200 border border-slate-300"></div>
+export const B2BShell: React.FC<B2BShellProps> = ({
+  tenant,
+  children,
+  navigation,
+  shellMode = 'default',
+  shellLabel = 'B2B Workspace',
+  shellHeaderTitle = 'TexQtic B2B Workspace',
+  shellFooterLabel = 'v2.4.0 • TexQtic B2B Workspace',
+  shellStatusLabel = null,
+}) => {
+  const isVerificationBlocked = shellMode === 'verification-blocked';
+
+  return (
+    <div className="min-h-screen flex bg-slate-100 font-sans">
+      <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
+        <div className="mb-8 space-y-3">
+          <PlatformSignature label={shellLabel} tone="dark" />
+          {isVerificationBlocked ? (
+            <div className="flex items-center gap-3 text-white font-bold text-lg">
+              <TenantMark tenant={tenant} />
+              <span>{tenant.name}</span>
+            </div>
+          ) : (
+            <button type="button" className="flex items-center gap-3 text-white font-bold text-lg cursor-pointer" onClick={() => navigation.onNavigateRoute('catalog')}>
+              <TenantMark tenant={tenant} />
+              <span>{tenant.name}</span>
+            </button>
+          )}
         </div>
-      </header>
-      <main className="p-8 flex-1">{children}</main>
+        {isVerificationBlocked ? (
+          <div className="space-y-4 rounded-2xl border border-amber-300/30 bg-amber-500/10 p-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-200">Workspace Status</div>
+            <div className="text-sm font-semibold text-white">{shellStatusLabel ?? 'Verification review in progress'}</div>
+            <p className="text-xs leading-6 text-slate-300">
+              Catalog management, RFQ workflows, and trade-capable operations stay unavailable until approval is recorded.
+            </p>
+          </div>
+        ) : (
+          <nav className="flex-1 space-y-4">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
+            <button onClick={() => navigation.onNavigateRoute('catalog')} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
+            {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
+            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔍 DPP Passport</button>}
+            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔒 Escrow</button>}
+            {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🚨 Escalations</button>}
+            {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">💸 Settlement</button>}
+            {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
+            {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
+            {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
+            {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Trades</button>}
+            <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
+          </nav>
+        )}
+        <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
+          {shellFooterLabel}
+        </div>
+      </aside>
+      <div className="flex-1 flex flex-col relative">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8 justify-between sticky top-0 z-10">
+          <h2 className="font-semibold text-slate-600">{shellHeaderTitle}</h2>
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+              <div className="text-xs font-bold text-slate-900">Alex Rivera</div>
+              <div className="text-[10px] text-slate-500 uppercase">Administrator</div>
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-slate-200 border border-slate-300"></div>
+          </div>
+        </header>
+        <main className="p-8 flex-1">{children}</main>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => {
   const { itemCount } = useCart();
