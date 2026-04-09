@@ -102,8 +102,11 @@ Across that chain, the following were corrected or settled:
 
 Current onboarding-family reading begins from the live opening-layer canon.
 
-For current onboarding-family truth, readers should treat the following as the active bounded
-reading chain:
+This closeout snapshot functions as the current closeout summary and handoff anchor for the
+completed remediation chain. It does not replace the live opening-layer canon as constitutional
+authority.
+
+For current onboarding-family truth, readers should use the following bounded reading chain:
 
 - the live opening-layer canon
 - the completed onboarding-family remediation artifacts listed in this snapshot
@@ -157,8 +160,9 @@ The reopen rule for future governance work is:
 1. the completed onboarding-family remediation passes remain closed
 2. they must not be reopened merely to restate, reclassify, or re-summarize already-settled truth
 3. a completed pass may be reopened only if a specific regression is later proven from repo truth
-4. future governance work should begin from this closeout snapshot and the live opening-layer canon
-   rather than re-litigating the completed remediation chain
+4. future governance work should begin from this closeout snapshot as the current handoff summary,
+  together with the live opening-layer canon as live authority, rather than re-litigating the
+  completed remediation chain
 
 ## 10. Completion state
 
@@ -177,5 +181,5 @@ next-action routing, or any settled onboarding-family truth; it only captured th
 remediation state.
 
 Boundary verdict: the onboarding-family remediation chain is now cleanly snapshotted for future
-governance handoff, with current authority, deferred remainder, reader-safety posture, and reopen
-rule stated without restarting the remediation wave.
+governance handoff, with the live authority source, deferred remainder, reader-safety posture, and
+reopen rule stated without restarting the remediation wave.
