@@ -13,6 +13,10 @@ const {
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    tenant: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
   };
 
   const prismaHolder = {
@@ -100,6 +104,8 @@ describe('control onboarding outcome route', () => {
     FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
     FAKE_TX.organizations.findUnique.mockReset();
     FAKE_TX.organizations.update.mockReset();
+    FAKE_TX.tenant.findUnique.mockReset();
+    FAKE_TX.tenant.update.mockReset();
     server = await buildServer();
   });
 
@@ -179,6 +185,116 @@ describe('control onboarding outcome route', () => {
     expect(response.json().error).toEqual(
       expect.objectContaining({
         code: 'ONBOARDING_STATUS_CONFLICT',
+      }),
+    );
+  });
+
+  it('archives a tenant by moving both lifecycle records to CLOSED and auditing the action', async () => {
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'archive-me',
+      legal_name: 'Archive Me LLC',
+      status: 'ACTIVE',
+    });
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'archive-me',
+      name: 'Archive Me LLC',
+      status: 'ACTIVE',
+    });
+    FAKE_TX.organizations.update.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'archive-me',
+      legal_name: 'Archive Me LLC',
+      status: 'CLOSED',
+    });
+    FAKE_TX.tenant.update.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'archive-me',
+      name: 'Archive Me LLC',
+      status: 'CLOSED',
+    });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/archive`,
+      payload: {
+        expectedSlug: 'archive-me',
+        reason: 'Archive high-confidence test tenant residue.',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(FAKE_TX.organizations.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: TEST_TENANT_ID },
+        data: { status: 'CLOSED' },
+      }),
+    );
+    expect(FAKE_TX.tenant.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: TEST_TENANT_ID },
+        data: { status: 'CLOSED' },
+      }),
+    );
+    expect(writeAuditLog).toHaveBeenCalledOnce();
+    expect(writeAuditLog).toHaveBeenCalledWith(
+      FAKE_TX,
+      expect.objectContaining({
+        action: 'control.tenants.archive.recorded',
+        entity: 'tenant',
+        actorId: TEST_ADMIN_ID,
+        metadataJson: expect.objectContaining({
+          tenantId: TEST_TENANT_ID,
+          slug: 'archive-me',
+          previousTenantStatus: 'ACTIVE',
+          nextTenantStatus: 'CLOSED',
+          previousOnboardingStatus: 'ACTIVE',
+          nextOnboardingStatus: 'CLOSED',
+          reason: 'Archive high-confidence test tenant residue.',
+        }),
+      }),
+    );
+
+    expect(response.json().data.tenant).toEqual({
+      id: TEST_TENANT_ID,
+      slug: 'archive-me',
+      name: 'Archive Me LLC',
+      status: 'CLOSED',
+      onboarding_status: 'CLOSED',
+    });
+  });
+
+  it('blocks archive attempts for protected QA and review hold tenants', async () => {
+    FAKE_TX.organizations.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'qa-b2b',
+      legal_name: 'QA B2B',
+      status: 'ACTIVE',
+    });
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'qa-b2b',
+      name: 'QA B2B',
+      status: 'ACTIVE',
+    });
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/api/control/tenants/${TEST_TENANT_ID}/archive`,
+      payload: {
+        expectedSlug: 'qa-b2b',
+        reason: 'Should never archive protected QA tenants.',
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(FAKE_TX.organizations.update).not.toHaveBeenCalled();
+    expect(FAKE_TX.tenant.update).not.toHaveBeenCalled();
+    expect(writeAuditLog).not.toHaveBeenCalled();
+    expect(response.json().error).toEqual(
+      expect.objectContaining({
+        code: 'FORBIDDEN',
       }),
     );
   });

@@ -141,6 +141,34 @@ const mutableOnboardingStatuses = new Set<string>([
   ...Object.values(onboardingOutcomeStatusByOutcome),
 ]);
 
+const protectedTenantArchiveSlugs = new Set<string>([
+  'qa-b2b',
+  'qa-b2c',
+  'qa-wl',
+  'qa-agg',
+  'qa-pend',
+  'white-label-co',
+]);
+
+const protectedTenantArchiveNames = new Set<string>([
+  'WHITE LABEL CO',
+]);
+
+function normalizeTenantProtectionValue(value: string | null | undefined): string {
+  return value?.trim().toUpperCase() ?? '';
+}
+
+function isProtectedTenantArchiveTarget(target: {
+  slug?: string | null;
+  name?: string | null;
+  legalName?: string | null;
+}): boolean {
+  const normalizedSlug = target.slug?.trim().toLowerCase() ?? '';
+  const normalizedName = normalizeTenantProtectionValue(target.name ?? target.legalName);
+
+  return protectedTenantArchiveSlugs.has(normalizedSlug) || protectedTenantArchiveNames.has(normalizedName);
+}
+
 function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
   switch (name) {
     case financeSupervisionEventTypeByOutcome.VERIFIED:
@@ -524,6 +552,186 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     } catch (error: unknown) {
       fastify.log.error({ err: error, tenantId: id, adminId }, '[Onboarding Approved Activation] Error');
       return sendError(reply, 'INTERNAL_ERROR', 'Failed to activate approved onboarding state', 500);
+    }
+  });
+
+  /**
+   * POST /api/control/tenants/:id/archive
+   * Explicitly archive a tenant by moving both runtime and org lifecycle status to CLOSED.
+   *
+   * Slice boundary:
+   * - SUPER_ADMIN only
+   * - requires explicit slug confirmation and operator reason
+   * - blocks the canonical QA keep-set and White Label Co from archival
+   * - preserves audit history while removing the tenant from ACTIVE runtime surfaces
+   */
+  fastify.post('/tenants/:id/archive', { preHandler: requireAdminRole('SUPER_ADMIN') }, async (request, reply) => {
+    if (!request.adminId) {
+      return sendUnauthorized(reply, 'Admin authentication required');
+    }
+
+    const paramsSchema = z.object({
+      id: z.string().uuid('Invalid tenant id format'),
+    });
+
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const bodySchema = z.object({
+      expectedSlug: z.string().trim().min(1).max(100),
+      reason: z.string().trim().min(1).max(500),
+    });
+
+    const bodyResult = bodySchema.safeParse(request.body);
+    if (!bodyResult.success) {
+      return sendValidationError(reply, bodyResult.error.errors);
+    }
+
+    const adminId = request.adminId;
+    const { id } = paramsResult.data;
+    const { expectedSlug, reason } = bodyResult.data;
+
+    try {
+      const result = await withOrgAdminWriteContext(id, adminId, async tx => {
+        const [currentOrg, currentTenant] = await Promise.all([
+          tx.organizations.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              slug: true,
+              legal_name: true,
+              status: true,
+            },
+          }),
+          tx.tenant.findUnique({
+            where: { id },
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              status: true,
+            },
+          }),
+        ]);
+
+        if (!currentOrg || !currentTenant) {
+          return { kind: 'not_found' as const };
+        }
+
+        if (isProtectedTenantArchiveTarget({
+          slug: currentTenant.slug,
+          name: currentTenant.name,
+          legalName: currentOrg.legal_name,
+        })) {
+          return {
+            kind: 'protected' as const,
+            currentOrg,
+            currentTenant,
+          };
+        }
+
+        if (expectedSlug.trim().toLowerCase() !== currentTenant.slug.trim().toLowerCase()) {
+          return {
+            kind: 'slug_mismatch' as const,
+            currentOrg,
+            currentTenant,
+          };
+        }
+
+        if (currentOrg.status === 'CLOSED' && currentTenant.status === 'CLOSED') {
+          return {
+            kind: 'already_archived' as const,
+            currentOrg,
+            currentTenant,
+          };
+        }
+
+        const [updatedOrg, updatedTenant] = await Promise.all([
+          tx.organizations.update({
+            where: { id },
+            data: {
+              status: 'CLOSED',
+            },
+            select: {
+              id: true,
+              slug: true,
+              legal_name: true,
+              status: true,
+            },
+          }),
+          tx.tenant.update({
+            where: { id },
+            data: {
+              status: 'CLOSED',
+            },
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              status: true,
+            },
+          }),
+        ]);
+
+        await writeAuditLog(
+          tx,
+          createAdminAudit(adminId, 'control.tenants.archive.recorded', 'tenant', {
+            tenantId: updatedTenant.id,
+            slug: updatedTenant.slug,
+            legalName: updatedOrg.legal_name,
+            previousTenantStatus: currentTenant.status,
+            nextTenantStatus: updatedTenant.status,
+            previousOnboardingStatus: currentOrg.status,
+            nextOnboardingStatus: updatedOrg.status,
+            reason,
+          })
+        );
+
+        return {
+          kind: 'archived' as const,
+          updatedOrg,
+          updatedTenant,
+        };
+      });
+
+      if (result.kind === 'not_found') {
+        return sendNotFound(reply, 'Tenant organization not found');
+      }
+
+      if (result.kind === 'protected') {
+        return sendForbidden(
+          reply,
+          `Tenant ${result.currentTenant.slug} is protected and cannot be archived from this control-plane surface`
+        );
+      }
+
+      if (result.kind === 'slug_mismatch') {
+        return sendError(
+          reply,
+          'TENANT_ARCHIVE_TARGET_MISMATCH',
+          `Archive confirmation must match tenant slug ${result.currentTenant.slug}`,
+          409
+        );
+      }
+
+      if (result.kind === 'already_archived') {
+        return sendError(reply, 'TENANT_ARCHIVE_CONFLICT', 'Tenant is already archived', 409);
+      }
+
+      return sendSuccess(reply, {
+        tenant: {
+          id: result.updatedTenant.id,
+          slug: result.updatedTenant.slug,
+          name: result.updatedTenant.name,
+          status: result.updatedTenant.status,
+          onboarding_status: result.updatedOrg.status,
+        },
+      });
+    } catch (error: unknown) {
+      fastify.log.error({ err: error, tenantId: id, adminId }, '[Tenant Archive] Error');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to archive tenant', 500);
     }
   });
 

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { TenantConfig } from '../../types';
-import { activateApprovedOnboarding } from '../../services/controlPlaneService';
+import { TenantConfig, TenantStatus } from '../../types';
+import { activateApprovedOnboarding, archiveTenant } from '../../services/controlPlaneService';
 
 type TenantDetailsTabId = 'OVERVIEW' | 'PLAN' | 'FEATURES' | 'BILLING' | 'RISK' | 'AUDIT';
 
@@ -22,21 +22,41 @@ interface TenantDetailsProps {
 
 export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, onImpersonate }) => {
   const [activeTab, setActiveTab] = useState<TenantDetailsTabId>('OVERVIEW');
+  const [tenantStatus, setTenantStatus] = useState<TenantStatus>(tenant.status);
   const [onboardingStatus, setOnboardingStatus] = useState<string | null>(tenant.onboarding_status ?? null);
   const [activationLoading, setActivationLoading] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
   const [activationNotice, setActivationNotice] = useState<string | null>(null);
+  const [archiveReason, setArchiveReason] = useState('');
+  const [archiveSlugConfirmation, setArchiveSlugConfirmation] = useState('');
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
   const tenantCreatedAt = getTenantCreatedAtDisplay(tenant);
-
-  const canActivateApproved = onboardingStatus === 'VERIFICATION_APPROVED';
+  const lifecycleTenant: TenantConfig = {
+    ...tenant,
+    status: tenantStatus,
+    onboarding_status: onboardingStatus,
+  };
+  const isProtectedArchiveTarget = isProtectedTenantArchiveTarget(lifecycleTenant);
+  const canEnterTenantContext = tenantStatus === TenantStatus.ACTIVE;
+  const canActivateApproved = tenantStatus !== TenantStatus.CLOSED && onboardingStatus === 'VERIFICATION_APPROVED';
+  const canArchiveTenant =
+    !isProtectedArchiveTarget &&
+    tenantStatus !== TenantStatus.CLOSED &&
+    archiveReason.trim().length > 0 &&
+    archiveSlugConfirmation.trim().toLowerCase() === tenant.slug.trim().toLowerCase();
 
   const handleActivateApproved = async () => {
     setActivationLoading(true);
     setActivationError(null);
     setActivationNotice(null);
+    setArchiveError(null);
+    setArchiveNotice(null);
 
     try {
       await activateApprovedOnboarding(tenant.id);
+      setTenantStatus(TenantStatus.ACTIVE);
       setOnboardingStatus('ACTIVE');
       setActivationNotice(
         'Approved onboarding activation recorded. Tenant is now ACTIVE. The provisioned primary owner should now use tenant sign-in with the provisioned credentials; invite-token activation remains a separate invite-based path.'
@@ -47,6 +67,82 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
       setActivationLoading(false);
     }
   };
+
+  const handleArchiveTenant = async () => {
+    setArchiveLoading(true);
+    setArchiveError(null);
+    setArchiveNotice(null);
+    setActivationError(null);
+    setActivationNotice(null);
+
+    try {
+      const response = await archiveTenant(tenant.id, {
+        expectedSlug: tenant.slug,
+        reason: archiveReason.trim(),
+      });
+
+      setTenantStatus(TenantStatus.CLOSED);
+      setOnboardingStatus(response.tenant.onboarding_status ?? 'CLOSED');
+      setArchiveNotice(
+        `Tenant ${response.tenant.slug} archived. Runtime access and org lifecycle are now CLOSED while audit history remains intact.`
+      );
+      setArchiveSlugConfirmation(response.tenant.slug);
+    } catch (error: any) {
+      setArchiveError(error?.message || 'Failed to archive tenant.');
+    } finally {
+      setArchiveLoading(false);
+    }
+  };
+
+  let archivePanelContent: React.ReactNode;
+
+  if (isProtectedArchiveTarget) {
+    archivePanelContent = (
+      <div className="rounded border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs text-amber-200">
+        This tenant is on the protected keep-set and cannot be archived from this surface.
+      </div>
+    );
+  } else if (tenantStatus === TenantStatus.CLOSED) {
+    archivePanelContent = (
+      <div className="rounded border border-slate-700 bg-slate-950/70 px-3 py-3 text-xs text-slate-300">
+        This tenant is already archived with runtime and lifecycle state CLOSED.
+      </div>
+    );
+  } else {
+    archivePanelContent = (
+      <>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Archive Reason</span>
+          <textarea
+            value={archiveReason}
+            onChange={event => setArchiveReason(event.target.value)}
+            rows={3}
+            className="w-full rounded border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-rose-500/60"
+            placeholder="Document why this tenant should be archived."
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Type Slug To Confirm</span>
+          <input
+            value={archiveSlugConfirmation}
+            onChange={event => setArchiveSlugConfirmation(event.target.value)}
+            className="w-full rounded border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-rose-500/60"
+            placeholder={tenant.slug}
+          />
+        </label>
+        <button
+          onClick={handleArchiveTenant}
+          disabled={!canArchiveTenant || archiveLoading}
+          className="w-full rounded bg-rose-700 py-2 text-xs font-bold uppercase text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {archiveLoading ? 'Archiving Tenant...' : 'Archive Tenant To CLOSED'}
+        </button>
+        <div className="text-[10px] uppercase tracking-widest text-slate-500">
+          Confirmation must match <span className="font-mono text-slate-300">{tenant.slug}</span>.
+        </div>
+      </>
+    );
+  }
 
   const tabs: TenantDetailsTab[] = [
     { id: 'OVERVIEW', label: 'Overview', state: 'FULL', note: 'Live' },
@@ -69,11 +165,12 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   <DetailItem label="Full Name" value={tenant.name} />
                   <DetailItem label="Slug" value={tenant.slug} />
                   <DetailItem label="Tenant ID" value={tenant.id} />
-                  <DetailItem label="Onboarding Status" value={onboardingStatus ?? 'N/A'} />
+                  <DetailItem label="Runtime Status" value={tenantStatus} />
+                  <DetailItem label="Lifecycle Status" value={onboardingStatus ?? 'N/A'} />
                   {tenantCreatedAt && <DetailItem label="Created At" value={tenantCreatedAt} />}
                 </div>
                 <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-                  This overview supports tenant inspection, approved activation when eligible, and bounded tenant-context entry only.
+                  This overview supports tenant inspection, approved activation when eligible, bounded archival to CLOSED, and tenant-context entry only for ACTIVE tenants.
                 </div>
               </div>
               <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
@@ -116,6 +213,13 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                       {activationLoading ? 'Activating Approved Tenant...' : 'Activate Approved Tenant'}
                     </button>
                   )}
+                  <div className="rounded border border-slate-700 bg-slate-950/60 p-4 space-y-3">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Archive Tenant</div>
+                    <div className="text-xs text-slate-400">
+                      Archive is a bounded control-plane action. It sets both runtime and organization lifecycle state to CLOSED, removing the tenant from ACTIVE sign-in, impersonation, and domain resolution flows without deleting audit history.
+                    </div>
+                    {archivePanelContent}
+                  </div>
                   <div className="space-y-3 rounded border border-dashed border-slate-700/80 bg-slate-950/40 p-3">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                       Other lifecycle actions are not available in this surface.
@@ -146,6 +250,16 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                 {activationNotice && (
                   <div className="mt-4 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
                     {activationNotice}
+                  </div>
+                )}
+                {archiveError && (
+                  <div className="mt-4 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+                    {archiveError}
+                  </div>
+                )}
+                {archiveNotice && (
+                  <div className="mt-4 rounded border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+                    {archiveNotice}
                   </div>
                 )}
               </div>
@@ -234,13 +348,14 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
         </h1>
         <div className="ml-auto flex flex-col items-end gap-1">
           <button
-            onClick={() => onImpersonate(tenant)}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold uppercase hover:bg-blue-700 transition"
+            onClick={() => onImpersonate(lifecycleTenant)}
+            disabled={!canEnterTenantContext}
+            className="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold uppercase hover:bg-blue-700 transition disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
           >
             Enter Tenant Context
           </button>
           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Bounded entry only
+            {canEnterTenantContext ? 'ACTIVE tenants only' : 'Unavailable outside ACTIVE'}
           </span>
         </div>
       </div>
@@ -302,6 +417,26 @@ const getTenantCreatedAtDisplay = (tenant: TenantConfig) => {
     hour: '2-digit',
     minute: '2-digit',
   })}`;
+};
+
+const protectedArchiveSlugs = new Set<string>([
+  'qa-b2b',
+  'qa-b2c',
+  'qa-wl',
+  'qa-agg',
+  'qa-pend',
+  'white-label-co',
+]);
+
+const protectedArchiveNames = new Set<string>([
+  'WHITE LABEL CO',
+]);
+
+const isProtectedTenantArchiveTarget = (tenant: TenantConfig) => {
+  const normalizedSlug = tenant.slug.trim().toLowerCase();
+  const normalizedName = tenant.name.trim().toUpperCase();
+
+  return protectedArchiveSlugs.has(normalizedSlug) || protectedArchiveNames.has(normalizedName);
 };
 
 const getTabBadgeClass = (state: TenantDetailsTabState) => {

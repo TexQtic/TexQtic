@@ -111,6 +111,21 @@ export interface ActivateApprovedOnboardingResponse {
   };
 }
 
+export interface ArchiveTenantRequest {
+  expectedSlug: string;
+  reason: string;
+}
+
+export interface ArchiveTenantResponse {
+  tenant: {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+    onboarding_status: string;
+  };
+}
+
 type AuditLogJsonValue =
   | Record<string, unknown>
   | string
@@ -128,6 +143,16 @@ export async function activateApprovedOnboarding(
     `/api/control/tenants/${tenantId}/onboarding/activate-approved`,
     {}
   );
+}
+
+/**
+ * Explicitly archive a tenant into CLOSED state across both runtime and org lifecycle records.
+ */
+export async function archiveTenant(
+  tenantId: string,
+  payload: ArchiveTenantRequest
+): Promise<ArchiveTenantResponse> {
+  return adminPost<ArchiveTenantResponse>(`/api/control/tenants/${tenantId}/archive`, payload);
 }
 
 // ==================== AUDIT LOGS ====================

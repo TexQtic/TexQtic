@@ -144,6 +144,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
       case 'SUSPENDED':
         return 'text-rose-400 bg-rose-400/10 border-rose-400/20';
+      case 'CLOSED':
+        return 'text-slate-300 bg-slate-400/10 border-slate-400/20';
       case 'TRIAL':
         return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
       default:
@@ -155,7 +157,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   const stats = {
     total: tenants.length,
     active: tenants.filter(t => t.status?.toUpperCase() === 'ACTIVE').length,
-    trial: tenants.filter(t => t.status?.toUpperCase() === 'TRIAL').length,
+    closed: tenants.filter(t => t.status?.toUpperCase() === 'CLOSED').length,
     suspended: tenants.filter(t => t.status?.toUpperCase() === 'SUSPENDED').length,
   };
 
@@ -175,7 +177,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+          { label: 'Closed', value: loading ? '...' : stats.closed.toString() },
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">Tenant Registry</h1>
@@ -252,6 +254,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   ? (mappedTenant.aiUsage / mappedTenant.aiBudget) * 100
                   : 0;
                 const isDetailLoading = detailLoadingTenantId === tenant.id;
+                const canImpersonate = tenant.status?.toUpperCase() === 'ACTIVE';
 
                 return (
                   <tr
@@ -322,8 +325,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                         <button
                           onClick={() => onImpersonate(mappedTenant)}
                           title="Impersonate"
-                          className="p-1 hover:text-blue-500 text-slate-500"
-                          disabled={isDetailLoading}
+                          className="p-1 text-slate-500 hover:text-blue-500 disabled:cursor-not-allowed disabled:text-slate-700"
+                          disabled={isDetailLoading || !canImpersonate}
                         >
                           👤
                         </button>

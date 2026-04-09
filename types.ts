@@ -11,6 +11,7 @@ export enum TenantType {
 export enum TenantStatus {
   ACTIVE = 'ACTIVE',
   SUSPENDED = 'SUSPENDED',
+  CLOSED = 'CLOSED',
   TRIAL = 'TRIAL',
   PENDING_VERIFICATION = 'PENDING_VERIFICATION'
 }

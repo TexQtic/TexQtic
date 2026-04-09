@@ -363,6 +363,124 @@
         }
       }
     },
+    "/api/control/tenants/{id}/archive": {
+      "post": {
+        "summary": "Archive a tenant",
+        "description": "SUPER_ADMIN-only bounded archive action. Transitions both tenant runtime status and organization lifecycle status to CLOSED. Protected QA tenants and White Label Co cannot be archived from this surface.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Tenant ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["expectedSlug", "reason"],
+                "properties": {
+                  "expectedSlug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tenant archived successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tenant": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "slug",
+                            "name",
+                            "status",
+                            "onboarding_status"
+                          ],
+                          "properties": {
+                            "id": { "type": "string", "format": "uuid" },
+                            "slug": { "type": "string" },
+                            "name": { "type": "string" },
+                            "status": { "type": "string", "enum": ["CLOSED"] },
+                            "onboarding_status": {
+                              "type": "string",
+                              "enum": ["CLOSED"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Protected tenant cannot be archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Tenant not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archive conflict",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/control/audit-logs": {
       "get": {
         "summary": "List all audit logs",
