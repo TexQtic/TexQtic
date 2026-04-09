@@ -3,13 +3,18 @@
 > This `-v1` roadmap is preserved as the completed dependency-ordered roadmap for the prior
 > planning cycle. It is no longer the active execution or sequencing roadmap.
 >
-> Current replacement authority for current sequencing and candidate posture now lives in:
+> For current onboarding-family consumer reading specifically, use:
+>
 > - Layer 0 posture in `governance/control/OPEN-SET.md` and `governance/control/NEXT-ACTION.md`
-> - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-> - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
-> - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
-> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md`
-> - the current reconciliation layer in `docs/product-truth/`
+> - the live opening-layer canon in `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md` and `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-PLANNING-RECONCILIATION-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-REMAINDER-INVENTORY-AND-BOUNDARY-CLASSIFICATION-2026-04-09.md`
+> - `docs/product-truth/ONBOARDING-PROVISIONING-ACTIVATION-FAMILY-CONSOLIDATION-v1.md` as bounded onboarding-family reading note only
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` as preserved context and sequencing-friction input only
+>
+> The old `-v2` chain remains historical evidence and must not be read as current onboarding-family authority.
+>
+> Onboarding completion statements preserved below remain historical wave-baseline guidance only. They do not imply whole-family completion, deferred remainder resolution, or broader current onboarding-family authority.
 >
 > This banner narrows authority only. The historical roadmap below is preserved.
 
