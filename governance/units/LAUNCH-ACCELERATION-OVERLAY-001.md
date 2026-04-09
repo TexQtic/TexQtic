@@ -31,9 +31,9 @@ embedded stagnation rule and one explicit non-duplication clause.
 
 `LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001` remains the source of overlay design truth.
 
-This unit does not open product delivery, does not replace Layer 0, does not replace current live
-product-truth authorities, and does not create roadmap, candidate-state, or forecast-commitment
-authority.
+This unit does not open product delivery, does not replace Layer 0, does not replace the live
+opening-layer canon or relevant preserved downstream authorities, and does not create roadmap,
+candidate-state, or forecast-commitment authority.
 
 ## Scope Statement
 
@@ -53,7 +53,7 @@ planning stack, implementation-planning subsystem, or new authority surface.
 ## Exit Criteria
 
 - [ ] The overlay continues to operate within the exact maintenance caps recorded below
-- [ ] Every refresh continues to preserve Layer 0 and live product-truth authorities as primary
+- [ ] Every refresh continues to preserve Layer 0, the live opening-layer canon, and relevant preserved downstream authorities as primary
 - [ ] No product-facing `ACTIVE_DELIVERY` opens by implication from any overlay refresh
 - [ ] Any request for a fourth surface, a second rule, or additional authority is rejected or routed to a separate bounded refinement decision rather than widening this unit
 - [ ] If the overlay later becomes duplicative or unnecessary, a separate bounded close or refinement decision is recorded instead of silent abandonment
@@ -77,6 +77,10 @@ No other files are authorized for edit in this opening step.
 - `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
 - `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
 - `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+
+The preserved read set above reflects the pre-reset opening context of this unit. Live authority for
+ongoing interpretation now routes through Layer 0 plus the opening-layer canon; the preserved `-v2`
+chain remains historical reconciliation input only.
 
 ## Exact In-Scope Boundary
 
@@ -106,15 +110,19 @@ This unit does **not** authorize:
 
 ## Authority Rule
 
-Primary authority order remains:
+Primary operational authority order is:
 
 1. `governance/control/OPEN-SET.md`
 2. `governance/control/NEXT-ACTION.md`
 3. `governance/control/BLOCKED.md`
-4. `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-5. `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
-6. `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` as derived context only
-7. this overlay only after all of the above
+4. `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
+5. `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
+6. `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+7. relevant preserved downstream family/design authorities by topic
+8. this overlay only after all of the above
+
+The preserved `-v2` product-truth chain remains historical reconciliation input only at this
+layer.
 
 Where any tension appears, the authorities above govern.
 
@@ -138,10 +146,10 @@ creates no opening, prioritization, or authority shift.
 `The thin Launch Acceleration Overlay may summarize launch-critical-path visibility, shortlist
 visibility, and rolling launch-window visibility only. It must not open units, verify units, sync
 or close units, normalize candidate state, replace Layer 0 authority, replace the live
-product-truth authorities, or act as roadmap or implementation-planning authority. Candidate-state
-normalization remains where TexQtic governance already handles it. Where any tension appears,
-Layer 0, TEXQTIC-NEXT-DELIVERY-PLAN-v2.md, TEXQTIC-GAP-REGISTER-v2.md, and existing Governance OS
-mechanics govern.`
+opening-layer canon or relevant preserved downstream authorities, or act as roadmap or
+implementation-planning authority. Candidate-state normalization remains where TexQtic governance
+already handles it. Where any tension appears, Layer 0, the live opening-layer canon, and the
+relevant preserved downstream authorities govern.`
 
 ## Current Layer 0 Rule
 
@@ -151,6 +159,9 @@ only.
 No product-facing `ACTIVE_DELIVERY` is open.
 
 `LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001` remains the source of overlay design truth.
+
+Current live interpretation of this unit routes through the opening-layer canon and current
+doctrine, not through the preserved `-v2` chain.
 
 ## Allowed Next Step
 
@@ -168,9 +179,15 @@ visibility surfaces using current authorities only.
 
 First initialized: `2026-04-05`
 
-Population basis: current Layer 0, the live product-truth authorities, and the current launch-family-chain baseline in the required read order only.
+Population basis: current Layer 0, the live opening-layer canon, and the current launch-family-chain baseline in the required read order only.
 
-This population is visibility-only. It does not select the next opening, does not replace Layer 0 or product-truth authority, and does not create roadmap, candidate-state, implementation-planning, or commitment authority.
+Preserved row-level and note-level citations inside the initialized overlay content reflect the
+pre-reset population context of `2026-04-05` and remain historical population lineage until a
+later overlay-specific refresh reconciles the content itself.
+
+This population is visibility-only. It does not select the next opening, does not replace Layer 0
+or the live opening-layer canon, and does not create roadmap, candidate-state,
+implementation-planning, or commitment authority.
 
 Corrective validation on `2026-04-05` removed `CONTROL-PLANE-ONBOARDING-OUTCOME-HANDLING-HARDENING` as a live contender because direct repo truth records it as `CLOSED` with completed implementation, verification, and governance close and no current authority restores it as openable.
 
@@ -221,3 +238,6 @@ refresh_reason: Separate lawful opening decision execution confirmed the recover
 confidence_note: Low confidence and visibility-only; one bounded product-facing unit is now open, while broader B2C, control-plane, Subscription, and RFQ family reductions remain unresolved for later selection.
 change_since_last_note: Opened AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS as the sole current ACTIVE_DELIVERY and removed it from the next-opening shortlist.
 ```
+
+The preserved `baseline_authorities` list above remains initialization lineage for the
+`2026-04-05` note rather than current live routing authority.

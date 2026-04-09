@@ -1,9 +1,9 @@
 # DOCTRINE.md — TexQtic Active Governance Doctrine
 
 **Layer:** 0 — Control Plane  
-**Authority:** GOV-OS-001-DESIGN.md  
-**Doctrine Version:** v1.11  
-**Last Updated:** 2026-04-06 (successor-chain preservation and revalidate-not-rediscover)  
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md  
+**Doctrine Version:** v1.12  
+**Last Updated:** 2026-04-09 (opening-layer descendant authority reconciliation)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -25,11 +25,12 @@ Before taking a governance action or checking governed-unit state, read these fi
 
 Read `governance/control/SNAPSHOT.md` only for session restore, dormant context, or strict-path / historical ambiguity.
 
-For product sequencing:
+For live opening-layer routing after Layer 0:
 
-- live sequencing authority: `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-- candidate/family truth: `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
-- derived planning context only: `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md`
+- live opening-layer taxonomy truth: `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
+- live opening-layer authority map: `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
+- live opening-layer sequencing authority: `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+- historical `-v2` chain: reconciliation input only
 
 **Rule:** ordinary next-opening selection must not require multi-document sequencing triangulation.
 
@@ -96,7 +97,7 @@ Before approving any future implementation opening, Governance OS must require a
 If any family fails, Governance OS must return the failing family, the missing chain element(s), the deepest root blocker reached by recursive trace, and the minimum bounded next move required to make the opening lawful. Dependencies do not all need full implementation first, but each must be ready at the threshold appropriate to the opening.
 
 ### D-015 — Post-Close Authority Reconciliation Is Mandatory
-After any product-facing close that changes active-delivery or next-candidate posture, Governance OS must reconcile Layer 0 posture with `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md` and `TEXQTIC-GAP-REGISTER-v2.md` before any new opening decision.
+After any product-facing close that changes active-delivery or next-candidate posture, Governance OS must reconcile Layer 0 posture with the live opening-layer sequencing authority and the live opening-layer authority map before any new opening decision. Historical `-v2` product-truth artifacts may be consulted only as reconciliation input.
 
 ### D-016 — Zero-Open Product-Delivery Re-Entry Returns To Decision Control
 If a close leaves zero active product-delivery units, Governance OS returns to explicit next-opening decision control and no successor may be inferred from the closed unit, family proximity, or stale carry-forward wording. When a valid `D-020` artifact remains compatible and no `D-023` invalidation trigger has fired, decision control may begin from `D-021` narrow revalidation only, never implied opening.
@@ -116,13 +117,13 @@ The required next move is one bounded lane-separation design-clarification step 
 Governance OS may preserve one bounded successor-chain artifact after a lawful next-unit determination, same-family bounded reduction, residual-lane decomposition, or product-facing close that preserves one coherent same-family follow-on path. The artifact is non-opening carry-forward authority only and must retain preservation basis, exact authority set, current remainder, next likely `1` to `3` exact slices, stable/transitional/volatile truths, dependency assumptions, excluded adjacencies, invalidation triggers, and `NO_OPENING_AUTHORITY`; otherwise it is incomplete and cannot support `D-021`.
 
 ### D-021 — Revalidate-Not-Rediscover Is Conditional
-Governance OS may begin from narrow successor revalidation instead of broad rediscovery only when a complete `D-020` artifact exists, Layer 0 remains compatible, no `D-023` invalidation trigger has fired, no material contradiction exists, and the proposed slice stays inside the preserved family or narrowed remainder. The minimum revalidation read set is Layer 0, the artifact, live sequencing authority, candidate/family truth, named volatile truths, and named dependency or support-family readiness surfaces; failure returns to the smallest lawful broader rediscovery level.
+Governance OS may begin from narrow successor revalidation instead of broad rediscovery only when a complete `D-020` artifact exists, Layer 0 remains compatible, no `D-023` invalidation trigger has fired, no material contradiction exists, and the proposed slice stays inside the preserved family or narrowed remainder. The minimum revalidation read set is Layer 0, the artifact, the live opening-layer sequencing authority, the live opening-layer authority map, the relevant preserved downstream family/design authorities, named volatile truths, and named dependency or support-family readiness surfaces; failure returns to the smallest lawful broader rediscovery level.
 
 ### D-022 — Truth Volatility Tiers
 Governance OS must distinguish stable truth, transitional truth, and volatile truth. Stable truth covers normalized family/design anchors and preserved repo-truth evidence; transitional truth covers remainder outputs, successor-chain artifacts, and bounded visibility artifacts; volatile truth covers Layer 0 posture, blockers, runtime proof, adjacency, readiness, and current gates. Only stable truth may be reused without revalidation, transitional truth requires `D-021`, and volatile truth must always be freshly checked.
 
 ### D-023 — Invalidation Triggers Force Rediscovery
-A `D-020` artifact is invalid for `D-021` if planning or family authority changed materially, readiness or runtime proof breaks an assumption, adjacency now intersects the slice, the remainder changed materially, the artifact is stale or incomplete, Layer 0 contradicts it, live sequencing or candidate truth supersedes it, or blocker/design-gate change materially resizes the slice. Any trigger forces rediscovery at the smallest lawful broader level.
+A `D-020` artifact is invalid for `D-021` if planning or family authority changed materially, readiness or runtime proof breaks an assumption, adjacency now intersects the slice, the remainder changed materially, the artifact is stale or incomplete, Layer 0 contradicts it, the live opening-layer sequencing authority or the relevant preserved downstream family/design authority supersedes it, or blocker/design-gate change materially resizes the slice. Any trigger forces rediscovery at the smallest lawful broader level.
 
 ---
 
@@ -130,7 +131,7 @@ A `D-020` artifact is invalid for `D-021` if planning or family authority change
 
 ### Normal Bounded Path
 
-- Read `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md`; read the live sequencing authority when product-facing.
+- Read `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md`; read the live opening-layer sequencing authority and live opening-layer authority map when product-facing.
 - Before approving any implementation opening, run the D-014 dependency-readiness investigation and either record a lawful opening basis or return the minimum bounded prerequisite move.
 - Open with one unit record plus the required Layer 0 update.
 - During work, update the unit record only when scope, blockers, or verification posture materially change.
@@ -197,4 +198,4 @@ Design documents live in `docs/governance/control/`. Operational files live here
 
 ---
 
-*Design authority: `docs/governance/control/GOV-OS-001-DESIGN.md`*
+*Preserved downstream design lineage: `docs/governance/control/GOV-OS-001-DESIGN.md` (historical design input only; live routing is governed by the opening-layer authority map above).*

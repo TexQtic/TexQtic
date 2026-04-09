@@ -90,6 +90,10 @@ No other files are authorized for edit in this decision/opening step.
 - `governance/decisions/**` except `governance/decisions/GOV-DEC-LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-OPENING.md`
 - `governance/units/**` except `governance/units/LAUNCH-ACCELERATION-OVERLAY-RESHAPE-DESIGN-001.md`
 
+The preserved read set above reflects the pre-reset design context of this unit. Live authority for
+ongoing interpretation now routes through Layer 0 plus the opening-layer canon; the preserved
+`-v2` chain remains historical design lineage and reconciliation input only.
+
 ## Exact In-Scope Boundary
 
 This unit may define only:
@@ -134,8 +138,8 @@ any separate governance queue.
 Any later thin overlay may surface only launch-critical-path visibility, shortlist visibility, and
 launch-window visibility. It must not duplicate Governance OS opening, verification, sync, close,
 or candidate-state authority; it must not create a parallel candidate/state system; and it must not
-compete with Layer 0, `TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`, or `TEXQTIC-GAP-REGISTER-v2.md` as the
-authority sources already named there.
+compete with Layer 0, the live opening-layer canon, or the relevant preserved downstream
+authorities.
 
 ## Current Layer 0 Rule
 
@@ -143,7 +147,7 @@ authority sources already named there.
 `DECISION_QUEUE` posture only.
 
 `NEXT-ACTION` preserves zero product-facing `ACTIVE_DELIVERY`, preserves the same derived
-product-truth authorities, and records this unit as the bounded governance action only.
+opening-layer authority routing, and records this unit as the bounded governance action only.
 No product successor, no broad planning stack, and no thin-overlay implementation opening are
 created by implication.
 
@@ -166,7 +170,7 @@ overlay shape described above.
 
 | Aspect | Definition |
 | --- | --- |
-| What it is | A thin, visibility-only launch-planning overlay that keeps current launch critical-path, next-opening shortlist, and rolling launch-window truth in one bounded place after Layer 0 and the live product-truth authorities have already been read. |
+| What it is | A thin, visibility-only launch-planning overlay that keeps current launch critical-path, next-opening shortlist, and rolling launch-window truth in one bounded place after Layer 0 and the live opening-layer canon plus the relevant preserved downstream authorities have already been read. |
 | What problem it solves | It reduces next-unit decision latency after closes by making launch dependency shape, contender comparison, and launch-window assumptions visible without forcing Governance OS itself to expand into broad portfolio planning. |
 | What authority it does **not** have | No opening authority, no verification authority, no sync or closure authority, no candidate-state normalization authority, no roadmap authority, and no investor-commitment authority. |
 | How it relates to Governance OS | Governance OS remains primary for lawful opening, D-014 dependency-readiness work, D-015 reconciliation, D-016 zero-open decision control, verification, sync, and closure. The overlay may only inform those steps with current visibility. |
@@ -216,7 +220,7 @@ Maintain one bounded current-state view of launch-critical serial and parallel d
 **Owner / authority relationship**
 
 - owned as visibility-only overlay content
-- derived from Layer 0 plus live product-truth authorities only
+- derived from Layer 0 plus the live opening-layer canon and relevant preserved downstream authorities only
 - never overrides those authorities
 
 **Serial vs parallel representation**
@@ -382,8 +386,7 @@ visibility, and rolling launch-window visibility only. It must not open units, v
 or close units, normalize candidate state, replace Layer 0 authority, replace the live
 product-truth authorities, or act as roadmap or implementation-planning authority. Candidate-state
 normalization remains where TexQtic governance already handles it. Where any tension appears,
-Layer 0, TEXQTIC-NEXT-DELIVERY-PLAN-v2.md, TEXQTIC-GAP-REGISTER-v2.md, and existing Governance OS
-mechanics govern.`
+Layer 0, the live opening-layer canon, and the relevant preserved downstream authorities govern.`
 
 Not this: not a parallel authority plane and not a replacement for existing governance mechanics.
 
@@ -394,10 +397,14 @@ Not this: not a parallel authority plane and not a replacement for existing gove
 1. `governance/control/OPEN-SET.md`
 2. `governance/control/NEXT-ACTION.md`
 3. `governance/control/BLOCKED.md`
-4. `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md`
-5. `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md`
-6. `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` as derived context only
-7. thin overlay surfaces only after all of the above
+4. `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
+5. `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
+6. `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+7. relevant preserved downstream family/design authorities by topic
+8. thin overlay surfaces only after all of the above
+
+The preserved `-v2` product-truth chain remains historical reconciliation input only at this
+layer.
 
 **Integration behavior**
 
@@ -406,7 +413,7 @@ Not this: not a parallel authority plane and not a replacement for existing gove
 - the overlay may inform D-014, D-015, and D-016 decision work but may not replace them
 - refresh only when a product-facing close or a material planning-truth change changes launch reality
 
-Not this: not a new first-read authority and not a substitute for Layer 0 or live product-truth authority.
+Not this: not a new first-read authority and not a substitute for Layer 0 or live opening-layer authority.
 
 ### F. Decision Test For Later Opening
 
@@ -414,7 +421,7 @@ Not this: not a new first-read authority and not a substitute for Layer 0 or liv
 | --- | --- |
 | `later thin-overlay opening possible` | All of the following remain true: the design stays limited to the three approved surfaces plus one rule and one clause; the surfaces derive entirely from current authorities without competing with them; no extra artifact family or parallel state system is required; the earlier visibility gap remains materially real after closes; and any bridge rule remains unnecessary or is narrowed to one proven-necessary rule only. |
 | `refine further` | Any of the following is true: another artifact is needed; boundedness rules remain ambiguous; the bridge rule is still broader than one narrow proven need; the shortlist or critical-path structures still drift toward roadmap or backlog behavior. |
-| `reject as unnecessary` | Any of the following is true: current Layer 0 plus live product-truth authorities already provide the same visibility with no material decision-latency gap; the overlay cannot stay non-authoritative; or maintenance burden would exceed the value of the visibility gained. |
+| `reject as unnecessary` | Any of the following is true: current Layer 0 plus the live opening-layer canon and relevant preserved downstream authorities already provide the same visibility with no material decision-latency gap; the overlay cannot stay non-authoritative; or maintenance burden would exceed the value of the visibility gained. |
 
 **Later-opening note**
 
@@ -431,7 +438,7 @@ Reason:
 
 - the thin overlay is now explicitly bounded to the three approved operational surfaces only
 - exactly one embedded stagnation rule and one explicit non-duplication clause are now defined
-- the overlay is explicitly non-authoritative and subordinate to Governance OS and live product-truth authorities
+- the overlay is explicitly non-authoritative and subordinate to Governance OS, the live opening-layer canon, and relevant preserved downstream authorities
 - current repo truth still supports the underlying visibility need identified by the preserved
   investigation result
 - a later separate opening is therefore possible, but only as a separate lawful governance step and
