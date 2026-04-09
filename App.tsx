@@ -125,6 +125,20 @@ const ENTERPRISE_TRADE_BRIDGE_CURRENCY = 'USD';
 const ENTERPRISE_HOME_CATALOG_FIRST_PAINT_LIMIT = 8;
 const ENTERPRISE_HOME_CATALOG_TAIL_LIMIT = 12;
 const ENTERPRISE_HOME_CATALOG_TAIL_DELAY_MS = 250;
+const DEFAULT_DOCUMENT_TITLE = 'TexQtic';
+const DOCUMENT_TITLE_HOME_ROUTES = new Set(['Catalog', 'Storefront Home', 'Workspace Home']);
+
+function joinDocumentTitle(...segments: Array<string | null | undefined>) {
+  return segments.filter((segment): segment is string => Boolean(segment)).join(' | ');
+}
+
+function normalizeDocumentRouteTitle(title: string | null | undefined) {
+  if (!title || DOCUMENT_TITLE_HOME_ROUTES.has(title)) {
+    return null;
+  }
+
+  return title;
+}
 
 function buildTradeReferenceFromRfq(rfqId: string): string {
   return `TRD-RFQ-${rfqId.replaceAll('-', '').slice(0, 8).toUpperCase()}`;
@@ -1195,6 +1209,80 @@ const App: React.FC = () => {
     isB2CBrowseEntrySurface,
     b2cSearchQuery,
   ]);
+
+  const documentTitle = useMemo(() => {
+    if (appState === 'AUTH') {
+      return authRealm === 'CONTROL_PLANE' ? 'TexQtic Admin Sign In' : 'TexQtic Sign In';
+    }
+
+    if (appState === 'TOKEN_HANDLER') {
+      return 'TexQtic Account Action';
+    }
+
+    if (appState === 'ONBOARDING') {
+      return currentTenant ? joinDocumentTitle(currentTenant.name, 'TexQtic Onboarding') : 'TexQtic Onboarding';
+    }
+
+    if (appState === 'CONTROL_PLANE') {
+      return joinDocumentTitle(controlPlaneLocalRouteSelection?.route.title, 'TexQtic Control Plane');
+    }
+
+    if (!currentTenant) {
+      return DEFAULT_DOCUMENT_TITLE;
+    }
+
+    if (tenantContentFamily === 'wl_admin') {
+      return joinDocumentTitle(
+        normalizeDocumentRouteTitle(wlAdminLocalRouteSelection?.route.title),
+        `${currentTenant.name} Admin`,
+      );
+    }
+
+    if (tenantContentFamily === 'wl_storefront') {
+      return joinDocumentTitle(
+        normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
+        currentTenant.name,
+      );
+    }
+
+    if (tenantContentFamily === 'b2b_workspace') {
+      return joinDocumentTitle(
+        normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
+        currentTenant.name,
+        'TexQtic B2B Workspace',
+      );
+    }
+
+    if (tenantContentFamily === 'b2c_storefront') {
+      return joinDocumentTitle(
+        normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
+        currentTenant.name,
+        'TexQtic Storefront',
+      );
+    }
+
+    if (tenantContentFamily === 'aggregator_workspace') {
+      return joinDocumentTitle(
+        normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
+        currentTenant.name,
+        'TexQtic Aggregator Workspace',
+      );
+    }
+
+    return joinDocumentTitle(currentTenant.name, DEFAULT_DOCUMENT_TITLE);
+  }, [
+    appState,
+    authRealm,
+    currentTenant,
+    tenantContentFamily,
+    tenantLocalRouteSelection,
+    wlAdminLocalRouteSelection,
+    controlPlaneLocalRouteSelection,
+  ]);
+
+  useEffect(() => {
+    document.title = documentTitle;
+  }, [documentTitle]);
 
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {

@@ -23,14 +23,57 @@ const hasShellRoute = (surface: RuntimeShellNavigationSurface | null, routeKey: 
   return surface?.items.some(item => item.routeKey === routeKey) ?? false;
 };
 
+const isRemoteLogoAsset = (logo: string) => /^https?:\/\//i.test(logo);
+
+const TenantMark: React.FC<{ tenant: TenantConfig; sizeClassName?: string }> = ({
+  tenant,
+  sizeClassName = 'h-9 w-9',
+}) => {
+  if (isRemoteLogoAsset(tenant.theme.logo)) {
+    return (
+      <img
+        src={tenant.theme.logo}
+        alt={`${tenant.name} logo`}
+        className={`${sizeClassName} rounded-xl object-cover shadow-sm`}
+      />
+    );
+  }
+
+  return (
+    <span aria-hidden="true" className="text-xl leading-none">
+      {tenant.theme.logo}
+    </span>
+  );
+};
+
+const PlatformSignature: React.FC<{ label: string; tone?: 'light' | 'dark' }> = ({
+  label,
+  tone = 'light',
+}) => {
+  const className = tone === 'dark'
+    ? 'inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-300'
+    : 'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500';
+  const brandClassName = tone === 'dark' ? 'text-white' : 'text-slate-700';
+
+  return (
+    <div className={className}>
+      <span className={brandClassName}>TexQtic</span>
+      <span>{label}</span>
+    </div>
+  );
+};
+
 export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => (
   <div className="min-h-screen flex flex-col font-sans">
     <header className="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <button type="button" className="flex items-center gap-2 text-xl font-bold cursor-pointer" onClick={() => navigation.onNavigateRoute('home')}>
-          <span>{tenant.theme.logo}</span>
-          <span>{tenant.name}</span>
-        </button>
+      <div className="max-w-7xl mx-auto flex justify-between items-center gap-6">
+        <div className="flex items-center gap-4 min-w-0">
+          <button type="button" className="flex items-center gap-3 text-xl font-bold cursor-pointer min-w-0" onClick={() => navigation.onNavigateRoute('home')}>
+            <TenantMark tenant={tenant} />
+            <span className="truncate">{tenant.name}</span>
+          </button>
+          <PlatformSignature label="Aggregator Workspace" tone="dark" />
+        </div>
         <nav className="hidden md:flex gap-6 text-sm font-medium">
           <button onClick={() => navigation.onNavigateRoute('home')} className="text-blue-400">Companies</button>
           {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="hover:text-blue-400 transition text-slate-300">Certifications</button>}
@@ -53,9 +96,13 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, naviga
 export const B2BShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => (
   <div className="min-h-screen flex bg-slate-100 font-sans">
     <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
-      <button type="button" className="flex items-center gap-2 text-white font-bold text-lg mb-8 cursor-pointer" onClick={() => navigation.onNavigateRoute('catalog')}>
-        <span>{tenant.theme.logo}</span> {tenant.name}
-      </button>
+      <div className="mb-8 space-y-3">
+        <PlatformSignature label="B2B Workspace" tone="dark" />
+        <button type="button" className="flex items-center gap-3 text-white font-bold text-lg cursor-pointer" onClick={() => navigation.onNavigateRoute('catalog')}>
+          <TenantMark tenant={tenant} />
+          <span>{tenant.name}</span>
+        </button>
+      </div>
       <nav className="flex-1 space-y-4">
         <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
         <button onClick={() => navigation.onNavigateRoute('catalog')} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
@@ -71,12 +118,12 @@ export const B2BShell: React.FC<ShellProps> = ({ tenant, children, navigation })
         <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
       </nav>
       <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
-        v2.4.0 • Enterprise
+        v2.4.0 • TexQtic B2B Workspace
       </div>
     </aside>
     <div className="flex-1 flex flex-col relative">
       <header className="h-16 bg-white border-b border-slate-200 flex items-center px-8 justify-between sticky top-0 z-10">
-        <h2 className="font-semibold text-slate-600">Enterprise Management</h2>
+        <h2 className="font-semibold text-slate-600">TexQtic B2B Workspace</h2>
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
             <div className="text-xs font-bold text-slate-900">Alex Rivera</div>
@@ -100,8 +147,12 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation })
     </div>
     <header className="border-b sticky top-0 bg-white/80 backdrop-blur-md z-50">
       <div className="max-w-7xl mx-auto p-4 flex justify-between items-center">
-        <button type="button" className="text-2xl font-black text-indigo-600 tracking-tight flex items-center gap-2 cursor-pointer" onClick={() => navigation.onNavigateRoute('home')}>
-           {tenant.theme.logo} {tenant.name}
+        <button type="button" className="flex items-center gap-3 cursor-pointer min-w-0" onClick={() => navigation.onNavigateRoute('home')}>
+          <TenantMark tenant={tenant} sizeClassName="h-11 w-11" />
+          <div className="flex flex-col items-start min-w-0">
+            <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">TexQtic Storefront</span>
+            <span className="text-2xl font-black text-indigo-600 tracking-tight truncate">{tenant.name}</span>
+          </div>
         </button>
         <div className="flex-1 max-w-md mx-8">
           <input

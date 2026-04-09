@@ -8,6 +8,7 @@ const QA_PASSWORD = ['Password123', '!'].join('');
 const QA_CTRL_EMAIL = 'admin@texqtic.com';
 const SUPPORT_EMAIL = 'support@texqtic.com';
 const CURRENT_MONTH = new Date().toISOString().slice(0, 7);
+const QA_PLACEHOLDER_HOST = 'https://placehold.co';
 
 type Tx = Prisma.TransactionClient;
 type QaTenantType = 'AGGREGATOR' | 'B2B' | 'B2C';
@@ -60,6 +61,29 @@ type SeededTenantIdentity = {
   ownerUserId: string;
 };
 
+function buildQaPlaceholderAsset(size: string, background: string, foreground: string, label: string) {
+  const normalizedBackground = background.replace('#', '');
+  const normalizedForeground = foreground.replace('#', '');
+
+  return `${QA_PLACEHOLDER_HOST}/${size}/${normalizedBackground}/${normalizedForeground}/png?text=${encodeURIComponent(label)}`;
+}
+
+function toDecimal(value: number) {
+  return new Prisma.Decimal(value);
+}
+
+function toNumber(value: Prisma.Decimal | number | null | undefined) {
+  if (value == null) {
+    return 0;
+  }
+
+  return typeof value === 'number' ? value : Number(value);
+}
+
+function hasLegacyPlaceholderHost(url: string | null | undefined) {
+  return url?.includes('example.com') ?? false;
+}
+
 const QA_B2B_SPEC: QaTenantSpec = {
   key: 'QA_B2B',
   displayName: 'QA B2B',
@@ -78,7 +102,7 @@ const QA_B2B_SPEC: QaTenantSpec = {
     legacy: ['acme.example.com'],
   },
   branding: {
-    logoUrl: 'https://example.com/logos/qa-b2b.png',
+    logoUrl: buildQaPlaceholderAsset('256x256', '#0F766E', '#FFFFFF', 'QA B2B'),
     themeJson: {
       primaryColor: '#0F766E',
       secondaryColor: '#164E63',
@@ -99,7 +123,7 @@ const QA_B2C_SPEC: QaTenantSpec = {
   isWhiteLabel: false,
   jurisdiction: 'US-CA',
   branding: {
-    logoUrl: 'https://example.com/logos/qa-b2c.png',
+    logoUrl: buildQaPlaceholderAsset('256x256', '#C2410C', '#FFFFFF', 'QA B2C'),
     themeJson: {
       primaryColor: '#C2410C',
       secondaryColor: '#F97316',
@@ -124,7 +148,7 @@ const QA_WL_SPEC: QaTenantSpec = {
     secondary: ['qa-wl.shop.texqtic.com'],
   },
   branding: {
-    logoUrl: 'https://example.com/logos/qa-wl.png',
+    logoUrl: buildQaPlaceholderAsset('256x256', '#7C2D12', '#F8FAFC', 'QA WL'),
     themeJson: {
       primaryColor: '#7C2D12',
       secondaryColor: '#EA580C',
@@ -166,7 +190,7 @@ const QA_B2B_CATALOG: CatalogSeedSpec[] = [
     description: 'Canonical QA B2B catalog anchor used for RFQ and order continuity.',
     price: 120,
     moq: 5,
-    imageUrl: 'https://example.com/catalog/qa-b2b-core-yarn-lot.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#0F766E', '#FFFFFF', 'QA B2B Core Yarn Lot'),
   },
 ];
 
@@ -177,7 +201,7 @@ const QA_B2C_CATALOG: CatalogSeedSpec[] = [
     description: 'B2C browse proof item one.',
     price: 24,
     moq: 1,
-    imageUrl: 'https://example.com/catalog/qa-b2c-cotton-scarf.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#C2410C', '#FFFFFF', 'QA B2C Cotton Scarf'),
   },
   {
     name: 'QA B2C Linen Wrap',
@@ -185,7 +209,7 @@ const QA_B2C_CATALOG: CatalogSeedSpec[] = [
     description: 'B2C browse proof item two.',
     price: 38,
     moq: 1,
-    imageUrl: 'https://example.com/catalog/qa-b2c-linen-wrap.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#EA580C', '#FFFFFF', 'QA B2C Linen Wrap'),
   },
   {
     name: 'QA B2C Silk Pocket Square',
@@ -193,7 +217,7 @@ const QA_B2C_CATALOG: CatalogSeedSpec[] = [
     description: 'B2C browse proof item three.',
     price: 18,
     moq: 1,
-    imageUrl: 'https://example.com/catalog/qa-b2c-pocket-square.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#9A3412', '#FFFFFF', 'QA B2C Silk Pocket Square'),
   },
 ];
 
@@ -204,7 +228,7 @@ const QA_WL_CATALOG: CatalogSeedSpec[] = [
     description: 'WL storefront proof product one.',
     price: 64,
     moq: 1,
-    imageUrl: 'https://example.com/catalog/qa-wl-indigo-throw.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#7C2D12', '#F8FAFC', 'QA WL Indigo Throw'),
   },
   {
     name: 'QA WL Canvas Apron',
@@ -212,7 +236,7 @@ const QA_WL_CATALOG: CatalogSeedSpec[] = [
     description: 'WL storefront proof product two.',
     price: 42,
     moq: 1,
-    imageUrl: 'https://example.com/catalog/qa-wl-canvas-apron.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#EA580C', '#F8FAFC', 'QA WL Canvas Apron'),
   },
   {
     name: 'QA WL Utility Tote',
@@ -220,21 +244,9 @@ const QA_WL_CATALOG: CatalogSeedSpec[] = [
     description: 'WL storefront proof product three.',
     price: 58,
     moq: 1,
-    imageUrl: 'https://example.com/catalog/qa-wl-utility-tote.png',
+    imageUrl: buildQaPlaceholderAsset('1200x900', '#9A3412', '#F8FAFC', 'QA WL Utility Tote'),
   },
 ];
-
-function toDecimal(value: number) {
-  return new Prisma.Decimal(value);
-}
-
-function toNumber(value: Prisma.Decimal | number | null | undefined) {
-  if (value == null) {
-    return 0;
-  }
-
-  return typeof value === 'number' ? value : Number(value);
-}
 
 function ensureSingleCandidate<T extends { id: string }>(records: T[], label: string): T | null {
   const uniqueIds = [...new Set(records.map(record => record.id))];
@@ -711,6 +723,24 @@ async function ensureCatalogItems(tx: Tx, tenantId: string, seeds: CatalogSeedSp
   return items;
 }
 
+async function deactivateCatalogResidue(tx: Tx, tenantId: string, canonicalSkus: string[]) {
+  const result = await tx.catalogItem.updateMany({
+    where: {
+      tenantId,
+      active: true,
+      OR: [
+        { sku: null },
+        { sku: { notIn: canonicalSkus } },
+      ],
+    },
+    data: {
+      active: false,
+    },
+  });
+
+  return result.count;
+}
+
 async function ensureActiveCartWithItem(tx: Tx, tenantId: string, userId: string, catalogItemId: string, quantity: number) {
   const cart =
     (await tx.cart.findFirst({
@@ -1051,6 +1081,11 @@ async function seedCanonicalQaBaseline(tx: Tx, passwordHash: string) {
   const qaB2bItems = await ensureCatalogItems(tx, qaB2b.tenantId, QA_B2B_CATALOG);
   const qaB2cItems = await ensureCatalogItems(tx, qaB2c.tenantId, QA_B2C_CATALOG);
   const qaWlItems = await ensureCatalogItems(tx, qaWl.tenantId, QA_WL_CATALOG);
+  const qaB2bResidueDeactivated = await deactivateCatalogResidue(
+    tx,
+    qaB2b.tenantId,
+    QA_B2B_CATALOG.map(item => item.sku),
+  );
 
   await ensureActiveCartWithItem(tx, qaB2c.tenantId, qaB2c.ownerUserId, qaB2cItems[0].id, 1);
   await ensureOrderWithItem(
@@ -1106,6 +1141,7 @@ async function seedCanonicalQaBaseline(tx: Tx, passwordHash: string) {
     metadataJson: {
       slug: qaB2b.slug,
       proof: ['catalog', 'rfq', 'order', 'audit'],
+      deactivatedCatalogResidue: qaB2bResidueDeactivated,
     },
   });
 
@@ -1251,7 +1287,13 @@ function baseTenantValidation(state: TenantValidationState) {
 
 function validateQaB2bIdentity(
   state: TenantValidationState,
-  proof: { activeCatalogItems: number; rfqs: number; orders: number; auditLogs: number },
+  proof: {
+    activeCatalogItems: number;
+    rfqs: number;
+    orders: number;
+    auditLogs: number;
+    legacySeedMediaUrlsPresent: number;
+  },
 ) {
   const hasIdentity =
     state.tenant?.name === 'QA B2B' &&
@@ -1268,10 +1310,11 @@ function validateQaB2bIdentity(
     state.descriptor.runtimeOverlays.length === 0;
 
   const hasProof =
-    proof.activeCatalogItems >= 1 &&
+    proof.activeCatalogItems === QA_B2B_CATALOG.length &&
     proof.rfqs >= 1 &&
     proof.orders >= 1 &&
-    proof.auditLogs >= 1;
+    proof.auditLogs >= 1 &&
+    proof.legacySeedMediaUrlsPresent === 0;
 
   return {
     ...baseTenantValidation(state),
@@ -1282,7 +1325,13 @@ function validateQaB2bIdentity(
 
 function validateQaB2cIdentity(
   state: TenantValidationState,
-  proof: { activeCatalogItems: number; activeCartItems: number; browseGroupingMode: string },
+  proof: {
+    activeCatalogItems: number;
+    activeCartItems: number;
+    browseGroupingMode: string;
+    legacySeedMediaUrlsPresent: number;
+    brandingMediaValid: boolean;
+  },
 ) {
   const hasIdentity =
     state.tenant?.name === 'QA B2C' &&
@@ -1294,7 +1343,11 @@ function validateQaB2cIdentity(
     state.directLoginEligible;
 
   const hasRuntime = state.descriptor?.operatingMode === 'B2C_STOREFRONT';
-  const hasProof = proof.activeCatalogItems >= 3 && proof.activeCartItems >= 1;
+  const hasProof =
+    proof.activeCatalogItems >= QA_B2C_CATALOG.length &&
+    proof.activeCartItems >= 1 &&
+    proof.legacySeedMediaUrlsPresent === 0 &&
+    proof.brandingMediaValid;
 
   return {
     ...baseTenantValidation(state),
@@ -1314,6 +1367,8 @@ function validateQaWlOwnerIdentity(
     collectionGroupingMode: string;
     orders: number;
     staffMemberships: number;
+    legacySeedMediaUrlsPresent: number;
+    brandingMediaValid: boolean;
   },
 ) {
   const hasIdentity =
@@ -1336,7 +1391,9 @@ function validateQaWlOwnerIdentity(
     proof.activeCatalogItems >= 3 &&
     proof.collectionGroups >= 1 &&
     proof.orders >= 1 &&
-    proof.staffMemberships >= 2;
+    proof.staffMemberships >= 2 &&
+    proof.legacySeedMediaUrlsPresent === 0 &&
+    proof.brandingMediaValid;
 
   return {
     ...baseTenantValidation(state),
@@ -1431,14 +1488,21 @@ async function validateQaBaseline() {
     prisma.user.findUnique({ where: { email: 'owner@acme.example.com' }, select: { id: true } }),
   ]);
 
-  const [qaB2bCatalogCount, qaB2bRfqCount, qaB2bOrderCount, qaB2bAuditCount] = qaB2b.tenant
+  const [qaB2bCatalogCount, qaB2bRfqCount, qaB2bOrderCount, qaB2bAuditCount, qaB2bLegacySeedMediaCount] = qaB2b.tenant
     ? await Promise.all([
         prisma.catalogItem.count({ where: { tenantId: qaB2b.tenant.id, active: true } }),
         prisma.rfq.count({ where: { orgId: qaB2b.tenant.id } }),
         prisma.order.count({ where: { tenantId: qaB2b.tenant.id } }),
         prisma.auditLog.count({ where: { tenantId: qaB2b.tenant.id } }),
+        prisma.catalogItem.count({
+          where: {
+            tenantId: qaB2b.tenant.id,
+            sku: { in: QA_B2B_CATALOG.map(item => item.sku) },
+            imageUrl: { contains: 'example.com' },
+          },
+        }),
       ])
-    : [0, 0, 0, 0];
+    : [0, 0, 0, 0, 0];
 
   const qaB2cActiveCart = qaB2c.tenant && qaB2c.user
     ? await prisma.cart.findFirst({
@@ -1453,9 +1517,27 @@ async function validateQaBaseline() {
       })
     : null;
 
-  const [qaB2cCatalogCount, qaWlCatalogCount, qaWlOrderCount, qaAggAuditCount] = await Promise.all([
+  const [qaB2cCatalogCount, qaB2cLegacySeedMediaCount, qaWlCatalogCount, qaWlLegacySeedMediaCount, qaWlOrderCount, qaAggAuditCount] = await Promise.all([
     qaB2c.tenant ? prisma.catalogItem.count({ where: { tenantId: qaB2c.tenant.id, active: true } }) : Promise.resolve(0),
+    qaB2c.tenant
+      ? prisma.catalogItem.count({
+          where: {
+            tenantId: qaB2c.tenant.id,
+            sku: { in: QA_B2C_CATALOG.map(item => item.sku) },
+            imageUrl: { contains: 'example.com' },
+          },
+        })
+      : Promise.resolve(0),
     qaWlOwner.tenant ? prisma.catalogItem.count({ where: { tenantId: qaWlOwner.tenant.id, active: true } }) : Promise.resolve(0),
+    qaWlOwner.tenant
+      ? prisma.catalogItem.count({
+          where: {
+            tenantId: qaWlOwner.tenant.id,
+            sku: { in: QA_WL_CATALOG.map(item => item.sku) },
+            imageUrl: { contains: 'example.com' },
+          },
+        })
+      : Promise.resolve(0),
     qaWlOwner.tenant ? prisma.order.count({ where: { tenantId: qaWlOwner.tenant.id } }) : Promise.resolve(0),
     qaAgg.tenant ? prisma.auditLog.count({ where: { tenantId: qaAgg.tenant.id } }) : Promise.resolve(0),
   ]);
@@ -1486,11 +1568,14 @@ async function validateQaBaseline() {
       rfqs: qaB2bRfqCount,
       orders: qaB2bOrderCount,
       auditLogs: qaB2bAuditCount,
+      legacySeedMediaUrlsPresent: qaB2bLegacySeedMediaCount,
     }),
     qaB2C: validateQaB2cIdentity(qaB2c, {
       activeCatalogItems: qaB2cCatalogCount,
       activeCartItems: qaB2cActiveCart?.items.length ?? 0,
       browseGroupingMode: 'catalog-grid',
+      legacySeedMediaUrlsPresent: qaB2cLegacySeedMediaCount,
+      brandingMediaValid: !hasLegacyPlaceholderHost(qaB2c.tenant?.branding?.logoUrl),
     }),
     qaWL: validateQaWlOwnerIdentity(qaWlOwner, {
       brandingRow: Boolean(qaWlOwner.tenant?.branding),
@@ -1503,6 +1588,8 @@ async function validateQaBaseline() {
       collectionGroupingMode: 'uncategorised-fallback',
       orders: qaWlOrderCount,
       staffMemberships: qaWlOwner.tenant?.memberships.length ?? 0,
+      legacySeedMediaUrlsPresent: qaWlLegacySeedMediaCount,
+      brandingMediaValid: !hasLegacyPlaceholderHost(qaWlOwner.tenant?.branding?.logoUrl),
     }),
     qaWLMember: validateQaWlMemberIdentity(qaWlMember),
     qaAgg: validateQaAggIdentity(qaAgg, {
