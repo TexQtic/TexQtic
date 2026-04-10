@@ -19,15 +19,28 @@ decisions_required: []
 blockers: []
 ---
 
+Current governance read: consume this historical March 2026 decision record through the fixed
+2026-04-10 opening-layer reset posture, the completed governance-family closeout, the completed
+taxonomy/naming closeout, the completed technical-contract closeout, the bounded identity /
+tenancy / workspace continuity entry, the preserved read-only contract authorities, and the
+preserved read-only continuity-truth anchor.
+
+All references below to `OPEN-SET.md`, `NEXT-ACTION.md`, `SNAPSHOT.md`,
+`REALM-BOUNDARY-SHELL-AFFORDANCE-001`, `OPERATOR_DECISION_REQUIRED`, and the historical
+`SPLIT_REQUIRED` routing posture are preserved as historical-at-original-closure context only and
+are not current live authority after the fixed 2026-04-10 chain.
+
 ## Unit Summary
 
-`AUTH-IDENTITY-TRUTH-DEPLOYED-001` is the sole bounded decision unit for the remaining deployed
-identity-truth defect family after closure of `REALM-BOUNDARY-SHELL-AFFORDANCE-001`.
+`AUTH-IDENTITY-TRUTH-DEPLOYED-001` is the historical bounded decision record for the remaining
+deployed identity-truth defect family after closure of `REALM-BOUNDARY-SHELL-AFFORDANCE-001` and
+is now consumed as the direct governance-side identity / tenancy / workspace continuity surface
+under the fixed 2026-04-10 authority posture.
 
-The decision question is whether the remaining finding is already narrow enough for one bounded
-implementation opening or whether it must remain non-open.
+At original closure, the decision question was whether the remaining finding was already narrow
+enough for one bounded implementation opening or whether it had to remain non-open.
 
-The selected result is `SPLIT_REQUIRED`.
+The historical selected result at original closure is `SPLIT_REQUIRED`.
 
 The current finding is still mixed across multiple narrower concerns:
 
@@ -38,7 +51,7 @@ The current finding is still mixed across multiple narrower concerns:
 In addition, `IMPERSONATION-STOP-CLEANUP-001` remains causally separate and must not be merged into
 this decision unit.
 
-## Layer 0 State Confirmation
+## Historical Layer 0 State Confirmation At Original Closure
 
 Layer 0 on entry to this unit is:
 
@@ -46,7 +59,7 @@ Layer 0 on entry to this unit is:
 - `NEXT-ACTION.md`: `AUTH-IDENTITY-TRUTH-DEPLOYED-001` decision only
 - `SNAPSHOT.md`: `REALM-BOUNDARY-SHELL-AFFORDANCE-001` is `CLOSED` and does not authorize broader auth, impersonation, routing, or control-plane continuation by implication
 
-## Decision Question
+## Historical Decision Question At Original Closure
 
 Choose the single narrowest truthful next disposition for the deployed identity-truth finding:
 
@@ -56,7 +69,7 @@ Choose the single narrowest truthful next disposition for the deployed identity-
 - `HOLD`
 - `RECORD_ONLY`
 
-## Options Considered
+## Historical Options Considered At Original Closure
 
 ### 1. `OPENING_CANDIDATE`
 
@@ -96,7 +109,7 @@ Rejected.
 The finding is stronger than a passive record. It is a real deployed defect family with enough signal
 to require explicit split discipline before any opening is considered.
 
-## Selected Option
+## Historical Selected Option
 
 `SPLIT_REQUIRED`
 
@@ -170,7 +183,7 @@ The minimum future verification posture is:
 
 No later opening may claim a universal auth defect unless deployed evidence proves cross-shell truth.
 
-## Resulting NEXT-ACTION Posture
+## Historical Resulting NEXT-ACTION Posture At Original Closure
 
 `OPERATOR_DECISION_REQUIRED`
 
@@ -184,14 +197,14 @@ implementation, and does not authorize any one child by implication.
 - impersonation persona clarity and stop-path cleanup are adjacent but not yet one causal slice
 - a broad opening now would create hidden scope drift across multiple runtime-sensitive concerns
 
-## Governance Closure
+## Historical Governance Closure
 
 - Closure result: `AUTH-IDENTITY-TRUTH-DEPLOYED-001`
 - Status transition: `OPEN` -> `CLOSED`
 - Selected posture: `SPLIT_REQUIRED`
 - Resulting Layer 0 posture: `OPERATOR_DECISION_REQUIRED`
 
-## Mandatory Post-Close Audit
+## Historical Post-Close Audit
 
 ### 1. State summary
 
@@ -236,6 +249,24 @@ must not be inferred automatically.
 - `NEXT-ACTION` returns to `OPERATOR_DECISION_REQUIRED`
 - no implementation-ready unit is open
 - the next lawful move, if any, is a later separate decision that names narrower identity-truth child boundaries explicitly and keeps stop-path cleanup separate
+
+## Current governance read after bounded continuity entry
+
+Under the fixed 2026-04-10 opening-layer reset posture, the completed governance-family closeout,
+the completed taxonomy/naming closeout, the completed technical-contract closeout, and the bounded
+identity / tenancy / workspace continuity entry, this file now functions as the exact one-file
+governance-side continuity target for bounded reconciliation.
+
+The preserved `SPLIT_REQUIRED` result remains historical March 2026 closure truth for the earlier
+mixed identity-truth finding and does not by itself control current Layer 0 routing or current
+next-family selection.
+
+Current live authority is the fixed 2026-04-10 canon/control chain plus the bounded identity /
+tenancy / workspace continuity entry artifact, while preserved contract authorities and the
+continuity-truth design anchor remain read-only inputs.
+
+This file does not authorize Layer 0 change, product-truth rewrite, onboarding work, platform
+planning, domain-family execution, OpenAPI execution, or implementation work.
 
 ## Atomic Commit
 
