@@ -7,15 +7,23 @@
 > For current onboarding-family consumer reading specifically, use:
 >
 > - the live opening-layer canon in `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md` and `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
-> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-PLANNING-RECONCILIATION-2026-04-09.md`
-> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-REMAINDER-INVENTORY-AND-BOUNDARY-CLASSIFICATION-2026-04-09.md`
-> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-CONSUMER-GUIDANCE-RECONCILIATION-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-REMEDIATION-CLOSEOUT-SNAPSHOT-2026-04-09.md` as current closeout summary and handoff anchor
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-POST-CLOSEOUT-ENTRY-GUARD-2026-04-09.md` as current lawful entry rule for future onboarding-family work
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DEFERRED-REMAINDER-BRANCH-DECISION-2026-04-09.md` as the deferred-remainder sequencing decision
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-DECISION-TO-OPEN-2026-04-09.md` as the delivery-consumer branch opening boundary
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-FIRST-WAVE-2026-04-09.md` as the completed first-wave consumer regeneration record
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-SECOND-WAVE-DECISION-2026-04-09.md` as the completed one-file second-wave opening boundary
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-SECOND-WAVE-2026-04-09.md` as the completed one-file second-wave regeneration record
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-POST-WAVE-HOLD-BRANCH-DECISION-2026-04-09.md` as the current post-wave hold posture
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-LAUNCH-OVERLAY-CONSUMER-BRANCH-DECISION-TO-OPEN-2026-04-09.md` as the paired launch-overlay consumer opening boundary
 > - `docs/product-truth/ONBOARDING-PROVISIONING-ACTIVATION-FAMILY-CONSOLIDATION-v1.md` as bounded onboarding-family reading note only
-> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` as preserved context and sequencing-friction input only
+> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` as preserved context and sequencing-friction input only, not current onboarding-family authority
 >
 > The old `-v2` chain remains historical evidence and must not be read as current onboarding-family authority.
 >
-> This historical scope record does not imply whole-family completion, deferred remainder closure, or broader current onboarding-family authority.
+> This regenerated paired launch-overlay consumer banner reanchors onboarding-family reading to the live post-closeout control chain only. It does not replace the live opening-layer canon, reopen delivery-consumer work, or widen into broader launch-overlay rewrite.
+>
+> This historical scope record does not imply whole-family completion, deferred remainder closure, white-label completeness, billing or subscription completion, broader auth or provisioning redesign completion, or broader current onboarding-family authority.
 >
 > This banner narrows onboarding-family reading only. The historical scope record below is preserved.
 
