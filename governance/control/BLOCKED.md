@@ -1,74 +1,27 @@
-# BLOCKED.md — Blocked / Deferred / Design-Gated Register
+# BLOCKED.md — Opening-Layer Blocker / Hold Register
 
 **Layer:** 0 — Control Plane  
-**Authority:** GOV-OS-001-DESIGN.md  
-**Last Updated:** 2026-04-09 (TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-09)
-**Max Size:** 80 lines (structural gate)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
+**Last Updated:** 2026-04-10 (TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-10)
 
-> Detailed register of all non-implementation-ready open units.  
-> For the full open set (summary view), see `OPEN-SET.md`.  
-> These units must NOT be sequenced for implementation without explicit resolution of the
-> blocker, product decision, or design gate recorded below.
->
-> Live opening-layer authority and sequencing interpretation now route through
-> `TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md` and
-> `TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`.
-> The old `-v2` chain is retained as historical evidence and reconciliation input only, not live
-> opening-layer authority.
+> This file records only current real blockers and holds relevant to the live opening-layer
+> posture after reset.
 
 ---
 
-## Section 1 — BLOCKED (active technical blocker; cannot proceed without resolution)
+## Section 1 — BLOCKED
 
-*(No units currently blocked. BLK-013-001 was resolved 2026-03-18 — see Section 4.)*
+*(No reset-scope blockers remain after bounded opening-layer reset execution.)*
 
----
+## Section 2 — HOLDS / REVIEW-UNKNOWN
 
-## Section 2 — DEFERRED (product decision; not a defect; do not implement without authorization)
+| Item | Status | Posture |
+| --- | --- | --- |
+| `White Label Co` | `REVIEW-UNKNOWN` | Preserved as the sole current hold. No normalization claim, disposition work, or implementation follow-up is implied by this reset. |
 
-*(No units currently deferred.)*
+## Section 3 — Excluded from blocker treatment in this pass
 
-**Doctrine (D-010):** Deferred items are not bugs. They must not be reopened or implemented
-without explicit product authorization recorded in `governance/decisions/PRODUCT-DECISIONS.md`.
-
----
-
-## Section 3 — DESIGN_GATE (requires explicit gate resolution before any work may begin)
-
-| UNIT-ID | Gate Type | Gate Description | Registered |
-|---|---|---|---|
-| TECS-FBW-ADMINRBAC | Product + Security | HIGH security posture; must not proceed without explicit product + security approval | 2026-03-09 |
-| RFQ-NEGOTIATION-CONTINUITY | Design Gate | Cross-mode RFQ / negotiation continuity remains design-gated across WL and enterprise runtime | 2026-03-30 |
-
-**To ungate TECS-FBW-ADMINRBAC:**  
-A product decision and a security posture decision must both be recorded in:
-- `governance/decisions/DESIGN-DECISIONS.md`
-- `governance/decisions/SECURITY-DECISIONS.md`
-
-Only after both decisions are approved may backend design begin.  
-**Note:** PW5-U3 applied dead-button gating as a pre-authorization stop-gap only.
-That is not the same as ADMINRBAC implementation authorization.
-
-**RFQ-NEGOTIATION-CONTINUITY posture:**  
-This broader RFQ / negotiation family remains design-gated across WL and enterprise runtime.
-Closed bounded child slices do not ungate the parent family, and any later RFQ / negotiation
-work must open through a separate bounded unit rather than by promoting the parent gate directly
-to `OPEN`.
-
----
-
-> **Rule:** Any prompt that sequences a unit from this register as OPEN (implementation-ready)
-> without first recording the required resolution is a governance violation (per GOV-OS-001 Section 4.4).
-
----
-
-## Section 4 — Recently Resolved Blockers (carry-forward context)
-
-| UNIT-ID | Blocker ID | Resolution | Resolved | Evidence |
-|---|---|---|---|---|
-| TECS-FBW-013 | BLK-013-001 | Tenant RFQ submission route implemented and verified; parent unit may now open | 2026-03-18 | commit 451f45b · VERIFY-TECS-FBW-013-BE-001: VERIFIED_COMPLETE |
-| TECS-FBW-006-B | BLK-006-B-001 | Tenant resolve route implemented, severity-capped at LEVEL_0 / LEVEL_1, and verified; parent unit may now open | 2026-03-18 | commits a2d8bfc · d212d0d · VERIFY-TECS-FBW-006-B-BE-001: VERIFIED_COMPLETE |
-| TECS-FBW-002-B | BLK-FBW-002-B-001 | GET /api/tenant/trades implemented and verified | 2026-03-17 | commit 5ffd727 · VERIFY-TECS-FBW-002-B-BE-ROUTE-001: VERIFIED_COMPLETE |
-
-TECS-FBW-013's blocker remains resolved. The parent unit later reached VERIFIED_COMPLETE;
-see `OPEN-SET.md`, `SNAPSHOT.md`, and the unit record.
+- Planning-package recommendations are not live authority and are not blockers in this reset pass.
+- Closed onboarding-family chains remain preserved aligned anchors only and are not reopened here.
+- The reused-existing-user bucket remains `BOUNDED-DEFERRED-REMAINDER`, but it is not reopened,
+  re-sequenced, or promoted into a reset blocker by this pass.
