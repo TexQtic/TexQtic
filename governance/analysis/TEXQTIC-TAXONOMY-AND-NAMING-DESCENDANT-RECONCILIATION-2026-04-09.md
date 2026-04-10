@@ -12,12 +12,12 @@ This pass did **not** reopen authority-routing work, Layer 0 canon, technical co
 identity/tenancy continuity, onboarding/control-plane planning, downstream family design
 authorities, delivery regeneration, debt cleanup, or broad historical document rewrite.
 
-## Opening-Layer Inputs Re-read
+## Fixed Inputs Re-read
 
 1. `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
-2. `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
-3. `governance/analysis/TEXQTIC-GOVERNANCE-ALIGNMENT-PLAN-FROM-REPO-TRUTH-2026-04-09.md`
-4. `governance/analysis/TEXQTIC-FINAL-LIVE-GOVERNANCE-AUTHORITY-DESCENDANT-SWEEP-2026-04-09.md`
+2. `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md`
+3. `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10.md`
+4. `governance/analysis/TEXQTIC-GOVERNANCE-FAMILY-RECONCILIATION-CLOSEOUT-SNAPSHOT-2026-04-10.md`
 
 ## Taxonomy Baseline Applied
 
@@ -95,9 +95,10 @@ authorities, delivery regeneration, debt cleanup, or broad historical document r
 
 ## Completion State
 
-This bounded taxonomy and naming descendant pass is complete for the minimal downstream governance
-descendants that still used stale enterprise/white-label runtime labels as current guidance.
+This bounded taxonomy and naming descendant pass remains the minimal downstream governance-side
+taxonomy record carried forward under the fixed 2026-04-10 canon/control posture.
 
 No further non-historical unit or opening-decision descendant was found in the inspected bounded
 set that still treated `app.tenant_id` as canonical, treated `blocked_pending_verification` as a
-runtime family, or required additional taxonomy/naming correction without widening scope.
+runtime family, or required additional taxonomy/naming correction without widening scope under the
+fixed 2026-04-10 authority posture.

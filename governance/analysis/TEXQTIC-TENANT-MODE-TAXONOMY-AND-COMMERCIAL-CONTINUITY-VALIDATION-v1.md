@@ -2,6 +2,10 @@
 
 Date: 2026-04-08
 
+Current governance read note: this validation remains evidence-first, but later governance reads
+must interpret it through the fixed opening-layer taxonomy baseline and the fixed 2026-04-10
+control posture.
+
 ## Scope
 
 This validation uses only repo code and live production runtime proof.
@@ -21,14 +25,23 @@ Evidence sources used:
 
 ## Executive Verdict
 
-TexQtic does not currently operate as a simple parity model across "enterprise", "white-label", and "B2C" tenants.
+TexQtic does not currently operate as a simple parity model across enterprise-labeled B2B,
+white-label, and B2C tenant experiences.
 
-The implemented runtime is a mode system with five effective states:
+The validated runtime slice in this pass expressed five effective observed experience states:
 - control plane
 - non-white-label B2B workspace
 - non-white-label B2C browse storefront
-- white-label admin back office
+- white-label admin overlay state
 - white-label storefront
+
+For current governance reading, those observed states must be interpreted inside the fixed
+opening-layer taxonomy where the canonical runtime families remain:
+- control plane
+- B2B workspace
+- B2C storefront
+- WL storefront with optional WL admin overlay
+- aggregator workspace
 
 The strongest finding from this pass is that white-label runtime behavior is currently not cleanly derived from canonical backend tenant identity alone. In production, `White Label Co` bootstraps into white-label admin and white-label storefront surfaces even though live `/api/me` returned `tenant_category: B2C` and `is_white_label: false`. The client achieves that by applying a repo-truth slug/name override inside `App.tsx`.
 
@@ -46,11 +59,13 @@ That means the current normalization layer is not merely descriptive. It is beha
 
 Commercial plan is normalized in `types.ts`, but plan is not the shell-routing authority.
 
-### 2. White-label admin is a separate runtime state
+### 2. White-label admin is an overlay state on the white-label runtime path
 
 `applyTenantBootstrapState(...)` and `canAccessWlAdmin(...)` can place a tenant user into `WL_ADMIN` before the normal `EXPERIENCE` shell renders.
 
-That means white-label is not just a themed storefront branch. It is a separate back-office state with its own navigation and content owner.
+That means white-label is not just a themed storefront branch. `WL_ADMIN` is an overlay state with
+its own navigation and content owner on the white-label runtime path, not a separate parent
+runtime family.
 
 ### 3. Non-white-label B2B, white-label, and non-white-label B2C do not expose equal commercial continuity
 
@@ -139,7 +154,7 @@ Visible storefront proof from the same live session:
 - product detail exposed both `Request Quote` and `Add to Cart`
 
 Validation result:
-- white-label runtime continuity is real and materially broader than either non-white-label B2B HOME or non-white-label B2C HOME because it includes both storefront commerce and a separate admin back office
+- white-label runtime continuity is real and materially broader than either non-white-label B2B HOME or non-white-label B2C HOME because it includes both storefront commerce and an optional admin overlay back office
 - however, the activation path is currently normalization-dependent rather than cleanly canonical from backend tenant identity
 
 ### C. Exact non-white-label B2C proof
@@ -229,10 +244,14 @@ TexQtic's current tenant-mode model is not a flat parity system. It is a layered
 
 Validated end state from this pass:
 - non-white-label B2B is a richer management workspace than non-white-label B2C HOME
-- white-label is the richest commercial mode because it combines a separate admin back office with a branded storefront and product-detail commerce flow
+- the white-label runtime path is the richest commercial mode because it combines a branded storefront with an optional admin overlay back office and product-detail commerce flow
 - non-white-label B2C HOME remains intentionally thinner and, on the exact proof tenant used here, was runtime-blocked by empty inventory
 - the biggest taxonomy hazard is the frontend normalization layer that can upgrade a server-reported non-white-label B2C tenant into white-label runtime behavior
 
 The correct high-level reading is therefore:
 
-TexQtic has shared commerce plumbing, but it does not have tenant-mode parity. It has distinct tenant operating modes, and the current white-label normalization layer can obscure canonical identity boundaries if not treated explicitly.
+TexQtic has shared commerce plumbing, but it does not have tenant-mode parity. Its canonical
+runtime-family taxonomy remains `control plane`, `B2B workspace`, `B2C storefront`, `WL
+storefront` with optional `WL admin` overlay, and `aggregator workspace`, and the current
+white-label normalization layer can still obscure canonical identity boundaries if not treated
+explicitly.
