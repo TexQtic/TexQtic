@@ -5,16 +5,21 @@
 > authority realignment.
 >
 > For current onboarding-family consumer reading specifically, use:
-> - Layer 0 posture in `governance/control/OPEN-SET.md`, `governance/control/NEXT-ACTION.md`, and `governance/control/BLOCKED.md`
+>
 > - the live opening-layer canon in `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md` and `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
-> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-PLANNING-RECONCILIATION-2026-04-09.md`
-> - `governance/analysis/TEXQTIC-ONBOARDING-ADJACENT-REMAINDER-INVENTORY-AND-BOUNDARY-CLASSIFICATION-2026-04-09.md`
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-REMEDIATION-CLOSEOUT-SNAPSHOT-2026-04-09.md` as current closeout summary and handoff anchor
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-POST-CLOSEOUT-ENTRY-GUARD-2026-04-09.md` as current lawful entry rule for future onboarding-family work
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DEFERRED-REMAINDER-BRANCH-DECISION-2026-04-09.md` as the current deferred-remainder sequencing decision
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-DECISION-TO-OPEN-2026-04-09.md` as the current delivery-consumer wave-opening boundary
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-FIRST-WAVE-2026-04-09.md` as the completed first-wave consumer regeneration record
+> - `governance/analysis/TEXQTIC-ONBOARDING-FAMILY-DELIVERY-CONSUMER-REGENERATION-SECOND-WAVE-DECISION-2026-04-09.md` as the current one-file second-wave boundary
 > - `docs/product-truth/ONBOARDING-PROVISIONING-ACTIVATION-FAMILY-CONSOLIDATION-v1.md` as bounded onboarding-family reading note only
-> - `docs/product-truth/TEXQTIC-LAUNCH-FAMILY-CHAIN-BASELINE-AND-SEQUENCING-FRICTION-v1.md` as preserved context and sequencing-friction input only
 >
 > The old `-v2` chain remains historical evidence and must not be read as current onboarding-family authority.
 >
-> Onboarding capability statements preserved below remain historical launch-baseline guidance only. They do not imply whole-family completion, deferred remainder resolution, or broader current onboarding-family authority.
+> This regenerated second-wave consumer banner reanchors onboarding-family reading to the live post-closeout control chain only. It does not replace the live opening-layer canon, reopen remediation, reopen first-wave regeneration, or widen into planning-split, scope-lock, or launch-family-baseline rewrite.
+>
+> Onboarding capability statements preserved below remain historical launch-baseline guidance only. They do not imply whole-family completion, closure of non-canonical invite-token behaviors or reused-existing-user edge cases, white-label completeness beyond bounded continuity, billing or subscription continuation completion, broader auth or provisioning redesign completion, or broader current onboarding-family authority.
 >
 > This banner narrows authority only. The historical analysis below is preserved.
 
@@ -53,9 +58,12 @@ Important repo-authority note:
 - The prompt named the `-v1` planning stack, and those files were reviewed.
 - At the time of this historical register, the reviewed `-v2` files were used as broad planning
    input alongside the requested `-v1` stack.
-- For current onboarding-family reading, the live opening-layer canon and bounded onboarding
-   reconciliation artifacts now control; the old `-v2` chain remains historical evidence and
-   reconciliation input only.
+- For current onboarding-family reading, the live opening-layer canon, the remediation closeout
+   snapshot, the post-closeout entry guard, the deferred-remainder branch decision, the
+   delivery-consumer decision-to-open artifact, the completed first-wave regeneration artifact, the
+   completed second-wave decision artifact, and the bounded onboarding-family consolidation note now
+   control the downstream onboarding-family consumer chain; the old `-v2` chain remains historical
+   evidence and reconciliation input only.
 
 Path-normalization note:
 
