@@ -1,9 +1,9 @@
 # DOCTRINE.md — TexQtic Active Governance Doctrine
 
 **Layer:** 0 — Control Plane  
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md  
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
 **Doctrine Version:** v1.12  
-**Last Updated:** 2026-04-09 (opening-layer descendant authority reconciliation)  
+**Last Updated:** 2026-04-10 (governance-family reconciliation execution)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -28,8 +28,8 @@ Read `governance/control/SNAPSHOT.md` only for session restore, dormant context,
 For live opening-layer routing after Layer 0:
 
 - live opening-layer taxonomy truth: `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
-- live opening-layer authority map: `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
-- live opening-layer sequencing authority: `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
+- live opening-layer authority map: `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md`
+- live opening-layer sequencing authority: `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10.md`
 - historical `-v2` chain: reconciliation input only
 
 **Rule:** ordinary next-opening selection must not require multi-document sequencing triangulation.
