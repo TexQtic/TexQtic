@@ -1,10 +1,16 @@
 # TEXQTIC — TECHNICAL CONTRACT PARITY DESCENDANT RECONCILIATION — 2026-04-09
 
+Current governance read: consume this descendant reconciliation record through the fixed
+2026-04-10 opening-layer reset posture, the completed governance-family closeout, the completed
+taxonomy/naming closeout, the bounded technical-contract entry, and the preserved read-only
+contract authorities.
+
 ## 1. Purpose
 
 This execution record captures the bounded downstream technical-contract parity reconciliation pass
-performed after the live authority-routing descendant sweep and the bounded taxonomy/naming
-descendant reconciliation.
+as now carried forward under the fixed 2026-04-10 opening-layer reset posture, the completed
+governance-family closeout, the completed taxonomy/naming closeout, and the bounded technical-
+contract entry.
 
 Its purpose is to identify downstream governance descendants that still misstate, overstate,
 understate, or ambiguously represent current technical-contract truth and to reconcile only the
@@ -24,18 +30,24 @@ reopen taxonomy/naming as a program, regenerate delivery planning, begin onboard
 modify preserved aligned contract authorities, regenerate OpenAPI, change code, change schema,
 change runtime behavior, change product behavior, perform debt cleanup, or begin architecture work.
 
-## 3. Upstream authorities used
+## 3. Fixed authorities consumed
 
 1. `governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md`
 2. `governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md`
-3. `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-09.md`
-4. `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-09.md`
-5. `governance/analysis/TEXQTIC-FINAL-LIVE-GOVERNANCE-AUTHORITY-DESCENDANT-SWEEP-2026-04-09.md`
-6. `governance/analysis/TEXQTIC-TAXONOMY-AND-NAMING-DESCENDANT-RECONCILIATION-2026-04-09.md`
-7. `shared/contracts/rls-policy.md`
-8. `shared/contracts/ARCHITECTURE-GOVERNANCE.md`
-9. sampled/current preserved OpenAPI authorities in `shared/contracts/openapi.tenant.json` and `shared/contracts/openapi.control-plane.json`
-10. `governance/analysis/TEXQTIC-GOVERNANCE-ALIGNMENT-PLAN-FROM-REPO-TRUTH-2026-04-09.md`
+3. `governance/analysis/TEXQTIC-OPENING-LAYER-CANON-AND-POINTER-SET-DECISION-2026-04-10.md`
+4. `governance/analysis/TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-10.md`
+5. `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md`
+6. `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10.md`
+7. `governance/analysis/TEXQTIC-GOVERNANCE-FAMILY-RECONCILIATION-CLOSEOUT-SNAPSHOT-2026-04-10.md`
+8. `governance/analysis/TEXQTIC-TAXONOMY-NAMING-RECONCILIATION-CLOSEOUT-SNAPSHOT-2026-04-10.md`
+9. `governance/analysis/TEXQTIC-NEXT-DOWNSTREAM-FAMILY-ENTRY-AFTER-TAXONOMY-DECISION-2026-04-10.md`
+10. `governance/analysis/TEXQTIC-TECHNICAL-CONTRACT-PARITY-ENTRY-2026-04-10.md`
+11. `shared/contracts/rls-policy.md`
+12. `shared/contracts/ARCHITECTURE-GOVERNANCE.md`
+13. `docs/contracts/RESPONSE_ENVELOPE_SPEC.md`
+14. preserved OpenAPI authorities in `shared/contracts/openapi.tenant.json` and
+   `shared/contracts/openapi.control-plane.json`
+15. `governance/analysis/TEXQTIC-GOVERNANCE-ALIGNMENT-PLAN-FROM-REPO-TRUTH-2026-04-09.md`
 
 ## 4. Candidate technical-contract descendants inspected
 
@@ -131,11 +143,14 @@ This pass explicitly defers:
 
 ## 10. Completion state
 
-The live opening-layer canon remains authoritative.
+The fixed 2026-04-10 opening-layer canon and control posture remain authoritative.
 
-This bounded downstream technical-contract parity descendant reconciliation pass is complete.
+This bounded downstream technical-contract parity descendant reconciliation record is now read as
+the direct governance-side technical-contract surface under the completed governance-family
+closeout, the completed taxonomy/naming closeout, and the bounded technical-contract entry.
 
-The smallest safe set of semantically live technical-contract descendant corrections has been
-applied, historical lineage has been preserved where appropriate, and broader contract remediation,
-onboarding reconciliation, delivery regeneration, debt work, and architecture work remain
-explicitly deferred.
+The smallest safe set of semantically live technical-contract descendant corrections remains
+preserved, historical lineage remains preserved where appropriate, the preserved contract
+authorities remain read-only, and broader contract remediation, OpenAPI execution,
+identity/lifecycle reconciliation, onboarding reconciliation, delivery regeneration, debt work,
+and architecture work remain explicitly deferred.
