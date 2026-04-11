@@ -202,3 +202,97 @@ Bounded truth established:
 - QA WL Member may lawfully see membership data and pending invites
 - QA WL Member should not be offered invite initiation in the UI
 - the defect corrected here was the invite CTA exposure, not a white-label admin overlay leak
+
+## 17. closeout pass update - Work Item 015A
+
+This section records the bounded closeout pass for Work Item 015 only.
+
+### 17.1 preflight result
+
+Exact command rerun:
+
+`git diff --name-only; git status --short`
+
+Observed output before commit:
+
+1. `components/Tenant/TeamManagement.tsx`
+2. `tests/runtime-verification-tenant-enterprise.test.ts`
+3. `tests/session-runtime-descriptor.test.ts`
+4. `M components/Tenant/TeamManagement.tsx`
+5. `M tests/runtime-verification-tenant-enterprise.test.ts`
+6. `M tests/session-runtime-descriptor.test.ts`
+7. `?? governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-015-2026-04-11.md`
+
+Interpretation:
+
+- only the bounded Item 015 files were pending
+- no unrelated worktree changes were present
+
+### 17.2 exact files re-read in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-015-2026-04-11.md`
+4. `components/Tenant/TeamManagement.tsx`
+5. `tests/runtime-verification-tenant-enterprise.test.ts`
+6. `tests/session-runtime-descriptor.test.ts`
+7. `runtime/sessionRuntimeDescriptor.ts`
+8. `App.tsx`
+9. `layouts/Shells.tsx`
+10. `server/src/routes/tenant.ts`
+11. `docs/ops/QA-TENANT-SEED-AND-RENAME-EXECUTION-PLAN-v1.md`
+
+### 17.3 exact files changed in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-015-2026-04-11.md`
+
+### 17.4 exact validation runs in the closeout pass
+
+Focused executable validation run:
+
+- `runTests` on:
+   - `tests/session-runtime-descriptor.test.ts`
+   - `tests/runtime-verification-tenant-enterprise.test.ts`
+- result: `<summary passed=18 failed=0 />`
+
+Runtime check performed:
+
+- production page read on `https://app.texqtic.com/`
+- page title observed: `TexQtic Sign In`
+- result: no manual authenticated QA WL Member session handoff was present in this pass
+
+### 17.5 code-truth and UI-truth confirmed in the closeout pass
+
+Confirmed unchanged in this closeout pass:
+
+1. QA WL Member does not receive `WL_ADMIN` overlay truth in repo routing.
+2. QA WL Member remains on the lawful read path to Team Management through the storefront shell.
+3. memberships and pending invites remain a lawful read surface for `MEMBER`.
+4. `Invite Member` CTA remains hidden for non-writer roles after the bounded correction.
+
+### 17.6 runtime production truth in the closeout pass
+
+Runtime production truth established: no.
+
+Reason:
+
+- the required manual authenticated QA WL Member production session handoff was still not present
+- the only observed runtime surface in this pass was the sign-in page
+
+### 17.7 atomic commit created in the closeout pass
+
+Exact commit created:
+
+- `e28f7a1` — `[TEXQTIC] tenant: close out work item 015 wl member boundary`
+
+### 17.8 final closeout verdict for Work Item 015
+
+`WORK-ITEM-015-CODE-CLOSEOUT-COMMITTED`
+
+Interpretation:
+
+- bounded code correction: complete
+- bounded focused validation: complete
+- bounded recording artifact: updated through the closeout pass
+- runtime production confirmation for QA WL Member: still not established in this pass because no
+   manual authenticated session handoff was available
