@@ -443,7 +443,7 @@ describe('tenant activation invite admission validation', () => {
     expect(writeAuditLogMock).not.toHaveBeenCalled();
   });
 
-  it('rejects activation when the invite is missing, accepted, or expired', async () => {
+  it('rejects invalid tokens before any acceptance-side writes or artifacts', async () => {
     const inviteToken = 'invite-token-123';
     prismaMock.invite.findFirst.mockResolvedValueOnce(null);
 
@@ -479,7 +479,68 @@ describe('tenant activation invite admission validation', () => {
       },
     });
     expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(txMock.user.create).not.toHaveBeenCalled();
+    expect(txMock.membership.create).not.toHaveBeenCalled();
+    expect(txMock.invite.update).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
+
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toMatchObject({
+      code: 'INVALID_INVITE',
+      message: 'Invite not found or expired',
+    });
+    expect(body).not.toHaveProperty('data');
+  });
+
+  it('rejects expired tokens before any acceptance-side writes or artifacts', async () => {
+    const inviteToken = 'expired-invite-token-123';
+    prismaMock.invite.findFirst.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken,
+        userData: {
+          email: 'owner@acme.test',
+          password: 'secret123',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(prismaMock.invite.findFirst).toHaveBeenCalledWith({
+      where: {
+        tokenHash: createHash('sha256').update(inviteToken).digest('hex'),
+        acceptedAt: null,
+        expiresAt: { gt: expect.any(Date) },
+      },
+      include: {
+        tenant: {
+          include: {
+            memberships: true,
+          },
+        },
+      },
+    });
+    expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(txMock.user.create).not.toHaveBeenCalled();
+    expect(txMock.membership.create).not.toHaveBeenCalled();
+    expect(txMock.invite.update).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toMatchObject({
+      code: 'INVALID_INVITE',
+      message: 'Invite not found or expired',
+    });
+    expect(body).not.toHaveProperty('data');
   });
 
   it('rejects true email mismatches before any activation writes run', async () => {
@@ -512,7 +573,18 @@ describe('tenant activation invite admission validation', () => {
     expect(response.statusCode).toBe(403);
     expect(withDbContextMock).not.toHaveBeenCalled();
     expect(txMock.user.findUnique).not.toHaveBeenCalled();
+    expect(txMock.user.create).not.toHaveBeenCalled();
+    expect(txMock.membership.create).not.toHaveBeenCalled();
+    expect(txMock.invite.update).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
+
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toMatchObject({
+      code: 'EMAIL_MISMATCH',
+      message: 'Email does not match invite',
+    });
+    expect(body).not.toHaveProperty('data');
   });
 
   it('accepts equivalent email casing and completes first-owner activation atomically', async () => {
@@ -761,5 +833,6 @@ describe('tenant activation invite admission validation', () => {
       code: 'INVALID_INVITE',
       message: 'Invite not found or expired',
     });
+    expect(replayBody).not.toHaveProperty('data');
   });
 });
