@@ -1,14 +1,20 @@
 import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
+import fastifyJwt from '@fastify/jwt';
 
 const {
   adminAuthMiddlewareMock,
   requireAdminRoleMock,
+  tenantAuthMiddlewareMock,
+  databaseContextMiddlewareMock,
   provisionTenantMock,
   writeAuditLogMock,
   createAdminAuditMock,
+  withDbContextMock,
   serviceBearerToken,
+  prismaMock,
+  txMock,
 } = vi.hoisted(() => ({
   adminAuthMiddlewareMock: vi.fn(async (req: unknown) => {
     const request = req as Record<string, unknown>;
@@ -17,15 +23,49 @@ const {
     request.adminRole = 'SUPER_ADMIN';
   }),
   requireAdminRoleMock: vi.fn(() => async () => undefined),
+  tenantAuthMiddlewareMock: vi.fn(async () => undefined),
+  databaseContextMiddlewareMock: vi.fn(async () => undefined),
   provisionTenantMock: vi.fn(),
   writeAuditLogMock: vi.fn().mockResolvedValue(undefined),
   createAdminAuditMock: vi.fn().mockReturnValue({}),
+  withDbContextMock: vi.fn(),
   serviceBearerToken: 'crm-approved-onboarding-service-token',
+  prismaMock: {
+    invite: {
+      findFirst: vi.fn(),
+    },
+  },
+  txMock: {
+    $queryRaw: vi.fn(),
+    $executeRawUnsafe: vi.fn(),
+    user: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
+    organizations: {
+      update: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    tenant: {
+      update: vi.fn(),
+    },
+    membership: {
+      create: vi.fn(),
+    },
+    invite: {
+      update: vi.fn(),
+    },
+  },
 }));
 
 vi.mock('../middleware/auth.js', () => ({
   adminAuthMiddleware: adminAuthMiddlewareMock,
   requireAdminRole: requireAdminRoleMock,
+  tenantAuthMiddleware: tenantAuthMiddlewareMock,
+}));
+
+vi.mock('../middleware/database-context.middleware.js', () => ({
+  databaseContextMiddleware: databaseContextMiddlewareMock,
 }));
 
 vi.mock('../config/index.js', () => ({
@@ -38,14 +78,72 @@ vi.mock('../services/tenantProvision.service.js', () => ({
   provisionTenant: provisionTenantMock,
 }));
 
-vi.mock('../db/prisma.js', () => ({ prisma: {} }));
+vi.mock('../db/prisma.js', () => ({ prisma: prismaMock }));
+
+vi.mock('../lib/database-context.js', () => ({
+  withDbContext: withDbContextMock,
+  getOrganizationIdentity: vi.fn(),
+  OrganizationNotFoundError: class OrganizationNotFoundError extends Error {},
+}));
 
 vi.mock('../lib/auditLog.js', () => ({
   writeAuditLog: writeAuditLogMock,
   createAdminAudit: createAdminAuditMock,
 }));
 
+vi.mock('../services/stateMachine.service.js', () => ({
+  StateMachineService: class StateMachineService {},
+}));
+
+vi.mock('../routes/tenant/escalation.g022.js', () => ({
+  default: async () => undefined,
+}));
+
+vi.mock('../routes/tenant/trades.g017.js', () => ({
+  default: async () => undefined,
+}));
+
+vi.mock('../routes/tenant/escrow.g018.js', () => ({
+  default: async () => undefined,
+}));
+
+vi.mock('../routes/tenant/settlement.js', () => ({
+  default: async () => undefined,
+}));
+
+vi.mock('../routes/tenant/certifications.g019.js', () => ({
+  default: async () => undefined,
+}));
+
+vi.mock('../routes/tenant/traceability.g016.js', () => ({
+  default: async () => undefined,
+}));
+
+vi.mock('../services/pricing/totals.service.js', () => ({
+  computeTotals: vi.fn(),
+  TotalsInputError: class TotalsInputError extends Error {},
+}));
+
+vi.mock('../services/email/email.service.js', () => ({
+  sendInviteMemberEmail: vi.fn(),
+}));
+
+vi.mock('../lib/cacheInvalidateEmitter.js', () => ({
+  emitCacheInvalidate: vi.fn(),
+}));
+
+vi.mock('../services/vectorIngestion.js', () => ({
+  enqueueSourceIngestion: vi.fn(),
+  enqueueSourceDeletion: vi.fn(),
+}));
+
+vi.mock('../services/counterpartyProfileAggregation.service.js', () => ({
+  getCounterpartyProfileAggregation: vi.fn(),
+  listCounterpartyDiscoveryEntries: vi.fn(),
+}));
+
 import tenantProvisionRoutes from '../routes/admin/tenantProvision.js';
+import tenantRoutes from '../routes/tenant.js';
 
 describe('approved-onboarding tenant provisioning route', () => {
   let app: FastifyInstance;
@@ -269,5 +367,228 @@ describe('approved-onboarding tenant provisioning route', () => {
     expect(response.statusCode).toBe(403);
     expect(provisionTenantMock).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('tenant activation invite admission validation', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    withDbContextMock.mockImplementation(async (_client, _dbContext, callback) => callback(txMock as never));
+    txMock.$queryRaw.mockResolvedValue([{ org_id: 'tenant-uuid-0000-0000-0000-000000000001' }]);
+    txMock.$executeRawUnsafe.mockResolvedValue(undefined);
+    txMock.user.findUnique.mockResolvedValue(null);
+    txMock.user.create.mockResolvedValue({
+      id: 'user-uuid-0000-0000-0000-000000000001',
+      email: 'owner@acme.test',
+    });
+    txMock.organizations.update.mockResolvedValue({
+      legal_name: 'Acme Textiles LLC',
+      status: 'PENDING_VERIFICATION',
+      org_type: 'B2B',
+      is_white_label: false,
+      plan: 'GROWTH',
+    });
+    txMock.organizations.findUnique.mockResolvedValue({
+      id: 'tenant-uuid-0000-0000-0000-000000000001',
+      slug: 'acme-textiles',
+      legal_name: 'Acme Textiles LLC',
+      status: 'PENDING_VERIFICATION',
+      org_type: 'B2B',
+      is_white_label: false,
+      jurisdiction: 'US-DE',
+      registration_no: 'REG-123',
+      plan: 'GROWTH',
+    });
+    txMock.tenant.update.mockResolvedValue({ name: 'Acme Textiles' });
+    txMock.membership.create.mockResolvedValue({ role: 'OWNER' });
+    txMock.invite.update.mockResolvedValue({ acceptedAt: new Date('2026-04-10T00:00:00.000Z') });
+
+    app = Fastify({ logger: false });
+    await app.register(fastifyJwt, {
+      secret: 'tenant-jwt-test-secret-key-min-32-chars',
+      namespace: 'tenant',
+      jwtSign: 'tenantJwtSign',
+      jwtVerify: 'tenantJwtVerify',
+    });
+    await app.register(tenantRoutes, { prefix: '/api' });
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('rejects activation payloads with a blank invite token before invite lookup', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: '',
+        userData: {
+          email: 'owner@acme.test',
+          password: 'secret123',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(prismaMock.invite.findFirst).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects activation when the invite is missing, accepted, or expired', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce(null);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: 'invite-token-123',
+        userData: {
+          email: 'owner@acme.test',
+          password: 'secret123',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects true email mismatches before any activation writes run', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce({
+      id: 'invite-uuid-0000-0000-0000-000000000001',
+      tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      email: 'owner@acme.test',
+      role: 'ADMIN',
+      tenant: {
+        memberships: [],
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: 'invite-token-123',
+        userData: {
+          email: 'other@acme.test',
+          password: 'secret123',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(txMock.user.findUnique).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('accepts equivalent email casing and completes first-owner activation atomically', async () => {
+    prismaMock.invite.findFirst.mockResolvedValueOnce({
+      id: 'invite-uuid-0000-0000-0000-000000000001',
+      tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      email: 'owner@acme.test',
+      role: 'ADMIN',
+      tenant: {
+        memberships: [],
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: 'invite-token-123',
+        userData: {
+          email: 'OWNER@ACME.TEST',
+          password: 'secret123',
+        },
+        tenantData: {
+          name: 'Acme Textiles',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(withDbContextMock).toHaveBeenCalledTimes(2);
+    expect(txMock.user.findUnique).toHaveBeenCalledWith({
+      where: { email: 'owner@acme.test' },
+    });
+    expect(txMock.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email: 'owner@acme.test',
+          emailVerified: true,
+        }),
+      })
+    );
+    expect(txMock.membership.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-uuid-0000-0000-0000-000000000001',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+        role: 'OWNER',
+      },
+    });
+    expect(txMock.invite.update).toHaveBeenCalledWith({
+      where: { id: 'invite-uuid-0000-0000-0000-000000000001' },
+      data: { acceptedAt: expect.any(Date) },
+    });
+    expect(writeAuditLogMock).toHaveBeenCalledWith(
+      txMock,
+      expect.objectContaining({
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+        action: 'user.activated',
+        entity: 'user',
+        metadataJson: expect.objectContaining({
+          inviteId: 'invite-uuid-0000-0000-0000-000000000001',
+          role: 'OWNER',
+          firstOwnerActivated: true,
+          verificationStatus: 'PENDING_VERIFICATION',
+        }),
+      })
+    );
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data).toMatchObject({
+      user: {
+        id: 'user-uuid-0000-0000-0000-000000000001',
+        email: 'owner@acme.test',
+      },
+      tenant: {
+        id: 'tenant-uuid-0000-0000-0000-000000000001',
+        name: 'Acme Textiles LLC',
+        slug: 'acme-textiles',
+        tenant_category: 'B2B',
+        is_white_label: false,
+        status: 'PENDING_VERIFICATION',
+        plan: 'GROWTH',
+      },
+      membership: {
+        role: 'OWNER',
+      },
+    });
+    expect(body.data.token).toEqual(expect.any(String));
   });
 });

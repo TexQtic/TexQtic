@@ -2503,8 +2503,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'INVALID_INVITE', 'Invite not found or expired', 404);
       }
 
+      const normalizedInviteEmail = invite.email.trim().toLowerCase();
+      const normalizedUserEmail = userData.email.trim().toLowerCase();
+
       // Check if email matches
-      if (invite.email !== userData.email) {
+      if (normalizedInviteEmail !== normalizedUserEmail) {
         return sendError(reply, 'EMAIL_MISMATCH', 'Email does not match invite', 403);
       }
 
@@ -2535,12 +2538,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         // Create or find user
         let user = await tx.user.findUnique({
-          where: { email: userData.email },
+          where: { email: normalizedUserEmail },
         });
 
         user ??= await tx.user.create({
           data: {
-            email: userData.email,
+            email: normalizedUserEmail,
             passwordHash,
             emailVerified: true,
             emailVerifiedAt: new Date(),
