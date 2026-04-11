@@ -298,6 +298,80 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('B2BShell');
   });
 
+  it('keeps authenticated EXPERIENCE shell-entry handoffs coherent across tenant runtime families', () => {
+    const cases = [
+      {
+        name: 'aggregator workspace',
+        input: makeTenantInput({ tenantCategory: 'AGGREGATOR', whiteLabelCapability: false }),
+        selection: { expView: 'HOME', showCart: false },
+        expected: {
+          manifestKey: 'aggregator_workspace',
+          shellFamily: 'AggregatorShell',
+          defaultLocalRouteKey: 'home',
+          routeKey: 'home',
+          activeNavigationKey: 'HOME',
+        },
+      },
+      {
+        name: 'b2b workspace',
+        input: makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: false }),
+        selection: { expView: 'HOME', showCart: false },
+        expected: {
+          manifestKey: 'b2b_workspace',
+          shellFamily: 'B2BShell',
+          defaultLocalRouteKey: 'catalog',
+          routeKey: 'catalog',
+          activeNavigationKey: 'HOME',
+        },
+      },
+      {
+        name: 'b2c storefront cart entry',
+        input: makeTenantInput({ tenantCategory: 'B2C', whiteLabelCapability: false }),
+        selection: { expView: 'HOME', showCart: true },
+        expected: {
+          manifestKey: 'b2c_storefront',
+          shellFamily: 'B2CShell',
+          defaultLocalRouteKey: 'home',
+          routeKey: 'cart',
+          activeNavigationKey: 'CART',
+        },
+      },
+      {
+        name: 'white-label storefront',
+        input: makeTenantInput({ tenantCategory: 'B2B', whiteLabelCapability: true, authenticatedRole: 'MEMBER' }),
+        selection: { expView: 'HOME', showCart: false },
+        expected: {
+          manifestKey: 'wl_storefront',
+          shellFamily: 'WhiteLabelShell',
+          defaultLocalRouteKey: 'home',
+          routeKey: 'home',
+          activeNavigationKey: 'HOME',
+        },
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const descriptor = createTenantSessionRuntimeDescriptor(testCase.input);
+
+      expect(resolveRuntimeAppStateFromDescriptor(descriptor ?? null), testCase.name).toBe('EXPERIENCE');
+
+      const handoff = resolveRuntimeFamilyEntryHandoff(descriptor ?? null, 'EXPERIENCE', testCase.selection);
+
+      expect(handoff, testCase.name).toEqual(expect.objectContaining({
+        manifestKey: testCase.expected.manifestKey,
+        contentFamily: testCase.expected.manifestKey,
+        shellFamily: testCase.expected.shellFamily,
+        defaultLocalRouteKey: testCase.expected.defaultLocalRouteKey,
+        localRouteSelection: expect.objectContaining({ routeKey: testCase.expected.routeKey }),
+      }));
+      expect(handoff?.navigationSurface, testCase.name).toEqual(expect.objectContaining({
+        activeRouteKey: testCase.expected.routeKey,
+        activeNavigationKey: testCase.expected.activeNavigationKey,
+        defaultRouteKey: testCase.expected.defaultLocalRouteKey,
+      }));
+    }
+  });
+
   it('maps non-white-label B2C tenants to storefront routing', () => {
     const descriptor = createTenantSessionRuntimeDescriptor(
       makeTenantInput({ tenantCategory: 'B2C', whiteLabelCapability: false }),
