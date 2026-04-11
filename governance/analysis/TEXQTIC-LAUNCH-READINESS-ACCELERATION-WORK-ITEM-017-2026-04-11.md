@@ -192,3 +192,31 @@ Interpretation:
 - no bounded shell or routing defect was proven in this pass
 - the observed missing navigation is best explained as a runtime classification misunderstanding
   against B2B or WL expectations rather than a missing shell implementation
+
+## 15. Work Item 017A procedural closeout
+
+This closeout pass was limited to confirming whether this artifact already reflected the final
+committed and clean-repo state for Work Item 017.
+
+Exact closeout preflight command:
+
+`git diff --name-only; git status --short`
+
+Closeout preflight result:
+
+- no output
+- repo clean at Work Item 017A intake
+
+Confirmed prior recording commit:
+
+- `421f844` - `[TEXQTIC] governance: record work item 017 b2c shell classification`
+
+Procedural disposition:
+
+- the substantive Work Item 017 classification and B2C shell expectation-mismatch record were
+   already correct
+- this artifact required a bounded procedural closeout note only so the record reflects the final
+   clean-repo and committed-state outcome truthfully
+- no change was made to classification `C`, to the established B2C shell truth, or to governance
+   state
+- Work Item 017 is procedurally closed after this artifact-only correction pass
