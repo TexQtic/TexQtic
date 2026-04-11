@@ -491,21 +491,43 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
       }
 
-      const memberships = await withDbContext(prisma, dbContext, async tx => {
-        return await tx.membership.findMany({
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                emailVerified: true,
+      const now = new Date();
+
+      const { memberships, pendingInvites } = await withDbContext(prisma, dbContext, async tx => {
+        const [memberships, pendingInvites] = await Promise.all([
+          tx.membership.findMany({
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  emailVerified: true,
+                },
               },
             },
-          },
-        });
+          }),
+          tx.invite.findMany({
+            where: {
+              acceptedAt: null,
+              expiresAt: { gt: now },
+            },
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              expiresAt: true,
+              createdAt: true,
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          }),
+        ]);
+
+        return { memberships, pendingInvites };
       });
 
-      return sendSuccess(reply, { memberships, count: memberships.length });
+      return sendSuccess(reply, { memberships, pendingInvites, count: memberships.length });
     }
   );
 

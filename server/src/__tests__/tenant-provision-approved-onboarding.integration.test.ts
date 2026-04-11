@@ -50,9 +50,11 @@ const {
       update: vi.fn(),
     },
     membership: {
+      findMany: vi.fn(),
       create: vi.fn(),
     },
     invite: {
+      findMany: vi.fn(),
       update: vi.fn(),
     },
   },
@@ -834,5 +836,222 @@ describe('tenant activation invite admission validation', () => {
       message: 'Invite not found or expired',
     });
     expect(replayBody).not.toHaveProperty('data');
+  });
+});
+
+describe('tenant membership listing read projection validation', () => {
+  let app: FastifyInstance;
+
+  const configureTenantRequestContext = (role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER') => {
+    tenantAuthMiddlewareMock.mockImplementation(async req => {
+      const request = req as Record<string, unknown>;
+      request.userId = 'user-uuid-tenant-member';
+      request.tenantId = 'tenant-uuid-0000-0000-0000-000000000001';
+      request.userRole = role;
+    });
+
+    databaseContextMiddlewareMock.mockImplementation(async req => {
+      const request = req as Record<string, unknown>;
+      request.dbContext = {
+        orgId: 'tenant-uuid-0000-0000-0000-000000000001',
+        actorId: 'user-uuid-tenant-member',
+        realm: 'tenant',
+        requestId: 'membership-read-request',
+      };
+    });
+  };
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-11T00:00:00.000Z'));
+    vi.clearAllMocks();
+
+    configureTenantRequestContext('ADMIN');
+    withDbContextMock.mockImplementation(async (_client, _dbContext, callback) => callback(txMock as never));
+    txMock.membership.findMany.mockResolvedValue([
+      {
+        id: 'membership-uuid-0000-0000-0000-000000000001',
+        role: 'OWNER',
+        userId: 'user-uuid-tenant-member',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+        createdAt: new Date('2026-04-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-04-05T00:00:00.000Z'),
+        user: {
+          id: 'user-uuid-tenant-member',
+          email: 'owner@acme.test',
+          emailVerified: true,
+        },
+      },
+    ]);
+    txMock.invite.findMany.mockResolvedValue([]);
+
+    app = Fastify({ logger: false });
+    await app.register(fastifyJwt, {
+      secret: 'tenant-jwt-test-secret-key-min-32-chars',
+      namespace: 'tenant',
+      jwtSign: 'tenantJwtSign',
+      jwtVerify: 'tenantJwtVerify',
+    });
+    await app.register(tenantRoutes, { prefix: '/api' });
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    vi.useRealTimers();
+    await app.close();
+  });
+
+  it('returns memberships plus a pending-invite projection with pending-only safe fields', async () => {
+    const seededInvites = [
+      {
+        id: 'invite-uuid-pending-newest',
+        email: 'admin.pending@acme.test',
+        role: 'ADMIN',
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        createdAt: new Date('2026-04-10T12:00:00.000Z'),
+        acceptedAt: null,
+        tokenHash: 'secret-pending-newest',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      },
+      {
+        id: 'invite-uuid-pending-older',
+        email: 'member.pending@acme.test',
+        role: 'MEMBER',
+        expiresAt: new Date('2026-04-17T00:00:00.000Z'),
+        createdAt: new Date('2026-04-09T08:00:00.000Z'),
+        acceptedAt: null,
+        tokenHash: 'secret-pending-older',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      },
+      {
+        id: 'invite-uuid-accepted',
+        email: 'accepted@acme.test',
+        role: 'MEMBER',
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        createdAt: new Date('2026-04-10T06:00:00.000Z'),
+        acceptedAt: new Date('2026-04-10T07:00:00.000Z'),
+        tokenHash: 'secret-accepted',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      },
+      {
+        id: 'invite-uuid-expired',
+        email: 'expired@acme.test',
+        role: 'ADMIN',
+        expiresAt: new Date('2026-04-10T00:00:00.000Z'),
+        createdAt: new Date('2026-04-08T06:00:00.000Z'),
+        acceptedAt: null,
+        tokenHash: 'secret-expired',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      },
+    ];
+
+    txMock.invite.findMany.mockImplementationOnce(async (args: {
+      where: { acceptedAt: null; expiresAt: { gt: Date } };
+      select: Record<string, boolean>;
+      orderBy: { createdAt: 'desc' | 'asc' };
+    }) => {
+      return seededInvites
+        .filter(invite => invite.acceptedAt === args.where.acceptedAt && invite.expiresAt > args.where.expiresAt.gt)
+        .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+        .map(({ id, email, role, expiresAt, createdAt }) => ({
+          id,
+          email,
+          role,
+          expiresAt,
+          createdAt,
+        }));
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/memberships',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(withDbContextMock).toHaveBeenCalledTimes(1);
+    expect(txMock.membership.findMany).toHaveBeenCalledWith({
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            emailVerified: true,
+          },
+        },
+      },
+    });
+    expect(txMock.invite.findMany).toHaveBeenCalledWith({
+      where: {
+        acceptedAt: null,
+        expiresAt: { gt: expect.any(Date) },
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.count).toBe(1);
+    expect(body.data.memberships).toHaveLength(1);
+    expect(body.data.pendingInvites).toEqual([
+      {
+        id: 'invite-uuid-pending-newest',
+        email: 'admin.pending@acme.test',
+        role: 'ADMIN',
+        expiresAt: '2026-04-18T00:00:00.000Z',
+        createdAt: '2026-04-10T12:00:00.000Z',
+      },
+      {
+        id: 'invite-uuid-pending-older',
+        email: 'member.pending@acme.test',
+        role: 'MEMBER',
+        expiresAt: '2026-04-17T00:00:00.000Z',
+        createdAt: '2026-04-09T08:00:00.000Z',
+      },
+    ]);
+
+    for (const invite of body.data.pendingInvites) {
+      expect(Object.keys(invite).sort((left, right) => left.localeCompare(right))).toEqual([
+        'createdAt',
+        'email',
+        'expiresAt',
+        'id',
+        'role',
+      ]);
+      expect(invite).not.toHaveProperty('acceptedAt');
+      expect(invite).not.toHaveProperty('inviteToken');
+      expect(invite).not.toHaveProperty('tenantId');
+      expect(invite).not.toHaveProperty('tokenHash');
+    }
+  });
+
+  it('rejects VIEWER membership reads before any membership or invite query executes', async () => {
+    configureTenantRequestContext('VIEWER');
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/tenant/memberships',
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(withDbContextMock).not.toHaveBeenCalled();
+    expect(txMock.membership.findMany).not.toHaveBeenCalled();
+    expect(txMock.invite.findMany).not.toHaveBeenCalled();
+
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toMatchObject({
+      code: 'FORBIDDEN',
+      message: 'Insufficient permissions',
+    });
+    expect(body).not.toHaveProperty('data');
   });
 });
