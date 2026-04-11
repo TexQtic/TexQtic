@@ -635,6 +635,70 @@ describe('tenant activation invite admission validation', () => {
     expect(body.data.tenant).not.toHaveProperty('tokenHash');
   });
 
+  it('preserves the invited role and records non-first-owner activation metadata when an owner already exists', async () => {
+    txMock.membership.create.mockResolvedValueOnce({ role: 'ADMIN' });
+    prismaMock.invite.findFirst.mockResolvedValueOnce({
+      id: 'invite-uuid-0000-0000-0000-000000000002',
+      tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      email: 'admin@acme.test',
+      role: 'ADMIN',
+      tenant: {
+        memberships: [{ role: 'OWNER' }],
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: 'invite-token-admin',
+        userData: {
+          email: 'ADMIN@ACME.TEST',
+          password: 'secret123',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(txMock.membership.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-uuid-0000-0000-0000-000000000001',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+        role: 'ADMIN',
+      },
+    });
+    expect(txMock.invite.update).toHaveBeenCalledWith({
+      where: { id: 'invite-uuid-0000-0000-0000-000000000002' },
+      data: { acceptedAt: expect.any(Date) },
+    });
+    expect(writeAuditLogMock).toHaveBeenCalledWith(txMock, {
+      tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+      realm: 'TENANT',
+      actorType: 'USER',
+      actorId: 'user-uuid-0000-0000-0000-000000000001',
+      action: 'user.activated',
+      entity: 'user',
+      entityId: 'user-uuid-0000-0000-0000-000000000001',
+      metadataJson: {
+        inviteId: 'invite-uuid-0000-0000-0000-000000000002',
+        role: 'ADMIN',
+        firstOwnerActivated: false,
+        verificationStatus: 'PENDING_VERIFICATION',
+      },
+    });
+    expect(txMock.invite.update.mock.invocationCallOrder[0]).toBeLessThan(
+      writeAuditLogMock.mock.invocationCallOrder[0]
+    );
+
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.membership).toEqual({ role: 'ADMIN' });
+  });
+
   it('rejects replay or duplicate-use after successful activation and performs no second acceptance writes', async () => {
     prismaMock.invite.findFirst
       .mockResolvedValueOnce({
