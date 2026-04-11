@@ -444,13 +444,14 @@ describe('tenant activation invite admission validation', () => {
   });
 
   it('rejects activation when the invite is missing, accepted, or expired', async () => {
+    const inviteToken = 'invite-token-123';
     prismaMock.invite.findFirst.mockResolvedValueOnce(null);
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/tenant/activate',
       payload: {
-        inviteToken: 'invite-token-123',
+        inviteToken,
         userData: {
           email: 'owner@acme.test',
           password: 'secret123',
@@ -463,6 +464,20 @@ describe('tenant activation invite admission validation', () => {
     });
 
     expect(response.statusCode).toBe(404);
+    expect(prismaMock.invite.findFirst).toHaveBeenCalledWith({
+      where: {
+        tokenHash: createHash('sha256').update(inviteToken).digest('hex'),
+        acceptedAt: null,
+        expiresAt: { gt: expect.any(Date) },
+      },
+      include: {
+        tenant: {
+          include: {
+            memberships: true,
+          },
+        },
+      },
+    });
     expect(withDbContextMock).not.toHaveBeenCalled();
     expect(writeAuditLogMock).not.toHaveBeenCalled();
   });
@@ -589,7 +604,35 @@ describe('tenant activation invite admission validation', () => {
         role: 'OWNER',
       },
     });
+    expect(Object.keys(body.data).sort((left, right) => left.localeCompare(right))).toEqual([
+      'membership',
+      'tenant',
+      'token',
+      'user',
+    ]);
+    expect(Object.keys(body.data.user).sort((left, right) => left.localeCompare(right))).toEqual([
+      'email',
+      'id',
+    ]);
+    expect(Object.keys(body.data.tenant).sort((left, right) => left.localeCompare(right))).toEqual([
+      'id',
+      'is_white_label',
+      'name',
+      'plan',
+      'slug',
+      'status',
+      'tenant_category',
+      'type',
+    ]);
+    expect(body.data.membership).toEqual({ role: 'OWNER' });
     expect(body.data.token).toEqual(expect.any(String));
+    expect(body.data).not.toHaveProperty('invite');
+    expect(body.data).not.toHaveProperty('inviteToken');
+    expect(body.data.user).not.toHaveProperty('passwordHash');
+    expect(body.data.tenant).not.toHaveProperty('jurisdiction');
+    expect(body.data.tenant).not.toHaveProperty('registration_no');
+    expect(body.data.tenant).not.toHaveProperty('memberships');
+    expect(body.data.tenant).not.toHaveProperty('tokenHash');
   });
 
   it('rejects replay or duplicate-use after successful activation and performs no second acceptance writes', async () => {
