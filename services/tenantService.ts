@@ -77,8 +77,17 @@ export interface Membership {
   user: MemberUser;
 }
 
+export interface PendingInvite {
+  id: string;
+  email: string;
+  role: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
 export interface MembershipsResponse {
   memberships: Membership[];
+  pendingInvites: PendingInvite[];
   count: number;
 }
 

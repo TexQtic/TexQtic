@@ -1,3 +1,5 @@
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../services/tenantApiClient', () => ({
@@ -9,8 +11,10 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
+import { TeamManagementPendingInvitesPanel } from '../components/Tenant/TeamManagement';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
+import { getMemberships, type MembershipsResponse } from '../services/tenantService';
 import {
   createTradeEscrow,
   listTenantTrades,
@@ -150,6 +154,51 @@ function makeCertificationResponse(): ListCertificationsResponse {
   };
 }
 
+function makeMembershipsResponse(): MembershipsResponse {
+  return {
+    memberships: [
+      {
+        id: 'membership-1',
+        role: 'OWNER',
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        createdAt: '2026-03-21T08:00:00.000Z',
+        updatedAt: '2026-03-21T09:00:00.000Z',
+        user: {
+          id: 'user-1',
+          email: 'owner@tenant.test',
+          emailVerified: true,
+        },
+      },
+    ],
+    pendingInvites: [
+      {
+        id: 'invite-1',
+        email: 'new-admin@tenant.test',
+        role: 'ADMIN',
+        expiresAt: '2026-04-18T00:00:00.000Z',
+        createdAt: '2026-04-10T12:00:00.000Z',
+      },
+      {
+        id: 'invite-2',
+        email: 'new-member@tenant.test',
+        role: 'MEMBER',
+        expiresAt: '2026-04-17T00:00:00.000Z',
+        createdAt: '2026-04-09T08:00:00.000Z',
+      },
+    ],
+    count: 1,
+  };
+}
+
+function renderPendingInvitesPanel(response: MembershipsResponse) {
+  return renderToStaticMarkup(
+    React.createElement(TeamManagementPendingInvitesPanel, {
+      pendingInvites: response.pendingInvites,
+    }),
+  );
+}
+
 describe('runtime verification - tenant enterprise service contracts', () => {
   beforeEach(() => {
     tenantGetMock.mockReset();
@@ -240,5 +289,34 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(tenantGetMock).toHaveBeenCalledWith('/api/tenant/certifications?stateKey=SUBMITTED&limit=10&offset=0');
     expect(result).toEqual(response);
     expect(result.items[0].stateKey).toBe('SUBMITTED');
+  });
+
+  it('uses the memberships endpoint and preserves the pending-invite read projection envelope', async () => {
+    const response = makeMembershipsResponse();
+    tenantGetMock.mockResolvedValue(response);
+
+    const result = await getMemberships();
+
+    expect(tenantGetMock).toHaveBeenCalledWith('/api/tenant/memberships');
+    expect(result).toEqual(response);
+    expect(result.pendingInvites[0].email).toBe('new-admin@tenant.test');
+    expect(result.pendingInvites[1].role).toBe('MEMBER');
+  });
+});
+
+describe('runtime verification - tenant membership pending invite surface', () => {
+  it('renders pending invites in response order using safe invite fields only', () => {
+    const html = renderPendingInvitesPanel(makeMembershipsResponse());
+
+    expect(html).toContain('Pending Invitations');
+    expect(html).toContain('new-admin@tenant.test');
+    expect(html).toContain('new-member@tenant.test');
+    expect(html).toContain('ADMIN');
+    expect(html).toContain('MEMBER');
+    expect(html).toContain('Expires Apr 18, 2026');
+    expect(html).toContain('Expires Apr 17, 2026');
+    expect(html.indexOf('new-admin@tenant.test')).toBeLessThan(html.indexOf('new-member@tenant.test'));
+    expect(html).not.toContain('tokenHash');
+    expect(html).not.toContain('inviteToken');
   });
 });

@@ -1,6 +1,11 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { getMemberships, updateMembershipRole, type Membership } from '../../services/tenantService';
+import {
+  getMemberships,
+  updateMembershipRole,
+  type Membership,
+  type PendingInvite,
+} from '../../services/tenantService';
 import { getCurrentUser } from '../../services/authService';
 import { APIError } from '../../services/apiClient';
 
@@ -8,11 +13,64 @@ type EditableRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 const ALL_EDITABLE_ROLES: EditableRole[] = ['OWNER', 'ADMIN', 'MEMBER'];
 
 interface TeamManagementProps {
-  onInvite?: () => void;
+  readonly onInvite?: () => void;
 }
 
-export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
+interface TeamManagementPendingInvitesPanelProps {
+  readonly pendingInvites: PendingInvite[];
+}
+
+function formatPendingInviteExpiry(expiresAt: string) {
+  return new Date(expiresAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+export function TeamManagementPendingInvitesPanel({
+  pendingInvites,
+}: TeamManagementPendingInvitesPanelProps) {
+  if (pendingInvites.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <div>
+          <h2 className="font-bold uppercase text-[10px] tracking-wider text-slate-500">Pending Invitations</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Newest invites appear first. Accepted and expired invites are not shown.
+          </p>
+        </div>
+        <span className="px-2 py-0.5 rounded border border-slate-200 bg-white text-[10px] font-bold text-slate-500">
+          {pendingInvites.length}
+        </span>
+      </div>
+
+      <div className="divide-y divide-slate-100">
+        {pendingInvites.map(invite => (
+          <div key={invite.id} className="px-6 py-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="font-bold text-slate-900">{invite.email}</div>
+              <div className="text-xs text-slate-500">
+                Expires {formatPendingInviteExpiry(invite.expiresAt)}
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-100 text-slate-500">
+              {invite.role}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function TeamManagement({ onInvite }: TeamManagementProps) {
   const [members, setMembers] = useState<Membership[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -33,6 +91,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
         getCurrentUser().catch(() => null),
       ]);
       setMembers(membersRes.memberships);
+      setPendingInvites(membersRes.pendingInvites ?? []);
       setUserRole(meRes?.role ?? null);
       setCurrentUserId(meRes?.user?.id ?? null);
     } catch (err) {
@@ -51,6 +110,8 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
   }, [fetchMembers]);
 
   const ownerCount = members.filter(m => m.role === 'OWNER').length;
+  const hasMembers = members.length > 0;
+  const hasPendingInvites = pendingInvites.length > 0;
 
   // Returns the roles this member can be moved to (empty = no edit button).
   // VIEWER source: VIEWER_TRANSITION_OUT_OF_SCOPE on backend; we hide early.
@@ -130,11 +191,11 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
         </div>
       )}
 
-      {!loading && !error && members.length === 0 && (
+      {!loading && !error && !hasMembers && !hasPendingInvites && (
         <div className="text-center py-12 text-slate-500 text-sm">No team members found.</div>
       )}
 
-      {!loading && !error && members.length > 0 && (
+      {!loading && !error && hasMembers && (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
@@ -182,6 +243,10 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
             </tbody>
           </table>
         </div>
+      )}
+
+      {!loading && !error && (
+        <TeamManagementPendingInvitesPanel pendingInvites={pendingInvites} />
       )}
 
       {/* Role Edit Modal */}
@@ -273,4 +338,4 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onInvite }) => {
       )}
     </div>
   );
-};
+}
