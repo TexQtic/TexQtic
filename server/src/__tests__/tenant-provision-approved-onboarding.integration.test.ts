@@ -591,4 +591,68 @@ describe('tenant activation invite admission validation', () => {
     });
     expect(body.data.token).toEqual(expect.any(String));
   });
+
+  it('rejects replay or duplicate-use after successful activation and performs no second acceptance writes', async () => {
+    prismaMock.invite.findFirst
+      .mockResolvedValueOnce({
+        id: 'invite-uuid-0000-0000-0000-000000000001',
+        tenantId: 'tenant-uuid-0000-0000-0000-000000000001',
+        email: 'owner@acme.test',
+        role: 'ADMIN',
+        tenant: {
+          memberships: [],
+        },
+      })
+      .mockResolvedValueOnce(null);
+
+    const firstResponse = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: 'invite-token-123',
+        userData: {
+          email: 'owner@acme.test',
+          password: 'secret123',
+        },
+        tenantData: {
+          name: 'Acme Textiles',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    const replayResponse = await app.inject({
+      method: 'POST',
+      url: '/api/tenant/activate',
+      payload: {
+        inviteToken: 'invite-token-123',
+        userData: {
+          email: 'owner@acme.test',
+          password: 'secret123',
+        },
+        verificationData: {
+          registrationNumber: 'REG-123',
+          jurisdiction: 'US-DE',
+        },
+      },
+    });
+
+    expect(firstResponse.statusCode).toBe(200);
+    expect(replayResponse.statusCode).toBe(404);
+    expect(withDbContextMock).toHaveBeenCalledTimes(2);
+    expect(txMock.user.create).toHaveBeenCalledTimes(1);
+    expect(txMock.membership.create).toHaveBeenCalledTimes(1);
+    expect(txMock.invite.update).toHaveBeenCalledTimes(1);
+    expect(writeAuditLogMock).toHaveBeenCalledTimes(1);
+
+    const replayBody = replayResponse.json();
+    expect(replayBody.success).toBe(false);
+    expect(replayBody.error).toMatchObject({
+      code: 'INVALID_INVITE',
+      message: 'Invite not found or expired',
+    });
+  });
 });
