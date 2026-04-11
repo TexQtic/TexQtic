@@ -24,6 +24,7 @@
     "control:guard": "pnpm --dir server exec tsx ../scripts/control-plane-guard.ts",
     "test:server": "pnpm --dir server run test:ci",
     "test:server:targeted": "pnpm --dir server run test",
+    "test:runtime-routing:focused": "pnpm --dir server exec vitest run ../tests/session-runtime-descriptor.test.ts ../tests/phase1-foundation-correction-routing-authority.test.tsx",
     "test:runtime-verification": "pnpm --dir server run test:runtime-verification"
   },
   "dependencies": {
