@@ -2709,7 +2709,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         }
 
         const invite = await withDbContext(prisma, dbContext, async tx => {
-          return await tx.invite.create({
+          const createdInvite = await tx.invite.create({
             data: {
               tenantId,
               email,
@@ -2718,21 +2718,22 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               expiresAt,
             },
           });
-        });
 
-        // Write audit log
-        await writeAuditLog(prisma, {
-          tenantId: tenantId ?? null,
-          realm: 'TENANT',
-          actorType: 'USER',
-          actorId: request.userId ?? null,
-          action: 'member.invited',
-          entity: 'invite',
-          entityId: invite.id,
-          metadataJson: {
-            email,
-            role,
-          },
+          await writeAuditLog(tx, {
+            tenantId: tenantId ?? null,
+            realm: 'TENANT',
+            actorType: 'USER',
+            actorId: request.userId ?? null,
+            action: 'member.invited',
+            entity: 'invite',
+            entityId: createdInvite.id,
+            metadataJson: {
+              email,
+              role,
+            },
+          });
+
+          return createdInvite;
         });
 
         // G-012: Fire-and-forget invite email — errors logged, never block invite creation

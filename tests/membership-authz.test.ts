@@ -25,6 +25,7 @@
  *   pnpm exec vitest run ../../tests/membership-authz.test.ts
  */
 
+import { createHash } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,119 @@ function canInviteAsRole(role: string): boolean {
 }
 
 type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+
+type InviteIssuanceRole = Exclude<MembershipRole, 'VIEWER'>;
+
+type MembershipInviteIssuanceOutcome =
+  | {
+      allowed: true;
+      persistedInvite: {
+        id: string;
+        tenantId: string;
+        email: string;
+        role: InviteIssuanceRole;
+        tokenHash: string;
+        expiresAt: Date;
+      };
+      response: {
+        invite: {
+          id: string;
+          email: string;
+          role: InviteIssuanceRole;
+          expiresAt: Date;
+        };
+        inviteToken: string;
+      };
+      audit: {
+        tenantId: string;
+        realm: 'TENANT';
+        actorType: 'USER';
+        actorId: string | null;
+        action: 'member.invited';
+        entity: 'invite';
+        entityId: string;
+        metadataJson: {
+          email: string;
+          role: InviteIssuanceRole;
+        };
+      };
+    }
+  | {
+      allowed: false;
+      error: 'UNAUTHORIZED' | 'FORBIDDEN' | 'VIEWER_TRANSITION_OUT_OF_SCOPE';
+    };
+
+function evaluateMembershipInviteIssuance(options: {
+  actorRole: MembershipRole;
+  tenantId: string | null;
+  actorId: string | null;
+  email: string;
+  requestedRole: MembershipRole;
+  inviteId: string;
+  inviteToken: string;
+  issuedAt: Date;
+}): MembershipInviteIssuanceOutcome {
+  const {
+    actorRole,
+    tenantId,
+    actorId,
+    email,
+    requestedRole,
+    inviteId,
+    inviteToken,
+    issuedAt,
+  } = options;
+
+  if (!tenantId) {
+    return { allowed: false, error: 'UNAUTHORIZED' };
+  }
+
+  if (actorRole !== 'OWNER' && actorRole !== 'ADMIN') {
+    return { allowed: false, error: 'FORBIDDEN' };
+  }
+
+  if (requestedRole === 'VIEWER') {
+    return { allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' };
+  }
+
+  const tokenHash = createHash('sha256').update(inviteToken).digest('hex');
+  const expiresAt = new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const safeRole = requestedRole as InviteIssuanceRole;
+
+  return {
+    allowed: true,
+    persistedInvite: {
+      id: inviteId,
+      tenantId,
+      email,
+      role: safeRole,
+      tokenHash,
+      expiresAt,
+    },
+    response: {
+      invite: {
+        id: inviteId,
+        email,
+        role: safeRole,
+        expiresAt,
+      },
+      inviteToken,
+    },
+    audit: {
+      tenantId,
+      realm: 'TENANT',
+      actorType: 'USER',
+      actorId,
+      action: 'member.invited',
+      entity: 'invite',
+      entityId: inviteId,
+      metadataJson: {
+        email,
+        role: safeRole,
+      },
+    },
+  };
+}
 
 type MembershipTransitionOutcome =
   | { allowed: true }
@@ -159,6 +273,111 @@ describe('POST /api/tenant/memberships — invite role admission', () => {
 
   it('VIEWER is rejected as an invite target role (422 expected from backend)', () => {
     expect(canInviteAsRole('VIEWER')).toBe(false);
+  });
+});
+
+describe('POST /api/tenant/memberships — invite issuance artifact contract', () => {
+  it('persists a token hash, assigns a seven-day expiry, and returns activation-handoff metadata', () => {
+    const issuedAt = new Date('2026-04-10T00:00:00.000Z');
+    const inviteToken = 'invite-token-abc';
+
+    const result = evaluateMembershipInviteIssuance({
+      actorRole: 'OWNER',
+      tenantId: 'tenant-uuid-1',
+      actorId: 'user-uuid-1',
+      email: 'invitee@acme.test',
+      requestedRole: 'MEMBER',
+      inviteId: 'invite-uuid-1',
+      inviteToken,
+      issuedAt,
+    });
+
+    expect(result.allowed).toBe(true);
+    if (!result.allowed) {
+      return;
+    }
+
+    expect(result.persistedInvite).toMatchObject({
+      id: 'invite-uuid-1',
+      tenantId: 'tenant-uuid-1',
+      email: 'invitee@acme.test',
+      role: 'MEMBER',
+    });
+    expect(result.persistedInvite.tokenHash).toBe(
+      createHash('sha256').update(inviteToken).digest('hex')
+    );
+    expect(result.persistedInvite.expiresAt.toISOString()).toBe('2026-04-17T00:00:00.000Z');
+    expect(result.persistedInvite).not.toHaveProperty('inviteToken');
+
+    expect(result.response).toEqual({
+      invite: {
+        id: 'invite-uuid-1',
+        email: 'invitee@acme.test',
+        role: 'MEMBER',
+        expiresAt: new Date('2026-04-17T00:00:00.000Z'),
+      },
+      inviteToken,
+    });
+  });
+
+  it('emits a member.invited audit contract aligned with the created invite artifact', () => {
+    const result = evaluateMembershipInviteIssuance({
+      actorRole: 'ADMIN',
+      tenantId: 'tenant-uuid-2',
+      actorId: 'user-uuid-2',
+      email: 'owner@acme.test',
+      requestedRole: 'OWNER',
+      inviteId: 'invite-uuid-2',
+      inviteToken: 'invite-token-owner',
+      issuedAt: new Date('2026-04-10T12:34:56.000Z'),
+    });
+
+    expect(result.allowed).toBe(true);
+    if (!result.allowed) {
+      return;
+    }
+
+    expect(result.audit).toEqual({
+      tenantId: 'tenant-uuid-2',
+      realm: 'TENANT',
+      actorType: 'USER',
+      actorId: 'user-uuid-2',
+      action: 'member.invited',
+      entity: 'invite',
+      entityId: 'invite-uuid-2',
+      metadataJson: {
+        email: 'owner@acme.test',
+        role: 'OWNER',
+      },
+    });
+  });
+
+  it('does not issue invite artifacts when tenant context is missing or VIEWER is requested', () => {
+    expect(
+      evaluateMembershipInviteIssuance({
+        actorRole: 'OWNER',
+        tenantId: null,
+        actorId: 'user-uuid-3',
+        email: 'invitee@acme.test',
+        requestedRole: 'MEMBER',
+        inviteId: 'invite-uuid-3',
+        inviteToken: 'invite-token-member',
+        issuedAt: new Date('2026-04-10T00:00:00.000Z'),
+      })
+    ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
+
+    expect(
+      evaluateMembershipInviteIssuance({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-3',
+        actorId: 'user-uuid-3',
+        email: 'viewer@acme.test',
+        requestedRole: 'VIEWER',
+        inviteId: 'invite-uuid-4',
+        inviteToken: 'invite-token-viewer',
+        issuedAt: new Date('2026-04-10T00:00:00.000Z'),
+      })
+    ).toEqual({ allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' });
   });
 });
 
