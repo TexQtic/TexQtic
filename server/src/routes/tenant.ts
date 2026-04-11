@@ -2689,6 +2689,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         const { email, role } = parseResult.data;
 
+        if (role === 'VIEWER') {
+          return sendError(reply, 'VIEWER_TRANSITION_OUT_OF_SCOPE', 'VIEWER role transitions are not supported', 422);
+        }
+
         // Create invite token
         const crypto = await import('node:crypto');
         const token = crypto.randomBytes(32).toString('hex');

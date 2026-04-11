@@ -3,10 +3,12 @@
  *
  * Purpose: Verify that the GET /api/tenant/memberships authorization rule
  * permits OWNER, ADMIN, and MEMBER roles — and denies VIEWER,
- * and that POST (invite creation) is restricted to OWNER and ADMIN only.
+ * and that POST (invite creation) is restricted to OWNER and ADMIN actors
+ * while rejecting VIEWER as an invite target role.
  *
  * This test documents and enforces the authorization contract as defined in:
- *   - server/src/routes/tenant.ts (GET: no role guard; POST: OWNER/ADMIN guard)
+ *   - server/src/routes/tenant.ts
+ *     (GET: OWNER/ADMIN/MEMBER guard; POST: OWNER/ADMIN actor guard + VIEWER target rejection)
  *   - services/tenantService.ts (getMemberships JSDoc)
  *   - shared/contracts/openapi.tenant.json (GET description)
  *   - docs/governance/IMPLEMENTATION-TRACKER-2026-Q2.md
@@ -29,6 +31,10 @@ import { describe, it, expect } from 'vitest';
 // ---------------------------------------------------------------------------
 function canInviteMember(role: string): boolean {
   return role === 'OWNER' || role === 'ADMIN';
+}
+
+function canInviteAsRole(role: string): boolean {
+  return role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER';
 }
 
 // ---------------------------------------------------------------------------
@@ -81,6 +87,20 @@ describe('POST /api/tenant/memberships — authorization contract', () => {
   });
 });
 
+describe('POST /api/tenant/memberships — invite role admission', () => {
+  const SUPPORTED_INVITE_ROLES = ['OWNER', 'ADMIN', 'MEMBER'] as const;
+
+  it('permits OWNER, ADMIN, and MEMBER as invite target roles', () => {
+    for (const role of SUPPORTED_INVITE_ROLES) {
+      expect(canInviteAsRole(role)).toBe(true);
+    }
+  });
+
+  it('VIEWER is rejected as an invite target role (422 expected from backend)', () => {
+    expect(canInviteAsRole('VIEWER')).toBe(false);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Contract invariant: GET is a superset of who may call POST
 // (everyone who can invite can also read; not the reverse)
@@ -101,5 +121,10 @@ describe('membership authorization invariant', () => {
     }
     // VIEWER is excluded from reads entirely (not just invite creation)
     expect(canReadMemberList('VIEWER')).toBe(false);
+  });
+
+  it('invite creation also requires a supported target role', () => {
+    expect(canInviteMember('OWNER') && canInviteAsRole('MEMBER')).toBe(true);
+    expect(canInviteMember('ADMIN') && canInviteAsRole('VIEWER')).toBe(false);
   });
 });
