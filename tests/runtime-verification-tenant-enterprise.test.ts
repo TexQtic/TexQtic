@@ -11,7 +11,7 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
-import { TeamManagementPendingInvitesPanel } from '../components/Tenant/TeamManagement';
+import { TeamManagementPendingInvitesPanel, canInviteMembers } from '../components/Tenant/TeamManagement';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
 import { getMemberships, type MembershipsResponse } from '../services/tenantService';
@@ -305,6 +305,14 @@ describe('runtime verification - tenant enterprise service contracts', () => {
 });
 
 describe('runtime verification - tenant membership pending invite surface', () => {
+  it('keeps member reads while denying the invite CTA to non-writer roles', () => {
+    expect(canInviteMembers('OWNER')).toBe(true);
+    expect(canInviteMembers('ADMIN')).toBe(true);
+    expect(canInviteMembers('MEMBER')).toBe(false);
+    expect(canInviteMembers('VIEWER')).toBe(false);
+    expect(canInviteMembers(null)).toBe(false);
+  });
+
   it('renders pending invites in response order using safe invite fields only', () => {
     const html = renderPendingInvitesPanel(makeMembershipsResponse());
 

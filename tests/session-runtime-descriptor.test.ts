@@ -467,6 +467,14 @@ describe('session runtime descriptor', () => {
     expect(resolveRuntimeManifestEntryFromDescriptor(storefrontDescriptor ?? null, 'WL_ADMIN')).toBeNull();
     expect(resolveRuntimeContentFamilyFromDescriptor(storefrontDescriptor ?? null, 'WL_ADMIN')).toBeNull();
     expect(resolveRuntimeShellFamilyFromDescriptor(storefrontDescriptor ?? null, 'WL_ADMIN')).toBeNull();
+    expect(resolveRuntimeFamilyEntryHandoff(storefrontDescriptor ?? null, 'WL_ADMIN', { wlAdminView: 'STAFF' })).toBeNull();
+    expect(resolveRuntimeFamilyEntryHandoff(storefrontDescriptor ?? null, 'EXPERIENCE', { expView: 'HOME' })).toEqual(
+      expect.objectContaining({
+        manifestKey: 'wl_storefront',
+        contentFamily: 'wl_storefront',
+        shellFamily: 'WhiteLabelShell',
+      }),
+    );
 
     expect(wlAdminDescriptor?.operatingMode).toBe('WL_STOREFRONT');
     expect(wlAdminDescriptor?.routeManifestKey).toBe('wl_admin');

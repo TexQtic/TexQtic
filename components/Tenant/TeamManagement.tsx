@@ -20,6 +20,10 @@ interface TeamManagementPendingInvitesPanelProps {
   readonly pendingInvites: PendingInvite[];
 }
 
+export function canInviteMembers(userRole: string | null) {
+  return userRole === 'OWNER' || userRole === 'ADMIN';
+}
+
 function formatPendingInviteExpiry(expiresAt: string) {
   return new Date(expiresAt).toLocaleDateString('en-US', {
     month: 'short',
@@ -112,6 +116,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const ownerCount = members.filter(m => m.role === 'OWNER').length;
   const hasMembers = members.length > 0;
   const hasPendingInvites = pendingInvites.length > 0;
+  const canInvite = canInviteMembers(userRole);
 
   // Returns the roles this member can be moved to (empty = no edit button).
   // VIEWER source: VIEWER_TRANSITION_OUT_OF_SCOPE on backend; we hide early.
@@ -172,10 +177,12 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
           <h1 className="text-2xl font-bold">Team Management</h1>
           <p className="text-slate-500 text-sm">Manage your organization's members and their access levels.</p>
         </div>
-        <button
-          className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-900/10"
-          onClick={onInvite}
-        >Invite Member</button>
+        {canInvite && (
+          <button
+            className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-900/10"
+            onClick={onInvite}
+          >Invite Member</button>
+        )}
       </div>
 
       {loading && (
