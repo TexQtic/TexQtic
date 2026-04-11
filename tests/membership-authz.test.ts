@@ -4,7 +4,9 @@
  * Purpose: Verify that the GET /api/tenant/memberships authorization rule
  * permits OWNER, ADMIN, and MEMBER roles — and denies VIEWER,
  * and that POST (invite creation) is restricted to OWNER and ADMIN actors
- * while rejecting VIEWER as an invite target role.
+ * while rejecting VIEWER as an invite target role, and that PATCH role
+ * transitions enforce OWNER-only mutation, disallowed transition errors,
+ * same-org target scoping, and the sole-OWNER invariant.
  *
  * This test documents and enforces the authorization contract as defined in:
  *   - server/src/routes/tenant.ts
@@ -35,6 +37,65 @@ function canInviteMember(role: string): boolean {
 
 function canInviteAsRole(role: string): boolean {
   return role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER';
+}
+
+type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+
+type MembershipTransitionOutcome =
+  | { allowed: true }
+  | {
+      allowed: false;
+      error:
+        | 'FORBIDDEN'
+        | 'MEMBERSHIP_NOT_FOUND'
+        | 'VIEWER_TRANSITION_OUT_OF_SCOPE'
+        | 'NO_OP_ROLE_CHANGE'
+        | 'PEER_OWNER_DEMOTION_FORBIDDEN'
+        | 'SOLE_OWNER_CANNOT_DOWNGRADE';
+    };
+
+function evaluateMembershipRoleTransition(options: {
+  actorRole: MembershipRole;
+  targetVisibleToOrg: boolean;
+  fromRole: MembershipRole;
+  requestedRole: MembershipRole;
+  isSelfTarget: boolean;
+  ownerCount: number;
+}): MembershipTransitionOutcome {
+  const {
+    actorRole,
+    targetVisibleToOrg,
+    fromRole,
+    requestedRole,
+    isSelfTarget,
+    ownerCount,
+  } = options;
+
+  if (actorRole !== 'OWNER') {
+    return { allowed: false, error: 'FORBIDDEN' };
+  }
+
+  if (!targetVisibleToOrg) {
+    return { allowed: false, error: 'MEMBERSHIP_NOT_FOUND' };
+  }
+
+  if (requestedRole === 'VIEWER' || fromRole === 'VIEWER') {
+    return { allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' };
+  }
+
+  if (fromRole === requestedRole) {
+    return { allowed: false, error: 'NO_OP_ROLE_CHANGE' };
+  }
+
+  if (fromRole === 'OWNER' && !isSelfTarget) {
+    return { allowed: false, error: 'PEER_OWNER_DEMOTION_FORBIDDEN' };
+  }
+
+  if (fromRole === 'OWNER' && isSelfTarget && ownerCount <= 1) {
+    return { allowed: false, error: 'SOLE_OWNER_CANNOT_DOWNGRADE' };
+  }
+
+  return { allowed: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -101,6 +162,119 @@ describe('POST /api/tenant/memberships — invite role admission', () => {
   });
 });
 
+describe('PATCH /api/tenant/memberships/:id — role transition contract', () => {
+  it('permits only OWNER actors to perform membership role changes', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: true });
+
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'ADMIN',
+        targetVisibleToOrg: true,
+        fromRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'FORBIDDEN' });
+  });
+
+  it('rejects cross-org or missing membership targets as not found', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: false,
+        fromRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'MEMBERSHIP_NOT_FOUND' });
+  });
+
+  it('rejects VIEWER as a requested or source transition role', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'MEMBER',
+        requestedRole: 'VIEWER',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' });
+
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'VIEWER',
+        requestedRole: 'MEMBER',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' });
+  });
+
+  it('rejects no-op transitions where the role does not change', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'ADMIN',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'NO_OP_ROLE_CHANGE' });
+  });
+
+  it('forbids changing the role of another OWNER membership', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'OWNER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'PEER_OWNER_DEMOTION_FORBIDDEN' });
+  });
+
+  it('enforces the sole-OWNER self-downgrade invariant', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'OWNER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: true,
+        ownerCount: 1,
+      }),
+    ).toEqual({ allowed: false, error: 'SOLE_OWNER_CANNOT_DOWNGRADE' });
+
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'OWNER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: true,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: true });
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Contract invariant: GET is a superset of who may call POST
 // (everyone who can invite can also read; not the reverse)
@@ -126,5 +300,29 @@ describe('membership authorization invariant', () => {
   it('invite creation also requires a supported target role', () => {
     expect(canInviteMember('OWNER') && canInviteAsRole('MEMBER')).toBe(true);
     expect(canInviteMember('ADMIN') && canInviteAsRole('VIEWER')).toBe(false);
+  });
+
+  it('membership transitions require an OWNER actor and a permitted transition path', () => {
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'OWNER',
+        targetVisibleToOrg: true,
+        fromRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: true });
+
+    expect(
+      evaluateMembershipRoleTransition({
+        actorRole: 'MEMBER',
+        targetVisibleToOrg: true,
+        fromRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        isSelfTarget: false,
+        ownerCount: 2,
+      }),
+    ).toEqual({ allowed: false, error: 'FORBIDDEN' });
   });
 });
