@@ -532,6 +532,22 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(updatedHtml).not.toContain('inviteToken');
   });
 
+  it('serializes pending invite row actions across the shared panel while a resend is in flight', () => {
+    const response = makeMembershipsResponse();
+    const html = renderPendingInvitesPanel(response, {
+      canEdit: true,
+      canRevoke: true,
+      canResend: true,
+      resendingInviteId: 'invite-1',
+    });
+    const disabledControls = html.match(/disabled=""/g) ?? [];
+
+    expect(html).toContain('Resending…');
+    expect(html).toContain('new-admin@tenant.test');
+    expect(html).toContain('new-member@tenant.test');
+    expect(disabledControls).toHaveLength(response.pendingInvites.length * 3);
+  });
+
   it('renders writer revoke controls and removes the revoked invite from the pending list state', () => {
     const response = makeMembershipsResponse();
     const writerHtml = renderPendingInvitesPanel(response, { canEdit: true, canRevoke: true, canResend: true });
