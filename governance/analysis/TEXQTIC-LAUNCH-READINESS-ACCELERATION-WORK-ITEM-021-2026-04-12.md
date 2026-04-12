@@ -228,3 +228,154 @@ The downstream governance-family posture remains frozen under
 `HOLD-FOR-BOUNDARY-TIGHTENING`.
 
 Layer 0 remains read-only.
+
+## 18. runtime production confirmation - Work Item 022
+
+This section records the bounded runtime production confirmation pass for the already-implemented
+Work Item 021 sidebar reachability fix.
+
+### 18.1 preflight result
+
+Exact command run:
+
+`git diff --name-only; git status --short`
+
+Observed output:
+
+- no output
+- repo clean at start of the runtime pass
+
+### 18.2 exact files re-read in the runtime pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-021-2026-04-12.md`
+4. `layouts/Shells.tsx`
+5. `runtime/sessionRuntimeDescriptor.ts`
+6. `tests/runtime-verification-tenant-enterprise.test.ts`
+7. `App.tsx`
+8. `docs/ops/QA-TENANT-SEED-AND-RENAME-EXECUTION-PLAN-v1.md`
+
+### 18.3 exact runtime environment used
+
+Runtime environment used:
+
+- production UI at `https://tex-qtic.vercel.app/`
+- Visual Studio Code integrated browser session on Windows
+- manually authenticated `QA B2B` owner or admin tenant session handoff already present in the
+  browser session
+- no raw credential typing, pasting, replay, echoing, storage, or transformation was performed in
+  browser-reflective tooling
+
+Observed authenticated runtime posture before the nav check:
+
+- page title included `QA B2B | TexQtic B2B Workspace`
+- visible workspace header: `TexQtic B2B Workspace`
+- visible tenant picker selection: `QA B2B`
+
+### 18.4 whether runtime mismatch or remaining validation gap was found
+
+No runtime mismatch was found in the exact sidebar reachability boundary exercised in this pass.
+
+No remaining validation gap remains for the exact boundary checked here.
+
+This pass does not widen into broader responsive-navigation judgments outside the authenticated
+production viewport that was actually exercised.
+
+### 18.5 exact runtime proof added
+
+The exact runtime proof added in this pass is:
+
+1. an authenticated `QA B2B` production workspace session was reachable in runtime
+2. the B2B sidebar was present in the live session and retained the corrected
+  `overflow-y-auto` sidebar class
+3. the live sidebar showed `clientHeight` `640` and `scrollHeight` `832`, proving the sidebar had
+  a real scrollable overflow surface on the exercised viewport
+4. before selecting `Traceability`, the lower nav items `Traceability`, `Audit Log`, `Trades`,
+  and `Members` were already visible and reachable
+5. selecting `Traceability` was not required to reveal those lower nav items
+6. after selecting `Traceability`, the same lower nav items remained visible with no unexpected
+  expansion or collapse behavior
+7. `Audit Log`, `Trades`, and `Members` each remained reachable during the same runtime pass and
+  navigated to their corresponding surfaces
+
+### 18.6 exact runtime checks run and results
+
+Exact runtime checks executed in this pass:
+
+1. confirm authenticated `QA B2B` workspace reachability
+  - result: successful
+  - observed title: `QA B2B | TexQtic B2B Workspace`
+  - observed workspace header: `TexQtic B2B Workspace`
+2. confirm sidebar presence and runtime scrollability on the exercised viewport
+  - result: successful
+  - observed sidebar class: `w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen overflow-y-auto`
+  - observed sidebar metrics: `clientHeight` `640`, `scrollHeight` `832`, `scrollTop` `192`
+3. confirm lower-nav visibility before any `Traceability` selection
+  - result: successful
+  - observed visible state before click: `Traceability` true, `Audit Log` true, `Trades` true,
+    `Members` true
+  - observed content heading before click: `Wholesale Catalog`
+4. select `Traceability` and confirm no reveal-workaround behavior
+  - result: successful
+  - observed content headings after click: `🔗 Traceability`, `Traceability Nodes`
+  - observed visible state after click: `Traceability` true, `Audit Log` true, `Trades` true,
+    `Members` true
+5. select `Audit Log`
+  - result: successful
+  - observed content heading after click: `Audit Log`
+  - observed visible state remained unchanged for the lower nav items
+6. select `Trades`
+  - result: successful
+  - observed content heading after click: `Trades`
+  - observed visible state remained unchanged for the lower nav items
+7. select `Members`
+  - result: successful
+  - observed content heading after click: `Team Management`
+  - observed visible state remained unchanged for the lower nav items
+
+### 18.7 runtime production truth established
+
+Yes.
+
+Reason:
+
+- the exact production viewport exercised in this pass showed the corrected live sidebar surface
+- the lower nav items were already reachable before `Traceability` was selected
+- repeated route changes did not produce the previously reported reveal or collapse behavior
+
+### 18.8 governance-state statement
+
+Governance state unchanged: yes.
+
+The downstream governance-family posture remains frozen under
+`HOLD-FOR-BOUNDARY-TIGHTENING`.
+
+Layer 0 remains read-only.
+
+### 18.9 implementation-commit statement
+
+No new implementation commit was created in this runtime pass.
+
+The implementation commit for the bounded sidebar fix remains `94967c4`.
+
+If an artifact-only closeout commit is later required for this runtime pass, that closeout remains
+separate from the current runtime confirmation pass.
+
+### 18.10 final git diff --name-only for this runtime pass
+
+Exact observed output after recording the runtime evidence in this pass:
+
+- `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-021-2026-04-12.md`
+
+### 18.11 final git status --short for this runtime pass
+
+Exact observed output after recording the runtime evidence in this pass:
+
+- `M governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-021-2026-04-12.md`
+
+Interpretation:
+
+- the repo is intentionally left with one modified artifact after the runtime pass
+- no code file changed in this pass
+- no commit was created in this pass
