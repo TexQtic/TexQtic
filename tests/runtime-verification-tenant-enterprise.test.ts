@@ -16,6 +16,7 @@ import {
   canInviteMembers,
   removePendingInviteById,
 } from '../components/Tenant/TeamManagement';
+import { B2BShell } from '../layouts/Shells';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
 import { getMemberships, revokePendingInvite, type MembershipsResponse } from '../services/tenantService';
@@ -27,6 +28,7 @@ import {
 } from '../services/tradeService';
 import { listEdges, listNodes, type EdgeListResponse, type NodeListResponse } from '../services/traceabilityService';
 import { tenantDelete, tenantGet, tenantPost } from '../services/tenantApiClient';
+import { TenantStatus, TenantType, type TenantConfig } from '../types';
 
 const tenantDeleteMock = vi.mocked(tenantDelete);
 const tenantGetMock = vi.mocked(tenantGet);
@@ -196,6 +198,29 @@ function makeMembershipsResponse(): MembershipsResponse {
   };
 }
 
+function makeB2BTenant(): TenantConfig {
+  return {
+    id: 'tenant-1',
+    slug: 'qa-b2b',
+    name: 'QA B2B',
+    type: TenantType.B2B,
+    tenant_category: TenantType.B2B,
+    is_white_label: false,
+    status: TenantStatus.ACTIVE,
+    plan: 'PROFESSIONAL',
+    theme: {
+      primaryColor: '#0f172a',
+      secondaryColor: '#1e293b',
+      logo: 'Q',
+    },
+    features: [],
+    aiBudget: 0,
+    aiUsage: 0,
+    billingStatus: 'CURRENT',
+    riskScore: 0,
+  };
+}
+
 function renderPendingInvitesPanel(
   response: MembershipsResponse,
   options: {
@@ -210,6 +235,39 @@ function renderPendingInvitesPanel(
       revokingInviteId: options.revokingInviteId,
       onRevoke: options.canRevoke ? vi.fn() : undefined,
     }),
+  );
+}
+
+function renderB2BShell() {
+  return renderToStaticMarkup(
+    React.createElement(
+      B2BShell,
+      {
+        tenant: makeB2BTenant(),
+        navigation: {
+          surface: {
+            activeRouteKey: 'catalog',
+            activeNavigationKey: 'HOME',
+            defaultRouteKey: 'catalog',
+            items: [
+              { routeKey: 'catalog', navigationKey: 'HOME', routeGroupKey: 'catalog_browse', active: true },
+              { routeKey: 'orders', navigationKey: 'ORDERS', routeGroupKey: 'orders_operations', active: false },
+              { routeKey: 'dpp', navigationKey: 'DPP', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'escrow', navigationKey: 'ESCROW', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'escalations', navigationKey: 'ESCALATIONS', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'settlement', navigationKey: 'SETTLEMENT', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'certifications', navigationKey: 'CERTIFICATIONS', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'traceability', navigationKey: 'TRACEABILITY', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'audit_logs', navigationKey: 'AUDIT_LOGS', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'trades', navigationKey: 'TRADES', routeGroupKey: 'operational_workspace', active: false },
+            ],
+          },
+          onNavigateRoute: () => undefined,
+          onNavigateTeam: () => undefined,
+        },
+      },
+      React.createElement('section', null, 'Workspace body'),
+    ),
   );
 }
 
@@ -373,5 +431,16 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(updatedHtml).not.toContain('new-admin@tenant.test');
     expect(updatedHtml).toContain('new-member@tenant.test');
     expect(updatedHtml).not.toContain('inviteToken');
+  });
+
+  it('keeps lower B2B workspace navigation items visible without route-linked expansion and exposes a scrollable sidebar', () => {
+    const html = renderB2BShell();
+
+    expect(html).toContain('Catalog');
+    expect(html).toContain('Traceability');
+    expect(html).toContain('Audit Log');
+    expect(html).toContain('Trades');
+    expect(html).toContain('Members');
+    expect(html).toContain('sticky top-0 h-screen overflow-y-auto');
   });
 });

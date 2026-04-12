@@ -115,7 +115,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
 
   return (
     <div className="min-h-screen flex bg-slate-100 font-sans">
-      <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen">
+      <aside className="w-64 bg-slate-800 text-slate-300 hidden lg:flex flex-col p-6 sticky top-0 h-screen overflow-y-auto">
         <div className="mb-8 space-y-3">
           <PlatformSignature label={shellLabel} tone="dark" />
           {isVerificationBlocked ? (
