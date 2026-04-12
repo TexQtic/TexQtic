@@ -820,3 +820,291 @@ Layer 0 remains read-only.
 ### 22.7 final procedural verdict
 
 `WORK-ITEM-027-FULLY-CLOSED-PROCEDURALLY`
+
+## 23. runtime rejection confirmation - Work Item 028
+
+This section records the bounded runtime production confirmation pass for the non-pending rejection
+boundary of the already-implemented Work Item 025 resend slice only.
+
+### 23.1 preflight result
+
+Exact command run:
+
+`git diff --name-only; git status --short`
+
+Observed output:
+
+- no output
+- repo clean at start of the runtime pass
+
+### 23.2 exact files re-read in the runtime pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+4. `server/src/routes/tenant.ts`
+5. `services/tenantService.ts`
+6. `components/Tenant/TeamManagement.tsx`
+7. `tests/membership-authz.test.ts`
+8. `tests/runtime-verification-tenant-enterprise.test.ts`
+9. `App.tsx`
+10. `docs/ops/QA-TENANT-SEED-AND-RENAME-EXECUTION-PLAN-v1.md`
+
+### 23.3 exact runtime environment used
+
+Runtime environment used:
+
+- production UI at `https://tex-qtic.vercel.app/`
+- Visual Studio Code integrated browser session on Windows
+- current browser page id at execution time: `cf2e9481-d51a-46b7-b3fb-5b072bb72d4a`
+- no raw credential typing, pasting, replay, echoing, storage, or transformation was performed in
+  browser-reflective tooling
+
+Observed runtime page states during this pass:
+
+1. initial browser state before resumed handoff
+   - page title: `TexQtic Sign In`
+   - visible controls: `Tenant Access`, `Staff Control Plane`, `Secure Login`
+   - no active owner or admin tenant workspace was available in that initial page state
+2. resumed browser state after a later manual authenticated QA B2B handoff was restored
+   - page title: `QA B2B | TexQtic B2B Workspace`
+   - visible tenant selection: `QA B2B`
+   - visible actor label: `Alex Rivera`
+   - visible role label: `Administrator`
+   - visible route before Team Management: `Wholesale Catalog`
+
+### 23.4 exact files changed in this runtime pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 23.5 whether runtime mismatch or remaining validation gap was found
+
+No live prod-vs-repo mismatch was proven in this pass.
+
+The pass ended at partial evidence because the restored QA B2B runtime surface exposed only the
+shared `Pending Invitations` UI path, which explicitly hides accepted and expired invites.
+
+Remaining validation gaps:
+
+1. no accepted invite candidate was exercised
+2. no expired invite candidate was exercised
+3. the shared Team Management surface states `Accepted and expired invites are not shown.`, so the
+   non-pending rejection cases were not reachable through the visible resend UI path in the restored
+   QA B2B session
+4. no still-pending invite was re-exercised in this resumed continuation; prior success truth
+   remains recorded in Work Items 026 and 027
+
+### 23.6 exact runtime proof added
+
+The exact runtime proof added in this pass is:
+
+1. the initial production browser page did not contain a usable manual authenticated owner or admin
+   tenant handoff and instead resolved to `TexQtic Sign In`
+2. after a later manual QA B2B handoff was restored, the authenticated B2B workspace became reachable
+3. the restored QA B2B session successfully reached the `Members` route and Team Management surface
+4. the Pending Invitations panel rendered with a visible count badge of `1`
+5. the visible pending row `smoke-ui-pending-20260411-1532@texqtic-test.com` exposed `Resend Invite`
+   and `Cancel Invite`
+6. the panel explicitly stated `Accepted and expired invites are not shown.`
+7. no accepted or expired invite row was visible or exercisable through the resend UI path in this
+   restored QA B2B session
+8. no invite token, token hash, or other invite-secret material was visibly rendered in the UI
+9. no unexpected extra invite-row actions were visible beyond `Resend Invite` and `Cancel Invite`
+
+### 23.7 exact runtime checks run and results
+
+Exact runtime checks executed in this pass:
+
+1. confirm whether the current browser page already represented a manual authenticated owner or
+   admin production handoff
+   - result: unsuccessful for runtime execution
+   - observed title: `TexQtic Sign In`
+   - observed visible controls: `Tenant Access`, `Staff Control Plane`, `Secure Login`
+2. perform one bounded browser-history recovery check to see whether an authenticated workspace
+   state remained behind the sign-in page
+   - result: unsuccessful
+   - observed page state: `about:blank`
+   - no authenticated workspace was recovered
+3. restore the production app URL after the history check
+   - result: successful navigation but unsuccessful authentication recovery
+   - observed title after reload: `TexQtic Sign In`
+4. resume the pass after a later manual authenticated QA B2B handoff was restored
+   - result: successful
+   - observed title: `QA B2B | TexQtic B2B Workspace`
+   - observed tenant selection: `QA B2B`
+   - observed actor label: `Alex Rivera`
+   - observed role label: `Administrator`
+5. reach Team Management through the visible `👥 Members` workspace entry
+   - result: successful
+   - observed content heading: `Team Management`
+   - observed pending panel heading: `Pending Invitations`
+   - observed count badge: `1`
+6. inspect whether the restored UI path exposed any accepted or expired invite candidate
+   - result: unsuccessful for non-pending-case execution
+   - observed panel text: `Accepted and expired invites are not shown.`
+   - observed visible pending row: `smoke-ui-pending-20260411-1532@texqtic-test.com`
+   - observed visible actions: `Resend Invite` and `Cancel Invite`
+   - no accepted invite row visible
+   - no expired invite row visible
+7. determine which rejection cases were actually exercised in this pass
+   - accepted invite case exercised: no
+   - expired invite case exercised: no
+   - still-pending resend case re-exercised in this resumed continuation: no
+
+### 23.8 code-truth established
+
+Code-truth remains unchanged from Work Item 025.
+
+Repo-truth still states all of the following:
+
+1. resend is restricted to `OWNER` and `ADMIN`
+2. resend applies only to still-pending invites
+3. accepted and expired invites are rejected with `INVITE_NOT_PENDING`
+4. the shared Team Management UI renders only `Pending Invitations`, and the panel explicitly says
+   `Accepted and expired invites are not shown.`
+
+### 23.9 UI-truth established
+
+Only partial runtime UI truth was established in this pass.
+
+The exact UI truth established is:
+
+1. the current production browser page initially fell back to sign-in, but a later restored manual
+    QA B2B handoff made the authenticated resend UI path reachable again
+2. the restored QA B2B Team Management surface exposes only the `Pending Invitations` panel
+3. the panel explicitly states `Accepted and expired invites are not shown.`
+4. no accepted or expired invite rejection case was exercised in this pass
+5. no invite secret material was exposed in this pass
+6. no unexpected extra invite-row actions were visible beyond `Resend Invite` and `Cancel Invite`
+
+### 23.10 runtime production truth established
+
+No.
+
+Reason:
+
+- neither the accepted-invite rejection case nor the expired-invite rejection case was actually
+   exercised in runtime in this pass
+- the restored QA B2B UI path exposed only pending invites and explicitly did not surface accepted
+   or expired invites for resend interaction
+
+### 23.11 governance-state statement
+
+Governance state unchanged: yes.
+
+The downstream governance-family posture remains frozen under
+`HOLD-FOR-BOUNDARY-TIGHTENING`.
+
+Layer 0 remains read-only.
+
+### 23.12 implementation and commit disposition
+
+No code change was required.
+
+No new implementation commit was created in this runtime pass.
+
+This runtime pass required only bounded record update to this existing artifact.
+
+If an artifact-only closeout commit is later required for this runtime pass, that closeout remains
+separate from the current runtime confirmation pass.
+
+### 23.13 recording artifact path updated
+
+`governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 23.14 final git diff --name-only for this runtime pass
+
+Exact final diff output observed after the Work Item 028A artifact-only closeout commit:
+
+- no output
+- repo clean
+
+### 23.15 final git status --short for this runtime pass
+
+Exact final status output observed after the Work Item 028A artifact-only closeout commit:
+
+- no output
+- repo clean
+
+### 23.16 commit hash if any
+
+None.
+
+### 23.17 final runtime verdict for Work Item 028
+
+`WORK-ITEM-028-PARTIAL-RUNTIME-EVIDENCE-ONLY-NO-NON-PENDING-CASE-EXERCISED`
+
+Interpretation:
+
+- no accepted-invite rejection case was actually exercised
+- no expired-invite rejection case was actually exercised
+- no runtime prod-vs-repo mismatch was proven
+- after the manual QA B2B handoff was restored, the Team Management UI still exposed only pending
+   invites and explicitly did not show accepted or expired invites
+- no email-delivery claim is made in this pass
+
+## 24. closeout pass update - Work Item 028A
+
+This section records the bounded procedural closeout pass for Work Item 028 only.
+
+### 24.1 preflight result
+
+Exact command rerun:
+
+`git diff --name-only; git status --short`
+
+Observed output:
+
+- `warning: in the working copy of 'governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md', CRLF will be replaced by LF the next time Git touches it`
+- `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+- ` M governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 24.2 exact files re-read in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+
+### 24.3 exact files changed in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 24.4 whether the artifact was already final or required correction
+
+The artifact required correction.
+
+Reason:
+
+- the Work Item 028 partial-runtime-proof substance was already correct
+- sections 23.14 and 23.15 still reflected the modified-artifact pre-closeout state rather than
+  the final clean-repo outcome after artifact-only closeout
+- the final procedural closeout disposition for Work Item 028 was not yet recorded
+- section 23.16 correctly remains `None` because no runtime-record implementation commit existed
+  inside Work Item 028 itself
+
+### 24.5 exact disposition action taken
+
+The existing Work Item 025, Work Item 026, Work Item 027, and Work Item 028 substance was
+preserved unchanged.
+
+This closeout pass applied only the smallest procedural correction:
+
+1. corrected sections 23.14 and 23.15 to the final clean-repo state after the artifact-only
+   closeout commit
+2. preserved section 23.16 as `None`
+3. preserved the Work Item 028 outcome explicitly as partial runtime evidence only with no
+   non-pending case exercised
+4. added this closeout note
+
+### 24.6 governance-state statement
+
+Governance state unchanged: yes.
+
+The downstream governance-family posture remains frozen under
+`HOLD-FOR-BOUNDARY-TIGHTENING`.
+
+Layer 0 remains read-only.
+
+### 24.7 final procedural verdict
+
+`WORK-ITEM-028-FULLY-CLOSED-PROCEDURALLY`.
