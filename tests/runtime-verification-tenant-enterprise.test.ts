@@ -15,11 +15,17 @@ import {
   TeamManagementPendingInvitesPanel,
   canInviteMembers,
   removePendingInviteById,
+  replacePendingInviteById,
 } from '../components/Tenant/TeamManagement';
 import { B2BShell } from '../layouts/Shells';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
-import { getMemberships, revokePendingInvite, type MembershipsResponse } from '../services/tenantService';
+import {
+  getMemberships,
+  resendPendingInvite,
+  revokePendingInvite,
+  type MembershipsResponse,
+} from '../services/tenantService';
 import {
   createTradeEscrow,
   listTenantTrades,
@@ -225,15 +231,20 @@ function renderPendingInvitesPanel(
   response: MembershipsResponse,
   options: {
     canRevoke?: boolean;
+    canResend?: boolean;
     revokingInviteId?: string | null;
+    resendingInviteId?: string | null;
   } = {},
 ) {
   return renderToStaticMarkup(
     React.createElement(TeamManagementPendingInvitesPanel, {
       pendingInvites: response.pendingInvites,
       canRevoke: options.canRevoke,
+      canResend: options.canResend,
       revokingInviteId: options.revokingInviteId,
+      resendingInviteId: options.resendingInviteId,
       onRevoke: options.canRevoke ? vi.fn() : undefined,
+      onResend: options.canResend ? vi.fn() : undefined,
     }),
   );
 }
@@ -385,6 +396,21 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(tenantDeleteMock).toHaveBeenCalledWith('/api/tenant/memberships/invites/invite-1');
     expect(result).toEqual(response);
   });
+
+  it('uses the pending-invite resend endpoint and preserves the safe invite envelope', async () => {
+    const response = {
+      invite: {
+        ...makeMembershipsResponse().pendingInvites[0],
+        expiresAt: '2026-04-21T00:00:00.000Z',
+      },
+    };
+    tenantPostMock.mockResolvedValue(response);
+
+    const result = await resendPendingInvite('invite-1');
+
+    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/memberships/invites/invite-1/resend');
+    expect(result).toEqual(response);
+  });
 });
 
 describe('runtime verification - tenant membership pending invite surface', () => {
@@ -412,20 +438,44 @@ describe('runtime verification - tenant membership pending invite surface', () =
   });
 
   it('does not render revoke controls for non-writer invite rows', () => {
-    const html = renderPendingInvitesPanel(makeMembershipsResponse(), { canRevoke: false });
+    const html = renderPendingInvitesPanel(makeMembershipsResponse(), {
+      canRevoke: false,
+      canResend: false,
+    });
 
     expect(html).not.toContain('Cancel Invite');
     expect(html).not.toContain('Cancelling…');
+    expect(html).not.toContain('Resend Invite');
+    expect(html).not.toContain('Resending…');
+  });
+
+  it('renders writer resend controls and keeps the pending row while updating safe fields after resend', () => {
+    const response = makeMembershipsResponse();
+    const writerHtml = renderPendingInvitesPanel(response, { canRevoke: true, canResend: true });
+    const afterResend = {
+      ...response,
+      pendingInvites: replacePendingInviteById(response.pendingInvites, {
+        ...response.pendingInvites[0],
+        expiresAt: '2026-04-21T00:00:00.000Z',
+      }),
+    };
+    const updatedHtml = renderPendingInvitesPanel(afterResend, { canRevoke: true, canResend: true });
+
+    expect(writerHtml).toContain('Resend Invite');
+    expect(writerHtml).toContain('Cancel Invite');
+    expect(updatedHtml).toContain('new-admin@tenant.test');
+    expect(updatedHtml).toContain('Expires Apr 21, 2026');
+    expect(updatedHtml).not.toContain('inviteToken');
   });
 
   it('renders writer revoke controls and removes the revoked invite from the pending list state', () => {
     const response = makeMembershipsResponse();
-    const writerHtml = renderPendingInvitesPanel(response, { canRevoke: true });
+    const writerHtml = renderPendingInvitesPanel(response, { canRevoke: true, canResend: true });
     const afterRevoke = {
       ...response,
       pendingInvites: removePendingInviteById(response.pendingInvites, 'invite-1'),
     };
-    const updatedHtml = renderPendingInvitesPanel(afterRevoke, { canRevoke: true });
+    const updatedHtml = renderPendingInvitesPanel(afterRevoke, { canRevoke: true, canResend: true });
 
     expect(writerHtml).toContain('Cancel Invite');
     expect(updatedHtml).not.toContain('new-admin@tenant.test');

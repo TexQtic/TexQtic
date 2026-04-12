@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   getMemberships,
+  resendPendingInvite,
   revokePendingInvite,
   updateMembershipRole,
   type Membership,
@@ -20,9 +21,12 @@ interface TeamManagementProps {
 interface TeamManagementPendingInvitesPanelProps {
   readonly pendingInvites: PendingInvite[];
   readonly canRevoke?: boolean;
+  readonly canResend?: boolean;
   readonly revokingInviteId?: string | null;
-  readonly revokeError?: string | null;
+  readonly resendingInviteId?: string | null;
+  readonly inviteActionError?: string | null;
   readonly onRevoke?: (invite: PendingInvite) => void;
+  readonly onResend?: (invite: PendingInvite) => void;
 }
 
 export function canInviteMembers(userRole: string | null) {
@@ -41,16 +45,25 @@ export function removePendingInviteById(pendingInvites: PendingInvite[], inviteI
   return pendingInvites.filter(invite => invite.id !== inviteId);
 }
 
+export function replacePendingInviteById(pendingInvites: PendingInvite[], updatedInvite: PendingInvite) {
+  return pendingInvites.map(invite => (invite.id === updatedInvite.id ? updatedInvite : invite));
+}
+
 export function TeamManagementPendingInvitesPanel({
   pendingInvites,
   canRevoke = false,
+  canResend = false,
   revokingInviteId = null,
-  revokeError = null,
+  resendingInviteId = null,
+  inviteActionError = null,
   onRevoke,
+  onResend,
 }: TeamManagementPendingInvitesPanelProps) {
   if (pendingInvites.length === 0) {
     return null;
   }
+
+  const hasPendingInviteMutation = revokingInviteId !== null || resendingInviteId !== null;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -66,9 +79,9 @@ export function TeamManagementPendingInvitesPanel({
         </span>
       </div>
 
-      {revokeError && (
+      {inviteActionError && (
         <div className="px-6 py-3 border-b border-rose-200 bg-rose-50 text-xs text-rose-700">
-          {revokeError}
+          {inviteActionError}
         </div>
       )}
 
@@ -85,11 +98,21 @@ export function TeamManagementPendingInvitesPanel({
               <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-100 text-slate-500">
                 {invite.role}
               </span>
+              {canResend && onResend && (
+                <button
+                  type="button"
+                  onClick={() => onResend(invite)}
+                  disabled={hasPendingInviteMutation}
+                  className="text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:underline disabled:cursor-not-allowed disabled:text-slate-300"
+                >
+                  {resendingInviteId === invite.id ? 'Resending…' : 'Resend Invite'}
+                </button>
+              )}
               {canRevoke && onRevoke && (
                 <button
                   type="button"
                   onClick={() => onRevoke(invite)}
-                  disabled={revokingInviteId !== null}
+                  disabled={hasPendingInviteMutation}
                   className="text-[10px] font-bold uppercase tracking-wider text-rose-600 hover:underline disabled:cursor-not-allowed disabled:text-rose-300"
                 >
                   {revokingInviteId === invite.id ? 'Cancelling…' : 'Cancel Invite'}
@@ -117,12 +140,13 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const [mutating, setMutating] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
-  const [pendingInviteError, setPendingInviteError] = useState<string | null>(null);
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [pendingInviteActionError, setPendingInviteActionError] = useState<string | null>(null);
 
   const fetchMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setPendingInviteError(null);
+    setPendingInviteActionError(null);
     try {
       const [membersRes, meRes] = await Promise.all([
         getMemberships(),
@@ -196,7 +220,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   };
 
   const handlePendingInviteRevoke = async (invite: PendingInvite) => {
-    setPendingInviteError(null);
+    setPendingInviteActionError(null);
     setRevokingInviteId(invite.id);
 
     try {
@@ -204,12 +228,30 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
       setPendingInvites(currentInvites => removePendingInviteById(currentInvites, invite.id));
     } catch (err) {
       if (err instanceof APIError) {
-        setPendingInviteError(err.message);
+        setPendingInviteActionError(err.message);
       } else {
-        setPendingInviteError('Failed to cancel invite. Please try again.');
+        setPendingInviteActionError('Failed to cancel invite. Please try again.');
       }
     } finally {
       setRevokingInviteId(null);
+    }
+  };
+
+  const handlePendingInviteResend = async (invite: PendingInvite) => {
+    setPendingInviteActionError(null);
+    setResendingInviteId(invite.id);
+
+    try {
+      const response = await resendPendingInvite(invite.id);
+      setPendingInvites(currentInvites => replacePendingInviteById(currentInvites, response.invite));
+    } catch (err) {
+      if (err instanceof APIError) {
+        setPendingInviteActionError(err.message);
+      } else {
+        setPendingInviteActionError('Failed to resend invite. Please try again.');
+      }
+    } finally {
+      setResendingInviteId(null);
     }
   };
 
@@ -308,9 +350,12 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
         <TeamManagementPendingInvitesPanel
           pendingInvites={pendingInvites}
           canRevoke={canInvite}
+          canResend={canInvite}
           revokingInviteId={revokingInviteId}
-          revokeError={pendingInviteError}
+          resendingInviteId={resendingInviteId}
+          inviteActionError={pendingInviteActionError}
           onRevoke={handlePendingInviteRevoke}
+          onResend={handlePendingInviteResend}
         />
       )}
 

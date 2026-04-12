@@ -532,6 +532,128 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * POST /api/tenant/memberships/invites/:id/resend
+   * Resend a still-pending invite for the current tenant.
+   * Requires OWNER or ADMIN role.
+   */
+  fastify.post(
+    '/tenant/memberships/invites/:id/resend',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+        return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+      }
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const paramsSchema = z.object({ id: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      const { id: inviteId } = paramsResult.data;
+      const now = new Date();
+      const crypto = await import('node:crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        const existingInvite = await tx.invite.findFirst({
+          where: {
+            id: inviteId,
+            tenantId: dbContext.orgId,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            acceptedAt: true,
+            expiresAt: true,
+            createdAt: true,
+          },
+        });
+
+        if (!existingInvite) {
+          return { error: 'INVITE_NOT_FOUND' as const };
+        }
+
+        if (existingInvite.acceptedAt !== null || existingInvite.expiresAt <= now) {
+          return { error: 'INVITE_NOT_PENDING' as const };
+        }
+
+        const resentInvite = await tx.invite.update({
+          where: { id: existingInvite.id },
+          data: {
+            tokenHash,
+            expiresAt,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            expiresAt: true,
+            createdAt: true,
+          },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'member.invite.resent',
+          entity: 'invite',
+          entityId: existingInvite.id,
+          metadataJson: {
+            email: existingInvite.email,
+            role: existingInvite.role,
+          },
+        });
+
+        return { invite: resentInvite };
+      });
+
+      if ('error' in result) {
+        if (result.error === 'INVITE_NOT_FOUND') {
+          return sendNotFound(reply, 'Invite not found');
+        }
+
+        if (result.error === 'INVITE_NOT_PENDING') {
+          return sendError(reply, 'INVITE_NOT_PENDING', 'Only pending invites can be resent', 409);
+        }
+      }
+
+      try {
+        let orgDisplayName = 'your organization';
+        const org = await getOrganizationIdentity(dbContext.orgId, prisma);
+        orgDisplayName = org.legal_name;
+
+        await sendInviteMemberEmail(
+          result.invite.email,
+          token,
+          orgDisplayName,
+          {
+            tenantId: dbContext.orgId,
+            triggeredBy: 'user',
+            actorId: userId ?? null,
+          }
+        );
+      } catch (emailErr) {
+        fastify.log.error({ err: emailErr }, '[Invite Resend] Email send failed (non-fatal)');
+      }
+
+      return sendSuccess(reply, { invite: result.invite });
+    }
+  );
+
+  /**
    * DELETE /api/tenant/memberships/invites/:id
    * Revoke/cancel a still-pending invite for the current tenant.
    * Requires OWNER or ADMIN role.

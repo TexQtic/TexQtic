@@ -129,12 +129,24 @@ export interface RevokePendingInviteResponse {
   deleted: string;
 }
 
+export interface ResendPendingInviteResponse {
+  invite: PendingInvite;
+}
+
 /**
  * Revoke/cancel a still-pending tenant invite.
  * Requires OWNER or ADMIN role.
  */
 export async function revokePendingInvite(id: string): Promise<RevokePendingInviteResponse> {
   return tenantDelete<RevokePendingInviteResponse>(`/api/tenant/memberships/invites/${id}`);
+}
+
+/**
+ * Resend a still-pending tenant invite and extend its expiry window.
+ * Requires OWNER or ADMIN role.
+ */
+export async function resendPendingInvite(id: string): Promise<ResendPendingInviteResponse> {
+  return tenantPost<ResendPendingInviteResponse>(`/api/tenant/memberships/invites/${id}/resend`);
 }
 
 // ==================== MEMBERSHIP ROLE UPDATE ====================
