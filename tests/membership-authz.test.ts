@@ -4,6 +4,8 @@
  * Purpose: Verify that the GET /api/tenant/memberships authorization rule
  * permits OWNER, ADMIN, and MEMBER roles — and denies VIEWER,
  * and that POST (invite creation) is restricted to OWNER and ADMIN actors
+ * and that DELETE pending-invite revocation is restricted to OWNER and ADMIN actors
+ * while allowing only still-pending invites to be revoked,
  * while rejecting VIEWER as an invite target role, and that PATCH role
  * transitions enforce OWNER-only mutation, disallowed transition errors,
  * same-org target scoping, and the sole-OWNER invariant.
@@ -151,6 +153,61 @@ function evaluateMembershipInviteIssuance(options: {
         email,
         role: safeRole,
       },
+    },
+  };
+}
+
+type PendingInviteRevocationOutcome =
+  | {
+      allowed: true;
+      response: {
+        deleted: string;
+      };
+    }
+  | {
+      allowed: false;
+      error: 'UNAUTHORIZED' | 'FORBIDDEN' | 'INVITE_NOT_FOUND' | 'INVITE_NOT_PENDING';
+    };
+
+function evaluatePendingInviteRevocation(options: {
+  actorRole: MembershipRole;
+  hasDbContext: boolean;
+  targetVisibleToOrg: boolean;
+  acceptedAt: Date | null;
+  expiresAt: Date;
+  now: Date;
+  inviteId: string;
+}): PendingInviteRevocationOutcome {
+  const {
+    actorRole,
+    hasDbContext,
+    targetVisibleToOrg,
+    acceptedAt,
+    expiresAt,
+    now,
+    inviteId,
+  } = options;
+
+  if (!hasDbContext) {
+    return { allowed: false, error: 'UNAUTHORIZED' };
+  }
+
+  if (actorRole !== 'OWNER' && actorRole !== 'ADMIN') {
+    return { allowed: false, error: 'FORBIDDEN' };
+  }
+
+  if (!targetVisibleToOrg) {
+    return { allowed: false, error: 'INVITE_NOT_FOUND' };
+  }
+
+  if (acceptedAt !== null || expiresAt <= now) {
+    return { allowed: false, error: 'INVITE_NOT_PENDING' };
+  }
+
+  return {
+    allowed: true,
+    response: {
+      deleted: inviteId,
     },
   };
 }
@@ -378,6 +435,111 @@ describe('POST /api/tenant/memberships — invite issuance artifact contract', (
         issuedAt: new Date('2026-04-10T00:00:00.000Z'),
       })
     ).toEqual({ allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' });
+  });
+});
+
+describe('DELETE /api/tenant/memberships/invites/:id — pending invite revoke contract', () => {
+  const now = new Date('2026-04-12T00:00:00.000Z');
+
+  it('permits OWNER and ADMIN to revoke a current pending invite', () => {
+    for (const actorRole of ['OWNER', 'ADMIN'] as const) {
+      expect(
+        evaluatePendingInviteRevocation({
+          actorRole,
+          hasDbContext: true,
+          targetVisibleToOrg: true,
+          acceptedAt: null,
+          expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+          now,
+          inviteId: 'invite-uuid-5',
+        })
+      ).toEqual({
+        allowed: true,
+        response: {
+          deleted: 'invite-uuid-5',
+        },
+      });
+    }
+  });
+
+  it('denies MEMBER and VIEWER actors from revoking pending invites', () => {
+    expect(
+      evaluatePendingInviteRevocation({
+        actorRole: 'MEMBER',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        now,
+        inviteId: 'invite-uuid-6',
+      })
+    ).toEqual({ allowed: false, error: 'FORBIDDEN' });
+
+    expect(
+      evaluatePendingInviteRevocation({
+        actorRole: 'VIEWER',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        now,
+        inviteId: 'invite-uuid-7',
+      })
+    ).toEqual({ allowed: false, error: 'FORBIDDEN' });
+  });
+
+  it('rejects missing database context or out-of-org invite targets', () => {
+    expect(
+      evaluatePendingInviteRevocation({
+        actorRole: 'OWNER',
+        hasDbContext: false,
+        targetVisibleToOrg: true,
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        now,
+        inviteId: 'invite-uuid-8',
+      })
+    ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
+
+    expect(
+      evaluatePendingInviteRevocation({
+        actorRole: 'OWNER',
+        hasDbContext: true,
+        targetVisibleToOrg: false,
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        now,
+        inviteId: 'invite-uuid-9',
+      })
+    ).toEqual({ allowed: false, error: 'INVITE_NOT_FOUND' });
+  });
+
+  it('rejects accepted invites from this revoke path', () => {
+    expect(
+      evaluatePendingInviteRevocation({
+        actorRole: 'ADMIN',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        acceptedAt: new Date('2026-04-11T12:00:00.000Z'),
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        now,
+        inviteId: 'invite-uuid-10',
+      })
+    ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
+  });
+
+  it('rejects expired invites from this revoke path', () => {
+    expect(
+      evaluatePendingInviteRevocation({
+        actorRole: 'ADMIN',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-11T23:59:59.000Z'),
+        now,
+        inviteId: 'invite-uuid-11',
+      })
+    ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
   });
 });
 

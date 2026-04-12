@@ -8,7 +8,7 @@
  */
 
 import { post } from './apiClient';
-import { tenantGet, tenantPost, tenantPut, tenantPatch } from './tenantApiClient';
+import { tenantDelete, tenantGet, tenantPost, tenantPut, tenantPatch } from './tenantApiClient';
 
 // ==================== ACTIVATION ====================
 
@@ -123,6 +123,18 @@ export async function createMembership(
   request: CreateMembershipRequest
 ): Promise<CreateMembershipResponse> {
   return tenantPost<CreateMembershipResponse>('/api/tenant/memberships', request);
+}
+
+export interface RevokePendingInviteResponse {
+  deleted: string;
+}
+
+/**
+ * Revoke/cancel a still-pending tenant invite.
+ * Requires OWNER or ADMIN role.
+ */
+export async function revokePendingInvite(id: string): Promise<RevokePendingInviteResponse> {
+  return tenantDelete<RevokePendingInviteResponse>(`/api/tenant/memberships/invites/${id}`);
 }
 
 // ==================== MEMBERSHIP ROLE UPDATE ====================

@@ -532,6 +532,93 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * DELETE /api/tenant/memberships/invites/:id
+   * Revoke/cancel a still-pending invite for the current tenant.
+   * Requires OWNER or ADMIN role.
+   */
+  fastify.delete(
+    '/tenant/memberships/invites/:id',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+        return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+      }
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const paramsSchema = z.object({ id: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      const { id: inviteId } = paramsResult.data;
+      const now = new Date();
+
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        const existingInvite = await tx.invite.findFirst({
+          where: {
+            id: inviteId,
+            tenantId: dbContext.orgId,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            acceptedAt: true,
+            expiresAt: true,
+          },
+        });
+
+        if (!existingInvite) {
+          return { error: 'INVITE_NOT_FOUND' as const };
+        }
+
+        if (existingInvite.acceptedAt !== null || existingInvite.expiresAt <= now) {
+          return { error: 'INVITE_NOT_PENDING' as const };
+        }
+
+        await tx.invite.delete({
+          where: { id: existingInvite.id },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'member.invite.revoked',
+          entity: 'invite',
+          entityId: existingInvite.id,
+          metadataJson: {
+            email: existingInvite.email,
+            role: existingInvite.role,
+          },
+        });
+
+        return { deleted: existingInvite.id };
+      });
+
+      if ('error' in result) {
+        if (result.error === 'INVITE_NOT_FOUND') {
+          return sendNotFound(reply, 'Invite not found');
+        }
+
+        if (result.error === 'INVITE_NOT_PENDING') {
+          return sendError(reply, 'INVITE_NOT_PENDING', 'Only pending invites can be revoked', 409);
+        }
+      }
+
+      return sendSuccess(reply, { deleted: result.deleted });
+    }
+  );
+
+  /**
    * PATCH /api/tenant/memberships/:id
    * Update the role of an existing tenant membership (TECS-FBW-012)
    *

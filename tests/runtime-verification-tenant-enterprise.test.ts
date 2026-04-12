@@ -11,10 +11,14 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
-import { TeamManagementPendingInvitesPanel, canInviteMembers } from '../components/Tenant/TeamManagement';
+import {
+  TeamManagementPendingInvitesPanel,
+  canInviteMembers,
+  removePendingInviteById,
+} from '../components/Tenant/TeamManagement';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
-import { getMemberships, type MembershipsResponse } from '../services/tenantService';
+import { getMemberships, revokePendingInvite, type MembershipsResponse } from '../services/tenantService';
 import {
   createTradeEscrow,
   listTenantTrades,
@@ -22,8 +26,9 @@ import {
   type TenantTradesListResponse,
 } from '../services/tradeService';
 import { listEdges, listNodes, type EdgeListResponse, type NodeListResponse } from '../services/traceabilityService';
-import { tenantGet, tenantPost } from '../services/tenantApiClient';
+import { tenantDelete, tenantGet, tenantPost } from '../services/tenantApiClient';
 
+const tenantDeleteMock = vi.mocked(tenantDelete);
 const tenantGetMock = vi.mocked(tenantGet);
 const tenantPostMock = vi.mocked(tenantPost);
 
@@ -191,16 +196,26 @@ function makeMembershipsResponse(): MembershipsResponse {
   };
 }
 
-function renderPendingInvitesPanel(response: MembershipsResponse) {
+function renderPendingInvitesPanel(
+  response: MembershipsResponse,
+  options: {
+    canRevoke?: boolean;
+    revokingInviteId?: string | null;
+  } = {},
+) {
   return renderToStaticMarkup(
     React.createElement(TeamManagementPendingInvitesPanel, {
       pendingInvites: response.pendingInvites,
+      canRevoke: options.canRevoke,
+      revokingInviteId: options.revokingInviteId,
+      onRevoke: options.canRevoke ? vi.fn() : undefined,
     }),
   );
 }
 
 describe('runtime verification - tenant enterprise service contracts', () => {
   beforeEach(() => {
+    tenantDeleteMock.mockReset();
     tenantGetMock.mockReset();
     tenantPostMock.mockReset();
   });
@@ -302,6 +317,16 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(result.pendingInvites[0].email).toBe('new-admin@tenant.test');
     expect(result.pendingInvites[1].role).toBe('MEMBER');
   });
+
+  it('uses the pending-invite revoke endpoint and preserves the delete envelope', async () => {
+    const response = { deleted: 'invite-1' };
+    tenantDeleteMock.mockResolvedValue(response);
+
+    const result = await revokePendingInvite('invite-1');
+
+    expect(tenantDeleteMock).toHaveBeenCalledWith('/api/tenant/memberships/invites/invite-1');
+    expect(result).toEqual(response);
+  });
 });
 
 describe('runtime verification - tenant membership pending invite surface', () => {
@@ -326,5 +351,27 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(html.indexOf('new-admin@tenant.test')).toBeLessThan(html.indexOf('new-member@tenant.test'));
     expect(html).not.toContain('tokenHash');
     expect(html).not.toContain('inviteToken');
+  });
+
+  it('does not render revoke controls for non-writer invite rows', () => {
+    const html = renderPendingInvitesPanel(makeMembershipsResponse(), { canRevoke: false });
+
+    expect(html).not.toContain('Cancel Invite');
+    expect(html).not.toContain('Cancelling…');
+  });
+
+  it('renders writer revoke controls and removes the revoked invite from the pending list state', () => {
+    const response = makeMembershipsResponse();
+    const writerHtml = renderPendingInvitesPanel(response, { canRevoke: true });
+    const afterRevoke = {
+      ...response,
+      pendingInvites: removePendingInviteById(response.pendingInvites, 'invite-1'),
+    };
+    const updatedHtml = renderPendingInvitesPanel(afterRevoke, { canRevoke: true });
+
+    expect(writerHtml).toContain('Cancel Invite');
+    expect(updatedHtml).not.toContain('new-admin@tenant.test');
+    expect(updatedHtml).toContain('new-member@tenant.test');
+    expect(updatedHtml).not.toContain('inviteToken');
   });
 });

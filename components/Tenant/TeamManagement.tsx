@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   getMemberships,
+  revokePendingInvite,
   updateMembershipRole,
   type Membership,
   type PendingInvite,
@@ -18,6 +19,10 @@ interface TeamManagementProps {
 
 interface TeamManagementPendingInvitesPanelProps {
   readonly pendingInvites: PendingInvite[];
+  readonly canRevoke?: boolean;
+  readonly revokingInviteId?: string | null;
+  readonly revokeError?: string | null;
+  readonly onRevoke?: (invite: PendingInvite) => void;
 }
 
 export function canInviteMembers(userRole: string | null) {
@@ -32,8 +37,16 @@ function formatPendingInviteExpiry(expiresAt: string) {
   });
 }
 
+export function removePendingInviteById(pendingInvites: PendingInvite[], inviteId: string) {
+  return pendingInvites.filter(invite => invite.id !== inviteId);
+}
+
 export function TeamManagementPendingInvitesPanel({
   pendingInvites,
+  canRevoke = false,
+  revokingInviteId = null,
+  revokeError = null,
+  onRevoke,
 }: TeamManagementPendingInvitesPanelProps) {
   if (pendingInvites.length === 0) {
     return null;
@@ -53,6 +66,12 @@ export function TeamManagementPendingInvitesPanel({
         </span>
       </div>
 
+      {revokeError && (
+        <div className="px-6 py-3 border-b border-rose-200 bg-rose-50 text-xs text-rose-700">
+          {revokeError}
+        </div>
+      )}
+
       <div className="divide-y divide-slate-100">
         {pendingInvites.map(invite => (
           <div key={invite.id} className="px-6 py-4 flex items-center justify-between gap-4">
@@ -62,9 +81,21 @@ export function TeamManagementPendingInvitesPanel({
                 Expires {formatPendingInviteExpiry(invite.expiresAt)}
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-100 text-slate-500">
-              {invite.role}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-100 text-slate-500">
+                {invite.role}
+              </span>
+              {canRevoke && onRevoke && (
+                <button
+                  type="button"
+                  onClick={() => onRevoke(invite)}
+                  disabled={revokingInviteId !== null}
+                  className="text-[10px] font-bold uppercase tracking-wider text-rose-600 hover:underline disabled:cursor-not-allowed disabled:text-rose-300"
+                >
+                  {revokingInviteId === invite.id ? 'Cancelling…' : 'Cancel Invite'}
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -85,10 +116,13 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const [selectedRole, setSelectedRole] = useState<EditableRole | null>(null);
   const [mutating, setMutating] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
+  const [pendingInviteError, setPendingInviteError] = useState<string | null>(null);
 
   const fetchMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setPendingInviteError(null);
     try {
       const [membersRes, meRes] = await Promise.all([
         getMemberships(),
@@ -158,6 +192,24 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
         setMutationError('Failed to update role. Please try again.');
       }
       setMutating(false);
+    }
+  };
+
+  const handlePendingInviteRevoke = async (invite: PendingInvite) => {
+    setPendingInviteError(null);
+    setRevokingInviteId(invite.id);
+
+    try {
+      await revokePendingInvite(invite.id);
+      setPendingInvites(currentInvites => removePendingInviteById(currentInvites, invite.id));
+    } catch (err) {
+      if (err instanceof APIError) {
+        setPendingInviteError(err.message);
+      } else {
+        setPendingInviteError('Failed to cancel invite. Please try again.');
+      }
+    } finally {
+      setRevokingInviteId(null);
     }
   };
 
@@ -253,7 +305,13 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
       )}
 
       {!loading && !error && (
-        <TeamManagementPendingInvitesPanel pendingInvites={pendingInvites} />
+        <TeamManagementPendingInvitesPanel
+          pendingInvites={pendingInvites}
+          canRevoke={canInvite}
+          revokingInviteId={revokingInviteId}
+          revokeError={pendingInviteError}
+          onRevoke={handlePendingInviteRevoke}
+        />
       )}
 
       {/* Role Edit Modal */}
