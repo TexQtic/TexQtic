@@ -312,3 +312,105 @@ Layer 0 remains read-only.
 ### 18.8 final procedural verdict
 
 `WORK-ITEM-029-FULLY-CLOSED-PROCEDURALLY`
+
+## 19. closeout pass update - Work Item 030A
+
+This section records the bounded procedural closeout pass for Work Item 030 only.
+
+### 19.1 preflight result
+
+Exact command rerun:
+
+`git diff --name-only; git status --short`
+
+Observed output:
+
+- no output
+- repo clean at start of the closeout pass
+
+### 19.2 exact files re-read in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-029-2026-04-12.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+
+### 19.3 exact files changed in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-029-2026-04-12.md`
+
+### 19.4 whether the artifact was already final or required correction
+
+The artifact required correction.
+
+Reason:
+
+- the Work Item 029 implementation substance and Work Item 029A procedural closeout were already
+   correct
+- the later Work Item 030 runtime production truth had been established but was not yet recorded in
+   this artifact
+- the final procedural disposition for Work Item 030 was not yet recorded
+- the deferred modal-default footgun observation was not yet preserved in repo truth
+
+### 19.5 exact Work Item 030 runtime proof preserved
+
+The following already-executed Work Item 030 runtime truth is preserved here unchanged:
+
+1. Team Management was reachable in the QA B2B owner/admin session
+2. the pending invite row exposed `Edit Invite`, `Resend Invite`, and `Cancel Invite`
+3. the role-only edit modal opened for the pending invite row
+4. a `MEMBER` pending invite was successfully updated to `ADMIN`
+5. the invite row remained in place and the visible role updated in place
+6. the invite was restored from `ADMIN` back to `MEMBER`
+7. no email-edit surface or expiry-edit surface was exposed in the observed modal
+8. no invite secret material was shown in the observed runtime path
+
+No broader invite-lifecycle, email-delivery, privilege-model, or modal redesign truth is claimed
+in this closeout pass.
+
+### 19.6 exact disposition action taken
+
+The existing Work Item 029 and Work Item 030 substance was preserved unchanged.
+
+This closeout pass applied only the smallest procedural correction:
+
+1. recorded the already-established Work Item 030 runtime production truth in this existing artifact
+2. recorded the final procedural closeout disposition for Work Item 030
+3. preserved one deferred carry-forward note for the modal-default footgun observation only
+4. preserved the clean-repo outcome for this artifact-only closeout pass
+
+### 19.7 deferred carry-forward note
+
+The following observation is preserved here as deferred carry-forward only:
+
+- the role-edit modal currently auto-preselects an alternate role on open
+- in the observed runtime case, a `MEMBER` invite opened with `OWNER` preselected
+- this is a privilege-escalation footgun candidate
+- if still needed later, it should be evaluated as a separate bounded follow-up
+- it is intentionally deferred and not patched in this pass
+
+### 19.8 governance-state statement
+
+Governance state unchanged: yes.
+
+The downstream governance-family posture remains frozen under
+`HOLD-FOR-BOUNDARY-TIGHTENING`.
+
+Layer 0 remains read-only.
+
+### 19.9 final git diff --name-only
+
+Exact final diff output observed after the Work Item 030A artifact closeout commit:
+
+- no output
+- repo clean
+
+### 19.10 final git status --short
+
+Exact final status output observed after the Work Item 030A artifact closeout commit:
+
+- no output
+- repo clean
+
+### 19.11 final procedural verdict
+
+`WORK-ITEM-030-FULLY-CLOSED-PROCEDURALLY`
