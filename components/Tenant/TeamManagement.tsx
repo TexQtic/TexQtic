@@ -15,6 +15,11 @@ import { APIError } from '../../services/apiClient';
 type EditableRole = 'OWNER' | 'ADMIN' | 'MEMBER';
 const ALL_EDITABLE_ROLES: EditableRole[] = ['OWNER', 'ADMIN', 'MEMBER'];
 
+// Safe default: require an explicit role choice before enabling save.
+export function getInitialRoleSelection(): EditableRole | null {
+  return null;
+}
+
 interface TeamManagementProps {
   readonly onInvite?: () => void;
 }
@@ -35,6 +40,19 @@ interface TeamManagementPendingInvitesPanelProps {
 
 export function canInviteMembers(userRole: string | null) {
   return userRole === 'OWNER' || userRole === 'ADMIN';
+}
+
+export function getValidNextRoles(
+  target: Pick<Membership, 'role' | 'userId'>,
+  currentUserId: string | null,
+): EditableRole[] {
+  if (target.role === 'VIEWER') return [];
+  if (target.role === 'OWNER' && target.userId !== currentUserId) return [];
+  return ALL_EDITABLE_ROLES.filter(r => r !== (target.role as EditableRole));
+}
+
+export function getValidInviteRoles(invite: Pick<PendingInvite, 'role'>): EditableRole[] {
+  return ALL_EDITABLE_ROLES.filter(role => role !== invite.role);
 }
 
 function formatPendingInviteExpiry(expiresAt: string) {
@@ -198,33 +216,20 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const hasPendingInvites = pendingInvites.length > 0;
   const canInvite = canInviteMembers(userRole);
 
-  // Returns the roles this member can be moved to (empty = no edit button).
-  // VIEWER source: VIEWER_TRANSITION_OUT_OF_SCOPE on backend; we hide early.
-  // Peer-OWNER target: PEER_OWNER_DEMOTION_FORBIDDEN on backend; we hide early.
-  const getValidNextRoles = (target: Membership): EditableRole[] => {
-    if (target.role === 'VIEWER') return [];
-    if (target.role === 'OWNER' && target.userId !== currentUserId) return [];
-    return ALL_EDITABLE_ROLES.filter(r => r !== (target.role as EditableRole));
-  };
-
   const openEditModal = (m: Membership) => {
-    const valid = getValidNextRoles(m);
+    const valid = getValidNextRoles(m, currentUserId);
     if (valid.length === 0) return;
     setEditTarget(m);
-    setSelectedRole(valid[0]);
+    setSelectedRole(getInitialRoleSelection());
     setMutationError(null);
     setMutating(false);
-  };
-
-  const getValidInviteRoles = (invite: PendingInvite): EditableRole[] => {
-    return ALL_EDITABLE_ROLES.filter(role => role !== invite.role);
   };
 
   const openEditInviteModal = (invite: PendingInvite) => {
     const valid = getValidInviteRoles(invite);
     if (valid.length === 0) return;
     setEditInviteTarget(invite);
-    setSelectedInviteRole(valid[0]);
+    setSelectedInviteRole(getInitialRoleSelection());
     setEditInviteError(null);
     setPendingInviteActionError(null);
   };
@@ -324,7 +329,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
     (selectedRole === 'ADMIN' || selectedRole === 'MEMBER');
   const isSoleOwnerSelfDowngrade = isSelfDowngrade && ownerCount <= 1;
   const isPromoteToOwner = selectedRole === 'OWNER';
-  const validNextRoles = editTarget ? getValidNextRoles(editTarget) : [];
+  const validNextRoles = editTarget ? getValidNextRoles(editTarget, currentUserId) : [];
   const isInvitePromoteToOwner = selectedInviteRole === 'OWNER';
   const validInviteRoles = editInviteTarget ? getValidInviteRoles(editInviteTarget) : [];
 
@@ -372,7 +377,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {members.map((m) => {
-                const isEditable = userRole === 'OWNER' && getValidNextRoles(m).length > 0;
+                const isEditable = userRole === 'OWNER' && getValidNextRoles(m, currentUserId).length > 0;
                 return (
                   <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">

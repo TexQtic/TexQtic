@@ -14,6 +14,9 @@ import { listCertifications, type ListCertificationsResponse } from '../services
 import {
   TeamManagementPendingInvitesPanel,
   canInviteMembers,
+  getInitialRoleSelection,
+  getValidInviteRoles,
+  getValidNextRoles,
   removePendingInviteById,
   replacePendingInviteById,
 } from '../components/Tenant/TeamManagement';
@@ -491,6 +494,22 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(updatedHtml).toContain('OWNER');
     expect(updatedHtml).not.toContain('inviteToken');
     expect(updatedHtml).not.toContain('tokenHash');
+  });
+
+  it('requires an explicit role choice before either role-edit modal can save', () => {
+    const response = makeMembershipsResponse();
+
+    expect(getValidInviteRoles(response.pendingInvites[1])).toEqual(['OWNER', 'ADMIN']);
+    expect(
+      getValidNextRoles(
+        {
+          role: 'ADMIN',
+          userId: 'user-2',
+        },
+        'user-1',
+      ),
+    ).toEqual(['OWNER', 'MEMBER']);
+    expect(getInitialRoleSelection()).toBeNull();
   });
 
   it('renders writer resend controls and keeps the pending row while updating safe fields after resend', () => {
