@@ -542,3 +542,281 @@ Layer 0 remains read-only.
 ### 20.7 final procedural verdict
 
 `WORK-ITEM-026-FULLY-CLOSED-PROCEDURALLY`
+
+## 21. runtime production confirmation - Work Item 027
+
+This section records the bounded runtime production confirmation pass for the already-implemented
+Work Item 025 resend slice on the QA WL owner or admin path only.
+
+### 21.1 preflight result
+
+Exact command run:
+
+`git diff --name-only; git status --short`
+
+Observed output:
+
+- no output
+- repo clean at start of the runtime pass
+
+### 21.2 exact files re-read in the runtime pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+4. `server/src/routes/tenant.ts`
+5. `services/tenantService.ts`
+6. `components/Tenant/TeamManagement.tsx`
+7. `tests/membership-authz.test.ts`
+8. `tests/runtime-verification-tenant-enterprise.test.ts`
+9. `App.tsx`
+10. `docs/ops/QA-TENANT-SEED-AND-RENAME-EXECUTION-PLAN-v1.md`
+
+### 21.3 exact runtime environment used
+
+Runtime environment used:
+
+- production UI at `https://tex-qtic.vercel.app/`
+- Visual Studio Code integrated browser session on Windows
+- manually authenticated `QA WL` owner or admin session already present in the browser at the
+  start of the pass
+- active authenticated shell family: WL admin overlay
+- no raw credential typing, pasting, replay, echoing, storage, or transformation was performed in
+  browser-reflective tooling
+
+Observed authenticated runtime posture before the resend check:
+
+- page title before navigation: `Store Profile | QA WL Admin`
+- visible tenant selection: `QA WL`
+- visible shell label: `Store Admin`
+- visible active route before Team Management: `Store Profile`
+
+### 21.4 exact files changed in this runtime pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 21.5 whether runtime mismatch or remaining validation gap was found
+
+No runtime mismatch was found in the exact resend slice exercised in this pass.
+
+Remaining validation gaps:
+
+1. no mailbox, email inbox, SMTP event stream, or other direct delivery evidence was safely
+   observed, so no mailbox-delivery truth is claimed
+2. no visible safe-field change was observed after resend in this QA WL pass because the rendered
+   expiry remained `Expires Apr 19, 2026` both before and after the resend action
+
+Interpretation of the second gap:
+
+- this does not by itself prove a mismatch
+- the resend action still completed without visible error, the pending row remained in place, and
+  the action controls returned to the settled state
+- the most likely bounded explanation is that the timestamp rotation and extension remained within
+  the same rendered calendar-date bucket used by the UI formatter
+
+### 21.6 exact runtime proof added
+
+The exact runtime proof added in this pass is:
+
+1. an authenticated `QA WL` WL-admin session successfully reached the `Staff` route and Team
+   Management surface
+2. the Pending Invitations panel rendered with a visible count badge of `1`
+3. the visible pending row `hello@texqtic.com` exposed both `Resend Invite` and `Cancel Invite`
+   for the authorized writer
+4. clicking `Resend Invite` entered the in-flight `Resending…` state and disabled `Cancel Invite`
+5. the invite row remained in place during the resend action and after the resend completed
+6. the row returned to the settled post-action state with `Resend Invite` and `Cancel Invite`
+   visible again and no visible error banner
+7. the safe visible expiry field remained `Expires Apr 19, 2026` before and after the resend action
+8. no invite token, token hash, or other invite-secret material was visibly rendered in the UI
+9. no unexpected extra invite-row actions appeared during this pass beyond `Resend Invite` and
+   `Cancel Invite`
+10. no mailbox-delivery truth is claimed
+
+### 21.7 exact runtime checks run and results
+
+Exact runtime checks executed in this pass:
+
+1. confirm authenticated `QA WL` workspace reachability
+   - result: successful
+   - observed title: `Store Profile | QA WL Admin`
+   - observed tenant selection: `QA WL`
+   - observed shell label: `Store Admin`
+2. reach Team Management through the visible `👥 Staff` WL-admin workspace entry
+   - result: successful
+   - observed title after navigation: `Staff | QA WL Admin`
+   - observed content heading: `Team Management`
+   - observed pending panel heading: `Pending Invitations`
+   - observed count badge before resend: `1`
+3. confirm writer-only resend affordance visibility on the pending row
+   - result: successful
+   - observed pending row: `hello@texqtic.com`
+   - observed role badge: `MEMBER`
+   - observed visible actions: `Resend Invite` and `Cancel Invite`
+4. resend one still-pending invite
+   - action: click `Resend Invite` on `hello@texqtic.com`
+   - result: successful
+   - observed in-flight UI state: `Resending…`
+   - observed `Cancel Invite` disabled during mutation
+   - observed row remained visible while the action was in progress
+5. confirm post-resend runtime state
+   - result: successful
+   - same pending row still visible after resend
+   - observed count badge after resend: `1`
+   - observed expiry before resend: `Expires Apr 19, 2026`
+   - observed expiry after resend: `Expires Apr 19, 2026`
+   - observed actions after resend: `Resend Invite` and `Cancel Invite`
+   - observed no visible error banner
+6. confirm no visible invite secret material or unexpected action expansion
+   - result: successful
+   - no visible `inviteToken`
+   - no visible `tokenHash`
+   - no visible extra invite-row actions beyond `Resend Invite` and `Cancel Invite`
+
+### 21.8 code-truth established
+
+Code-truth remains unchanged from Work Item 025.
+
+This runtime pass confirmed the already-committed resend slice on the QA WL owner or admin path
+without requiring code correction.
+
+### 21.9 UI-truth established
+
+UI-truth remains aligned with Work Item 025 and is now runtime-confirmed for the exercised `QA WL`
+WL-admin path.
+
+The exercised runtime UI truth established in this pass is:
+
+1. WL admin `Staff` resolves to the shared Team Management surface
+2. Pending Invitations are reachable in the live `QA WL` session
+3. `Resend Invite` is visible for the authorized writer on the still-pending row
+4. resend preserves the row in place rather than removing it
+5. no invite secret material is rendered
+6. no unexpected extra invite-row actions appear
+
+### 21.10 runtime production truth established
+
+Yes.
+
+For the exact exercised QA WL resend boundary only.
+
+No mailbox-delivery truth is claimed.
+
+### 21.11 governance-state statement
+
+Governance state unchanged: yes.
+
+The downstream governance-family posture remains frozen under
+`HOLD-FOR-BOUNDARY-TIGHTENING`.
+
+Layer 0 remains read-only.
+
+### 21.12 implementation and commit disposition
+
+No code change was required.
+
+No new implementation commit was created in this runtime pass.
+
+This runtime pass required only bounded record update to this existing artifact.
+
+If an artifact-only closeout commit is later required for this runtime pass, that closeout remains
+separate from the current runtime confirmation pass.
+
+### 21.13 recording artifact path updated
+
+`governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 21.14 final git diff --name-only for this runtime pass
+
+Exact final diff output observed after the Work Item 027A artifact-only closeout commit:
+
+- no output
+- repo clean
+
+### 21.15 final git status --short for this runtime pass
+
+Exact final status output observed after the Work Item 027A artifact-only closeout commit:
+
+- no output
+- repo clean
+
+### 21.16 commit hash if any
+
+None.
+
+### 21.17 final runtime verdict for Work Item 027
+
+`WORK-ITEM-027-RUNTIME-TRUTH-ESTABLISHED-FOR-PENDING-INVITE-RESEND-WL-ADMIN-UI-SLICE`
+
+Interpretation:
+
+- the committed resend slice is live on the authenticated `QA WL` WL-admin path
+- the pending invite row remains visible after resend rather than disappearing
+- the resend action completes without visible error and returns to the settled control state
+- no invite secret material or unexpected extra invite-row actions were visible
+- no visible expiry-date change was observed in this pass because the rendered date remained
+  `Apr 19, 2026` before and after the action
+- no email-delivery claim is made in this pass
+
+## 22. closeout pass update - Work Item 027A
+
+This section records the bounded procedural closeout pass for Work Item 027 only.
+
+### 22.1 preflight result
+
+Exact command rerun:
+
+`git diff --name-only; git status --short`
+
+Observed output:
+
+- `warning: in the working copy of 'governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md', CRLF will be replaced by LF the next time Git touches it`
+- `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+- ` M governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 22.2 exact files re-read in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+2. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-POLICY-2026-04-10.md`
+3. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-EXECUTION-PROTOCOL-2026-04-10.md`
+
+### 22.3 exact files changed in the closeout pass
+
+1. `governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-WORK-ITEM-025-2026-04-12.md`
+
+### 22.4 whether the artifact was already final or required correction
+
+The artifact required correction.
+
+Reason:
+
+- the Work Item 027 runtime-proof substance was already correct
+- sections 21.14 and 21.15 still reflected the modified-artifact pre-closeout state rather than
+   the final clean-repo outcome after artifact-only closeout
+- the final procedural closeout disposition for Work Item 027 was not yet recorded
+- section 21.16 correctly remained `None` because no runtime-record implementation commit existed
+   inside Work Item 027 itself
+
+### 22.5 exact disposition action taken
+
+The existing Work Item 025, Work Item 026, and Work Item 027 substance was preserved unchanged.
+
+This closeout pass applied only the smallest procedural correction:
+
+1. corrected sections 21.14 and 21.15 to the final clean-repo state after the artifact-only
+    closeout commit
+2. preserved section 21.16 as `None`
+3. added this closeout note
+
+### 22.6 governance-state statement
+
+Governance state unchanged: yes.
+
+The downstream governance-family posture remains frozen under
+`HOLD-FOR-BOUNDARY-TIGHTENING`.
+
+Layer 0 remains read-only.
+
+### 22.7 final procedural verdict
+
+`WORK-ITEM-027-FULLY-CLOSED-PROCEDURALLY`
