@@ -185,24 +185,25 @@ Layer 0 remains read-only.
 
 ## 14. final git diff --name-only
 
-Exact pre-commit output observed immediately before the same-pass atomic commit:
+Exact final output observed after the Work Item 001 implementation commit and clean-repo
+verification:
 
-1. `layouts/Shells.tsx`
-2. `tests/b2c-shell-authenticated-affordance-separation.test.tsx`
-3. `tests/runtime-verification-tenant-enterprise.test.ts`
+- no output
 
 ## 15. final git status --short
 
-Exact pre-commit output observed immediately before the same-pass atomic commit:
+Exact final output observed after the Work Item 001 implementation commit and clean-repo
+verification:
 
-1. `M layouts/Shells.tsx`
-2. `M tests/b2c-shell-authenticated-affordance-separation.test.tsx`
-3. `M tests/runtime-verification-tenant-enterprise.test.ts`
-4. `?? governance/analysis/TEXQTIC-LAUNCH-READINESS-ACCELERATION-MOBILE-SHELL-NAVIGATION-CONTINUITY-WORK-ITEM-001-2026-04-12.md`
+- no output
+
+This confirms the Work Item 001 implementation pass ended with a clean repository.
 
 ## 16. commit hash if any
 
-Recorded in the final report for this pass after the same-pass atomic commit is created.
+`2f7d63a2f8335e63c192bcabb3fef8949745b43d`
+
+This is the final implementation commit hash for Mobile Shell/Navigation Continuity Work Item 001.
 
 ## 17. final verdict for Mobile Shell/Navigation Continuity Work Item 001
 
@@ -214,3 +215,10 @@ Interpretation:
 2. primary tenant-facing route groups are no longer dependent on desktop-only shell affordances
 3. the aggregator remained inside the same first shell family as required
 4. secondary table and modal adaptivity remains a later family and was not widened into this pass
+
+Procedural closeout note:
+
+1. Work Item 001A updated this artifact only to align sections 14 through 16 with the already-
+   landed implementation commit and clean-repo outcome
+2. no implementation truth, family boundary, or later-family deferral posture changed in the
+   closeout pass
