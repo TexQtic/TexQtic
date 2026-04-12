@@ -20,7 +20,7 @@ import {
   removePendingInviteById,
   replacePendingInviteById,
 } from '../components/Tenant/TeamManagement';
-import { B2BShell } from '../layouts/Shells';
+import { AggregatorShell, B2BShell, WhiteLabelAdminShell, WhiteLabelShell } from '../layouts/Shells';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
 import {
@@ -232,6 +232,27 @@ function makeB2BTenant(): TenantConfig {
   };
 }
 
+function makeAggregatorTenant(): TenantConfig {
+  return {
+    ...makeB2BTenant(),
+    id: 'tenant-agg-1',
+    slug: 'qa-aggregator',
+    name: 'QA Aggregator',
+    type: TenantType.AGGREGATOR,
+    tenant_category: TenantType.AGGREGATOR,
+  };
+}
+
+function makeWhiteLabelTenant(): TenantConfig {
+  return {
+    ...makeB2BTenant(),
+    id: 'tenant-wl-1',
+    slug: 'qa-wl',
+    name: 'QA WL',
+    is_white_label: true,
+  };
+}
+
 function renderPendingInvitesPanel(
   response: MembershipsResponse,
   options: {
@@ -288,6 +309,88 @@ function renderB2BShell() {
         },
       },
       React.createElement('section', null, 'Workspace body'),
+    ),
+  );
+}
+
+function renderAggregatorShell() {
+  return renderToStaticMarkup(
+    React.createElement(
+      AggregatorShell,
+      {
+        tenant: makeAggregatorTenant(),
+        navigation: {
+          surface: {
+            activeRouteKey: 'home',
+            activeNavigationKey: 'HOME',
+            defaultRouteKey: 'home',
+            items: [
+              { routeKey: 'home', navigationKey: 'HOME', routeGroupKey: 'home_landing', active: true },
+              { routeKey: 'orders', navigationKey: 'ORDERS', routeGroupKey: 'orders_operations', active: false },
+              { routeKey: 'certifications', navigationKey: 'CERTIFICATIONS', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'traceability', navigationKey: 'TRACEABILITY', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'audit_logs', navigationKey: 'AUDIT_LOGS', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'trades', navigationKey: 'TRADES', routeGroupKey: 'operational_workspace', active: false },
+            ],
+          },
+          onNavigateRoute: () => undefined,
+          onNavigateTeam: () => undefined,
+        },
+      },
+      React.createElement('section', null, 'Aggregator body'),
+    ),
+  );
+}
+
+function renderWhiteLabelShell() {
+  return renderToStaticMarkup(
+    React.createElement(
+      WhiteLabelShell,
+      {
+        tenant: makeWhiteLabelTenant(),
+        navigation: {
+          surface: {
+            activeRouteKey: 'home',
+            activeNavigationKey: 'HOME',
+            defaultRouteKey: 'home',
+            items: [
+              { routeKey: 'home', navigationKey: 'HOME', routeGroupKey: 'home_landing', active: true },
+              { routeKey: 'orders', navigationKey: 'ORDERS', routeGroupKey: 'orders_operations', active: false },
+              { routeKey: 'escrow', navigationKey: 'ESCROW', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'trades', navigationKey: 'TRADES', routeGroupKey: 'operational_workspace', active: false },
+            ],
+          },
+          onNavigateRoute: () => undefined,
+          onNavigateTeam: () => undefined,
+        },
+      },
+      React.createElement('section', null, 'White-label storefront body'),
+    ),
+  );
+}
+
+function renderWhiteLabelAdminShell() {
+  return renderToStaticMarkup(
+    React.createElement(
+      WhiteLabelAdminShell,
+      {
+        tenant: makeWhiteLabelTenant(),
+        navigation: {
+          activeRouteKey: 'staff',
+          activeNavigationKey: 'STAFF',
+          defaultRouteKey: 'branding',
+          items: [
+            { routeKey: 'branding', navigationKey: 'BRANDING', routeGroupKey: 'admin_branding_domains', active: false },
+            { routeKey: 'staff', navigationKey: 'STAFF', routeGroupKey: 'admin_branding_domains', active: true },
+            { routeKey: 'products', navigationKey: 'PRODUCTS', routeGroupKey: 'catalog_browse', active: false },
+            { routeKey: 'orders', navigationKey: 'ORDERS', routeGroupKey: 'orders_operations', active: false },
+            { routeKey: 'domains', navigationKey: 'DOMAINS', routeGroupKey: 'admin_branding_domains', active: false },
+          ],
+        },
+        onNavigateRoute: () => undefined,
+        onNavigateStorefront: () => undefined,
+      },
+      React.createElement('section', null, 'White-label admin body'),
     ),
   );
 }
@@ -564,7 +667,7 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(updatedHtml).not.toContain('inviteToken');
   });
 
-  it('keeps lower B2B workspace navigation items visible without route-linked expansion and exposes a scrollable sidebar', () => {
+  it('keeps lower B2B workspace navigation items visible, exposes a scrollable desktop sidebar, and adds a handheld menu fallback', () => {
     const html = renderB2BShell();
 
     expect(html).toContain('Catalog');
@@ -573,5 +676,25 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(html).toContain('Trades');
     expect(html).toContain('Members');
     expect(html).toContain('sticky top-0 h-screen overflow-y-auto');
+    expect(html).toContain('data-mobile-nav="b2b"');
+    expect(html).toContain('data-mobile-item-count="11"');
+  });
+
+  it('adds handheld menu fallbacks for aggregator, white-label storefront, and white-label admin shells', () => {
+    const aggregatorHtml = renderAggregatorShell();
+    const storefrontHtml = renderWhiteLabelShell();
+    const adminHtml = renderWhiteLabelAdminShell();
+
+    expect(aggregatorHtml).toContain('data-mobile-nav="aggregator"');
+    expect(aggregatorHtml).toContain('Companies');
+    expect(aggregatorHtml).toContain('Team');
+
+    expect(storefrontHtml).toContain('data-mobile-nav="wl-storefront"');
+    expect(storefrontHtml).toContain('Portfolio');
+    expect(storefrontHtml).toContain('Access Control');
+
+    expect(adminHtml).toContain('data-mobile-nav="wl-admin"');
+    expect(adminHtml).toContain('Store Profile');
+    expect(adminHtml).toContain('Storefront');
   });
 });
