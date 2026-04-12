@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
+  editPendingInvite,
   getMemberships,
   resendPendingInvite,
   revokePendingInvite,
@@ -20,11 +21,14 @@ interface TeamManagementProps {
 
 interface TeamManagementPendingInvitesPanelProps {
   readonly pendingInvites: PendingInvite[];
+  readonly canEdit?: boolean;
   readonly canRevoke?: boolean;
   readonly canResend?: boolean;
+  readonly editingInviteId?: string | null;
   readonly revokingInviteId?: string | null;
   readonly resendingInviteId?: string | null;
   readonly inviteActionError?: string | null;
+  readonly onEdit?: (invite: PendingInvite) => void;
   readonly onRevoke?: (invite: PendingInvite) => void;
   readonly onResend?: (invite: PendingInvite) => void;
 }
@@ -51,11 +55,14 @@ export function replacePendingInviteById(pendingInvites: PendingInvite[], update
 
 export function TeamManagementPendingInvitesPanel({
   pendingInvites,
+  canEdit = false,
   canRevoke = false,
   canResend = false,
+  editingInviteId = null,
   revokingInviteId = null,
   resendingInviteId = null,
   inviteActionError = null,
+  onEdit,
   onRevoke,
   onResend,
 }: TeamManagementPendingInvitesPanelProps) {
@@ -63,7 +70,8 @@ export function TeamManagementPendingInvitesPanel({
     return null;
   }
 
-  const hasPendingInviteMutation = revokingInviteId !== null || resendingInviteId !== null;
+  const hasPendingInviteMutation =
+    editingInviteId !== null || revokingInviteId !== null || resendingInviteId !== null;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
@@ -98,6 +106,16 @@ export function TeamManagementPendingInvitesPanel({
               <span className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-100 text-slate-500">
                 {invite.role}
               </span>
+              {canEdit && onEdit && (
+                <button
+                  type="button"
+                  onClick={() => onEdit(invite)}
+                  disabled={hasPendingInviteMutation}
+                  className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 hover:underline disabled:cursor-not-allowed disabled:text-indigo-300"
+                >
+                  {editingInviteId === invite.id ? 'Saving…' : 'Edit Invite'}
+                </button>
+              )}
               {canResend && onResend && (
                 <button
                   type="button"
@@ -139,6 +157,10 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const [selectedRole, setSelectedRole] = useState<EditableRole | null>(null);
   const [mutating, setMutating] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [editInviteTarget, setEditInviteTarget] = useState<PendingInvite | null>(null);
+  const [selectedInviteRole, setSelectedInviteRole] = useState<EditableRole | null>(null);
+  const [editingInviteId, setEditingInviteId] = useState<string | null>(null);
+  const [editInviteError, setEditInviteError] = useState<string | null>(null);
   const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
   const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
   const [pendingInviteActionError, setPendingInviteActionError] = useState<string | null>(null);
@@ -192,6 +214,26 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
     setSelectedRole(valid[0]);
     setMutationError(null);
     setMutating(false);
+  };
+
+  const getValidInviteRoles = (invite: PendingInvite): EditableRole[] => {
+    return ALL_EDITABLE_ROLES.filter(role => role !== invite.role);
+  };
+
+  const openEditInviteModal = (invite: PendingInvite) => {
+    const valid = getValidInviteRoles(invite);
+    if (valid.length === 0) return;
+    setEditInviteTarget(invite);
+    setSelectedInviteRole(valid[0]);
+    setEditInviteError(null);
+    setPendingInviteActionError(null);
+  };
+
+  const closeEditInviteModal = () => {
+    setEditInviteTarget(null);
+    setSelectedInviteRole(null);
+    setEditInviteError(null);
+    setEditingInviteId(null);
   };
 
   const closeEditModal = () => {
@@ -255,6 +297,26 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
     }
   };
 
+  const handlePendingInviteEdit = async () => {
+    if (!editInviteTarget || !selectedInviteRole) return;
+
+    setEditInviteError(null);
+    setEditingInviteId(editInviteTarget.id);
+
+    try {
+      const response = await editPendingInvite(editInviteTarget.id, { role: selectedInviteRole });
+      setPendingInvites(currentInvites => replacePendingInviteById(currentInvites, response.invite));
+      closeEditInviteModal();
+    } catch (err) {
+      if (err instanceof APIError) {
+        setEditInviteError(err.message);
+      } else {
+        setEditInviteError('Failed to edit invite. Please try again.');
+      }
+      setEditingInviteId(null);
+    }
+  };
+
   const isSelf = editTarget?.userId === currentUserId;
   const isSelfDowngrade =
     isSelf &&
@@ -263,6 +325,8 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const isSoleOwnerSelfDowngrade = isSelfDowngrade && ownerCount <= 1;
   const isPromoteToOwner = selectedRole === 'OWNER';
   const validNextRoles = editTarget ? getValidNextRoles(editTarget) : [];
+  const isInvitePromoteToOwner = selectedInviteRole === 'OWNER';
+  const validInviteRoles = editInviteTarget ? getValidInviteRoles(editInviteTarget) : [];
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -349,11 +413,14 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
       {!loading && !error && (
         <TeamManagementPendingInvitesPanel
           pendingInvites={pendingInvites}
+          canEdit={canInvite}
           canRevoke={canInvite}
           canResend={canInvite}
+          editingInviteId={editingInviteId}
           revokingInviteId={revokingInviteId}
           resendingInviteId={resendingInviteId}
           inviteActionError={pendingInviteActionError}
+          onEdit={openEditInviteModal}
           onRevoke={handlePendingInviteRevoke}
           onResend={handlePendingInviteResend}
         />
@@ -441,6 +508,87 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
                 className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-indigo-600 text-white shadow hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {mutating ? 'Saving…' : 'Save Change'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editInviteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 space-y-5">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Edit Pending Invite</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Update the role for <span className="font-semibold text-slate-700">{editInviteTarget.email}</span>.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 rounded-xl px-4 py-3 text-sm space-y-2">
+              <div className="flex justify-between gap-4">
+                <span className="text-slate-500">Current role</span>
+                <span className="font-bold text-slate-700">{editInviteTarget.role}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-slate-500">Expiry</span>
+                <span className="font-bold text-slate-700">{formatPendingInviteExpiry(editInviteTarget.expiresAt)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="block text-xs font-bold uppercase tracking-wider text-slate-500">New Role</p>
+              <div className="flex flex-col gap-2">
+                {validInviteRoles.map(role => (
+                  <label
+                    key={role}
+                    htmlFor={`invite-role-option-${role}`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${
+                      selectedInviteRole === role
+                        ? 'border-indigo-400 bg-indigo-50'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      id={`invite-role-option-${role}`}
+                      type="radio"
+                      name="invite-role"
+                      value={role}
+                      checked={selectedInviteRole === role}
+                      onChange={() => setSelectedInviteRole(role)}
+                      className="accent-indigo-600"
+                    />
+                    <span className="font-bold text-slate-800 text-sm">{role}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {isInvitePromoteToOwner && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-xs">
+                This invite will create full ownership access if accepted.
+              </div>
+            )}
+
+            {editInviteError && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-4 py-3 text-xs">
+                {editInviteError}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end pt-1">
+              <button
+                onClick={closeEditInviteModal}
+                disabled={editingInviteId !== null}
+                className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePendingInviteEdit}
+                disabled={editingInviteId !== null || !selectedInviteRole}
+                className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-indigo-600 text-white shadow hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingInviteId !== null ? 'Saving…' : 'Save Change'}
               </button>
             </div>
           </div>

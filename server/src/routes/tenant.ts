@@ -654,6 +654,124 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * PATCH /api/tenant/memberships/invites/:id
+   * Edit the role of a still-pending invite for the current tenant.
+   * Requires OWNER or ADMIN role.
+   */
+  fastify.patch(
+    '/tenant/memberships/invites/:id',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId, userRole } = request;
+
+      if (userRole !== 'OWNER' && userRole !== 'ADMIN') {
+        return sendError(reply, 'FORBIDDEN', 'Insufficient permissions', 403);
+      }
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const paramsSchema = z.object({ id: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      const bodySchema = z.object({
+        role: z.enum(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']),
+      });
+      const bodyResult = bodySchema.safeParse(request.body);
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+
+      const { id: inviteId } = paramsResult.data;
+      const { role } = bodyResult.data;
+      const now = new Date();
+
+      if (role === 'VIEWER') {
+        return sendError(reply, 'VIEWER_TRANSITION_OUT_OF_SCOPE', 'VIEWER role transitions are not supported', 422);
+      }
+
+      const result = await withDbContext(prisma, dbContext, async tx => {
+        const existingInvite = await tx.invite.findFirst({
+          where: {
+            id: inviteId,
+            tenantId: dbContext.orgId,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            acceptedAt: true,
+            expiresAt: true,
+            createdAt: true,
+          },
+        });
+
+        if (!existingInvite) {
+          return { error: 'INVITE_NOT_FOUND' as const };
+        }
+
+        if (existingInvite.acceptedAt !== null || existingInvite.expiresAt <= now) {
+          return { error: 'INVITE_NOT_PENDING' as const };
+        }
+
+        if (existingInvite.role === role) {
+          return { error: 'NO_OP_ROLE_CHANGE' as const };
+        }
+
+        const updatedInvite = await tx.invite.update({
+          where: { id: existingInvite.id },
+          data: { role },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            expiresAt: true,
+            createdAt: true,
+          },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'member.invite.updated',
+          entity: 'invite',
+          entityId: existingInvite.id,
+          metadataJson: {
+            email: existingInvite.email,
+            fromRole: existingInvite.role,
+            toRole: role,
+          },
+        });
+
+        return { invite: updatedInvite };
+      });
+
+      if ('error' in result) {
+        if (result.error === 'INVITE_NOT_FOUND') {
+          return sendNotFound(reply, 'Invite not found');
+        }
+
+        if (result.error === 'INVITE_NOT_PENDING') {
+          return sendError(reply, 'INVITE_NOT_PENDING', 'Only pending invites can be edited', 409);
+        }
+
+        if (result.error === 'NO_OP_ROLE_CHANGE') {
+          return sendError(reply, 'NO_OP_ROLE_CHANGE', 'Invite already has the requested role', 409);
+        }
+      }
+
+      return sendSuccess(reply, { invite: result.invite });
+    }
+  );
+
+  /**
    * DELETE /api/tenant/memberships/invites/:id
    * Revoke/cancel a still-pending invite for the current tenant.
    * Requires OWNER or ADMIN role.

@@ -252,6 +252,44 @@ type PendingInviteResendOutcome =
       error: 'UNAUTHORIZED' | 'FORBIDDEN' | 'INVITE_NOT_FOUND' | 'INVITE_NOT_PENDING';
     };
 
+type PendingInviteEditOutcome =
+  | {
+      allowed: true;
+      response: {
+        invite: {
+          id: string;
+          email: string;
+          role: InviteIssuanceRole;
+          expiresAt: Date;
+          createdAt: Date;
+        };
+      };
+      audit: {
+        tenantId: string;
+        realm: 'TENANT';
+        actorType: 'USER';
+        actorId: string | null;
+        action: 'member.invite.updated';
+        entity: 'invite';
+        entityId: string;
+        metadataJson: {
+          email: string;
+          fromRole: InviteIssuanceRole;
+          toRole: InviteIssuanceRole;
+        };
+      };
+    }
+  | {
+      allowed: false;
+      error:
+        | 'UNAUTHORIZED'
+        | 'FORBIDDEN'
+        | 'INVITE_NOT_FOUND'
+        | 'INVITE_NOT_PENDING'
+        | 'VIEWER_TRANSITION_OUT_OF_SCOPE'
+        | 'NO_OP_ROLE_CHANGE';
+    };
+
 function evaluatePendingInviteResend(options: {
   actorRole: MembershipRole;
   tenantId: string | null;
@@ -334,6 +372,91 @@ function evaluatePendingInviteResend(options: {
       metadataJson: {
         email,
         role,
+      },
+    },
+  };
+}
+
+function evaluatePendingInviteEdit(options: {
+  actorRole: MembershipRole;
+  tenantId: string | null;
+  actorId: string | null;
+  hasDbContext: boolean;
+  targetVisibleToOrg: boolean;
+  email: string;
+  currentRole: InviteIssuanceRole;
+  requestedRole: MembershipRole;
+  acceptedAt: Date | null;
+  expiresAt: Date;
+  now: Date;
+  inviteId: string;
+  createdAt: Date;
+}): PendingInviteEditOutcome {
+  const {
+    actorRole,
+    tenantId,
+    actorId,
+    hasDbContext,
+    targetVisibleToOrg,
+    email,
+    currentRole,
+    requestedRole,
+    acceptedAt,
+    expiresAt,
+    now,
+    inviteId,
+    createdAt,
+  } = options;
+
+  if (!tenantId || !hasDbContext) {
+    return { allowed: false, error: 'UNAUTHORIZED' };
+  }
+
+  if (actorRole !== 'OWNER' && actorRole !== 'ADMIN') {
+    return { allowed: false, error: 'FORBIDDEN' };
+  }
+
+  if (!targetVisibleToOrg) {
+    return { allowed: false, error: 'INVITE_NOT_FOUND' };
+  }
+
+  if (acceptedAt !== null || expiresAt <= now) {
+    return { allowed: false, error: 'INVITE_NOT_PENDING' };
+  }
+
+  if (requestedRole === 'VIEWER') {
+    return { allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' };
+  }
+
+  if (requestedRole === currentRole) {
+    return { allowed: false, error: 'NO_OP_ROLE_CHANGE' };
+  }
+
+  const safeRole = requestedRole as InviteIssuanceRole;
+
+  return {
+    allowed: true,
+    response: {
+      invite: {
+        id: inviteId,
+        email,
+        role: safeRole,
+        expiresAt,
+        createdAt,
+      },
+    },
+    audit: {
+      tenantId,
+      realm: 'TENANT',
+      actorType: 'USER',
+      actorId,
+      action: 'member.invite.updated',
+      entity: 'invite',
+      entityId: inviteId,
+      metadataJson: {
+        email,
+        fromRole: currentRole,
+        toRole: safeRole,
       },
     },
   };
@@ -873,6 +996,231 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         inviteToken: 'resent-invite-token-15b',
       })
     ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
+  });
+});
+
+describe('PATCH /api/tenant/memberships/invites/:id — pending invite edit contract', () => {
+  const now = new Date('2026-04-12T00:00:00.000Z');
+  const createdAt = new Date('2026-04-10T12:00:00.000Z');
+  const expiresAt = new Date('2026-04-18T00:00:00.000Z');
+
+  it('permits OWNER and ADMIN to update the role of a current pending invite and returns a safe projection', () => {
+    for (const actorRole of ['OWNER', 'ADMIN'] as const) {
+      const result = evaluatePendingInviteEdit({
+        actorRole,
+        tenantId: 'tenant-uuid-16',
+        actorId: 'user-uuid-16',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-16',
+        createdAt,
+      });
+
+      expect(result.allowed).toBe(true);
+      if (!result.allowed) {
+        return;
+      }
+
+      expect(result.response).toEqual({
+        invite: {
+          id: 'invite-uuid-16',
+          email: 'invitee@acme.test',
+          role: 'ADMIN',
+          expiresAt,
+          createdAt,
+        },
+      });
+      expect(result.response.invite).not.toHaveProperty('inviteToken');
+      expect(result.response.invite).not.toHaveProperty('tokenHash');
+      expect(result.audit).toEqual({
+        tenantId: 'tenant-uuid-16',
+        realm: 'TENANT',
+        actorType: 'USER',
+        actorId: 'user-uuid-16',
+        action: 'member.invite.updated',
+        entity: 'invite',
+        entityId: 'invite-uuid-16',
+        metadataJson: {
+          email: 'invitee@acme.test',
+          fromRole: 'MEMBER',
+          toRole: 'ADMIN',
+        },
+      });
+    }
+  });
+
+  it('denies MEMBER and VIEWER actors from editing pending invites', () => {
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'MEMBER',
+        tenantId: 'tenant-uuid-17',
+        actorId: 'user-uuid-17',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-17',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'FORBIDDEN' });
+
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'VIEWER',
+        tenantId: 'tenant-uuid-17',
+        actorId: 'user-uuid-17',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-17',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'FORBIDDEN' });
+  });
+
+  it('rejects missing context, out-of-org targets, accepted invites, and expired invites', () => {
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'OWNER',
+        tenantId: null,
+        actorId: 'user-uuid-18',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-18',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
+
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-18',
+        actorId: 'user-uuid-18',
+        hasDbContext: false,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-18',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
+
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-18',
+        actorId: 'user-uuid-18',
+        hasDbContext: true,
+        targetVisibleToOrg: false,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-18',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'INVITE_NOT_FOUND' });
+
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-18',
+        actorId: 'user-uuid-18',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: new Date('2026-04-11T10:00:00.000Z'),
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-18',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
+
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-18',
+        actorId: 'user-uuid-18',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-11T23:59:59.000Z'),
+        now,
+        inviteId: 'invite-uuid-18',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
+  });
+
+  it('rejects VIEWER targets and no-op role changes', () => {
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'ADMIN',
+        tenantId: 'tenant-uuid-19',
+        actorId: 'user-uuid-19',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'MEMBER',
+        requestedRole: 'VIEWER',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-19',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' });
+
+    expect(
+      evaluatePendingInviteEdit({
+        actorRole: 'ADMIN',
+        tenantId: 'tenant-uuid-19',
+        actorId: 'user-uuid-19',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        currentRole: 'ADMIN',
+        requestedRole: 'ADMIN',
+        acceptedAt: null,
+        expiresAt,
+        now,
+        inviteId: 'invite-uuid-19',
+        createdAt,
+      })
+    ).toEqual({ allowed: false, error: 'NO_OP_ROLE_CHANGE' });
   });
 });
 

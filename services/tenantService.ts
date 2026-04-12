@@ -133,6 +133,14 @@ export interface ResendPendingInviteResponse {
   invite: PendingInvite;
 }
 
+export interface EditPendingInviteRequest {
+  role: 'OWNER' | 'ADMIN' | 'MEMBER';
+}
+
+export interface EditPendingInviteResponse {
+  invite: PendingInvite;
+}
+
 /**
  * Revoke/cancel a still-pending tenant invite.
  * Requires OWNER or ADMIN role.
@@ -147,6 +155,17 @@ export async function revokePendingInvite(id: string): Promise<RevokePendingInvi
  */
 export async function resendPendingInvite(id: string): Promise<ResendPendingInviteResponse> {
   return tenantPost<ResendPendingInviteResponse>(`/api/tenant/memberships/invites/${id}/resend`);
+}
+
+/**
+ * Edit the role of a still-pending tenant invite.
+ * Requires OWNER or ADMIN role.
+ */
+export async function editPendingInvite(
+  id: string,
+  request: EditPendingInviteRequest
+): Promise<EditPendingInviteResponse> {
+  return tenantPatch<EditPendingInviteResponse>(`/api/tenant/memberships/invites/${id}`, request);
 }
 
 // ==================== MEMBERSHIP ROLE UPDATE ====================
