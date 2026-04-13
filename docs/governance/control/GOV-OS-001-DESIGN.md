@@ -132,6 +132,21 @@ The Governance OS partitions governance truth into five structurally separated l
 - Layer 3 receives entries; never loses them; never becomes operational
 - Layer 4 is read-only after migration; no new entries
 
+### 3.1A Architectural Governance Statement
+
+The preserved downstream architectural governance statement for TexQtic is:
+
+- base commercial families are `B2B` and `B2C`
+- `INTERNAL` is the non-commercial platform category
+- white-label remains overlay/capability logic on top of a lawful base family and is not a peer family
+- Aggregator remains a cross-family discovery, matching, and intent-handoff capability and is not a peer base family
+- package/plan remains a separate commercial and entitlement axis and is not family identity
+- marketing is non-canonical interest capture only; CRM is the normalized pre-provisioning recommendation and handoff layer only; platform provisioning and runtime identity are the canonical persisted family/package truth
+- tenant admin remains one common core with bounded family-specific and capability-specific overlays only; no full separate admin office exists per family, and Aggregator may have only a lightweight capability-specific control surface inside the common core
+- B2B contains a canonical internal textile-industry taxonomy with one primary segment, multiple secondary segments, and a separate role-positioning axis (`manufacturer`, `trader`, `service_provider`); `service_provider` is not a separate top-level B2B class and enterprise remains subordinate depth within B2B
+- Aggregator may consume only the discovery-safe subset of the B2B taxonomy and does not inherit full B2B administrative or execution ownership
+- schema shape, taxonomy codes and aliases, ranking/filter/search logic, onboarding-form capture design, CRM field implementation, workflow mappings, package redesign specifics, and implementation sequencing remain outside this governance statement
+
 ### 3.2 Control-Plane Files (Layer 0)
 
 The control plane consists of exactly **five files**, all in `governance/control/`. Each file has a hard-enforced maximum size.
