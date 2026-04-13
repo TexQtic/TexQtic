@@ -27,6 +27,15 @@ This artifact does not:
 - reopen CRM or Marketing planning beyond terminology placement
 - decide detailed taxonomy propagation mechanics, shell rewiring, or entitlement implementation
 
+Usage rule:
+
+- later bounded planning artifacts and implementation-facing planning must treat this document as
+  the controlling normalization reference for terminology and state interpretation unless a later
+  governance-approved artifact explicitly supersedes it
+- this artifact governs terminology and state interpretation only; it must not be used by itself to
+  justify runtime, schema, or contract changes without a later bounded implementation-facing
+  artifact
+
 Authority order used:
 
 1. Layer 0 posture
