@@ -1,13 +1,28 @@
-# OPEN-SET.md — Opening-Layer Live Canon and Control Set
+# OPEN-SET.md — Layer 0 Governed Posture and Read Order
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-10 (TEXQTIC-OPENING-LAYER-RESET-EXECUTION-2026-04-10)
+**Last Updated:** 2026-04-13 (TEXQTIC-TECS-OS-GOVERNANCE-AMENDMENT-SYNC-WORK-ITEM-001-2026-04-13)
 
-> This file records the exact active live canon package and live control set after the bounded
-> opening-layer reset.
+> This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
+> `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
+> historical ambiguity requires it.
 
 ---
+
+## Layer 0 Role
+
+- Layer 0 confirms current governed-unit state, blocker/hold posture, audit posture, and
+  governance exceptions.
+- Layer 0 does not originate ordinary product delivery sequencing.
+- Ordinary product sequencing is read from the product-truth authority stack listed below.
+
+## Control-Plane Read Order
+
+1. `governance/control/OPEN-SET.md`
+2. `governance/control/NEXT-ACTION.md`
+3. `governance/control/BLOCKED.md`
+4. `governance/control/SNAPSHOT.md` only when restore context or historical ambiguity matters
 
 ## Live Canon Package
 
@@ -23,15 +38,25 @@
 | --- | --- |
 | Opening-layer governance authority/pointer layer | `governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md` |
 | Opening-layer sequencing authority | `governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10.md` |
-| Layer 0 snapshot | `governance/control/SNAPSHOT.md` |
 | Layer 0 open-set control surface | `governance/control/OPEN-SET.md` |
 | Layer 0 next-action pointer | `governance/control/NEXT-ACTION.md` |
 | Layer 0 blocked/hold register | `governance/control/BLOCKED.md` |
+| Layer 0 snapshot | `governance/control/SNAPSHOT.md` |
+
+## Product-Truth Authority Stack
+
+| Role | File |
+| --- | --- |
+| Preserved gap baseline | `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md` |
+| Preserved dependency-ordered roadmap baseline | `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` |
+| Preserved immediate-delivery baseline | `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md` |
 
 ## Operating Notes
 
-- Planning docs remain guidance and decision input only, not live authority.
+- Governing posture remains `HOLD-FOR-BOUNDARY-TIGHTENING`.
+- No product-facing `ACTIVE_DELIVERY` unit is currently open.
+- Planning-package recommendations outside the product-truth authority stack remain guidance and
+  decision input only, not live authority.
 - Preserved aligned anchors, including the closed onboarding-family handoff chain, remain outside
   the live canon package and outside the live control set.
 - The old `-v2` chain remains historical evidence and reconciliation input only.
-- Current open product-facing `ACTIVE_DELIVERY`: none.

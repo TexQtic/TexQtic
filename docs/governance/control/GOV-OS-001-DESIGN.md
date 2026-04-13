@@ -27,7 +27,11 @@ A Governance Operating Model for TexQtic has been designed that:
 
 Reset amendment ratified on 2026-04-04 preserves this design as downstream governance lineage and narrows its live operating burden:
 - Layer 0 owns present operational posture only
+- Layer 0 confirms governed-unit state, blocker/hold posture, audit posture, and governance exceptions only
 - the live opening-layer canon now governs top-level opening-layer routing after Layer 0
+- ordinary product execution sequencing is read from the product-truth authority stack (`docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md` -> `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` -> `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`) when no governance exception is active
+- the control-plane read order is `OPEN-SET.md` -> `NEXT-ACTION.md` -> `BLOCKED.md` -> `SNAPSHOT.md`
+- `NEXT-ACTION.md` is a governance-facing pointer and must not be treated as a universal delivery-order source when no governance exception is active
 - relevant preserved downstream family/design authorities remain topic-specific descendant truth only
 - the old `-v2` chain is historical evidence and reconciliation input only, not live authority
 - candidate normalization is exception-only rather than a standing prerequisite
@@ -116,8 +120,9 @@ The Governance OS partitions governance truth into five structurally separated l
 ```
 
 **Layer rules:**
-- Layer 0 owns current governed posture only: open set, next action, blockers, and restore-grade snapshot state
+- Layer 0 owns current governed posture only: open set, governance-facing next-action pointer, blockers/holds, audit posture, governance exceptions, and restore-grade snapshot state
 - the live opening-layer canon governs opening-layer routing after Layer 0
+- ordinary product execution sequencing is derived from the product-truth authority stack when no governance exception is active
 - relevant preserved downstream family/design authorities provide topic-specific descendant truth
 - the old `-v2` chain remains historical evidence and reconciliation input only and must not compete as live authority
 - Layer 1 is the single source of truth for individual unit status
@@ -129,13 +134,13 @@ The Governance OS partitions governance truth into five structurally separated l
 
 The control plane consists of exactly **five files**, all in `governance/control/`. Each file has a hard-enforced maximum size.
 
-Layer 0 is not the origin of root opening-layer or downstream design authority. Layer 0 owns current governed posture only. After Layer 0, live routing follows the opening-layer canon, then the relevant preserved downstream family/design authorities by topic. `SNAPSHOT.md` is restore-grade context only. The old `-v2` chain remains historical evidence and reconciliation input only.
+Layer 0 is not the origin of root opening-layer or downstream design authority, and it is not the origin of ordinary product delivery sequencing. Layer 0 owns current governed posture only. After Layer 0, ordinary product sequencing reads from `docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md` -> `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md` -> `docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md`, while live governance routing follows the opening-layer canon and the relevant preserved downstream family/design authorities by topic. The control-plane read order is `OPEN-SET.md` -> `NEXT-ACTION.md` -> `BLOCKED.md` -> `SNAPSHOT.md`. `SNAPSHOT.md` is restore-grade context only. The old `-v2` chain remains historical evidence and reconciliation input only.
 
 | File | Max Size | Owns |
 |---|---|---|
 | `OPEN-SET.md` | ≤ 50 lines | Exact list of currently open governed units and current governance posture |
-| `NEXT-ACTION.md` | ≤ 20 lines | Derived Layer 0 next-action pointer or explicit active governance exception |
-| `BLOCKED.md` | ≤ 80 lines | All currently blocked or deferred units with explicit blocker reason |
+| `NEXT-ACTION.md` | ≤ 20 lines | Governance-facing Layer 0 pointer or explicit active governance exception |
+| `BLOCKED.md` | ≤ 80 lines | All currently blocked or deferred units with explicit blocker or hold reason |
 | `DOCTRINE.md` | ≤ 150 lines | Active doctrine invariants. Points to canonical doctrine sources. |
 | `SNAPSHOT.md` | ≤ 100 lines | Restore-grade carry-forward context for session restoration. Refreshed at end of each governance unit. |
 
@@ -163,12 +168,13 @@ live_opening_layer_baseline: <doc path> | omit when exception-only
 live_taxonomy_authority: <doc path> | omit when exception-only
 live_governance_authority: <doc path> | omit when exception-only
 live_sequencing_authority: <doc path> | omit when exception-only
+product_truth_authority_stack: <doc path list> | include when no governance exception is active
 historical_reconciliation_inputs: <doc path list> | omit when exception-only
 layer_0_action: <governance-facing pointer or exception statement>
 notes: <≤3 lines if needed, else omit>
 ```
 
-**Rule:** ordinary bounded next-opening decisions must not require multi-document sequencing triangulation.
+**Rule:** ordinary bounded next-opening decisions must use the product-truth authority stack when no governance exception is active and must not require multi-document sequencing triangulation inside Layer 0.
 
 #### BLOCKED.md schema (per entry)
 
@@ -404,11 +410,11 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 | Operation | Authorized read scope |
 |---|---|
 | Session open / context restoration | `OPEN-SET.md`, `NEXT-ACTION.md`, `BLOCKED.md`; add `SNAPSHOT.md` only when restore context or historical ambiguity matters |
-| Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add the live opening-layer sequencing authority and the relevant preserved downstream family/design authority when product-facing |
+| Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add the product-truth authority stack and the relevant preserved downstream family/design authority when product-facing; add the live opening-layer authority map when a governance exception or authority conflict is active |
 | Drafting verification prompt | Add: `units/<UNIT-ID>.md` |
-| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files; add the live opening-layer sequencing authority + the live opening-layer authority map when a product-facing close changes active-delivery or next-candidate posture |
-| Product/design decision | Relevant decision file + the live opening-layer sequencing authority + the relevant preserved downstream family/design authority when product-facing |
-| Implementation-opening readiness investigation | Layer 0 files + the live opening-layer sequencing authority + the live opening-layer authority map + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
+| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files; add the product-truth authority stack when a product-facing close changes active-delivery or next-candidate posture; add the live opening-layer authority map when a governance exception or authority conflict is active |
+| Product/design decision | Relevant decision file + the product-truth authority stack + the relevant preserved downstream family/design authority when product-facing |
+| Implementation-opening readiness investigation | Layer 0 files + the product-truth authority stack + the live opening-layer authority map + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
 | Strict-path / authority-shaping work | Layer 0 files + `SNAPSHOT.md` + the minimum Layer 1 / Layer 2 / Layer 3 sources required for that authority check |
 | Candidate-normalization exception | Relevant analysis artifact + `governance/analysis/CANDIDATE-NORMALIZATION-LEDGER.md` |
 | Audit query | `EXECUTION-LOG.md` (read-only) |
@@ -417,6 +423,7 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 - Reading the full `gap-register.md` (or archive) for sequencing decisions
 - Reading the full `IMPLEMENTATION-TRACKER-*.md` for next-unit selection
 - Scanning all governance files to determine "what's open"
+- Treating `NEXT-ACTION.md` as a universal delivery-order source when no governance exception is active
 - Using `TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` as a competing live sequencing authority
 - Using normalization ledgers as standing operating truth for ordinary bounded work
 
@@ -1005,9 +1012,9 @@ These rules apply when documents are missing, oversized, or inconsistent.
 ```
 governance/
 ├── control/                         ← LAYER 0 — Control Plane (≤5 small files)
-│   ├── OPEN-SET.md                  ← Exact current open set (≤50 lines)
-│   ├── NEXT-ACTION.md               ← Derived Layer 0 pointer or governance exception (≤20 lines)
-│   ├── BLOCKED.md                   ← Blocked + deferred register (≤80 lines)
+│   ├── OPEN-SET.md                  ← Exact current governed posture + read-order entry (≤50 lines)
+│   ├── NEXT-ACTION.md               ← Governance-facing Layer 0 pointer or exception (≤20 lines)
+│   ├── BLOCKED.md                   ← Blocked + hold register (≤80 lines)
 │   ├── DOCTRINE.md                  ← Active doctrine invariants (≤150 lines)
 │   └── SNAPSHOT.md                  ← Carry-forward context (≤100 lines)
 │
