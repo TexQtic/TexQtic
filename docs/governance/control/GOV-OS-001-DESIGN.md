@@ -41,6 +41,7 @@ Reset amendment ratified on 2026-04-04 preserves this design as downstream gover
 - zero-open product-delivery post-close posture returns to explicit next-opening decision control; closed units preserve lineage only
 - structurally broad but coherent chosen family remainders must route to one further same-family bounded reduction or narrow design-clarification step only
 - coherent narrowed same-family remainders with explicit residual lanes must route to one same-remainder lane-separation clarification step only
+- when a truthful preserved unresolved hold remains and bounded contradiction and descendant-selection checks prove no hold-outranking contradiction and no exact current downstream governance descendant, Governance OS must route to one governance-only same-hold design-clarification successor limited to the minimum exact future hold-resolution path or evidence condition for that same hold
 
 No application code, schema, migration, API, or test files were modified.  
 No product unit status was changed as part of this governance design.
@@ -123,6 +124,7 @@ The Governance OS partitions governance truth into five structurally separated l
 - Layer 0 owns current governed posture only: open set, governance-facing next-action pointer, blockers/holds, audit posture, governance exceptions, and restore-grade snapshot state
 - the live opening-layer canon governs opening-layer routing after Layer 0
 - ordinary product execution sequencing is derived from the product-truth authority stack when no governance exception is active
+- when a truthful preserved unresolved hold remains and bounded contradiction and descendant-selection checks prove no hold-outranking contradiction and no exact current downstream governance descendant, Governance OS must route to one governance-only same-hold design-clarification successor before any broader downstream governance or product-family movement
 - relevant preserved downstream family/design authorities provide topic-specific descendant truth
 - the old `-v2` chain remains historical evidence and reconciliation input only and must not compete as live authority
 - Layer 1 is the single source of truth for individual unit status
@@ -175,6 +177,8 @@ notes: <≤3 lines if needed, else omit>
 ```
 
 **Rule:** ordinary bounded next-opening decisions must use the product-truth authority stack when no governance exception is active and must not require multi-document sequencing triangulation inside Layer 0.
+
+**Rule:** when a truthful preserved unresolved hold remains and bounded contradiction and descendant-selection checks prove no hold-outranking contradiction and no exact current downstream governance descendant, `NEXT-ACTION.md` must surface exactly one governance-only same-hold design-clarification successor limited to the minimum exact future hold-resolution path or evidence condition for that same hold. It must not reopen product-family execution, hold-defeat implementation, or broader downstream governance execution.
 
 #### BLOCKED.md schema (per entry)
 
