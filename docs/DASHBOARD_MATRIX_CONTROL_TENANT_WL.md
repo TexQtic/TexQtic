@@ -58,7 +58,7 @@ The SuperAdmin control center is organized into **4 Control Towers**. Each tower
 
 | Module                 | Description                                                   | Status         |
 |------------------------|---------------------------------------------------------------|----------------|
-| Tenant Plans           | Per-tenant subscription status, tier, billing alerts          | ⏳ Stub        |
+| Tenant plan metadata   | Per-tenant subscription status, tier, billing alerts          | ⏳ Stub        |
 | Fee Ledger             | Platform fee schedule and earned fee records                  | ⏳ Stub        |
 | Transaction Fees       | Per-transaction fee visibility (where platform earns)         | ⏳ Not started |
 | Settlement Status      | Settlement acknowledgement records — visibility only          | ⏳ Not started |
@@ -252,7 +252,7 @@ truth.
 | **P1**   | WHITE_LABEL    | TS     | Collections (WL-specific)                                 |
 | **P1**   | B2B            | TO     | Compliance Tasks surface                                  |
 | **P1**   | B2B            | TO     | RFQ Management (product definition gate first)            |
-| **P1**   | Control Plane  | Finance | Tenant Plans + Fee Ledger stubs                          |
+| **P1**   | Control Plane  | Finance | Tenant plan metadata + Fee Ledger stubs                  |
 | **BUG**  | ALL (tenant)   | TO     | Fix `POST /api/tenant/checkout` HTTP 500 — blocks all commerce modules |
 
 ---
