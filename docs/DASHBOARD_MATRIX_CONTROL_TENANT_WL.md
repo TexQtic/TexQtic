@@ -80,7 +80,7 @@ The SuperAdmin control center is organized into **4 Control Towers**. Each tower
 
 ---
 
-## II. Tenant — B2B Professional
+## II. Tenant — B2B family
 
 **Realm:** `tenant`  
 **Shell:** `B2BShell` in `layouts/Shells.tsx`  
