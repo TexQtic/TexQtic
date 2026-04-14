@@ -1,8 +1,9 @@
 # TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10
 
-Status: live opening-layer sequencing authority
-Layer: opening-layer live control layer
+Status: preserved opening-layer sequencing snapshot; historical reconciliation input only
+Layer: opening-layer historical reconciliation surface
 Date: 2026-04-10
+Current live ordinary sequencing authority: governance/control/NEXT-ACTION.md
 Upstream replacement canon:
 
 1. governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -12,16 +13,17 @@ Upstream replacement canon:
 
 ## 1. Purpose
 
-This document defines the lawful current next-cycle entry posture after the bounded opening-layer
-reset execution.
+This document preserves the lawful next-cycle entry posture that applied after the bounded
+opening-layer reset execution.
 
 It consumes the replacement canon and the recreated governance authority/pointer layer.
 
-It is not the source of taxonomy truth, contract truth, or downstream family-boundary truth.
+It is not the source of taxonomy truth, contract truth, downstream family-boundary truth, or
+current repo-level next-step authority.
 
-## 2. Current sequencing posture after reset
+## 2. Historical sequencing posture at reset-stage handoff
 
-The current sequencing posture after reset is:
+The historical sequencing posture after reset was:
 
 - the replacement opening-layer canon is now the live top-level opening-layer authority package
 - the recreated governance authority/pointer layer is now the live control surface consuming that
@@ -33,9 +35,9 @@ The current sequencing posture after reset is:
 - any future governance or product movement must begin from the replacement canon and recreated
   control layer, not from the planning package and not from the historical `-v2` chain
 
-## 3. Current lawful next move after reset execution
+## 3. Historical then-current next move after reset execution
 
-The current lawful next move after reset execution is:
+The then-current lawful next move after reset execution was:
 
 - when a truthful preserved unresolved hold remains, one bounded forensic contradiction test has
   concluded that no hold-outranking contradiction exists, and one bounded downstream descendant-
@@ -83,3 +85,6 @@ This document is narrow by design.
 
 It fixes the current next-cycle entry posture after reset only and does not itself begin downstream
 reconciliation, debt cleanup, architecture change, delivery regeneration, or implementation.
+
+After the 2026-04-14 live-authority spine reconciliation, this file remains preserved as
+historical reconciliation input only.

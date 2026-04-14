@@ -1,20 +1,25 @@
+> STATUS — RETAINED AS HISTORICAL RECONCILIATION INPUT ONLY
+>
+> After the 2026-04-14 live-authority spine reconciliation, this `-v2` next-delivery plan no longer
+> serves as the live sequencing authority for current repo-level next-step selection. It is
+> preserved as candidate-slate history and reconciliation input only.
+
 # TEXQTIC-NEXT-DELIVERY-PLAN-v2
 
 ## Purpose
 
-This document defines the immediate next-cycle delivery ordering for TexQtic after the completed
-`-v1` planning stack.
+This document preserves the immediate next-cycle delivery ordering that was carried by the `-v2`
+product-truth cycle after the completed `-v1` planning stack.
 
-It is the sole live product-truth sequencing authority for ordinary product-facing next-opening
-selection, without opening a unit by itself. The `-v1` plan remains historical and complete; this
-`-v2` plan now records the bounded closed deliveries and preserves the remaining next-cycle family
-posture without naming a fresh bounded next candidate until one is lawfully selected.
+It no longer serves as the live sequencing authority for current repo-level next-step selection.
+The `-v1` plan remains historical and complete, and this `-v2` plan is now preserved as bounded
+candidate-slate history and reconciliation input only.
 
 ## Authority Note
 
-- Use this file for ordinary product-facing next-opening selection.
-- Use `docs/product-truth/TEXQTIC-GAP-REGISTER-v2.md` for canonical candidate and family truth.
-- Treat `docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md` as derived planning context only.
+- Do not use this file as the current live sequencing authority.
+- Read it beside the preserved `-v2` gap register and roadmap when `-v2` candidate-slate history
+    or reconciliation context is needed.
 - No successor opening is implied by this file alone; a separate bounded governance move is still required.
 
 ## Immediate Posture
@@ -28,7 +33,7 @@ posture without naming a fresh bounded next candidate until one is lawfully sele
 - `ENTERPRISE-RFQ-TO-NEGOTIATION-BRIDGE-CONTINUITY` is now closed after bounded implementation and bounded live production verification established that the reviewed enterprise responded-RFQ path now truthfully bridges into the existing trade / negotiation continuity.
 - The remaining candidates stay recorded as distinct later-ready or design-gate work.
 - `RFQ-NEGOTIATION-CONTINUITY` is now recorded as a separate design-gate candidate rather than an unassigned adjacent finding.
-- No exact bounded next candidate is currently selected in this live sequencing authority after the
+- No exact bounded next candidate is currently recorded in this preserved `-v2` candidate record after the
     closure of `SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT`.
 
 ## Delivery Ordering Rules
@@ -41,8 +46,8 @@ posture without naming a fresh bounded next candidate until one is lawfully sele
 
 ## Launch Overlay Alignment Note
 
-This `-v2` next-delivery plan is the canonical live product-truth delivery pointer, and no current
-active delivery is open.
+This `-v2` next-delivery plan is preserved as historical candidate-slate and reconciliation input
+only, and no current active delivery is open.
 
 For launch-specific posture, also see:
 
@@ -56,8 +61,9 @@ therefore respect the launch overlay, including the ordered follow-on planning-a
 distinction between implementation-design-ready, normalization-first, and design-gate-first
 families.
 
-The implementation roadmap remains useful for wave grouping and planning context, but it must not
-be used as a competing live sequencing authority while this file is current.
+The implementation roadmap remains useful for wave grouping and planning context, but neither it
+nor this file controls current repo-level sequencing after the 2026-04-14 live-authority spine
+reconciliation.
 
 ## Post-Subscription Close Sequencing Reconciliation Note
 
@@ -87,7 +93,7 @@ still required by Governance OS.
 
 ## Immediate Next-Candidate Posture
 
-- No exact bounded next candidate is currently selected in the live sequencing authority.
+- No exact bounded next candidate is currently selected in the preserved `-v2` candidate record.
 - The strongest preserved later-ready family remainders remain
     `CONTROL-PLANE-TENANT-OPERATIONS-REALITY` and `MODE-COMPLETENESS-B2C-STOREFRONT-CONTINUITY`,
     but each is still a broad preserved family remainder rather than one exact bounded next unit.
@@ -274,5 +280,5 @@ without collapsing the family-level design gate.
 
 The `-v1` delivery plan remains the completed historical record of the prior cycle. This `-v2`
 plan starts the next-cycle ordering without rewriting or reopening those completed outcomes. This
-file remains the live sequencing authority unless and until a later bounded governance move
-explicitly replaces it.
+file remains preserved historical reconciliation input unless and until a later bounded governance
+move explicitly supersedes or archives it.

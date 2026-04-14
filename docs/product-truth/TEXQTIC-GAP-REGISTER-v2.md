@@ -1,3 +1,9 @@
+> STATUS — RETAINED AS HISTORICAL RECONCILIATION INPUT ONLY
+>
+> After the 2026-04-14 live-authority spine reconciliation, this `-v2` gap register no longer
+> serves as the active broad product-truth base for current repo-level sequencing. It is preserved
+> as `-v2` candidate-family history and reconciliation input only.
+
 # TEXQTIC-GAP-REGISTER-v2
 
 ## Purpose
@@ -9,7 +15,8 @@ synthesis, and A3 first-opening prioritization inside the repo so those findings
 chat-only.
 
 The completed `-v1` stack remains historical baseline for the prior cycle. This `-v2` register is
-the fresh bounded planning base for the next product-facing opening decision.
+now preserved as bounded candidate-family history and reconciliation input from the later `-v2`
+cycle.
 
 ## Authority Statement
 
@@ -25,8 +32,7 @@ The governing assumptions for this register are:
 
 ## Launch Overlay Note
 
-This `-v2` gap register remains the active broad product-truth base for next-cycle candidate-family
-truth.
+This `-v2` gap register is preserved as historical candidate-family and reconciliation input only.
 
 For launch-specific posture, also see:
 
