@@ -7,7 +7,7 @@
 | **Realm** | tenant                                                             |
 | **Links** | `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`, `docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md` |
 
-> This matrix defines the canonical dashboard surfaces for each tenant type. It is the product scope boundary for all Wave 4+ frontend work. **No tenant dashboard module ships without a row in this matrix.**
+> This matrix defines the canonical dashboard surfaces for each covered family, category, or capability workspace. It is the product scope boundary for all Wave 4+ frontend work. **No tenant dashboard module ships without a row in this matrix.**
 
 > Canonical model note: B2B, B2C, and Aggregator are the governed commercial access models.
 > White-label is an overlay capability and deployment/experience model, not a separate board-level
@@ -17,7 +17,7 @@
 
 ## Organization Principle
 
-Every tenant dashboard is organized into **5 Dashboard Domains**. The same 5 domains apply to every tenant type — but which modules exist within each domain, and which are active vs stub vs planned, varies by type.
+Every tenant dashboard is organized into **5 Dashboard Domains**. The same 5 domains apply across each covered family, category, or capability workspace — but the specific modules and their active vs stub vs planned status vary by surface.
 
 | Domain | Code | Purpose |
 |--------|------|---------|
@@ -29,9 +29,9 @@ Every tenant dashboard is organized into **5 Dashboard Domains**. The same 5 dom
 
 ---
 
-## Tenant Type Coverage
+## Family / category / capability workspace coverage
 
-### Tenant Type: B2B (Governed Exchange Operator)
+### B2B family — Governed Exchange Operator
 
 **Actor roles:** OWNER, ADMIN, MEMBER
 
@@ -101,7 +101,7 @@ board-level pillar.
 
 ---
 
-### Tenant Type: AGGREGATOR (Directory Discovery + Intent Handoff)
+### Aggregator workspace — Curated Directory & Intent Handoff
 
 **Actor roles:** OWNER, ADMIN, MEMBER
 
@@ -133,7 +133,7 @@ orchestration.
 
 ---
 
-### Tenant Type: B2C (Tenant-Branded Commerce)
+### B2C family — Tenant-Branded Commerce
 
 **Actor roles:** OWNER, ADMIN, MEMBER (with separate public-safe storefront visitors on the consumer-facing surface)
 
@@ -176,7 +176,7 @@ For each module, access is determined by the actor's role within the tenant:
 ## Module Declaration: [Module Name]
 
 - **Domain:** TA | TO | TF | TS | TC
-- **Tenant types:** ALL | B2B | AGGREGATOR | B2C (+ white-label overlay where applicable)
+- **Covered surfaces:** ALL | B2B | AGGREGATOR | B2C (+ white-label overlay where applicable)
 - **Actor roles:** OWNER | ADMIN | MEMBER (+ access level per role)
 - **Realm:** tenant
 - **Data authority:** [tables + RLS context required]
@@ -193,7 +193,7 @@ For each module, access is determined by the actor's role within the tenant:
 
 ## Priority Summary for Wave 4
 
-| Priority | Tenant Type | Domain | Module |
+| Priority | Covered Surface | Domain | Module |
 |----------|-------------|--------|--------|
 | P1 | ALL | TA | Org Profile / Store Profile |
 | P1 | ALL | TA | Membership (UI completion for ADMIN invite flow) |
