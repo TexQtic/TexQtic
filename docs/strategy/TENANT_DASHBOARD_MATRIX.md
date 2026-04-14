@@ -7,9 +7,8 @@
 | **Realm** | tenant                                                             |
 | **Links** | `docs/status/TEXQTIC_CURRENT_STATE__2026-02-24.md`, `docs/strategy/PLATFORM_DOCTRINE_ADDENDUM.md` |
 
-> This matrix defines the canonical dashboard surfaces for each covered family, category, or capability workspace. It is the product scope boundary for all Wave 4+ frontend work. **No tenant dashboard module ships without a row in this matrix.**
-
-> Canonical model note: B2B, B2C, and Aggregator are the governed commercial access models.
+> This matrix is a preserved descriptive dashboard matrix for each covered family, category, or capability workspace. It remains a useful evidence surface for dashboard scope comparison, but it should not be treated as the current standalone canonical dashboard authority or sole product scope boundary for later work. **No tenant dashboard module ships without a row in this matrix.**
+> Alignment note: B2B, B2C, and Aggregator are the governed commercial access models.
 > White-label is an overlay capability and deployment/experience model, not a separate board-level
 > pillar or primary tenant-mode family.
 

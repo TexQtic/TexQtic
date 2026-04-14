@@ -5,10 +5,10 @@
 |-----------|--------------------------------------------------------------------|
 | **Date**  | 2026-02-24                                                         |
 | **Status**| DRAFT — aligned with Doctrine Addendum + G-W3-AUDIT-001 baseline  |
-| **Scope** | Canonical surface definition for all Wave 4+ dashboard work        |
+| **Scope** | Preserved descriptive matrix for control-plane, B2B, and WL dashboard work |
 | **Links** | `docs/DOCTRINE_ADDENDUM_POSITIONING_MONEY.md` · `docs/strategy/TENANT_DASHBOARD_MATRIX.md` |
 
-> **This is the authoritative dashboard surface definition.** No module ships without a declared entry here. See `docs/strategy/TENANT_DASHBOARD_MATRIX.md` for the full 4-tenant-type matrix including AGGREGATOR and B2C.
+> This is a preserved descriptive dashboard matrix aligned to later anti-drift product-truth authority. It should not be read as the current standalone authoritative dashboard surface definition. No module ships without a declared entry here. See `docs/strategy/TENANT_DASHBOARD_MATRIX.md` for the full 4-tenant-type matrix including AGGREGATOR and B2C.
 
 ---
 
