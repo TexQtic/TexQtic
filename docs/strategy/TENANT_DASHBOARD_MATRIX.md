@@ -116,8 +116,8 @@ orchestration.
 |--------|--------|-------------|--------|--------|
 | **TA — Admin** | Org Profile | Aggregator identity, tier, domains | P1 | ⏳ Stub |
 | | Membership & RBAC | Staff + partner access management | P1 | ✅ API done |
-| | Supplier Network | Approved supplier list + onboarding | P2 | ⏳ Product-defined |
-| | Buyer Network | Approved buyer list | P2 | ⏳ Product-defined |
+| | Discovery-safe supplier directory | Discovery-safe supplier directory and counterparty inspection only | P2 | ⏳ Product-defined |
+| | Discovery-safe buyer directory | Discovery-safe buyer directory and counterparty inspection only | P2 | ⏳ Product-defined |
 | **TO — Operations** | Shared downstream order continuation | Shared downstream order visibility after handoff | P1 | ⏳ Stub |
 | | Qualified intent handoff | Qualified RFQ intake and downstream handoff | P1 | ⏳ Product-defined |
 | | Downstream negotiation continuation | Visibility into downstream negotiation continuation after handoff | P2 | ⏳ Product-defined |
@@ -125,7 +125,7 @@ orchestration.
 | **TF — Finance** | Historical finance overhang (non-canonical) | Retained only as a pre-normalization note; not a current Aggregator-owned finance function | N/A | Historical note |
 | | Invoice Management | Issue/receive invoices across parties | P2 | ⏳ Not started |
 | | Settlement Visibility | Multi-party settlement tracking | P3 | ⏳ Not started |
-| **TS — Sales/Products** | Catalog Hub | Unified catalog across supplier sources | P1 | ⏳ Stub |
+| **TS — Sales/Products** | Discovery catalog / counterparty inspection | Discovery-safe catalog and counterparty inspection across supplier sources only | P1 | ⏳ Stub |
 | | Pricing Governance | Price floors/ceilings across network | P2 | ⏳ Product-defined |
 | **TC — Client Comms** | Downstream communication continuation | Shared downstream communication continuation after handoff | P2 | ⏳ Not started |
 | | Approval Chains | Complex multi-party approval workflows | P2 | ⏳ Product-defined |
