@@ -249,8 +249,8 @@ overlay surface is already materially present in current repo truth.
 | **P1**   | ALL tenants    | TS     | Catalog Management UI (API exists)                        |
 | **P1**   | ALL tenants    | TO     | Order List (basic view)                                   |
 | **P1**   | ALL tenants    | TC     | Notifications center                                      |
-| **P1**   | WHITE_LABEL    | TA     | Store Branding UI (API exists)                            |
-| **P1**   | WHITE_LABEL    | TS     | Collections (WL-specific)                                 |
+| **P1**   | WL overlay     | TA     | Store Branding UI (API exists)                            |
+| **P1**   | WL overlay     | TS     | Collections (WL-specific)                                 |
 | **P1**   | B2B            | TO     | Compliance Tasks surface                                  |
 | **P1**   | B2B            | TO     | RFQ Management (product definition gate first)            |
 | **P1**   | Control Plane  | Finance | Tenant plan metadata + Fee Ledger stubs                  |
@@ -264,7 +264,7 @@ Before any module is implemented, all must be checked:
 
 - [ ] Realm declared: `control` / `tenant` / `public`
 - [ ] Actor roles and permission level per role defined
-- [ ] Tenant types scoped: ALL / B2B / WHITE_LABEL / AGGREGATOR / B2C
+- [ ] Tenant types scoped: ALL / B2B / AGGREGATOR / B2C (+ WL overlay where applicable)
 - [ ] Data authority boundary declared (tables + RLS context)
 - [ ] API endpoints listed or stubbed
 - [ ] Audit events listed (SNAKE_CASE)
