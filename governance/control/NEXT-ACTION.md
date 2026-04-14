@@ -25,11 +25,11 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
   Preserve HOLD-FOR-BOUNDARY-TIGHTENING, the zero-open product-delivery posture, and the current blocker/hold register.
-  When a truthful preserved unresolved hold remains, one bounded forensic contradiction test has concluded that no hold-outranking contradiction exists, and one bounded downstream descendant-selection test has concluded that no exact current downstream governance descendant is positively selectable, surface exactly one governance-only same-hold design-clarification successor limited to the minimum exact future hold-resolution path or evidence condition for that same hold.
+  When the fixed `White Label Co` same-hold verdict is `EXACT_EXCEPTION_STILL_REMAINS`, surface exactly one bounded governance-only Layer 0 sync-decision limited to deciding whether the live next-action pointer and hold register should be synchronized to that fixed post-verdict posture or explicitly left unchanged.
 notes: |
   Ordinary product execution sequencing comes from the product-truth authority stack.
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   That successor does not reopen product-family execution, hold-defeat implementation, or broader downstream governance execution.
   Reused-existing-user remains BOUNDED_DEFERRED_REMAINDER.
-  White Label Co remains the sole REVIEW-UNKNOWN hold.
+  White Label Co remains the sole same-hold residual under fixed post-verdict posture EXACT_EXCEPTION_STILL_REMAINS.
 ```

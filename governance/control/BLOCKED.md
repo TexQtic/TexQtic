@@ -18,7 +18,12 @@
 
 | Item | Status | Posture |
 | --- | --- | --- |
-| `White Label Co` | `REVIEW-UNKNOWN` | Preserved as the sole current hold. No normalization claim, disposition work, or implementation follow-up is implied by this reset. |
+| `White Label Co` | `REVIEW-UNKNOWN` | Preserved as the sole current hold under fixed post-verdict posture `EXACT_EXCEPTION_STILL_REMAINS`. No normalization claim, disposition work, or implementation follow-up is implied by this sync. |
+
+- Exact post-verdict exception: no fixed bounded authority yet proves the remaining seam is already
+    one cleanly separable, overlay-owned downstream governance slice that can advance without unsafe
+    normalization into broader `B2C`, domain / routing / brand-surface, identity / tenancy,
+    tenant-back-office, or canon-expansion work.
 
 ## Section 3 — Excluded from blocker treatment in this pass
 
