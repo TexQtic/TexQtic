@@ -118,16 +118,16 @@ orchestration.
 | | Membership & RBAC | Staff + partner access management | P1 | ✅ API done |
 | | Supplier Network | Approved supplier list + onboarding | P2 | ⏳ Product-defined |
 | | Buyer Network | Approved buyer list | P2 | ⏳ Product-defined |
-| **TO — Operations** | Order Hub | Cross-party order tracking | P1 | ⏳ Stub |
-| | RFQ Routing | Receive, match, route RFQs to suppliers | P1 | ⏳ Product-defined |
-| | Negotiation Hub | Multi-party negotiation management | P2 | ⏳ Product-defined |
+| **TO — Operations** | Shared downstream order continuation | Shared downstream order visibility after handoff | P1 | ⏳ Stub |
+| | Qualified intent handoff | Qualified RFQ intake and downstream handoff | P1 | ⏳ Product-defined |
+| | Downstream negotiation continuation | Visibility into downstream negotiation continuation after handoff | P2 | ⏳ Product-defined |
 | | Compliance Dashboard | Compliance posture across network | P2 | ⏳ Stub |
-| **TF — Finance** | Network Revenue | Aggregator margin / take on brokered trades | P2 | ⏳ Product-defined |
+| **TF — Finance** | Historical finance overhang (non-canonical) | Retained only as a pre-normalization note; not a current Aggregator-owned finance function | N/A | Historical note |
 | | Invoice Management | Issue/receive invoices across parties | P2 | ⏳ Not started |
 | | Settlement Visibility | Multi-party settlement tracking | P3 | ⏳ Not started |
 | **TS — Sales/Products** | Catalog Hub | Unified catalog across supplier sources | P1 | ⏳ Stub |
 | | Pricing Governance | Price floors/ceilings across network | P2 | ⏳ Product-defined |
-| **TC — Client Comms** | Multi-party Threads | Buyer ↔ Aggregator ↔ Supplier threads | P2 | ⏳ Not started |
+| **TC — Client Comms** | Downstream communication continuation | Shared downstream communication continuation after handoff | P2 | ⏳ Not started |
 | | Approval Chains | Complex multi-party approval workflows | P2 | ⏳ Product-defined |
 | | Network Notifications | Cross-party event notifications | P1 | ⏳ Not started |
 
