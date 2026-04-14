@@ -59,7 +59,7 @@ Authority order used:
 | AI Governance / Advisory Automation | `EXPLICIT_SUBFAMILY_INSIDE_EXISTING_PARENT` | `Platform Control-Plane and Platform Operations Supervision` | Current AI-governance truth is bounded platform oversight plus doctrinally gated future automation. That makes it a real explicit control-plane subfamily with later refinable design work, not a missing standalone top-level family. |
 | Billing / Tenant Billing / Commercial Admin Operations | `EXPLICIT_SUBFAMILY_INSIDE_EXISTING_PARENT` | `Platform Control-Plane and Platform Operations Supervision` | Current runtime truth is platform-side finance supervision and commercial-admin visibility, with explicit adjacency to Subscription and Payments but no evidence that it should be broken out as a top-level family now. It should therefore be normalized as an explicit control-plane subfamily. |
 | Public-facing pages / surfaces | `EXPLICIT_SUBFAMILY_INSIDE_EXISTING_PARENT` | `Domain / Tenant Routing / Brand-Surface Management` | Current authority already places public-safe tenant discovery, routed brand surfaces, and public-entry continuity inside the route/brand-surface family, while B2C remains the consuming commercial family for public-safe consumer entry. Public-facing surfaces should remain a named public-entry / public-shell lane inside the domain family, not a standalone top-level family. |
-| Supplier / Manufacturer Capability Directory / Profiling | `EXPLICIT_SUBFAMILY_INSIDE_EXISTING_PARENT` | `Aggregator Directory Discovery and Intent-Handoff Workspace` | Current undernamed ecosystem-discovery truth fits best as an Aggregator subfamily because capability/profile visibility serves curated discovery and intent handoff rather than a separate independent platform pillar. |
+| Discovery-safe counterparty profile directory | `EXPLICIT_SUBFAMILY_INSIDE_EXISTING_PARENT` | `Aggregator Directory Discovery and Intent-Handoff Workspace` | Current discovery-safe counterparty profile visibility fits best as an Aggregator subfamily because bounded profile inspection serves curated discovery and intent handoff without transferring taxonomy administration, participant-governance authority, or execution ownership out of B2B. |
 
 ## Public-Facing Pages Decision
 
@@ -104,4 +104,4 @@ This normalization does not complete the following later work:
 ## Non-Opening Rule
 
 These placement decisions do not create new `-v2` candidate families, do not promote any new
-product-facing opening, and do not reopen the paused B2C cycle.
+ product-facing opening, and do not reopen the paused B2C cycle.
