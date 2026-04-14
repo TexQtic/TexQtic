@@ -153,7 +153,61 @@ Authority effect of this writeback:
 - `governance/control/NEXT-ACTION.md` remains the sole live ordinary sequencing authority
 - zero-open posture remains intact
 
-## 9. Scope boundary
+## 9. Post-2026-04-14 family-unit conditional-elevation eligibility map
+
+This section is a non-Layer-0 authority-map clarification only.
+
+It records the already-decided family-unit conditional-elevation eligibility model from:
+
+- governance/analysis/TEXQTIC-FAMILY-UNIT-CONDITIONAL-ELEVATION-ELIGIBILITY-DECISION-2026-04-14.md
+
+It does not:
+
+- replace `governance/control/NEXT-ACTION.md` as the sole live ordinary sequencing authority
+- reopen the family-unit eligibility decision
+- execute actual elevation of any family-unit artifact
+- reopen the White Label same-hold chain
+- select any product-facing next opening
+
+The carried-forward family-unit eligibility map is exactly:
+
+- `ELIGIBLE_FOR_CONDITIONAL_ELEVATION`
+  - docs/product-truth/TEXQTIC-TAXONOMY-PROPAGATION-AND-DISCOVERY-SAFE-EXPOSURE-MAP-v1.md
+    - condition: only as a bounded cross-family taxonomy propagation and exposure authority, and only when carried together with its explicitly named controlling vocabulary/state-map, provisioning-alignment, and tenant-admin-surface references
+    - still cannot: authorize runtime, schema, route, or contract mutation; transfer B2B taxonomy ownership to Aggregator; or become a product-opening selector
+  - docs/product-truth/B2C-OPERATING-MODE-DESIGN-v1.md
+    - condition: only as a bounded B2C parent-family authority anchor for later B2C-specific descendant work while zero-open posture and live-spine supremacy remain intact
+    - still cannot: turn the closed B2C seam into whole-family completion, authorize any B2C product-facing opening, or absorb WL, catalog, checkout, identity, or tenant-admin families by implication
+  - docs/product-truth/B2B-EXCHANGE-OPERATING-MODE-DESIGN-v1.md
+    - condition: only as a bounded B2B parent-family authority anchor in combination with the April target-structure decision and April B2B taxonomy refinement
+    - still cannot: make Aggregator a peer family again, turn package / entitlement posture into B2B family identity, or select a B2B product-facing next opening by itself
+
+- `NOT_ELIGIBLE_YET`
+  - docs/product-truth/AGGREGATOR-OPERATING-MODE-NORMALIZATION-v1.md
+    - reconsideration condition: only after explicit rebase under the April target-structure decision, explicit subordination to B2B taxonomy ownership and the discovery-safe subset rule, and removal of peer-family or peer-category implications
+
+- `PRESERVE_AS_ANCHOR_ONLY`
+  - docs/product-truth/WHITE-LABEL-OVERLAY-NORMALIZATION-v1.md
+  - docs/product-truth/SUBSCRIPTION-ENTITLEMENT-NORMALIZATION-v1.md
+
+- `PRESERVE_AS_DESCENDANT_ONLY`
+  - docs/product-truth/B2C-TENANT-BRANDED-COMMERCE-POST-SEAM-RECONCILIATION-v1.md
+  - docs/product-truth/SUBSCRIPTION-ENTITLEMENT-IMPLEMENTATION-DESIGN-v1.md
+
+- `PRESERVE_AS_NON-CONTROLLING_REFERENCE`
+  - docs/product-truth/SUBSCRIPTION-BOUNDED-TECS-OPENING-CANDIDATE-ANALYSIS-v1.md
+  - docs/product-truth/SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT-BOUNDED-PRODUCT-DECISION-v1.md
+  - docs/product-truth/SUBSCRIPTION-FRONTEND-CANONICAL-VOCABULARY-ALIGNMENT-LAWFUL-OPENING-STEP-v1.md
+
+Authority effect of this writeback:
+
+- the family-authority eligibility map is now visible in one existing non-Layer-0 reference surface
+- no family-unit artifact listed here is a repo-level next-step selector
+- no actual family-unit elevation is executed by this writeback
+- `governance/control/NEXT-ACTION.md` remains the sole live ordinary sequencing authority
+- zero-open posture remains intact
+
+## 10. Scope boundary
 
 This document is the recreated opening-layer governance authority and pointer layer only.
 
