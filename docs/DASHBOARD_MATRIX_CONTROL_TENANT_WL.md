@@ -1,5 +1,5 @@
 # TexQtic — Dashboard Matrix
-## Control Plane · Tenant (B2B Professional) · White-Label
+## Control Plane · Tenant Workspace · B2B family · PROFESSIONAL plan · White-Label overlay
 
 | Field     | Value                                                              |
 |-----------|--------------------------------------------------------------------|
@@ -158,15 +158,15 @@ would otherwise understate current tenant reality.
 
 ---
 
-## III. White-Label Tenant
+## III. White-Label Overlay (on lawful parent family)
 
 **Realm:** `tenant`  
 **Shell:** `WhiteLabelShell` in `layouts/Shells.tsx`  
 **Actor roles:** `OWNER`, `ADMIN`, `MEMBER` (back-office) · `BUYER`, `GUEST` (storefront consumers)
 
-WL tenants require **two distinct surfaces**. The storefront consumer UX is a separate rendering
-concern, and the operator/admin back-office surface is already materially present in current repo
-truth.
+The White-Label overlay spans **two distinct surfaces** on a lawful parent tenant context. The
+storefront consumer UX remains a separate rendering concern, and the bounded brand-operator admin
+overlay surface is already materially present in current repo truth.
 
 ---
 
@@ -183,10 +183,11 @@ truth.
 
 ---
 
-### 2️⃣ Store Admin — Back-Office
+### 2️⃣ WL admin overlay — brand-operator back office
 
-> **Current repo-truth note:** WL tenants already have a real operator/admin back-office surface.
-> This section should no longer be read as if WL Store Admin were still a future-add entry point.
+> **Current repo-truth note:** The WL admin overlay already exposes a real brand-operator back-
+> office surface on the lawful parent tenant context. This section should no longer be read as if
+> it were a future-add entry point or a whole-office label for the tenant-admin family.
 
 ---
 
