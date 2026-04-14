@@ -100,7 +100,60 @@ The following remain historical evidence and reconciliation input only:
 
 These materials may inform later bounded work, but they are not live authority after this reset.
 
-## 8. Scope boundary
+## 8. Post-2026-04-14 April-wave role map
+
+This section is a non-Layer-0 authority-map clarification only.
+
+It records the already-decided April-wave role model from:
+
+- governance/analysis/TEXQTIC-APRIL-13-14-WAVE-ELEVATION-DECISION-2026-04-14.md
+
+It does not:
+
+- replace `governance/control/NEXT-ACTION.md` as the sole live ordinary sequencing authority
+- reopen the April-wave elevation decision
+- reopen the White Label same-hold chain
+- select any product-facing next opening
+
+The carried-forward April-wave role map is exactly:
+
+- `LIVE_AUTHORITY`
+  - governance/analysis/TEXQTIC-WHITE-LABEL-CO-SAME-HOLD-EVIDENCE-VERDICT-2026-04-14.md
+
+- `LIVE_ENABLING_AUTHORITY`
+  - governance/analysis/TEXQTIC-GOV-OS-HOLD-DEFEAT-ROUTING-DESIGN-WORK-ITEM-002-2026-04-13.md
+  - governance/analysis/TEXQTIC-TARGET-STRUCTURE-DECISION-TENANT-FAMILY-WL-AGGREGATOR-PACKAGE-BACKOFFICE-WORK-ITEM-001-2026-04-13.md
+  - governance/analysis/TEXQTIC-B2B-TAXONOMY-STRUCTURE-REFINEMENT-WORK-ITEM-003-2026-04-13.md
+
+- `PRESERVED_DESCENDANT_PLANNING`
+  - governance/analysis/TEXQTIC-FAMILY-BY-FAMILY-EXPOSURE-AUDIT-LANE-OPENING-WORK-ITEM-001-2026-04-13.md
+  - governance/analysis/TEXQTIC-FAMILY-BY-FAMILY-EXPOSURE-AUDIT-B2B-WORK-ITEM-002-2026-04-13.md
+
+- `NON-CONTROLLING_REFERENCE`
+  - governance/analysis/TEXQTIC-TECS-OS-GOVERNANCE-AMENDMENT-SYNC-WORK-ITEM-001-2026-04-13.md
+  - governance/analysis/TEXQTIC-GOV-OS-SUCCESSOR-SELECTION-RULE-SYNC-WORK-ITEM-003-2026-04-13.md
+  - governance/analysis/TEXQTIC-ARCHITECTURAL-GOVERNANCE-STATEMENT-SYNC-WORK-ITEM-004-2026-04-13.md
+  - governance/analysis/TEXQTIC-WHITE-LABEL-CO-SAME-HOLD-DESIGN-CLARIFICATION-FILE-TARGETING-PLAN-2026-04-14.md
+  - governance/analysis/TEXQTIC-WHITE-LABEL-CO-SAME-HOLD-EVIDENCE-VERDICT-FILE-TARGETING-PLAN-2026-04-14.md
+  - governance/analysis/TEXQTIC-WHITE-LABEL-CO-POST-VERDICT-LAYER-0-SYNC-DECISION-FILE-TARGETING-PLAN-2026-04-14.md
+
+- `CLOSURE_OR_AUDIT_LINEAGE_ONLY`
+  - governance/analysis/TEXQTIC-BOUNDARY-FORENSIC-TRUTH-RECONSTRUCTION-WORK-ITEM-001-2026-04-13.md
+  - governance/analysis/TEXQTIC-DOWNSTREAM-GOVERNANCE-DESCENDANT-SELECTION-WORK-ITEM-001-2026-04-13.md
+  - governance/analysis/TEXQTIC-GOV-OS-WORKING-LOGIC-AND-HOLD-RESOLUTION-CAPACITY-AUDIT-WORK-ITEM-001-2026-04-13.md
+  - governance/analysis/TEXQTIC-WHITE-LABEL-CO-SAME-HOLD-DESIGN-CLARIFICATION-2026-04-14.md
+  - governance/analysis/TEXQTIC-WHITE-LABEL-CO-SAME-HOLD-CLOSURE-RECORD-2026-04-14.md
+  - governance/analysis/TEXQTIC-REPO-TRUTH-DRIFT-AUDIT-AND-CURRENT-ACTIVITIES-RECONCILIATION-2026-04-14.md
+  - governance/analysis/TEXQTIC-POST-GOV-OS-UPGRADE-CHRONOLOGY-WORK-ORDER-AND-AUTHORITY-SEQUENCING-AUDIT-2026-04-14.md
+
+Authority effect of this writeback:
+
+- the April-wave elevated role set is now visible in one existing non-Layer-0 authority-map surface
+- no April-wave artifact listed here is a repo-level next-step selector
+- `governance/control/NEXT-ACTION.md` remains the sole live ordinary sequencing authority
+- zero-open posture remains intact
+
+## 9. Scope boundary
 
 This document is the recreated opening-layer governance authority and pointer layer only.
 
