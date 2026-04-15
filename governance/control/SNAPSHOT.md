@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-3C-REPO-HEALTH-GATE-DISPOSITION-2026-04-15)
+**Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-3C-CLOSEOUT-2026-04-15)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-15
-snapshot_unit: SUBSCRIPTION-SLICE-3C-REPO-HEALTH-GATE-DISPOSITION-2026-04-15
+snapshot_unit: SUBSCRIPTION-SLICE-3C-CLOSEOUT-2026-04-15
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -42,26 +42,21 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: Subscription slice 3C — backend runtime plan canonicalization and typing tightening
-current_product_active_delivery_status: BLOCKED_PENDING_REPO_HEALTH_REMEDIATION
-current_product_active_delivery_blocker: |
-  Slice 3C remains the active/open bounded unit with uncommitted implementation scope limited to server/src/lib/database-context.ts and server/src/routes/tenant.ts.
-  In-scope eslint completed with 0 errors and git diff --check passed.
-  Repo-level pnpm -C server exec tsc --noEmit remains red due to pre-existing out-of-scope failures at server/src/__tests__/g026-platform-subdomain-routing.spec.ts:31 and server/src/__tests__/tenant-provision-approved-onboarding.integration.test.ts:846.
-  No implementation commit is lawful until repo-health remediation resolves the red gate or a separately authorized governance exception is created.
-  Slice 3C may not proceed to verification or closeout while this blocker remains.
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: NONE_OPEN
+current_product_active_delivery_status: ZERO_OPEN_POST_CLOSE
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
-  Subscription slice 3B — OpenAPI contract plan metadata tightening closed from commit af5827a.
-  Implementation scope remained bounded to shared/contracts/openapi.tenant.json and shared/contracts/openapi.control-plane.json only.
-  Both contract plan fields were tightened from unconstrained string to the canonical enum FREE, STARTER, PROFESSIONAL, ENTERPRISE.
-  Added description text remained metadata-only and clarified that plan does not by itself imply full entitlement completeness.
-  No services, routes, provisioning, helper/runtime files, or UI files were modified, and no broader entitlement meaning, AI-budget behavior, or operator plan-assignment behavior was reopened.
-  Validation and verification passed: git diff --check, pnpm exec tsc --noEmit, verdict VERIFIED_CLEAN.
-  No broader subscription opening is implied; Layer 0 remains in zero-open posture.
+  Subscription slice 3C — backend runtime plan canonicalization and typing tightening closed from implementation commit 35bc83f9bae5b4941fe964a8a84d9b6d198202f5 with verification verdict VERIFIED_CLEAN.
+  Implementation scope remained bounded to server/src/lib/database-context.ts and server/src/routes/tenant.ts only.
+  server/src/lib/database-context.ts now canonicalizes text-backed organizations.plan through canonicalizeTenantPlan(plan: string): TenantPlan and tightens OrganizationIdentity.plan from string to TenantPlan.
+  server/src/routes/tenant.ts tightens TenantSessionIdentity.plan from string to TenantPlan and routes the immediate tenant runtime consumer through the same canonicalization path.
+  Storage truth remained preserved: organizations.plan remains text-backed in persistence and canonicalization occurs at the runtime/helper seam rather than by pretending persistence is already a native enum.
+  No provisioning, auth expansion, contracts, OpenAPI, frontend service, or UI files were modified, and no broader entitlement meaning, AI-budget behavior, or operator plan-assignment behavior was reopened.
+  Validation and verification passed: pnpm -C server exec eslint src/routes/tenant.ts src/lib/database-context.ts, pnpm -C server exec tsc --noEmit, git diff --check, verdict VERIFIED_CLEAN.
+  No broader subscription opening is implied; Layer 0 returns to zero-open posture.
 ```
 
 ## Current Posture
@@ -78,4 +73,4 @@ latest_verified_product_close: |
 
 - Read `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md` first, in that order.
 - Use this file only when current opening-layer context is missing or historically ambiguous.
-- Slice 3C is the current bounded open unit and is blocked pending repo-health remediation.
+- Subscription slice 3C is implemented, VERIFIED_CLEAN, and closed; no product-facing implementation unit is currently open.

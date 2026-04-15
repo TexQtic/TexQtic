@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-13 (TEXQTIC-TECS-OS-GOVERNANCE-AMENDMENT-SYNC-WORK-ITEM-001-2026-04-13)
+**Last Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-3C-CLOSEOUT-2026-04-15)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -14,16 +14,7 @@
 
 | Item | Status | Posture |
 | --- | --- | --- |
-| `Subscription slice 3C` | `BLOCKED` | Active/open bounded unit pending mandatory repo-health remediation before any implementation commit, verification, or closeout. |
-
-- Uncommitted implementation scope remains limited to `server/src/lib/database-context.ts` and `server/src/routes/tenant.ts`.
-- In-scope validation passed: `eslint` on the two allowlisted files completed with 0 errors, and `git diff --check` passed.
-- Repo-level TypeScript gate remains red: `pnpm -C server exec tsc --noEmit`.
-- Pre-existing out-of-scope failing files:
-    - `server/src/__tests__/g026-platform-subdomain-routing.spec.ts:31`
-    - `server/src/__tests__/tenant-provision-approved-onboarding.integration.test.ts:846`
-- No implementation commit is lawful until repo-health remediation resolves the red gate or a separately authorized governance exception is created.
-- Slice 3C may not proceed to verification or closeout while this blocker remains.
+| `None` | `CLEAR` | No current live product blocker is recorded in this closeout pass. |
 
 ## Section 2 — HOLDS / REVIEW-UNKNOWN
 
