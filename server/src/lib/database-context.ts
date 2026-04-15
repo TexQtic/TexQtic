@@ -13,6 +13,7 @@
 
 import type { FastifyRequest } from 'fastify';
 import type { PrismaClient } from '@prisma/client';
+import type { TenantPlan } from '../types/index.js';
 import { randomUUID } from 'node:crypto';
 
 /**
@@ -513,6 +514,18 @@ export class OrganizationNotFoundError extends Error {
  * Only fields confirmed to exist in the organizations table are included.
  * Do NOT invent columns — schema.prisma is the authoritative source.
  */
+export function canonicalizeTenantPlan(plan: string): TenantPlan {
+  switch (plan) {
+    case 'FREE':
+    case 'STARTER':
+    case 'PROFESSIONAL':
+    case 'ENTERPRISE':
+      return plan;
+    default:
+      throw new Error(`Invalid tenant plan: ${plan}`);
+  }
+}
+
 export interface OrganizationIdentity {
   id: string;
   slug: string;
@@ -523,7 +536,7 @@ export interface OrganizationIdentity {
   jurisdiction: string;
   registration_no: string | null;
   risk_score: number;
-  plan: string;
+  plan: TenantPlan;
   created_at: Date;
   updated_at: Date;
 }
@@ -606,7 +619,10 @@ export async function getOrganizationIdentity(
     if (!org) {
       throw new OrganizationNotFoundError(orgId);
     }
-    return org;
+    return {
+      ...org,
+      plan: canonicalizeTenantPlan(org.plan),
+    };
   });
 }
 

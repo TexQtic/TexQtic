@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
+import type { TenantPlan } from '../types/index.js';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -20,6 +21,7 @@ import {
   sendUnauthorized,
 } from '../utils/response.js';
 import {
+  canonicalizeTenantPlan,
   withDbContext,
   type DatabaseContext,
   getOrganizationIdentity,
@@ -71,7 +73,7 @@ type TenantSessionIdentity = {
   tenant_category: string;
   is_white_label: boolean;
   status: string;
-  plan: string;
+  plan: TenantPlan;
 };
 
 async function resolveTenantSessionIdentity(input: {
@@ -117,7 +119,7 @@ async function resolveTenantSessionIdentity(input: {
       tenant_category: org.org_type,
       is_white_label: org.is_white_label,
       status: org.status,
-      plan: org.plan,
+      plan: canonicalizeTenantPlan(org.plan),
     };
   });
 }
