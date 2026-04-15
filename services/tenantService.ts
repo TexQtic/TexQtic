@@ -42,7 +42,7 @@ export interface ActivateTenantResponse {
     tenant_category?: string | null;
     is_white_label?: boolean;
     status: string;
-    plan: string;
+    plan: import('../types').CommercialPlan;
   };
   membership: {
     role: string;

@@ -26,7 +26,7 @@ export interface Tenant {
   status: string;
   /** Org-backed onboarding lifecycle status used by onboarding completion flow. */
   onboarding_status?: string | null;
-  plan: string;
+  plan: import('../types').CommercialPlan;
   /** Detail reads populate timestamps; summary list reads may omit them. */
   createdAt?: string;
   updatedAt?: string;
