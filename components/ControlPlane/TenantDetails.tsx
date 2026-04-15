@@ -33,6 +33,10 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
   const tenantCreatedAt = getTenantCreatedAtDisplay(tenant);
+  const aiUsagePercent = tenant.aiBudget > 0
+    ? Math.min((tenant.aiUsage / tenant.aiBudget) * 100, 100)
+    : 0;
+  const remainingAiBudget = Math.max(tenant.aiBudget - tenant.aiUsage, 0);
   const lifecycleTenant: TenantConfig = {
     ...tenant,
     status: tenantStatus,
@@ -146,9 +150,9 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
 
   const tabs: TenantDetailsTab[] = [
     { id: 'OVERVIEW', label: 'Overview', state: 'FULL', note: 'Live' },
-    { id: 'PLAN', label: 'Plan & Quotas', state: 'LIMITED', note: 'Limited' },
+    { id: 'PLAN', label: 'Plan & AI Budget', state: 'LIMITED', note: 'Live data' },
     { id: 'FEATURES', label: 'Feature Flags', state: 'LIMITED', note: 'Limited' },
-    { id: 'BILLING', label: 'Billing', state: 'PREVIEW', note: 'Preview' },
+    { id: 'BILLING', label: 'Billing Scope', state: 'LIMITED', note: 'Boundary' },
     { id: 'RISK', label: 'Risk & Compliance', state: 'PREVIEW', note: 'Preview' },
     { id: 'AUDIT', label: 'Audit Log', state: 'SEPARATE', note: 'Separate' },
   ];
@@ -276,12 +280,48 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
           </div>
         );
       case 'PLAN':
-        return renderTabNoticePanel({
-          title: 'Plan & Quotas',
-          state: 'Limited',
-          message: 'Plan and quota depth is not launch-ready in this tenant deep-dive.',
-          detail: 'Use this view as an overview only; deeper plan administration is outside this surface.',
-        });
+        return (
+          <div className="bg-slate-900/50 p-8 rounded-xl border border-slate-800 space-y-6 animate-in slide-in-from-right-4 duration-300">
+            <div className="flex flex-wrap items-center gap-3">
+              <h3 className="text-xl font-bold text-white">Plan & AI Budget</h3>
+              <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Limited</span>
+            </div>
+            <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
+              This tab shows the current control-plane commercial metadata available in runtime today: canonical plan identity plus AI usage against the configured cap. It does not imply billing-complete administration.
+            </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-5">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Commercial Identity</div>
+                <div className="mt-4 space-y-4 text-sm">
+                  <DetailItem label="Commercial plan" value={tenant.plan} />
+                  <DetailItem label="Runtime status" value={tenantStatus} />
+                </div>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-5">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">AI Budget Visibility</div>
+                <div className="mt-4 space-y-4 text-sm">
+                  <DetailItem label="Configured cap" value={`${tenant.aiBudget.toLocaleString()} units`} />
+                  <DetailItem label="Current usage" value={`${tenant.aiUsage.toLocaleString()} units`} />
+                  <DetailItem label="Remaining headroom" value={`${remainingAiBudget.toLocaleString()} units`} />
+                </div>
+                <div className="mt-4">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className={`h-full ${aiUsagePercent > 80 ? 'bg-rose-500' : 'bg-blue-500'}`}
+                      style={{ width: `${aiUsagePercent}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-[10px] uppercase tracking-widest text-slate-500">
+                    {Math.round(aiUsagePercent)}% of configured cap in use
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-dashed border-slate-700/80 bg-slate-950/40 p-6 text-sm text-slate-400">
+              Deeper plan administration, billing operations, statements, invoices, and fee-ledger workflows remain outside this surface.
+            </div>
+          </div>
+        );
       case 'FEATURES':
         return renderTabNoticePanel({
           title: 'Feature Flags',
@@ -293,16 +333,16 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
         return (
           <div className="bg-slate-900/50 p-8 rounded-xl border border-slate-800 space-y-6 animate-in slide-in-from-right-4 duration-300">
              <div className="flex flex-wrap items-center gap-3">
-               <h3 className="text-xl font-bold text-white">Billing</h3>
+               <h3 className="text-xl font-bold text-white">Billing Scope</h3>
                <span className="rounded border border-slate-700 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Limited</span>
              </div>
              <div className="rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-               This tenant deep-dive does not expose tenant-real billing operations, invoice state handling, statement generation, or usage-backed financial detail.
+               This tenant deep-dive does not expose tenant-real billing operations, invoice state handling, statement generation, fee-ledger truth, or usage-backed financial workflows.
              </div>
              <div className="rounded-xl border border-dashed border-slate-700/80 bg-slate-950/40 p-6 space-y-3">
-               <div className="text-sm font-bold text-slate-200">Billing depth remains outside this surface.</div>
+               <div className="text-sm font-bold text-slate-200">Billing remains outside this surface.</div>
                <div className="text-sm text-slate-400">
-                 Use this tab as a boundary reminder only: billing workflow completion and operator billing actions are not available from the tenant deep-dive.
+                 Use Plan & AI Budget for the currently supported commercial metadata. Treat this tab as a boundary reminder only, not as a billing console.
                </div>
              </div>
           </div>
