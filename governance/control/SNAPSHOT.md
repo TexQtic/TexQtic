@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-13 (TEXQTIC-TECS-OS-GOVERNANCE-AMENDMENT-SYNC-WORK-ITEM-001-2026-04-13)
+**Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-2-CONTROL-PLANE-SURFACE-CORRECTION-CLOSEOUT-2026-04-15)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,8 +10,8 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-13
-snapshot_unit: TEXQTIC-TECS-OS-GOVERNANCE-AMENDMENT-SYNC-WORK-ITEM-001-2026-04-13
+snapshot_date: 2026-04-15
+snapshot_unit: SUBSCRIPTION-SLICE-2-CONTROL-PLANE-SURFACE-CORRECTION-CLOSEOUT-2026-04-15
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -47,6 +47,11 @@ current_product_active_delivery_unit: null
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
+latest_verified_product_close: |
+  Subscription slice 2 — control-plane surface correction closed from commit 3df60d3.
+  Implementation scope remained bounded to components/ControlPlane/TenantDetails.tsx only; components/ControlPlane/TenantRegistry.tsx remained unchanged.
+  Deployed control-plane tenant-detail verification passed: Plan & AI Budget exposes canonical plan, configured AI cap, current AI usage, remaining AI headroom, and usage indicator; Billing Scope is a boundary reminder only, not a billing console.
+  No broader subscription opening is implied; Layer 0 remains in zero-open posture.
 ```
 
 ## Current Posture
