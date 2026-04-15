@@ -185,6 +185,125 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     suspended: tenants.filter(t => t.status?.toUpperCase() === 'SUSPENDED').length,
   };
 
+  const operationalTenants = tenants.filter(t => t.status?.toUpperCase() !== 'CLOSED');
+  const closedTenants = tenants.filter(t => t.status?.toUpperCase() === 'CLOSED');
+
+  const renderTenantTable = (tenantList: Tenant[]) => (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
+          <tr>
+            <th className="px-6 py-4 font-bold uppercase text-[10px]">Tenant</th>
+            <th className="px-6 py-4 font-bold uppercase text-[10px]">Status</th>
+            <th className="px-6 py-4 font-bold uppercase text-[10px]">Plan</th>
+            <th className="px-6 py-4 font-bold uppercase text-[10px]">AI Usage</th>
+            <th className="px-6 py-4 font-bold uppercase text-[10px]">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-800">
+          {tenantList.map(tenant => {
+            const mappedTenant = mapToTenantConfig(tenant);
+            const aiUsagePercent = mappedTenant.aiBudget
+              ? (mappedTenant.aiUsage / mappedTenant.aiBudget) * 100
+              : 0;
+            const isDetailLoading = detailLoadingTenantId === tenant.id;
+            const canImpersonate = tenant.status?.toUpperCase() === 'ACTIVE';
+
+            return (
+              <tr
+                key={tenant.id}
+                className={`hover:bg-slate-800/30 transition-colors group ${isDetailLoading ? 'cursor-wait opacity-80' : 'cursor-pointer'}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  void handleSelectTenant(tenant);
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    void handleSelectTenant(tenant);
+                  }
+                }}
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{mappedTenant.theme.logo}</span>
+                    <div>
+                      <div className="font-bold text-slate-100">{tenant.name}</div>
+                      <div className="text-[10px] text-slate-500 font-mono">
+                        {tenant.slug}.texqtic.com
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase ${getStatusColor(tenant.status)}`}
+                  >
+                    {tenant.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-xs text-slate-300 font-bold">{mappedTenant.plan}</div>
+                  <div className="text-[9px] text-slate-500 uppercase">{tenant.type}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <svg
+                    aria-hidden="true"
+                    className="block h-1 w-full max-w-[100px]"
+                    preserveAspectRatio="none"
+                    viewBox="0 0 100 1"
+                  >
+                    <rect className="fill-slate-800" height="1" rx="0.5" ry="0.5" width="100" x="0" y="0" />
+                    <rect
+                      className={aiUsagePercent > 80 ? 'fill-rose-500' : 'fill-blue-500'}
+                      height="1"
+                      rx="0.5"
+                      ry="0.5"
+                      width={Math.min(aiUsagePercent, 100)}
+                      x="0"
+                      y="0"
+                    />
+                  </svg>
+                  <div className="text-[10px] text-slate-500 mt-1">
+                    {Math.round(aiUsagePercent)}% cap
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div
+                    className="flex gap-3"
+                    role="presentation"
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => {
+                        void handleSelectTenant(tenant);
+                      }}
+                      title="Config"
+                      className="p-1 hover:text-white text-slate-500"
+                      disabled={isDetailLoading}
+                    >
+                      {isDetailLoading ? '…' : '⚙️'}
+                    </button>
+                    <button
+                      onClick={() => onImpersonate(mappedTenant)}
+                      title="Impersonate"
+                      className="p-1 text-slate-500 hover:text-blue-500 disabled:cursor-not-allowed disabled:text-slate-700"
+                      disabled={isDetailLoading || !canImpersonate}
+                    >
+                      👤
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
   // Error state
   if (error && !loading) {
     return (
@@ -264,118 +383,52 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
 
       {/* Data state */}
       {!loading && tenants.length > 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
-              <tr>
-                <th className="px-6 py-4 font-bold uppercase text-[10px]">Tenant</th>
-                <th className="px-6 py-4 font-bold uppercase text-[10px]">Status</th>
-                <th className="px-6 py-4 font-bold uppercase text-[10px]">Plan</th>
-                <th className="px-6 py-4 font-bold uppercase text-[10px]">AI Usage</th>
-                <th className="px-6 py-4 font-bold uppercase text-[10px]">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {tenants.map(tenant => {
-                const mappedTenant = mapToTenantConfig(tenant);
-                const aiUsagePercent = mappedTenant.aiBudget
-                  ? (mappedTenant.aiUsage / mappedTenant.aiBudget) * 100
-                  : 0;
-                const isDetailLoading = detailLoadingTenantId === tenant.id;
-                const canImpersonate = tenant.status?.toUpperCase() === 'ACTIVE';
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">
+                  Operational Tenants
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Tenants whose lifecycle status is not CLOSED.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
+                {operationalTenants.length}
+              </div>
+            </div>
+            {operationalTenants.length > 0 ? (
+              renderTenantTable(operationalTenants)
+            ) : (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
+                No operational tenants are currently visible.
+              </div>
+            )}
+          </div>
 
-                return (
-                  <tr
-                    key={tenant.id}
-                    className={`hover:bg-slate-800/30 transition-colors group ${isDetailLoading ? 'cursor-wait opacity-80' : 'cursor-pointer'}`}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      void handleSelectTenant(tenant);
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        void handleSelectTenant(tenant);
-                      }
-                    }}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{mappedTenant.theme.logo}</span>
-                        <div>
-                          <div className="font-bold text-slate-100">{tenant.name}</div>
-                          <div className="text-[10px] text-slate-500 font-mono">
-                            {tenant.slug}.texqtic.com
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase ${getStatusColor(tenant.status)}`}
-                      >
-                        {tenant.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-xs text-slate-300 font-bold">{mappedTenant.plan}</div>
-                      <div className="text-[9px] text-slate-500 uppercase">{tenant.type}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <svg
-                        aria-hidden="true"
-                        className="block h-1 w-full max-w-[100px]"
-                        preserveAspectRatio="none"
-                        viewBox="0 0 100 1"
-                      >
-                        <rect className="fill-slate-800" height="1" rx="0.5" ry="0.5" width="100" x="0" y="0" />
-                        <rect
-                          className={aiUsagePercent > 80 ? 'fill-rose-500' : 'fill-blue-500'}
-                          height="1"
-                          rx="0.5"
-                          ry="0.5"
-                          width={Math.min(aiUsagePercent, 100)}
-                          x="0"
-                          y="0"
-                        />
-                      </svg>
-                      <div className="text-[10px] text-slate-500 mt-1">
-                        {Math.round(aiUsagePercent)}% cap
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className="flex gap-3"
-                        role="presentation"
-                        onClick={e => e.stopPropagation()}
-                        onKeyDown={e => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => {
-                            void handleSelectTenant(tenant);
-                          }}
-                          title="Config"
-                          className="p-1 hover:text-white text-slate-500"
-                          disabled={isDetailLoading}
-                        >
-                          {isDetailLoading ? '…' : '⚙️'}
-                        </button>
-                        <button
-                          onClick={() => onImpersonate(mappedTenant)}
-                          title="Impersonate"
-                          className="p-1 text-slate-500 hover:text-blue-500 disabled:cursor-not-allowed disabled:text-slate-700"
-                          disabled={isDetailLoading || !canImpersonate}
-                        >
-                          👤
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">
+                  Closed Tenants
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Tenants whose lifecycle status is CLOSED.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
+                {closedTenants.length}
+              </div>
+            </div>
+            {closedTenants.length > 0 ? (
+              renderTenantTable(closedTenants)
+            ) : (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
+                No closed tenants are currently visible.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
