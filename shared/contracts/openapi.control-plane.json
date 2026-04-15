@@ -50,7 +50,11 @@
             "example": false
           },
           "status": { "type": "string" },
-          "plan": { "type": "string" }
+          "plan": {
+            "type": "string",
+            "enum": ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"],
+            "description": "Canonical commercial plan identity metadata. This field does not by itself imply full entitlement completeness."
+          }
         }
       },
       "ControlPlaneAdminRegistryEntry": {

@@ -118,7 +118,11 @@
                     ],
                     "description": "Tenant lifecycle and onboarding state exposed from the canonical organization record. PENDING_VERIFICATION means verification has been submitted and is awaiting review. VERIFICATION_APPROVED, VERIFICATION_REJECTED, and VERIFICATION_NEEDS_MORE_INFO represent recorded review outcomes before or instead of ACTIVE trade-capable runtime use."
                   },
-                  "plan": { "type": "string" }
+                  "plan": {
+                    "type": "string",
+                    "enum": ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"],
+                    "description": "Canonical commercial plan identity metadata. This field does not by itself imply full entitlement completeness."
+                  }
                 }
               },
               "role": { "type": "string" }
