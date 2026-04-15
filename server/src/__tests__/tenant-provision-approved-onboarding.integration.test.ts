@@ -23,8 +23,8 @@ const {
     request.adminRole = 'SUPER_ADMIN';
   }),
   requireAdminRoleMock: vi.fn(() => async () => undefined),
-  tenantAuthMiddlewareMock: vi.fn(async () => undefined),
-  databaseContextMiddlewareMock: vi.fn(async () => undefined),
+  tenantAuthMiddlewareMock: vi.fn(async (_req: unknown) => undefined),
+  databaseContextMiddlewareMock: vi.fn(async (_req: unknown) => undefined),
   provisionTenantMock: vi.fn(),
   writeAuditLogMock: vi.fn().mockResolvedValue(undefined),
   createAdminAuditMock: vi.fn().mockReturnValue({}),

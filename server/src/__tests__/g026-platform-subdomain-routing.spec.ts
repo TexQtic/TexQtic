@@ -28,7 +28,15 @@ import resolveDomainRoutes from '../routes/internal/resolveDomain.js';
 import { tenantResolutionHook } from '../hooks/tenantResolutionHook.js';
 import { edgeCanonicalMessage } from '../lib/tenantHeaders.js';
 import { tenantAuthMiddleware } from '../middleware/auth.js';
-import edgeMiddleware from '../../../middleware.ts';
+
+type EdgeMiddleware = (request: Request) => Promise<Response>;
+
+const edgeMiddlewareModulePath: string = '../../../middleware.ts';
+
+async function loadEdgeMiddleware(): Promise<EdgeMiddleware> {
+  const edgeModule = (await import(edgeMiddlewareModulePath)) as { default: EdgeMiddleware };
+  return edgeModule.default;
+}
 
 const originalFetch = globalThis.fetch;
 const originalResolverSecret = process.env.TEXQTIC_RESOLVER_SECRET;
@@ -88,6 +96,7 @@ describe('TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001', () => {
   it('keeps platform root, dev, and vercel hosts on the passthrough path', async () => {
     const fetchMock = vi.fn();
     globalThis.fetch = fetchMock as typeof fetch;
+    const edgeMiddleware = await loadEdgeMiddleware();
 
     const passthroughCases = [
       { url: 'https://texqtic.app/catalog', host: 'texqtic.app' },
@@ -369,6 +378,7 @@ describe('TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001', () => {
       canonicalHost: 'shop.customer.com',
     }));
     globalThis.fetch = fetchMock as typeof fetch;
+    const edgeMiddleware = await loadEdgeMiddleware();
 
     const response = await edgeMiddleware(new Request('https://shop.customer.com/store', {
       headers: { host: 'Shop.Customer.com:443' },
@@ -388,6 +398,7 @@ describe('TECS-G026-V1-PLATFORM-SUBDOMAIN-ROUTING-001', () => {
       status: 'not_found',
     }));
     globalThis.fetch = fetchMock as typeof fetch;
+    const edgeMiddleware = await loadEdgeMiddleware();
 
     const response = await edgeMiddleware(new Request('https://missing.customer.com/store', {
       headers: { host: 'missing.customer.com' },
