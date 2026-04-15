@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-3B-OPENAPI-CONTRACT-PLAN-METADATA-TIGHTENING-CLOSEOUT-2026-04-15)
+**Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-3C-REPO-HEALTH-GATE-DISPOSITION-2026-04-15)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-15
-snapshot_unit: SUBSCRIPTION-SLICE-3B-OPENAPI-CONTRACT-PLAN-METADATA-TIGHTENING-CLOSEOUT-2026-04-15
+snapshot_unit: SUBSCRIPTION-SLICE-3C-REPO-HEALTH-GATE-DISPOSITION-2026-04-15
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -42,8 +42,15 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: null
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: Subscription slice 3C — backend runtime plan canonicalization and typing tightening
+current_product_active_delivery_status: BLOCKED_PENDING_REPO_HEALTH_REMEDIATION
+current_product_active_delivery_blocker: |
+  Slice 3C remains the active/open bounded unit with uncommitted implementation scope limited to server/src/lib/database-context.ts and server/src/routes/tenant.ts.
+  In-scope eslint completed with 0 errors and git diff --check passed.
+  Repo-level pnpm -C server exec tsc --noEmit remains red due to pre-existing out-of-scope failures at server/src/__tests__/g026-platform-subdomain-routing.spec.ts:31 and server/src/__tests__/tenant-provision-approved-onboarding.integration.test.ts:846.
+  No implementation commit is lawful until repo-health remediation resolves the red gate or a separately authorized governance exception is created.
+  Slice 3C may not proceed to verification or closeout while this blocker remains.
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
@@ -71,4 +78,4 @@ latest_verified_product_close: |
 
 - Read `OPEN-SET.md`, `NEXT-ACTION.md`, and `BLOCKED.md` first, in that order.
 - Use this file only when current opening-layer context is missing or historically ambiguous.
-- No product-facing `ACTIVE_DELIVERY` unit is currently open.
+- Slice 3C is the current bounded open unit and is blocked pending repo-health remediation.

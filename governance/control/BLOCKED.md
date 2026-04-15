@@ -12,7 +12,18 @@
 
 ## Section 1 — BLOCKED
 
-*(No reset-scope blockers remain after bounded opening-layer reset execution.)*
+| Item | Status | Posture |
+| --- | --- | --- |
+| `Subscription slice 3C` | `BLOCKED` | Active/open bounded unit pending mandatory repo-health remediation before any implementation commit, verification, or closeout. |
+
+- Uncommitted implementation scope remains limited to `server/src/lib/database-context.ts` and `server/src/routes/tenant.ts`.
+- In-scope validation passed: `eslint` on the two allowlisted files completed with 0 errors, and `git diff --check` passed.
+- Repo-level TypeScript gate remains red: `pnpm -C server exec tsc --noEmit`.
+- Pre-existing out-of-scope failing files:
+    - `server/src/__tests__/g026-platform-subdomain-routing.spec.ts:31`
+    - `server/src/__tests__/tenant-provision-approved-onboarding.integration.test.ts:846`
+- No implementation commit is lawful until repo-health remediation resolves the red gate or a separately authorized governance exception is created.
+- Slice 3C may not proceed to verification or closeout while this blocker remains.
 
 ## Section 2 — HOLDS / REVIEW-UNKNOWN
 
