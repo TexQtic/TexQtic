@@ -16,6 +16,7 @@
 import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/prisma.js';
+import type { TenantPlan } from '../types/index.js';
 import type {
   TenantProvisionRequest,
   TenantProvisionResult,
@@ -51,6 +52,7 @@ type LegacyProvisionRequest = TenantProvisionRequest & {
   orgName: string;
   primaryAdminEmail: string;
   primaryAdminPassword: string;
+  plan: TenantPlan;
 };
 
 type ApprovedOnboardingProvisionRequest = TenantProvisionRequest & {
@@ -74,8 +76,8 @@ function isApprovedOnboardingProvisionRequest(
 }
 
 function assertLegacyProvisionRequest(request: TenantProvisionRequest): LegacyProvisionRequest {
-  if (!request.orgName || !request.primaryAdminEmail || !request.primaryAdminPassword) {
-    throw new Error('PROVISION_ABORT: Legacy admin provisioning requires orgName, primaryAdminEmail, and primaryAdminPassword');
+  if (!request.orgName || !request.primaryAdminEmail || !request.primaryAdminPassword || !request.plan) {
+    throw new Error('PROVISION_ABORT: Legacy admin provisioning requires orgName, primaryAdminEmail, primaryAdminPassword, and plan');
   }
 
   return request as LegacyProvisionRequest;
@@ -229,6 +231,7 @@ export async function provisionTenant(
         name: orgDisplayName,
         slug,
         externalOrchestrationRef: orchestrationReference ?? undefined,
+        plan: legacyRequest?.plan,
         // B2-REM-5A: canonical identity fields wired from provisioning request
         // type = Prisma field name for tenant_category API field
         type: request.tenant_category,
@@ -346,10 +349,14 @@ export async function provisionTenant(
     });
 
     if (!user) {
+      if (!passwordHash) {
+        throw new Error('PROVISION_ABORT: Legacy admin provisioning password hash was not resolved');
+      }
+
       user = await tx.user.create({
         data: {
           email: legacyRequest.primaryAdminEmail,
-          passwordHash: passwordHash!,
+          passwordHash,
           emailVerified: true,
           emailVerifiedAt: new Date(),
         },

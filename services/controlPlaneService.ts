@@ -359,13 +359,15 @@ export async function getCartSummaryByCartId(
 /**
  * TECS-FBW-PROV-001 (2026-03-06): aligned to backend Zod schema.
  * Backend: POST /api/control/tenants/provision — admin/tenantProvision.ts
- * Schema fields: orgName, primaryAdminEmail, primaryAdminPassword
+ * Schema fields: orgName, primaryAdminEmail, primaryAdminPassword, plan
  * Removed: name, slug, type, ownerEmail, ownerPassword (wrong names; slug/type are backend-derived)
  */
 export interface ProvisionTenantRequest {
   orgName: string;
   primaryAdminEmail: string;
   primaryAdminPassword: string;
+  /** Canonical commercial plan identity metadata for legacy admin provisioning. */
+  plan: import('../types').CommercialPlan;
   /** Canonical tenant identity — B2-REM-5A */
   tenant_category: 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
   /** White-label deployment flag — optional; defaults to false */

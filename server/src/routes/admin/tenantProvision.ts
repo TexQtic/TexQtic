@@ -47,6 +47,9 @@ const legacyProvisionBodySchema = z.object({
   primaryAdminPassword: z
     .string()
     .min(8, 'primaryAdminPassword must be at least 8 characters'),
+  plan: z.enum(['FREE', 'STARTER', 'PROFESSIONAL', 'ENTERPRISE'], {
+    errorMap: () => ({ message: 'plan must be one of: FREE, STARTER, PROFESSIONAL, ENTERPRISE' }),
+  }),
   tenant_category: z.enum(['AGGREGATOR', 'B2B', 'B2C', 'INTERNAL'], {
     errorMap: () => ({ message: 'tenant_category must be one of: AGGREGATOR, B2B, B2C, INTERNAL' }),
   }),
@@ -153,10 +156,12 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
   fastify.post('/tenants/provision', {
     preHandler: (request, reply, done) => {
       const bearerToken = extractBearerToken(request.headers.authorization);
+      const approvedOnboardingServiceTokenHash = config.APPROVED_ONBOARDING_SERVICE_TOKEN_HASH;
       const hasServiceToken = Boolean(
         bearerToken &&
+        approvedOnboardingServiceTokenHash &&
         hasConfiguredApprovedOnboardingServiceToken() &&
-        tokenMatchesConfiguredHash(bearerToken, config.APPROVED_ONBOARDING_SERVICE_TOKEN_HASH!)
+        tokenMatchesConfiguredHash(bearerToken, approvedOnboardingServiceTokenHash)
       );
 
       if (hasServiceToken) {

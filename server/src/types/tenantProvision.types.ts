@@ -9,6 +9,8 @@
  * org_id is the ONLY canonical tenant boundary key.
  */
 
+import type { TenantPlan } from './index.js';
+
 /**
  * Request body for POST /api/admin/tenants/provision
  *
@@ -32,6 +34,13 @@ export interface TenantProvisionRequest {
    * Legacy admin provisioning only.
    */
   primaryAdminPassword?: string;
+
+  /**
+   * Canonical commercial plan identity.
+   * Legacy admin provisioning only.
+   * Bounded as identity metadata only.
+   */
+  plan?: TenantPlan;
 
   /**
    * Canonical tenant identity category.

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getTenantById, getTenants, provisionTenant, Tenant } from '../../services/controlPlaneService';
-import { TenantStatus, TenantConfig, normalizeCommercialPlan } from '../../types';
+import {
+  TenantStatus,
+  TenantConfig,
+  normalizeCommercialPlan,
+  type CommercialPlan,
+} from '../../types';
 import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
@@ -23,12 +28,17 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     orgName: '',
     primaryAdminEmail: '',
     primaryAdminPassword: '',
+    plan: '' as '' | CommercialPlan,
     tenant_category: 'B2B' as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL',
     is_white_label: false,
   });
   const [provisionLoading, setProvisionLoading] = useState(false);
   const [provisionError, setProvisionError] = useState<string | null>(null);
-  const [provisionResult, setProvisionResult] = useState<{ orgId: string; slug: string; inviteToken?: string } | null>(null);
+  const [provisionResult, setProvisionResult] = useState<{
+    orgId: string;
+    slug: string;
+    inviteToken?: string;
+  } | null>(null);
   const [detailLoadingTenantId, setDetailLoadingTenantId] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
 
@@ -40,6 +50,12 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   // RU-002: Handle provision form submission
   const handleProvision = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!provisionForm.plan) {
+      setProvisionError('Select a canonical plan.');
+      return;
+    }
+
     setProvisionLoading(true);
     setProvisionError(null);
     setProvisionResult(null);
@@ -49,11 +65,19 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         orgName: provisionForm.orgName,
         primaryAdminEmail: provisionForm.primaryAdminEmail,
         primaryAdminPassword: provisionForm.primaryAdminPassword,
+        plan: provisionForm.plan,
         tenant_category: provisionForm.tenant_category,
         is_white_label: provisionForm.is_white_label,
       });
       setProvisionResult({ orgId: result.orgId, slug: result.slug });
-      setProvisionForm({ orgName: '', primaryAdminEmail: '', primaryAdminPassword: '', tenant_category: 'B2B', is_white_label: false });
+      setProvisionForm({
+        orgName: '',
+        primaryAdminEmail: '',
+        primaryAdminPassword: '',
+        plan: '',
+        tenant_category: 'B2B',
+        is_white_label: false,
+      });
       // Refresh tenant list to include newly provisioned tenant
       await fetchTenants();
     } catch (err: any) {
@@ -184,14 +208,18 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
           <p className="text-slate-400 text-sm">Manage global tenant lifecycle and governance.</p>
         </div>
         <button
-          onClick={() => { setShowProvisionModal(true); setProvisionResult(null); setProvisionError(null); }}
+          onClick={() => {
+            setShowProvisionModal(true);
+            setProvisionResult(null);
+            setProvisionError(null);
+          }}
           className="bg-indigo-600 text-white px-4 py-2 rounded font-bold text-xs uppercase tracking-tight hover:bg-indigo-700 transition"
         >
           Provision New Tenant
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {[
           { label: 'Total Tenants', value: loading ? '...' : stats.total.toString() },
           { label: 'Active', value: loading ? '...' : stats.active.toString() },
@@ -295,12 +323,23 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                       <div className="text-[9px] text-slate-500 uppercase">{tenant.type}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="w-full max-w-[100px] bg-slate-800 h-1 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${aiUsagePercent > 80 ? 'bg-rose-500' : 'bg-blue-500'}`}
-                          style={{ width: `${Math.min(aiUsagePercent, 100)}%` }}
+                      <svg
+                        aria-hidden="true"
+                        className="block h-1 w-full max-w-[100px]"
+                        preserveAspectRatio="none"
+                        viewBox="0 0 100 1"
+                      >
+                        <rect className="fill-slate-800" height="1" rx="0.5" ry="0.5" width="100" x="0" y="0" />
+                        <rect
+                          className={aiUsagePercent > 80 ? 'fill-rose-500' : 'fill-blue-500'}
+                          height="1"
+                          rx="0.5"
+                          ry="0.5"
+                          width={Math.min(aiUsagePercent, 100)}
+                          x="0"
+                          y="0"
                         />
-                      </div>
+                      </svg>
                       <div className="text-[10px] text-slate-500 mt-1">
                         {Math.round(aiUsagePercent)}% cap
                       </div>
@@ -347,7 +386,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
             <div>
               <h2 className="text-lg font-bold">Provision New Tenant</h2>
               <p className="text-sm text-slate-500 mt-1">
-                Creates a new tenant organisation and provisions the primary owner account with an OWNER membership.
+                Creates a new tenant organisation and provisions the primary owner account with an
+                OWNER membership.
               </p>
             </div>
 
@@ -359,13 +399,21 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   <div className="text-xs text-slate-600 font-mono">Slug: {provisionResult.slug}.texqtic.com</div>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800">
-                  <strong>Authoritative handoff:</strong> The provisioned primary owner should enter through the tenant sign-in flow using the provisioned email and password once onboarding has been approved and the tenant has been activated to <code className="font-mono">ACTIVE</code>.
+                  <strong>Authoritative handoff:</strong> The provisioned primary owner should enter
+                  through the tenant sign-in flow using the provisioned email and password once
+                  onboarding has been approved and the tenant has been activated to{' '}
+                  <code className="font-mono">ACTIVE</code>.
                 </div>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700">
-                  <strong>Separate path only:</strong> Invite-token activation remains available for explicit invite-based membership flows, but it is not the default handoff for the already provisioned primary owner.
+                  <strong>Separate path only:</strong> Invite-token activation remains available for
+                  explicit invite-based membership flows, but it is not the default handoff for the
+                  already provisioned primary owner.
                 </div>
                 <button
-                  onClick={() => { setShowProvisionModal(false); setProvisionResult(null); }}
+                  onClick={() => {
+                    setShowProvisionModal(false);
+                    setProvisionResult(null);
+                  }}
                   className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition"
                 >
                   Close
@@ -379,7 +427,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   </div>
                 )}
                 <div className="space-y-1">
-                  <label htmlFor="prov-org-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Org Name *</label>
+                  <label htmlFor="prov-org-name" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    Org Name *
+                  </label>
                   <input
                     id="prov-org-name"
                     required
@@ -390,7 +440,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-owner-email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Email *</label>
+                  <label htmlFor="prov-owner-email" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    Owner Email *
+                  </label>
                   <input
                     id="prov-owner-email"
                     required
@@ -402,7 +454,9 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-owner-pwd" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Owner Password *</label>
+                  <label htmlFor="prov-owner-pwd" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    Owner Password *
+                  </label>
                   <input
                     id="prov-owner-pwd"
                     required
@@ -415,12 +469,48 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="prov-tenant-category" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Tenant Category *</label>
+                  <label htmlFor="prov-plan" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    Commercial Plan *
+                  </label>
+                  <select
+                    id="prov-plan"
+                    required
+                    value={provisionForm.plan}
+                    onChange={e =>
+                      setProvisionForm(f => ({
+                        ...f,
+                        plan: e.target.value as '' | CommercialPlan,
+                      }))
+                    }
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="" disabled>
+                      Select canonical plan
+                    </option>
+                    <option value="FREE">FREE</option>
+                    <option value="STARTER">STARTER</option>
+                    <option value="PROFESSIONAL">PROFESSIONAL</option>
+                    <option value="ENTERPRISE">ENTERPRISE</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="prov-tenant-category" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    Tenant Category *
+                  </label>
                   <select
                     id="prov-tenant-category"
                     required
                     value={provisionForm.tenant_category}
-                    onChange={e => setProvisionForm(f => ({ ...f, tenant_category: e.target.value as 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL' }))}
+                    onChange={e =>
+                      setProvisionForm(f => ({
+                        ...f,
+                        tenant_category: e.target.value as
+                          | 'AGGREGATOR'
+                          | 'B2B'
+                          | 'B2C'
+                          | 'INTERNAL',
+                      }))
+                    }
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="B2B">B2B</option>
@@ -437,12 +527,17 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                     onChange={e => setProvisionForm(f => ({ ...f, is_white_label: e.target.checked }))}
                     className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">White Label Deployment</label>
+                  <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                    White Label Deployment
+                  </label>
                 </div>
                 <div className="flex gap-4 pt-2">
                   <button
                     type="button"
-                    onClick={() => { setShowProvisionModal(false); setProvisionError(null); }}
+                    onClick={() => {
+                      setShowProvisionModal(false);
+                      setProvisionError(null);
+                    }}
                     className="flex-1 py-3 font-bold text-slate-500 text-xs uppercase tracking-widest hover:text-slate-900 transition"
                   >
                     Cancel

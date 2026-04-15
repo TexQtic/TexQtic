@@ -141,6 +141,7 @@
                       "orgName",
                       "primaryAdminEmail",
                       "primaryAdminPassword",
+                      "plan",
                       "tenant_category"
                     ],
                     "properties": {
@@ -160,6 +161,16 @@
                       "primaryAdminPassword": {
                         "type": "string",
                         "minLength": 8
+                      },
+                      "plan": {
+                        "type": "string",
+                        "enum": [
+                          "FREE",
+                          "STARTER",
+                          "PROFESSIONAL",
+                          "ENTERPRISE"
+                        ],
+                        "description": "Canonical commercial plan identity metadata for legacy admin provisioning. This field does not by itself imply full entitlement completeness."
                       },
                       "tenant_category": {
                         "type": "string",
