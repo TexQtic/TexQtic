@@ -50,6 +50,10 @@
             "example": false
           },
           "status": { "type": "string" },
+          "has_pending_first_owner_preparation_invite": {
+            "type": "boolean",
+            "description": "List-safe invited-classifier truth. True when the tenant still has a pending FIRST_OWNER_PREPARATION invite with acceptedAt = null and expiresAt in the future."
+          },
           "plan": {
             "type": "string",
             "enum": ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"],

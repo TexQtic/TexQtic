@@ -24,6 +24,8 @@ export interface Tenant {
   /** Control-plane list queries may emit the Prisma camelCase field for white-label capability. */
   isWhiteLabel?: boolean | null;
   status: string;
+  /** List-safe invited-classifier truth derived from a still-pending first-owner preparation invite. */
+  has_pending_first_owner_preparation_invite?: boolean;
   /** Org-backed onboarding lifecycle status used by onboarding completion flow. */
   onboarding_status?: string | null;
   plan: import('../types').CommercialPlan;

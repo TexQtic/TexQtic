@@ -211,7 +211,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
   fastify.get('/tenants', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
     const tenants = await withAdminContext(async tx => {
-      return await tx.tenant.findMany({
+      const tenantRows = await tx.tenant.findMany({
         select: {
           id: true,
           slug: true,
@@ -223,6 +223,32 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         },
         orderBy: { createdAt: 'desc' },
       });
+
+      if (tenantRows.length === 0) {
+        return tenantRows;
+      }
+
+      const tenantIds = tenantRows.map((tenant: { id: string }) => tenant.id);
+      const pendingFirstOwnerPreparationInvites = await tx.invite.findMany({
+        where: {
+          tenantId: { in: tenantIds },
+          invitePurpose: 'FIRST_OWNER_PREPARATION',
+          acceptedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        select: {
+          tenantId: true,
+        },
+      });
+
+      const invitedTenantIds = new Set(
+        pendingFirstOwnerPreparationInvites.map((invite: { tenantId: string }) => invite.tenantId)
+      );
+
+      return tenantRows.map((tenant: { id: string }) => ({
+        ...tenant,
+        has_pending_first_owner_preparation_invite: invitedTenantIds.has(tenant.id),
+      }));
     });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read', 'tenant', { count: tenants.length }));
