@@ -280,6 +280,7 @@ describe('approved-onboarding tenant provisioning route', () => {
         orgName: 'Legacy Org',
         primaryAdminEmail: 'admin@legacy.test',
         primaryAdminPassword: legacyProvisionPassword,
+        plan: 'FREE',
         tenant_category: 'B2B',
       },
     });
@@ -290,6 +291,7 @@ describe('approved-onboarding tenant provisioning route', () => {
       expect.objectContaining({
         orgName: 'Legacy Org',
         primaryAdminEmail: 'admin@legacy.test',
+        plan: 'FREE',
       }),
       expect.objectContaining({
         adminActorId: 'admin-uuid-1',
