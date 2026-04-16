@@ -178,7 +178,7 @@ describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
    */
   it('should reject admin JWT on tenant endpoints (401/403)', async () => {
     const adminToken = jwt.sign(
-      { adminId, role: 'super_admin', type: 'access' },
+      { adminId, role: 'SUPER_ADMIN', type: 'access' },
       JWT_ADMIN_SECRET,
       {
         expiresIn: '15m',
@@ -233,7 +233,7 @@ describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
    */
   it('should allow admin JWT on admin endpoints (200 OK)', async () => {
     const adminToken = jwt.sign(
-      { adminId, role: 'super_admin', type: 'access' },
+      { adminId, role: 'SUPER_ADMIN', type: 'access' },
       JWT_ADMIN_SECRET,
       {
         expiresIn: '15m',
