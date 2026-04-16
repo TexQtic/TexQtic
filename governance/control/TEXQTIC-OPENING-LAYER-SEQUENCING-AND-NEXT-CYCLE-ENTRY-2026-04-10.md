@@ -42,8 +42,13 @@ The then-current lawful next move after reset execution was:
 - when a truthful preserved unresolved hold remains, one bounded forensic contradiction test has
   concluded that no hold-outranking contradiction exists, and one bounded downstream descendant-
   selection test has concluded that no exact current downstream governance descendant is positively
-  selectable, GOV OS must surface exactly one next lawful successor as a governance-only same-hold
-  design-clarification unit
+  selectable, GOV OS must first re-query any still-active launch-readiness acceleration attachment
+  for one exact bounded next work item or one lawfully identified deferred bounded next-work
+  candidate preserved in that lane
+
+- only when that acceleration lane is explicitly exhausted, superseded by later authority, or
+  blocked by a narrower live governance exception may GOV OS surface exactly one next lawful
+  successor as a governance-only same-hold design-clarification unit
 
 That successor is limited to:
 
@@ -76,8 +81,11 @@ The sequencing rules after reset are:
 6. when a truthful preserved unresolved hold remains after the first bounded downstream governance
   reconciliation move, and bounded contradiction and descendant-selection checks prove no hold-
   outranking contradiction and no exact current downstream governance descendant, sequencing must
-  route to one governance-only same-hold design-clarification unit before any broader downstream
-  governance or product-family movement
+  first re-query any still-active launch-readiness acceleration attachment for one exact bounded
+  next work item or one lawfully identified deferred bounded next-work candidate preserved in that
+  lane; only when that lane is explicitly exhausted, superseded by later authority, or blocked by a
+  narrower live governance exception may sequencing route to one governance-only same-hold design-
+  clarification unit before any broader downstream governance or product-family movement
 
 ## 5. Scope boundary
 
