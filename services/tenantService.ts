@@ -85,6 +85,16 @@ export interface PendingInvite {
   createdAt: string;
 }
 
+export type InviteEmailDeliveryStatus =
+  | 'DEV_LOGGED'
+  | 'SKIPPED_SMTP_UNCONFIGURED'
+  | 'SENT'
+  | 'FAILED_NON_FATAL';
+
+export interface InviteEmailDeliveryOutcome {
+  status: InviteEmailDeliveryStatus;
+}
+
 export interface MembershipsResponse {
   memberships: Membership[];
   pendingInvites: PendingInvite[];
@@ -113,6 +123,7 @@ export interface CreateMembershipResponse {
     expiresAt: string;
   };
   inviteToken: string;
+  emailDelivery: InviteEmailDeliveryOutcome;
 }
 
 /**
@@ -131,6 +142,7 @@ export interface RevokePendingInviteResponse {
 
 export interface ResendPendingInviteResponse {
   invite: PendingInvite;
+  emailDelivery: InviteEmailDeliveryOutcome;
 }
 
 export interface EditPendingInviteRequest {

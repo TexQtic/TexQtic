@@ -11,9 +11,11 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
+import { InviteMemberSuccessState } from '../components/Tenant/InviteMemberForm';
 import {
   TeamManagementPendingInvitesPanel,
   canInviteMembers,
+  getPendingInviteDeliveryOutcomeMessage,
   getInitialRoleSelection,
   getValidInviteRoles,
   getValidNextRoles,
@@ -24,10 +26,12 @@ import { AggregatorShell, B2BShell, WhiteLabelAdminShell, WhiteLabelShell } from
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
 import {
+  createMembership,
   editPendingInvite,
   getMemberships,
   resendPendingInvite,
   revokePendingInvite,
+  type InviteEmailDeliveryOutcome,
   type MembershipsResponse,
 } from '../services/tenantService';
 import {
@@ -262,6 +266,7 @@ function renderPendingInvitesPanel(
     editingInviteId?: string | null;
     revokingInviteId?: string | null;
     resendingInviteId?: string | null;
+    inviteActionNotice?: string | null;
   } = {},
 ) {
   return renderToStaticMarkup(
@@ -273,9 +278,19 @@ function renderPendingInvitesPanel(
       editingInviteId: options.editingInviteId,
       revokingInviteId: options.revokingInviteId,
       resendingInviteId: options.resendingInviteId,
+      inviteActionNotice: options.inviteActionNotice,
       onEdit: options.canEdit ? vi.fn() : undefined,
       onRevoke: options.canRevoke ? vi.fn() : undefined,
       onResend: options.canResend ? vi.fn() : undefined,
+    }),
+  );
+}
+
+function renderInviteMemberSuccessState(email: string, emailDelivery: InviteEmailDeliveryOutcome) {
+  return renderToStaticMarkup(
+    React.createElement(InviteMemberSuccessState, {
+      email,
+      emailDelivery,
     }),
   );
 }
@@ -501,6 +516,32 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(result.pendingInvites[1].role).toBe('MEMBER');
   });
 
+  it('uses the invite issuance endpoint and preserves activation handoff plus bounded email delivery outcome', async () => {
+    const response = {
+      invite: {
+        id: 'invite-1',
+        email: 'new-admin@tenant.test',
+        role: 'ADMIN',
+        expiresAt: '2026-04-18T00:00:00.000Z',
+      },
+      inviteToken: 'invite-token-1',
+      emailDelivery: {
+        status: 'SENT',
+      } satisfies InviteEmailDeliveryOutcome,
+    };
+    tenantPostMock.mockResolvedValue(response);
+
+    const result = await createMembership({ email: 'new-admin@tenant.test', role: 'ADMIN' });
+
+    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/memberships', {
+      email: 'new-admin@tenant.test',
+      role: 'ADMIN',
+    });
+    expect(result).toEqual(response);
+    expect(result.inviteToken).toBe('invite-token-1');
+    expect(result.emailDelivery.status).toBe('SENT');
+  });
+
   it('uses the pending-invite revoke endpoint and preserves the delete envelope', async () => {
     const response = { deleted: 'invite-1' };
     tenantDeleteMock.mockResolvedValue(response);
@@ -517,6 +558,9 @@ describe('runtime verification - tenant enterprise service contracts', () => {
         ...makeMembershipsResponse().pendingInvites[0],
         expiresAt: '2026-04-21T00:00:00.000Z',
       },
+      emailDelivery: {
+        status: 'FAILED_NON_FATAL',
+      } satisfies InviteEmailDeliveryOutcome,
     };
     tenantPostMock.mockResolvedValue(response);
 
@@ -524,6 +568,9 @@ describe('runtime verification - tenant enterprise service contracts', () => {
 
     expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/memberships/invites/invite-1/resend');
     expect(result).toEqual(response);
+    expect(result.invite).not.toHaveProperty('inviteToken');
+    expect(result.invite).not.toHaveProperty('tokenHash');
+    expect(result.emailDelivery.status).toBe('FAILED_NON_FATAL');
   });
 
   it('uses the pending-invite edit endpoint and preserves the safe invite envelope', async () => {
@@ -633,6 +680,55 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(updatedHtml).toContain('new-admin@tenant.test');
     expect(updatedHtml).toContain('Expires Apr 21, 2026');
     expect(updatedHtml).not.toContain('inviteToken');
+  });
+
+  it('renders create invite UI with truthful bounded delivery outcome messaging', () => {
+    const sentHtml = renderInviteMemberSuccessState('new-admin@tenant.test', { status: 'SENT' });
+    const devLoggedHtml = renderInviteMemberSuccessState('new-admin@tenant.test', { status: 'DEV_LOGGED' });
+    const smtpMissingHtml = renderInviteMemberSuccessState('new-admin@tenant.test', { status: 'SKIPPED_SMTP_UNCONFIGURED' });
+    const failedHtml = renderInviteMemberSuccessState('new-admin@tenant.test', { status: 'FAILED_NON_FATAL' });
+
+    expect(sentHtml).toContain('Invite Recorded');
+    expect(sentHtml).toContain('email dispatch completed successfully');
+    expect(devLoggedHtml).toContain('dev-logged only');
+    expect(smtpMissingHtml).toContain('SMTP is not configured');
+    expect(failedHtml).toContain('failed non-fatally');
+    expect(failedHtml).not.toContain('mailbox');
+  });
+
+  it('renders pending-invite resend UI with truthful bounded delivery outcome messaging', () => {
+    const response = makeMembershipsResponse();
+    const sentHtml = renderPendingInvitesPanel(response, {
+      canEdit: true,
+      canRevoke: true,
+      canResend: true,
+      inviteActionNotice: getPendingInviteDeliveryOutcomeMessage('new-admin@tenant.test', { status: 'SENT' }),
+    });
+    const devLoggedHtml = renderPendingInvitesPanel(response, {
+      canEdit: true,
+      canRevoke: true,
+      canResend: true,
+      inviteActionNotice: getPendingInviteDeliveryOutcomeMessage('new-admin@tenant.test', { status: 'DEV_LOGGED' }),
+    });
+    const smtpMissingHtml = renderPendingInvitesPanel(response, {
+      canEdit: true,
+      canRevoke: true,
+      canResend: true,
+      inviteActionNotice: getPendingInviteDeliveryOutcomeMessage('new-admin@tenant.test', { status: 'SKIPPED_SMTP_UNCONFIGURED' }),
+    });
+    const failedHtml = renderPendingInvitesPanel(response, {
+      canEdit: true,
+      canRevoke: true,
+      canResend: true,
+      inviteActionNotice: getPendingInviteDeliveryOutcomeMessage('new-admin@tenant.test', { status: 'FAILED_NON_FATAL' }),
+    });
+
+    expect(sentHtml).toContain('email dispatch completed successfully');
+    expect(devLoggedHtml).toContain('dev-logged only');
+    expect(smtpMissingHtml).toContain('SMTP is not configured');
+    expect(failedHtml).toContain('failed non-fatally');
+    expect(failedHtml).not.toContain('inviteToken');
+    expect(failedHtml).not.toContain('tokenHash');
   });
 
   it('serializes pending invite row actions across the shared panel while a resend is in flight', () => {

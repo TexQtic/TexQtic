@@ -6,6 +6,7 @@ import {
   resendPendingInvite,
   revokePendingInvite,
   updateMembershipRole,
+  type InviteEmailDeliveryOutcome,
   type Membership,
   type PendingInvite,
 } from '../../services/tenantService';
@@ -32,6 +33,7 @@ interface TeamManagementPendingInvitesPanelProps {
   readonly editingInviteId?: string | null;
   readonly revokingInviteId?: string | null;
   readonly resendingInviteId?: string | null;
+  readonly inviteActionNotice?: string | null;
   readonly inviteActionError?: string | null;
   readonly onEdit?: (invite: PendingInvite) => void;
   readonly onRevoke?: (invite: PendingInvite) => void;
@@ -71,6 +73,23 @@ export function replacePendingInviteById(pendingInvites: PendingInvite[], update
   return pendingInvites.map(invite => (invite.id === updatedInvite.id ? updatedInvite : invite));
 }
 
+export function getPendingInviteDeliveryOutcomeMessage(
+  email: string,
+  emailDelivery: InviteEmailDeliveryOutcome,
+): string {
+  switch (emailDelivery.status) {
+    case 'DEV_LOGGED':
+      return `Invite for ${email} remains pending. Email dispatch was dev-logged only, so no email was sent in this environment.`;
+    case 'SKIPPED_SMTP_UNCONFIGURED':
+      return `Invite for ${email} remains pending. Email dispatch was skipped because SMTP is not configured.`;
+    case 'FAILED_NON_FATAL':
+      return `Invite for ${email} remains pending, but email dispatch failed non-fatally. Resend the invite after delivery is restored.`;
+    case 'SENT':
+    default:
+      return `Invite for ${email} remains pending and email dispatch completed successfully.`;
+  }
+}
+
 export function TeamManagementPendingInvitesPanel({
   pendingInvites,
   canEdit = false,
@@ -79,6 +98,7 @@ export function TeamManagementPendingInvitesPanel({
   editingInviteId = null,
   revokingInviteId = null,
   resendingInviteId = null,
+  inviteActionNotice = null,
   inviteActionError = null,
   onEdit,
   onRevoke,
@@ -108,6 +128,12 @@ export function TeamManagementPendingInvitesPanel({
       {inviteActionError && (
         <div className="px-6 py-3 border-b border-rose-200 bg-rose-50 text-xs text-rose-700">
           {inviteActionError}
+        </div>
+      )}
+
+      {inviteActionNotice && (
+        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50 text-xs text-slate-700">
+          {inviteActionNotice}
         </div>
       )}
 
@@ -181,11 +207,13 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   const [editInviteError, setEditInviteError] = useState<string | null>(null);
   const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
   const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
+  const [pendingInviteActionNotice, setPendingInviteActionNotice] = useState<string | null>(null);
   const [pendingInviteActionError, setPendingInviteActionError] = useState<string | null>(null);
 
   const fetchMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setPendingInviteActionNotice(null);
     setPendingInviteActionError(null);
     try {
       const [membersRes, meRes] = await Promise.all([
@@ -231,6 +259,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
     setEditInviteTarget(invite);
     setSelectedInviteRole(getInitialRoleSelection());
     setEditInviteError(null);
+    setPendingInviteActionNotice(null);
     setPendingInviteActionError(null);
   };
 
@@ -267,6 +296,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   };
 
   const handlePendingInviteRevoke = async (invite: PendingInvite) => {
+    setPendingInviteActionNotice(null);
     setPendingInviteActionError(null);
     setRevokingInviteId(invite.id);
 
@@ -285,12 +315,16 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
   };
 
   const handlePendingInviteResend = async (invite: PendingInvite) => {
+    setPendingInviteActionNotice(null);
     setPendingInviteActionError(null);
     setResendingInviteId(invite.id);
 
     try {
       const response = await resendPendingInvite(invite.id);
       setPendingInvites(currentInvites => replacePendingInviteById(currentInvites, response.invite));
+      setPendingInviteActionNotice(
+        getPendingInviteDeliveryOutcomeMessage(response.invite.email, response.emailDelivery)
+      );
     } catch (err) {
       if (err instanceof APIError) {
         setPendingInviteActionError(err.message);
@@ -306,6 +340,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
     if (!editInviteTarget || !selectedInviteRole) return;
 
     setEditInviteError(null);
+    setPendingInviteActionNotice(null);
     setEditingInviteId(editInviteTarget.id);
 
     try {
@@ -424,6 +459,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
           editingInviteId={editingInviteId}
           revokingInviteId={revokingInviteId}
           resendingInviteId={resendingInviteId}
+          inviteActionNotice={pendingInviteActionNotice}
           inviteActionError={pendingInviteActionError}
           onEdit={openEditInviteModal}
           onRevoke={handlePendingInviteRevoke}
@@ -593,7 +629,7 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
                 disabled={editingInviteId !== null || !selectedInviteRole}
                 className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-indigo-600 text-white shadow hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editingInviteId !== null ? 'Saving…' : 'Save Change'}
+                {editingInviteId === null ? 'Save Change' : 'Saving…'}
               </button>
             </div>
           </div>

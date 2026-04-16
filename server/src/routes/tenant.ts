@@ -30,7 +30,7 @@ import {
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
-import { sendInviteMemberEmail } from '../services/email/email.service.js';
+import { sendInviteMemberEmail, type EmailDispatchOutcome } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
 import { enqueueSourceIngestion, enqueueSourceDeletion } from '../services/vectorIngestion.js';
@@ -40,6 +40,16 @@ import {
   type CounterpartyDiscoveryEntry,
   type CounterpartyProfileAggregation,
 } from '../services/counterpartyProfileAggregation.service.js';
+
+type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FATAL';
+
+interface InviteEmailDeliveryOutcome {
+  status: InviteEmailDeliveryStatus;
+}
+
+function failedInviteEmailDeliveryOutcome(): InviteEmailDeliveryOutcome {
+  return { status: 'FAILED_NON_FATAL' };
+}
 /**
  * Wraps a Prisma TransactionClient as PrismaClient for services that require
  * the full client type. Redirects $transaction() to execute the callback
@@ -632,12 +642,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         }
       }
 
+      let emailDelivery: InviteEmailDeliveryOutcome;
       try {
-        let orgDisplayName = 'your organization';
         const org = await getOrganizationIdentity(dbContext.orgId, prisma);
-        orgDisplayName = org.legal_name;
+        const orgDisplayName = org.legal_name;
 
-        await sendInviteMemberEmail(
+        emailDelivery = await sendInviteMemberEmail(
           result.invite.email,
           token,
           orgDisplayName,
@@ -649,9 +659,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         );
       } catch (emailErr) {
         fastify.log.error({ err: emailErr }, '[Invite Resend] Email send failed (non-fatal)');
+        emailDelivery = failedInviteEmailDeliveryOutcome();
       }
 
-      return sendSuccess(reply, { invite: result.invite });
+      return sendSuccess(reply, { invite: result.invite, emailDelivery });
     }
   );
 
@@ -3089,13 +3100,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         // G-012: Fire-and-forget invite email — errors logged, never block invite creation
         // G-015 Phase C: org display name read via admin-context (organizations.legal_name)
+        let emailDelivery: InviteEmailDeliveryOutcome;
         try {
           let orgDisplayName = 'your organization';
           if (tenantId) {
             const org = await getOrganizationIdentity(tenantId, prisma);
             orgDisplayName = org.legal_name;
           }
-          await sendInviteMemberEmail(
+          emailDelivery = await sendInviteMemberEmail(
             email,
             token,
             orgDisplayName,
@@ -3107,6 +3119,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           );
         } catch (emailErr) {
           fastify.log.error({ err: emailErr }, '[Invite] Email send failed (non-fatal)');
+          emailDelivery = failedInviteEmailDeliveryOutcome();
         }
 
         return sendSuccess(reply, {
@@ -3117,6 +3130,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             expiresAt: invite.expiresAt,
           },
           inviteToken: token, // Return token for email delivery
+          emailDelivery,
         });
       } catch (error: unknown) {
         fastify.log.error({ err: error }, '[Create Membership] Error');

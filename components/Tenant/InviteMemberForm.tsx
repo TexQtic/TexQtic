@@ -1,14 +1,62 @@
 
 import React, { useState } from 'react';
-import { createMembership } from '../../services/tenantService';
+import { createMembership, type InviteEmailDeliveryOutcome } from '../../services/tenantService';
 import { APIError } from '../../services/apiClient';
+
+interface InviteMemberSuccessStateProps {
+  email: string;
+  emailDelivery: InviteEmailDeliveryOutcome;
+}
+
+export function describeInviteCreateDeliveryOutcome(
+  email: string,
+  emailDelivery: InviteEmailDeliveryOutcome,
+): { title: string; detail: string } {
+  switch (emailDelivery.status) {
+    case 'DEV_LOGGED':
+      return {
+        title: 'Invite Recorded',
+        detail: `The invite for ${email} was recorded. Email dispatch was dev-logged only, so no email was sent in this environment.`,
+      };
+    case 'SKIPPED_SMTP_UNCONFIGURED':
+      return {
+        title: 'Invite Recorded',
+        detail: `The invite for ${email} was recorded, but email dispatch was skipped because SMTP is not configured.`,
+      };
+    case 'FAILED_NON_FATAL':
+      return {
+        title: 'Invite Recorded',
+        detail: `The invite for ${email} was recorded, but email dispatch failed non-fatally. Resend the invite after delivery is restored.`,
+      };
+    case 'SENT':
+    default:
+      return {
+        title: 'Invite Recorded',
+        detail: `The invite for ${email} was recorded and email dispatch completed successfully.`,
+      };
+  }
+}
+
+export const InviteMemberSuccessState: React.FC<InviteMemberSuccessStateProps> = ({ email, emailDelivery }) => {
+  const copy = describeInviteCreateDeliveryOutcome(email, emailDelivery);
+
+  return (
+    <div className="max-w-md mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6 animate-in zoom-in-95 duration-300 text-center">
+      <div className="text-4xl">✉️</div>
+      <div>
+        <h2 className="text-xl font-bold text-emerald-600">{copy.title}</h2>
+        <p className="text-sm text-slate-500 mt-1">{copy.detail}</p>
+      </div>
+    </div>
+  );
+};
 
 export const InviteMemberForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER'>('MEMBER');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [successState, setSuccessState] = useState<InviteMemberSuccessStateProps | null>(null);
 
   // Map display roles to API roles
   const roleOptions: { label: string; value: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER' }[] = [
@@ -23,8 +71,8 @@ export const InviteMemberForm: React.FC<{ onBack: () => void }> = ({ onBack }) =
     setLoading(true);
     setError(null);
     try {
-      await createMembership({ email, role });
-      setSuccess(true);
+      const response = await createMembership({ email, role });
+      setSuccessState({ email, emailDelivery: response.emailDelivery });
       // Navigate back after brief success display
       setTimeout(() => onBack(), 1500);
     } catch (err) {
@@ -38,18 +86,8 @@ export const InviteMemberForm: React.FC<{ onBack: () => void }> = ({ onBack }) =
     }
   };
 
-  if (success) {
-    return (
-      <div className="max-w-md mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6 animate-in zoom-in-95 duration-300 text-center">
-        <div className="text-4xl">✉️</div>
-        <div>
-          <h2 className="text-xl font-bold text-emerald-600">Invite Sent!</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            An invitation has been sent to <strong>{email}</strong>.
-          </p>
-        </div>
-      </div>
-    );
+  if (successState) {
+    return <InviteMemberSuccessState email={successState.email} emailDelivery={successState.emailDelivery} />;
   }
 
   return (

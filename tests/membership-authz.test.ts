@@ -29,7 +29,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Authorization guard — mirrors POST /api/tenant/memberships route check:
@@ -46,6 +46,12 @@ function canInviteAsRole(role: string): boolean {
 type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
 
 type InviteIssuanceRole = Exclude<MembershipRole, 'VIEWER'>;
+
+type InviteEmailDeliveryStatus = 'DEV_LOGGED' | 'SKIPPED_SMTP_UNCONFIGURED' | 'SENT' | 'FAILED_NON_FATAL';
+
+interface InviteEmailDeliveryOutcome {
+  status: InviteEmailDeliveryStatus;
+}
 
 type MembershipInviteIssuanceOutcome =
   | {
@@ -66,6 +72,7 @@ type MembershipInviteIssuanceOutcome =
           expiresAt: Date;
         };
         inviteToken: string;
+        emailDelivery: InviteEmailDeliveryOutcome;
       };
       audit: {
         tenantId: string;
@@ -95,6 +102,7 @@ function evaluateMembershipInviteIssuance(options: {
   inviteId: string;
   inviteToken: string;
   issuedAt: Date;
+  dispatchStatus: InviteEmailDeliveryStatus;
 }): MembershipInviteIssuanceOutcome {
   const {
     actorRole,
@@ -105,6 +113,7 @@ function evaluateMembershipInviteIssuance(options: {
     inviteId,
     inviteToken,
     issuedAt,
+    dispatchStatus,
   } = options;
 
   if (!tenantId) {
@@ -141,6 +150,9 @@ function evaluateMembershipInviteIssuance(options: {
         expiresAt,
       },
       inviteToken,
+      emailDelivery: {
+        status: dispatchStatus,
+      },
     },
     audit: {
       tenantId,
@@ -232,6 +244,7 @@ type PendingInviteResendOutcome =
           expiresAt: Date;
           createdAt: Date;
         };
+        emailDelivery: InviteEmailDeliveryOutcome;
       };
       audit: {
         tenantId: string;
@@ -305,6 +318,7 @@ function evaluatePendingInviteResend(options: {
   createdAt: Date;
   resentAt: Date;
   inviteToken: string;
+  dispatchStatus: InviteEmailDeliveryStatus;
 }): PendingInviteResendOutcome {
   const {
     actorRole,
@@ -321,6 +335,7 @@ function evaluatePendingInviteResend(options: {
     createdAt,
     resentAt,
     inviteToken,
+    dispatchStatus,
   } = options;
 
   if (!tenantId || !hasDbContext) {
@@ -359,6 +374,9 @@ function evaluatePendingInviteResend(options: {
         role,
         expiresAt: resentExpiresAt,
         createdAt,
+      },
+      emailDelivery: {
+        status: dispatchStatus,
       },
     },
     audit: {
@@ -461,6 +479,159 @@ function evaluatePendingInviteEdit(options: {
     },
   };
 }
+
+const EMAIL_ENV_KEYS = [
+  'NODE_ENV',
+  'DATABASE_URL',
+  'JWT_ACCESS_SECRET',
+  'JWT_REFRESH_SECRET',
+  'JWT_ADMIN_ACCESS_SECRET',
+  'JWT_ADMIN_REFRESH_SECRET',
+  'GEMINI_API_KEY',
+  'TEXQTIC_RESOLVER_SECRET',
+  'FRONTEND_URL',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'SMTP_FROM',
+] as const;
+
+type EmailEnvKey = (typeof EMAIL_ENV_KEYS)[number];
+
+const PROCESS_ENV = globalThis.process.env;
+
+const ORIGINAL_EMAIL_ENV = new Map<EmailEnvKey, string | undefined>(
+  EMAIL_ENV_KEYS.map(key => [key, PROCESS_ENV[key]])
+);
+
+function applyEmailTestEnv(overrides: Partial<Record<EmailEnvKey, string | undefined>> = {}) {
+  const baseEnv: Record<EmailEnvKey, string> = {
+    NODE_ENV: 'test',
+    DATABASE_URL: 'https://example.com/db',
+    JWT_ACCESS_SECRET: 'a'.repeat(32),
+    JWT_REFRESH_SECRET: 'b'.repeat(32),
+    JWT_ADMIN_ACCESS_SECRET: 'c'.repeat(32),
+    JWT_ADMIN_REFRESH_SECRET: 'd'.repeat(32),
+    GEMINI_API_KEY: 'test-key',
+    TEXQTIC_RESOLVER_SECRET: 'e'.repeat(32),
+    FRONTEND_URL: 'https://app.texqtic.test',
+    SMTP_HOST: 'smtp.texqtic.test',
+    SMTP_PORT: '587',
+    SMTP_USER: 'smtp-user',
+    SMTP_PASS: 'smtp-pass',
+    SMTP_FROM: 'noreply@texqtic.test',
+  };
+
+  for (const key of EMAIL_ENV_KEYS) {
+    const value = overrides[key];
+    if (value === undefined && Object.hasOwn(overrides, key)) {
+      delete PROCESS_ENV[key];
+      continue;
+    }
+
+    PROCESS_ENV[key] = value ?? baseEnv[key];
+  }
+}
+
+async function loadEmailService(options: {
+  envOverrides?: Partial<Record<EmailEnvKey, string | undefined>>;
+  sendMailImpl?: () => Promise<{ messageId: string }>;
+} = {}) {
+  vi.resetModules();
+
+  const sendMailMock = vi.fn(options.sendMailImpl ?? (() => Promise.resolve({ messageId: 'message-1' })));
+  const createTransportMock = vi.fn(() => ({ sendMail: sendMailMock }));
+
+  vi.doMock('nodemailer', () => ({
+    __esModule: true,
+    default: {
+      createTransport: createTransportMock,
+    },
+  }));
+
+  applyEmailTestEnv(options.envOverrides);
+
+  const emailModule = await import('../server/src/services/email/email.service.ts');
+
+  return {
+    ...emailModule,
+    createTransportMock,
+    sendMailMock,
+  };
+}
+
+function restoreEmailTestEnv() {
+  for (const key of EMAIL_ENV_KEYS) {
+    const original = ORIGINAL_EMAIL_ENV.get(key);
+    if (original === undefined) {
+      delete PROCESS_ENV[key];
+      continue;
+    }
+
+    PROCESS_ENV[key] = original;
+  }
+}
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.doUnmock('nodemailer');
+  vi.resetModules();
+  restoreEmailTestEnv();
+});
+
+describe('invite email delivery outcome seam', () => {
+  it('returns DEV_LOGGED in non-production without creating an SMTP transporter', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const { sendInviteMemberEmail, createTransportMock } = await loadEmailService({
+      envOverrides: {
+        NODE_ENV: 'test',
+      },
+    });
+
+    const result = await sendInviteMemberEmail('invitee@acme.test', 'invite-token-1', 'Acme');
+
+    expect(result).toEqual({ status: 'DEV_LOGGED' });
+    expect(logSpy).toHaveBeenCalledOnce();
+    expect(createTransportMock).not.toHaveBeenCalled();
+  });
+
+  it('returns SKIPPED_SMTP_UNCONFIGURED in production when SMTP settings are absent', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { sendInviteMemberEmail, createTransportMock } = await loadEmailService({
+      envOverrides: {
+        NODE_ENV: 'production',
+        SMTP_HOST: undefined,
+        SMTP_USER: undefined,
+        SMTP_PASS: undefined,
+        SMTP_FROM: undefined,
+      },
+    });
+
+    const result = await sendInviteMemberEmail('invitee@acme.test', 'invite-token-2', 'Acme');
+
+    expect(result).toEqual({ status: 'SKIPPED_SMTP_UNCONFIGURED' });
+    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(createTransportMock).not.toHaveBeenCalled();
+  });
+
+  it('throws on production send failure so tenant invite routes can preserve non-fatal behavior explicitly', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { sendInviteMemberEmail, createTransportMock, sendMailMock } = await loadEmailService({
+      envOverrides: {
+        NODE_ENV: 'production',
+      },
+      sendMailImpl: () => Promise.reject(new Error('SMTP transport failed')),
+    });
+
+    await expect(
+      sendInviteMemberEmail('invitee@acme.test', 'invite-token-3', 'Acme')
+    ).rejects.toThrow('SMTP transport failed');
+    expect(createTransportMock).toHaveBeenCalledOnce();
+    expect(sendMailMock).toHaveBeenCalledOnce();
+    expect(errorSpy).toHaveBeenCalledOnce();
+  });
+});
 
 type MembershipTransitionOutcome =
   | { allowed: true }
@@ -597,6 +768,7 @@ describe('POST /api/tenant/memberships — invite issuance artifact contract', (
       inviteId: 'invite-uuid-1',
       inviteToken,
       issuedAt,
+      dispatchStatus: 'SENT',
     });
 
     expect(result.allowed).toBe(true);
@@ -624,7 +796,34 @@ describe('POST /api/tenant/memberships — invite issuance artifact contract', (
         expiresAt: new Date('2026-04-17T00:00:00.000Z'),
       },
       inviteToken,
+      emailDelivery: {
+        status: 'SENT',
+      },
     });
+  });
+
+  it('preserves raw-token activation handoff while surfacing bounded invite-email delivery outcomes', () => {
+    for (const dispatchStatus of ['DEV_LOGGED', 'SKIPPED_SMTP_UNCONFIGURED', 'FAILED_NON_FATAL'] as const) {
+      const result = evaluateMembershipInviteIssuance({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-1',
+        actorId: 'user-uuid-1',
+        email: 'invitee@acme.test',
+        requestedRole: 'MEMBER',
+        inviteId: `invite-${dispatchStatus}`,
+        inviteToken: `invite-token-${dispatchStatus}`,
+        issuedAt: new Date('2026-04-10T00:00:00.000Z'),
+        dispatchStatus,
+      });
+
+      expect(result.allowed).toBe(true);
+      if (!result.allowed) {
+        return;
+      }
+
+      expect(result.response.inviteToken).toBe(`invite-token-${dispatchStatus}`);
+      expect(result.response.emailDelivery).toEqual({ status: dispatchStatus });
+    }
   });
 
   it('emits a member.invited audit contract aligned with the created invite artifact', () => {
@@ -637,6 +836,7 @@ describe('POST /api/tenant/memberships — invite issuance artifact contract', (
       inviteId: 'invite-uuid-2',
       inviteToken: 'invite-token-owner',
       issuedAt: new Date('2026-04-10T12:34:56.000Z'),
+      dispatchStatus: 'SENT',
     });
 
     expect(result.allowed).toBe(true);
@@ -670,6 +870,7 @@ describe('POST /api/tenant/memberships — invite issuance artifact contract', (
         inviteId: 'invite-uuid-3',
         inviteToken: 'invite-token-member',
         issuedAt: new Date('2026-04-10T00:00:00.000Z'),
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
 
@@ -683,6 +884,7 @@ describe('POST /api/tenant/memberships — invite issuance artifact contract', (
         inviteId: 'invite-uuid-4',
         inviteToken: 'invite-token-viewer',
         issuedAt: new Date('2026-04-10T00:00:00.000Z'),
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'VIEWER_TRANSITION_OUT_OF_SCOPE' });
   });
@@ -815,6 +1017,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-12',
+        dispatchStatus: 'SENT',
       });
 
       expect(result.allowed).toBe(true);
@@ -840,6 +1043,9 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
           expiresAt: new Date('2026-04-19T09:30:00.000Z'),
           createdAt,
         },
+        emailDelivery: {
+          status: 'SENT',
+        },
       });
       expect(result.response.invite).not.toHaveProperty('inviteToken');
       expect(result.response.invite).not.toHaveProperty('tokenHash');
@@ -856,6 +1062,37 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
           role: 'MEMBER',
         },
       });
+    }
+  });
+
+  it('surfaces bounded resend delivery outcomes without leaking inviteToken or tokenHash', () => {
+    for (const dispatchStatus of ['DEV_LOGGED', 'SKIPPED_SMTP_UNCONFIGURED', 'FAILED_NON_FATAL'] as const) {
+      const result = evaluatePendingInviteResend({
+        actorRole: 'OWNER',
+        tenantId: 'tenant-uuid-12',
+        actorId: 'user-uuid-12',
+        hasDbContext: true,
+        targetVisibleToOrg: true,
+        email: 'invitee@acme.test',
+        role: 'MEMBER',
+        acceptedAt: null,
+        expiresAt: new Date('2026-04-18T00:00:00.000Z'),
+        now,
+        inviteId: `invite-${dispatchStatus}`,
+        createdAt,
+        resentAt,
+        inviteToken: `resent-token-${dispatchStatus}`,
+        dispatchStatus,
+      });
+
+      expect(result.allowed).toBe(true);
+      if (!result.allowed) {
+        return;
+      }
+
+      expect(result.response.emailDelivery).toEqual({ status: dispatchStatus });
+      expect(result.response.invite).not.toHaveProperty('inviteToken');
+      expect(result.response.invite).not.toHaveProperty('tokenHash');
     }
   });
 
@@ -876,6 +1113,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-13',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'FORBIDDEN' });
 
@@ -895,6 +1133,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-13b',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'FORBIDDEN' });
   });
@@ -916,6 +1155,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-14',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
 
@@ -935,6 +1175,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-14b',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'UNAUTHORIZED' });
 
@@ -954,6 +1195,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-14c',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'INVITE_NOT_FOUND' });
   });
@@ -975,6 +1217,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-15',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
 
@@ -994,6 +1237,7 @@ describe('POST /api/tenant/memberships/invites/:id/resend — pending invite res
         createdAt,
         resentAt,
         inviteToken: 'resent-invite-token-15b',
+        dispatchStatus: 'SENT',
       })
     ).toEqual({ allowed: false, error: 'INVITE_NOT_PENDING' });
   });

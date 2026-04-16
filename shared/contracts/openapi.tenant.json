@@ -130,6 +130,85 @@
           }
         }
       },
+      "InviteEmailDeliveryOutcome": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "DEV_LOGGED",
+              "SKIPPED_SMTP_UNCONFIGURED",
+              "SENT",
+              "FAILED_NON_FATAL"
+            ],
+            "description": "Bounded invite-email dispatch outcome. This reports application dispatch behavior only and does not claim mailbox delivery."
+          }
+        }
+      },
+      "TenantInviteCreateSuccessResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["invite", "inviteToken", "emailDelivery"],
+            "properties": {
+              "invite": {
+                "type": "object",
+                "required": ["id", "email", "role", "expiresAt"],
+                "properties": {
+                  "id": { "type": "string", "format": "uuid" },
+                  "email": { "type": "string", "format": "email" },
+                  "role": {
+                    "type": "string",
+                    "enum": ["OWNER", "ADMIN", "MEMBER"]
+                  },
+                  "expiresAt": { "type": "string", "format": "date-time" }
+                }
+              },
+              "inviteToken": {
+                "type": "string",
+                "description": "Activation handoff token for the newly created invite."
+              },
+              "emailDelivery": {
+                "$ref": "#/components/schemas/InviteEmailDeliveryOutcome"
+              }
+            }
+          }
+        }
+      },
+      "TenantInviteResendSuccessResponse": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {
+            "type": "object",
+            "required": ["invite", "emailDelivery"],
+            "properties": {
+              "invite": {
+                "type": "object",
+                "required": ["id", "email", "role", "expiresAt", "createdAt"],
+                "properties": {
+                  "id": { "type": "string", "format": "uuid" },
+                  "email": { "type": "string", "format": "email" },
+                  "role": {
+                    "type": "string",
+                    "enum": ["OWNER", "ADMIN", "MEMBER"]
+                  },
+                  "expiresAt": { "type": "string", "format": "date-time" },
+                  "createdAt": { "type": "string", "format": "date-time" }
+                }
+              },
+              "emailDelivery": {
+                "$ref": "#/components/schemas/InviteEmailDeliveryOutcome"
+              }
+            }
+          }
+        }
+      },
       "AggregatorDiscoveryEntry": {
         "type": "object",
         "required": [
@@ -650,7 +729,16 @@
           }
         },
         "responses": {
-          "200": { "description": "Member invited successfully" },
+          "200": {
+            "description": "Member invited successfully with bounded invite-email dispatch outcome.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantInviteCreateSuccessResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
@@ -661,6 +749,65 @@
           },
           "403": {
             "description": "Forbidden (insufficient permissions)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenant/memberships/invites/{id}/resend": {
+      "post": {
+        "summary": "Resend a pending tenant invite",
+        "description": "Resend a still-pending tenant invite for the current tenant. Requires OWNER or ADMIN role. Returns a safe invite envelope plus bounded invite-email dispatch outcome only.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invite resent successfully with bounded invite-email dispatch outcome.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantInviteResendSuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (insufficient permissions)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Invite not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Only pending invites can be resent",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Error" }

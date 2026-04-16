@@ -38,6 +38,12 @@ export interface EmailContext {
   actorId?: string | null;
 }
 
+export type EmailDispatchStatus = 'DEV_LOGGED' | 'SKIPPED_SMTP_UNCONFIGURED' | 'SENT';
+
+export interface EmailDispatchOutcome {
+  status: EmailDispatchStatus;
+}
+
 // ---------------------------------------------------------------------------
 // Error class (stop-loss)
 // ---------------------------------------------------------------------------
@@ -107,7 +113,7 @@ function createTransporter() {
 export async function sendEmail(
   params: EmailParams,
   context: EmailContext = {}
-): Promise<void> {
+): Promise<EmailDispatchOutcome> {
   // Stop-loss — validate before any I/O
   validate(params);
 
@@ -132,7 +138,7 @@ export async function sendEmail(
   // --- Development / Test ---
   if (env !== 'production') {
     console.log(JSON.stringify(devPayload));
-    return;
+    return { status: 'DEV_LOGGED' };
   }
 
   // --- Production without SMTP config ---
@@ -148,7 +154,7 @@ export async function sendEmail(
           'Email not sent. Set SMTP env vars to enable delivery in production.',
       })
     );
-    return;
+    return { status: 'SKIPPED_SMTP_UNCONFIGURED' };
   }
 
   // --- Production with SMTP ---
@@ -172,6 +178,7 @@ export async function sendEmail(
         triggeredBy: context.triggeredBy ?? 'system',
       })
     );
+    return { status: 'SENT' };
   } catch (err) {
     console.error(
       JSON.stringify({
@@ -252,9 +259,9 @@ export async function sendInviteMemberEmail(
   inviteToken: string,
   orgName: string,
   context: EmailContext = {}
-): Promise<void> {
+): Promise<EmailDispatchOutcome> {
   const inviteLink = `${FRONTEND_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}&action=invite`;
-  await sendEmail(
+  return sendEmail(
     {
       to,
       subject: `You've been invited to join ${orgName} on TexQtic`,
