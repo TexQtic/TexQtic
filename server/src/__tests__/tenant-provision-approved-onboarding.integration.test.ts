@@ -83,6 +83,17 @@ vi.mock('../services/tenantProvision.service.js', () => ({
 vi.mock('../db/prisma.js', () => ({ prisma: prismaMock }));
 
 vi.mock('../lib/database-context.js', () => ({
+  canonicalizeTenantPlan: vi.fn((plan: string) => {
+    switch (plan) {
+      case 'FREE':
+      case 'STARTER':
+      case 'PROFESSIONAL':
+      case 'ENTERPRISE':
+        return plan;
+      default:
+        throw new Error(`Invalid tenant plan: ${plan}`);
+    }
+  }),
   withDbContext: withDbContextMock,
   getOrganizationIdentity: vi.fn(),
   OrganizationNotFoundError: class OrganizationNotFoundError extends Error {},
@@ -393,7 +404,7 @@ describe('tenant activation invite admission validation', () => {
       status: 'PENDING_VERIFICATION',
       org_type: 'B2B',
       is_white_label: false,
-      plan: 'GROWTH',
+      plan: 'FREE',
     });
     txMock.organizations.findUnique.mockResolvedValue({
       id: 'tenant-uuid-0000-0000-0000-000000000001',
@@ -404,7 +415,7 @@ describe('tenant activation invite admission validation', () => {
       is_white_label: false,
       jurisdiction: 'US-DE',
       registration_no: 'REG-123',
-      plan: 'GROWTH',
+      plan: 'FREE',
     });
     txMock.tenant.update.mockResolvedValue({ name: 'Acme Textiles' });
     txMock.membership.create.mockResolvedValue({ role: 'OWNER' });
@@ -674,7 +685,7 @@ describe('tenant activation invite admission validation', () => {
         tenant_category: 'B2B',
         is_white_label: false,
         status: 'PENDING_VERIFICATION',
-        plan: 'GROWTH',
+        plan: 'FREE',
       },
       membership: {
         role: 'OWNER',
