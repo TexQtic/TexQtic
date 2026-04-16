@@ -3338,23 +3338,56 @@ const App: React.FC = () => {
       return null;
     }
 
-    switch (controlPlaneLocalRouteSelection.routeKey) {
-      case 'tenant_detail':
-        if (!selectedTenant) {
-          return null;
-        }
+    if (
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_detail' ||
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_invited' ||
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_closed'
+    ) {
+      if (!selectedTenant) {
+        return null;
+      }
 
-        return (
-          <TenantDetails
-            tenant={selectedTenant}
-            onBack={() => navigateControlPlaneManifestRoute('tenant_registry')}
-            onImpersonate={handleImpersonate}
-          />
-        );
-      case 'tenant_registry':
-        return (
-          <TenantRegistry onSelectTenant={setSelectedTenant} onImpersonate={handleImpersonate} />
-        );
+      let backRouteKey: 'tenant_registry' | 'tenant_registry_invited' | 'tenant_registry_closed' =
+        'tenant_registry';
+
+      if (controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_invited') {
+        backRouteKey = 'tenant_registry_invited';
+      } else if (controlPlaneLocalRouteSelection.routeKey === 'tenant_detail_closed') {
+        backRouteKey = 'tenant_registry_closed';
+      }
+
+      return (
+        <TenantDetails
+          tenant={selectedTenant}
+          onBack={() => navigateControlPlaneManifestRoute(backRouteKey)}
+          onImpersonate={handleImpersonate}
+        />
+      );
+    }
+
+    if (
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_registry' ||
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_invited' ||
+      controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_closed'
+    ) {
+      let lifecycleView: 'ACTIVE' | 'INVITED' | 'CLOSED' = 'ACTIVE';
+
+      if (controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_invited') {
+        lifecycleView = 'INVITED';
+      } else if (controlPlaneLocalRouteSelection.routeKey === 'tenant_registry_closed') {
+        lifecycleView = 'CLOSED';
+      }
+
+      return (
+        <TenantRegistry
+          lifecycleView={lifecycleView}
+          onSelectTenant={setSelectedTenant}
+          onImpersonate={handleImpersonate}
+        />
+      );
+    }
+
+    switch (controlPlaneLocalRouteSelection.routeKey) {
       case 'logs':
         return <AuditLogs />;
       case 'finance':

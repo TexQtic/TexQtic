@@ -10,11 +10,13 @@ import { EmptyState, ErrorState, TenantRowSkeleton } from '../shared';
 import { APIError } from '../../services/apiClient';
 
 interface TenantRegistryProps {
+  lifecycleView: 'ACTIVE' | 'INVITED' | 'CLOSED';
   onSelectTenant: (tenant: TenantConfig) => void;
   onImpersonate: (tenant: TenantConfig) => void;
 }
 
 export const TenantRegistry: React.FC<TenantRegistryProps> = ({
+  lifecycleView,
   onSelectTenant,
   onImpersonate,
 }) => {
@@ -180,13 +182,49 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   // Compute stats from actual tenant data
   const stats = {
     total: tenants.length,
-    active: tenants.filter(t => t.status?.toUpperCase() === 'ACTIVE').length,
+    active: tenants.filter(
+      t => t.status?.toUpperCase() !== 'CLOSED' && !t.has_pending_first_owner_preparation_invite
+    ).length,
+    invited: tenants.filter(t => t.has_pending_first_owner_preparation_invite === true).length,
     closed: tenants.filter(t => t.status?.toUpperCase() === 'CLOSED').length,
-    suspended: tenants.filter(t => t.status?.toUpperCase() === 'SUSPENDED').length,
   };
 
-  const operationalTenants = tenants.filter(t => t.status?.toUpperCase() !== 'CLOSED');
+  const activeTenants = tenants.filter(
+    t => t.status?.toUpperCase() !== 'CLOSED' && !t.has_pending_first_owner_preparation_invite
+  );
+  const invitedTenants = tenants.filter(t => t.has_pending_first_owner_preparation_invite === true);
   const closedTenants = tenants.filter(t => t.status?.toUpperCase() === 'CLOSED');
+
+  const currentView = (() => {
+    switch (lifecycleView) {
+      case 'INVITED':
+        return {
+          title: 'Invited Tenants',
+          description:
+            'Tenants that still satisfy the pending first-owner preparation invite classifier.',
+          count: invitedTenants.length,
+          tenantList: invitedTenants,
+          emptyMessage: 'No invited tenants are currently visible.',
+        };
+      case 'CLOSED':
+        return {
+          title: 'Closed Tenants',
+          description: 'Tenants whose lifecycle status is CLOSED.',
+          count: closedTenants.length,
+          tenantList: closedTenants,
+          emptyMessage: 'No closed tenants are currently visible.',
+        };
+      default:
+        return {
+          title: 'Active Tenants',
+          description:
+            'Tenants whose lifecycle status is not CLOSED and that do not currently satisfy the invited classifier.',
+          count: activeTenants.length,
+          tenantList: activeTenants,
+          emptyMessage: 'No active tenants are currently visible.',
+        };
+    }
+  })();
 
   const renderTenantTable = (tenantList: Tenant[]) => (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
@@ -310,8 +348,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-white">Tenant Registry</h1>
-            <p className="text-slate-400 text-sm">Manage global tenant lifecycle and governance.</p>
+            <h1 className="text-2xl font-bold text-white">{currentView.title}</h1>
+            <p className="text-slate-400 text-sm">{currentView.description}</p>
           </div>
         </div>
         <ErrorState error={error} onRetry={fetchTenants} />
@@ -323,8 +361,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white">Tenant Registry</h1>
-          <p className="text-slate-400 text-sm">Manage global tenant lifecycle and governance.</p>
+          <h1 className="text-2xl font-bold text-white">{currentView.title}</h1>
+          <p className="text-slate-400 text-sm">{currentView.description}</p>
         </div>
         <button
           onClick={() => {
@@ -342,7 +380,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         {[
           { label: 'Total Tenants', value: loading ? '...' : stats.total.toString() },
           { label: 'Active', value: loading ? '...' : stats.active.toString() },
-          { label: 'Suspended', value: loading ? '...' : stats.suspended.toString() },
+          { label: 'Invited', value: loading ? '...' : stats.invited.toString() },
           { label: 'Closed', value: loading ? '...' : stats.closed.toString() },
         ].map((stat, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
@@ -383,52 +421,25 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
 
       {/* Data state */}
       {!loading && tenants.length > 0 && (
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">
-                  Operational Tenants
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Tenants whose lifecycle status is not CLOSED.
-                </p>
-              </div>
-              <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
-                {operationalTenants.length}
-              </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">
+                {currentView.title}
+              </h2>
+              <p className="text-xs text-slate-500">{currentView.description}</p>
             </div>
-            {operationalTenants.length > 0 ? (
-              renderTenantTable(operationalTenants)
-            ) : (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
-                No operational tenants are currently visible.
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">
-                  Closed Tenants
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Tenants whose lifecycle status is CLOSED.
-                </p>
-              </div>
-              <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
-                {closedTenants.length}
-              </div>
+            <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-bold text-slate-300">
+              {currentView.count}
             </div>
-            {closedTenants.length > 0 ? (
-              renderTenantTable(closedTenants)
-            ) : (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
-                No closed tenants are currently visible.
-              </div>
-            )}
           </div>
+          {currentView.tenantList.length > 0 ? (
+            renderTenantTable(currentView.tenantList)
+          ) : (
+            <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-6 text-sm text-slate-400">
+              {currentView.emptyMessage}
+            </div>
+          )}
         </div>
       )}
 

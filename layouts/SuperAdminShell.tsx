@@ -32,6 +32,8 @@ export const formatControlPlaneActorLabel = (identity: ControlPlaneIdentity | nu
 
 export type AdminView =
   | 'TENANTS'
+  | 'TENANTS_INVITED'
+  | 'TENANTS_CLOSED'
   | 'FLAGS'
   | 'FINANCE'
   | 'COMPLIANCE'
@@ -73,7 +75,9 @@ const isActiveNavigationRoute = (navigation: RuntimeShellNavigationSurface | nul
 };
 
 const CONTROL_PLANE_NAV = [
-  { routeKey: 'tenant_registry', icon: '🏢', label: 'Tenants' },
+  { routeKey: 'tenant_registry', icon: '🏢', label: 'Active Tenants' },
+  { routeKey: 'tenant_registry_invited', icon: '📨', label: 'Invited Tenants' },
+  { routeKey: 'tenant_registry_closed', icon: '🗃️', label: 'Closed Tenants' },
   { routeKey: 'flags', icon: '🚩', label: 'Feature Flags' },
   { routeKey: 'finance', icon: '💰', label: 'Finance & Fees' },
   { routeKey: 'trades', icon: '🔁', label: 'Trade Oversight' },
@@ -130,7 +134,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
       <aside className="w-64 border-r border-slate-800 bg-slate-900/30 hidden md:flex flex-col p-4 sticky top-14 h-[calc(100vh-3.5rem)]">
         <nav className="space-y-0.5 overflow-y-auto pr-2 custom-scrollbar">
           <SectionTitle>Governance</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(0, 7).map(item => {
+          {CONTROL_PLANE_NAV.slice(0, 9).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }
@@ -147,7 +151,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           })}
 
           <SectionTitle>Risk & Compliance</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(7, 14).map(item => {
+          {CONTROL_PLANE_NAV.slice(9, 16).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }
@@ -164,7 +168,7 @@ export const SuperAdminShell: React.FC<SuperAdminShellProps> = ({
           })}
 
           <SectionTitle>Infrastructure</SectionTitle>
-          {CONTROL_PLANE_NAV.slice(14).map(item => {
+          {CONTROL_PLANE_NAV.slice(16).map(item => {
             if (!hasNavigationRoute(navigation, item.routeKey)) {
               return null;
             }

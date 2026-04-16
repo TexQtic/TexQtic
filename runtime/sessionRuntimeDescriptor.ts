@@ -119,7 +119,11 @@ export type RuntimeLocalRouteKey =
   | 'collections'
   | 'domains'
   | 'tenant_registry'
+  | 'tenant_registry_invited'
+  | 'tenant_registry_closed'
   | 'tenant_detail'
+  | 'tenant_detail_invited'
+  | 'tenant_detail_closed'
   | 'flags'
   | 'finance'
   | 'compliance'
@@ -269,10 +273,26 @@ const CONTROL_PLANE_ROUTE_GROUP = defineRuntimeRouteGroup('control_plane_operati
     adminView: 'TENANTS',
     requiresSelectedTenant: true,
   }),
-  defineRuntimeRoute('tenant_registry', 'Tenants', 'TENANTS', {
+  defineRuntimeRoute('tenant_registry', 'Active Tenants', 'TENANTS', {
     adminView: 'TENANTS',
     requiresSelectedTenant: false,
   }, { defaultForGroup: true }),
+  defineRuntimeRoute('tenant_detail_invited', 'Tenant Detail', 'TENANT_DETAIL', {
+    adminView: 'TENANTS_INVITED',
+    requiresSelectedTenant: true,
+  }),
+  defineRuntimeRoute('tenant_registry_invited', 'Invited Tenants', 'TENANTS_INVITED', {
+    adminView: 'TENANTS_INVITED',
+    requiresSelectedTenant: false,
+  }),
+  defineRuntimeRoute('tenant_detail_closed', 'Tenant Detail', 'TENANT_DETAIL', {
+    adminView: 'TENANTS_CLOSED',
+    requiresSelectedTenant: true,
+  }),
+  defineRuntimeRoute('tenant_registry_closed', 'Closed Tenants', 'TENANTS_CLOSED', {
+    adminView: 'TENANTS_CLOSED',
+    requiresSelectedTenant: false,
+  }),
   defineRuntimeRoute('flags', 'Feature Flags', 'FLAGS', { adminView: 'FLAGS' }),
   defineRuntimeRoute('finance', 'Finance & Fees', 'FINANCE', { adminView: 'FINANCE' }),
   defineRuntimeRoute('trades', 'Trade Oversight', 'TRADES', { adminView: 'TRADES' }),
@@ -398,6 +418,8 @@ const WL_ADMIN_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
 
 const CONTROL_PLANE_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'tenant_registry',
+  'tenant_registry_invited',
+  'tenant_registry_closed',
   'flags',
   'finance',
   'trades',
