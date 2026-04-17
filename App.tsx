@@ -67,6 +67,7 @@ import { createTradeFromRfq } from './services/tradeService';
 import {
   getCatalogItems,
   CatalogItem,
+  BuyerRfqDetailResponse,
   CreateRfqRequest,
   CreateRfqResponse,
   createCatalogItem,
@@ -137,6 +138,8 @@ type BuyerRfqDetailViewState = {
   error: string | null;
   data: BuyerRfqDetail | null;
 };
+
+type BuyerRfqDetailSource = Exclude<BuyerRfqDetailViewState['source'], null>;
 
 const createInitialBuyerRfqDialogState = (): BuyerRfqDialogState => ({
   open: false,
@@ -244,6 +247,107 @@ const resolveBuyerRfqSubmitError = (error: unknown) => {
   return error instanceof APIError
     ? error.message
     : 'Failed to submit your request for quote. Please try again.';
+};
+
+const resolveBuyerRfqDetailOpenAction = ({
+  rfqId,
+  fallbackRfqId,
+  source = 'dialog',
+  currentDetailView,
+}: {
+  rfqId?: string;
+  fallbackRfqId?: string | null;
+  source?: BuyerRfqDetailSource;
+  currentDetailView: BuyerRfqDetailViewState;
+}) => {
+  const nextRfqId = rfqId ?? fallbackRfqId;
+  if (!nextRfqId) {
+    return {
+      kind: 'noop' as const,
+      rfqId: null,
+      detailView: null,
+    };
+  }
+
+  if (
+    currentDetailView.rfqId === nextRfqId
+    && currentDetailView.data
+    && currentDetailView.source === source
+  ) {
+    return {
+      kind: 'reuse' as const,
+      rfqId: nextRfqId,
+      detailView: {
+        ...currentDetailView,
+        open: true,
+        error: null,
+      },
+    };
+  }
+
+  return {
+    kind: 'load' as const,
+    rfqId: nextRfqId,
+    detailView: {
+      open: true,
+      source,
+      rfqId: nextRfqId,
+      loading: true,
+      error: null,
+      data: null,
+    } satisfies BuyerRfqDetailViewState,
+  };
+};
+
+const resolveBuyerRfqDetailSuccess = ({
+  rfqId,
+  source,
+  response,
+}: {
+  rfqId: string;
+  source: BuyerRfqDetailSource;
+  response: BuyerRfqDetailResponse;
+}) => ({
+  open: true,
+  source,
+  rfqId,
+  loading: false,
+  error: null,
+  data: response.rfq,
+} satisfies BuyerRfqDetailViewState);
+
+const resolveBuyerRfqDetailError = ({
+  rfqId,
+  source,
+  error,
+}: {
+  rfqId: string;
+  source: BuyerRfqDetailSource;
+  error: unknown;
+}) => ({
+  open: true,
+  source,
+  rfqId,
+  loading: false,
+  error: error instanceof APIError ? error.message : 'Unable to load RFQ detail right now.',
+  data: null,
+} satisfies BuyerRfqDetailViewState);
+
+const loadBuyerRfqDetailContinuity = async ({
+  rfqId,
+  source,
+  loadBuyerRfqDetail,
+}: {
+  rfqId: string;
+  source: BuyerRfqDetailSource;
+  loadBuyerRfqDetail: (rfqId: string) => Promise<BuyerRfqDetailResponse>;
+}) => {
+  try {
+    const response = await loadBuyerRfqDetail(rfqId);
+    return resolveBuyerRfqDetailSuccess({ rfqId, source, response });
+  } catch (error) {
+    return resolveBuyerRfqDetailError({ rfqId, source, error });
+  }
 };
 
 const VERIFICATION_BLOCKED_VIEWS = new Set([
@@ -712,6 +816,11 @@ export const __B2B_RFQ_INITIATION_TESTING__ = {
   resolveBuyerRfqSubmitPayload,
   resolveBuyerRfqSubmitSuccess,
   resolveBuyerRfqSubmitError,
+};
+
+export const __B2B_RFQ_DETAIL_TESTING__ = {
+  resolveBuyerRfqDetailOpenAction,
+  loadBuyerRfqDetailContinuity,
 };
 
 const clearPersistedImpersonationSession = () => {
@@ -2390,8 +2499,14 @@ const App: React.FC = () => {
   };
 
   const handleOpenRfqDetail = async (rfqId?: string, source: 'dialog' | 'list' = 'dialog') => {
-    const nextRfqId = rfqId ?? rfqDialog.success?.rfqId;
-    if (!nextRfqId) return;
+    const openAction = resolveBuyerRfqDetailOpenAction({
+      rfqId,
+      fallbackRfqId: rfqDialog.success?.rfqId,
+      source,
+      currentDetailView: rfqDetailView,
+    });
+
+    if (openAction.kind === 'noop') return;
 
     setBuyerRfqTradeBridge(view => ({ ...view, error: null }));
 
@@ -2399,40 +2514,19 @@ const App: React.FC = () => {
       navigateTenantManifestRoute('buyer_rfqs');
     }
 
-    if (rfqDetailView.rfqId === nextRfqId && rfqDetailView.data && rfqDetailView.source === source) {
-      setRfqDetailView(view => ({ ...view, open: true, error: null }));
+    if (openAction.kind === 'reuse') {
+      setRfqDetailView(openAction.detailView);
       return;
     }
 
-    setRfqDetailView({
-      open: true,
-      source,
-      rfqId: nextRfqId,
-      loading: true,
-      error: null,
-      data: null,
-    });
+    setRfqDetailView(openAction.detailView);
 
-    try {
-      const response = await getBuyerRfqDetail(nextRfqId);
-      setRfqDetailView({
-        open: true,
-        source,
-        rfqId: nextRfqId,
-        loading: false,
-        error: null,
-        data: response.rfq,
-      });
-    } catch (error) {
-      setRfqDetailView({
-        open: true,
-        source,
-        rfqId: nextRfqId,
-        loading: false,
-        error: error instanceof APIError ? error.message : 'Unable to load RFQ detail right now.',
-        data: null,
-      });
-    }
+    const detailView = await loadBuyerRfqDetailContinuity({
+      rfqId: openAction.rfqId,
+      source,
+      loadBuyerRfqDetail: getBuyerRfqDetail,
+    });
+    setRfqDetailView(detailView);
   };
 
   const handleReturnToBuyerRfqList = () => {

@@ -10,9 +10,14 @@ vi.mock('../services/tenantApiClient', () => ({
   tenantPut: vi.fn(),
 }));
 
-import { __B2B_RFQ_INITIATION_TESTING__ } from '../App';
+import { __B2B_RFQ_DETAIL_TESTING__, __B2B_RFQ_INITIATION_TESTING__ } from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
-import { createRfq, type CatalogItem } from '../services/catalogService';
+import {
+  createRfq,
+  type BuyerRfqDetail,
+  type BuyerRfqDetailResponse,
+  type CatalogItem,
+} from '../services/catalogService';
 import { APIError } from '../services/apiClient';
 import { InviteMemberSuccessState } from '../components/Tenant/InviteMemberForm';
 import {
@@ -60,6 +65,11 @@ const {
   resolveBuyerRfqSubmitSuccess,
   resolveBuyerRfqSubmitError,
 } = __B2B_RFQ_INITIATION_TESTING__;
+
+const {
+  resolveBuyerRfqDetailOpenAction,
+  loadBuyerRfqDetailContinuity,
+} = __B2B_RFQ_DETAIL_TESTING__;
 
 function makeTradeResponse(): TenantTradesListResponse {
   return {
@@ -223,6 +233,27 @@ function makeCreateRfqResponse() {
       supplier_response: null,
       trade_continuity: null,
     },
+  };
+}
+
+function makeBuyerRfqDetail(overrides: Partial<BuyerRfqDetail> = {}): BuyerRfqDetail {
+  return {
+    id: 'rfq-1',
+    status: 'RESPONDED',
+    org_id: 'buyer-1',
+    catalog_item_id: 'item-1',
+    item_name: 'Combed Cotton 30s',
+    item_sku: 'COT-30S',
+    quantity: 24,
+    supplier_org_id: 'supplier-1',
+    created_at: '2026-03-22T08:00:00.000Z',
+    updated_at: '2026-03-22T09:00:00.000Z',
+    item_unit_price: 18.5,
+    buyer_message: 'Need export-grade packing.',
+    created_by_user_id: 'user-1',
+    supplier_response: null,
+    trade_continuity: null,
+    ...overrides,
   };
 }
 
@@ -687,6 +718,114 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(resolveBuyerRfqSubmitError(new Error('boom'))).toBe(
       'Failed to submit your request for quote. Please try again.',
     );
+  });
+
+  it('keeps buyer RFQ detail continuity inside the App-owned open/loading seam', () => {
+    const openAction = resolveBuyerRfqDetailOpenAction({
+      fallbackRfqId: 'rfq-1',
+      source: 'dialog',
+      currentDetailView: createInitialBuyerRfqDetailViewState(),
+    });
+
+    expect(openAction.kind).toBe('load');
+    expect(openAction.rfqId).toBe('rfq-1');
+    expect(openAction.detailView).toEqual({
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'dialog',
+      rfqId: 'rfq-1',
+      loading: true,
+    });
+
+    const reuseAction = resolveBuyerRfqDetailOpenAction({
+      rfqId: 'rfq-1',
+      source: 'dialog',
+      currentDetailView: {
+        ...createInitialBuyerRfqDetailViewState(),
+        open: false,
+        source: 'dialog',
+        rfqId: 'rfq-1',
+        loading: false,
+        error: 'stale',
+        data: makeBuyerRfqDetail(),
+      },
+    });
+
+    expect(reuseAction.kind).toBe('reuse');
+    expect(reuseAction.detailView).toEqual({
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'dialog',
+      rfqId: 'rfq-1',
+      loading: false,
+      error: null,
+      data: makeBuyerRfqDetail(),
+    });
+  });
+
+  it('invokes getBuyerRfqDetail and maps buyer RFQ detail success into App-owned state continuity', async () => {
+    const rfq = makeBuyerRfqDetail();
+    const getBuyerRfqDetailMock = vi.fn(async (rfqId: string): Promise<BuyerRfqDetailResponse> => ({
+      rfq: {
+        ...rfq,
+        id: rfqId,
+      },
+    }));
+
+    const detailView = await loadBuyerRfqDetailContinuity({
+      rfqId: 'rfq-1',
+      source: 'dialog',
+      loadBuyerRfqDetail: getBuyerRfqDetailMock,
+    });
+
+    expect(getBuyerRfqDetailMock).toHaveBeenCalledWith('rfq-1');
+    expect(detailView).toEqual({
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'dialog',
+      rfqId: 'rfq-1',
+      loading: false,
+      error: null,
+      data: rfq,
+    });
+  });
+
+  it('maps buyer RFQ detail fetch failures to API and fallback App-owned error states', async () => {
+    const apiErrorView = await loadBuyerRfqDetailContinuity({
+      rfqId: 'rfq-1',
+      source: 'dialog',
+      loadBuyerRfqDetail: vi.fn(async (_rfqId: string): Promise<BuyerRfqDetailResponse> => {
+        throw new APIError(404, 'RFQ not found.');
+      }),
+    });
+
+    expect(apiErrorView).toEqual({
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'dialog',
+      rfqId: 'rfq-1',
+      loading: false,
+      error: 'RFQ not found.',
+      data: null,
+    });
+
+    const fallbackErrorView = await loadBuyerRfqDetailContinuity({
+      rfqId: 'rfq-2',
+      source: 'list',
+      loadBuyerRfqDetail: vi.fn(async (_rfqId: string): Promise<BuyerRfqDetailResponse> => {
+        throw new Error('boom');
+      }),
+    });
+
+    expect(fallbackErrorView).toEqual({
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'list',
+      rfqId: 'rfq-2',
+      loading: false,
+      error: 'Unable to load RFQ detail right now.',
+      data: null,
+    });
   });
 
   it('uses the pending-invite revoke endpoint and preserves the delete envelope', async () => {
