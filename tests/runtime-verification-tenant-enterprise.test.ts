@@ -10,13 +10,20 @@ vi.mock('../services/tenantApiClient', () => ({
   tenantPut: vi.fn(),
 }));
 
-import { __B2B_RFQ_DETAIL_TESTING__, __B2B_RFQ_INITIATION_TESTING__ } from '../App';
+import {
+  __B2B_RFQ_DETAIL_TESTING__,
+  __B2B_RFQ_INITIATION_TESTING__,
+  __B2B_SUPPLIER_INBOX_TESTING__,
+} from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import {
   createRfq,
+  getSupplierRfqInbox,
   type BuyerRfqDetail,
   type BuyerRfqDetailResponse,
   type CatalogItem,
+  type SupplierRfqListItem,
+  type SupplierRfqListResponse,
 } from '../services/catalogService';
 import { APIError } from '../services/apiClient';
 import { InviteMemberSuccessState } from '../components/Tenant/InviteMemberForm';
@@ -70,6 +77,11 @@ const {
   resolveBuyerRfqDetailOpenAction,
   loadBuyerRfqDetailContinuity,
 } = __B2B_RFQ_DETAIL_TESTING__;
+
+const {
+  resolveSupplierRfqInboxOpenAction,
+  loadSupplierRfqInboxContinuity,
+} = __B2B_SUPPLIER_INBOX_TESTING__;
 
 function makeTradeResponse(): TenantTradesListResponse {
   return {
@@ -253,6 +265,20 @@ function makeBuyerRfqDetail(overrides: Partial<BuyerRfqDetail> = {}): BuyerRfqDe
     created_by_user_id: 'user-1',
     supplier_response: null,
     trade_continuity: null,
+    ...overrides,
+  };
+}
+
+function makeSupplierRfqListItem(overrides: Partial<SupplierRfqListItem> = {}): SupplierRfqListItem {
+  return {
+    id: 'supplier-rfq-1',
+    status: 'OPEN',
+    catalog_item_id: 'item-1',
+    item_name: 'Combed Cotton 30s',
+    item_sku: 'COT-30S',
+    quantity: 24,
+    created_at: '2026-03-22T08:00:00.000Z',
+    updated_at: '2026-03-22T09:00:00.000Z',
     ...overrides,
   };
 }
@@ -825,6 +851,76 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: false,
       error: 'Unable to load RFQ detail right now.',
       data: null,
+    });
+  });
+
+  it('keeps supplier inbox continuity inside the App-owned open/loading seam', () => {
+    const currentRfqs = [makeSupplierRfqListItem()];
+    const openAction = resolveSupplierRfqInboxOpenAction({
+      loading: false,
+      error: 'stale',
+      rfqs: currentRfqs,
+    });
+
+    expect(openAction.detailView).toEqual({
+      open: false,
+      rfqId: null,
+      loading: false,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: null,
+    });
+    expect(openAction.listView).toEqual({
+      loading: true,
+      error: null,
+      rfqs: currentRfqs,
+    });
+  });
+
+  it('invokes getSupplierRfqInbox and maps supplier inbox success into App-owned list continuity', async () => {
+    const rfqs = [makeSupplierRfqListItem()];
+    tenantGetMock.mockResolvedValue({
+      rfqs,
+      count: rfqs.length,
+    } satisfies SupplierRfqListResponse);
+
+    const listView = await loadSupplierRfqInboxContinuity({
+      loadSupplierRfqInbox: getSupplierRfqInbox,
+    });
+
+    expect(tenantGetMock).toHaveBeenCalledWith('/api/tenant/rfqs/inbox');
+    expect(listView).toEqual({
+      loading: false,
+      error: null,
+      rfqs,
+    });
+  });
+
+  it('maps supplier inbox fetch failures to API and fallback App-owned error states', async () => {
+    const apiErrorView = await loadSupplierRfqInboxContinuity({
+      loadSupplierRfqInbox: vi.fn(async (): Promise<SupplierRfqListResponse> => {
+        throw new APIError(503, 'Supplier inbox is unavailable.');
+      }),
+    });
+
+    expect(apiErrorView).toEqual({
+      loading: false,
+      error: 'Supplier inbox is unavailable.',
+      rfqs: [],
+    });
+
+    const fallbackErrorView = await loadSupplierRfqInboxContinuity({
+      loadSupplierRfqInbox: vi.fn(async (): Promise<SupplierRfqListResponse> => {
+        throw new Error('boom');
+      }),
+    });
+
+    expect(fallbackErrorView).toEqual({
+      loading: false,
+      error: 'Unable to load the supplier RFQ inbox right now.',
+      rfqs: [],
     });
   });
 

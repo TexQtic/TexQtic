@@ -83,6 +83,7 @@ import {
   BuyerRfqListItem,
   SupplierRfqDetail,
   SupplierRfqListItem,
+  SupplierRfqListResponse,
   SupplierRfqResponse,
 } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
@@ -141,6 +142,23 @@ type BuyerRfqDetailViewState = {
 
 type BuyerRfqDetailSource = Exclude<BuyerRfqDetailViewState['source'], null>;
 
+type SupplierRfqListViewState = {
+  loading: boolean;
+  error: string | null;
+  rfqs: SupplierRfqListItem[];
+};
+
+type SupplierRfqDetailViewState = {
+  open: boolean;
+  rfqId: string | null;
+  loading: boolean;
+  error: string | null;
+  submitLoading: boolean;
+  submitError: string | null;
+  data: SupplierRfqDetail | null;
+  response: SupplierRfqResponse | null;
+};
+
 const createInitialBuyerRfqDialogState = (): BuyerRfqDialogState => ({
   open: false,
   product: null,
@@ -158,6 +176,23 @@ const createInitialBuyerRfqDetailViewState = (): BuyerRfqDetailViewState => ({
   loading: false,
   error: null,
   data: null,
+});
+
+const createInitialSupplierRfqListViewState = (): SupplierRfqListViewState => ({
+  loading: false,
+  error: null,
+  rfqs: [],
+});
+
+const createInitialSupplierRfqDetailViewState = (): SupplierRfqDetailViewState => ({
+  open: false,
+  rfqId: null,
+  loading: false,
+  error: null,
+  submitLoading: false,
+  submitError: null,
+  data: null,
+  response: null,
 });
 
 const resolveBuyerRfqOpenAction = ({
@@ -347,6 +382,36 @@ const loadBuyerRfqDetailContinuity = async ({
     return resolveBuyerRfqDetailSuccess({ rfqId, source, response });
   } catch (error) {
     return resolveBuyerRfqDetailError({ rfqId, source, error });
+  }
+};
+
+const resolveSupplierRfqInboxOpenAction = (currentListView: SupplierRfqListViewState) => ({
+  detailView: createInitialSupplierRfqDetailViewState(),
+  listView: {
+    ...currentListView,
+    loading: true,
+    error: null,
+  } satisfies SupplierRfqListViewState,
+});
+
+const loadSupplierRfqInboxContinuity = async ({
+  loadSupplierRfqInbox,
+}: {
+  loadSupplierRfqInbox: () => Promise<SupplierRfqListResponse>;
+}) => {
+  try {
+    const response = await loadSupplierRfqInbox();
+    return {
+      loading: false,
+      error: null,
+      rfqs: response.rfqs,
+    } satisfies SupplierRfqListViewState;
+  } catch (error) {
+    return {
+      loading: false,
+      error: error instanceof APIError ? error.message : 'Unable to load the supplier RFQ inbox right now.',
+      rfqs: [],
+    } satisfies SupplierRfqListViewState;
   }
 };
 
@@ -823,6 +888,11 @@ export const __B2B_RFQ_DETAIL_TESTING__ = {
   loadBuyerRfqDetailContinuity,
 };
 
+export const __B2B_SUPPLIER_INBOX_TESTING__ = {
+  resolveSupplierRfqInboxOpenAction,
+  loadSupplierRfqInboxContinuity,
+};
+
 const clearPersistedImpersonationSession = () => {
   setImpersonationToken(null);
   persistImpersonationSession(null);
@@ -937,34 +1007,8 @@ const App: React.FC = () => {
     error: null,
     rfqs: [],
   });
-  const [supplierRfqListView, setSupplierRfqListView] = useState<{
-    loading: boolean;
-    error: string | null;
-    rfqs: SupplierRfqListItem[];
-  }>({
-    loading: false,
-    error: null,
-    rfqs: [],
-  });
-  const [supplierRfqDetailView, setSupplierRfqDetailView] = useState<{
-    open: boolean;
-    rfqId: string | null;
-    loading: boolean;
-    error: string | null;
-    submitLoading: boolean;
-    submitError: string | null;
-    data: SupplierRfqDetail | null;
-    response: SupplierRfqResponse | null;
-  }>({
-    open: false,
-    rfqId: null,
-    loading: false,
-    error: null,
-    submitLoading: false,
-    submitError: null,
-    data: null,
-    response: null,
-  });
+  const [supplierRfqListView, setSupplierRfqListView] = useState<SupplierRfqListViewState>(createInitialSupplierRfqListViewState);
+  const [supplierRfqDetailView, setSupplierRfqDetailView] = useState<SupplierRfqDetailViewState>(createInitialSupplierRfqDetailViewState);
   const [buyerRfqTradeBridge, setBuyerRfqTradeBridge] = useState<{
     loading: boolean;
     error: string | null;
@@ -2641,36 +2685,14 @@ const App: React.FC = () => {
 
   const handleOpenSupplierRfqInbox = async () => {
     navigateTenantManifestRoute('supplier_rfq_inbox');
-    setSupplierRfqDetailView({
-      open: false,
-      rfqId: null,
-      loading: false,
-      error: null,
-      submitLoading: false,
-      submitError: null,
-      data: null,
-      response: null,
-    });
-    setSupplierRfqListView(view => ({
-      ...view,
-      loading: true,
-      error: null,
-    }));
+    const openAction = resolveSupplierRfqInboxOpenAction(supplierRfqListView);
+    setSupplierRfqDetailView(openAction.detailView);
+    setSupplierRfqListView(openAction.listView);
 
-    try {
-      const response = await getSupplierRfqInbox();
-      setSupplierRfqListView({
-        loading: false,
-        error: null,
-        rfqs: response.rfqs,
-      });
-    } catch (error) {
-      setSupplierRfqListView({
-        loading: false,
-        error: error instanceof APIError ? error.message : 'Unable to load the supplier RFQ inbox right now.',
-        rfqs: [],
-      });
-    }
+    const listView = await loadSupplierRfqInboxContinuity({
+      loadSupplierRfqInbox: getSupplierRfqInbox,
+    });
+    setSupplierRfqListView(listView);
   };
 
   const handleOpenSupplierRfqDetail = async (rfqId: string) => {
