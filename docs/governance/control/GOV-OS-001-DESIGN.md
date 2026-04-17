@@ -36,9 +36,10 @@ Reset amendment ratified on 2026-04-04 preserves this design as downstream gover
 - the old `-v2` chain is historical evidence and reconciliation input only, not live authority
 - candidate normalization is exception-only rather than a standing prerequisite
 - Sentinel gating is control-critical only
-- separate post-close audit artifacts are reserved for strict-path or broader queue-shaping closes
-- product-facing closes that change active-delivery or next-candidate posture require post-close authority reconciliation against the live opening-layer sequencing authority and live opening-layer authority map before any fresh opening decision
-- zero-open product-delivery post-close posture returns to explicit next-opening decision control; closed units preserve lineage only
+- ordinary bounded units do not default to heavy governance closeout; they complete only after mandatory verification and then perform the minimum truthful post-unit sync required by materially changed truth
+- separate post-close audit artifacts remain reserved for strict-path or broader queue-shaping closes only
+- production-dependent product-facing execution follows `implement -> commit -> deploy -> verify`, then performs only the minimum post-unit truth sync required; when that completed unit materially changes active-delivery or next-candidate posture, the sync step must include authority reconciliation against the live opening-layer sequencing authority and live opening-layer authority map before any fresh opening decision
+- zero-open product-delivery post-unit truth sync returns to explicit next-opening decision control; closed units preserve lineage only
 - structurally broad but coherent chosen family remainders must route to one further same-family bounded reduction or narrow design-clarification step only
 - coherent narrowed same-family remainders with explicit residual lanes must route to one same-remainder lane-separation clarification step only
 - when a truthful preserved unresolved hold remains and bounded contradiction and descendant-selection checks prove no hold-outranking contradiction and no exact current downstream governance descendant, Governance OS must first re-query any still-active launch-readiness acceleration attachment for one exact bounded next work item or one lawfully identified deferred bounded next-work candidate preserved in that lane; when that re-query reaches a lawfully open launch-readiness acceleration family whose one bounded sub-slice is externally blocked but whose family remains open, Governance OS must preserve the family as open and the blocked sub-slice as blocked and may surface exactly one next bounded continuation slice only when current authority or already-established bounded outputs prove that slice does not depend on the blocked sub-slice and no narrower live governance exception bars it; only when that lane is explicitly exhausted, superseded by later authority, fully blocked by a narrower live governance exception, or lacks one proven non-overlapping continuation slice may Governance OS route to one governance-only same-hold design-clarification successor limited to the minimum exact future hold-resolution path or evidence condition for that same hold
@@ -217,6 +218,23 @@ Under this working model:
 6. future refinement of this working model is lawful only when actual execution exposes one
   concrete narrow need; no broad redesign is reopened by default
 
+#### Current Execution Rule — Verification-First Minimal Post-Unit Truth Sync
+
+The current TexQtic execution rule for ordinary bounded implementation work is:
+
+1. confirm or lawfully open the next unit
+2. complete bounded design or planning for that unit
+3. validate repo truth before changing code
+4. plan the implementation at slice scope only
+5. implement slice by slice
+6. run mandatory verification before completion, with verification chosen by unit class:
+   - backend units: tests mandatory
+   - frontend or auth units: Vercel verification mandatory
+   - shared shell changes: neighbor-path smoke checks mandatory
+7. no implementation unit is complete without verification evidence
+8. when live or production-dependent verification is required, the lawful chain is `implement -> commit -> deploy -> verify`
+9. after verification, perform only the minimum post-unit truth sync required by materially changed truth; if no Layer 0, guidance, or governing-rule truth changed, no broader governance closeout is lawful
+
 #### BLOCKED.md schema (per entry)
 
 ```
@@ -367,7 +385,7 @@ All other `docs/governance/*.md` design documents remain in place as design refe
 | Family-local packet drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + one lawful family boundary/control source + direct repo code/tests/runtime/contracts for the candidate slice; add `BLOCKED.md` when the family preserves a blocked bounded sub-slice; descriptive markdown advisory only after repo-truth checks complete |
 | Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`); add the live opening-layer sequencing authority and the relevant preserved downstream family/design authority when product-facing |
 | Verification prompt drafting | `OPEN-SET.md` + target unit file |
-| Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add the live opening-layer sequencing authority + the live opening-layer authority map when a product-facing close changes active-delivery or next-candidate posture |
+| Post-unit truth sync | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add `SNAPSHOT.md` only when restore-grade or strict-path triggers apply; add the live opening-layer sequencing authority + the live opening-layer authority map only when a product-facing verified unit materially changes active-delivery or next-candidate posture |
 | Any session restoration | `OPEN-SET.md` + `NEXT-ACTION.md`; add `SNAPSHOT.md` only when current context is missing, stale, or historically ambiguous |
 
 **Prohibition:** Archive files, historical tracker files, the execution log, and descriptive markdown that conflicts with current repo truth MUST NOT be used as operational truth for sequencing or implementation-status decisions. If a unit's status is not in Layer 0 or Layer 1, it is assumed UNKNOWN and must be resolved before acting.
@@ -454,7 +472,7 @@ Any prompt that would produce a forbidden transition must STOP and emit a Blocke
 | Session open / context restoration | `OPEN-SET.md`, `NEXT-ACTION.md`, `BLOCKED.md`; add `SNAPSHOT.md` only when restore context or historical ambiguity matters |
 | Drafting implementation prompt | Add: `units/<UNIT-ID>.md`; add the product-truth authority stack and the relevant preserved downstream family/design authority when product-facing; add the live opening-layer authority map when a governance exception or authority conflict is active |
 | Drafting verification prompt | Add: `units/<UNIT-ID>.md` |
-| Governance closure | `units/<UNIT-ID>.md` + Layer 0 files; add the product-truth authority stack when a product-facing close changes active-delivery or next-candidate posture; add the live opening-layer authority map when a governance exception or authority conflict is active |
+| Post-unit truth sync | `units/<UNIT-ID>.md` + Layer 0 files; add `SNAPSHOT.md` only when restore-grade or strict-path context changed; add the product-truth authority stack when a product-facing verified unit materially changes active-delivery or next-candidate posture; add the live opening-layer authority map when a governance exception or authority conflict is active |
 | Product/design decision | Relevant decision file + the product-truth authority stack + the relevant preserved downstream family/design authority when product-facing |
 | Implementation-opening readiness investigation | Layer 0 files + the product-truth authority stack + the live opening-layer authority map + the target opening authority + the minimum material dependency/support-family authorities + any relevant design-gate or reconciliation artifacts |
 | Strict-path / authority-shaping work | Layer 0 files + `SNAPSHOT.md` + the minimum Layer 1 / Layer 2 / Layer 3 sources required for that authority check |
