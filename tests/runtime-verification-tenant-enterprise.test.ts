@@ -13,15 +13,19 @@ vi.mock('../services/tenantApiClient', () => ({
 import {
   __B2B_RFQ_DETAIL_TESTING__,
   __B2B_RFQ_INITIATION_TESTING__,
+  __B2B_SUPPLIER_DETAIL_TESTING__,
   __B2B_SUPPLIER_INBOX_TESTING__,
 } from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import {
   createRfq,
+  getSupplierRfqDetail,
   getSupplierRfqInbox,
   type BuyerRfqDetail,
   type BuyerRfqDetailResponse,
   type CatalogItem,
+  type SupplierRfqDetail,
+  type SupplierRfqDetailResponse,
   type SupplierRfqListItem,
   type SupplierRfqListResponse,
 } from '../services/catalogService';
@@ -82,6 +86,12 @@ const {
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
 } = __B2B_SUPPLIER_INBOX_TESTING__;
+
+const {
+  createInitialSupplierRfqDetailViewState,
+  resolveSupplierRfqDetailOpenAction,
+  loadSupplierRfqDetailContinuity,
+} = __B2B_SUPPLIER_DETAIL_TESTING__;
 
 function makeTradeResponse(): TenantTradesListResponse {
   return {
@@ -279,6 +289,21 @@ function makeSupplierRfqListItem(overrides: Partial<SupplierRfqListItem> = {}): 
     quantity: 24,
     created_at: '2026-03-22T08:00:00.000Z',
     updated_at: '2026-03-22T09:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function makeSupplierRfqDetail(overrides: Partial<SupplierRfqDetail> = {}): SupplierRfqDetail {
+  return {
+    id: 'supplier-rfq-1',
+    status: 'OPEN',
+    catalog_item_id: 'item-1',
+    item_name: 'Combed Cotton 30s',
+    item_sku: 'COT-30S',
+    quantity: 24,
+    created_at: '2026-03-22T08:00:00.000Z',
+    updated_at: '2026-03-22T09:00:00.000Z',
+    buyer_message: 'Need export-grade packing.',
     ...overrides,
   };
 }
@@ -921,6 +946,104 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: false,
       error: 'Unable to load the supplier RFQ inbox right now.',
       rfqs: [],
+    });
+  });
+
+  it('keeps supplier RFQ detail continuity inside the App-owned open/loading seam', () => {
+    const openAction = resolveSupplierRfqDetailOpenAction({
+      rfqId: 'supplier-rfq-1',
+      currentDetailView: createInitialSupplierRfqDetailViewState(),
+    });
+
+    expect(openAction.kind).toBe('load');
+    expect(openAction.detailView).toEqual({
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      loading: true,
+    });
+
+    const reuseAction = resolveSupplierRfqDetailOpenAction({
+      rfqId: 'supplier-rfq-1',
+      currentDetailView: {
+        ...createInitialSupplierRfqDetailViewState(),
+        open: false,
+        rfqId: 'supplier-rfq-1',
+        loading: false,
+        error: 'stale',
+        submitError: 'stale submit',
+        data: makeSupplierRfqDetail(),
+      },
+    });
+
+    expect(reuseAction.kind).toBe('reuse');
+    expect(reuseAction.detailView).toEqual({
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      loading: false,
+      error: null,
+      submitError: null,
+      data: makeSupplierRfqDetail(),
+    });
+  });
+
+  it('invokes getSupplierRfqDetail and maps supplier RFQ detail success into App-owned state continuity', async () => {
+    const rfq = makeSupplierRfqDetail();
+    tenantGetMock.mockResolvedValue({
+      rfq,
+    } satisfies SupplierRfqDetailResponse);
+
+    const detailView = await loadSupplierRfqDetailContinuity({
+      rfqId: 'supplier-rfq-1',
+      existingResponse: null,
+      loadSupplierRfqDetail: getSupplierRfqDetail,
+    });
+
+    expect(tenantGetMock).toHaveBeenCalledWith('/api/tenant/rfqs/inbox/supplier-rfq-1');
+    expect(detailView).toEqual({
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      loading: false,
+      error: null,
+      data: rfq,
+    });
+  });
+
+  it('maps supplier RFQ detail fetch failures to API and fallback App-owned error states', async () => {
+    const apiErrorView = await loadSupplierRfqDetailContinuity({
+      rfqId: 'supplier-rfq-1',
+      existingResponse: null,
+      loadSupplierRfqDetail: vi.fn(async (): Promise<SupplierRfqDetailResponse> => {
+        throw new APIError(404, 'RFQ not found.');
+      }),
+    });
+
+    expect(apiErrorView).toEqual({
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      loading: false,
+      error: 'RFQ not found.',
+      data: null,
+    });
+
+    const fallbackErrorView = await loadSupplierRfqDetailContinuity({
+      rfqId: 'supplier-rfq-2',
+      existingResponse: null,
+      loadSupplierRfqDetail: vi.fn(async (): Promise<SupplierRfqDetailResponse> => {
+        throw new Error('boom');
+      }),
+    });
+
+    expect(fallbackErrorView).toEqual({
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-2',
+      loading: false,
+      error: 'Unable to load supplier RFQ detail right now.',
+      data: null,
     });
   });
 

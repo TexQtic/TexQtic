@@ -82,6 +82,7 @@ import {
   BuyerRfqDetail,
   BuyerRfqListItem,
   SupplierRfqDetail,
+  SupplierRfqDetailResponse,
   SupplierRfqListItem,
   SupplierRfqListResponse,
   SupplierRfqResponse,
@@ -412,6 +413,77 @@ const loadSupplierRfqInboxContinuity = async ({
       error: error instanceof APIError ? error.message : 'Unable to load the supplier RFQ inbox right now.',
       rfqs: [],
     } satisfies SupplierRfqListViewState;
+  }
+};
+
+const resolveSupplierRfqDetailOpenAction = ({
+  rfqId,
+  currentDetailView,
+}: {
+  rfqId: string;
+  currentDetailView: SupplierRfqDetailViewState;
+}) => {
+  const existingResponse = currentDetailView.rfqId === rfqId ? currentDetailView.response : null;
+
+  if (currentDetailView.rfqId === rfqId && currentDetailView.data) {
+    return {
+      kind: 'reuse' as const,
+      detailView: {
+        ...currentDetailView,
+        open: true,
+        error: null,
+        submitError: null,
+      },
+    };
+  }
+
+  return {
+    kind: 'load' as const,
+    detailView: {
+      open: true,
+      rfqId,
+      loading: true,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: existingResponse,
+    } satisfies SupplierRfqDetailViewState,
+  };
+};
+
+const loadSupplierRfqDetailContinuity = async ({
+  rfqId,
+  existingResponse,
+  loadSupplierRfqDetail,
+}: {
+  rfqId: string;
+  existingResponse: SupplierRfqResponse | null;
+  loadSupplierRfqDetail: (rfqId: string) => Promise<SupplierRfqDetailResponse>;
+}) => {
+  try {
+    const response = await loadSupplierRfqDetail(rfqId);
+    return {
+      open: true,
+      rfqId,
+      loading: false,
+      error: null,
+      submitLoading: false,
+      submitError: null,
+      data: response.rfq,
+      response: existingResponse,
+    } satisfies SupplierRfqDetailViewState;
+  } catch (error) {
+    return {
+      open: true,
+      rfqId,
+      loading: false,
+      error: error instanceof APIError ? error.message : 'Unable to load supplier RFQ detail right now.',
+      submitLoading: false,
+      submitError: null,
+      data: null,
+      response: existingResponse,
+    } satisfies SupplierRfqDetailViewState;
   }
 };
 
@@ -891,6 +963,12 @@ export const __B2B_RFQ_DETAIL_TESTING__ = {
 export const __B2B_SUPPLIER_INBOX_TESTING__ = {
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
+};
+
+export const __B2B_SUPPLIER_DETAIL_TESTING__ = {
+  createInitialSupplierRfqDetailViewState,
+  resolveSupplierRfqDetailOpenAction,
+  loadSupplierRfqDetailContinuity,
 };
 
 const clearPersistedImpersonationSession = () => {
@@ -2696,53 +2774,24 @@ const App: React.FC = () => {
   };
 
   const handleOpenSupplierRfqDetail = async (rfqId: string) => {
-    const existingResponse = supplierRfqDetailView.rfqId === rfqId ? supplierRfqDetailView.response : null;
+    const openAction = resolveSupplierRfqDetailOpenAction({
+      rfqId,
+      currentDetailView: supplierRfqDetailView,
+    });
 
-    if (supplierRfqDetailView.rfqId === rfqId && supplierRfqDetailView.data) {
-      setSupplierRfqDetailView(view => ({
-        ...view,
-        open: true,
-        error: null,
-        submitError: null,
-      }));
+    if (openAction.kind === 'reuse') {
+      setSupplierRfqDetailView(openAction.detailView);
       return;
     }
 
-    setSupplierRfqDetailView({
-      open: true,
-      rfqId,
-      loading: true,
-      error: null,
-      submitLoading: false,
-      submitError: null,
-      data: null,
-      response: existingResponse,
-    });
+    setSupplierRfqDetailView(openAction.detailView);
 
-    try {
-      const response = await getSupplierRfqDetail(rfqId);
-      setSupplierRfqDetailView({
-        open: true,
-        rfqId,
-        loading: false,
-        error: null,
-        submitLoading: false,
-        submitError: null,
-        data: response.rfq,
-        response: existingResponse,
-      });
-    } catch (error) {
-      setSupplierRfqDetailView({
-        open: true,
-        rfqId,
-        loading: false,
-        error: error instanceof APIError ? error.message : 'Unable to load supplier RFQ detail right now.',
-        submitLoading: false,
-        submitError: null,
-        data: null,
-        response: existingResponse,
-      });
-    }
+    const detailView = await loadSupplierRfqDetailContinuity({
+      rfqId,
+      existingResponse: openAction.detailView.response,
+      loadSupplierRfqDetail: getSupplierRfqDetail,
+    });
+    setSupplierRfqDetailView(detailView);
   };
 
   const handleReturnToSupplierRfqList = () => {
