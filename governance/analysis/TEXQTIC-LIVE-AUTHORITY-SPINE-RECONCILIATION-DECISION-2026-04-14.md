@@ -92,7 +92,7 @@ The live-authority spine conflict was reviewed across these exact top-of-stack s
 | governance/control/BLOCKED.md | `LIVE_CONTROL_POSTURE_ONLY` | It preserves the current hold register and explicitly states that ordinary product sequencing is not set here. |
 | governance/control/SNAPSHOT.md | `LIVE_CONTROL_POSTURE_ONLY` | It is restore-grade posture context only and is not itself a next-step selector. |
 | governance/control/DOCTRINE.md | `LIVE_CONTROL_POSTURE_ONLY` | It fixes doctrine rules and read order, but it does not itself choose the current next unit. |
-| governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10.md | `STALE_COMPETING_AUTHORITY` | Layer 0 still references it, but its stated current lawful next move is the pre-verdict same-hold clarification step that chronology shows has already been consumed and closed. |
+| governance/control/TEXQTIC-OPENING-LAYER-SEQUENCING-AND-NEXT-CYCLE-ENTRY-2026-04-10.md | `HISTORICAL_RECONCILIATION_INPUT_ONLY` | Layer 0 still references it as a preserved reconciliation input, but it does not independently select the repo-level next step and its corrected routing clauses now align under `NEXT-ACTION.md` rather than competing with it. |
 | docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v1.md | `HISTORICAL_RECONCILIATION_INPUT_ONLY` | Its own banner demotes it to history-only and current Layer 0 no longer has a lawful basis to let it outrank post-verdict control truth. |
 | docs/product-truth/TEXQTIC-GAP-REGISTER-v1.md | `HISTORICAL_RECONCILIATION_INPUT_ONLY` | Its own banner demotes it to history-only baseline and it cannot survive current top-of-stack reconciliation as live sequencing authority. |
 | docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v1.md | `HISTORICAL_RECONCILIATION_INPUT_ONLY` | Its own banner demotes it to history-only roadmap baseline and it cannot control current repo-level next-step selection. |
@@ -142,12 +142,12 @@ The reconciled live spine is therefore:
 
 ### The opening-layer sequencing file is no longer controlling
 
-- It still carries the stale instruction that the current lawful next move is one same-hold
-  design-clarification unit.
-- The chronology audit proves that clarification, verdict, and closure-recorded consumption of
-  that same-hold path already happened on 2026-04-14.
-- It therefore remains a referenced live-era surface but no longer survives as current controlling
-  next-step authority.
+- It remains a preserved reconciliation input referenced by Layer 0, not the surviving repo-level
+   next-step selector.
+- Its earlier pre-verdict same-hold wording has been overtaken by later live corrections to
+   `NEXT-ACTION.md` and by later routing sync on the sequencing surface itself.
+- It therefore remains usable as aligned reconciliation guidance, but it no longer survives as an
+   independent competing authority against the live pointer.
 
 ### The `-v1` trilogy is no longer controlling
 
@@ -199,7 +199,7 @@ What the live spine now is:
 
 What is no longer controlling:
 
-- the stale pre-verdict opening-layer sequencing surface as current-next authority
+- the opening-layer sequencing surface as any independent current-next authority
 - the `-v1` trilogy as live sequencing or roadmap authority
 - the `-v2` stack as any live next-opening authority
 - mature downstream family chains as implied top-of-stack selectors
