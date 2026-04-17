@@ -1,9 +1,10 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-17 (blocked-open-family continuation correction)
-> This file is the governance-facing Layer 0 pointer and the sole live ordinary sequencing
-> authority for current repo-level next-step selection. Read it after `OPEN-SET.md` and before
-> `BLOCKED.md`. It does not select a product-facing opening by itself.
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-17 (repo-truth-first family-scoped delivery loop codification)
+> This file is the governance-facing Layer 0 pointer and live guardrail surface for current
+> repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
+> product-facing opening by itself, and it does not shape the next implementation slice inside a
+> chosen family.
 
 ---
 
@@ -25,14 +26,13 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
   Preserve HOLD-FOR-BOUNDARY-TIGHTENING, the zero-open product-delivery posture, and the current blocker/hold register.
-  Treat NEXT-ACTION.md as the sole live ordinary sequencing authority while the preserved opening-layer sequencing surface and preserved `-v1` / `-v2` stacks remain reconciliation input only.
-  When current posture is truthful, zero-open remains preserved, and the active launch-readiness acceleration attachment still preserves one exact bounded next work item or one lawfully identified deferred bounded next-work candidate, re-query that acceleration lane before surfacing any new governance-only hygiene, same-hold design-clarification, descendant-planning, or family-exposure audit successor.
-  When that re-query reaches a lawfully open launch-readiness acceleration family whose one bounded sub-slice is externally blocked but whose family remains open, preserve the family as open and the blocked sub-slice as blocked and surface exactly one next bounded continuation slice only when current authority or already-established bounded outputs prove that slice does not depend on the blocked sub-slice and no narrower live governance exception bars it.
-  Only when that acceleration lane is explicitly exhausted, superseded by later authority, fully blocked by a narrower live governance exception, or lacks one proven non-overlapping continuation slice may routing fall back to the governance-only same-hold successor path.
-  The next lawful governed move after this writeback is one bounded governance-only next-step selection pass; no product-facing opening is selected here.
+  Treat NEXT-ACTION.md as the live Layer 0 guardrail pointer while the preserved opening-layer sequencing surface and preserved `-v1` / `-v2` stacks remain reconciliation input only.
+  If no family is yet manually chosen or otherwise lawfully fixed, preserve the current launch-readiness acceleration and blocked-open-family guardrail posture recorded by the live correction chain without using Layer 0 as the primary slice-shaping engine.
+  Once one family is manually chosen or otherwise lawfully fixed, do not shape the next slice from Layer 0; use one strict family-local packet with repo code/tests/runtime/contracts as implementation truth and family artifacts only for lawful boundary/open/blocked scope.
+  If that packet cannot prove one exact unconsumed slice, stop with one blocker/discriminator rather than synthesizing a replacement slice from Layer 0 or descriptive markdown.
+  After any packet-driven verified or closed unit, run the mandatory post-unit maintenance review before any further shaping or sequencing.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
-  This file is the sole current repo-level next-step pointer after the 2026-04-14 live-authority spine reconciliation.
-  Reused-existing-user remains BOUNDED_DEFERRED_REMAINDER.
-  White Label Co remains the sole same-hold residual under fixed post-verdict posture EXACT_EXCEPTION_STILL_REMAINS.
+  This file is the sole current Layer 0 guardrail pointer after the 2026-04-14 live-authority spine reconciliation and is not the primary selector/shaper inside a chosen family.
+  Reused-existing-user remains BOUNDED_DEFERRED_REMAINDER; White Label Co remains the sole same-hold residual under fixed post-verdict posture EXACT_EXCEPTION_STILL_REMAINS.
 ```

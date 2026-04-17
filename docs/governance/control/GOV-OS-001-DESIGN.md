@@ -195,6 +195,28 @@ notes: <≤3 lines if needed, else omit>
 
 **Rule:** when a truthful preserved unresolved hold remains and bounded contradiction and descendant-selection checks prove no hold-outranking contradiction and no exact current downstream governance descendant, `NEXT-ACTION.md` must first re-query any still-active launch-readiness acceleration attachment for one exact bounded next work item or one lawfully identified deferred bounded next-work candidate preserved in that lane. When that re-query reaches a lawfully open launch-readiness acceleration family whose one bounded sub-slice is externally blocked but whose family remains open, `NEXT-ACTION.md` must preserve the family as open and the blocked sub-slice as blocked and may surface exactly one next bounded continuation slice only when current authority or already-established bounded outputs prove that slice does not depend on the blocked sub-slice and no narrower live governance exception bars it. Only when that lane is explicitly exhausted, superseded by later authority, fully blocked by a narrower live governance exception, or lacks one proven non-overlapping continuation slice may `NEXT-ACTION.md` surface exactly one governance-only same-hold design-clarification successor limited to the minimum exact future hold-resolution path or evidence condition for that same hold. This bridge re-queries bounded acceleration-lane work only and does not elevate launch-readiness acceleration into blanket downstream family-opening authority or blanket parallelization.
 
+#### Current Working Model — Repo-Truth-First Family-Scoped Delivery Loop
+
+The current TexQtic working model for packet-driven implementation shaping is the repo-truth-first
+Family-Scoped Delivery Loop.
+
+Under this working model:
+
+1. GOV OS and Layer 0 remain guardrails only and do not act as the primary selector/shaper for
+  implementation slices after one family is manually chosen or otherwise lawfully fixed
+2. after that family choice, one strict family-local packet is the default shaping mechanism for
+  the next exact slice
+3. current repo code, tests, runtime truth, and live contracts outrank descriptive markdown for
+  implementation status
+4. family-opening, family-state, blocked-slice, and closeout artifacts define lawful scope,
+  exclusions, and control truth only; they do not establish current implementation status when
+  repo truth disagrees
+5. if packet drafting cannot prove one exact unconsumed slice without overlap, speculative
+  inference, second-candidate branching, or descriptive-markdown override, it must stop with one
+  blocker/discriminator only
+6. future refinement of this working model is lawful only when actual execution exposes one
+  concrete narrow need; no broad redesign is reopened by default
+
 #### BLOCKED.md schema (per entry)
 
 ```
@@ -342,12 +364,13 @@ All other `docs/governance/*.md` design documents remain in place as design refe
 | Prompt Type | Required reads (before any action) |
 |---|---|
 | Next-unit selection | `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add the live opening-layer sequencing authority and the live opening-layer authority map when the selection is product-facing |
+| Family-local packet drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + one lawful family boundary/control source + direct repo code/tests/runtime/contracts for the candidate slice; add `BLOCKED.md` when the family preserves a blocked bounded sub-slice; descriptive markdown advisory only after repo-truth checks complete |
 | Implementation prompt drafting | `OPEN-SET.md` + `NEXT-ACTION.md` + target unit file (`units/<ID>.md`); add the live opening-layer sequencing authority and the relevant preserved downstream family/design authority when product-facing |
 | Verification prompt drafting | `OPEN-SET.md` + target unit file |
 | Governance close | Target unit file + `OPEN-SET.md` + `NEXT-ACTION.md` + `BLOCKED.md`; add the live opening-layer sequencing authority + the live opening-layer authority map when a product-facing close changes active-delivery or next-candidate posture |
 | Any session restoration | `OPEN-SET.md` + `NEXT-ACTION.md`; add `SNAPSHOT.md` only when current context is missing, stale, or historically ambiguous |
 
-**Prohibition:** Archive files, historical tracker files, and the execution log MUST NOT be used as operational truth for sequencing decisions. If a unit's status is not in Layer 0 or Layer 1, it is assumed UNKNOWN and must be resolved before acting.
+**Prohibition:** Archive files, historical tracker files, the execution log, and descriptive markdown that conflicts with current repo truth MUST NOT be used as operational truth for sequencing or implementation-status decisions. If a unit's status is not in Layer 0 or Layer 1, it is assumed UNKNOWN and must be resolved before acting.
 
 **Operating-path rule:** ordinary bounded work uses the minimum read set above. Strict-path work (DB, RLS, auth/session, sequencing-authority changes, control-plane rebases, cross-family authority shifts, or production-critical entry truth) must additionally read `SNAPSHOT.md` and the specific Layer 1 / Layer 2 / Layer 3 sources needed to verify historical and authority context.
 
@@ -970,7 +993,7 @@ These gates should be checked before every commit. They are designed to be autom
 
 **No informal shortcuts.** "I know the system well enough to skip reading OPEN-SET.md" is not a valid justification for any actor. The control plane is small enough that reading it is always faster than reconstructing context from memory.
 
-**GPT-specific constraint:** The GPT CTO planner must not propose "the next unit" from memory or from a partial scan of large historical files. The next unit must be derived from `NEXT-ACTION.md` and `OPEN-SET.md` only.
+**GPT-specific constraint:** The GPT CTO planner must not propose "the next unit" from memory, from a partial scan of large historical files, or from descriptive markdown alone. After one family is manually chosen or otherwise lawfully fixed, the next implementation slice must be shaped from one strict family-local packet using current repo code/tests/runtime/contracts first and one lawful family boundary/control source for scope only.
 
 **Copilot-specific constraint:** Copilot must not improvise governance updates during implementation units. If a governance update is needed during an implementation unit, it must be flagged and deferred to a governance unit — not performed inline.
 
