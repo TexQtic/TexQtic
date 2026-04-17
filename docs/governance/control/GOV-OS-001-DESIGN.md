@@ -159,7 +159,7 @@ Layer 0 is not the origin of root opening-layer or downstream design authority, 
 | `NEXT-ACTION.md` | ≤ 20 lines | Governance-facing Layer 0 pointer or explicit active governance exception |
 | `BLOCKED.md` | ≤ 80 lines | All currently blocked or deferred units with explicit blocker or hold reason |
 | `DOCTRINE.md` | ≤ 150 lines | Active doctrine invariants. Points to canonical doctrine sources. |
-| `SNAPSHOT.md` | ≤ 100 lines | Restore-grade carry-forward context for session restoration. Refreshed at end of each governance unit. |
+| `SNAPSHOT.md` | ≤ 100 lines | Restore-grade carry-forward context for session restoration. Refreshed only when the Section 4.9 triggers fire. |
 
 **Size limits are structural gates, not suggestions.** If a file exceeds its limit, a maintenance governance unit must be run to compact or archive entries before further updates are made to that file.
 
@@ -985,6 +985,8 @@ Refresh `SNAPSHOT.md` when:
 
 Normal bounded units may complete with compact closure writeback alone when restore-grade context does not materially change.
 
+Section 4.9A defines the mandatory post-unit maintenance review and the conditional writeback order that follows each verified or closed unit.
+
 Representative structure:
 
 ```yaml
@@ -1008,6 +1010,91 @@ session_restore_notes: <≤3 short lines>
 ```
 
 **Rule:** ordinary bounded work is authorized when Layer 0 current-state files are sufficient. If restore or strict-path work depends on context not captured in current Layer 0 state, refresh `SNAPSHOT.md` first.
+
+### 4.9A Post-Unit Maintenance Review And Conditional Writeback
+
+#### 1. Rule Purpose
+
+This rule makes the post-unit GOV OS writeback explicit so verified unit truth does not remain only
+in the closing artifact, temporary chat memory, or operator recollection.
+
+#### 2. Mandatory Review Trigger
+
+After any identified unit reaches `VERIFIED_COMPLETE` or `CLOSED`, Governance OS must run one
+bounded post-unit maintenance review before any fresh next-unit selection.
+
+The review itself is mandatory.
+
+The resulting write set is conditional.
+
+It is lawful for the review to conclude that no further control-surface or guidance writeback is
+required beyond compact closure evidence.
+
+#### 3. Minimum Review Read Set
+
+Start with:
+
+- the closing or verifying artifact for the just-finished unit
+- `OPEN-SET.md`
+- `NEXT-ACTION.md`
+- `BLOCKED.md`
+
+Add only the minimum extra surfaces the just-finished unit can materially affect:
+
+- `SNAPSHOT.md` when Section 4.9 requires restore-grade or strict-path review
+- the live opening-layer sequencing authority and live opening-layer authority map when Section
+  4.5B is triggered or when live authority classification may change
+- one bounded descendant family, successor-chain, or operational-truth artifact when the
+  just-finished unit changed the meaning of an already-open family, blocked bounded sub-slice, or
+  preserved continuation lane
+
+Broad repo rescans remain forbidden.
+
+#### 4. Conditional Writeback Order
+
+The post-unit maintenance review must test the following write targets in order and update only the
+targets whose current truth changed:
+
+1. `OPEN-SET.md` only when open-unit or open-family membership, terminal-state visibility, or
+   zero-open posture changed
+2. `NEXT-ACTION.md` only when the lawful current-next pointer, preserved acceleration-lane
+   continuation, or current Layer 0 sequencing explanation changed
+3. `BLOCKED.md` only when a blocker or hold was added, removed, narrowed, widened, or
+   reclassified; blocked bounded sub-slices must be recorded at the narrowest truthful scope
+4. `SNAPSHOT.md` only when the Section 4.9 triggers fire
+5. one bounded descendant-guidance or operational-truth artifact only when newly verified runtime,
+   provider, or repo truth materially changes the meaning of an already-open family, blocked
+   bounded sub-slice, or preserved continuation lane and that truth would otherwise remain
+   conversation-only
+6. live design or spine-classification artifacts only when the just-finished unit actually changes
+   governing rules, control-surface ownership, or a surface classification; ordinary bounded closes
+   must not rewrite those artifacts merely because they were consulted
+
+If none of the above targets changed, compact closure evidence alone is sufficient and no broader
+governance writeback is lawful.
+
+#### 5. Required Anti-Drift Checks
+
+Before the maintenance review ends, Governance OS must confirm all of the following:
+
+- the closed or verified unit is not still implied as the current-next move
+- no stale blocker or hold residue remains in Layer 0 after the just-finished unit resolved or
+  narrowed that condition
+- a lawfully open family is not falsely exhausted merely because one bounded sub-slice remains
+  externally blocked
+- newly verified or operationally proved bounded truth is not left unreachable in repo guidance
+  when later lawful continuation depends on that truth
+- no bounded guidance artifact is promoted into top-of-stack sequencing authority by implication
+- `SNAPSHOT.md` was not refreshed unless Section 4.9 required it
+
+#### 6. Completion Condition
+
+The post-unit maintenance review is complete only when the minimum exact set of live Layer 0 and
+bounded guidance surfaces has either:
+
+- been confirmed unchanged, or
+- been updated to preserve current repo truth for the next session without broad redesign,
+  next-unit selection expansion, or family-widening drift
 
 ### 4.10 Operational Fallback Rules
 
@@ -1251,7 +1338,8 @@ After Phase 6 is complete:
 - OPEN-SET.md, NEXT-ACTION.md, BLOCKED.md are the sole operational truth sources
 - Legacy files are archive-only
 - Validation script runs on every commit
-- SNAPSHOT.md is refreshed at the end of every governance unit
+- the post-unit maintenance review runs after each verified or closed unit
+- SNAPSHOT.md is refreshed only when the Section 4.9 triggers fire
 
 **Migration safety constraints:**
 - Phases must execute in order 1 → 7
@@ -1268,7 +1356,7 @@ After Phase 6 is complete:
 |---|---|---|---|
 | Migration phases not completed | High — multi-unit work | Control plane partially implemented, increasing drift | Design declares partial adoption illegal; OPEN-SET.md cannot be the sole truth until all open units have unit files |
 | Large unit file accumulation in `units/` | Medium | Layer 1 directory becomes unwieldy | Terminal-status unit files may be moved to `units/archive/` after 90 days |
-| `NEXT-ACTION.md` not updated between units | High — easy to forget | Next session starts without authorized context | `SNAPSHOT.md` update is mandatory at end of every governance unit; NEXT-ACTION.md is refreshed at same time |
+| `NEXT-ACTION.md` not updated between units | High — easy to forget | Next session starts without authorized context | Post-unit maintenance review is mandatory after each verified or closed unit; `NEXT-ACTION.md` is updated only when current-pointer truth changes, and `SNAPSHOT.md` remains conditional under Section 4.9 |
 | Legacy file still used as operational truth | High — habit | Drift resumes with old patterns | Enforcement: validation gate GATE-006 blocks commits that modify archived files |
 | Free-form prose creeps into OPEN-SET.md | Medium | Status becomes unreadable | GATE-004 (size limit) and GATE-002 (vocabulary) block non-conforming entries |
 | AI uses archive for next-unit selection | High without structural enforcement | Stale units "reopened" from archive | The explicit prohibition in Section 4.1 and the read-scope enforcement table in Section 4.5 address this directly |
