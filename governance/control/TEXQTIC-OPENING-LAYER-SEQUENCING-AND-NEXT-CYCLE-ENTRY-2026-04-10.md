@@ -46,9 +46,16 @@ The then-current lawful next move after reset execution was:
   for one exact bounded next work item or one lawfully identified deferred bounded next-work
   candidate preserved in that lane
 
-- only when that acceleration lane is explicitly exhausted, superseded by later authority, or
-  blocked by a narrower live governance exception may GOV OS surface exactly one next lawful
-  successor as a governance-only same-hold design-clarification unit
+- when that re-query reaches a lawfully open launch-readiness acceleration family whose one
+  bounded sub-slice is externally blocked but whose family remains open, GOV OS must preserve the
+  family as open and the blocked sub-slice as blocked and may surface exactly one next bounded
+  continuation slice only when current authority or already-established bounded outputs prove that
+  slice does not depend on the blocked sub-slice and no narrower live governance exception bars it
+
+- only when that acceleration lane is explicitly exhausted, superseded by later authority, fully
+  blocked by a narrower live governance exception, or lacks one proven non-overlapping
+  continuation slice may GOV OS surface exactly one next lawful successor as a governance-only
+  same-hold design-clarification unit
 
 That successor is limited to:
 
@@ -83,9 +90,15 @@ The sequencing rules after reset are:
   outranking contradiction and no exact current downstream governance descendant, sequencing must
   first re-query any still-active launch-readiness acceleration attachment for one exact bounded
   next work item or one lawfully identified deferred bounded next-work candidate preserved in that
-  lane; only when that lane is explicitly exhausted, superseded by later authority, or blocked by a
-  narrower live governance exception may sequencing route to one governance-only same-hold design-
-  clarification unit before any broader downstream governance or product-family movement
+  lane; when that re-query reaches a lawfully open launch-readiness acceleration family whose one
+  bounded sub-slice is externally blocked but whose family remains open, sequencing must preserve
+  the family as open and the blocked sub-slice as blocked and may surface exactly one next bounded
+  continuation slice only when current authority or already-established bounded outputs prove that
+  slice does not depend on the blocked sub-slice and no narrower live governance exception bars it;
+  only when that lane is explicitly exhausted, superseded by later authority, fully blocked by a
+  narrower live governance exception, or lacks one proven non-overlapping continuation slice may
+  sequencing route to one governance-only same-hold design-clarification unit before any broader
+  downstream governance or product-family movement
 
 ## 5. Scope boundary
 

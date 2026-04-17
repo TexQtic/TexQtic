@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-13 (TEXQTIC-GOV-OS-SUCCESSOR-SELECTION-RULE-SYNC-WORK-ITEM-003-2026-04-13)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-17 (blocked-open-family continuation correction)
 > This file is the governance-facing Layer 0 pointer and the sole live ordinary sequencing
 > authority for current repo-level next-step selection. Read it after `OPEN-SET.md` and before
 > `BLOCKED.md`. It does not select a product-facing opening by itself.
@@ -27,7 +27,8 @@ layer_0_action: |
   Preserve HOLD-FOR-BOUNDARY-TIGHTENING, the zero-open product-delivery posture, and the current blocker/hold register.
   Treat NEXT-ACTION.md as the sole live ordinary sequencing authority while the preserved opening-layer sequencing surface and preserved `-v1` / `-v2` stacks remain reconciliation input only.
   When current posture is truthful, zero-open remains preserved, and the active launch-readiness acceleration attachment still preserves one exact bounded next work item or one lawfully identified deferred bounded next-work candidate, re-query that acceleration lane before surfacing any new governance-only hygiene, same-hold design-clarification, descendant-planning, or family-exposure audit successor.
-  Only when that acceleration lane is explicitly exhausted, superseded by later authority, or blocked by a narrower live governance exception may routing fall back to the governance-only same-hold successor path.
+  When that re-query reaches a lawfully open launch-readiness acceleration family whose one bounded sub-slice is externally blocked but whose family remains open, preserve the family as open and the blocked sub-slice as blocked and surface exactly one next bounded continuation slice only when current authority or already-established bounded outputs prove that slice does not depend on the blocked sub-slice and no narrower live governance exception bars it.
+  Only when that acceleration lane is explicitly exhausted, superseded by later authority, fully blocked by a narrower live governance exception, or lacks one proven non-overlapping continuation slice may routing fall back to the governance-only same-hold successor path.
   The next lawful governed move after this writeback is one bounded governance-only next-step selection pass; no product-facing opening is selected here.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
