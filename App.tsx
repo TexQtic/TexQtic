@@ -67,6 +67,8 @@ import { createTradeFromRfq } from './services/tradeService';
 import {
   getCatalogItems,
   CatalogItem,
+  CreateRfqRequest,
+  CreateRfqResponse,
   createCatalogItem,
   updateCatalogItem,
   deleteCatalogItem,
@@ -112,6 +114,136 @@ const EMPTY_IMPERSONATION_STATE: ImpersonationState = {
   impersonationId: null,
   token: null,
   expiresAt: null,
+};
+
+type BuyerRfqDialogState = {
+  open: boolean;
+  product: CatalogItem | null;
+  quantity: string;
+  buyerMessage: string;
+  loading: boolean;
+  error: string | null;
+  success: {
+    rfqId: string;
+    quantity: number;
+  } | null;
+};
+
+type BuyerRfqDetailViewState = {
+  open: boolean;
+  source: 'dialog' | 'list' | null;
+  rfqId: string | null;
+  loading: boolean;
+  error: string | null;
+  data: BuyerRfqDetail | null;
+};
+
+const createInitialBuyerRfqDialogState = (): BuyerRfqDialogState => ({
+  open: false,
+  product: null,
+  quantity: '1',
+  buyerMessage: '',
+  loading: false,
+  error: null,
+  success: null,
+});
+
+const createInitialBuyerRfqDetailViewState = (): BuyerRfqDetailViewState => ({
+  open: false,
+  source: null,
+  rfqId: null,
+  loading: false,
+  error: null,
+  data: null,
+});
+
+const resolveBuyerRfqOpenAction = ({
+  product,
+  isVerificationBlockedTenantWorkspace,
+  verificationBlockedActionMessage,
+}: {
+  product: CatalogItem;
+  isVerificationBlockedTenantWorkspace: boolean;
+  verificationBlockedActionMessage: string;
+}) => {
+  if (isVerificationBlockedTenantWorkspace) {
+    return {
+      blocked: true as const,
+      catalogError: verificationBlockedActionMessage,
+      dialog: null,
+    };
+  }
+
+  return {
+    blocked: false as const,
+    catalogError: null,
+    dialog: {
+      ...createInitialBuyerRfqDialogState(),
+      open: true,
+      product,
+      quantity: product.moq ? String(product.moq) : '1',
+    },
+  };
+};
+
+const resolveBuyerRfqCloseState = () => ({
+  dialog: createInitialBuyerRfqDialogState(),
+  detailView: createInitialBuyerRfqDetailViewState(),
+});
+
+const resolveBuyerRfqSubmitPayload = (dialog: BuyerRfqDialogState) => {
+  if (!dialog.product) {
+    return {
+      error: 'A catalog item is required to submit an RFQ.',
+      payload: null,
+    };
+  }
+
+  const quantityInput = dialog.quantity.trim();
+  const quantity = Number(quantityInput);
+  if (
+    quantityInput.length === 0 ||
+    Number.isNaN(quantity) ||
+    !Number.isInteger(quantity) ||
+    quantity < 1
+  ) {
+    return {
+      error: 'Quantity must be an integer of at least 1.',
+      payload: null,
+    };
+  }
+
+  const buyerMessage = dialog.buyerMessage.trim();
+
+  return {
+    error: null,
+    payload: {
+      catalogItemId: dialog.product.id,
+      quantity,
+      ...(buyerMessage ? { buyerMessage } : {}),
+    } satisfies CreateRfqRequest,
+  };
+};
+
+const resolveBuyerRfqSubmitSuccess = (response: CreateRfqResponse) => ({
+  dialogPatch: {
+    loading: false,
+    error: null,
+    success: {
+      rfqId: response.rfq.id,
+      quantity: response.rfq.quantity,
+    },
+  } satisfies Pick<BuyerRfqDialogState, 'loading' | 'error' | 'success'>,
+  detailView: {
+    ...createInitialBuyerRfqDetailViewState(),
+    rfqId: response.rfq.id,
+  },
+});
+
+const resolveBuyerRfqSubmitError = (error: unknown) => {
+  return error instanceof APIError
+    ? error.message
+    : 'Failed to submit your request for quote. Please try again.';
 };
 
 const VERIFICATION_BLOCKED_VIEWS = new Set([
@@ -572,6 +704,16 @@ export const __PHASE1_FOUNDATION_CORRECTION_TESTING__ = {
   resolveTenantBootstrapAuthView,
 };
 
+export const __B2B_RFQ_INITIATION_TESTING__ = {
+  createInitialBuyerRfqDialogState,
+  createInitialBuyerRfqDetailViewState,
+  resolveBuyerRfqOpenAction,
+  resolveBuyerRfqCloseState,
+  resolveBuyerRfqSubmitPayload,
+  resolveBuyerRfqSubmitSuccess,
+  resolveBuyerRfqSubmitError,
+};
+
 const clearPersistedImpersonationSession = () => {
   setImpersonationToken(null);
   persistImpersonationSession(null);
@@ -662,26 +804,7 @@ const App: React.FC = () => {
     error: string | null;
   }>({ open: false, tenant: null, reason: '', loading: false, error: null });
 
-  const [rfqDialog, setRfqDialog] = useState<{
-    open: boolean;
-    product: CatalogItem | null;
-    quantity: string;
-    buyerMessage: string;
-    loading: boolean;
-    error: string | null;
-    success: {
-      rfqId: string;
-      quantity: number;
-    } | null;
-  }>({
-    open: false,
-    product: null,
-    quantity: '1',
-    buyerMessage: '',
-    loading: false,
-    error: null,
-    success: null,
-  });
+  const [rfqDialog, setRfqDialog] = useState<BuyerRfqDialogState>(createInitialBuyerRfqDialogState);
 
   const enterWlAdmin = (view: WLAdminView = 'BRANDING') => {
     const nextSelection = resolveRuntimeLocalRouteSelection(tenantWlAdminRuntimeHandoff?.manifestEntry ?? null, {
@@ -695,21 +818,7 @@ const App: React.FC = () => {
 
     navigateWlAdminManifestRoute(nextSelection.routeKey);
   };
-  const [rfqDetailView, setRfqDetailView] = useState<{
-    open: boolean;
-    source: 'dialog' | 'list' | null;
-    rfqId: string | null;
-    loading: boolean;
-    error: string | null;
-    data: BuyerRfqDetail | null;
-  }>({
-    open: false,
-    source: null,
-    rfqId: null,
-    loading: false,
-    error: null,
-    data: null,
-  });
+  const [rfqDetailView, setRfqDetailView] = useState<BuyerRfqDetailViewState>(createInitialBuyerRfqDetailViewState);
   const [buyerRfqListView, setBuyerRfqListView] = useState<{
     loading: boolean;
     error: string | null;
@@ -762,23 +871,8 @@ const App: React.FC = () => {
     setExpView('HOME');
     setShowCart(false);
     setConfirmedOrderId(null);
-    setRfqDialog({
-      open: false,
-      product: null,
-      quantity: '1',
-      buyerMessage: '',
-      loading: false,
-      error: null,
-      success: null,
-    });
-    setRfqDetailView({
-      open: false,
-      source: null,
-      rfqId: null,
-      loading: false,
-      error: null,
-      data: null,
-    });
+    setRfqDialog(createInitialBuyerRfqDialogState());
+    setRfqDetailView(createInitialBuyerRfqDetailViewState());
     setBuyerRfqListView({
       loading: false,
       error: null,
@@ -2207,91 +2301,53 @@ const App: React.FC = () => {
   };
 
   const handleOpenRfqDialog = (product: CatalogItem) => {
-    if (isVerificationBlockedTenantWorkspace) {
-      setCatalogError(verificationBlockedActionMessage);
+    const openOutcome = resolveBuyerRfqOpenAction({
+      product,
+      isVerificationBlockedTenantWorkspace,
+      verificationBlockedActionMessage,
+    });
+
+    if (openOutcome.blocked) {
+      setCatalogError(openOutcome.catalogError);
       return;
     }
 
-    setRfqDialog({
-      open: true,
-      product,
-      quantity: product.moq ? String(product.moq) : '1',
-      buyerMessage: '',
-      loading: false,
-      error: null,
-      success: null,
-    });
+    setRfqDialog(openOutcome.dialog);
   };
 
   const handleCloseRfqDialog = () => {
-    setRfqDialog({
-      open: false,
-      product: null,
-      quantity: '1',
-      buyerMessage: '',
-      loading: false,
-      error: null,
-      success: null,
-    });
-    setRfqDetailView({
-      open: false,
-      source: null,
-      rfqId: null,
-      loading: false,
-      error: null,
-      data: null,
-    });
+    const closeState = resolveBuyerRfqCloseState();
+    setRfqDialog(closeState.dialog);
+    setRfqDetailView(closeState.detailView);
   };
 
-  const handleSubmitRfq = async (e: React.FormEvent) => {
+  const handleSubmitRfq = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!rfqDialog.product) return;
 
-    const quantityInput = rfqDialog.quantity.trim();
-    const quantity = Number(quantityInput);
-    if (
-      quantityInput.length === 0 ||
-      Number.isNaN(quantity) ||
-      !Number.isInteger(quantity) ||
-      quantity < 1
-    ) {
-      setRfqDialog(dialog => ({ ...dialog, error: 'Quantity must be an integer of at least 1.' }));
+    const submitResolution = resolveBuyerRfqSubmitPayload(rfqDialog);
+    if (!submitResolution.payload) {
+      setRfqDialog(dialog => ({ ...dialog, error: submitResolution.error }));
       return;
     }
 
-    const buyerMessage = rfqDialog.buyerMessage.trim();
     setRfqDialog(dialog => ({ ...dialog, loading: true, error: null }));
 
     try {
-      const response = await createRfq({
-        catalogItemId: rfqDialog.product.id,
-        quantity,
-        ...(buyerMessage ? { buyerMessage } : {}),
-      });
+      const response = await createRfq(submitResolution.payload);
+      const successState = resolveBuyerRfqSubmitSuccess(response);
 
       setRfqDialog(dialog => ({
         ...dialog,
-        loading: false,
-        error: null,
-        success: {
-          rfqId: response.rfq.id,
-          quantity: response.rfq.quantity,
-        },
+        ...successState.dialogPatch,
       }));
-      setRfqDetailView({
-        open: false,
-        source: null,
-        rfqId: response.rfq.id,
-        loading: false,
-        error: null,
-        data: null,
-      });
+      setRfqDetailView(successState.detailView);
     } catch (error) {
       console.error('Failed to submit RFQ:', error);
       setRfqDialog(dialog => ({
         ...dialog,
         loading: false,
-        error: error instanceof APIError ? error.message : 'Failed to submit your request for quote. Please try again.',
+        error: resolveBuyerRfqSubmitError(error),
       }));
     }
   };
@@ -2381,14 +2437,7 @@ const App: React.FC = () => {
 
   const handleReturnToBuyerRfqList = () => {
     setBuyerRfqTradeBridge(view => ({ ...view, loading: false, error: null }));
-    setRfqDetailView({
-      open: false,
-      source: null,
-      rfqId: null,
-      loading: false,
-      error: null,
-      data: null,
-    });
+    setRfqDetailView(createInitialBuyerRfqDetailViewState());
   };
 
   const handleCloseBuyerRfqs = () => {

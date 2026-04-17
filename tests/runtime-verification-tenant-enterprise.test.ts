@@ -10,7 +10,10 @@ vi.mock('../services/tenantApiClient', () => ({
   tenantPut: vi.fn(),
 }));
 
+import { __B2B_RFQ_INITIATION_TESTING__ } from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
+import { createRfq, type CatalogItem } from '../services/catalogService';
+import { APIError } from '../services/apiClient';
 import { InviteMemberSuccessState } from '../components/Tenant/InviteMemberForm';
 import {
   TeamManagementPendingInvitesPanel,
@@ -48,6 +51,15 @@ const tenantDeleteMock = vi.mocked(tenantDelete);
 const tenantGetMock = vi.mocked(tenantGet);
 const tenantPatchMock = vi.mocked(tenantPatch);
 const tenantPostMock = vi.mocked(tenantPost);
+
+const {
+  createInitialBuyerRfqDialogState,
+  createInitialBuyerRfqDetailViewState,
+  resolveBuyerRfqOpenAction,
+  resolveBuyerRfqSubmitPayload,
+  resolveBuyerRfqSubmitSuccess,
+  resolveBuyerRfqSubmitError,
+} = __B2B_RFQ_INITIATION_TESTING__;
 
 function makeTradeResponse(): TenantTradesListResponse {
   return {
@@ -173,6 +185,44 @@ function makeCertificationResponse(): ListCertificationsResponse {
     total: 1,
     limit: 10,
     offset: 0,
+  };
+}
+
+function makeCatalogItem(overrides: Partial<CatalogItem> = {}): CatalogItem {
+  return {
+    id: 'item-1',
+    tenantId: 'supplier-1',
+    name: 'Combed Cotton 30s',
+    sku: 'COT-30S',
+    description: 'Ring-spun cotton yarn',
+    price: 18.5,
+    active: true,
+    createdAt: '2026-03-21T08:00:00.000Z',
+    updatedAt: '2026-03-21T09:00:00.000Z',
+    moq: 12,
+    ...overrides,
+  };
+}
+
+function makeCreateRfqResponse() {
+  return {
+    rfq: {
+      id: 'rfq-1',
+      status: 'INITIATED' as const,
+      org_id: 'buyer-1',
+      catalog_item_id: 'item-1',
+      item_name: 'Combed Cotton 30s',
+      item_sku: 'COT-30S',
+      quantity: 24,
+      supplier_org_id: 'supplier-1',
+      created_at: '2026-03-22T08:00:00.000Z',
+      updated_at: '2026-03-22T08:00:00.000Z',
+      item_unit_price: 18.5,
+      buyer_message: 'Need export-grade packing.',
+      created_by_user_id: 'user-1',
+      supplier_response: null,
+      trade_continuity: null,
+    },
   };
 }
 
@@ -540,6 +590,103 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(result).toEqual(response);
     expect(result.inviteToken).toBe('invite-token-1');
     expect(result.emailDelivery.status).toBe('SENT');
+  });
+
+  it('keeps buyer RFQ initiation open-state continuity inside the Request Quote slice', () => {
+    const product = makeCatalogItem();
+
+    const openOutcome = resolveBuyerRfqOpenAction({
+      product,
+      isVerificationBlockedTenantWorkspace: false,
+      verificationBlockedActionMessage: 'Verification approval is required.',
+    });
+
+    expect(openOutcome.blocked).toBe(false);
+    expect(openOutcome.catalogError).toBeNull();
+    expect(openOutcome.dialog).toEqual({
+      ...createInitialBuyerRfqDialogState(),
+      open: true,
+      product,
+      quantity: '12',
+    });
+
+    const blockedOutcome = resolveBuyerRfqOpenAction({
+      product: makeCatalogItem({ moq: undefined }),
+      isVerificationBlockedTenantWorkspace: true,
+      verificationBlockedActionMessage: 'Verification approval is required.',
+    });
+
+    expect(blockedOutcome.blocked).toBe(true);
+    expect(blockedOutcome.catalogError).toBe('Verification approval is required.');
+    expect(blockedOutcome.dialog).toBeNull();
+  });
+
+  it('uses the buyer RFQ create endpoint with trimmed submit payload continuity', async () => {
+    const submitResolution = resolveBuyerRfqSubmitPayload({
+      ...createInitialBuyerRfqDialogState(),
+      open: true,
+      product: makeCatalogItem(),
+      quantity: ' 24 ',
+      buyerMessage: '  Need export-grade packing.  ',
+    });
+
+    expect(submitResolution.error).toBeNull();
+    expect(submitResolution.payload).toEqual({
+      catalogItemId: 'item-1',
+      quantity: 24,
+      buyerMessage: 'Need export-grade packing.',
+    });
+
+    tenantPostMock.mockResolvedValue(makeCreateRfqResponse());
+    if (!submitResolution.payload) {
+      throw new Error('Expected RFQ submit payload to be present for the continuity check.');
+    }
+
+    const result = await createRfq(submitResolution.payload);
+
+    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/rfqs', {
+      catalogItemId: 'item-1',
+      quantity: 24,
+      buyerMessage: 'Need export-grade packing.',
+    });
+    expect(result.rfq.id).toBe('rfq-1');
+
+    const invalidResolution = resolveBuyerRfqSubmitPayload({
+      ...createInitialBuyerRfqDialogState(),
+      open: true,
+      product: makeCatalogItem(),
+      quantity: '0',
+      buyerMessage: '',
+    });
+
+    expect(invalidResolution.payload).toBeNull();
+    expect(invalidResolution.error).toBe('Quantity must be an integer of at least 1.');
+  });
+
+  it('maps buyer RFQ submit success into the non-binding success state and RFQ detail continuity id', () => {
+    const successState = resolveBuyerRfqSubmitSuccess(makeCreateRfqResponse());
+
+    expect(successState.dialogPatch).toEqual({
+      loading: false,
+      error: null,
+      success: {
+        rfqId: 'rfq-1',
+        quantity: 24,
+      },
+    });
+    expect(successState.detailView).toEqual({
+      ...createInitialBuyerRfqDetailViewState(),
+      rfqId: 'rfq-1',
+    });
+  });
+
+  it('maps buyer RFQ submit failures to API and fallback messages without widening the flow', () => {
+    expect(resolveBuyerRfqSubmitError(new APIError(422, 'RFQ creation is unavailable.'))).toBe(
+      'RFQ creation is unavailable.',
+    );
+    expect(resolveBuyerRfqSubmitError(new Error('boom'))).toBe(
+      'Failed to submit your request for quote. Please try again.',
+    );
   });
 
   it('uses the pending-invite revoke endpoint and preserves the delete envelope', async () => {
