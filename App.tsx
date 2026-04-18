@@ -582,6 +582,11 @@ const loadSupplierRfqDetailContinuity = async ({
 
 const resolveSupplierRfqDetailReturnToInboxState = () => createInitialSupplierRfqDetailViewState();
 
+const resolveSupplierRfqDetailCloseState = () => ({
+  detailView: resolveSupplierRfqDetailReturnToInboxState(),
+  navigateToDefaultRoute: true as const,
+});
+
 const resolveSupplierRfqRespondSubmitAction = ({
   message,
   currentDetailView,
@@ -1292,6 +1297,7 @@ export const __B2B_SUPPLIER_DETAIL_TESTING__ = {
   createInitialSupplierRfqDetailViewState,
   resolveSupplierRfqDetailOpenAction,
   resolveSupplierRfqDetailReturnToInboxState,
+  resolveSupplierRfqDetailCloseState,
   loadSupplierRfqDetailContinuity,
 };
 
@@ -3083,8 +3089,12 @@ const App: React.FC = () => {
   };
 
   const handleCloseSupplierRfqInbox = () => {
-    handleReturnToSupplierRfqList();
-    navigateTenantDefaultManifestRoute();
+    const closeState = resolveSupplierRfqDetailCloseState();
+    setSupplierRfqDetailView(closeState.detailView);
+
+    if (closeState.navigateToDefaultRoute) {
+      navigateTenantDefaultManifestRoute();
+    }
   };
 
   const handleSubmitSupplierRfqResponse = async (message: string) => {

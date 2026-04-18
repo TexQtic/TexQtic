@@ -119,6 +119,7 @@ const {
   createInitialSupplierRfqDetailViewState,
   resolveSupplierRfqDetailOpenAction,
   resolveSupplierRfqDetailReturnToInboxState,
+  resolveSupplierRfqDetailCloseState,
   loadSupplierRfqDetailContinuity,
 } = __B2B_SUPPLIER_DETAIL_TESTING__;
 
@@ -1403,6 +1404,15 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     const returnState = resolveSupplierRfqDetailReturnToInboxState();
 
     expect(returnState).toEqual(createInitialSupplierRfqDetailViewState());
+  });
+
+  it('keeps supplier RFQ detail close continuity inside the App-owned onClose reset and default-route handoff seam', () => {
+    const closeState = resolveSupplierRfqDetailCloseState();
+
+    expect(closeState).toEqual({
+      detailView: createInitialSupplierRfqDetailViewState(),
+      navigateToDefaultRoute: true,
+    });
   });
 
   it('keeps supplier RFQ respond validation and submit-loading continuity inside the App-owned submit seam', () => {
