@@ -72,6 +72,7 @@ import {
   getCatalogItems,
   CatalogItem,
   BuyerRfqDetailResponse,
+  BuyerRfqListResponse,
   CreateRfqRequest,
   CreateRfqResponse,
   createCatalogItem,
@@ -149,6 +150,12 @@ type BuyerRfqDetailViewState = {
 
 type BuyerRfqDetailSource = Exclude<BuyerRfqDetailViewState['source'], null>;
 
+type BuyerRfqListViewState = {
+  loading: boolean;
+  error: string | null;
+  rfqs: BuyerRfqListItem[];
+};
+
 type SupplierRfqListViewState = {
   loading: boolean;
   error: string | null;
@@ -190,6 +197,8 @@ const createInitialBuyerRfqDetailViewState = (): BuyerRfqDetailViewState => ({
   error: null,
   data: null,
 });
+
+const createInitialBuyerRfqListViewState = (): BuyerRfqListViewState => createInitialSupplierRfqListViewState();
 
 const createInitialSupplierRfqListViewState = (): SupplierRfqListViewState => ({
   loading: false,
@@ -401,6 +410,33 @@ const loadBuyerRfqDetailContinuity = async ({
     return resolveBuyerRfqDetailSuccess({ rfqId, source, response });
   } catch (error) {
     return resolveBuyerRfqDetailError({ rfqId, source, error });
+  }
+};
+
+const resolveBuyerRfqListOpenAction = (currentListView: BuyerRfqListViewState) => ({
+  ...currentListView,
+  loading: true,
+  error: null,
+}) satisfies BuyerRfqListViewState;
+
+const loadBuyerRfqListContinuity = async ({
+  loadBuyerRfqs,
+}: {
+  loadBuyerRfqs: () => Promise<BuyerRfqListResponse>;
+}) => {
+  try {
+    const response = await loadBuyerRfqs();
+    return {
+      loading: false,
+      error: null,
+      rfqs: response.rfqs,
+    } satisfies BuyerRfqListViewState;
+  } catch (error) {
+    return {
+      loading: false,
+      error: error instanceof APIError ? error.message : 'Unable to load your RFQs right now.',
+      rfqs: [],
+    } satisfies BuyerRfqListViewState;
   }
 };
 
@@ -1192,6 +1228,12 @@ export const __B2B_RFQ_DETAIL_TESTING__ = {
   loadBuyerRfqDetailContinuity,
 };
 
+export const __B2B_BUYER_RFQ_LIST_TESTING__ = {
+  createInitialBuyerRfqListViewState,
+  resolveBuyerRfqListOpenAction,
+  loadBuyerRfqListContinuity,
+};
+
 export const __B2B_SUPPLIER_INBOX_TESTING__ = {
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
@@ -1320,15 +1362,7 @@ const App: React.FC = () => {
     navigateWlAdminManifestRoute(nextSelection.routeKey);
   };
   const [rfqDetailView, setRfqDetailView] = useState<BuyerRfqDetailViewState>(createInitialBuyerRfqDetailViewState);
-  const [buyerRfqListView, setBuyerRfqListView] = useState<{
-    loading: boolean;
-    error: string | null;
-    rfqs: BuyerRfqListItem[];
-  }>({
-    loading: false,
-    error: null,
-    rfqs: [],
-  });
+  const [buyerRfqListView, setBuyerRfqListView] = useState<BuyerRfqListViewState>(createInitialBuyerRfqListViewState);
   const [supplierRfqListView, setSupplierRfqListView] = useState<SupplierRfqListViewState>(createInitialSupplierRfqListViewState);
   const [supplierRfqDetailView, setSupplierRfqDetailView] = useState<SupplierRfqDetailViewState>(createInitialSupplierRfqDetailViewState);
   const [buyerRfqTradeBridge, setBuyerRfqTradeBridge] = useState<BuyerRfqTradeBridgeState>(createInitialBuyerRfqTradeBridgeState);
@@ -2830,26 +2864,12 @@ const App: React.FC = () => {
           }
         : view
     );
-    setBuyerRfqListView(view => ({
-      ...view,
-      loading: true,
-      error: null,
-    }));
+    setBuyerRfqListView(view => resolveBuyerRfqListOpenAction(view));
 
-    try {
-      const response = await getBuyerRfqs();
-      setBuyerRfqListView({
-        loading: false,
-        error: null,
-        rfqs: response.rfqs,
-      });
-    } catch (error) {
-      setBuyerRfqListView({
-        loading: false,
-        error: error instanceof APIError ? error.message : 'Unable to load your RFQs right now.',
-        rfqs: [],
-      });
-    }
+    const listView = await loadBuyerRfqListContinuity({
+      loadBuyerRfqs: getBuyerRfqs,
+    });
+    setBuyerRfqListView(listView);
   };
 
   const handleOpenRfqDetail = async (rfqId?: string, source: 'dialog' | 'list' = 'dialog') => {

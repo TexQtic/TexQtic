@@ -11,6 +11,7 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import {
+  __B2B_BUYER_RFQ_LIST_TESTING__,
   __B2B_RFQ_DETAIL_TESTING__,
   __B2B_RFQ_INITIATION_TESTING__,
   __B2B_SUPPLIER_DETAIL_TESTING__,
@@ -21,11 +22,14 @@ import {
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import {
   createRfq,
+  getBuyerRfqs,
   getSupplierRfqDetail,
   getSupplierRfqInbox,
   submitSupplierRfqResponse,
   type BuyerRfqDetail,
   type BuyerRfqDetailResponse,
+  type BuyerRfqListItem,
+  type BuyerRfqListResponse,
   type CatalogItem,
   type SupplierRfqDetail,
   type SupplierRfqDetailResponse,
@@ -83,6 +87,12 @@ const {
   resolveBuyerRfqSubmitSuccess,
   resolveBuyerRfqSubmitError,
 } = __B2B_RFQ_INITIATION_TESTING__;
+
+const {
+  createInitialBuyerRfqListViewState,
+  resolveBuyerRfqListOpenAction,
+  loadBuyerRfqListContinuity,
+} = __B2B_BUYER_RFQ_LIST_TESTING__;
 
 const {
   resolveBuyerRfqDetailOpenAction,
@@ -305,6 +315,21 @@ function makeBuyerRfqDetail(overrides: Partial<BuyerRfqDetail> = {}): BuyerRfqDe
     created_by_user_id: 'user-1',
     supplier_response: null,
     trade_continuity: null,
+    ...overrides,
+  };
+}
+
+function makeBuyerRfqListItem(overrides: Partial<BuyerRfqListItem> = {}): BuyerRfqListItem {
+  return {
+    id: 'buyer-rfq-1',
+    status: 'RESPONDED',
+    catalog_item_id: 'item-1',
+    item_name: 'Combed Cotton 30s',
+    item_sku: 'COT-30S',
+    quantity: 24,
+    supplier_org_id: 'supplier-1',
+    created_at: '2026-03-22T08:00:00.000Z',
+    updated_at: '2026-03-22T09:00:00.000Z',
     ...overrides,
   };
 }
@@ -813,6 +838,69 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(resolveBuyerRfqSubmitError(new Error('boom'))).toBe(
       'Failed to submit your request for quote. Please try again.',
     );
+  });
+
+  it('keeps buyer RFQ list continuity inside the App-owned loading seam', () => {
+    const currentRfqs = [makeBuyerRfqListItem()];
+    const openAction = resolveBuyerRfqListOpenAction({
+      loading: false,
+      error: 'stale',
+      rfqs: currentRfqs,
+    });
+
+    expect(openAction).toEqual({
+      loading: true,
+      error: null,
+      rfqs: currentRfqs,
+    });
+  });
+
+  it('invokes getBuyerRfqs and maps buyer RFQ list success into App-owned state continuity', async () => {
+    const rfqs = [makeBuyerRfqListItem()];
+    tenantGetMock.mockResolvedValue({
+      rfqs,
+      count: rfqs.length,
+    } satisfies BuyerRfqListResponse);
+
+    const listView = await loadBuyerRfqListContinuity({
+      loadBuyerRfqs: getBuyerRfqs,
+    });
+
+    expect(tenantGetMock).toHaveBeenCalledWith('/api/tenant/rfqs');
+    expect(listView).toEqual({
+      ...createInitialBuyerRfqListViewState(),
+      loading: false,
+      error: null,
+      rfqs,
+    });
+  });
+
+  it('maps buyer RFQ list fetch failures to API and fallback App-owned error states', async () => {
+    const apiErrorView = await loadBuyerRfqListContinuity({
+      loadBuyerRfqs: vi.fn(async (): Promise<BuyerRfqListResponse> => {
+        throw new APIError(503, 'Buyer RFQ list is unavailable.');
+      }),
+    });
+
+    expect(apiErrorView).toEqual({
+      ...createInitialBuyerRfqListViewState(),
+      loading: false,
+      error: 'Buyer RFQ list is unavailable.',
+      rfqs: [],
+    });
+
+    const fallbackErrorView = await loadBuyerRfqListContinuity({
+      loadBuyerRfqs: vi.fn(async (): Promise<BuyerRfqListResponse> => {
+        throw new Error('boom');
+      }),
+    });
+
+    expect(fallbackErrorView).toEqual({
+      ...createInitialBuyerRfqListViewState(),
+      loading: false,
+      error: 'Unable to load your RFQs right now.',
+      rfqs: [],
+    });
   });
 
   it('keeps buyer RFQ detail continuity inside the App-owned open/loading seam', () => {
