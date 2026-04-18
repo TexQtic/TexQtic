@@ -113,3 +113,27 @@ The exact planning outcome recorded in this pass is:
 `BOUNDED-IMPLEMENTATION-PLANNING-SEQUENCE-RECORDED-FOR-RUNTIME-TAXONOMY-PROVISIONING-TENANT-ADMIN-AND-AGGREGATOR-DISCOVERY-SAFE-ALIGNMENT`
 
 This planning sequence should begin before any new family selection because the architecture and taxonomy chain is already locked, authority reconciliation is already complete, and this bounded sequencing step is the remaining lawful bridge between locked design truth and later implementation.
+
+## 9. Minimal carry-forward refresh after bounded child-slice consumption
+
+This refresh leaves the already-recorded sequence unchanged and records only the newly verified
+state required for truthful later continuation.
+
+The exact verified child slices now consumed under this planning sequence are:
+
+1. `9858248` — `[TEXQTIC] admin: align tenant-admin entry and shared-core partition`
+2. `a40c06b` — `[TEXQTIC] admin: align WL overlay visibility to shared-core boundary`
+3. `d160db1` — `[TEXQTIC] admin: normalize shared-core WL settings handoff`
+4. `dec6447` — `[TEXQTIC] aggregator: exclude status from discovery contract`
+
+The exact local exhaustion results now fixed at the current lawful granularity are:
+
+1. `tenant-admin core/overlay alignment` = `LOCALLY_EXHAUSTED`
+2. `Aggregator discovery-safe subset boundary` = `LOCALLY_EXHAUSTED`
+
+The exact carry-forward rule after this refresh is:
+
+1. do not reopen either exhausted chain absent one new exact repo-truth discriminator proving one
+   fresh bounded seam inside that same chain
+2. do not infer a further child slice from sequence adjacency alone
+3. no additional same-chain SAFE-WRITE slice is recorded by this refresh
