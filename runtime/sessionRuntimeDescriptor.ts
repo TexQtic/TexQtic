@@ -2,6 +2,8 @@ import { normalizeCommercialPlan, type CommercialPlan } from '../types';
 
 export type TenantCategory = 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
 
+export type RuntimeBaseCategory = 'B2B' | 'B2C' | 'INTERNAL';
+
 export type TenantOperatingMode =
   | 'CONTROL_PLANE'
   | 'AGGREGATOR_WORKSPACE'
@@ -50,6 +52,7 @@ export interface SessionRuntimeDescriptor {
   tenantSlug: string | null;
   tenantName: string | null;
   authenticatedRole: string | null;
+  identity: SessionRuntimeIdentity;
   commercialPlan: CommercialPlan | null;
   tenantCategory: TenantCategory | null;
   whiteLabelCapability: boolean;
@@ -73,6 +76,13 @@ export interface ControlPlaneRuntimeDescriptorInput {
   actorId: string | null;
   actorEmail: string | null;
   authenticatedRole: string | null;
+}
+
+export interface SessionRuntimeIdentity {
+  baseCategory: RuntimeBaseCategory | null;
+  aggregatorCapability: boolean;
+  whiteLabelCapability: boolean;
+  commercialPlan: CommercialPlan | null;
 }
 
 export type RuntimeAppState = 'CONTROL_PLANE' | 'EXPERIENCE' | 'WL_ADMIN';
@@ -215,6 +225,7 @@ export interface RuntimeShellNavigationSurface {
 export interface RuntimeFamilyEntryHandoff {
   manifestKey: RouteManifestKey;
   contentFamily: RouteManifestKey;
+  identity: SessionRuntimeIdentity;
   manifestEntry: RuntimeManifestEntry;
   shellFamily: RuntimeShellFamily;
   defaultLocalRouteKey: RuntimeLocalRouteKey;
@@ -585,6 +596,13 @@ const EMPTY_CAPABILITIES: SessionCapabilities = {
   },
 };
 
+const EMPTY_RUNTIME_IDENTITY: SessionRuntimeIdentity = {
+  baseCategory: null,
+  aggregatorCapability: false,
+  whiteLabelCapability: false,
+  commercialPlan: null,
+};
+
 const normalizeTenantCategory = (tenantCategory: string | null | undefined): TenantCategory | null => {
   const normalized = tenantCategory?.trim().toUpperCase();
 
@@ -605,6 +623,36 @@ const normalizeTenantCategory = (tenantCategory: string | null | undefined): Ten
 const hasWlAdminOverlay = (whiteLabelCapability: boolean, authenticatedRole: string | null) => {
   return whiteLabelCapability && WL_ADMIN_ROLES.has(authenticatedRole?.trim().toUpperCase() ?? '');
 };
+
+const resolveRuntimeBaseCategory = (
+  tenantCategory: TenantCategory | null,
+): RuntimeBaseCategory | null => {
+  switch (tenantCategory) {
+    case 'B2B':
+      return 'B2B';
+    case 'B2C':
+      return 'B2C';
+    case 'INTERNAL':
+      return 'INTERNAL';
+    default:
+      return null;
+  }
+};
+
+const resolveRuntimeIdentity = ({
+  tenantCategory,
+  whiteLabelCapability,
+  commercialPlan,
+}: {
+  tenantCategory: TenantCategory | null;
+  whiteLabelCapability: boolean;
+  commercialPlan: CommercialPlan | null;
+}): SessionRuntimeIdentity => ({
+  baseCategory: resolveRuntimeBaseCategory(tenantCategory),
+  aggregatorCapability: tenantCategory === 'AGGREGATOR',
+  whiteLabelCapability,
+  commercialPlan,
+});
 
 const resolveOperatingMode = (
   tenantCategory: TenantCategory | null,
@@ -886,6 +934,13 @@ export const createTenantSessionRuntimeDescriptor = (
     return null;
   }
 
+  const commercialPlan = input.commercialPlan ? normalizeCommercialPlan(input.commercialPlan) : null;
+  const identity = resolveRuntimeIdentity({
+    tenantCategory,
+    whiteLabelCapability: input.whiteLabelCapability,
+    commercialPlan,
+  });
+
   const runtimeOverlays: RuntimeOverlay[] = hasWlAdminOverlay(
     input.whiteLabelCapability,
     input.authenticatedRole,
@@ -899,7 +954,8 @@ export const createTenantSessionRuntimeDescriptor = (
     tenantSlug: input.tenantSlug,
     tenantName: input.tenantName,
     authenticatedRole: input.authenticatedRole,
-    commercialPlan: input.commercialPlan ? normalizeCommercialPlan(input.commercialPlan) : null,
+    identity,
+    commercialPlan,
     tenantCategory,
     whiteLabelCapability: input.whiteLabelCapability,
     operatingMode,
@@ -925,6 +981,7 @@ export const createControlPlaneSessionRuntimeDescriptor = (
     tenantSlug: null,
     tenantName: null,
     authenticatedRole: input.authenticatedRole,
+    identity: EMPTY_RUNTIME_IDENTITY,
     commercialPlan: null,
     tenantCategory: null,
     whiteLabelCapability: false,
@@ -1096,6 +1153,7 @@ export const resolveRuntimeFamilyEntryHandoff = (
   return {
     manifestKey: manifestEntry.key,
     contentFamily: manifestEntry.key,
+    identity: descriptor?.identity ?? EMPTY_RUNTIME_IDENTITY,
     manifestEntry,
     shellFamily: manifestEntry.shellFamily,
     defaultLocalRouteKey: manifestEntry.defaultLocalRouteKey,

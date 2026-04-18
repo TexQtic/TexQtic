@@ -1713,6 +1713,7 @@ const App: React.FC = () => {
       authenticatedRole: controlPlaneIdentity.role,
     });
   }, [controlPlaneIdentity]);
+  const tenantRuntimeIdentity = tenantRuntimeDescriptor?.identity ?? null;
   const tenantHasWlAdminOverlay = tenantRuntimeDescriptor?.runtimeOverlays.includes('WL_ADMIN') ?? false;
   const tenantWorkspaceRuntimeHandoff = useMemo(() => {
     return resolveRuntimeFamilyEntryHandoff(tenantRuntimeDescriptor, 'EXPERIENCE', {
@@ -1757,6 +1758,9 @@ const App: React.FC = () => {
   const tenantLocalRouteSelection = tenantWorkspaceRuntimeHandoff?.localRouteSelection ?? null;
   const wlAdminLocalRouteSelection = tenantWlAdminRuntimeHandoff?.localRouteSelection ?? null;
   const controlPlaneLocalRouteSelection = controlPlaneRuntimeHandoff?.localRouteSelection ?? null;
+  const tenantBaseCategory = tenantRuntimeIdentity?.baseCategory ?? null;
+  const tenantHasAggregatorCapability = tenantRuntimeIdentity?.aggregatorCapability ?? false;
+  const tenantHasWhiteLabelCapability = tenantRuntimeIdentity?.whiteLabelCapability ?? false;
   const currentOnboardingStatusContinuity = useMemo(() => {
     return getOnboardingStatusContinuity(currentTenant?.status);
   }, [currentTenant?.status]);
@@ -1832,22 +1836,22 @@ const App: React.FC = () => {
   const wlAdminShellNavigation = tenantWlAdminRuntimeHandoff?.navigationSurface ?? null;
   const tenantShellNavigation = tenantWorkspaceRuntimeHandoff?.navigationSurface ?? null;
   const b2cCatalogSectionRef = useRef<globalThis.HTMLElement | null>(null);
-  const tenantWorkspaceContentFamily = tenantWorkspaceRuntimeHandoff?.contentFamily ?? null;
-  const isNonWhiteLabelB2CTenant = tenantWorkspaceContentFamily === 'b2c_storefront';
+  const isNonWhiteLabelB2CTenant = tenantBaseCategory === 'B2C' && !tenantHasWhiteLabelCapability;
   const isB2CBrowseEntrySurface = appState === 'EXPERIENCE'
     && tenantLocalRouteSelection?.routeKey === 'home'
     && isNonWhiteLabelB2CTenant;
   const showB2CHomeAuthenticatedAffordances = !isB2CBrowseEntrySurface;
   const isAggregatorDiscoveryEntrySurface = appState === 'EXPERIENCE'
     && tenantLocalRouteSelection?.routeKey === 'home'
-    && tenantWorkspaceContentFamily === 'aggregator_workspace';
-  const isEnterpriseCatalogEntrySurface = appState === 'EXPERIENCE'
+    && tenantHasAggregatorCapability;
+  const isB2BCatalogEntrySurface = appState === 'EXPERIENCE'
     && tenantLocalRouteSelection?.routeKey === 'catalog'
-    && tenantWorkspaceContentFamily === 'b2b_workspace';
+    && tenantBaseCategory === 'B2B'
+    && !tenantHasWhiteLabelCapability;
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
     && wlAdminLocalRouteSelection?.routeKey === 'products'
     && tenantContentFamily === 'wl_admin';
-  const shouldLoadAppCatalog = isEnterpriseCatalogEntrySurface
+  const shouldLoadAppCatalog = isB2BCatalogEntrySurface
     || isB2CBrowseEntrySurface
     || isWlAdminProductsSurface;
   const tenantShellContract = useMemo(() => {
@@ -1907,14 +1911,14 @@ const App: React.FC = () => {
       );
     }
 
-    if (tenantContentFamily === 'wl_storefront') {
+    if (tenantHasWhiteLabelCapability && tenantContentFamily === 'wl_storefront') {
       return joinDocumentTitle(
         normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
         currentTenant.name,
       );
     }
 
-    if (tenantContentFamily === 'b2b_workspace') {
+    if (tenantBaseCategory === 'B2B' && !tenantHasAggregatorCapability && !tenantHasWhiteLabelCapability) {
       if (currentOnboardingStatusContinuity) {
         return joinDocumentTitle(
           currentTenant.name,
@@ -1930,7 +1934,7 @@ const App: React.FC = () => {
       );
     }
 
-    if (tenantContentFamily === 'b2c_storefront') {
+    if (tenantBaseCategory === 'B2C' && !tenantHasWhiteLabelCapability) {
       return joinDocumentTitle(
         normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
         currentTenant.name,
@@ -1938,11 +1942,11 @@ const App: React.FC = () => {
       );
     }
 
-    if (tenantContentFamily === 'aggregator_workspace') {
+    if (tenantHasAggregatorCapability && tenantContentFamily === 'aggregator_workspace') {
       return joinDocumentTitle(
         normalizeDocumentRouteTitle(tenantLocalRouteSelection?.route.title),
         currentTenant.name,
-        'TexQtic Aggregator Workspace',
+        'TexQtic Discovery Workspace',
       );
     }
 
@@ -1952,6 +1956,9 @@ const App: React.FC = () => {
     authRealm,
     currentTenant,
     tenantContentFamily,
+    tenantBaseCategory,
+    tenantHasAggregatorCapability,
+    tenantHasWhiteLabelCapability,
     currentOnboardingStatusContinuity,
     tenantLocalRouteSelection,
     wlAdminLocalRouteSelection,
@@ -2113,7 +2120,7 @@ const App: React.FC = () => {
 
       try {
         const query = isB2CBrowseEntrySurface ? b2cSearchQuery.trim() : '';
-        const initialLimit = isEnterpriseCatalogEntrySurface
+        const initialLimit = isB2BCatalogEntrySurface
           ? ENTERPRISE_HOME_CATALOG_FIRST_PAINT_LIMIT
           : 20;
         const response = await getCatalogItems({
@@ -2129,7 +2136,7 @@ const App: React.FC = () => {
         setCatalogNextCursor(response.nextCursor);
         setB2cVisibleCount(query ? response.items.length : Math.min(8, response.items.length || 8));
 
-        if (isEnterpriseCatalogEntrySurface && response.nextCursor) {
+        if (isB2BCatalogEntrySurface && response.nextCursor) {
           tailHydrationTimer = globalThis.setTimeout(() => {
             void hydrateEnterpriseHomeCatalogTail(response.nextCursor as string);
           }, ENTERPRISE_HOME_CATALOG_TAIL_DELAY_MS);
@@ -2170,7 +2177,7 @@ const App: React.FC = () => {
         globalThis.clearTimeout(tailHydrationTimer);
       }
     };
-  }, [shouldLoadAppCatalog, isB2CBrowseEntrySurface, isEnterpriseCatalogEntrySurface, b2cSearchQuery, currentTenant?.id]);
+  }, [shouldLoadAppCatalog, isB2CBrowseEntrySurface, isB2BCatalogEntrySurface, b2cSearchQuery, currentTenant?.id]);
 
   const handleB2CShopNow = () => {
     b2cCatalogSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4317,7 +4324,7 @@ const App: React.FC = () => {
         return (
           <CartProvider
             key={`tenant-shell:${currentTenant.id}`}
-            deferInitialRefresh={isEnterpriseCatalogEntrySurface}
+            deferInitialRefresh={isB2BCatalogEntrySurface}
           >
             {tenantProvisionError && (
               <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-50 border-b border-amber-300 px-4 py-3 text-amber-800 text-sm text-center">
