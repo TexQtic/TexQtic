@@ -111,6 +111,7 @@ import {
   resolveRuntimeFamilyEntryHandoff,
   resolveRuntimeLocalRouteSelection,
   type RouteManifestKey,
+  type RuntimeAppState,
   type RuntimeLocalRouteKey,
 } from './runtime/sessionRuntimeDescriptor';
 
@@ -1035,6 +1036,16 @@ const buildControlPlaneIdentity = (user?: { id?: string; email?: string }, role?
   };
 };
 
+const resolveTenantAdminEntryState = (
+  nextState: RuntimeAppState | null,
+): 'EXPERIENCE' | null => {
+  if (nextState === 'EXPERIENCE' || nextState === 'WL_ADMIN') {
+    return 'EXPERIENCE';
+  }
+
+  return null;
+};
+
 const persistControlPlaneIdentity = (identity: ControlPlaneIdentity | null) => {
   if (!identity) {
     localStorage.removeItem(CONTROL_PLANE_IDENTITY_KEY);
@@ -1530,7 +1541,7 @@ const App: React.FC = () => {
     return {
       resolvedRole,
       descriptor,
-      nextState: nextState === 'EXPERIENCE' || nextState === 'WL_ADMIN' ? nextState : null,
+      nextState: resolveTenantAdminEntryState(nextState),
     };
   };
 
@@ -1761,6 +1772,7 @@ const App: React.FC = () => {
   const tenantBaseCategory = tenantRuntimeIdentity?.baseCategory ?? null;
   const tenantHasAggregatorCapability = tenantRuntimeIdentity?.aggregatorCapability ?? false;
   const tenantHasWhiteLabelCapability = tenantRuntimeIdentity?.whiteLabelCapability ?? false;
+  const tenantCanAccessWhiteLabelSettingsOverlay = tenantHasWhiteLabelCapability;
   const currentOnboardingStatusContinuity = useMemo(() => {
     return getOnboardingStatusContinuity(currentTenant?.status);
   }, [currentTenant?.status]);
@@ -1859,11 +1871,6 @@ const App: React.FC = () => {
       surface: tenantShellNavigation,
       onNavigateRoute: navigateTenantManifestRoute,
       onNavigateTeam: () => {
-        if (tenantHasWlAdminOverlay) {
-          enterWlAdmin('STAFF');
-          return;
-        }
-
         setAppState('TEAM_MGMT');
       },
       showAuthenticatedAffordances: showB2CHomeAuthenticatedAffordances,
@@ -1873,8 +1880,6 @@ const App: React.FC = () => {
   }, [
     tenantShellNavigation,
     navigateTenantManifestRoute,
-    enterWlAdmin,
-    tenantHasWlAdminOverlay,
     showB2CHomeAuthenticatedAffordances,
     isB2CBrowseEntrySurface,
     b2cSearchQuery,
@@ -2387,7 +2392,7 @@ const App: React.FC = () => {
       setTenantProvisionError(null);
       setTenantBootstrapBlockedMessage(null);
 
-      let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
+      let nextState: 'EXPERIENCE' = 'EXPERIENCE';
 
       const failClosedTenantBootstrap = (
         reason: string,
@@ -2515,7 +2520,7 @@ const App: React.FC = () => {
     setTenantBootstrapBlockedMessage(null);
     setTenantProvisionError(null);
 
-    let nextState: 'EXPERIENCE' | 'WL_ADMIN' = 'EXPERIENCE';
+    let nextState: 'EXPERIENCE' = 'EXPERIENCE';
 
     const failClosedTenantBootstrap = (blockedMessage?: string | null) => {
       setTenantRestorePending(false);
@@ -3699,7 +3704,7 @@ const App: React.FC = () => {
     if (appState === 'TEAM_MGMT') return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
     if (appState === 'INVITE_MEMBER')
       return <InviteMemberForm onBack={() => setAppState('TEAM_MGMT')} />;
-    if (appState === 'SETTINGS' && !isNonWhiteLabelB2CTenant) {
+    if (appState === 'SETTINGS' && tenantCanAccessWhiteLabelSettingsOverlay) {
       return (
         <WhiteLabelSettings
           tenant={currentTenant}
@@ -3707,6 +3712,7 @@ const App: React.FC = () => {
         />
       );
     }
+    if (appState === 'SETTINGS') return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
     switch (tenantLocalRouteSelection?.routeKey) {
       case 'orders':
         return <EXPOrdersPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
@@ -4356,11 +4362,11 @@ const App: React.FC = () => {
                   {showB2CHomeAuthenticatedAffordances && (
                     <CartToggleButton setShowCart={setShowCart} />
                   )}
-                  {!isNonWhiteLabelB2CTenant && (
+                  {tenantCanAccessWhiteLabelSettingsOverlay && (
                     <button
                       onClick={() => setAppState('SETTINGS')}
                       className="bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hover:text-indigo-600 transition"
-                      title="Storefront Settings"
+                      title="White Label Settings"
                     >
                       ⚙️
                     </button>
