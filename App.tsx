@@ -488,6 +488,11 @@ const resolveSupplierRfqInboxOpenAction = (currentListView: SupplierRfqListViewS
   } satisfies SupplierRfqListViewState,
 });
 
+const resolveSupplierRfqInboxEntryState = (currentListView: SupplierRfqListViewState) => ({
+  routeKey: 'supplier_rfq_inbox' as const,
+  ...resolveSupplierRfqInboxOpenAction(currentListView),
+});
+
 const loadSupplierRfqInboxContinuity = async ({
   loadSupplierRfqInbox,
 }: {
@@ -1295,6 +1300,7 @@ export const __B2B_BUYER_RFQ_LIST_TESTING__ = {
 
 export const __B2B_SUPPLIER_INBOX_TESTING__ = {
   resolveSupplierRfqInboxCloseState,
+  resolveSupplierRfqInboxEntryState,
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
 };
@@ -3058,10 +3064,10 @@ const App: React.FC = () => {
   };
 
   const handleOpenSupplierRfqInbox = async () => {
-    navigateTenantManifestRoute('supplier_rfq_inbox');
-    const openAction = resolveSupplierRfqInboxOpenAction(supplierRfqListView);
-    setSupplierRfqDetailView(openAction.detailView);
-    setSupplierRfqListView(openAction.listView);
+    const entryState = resolveSupplierRfqInboxEntryState(supplierRfqListView);
+    navigateTenantManifestRoute(entryState.routeKey);
+    setSupplierRfqDetailView(entryState.detailView);
+    setSupplierRfqListView(entryState.listView);
 
     const listView = await loadSupplierRfqInboxContinuity({
       loadSupplierRfqInbox: getSupplierRfqInbox,

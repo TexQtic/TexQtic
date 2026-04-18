@@ -112,6 +112,7 @@ const {
 
 const {
   resolveSupplierRfqInboxCloseState,
+  resolveSupplierRfqInboxEntryState,
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
 } = __B2B_SUPPLIER_INBOX_TESTING__;
@@ -1255,6 +1256,25 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: true,
       error: null,
       rfqs: currentRfqs,
+    });
+  });
+
+  it('keeps supplier RFQ inbox entry continuity inside the App-owned route-handoff seam', () => {
+    const currentRfqs = [makeSupplierRfqListItem()];
+    const entryState = resolveSupplierRfqInboxEntryState({
+      loading: false,
+      error: 'stale',
+      rfqs: currentRfqs,
+    });
+
+    expect(entryState).toEqual({
+      routeKey: 'supplier_rfq_inbox',
+      detailView: createInitialSupplierRfqDetailViewState(),
+      listView: {
+        loading: true,
+        error: null,
+        rfqs: currentRfqs,
+      },
     });
   });
 
