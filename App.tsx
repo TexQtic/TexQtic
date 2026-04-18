@@ -580,6 +580,8 @@ const loadSupplierRfqDetailContinuity = async ({
   }
 };
 
+const resolveSupplierRfqDetailReturnToInboxState = () => createInitialSupplierRfqDetailViewState();
+
 const resolveSupplierRfqRespondSubmitAction = ({
   message,
   currentDetailView,
@@ -1289,6 +1291,7 @@ export const __B2B_SUPPLIER_INBOX_TESTING__ = {
 export const __B2B_SUPPLIER_DETAIL_TESTING__ = {
   createInitialSupplierRfqDetailViewState,
   resolveSupplierRfqDetailOpenAction,
+  resolveSupplierRfqDetailReturnToInboxState,
   loadSupplierRfqDetailContinuity,
 };
 
@@ -3076,16 +3079,7 @@ const App: React.FC = () => {
   };
 
   const handleReturnToSupplierRfqList = () => {
-    setSupplierRfqDetailView({
-      open: false,
-      rfqId: null,
-      loading: false,
-      error: null,
-      submitLoading: false,
-      submitError: null,
-      data: null,
-      response: null,
-    });
+    setSupplierRfqDetailView(resolveSupplierRfqDetailReturnToInboxState());
   };
 
   const handleCloseSupplierRfqInbox = () => {

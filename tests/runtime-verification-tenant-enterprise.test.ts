@@ -118,6 +118,7 @@ const {
 const {
   createInitialSupplierRfqDetailViewState,
   resolveSupplierRfqDetailOpenAction,
+  resolveSupplierRfqDetailReturnToInboxState,
   loadSupplierRfqDetailContinuity,
 } = __B2B_SUPPLIER_DETAIL_TESTING__;
 
@@ -1396,6 +1397,12 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       error: 'Unable to load supplier RFQ detail right now.',
       data: null,
     });
+  });
+
+  it('keeps supplier RFQ detail return-to-inbox continuity inside the App-owned onBack reset seam', () => {
+    const returnState = resolveSupplierRfqDetailReturnToInboxState();
+
+    expect(returnState).toEqual(createInitialSupplierRfqDetailViewState());
   });
 
   it('keeps supplier RFQ respond validation and submit-loading continuity inside the App-owned submit seam', () => {
