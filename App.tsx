@@ -198,7 +198,15 @@ const createInitialBuyerRfqDetailViewState = (): BuyerRfqDetailViewState => ({
   data: null,
 });
 
-const createInitialBuyerRfqListViewState = (): BuyerRfqListViewState => createInitialSupplierRfqListViewState();
+const createInitialBuyerRfqListViewState = (): BuyerRfqListViewState => {
+  const initialSupplierListView = createInitialSupplierRfqListViewState();
+
+  return {
+    loading: initialSupplierListView.loading,
+    error: initialSupplierListView.error,
+    rfqs: [],
+  };
+};
 
 const createInitialSupplierRfqListViewState = (): SupplierRfqListViewState => ({
   loading: false,
