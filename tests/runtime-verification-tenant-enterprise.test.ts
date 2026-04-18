@@ -84,6 +84,7 @@ const tenantPostMock = vi.mocked(tenantPost);
 const {
   createInitialBuyerRfqDialogState,
   createInitialBuyerRfqDetailViewState,
+  resolveBuyerRfqCloseState,
   resolveBuyerRfqOpenAction,
   resolveBuyerRfqSubmitPayload,
   resolveBuyerRfqSubmitSuccess,
@@ -780,6 +781,15 @@ describe('runtime verification - tenant enterprise service contracts', () => {
     expect(blockedOutcome.blocked).toBe(true);
     expect(blockedOutcome.catalogError).toBe('Verification approval is required.');
     expect(blockedOutcome.dialog).toBeNull();
+  });
+
+  it('keeps buyer RFQ dialog close/reset continuity inside the App-owned Request Quote cancel seam', () => {
+    const closeState = resolveBuyerRfqCloseState();
+
+    expect(closeState).toEqual({
+      dialog: createInitialBuyerRfqDialogState(),
+      detailView: createInitialBuyerRfqDetailViewState(),
+    });
   });
 
   it('uses the buyer RFQ create endpoint with trimmed submit payload continuity', async () => {
