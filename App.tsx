@@ -1772,7 +1772,11 @@ const App: React.FC = () => {
   const tenantBaseCategory = tenantRuntimeIdentity?.baseCategory ?? null;
   const tenantHasAggregatorCapability = tenantRuntimeIdentity?.aggregatorCapability ?? false;
   const tenantHasWhiteLabelCapability = tenantRuntimeIdentity?.whiteLabelCapability ?? false;
-  const tenantCanAccessWhiteLabelSettingsOverlay = tenantHasWhiteLabelCapability;
+  const tenantIsInSharedAdminCore = appState === 'TEAM_MGMT'
+    || appState === 'INVITE_MEMBER'
+    || appState === 'SETTINGS';
+  const tenantCanAccessWhiteLabelSettingsOverlay = tenantHasWhiteLabelCapability
+    && tenantIsInSharedAdminCore;
   const currentOnboardingStatusContinuity = useMemo(() => {
     return getOnboardingStatusContinuity(currentTenant?.status);
   }, [currentTenant?.status]);
