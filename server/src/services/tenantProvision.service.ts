@@ -16,6 +16,7 @@
 import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/prisma.js';
+import { resolveCanonicalProvisioningIdentity } from '../lib/database-context.js';
 import type { TenantPlan } from '../types/index.js';
 import type {
   TenantProvisionRequest,
@@ -246,6 +247,12 @@ export async function provisionTenant(
       },
     });
 
+    const provisioningIdentity = resolveCanonicalProvisioningIdentity({
+      tenantCategory: tenant.type,
+      whiteLabelCapability: request.is_white_label ?? false,
+      commercialPlan: tenant.plan,
+    });
+
     // Runtime tenant identity reads organizations.is_white_label via getOrganizationIdentity().
     // Provisioning must therefore write the WL flag into the canonical organizations row,
     // not only the transitional tenants mirror, so newly provisioned tenants rehydrate correctly.
@@ -318,6 +325,7 @@ export async function provisionTenant(
         userId: null,
         membershipId: null,
         orchestrationReference,
+        provisioning_identity: provisioningIdentity,
         organization: {
           legalName: organization.legal_name,
           jurisdiction: organization.jurisdiction,
@@ -402,6 +410,7 @@ export async function provisionTenant(
       userId:       user.id,
       membershipId: membership.id,
       orchestrationReference: null,
+      provisioning_identity: provisioningIdentity,
       organization: {
         legalName: organization.legal_name,
         jurisdiction: organization.jurisdiction,

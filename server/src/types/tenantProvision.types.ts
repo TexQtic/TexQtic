@@ -10,6 +10,7 @@
  */
 
 import type { TenantPlan } from './index.js';
+import type { CanonicalProvisioningIdentity } from '../lib/database-context.js';
 
 /**
  * Request body for POST /api/admin/tenants/provision
@@ -99,6 +100,9 @@ export interface TenantProvisionResult {
 
   /** External orchestration reference persisted on the platform anchors */
   orchestrationReference: string | null;
+
+  /** Canonical four-axis provisioning identity carried without changing storage shape. */
+  provisioning_identity: CanonicalProvisioningIdentity;
 
   /** Seeded organization identity returned for later CRM consumption */
   organization: {

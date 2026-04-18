@@ -376,10 +376,18 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         // Expected values: 'B2B' | 'WHITE_LABEL' | 'AGGREGATOR' | 'B2C' | null
         let tenantType: string | null = null;
         let isWhiteLabel: boolean = false;
+        let baseFamily: 'B2B' | 'B2C' | 'INTERNAL' | null = null;
+        let aggregatorCapability = false;
+        let whiteLabelCapability = false;
+        let commercialPlan: string | null = null;
         try {
           const org = await getOrganizationIdentity(result.membership.tenantId, prisma);
           tenantType = org.org_type;
           isWhiteLabel = org.is_white_label;
+          baseFamily = org.base_family;
+          aggregatorCapability = org.aggregator_capability;
+          whiteLabelCapability = org.white_label_capability;
+          commercialPlan = org.commercial_plan;
         } catch (err) {
           if (!(err instanceof OrganizationNotFoundError)) {
             // Unexpected DB error — log but still fail-open (do not block login)
@@ -403,6 +411,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
           // B2-REM-2: canonical identity fields (tenant_category aliases tenantType; is_white_label from org)
           tenant_category: tenantType,
           is_white_label: isWhiteLabel,
+          base_family: baseFamily,
+          aggregator_capability: aggregatorCapability,
+          white_label_capability: whiteLabelCapability,
+          commercial_plan: commercialPlan,
         });
       }
 
@@ -1065,10 +1077,18 @@ const authRoutes: FastifyPluginAsync = async fastify => {
       // B2-REM-2: fail-open org identity lookup for canonical tenant fields
       let tenantCategory: string | null = null;
       let tenantIsWhiteLabel: boolean = false;
+      let baseFamily: 'B2B' | 'B2C' | 'INTERNAL' | null = null;
+      let aggregatorCapability = false;
+      let whiteLabelCapability = false;
+      let commercialPlan: string | null = null;
       try {
         const org = await getOrganizationIdentity(result.membership.tenantId, prisma);
         tenantCategory = org.org_type;
         tenantIsWhiteLabel = org.is_white_label;
+        baseFamily = org.base_family;
+        aggregatorCapability = org.aggregator_capability;
+        whiteLabelCapability = org.white_label_capability;
+        commercialPlan = org.commercial_plan;
       } catch (err) {
         if (!(err instanceof OrganizationNotFoundError)) {
           fastify.log.warn({ err }, '[Tenant Login] org identity lookup failed — tenant_category will be null');
@@ -1083,6 +1103,10 @@ const authRoutes: FastifyPluginAsync = async fastify => {
         // B2-REM-2: canonical identity fields
         tenant_category: tenantCategory,
         is_white_label: tenantIsWhiteLabel,
+        base_family: baseFamily,
+        aggregator_capability: aggregatorCapability,
+        white_label_capability: whiteLabelCapability,
+        commercial_plan: commercialPlan,
       });
     } catch (error: unknown) {
       fastify.log.error({ err: error }, '[Tenant Login] Error');

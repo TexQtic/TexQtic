@@ -526,6 +526,42 @@ export function canonicalizeTenantPlan(plan: string): TenantPlan {
   }
 }
 
+export type ProvisioningBaseFamily = 'B2B' | 'B2C' | 'INTERNAL';
+
+export interface CanonicalProvisioningIdentity {
+  base_family: ProvisioningBaseFamily;
+  aggregator_capability: boolean;
+  white_label_capability: boolean;
+  commercial_plan: TenantPlan;
+}
+
+export function resolveCanonicalProvisioningIdentity(input: {
+  tenantCategory: string;
+  whiteLabelCapability: boolean;
+  commercialPlan: TenantPlan;
+}): CanonicalProvisioningIdentity {
+  switch (input.tenantCategory) {
+    case 'AGGREGATOR':
+      return {
+        base_family: 'INTERNAL',
+        aggregator_capability: true,
+        white_label_capability: input.whiteLabelCapability,
+        commercial_plan: input.commercialPlan,
+      };
+    case 'B2B':
+    case 'B2C':
+    case 'INTERNAL':
+      return {
+        base_family: input.tenantCategory,
+        aggregator_capability: false,
+        white_label_capability: input.whiteLabelCapability,
+        commercial_plan: input.commercialPlan,
+      };
+    default:
+      throw new Error(`Invalid tenant category: ${input.tenantCategory}`);
+  }
+}
+
 export interface OrganizationIdentity {
   id: string;
   slug: string;
@@ -537,6 +573,10 @@ export interface OrganizationIdentity {
   registration_no: string | null;
   risk_score: number;
   plan: TenantPlan;
+  base_family: ProvisioningBaseFamily;
+  aggregator_capability: boolean;
+  white_label_capability: boolean;
+  commercial_plan: TenantPlan;
   created_at: Date;
   updated_at: Date;
 }
@@ -619,9 +659,17 @@ export async function getOrganizationIdentity(
     if (!org) {
       throw new OrganizationNotFoundError(orgId);
     }
+
+    const plan = canonicalizeTenantPlan(org.plan);
+
     return {
       ...org,
-      plan: canonicalizeTenantPlan(org.plan),
+      plan,
+      ...resolveCanonicalProvisioningIdentity({
+        tenantCategory: org.org_type,
+        whiteLabelCapability: org.is_white_label,
+        commercialPlan: plan,
+      }),
     };
   });
 }

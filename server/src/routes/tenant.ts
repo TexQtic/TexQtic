@@ -84,7 +84,38 @@ type TenantSessionIdentity = {
   is_white_label: boolean;
   status: string;
   plan: TenantPlan;
+  base_family: 'B2B' | 'B2C' | 'INTERNAL';
+  aggregator_capability: boolean;
+  white_label_capability: boolean;
+  commercial_plan: TenantPlan;
 };
+
+function resolveTenantSessionProvisioningIdentity(input: {
+  tenantCategory: string;
+  whiteLabelCapability: boolean;
+  commercialPlan: TenantPlan;
+}) {
+  switch (input.tenantCategory) {
+    case 'AGGREGATOR':
+      return {
+        base_family: 'INTERNAL' as const,
+        aggregator_capability: true,
+        white_label_capability: input.whiteLabelCapability,
+        commercial_plan: input.commercialPlan,
+      };
+    case 'B2B':
+    case 'B2C':
+    case 'INTERNAL':
+      return {
+        base_family: input.tenantCategory,
+        aggregator_capability: false,
+        white_label_capability: input.whiteLabelCapability,
+        commercial_plan: input.commercialPlan,
+      };
+    default:
+      throw new Error(`Invalid tenant category: ${input.tenantCategory}`);
+  }
+}
 
 async function resolveTenantSessionIdentity(input: {
   tenantId: string;
@@ -121,6 +152,13 @@ async function resolveTenantSessionIdentity(input: {
       throw new OrganizationNotFoundError(input.tenantId);
     }
 
+    const plan = canonicalizeTenantPlan(org.plan);
+    const provisioningIdentity = resolveTenantSessionProvisioningIdentity({
+      tenantCategory: org.org_type,
+      whiteLabelCapability: org.is_white_label,
+      commercialPlan: plan,
+    });
+
     return {
       id: org.id,
       slug: org.slug,
@@ -129,7 +167,8 @@ async function resolveTenantSessionIdentity(input: {
       tenant_category: org.org_type,
       is_white_label: org.is_white_label,
       status: org.status,
-      plan: canonicalizeTenantPlan(org.plan),
+      plan,
+      ...provisioningIdentity,
     };
   });
 }
