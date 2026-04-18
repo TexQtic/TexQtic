@@ -188,7 +188,6 @@ describe.skipIf(!hasDb)('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — discove
           legalName: string;
           orgType: string;
           jurisdiction: string;
-          status: string;
         }>;
         count: number;
       };
@@ -198,6 +197,7 @@ describe.skipIf(!hasDb)('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — discove
     expect(body.data.count).toBeGreaterThanOrEqual(1);
     expect(body.data.items.some(item => item.orgId === supplierOrgId)).toBe(true);
     expect(body.data.items.some(item => item.orgId === aggregatorOrgId)).toBe(false);
+    expect(body.data.items.every(item => !('status' in item))).toBe(true);
   });
 
   it('rejects the discovery route for non-Aggregator tenants', async () => {

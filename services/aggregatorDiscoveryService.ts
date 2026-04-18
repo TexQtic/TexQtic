@@ -6,7 +6,6 @@ export interface AggregatorDiscoveryEntry {
   legalName: string;
   orgType: string;
   jurisdiction: string;
-  status: string;
   certificationCount: number;
   certificationTypes: string[];
   hasTraceabilityEvidence: boolean;

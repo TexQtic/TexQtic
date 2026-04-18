@@ -45,7 +45,6 @@ export type CounterpartyDiscoveryEntry = {
   legalName: string;
   orgType: string;
   jurisdiction: string;
-  status: string;
   certificationCount: number;
   certificationTypes: string[];
   hasTraceabilityEvidence: boolean;
@@ -102,7 +101,6 @@ function toDiscoveryEntry(
     legalName: profile.identity.legalName,
     orgType: profile.identity.orgType,
     jurisdiction: profile.identity.jurisdiction,
-    status: profile.identity.status,
     certificationCount: profile.trustSummary.certifications.length,
     certificationTypes: Array.from(
       new Set(profile.trustSummary.certifications.map(certification => certification.certificationType)),

@@ -53,8 +53,6 @@ function renderEntryCard(entry: AggregatorDiscoveryEntry) {
             <span>{formatCompanyType(entry.orgType)}</span>
             <span aria-hidden="true">•</span>
             <span>{entry.jurisdiction}</span>
-            <span aria-hidden="true">•</span>
-            <span>Status: {entry.status}</span>
           </div>
         </div>
         <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
