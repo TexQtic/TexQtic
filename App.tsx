@@ -587,6 +587,11 @@ const resolveSupplierRfqDetailCloseState = () => ({
   navigateToDefaultRoute: true as const,
 });
 
+const resolveSupplierRfqInboxCloseState = () => ({
+  detailView: resolveSupplierRfqDetailReturnToInboxState(),
+  navigateToDefaultRoute: true as const,
+});
+
 const resolveSupplierRfqRespondSubmitAction = ({
   message,
   currentDetailView,
@@ -1289,6 +1294,7 @@ export const __B2B_BUYER_RFQ_LIST_TESTING__ = {
 };
 
 export const __B2B_SUPPLIER_INBOX_TESTING__ = {
+  resolveSupplierRfqInboxCloseState,
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
 };
@@ -3089,7 +3095,7 @@ const App: React.FC = () => {
   };
 
   const handleCloseSupplierRfqInbox = () => {
-    const closeState = resolveSupplierRfqDetailCloseState();
+    const closeState = resolveSupplierRfqInboxCloseState();
     setSupplierRfqDetailView(closeState.detailView);
 
     if (closeState.navigateToDefaultRoute) {

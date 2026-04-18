@@ -111,6 +111,7 @@ const {
 } = __B2B_RFQ_DETAIL_TESTING__;
 
 const {
+  resolveSupplierRfqInboxCloseState,
   resolveSupplierRfqInboxOpenAction,
   loadSupplierRfqInboxContinuity,
 } = __B2B_SUPPLIER_INBOX_TESTING__;
@@ -1299,6 +1300,15 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: false,
       error: 'Unable to load the supplier RFQ inbox right now.',
       rfqs: [],
+    });
+  });
+
+  it('keeps supplier RFQ inbox close continuity inside the App-owned onBack reset and default-route handoff seam', () => {
+    const closeState = resolveSupplierRfqInboxCloseState();
+
+    expect(closeState).toEqual({
+      detailView: createInitialSupplierRfqDetailViewState(),
+      navigateToDefaultRoute: true,
     });
   });
 
