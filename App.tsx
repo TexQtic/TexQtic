@@ -3712,7 +3712,6 @@ const App: React.FC = () => {
       return (
         <WhiteLabelSettings
           tenant={currentTenant}
-          onNavigateDomains={tenantHasWlAdminOverlay ? () => enterWlAdmin('DOMAINS') : undefined}
         />
       );
     }
