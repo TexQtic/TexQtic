@@ -16,6 +16,7 @@ import {
   __B2B_SUPPLIER_DETAIL_TESTING__,
   __B2B_SUPPLIER_INBOX_TESTING__,
   __B2B_SUPPLIER_RESPOND_TESTING__,
+  __B2B_TRADE_FROM_RFQ_TESTING__,
 } from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import {
@@ -58,8 +59,10 @@ import {
   type MembershipsResponse,
 } from '../services/tenantService';
 import {
+  createTradeFromRfq,
   createTradeEscrow,
   listTenantTrades,
+  type CreateTradeFromRfqResponse,
   type CreateTradeEscrowResponse,
   type TenantTradesListResponse,
 } from '../services/tradeService';
@@ -102,6 +105,13 @@ const {
   submitSupplierRfqResponseContinuity,
 } = __B2B_SUPPLIER_RESPOND_TESTING__;
 
+const {
+  createInitialBuyerRfqTradeBridgeState,
+  resolveBuyerRfqTradeFromRfqCreateAction,
+  continueBuyerRfqTradeFromRfqCreatePath,
+  resolveBuyerRfqTradeFromRfqError,
+} = __B2B_TRADE_FROM_RFQ_TESTING__;
+
 function makeTradeResponse(): TenantTradesListResponse {
   return {
     trades: [
@@ -120,6 +130,17 @@ function makeTradeResponse(): TenantTradesListResponse {
       },
     ],
     count: 1,
+  };
+}
+
+function makeTradeFromRfqResponse(
+  overrides: Partial<CreateTradeFromRfqResponse> = {},
+): CreateTradeFromRfqResponse {
+  return {
+    tradeId: 'trade-rfq-1',
+    tradeReference: 'TRD-RFQ-RFQ1',
+    rfqId: 'rfq-1',
+    ...overrides,
   };
 }
 
@@ -899,6 +920,148 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: false,
       error: 'Unable to load RFQ detail right now.',
       data: null,
+    });
+  });
+
+  it('keeps buyer trade-from-RFQ continuity inside the App-owned responded create seam', () => {
+    const noopAction = resolveBuyerRfqTradeFromRfqCreateAction(
+      makeBuyerRfqDetail({ status: 'OPEN' }),
+    );
+
+    expect(noopAction).toEqual({
+      kind: 'noop',
+      tradeBridge: null,
+      payload: null,
+    });
+
+    const invalidAmountAction = resolveBuyerRfqTradeFromRfqCreateAction(
+      makeBuyerRfqDetail({ item_unit_price: 0 }),
+    );
+
+    expect(invalidAmountAction).toEqual({
+      kind: 'invalid-gross-amount',
+      tradeBridge: {
+        ...createInitialBuyerRfqTradeBridgeState(),
+        error: 'Unable to derive a valid trade amount from the responded RFQ detail.',
+      },
+      payload: null,
+    });
+
+    const createAction = resolveBuyerRfqTradeFromRfqCreateAction(makeBuyerRfqDetail());
+
+    expect(createAction).toEqual({
+      kind: 'create-trade',
+      tradeBridge: {
+        ...createInitialBuyerRfqTradeBridgeState(),
+        loading: true,
+      },
+      payload: {
+        rfqId: 'rfq-1',
+        tradeReference: 'TRD-RFQ-RFQ1',
+        currency: 'USD',
+        grossAmount: 444,
+        reason: 'Bridge responded RFQ rfq-1 into existing trade continuity.',
+      },
+    });
+  });
+
+  it('invokes createTradeFromRfq and maps trade-from-RFQ success into App-owned continuity', async () => {
+    const response = makeTradeFromRfqResponse();
+    tenantPostMock.mockResolvedValue(response);
+
+    const rfq = makeBuyerRfqDetail();
+    const createAction = resolveBuyerRfqTradeFromRfqCreateAction(rfq);
+    expect(createAction.kind).toBe('create-trade');
+
+    if (createAction.kind !== 'create-trade') {
+      throw new Error('Expected responded RFQ to enter the create-trade continuity path.');
+    }
+
+    const currentDetailView = {
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'dialog' as const,
+      rfqId: 'rfq-1',
+      data: rfq,
+    };
+
+    const result = await continueBuyerRfqTradeFromRfqCreatePath({
+      payload: createAction.payload,
+      currentDetailView,
+      createTrade: createTradeFromRfq,
+    });
+
+    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/trades/from-rfq', createAction.payload);
+    expect(result).toEqual({
+      kind: 'created',
+      detailView: {
+        ...currentDetailView,
+        open: false,
+        data: {
+          ...rfq,
+          trade_continuity: {
+            trade_id: response.tradeId,
+            trade_reference: response.tradeReference,
+          },
+        },
+      },
+      tradeBridge: {
+        ...createInitialBuyerRfqTradeBridgeState(),
+        initialTradeId: response.tradeId,
+      },
+    });
+  });
+
+  it('maps trade-from-RFQ create failures to API and fallback App-owned error states', async () => {
+    const createAction = resolveBuyerRfqTradeFromRfqCreateAction(makeBuyerRfqDetail());
+    expect(createAction.kind).toBe('create-trade');
+
+    if (createAction.kind !== 'create-trade') {
+      throw new Error('Expected responded RFQ to enter the create-trade continuity path.');
+    }
+
+    const currentDetailView = {
+      ...createInitialBuyerRfqDetailViewState(),
+      open: true,
+      source: 'dialog' as const,
+      rfqId: 'rfq-1',
+      data: makeBuyerRfqDetail(),
+    };
+
+    const apiErrorResult = await continueBuyerRfqTradeFromRfqCreatePath({
+      payload: createAction.payload,
+      currentDetailView,
+      createTrade: vi.fn(async () => {
+        throw new APIError(503, 'Trade bridge is unavailable.');
+      }),
+    });
+
+    expect(apiErrorResult.kind).toBe('error');
+    if (apiErrorResult.kind !== 'error') {
+      throw new Error('Expected API failure to stay inside the App-owned trade bridge error path.');
+    }
+
+    expect(resolveBuyerRfqTradeFromRfqError(apiErrorResult.error)).toEqual({
+      ...createInitialBuyerRfqTradeBridgeState(),
+      error: 'Trade bridge is unavailable.',
+    });
+
+    const fallbackErrorResult = await continueBuyerRfqTradeFromRfqCreatePath({
+      payload: createAction.payload,
+      currentDetailView,
+      createTrade: vi.fn(async () => {
+        throw new Error('boom');
+      }),
+    });
+
+    expect(fallbackErrorResult.kind).toBe('error');
+    if (fallbackErrorResult.kind !== 'error') {
+      throw new Error('Expected fallback failure to stay inside the App-owned trade bridge error path.');
+    }
+
+    expect(resolveBuyerRfqTradeFromRfqError(fallbackErrorResult.error)).toEqual({
+      ...createInitialBuyerRfqTradeBridgeState(),
+      error: 'Unable to continue this responded RFQ into the existing trade flow right now.',
     });
   });
 

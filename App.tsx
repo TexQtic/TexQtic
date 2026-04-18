@@ -63,7 +63,11 @@ import {
   getAggregatorDiscoveryEntries,
   type AggregatorDiscoveryEntry,
 } from './services/aggregatorDiscoveryService';
-import { createTradeFromRfq } from './services/tradeService';
+import {
+  createTradeFromRfq,
+  type CreateTradeFromRfqInput,
+  type CreateTradeFromRfqResponse,
+} from './services/tradeService';
 import {
   getCatalogItems,
   CatalogItem,
@@ -162,6 +166,12 @@ type SupplierRfqDetailViewState = {
   response: SupplierRfqResponse | null;
 };
 
+type BuyerRfqTradeBridgeState = {
+  loading: boolean;
+  error: string | null;
+  initialTradeId: string | null;
+};
+
 const createInitialBuyerRfqDialogState = (): BuyerRfqDialogState => ({
   open: false,
   product: null,
@@ -196,6 +206,12 @@ const createInitialSupplierRfqDetailViewState = (): SupplierRfqDetailViewState =
   submitError: null,
   data: null,
   response: null,
+});
+
+const createInitialBuyerRfqTradeBridgeState = (): BuyerRfqTradeBridgeState => ({
+  loading: false,
+  error: null,
+  initialTradeId: null,
 });
 
 const resolveBuyerRfqOpenAction = ({
@@ -638,6 +654,100 @@ function normalizeDocumentRouteTitle(title: string | null | undefined) {
 function buildTradeReferenceFromRfq(rfqId: string): string {
   return `TRD-RFQ-${rfqId.replaceAll('-', '').slice(0, 8).toUpperCase()}`;
 }
+
+const resolveBuyerRfqTradeFromRfqCreateAction = (rfq: BuyerRfqDetail | null) => {
+  if (rfq?.status !== 'RESPONDED') {
+    return {
+      kind: 'noop' as const,
+      tradeBridge: null,
+      payload: null,
+    };
+  }
+
+  const grossAmount = Number(rfq.item_unit_price) * rfq.quantity;
+  if (!Number.isFinite(grossAmount) || grossAmount <= 0) {
+    return {
+      kind: 'invalid-gross-amount' as const,
+      tradeBridge: {
+        ...createInitialBuyerRfqTradeBridgeState(),
+        error: 'Unable to derive a valid trade amount from the responded RFQ detail.',
+      } satisfies BuyerRfqTradeBridgeState,
+      payload: null,
+    };
+  }
+
+  return {
+    kind: 'create-trade' as const,
+    tradeBridge: {
+      ...createInitialBuyerRfqTradeBridgeState(),
+      loading: true,
+    } satisfies BuyerRfqTradeBridgeState,
+    payload: {
+      rfqId: rfq.id,
+      tradeReference: buildTradeReferenceFromRfq(rfq.id),
+      currency: ENTERPRISE_TRADE_BRIDGE_CURRENCY,
+      grossAmount,
+      reason: `Bridge responded RFQ ${rfq.id} into existing trade continuity.`,
+    } satisfies CreateTradeFromRfqInput,
+  };
+};
+
+const resolveBuyerRfqTradeFromRfqSuccess = ({
+  currentDetailView,
+  result,
+}: {
+  currentDetailView: BuyerRfqDetailViewState;
+  result: CreateTradeFromRfqResponse;
+}) => ({
+  detailView: {
+    ...currentDetailView,
+    open: false,
+    data: currentDetailView.data
+      ? {
+          ...currentDetailView.data,
+          trade_continuity: {
+            trade_id: result.tradeId,
+            trade_reference: result.tradeReference,
+          },
+        }
+      : currentDetailView.data,
+  } satisfies BuyerRfqDetailViewState,
+  tradeBridge: {
+    ...createInitialBuyerRfqTradeBridgeState(),
+    initialTradeId: result.tradeId,
+  } satisfies BuyerRfqTradeBridgeState,
+});
+
+const resolveBuyerRfqTradeFromRfqError = (error: unknown) => ({
+  ...createInitialBuyerRfqTradeBridgeState(),
+  error: error instanceof APIError ? error.message : 'Unable to continue this responded RFQ into the existing trade flow right now.',
+}) satisfies BuyerRfqTradeBridgeState;
+
+const continueBuyerRfqTradeFromRfqCreatePath = async ({
+  payload,
+  currentDetailView,
+  createTrade,
+}: {
+  payload: CreateTradeFromRfqInput;
+  currentDetailView: BuyerRfqDetailViewState;
+  createTrade: (input: CreateTradeFromRfqInput) => Promise<CreateTradeFromRfqResponse>;
+}) => {
+  try {
+    const result = await createTrade(payload);
+    return {
+      kind: 'created' as const,
+      ...resolveBuyerRfqTradeFromRfqSuccess({
+        currentDetailView,
+        result,
+      }),
+    };
+  } catch (error) {
+    return {
+      kind: 'error' as const,
+      error,
+    };
+  }
+};
 
 const WL_ADMIN_VIEWS = ['BRANDING', 'STAFF', 'PRODUCTS', 'COLLECTIONS', 'ORDERS', 'DOMAINS'] as const;
 type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
@@ -1098,6 +1208,13 @@ export const __B2B_SUPPLIER_RESPOND_TESTING__ = {
   submitSupplierRfqResponseContinuity,
 };
 
+export const __B2B_TRADE_FROM_RFQ_TESTING__ = {
+  createInitialBuyerRfqTradeBridgeState,
+  resolveBuyerRfqTradeFromRfqCreateAction,
+  continueBuyerRfqTradeFromRfqCreatePath,
+  resolveBuyerRfqTradeFromRfqError,
+};
+
 const clearPersistedImpersonationSession = () => {
   setImpersonationToken(null);
   persistImpersonationSession(null);
@@ -1214,15 +1331,7 @@ const App: React.FC = () => {
   });
   const [supplierRfqListView, setSupplierRfqListView] = useState<SupplierRfqListViewState>(createInitialSupplierRfqListViewState);
   const [supplierRfqDetailView, setSupplierRfqDetailView] = useState<SupplierRfqDetailViewState>(createInitialSupplierRfqDetailViewState);
-  const [buyerRfqTradeBridge, setBuyerRfqTradeBridge] = useState<{
-    loading: boolean;
-    error: string | null;
-    initialTradeId: string | null;
-  }>({
-    loading: false,
-    error: null,
-    initialTradeId: null,
-  });
+  const [buyerRfqTradeBridge, setBuyerRfqTradeBridge] = useState<BuyerRfqTradeBridgeState>(createInitialBuyerRfqTradeBridgeState);
   const lastTenantViewScopeKeyRef = useRef<string | null>(null);
 
   const resetTenantScopedRouteState = () => {
@@ -1251,11 +1360,7 @@ const App: React.FC = () => {
       data: null,
       response: null,
     });
-    setBuyerRfqTradeBridge({
-      loading: false,
-      error: null,
-      initialTradeId: null,
-    });
+    setBuyerRfqTradeBridge(createInitialBuyerRfqTradeBridgeState());
   };
 
   const [aiInsight, setAiInsight] = useState<string>('Loading AI insights...');
@@ -2811,52 +2916,32 @@ const App: React.FC = () => {
       return;
     }
 
-    const grossAmount = Number(rfq.item_unit_price) * rfq.quantity;
-    if (!Number.isFinite(grossAmount) || grossAmount <= 0) {
-      setBuyerRfqTradeBridge({
-        loading: false,
-        error: 'Unable to derive a valid trade amount from the responded RFQ detail.',
-        initialTradeId: null,
-      });
+    const createAction = resolveBuyerRfqTradeFromRfqCreateAction(rfq);
+    if (createAction.kind !== 'create-trade') {
+      if (createAction.tradeBridge) {
+        setBuyerRfqTradeBridge(createAction.tradeBridge);
+      }
       return;
     }
 
-    setBuyerRfqTradeBridge({
-      loading: true,
-      error: null,
-      initialTradeId: null,
+    setBuyerRfqTradeBridge(createAction.tradeBridge);
+
+    const createResult = await continueBuyerRfqTradeFromRfqCreatePath({
+      payload: createAction.payload,
+      currentDetailView: rfqDetailView,
+      createTrade: createTradeFromRfq,
     });
 
-    try {
-      const result = await createTradeFromRfq({
-        rfqId: rfq.id,
-        tradeReference: buildTradeReferenceFromRfq(rfq.id),
-        currency: ENTERPRISE_TRADE_BRIDGE_CURRENCY,
-        grossAmount,
-        reason: `Bridge responded RFQ ${rfq.id} into existing trade continuity.`,
-      });
-
-      setRfqDetailView(view => ({
-        ...view,
-        open: false,
-        data: view.data
-          ? {
-              ...view.data,
-              trade_continuity: {
-                trade_id: result.tradeId,
-                trade_reference: result.tradeReference,
-              },
-            }
-          : view.data,
-      }));
-      setBuyerRfqTradeBridge({
-        loading: false,
-        error: null,
-        initialTradeId: result.tradeId,
-      });
+    if (createResult.kind === 'created') {
+      setRfqDetailView(createResult.detailView);
+      setBuyerRfqTradeBridge(createResult.tradeBridge);
       navigateTenantManifestRoute('trades');
-    } catch (error) {
-      if (error instanceof APIError && error.code === 'RFQ_ALREADY_CONVERTED') {
+      return;
+    }
+
+    const error = createResult.error;
+
+    if (error instanceof APIError && error.code === 'RFQ_ALREADY_CONVERTED') {
         try {
           const refreshed = await getBuyerRfqDetail(rfq.id);
           if (refreshed.rfq.trade_continuity) {
@@ -2878,14 +2963,9 @@ const App: React.FC = () => {
         } catch {
           // Fall through to the bounded user-facing error below.
         }
-      }
-
-      setBuyerRfqTradeBridge({
-        loading: false,
-        error: error instanceof APIError ? error.message : 'Unable to continue this responded RFQ into the existing trade flow right now.',
-        initialTradeId: null,
-      });
     }
+
+    setBuyerRfqTradeBridge(resolveBuyerRfqTradeFromRfqError(error));
   };
 
   const handleOpenSupplierRfqInbox = async () => {
