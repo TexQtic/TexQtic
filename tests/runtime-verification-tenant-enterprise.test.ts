@@ -11,6 +11,7 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import {
+  __B2B_BUYER_RFQ_DETAIL_RETURN_TESTING__,
   __B2B_BUYER_RFQ_LIST_TESTING__,
   __B2B_RFQ_DETAIL_TESTING__,
   __B2B_RFQ_INITIATION_TESTING__,
@@ -93,6 +94,10 @@ const {
   resolveBuyerRfqListOpenAction,
   loadBuyerRfqListContinuity,
 } = __B2B_BUYER_RFQ_LIST_TESTING__;
+
+const {
+  resolveBuyerRfqDetailReturnToListState,
+} = __B2B_BUYER_RFQ_DETAIL_RETURN_TESTING__;
 
 const {
   resolveBuyerRfqDetailOpenAction,
@@ -1008,6 +1013,28 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: false,
       error: 'Unable to load RFQ detail right now.',
       data: null,
+    });
+  });
+
+  it('keeps buyer RFQ detail return-to-list continuity inside the App-owned list-sourced onBack seam', () => {
+    const currentTradeBridge = {
+      ...createInitialBuyerRfqTradeBridgeState(),
+      loading: true,
+      error: 'stale trade continuity error',
+      initialTradeId: 'trade-1',
+    };
+
+    const returnState = resolveBuyerRfqDetailReturnToListState({
+      currentTradeBridge,
+    });
+
+    expect(returnState).toEqual({
+      tradeBridge: {
+        ...currentTradeBridge,
+        loading: false,
+        error: null,
+      },
+      detailView: createInitialBuyerRfqDetailViewState(),
     });
   });
 

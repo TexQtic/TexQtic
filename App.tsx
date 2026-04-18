@@ -421,6 +421,19 @@ const loadBuyerRfqDetailContinuity = async ({
   }
 };
 
+const resolveBuyerRfqDetailReturnToListState = ({
+  currentTradeBridge,
+}: {
+  currentTradeBridge: BuyerRfqTradeBridgeState;
+}) => ({
+  tradeBridge: {
+    ...currentTradeBridge,
+    loading: false,
+    error: null,
+  } satisfies BuyerRfqTradeBridgeState,
+  detailView: createInitialBuyerRfqDetailViewState(),
+});
+
 const resolveBuyerRfqListOpenAction = (currentListView: BuyerRfqListViewState) => ({
   ...currentListView,
   loading: true,
@@ -1234,6 +1247,10 @@ export const __B2B_RFQ_INITIATION_TESTING__ = {
 export const __B2B_RFQ_DETAIL_TESTING__ = {
   resolveBuyerRfqDetailOpenAction,
   loadBuyerRfqDetailContinuity,
+};
+
+export const __B2B_BUYER_RFQ_DETAIL_RETURN_TESTING__ = {
+  resolveBuyerRfqDetailReturnToListState,
 };
 
 export const __B2B_BUYER_RFQ_LIST_TESTING__ = {
@@ -2912,8 +2929,11 @@ const App: React.FC = () => {
   };
 
   const handleReturnToBuyerRfqList = () => {
-    setBuyerRfqTradeBridge(view => ({ ...view, loading: false, error: null }));
-    setRfqDetailView(createInitialBuyerRfqDetailViewState());
+    const returnState = resolveBuyerRfqDetailReturnToListState({
+      currentTradeBridge: buyerRfqTradeBridge,
+    });
+    setBuyerRfqTradeBridge(returnState.tradeBridge);
+    setRfqDetailView(returnState.detailView);
   };
 
   const handleCloseBuyerRfqs = () => {
