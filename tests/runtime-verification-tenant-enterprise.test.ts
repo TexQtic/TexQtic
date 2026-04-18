@@ -15,12 +15,14 @@ import {
   __B2B_RFQ_INITIATION_TESTING__,
   __B2B_SUPPLIER_DETAIL_TESTING__,
   __B2B_SUPPLIER_INBOX_TESTING__,
+  __B2B_SUPPLIER_RESPOND_TESTING__,
 } from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import {
   createRfq,
   getSupplierRfqDetail,
   getSupplierRfqInbox,
+  submitSupplierRfqResponse,
   type BuyerRfqDetail,
   type BuyerRfqDetailResponse,
   type CatalogItem,
@@ -28,6 +30,8 @@ import {
   type SupplierRfqDetailResponse,
   type SupplierRfqListItem,
   type SupplierRfqListResponse,
+  type SupplierRfqResponse,
+  type SubmitSupplierRfqResponseResult,
 } from '../services/catalogService';
 import { APIError } from '../services/apiClient';
 import { InviteMemberSuccessState } from '../components/Tenant/InviteMemberForm';
@@ -92,6 +96,11 @@ const {
   resolveSupplierRfqDetailOpenAction,
   loadSupplierRfqDetailContinuity,
 } = __B2B_SUPPLIER_DETAIL_TESTING__;
+
+const {
+  resolveSupplierRfqRespondSubmitAction,
+  submitSupplierRfqResponseContinuity,
+} = __B2B_SUPPLIER_RESPOND_TESTING__;
 
 function makeTradeResponse(): TenantTradesListResponse {
   return {
@@ -304,6 +313,20 @@ function makeSupplierRfqDetail(overrides: Partial<SupplierRfqDetail> = {}): Supp
     created_at: '2026-03-22T08:00:00.000Z',
     updated_at: '2026-03-22T09:00:00.000Z',
     buyer_message: 'Need export-grade packing.',
+    ...overrides,
+  };
+}
+
+function makeSupplierRfqResponse(overrides: Partial<SupplierRfqResponse> = {}): SupplierRfqResponse {
+  return {
+    id: 'response-1',
+    rfq_id: 'supplier-rfq-1',
+    supplier_org_id: 'supplier-1',
+    message: 'We can ship next week.',
+    submitted_at: '2026-03-22T11:00:00.000Z',
+    created_at: '2026-03-22T11:00:00.000Z',
+    updated_at: '2026-03-22T11:00:00.000Z',
+    created_by_user_id: 'user-2',
     ...overrides,
   };
 }
@@ -1044,6 +1067,173 @@ describe('runtime verification - tenant enterprise service contracts', () => {
       loading: false,
       error: 'Unable to load supplier RFQ detail right now.',
       data: null,
+    });
+  });
+
+  it('keeps supplier RFQ respond validation and submit-loading continuity inside the App-owned submit seam', () => {
+    const currentDetailView = {
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      data: makeSupplierRfqDetail(),
+      submitError: 'stale',
+    };
+
+    const validationAction = resolveSupplierRfqRespondSubmitAction({
+      message: '   ',
+      currentDetailView,
+    });
+
+    expect(validationAction).toEqual({
+      kind: 'validation-error',
+      payload: null,
+      detailView: {
+        ...currentDetailView,
+        submitLoading: false,
+        submitError: 'Response message is required.',
+      },
+    });
+
+    const submitAction = resolveSupplierRfqRespondSubmitAction({
+      message: 'We can ship next week.',
+      currentDetailView,
+    });
+
+    expect(submitAction).toEqual({
+      kind: 'submit',
+      payload: {
+        message: 'We can ship next week.',
+      },
+      detailView: {
+        ...currentDetailView,
+        submitLoading: true,
+        submitError: null,
+      },
+    });
+  });
+
+  it('invokes submitSupplierRfqResponse and maps supplier RFQ respond success into App-owned continuity', async () => {
+    const response = makeSupplierRfqResponse();
+    tenantPostMock.mockResolvedValue({
+      response,
+      rfq: {
+        id: 'supplier-rfq-1',
+        status: 'RESPONDED',
+      },
+      non_binding: true,
+    } satisfies SubmitSupplierRfqResponseResult);
+
+    const rfq = makeSupplierRfqDetail();
+    const currentDetailView = {
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      data: rfq,
+      submitLoading: true,
+    };
+    const untouchedListItem = makeSupplierRfqListItem({
+      id: 'supplier-rfq-2',
+      updated_at: '2026-03-22T09:30:00.000Z',
+    });
+    const currentListView = {
+      loading: false,
+      error: null,
+      rfqs: [makeSupplierRfqListItem(), untouchedListItem],
+    };
+
+    const result = await submitSupplierRfqResponseContinuity({
+      rfqId: 'supplier-rfq-1',
+      payload: {
+        message: 'We can ship next week.',
+      },
+      currentDetailView,
+      currentListView,
+      submitResponse: submitSupplierRfqResponse,
+    });
+
+    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/rfqs/inbox/supplier-rfq-1/respond', {
+      message: 'We can ship next week.',
+    });
+    expect(result).toEqual({
+      detailView: {
+        ...currentDetailView,
+        submitLoading: false,
+        submitError: null,
+        data: {
+          ...rfq,
+          status: 'RESPONDED',
+          updated_at: response.updated_at,
+        },
+        response,
+      },
+      listView: {
+        ...currentListView,
+        rfqs: [
+          {
+            ...currentListView.rfqs[0],
+            status: 'RESPONDED',
+            updated_at: response.updated_at,
+          },
+          untouchedListItem,
+        ],
+      },
+    });
+  });
+
+  it('maps supplier RFQ respond failures to API and fallback App-owned error states', async () => {
+    const currentDetailView = {
+      ...createInitialSupplierRfqDetailViewState(),
+      open: true,
+      rfqId: 'supplier-rfq-1',
+      data: makeSupplierRfqDetail(),
+      submitLoading: true,
+    };
+    const currentListView = {
+      loading: false,
+      error: null,
+      rfqs: [makeSupplierRfqListItem()],
+    };
+
+    const apiErrorResult = await submitSupplierRfqResponseContinuity({
+      rfqId: 'supplier-rfq-1',
+      payload: {
+        message: 'We can ship next week.',
+      },
+      currentDetailView,
+      currentListView,
+      submitResponse: vi.fn(async () => {
+        throw new APIError(409, 'RFQ already has a response.');
+      }),
+    });
+
+    expect(apiErrorResult).toEqual({
+      detailView: {
+        ...currentDetailView,
+        submitLoading: false,
+        submitError: 'RFQ already has a response.',
+      },
+      listView: currentListView,
+    });
+
+    const fallbackErrorResult = await submitSupplierRfqResponseContinuity({
+      rfqId: 'supplier-rfq-1',
+      payload: {
+        message: 'We can ship next week.',
+      },
+      currentDetailView,
+      currentListView,
+      submitResponse: vi.fn(async () => {
+        throw new Error('boom');
+      }),
+    });
+
+    expect(fallbackErrorResult).toEqual({
+      detailView: {
+        ...currentDetailView,
+        submitLoading: false,
+        submitError: 'Unable to submit the supplier response right now.',
+      },
+      listView: currentListView,
     });
   });
 

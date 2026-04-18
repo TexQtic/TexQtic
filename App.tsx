@@ -86,6 +86,8 @@ import {
   SupplierRfqListItem,
   SupplierRfqListResponse,
   SupplierRfqResponse,
+  SubmitSupplierRfqResponseRequest,
+  SubmitSupplierRfqResponseResult,
 } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
@@ -484,6 +486,126 @@ const loadSupplierRfqDetailContinuity = async ({
       data: null,
       response: existingResponse,
     } satisfies SupplierRfqDetailViewState;
+  }
+};
+
+const resolveSupplierRfqRespondSubmitAction = ({
+  message,
+  currentDetailView,
+}: {
+  message: string;
+  currentDetailView: SupplierRfqDetailViewState;
+}) => {
+  if (!message.trim()) {
+    return {
+      kind: 'validation-error' as const,
+      payload: null,
+      detailView: {
+        ...currentDetailView,
+        submitLoading: false,
+        submitError: 'Response message is required.',
+      } satisfies SupplierRfqDetailViewState,
+    };
+  }
+
+  return {
+    kind: 'submit' as const,
+    payload: {
+      message,
+    } satisfies SubmitSupplierRfqResponseRequest,
+    detailView: {
+      ...currentDetailView,
+      submitLoading: true,
+      submitError: null,
+    } satisfies SupplierRfqDetailViewState,
+  };
+};
+
+const resolveSupplierRfqRespondSuccess = ({
+  rfqId,
+  currentDetailView,
+  currentListView,
+  result,
+}: {
+  rfqId: string;
+  currentDetailView: SupplierRfqDetailViewState;
+  currentListView: SupplierRfqListViewState;
+  result: SubmitSupplierRfqResponseResult;
+}) => ({
+  detailView: {
+    ...currentDetailView,
+    submitLoading: false,
+    submitError: null,
+    data: currentDetailView.data
+      ? {
+          ...currentDetailView.data,
+          status: result.rfq.status,
+          updated_at: result.response.updated_at,
+        }
+      : currentDetailView.data,
+    response: result.response,
+  } satisfies SupplierRfqDetailViewState,
+  listView: {
+    ...currentListView,
+    rfqs: currentListView.rfqs.map(rfq =>
+      rfq.id === rfqId
+        ? {
+            ...rfq,
+            status: result.rfq.status,
+            updated_at: result.response.updated_at,
+          }
+        : rfq
+    ),
+  } satisfies SupplierRfqListViewState,
+});
+
+const resolveSupplierRfqRespondError = ({
+  currentDetailView,
+  currentListView,
+  error,
+}: {
+  currentDetailView: SupplierRfqDetailViewState;
+  currentListView: SupplierRfqListViewState;
+  error: unknown;
+}) => ({
+  detailView: {
+    ...currentDetailView,
+    submitLoading: false,
+    submitError: error instanceof APIError ? error.message : 'Unable to submit the supplier response right now.',
+  } satisfies SupplierRfqDetailViewState,
+  listView: currentListView,
+});
+
+const submitSupplierRfqResponseContinuity = async ({
+  rfqId,
+  payload,
+  currentDetailView,
+  currentListView,
+  submitResponse,
+}: {
+  rfqId: string;
+  payload: SubmitSupplierRfqResponseRequest;
+  currentDetailView: SupplierRfqDetailViewState;
+  currentListView: SupplierRfqListViewState;
+  submitResponse: (
+    rfqId: string,
+    payload: SubmitSupplierRfqResponseRequest
+  ) => Promise<SubmitSupplierRfqResponseResult>;
+}) => {
+  try {
+    const result = await submitResponse(rfqId, payload);
+    return resolveSupplierRfqRespondSuccess({
+      rfqId,
+      currentDetailView,
+      currentListView,
+      result,
+    });
+  } catch (error) {
+    return resolveSupplierRfqRespondError({
+      currentDetailView,
+      currentListView,
+      error,
+    });
   }
 };
 
@@ -969,6 +1091,11 @@ export const __B2B_SUPPLIER_DETAIL_TESTING__ = {
   createInitialSupplierRfqDetailViewState,
   resolveSupplierRfqDetailOpenAction,
   loadSupplierRfqDetailContinuity,
+};
+
+export const __B2B_SUPPLIER_RESPOND_TESTING__ = {
+  resolveSupplierRfqRespondSubmitAction,
+  submitSupplierRfqResponseContinuity,
 };
 
 const clearPersistedImpersonationSession = () => {
@@ -2820,54 +2947,27 @@ const App: React.FC = () => {
       return;
     }
 
-    if (!message.trim()) {
-      setSupplierRfqDetailView(view => ({
-        ...view,
-        submitError: 'Response message is required.',
-      }));
+    const submitAction = resolveSupplierRfqRespondSubmitAction({
+      message,
+      currentDetailView: supplierRfqDetailView,
+    });
+
+    setSupplierRfqDetailView(submitAction.detailView);
+
+    if (submitAction.kind !== 'submit') {
       return;
     }
 
-    setSupplierRfqDetailView(view => ({
-      ...view,
-      submitLoading: true,
-      submitError: null,
-    }));
+    const result = await submitSupplierRfqResponseContinuity({
+      rfqId,
+      payload: submitAction.payload,
+      currentDetailView: submitAction.detailView,
+      currentListView: supplierRfqListView,
+      submitResponse: submitSupplierRfqResponse,
+    });
 
-    try {
-      const result = await submitSupplierRfqResponse(rfqId, { message });
-      setSupplierRfqDetailView(view => ({
-        ...view,
-        submitLoading: false,
-        submitError: null,
-        data: view.data
-          ? {
-              ...view.data,
-              status: result.rfq.status,
-              updated_at: result.response.updated_at,
-            }
-          : view.data,
-        response: result.response,
-      }));
-      setSupplierRfqListView(view => ({
-        ...view,
-        rfqs: view.rfqs.map(rfq =>
-          rfq.id === rfqId
-            ? {
-                ...rfq,
-                status: result.rfq.status,
-                updated_at: result.response.updated_at,
-              }
-            : rfq
-        ),
-      }));
-    } catch (error) {
-      setSupplierRfqDetailView(view => ({
-        ...view,
-        submitLoading: false,
-        submitError: error instanceof APIError ? error.message : 'Unable to submit the supplier response right now.',
-      }));
-    }
+    setSupplierRfqDetailView(result.detailView);
+    setSupplierRfqListView(result.listView);
   };
 
   /** Wave 4 P1: WL Store Admin — content renderer for back-office panels. */
