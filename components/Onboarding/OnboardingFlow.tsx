@@ -179,35 +179,31 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
 
         {step === 3 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-            <h2 className="text-3xl font-bold">Select Platform Experience</h2>
+            <h2 className="text-3xl font-bold">Select Your Base Activation Path</h2>
             <p className="text-slate-500">
-              Choose the interface architecture that matches your business model.
+              Choose the base business model or discovery workspace that best matches your
+              activation path. White-label branding is configured separately as an overlay and
+              does not replace your base tenant category.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 {
                   type: TenantType.AGGREGATOR,
                   icon: '🌐',
-                  label: 'Global Directory',
-                  desc: 'Directory, lead generation, and certifications.',
+                  label: 'Aggregator Discovery Workspace',
+                  desc: 'Discovery, qualification, and intent handoff for networked sourcing.',
                 },
                 {
                   type: TenantType.B2B,
                   icon: '🏗️',
-                  label: 'B2B Marketplace',
+                  label: 'B2B Trade Workspace',
                   desc: 'Wholesale, MOQ pricing, and negotiations.',
                 },
                 {
                   type: TenantType.B2C,
                   icon: '🛍️',
-                  label: 'D2C Retail',
+                  label: 'B2C Retail Storefront',
                   desc: 'Storefront, cart, checkout, and returns.',
-                },
-                {
-                  type: TenantType.WHITE_LABEL,
-                  icon: '✨',
-                  label: 'Bespoke Brand',
-                  desc: 'Custom branding and independent checkout.',
                 },
               ].map(opt => (
                 <button
@@ -220,6 +216,10 @@ export const ActivationFlow: React.FC<ActivationFlowProps> = ({
                   <div className="text-xs text-slate-500 mt-1">{opt.desc}</div>
                 </button>
               ))}
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              White-label deployment is enabled later as a branded overlay on top of a lawful base
+              tenant category.
             </div>
           </div>
         )}
