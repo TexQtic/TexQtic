@@ -126,12 +126,14 @@ The exact verified child slices now consumed under this planning sequence are:
 3. `d160db1` — `[TEXQTIC] admin: normalize shared-core WL settings handoff`
 4. `dec6447` — `[TEXQTIC] aggregator: exclude status from discovery contract`
 5. `3fd6e7f` — `[TEXQTIC] onboarding: normalize activation selector terminology` — `VERIFIED_COMPLETE`
+6. `e94da10` — `[TEXQTIC] runtime: anchor bootstrap snapshot type to canonical category` — `VERIFIED_COMPLETE`
 
 The exact local exhaustion results now fixed at the current lawful granularity are:
 
-1. `tenant-admin core/overlay alignment` = `LOCALLY_EXHAUSTED`
-2. `Aggregator discovery-safe subset boundary` = `LOCALLY_EXHAUSTED`
-3. `provisioning terminology alignment` = `LOCALLY_EXHAUSTED`
+1. `runtime taxonomy alignment` = `LOCALLY_EXHAUSTED`
+2. `tenant-admin core/overlay alignment` = `LOCALLY_EXHAUSTED`
+3. `Aggregator discovery-safe subset boundary` = `LOCALLY_EXHAUSTED`
+4. `provisioning terminology alignment` = `LOCALLY_EXHAUSTED`
 
 The exact carry-forward rule after this refresh is:
 
@@ -140,4 +142,6 @@ The exact carry-forward rule after this refresh is:
 2. do not infer a further child slice from sequence adjacency alone
 3. do not infer a new provisioning terminology SAFE-WRITE slice from internal compatibility residue
    alone once the verified onboarding selector seam has been consumed
-4. no additional same-chain SAFE-WRITE slice is recorded by this refresh
+4. do not infer a new runtime taxonomy SAFE-WRITE slice from currentTenant or control-plane
+   compatibility residue alone once the verified bootstrap snapshot seam has been consumed
+5. no additional same-chain SAFE-WRITE slice is recorded by this refresh
