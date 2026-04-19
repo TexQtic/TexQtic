@@ -15,6 +15,50 @@ interface TenantRegistryProps {
   onImpersonate: (tenant: TenantConfig) => void;
 }
 
+interface ControlPlaneIdentityPresentation {
+  baseFamilyOrInternalCategory: string;
+  capabilityOrOverlayPosture: string;
+}
+
+const resolveControlPlaneTenantCategory = (
+  tenantCategory: string | null | undefined,
+  fallbackType?: string | null,
+) => {
+  const normalized = (tenantCategory ?? fallbackType ?? '').trim().toUpperCase();
+
+  return normalized || null;
+};
+
+const buildControlPlaneIdentityPresentation = ({
+  tenantCategory,
+  fallbackType,
+  isWhiteLabel,
+}: {
+  tenantCategory: string | null | undefined;
+  fallbackType?: string | null;
+  isWhiteLabel: boolean;
+}): ControlPlaneIdentityPresentation => {
+  const resolvedCategory = resolveControlPlaneTenantCategory(tenantCategory, fallbackType);
+  const posture: string[] = [];
+
+  if (resolvedCategory === 'AGGREGATOR') {
+    posture.push('Aggregator workspace');
+  }
+
+  if (isWhiteLabel) {
+    posture.push('White-label overlay');
+  }
+
+  return {
+    baseFamilyOrInternalCategory:
+      resolvedCategory === 'B2B' || resolvedCategory === 'B2C' || resolvedCategory === 'INTERNAL'
+        ? resolvedCategory
+        : 'Not surfaced in current control-plane read model',
+    capabilityOrOverlayPosture:
+      posture.length > 0 ? posture.join(' + ') : 'No additional capability or overlay surfaced',
+  };
+};
+
 export const TenantRegistry: React.FC<TenantRegistryProps> = ({
   lifecycleView,
   onSelectTenant,
@@ -247,7 +291,11 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         <tbody className="divide-y divide-slate-800">
           {tenantList.map(tenant => {
             const mappedTenant = mapToTenantConfig(tenant);
-            const visibleTenantIdentity = resolveRegistryTenantIdentity(tenant);
+            const identityPresentation = buildControlPlaneIdentityPresentation({
+              tenantCategory: tenant.tenant_category,
+              fallbackType: tenant.type,
+              isWhiteLabel: tenant.is_white_label ?? tenant.isWhiteLabel ?? false,
+            });
             const aiUsagePercent = mappedTenant.aiBudget
               ? (mappedTenant.aiUsage / mappedTenant.aiBudget) * 100
               : 0;
@@ -290,7 +338,20 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-xs text-slate-300 font-bold">{mappedTenant.plan}</div>
-                  <div className="text-[9px] text-slate-500 uppercase">{visibleTenantIdentity}</div>
+                  <div className="mt-1 space-y-1 text-[9px] text-slate-500">
+                    <div>
+                      <span className="font-bold uppercase tracking-[0.16em] text-slate-600">
+                        Base/Internal
+                      </span>{' '}
+                      {identityPresentation.baseFamilyOrInternalCategory}
+                    </div>
+                    <div>
+                      <span className="font-bold uppercase tracking-[0.16em] text-slate-600">
+                        Capability/Overlay
+                      </span>{' '}
+                      {identityPresentation.capabilityOrOverlayPosture}
+                    </div>
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <svg

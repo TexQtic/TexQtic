@@ -20,6 +20,50 @@ interface TenantDetailsProps {
   onImpersonate: (tenant: TenantConfig) => void;
 }
 
+interface ControlPlaneIdentityPresentation {
+  baseFamilyOrInternalCategory: string;
+  capabilityOrOverlayPosture: string;
+}
+
+const resolveControlPlaneTenantCategory = (
+  tenantCategory: string | null | undefined,
+  fallbackType?: string | null,
+) => {
+  const normalized = (tenantCategory ?? fallbackType ?? '').trim().toUpperCase();
+
+  return normalized || null;
+};
+
+const buildControlPlaneIdentityPresentation = ({
+  tenantCategory,
+  fallbackType,
+  isWhiteLabel,
+}: {
+  tenantCategory: string | null | undefined;
+  fallbackType?: string | null;
+  isWhiteLabel: boolean;
+}): ControlPlaneIdentityPresentation => {
+  const resolvedCategory = resolveControlPlaneTenantCategory(tenantCategory, fallbackType);
+  const posture: string[] = [];
+
+  if (resolvedCategory === 'AGGREGATOR') {
+    posture.push('Aggregator workspace');
+  }
+
+  if (isWhiteLabel) {
+    posture.push('White-label overlay');
+  }
+
+  return {
+    baseFamilyOrInternalCategory:
+      resolvedCategory === 'B2B' || resolvedCategory === 'B2C' || resolvedCategory === 'INTERNAL'
+        ? resolvedCategory
+        : 'Not surfaced in current control-plane read model',
+    capabilityOrOverlayPosture:
+      posture.length > 0 ? posture.join(' + ') : 'No additional capability or overlay surfaced',
+  };
+};
+
 export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, onImpersonate }) => {
   const [activeTab, setActiveTab] = useState<TenantDetailsTabId>('OVERVIEW');
   const [tenantStatus, setTenantStatus] = useState<TenantStatus>(tenant.status);
@@ -32,6 +76,11 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
+  const identityPresentation = buildControlPlaneIdentityPresentation({
+    tenantCategory: tenant.tenant_category,
+    fallbackType: tenant.type,
+    isWhiteLabel: tenant.is_white_label ?? false,
+  });
   const tenantCreatedAt = getTenantCreatedAtDisplay(tenant);
   const aiUsagePercent = tenant.aiBudget > 0
     ? Math.min((tenant.aiUsage / tenant.aiBudget) * 100, 100)
@@ -169,6 +218,15 @@ export const TenantDetails: React.FC<TenantDetailsProps> = ({ tenant, onBack, on
                   <DetailItem label="Full Name" value={tenant.name} />
                   <DetailItem label="Slug" value={tenant.slug} />
                   <DetailItem label="Tenant ID" value={tenant.id} />
+                  <DetailItem
+                    label="Base family / internal category"
+                    value={identityPresentation.baseFamilyOrInternalCategory}
+                  />
+                  <DetailItem
+                    label="Capability / overlay posture"
+                    value={identityPresentation.capabilityOrOverlayPosture}
+                  />
+                  <DetailItem label="Commercial plan" value={tenant.plan} />
                   <DetailItem label="Runtime Status" value={tenantStatus} />
                   <DetailItem label="Lifecycle Status" value={onboardingStatus ?? 'N/A'} />
                   {tenantCreatedAt && <DetailItem label="Created At" value={tenantCreatedAt} />}
