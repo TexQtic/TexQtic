@@ -120,29 +120,35 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
     }
   };
 
-  const mapToTenantConfig = (tenant: Tenant): TenantSelectionConfig => ({
-    id: tenant.id,
-    name: tenant.name,
-    slug: tenant.slug,
-    type: tenant.type as any,
-    status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
-    onboarding_status: tenant.onboarding_status ?? null,
-    plan: normalizeCommercialPlan(tenant.plan),
-    theme: {
-      primaryColor: tenant.branding?.primaryColor || '#4F46E5',
-      secondaryColor: '#10B981',
-      logo: '🏢',
-    },
-    features: [],
-    aiUsage: tenant.aiBudget?.currentUsage || 0,
-    aiBudget: tenant.aiBudget?.monthlyLimit || 1000,
-    billingStatus: 'CURRENT',
-    riskScore: 0,
-    tenant_category: tenant.tenant_category ?? tenant.type,
-    is_white_label: tenant.is_white_label ?? tenant.isWhiteLabel ?? false,
-    createdAt: tenant.createdAt,
-    updatedAt: tenant.updatedAt,
-  });
+  const resolveRegistryTenantIdentity = (tenant: Tenant) => tenant.tenant_category ?? tenant.type;
+
+  const mapToTenantConfig = (tenant: Tenant): TenantSelectionConfig => {
+    const resolvedTenantIdentity = resolveRegistryTenantIdentity(tenant);
+
+    return {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      type: resolvedTenantIdentity as TenantConfig['type'],
+      status: (tenant.status?.toUpperCase() || 'ACTIVE') as TenantStatus,
+      onboarding_status: tenant.onboarding_status ?? null,
+      plan: normalizeCommercialPlan(tenant.plan),
+      theme: {
+        primaryColor: tenant.branding?.primaryColor || '#4F46E5',
+        secondaryColor: '#10B981',
+        logo: '🏢',
+      },
+      features: [],
+      aiUsage: tenant.aiBudget?.currentUsage || 0,
+      aiBudget: tenant.aiBudget?.monthlyLimit || 1000,
+      billingStatus: 'CURRENT',
+      riskScore: 0,
+      tenant_category: resolvedTenantIdentity,
+      is_white_label: tenant.is_white_label ?? tenant.isWhiteLabel ?? false,
+      createdAt: tenant.createdAt,
+      updatedAt: tenant.updatedAt,
+    };
+  };
 
   const handleSelectTenant = async (tenant: Tenant) => {
     setDetailLoadingTenantId(tenant.id);
@@ -241,6 +247,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
         <tbody className="divide-y divide-slate-800">
           {tenantList.map(tenant => {
             const mappedTenant = mapToTenantConfig(tenant);
+            const visibleTenantIdentity = resolveRegistryTenantIdentity(tenant);
             const aiUsagePercent = mappedTenant.aiBudget
               ? (mappedTenant.aiUsage / mappedTenant.aiBudget) * 100
               : 0;
@@ -283,7 +290,7 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-xs text-slate-300 font-bold">{mappedTenant.plan}</div>
-                  <div className="text-[9px] text-slate-500 uppercase">{tenant.type}</div>
+                  <div className="text-[9px] text-slate-500 uppercase">{visibleTenantIdentity}</div>
                 </td>
                 <td className="px-6 py-4">
                   <svg
