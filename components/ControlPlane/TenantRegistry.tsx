@@ -519,7 +519,8 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
               <h2 className="text-lg font-bold">Provision New Tenant</h2>
               <p className="text-sm text-slate-500 mt-1">
                 Creates a new tenant organisation and provisions the primary owner account with an
-                OWNER membership.
+                OWNER membership. Commercial plan, current runtime category input, and white-label
+                overlay posture remain separate inputs in this modal.
               </p>
             </div>
 
@@ -624,10 +625,14 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                     <option value="PROFESSIONAL">PROFESSIONAL</option>
                     <option value="ENTERPRISE">ENTERPRISE</option>
                   </select>
+                  <p className="text-[11px] leading-5 text-slate-500">
+                    Commercial plan controls packaging only; it does not define base family,
+                    runtime posture, or overlay posture.
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="prov-tenant-category" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
-                    Tenant Category *
+                    Current Runtime Category Input *
                   </label>
                   <select
                     id="prov-tenant-category"
@@ -645,23 +650,34 @@ export const TenantRegistry: React.FC<TenantRegistryProps> = ({
                     }
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    <option value="B2B">B2B</option>
-                    <option value="B2C">B2C</option>
-                    <option value="AGGREGATOR">AGGREGATOR</option>
-                    <option value="INTERNAL">INTERNAL</option>
+                    <option value="B2B">B2B - base family</option>
+                    <option value="B2C">B2C - base family</option>
+                    <option value="AGGREGATOR">AGGREGATOR - current aggregator workspace posture</option>
+                    <option value="INTERNAL">INTERNAL - internal category</option>
                   </select>
+                  <p className="text-[11px] leading-5 text-slate-500">
+                    This preserves the current persisted and runtime category input used by the
+                    existing provisioning contract. It does not, by itself, express the full
+                    base-family, capability, and overlay model.
+                  </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    id="prov-is-white-label"
-                    type="checkbox"
-                    checked={provisionForm.is_white_label}
-                    onChange={e => setProvisionForm(f => ({ ...f, is_white_label: e.target.checked }))}
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
-                    White Label Deployment
-                  </label>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="prov-is-white-label"
+                      type="checkbox"
+                      checked={provisionForm.is_white_label}
+                      onChange={e => setProvisionForm(f => ({ ...f, is_white_label: e.target.checked }))}
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label htmlFor="prov-is-white-label" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                      White-label Overlay Posture
+                    </label>
+                  </div>
+                  <p className="text-[11px] leading-5 text-slate-500">
+                    Apply white-label branding as an overlay in addition to the selected runtime
+                    category input. It does not replace the selected category.
+                  </p>
                 </div>
                 <div className="flex gap-4 pt-2">
                   <button
