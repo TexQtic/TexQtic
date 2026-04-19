@@ -247,6 +247,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
       return tenantRows.map((tenant: { id: string }) => ({
         ...tenant,
+        tenant_category: tenant.type,
         has_pending_first_owner_preparation_invite: invitedTenantIds.has(tenant.id),
       }));
     });
@@ -294,6 +295,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
 
     const tenantWithOnboardingStatus = {
       ...tenantRecord,
+      tenant_category: tenantRecord.type,
       onboarding_status: (await readOrganizationStatuses([tenantRecord.id])).get(tenantRecord.id) ?? null,
     };
 

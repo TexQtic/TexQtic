@@ -10,12 +10,17 @@ const {
   const FAKE_TX = {
     $executeRawUnsafe: vi.fn().mockResolvedValue(undefined),
     organizations: {
+      findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
     },
     tenant: {
+      findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+    },
+    invite: {
+      findMany: vi.fn(),
     },
   };
 
@@ -102,10 +107,13 @@ describe('control onboarding outcome route', () => {
     vi.clearAllMocks();
     prismaHolder.$transaction.mockImplementation(async (callback: (tx: typeof FAKE_TX) => Promise<unknown>) => callback(FAKE_TX));
     FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
+    FAKE_TX.organizations.findMany.mockReset();
     FAKE_TX.organizations.findUnique.mockReset();
     FAKE_TX.organizations.update.mockReset();
+    FAKE_TX.tenant.findMany.mockReset();
     FAKE_TX.tenant.findUnique.mockReset();
     FAKE_TX.tenant.update.mockReset();
+    FAKE_TX.invite.findMany.mockReset();
     server = await buildServer();
   });
 
@@ -295,6 +303,107 @@ describe('control onboarding outcome route', () => {
     expect(response.json().error).toEqual(
       expect.objectContaining({
         code: 'FORBIDDEN',
+      }),
+    );
+  });
+});
+
+describe('control tenant read routes', () => {
+  let server: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    prismaHolder.$transaction.mockImplementation(async (callback: (tx: typeof FAKE_TX) => Promise<unknown>) => callback(FAKE_TX));
+    FAKE_TX.$executeRawUnsafe.mockResolvedValue(undefined);
+    FAKE_TX.organizations.findMany.mockReset();
+    FAKE_TX.organizations.findUnique.mockReset();
+    FAKE_TX.organizations.update.mockReset();
+    FAKE_TX.tenant.findMany.mockReset();
+    FAKE_TX.tenant.findUnique.mockReset();
+    FAKE_TX.tenant.update.mockReset();
+    FAKE_TX.invite.findMany.mockReset();
+    server = await buildServer();
+  });
+
+  afterEach(async () => {
+    await server.close();
+  });
+
+  it('includes tenant_category on control tenant list responses', async () => {
+    FAKE_TX.tenant.findMany.mockResolvedValue([
+      {
+        id: TEST_TENANT_ID,
+        slug: 'qa-agg',
+        name: 'QA AGG',
+        type: 'AGGREGATOR',
+        status: 'ACTIVE',
+        plan: 'PROFESSIONAL',
+        isWhiteLabel: false,
+      },
+    ]);
+    FAKE_TX.invite.findMany.mockResolvedValue([]);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/api/control/tenants',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data.tenants).toEqual([
+      {
+        id: TEST_TENANT_ID,
+        slug: 'qa-agg',
+        name: 'QA AGG',
+        type: 'AGGREGATOR',
+        tenant_category: 'AGGREGATOR',
+        status: 'ACTIVE',
+        plan: 'PROFESSIONAL',
+        isWhiteLabel: false,
+        has_pending_first_owner_preparation_invite: false,
+      },
+    ]);
+  });
+
+  it('includes tenant_category on control tenant detail responses', async () => {
+    FAKE_TX.tenant.findUnique.mockResolvedValue({
+      id: TEST_TENANT_ID,
+      slug: 'qa-wl',
+      name: 'QA WL',
+      type: 'B2C',
+      status: 'ACTIVE',
+      plan: 'ENTERPRISE',
+      isWhiteLabel: true,
+      createdAt: '2026-04-08T12:47:02.651Z',
+      updatedAt: '2026-04-09T03:15:56.119Z',
+      domains: [],
+      branding: null,
+      aiBudget: null,
+      memberships: [],
+    });
+    FAKE_TX.organizations.findMany.mockResolvedValue([
+      {
+        id: TEST_TENANT_ID,
+        status: 'ACTIVE',
+      },
+    ]);
+
+    const response = await server.inject({
+      method: 'GET',
+      url: `/api/control/tenants/${TEST_TENANT_ID}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data.tenant).toEqual(
+      expect.objectContaining({
+        id: TEST_TENANT_ID,
+        slug: 'qa-wl',
+        name: 'QA WL',
+        type: 'B2C',
+        tenant_category: 'B2C',
+        status: 'ACTIVE',
+        plan: 'ENTERPRISE',
+        isWhiteLabel: true,
+        onboarding_status: 'ACTIVE',
       }),
     );
   });
