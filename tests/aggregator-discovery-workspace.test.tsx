@@ -51,6 +51,8 @@ describe('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — workspace surface', ()
       }),
     ]);
 
+    expect(html).toContain('Bounded discovery capability surface');
+    expect(html).not.toContain('Aggregator-owned discovery workspace');
     expect(html).toContain('Curated company discovery');
     expect(html).toContain('Atlas Industrial Components');
     expect(html).toContain('Nordic Fibers Group');

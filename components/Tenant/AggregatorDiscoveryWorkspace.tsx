@@ -105,12 +105,12 @@ export const AggregatorDiscoveryWorkspace: React.FC<AggregatorDiscoveryWorkspace
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-4 max-w-3xl">
             <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-sky-700">
-              Aggregator-owned discovery workspace
+              Bounded discovery capability surface
             </div>
             <h1 className="text-4xl font-bold text-slate-900">Curated company discovery</h1>
             <p className="text-slate-600 text-lg leading-relaxed">
-              {tenantName} can now review real counterparties already visible in TexQtic with bounded
-              trust cues, rather than static promotional copy.
+              {tenantName} can review real counterparties already visible in TexQtic through a bounded
+              discovery surface with trust cues, rather than static promotional copy.
             </p>
           </div>
 

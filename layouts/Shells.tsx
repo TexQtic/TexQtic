@@ -181,7 +181,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, naviga
               <span className="truncate">{tenant.name}</span>
             </button>
             <div className="hidden sm:block">
-              <PlatformSignature label="Aggregator Workspace" tone="dark" />
+              <PlatformSignature label="Discovery Capability" tone="dark" />
             </div>
           </div>
           <nav className="hidden md:flex gap-6 text-sm font-medium">
