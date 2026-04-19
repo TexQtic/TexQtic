@@ -43,6 +43,7 @@ import {
 import { APIError } from '../services/apiClient';
 import { InviteMemberSuccessState } from '../components/Tenant/InviteMemberForm';
 import {
+  TeamManagement,
   TeamManagementPendingInvitesPanel,
   canInviteMembers,
   getPendingInviteDeliveryOutcomeMessage,
@@ -623,6 +624,14 @@ function renderWhiteLabelAdminShell() {
       },
       React.createElement('section', null, 'White-label admin body'),
     ),
+  );
+}
+
+function renderTeamManagement() {
+  return renderToStaticMarkup(
+    React.createElement(TeamManagement, {
+      onInvite: () => undefined,
+    }),
   );
 }
 
@@ -1840,7 +1849,7 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(html).toContain('Traceability');
     expect(html).toContain('Audit Log');
     expect(html).toContain('Trades');
-    expect(html).toContain('Members');
+    expect(html).toContain('Team Access');
     expect(html).toContain('sticky top-0 h-screen overflow-y-auto');
     expect(html).toContain('data-mobile-nav="b2b"');
     expect(html).toContain('data-mobile-item-count="11"');
@@ -1853,14 +1862,21 @@ describe('runtime verification - tenant membership pending invite surface', () =
 
     expect(aggregatorHtml).toContain('data-mobile-nav="aggregator"');
     expect(aggregatorHtml).toContain('Companies');
-    expect(aggregatorHtml).toContain('Team');
+    expect(aggregatorHtml).toContain('Team Access');
 
     expect(storefrontHtml).toContain('data-mobile-nav="wl-storefront"');
     expect(storefrontHtml).toContain('Portfolio');
-    expect(storefrontHtml).toContain('Access Control');
+    expect(storefrontHtml).toContain('Team Access');
 
     expect(adminHtml).toContain('data-mobile-nav="wl-admin"');
     expect(adminHtml).toContain('Store Profile');
     expect(adminHtml).toContain('Storefront');
+  });
+
+  it('renders the shared tenant-admin destination as the same common-core interpretation', () => {
+    const html = renderTeamManagement();
+
+    expect(html).toContain('Team Access');
+    expect(html).toContain('shared tenant-admin core');
   });
 });

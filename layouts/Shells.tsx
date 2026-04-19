@@ -168,7 +168,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, naviga
     ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
     ...(hasShellRoute(navigation.surface, 'audit_logs') ? [{ key: 'audit_logs', label: 'Audit Log', onSelect: () => navigation.onNavigateRoute('audit_logs') }] : []),
     ...(hasShellRoute(navigation.surface, 'trades') ? [{ key: 'trades', label: 'Trades', onSelect: () => navigation.onNavigateRoute('trades') }] : []),
-    { key: 'team', label: 'Team', onSelect: navigation.onNavigateTeam },
+    { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
   ];
 
   return (
@@ -195,7 +195,7 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, naviga
             {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="hover:text-blue-400 transition text-slate-300">Settlement</button>}
             {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="hover:text-blue-400 transition text-slate-300">Audit Log</button>}
             {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="hover:text-blue-400 transition text-slate-300">Trades</button>}
-            <button onClick={navigation.onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team</button>
+            <button onClick={navigation.onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team Access</button>
           </nav>
           <MobileShellMenu
             shellId="aggregator"
@@ -235,7 +235,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
         ...(hasShellRoute(navigation.surface, 'traceability') ? [{ key: 'traceability', label: 'Traceability', onSelect: () => navigation.onNavigateRoute('traceability') }] : []),
         ...(hasShellRoute(navigation.surface, 'audit_logs') ? [{ key: 'audit_logs', label: 'Audit Log', onSelect: () => navigation.onNavigateRoute('audit_logs') }] : []),
         ...(hasShellRoute(navigation.surface, 'trades') ? [{ key: 'trades', label: 'Trades', onSelect: () => navigation.onNavigateRoute('trades') }] : []),
-        { key: 'team', label: 'Members', onSelect: navigation.onNavigateTeam },
+        { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
       ];
 
   return (
@@ -276,7 +276,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
             {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
             {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
             {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Trades</button>}
-            <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Members</button>
+            <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Team Access</button>
           </nav>
         )}
         <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
@@ -324,7 +324,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation })
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'traceability') ? [{ key: 'traceability', label: 'Traceability', onSelect: () => navigation.onNavigateRoute('traceability') }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'audit_logs') ? [{ key: 'audit_logs', label: 'Audit Log', onSelect: () => navigation.onNavigateRoute('audit_logs') }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'trades') ? [{ key: 'trades', label: 'Trades', onSelect: () => navigation.onNavigateRoute('trades') }] : []),
-    ...(showAuthenticatedAffordances ? [{ key: 'team', label: 'Team', onSelect: navigation.onNavigateTeam }] : []),
+    ...(showAuthenticatedAffordances ? [{ key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam }] : []),
     ...(showAuthenticatedAffordances && hasShellRoute(navigation.surface, 'cart') ? [{ key: 'cart', label: 'Shopping Cart', onSelect: () => navigation.onNavigateRoute('cart') }] : []),
   ];
 
@@ -386,7 +386,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation })
             {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Traceability</button>}
             {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Audit Log</button>}
             {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Trades</button>}
-            <button onClick={navigation.onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team</button>
+            <button onClick={navigation.onNavigateTeam} className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition">Team Access</button>
             <button onClick={() => navigation.onNavigateRoute('cart')} className="relative cursor-pointer" title="Shopping Cart">
               <span className="text-2xl">🛒</span>
               {itemCount > 0 && (
@@ -407,7 +407,7 @@ export const B2CShell: React.FC<ShellProps> = ({ tenant, children, navigation })
 export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => {
   const mobileMenuItems: MobileShellMenuItem[] = [
     { key: 'home', label: 'Portfolio', onSelect: () => navigation.onNavigateRoute('home') },
-    { key: 'team', label: 'Access Control', onSelect: navigation.onNavigateTeam },
+    { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
     ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
     ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Snapshot', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
     ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
@@ -439,7 +439,7 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, naviga
           </div>
           <div className="hidden md:flex justify-center gap-12 py-6 text-[10px] font-bold uppercase tracking-[0.2em]">
             <button onClick={() => navigation.onNavigateRoute('home')} className="hover:opacity-40 transition-opacity">Portfolio</button>
-            <button onClick={navigation.onNavigateTeam} className="hover:opacity-40 transition-opacity">Access Control</button>
+            <button onClick={navigation.onNavigateTeam} className="hover:opacity-40 transition-opacity">Team Access</button>
             {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="hover:opacity-40 transition-opacity">Orders</button>}
             {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="hover:opacity-40 transition-opacity">DPP Snapshot</button>}
             {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="hover:opacity-40 transition-opacity">Escrow</button>}

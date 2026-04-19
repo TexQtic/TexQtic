@@ -372,8 +372,8 @@ export function TeamManagement({ onInvite }: TeamManagementProps) {
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Team Management</h1>
-          <p className="text-slate-500 text-sm">Manage your organization's members and their access levels.</p>
+          <h1 className="text-2xl font-bold">Team Access</h1>
+          <p className="text-slate-500 text-sm">Manage your organization's members and their access levels from the shared tenant-admin core.</p>
         </div>
         {canInvite && (
           <button
