@@ -125,15 +125,19 @@ The exact verified child slices now consumed under this planning sequence are:
 2. `a40c06b` — `[TEXQTIC] admin: align WL overlay visibility to shared-core boundary`
 3. `d160db1` — `[TEXQTIC] admin: normalize shared-core WL settings handoff`
 4. `dec6447` — `[TEXQTIC] aggregator: exclude status from discovery contract`
+5. `3fd6e7f` — `[TEXQTIC] onboarding: normalize activation selector terminology` — `VERIFIED_COMPLETE`
 
 The exact local exhaustion results now fixed at the current lawful granularity are:
 
 1. `tenant-admin core/overlay alignment` = `LOCALLY_EXHAUSTED`
 2. `Aggregator discovery-safe subset boundary` = `LOCALLY_EXHAUSTED`
+3. `provisioning terminology alignment` = `LOCALLY_EXHAUSTED`
 
 The exact carry-forward rule after this refresh is:
 
-1. do not reopen either exhausted chain absent one new exact repo-truth discriminator proving one
-   fresh bounded seam inside that same chain
+1. do not reopen any exhausted chain recorded here absent one new exact repo-truth discriminator
+   proving one fresh bounded seam inside that same chain
 2. do not infer a further child slice from sequence adjacency alone
-3. no additional same-chain SAFE-WRITE slice is recorded by this refresh
+3. do not infer a new provisioning terminology SAFE-WRITE slice from internal compatibility residue
+   alone once the verified onboarding selector seam has been consumed
+4. no additional same-chain SAFE-WRITE slice is recorded by this refresh
