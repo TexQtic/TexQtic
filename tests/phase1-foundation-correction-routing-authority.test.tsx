@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { __PHASE1_FOUNDATION_CORRECTION_TESTING__ } from '../App';
+import { TenantType } from '../types';
 import {
   createTenantSessionRuntimeDescriptor,
   resolveRuntimeAppStateFromDescriptor,
@@ -148,13 +149,14 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
     );
 
     const canonicalTenant = buildTenantSnapshot(makeCanonicalTenant({
-      type: 'AGGREGATOR',
+      type: 'B2C',
       tenant_category: 'AGGREGATOR',
       is_white_label: false,
     }));
     const descriptor = buildTenantDescriptor(canonicalTenant);
 
     expect(canonicalTenant?.tenant_category).toBe('AGGREGATOR');
+    expect(canonicalTenant?.type).toBe(TenantType.AGGREGATOR);
     expect(canonicalTenant?.is_white_label).toBe(false);
     expect(resolveRuntimeManifestKeyFromDescriptor(descriptor, 'EXPERIENCE')).toBe('aggregator_workspace');
 

@@ -1145,7 +1145,7 @@ const buildTenantSnapshot = (tenant?: {
     id: tenant.id,
     slug: tenant.slug,
     name: tenant.name,
-    type: (tenant.type ?? tenant.tenant_category) as TenantType,
+    type: tenant.tenant_category as TenantType,
     tenant_category: tenant.tenant_category,
     is_white_label: tenant.is_white_label,
     status: tenant.status as any,
