@@ -939,6 +939,15 @@ type TenantIdentityCarrierRecord = {
   commercial_plan?: string | null;
   status?: string | null;
   plan?: string | null;
+  primary_segment_key?: string | null;
+  secondary_segment_keys?: string[] | null;
+  role_position_keys?: string[] | null;
+};
+
+type RuntimeTenantRecord = Tenant & {
+  primary_segment_key?: string | null;
+  secondary_segment_keys?: string[];
+  role_position_keys?: string[];
 };
 
 const normalizeBaseFamily = (value: string | null | undefined) => {
@@ -1018,9 +1027,96 @@ const summarizeTenantIdentity = (tenant?: TenantIdentityCarrierRecord | null) =>
     aggregator_capability: tenant.aggregator_capability ?? null,
     white_label_capability: tenant.white_label_capability ?? null,
     commercial_plan: tenant.commercial_plan ?? null,
+    primary_segment_key: tenant.primary_segment_key ?? null,
+    secondary_segment_keys: tenant.secondary_segment_keys ?? null,
+    role_position_keys: tenant.role_position_keys ?? null,
     status: tenant.status ?? null,
     plan: tenant.plan ?? null,
   };
+};
+
+const normalizeTenantTaxonomyList = (values: string[] | null | undefined) => {
+  return Array.isArray(values)
+    ? values.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    : [];
+};
+
+const resolveTenantTaxonomyCarrier = (tenant?: Pick<
+  TenantIdentityCarrierRecord,
+  'primary_segment_key' | 'secondary_segment_keys' | 'role_position_keys'
+> | null) => {
+  return {
+    primarySegmentKey:
+      typeof tenant?.primary_segment_key === 'string' && tenant.primary_segment_key.trim().length > 0
+        ? tenant.primary_segment_key
+        : null,
+    secondarySegmentKeys: normalizeTenantTaxonomyList(tenant?.secondary_segment_keys),
+    rolePositionKeys: normalizeTenantTaxonomyList(tenant?.role_position_keys),
+  };
+};
+
+const canRenderCanonicalB2BTaxonomy = (tenant?: TenantConfig | null) => {
+  if (!tenant) {
+    return false;
+  }
+
+  const identity = resolveTenantIdentityCarrier(tenant);
+  if (identity.aggregatorCapability || identity.whiteLabelCapability) {
+    return false;
+  }
+
+  return identity.baseFamily === TenantType.B2B || identity.tenantCategory === TenantType.B2B;
+};
+
+export const B2BTenantTaxonomyPanel: React.FC<{ tenant: TenantConfig }> = ({ tenant }) => {
+  const { primarySegmentKey, secondarySegmentKeys, rolePositionKeys } = resolveTenantTaxonomyCarrier(tenant);
+
+  if (!canRenderCanonicalB2BTaxonomy(tenant)) {
+    return null;
+  }
+
+  if (!primarySegmentKey && secondarySegmentKeys.length === 0 && rolePositionKeys.length === 0) {
+    return null;
+  }
+
+  return (
+    <section
+      data-tenant-taxonomy="b2b-canonical"
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    >
+      <div className="space-y-1">
+        <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">Canonical Taxonomy</div>
+        <h2 className="text-lg font-semibold text-slate-900">B2B Organization Taxonomy</h2>
+        <p className="text-sm text-slate-500">Canonical organization taxonomy carried on the active tenant session.</p>
+      </div>
+      <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Primary Segment</div>
+          <div className="text-sm font-medium text-slate-900">{primarySegmentKey ?? 'Not assigned'}</div>
+        </div>
+        <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Secondary Segments</div>
+          <ul className="flex flex-wrap gap-2 text-sm text-slate-900">
+            {secondarySegmentKeys.map(segmentKey => (
+              <li key={segmentKey} className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                {segmentKey}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Role Positions</div>
+          <ul className="flex flex-wrap gap-2 text-sm text-slate-900">
+            {rolePositionKeys.map(rolePositionKey => (
+              <li key={rolePositionKey} className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                {rolePositionKey}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
 };
 
 const appendRehydrationTrace = (event: string, payload: RehydrationTracePayload = {}) => {
@@ -1183,7 +1279,7 @@ const readStoredAdminJwtClaims = (): { adminId: string; role: string | null; exp
   }
 };
 
-const buildTenantSnapshot = (tenant?: TenantIdentityCarrierRecord | null): Tenant | null => {
+const buildTenantSnapshot = (tenant?: TenantIdentityCarrierRecord | null): RuntimeTenantRecord | null => {
   appendRehydrationTrace('buildTenantSnapshot:input', {
     tenant: summarizeTenantIdentity(tenant),
   });
@@ -1206,7 +1302,9 @@ const buildTenantSnapshot = (tenant?: TenantIdentityCarrierRecord | null): Tenan
     return null;
   }
 
-  const normalizedSnapshot: Tenant = {
+  const taxonomyCarrier = resolveTenantTaxonomyCarrier(tenant);
+
+  const normalizedSnapshot: RuntimeTenantRecord = {
     id: tenant.id,
     slug: tenant.slug,
     name: tenant.name,
@@ -1217,6 +1315,9 @@ const buildTenantSnapshot = (tenant?: TenantIdentityCarrierRecord | null): Tenan
     aggregator_capability: identity.aggregatorCapability,
     white_label_capability: identity.whiteLabelCapability,
     commercial_plan: identity.commercialPlan,
+    primary_segment_key: taxonomyCarrier.primarySegmentKey,
+    secondary_segment_keys: taxonomyCarrier.secondarySegmentKeys,
+    role_position_keys: taxonomyCarrier.rolePositionKeys,
     status: tenant.status as any,
     plan: identity.commercialPlan,
     createdAt: '',
@@ -1477,7 +1578,7 @@ const App: React.FC = () => {
   const [expView, setExpView] = useState<ExperienceView>('HOME');
 
   // Tenant management state
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<RuntimeTenantRecord[]>([]);
   const [_tenantsLoading, setTenantsLoading] = useState(false);
   const [_tenantsError, setTenantsError] = useState<string | null>(null);
   const [tenantProvisionError, setTenantProvisionError] = useState<string | null>(null);
@@ -1752,6 +1853,7 @@ const App: React.FC = () => {
     }
 
     const tenantIdentity = resolveTenantIdentityCarrier(tenant);
+    const taxonomyCarrier = resolveTenantTaxonomyCarrier(tenant);
     const resolvedPlan = tenantIdentity.commercialPlan ?? normalizeCommercialPlan(tenant.plan);
 
     const resolvedTenant: TenantConfig = {
@@ -1765,6 +1867,9 @@ const App: React.FC = () => {
       aggregator_capability: tenantIdentity.aggregatorCapability,
       white_label_capability: tenantIdentity.whiteLabelCapability,
       commercial_plan: resolvedPlan,
+      primary_segment_key: taxonomyCarrier.primarySegmentKey,
+      secondary_segment_keys: taxonomyCarrier.secondarySegmentKeys,
+      role_position_keys: taxonomyCarrier.rolePositionKeys,
       status: tenant.status as any,
       plan: resolvedPlan,
       theme: {
@@ -3445,6 +3550,8 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
+
+            <B2BTenantTaxonomyPanel tenant={currentTenant} />
 
             {showAddItemForm && (
               <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">

@@ -82,6 +82,12 @@ export interface TenantConfig {
   white_label_capability?: boolean;
   /** Canonical commercial plan read-model carrier. */
   commercial_plan?: CommercialPlan | null;
+  /** Canonical primary B2B segment read-model carrier. */
+  primary_segment_key?: string | null;
+  /** Canonical secondary B2B segments read-model carrier. */
+  secondary_segment_keys?: string[];
+  /** Canonical B2B role-position read-model carrier. */
+  role_position_keys?: string[];
   status: TenantStatus;
   /** Org-backed onboarding lifecycle status used for onboarding completion. */
   onboarding_status?: string | null;

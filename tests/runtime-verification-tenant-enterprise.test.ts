@@ -21,6 +21,7 @@ import {
   __B2B_SUPPLIER_INBOX_TESTING__,
   __B2B_SUPPLIER_RESPOND_TESTING__,
   __B2B_TRADE_FROM_RFQ_TESTING__,
+  B2BTenantTaxonomyPanel,
 } from '../App';
 import { listCertifications, type ListCertificationsResponse } from '../services/certificationService';
 import {
@@ -100,6 +101,9 @@ describe('canonical identity carrier intake', () => {
       aggregator_capability: true,
       white_label_capability: true,
       commercial_plan: 'ENTERPRISE',
+      primary_segment_key: 'Weaving',
+      secondary_segment_keys: ['Fabric Processing'],
+      role_position_keys: ['manufacturer'],
       status: 'ACTIVE',
       plan: 'FREE',
     });
@@ -113,6 +117,9 @@ describe('canonical identity carrier intake', () => {
       white_label_capability: true,
       commercial_plan: 'ENTERPRISE',
       plan: 'ENTERPRISE',
+      primary_segment_key: 'Weaving',
+      secondary_segment_keys: ['Fabric Processing'],
+      role_position_keys: ['manufacturer'],
     }));
     expect(resolveRuntimeTenantSeedFromRecord(snapshot)).toEqual({
       baseFamily: 'INTERNAL',
@@ -492,6 +499,20 @@ function makeB2BTenant(): TenantConfig {
     aiUsage: 0,
     billingStatus: 'CURRENT',
     riskScore: 0,
+    primary_segment_key: 'Weaving',
+    secondary_segment_keys: ['Fabric Processing'],
+    role_position_keys: ['manufacturer'],
+  };
+}
+
+function makeB2CTenant(): TenantConfig {
+  return {
+    ...makeB2BTenant(),
+    id: 'tenant-b2c-1',
+    slug: 'qa-b2c',
+    name: 'QA B2C',
+    type: TenantType.B2C,
+    tenant_category: TenantType.B2C,
   };
 }
 
@@ -679,6 +700,14 @@ function renderWhiteLabelSettings(options: { hasDomainsNavigation?: boolean; has
       tenant: makeWhiteLabelTenant(),
       ...(options.hasDomainsNavigation ? { onNavigateDomains: () => undefined } : {}),
       ...(options.hasOverlayEntry ? { onEnterOverlay: () => undefined } : {}),
+    }),
+  );
+}
+
+function renderB2BTaxonomyPanel(tenant: TenantConfig) {
+  return renderToStaticMarkup(
+    React.createElement(B2BTenantTaxonomyPanel, {
+      tenant,
     }),
   );
 }
@@ -1909,6 +1938,23 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(html).toContain('sticky top-0 h-screen overflow-y-auto');
     expect(html).toContain('data-mobile-nav="b2b"');
     expect(html).toContain('data-mobile-item-count="11"');
+  });
+
+  it('renders canonical taxonomy only on lawful B2B tenant surfaces', () => {
+    const b2bHtml = renderB2BTaxonomyPanel(makeB2BTenant());
+    const aggregatorHtml = renderB2BTaxonomyPanel(makeAggregatorTenant());
+    const whiteLabelHtml = renderB2BTaxonomyPanel(makeWhiteLabelTenant());
+    const b2cHtml = renderB2BTaxonomyPanel(makeB2CTenant());
+
+    expect(b2bHtml).toContain('B2B Organization Taxonomy');
+    expect(b2bHtml).toContain('Primary Segment');
+    expect(b2bHtml).toContain('Weaving');
+    expect(b2bHtml).toContain('Fabric Processing');
+    expect(b2bHtml).toContain('manufacturer');
+
+    expect(aggregatorHtml).toBe('');
+    expect(whiteLabelHtml).toBe('');
+    expect(b2cHtml).toBe('');
   });
 
   it('adds handheld menu fallbacks for aggregator, white-label storefront, and the storefront-linked white-label admin overlay', () => {
