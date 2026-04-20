@@ -568,11 +568,14 @@ export interface OrganizationIdentity {
   legal_name: string;
   status: string;
   org_type: string;
+  primary_segment_key: string | null;
   is_white_label: boolean;
   jurisdiction: string;
   registration_no: string | null;
   risk_score: number;
   plan: TenantPlan;
+  secondary_segment_keys: string[];
+  role_position_keys: string[];
   base_family: ProvisioningBaseFamily;
   aggregator_capability: boolean;
   white_label_capability: boolean;
@@ -621,7 +624,7 @@ export async function withOrgAdminContext<T>(
  *
  * USAGE:
  * - Call this instead of prisma.tenant.findUnique() wherever org identity metadata
- *   (legal_name, slug, org_type, jurisdiction, status, plan) is needed.
+ *   (legal_name, slug, org_type, jurisdiction, status, plan, taxonomy carrier fields) is needed.
  * - Uses withOrgAdminContext so the organizations RESTRICTIVE guard allows the SELECT.
  * - Safe to call from tenant-plane request handlers (admin elevation is scoped to this tx only).
  *
@@ -647,11 +650,28 @@ export async function getOrganizationIdentity(
         legal_name: true,
         status: true,
         org_type: true,
+        primary_segment_key: true,
         is_white_label: true,
         jurisdiction: true,
         registration_no: true,
         risk_score: true,
         plan: true,
+        secondary_segments: {
+          select: {
+            segment_key: true,
+          },
+          orderBy: {
+            segment_key: 'asc',
+          },
+        },
+        role_positions: {
+          select: {
+            role_position_key: true,
+          },
+          orderBy: {
+            role_position_key: 'asc',
+          },
+        },
         created_at: true,
         updated_at: true,
       },
@@ -661,10 +681,13 @@ export async function getOrganizationIdentity(
     }
 
     const plan = canonicalizeTenantPlan(org.plan);
+    const { secondary_segments, role_positions, ...orgIdentity } = org;
 
     return {
-      ...org,
+      ...orgIdentity,
       plan,
+      secondary_segment_keys: secondary_segments.map(entry => entry.segment_key),
+      role_position_keys: role_positions.map(entry => entry.role_position_key),
       ...resolveCanonicalProvisioningIdentity({
         tenantCategory: org.org_type,
         whiteLabelCapability: org.is_white_label,
