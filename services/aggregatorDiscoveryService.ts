@@ -1,5 +1,11 @@
 import { tenantGet } from './tenantApiClient';
 
+export interface AggregatorDiscoverySafeTaxonomy {
+  primarySegment: string;
+  secondarySegments: string[];
+  rolePositions: string[];
+}
+
 export interface AggregatorDiscoveryEntry {
   orgId: string;
   slug: string;
@@ -10,6 +16,7 @@ export interface AggregatorDiscoveryEntry {
   certificationTypes: string[];
   hasTraceabilityEvidence: boolean;
   visibilityIndicators: string[];
+  discoverySafeTaxonomy?: AggregatorDiscoverySafeTaxonomy;
 }
 
 export interface AggregatorDiscoveryResponse {

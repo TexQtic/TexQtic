@@ -54,6 +54,13 @@ describe.skipIf(!hasDb)('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — discove
           status: 'ACTIVE',
           is_white_label: false,
           jurisdiction: 'DE',
+          primary_segment_key: 'Weaving',
+          secondary_segments: {
+            create: [{ segment_key: 'Fabric Processing' }],
+          },
+          role_positions: {
+            create: [{ role_position_key: 'manufacturer' }],
+          },
         },
       });
 
@@ -188,6 +195,11 @@ describe.skipIf(!hasDb)('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — discove
           legalName: string;
           orgType: string;
           jurisdiction: string;
+          discoverySafeTaxonomy?: {
+            primarySegment: string;
+            secondarySegments: string[];
+            rolePositions: string[];
+          };
         }>;
         count: number;
       };
@@ -198,6 +210,16 @@ describe.skipIf(!hasDb)('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — discove
     expect(body.data.items.some(item => item.orgId === supplierOrgId)).toBe(true);
     expect(body.data.items.some(item => item.orgId === aggregatorOrgId)).toBe(false);
     expect(body.data.items.every(item => !('status' in item))).toBe(true);
+    expect(body.data.items.every(item => !('primary_segment_key' in item))).toBe(true);
+    expect(body.data.items.every(item => !('secondary_segment_keys' in item))).toBe(true);
+    expect(body.data.items.every(item => !('role_position_keys' in item))).toBe(true);
+
+    const supplierItem = body.data.items.find(item => item.orgId === supplierOrgId);
+    expect(supplierItem?.discoverySafeTaxonomy).toEqual({
+      primarySegment: 'Weaving',
+      secondarySegments: ['Fabric Processing'],
+      rolePositions: ['manufacturer'],
+    });
   });
 
   it('rejects the discovery route for non-Aggregator tenants', async () => {

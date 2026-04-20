@@ -209,6 +209,21 @@
           }
         }
       },
+      "AggregatorDiscoverySafeTaxonomy": {
+        "type": "object",
+        "required": ["primarySegment", "secondarySegments", "rolePositions"],
+        "properties": {
+          "primarySegment": { "type": "string" },
+          "secondarySegments": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "rolePositions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
       "AggregatorDiscoveryEntry": {
         "type": "object",
         "required": [
@@ -217,7 +232,6 @@
           "legalName",
           "orgType",
           "jurisdiction",
-          "status",
           "certificationCount",
           "certificationTypes",
           "hasTraceabilityEvidence",
@@ -229,7 +243,6 @@
           "legalName": { "type": "string" },
           "orgType": { "type": "string" },
           "jurisdiction": { "type": "string" },
-          "status": { "type": "string" },
           "certificationCount": { "type": "integer", "minimum": 0 },
           "certificationTypes": {
             "type": "array",
@@ -239,6 +252,9 @@
           "visibilityIndicators": {
             "type": "array",
             "items": { "type": "string" }
+          },
+          "discoverySafeTaxonomy": {
+            "$ref": "#/components/schemas/AggregatorDiscoverySafeTaxonomy"
           }
         }
       },

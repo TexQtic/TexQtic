@@ -20,6 +20,13 @@ type EvidenceSummary = {
   nodeTypePresence: string[];
   visibilityIndicators: string[];
 };
+
+export type CounterpartyDiscoverySafeTaxonomy = {
+  primarySegment: string;
+  secondarySegments: string[];
+  rolePositions: string[];
+};
+
 const DISCOVERY_ELIGIBLE_ORG_TYPES = ['B2B'] as const;
 const DISCOVERY_ELIGIBLE_STATUSES = ['ACTIVE', 'VERIFICATION_APPROVED'] as const;
 
@@ -49,6 +56,7 @@ export type CounterpartyDiscoveryEntry = {
   certificationTypes: string[];
   hasTraceabilityEvidence: boolean;
   visibilityIndicators: string[];
+  discoverySafeTaxonomy?: CounterpartyDiscoverySafeTaxonomy;
 };
 
 type DiscoveryOrganizationRow = {
@@ -59,7 +67,30 @@ type DiscoveryOrganizationRow = {
   jurisdiction: string;
   registration_no: string | null;
   status: string;
+  primary_segment_key: string | null;
+  secondary_segments: Array<{
+    segment_key: string;
+  }>;
+  role_positions: Array<{
+    role_position_key: string;
+  }>;
 };
+
+function buildDiscoverySafeTaxonomy(input: {
+  primary_segment_key: string | null;
+  secondary_segment_keys: string[];
+  role_position_keys: string[];
+}): CounterpartyDiscoverySafeTaxonomy | undefined {
+  if (!input.primary_segment_key) {
+    return undefined;
+  }
+
+  return {
+    primarySegment: input.primary_segment_key,
+    secondarySegments: [...input.secondary_segment_keys],
+    rolePositions: [...input.role_position_keys],
+  };
+}
 
 function toIdentitySummary(
   identity: OrganizationIdentity,
@@ -94,6 +125,7 @@ export async function getCounterpartyProfileAggregation(
 }
 function toDiscoveryEntry(
   profile: CounterpartyProfileAggregation,
+  discoverySafeTaxonomy: CounterpartyDiscoverySafeTaxonomy | undefined,
 ): CounterpartyDiscoveryEntry {
   return {
     orgId: profile.orgId,
@@ -107,6 +139,7 @@ function toDiscoveryEntry(
     ).slice(0, TRACEABILITY_SUMMARY_LIMIT),
     hasTraceabilityEvidence: profile.evidenceSummary.hasTraceabilityEvidence,
     visibilityIndicators: profile.evidenceSummary.visibilityIndicators,
+    ...(discoverySafeTaxonomy ? { discoverySafeTaxonomy } : {}),
   };
 }
 
@@ -131,6 +164,23 @@ export async function listCounterpartyDiscoveryEntries(
         jurisdiction: true,
         registration_no: true,
         status: true,
+        primary_segment_key: true,
+        secondary_segments: {
+          select: {
+            segment_key: true,
+          },
+          orderBy: {
+            segment_key: 'asc',
+          },
+        },
+        role_positions: {
+          select: {
+            role_position_key: true,
+          },
+          orderBy: {
+            role_position_key: 'asc',
+          },
+        },
       },
       orderBy: [{ updated_at: 'desc' }, { created_at: 'desc' }],
       take: limit,
@@ -235,7 +285,20 @@ export async function listCounterpartyDiscoveryEntries(
     },
   }));
 
-  return profiles.map(toDiscoveryEntry);
+  const discoverySafeTaxonomyByOrgId = new Map(
+    organizations.map((organization: DiscoveryOrganizationRow) => [
+      organization.id,
+      buildDiscoverySafeTaxonomy({
+        primary_segment_key: organization.primary_segment_key,
+        secondary_segment_keys: organization.secondary_segments.map(entry => entry.segment_key),
+        role_position_keys: organization.role_positions.map(entry => entry.role_position_key),
+      }),
+    ]),
+  );
+
+  return profiles.map(profile =>
+    toDiscoveryEntry(profile, discoverySafeTaxonomyByOrgId.get(profile.orgId)),
+  );
 }
 
 async function readTrustSummary(

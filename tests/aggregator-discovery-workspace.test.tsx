@@ -12,7 +12,6 @@ function makeDiscoveryEntry(overrides: Partial<AggregatorDiscoveryEntry> = {}): 
     legalName: 'Atlas Industrial Components',
     orgType: 'B2B',
     jurisdiction: 'DE',
-    status: 'ACTIVE',
     certificationCount: 2,
     certificationTypes: ['ISO9001', 'OEKO-TEX'],
     hasTraceabilityEvidence: true,
@@ -80,11 +79,22 @@ describe('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — workspace surface', ()
   });
 
   it('does not render forbidden detail or transactional actions', () => {
-    const html = renderHtml([makeDiscoveryEntry()]);
+    const html = renderHtml([
+      makeDiscoveryEntry({
+        discoverySafeTaxonomy: {
+          primarySegment: 'Weaving',
+          secondarySegments: ['Fabric Processing'],
+          rolePositions: ['manufacturer'],
+        },
+      }),
+    ]);
 
     expect(html).not.toContain('View Detail');
     expect(html).not.toContain('Create RFQ');
     expect(html).not.toContain('Start Negotiation');
     expect(html).not.toContain('Settlement');
+    expect(html).not.toContain('Weaving');
+    expect(html).not.toContain('Fabric Processing');
+    expect(html).not.toContain('manufacturer');
   });
 });
