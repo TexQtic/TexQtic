@@ -81,6 +81,9 @@ type TenantSessionIdentity = {
   name: string;
   type: string;
   tenant_category: string;
+  primary_segment_key: string | null;
+  secondary_segment_keys: string[];
+  role_position_keys: string[];
   is_white_label: boolean;
   status: string;
   plan: TenantPlan;
@@ -141,10 +144,27 @@ async function resolveTenantSessionIdentity(input: {
         legal_name: true,
         status: true,
         org_type: true,
+        primary_segment_key: true,
         is_white_label: true,
         jurisdiction: true,
         registration_no: true,
         plan: true,
+        secondary_segments: {
+          select: {
+            segment_key: true,
+          },
+          orderBy: {
+            segment_key: 'asc',
+          },
+        },
+        role_positions: {
+          select: {
+            role_position_key: true,
+          },
+          orderBy: {
+            role_position_key: 'asc',
+          },
+        },
       },
     });
 
@@ -165,6 +185,9 @@ async function resolveTenantSessionIdentity(input: {
       name: org.legal_name,
       type: org.org_type,
       tenant_category: org.org_type,
+      primary_segment_key: org.primary_segment_key,
+      secondary_segment_keys: org.secondary_segments.map(entry => entry.segment_key),
+      role_position_keys: org.role_positions.map(entry => entry.role_position_key),
       is_white_label: org.is_white_label,
       status: org.status,
       plan,
@@ -3045,6 +3068,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           slug: tenant.slug,
           type: tenant.type,
           tenant_category: tenant.tenant_category,
+          primary_segment_key: tenant.primary_segment_key,
+          secondary_segment_keys: tenant.secondary_segment_keys,
+          role_position_keys: tenant.role_position_keys,
           is_white_label: tenant.is_white_label,
           status: tenant.status,
           plan: tenant.plan,

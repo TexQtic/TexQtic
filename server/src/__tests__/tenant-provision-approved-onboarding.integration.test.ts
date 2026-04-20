@@ -552,10 +552,13 @@ describe('tenant activation invite admission validation', () => {
       legal_name: 'Acme Textiles LLC',
       status: 'PENDING_VERIFICATION',
       org_type: 'B2B',
+      primary_segment_key: 'Weaving',
       is_white_label: false,
       jurisdiction: 'US-DE',
       registration_no: 'REG-123',
       plan: 'FREE',
+      secondary_segments: [{ segment_key: 'Fabric Processing' }],
+      role_positions: [{ role_position_key: 'manufacturer' }],
     });
     txMock.tenant.update.mockResolvedValue({ name: 'Acme Textiles' });
     txMock.membership.create.mockResolvedValue({ role: 'OWNER' });
@@ -823,6 +826,9 @@ describe('tenant activation invite admission validation', () => {
         name: 'Acme Textiles LLC',
         slug: 'acme-textiles',
         tenant_category: 'B2B',
+        primary_segment_key: 'Weaving',
+        secondary_segment_keys: ['Fabric Processing'],
+        role_position_keys: ['manufacturer'],
         is_white_label: false,
         status: 'PENDING_VERIFICATION',
         plan: 'FREE',
@@ -846,6 +852,9 @@ describe('tenant activation invite admission validation', () => {
       'is_white_label',
       'name',
       'plan',
+      'primary_segment_key',
+      'role_position_keys',
+      'secondary_segment_keys',
       'slug',
       'status',
       'tenant_category',

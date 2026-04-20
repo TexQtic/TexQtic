@@ -72,6 +72,19 @@ describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
     });
     tenantId = tenant.id;
 
+    await prisma.organizations.update({
+      where: { id: tenantId },
+      data: {
+        primary_segment_key: 'Weaving',
+        secondary_segments: {
+          create: [{ segment_key: 'Fabric Processing' }],
+        },
+        role_positions: {
+          create: [{ role_position_key: 'manufacturer' }],
+        },
+      },
+    });
+
     const user = await prisma.user.create({
       data: {
         id: randomUUID(),
@@ -225,14 +238,14 @@ describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
     expect(body.success).toBe(true);
     expect(body.data.tenant).toEqual(expect.objectContaining({
       tenant_category: 'B2B',
+      primary_segment_key: 'Weaving',
+      secondary_segment_keys: ['Fabric Processing'],
+      role_position_keys: ['manufacturer'],
       base_family: 'B2B',
       aggregator_capability: false,
       white_label_capability: false,
       commercial_plan: 'FREE',
     }));
-    expect(body.data.tenant).not.toHaveProperty('primary_segment_key');
-    expect(body.data.tenant).not.toHaveProperty('secondary_segment_keys');
-    expect(body.data.tenant).not.toHaveProperty('role_position_keys');
   });
 
   /**
