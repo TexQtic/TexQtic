@@ -14,6 +14,7 @@ const {
   buildTenantSnapshot,
   readStoredImpersonationSession,
   resolveCanonicalImpersonationTenant,
+  resolveRuntimeTenantSeedFromRecord,
   resolveTenantBootstrapAuthView,
 } = __PHASE1_FOUNDATION_CORRECTION_TESTING__;
 
@@ -205,6 +206,63 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
     }));
 
     expect(incompleteSnapshot).toBeNull();
+  });
+
+  it('normalizes list-sourced tenant identity before runtime family resolution', () => {
+    const aggregatorSeed = resolveRuntimeTenantSeedFromRecord({
+      type: 'AGGREGATOR',
+      tenant_category: null,
+      is_white_label: null,
+      isWhiteLabel: null,
+    });
+    const whiteLabelSeed = resolveRuntimeTenantSeedFromRecord({
+      type: 'B2C',
+      tenant_category: null,
+      is_white_label: null,
+      isWhiteLabel: true,
+    });
+    const b2bSeed = resolveRuntimeTenantSeedFromRecord({
+      type: 'B2B',
+      tenant_category: 'B2B',
+      is_white_label: false,
+      isWhiteLabel: null,
+    });
+
+    const aggregatorDescriptor = createTenantSessionRuntimeDescriptor({
+      tenantId: 'agg-1',
+      tenantSlug: 'qa-agg',
+      tenantName: 'QA AGG',
+      tenantCategory: aggregatorSeed.tenantCategory,
+      whiteLabelCapability: aggregatorSeed.whiteLabelCapability,
+      commercialPlan: 'PROFESSIONAL',
+      authenticatedRole: 'OWNER',
+    });
+    const whiteLabelDescriptor = createTenantSessionRuntimeDescriptor({
+      tenantId: 'wl-1',
+      tenantSlug: 'qa-wl',
+      tenantName: 'QA WL',
+      tenantCategory: whiteLabelSeed.tenantCategory,
+      whiteLabelCapability: whiteLabelSeed.whiteLabelCapability,
+      commercialPlan: 'ENTERPRISE',
+      authenticatedRole: 'OWNER',
+    });
+    const b2bDescriptor = createTenantSessionRuntimeDescriptor({
+      tenantId: 'b2b-1',
+      tenantSlug: 'qa-b2b',
+      tenantName: 'QA B2B',
+      tenantCategory: b2bSeed.tenantCategory,
+      whiteLabelCapability: b2bSeed.whiteLabelCapability,
+      commercialPlan: 'PROFESSIONAL',
+      authenticatedRole: 'OWNER',
+    });
+
+    expect(aggregatorSeed).toEqual({ tenantCategory: 'AGGREGATOR', whiteLabelCapability: false });
+    expect(whiteLabelSeed).toEqual({ tenantCategory: 'B2C', whiteLabelCapability: true });
+    expect(resolveRuntimeManifestKeyFromDescriptor(aggregatorDescriptor, 'EXPERIENCE')).toBe('aggregator_workspace');
+    expect(resolveRuntimeShellFamilyFromDescriptor(aggregatorDescriptor, 'EXPERIENCE')).toBe('AggregatorShell');
+    expect(resolveRuntimeManifestKeyFromDescriptor(whiteLabelDescriptor, 'EXPERIENCE')).toBe('wl_storefront');
+    expect(resolveRuntimeShellFamilyFromDescriptor(whiteLabelDescriptor, 'EXPERIENCE')).toBe('WhiteLabelShell');
+    expect(resolveRuntimeManifestKeyFromDescriptor(b2bDescriptor, 'EXPERIENCE')).toBe('b2b_workspace');
   });
 
   it('keeps restore and refresh anchored to canonical tenant truth when stale hints exist', () => {

@@ -1250,6 +1250,35 @@ const resolveCanonicalImpersonationTenant = (
   return snapshot;
 };
 
+const resolveRuntimeTenantSeedFromRecord = (
+  tenant: {
+    type?: string | null;
+    tenant_category?: string | null;
+    is_white_label?: boolean | null;
+    isWhiteLabel?: boolean | null;
+  } | null | undefined,
+) => {
+  let tenantCategory: string | null = null;
+  if (typeof tenant?.tenant_category === 'string' && tenant.tenant_category.trim().length > 0) {
+    tenantCategory = tenant.tenant_category;
+  } else if (typeof tenant?.type === 'string' && tenant.type.trim().length > 0) {
+    tenantCategory = tenant.type;
+  }
+
+  // Control-plane tenant list reads can still surface compat field names or omit false flags.
+  let whiteLabelCapability = false;
+  if (typeof tenant?.is_white_label === 'boolean') {
+    whiteLabelCapability = tenant.is_white_label;
+  } else if (typeof tenant?.isWhiteLabel === 'boolean') {
+    whiteLabelCapability = tenant.isWhiteLabel;
+  }
+
+  return {
+    tenantCategory,
+    whiteLabelCapability,
+  };
+};
+
 const resolveTenantBootstrapAuthView = ({
   authRealm,
   tenantRestorePending,
@@ -1277,6 +1306,7 @@ export const __PHASE1_FOUNDATION_CORRECTION_TESTING__ = {
   buildTenantSnapshot,
   readStoredImpersonationSession,
   resolveCanonicalImpersonationTenant,
+  resolveRuntimeTenantSeedFromRecord,
   resolveTenantBootstrapAuthView,
 };
 
@@ -1657,6 +1687,9 @@ const App: React.FC = () => {
   const activeTenantRecord = useMemo(() => {
     return tenants.find(tenant => tenant.id === currentTenantId) ?? null;
   }, [tenants, currentTenantId]);
+  const activeTenantRuntimeSeed = useMemo(() => {
+    return resolveRuntimeTenantSeedFromRecord(activeTenantRecord);
+  }, [activeTenantRecord]);
 
   // Convert backend Tenant to TenantConfig for UI compatibility
   const currentTenant: TenantConfig | null = useMemo(() => {
@@ -1675,8 +1708,8 @@ const App: React.FC = () => {
       slug: tenant.slug,
       name: tenant.name,
       type: tenant.type as TenantType,
-      tenant_category: tenant.tenant_category ?? tenant.type,
-      is_white_label: tenant.is_white_label ?? false,
+      tenant_category: activeTenantRuntimeSeed.tenantCategory ?? tenant.type,
+      is_white_label: activeTenantRuntimeSeed.whiteLabelCapability,
       status: tenant.status as any,
       plan: normalizeCommercialPlan(tenant.plan),
       theme: {
@@ -1697,7 +1730,7 @@ const App: React.FC = () => {
     });
 
     return resolvedTenant;
-  }, [activeTenantRecord, currentTenantId, tenants]);
+  }, [activeTenantRecord, activeTenantRuntimeSeed, currentTenantId, tenants]);
   const tenantRuntimeDescriptor = useMemo(() => {
     if (!activeTenantRecord) {
       return null;
@@ -1707,12 +1740,12 @@ const App: React.FC = () => {
       tenantId: activeTenantRecord.id,
       tenantSlug: activeTenantRecord.slug,
       tenantName: activeTenantRecord.name,
-      tenantCategory: activeTenantRecord.tenant_category,
-      whiteLabelCapability: activeTenantRecord.is_white_label,
+      tenantCategory: activeTenantRuntimeSeed.tenantCategory,
+      whiteLabelCapability: activeTenantRuntimeSeed.whiteLabelCapability,
       commercialPlan: activeTenantRecord.plan,
       authenticatedRole: tenantAuthenticatedRole,
     });
-  }, [activeTenantRecord, tenantAuthenticatedRole]);
+  }, [activeTenantRecord, activeTenantRuntimeSeed, tenantAuthenticatedRole]);
   const controlPlaneRuntimeDescriptor = useMemo(() => {
     if (!controlPlaneIdentity) {
       return null;
