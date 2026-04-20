@@ -108,6 +108,9 @@ describe('tenantProvision.service', () => {
         aggregator_capability: false,
         white_label_capability: false,
         commercial_plan: 'PROFESSIONAL',
+        primary_segment_key: 'Yarn',
+        secondary_segment_keys: ['Weaving', 'Knitting'],
+        role_position_keys: ['manufacturer', 'trader'],
         organization: {
           legalName: 'Acme Textiles LLC',
           displayName: 'Acme Textiles',
@@ -146,6 +149,30 @@ describe('tenantProvision.service', () => {
           registration_no: 'REG-123',
           external_orchestration_ref: 'ocase_12345',
           status: 'VERIFICATION_APPROVED',
+          primary_segment_key: 'Yarn',
+          secondary_segments: {
+            create: [{ segment_key: 'Weaving' }, { segment_key: 'Knitting' }],
+          },
+          role_positions: {
+            create: [
+              { role_position_key: 'manufacturer' },
+              { role_position_key: 'trader' },
+            ],
+          },
+        }),
+        update: expect.objectContaining({
+          primary_segment_key: 'Yarn',
+          secondary_segments: {
+            deleteMany: {},
+            create: [{ segment_key: 'Weaving' }, { segment_key: 'Knitting' }],
+          },
+          role_positions: {
+            deleteMany: {},
+            create: [
+              { role_position_key: 'manufacturer' },
+              { role_position_key: 'trader' },
+            ],
+          },
         }),
       })
     );
@@ -223,15 +250,21 @@ describe('tenantProvision.service', () => {
         }),
       })
     );
-    expect(tx.organizations.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        create: expect.objectContaining({
-          org_type: 'AGGREGATOR',
-          plan: 'ENTERPRISE',
-          is_white_label: true,
-        }),
-      })
-    );
+    const organizationUpsertCall = tx.organizations.upsert.mock.calls.at(-1)?.[0];
+    expect(organizationUpsertCall).toBeDefined();
+    expect(organizationUpsertCall.create).toMatchObject({
+      org_type: 'AGGREGATOR',
+      plan: 'ENTERPRISE',
+      is_white_label: true,
+      primary_segment_key: null,
+    });
+    expect(organizationUpsertCall.create).not.toHaveProperty('secondary_segments');
+    expect(organizationUpsertCall.create).not.toHaveProperty('role_positions');
+    expect(organizationUpsertCall.update).toMatchObject({
+      primary_segment_key: null,
+      secondary_segments: { deleteMany: {} },
+      role_positions: { deleteMany: {} },
+    });
     expect(tx.user.findUnique).toHaveBeenCalledWith({ where: { email: 'admin@legacy.test' }, select: { id: true } });
     expect(tx.membership.create).toHaveBeenCalledOnce();
     expect(tx.invite.create).not.toHaveBeenCalled();

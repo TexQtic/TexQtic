@@ -211,6 +211,9 @@ describe('approved-onboarding tenant provisioning route', () => {
         aggregator_capability: false,
         white_label_capability: false,
         commercial_plan: 'PROFESSIONAL',
+        primary_segment_key: 'Yarn',
+        secondary_segment_keys: ['Weaving', 'Knitting'],
+        role_position_keys: ['manufacturer', 'trader'],
         organization: {
           legalName: 'Acme Textiles LLC',
           displayName: 'Acme Textiles',
@@ -235,6 +238,9 @@ describe('approved-onboarding tenant provisioning route', () => {
         aggregator_capability: false,
         white_label_capability: false,
         commercial_plan: 'PROFESSIONAL',
+        primary_segment_key: 'Yarn',
+        secondary_segment_keys: ['Weaving', 'Knitting'],
+        role_position_keys: ['manufacturer', 'trader'],
         firstOwner: { email: 'owner@acme.test' },
       }),
       expect.objectContaining({
@@ -289,6 +295,95 @@ describe('approved-onboarding tenant provisioning route', () => {
         aggregator_capability: true,
         white_label_capability: false,
         commercial_plan: 'FREE',
+        organization: {
+          legalName: 'Acme Textiles LLC',
+          displayName: 'Acme Textiles',
+          jurisdiction: 'US-DE',
+          registrationNumber: 'REG-123',
+        },
+        firstOwner: {
+          email: 'OWNER@ACME.TEST',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(provisionTenantMock).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects taxonomy assignment unless base_family is explicitly supplied as canonical B2B ownership', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_12345',
+        tenant_category: 'B2B',
+        primary_segment_key: 'Yarn',
+        secondary_segment_keys: ['Weaving'],
+        role_position_keys: ['manufacturer'],
+        organization: {
+          legalName: 'Acme Textiles LLC',
+          displayName: 'Acme Textiles',
+          jurisdiction: 'US-DE',
+          registrationNumber: 'REG-123',
+        },
+        firstOwner: {
+          email: 'OWNER@ACME.TEST',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(provisionTenantMock).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects duplicate or conflicting canonical taxonomy assignments', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_12345',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'PROFESSIONAL',
+        primary_segment_key: 'Yarn',
+        secondary_segment_keys: ['Yarn', 'Weaving', 'Weaving'],
+        role_position_keys: ['manufacturer', 'manufacturer'],
+        organization: {
+          legalName: 'Acme Textiles LLC',
+          displayName: 'Acme Textiles',
+          jurisdiction: 'US-DE',
+          registrationNumber: 'REG-123',
+        },
+        firstOwner: {
+          email: 'OWNER@ACME.TEST',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(provisionTenantMock).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects role_position_keys outside the locked minimal set', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_12345',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'PROFESSIONAL',
+        primary_segment_key: 'Yarn',
+        role_position_keys: ['manufacturer', 'distributor'],
         organization: {
           legalName: 'Acme Textiles LLC',
           displayName: 'Acme Textiles',

@@ -60,7 +60,49 @@ function assertLegacyProvisionRequest(request: NormalizedTenantProvisionRequest)
     throw new Error('PROVISION_ABORT: Legacy admin provisioning requires orgName, primaryAdminEmail, primaryAdminPassword, and commercial_plan');
   }
 
-  return request as LegacyProvisionRequest;
+  return request as LegacyAdminProvisionRequest;
+}
+
+function buildOrganizationTaxonomyCreateData(request: NormalizedTenantProvisionRequest) {
+  return {
+    primary_segment_key: request.primary_segment_key,
+    ...(request.secondary_segment_keys.length > 0
+      ? {
+          secondary_segments: {
+            create: request.secondary_segment_keys.map(segment_key => ({ segment_key })),
+          },
+        }
+      : {}),
+    ...(request.role_position_keys.length > 0
+      ? {
+          role_positions: {
+            create: request.role_position_keys.map(role_position_key => ({ role_position_key })),
+          },
+        }
+      : {}),
+  };
+}
+
+function buildOrganizationTaxonomyUpdateData(request: NormalizedTenantProvisionRequest) {
+  return {
+    primary_segment_key: request.primary_segment_key,
+    secondary_segments: {
+      deleteMany: {},
+      ...(request.secondary_segment_keys.length > 0
+        ? {
+            create: request.secondary_segment_keys.map(segment_key => ({ segment_key })),
+          }
+        : {}),
+    },
+    role_positions: {
+      deleteMany: {},
+      ...(request.role_position_keys.length > 0
+        ? {
+            create: request.role_position_keys.map(role_position_key => ({ role_position_key })),
+          }
+        : {}),
+    },
+  };
 }
 
 function buildInviteArtifact() {
@@ -120,6 +162,8 @@ export async function provisionTenant(
     commercial_plan: request.commercial_plan,
   };
   const storageBridge = resolveProvisioningStorageBridge(provisioningIdentity);
+  const organizationTaxonomyCreateData = buildOrganizationTaxonomyCreateData(request);
+  const organizationTaxonomyUpdateData = buildOrganizationTaxonomyUpdateData(request);
 
   let passwordHash: string | null = null;
   let orgDisplayName: string;
@@ -249,6 +293,7 @@ export async function provisionTenant(
         status: organizationStatus,
         plan: storageBridge.plan,
         is_white_label: storageBridge.is_white_label,
+        ...organizationTaxonomyCreateData,
       },
       update: {
         slug: tenant.slug,
@@ -260,6 +305,7 @@ export async function provisionTenant(
         status: organizationStatus,
         plan: storageBridge.plan,
         is_white_label: storageBridge.is_white_label,
+        ...organizationTaxonomyUpdateData,
         updated_at: new Date(),
       },
       select: {

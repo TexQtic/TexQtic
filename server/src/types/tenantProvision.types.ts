@@ -17,6 +17,20 @@ import type {
 
 export type TenantProvisionCategory = 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
 
+export const ORGANIZATION_ROLE_POSITION_KEYS = [
+  'manufacturer',
+  'trader',
+  'service_provider',
+] as const;
+
+export type OrganizationRolePositionKey = (typeof ORGANIZATION_ROLE_POSITION_KEYS)[number];
+
+export interface CanonicalProvisioningTaxonomyAssignment {
+  primary_segment_key: string | null;
+  secondary_segment_keys: string[];
+  role_position_keys: OrganizationRolePositionKey[];
+}
+
 type TenantProvisioningMode = 'LEGACY_ADMIN' | 'APPROVED_ONBOARDING';
 
 /**
@@ -64,6 +78,15 @@ export interface TenantProvisionRequest {
   /** Canonical commercial-plan write carrier. */
   commercial_plan?: TenantPlan;
 
+  /** Canonical B2B taxonomy primary segment write carrier. */
+  primary_segment_key?: string;
+
+  /** Canonical B2B taxonomy secondary segments write carrier. */
+  secondary_segment_keys?: string[];
+
+  /** Canonical B2B role-position write carrier. */
+  role_position_keys?: OrganizationRolePositionKey[];
+
   /** Cross-system orchestration reference owned by the onboarding case. */
   orchestrationReference?: string;
 
@@ -94,8 +117,12 @@ export interface NormalizedTenantProvisionRequest
     | 'aggregator_capability'
     | 'white_label_capability'
     | 'commercial_plan'
+    | 'primary_segment_key'
+    | 'secondary_segment_keys'
+    | 'role_position_keys'
   >,
-    CanonicalProvisioningIdentity {}
+    CanonicalProvisioningIdentity,
+    CanonicalProvisioningTaxonomyAssignment {}
 
 export interface LegacyAdminProvisionRequest extends NormalizedTenantProvisionRequest {
   provisioningMode?: 'LEGACY_ADMIN';
@@ -254,6 +281,131 @@ function collectLegacyIdentityConflicts(
   return errors;
 }
 
+function normalizeSegmentKey(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeSegmentKeyList(values: string[] | undefined): string[] {
+  if (!values) {
+    return [];
+  }
+
+  return values
+    .map(value => value.trim())
+    .filter((value): value is string => value.length > 0);
+}
+
+function normalizeRolePositionKeyList(
+  values: OrganizationRolePositionKey[] | undefined
+): OrganizationRolePositionKey[] {
+  if (!values) {
+    return [];
+  }
+
+  return values
+    .map(value => value.trim())
+    .filter((value): value is OrganizationRolePositionKey => value.length > 0);
+}
+
+function hasDuplicateValues(values: string[]): boolean {
+  return new Set(values).size !== values.length;
+}
+
+function resolveCanonicalProvisioningTaxonomyInput(
+  request: TenantProvisionRequest,
+  canonicalIdentity: CanonicalProvisioningIdentity
+):
+  | { success: true; data: CanonicalProvisioningTaxonomyAssignment }
+  | { success: false; errors: TenantProvisionNormalizationIssue[] } {
+  const primary_segment_key = normalizeSegmentKey(request.primary_segment_key);
+  const secondary_segment_keys = normalizeSegmentKeyList(request.secondary_segment_keys);
+  const role_position_keys = normalizeRolePositionKeyList(request.role_position_keys);
+  const errors: TenantProvisionNormalizationIssue[] = [];
+  const taxonomyAssignmentRequested =
+    primary_segment_key !== null ||
+    secondary_segment_keys.length > 0 ||
+    role_position_keys.length > 0;
+
+  if (!taxonomyAssignmentRequested) {
+    return {
+      success: true,
+      data: {
+        primary_segment_key: null,
+        secondary_segment_keys: [],
+        role_position_keys: [],
+      },
+    };
+  }
+
+  if (request.base_family !== 'B2B') {
+    errors.push({
+      path: ['base_family'],
+      message: 'base_family must be explicitly set to B2B when assigning canonical B2B taxonomy',
+    });
+  }
+
+  if (canonicalIdentity.base_family !== 'B2B') {
+    errors.push({
+      path: ['base_family'],
+      message: 'canonical B2B taxonomy may only be assigned for B2B provisioning',
+    });
+  }
+
+  for (const [index, rolePositionKey] of role_position_keys.entries()) {
+    if (!ORGANIZATION_ROLE_POSITION_KEYS.includes(rolePositionKey)) {
+      errors.push({
+        path: ['role_position_keys', index],
+        message: 'role_position_keys entries must be one of: manufacturer, trader, service_provider',
+      });
+    }
+  }
+
+  if (primary_segment_key === null) {
+    errors.push({
+      path: ['primary_segment_key'],
+      message: 'primary_segment_key is required when assigning canonical B2B taxonomy',
+    });
+  }
+
+  if (
+    primary_segment_key !== null &&
+    secondary_segment_keys.includes(primary_segment_key)
+  ) {
+    errors.push({
+      path: ['secondary_segment_keys'],
+      message: 'primary_segment_key must not also appear in secondary_segment_keys',
+    });
+  }
+
+  if (hasDuplicateValues(secondary_segment_keys)) {
+    errors.push({
+      path: ['secondary_segment_keys'],
+      message: 'secondary_segment_keys must be unique',
+    });
+  }
+
+  if (hasDuplicateValues(role_position_keys)) {
+    errors.push({
+      path: ['role_position_keys'],
+      message: 'role_position_keys must be unique',
+    });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      primary_segment_key,
+      secondary_segment_keys,
+      role_position_keys,
+    },
+  };
+}
+
 export function normalizeTenantProvisionRequest(
   request: TenantProvisionRequest
 ):
@@ -266,6 +418,7 @@ export function normalizeTenantProvisionRequest(
   }
 
   const canonicalIdentity = canonicalIdentityResult.data;
+  const canonicalTaxonomyResult = resolveCanonicalProvisioningTaxonomyInput(request, canonicalIdentity);
 
   let storageBridge: ReturnType<typeof resolveProvisioningStorageBridge>;
 
@@ -281,11 +434,16 @@ export function normalizeTenantProvisionRequest(
     };
   }
 
-  const errors = collectLegacyIdentityConflicts(request, canonicalIdentity, storageBridge);
+  const errors = [
+    ...collectLegacyIdentityConflicts(request, canonicalIdentity, storageBridge),
+    ...(canonicalTaxonomyResult.success ? [] : canonicalTaxonomyResult.errors),
+  ];
 
   if (errors.length > 0) {
     return { success: false, errors };
   }
+
+  const canonicalTaxonomy = canonicalTaxonomyResult.data;
 
   const {
     plan: _plan,
@@ -295,6 +453,9 @@ export function normalizeTenantProvisionRequest(
     aggregator_capability: _rawAggregatorCapability,
     white_label_capability: _rawWhiteLabelCapability,
     commercial_plan: _rawCommercialPlan,
+    primary_segment_key: _rawPrimarySegmentKey,
+    secondary_segment_keys: _rawSecondarySegmentKeys,
+    role_position_keys: _rawRolePositionKeys,
     ...rest
   } = request;
 
@@ -303,6 +464,7 @@ export function normalizeTenantProvisionRequest(
     data: {
       ...rest,
       ...canonicalIdentity,
+      ...canonicalTaxonomy,
     },
   };
 }

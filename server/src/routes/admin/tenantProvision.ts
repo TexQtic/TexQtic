@@ -46,6 +46,18 @@ const baseFamilySchema = z.enum(['B2B', 'B2C', 'INTERNAL'], {
   errorMap: () => ({ message: 'base_family must be one of: B2B, B2C, INTERNAL' }),
 });
 
+const segmentKeySchema = z
+  .string()
+  .trim()
+  .min(1, 'segment keys must be non-empty')
+  .max(100, 'segment keys must be at most 100 characters');
+
+const rolePositionKeySchema = z.enum(['manufacturer', 'trader', 'service_provider'], {
+  errorMap: () => ({
+    message: 'role_position_keys entries must be one of: manufacturer, trader, service_provider',
+  }),
+});
+
 const provisionIdentitySchemaShape = {
   plan: planSchema.optional(),
   tenant_category: tenantCategorySchema.optional(),
@@ -54,6 +66,9 @@ const provisionIdentitySchemaShape = {
   aggregator_capability: z.boolean().optional(),
   white_label_capability: z.boolean().optional(),
   commercial_plan: planSchema.optional(),
+  primary_segment_key: segmentKeySchema.optional(),
+  secondary_segment_keys: z.array(segmentKeySchema).optional(),
+  role_position_keys: z.array(rolePositionKeySchema).optional(),
 };
 
 const legacyProvisionBodySchema = z.object({
