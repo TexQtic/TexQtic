@@ -49,7 +49,7 @@ export const WhiteLabelSettings: React.FC<{
       <div>
         <h1 className="text-2xl font-bold">Storefront Configuration</h1>
         <p className="text-slate-500 text-sm">
-          Manage your custom domain, brand identity, and theme settings.
+          Manage brand, domain, and theme controls for this tenant storefront from the white-label admin overlay.
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export const WhiteLabelSettings: React.FC<{
               <div className="space-y-3">
                 <p className="text-sm text-slate-500">
                   Add and verify custom domains for your storefront. Manage DNS records and
-                  domain verification in the Domains panel.
+                  domain verification in this overlay's Domains view.
                 </p>
                 <button
                   onClick={onNavigateDomains}
@@ -76,8 +76,8 @@ export const WhiteLabelSettings: React.FC<{
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <p className="text-sm text-slate-500">
                   Custom domain management is available in the{' '}
-                  <span className="font-semibold text-slate-700">White Label Admin</span> panel
-                  under Domains. Contact your account owner if you need access.
+                  <span className="font-semibold text-slate-700">White-Label Admin Overlay</span>{' '}
+                  under Domains. Contact your account owner if you need overlay access.
                 </p>
               </div>
             )}

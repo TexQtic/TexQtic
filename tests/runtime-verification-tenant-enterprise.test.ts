@@ -53,6 +53,7 @@ import {
   removePendingInviteById,
   replacePendingInviteById,
 } from '../components/Tenant/TeamManagement';
+import { WhiteLabelSettings } from '../components/Tenant/WhiteLabelSettings';
 import { AggregatorShell, B2BShell, WhiteLabelAdminShell, WhiteLabelShell } from '../layouts/Shells';
 import { listEscalations, type EscalationListResponse } from '../services/escalationService';
 import { listEscrows, type EscrowListResponse } from '../services/escrowService';
@@ -628,6 +629,15 @@ function renderWhiteLabelAdminShell() {
       },
       React.createElement('section', null, 'White-label admin body'),
     ),
+  );
+}
+
+function renderWhiteLabelSettings(hasDomainsNavigation = false) {
+  return renderToStaticMarkup(
+    React.createElement(WhiteLabelSettings, {
+      tenant: makeWhiteLabelTenant(),
+      ...(hasDomainsNavigation ? { onNavigateDomains: () => undefined } : {}),
+    }),
   );
 }
 
@@ -1859,10 +1869,12 @@ describe('runtime verification - tenant membership pending invite surface', () =
     expect(html).toContain('data-mobile-item-count="11"');
   });
 
-  it('adds handheld menu fallbacks for aggregator, white-label storefront, and white-label admin shells', () => {
+  it('adds handheld menu fallbacks for aggregator, white-label storefront, and the storefront-linked white-label admin overlay', () => {
     const aggregatorHtml = renderAggregatorShell();
     const storefrontHtml = renderWhiteLabelShell();
     const adminHtml = renderWhiteLabelAdminShell();
+    const overlaySettingsHtml = renderWhiteLabelSettings();
+    const overlayDomainsHtml = renderWhiteLabelSettings(true);
 
     expect(aggregatorHtml).toContain('data-mobile-nav="aggregator"');
     expect(aggregatorHtml).toContain('Discovery Capability');
@@ -1878,7 +1890,14 @@ describe('runtime verification - tenant membership pending invite surface', () =
 
     expect(adminHtml).toContain('data-mobile-nav="wl-admin"');
     expect(adminHtml).toContain('Store Profile');
-    expect(adminHtml).toContain('Storefront');
+    expect(adminHtml).toContain('White-Label Admin Overlay');
+    expect(adminHtml).toContain('Storefront-linked controls for this tenant.');
+    expect(adminHtml).toContain('Return to Storefront');
+    expect(adminHtml).toContain('Storefront-linked overlay');
+
+    expect(overlaySettingsHtml).toContain('white-label admin overlay');
+    expect(overlaySettingsHtml).toContain('White-Label Admin Overlay');
+    expect(overlayDomainsHtml).toContain("this overlay&#x27;s Domains view");
   });
 
   it('renders the shared tenant-admin destination as the same common-core interpretation', () => {

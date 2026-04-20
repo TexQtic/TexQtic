@@ -552,9 +552,9 @@ export const WhiteLabelShell: React.FC<ShellProps> = ({ tenant, children, naviga
 };
 
 // ── WhiteLabelAdminShell ───────────────────────────────────────────────────────
-// Wave 4 P1: Store Admin back-office console for WL OWNER / ADMIN users.
-// Rendered when appState === 'WL_ADMIN'. The storefront shell (WhiteLabelShell)
-// remains reachable via the "← Storefront" link at the bottom of the sidebar.
+// Wave 4 P1: White-label admin overlay for WL OWNER / ADMIN users.
+// Rendered when appState === 'WL_ADMIN'. The storefront shell remains reachable
+// so the overlay stays visibly tied to tenant storefront continuity.
 
 interface WLAdminShellProps {
   tenant: TenantConfig;
@@ -591,7 +591,7 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
   if (onNavigateStorefront) {
     mobileMenuItems.push({
       key: 'storefront',
-      label: 'Storefront',
+      label: 'Return to Storefront',
       onSelect: onNavigateStorefront,
     });
   }
@@ -600,12 +600,15 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
   <div className="min-h-screen flex bg-white font-sans">
     <aside className="hidden lg:flex w-60 border-r border-slate-100 flex-col py-8 px-6 sticky top-0 h-screen overflow-y-auto">
       <div className="mb-8">
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Store Admin</div>
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">White-Label Admin Overlay</div>
         <div
           className="font-serif italic text-lg truncate"
           style={{ color: tenant.theme.primaryColor }}
         >
           {tenant.name}
+        </div>
+        <div className="mt-2 text-[11px] leading-5 text-slate-500">
+          Storefront-linked controls for this tenant.
         </div>
       </div>
       <nav className="flex-1 space-y-1">
@@ -639,11 +642,11 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
           onClick={onNavigateStorefront}
           className="mt-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-700 transition-colors flex items-center gap-1"
         >
-          ← Storefront
+          ← Return to Storefront
         </button>
       )}
       <div className="mt-4 pt-4 border-t border-slate-100 text-[9px] text-slate-300 font-mono">
-        WL Admin · Wave 4 P1
+        WL Admin Overlay · Wave 4 P1
       </div>
     </aside>
     <div className="flex-1 flex flex-col min-h-screen">
@@ -651,18 +654,18 @@ export const WhiteLabelAdminShell: React.FC<WLAdminShellProps> = ({
         <div className="flex min-w-0 items-center gap-3">
           <MobileShellMenu
             shellId="wl-admin"
-            title="white-label admin navigation menu"
+            title="white-label admin overlay navigation menu"
             items={mobileMenuItems}
             tone="light"
             breakpoint="lg"
             align="left"
           />
           <h2 className="font-semibold text-slate-700 text-sm truncate">
-            {WL_ADMIN_NAV.find(item => navigation?.items.some(entry => entry.routeKey === item.routeKey && entry.active))?.label ?? 'Store Admin'}
+            {WL_ADMIN_NAV.find(item => navigation?.items.some(entry => entry.routeKey === item.routeKey && entry.active))?.label ?? 'Admin Overlay'}
           </h2>
         </div>
         <span className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-200 px-3 py-1 rounded-full">
-          White Label
+          Storefront-linked overlay
         </span>
       </header>
       <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-slate-50 relative">{children}</main>
