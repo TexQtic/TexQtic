@@ -37,6 +37,7 @@ Authority posture: inherits the April 13 / April 14 / April 18 authority chain a
 
 ## Notes
 
+- `White-label admin overlay entry-path repair` (`88b6f3f`) is `VERIFIED_COMPLETE` after fresh QA WL production verification of the shared-core settings entry, overlay shell, Domains path, storefront return path, and unchanged Team Access shared-core wording; this closes that bounded WL overlay slice only and does not open a new tenant-admin common-core / overlay visibility slice.
 - Status vocabulary used here is intentionally narrow: `IMPLEMENTED_AND_PRODUCTION_VERIFIED`, `IMPLEMENTED_BUT_NOT_PRODUCTION_VISIBLE`, `PARTIALLY_IMPLEMENTED_INTERNAL_ONLY`, `BLOCKED_BY_CONTRACT_OR_SCHEMA`, `NOT_YET_OPENED`, `LOCALLY_EXHAUSTED`, `VERIFIED_COMPLETE`.
 - `Exact next bounded slice` should remain `NONE_READY` when repo truth does not yet support one truthful narrow opening.
 - This tracker is support-only. It operationalizes visibility and anti-drift checks against the April authority chain; it does not supersede `TS`, `TAX`, `WAVE`, `SPINE`, `PLAN`, or Layer 0.
