@@ -70,10 +70,18 @@ export interface TenantConfig {
   slug: string;
   name: string;
   type: TenantType;
-  /** B2-REM-3: canonical organizational identity (B2-REM-2). Authoritative routing signal. */
+  /** Compatibility category alias retained while canonical flat carrier normalizes downstream reads. */
   tenant_category?: string | null;
-  /** B2-REM-3: white-label capability flag (B2-REM-2). Authoritative WL routing signal. */
+  /** Compatibility white-label alias retained while canonical flat carrier normalizes downstream reads. */
   is_white_label?: boolean;
+  /** Canonical base family read-model carrier. */
+  base_family?: 'B2B' | 'B2C' | 'INTERNAL' | null;
+  /** Canonical aggregator capability read-model carrier. */
+  aggregator_capability?: boolean;
+  /** Canonical white-label capability read-model carrier. */
+  white_label_capability?: boolean;
+  /** Canonical commercial plan read-model carrier. */
+  commercial_plan?: CommercialPlan | null;
   status: TenantStatus;
   /** Org-backed onboarding lifecycle status used for onboarding completion. */
   onboarding_status?: string | null;

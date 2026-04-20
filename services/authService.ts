@@ -26,10 +26,18 @@ export interface LoginResponse {
   };
   /** Canonical org_type from organizations table (Doctrine v1.4). null when org not yet provisioned. */
   tenantType?: string | null;
-  /** B2-REM-3: canonical tenant identity category (B2-REM-2). Preferred over tenantType for routing. */
+  /** Compatibility category alias retained while canonical flat carrier normalizes downstream reads. */
   tenant_category?: string | null;
-  /** B2-REM-3: white-label capability flag (B2-REM-2). Authoritative WL routing signal. */
+  /** Compatibility white-label alias retained while canonical flat carrier normalizes downstream reads. */
   is_white_label?: boolean;
+  /** Canonical base family read-model carrier. */
+  base_family?: 'B2B' | 'B2C' | 'INTERNAL' | null;
+  /** Canonical aggregator capability read-model carrier. */
+  aggregator_capability?: boolean;
+  /** Canonical white-label capability read-model carrier. */
+  white_label_capability?: boolean;
+  /** Canonical commercial plan read-model carrier. */
+  commercial_plan?: import('../types').CommercialPlan | null;
 }
 
 export interface CurrentUserResponse {
@@ -44,10 +52,18 @@ export interface CurrentUserResponse {
     slug: string;
     name: string;
     type: string;
-    /** B2-REM-3: canonical tenant identity category (B2-REM-2). */
+    /** Compatibility category alias retained while canonical flat carrier normalizes downstream reads. */
     tenant_category?: string | null;
-    /** B2-REM-3: white-label capability flag (B2-REM-2). */
+    /** Compatibility white-label alias retained while canonical flat carrier normalizes downstream reads. */
     is_white_label?: boolean;
+    /** Canonical base family read-model carrier. */
+    base_family?: 'B2B' | 'B2C' | 'INTERNAL' | null;
+    /** Canonical aggregator capability read-model carrier. */
+    aggregator_capability?: boolean;
+    /** Canonical white-label capability read-model carrier. */
+    white_label_capability?: boolean;
+    /** Canonical commercial plan read-model carrier. */
+    commercial_plan?: import('../types').CommercialPlan | null;
     status:
       | 'ACTIVE'
       | 'SUSPENDED'

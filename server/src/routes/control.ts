@@ -4,7 +4,12 @@ import { Prisma, type EventLog, type PrismaClient } from '@prisma/client';
 import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendForbidden, sendNotFound, sendUnauthorized, sendValidationError } from '../utils/response.js';
 import { randomUUID } from 'node:crypto';
-import { withDbContext, type DatabaseContext } from '../lib/database-context.js';
+import {
+  canonicalizeTenantPlan,
+  resolveCanonicalProvisioningIdentity,
+  withDbContext,
+  type DatabaseContext,
+} from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
 import { EscalationService } from '../services/escalation.service.js';
@@ -169,6 +174,18 @@ function isProtectedTenantArchiveTarget(target: {
   return protectedTenantArchiveSlugs.has(normalizedSlug) || protectedTenantArchiveNames.has(normalizedName);
 }
 
+function resolveTenantReadModelIdentity(tenant: {
+  type: string;
+  isWhiteLabel: boolean;
+  plan: string;
+}) {
+  return resolveCanonicalProvisioningIdentity({
+    tenantCategory: tenant.type,
+    whiteLabelCapability: tenant.isWhiteLabel,
+    commercialPlan: canonicalizeTenantPlan(tenant.plan),
+  });
+}
+
 function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
   switch (name) {
     case financeSupervisionEventTypeByOutcome.VERIFIED:
@@ -245,9 +262,10 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         pendingFirstOwnerPreparationInvites.map((invite: { tenantId: string }) => invite.tenantId)
       );
 
-      return tenantRows.map((tenant: { id: string }) => ({
+      return tenantRows.map((tenant: { id: string; type: string; isWhiteLabel: boolean; plan: string }) => ({
         ...tenant,
         tenant_category: tenant.type,
+        ...resolveTenantReadModelIdentity(tenant),
         has_pending_first_owner_preparation_invite: invitedTenantIds.has(tenant.id),
       }));
     });
@@ -296,6 +314,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     const tenantWithOnboardingStatus = {
       ...tenantRecord,
       tenant_category: tenantRecord.type,
+      ...resolveTenantReadModelIdentity(tenantRecord),
       onboarding_status: (await readOrganizationStatuses([tenantRecord.id])).get(tenantRecord.id) ?? null,
     };
 

@@ -11,6 +11,7 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import {
+  __PHASE1_FOUNDATION_CORRECTION_TESTING__,
   __B2B_BUYER_RFQ_DETAIL_CLOSE_TESTING__,
   __B2B_BUYER_RFQ_DETAIL_RETURN_TESTING__,
   __B2B_BUYER_RFQ_LIST_TESTING__,
@@ -82,6 +83,43 @@ const tenantDeleteMock = vi.mocked(tenantDelete);
 const tenantGetMock = vi.mocked(tenantGet);
 const tenantPatchMock = vi.mocked(tenantPatch);
 const tenantPostMock = vi.mocked(tenantPost);
+
+describe('canonical identity carrier intake', () => {
+  it('prefers the flat canonical carrier over legacy aliases for runtime seeds', () => {
+    const { buildTenantSnapshot, resolveRuntimeTenantSeedFromRecord } =
+      __PHASE1_FOUNDATION_CORRECTION_TESTING__;
+
+    const snapshot = buildTenantSnapshot({
+      id: 'tenant-1',
+      slug: 'tenant-one',
+      name: 'Tenant One',
+      type: 'B2B',
+      tenant_category: 'B2B',
+      is_white_label: false,
+      base_family: 'INTERNAL',
+      aggregator_capability: true,
+      white_label_capability: true,
+      commercial_plan: 'ENTERPRISE',
+      status: 'ACTIVE',
+      plan: 'FREE',
+    });
+
+    expect(snapshot).toEqual(expect.objectContaining({
+      type: 'AGGREGATOR',
+      tenant_category: 'AGGREGATOR',
+      is_white_label: true,
+      base_family: 'INTERNAL',
+      aggregator_capability: true,
+      white_label_capability: true,
+      commercial_plan: 'ENTERPRISE',
+      plan: 'ENTERPRISE',
+    }));
+    expect(resolveRuntimeTenantSeedFromRecord(snapshot)).toEqual({
+      tenantCategory: 'AGGREGATOR',
+      whiteLabelCapability: true,
+    });
+  });
+});
 
 const {
   createInitialBuyerRfqDialogState,

@@ -223,6 +223,13 @@ describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body.success).toBe(true);
+    expect(body.data.tenant).toEqual(expect.objectContaining({
+      tenant_category: 'B2B',
+      base_family: 'B2B',
+      aggregator_capability: false,
+      white_label_capability: false,
+      commercial_plan: 'FREE',
+    }));
   });
 
   /**

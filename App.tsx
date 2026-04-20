@@ -925,16 +925,84 @@ type StoredImpersonationSession = {
 
 type RehydrationTracePayload = Record<string, unknown>;
 
-const summarizeTenantIdentity = (tenant?: {
+type TenantIdentityCarrierRecord = {
   id?: string | null;
   slug?: string | null;
   name?: string | null;
   type?: string | null;
   tenant_category?: string | null;
   is_white_label?: boolean | null;
+  isWhiteLabel?: boolean | null;
+  base_family?: string | null;
+  aggregator_capability?: boolean | null;
+  white_label_capability?: boolean | null;
+  commercial_plan?: string | null;
   status?: string | null;
   plan?: string | null;
-} | null) => {
+};
+
+const normalizeBaseFamily = (value: string | null | undefined) => {
+  const normalized = value?.trim().toUpperCase();
+
+  switch (normalized) {
+    case TenantType.B2B:
+    case TenantType.B2C:
+    case TenantType.INTERNAL:
+      return normalized;
+    default:
+      return null;
+  }
+};
+
+const normalizeCompatTenantCategory = (value: string | null | undefined) => {
+  const normalized = value?.trim().toUpperCase();
+
+  switch (normalized) {
+    case TenantType.AGGREGATOR:
+    case TenantType.B2B:
+    case TenantType.B2C:
+    case TenantType.INTERNAL:
+      return normalized;
+    default:
+      return null;
+  }
+};
+
+const resolveTenantIdentityCarrier = (tenant?: TenantIdentityCarrierRecord | null) => {
+  const compatCategory = normalizeCompatTenantCategory(tenant?.tenant_category ?? tenant?.type);
+  const baseFamily = normalizeBaseFamily(tenant?.base_family)
+    ?? (compatCategory === TenantType.B2B || compatCategory === TenantType.B2C || compatCategory === TenantType.INTERNAL
+      ? compatCategory
+      : null);
+  const aggregatorCapability = typeof tenant?.aggregator_capability === 'boolean'
+    ? tenant.aggregator_capability
+    : compatCategory === TenantType.AGGREGATOR;
+  let whiteLabelCapability = false;
+  if (typeof tenant?.white_label_capability === 'boolean') {
+    whiteLabelCapability = tenant.white_label_capability;
+  } else if (typeof tenant?.is_white_label === 'boolean') {
+    whiteLabelCapability = tenant.is_white_label;
+  } else if (typeof tenant?.isWhiteLabel === 'boolean') {
+    whiteLabelCapability = tenant.isWhiteLabel;
+  }
+
+  let commercialPlanSource: string | null = null;
+  if (typeof tenant?.commercial_plan === 'string' && tenant.commercial_plan.trim().length > 0) {
+    commercialPlanSource = tenant.commercial_plan;
+  } else if (typeof tenant?.plan === 'string' && tenant.plan.trim().length > 0) {
+    commercialPlanSource = tenant.plan;
+  }
+
+  return {
+    baseFamily,
+    aggregatorCapability,
+    whiteLabelCapability,
+    commercialPlan: commercialPlanSource ? normalizeCommercialPlan(commercialPlanSource) : null,
+    tenantCategory: aggregatorCapability ? TenantType.AGGREGATOR : baseFamily ?? compatCategory,
+  };
+};
+
+const summarizeTenantIdentity = (tenant?: TenantIdentityCarrierRecord | null) => {
   if (!tenant) {
     return null;
   }
@@ -946,6 +1014,10 @@ const summarizeTenantIdentity = (tenant?: {
     type: tenant.type ?? null,
     tenant_category: tenant.tenant_category ?? null,
     is_white_label: tenant.is_white_label ?? null,
+    base_family: tenant.base_family ?? null,
+    aggregator_capability: tenant.aggregator_capability ?? null,
+    white_label_capability: tenant.white_label_capability ?? null,
+    commercial_plan: tenant.commercial_plan ?? null,
     status: tenant.status ?? null,
     plan: tenant.plan ?? null,
   };
@@ -1111,21 +1183,14 @@ const readStoredAdminJwtClaims = (): { adminId: string; role: string | null; exp
   }
 };
 
-const buildTenantSnapshot = (tenant?: {
-  id?: string | null;
-  slug?: string | null;
-  name?: string | null;
-  type?: string | null;
-  tenant_category?: string | null;
-  is_white_label?: boolean | null;
-  status?: string | null;
-  plan?: string | null;
-} | null): Tenant | null => {
+const buildTenantSnapshot = (tenant?: TenantIdentityCarrierRecord | null): Tenant | null => {
   appendRehydrationTrace('buildTenantSnapshot:input', {
     tenant: summarizeTenantIdentity(tenant),
   });
 
-  if (!tenant?.id || !tenant.slug || !tenant.name || !tenant.status || !tenant.plan) {
+  const identity = resolveTenantIdentityCarrier(tenant);
+
+  if (!tenant?.id || !tenant.slug || !tenant.name || !tenant.status || !identity.commercialPlan) {
     appendRehydrationTrace('buildTenantSnapshot:output', {
       tenant: null,
       reason: 'missing_required_fields',
@@ -1133,10 +1198,10 @@ const buildTenantSnapshot = (tenant?: {
     return null;
   }
 
-  if (!tenant.tenant_category || typeof tenant.is_white_label !== 'boolean') {
+  if (!identity.tenantCategory) {
     appendRehydrationTrace('buildTenantSnapshot:output', {
       tenant: null,
-      reason: 'incomplete_canonical_identity',
+      reason: 'incomplete_identity_carrier',
     });
     return null;
   }
@@ -1145,11 +1210,15 @@ const buildTenantSnapshot = (tenant?: {
     id: tenant.id,
     slug: tenant.slug,
     name: tenant.name,
-    type: tenant.tenant_category as TenantType,
-    tenant_category: tenant.tenant_category,
-    is_white_label: tenant.is_white_label,
+    type: identity.tenantCategory as TenantType,
+    tenant_category: identity.tenantCategory,
+    is_white_label: identity.whiteLabelCapability,
+    base_family: identity.baseFamily,
+    aggregator_capability: identity.aggregatorCapability,
+    white_label_capability: identity.whiteLabelCapability,
+    commercial_plan: identity.commercialPlan,
     status: tenant.status as any,
-    plan: normalizeCommercialPlan(tenant.plan),
+    plan: identity.commercialPlan,
     createdAt: '',
     updatedAt: '',
   };
@@ -1230,16 +1299,7 @@ const readStoredImpersonationSession = (): StoredImpersonationSession | null => 
 };
 
 const resolveCanonicalImpersonationTenant = (
-  tenant: {
-    id?: string | null;
-    slug?: string | null;
-    name?: string | null;
-    type?: string | null;
-    tenant_category?: string | null;
-    is_white_label?: boolean | null;
-    status?: string | null;
-    plan?: string | null;
-  } | null | undefined,
+  tenant: TenantIdentityCarrierRecord | null | undefined,
   targetTenantId: string | null | undefined
 ) => {
   const snapshot = buildTenantSnapshot(tenant);
@@ -1251,31 +1311,13 @@ const resolveCanonicalImpersonationTenant = (
 };
 
 const resolveRuntimeTenantSeedFromRecord = (
-  tenant: {
-    type?: string | null;
-    tenant_category?: string | null;
-    is_white_label?: boolean | null;
-    isWhiteLabel?: boolean | null;
-  } | null | undefined,
+  tenant: TenantIdentityCarrierRecord | null | undefined,
 ) => {
-  let tenantCategory: string | null = null;
-  if (typeof tenant?.tenant_category === 'string' && tenant.tenant_category.trim().length > 0) {
-    tenantCategory = tenant.tenant_category;
-  } else if (typeof tenant?.type === 'string' && tenant.type.trim().length > 0) {
-    tenantCategory = tenant.type;
-  }
-
-  // Control-plane tenant list reads can still surface compat field names or omit false flags.
-  let whiteLabelCapability = false;
-  if (typeof tenant?.is_white_label === 'boolean') {
-    whiteLabelCapability = tenant.is_white_label;
-  } else if (typeof tenant?.isWhiteLabel === 'boolean') {
-    whiteLabelCapability = tenant.isWhiteLabel;
-  }
+  const identity = resolveTenantIdentityCarrier(tenant);
 
   return {
-    tenantCategory,
-    whiteLabelCapability,
+    tenantCategory: identity.tenantCategory,
+    whiteLabelCapability: identity.whiteLabelCapability,
   };
 };
 
@@ -1703,15 +1745,22 @@ const App: React.FC = () => {
       return null;
     }
 
+    const tenantIdentity = resolveTenantIdentityCarrier(tenant);
+    const resolvedPlan = tenantIdentity.commercialPlan ?? normalizeCommercialPlan(tenant.plan);
+
     const resolvedTenant: TenantConfig = {
       id: tenant.id,
       slug: tenant.slug,
       name: tenant.name,
-      type: tenant.type as TenantType,
-      tenant_category: activeTenantRuntimeSeed.tenantCategory ?? tenant.type,
-      is_white_label: activeTenantRuntimeSeed.whiteLabelCapability,
+      type: (tenantIdentity.tenantCategory ?? tenant.type) as TenantType,
+      tenant_category: tenantIdentity.tenantCategory ?? tenant.type,
+      is_white_label: tenantIdentity.whiteLabelCapability,
+      base_family: tenantIdentity.baseFamily,
+      aggregator_capability: tenantIdentity.aggregatorCapability,
+      white_label_capability: tenantIdentity.whiteLabelCapability,
+      commercial_plan: resolvedPlan,
       status: tenant.status as any,
-      plan: normalizeCommercialPlan(tenant.plan),
+      plan: resolvedPlan,
       theme: {
         primaryColor: tenant.branding?.primaryColor || '#4F46E5',
         secondaryColor: '#10B981',

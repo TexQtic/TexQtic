@@ -17,10 +17,18 @@ export interface Tenant {
   slug: string;
   name: string;
   type: string;
-  /** B2-REM-3: canonical tenant identity category. Optional — control-plane list queries may not populate. */
+  /** Compatibility category alias retained while canonical flat carrier normalizes downstream reads. */
   tenant_category?: string | null;
-  /** B2-REM-3: white-label capability flag. Optional — control-plane list queries may not populate. */
+  /** Compatibility white-label alias retained while canonical flat carrier normalizes downstream reads. */
   is_white_label?: boolean | null;
+  /** Canonical base family read-model carrier. */
+  base_family?: 'B2B' | 'B2C' | 'INTERNAL' | null;
+  /** Canonical aggregator capability read-model carrier. */
+  aggregator_capability?: boolean | null;
+  /** Canonical white-label capability read-model carrier. */
+  white_label_capability?: boolean | null;
+  /** Canonical commercial plan read-model carrier. */
+  commercial_plan?: import('../types').CommercialPlan | null;
   /** Control-plane list queries may emit the Prisma camelCase field for white-label capability. */
   isWhiteLabel?: boolean | null;
   status: string;
