@@ -66,6 +66,8 @@ export interface TenantRuntimeDescriptorInput {
   tenantId: string | null;
   tenantSlug: string | null;
   tenantName: string | null;
+  baseFamily?: string | null;
+  aggregatorCapability?: boolean | null;
   tenantCategory: string | null | undefined;
   whiteLabelCapability: boolean | null | undefined;
   commercialPlan: string | null | undefined;
@@ -243,6 +245,14 @@ export interface RuntimeRouteGroupSelectionInput {
 }
 
 export type RuntimeShellState = RuntimeAppState | 'TEAM_MGMT' | 'INVITE_MEMBER' | 'SETTINGS' | null | undefined;
+
+interface ResolvedTenantRuntimeAuthority {
+  tenantCategory: TenantCategory;
+  baseCategory: RuntimeBaseCategory | null;
+  aggregatorCapability: boolean;
+  whiteLabelCapability: boolean;
+  commercialPlan: CommercialPlan | null;
+}
 
 const WL_ADMIN_ROLES = new Set(['TENANT_OWNER', 'TENANT_ADMIN', 'OWNER', 'ADMIN']);
 const ROUTE_GROUP_CLASSIFICATIONS: Record<RouteGroupKey, RouteGroupClassification> = {
@@ -620,6 +630,21 @@ const normalizeTenantCategory = (tenantCategory: string | null | undefined): Ten
   }
 };
 
+const normalizeBaseFamily = (baseFamily: string | null | undefined): RuntimeBaseCategory | null => {
+  const normalized = baseFamily?.trim().toUpperCase();
+
+  switch (normalized) {
+    case 'B2B':
+      return 'B2B';
+    case 'B2C':
+      return 'B2C';
+    case 'INTERNAL':
+      return 'INTERNAL';
+    default:
+      return null;
+  }
+};
+
 const hasWlAdminOverlay = (whiteLabelCapability: boolean, authenticatedRole: string | null) => {
   return whiteLabelCapability && WL_ADMIN_ROLES.has(authenticatedRole?.trim().toUpperCase() ?? '');
 };
@@ -639,29 +664,72 @@ const resolveRuntimeBaseCategory = (
   }
 };
 
+const resolveTenantCategoryFromAuthority = (
+  baseCategory: RuntimeBaseCategory | null,
+  aggregatorCapability: boolean,
+): TenantCategory | null => {
+  if (aggregatorCapability) {
+    return 'AGGREGATOR';
+  }
+
+  return baseCategory;
+};
+
+const resolveTenantRuntimeAuthority = (
+  input: TenantRuntimeDescriptorInput,
+): ResolvedTenantRuntimeAuthority | null => {
+  if (typeof input.whiteLabelCapability !== 'boolean') {
+    return null;
+  }
+
+  const compatTenantCategory = normalizeTenantCategory(input.tenantCategory);
+  const baseCategory = normalizeBaseFamily(input.baseFamily)
+    ?? resolveRuntimeBaseCategory(compatTenantCategory);
+  const aggregatorCapability = typeof input.aggregatorCapability === 'boolean'
+    ? input.aggregatorCapability
+    : compatTenantCategory === 'AGGREGATOR';
+  const tenantCategory = resolveTenantCategoryFromAuthority(baseCategory, aggregatorCapability);
+
+  if (!tenantCategory) {
+    return null;
+  }
+
+  return {
+    tenantCategory,
+    baseCategory,
+    aggregatorCapability,
+    whiteLabelCapability: input.whiteLabelCapability,
+    commercialPlan: input.commercialPlan ? normalizeCommercialPlan(input.commercialPlan) : null,
+  };
+};
+
 const resolveRuntimeIdentity = ({
-  tenantCategory,
+  baseCategory,
+  aggregatorCapability,
   whiteLabelCapability,
   commercialPlan,
 }: {
-  tenantCategory: TenantCategory | null;
+  baseCategory: RuntimeBaseCategory | null;
+  aggregatorCapability: boolean;
   whiteLabelCapability: boolean;
   commercialPlan: CommercialPlan | null;
 }): SessionRuntimeIdentity => ({
-  baseCategory: resolveRuntimeBaseCategory(tenantCategory),
-  aggregatorCapability: tenantCategory === 'AGGREGATOR',
+  baseCategory,
+  aggregatorCapability,
   whiteLabelCapability,
   commercialPlan,
 });
 
 const resolveOperatingMode = (
-  tenantCategory: TenantCategory | null,
+  baseCategory: RuntimeBaseCategory | null,
+  aggregatorCapability: boolean,
   whiteLabelCapability: boolean,
 ): TenantOperatingMode | null => {
-  switch (tenantCategory) {
-    case 'AGGREGATOR':
-    case 'INTERNAL':
-      return 'AGGREGATOR_WORKSPACE';
+  if (aggregatorCapability || baseCategory === 'INTERNAL') {
+    return 'AGGREGATOR_WORKSPACE';
+  }
+
+  switch (baseCategory) {
     case 'B2B':
       return whiteLabelCapability ? 'WL_STOREFRONT' : 'B2B_WORKSPACE';
     case 'B2C':
@@ -920,29 +988,29 @@ export const createTenantSessionRuntimeDescriptor = (
     return null;
   }
 
-  if (typeof input.whiteLabelCapability !== 'boolean') {
+  const authority = resolveTenantRuntimeAuthority(input);
+  if (!authority) {
     return null;
   }
 
-  const tenantCategory = normalizeTenantCategory(input.tenantCategory);
-  if (!tenantCategory) {
-    return null;
-  }
-
-  const operatingMode = resolveOperatingMode(tenantCategory, input.whiteLabelCapability);
+  const operatingMode = resolveOperatingMode(
+    authority.baseCategory,
+    authority.aggregatorCapability,
+    authority.whiteLabelCapability,
+  );
   if (!operatingMode) {
     return null;
   }
 
-  const commercialPlan = input.commercialPlan ? normalizeCommercialPlan(input.commercialPlan) : null;
   const identity = resolveRuntimeIdentity({
-    tenantCategory,
-    whiteLabelCapability: input.whiteLabelCapability,
-    commercialPlan,
+    baseCategory: authority.baseCategory,
+    aggregatorCapability: authority.aggregatorCapability,
+    whiteLabelCapability: authority.whiteLabelCapability,
+    commercialPlan: authority.commercialPlan,
   });
 
-  const runtimeOverlays: RuntimeOverlay[] = hasWlAdminOverlay(
-    input.whiteLabelCapability,
+  const runtimeOverlays: RuntimeOverlay[] = operatingMode === 'WL_STOREFRONT' && hasWlAdminOverlay(
+    authority.whiteLabelCapability,
     input.authenticatedRole,
   )
     ? ['WL_ADMIN']
@@ -955,9 +1023,9 @@ export const createTenantSessionRuntimeDescriptor = (
     tenantName: input.tenantName,
     authenticatedRole: input.authenticatedRole,
     identity,
-    commercialPlan,
-    tenantCategory,
-    whiteLabelCapability: input.whiteLabelCapability,
+    commercialPlan: authority.commercialPlan,
+    tenantCategory: authority.tenantCategory,
+    whiteLabelCapability: authority.whiteLabelCapability,
     operatingMode,
     runtimeOverlays,
     capabilities: resolveCapabilities(operatingMode, runtimeOverlays),

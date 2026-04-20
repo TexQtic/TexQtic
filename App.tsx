@@ -1316,8 +1316,11 @@ const resolveRuntimeTenantSeedFromRecord = (
   const identity = resolveTenantIdentityCarrier(tenant);
 
   return {
+    baseFamily: identity.baseFamily,
+    aggregatorCapability: identity.aggregatorCapability,
     tenantCategory: identity.tenantCategory,
     whiteLabelCapability: identity.whiteLabelCapability,
+    commercialPlan: identity.commercialPlan,
   };
 };
 
@@ -1595,13 +1598,16 @@ const App: React.FC = () => {
 
   const applyTenantBootstrapState = (tenant: Tenant, role: string | null | undefined) => {
     const resolvedRole = resolveTenantRole(role ?? null, tenant.id);
+    const tenantIdentity = resolveTenantIdentityCarrier(tenant);
     const descriptor = createTenantSessionRuntimeDescriptor({
       tenantId: tenant.id,
       tenantSlug: tenant.slug,
       tenantName: tenant.name,
-      tenantCategory: tenant.tenant_category,
-      whiteLabelCapability: tenant.is_white_label,
-      commercialPlan: tenant.plan,
+      baseFamily: tenantIdentity.baseFamily,
+      aggregatorCapability: tenantIdentity.aggregatorCapability,
+      tenantCategory: tenantIdentity.tenantCategory,
+      whiteLabelCapability: tenantIdentity.whiteLabelCapability,
+      commercialPlan: tenantIdentity.commercialPlan ?? tenant.plan,
       authenticatedRole: resolvedRole,
     });
     const nextState = resolveRuntimeAppStateFromDescriptor(descriptor);
@@ -1789,9 +1795,11 @@ const App: React.FC = () => {
       tenantId: activeTenantRecord.id,
       tenantSlug: activeTenantRecord.slug,
       tenantName: activeTenantRecord.name,
+      baseFamily: activeTenantRuntimeSeed.baseFamily,
+      aggregatorCapability: activeTenantRuntimeSeed.aggregatorCapability,
       tenantCategory: activeTenantRuntimeSeed.tenantCategory,
       whiteLabelCapability: activeTenantRuntimeSeed.whiteLabelCapability,
-      commercialPlan: activeTenantRecord.plan,
+      commercialPlan: activeTenantRuntimeSeed.commercialPlan ?? activeTenantRecord.plan,
       authenticatedRole: tenantAuthenticatedRole,
     });
   }, [activeTenantRecord, activeTenantRuntimeSeed, tenantAuthenticatedRole]);

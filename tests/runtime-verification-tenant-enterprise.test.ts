@@ -115,6 +115,9 @@ describe('canonical identity carrier intake', () => {
       plan: 'ENTERPRISE',
     }));
     expect(resolveRuntimeTenantSeedFromRecord(snapshot)).toEqual({
+      baseFamily: 'INTERNAL',
+      aggregatorCapability: true,
+      commercialPlan: 'ENTERPRISE',
       tenantCategory: 'AGGREGATOR',
       whiteLabelCapability: true,
     });

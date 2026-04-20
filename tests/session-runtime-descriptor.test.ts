@@ -29,6 +29,49 @@ const makeTenantInput = (
 });
 
 describe('session runtime descriptor', () => {
+  it('prefers canonical runtime authority over conflicting legacy shorthand', () => {
+    const descriptor = createTenantSessionRuntimeDescriptor(
+      makeTenantInput({
+        baseFamily: 'B2C',
+        aggregatorCapability: false,
+        tenantCategory: 'AGGREGATOR',
+        whiteLabelCapability: true,
+        authenticatedRole: 'TENANT_ADMIN',
+      }),
+    );
+
+    expect(descriptor?.tenantCategory).toBe('B2C');
+    expect(descriptor?.identity).toEqual(expect.objectContaining({
+      baseCategory: 'B2C',
+      aggregatorCapability: false,
+      whiteLabelCapability: true,
+    }));
+    expect(descriptor?.operatingMode).toBe('WL_STOREFRONT');
+    expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('wl_storefront');
+    expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'WL_ADMIN')).toBe('wl_admin');
+  });
+
+  it('uses canonical aggregator capability for workspace selection while preserving base family continuity', () => {
+    const descriptor = createTenantSessionRuntimeDescriptor(
+      makeTenantInput({
+        baseFamily: 'B2B',
+        aggregatorCapability: true,
+        tenantCategory: 'B2B',
+        whiteLabelCapability: false,
+      }),
+    );
+
+    expect(descriptor?.tenantCategory).toBe('AGGREGATOR');
+    expect(descriptor?.identity).toEqual(expect.objectContaining({
+      baseCategory: 'B2B',
+      aggregatorCapability: true,
+      whiteLabelCapability: false,
+    }));
+    expect(descriptor?.operatingMode).toBe('AGGREGATOR_WORKSPACE');
+    expect(resolveRuntimeManifestKeyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('aggregator_workspace');
+    expect(resolveRuntimeShellFamilyFromDescriptor(descriptor ?? null, 'EXPERIENCE')).toBe('AggregatorShell');
+  });
+
   it('fails closed when canonical tenant identity is incomplete', () => {
     expect(
       createTenantSessionRuntimeDescriptor(

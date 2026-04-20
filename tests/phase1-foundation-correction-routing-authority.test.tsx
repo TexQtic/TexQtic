@@ -26,9 +26,11 @@ const buildTenantDescriptor = (
     tenantId: tenant?.id ?? null,
     tenantSlug: tenant?.slug ?? null,
     tenantName: tenant?.name ?? null,
+    baseFamily: tenant?.base_family ?? null,
+    aggregatorCapability: tenant?.aggregator_capability ?? null,
     tenantCategory: tenant?.tenant_category ?? null,
-    whiteLabelCapability: tenant?.is_white_label ?? null,
-    commercialPlan: tenant?.plan ?? null,
+    whiteLabelCapability: tenant?.white_label_capability ?? tenant?.is_white_label ?? null,
+    commercialPlan: tenant?.commercial_plan ?? tenant?.plan ?? null,
     authenticatedRole,
   });
 };
@@ -97,6 +99,10 @@ function makeCanonicalTenant(
     type: string | null;
     tenant_category: string | null;
     is_white_label: boolean | null;
+    base_family: string | null;
+    aggregator_capability: boolean | null;
+    white_label_capability: boolean | null;
+    commercial_plan: string | null;
     status: string | null;
     plan: string | null;
   }> = {},
@@ -108,6 +114,10 @@ function makeCanonicalTenant(
     type: 'B2B',
     tenant_category: 'B2B',
     is_white_label: false,
+    base_family: 'B2B',
+    aggregator_capability: false,
+    white_label_capability: false,
+    commercial_plan: 'PROFESSIONAL',
     status: 'ACTIVE',
     plan: 'PROFESSIONAL',
     ...overrides,
@@ -151,8 +161,11 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
 
     const canonicalTenant = buildTenantSnapshot(makeCanonicalTenant({
       type: 'B2C',
-      tenant_category: 'AGGREGATOR',
+      tenant_category: 'B2C',
       is_white_label: false,
+      base_family: 'B2B',
+      aggregator_capability: true,
+      white_label_capability: false,
     }));
     const descriptor = buildTenantDescriptor(canonicalTenant);
 
@@ -162,9 +175,12 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
     expect(resolveRuntimeManifestKeyFromDescriptor(descriptor, 'EXPERIENCE')).toBe('aggregator_workspace');
 
     const hintOnlyTenant = buildTenantSnapshot(makeCanonicalTenant({
-      type: 'B2C',
+      type: null,
       tenant_category: null,
+      base_family: null,
+      aggregator_capability: null,
       is_white_label: null,
+      white_label_capability: null,
     }));
 
     expect(hintOnlyTenant).toBeNull();
@@ -200,9 +216,12 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
     expect(resolveRuntimeShellFamilyFromDescriptor(completeDescriptor, 'EXPERIENCE')).toBe('B2BShell');
 
     const incompleteSnapshot = buildTenantSnapshot(makeCanonicalTenant({
-      type: 'B2C',
+      type: null,
       tenant_category: null,
+      base_family: null,
+      aggregator_capability: null,
       is_white_label: false,
+      white_label_capability: false,
     }));
 
     expect(incompleteSnapshot).toBeNull();
@@ -214,50 +233,87 @@ describe('phase 1 foundation correction - routing authority leaks', () => {
       tenant_category: null,
       is_white_label: null,
       isWhiteLabel: null,
+      base_family: 'B2B',
+      aggregator_capability: true,
+      white_label_capability: false,
+      commercial_plan: 'PROFESSIONAL',
     });
     const whiteLabelSeed = resolveRuntimeTenantSeedFromRecord({
       type: 'B2C',
       tenant_category: null,
       is_white_label: null,
       isWhiteLabel: true,
+      base_family: 'B2C',
+      aggregator_capability: false,
+      white_label_capability: true,
+      commercial_plan: 'ENTERPRISE',
     });
     const b2bSeed = resolveRuntimeTenantSeedFromRecord({
       type: 'B2B',
       tenant_category: 'B2B',
       is_white_label: false,
       isWhiteLabel: null,
+      base_family: 'B2B',
+      aggregator_capability: false,
+      white_label_capability: false,
+      commercial_plan: 'PROFESSIONAL',
     });
 
     const aggregatorDescriptor = createTenantSessionRuntimeDescriptor({
       tenantId: 'agg-1',
       tenantSlug: 'qa-agg',
       tenantName: 'QA AGG',
+      baseFamily: aggregatorSeed.baseFamily,
+      aggregatorCapability: aggregatorSeed.aggregatorCapability,
       tenantCategory: aggregatorSeed.tenantCategory,
       whiteLabelCapability: aggregatorSeed.whiteLabelCapability,
-      commercialPlan: 'PROFESSIONAL',
+      commercialPlan: aggregatorSeed.commercialPlan,
       authenticatedRole: 'OWNER',
     });
     const whiteLabelDescriptor = createTenantSessionRuntimeDescriptor({
       tenantId: 'wl-1',
       tenantSlug: 'qa-wl',
       tenantName: 'QA WL',
+      baseFamily: whiteLabelSeed.baseFamily,
+      aggregatorCapability: whiteLabelSeed.aggregatorCapability,
       tenantCategory: whiteLabelSeed.tenantCategory,
       whiteLabelCapability: whiteLabelSeed.whiteLabelCapability,
-      commercialPlan: 'ENTERPRISE',
+      commercialPlan: whiteLabelSeed.commercialPlan,
       authenticatedRole: 'OWNER',
     });
     const b2bDescriptor = createTenantSessionRuntimeDescriptor({
       tenantId: 'b2b-1',
       tenantSlug: 'qa-b2b',
       tenantName: 'QA B2B',
+      baseFamily: b2bSeed.baseFamily,
+      aggregatorCapability: b2bSeed.aggregatorCapability,
       tenantCategory: b2bSeed.tenantCategory,
       whiteLabelCapability: b2bSeed.whiteLabelCapability,
-      commercialPlan: 'PROFESSIONAL',
+      commercialPlan: b2bSeed.commercialPlan,
       authenticatedRole: 'OWNER',
     });
 
-    expect(aggregatorSeed).toEqual({ tenantCategory: 'AGGREGATOR', whiteLabelCapability: false });
-    expect(whiteLabelSeed).toEqual({ tenantCategory: 'B2C', whiteLabelCapability: true });
+    expect(aggregatorSeed).toEqual({
+      baseFamily: 'B2B',
+      aggregatorCapability: true,
+      tenantCategory: 'AGGREGATOR',
+      whiteLabelCapability: false,
+      commercialPlan: 'PROFESSIONAL',
+    });
+    expect(whiteLabelSeed).toEqual({
+      baseFamily: 'B2C',
+      aggregatorCapability: false,
+      tenantCategory: 'B2C',
+      whiteLabelCapability: true,
+      commercialPlan: 'ENTERPRISE',
+    });
+    expect(b2bSeed).toEqual({
+      baseFamily: 'B2B',
+      aggregatorCapability: false,
+      tenantCategory: 'B2B',
+      whiteLabelCapability: false,
+      commercialPlan: 'PROFESSIONAL',
+    });
     expect(resolveRuntimeManifestKeyFromDescriptor(aggregatorDescriptor, 'EXPERIENCE')).toBe('aggregator_workspace');
     expect(resolveRuntimeShellFamilyFromDescriptor(aggregatorDescriptor, 'EXPERIENCE')).toBe('AggregatorShell');
     expect(resolveRuntimeManifestKeyFromDescriptor(whiteLabelDescriptor, 'EXPERIENCE')).toBe('wl_storefront');
