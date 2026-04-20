@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  buildOrganizationTaxonomyCarrier,
+  buildTenantSessionTransportIdentity,
   getOrganizationIdentity,
+  mapOrganizationIdentityRow,
   OrganizationNotFoundError,
 } from '../lib/database-context.js';
 
@@ -95,6 +98,58 @@ describe('getOrganizationIdentity', () => {
     expect(result.role_position_keys).toEqual(['manufacturer', 'trader']);
     expect(result.white_label_capability).toBe(true);
     expect(result.commercial_plan).toBe('ENTERPRISE');
+  });
+
+  it('builds internal tenant session transport with canonical taxonomy while preserving public aliases', async () => {
+    const createdAt = new Date('2026-04-20T00:00:00.000Z');
+    const identity = mapOrganizationIdentityRow({
+      id: 'org-3',
+      slug: 'loom-labs',
+      legal_name: 'Loom Labs',
+      status: 'ACTIVE',
+      org_type: 'B2B',
+      primary_segment_key: 'Yarn',
+      is_white_label: false,
+      jurisdiction: 'IN',
+      registration_no: 'IN-99',
+      risk_score: 1,
+      plan: 'STARTER',
+      secondary_segments: [{ segment_key: 'Knitting' }],
+      role_positions: [{ role_position_key: 'manufacturer' }],
+      created_at: createdAt,
+      updated_at: createdAt,
+    });
+
+    const result = buildTenantSessionTransportIdentity(identity);
+
+    expect(result).toMatchObject({
+      id: 'org-3',
+      slug: 'loom-labs',
+      name: 'Loom Labs',
+      type: 'B2B',
+      tenant_category: 'B2B',
+      primary_segment_key: 'Yarn',
+      secondary_segment_keys: ['Knitting'],
+      role_position_keys: ['manufacturer'],
+      base_family: 'B2B',
+      aggregator_capability: false,
+      white_label_capability: false,
+      commercial_plan: 'STARTER',
+    });
+  });
+
+  it('clones taxonomy arrays when building internal taxonomy carriers', () => {
+    const identity = {
+      primary_segment_key: 'Yarn',
+      secondary_segment_keys: ['Knitting'],
+      role_position_keys: ['manufacturer'],
+    };
+
+    const result = buildOrganizationTaxonomyCarrier(identity);
+
+    expect(result).toEqual(identity);
+    expect(result.secondary_segment_keys).not.toBe(identity.secondary_segment_keys);
+    expect(result.role_position_keys).not.toBe(identity.role_position_keys);
   });
 
   it('throws OrganizationNotFoundError when the organization row is absent', async () => {

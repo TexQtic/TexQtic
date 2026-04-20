@@ -342,6 +342,25 @@ describe('control tenant read routes', () => {
       },
     ]);
     FAKE_TX.invite.findMany.mockResolvedValue([]);
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
+      {
+        id: TEST_TENANT_ID,
+        slug: 'qa-agg',
+        legal_name: 'QA AGG',
+        status: 'ACTIVE',
+        org_type: 'AGGREGATOR',
+        primary_segment_key: 'Yarn',
+        is_white_label: false,
+        jurisdiction: 'AE',
+        registration_no: null,
+        risk_score: 0,
+        plan: 'PROFESSIONAL',
+        secondary_segments: [{ segment_key: 'Knitting' }],
+        role_positions: [{ role_position_key: 'manufacturer' }],
+        created_at: new Date('2026-04-20T00:00:00.000Z'),
+        updated_at: new Date('2026-04-20T00:00:00.000Z'),
+      },
+    ]);
 
     const response = await server.inject({
       method: 'GET',
@@ -384,10 +403,29 @@ describe('control tenant read routes', () => {
       aiBudget: null,
       memberships: [],
     });
-    FAKE_TX.organizations.findMany.mockResolvedValue([
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
       {
         id: TEST_TENANT_ID,
         status: 'ACTIVE',
+      },
+    ]);
+    FAKE_TX.organizations.findMany.mockResolvedValueOnce([
+      {
+        id: TEST_TENANT_ID,
+        slug: 'qa-wl',
+        legal_name: 'QA WL',
+        status: 'ACTIVE',
+        org_type: 'B2C',
+        primary_segment_key: 'Yarn',
+        is_white_label: true,
+        jurisdiction: 'AE',
+        registration_no: null,
+        risk_score: 0,
+        plan: 'ENTERPRISE',
+        secondary_segments: [{ segment_key: 'Knitting' }],
+        role_positions: [{ role_position_key: 'manufacturer' }],
+        created_at: new Date('2026-04-20T00:00:00.000Z'),
+        updated_at: new Date('2026-04-20T00:00:00.000Z'),
       },
     ]);
 
@@ -414,5 +452,8 @@ describe('control tenant read routes', () => {
         onboarding_status: 'ACTIVE',
       }),
     );
+    expect(response.json().data.tenant).not.toHaveProperty('primary_segment_key');
+    expect(response.json().data.tenant).not.toHaveProperty('secondary_segment_keys');
+    expect(response.json().data.tenant).not.toHaveProperty('role_position_keys');
   });
 });

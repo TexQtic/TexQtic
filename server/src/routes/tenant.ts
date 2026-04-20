@@ -133,7 +133,7 @@ async function resolveTenantSessionIdentity(input: {
     await tx.$executeRawUnsafe(`SELECT set_config('app.realm', 'admin', true)`);
     await tx.$executeRawUnsafe(`SELECT set_config('app.is_admin', 'true', true)`);
 
-    let org = await tx.organizations.findUnique({
+    const org = await tx.organizations.findUnique({
       where: { id: input.tenantId },
       select: {
         id: true,

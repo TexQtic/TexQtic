@@ -535,6 +535,12 @@ export interface CanonicalProvisioningIdentity {
   commercial_plan: TenantPlan;
 }
 
+export interface OrganizationTaxonomyCarrier {
+  primary_segment_key: string | null;
+  secondary_segment_keys: string[];
+  role_position_keys: string[];
+}
+
 export function resolveCanonicalProvisioningIdentity(input: {
   tenantCategory: string;
   whiteLabelCapability: boolean;
@@ -582,6 +588,105 @@ export interface OrganizationIdentity {
   commercial_plan: TenantPlan;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface OrganizationIdentityRow {
+  id: string;
+  slug: string;
+  legal_name: string;
+  status: string;
+  org_type: string;
+  primary_segment_key: string | null;
+  is_white_label: boolean;
+  jurisdiction: string;
+  registration_no: string | null;
+  risk_score: number;
+  plan: string;
+  secondary_segments: Array<{
+    segment_key: string;
+  }>;
+  role_positions: Array<{
+    role_position_key: string;
+  }>;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface TenantSessionTransportIdentity extends OrganizationTaxonomyCarrier {
+  id: string;
+  slug: string;
+  name: string;
+  type: string;
+  tenant_category: string;
+  is_white_label: boolean;
+  status: string;
+  plan: TenantPlan;
+  base_family: ProvisioningBaseFamily;
+  aggregator_capability: boolean;
+  white_label_capability: boolean;
+  commercial_plan: TenantPlan;
+}
+
+export function buildOrganizationTaxonomyCarrier(
+  identity: Pick<
+    OrganizationIdentity,
+    'primary_segment_key' | 'secondary_segment_keys' | 'role_position_keys'
+  >,
+): OrganizationTaxonomyCarrier {
+  return {
+    primary_segment_key: identity.primary_segment_key,
+    secondary_segment_keys: [...identity.secondary_segment_keys],
+    role_position_keys: [...identity.role_position_keys],
+  };
+}
+
+export function mapOrganizationIdentityRow(org: OrganizationIdentityRow): OrganizationIdentity {
+  const plan = canonicalizeTenantPlan(org.plan);
+
+  return {
+    id: org.id,
+    slug: org.slug,
+    legal_name: org.legal_name,
+    status: org.status,
+    org_type: org.org_type,
+    is_white_label: org.is_white_label,
+    jurisdiction: org.jurisdiction,
+    registration_no: org.registration_no,
+    risk_score: org.risk_score,
+    plan,
+    ...buildOrganizationTaxonomyCarrier({
+      primary_segment_key: org.primary_segment_key,
+      secondary_segment_keys: org.secondary_segments.map(entry => entry.segment_key),
+      role_position_keys: org.role_positions.map(entry => entry.role_position_key),
+    }),
+    ...resolveCanonicalProvisioningIdentity({
+      tenantCategory: org.org_type,
+      whiteLabelCapability: org.is_white_label,
+      commercialPlan: plan,
+    }),
+    created_at: org.created_at,
+    updated_at: org.updated_at,
+  };
+}
+
+export function buildTenantSessionTransportIdentity(
+  identity: OrganizationIdentity,
+): TenantSessionTransportIdentity {
+  return {
+    id: identity.id,
+    slug: identity.slug,
+    name: identity.legal_name,
+    type: identity.org_type,
+    tenant_category: identity.org_type,
+    is_white_label: identity.is_white_label,
+    status: identity.status,
+    plan: identity.plan,
+    ...buildOrganizationTaxonomyCarrier(identity),
+    base_family: identity.base_family,
+    aggregator_capability: identity.aggregator_capability,
+    white_label_capability: identity.white_label_capability,
+    commercial_plan: identity.commercial_plan,
+  };
 }
 
 /**
@@ -675,25 +780,12 @@ export async function getOrganizationIdentity(
         created_at: true,
         updated_at: true,
       },
-    });
+    }) as OrganizationIdentityRow | null;
     if (!org) {
       throw new OrganizationNotFoundError(orgId);
     }
 
-    const plan = canonicalizeTenantPlan(org.plan);
-    const { secondary_segments, role_positions, ...orgIdentity } = org;
-
-    return {
-      ...orgIdentity,
-      plan,
-      secondary_segment_keys: secondary_segments.map(entry => entry.segment_key),
-      role_position_keys: role_positions.map(entry => entry.role_position_key),
-      ...resolveCanonicalProvisioningIdentity({
-        tenantCategory: org.org_type,
-        whiteLabelCapability: org.is_white_label,
-        commercialPlan: plan,
-      }),
-    };
+    return mapOrganizationIdentityRow(org);
   });
 }
 

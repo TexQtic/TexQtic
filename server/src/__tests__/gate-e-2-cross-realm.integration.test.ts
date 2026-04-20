@@ -230,6 +230,9 @@ describe.skipIf(!hasDb)('Gate E.2 — Cross-Realm Isolation', () => {
       white_label_capability: false,
       commercial_plan: 'FREE',
     }));
+    expect(body.data.tenant).not.toHaveProperty('primary_segment_key');
+    expect(body.data.tenant).not.toHaveProperty('secondary_segment_keys');
+    expect(body.data.tenant).not.toHaveProperty('role_position_keys');
   });
 
   /**

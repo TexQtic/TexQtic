@@ -5,10 +5,15 @@ import { adminAuthMiddleware, requireAdminRole } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendForbidden, sendNotFound, sendUnauthorized, sendValidationError } from '../utils/response.js';
 import { randomUUID } from 'node:crypto';
 import {
+  buildOrganizationTaxonomyCarrier,
   canonicalizeTenantPlan,
+  mapOrganizationIdentityRow,
   resolveCanonicalProvisioningIdentity,
   withDbContext,
   type DatabaseContext,
+  type OrganizationIdentity,
+  type OrganizationIdentityRow,
+  withOrgAdminContext as withOrganizationReadAdminContext,
 } from '../lib/database-context.js';
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog, createAdminAudit, writeAuthorityIntent } from '../lib/auditLog.js';
@@ -70,6 +75,62 @@ async function readOrganizationStatuses(organizationIds: string[]): Promise<Map<
     });
 
     return new Map(organizations.map((organization: { id: string; status: string }) => [organization.id, organization.status]));
+  });
+}
+
+async function readOrganizationIdentities(
+  organizationIds: string[],
+): Promise<Map<string, OrganizationIdentity>> {
+  if (organizationIds.length === 0) {
+    return new Map();
+  }
+
+  return withOrganizationReadAdminContext(prisma, async tx => {
+    const organizations = await tx.organizations.findMany({
+      where: {
+        id: {
+          in: organizationIds,
+        },
+      },
+      select: {
+        id: true,
+        slug: true,
+        legal_name: true,
+        status: true,
+        org_type: true,
+        primary_segment_key: true,
+        is_white_label: true,
+        jurisdiction: true,
+        registration_no: true,
+        risk_score: true,
+        plan: true,
+        secondary_segments: {
+          select: {
+            segment_key: true,
+          },
+          orderBy: {
+            segment_key: 'asc',
+          },
+        },
+        role_positions: {
+          select: {
+            role_position_key: true,
+          },
+          orderBy: {
+            role_position_key: 'asc',
+          },
+        },
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    return new Map(
+      (organizations as OrganizationIdentityRow[]).map(organization => {
+        const identity = mapOrganizationIdentityRow(organization);
+        return [identity.id, identity];
+      }),
+    );
   });
 }
 
@@ -186,6 +247,55 @@ function resolveTenantReadModelIdentity(tenant: {
   });
 }
 
+function buildControlTenantInternalReadModel<
+  T extends {
+    id: string;
+    slug: string;
+    name: string;
+    type: string;
+    status: string;
+    plan: string;
+    isWhiteLabel: boolean;
+  },
+>(tenant: T, organizationIdentity: OrganizationIdentity | null) {
+  const fallbackIdentity = resolveTenantReadModelIdentity(tenant);
+
+  return {
+    ...tenant,
+    tenant_category: organizationIdentity?.org_type ?? tenant.type,
+    ...buildOrganizationTaxonomyCarrier(
+      organizationIdentity ?? {
+        primary_segment_key: null,
+        secondary_segment_keys: [],
+        role_position_keys: [],
+      },
+    ),
+    base_family: organizationIdentity?.base_family ?? fallbackIdentity.base_family,
+    aggregator_capability:
+      organizationIdentity?.aggregator_capability ?? fallbackIdentity.aggregator_capability,
+    white_label_capability:
+      organizationIdentity?.white_label_capability ?? fallbackIdentity.white_label_capability,
+    commercial_plan: organizationIdentity?.commercial_plan ?? fallbackIdentity.commercial_plan,
+  };
+}
+
+function toPublicControlTenantReadModel<
+  T extends {
+    primary_segment_key: string | null;
+    secondary_segment_keys: string[];
+    role_position_keys: string[];
+  },
+>(tenant: T): Omit<T, 'primary_segment_key' | 'secondary_segment_keys' | 'role_position_keys'> {
+  const {
+    primary_segment_key: _primary_segment_key,
+    secondary_segment_keys: _secondary_segment_keys,
+    role_position_keys: _role_position_keys,
+    ...publicTenant
+  } = tenant;
+
+  return publicTenant;
+}
+
 function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
   switch (name) {
     case financeSupervisionEventTypeByOutcome.VERIFIED:
@@ -227,7 +337,7 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
    */
   fastify.get('/tenants', async (request, reply) => {
     const adminId = request.adminId ?? 'unknown';
-    const tenants = await withAdminContext(async tx => {
+    const { tenantRows, invitedTenantIds } = await withAdminContext(async tx => {
       const tenantRows = await tx.tenant.findMany({
         select: {
           id: true,
@@ -242,7 +352,10 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
 
       if (tenantRows.length === 0) {
-        return tenantRows;
+        return {
+          tenantRows,
+          invitedTenantIds: [] as string[],
+        };
       }
 
       const tenantIds = tenantRows.map((tenant: { id: string }) => tenant.id);
@@ -262,13 +375,25 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
         pendingFirstOwnerPreparationInvites.map((invite: { tenantId: string }) => invite.tenantId)
       );
 
-      return tenantRows.map((tenant: { id: string; type: string; isWhiteLabel: boolean; plan: string }) => ({
-        ...tenant,
-        tenant_category: tenant.type,
-        ...resolveTenantReadModelIdentity(tenant),
-        has_pending_first_owner_preparation_invite: invitedTenantIds.has(tenant.id),
-      }));
+      return {
+        tenantRows,
+        invitedTenantIds: Array.from(invitedTenantIds),
+      };
     });
+
+    const organizationIdentityMap = await readOrganizationIdentities(
+      tenantRows.map((tenant: { id: string }) => tenant.id),
+    );
+    const invitedTenantIdSet = new Set(invitedTenantIds);
+    const tenants = tenantRows.map((tenant: { id: string; slug: string; name: string; type: string; status: string; plan: string; isWhiteLabel: boolean }) =>
+      toPublicControlTenantReadModel({
+        ...buildControlTenantInternalReadModel(
+          tenant,
+          organizationIdentityMap.get(tenant.id) ?? null,
+        ),
+        has_pending_first_owner_preparation_invite: invitedTenantIdSet.has(tenant.id),
+      }),
+    );
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read', 'tenant', { count: tenants.length }));
     return sendSuccess(reply, { tenants });
@@ -311,12 +436,18 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
       });
     }
 
-    const tenantWithOnboardingStatus = {
-      ...tenantRecord,
-      tenant_category: tenantRecord.type,
-      ...resolveTenantReadModelIdentity(tenantRecord),
-      onboarding_status: (await readOrganizationStatuses([tenantRecord.id])).get(tenantRecord.id) ?? null,
-    };
+    const [organizationStatuses, organizationIdentities] = await Promise.all([
+      readOrganizationStatuses([tenantRecord.id]),
+      readOrganizationIdentities([tenantRecord.id]),
+    ]);
+
+    const tenantWithOnboardingStatus = toPublicControlTenantReadModel({
+      ...buildControlTenantInternalReadModel(
+        tenantRecord,
+        organizationIdentities.get(tenantRecord.id) ?? null,
+      ),
+      onboarding_status: organizationStatuses.get(tenantRecord.id) ?? null,
+    });
 
     await writeAuditLog(prisma, createAdminAudit(adminId, 'control.tenants.read_one', 'tenant', { tenantId: id }));
     return sendSuccess(reply, { tenant: tenantWithOnboardingStatus });
