@@ -16,13 +16,14 @@
 import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/prisma.js';
-import { resolveCanonicalProvisioningIdentity } from '../lib/database-context.js';
-import type { TenantPlan } from '../types/index.js';
 import type {
-  TenantProvisionRequest,
+  ApprovedOnboardingProvisionRequest,
+  LegacyAdminProvisionRequest,
+  NormalizedTenantProvisionRequest,
   TenantProvisionResult,
   ProvisionContext,
 } from '../types/tenantProvision.types.js';
+import { resolveProvisioningStorageBridge } from '../types/tenantProvision.types.js';
 
 /**
  * Admin sentinel — used as actor during cross-tenant admin operations.
@@ -48,37 +49,15 @@ function slugify(name: string): string {
     .substring(0, 90);
 }
 
-type LegacyProvisionRequest = TenantProvisionRequest & {
-  provisioningMode?: 'LEGACY_ADMIN';
-  orgName: string;
-  primaryAdminEmail: string;
-  primaryAdminPassword: string;
-  plan: TenantPlan;
-};
-
-type ApprovedOnboardingProvisionRequest = TenantProvisionRequest & {
-  provisioningMode: 'APPROVED_ONBOARDING';
-  orchestrationReference: string;
-  organization: {
-    legalName: string;
-    displayName?: string;
-    jurisdiction: string;
-    registrationNumber?: string;
-  };
-  firstOwner: {
-    email: string;
-  };
-};
-
 function isApprovedOnboardingProvisionRequest(
-  request: TenantProvisionRequest
+  request: NormalizedTenantProvisionRequest
 ): request is ApprovedOnboardingProvisionRequest {
   return request.provisioningMode === 'APPROVED_ONBOARDING';
 }
 
-function assertLegacyProvisionRequest(request: TenantProvisionRequest): LegacyProvisionRequest {
-  if (!request.orgName || !request.primaryAdminEmail || !request.primaryAdminPassword || !request.plan) {
-    throw new Error('PROVISION_ABORT: Legacy admin provisioning requires orgName, primaryAdminEmail, primaryAdminPassword, and plan');
+function assertLegacyProvisionRequest(request: NormalizedTenantProvisionRequest): LegacyAdminProvisionRequest {
+  if (!request.orgName || !request.primaryAdminEmail || !request.primaryAdminPassword) {
+    throw new Error('PROVISION_ABORT: Legacy admin provisioning requires orgName, primaryAdminEmail, primaryAdminPassword, and commercial_plan');
   }
 
   return request as LegacyProvisionRequest;
@@ -128,12 +107,19 @@ function buildInviteArtifact() {
  * @returns        TenantProvisionResult with org_id, slug, userId, membershipId
  */
 export async function provisionTenant(
-  request: TenantProvisionRequest,
+  request: NormalizedTenantProvisionRequest,
   ctx: ProvisionContext
 ): Promise<TenantProvisionResult> {
   const isApprovedOnboarding = isApprovedOnboardingProvisionRequest(request);
   const approvedOnboardingRequest = isApprovedOnboarding ? request : null;
   const legacyRequest = isApprovedOnboarding ? null : assertLegacyProvisionRequest(request);
+  const provisioningIdentity = {
+    base_family: request.base_family,
+    aggregator_capability: request.aggregator_capability,
+    white_label_capability: request.white_label_capability,
+    commercial_plan: request.commercial_plan,
+  };
+  const storageBridge = resolveProvisioningStorageBridge(provisioningIdentity);
 
   let passwordHash: string | null = null;
   let orgDisplayName: string;
@@ -232,11 +218,9 @@ export async function provisionTenant(
         name: orgDisplayName,
         slug,
         externalOrchestrationRef: orchestrationReference ?? undefined,
-        plan: legacyRequest?.plan,
-        // B2-REM-5A: canonical identity fields wired from provisioning request
-        // type = Prisma field name for tenant_category API field
-        type: request.tenant_category,
-        isWhiteLabel: request.is_white_label ?? false,
+        plan: storageBridge.plan,
+        type: storageBridge.tenant_category,
+        isWhiteLabel: storageBridge.is_white_label,
       },
       select: {
         id: true,
@@ -245,12 +229,6 @@ export async function provisionTenant(
         status: true,
         plan: true,
       },
-    });
-
-    const provisioningIdentity = resolveCanonicalProvisioningIdentity({
-      tenantCategory: tenant.type,
-      whiteLabelCapability: request.is_white_label ?? false,
-      commercialPlan: tenant.plan,
     });
 
     // Runtime tenant identity reads organizations.is_white_label via getOrganizationIdentity().
@@ -267,10 +245,10 @@ export async function provisionTenant(
         external_orchestration_ref: orchestrationReference ?? undefined,
         jurisdiction: isApprovedOnboarding ? approvedOnboardingJurisdiction : 'UNKNOWN',
         registration_no: isApprovedOnboarding ? approvedOnboardingRegistrationNumber : undefined,
-        org_type: tenant.type,
+        org_type: storageBridge.tenant_category,
         status: organizationStatus,
-        plan: tenant.plan,
-        is_white_label: request.is_white_label ?? false,
+        plan: storageBridge.plan,
+        is_white_label: storageBridge.is_white_label,
       },
       update: {
         slug: tenant.slug,
@@ -278,10 +256,10 @@ export async function provisionTenant(
         external_orchestration_ref: orchestrationReference ?? undefined,
         jurisdiction: isApprovedOnboarding ? approvedOnboardingJurisdiction : 'UNKNOWN',
         registration_no: isApprovedOnboarding ? approvedOnboardingRegistrationNumber : undefined,
-        org_type: tenant.type,
+        org_type: storageBridge.tenant_category,
         status: organizationStatus,
-        plan: tenant.plan,
-        is_white_label: request.is_white_label ?? false,
+        plan: storageBridge.plan,
+        is_white_label: storageBridge.is_white_label,
         updated_at: new Date(),
       },
       select: {

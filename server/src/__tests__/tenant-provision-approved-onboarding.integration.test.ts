@@ -105,7 +105,9 @@ vi.mock('../lib/auditLog.js', () => ({
 }));
 
 vi.mock('../services/stateMachine.service.js', () => ({
-  StateMachineService: class StateMachineService {},
+  StateMachineService: class StateMachineService {
+    noop(): void {}
+  },
 }));
 
 vi.mock('../routes/tenant/escalation.g022.js', () => ({
@@ -205,8 +207,10 @@ describe('approved-onboarding tenant provisioning route', () => {
       payload: {
         provisioningMode: 'APPROVED_ONBOARDING',
         orchestrationReference: 'ocase_12345',
-        tenant_category: 'B2B',
-        is_white_label: false,
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'PROFESSIONAL',
         organization: {
           legalName: 'Acme Textiles LLC',
           displayName: 'Acme Textiles',
@@ -227,12 +231,18 @@ describe('approved-onboarding tenant provisioning route', () => {
       expect.objectContaining({
         provisioningMode: 'APPROVED_ONBOARDING',
         orchestrationReference: 'ocase_12345',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'PROFESSIONAL',
         firstOwner: { email: 'owner@acme.test' },
       }),
       expect.objectContaining({
         adminActorId: 'admin-uuid-1',
       })
     );
+    expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('tenant_category');
+    expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('is_white_label');
 
     const body = response.json();
     expect(body.success).toBe(true);
@@ -265,6 +275,35 @@ describe('approved-onboarding tenant provisioning route', () => {
         invitePurpose: 'FIRST_OWNER_PREPARATION',
       })
     );
+  });
+
+  it('rejects conflicting canonical and legacy provisioning identity fields', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_12345',
+        tenant_category: 'B2B',
+        base_family: 'B2B',
+        aggregator_capability: true,
+        white_label_capability: false,
+        commercial_plan: 'FREE',
+        organization: {
+          legalName: 'Acme Textiles LLC',
+          displayName: 'Acme Textiles',
+          jurisdiction: 'US-DE',
+          registrationNumber: 'REG-123',
+        },
+        firstOwner: {
+          email: 'OWNER@ACME.TEST',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(provisionTenantMock).not.toHaveBeenCalled();
+    expect(writeAuditLogMock).not.toHaveBeenCalled();
   });
 
   it('preserves human-admin legacy provisioning on the same seam', async () => {
@@ -302,12 +341,18 @@ describe('approved-onboarding tenant provisioning route', () => {
       expect.objectContaining({
         orgName: 'Legacy Org',
         primaryAdminEmail: 'admin@legacy.test',
-        plan: 'FREE',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'FREE',
       }),
       expect.objectContaining({
         adminActorId: 'admin-uuid-1',
       })
     );
+    expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('plan');
+    expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('tenant_category');
+    expect(provisionTenantMock.mock.calls.at(-1)?.[0]).not.toHaveProperty('is_white_label');
 
     const body = response.json();
     expect(body.data).toMatchObject({

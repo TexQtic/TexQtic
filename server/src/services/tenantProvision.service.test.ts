@@ -86,6 +86,13 @@ describe('tenantProvision.service', () => {
   });
 
   it('creates tenant plus organization plus distinct first-owner invite for approved onboarding', async () => {
+    tx.tenant.create.mockResolvedValueOnce({
+      id: 'tenant-uuid-0000-0000-0000-000000000001',
+      slug: 'acme-textiles',
+      type: 'B2B',
+      status: 'ACTIVE',
+      plan: 'PROFESSIONAL',
+    });
     tx.organizations.upsert.mockResolvedValueOnce({
       legal_name: 'Acme Textiles LLC',
       jurisdiction: 'US-DE',
@@ -97,8 +104,10 @@ describe('tenantProvision.service', () => {
       {
         provisioningMode: 'APPROVED_ONBOARDING',
         orchestrationReference: 'ocase_12345',
-        tenant_category: 'B2B',
-        is_white_label: false,
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'PROFESSIONAL',
         organization: {
           legalName: 'Acme Textiles LLC',
           displayName: 'Acme Textiles',
@@ -123,6 +132,9 @@ describe('tenantProvision.service', () => {
         data: expect.objectContaining({
           name: 'Acme Textiles',
           externalOrchestrationRef: 'ocase_12345',
+          plan: 'PROFESSIONAL',
+          type: 'B2B',
+          isWhiteLabel: false,
         }),
       })
     );
@@ -153,6 +165,12 @@ describe('tenantProvision.service', () => {
     expect(tx.membership.create).not.toHaveBeenCalled();
     expect(result.provisioningMode).toBe('APPROVED_ONBOARDING');
     expect(result.orchestrationReference).toBe('ocase_12345');
+    expect(result.provisioning_identity).toEqual({
+      base_family: 'B2B',
+      aggregator_capability: false,
+      white_label_capability: false,
+      commercial_plan: 'PROFESSIONAL',
+    });
     expect(result.organization.status).toBe('VERIFICATION_APPROVED');
     expect(result.firstOwnerAccessPreparation).toMatchObject({
       artifactType: 'PLATFORM_INVITE',
@@ -164,8 +182,15 @@ describe('tenantProvision.service', () => {
     expect(result.firstOwnerAccessPreparation?.inviteToken.length).toBeGreaterThan(0);
   });
 
-  it('preserves legacy admin provisioning without creating an invite artifact', async () => {
-    tx.organizations.upsert.mockResolvedValue({
+  it('derives the persisted aggregator bridge from the canonical write carrier for legacy admin provisioning', async () => {
+    tx.tenant.create.mockResolvedValueOnce({
+      id: 'tenant-uuid-0000-0000-0000-000000000001',
+      slug: 'legacy-org',
+      type: 'AGGREGATOR',
+      status: 'ACTIVE',
+      plan: 'ENTERPRISE',
+    });
+    tx.organizations.upsert.mockResolvedValueOnce({
       legal_name: 'Legacy Org',
       jurisdiction: 'UNKNOWN',
       registration_no: null,
@@ -177,7 +202,10 @@ describe('tenantProvision.service', () => {
         orgName: 'Legacy Org',
         primaryAdminEmail: 'admin@legacy.test',
         primaryAdminPassword: legacyAdminPassword,
-        tenant_category: 'B2B',
+        base_family: 'INTERNAL',
+        aggregator_capability: true,
+        white_label_capability: true,
+        commercial_plan: 'ENTERPRISE',
       },
       {
         requestId: 'req-2',
@@ -185,10 +213,35 @@ describe('tenantProvision.service', () => {
       }
     );
 
+    expect(tx.tenant.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          name: 'Legacy Org',
+          plan: 'ENTERPRISE',
+          type: 'AGGREGATOR',
+          isWhiteLabel: true,
+        }),
+      })
+    );
+    expect(tx.organizations.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          org_type: 'AGGREGATOR',
+          plan: 'ENTERPRISE',
+          is_white_label: true,
+        }),
+      })
+    );
     expect(tx.user.findUnique).toHaveBeenCalledWith({ where: { email: 'admin@legacy.test' }, select: { id: true } });
     expect(tx.membership.create).toHaveBeenCalledOnce();
     expect(tx.invite.create).not.toHaveBeenCalled();
     expect(result.provisioningMode).toBe('LEGACY_ADMIN');
+    expect(result.provisioning_identity).toEqual({
+      base_family: 'INTERNAL',
+      aggregator_capability: true,
+      white_label_capability: true,
+      commercial_plan: 'ENTERPRISE',
+    });
     expect(result.userId).toBe('user-uuid-0000-0000-0000-000000000001');
     expect(result.membershipId).toBe('membership-uuid-0000-0000-0000-000000000001');
     expect(result.firstOwnerAccessPreparation).toBeNull();

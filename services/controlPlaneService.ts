@@ -376,12 +376,20 @@ export interface ProvisionTenantRequest {
   orgName: string;
   primaryAdminEmail: string;
   primaryAdminPassword: string;
-  /** Canonical commercial plan identity metadata for legacy admin provisioning. */
-  plan: import('../types').CommercialPlan;
-  /** Canonical tenant identity — B2-REM-5A */
-  tenant_category: 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
-  /** White-label deployment flag — optional; defaults to false */
+  /** Compatibility commercial plan alias retained while canonical writes normalize callers. */
+  plan?: import('../types').CommercialPlan;
+  /** Compatibility tenant identity alias retained while canonical writes normalize callers. */
+  tenant_category?: 'AGGREGATOR' | 'B2B' | 'B2C' | 'INTERNAL';
+  /** Compatibility white-label alias retained while canonical writes normalize callers. */
   is_white_label?: boolean;
+  /** Canonical base-family write carrier. */
+  base_family?: 'B2B' | 'B2C' | 'INTERNAL';
+  /** Canonical aggregator capability write carrier. */
+  aggregator_capability?: boolean;
+  /** Canonical white-label capability write carrier. */
+  white_label_capability?: boolean;
+  /** Canonical commercial-plan write carrier. */
+  commercial_plan?: import('../types').CommercialPlan;
 }
 
 /**

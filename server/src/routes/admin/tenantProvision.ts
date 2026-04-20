@@ -22,6 +22,7 @@ import { adminAuthMiddleware, requireAdminRole } from '../../middleware/auth.js'
 import { config } from '../../config/index.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
 import { provisionTenant } from '../../services/tenantProvision.service.js';
+import { normalizeTenantProvisionRequest } from '../../types/tenantProvision.types.js';
 import { prisma } from '../../db/prisma.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
 
@@ -33,6 +34,28 @@ import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
  * - primaryAdminEmail: valid email format
  * - primaryAdminPassword: minimum 8 chars (bcrypt hashing in service)
  */
+const planSchema = z.enum(['FREE', 'STARTER', 'PROFESSIONAL', 'ENTERPRISE'], {
+  errorMap: () => ({ message: 'plan must be one of: FREE, STARTER, PROFESSIONAL, ENTERPRISE' }),
+});
+
+const tenantCategorySchema = z.enum(['AGGREGATOR', 'B2B', 'B2C', 'INTERNAL'], {
+  errorMap: () => ({ message: 'tenant_category must be one of: AGGREGATOR, B2B, B2C, INTERNAL' }),
+});
+
+const baseFamilySchema = z.enum(['B2B', 'B2C', 'INTERNAL'], {
+  errorMap: () => ({ message: 'base_family must be one of: B2B, B2C, INTERNAL' }),
+});
+
+const provisionIdentitySchemaShape = {
+  plan: planSchema.optional(),
+  tenant_category: tenantCategorySchema.optional(),
+  is_white_label: z.boolean().optional(),
+  base_family: baseFamilySchema.optional(),
+  aggregator_capability: z.boolean().optional(),
+  white_label_capability: z.boolean().optional(),
+  commercial_plan: planSchema.optional(),
+};
+
 const legacyProvisionBodySchema = z.object({
   provisioningMode: z.literal('LEGACY_ADMIN').optional(),
   orgName: z
@@ -47,22 +70,13 @@ const legacyProvisionBodySchema = z.object({
   primaryAdminPassword: z
     .string()
     .min(8, 'primaryAdminPassword must be at least 8 characters'),
-  plan: z.enum(['FREE', 'STARTER', 'PROFESSIONAL', 'ENTERPRISE'], {
-    errorMap: () => ({ message: 'plan must be one of: FREE, STARTER, PROFESSIONAL, ENTERPRISE' }),
-  }),
-  tenant_category: z.enum(['AGGREGATOR', 'B2B', 'B2C', 'INTERNAL'], {
-    errorMap: () => ({ message: 'tenant_category must be one of: AGGREGATOR, B2B, B2C, INTERNAL' }),
-  }),
-  is_white_label: z.boolean().optional().default(false),
+  ...provisionIdentitySchemaShape,
 });
 
 const approvedOnboardingProvisionBodySchema = z.object({
   provisioningMode: z.literal('APPROVED_ONBOARDING'),
   orchestrationReference: z.string().trim().min(1).max(255),
-  tenant_category: z.enum(['AGGREGATOR', 'B2B', 'B2C', 'INTERNAL'], {
-    errorMap: () => ({ message: 'tenant_category must be one of: AGGREGATOR, B2B, B2C, INTERNAL' }),
-  }),
-  is_white_label: z.boolean().optional().default(false),
+  ...provisionIdentitySchemaShape,
   organization: z.object({
     legalName: z.string().trim().min(2).max(500),
     displayName: z.string().trim().min(2).max(200).optional(),
@@ -86,6 +100,19 @@ function parseProvisionRequestBody(body: unknown) {
   }
 
   return legacyProvisionBodySchema.safeParse(body);
+}
+
+function validateProvisionRequestBody(body: unknown) {
+  const parseResult = parseProvisionRequestBody(body);
+
+  if (!parseResult.success) {
+    return {
+      success: false as const,
+      errors: parseResult.error.errors,
+    };
+  }
+
+  return normalizeTenantProvisionRequest(parseResult.data);
 }
 
 function hasConfiguredApprovedOnboardingServiceToken(): boolean {
@@ -205,14 +232,13 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
     }
 
     // ── Input validation ──────────────────────────────────────────────────────
-    const parseResult = parseProvisionRequestBody(request.body);
-    if (!parseResult.success) {
-      return sendValidationError(reply, parseResult.error.errors);
+    const provisionRequest = validateProvisionRequestBody(request.body);
+
+    if (!provisionRequest.success) {
+      return sendValidationError(reply, provisionRequest.errors);
     }
 
-    const provisionRequest = parseResult.data;
-
-    if (isServiceCaller && provisionRequest.provisioningMode !== 'APPROVED_ONBOARDING') {
+    if (isServiceCaller && provisionRequest.data.provisioningMode !== 'APPROVED_ONBOARDING') {
       return sendError(
         reply,
         'FORBIDDEN',
@@ -228,7 +254,7 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
     // ── Invoke provisioning service ───────────────────────────────────────────
     try {
       const result = await provisionTenant(
-        provisionRequest,
+        provisionRequest.data,
         {
           requestId:    request.id ?? randomUUID(),
           adminActorId: actorId,
