@@ -13,6 +13,14 @@ const QA_PLACEHOLDER_HOST = 'https://placehold.co';
 type Tx = Prisma.TransactionClient;
 type QaTenantType = 'AGGREGATOR' | 'B2B' | 'B2C';
 type QaOrganizationStatus = 'ACTIVE' | 'PENDING_VERIFICATION';
+type QaPrimarySegmentKey = 'Weaving' | 'Fabric Processing' | 'Yarn' | 'Knitting' | null;
+type QaRolePositionKey = 'manufacturer' | 'trader' | 'service_provider';
+
+type QaTenantTaxonomySpec = {
+  primarySegmentKey: QaPrimarySegmentKey;
+  secondarySegmentKeys: Array<Exclude<QaPrimarySegmentKey, null>>;
+  rolePositionKeys: QaRolePositionKey[];
+};
 
 type QaTenantSpec = {
   key: 'QA_B2B' | 'QA_B2C' | 'QA_WL' | 'QA_AGG' | 'QA_PEND';
@@ -36,6 +44,7 @@ type QaTenantSpec = {
     logoUrl: string;
     themeJson: Prisma.InputJsonValue;
   };
+  taxonomy: QaTenantTaxonomySpec;
 };
 
 type CatalogSeedSpec = {
@@ -113,6 +122,11 @@ const QA_B2B_SPEC: QaTenantSpec = {
       fontFamily: 'IBM Plex Sans',
     },
   },
+  taxonomy: {
+    primarySegmentKey: 'Weaving',
+    secondarySegmentKeys: ['Fabric Processing'],
+    rolePositionKeys: ['manufacturer'],
+  },
 };
 
 const QA_B2C_SPEC: QaTenantSpec = {
@@ -133,6 +147,11 @@ const QA_B2C_SPEC: QaTenantSpec = {
       secondaryColor: '#F97316',
       fontFamily: 'Source Sans 3',
     },
+  },
+  taxonomy: {
+    primarySegmentKey: null,
+    secondarySegmentKeys: [],
+    rolePositionKeys: [],
   },
 };
 
@@ -159,6 +178,11 @@ const QA_WL_SPEC: QaTenantSpec = {
       fontFamily: 'Cormorant Garamond',
     },
   },
+  taxonomy: {
+    primarySegmentKey: null,
+    secondarySegmentKeys: [],
+    rolePositionKeys: [],
+  },
 };
 
 const QA_AGG_SPEC: QaTenantSpec = {
@@ -172,6 +196,11 @@ const QA_AGG_SPEC: QaTenantSpec = {
   plan: 'PROFESSIONAL',
   isWhiteLabel: false,
   jurisdiction: 'DE',
+  taxonomy: {
+    primarySegmentKey: null,
+    secondarySegmentKeys: [],
+    rolePositionKeys: [],
+  },
 };
 
 const QA_PEND_SPEC: QaTenantSpec = {
@@ -185,7 +214,54 @@ const QA_PEND_SPEC: QaTenantSpec = {
   plan: 'PROFESSIONAL',
   isWhiteLabel: false,
   jurisdiction: 'IN',
+  taxonomy: {
+    primarySegmentKey: null,
+    secondarySegmentKeys: [],
+    rolePositionKeys: [],
+  },
 };
+
+function buildQaTaxonomyCreateData(spec: QaTenantSpec) {
+  return {
+    primary_segment_key: spec.taxonomy.primarySegmentKey,
+    ...(spec.taxonomy.secondarySegmentKeys.length > 0
+      ? {
+          secondary_segments: {
+            create: spec.taxonomy.secondarySegmentKeys.map(segment_key => ({ segment_key })),
+          },
+        }
+      : {}),
+    ...(spec.taxonomy.rolePositionKeys.length > 0
+      ? {
+          role_positions: {
+            create: spec.taxonomy.rolePositionKeys.map(role_position_key => ({ role_position_key })),
+          },
+        }
+      : {}),
+  };
+}
+
+function buildQaTaxonomyUpdateData(spec: QaTenantSpec) {
+  return {
+    primary_segment_key: spec.taxonomy.primarySegmentKey,
+    secondary_segments: {
+      deleteMany: {},
+      ...(spec.taxonomy.secondarySegmentKeys.length > 0
+        ? {
+            create: spec.taxonomy.secondarySegmentKeys.map(segment_key => ({ segment_key })),
+          }
+        : {}),
+    },
+    role_positions: {
+      deleteMany: {},
+      ...(spec.taxonomy.rolePositionKeys.length > 0
+        ? {
+            create: spec.taxonomy.rolePositionKeys.map(role_position_key => ({ role_position_key })),
+          }
+        : {}),
+    },
+  };
+}
 
 const QA_B2B_CATALOG: CatalogSeedSpec[] = [
   {
@@ -553,6 +629,7 @@ async function ensureTenantIdentity(tx: Tx, spec: QaTenantSpec) {
       status: spec.organizationStatus,
       plan: spec.plan,
       is_white_label: spec.isWhiteLabel,
+      ...buildQaTaxonomyUpdateData(spec),
       updated_at: new Date(),
     },
     create: {
@@ -564,6 +641,7 @@ async function ensureTenantIdentity(tx: Tx, spec: QaTenantSpec) {
       status: spec.organizationStatus,
       plan: spec.plan,
       is_white_label: spec.isWhiteLabel,
+      ...buildQaTaxonomyCreateData(spec),
     },
     select: {
       id: true,
@@ -573,6 +651,23 @@ async function ensureTenantIdentity(tx: Tx, spec: QaTenantSpec) {
       status: true,
       plan: true,
       is_white_label: true,
+      primary_segment_key: true,
+      secondary_segments: {
+        select: {
+          segment_key: true,
+        },
+        orderBy: {
+          segment_key: 'asc',
+        },
+      },
+      role_positions: {
+        select: {
+          role_position_key: true,
+        },
+        orderBy: {
+          role_position_key: 'asc',
+        },
+      },
     },
   });
 
@@ -1346,8 +1441,25 @@ async function loadTenantValidationState(slug: string, email: string) {
           legal_name: true,
           status: true,
           org_type: true,
+          primary_segment_key: true,
           is_white_label: true,
           plan: true,
+          secondary_segments: {
+            select: {
+              segment_key: true,
+            },
+            orderBy: {
+              segment_key: 'asc',
+            },
+          },
+          role_positions: {
+            select: {
+              role_position_key: true,
+            },
+            orderBy: {
+              role_position_key: 'asc',
+            },
+          },
         },
       })
     : null;
@@ -1406,6 +1518,9 @@ function validateQaB2bIdentity(
     orders: number;
     auditLogs: number;
     invalidActiveMediaUrlsPresent: number;
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
   },
 ) {
   const hasIdentity =
@@ -1428,12 +1543,33 @@ function validateQaB2bIdentity(
     proof.rfqs >= 1 &&
     proof.orders >= 1 &&
     proof.auditLogs >= 1 &&
-    proof.invalidActiveMediaUrlsPresent === 0;
+    proof.invalidActiveMediaUrlsPresent === 0 &&
+    proof.primarySegmentKey === QA_B2B_SPEC.taxonomy.primarySegmentKey &&
+    JSON.stringify(proof.secondarySegmentKeys) === JSON.stringify([...QA_B2B_SPEC.taxonomy.secondarySegmentKeys].sort((left, right) => left.localeCompare(right))) &&
+    JSON.stringify(proof.rolePositionKeys) === JSON.stringify([...QA_B2B_SPEC.taxonomy.rolePositionKeys].sort((left, right) => left.localeCompare(right)));
 
   return {
     ...baseTenantValidation(state),
     proof,
     pass: Boolean(hasIdentity && hasRuntime && hasProof),
+  };
+}
+
+function validateQaNullTaxonomyControl(
+  state: TenantValidationState,
+  proof: {
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
+  },
+) {
+  return {
+    ...baseTenantValidation(state),
+    taxonomy: proof,
+    pass:
+      proof.primarySegmentKey === null &&
+      proof.secondarySegmentKeys.length === 0 &&
+      proof.rolePositionKeys.length === 0,
   };
 }
 
@@ -1445,6 +1581,9 @@ function validateQaB2cIdentity(
     browseGroupingMode: string;
     legacySeedMediaUrlsPresent: number;
     brandingMediaValid: boolean;
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
   },
 ) {
   const hasIdentity =
@@ -1461,7 +1600,10 @@ function validateQaB2cIdentity(
     proof.activeCatalogItems >= QA_B2C_CATALOG.length &&
     proof.activeCartItems >= 1 &&
     proof.legacySeedMediaUrlsPresent === 0 &&
-    proof.brandingMediaValid;
+    proof.brandingMediaValid &&
+    proof.primarySegmentKey === null &&
+    proof.secondarySegmentKeys.length === 0 &&
+    proof.rolePositionKeys.length === 0;
 
   return {
     ...baseTenantValidation(state),
@@ -1483,6 +1625,9 @@ function validateQaWlOwnerIdentity(
     staffMemberships: number;
     legacySeedMediaUrlsPresent: number;
     brandingMediaValid: boolean;
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
   },
 ) {
   const hasIdentity =
@@ -1507,7 +1652,10 @@ function validateQaWlOwnerIdentity(
     proof.orders >= 1 &&
     proof.staffMemberships >= 2 &&
     proof.legacySeedMediaUrlsPresent === 0 &&
-    proof.brandingMediaValid;
+    proof.brandingMediaValid &&
+    proof.primarySegmentKey === null &&
+    proof.secondarySegmentKeys.length === 0 &&
+    proof.rolePositionKeys.length === 0;
 
   return {
     ...baseTenantValidation(state),
@@ -1536,7 +1684,13 @@ function validateQaWlMemberIdentity(state: TenantValidationState) {
 
 function validateQaAggIdentity(
   state: TenantValidationState,
-  proof: { visibleDiscoveryRows: number; auditLogs: number },
+  proof: {
+    visibleDiscoveryRows: number;
+    auditLogs: number;
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
+  },
 ) {
   const hasIdentity =
     state.organization?.org_type === 'AGGREGATOR' &&
@@ -1547,7 +1701,12 @@ function validateQaAggIdentity(
     state.directLoginEligible;
 
   const hasRuntime = state.descriptor?.operatingMode === 'AGGREGATOR_WORKSPACE';
-  const hasProof = proof.visibleDiscoveryRows >= 2 && proof.auditLogs >= 1;
+  const hasProof =
+    proof.visibleDiscoveryRows >= 2 &&
+    proof.auditLogs >= 1 &&
+    proof.primarySegmentKey === null &&
+    proof.secondarySegmentKeys.length === 0 &&
+    proof.rolePositionKeys.length === 0;
 
   return {
     ...baseTenantValidation(state),
@@ -1556,7 +1715,14 @@ function validateQaAggIdentity(
   };
 }
 
-function validateQaPendIdentity(state: TenantValidationState) {
+function validateQaPendIdentity(
+  state: TenantValidationState,
+  proof: {
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
+  },
+) {
   const hasIdentity =
     state.tenant?.status === 'ACTIVE' &&
     state.organization?.org_type === 'B2B' &&
@@ -1570,11 +1736,17 @@ function validateQaPendIdentity(state: TenantValidationState) {
     state.descriptor?.operatingMode === 'B2B_WORKSPACE' &&
     state.descriptor.runtimeOverlays.length === 0;
 
+  const hasNullTaxonomy =
+    proof.primarySegmentKey === null &&
+    proof.secondarySegmentKeys.length === 0 &&
+    proof.rolePositionKeys.length === 0;
+
   return {
     ...baseTenantValidation(state),
+    taxonomy: proof,
     posture: state.organization?.status ?? null,
     tenantStatus: state.tenant?.status ?? null,
-    pass: Boolean(hasIdentity && hasRuntime),
+    pass: Boolean(hasIdentity && hasRuntime && hasNullTaxonomy),
   };
 }
 
@@ -1696,6 +1868,9 @@ async function validateQaBaseline() {
       orders: qaB2bOrderCount,
       auditLogs: qaB2bAuditCount,
       invalidActiveMediaUrlsPresent: qaB2bInvalidActiveMediaCount,
+      primarySegmentKey: qaB2b.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaB2b.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaB2b.organization?.role_positions?.map(position => position.role_position_key) ?? []),
     }),
     qaB2C: validateQaB2cIdentity(qaB2c, {
       activeCatalogItems: qaB2cCatalogCount,
@@ -1703,6 +1878,9 @@ async function validateQaBaseline() {
       browseGroupingMode: 'catalog-grid',
       legacySeedMediaUrlsPresent: qaB2cLegacySeedMediaCount,
       brandingMediaValid: !hasLegacyPlaceholderHost(qaB2c.tenant?.branding?.logoUrl),
+      primarySegmentKey: qaB2c.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaB2c.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaB2c.organization?.role_positions?.map(position => position.role_position_key) ?? []),
     }),
     qaWL: validateQaWlOwnerIdentity(qaWlOwner, {
       brandingRow: Boolean(qaWlOwner.tenant?.branding),
@@ -1717,13 +1895,28 @@ async function validateQaBaseline() {
       staffMemberships: qaWlOwner.tenant?.memberships.length ?? 0,
       legacySeedMediaUrlsPresent: qaWlLegacySeedMediaCount,
       brandingMediaValid: !hasLegacyPlaceholderHost(qaWlOwner.tenant?.branding?.logoUrl),
+      primarySegmentKey: qaWlOwner.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaWlOwner.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaWlOwner.organization?.role_positions?.map(position => position.role_position_key) ?? []),
     }),
     qaWLMember: validateQaWlMemberIdentity(qaWlMember),
+    qaWLMemberTaxonomy: validateQaNullTaxonomyControl(qaWlMember, {
+      primarySegmentKey: qaWlMember.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaWlMember.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaWlMember.organization?.role_positions?.map(position => position.role_position_key) ?? []),
+    }),
     qaAgg: validateQaAggIdentity(qaAgg, {
       visibleDiscoveryRows: qaAggDiscoveryVisibleCount,
       auditLogs: qaAggAuditCount,
+      primarySegmentKey: qaAgg.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaAgg.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaAgg.organization?.role_positions?.map(position => position.role_position_key) ?? []),
     }),
-    qaPend: validateQaPendIdentity(qaPend),
+    qaPend: validateQaPendIdentity(qaPend, {
+      primarySegmentKey: qaPend.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaPend.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaPend.organization?.role_positions?.map(position => position.role_position_key) ?? []),
+    }),
     legacyChecks: {
       acmeSlugRetired: !legacyAcmeTenant,
       acmeOwnerEmailRetired: !legacyAcmeUser,
@@ -1737,6 +1930,7 @@ async function validateQaBaseline() {
     validation.qaB2C.pass &&
     validation.qaWL.pass &&
     validation.qaWLMember.pass &&
+    validation.qaWLMemberTaxonomy.pass &&
     validation.qaAgg.pass &&
     validation.qaPend.pass &&
     validation.legacyChecks.acmeSlugRetired &&
