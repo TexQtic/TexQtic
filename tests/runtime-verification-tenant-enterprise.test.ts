@@ -632,11 +632,12 @@ function renderWhiteLabelAdminShell() {
   );
 }
 
-function renderWhiteLabelSettings(hasDomainsNavigation = false) {
+function renderWhiteLabelSettings(options: { hasDomainsNavigation?: boolean; hasOverlayEntry?: boolean } = {}) {
   return renderToStaticMarkup(
     React.createElement(WhiteLabelSettings, {
       tenant: makeWhiteLabelTenant(),
-      ...(hasDomainsNavigation ? { onNavigateDomains: () => undefined } : {}),
+      ...(options.hasDomainsNavigation ? { onNavigateDomains: () => undefined } : {}),
+      ...(options.hasOverlayEntry ? { onEnterOverlay: () => undefined } : {}),
     }),
   );
 }
@@ -1874,7 +1875,8 @@ describe('runtime verification - tenant membership pending invite surface', () =
     const storefrontHtml = renderWhiteLabelShell();
     const adminHtml = renderWhiteLabelAdminShell();
     const overlaySettingsHtml = renderWhiteLabelSettings();
-    const overlayDomainsHtml = renderWhiteLabelSettings(true);
+    const overlayEntryHtml = renderWhiteLabelSettings({ hasOverlayEntry: true });
+    const overlayDomainsHtml = renderWhiteLabelSettings({ hasDomainsNavigation: true });
 
     expect(aggregatorHtml).toContain('data-mobile-nav="aggregator"');
     expect(aggregatorHtml).toContain('Discovery Capability');
@@ -1897,6 +1899,8 @@ describe('runtime verification - tenant membership pending invite surface', () =
 
     expect(overlaySettingsHtml).toContain('white-label admin overlay');
     expect(overlaySettingsHtml).toContain('White-Label Admin Overlay');
+    expect(overlayEntryHtml).toContain('Continue into the White-Label Admin Overlay');
+    expect(overlayEntryHtml).toContain('Open White-Label Admin Overlay');
     expect(overlayDomainsHtml).toContain("this overlay&#x27;s Domains view");
   });
 

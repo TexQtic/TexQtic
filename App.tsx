@@ -3745,6 +3745,7 @@ const App: React.FC = () => {
       return (
         <WhiteLabelSettings
           tenant={currentTenant}
+          onEnterOverlay={tenantHasWlAdminOverlay ? () => enterWlAdmin('BRANDING') : undefined}
         />
       );
     }

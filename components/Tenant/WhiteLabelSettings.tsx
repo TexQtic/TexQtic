@@ -10,7 +10,9 @@ export const WhiteLabelSettings: React.FC<{
    * When absent (EXPERIENCE SETTINGS context), a static informational note is shown.
    * In both cases the dead non-wired Connect input is removed. */
   onNavigateDomains?: () => void;
-}> = ({ tenant, onNavigateDomains }) => {
+  /** Optional entry from reachable shared-core settings into the existing WL admin overlay. */
+  onEnterOverlay?: () => void;
+}> = ({ tenant, onNavigateDomains, onEnterOverlay }) => {
   const [primaryColor, setPrimaryColor] = useState(tenant.theme.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState(tenant.theme.secondaryColor);
   const [logoUrl, setLogoUrl] = useState(
@@ -69,6 +71,20 @@ export const WhiteLabelSettings: React.FC<{
                   className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition"
                 >
                   Manage Custom Domains →
+                </button>
+              </div>
+            ) : onEnterOverlay ? (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-500">
+                  Continue into the White-Label Admin Overlay to manage custom domains and related
+                  storefront controls.
+                </p>
+                <button
+                  type="button"
+                  onClick={onEnterOverlay}
+                  className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition"
+                >
+                  Open White-Label Admin Overlay →
                 </button>
               </div>
             ) : (
