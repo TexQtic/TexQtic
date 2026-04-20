@@ -285,15 +285,8 @@ function toPublicControlTenantReadModel<
     secondary_segment_keys: string[];
     role_position_keys: string[];
   },
->(tenant: T): Omit<T, 'primary_segment_key' | 'secondary_segment_keys' | 'role_position_keys'> {
-  const {
-    primary_segment_key: _primary_segment_key,
-    secondary_segment_keys: _secondary_segment_keys,
-    role_position_keys: _role_position_keys,
-    ...publicTenant
-  } = tenant;
-
-  return publicTenant;
+>(tenant: T): T {
+  return tenant;
 }
 
 function mapFinanceSupervisionStatus(name: string): 'VERIFIED' | 'FOLLOW_UP_REQUIRED' | null {
