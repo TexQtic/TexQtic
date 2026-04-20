@@ -559,6 +559,10 @@ function renderAggregatorShell() {
             items: [
               { routeKey: 'home', navigationKey: 'HOME', routeGroupKey: 'home_landing', active: true },
               { routeKey: 'orders', navigationKey: 'ORDERS', routeGroupKey: 'orders_operations', active: false },
+              { routeKey: 'dpp', navigationKey: 'DPP', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'escrow', navigationKey: 'ESCROW', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'escalations', navigationKey: 'ESCALATIONS', routeGroupKey: 'operational_workspace', active: false },
+              { routeKey: 'settlement', navigationKey: 'SETTLEMENT', routeGroupKey: 'operational_workspace', active: false },
               { routeKey: 'certifications', navigationKey: 'CERTIFICATIONS', routeGroupKey: 'operational_workspace', active: false },
               { routeKey: 'traceability', navigationKey: 'TRACEABILITY', routeGroupKey: 'operational_workspace', active: false },
               { routeKey: 'audit_logs', navigationKey: 'AUDIT_LOGS', routeGroupKey: 'operational_workspace', active: false },
@@ -1861,7 +1865,11 @@ describe('runtime verification - tenant membership pending invite surface', () =
     const adminHtml = renderWhiteLabelAdminShell();
 
     expect(aggregatorHtml).toContain('data-mobile-nav="aggregator"');
+    expect(aggregatorHtml).toContain('Discovery Capability');
+    expect(aggregatorHtml).toContain('Shared Continuation');
+    expect(aggregatorHtml).toContain('Shared Core');
     expect(aggregatorHtml).toContain('Companies');
+    expect(aggregatorHtml).toContain('Orders');
     expect(aggregatorHtml).toContain('Team Access');
 
     expect(storefrontHtml).toContain('data-mobile-nav="wl-storefront"');

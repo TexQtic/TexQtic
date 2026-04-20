@@ -31,6 +31,8 @@ interface MobileShellMenuItem {
   key: string;
   label: string;
   onSelect?: () => void;
+  kind?: 'action' | 'section';
+  active?: boolean;
 }
 
 interface MobileShellMenuProps {
@@ -44,6 +46,79 @@ interface MobileShellMenuProps {
 
 const hasShellRoute = (surface: RuntimeShellNavigationSurface | null, routeKey: RuntimeLocalRouteKey) => {
   return surface?.items.some(item => item.routeKey === routeKey) ?? false;
+};
+
+const AGGREGATOR_DISCOVERY_GROUP_KEYS = new Set(['home_landing']);
+const AGGREGATOR_SHARED_CONTINUATION_GROUP_KEYS = new Set([
+  'orders_operations',
+  'rfq_sourcing',
+  'operational_workspace',
+]);
+
+const AGGREGATOR_ROUTE_LABELS: Partial<Record<RuntimeLocalRouteKey, string>> = {
+  home: 'Companies',
+  orders: 'Orders',
+  dpp: 'DPP Passport',
+  escrow: 'Escrow',
+  escalations: 'Escalations',
+  settlement: 'Settlement',
+  certifications: 'Certifications',
+  traceability: 'Traceability',
+  audit_logs: 'Audit Log',
+  trades: 'Trades',
+};
+
+const buildAggregatorNavigationItems = (
+  surface: RuntimeShellNavigationSurface | null,
+  routeGroupKeys: ReadonlySet<string>,
+  onNavigateRoute: (routeKey: RuntimeLocalRouteKey) => void,
+): MobileShellMenuItem[] => {
+  return (surface?.items ?? []).flatMap(item => {
+    if (!routeGroupKeys.has(item.routeGroupKey)) {
+      return [];
+    }
+
+    const label = AGGREGATOR_ROUTE_LABELS[item.routeKey];
+    if (!label) {
+      return [];
+    }
+
+    return [{
+      key: item.routeKey,
+      label,
+      onSelect: () => onNavigateRoute(item.routeKey),
+      active: item.active,
+    }];
+  });
+};
+
+const AggregatorDesktopNavSection: React.FC<{
+  title: string;
+  items: MobileShellMenuItem[];
+}> = ({ title, items }) => {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+        {title}
+      </div>
+      <div className="flex flex-wrap gap-4 text-sm font-medium">
+        {items.map(item => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={item.onSelect}
+            className={item.active ? 'text-blue-400' : 'text-slate-300 hover:text-blue-400 transition'}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const isRemoteLogoAsset = (logo: string) => /^https?:\/\//i.test(logo);
@@ -112,12 +187,16 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
   const itemClassName = tone === 'dark'
     ? 'text-slate-100 hover:bg-white/10'
     : 'text-slate-700 hover:bg-slate-100';
+  const sectionClassName = tone === 'dark'
+    ? 'px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500'
+    : 'px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400';
+  const actionCount = items.filter(item => item.kind !== 'section').length;
 
   return (
     <details
       ref={menuRef}
       data-mobile-nav={shellId}
-      data-mobile-item-count={items.length}
+      data-mobile-item-count={actionCount}
       className={`${hiddenClassName} relative`}
     >
       <summary
@@ -134,22 +213,32 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
           Navigation
         </div>
         <nav className="space-y-1">
-          {items.map(item => (
-            <button
-              key={item.key}
-              type="button"
-              data-mobile-nav-item={item.key}
-              onClick={() => {
-                if (menuRef.current) {
-                  menuRef.current.open = false;
-                }
-                item.onSelect?.();
-              }}
-              className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${itemClassName}`}
-            >
-              {item.label}
-            </button>
-          ))}
+          {items.map(item => {
+            if (item.kind === 'section') {
+              return (
+                <div key={item.key} className={sectionClassName}>
+                  {item.label}
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                data-mobile-nav-item={item.key}
+                onClick={() => {
+                  if (menuRef.current) {
+                    menuRef.current.open = false;
+                  }
+                  item.onSelect?.();
+                }}
+                className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${itemClassName}`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
       </div>
     </details>
@@ -157,18 +246,30 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
 };
 
 export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, navigation }) => {
-  const mobileMenuItems: MobileShellMenuItem[] = [
-    { key: 'home', label: 'Companies', onSelect: () => navigation.onNavigateRoute('home') },
-    ...(hasShellRoute(navigation.surface, 'certifications') ? [{ key: 'certifications', label: 'Certifications', onSelect: () => navigation.onNavigateRoute('certifications') }] : []),
-    ...(hasShellRoute(navigation.surface, 'traceability') ? [{ key: 'traceability', label: 'Traceability', onSelect: () => navigation.onNavigateRoute('traceability') }] : []),
-    ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
-    ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
-    ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
-    ...(hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
-    ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
-    ...(hasShellRoute(navigation.surface, 'audit_logs') ? [{ key: 'audit_logs', label: 'Audit Log', onSelect: () => navigation.onNavigateRoute('audit_logs') }] : []),
-    ...(hasShellRoute(navigation.surface, 'trades') ? [{ key: 'trades', label: 'Trades', onSelect: () => navigation.onNavigateRoute('trades') }] : []),
+  const discoveryItems = buildAggregatorNavigationItems(
+    navigation.surface,
+    AGGREGATOR_DISCOVERY_GROUP_KEYS,
+    navigation.onNavigateRoute,
+  );
+  const sharedContinuationItems = buildAggregatorNavigationItems(
+    navigation.surface,
+    AGGREGATOR_SHARED_CONTINUATION_GROUP_KEYS,
+    navigation.onNavigateRoute,
+  );
+  const sharedCoreItems: MobileShellMenuItem[] = [
     { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
+  ];
+  const mobileMenuItems: MobileShellMenuItem[] = [
+    { key: 'aggregator-discovery', label: 'Discovery Capability', kind: 'section' },
+    ...discoveryItems,
+    ...(sharedContinuationItems.length > 0
+      ? [
+          { key: 'aggregator-shared-continuation', label: 'Shared Continuation', kind: 'section' as const },
+          ...sharedContinuationItems,
+        ]
+      : []),
+    { key: 'aggregator-shared-core', label: 'Shared Core', kind: 'section' },
+    ...sharedCoreItems,
   ];
 
   return (
@@ -184,18 +285,10 @@ export const AggregatorShell: React.FC<ShellProps> = ({ tenant, children, naviga
               <PlatformSignature label="Discovery Capability" tone="dark" />
             </div>
           </div>
-          <nav className="hidden md:flex gap-6 text-sm font-medium">
-            <button onClick={() => navigation.onNavigateRoute('home')} className="text-blue-400">Companies</button>
-            {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="hover:text-blue-400 transition text-slate-300">Certifications</button>}
-            {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="hover:text-blue-400 transition text-slate-300">Traceability</button>}
-            {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="hover:text-blue-400 transition text-slate-300">Orders</button>}
-            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="hover:text-blue-400 transition text-slate-300">DPP Passport</button>}
-            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="hover:text-blue-400 transition text-slate-300">Escrow</button>}
-            {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="hover:text-blue-400 transition text-slate-300">Escalations</button>}
-            {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="hover:text-blue-400 transition text-slate-300">Settlement</button>}
-            {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="hover:text-blue-400 transition text-slate-300">Audit Log</button>}
-            {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="hover:text-blue-400 transition text-slate-300">Trades</button>}
-            <button onClick={navigation.onNavigateTeam} className="hover:text-blue-400 transition text-slate-300">Team Access</button>
+          <nav className="hidden md:flex flex-wrap items-start gap-6">
+            <AggregatorDesktopNavSection title="Discovery Capability" items={discoveryItems} />
+            <AggregatorDesktopNavSection title="Shared Continuation" items={sharedContinuationItems} />
+            <AggregatorDesktopNavSection title="Shared Core" items={sharedCoreItems} />
           </nav>
           <MobileShellMenu
             shellId="aggregator"
