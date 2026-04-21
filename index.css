@@ -29,6 +29,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.public-entry-editorial-heading {
+  font-family:
+    'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+}
+
 code,
 pre {
   font-family: 'JetBrains Mono', 'Courier New', monospace;

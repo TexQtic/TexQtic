@@ -1531,7 +1531,7 @@ type AppState =
   | 'WL_ADMIN'
   | 'ORDER_CONFIRMED';
 
-type NeutralEntryPathSelection = 'B2B' | 'B2C' | null;
+type NeutralEntryPathSelection = 'B2B' | 'B2C' | 'SUPPLIER' | null;
 
 const hasStoredAuthenticatedSession = () => {
   if (globalThis.window === undefined) {
@@ -2149,25 +2149,90 @@ const App: React.FC = () => {
   const primaryEntrySurfaceState: AppState = isNeutralPublicEntryDescriptor(publicEntryDescriptor)
     ? 'PUBLIC_ENTRY'
     : 'AUTH';
+  const scrollToPublicEntrySection = (sectionId: string) => {
+    globalThis.document?.getElementById(sectionId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+  const selectNeutralPublicEntryPath = (
+    nextSelection: Exclude<NeutralEntryPathSelection, null>,
+    sectionId?: string,
+  ) => {
+    setNeutralEntryPathSelection(nextSelection);
+
+    if (sectionId) {
+      scrollToPublicEntrySection(sectionId);
+    }
+  };
+  const openSecondaryAuthenticatedEntry = (realm: 'TENANT' | 'CONTROL_PLANE') => {
+    setTenantBootstrapBlockedMessage(null);
+    setTenantProvisionError(null);
+    setAuthRealm(realm);
+    scrollToPublicEntrySection('public-entry-auth');
+  };
   const publicEntryLaunchGuidance = (() => {
     if (neutralEntryPathSelection === 'B2B') {
       return {
-        title: 'B2B public discovery entry',
+        title: 'Structured B2B sourcing path',
         detail:
-          'Launch remains bounded at public-safe supplier and capability entry. Pricing, negotiation, RFQ workflow, and trade continuity stay outside this neutral host surface.',
+          'Begin with verified manufacturers, traders, and suppliers. Structured inquiries and sourcing continuity continue after the public entry surface hands off to the next appropriate authenticated step.',
       };
     }
 
     if (neutralEntryPathSelection === 'B2C') {
       return {
-        title: 'B2C public browse entry',
+        title: 'Curated product discovery path',
         detail:
-          'Launch remains bounded at storefront browse-entry context. Cart persistence, checkout, account continuity, and post-purchase workflow stay outside this neutral host surface.',
+          'Begin with curated textile product discovery and verified seller visibility. Account continuity, cart persistence, and checkout move into later authenticated commerce steps when appropriate.',
+      };
+    }
+
+    if (neutralEntryPathSelection === 'SUPPLIER') {
+      return {
+        title: 'Verified supplier onboarding path',
+        detail:
+          'Begin with supplier visibility intent. Verification review, structured listings, and deeper commercial continuity continue after the right authenticated entry begins.',
       };
     }
 
     return null;
   })();
+  const publicEntryTrustSignals = [
+    'Verified suppliers',
+    'Structured inquiries',
+    'Trusted trade pathways',
+    'Curated discovery',
+  ] as const;
+  const publicEntryTrustBlocks = [
+    {
+      title: 'Verified supplier profiles',
+      detail:
+        'Supplier presence is tied to structured identity, business context, and visible trust signals.',
+    },
+    {
+      title: 'Structured category system',
+      detail:
+        'Listings and discovery pathways follow a textile-specific category model instead of a loose, generic directory.',
+    },
+    {
+      title: 'Structured inquiry workflows',
+      detail:
+        'Business sourcing and product discovery are supported by more disciplined inquiry and handoff paths.',
+    },
+    {
+      title: 'Trusted trade continuity',
+      detail:
+        'Public discovery can begin openly, while deeper commercial continuity moves into authenticated flows when appropriate.',
+    },
+  ] as const;
+  const publicEntrySupplierValuePoints = [
+    'Create a verified supplier or brand presence',
+    'Publish listings within a structured textile category system',
+    'Manage B2B and B2C visibility from one platform',
+    'Receive structured inquiries instead of unqualified noise',
+    'Strengthen buyer trust through visible credibility signals',
+  ] as const;
 
   const documentTitle = useMemo(() => {
     if (appState === 'PUBLIC_ENTRY') {
@@ -4441,195 +4506,534 @@ const App: React.FC = () => {
     switch (appState) {
       case 'PUBLIC_ENTRY': {
         return (
-          <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.10),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] font-sans text-slate-900">
-            <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-8 px-6 py-8 lg:flex-row lg:items-start lg:px-10 lg:py-10">
-              <section className="flex-1 rounded-[32px] border border-slate-200 bg-white/90 p-8 shadow-xl shadow-slate-200/70 backdrop-blur">
-                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
-                  <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1">
-                    Neutral platform host
-                  </span>
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
-                    {publicEntryHostLabel}
-                  </span>
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
-                    Public-safe entry only
-                  </span>
-                </div>
+          <div className="min-h-screen bg-[#f3f8fb] font-sans text-slate-900">
+            <div className="bg-[radial-gradient(circle_at_top_left,_rgba(102,213,224,0.22),_transparent_28%),linear-gradient(180deg,_#eef6f8_0%,_#f3f8fb_100%)]">
+              <div className="mx-auto max-w-7xl px-6 py-6 lg:px-10 lg:py-8">
+                <nav className="rounded-[32px] border border-[#d9e6ea] bg-white/92 px-5 py-4 shadow-[0_24px_70px_rgba(7,26,47,0.10)] backdrop-blur">
+                  <div className="flex items-center justify-between gap-4">
+                    <a href="#public-entry-top" className="flex items-center" aria-label="TexQtic platform entry">
+                      <img
+                        src="/brand/texqtic-logo.png"
+                        alt="TexQtic"
+                        className="h-12 w-auto md:h-14"
+                        loading="eager"
+                      />
+                    </a>
 
-                <div className="mt-8 max-w-3xl space-y-5">
-                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-400">
-                    TexQtic platform entry
-                  </p>
-                  <h1 className="max-w-2xl text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
-                    Governed market-access entry for neutral public launch.
-                  </h1>
-                  <p className="max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
-                    This neutral host frames TexQtic before any tenant-branded or authenticated surface takes over.
-                    It presents the lawful B2B, B2C, tenant, and staff entry paths without collapsing the first page
-                    into a login-only shell.
-                  </p>
-                </div>
-
-                <div className="mt-8 grid gap-4 md:grid-cols-2">
-                  <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
-                      Public-safe B2B
+                    <div className="hidden lg:flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => scrollToPublicEntrySection('public-entry-discovery')}
+                        className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
+                      >
+                        Discover
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')}
+                        className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
+                      >
+                        Source for Business
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectNeutralPublicEntryPath('B2C', 'public-entry-discovery')}
+                        className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
+                      >
+                        Browse Products
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                        className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
+                      >
+                        For Suppliers
+                      </button>
                     </div>
-                    <h2 className="mt-3 text-xl font-bold text-slate-900">B2B Discovery Entry</h2>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      Launch toward lawful supplier and capability discovery without exposing anonymous pricing,
-                      negotiation, or RFQ workflow depth on the neutral host.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setNeutralEntryPathSelection('B2B')}
-                      className="mt-5 inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-400 hover:bg-white"
-                    >
-                      Open B2B path
-                    </button>
-                  </article>
 
-                  <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
-                      Public-safe B2C
+                    <div className="hidden md:flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                        className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
+                      >
+                        Sign in
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                        className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                      >
+                        List your business
+                      </button>
                     </div>
-                    <h2 className="mt-3 text-xl font-bold text-slate-900">B2C Browse Entry</h2>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      Launch toward lawful storefront browse-entry context without taking ownership of cart,
-                      checkout, or account continuity on the neutral host.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setNeutralEntryPathSelection('B2C')}
-                      className="mt-5 inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-400 hover:bg-white"
-                    >
-                      Open B2C path
-                    </button>
-                  </article>
-
-                  <article className="rounded-3xl border border-indigo-200 bg-indigo-50/80 p-6 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-500">
-                      Secondary authenticated entry
-                    </div>
-                    <h2 className="mt-3 text-xl font-bold text-slate-900">Tenant Access</h2>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      Returning tenant members, owners, and workspace users can continue through authenticated tenant entry.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTenantBootstrapBlockedMessage(null);
-                        setTenantProvisionError(null);
-                        setAuthRealm('TENANT');
-                      }}
-                      className="mt-5 inline-flex items-center rounded-full border border-indigo-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-indigo-700 transition hover:border-indigo-400"
-                    >
-                      Use tenant access
-                    </button>
-                  </article>
-
-                  <article className="rounded-3xl border border-rose-200 bg-rose-50/80 p-6 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-rose-500">
-                      Secondary authenticated entry
-                    </div>
-                    <h2 className="mt-3 text-xl font-bold text-slate-900">Staff Control</h2>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      Staff and control-plane users can continue through bounded authenticated control entry without taking over the neutral public page.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTenantBootstrapBlockedMessage(null);
-                        setTenantProvisionError(null);
-                        setAuthRealm('CONTROL_PLANE');
-                      }}
-                      className="mt-5 inline-flex items-center rounded-full border border-rose-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-rose-700 transition hover:border-rose-400"
-                    >
-                      Use staff control
-                    </button>
-                  </article>
-                </div>
-
-                {publicEntryLaunchGuidance && (
-                  <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-950 px-6 py-5 text-white shadow-lg shadow-slate-300/30">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
-                      Selected launch path
-                    </div>
-                    <h2 className="mt-3 text-lg font-semibold">{publicEntryLaunchGuidance.title}</h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                      {publicEntryLaunchGuidance.detail}
-                    </p>
                   </div>
-                )}
 
-                <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">
-                    Pre-session and pre-workflow
-                  </span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">
-                    No tenant admin or control-plane runtime exposure
-                  </span>
-                  {publicEntryBootstrapPending && (
-                    <span className="rounded-full bg-indigo-50 px-3 py-1 font-medium text-indigo-700">
-                      Confirming neutral entry context...
-                    </span>
-                  )}
-                </div>
-              </section>
+                  <div className="mt-4 flex flex-wrap gap-2 lg:hidden">
+                    <button
+                      type="button"
+                      onClick={() => scrollToPublicEntrySection('public-entry-discovery')}
+                      className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
+                    >
+                      Discover
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')}
+                      className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
+                    >
+                      Source for Business
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('B2C', 'public-entry-discovery')}
+                      className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
+                    >
+                      Browse Products
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                      className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
+                    >
+                      For Suppliers
+                    </button>
+                  </div>
 
-              <aside className="w-full lg:max-w-md">
-                <div className="rounded-[32px] border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
-                        Authenticated entry
-                      </div>
-                      <h2 className="mt-3 text-2xl font-bold text-slate-900">Secondary access controls</h2>
-                      <p className="mt-2 text-sm leading-6 text-slate-500">
-                        Tenant Access and Staff Control stay available here as bounded authenticated launch paths.
+                  <div className="mt-3 flex flex-wrap gap-3 md:hidden">
+                    <button
+                      type="button"
+                      onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                      className="rounded-full border border-[#dbe6ea] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
+                    >
+                      Sign in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                      className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white"
+                    >
+                      List your business
+                    </button>
+                  </div>
+                </nav>
+
+                <div id="public-entry-top" className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.18fr)_360px] lg:items-start">
+                  <section className="rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,_#071a2f_0%,_#0d2743_58%,_#123a57_100%)] p-8 text-white shadow-[0_30px_90px_rgba(7,26,47,0.28)] md:p-10">
+                    <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-[#b7dbe3]">
+                      <span className="rounded-full border border-white/15 bg-white/8 px-3 py-1.5">
+                        Verified textile commerce platform
+                      </span>
+                      <span className="rounded-full border border-[#2c6078] bg-[#0b3550] px-3 py-1.5 text-[#87dae4]">
+                        {publicEntryHostLabel} public entry
+                      </span>
+                      <span className="rounded-full border border-[#315f78] bg-[#0c2d46] px-3 py-1.5 text-[#d7edf1]">
+                        Pre-session and pre-workflow
+                      </span>
+                      {publicEntryBootstrapPending && (
+                        <span className="rounded-full border border-[#4cbcc9] bg-[#0d4860] px-3 py-1.5 text-[#8fe0e8]">
+                          Confirming neutral entry context
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-8 max-w-3xl">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.34em] text-[#7fd5de]">
+                        Verified textile commerce platform
+                      </p>
+                      <h1 className="public-entry-editorial-heading mt-4 text-5xl leading-[1.02] tracking-[-0.04em] text-white md:text-6xl">
+                        Where textile businesses discover, source, and grow with structure and trust
+                      </h1>
+                      <p className="mt-6 max-w-2xl text-base leading-7 text-slate-200 md:text-lg">
+                        TexQtic is a verified textile commerce platform — structured sourcing for B2B,
+                        curated discovery for all. Buyers, suppliers, and brands can explore the right path
+                        with clarity and confidence.
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
+                    <div className="mt-8 flex flex-wrap gap-3">
                       <button
                         type="button"
-                        onClick={() => {
-                          setTenantBootstrapBlockedMessage(null);
-                          setTenantProvisionError(null);
-                          setAuthRealm('TENANT');
-                        }}
-                        className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border transition-all ${authRealm === 'TENANT' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                        onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')}
+                        className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
+                      >
+                        Source for Business
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectNeutralPublicEntryPath('B2C', 'public-entry-discovery')}
+                        className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/8 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-white/14"
+                      >
+                        Browse Products
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                        className="inline-flex items-center justify-center rounded-full border border-[#7fd5de]/40 bg-transparent px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#a6e9f0] transition hover:border-[#a6e9f0] hover:bg-[#0a334d]"
+                      >
+                        List Your Business
+                      </button>
+                    </div>
+
+                    <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      {publicEntryTrustSignals.map((signal) => (
+                        <div
+                          key={signal}
+                          className="rounded-[24px] border border-white/10 bg-white/8 px-4 py-4 text-sm font-medium text-slate-100"
+                        >
+                          {signal}
+                        </div>
+                      ))}
+                    </div>
+
+                    {publicEntryLaunchGuidance && (
+                      <div className="mt-8 rounded-[28px] border border-[#2a4d66] bg-[#0b2238]/85 px-6 py-5 shadow-[0_20px_50px_rgba(3,16,28,0.22)]">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#85d7e1]">
+                          Selected entry path
+                        </div>
+                        <h2 className="mt-3 text-xl font-semibold text-white">{publicEntryLaunchGuidance.title}</h2>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                          {publicEntryLaunchGuidance.detail}
+                        </p>
+                      </div>
+                    )}
+                  </section>
+
+                  <aside
+                    id="public-entry-auth"
+                    className="rounded-[32px] border border-[#d7e4e8] bg-white p-6 shadow-[0_24px_70px_rgba(7,26,47,0.10)] md:p-7"
+                  >
+                    <div className="rounded-[28px] border border-[#dce8eb] bg-[#f5fafb] p-5">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8196]">
+                        Authenticated entry
+                      </div>
+                      <h2 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
+                        Tenant Access and Staff Control stay secondary
+                      </h2>
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        Use authenticated entry only when you are continuing into a workspace, control function,
+                        or supplier onboarding path.
+                      </p>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-2xl border border-indigo-100 bg-white px-4 py-4">
+                          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-500">
+                            Tenant Access
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Returning tenant members, buyers, and suppliers continue here.
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-rose-100 bg-white px-4 py-4">
+                          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-rose-500">
+                            Staff Control
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Staff and control-plane users continue through the bounded control entry path.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                        className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] transition-all ${authRealm === 'TENANT' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200 hover:text-indigo-700'}`}
                       >
                         Tenant Access
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setTenantBootstrapBlockedMessage(null);
-                          setTenantProvisionError(null);
-                          setAuthRealm('CONTROL_PLANE');
-                        }}
-                        className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border transition-all ${authRealm === 'CONTROL_PLANE' ? 'bg-rose-600 border-rose-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                        onClick={() => openSecondaryAuthenticatedEntry('CONTROL_PLANE')}
+                        className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] transition-all ${authRealm === 'CONTROL_PLANE' ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-200 bg-white text-slate-500 hover:border-rose-200 hover:text-rose-700'}`}
                       >
                         Staff Control
                       </button>
                     </div>
-                  </div>
 
-                  <div className="mt-6">
-                    <AuthForm realm={authRealm} onSuccess={handleAuthSuccess} />
+                    <p className="mt-5 text-sm leading-6 text-slate-500">
+                      Returning users can sign in here. Listing continuity and supplier onboarding begin after
+                      the right authenticated entry is established.
+                    </p>
+
+                    <div className="mt-6">
+                      <AuthForm realm={authRealm} onSuccess={handleAuthSuccess} />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setAppState('FORGOT_PASSWORD')}
+                      className="mt-4 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400 transition hover:text-indigo-600"
+                    >
+                      Forgot Password?
+                    </button>
+                  </aside>
+                </div>
+              </div>
+            </div>
+
+            <main className="mx-auto max-w-7xl space-y-8 px-6 py-12 lg:px-10 lg:py-16">
+              <section
+                id="public-entry-routing"
+                className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10"
+              >
+                <div className="max-w-3xl">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
+                    Choose the path that fits your role
+                  </p>
+                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                    TexQtic is designed for multiple kinds of visitors
+                  </h2>
+                  <p className="mt-4 text-base leading-7 text-slate-600">
+                    TexQtic is designed for multiple kinds of visitors. Start with the lane that matches what
+                    you want to do.
+                  </p>
+                </div>
+
+                <div className="mt-10 grid gap-5 lg:grid-cols-3">
+                  <article className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">B2B sourcing</p>
+                    <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
+                      I&apos;m sourcing for my business
+                    </h3>
+                    <p className="mt-4 text-sm leading-6 text-slate-600">
+                      Discover verified manufacturers, traders, and suppliers. Compare capabilities, submit
+                      inquiries, and begin a structured sourcing workflow built for textile commerce.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('B2B')}
+                      className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                    >
+                      Start B2B sourcing
+                    </button>
+                  </article>
+
+                  <article className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">B2C browsing</p>
+                    <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
+                      I&apos;m shopping for products
+                    </h3>
+                    <p className="mt-4 text-sm leading-6 text-slate-600">
+                      Browse textile products, collections, and branded storefronts from verified sellers.
+                      Explore curated options before account or checkout continuity begins.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('B2C')}
+                      className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                    >
+                      Browse products
+                    </button>
+                  </article>
+
+                  <article className="rounded-[28px] border border-[#d9e5ea] bg-[#fbfdfe] p-6 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#2f8094]">
+                      Supplier onboarding
+                    </p>
+                    <h3 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
+                      I want to list my business
+                    </h3>
+                    <p className="mt-4 text-sm leading-6 text-slate-600">
+                      Join TexQtic as a verified supplier or brand. Build your presence, publish structured
+                      listings, and connect with qualified buyers across B2B and B2C pathways.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                      className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                    >
+                      Start supplier onboarding
+                    </button>
+                  </article>
+                </div>
+              </section>
+
+              <section
+                id="public-entry-trust"
+                className="rounded-[32px] bg-[linear-gradient(135deg,_#08233a_0%,_#0e304a_100%)] p-8 text-white shadow-[0_24px_70px_rgba(7,26,47,0.20)] md:p-10"
+              >
+                <div className="max-w-3xl">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#83d7e1]">Why TexQtic</p>
+                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-white md:text-4xl">
+                    Built on verified commerce infrastructure
+                  </h2>
+                  <p className="mt-4 text-base leading-7 text-slate-200">
+                    TexQtic is not an open listing directory. It is a verified textile commerce platform
+                    designed to make discovery, sourcing, and supplier visibility more credible, structured,
+                    and business-ready.
+                  </p>
+                </div>
+
+                <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                  {publicEntryTrustBlocks.map((block) => (
+                    <article
+                      key={block.title}
+                      className="rounded-[28px] border border-white/10 bg-white/8 p-6 shadow-sm"
+                    >
+                      <h3 className="text-lg font-semibold text-white">{block.title}</h3>
+                      <p className="mt-3 text-sm leading-6 text-slate-200">{block.detail}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section id="public-entry-discovery" className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_360px]">
+                <div className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#2f8094]">
+                    Start with discovery
+                  </p>
+                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-[#0a2036] md:text-4xl">
+                    Explore by category, capability, or product need
+                  </h2>
+                  <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                    TexQtic&apos;s discovery layer helps visitors browse curated textile categories and explore
+                    suppliers, capabilities, and listings before entering a deeper workflow.
+                  </p>
+
+                  <div className="mt-8 flex flex-wrap gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0a2036]">
+                    <span className="rounded-full border border-[#d7e5ea] bg-[#f7fbfc] px-4 py-2">Categories</span>
+                    <span className="rounded-full border border-[#d7e5ea] bg-[#f7fbfc] px-4 py-2">Capabilities</span>
+                    <span className="rounded-full border border-[#d7e5ea] bg-[#f7fbfc] px-4 py-2">Product needs</span>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setAppState('FORGOT_PASSWORD')}
-                    className="mt-4 text-[10px] font-bold uppercase text-slate-400 hover:text-indigo-600 tracking-widest"
+                    onClick={() => selectNeutralPublicEntryPath('B2C')}
+                    className="mt-8 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                   >
-                    Forgot Password?
+                    Explore discovery
                   </button>
                 </div>
-              </aside>
-            </div>
+
+                <div className="rounded-[32px] border border-[#9ed0d8] bg-[linear-gradient(180deg,_#e9f8fb_0%,_#d9eef3_100%)] p-8 shadow-[0_18px_50px_rgba(47,128,148,0.16)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
+                    Curated discovery preview
+                  </p>
+                  <h3 className="public-entry-editorial-heading mt-4 text-2xl leading-tight text-[#0a2036]">
+                    Discovery starts openly, then deepens with context
+                  </h3>
+                  <p className="mt-4 text-sm leading-6 text-slate-700">
+                    Browse textile categories, evaluate supplier capabilities, and explore verified storefront
+                    signals before account continuity begins.
+                  </p>
+
+                  <div className="mt-6 space-y-3">
+                    {['Curated category paths', 'Verified supplier visibility', 'Textile-specific capability cues', 'Product-led browse context'].map((item) => (
+                      <div key={item} className="rounded-2xl border border-white/60 bg-white/55 px-4 py-3 text-sm font-medium text-[#0a2036]">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section id="public-entry-suppliers" className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+                <div className="rounded-[32px] bg-[linear-gradient(180deg,_#0a2036_0%,_#123552_100%)] p-8 text-white shadow-[0_24px_70px_rgba(7,26,47,0.22)]">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#83d7e1]">
+                    For manufacturers, traders, and brands
+                  </p>
+                  <h2 className="public-entry-editorial-heading mt-4 text-3xl leading-tight text-white">
+                    List your business. Reach qualified buyers.
+                  </h2>
+                  <p className="mt-4 text-base leading-7 text-slate-200">
+                    Build a trusted presence on TexQtic, publish structured listings, and connect with
+                    qualified buyers across B2B and B2C channels from one platform.
+                  </p>
+
+                  <div className="mt-8 flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        selectNeutralPublicEntryPath('SUPPLIER');
+                        openSecondaryAuthenticatedEntry('TENANT');
+                      }}
+                      className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
+                    >
+                      Apply to list your business
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToPublicEntrySection('public-entry-trust')}
+                      className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/8 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-white/14"
+                    >
+                      Learn how supplier onboarding works
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-[32px] border border-[#d9e5ea] bg-white p-8 shadow-[0_18px_50px_rgba(7,26,47,0.08)] md:p-10">
+                  <div className="space-y-4">
+                    {publicEntrySupplierValuePoints.map((point) => (
+                      <div key={point} className="flex items-start gap-4 rounded-[24px] border border-[#e3ecef] bg-[#fbfdfe] px-5 py-4">
+                        <span className="mt-1 h-3 w-3 rounded-full bg-[#2f8094]" />
+                        <p className="text-sm leading-6 text-slate-700">{point}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </main>
+
+            <footer className="bg-[#071a2f] text-slate-200">
+              <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10">
+                <div className="grid gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1.25fr_repeat(3,minmax(0,1fr))]">
+                  <div>
+                    <div className="inline-flex rounded-[24px] bg-white p-4 shadow-[0_18px_40px_rgba(0,0,0,0.15)]">
+                      <img
+                        src="/brand/texqtic-logo.png"
+                        alt="TexQtic"
+                        className="h-12 w-auto"
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#81d6e0]">
+                      Verified textile commerce platform
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Discover</h3>
+                    <div className="mt-4 space-y-3 text-sm text-slate-300">
+                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-discovery')} className="block transition hover:text-white">Discover</button>
+                      <button type="button" onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')} className="block transition hover:text-white">Source for Business</button>
+                      <button type="button" onClick={() => selectNeutralPublicEntryPath('B2C', 'public-entry-discovery')} className="block transition hover:text-white">Browse Products</button>
+                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-discovery')} className="block transition hover:text-white">Categories</button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Suppliers</h3>
+                    <div className="mt-4 space-y-3 text-sm text-slate-300">
+                      <button type="button" onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')} className="block transition hover:text-white">For Suppliers</button>
+                      <button type="button" onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')} className="block transition hover:text-white">List your business</button>
+                      <button type="button" onClick={() => { selectNeutralPublicEntryPath('SUPPLIER'); openSecondaryAuthenticatedEntry('TENANT'); }} className="block transition hover:text-white">Supplier onboarding</button>
+                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-trust')} className="block transition hover:text-white">Verification process</button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Platform</h3>
+                    <div className="mt-4 space-y-3 text-sm text-slate-300">
+                      <a href="https://texqtic.com/company" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">About TexQtic</a>
+                      <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-trust')} className="block transition hover:text-white">Trust standards</button>
+                      <a href="https://texqtic.com/company" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">Contact</a>
+                      <a href="https://texqtic.com/resources" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">Help</a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col gap-4 text-xs uppercase tracking-[0.18em] text-slate-400 md:flex-row md:items-center md:justify-between">
+                  <span>© 2026 TexQtic. All rights reserved.</span>
+                  <div className="flex flex-wrap gap-4">
+                    <span>Privacy</span>
+                    <span>Terms</span>
+                    <span>Supplier policy</span>
+                  </div>
+                </div>
+              </div>
+            </footer>
           </div>
         );
       }
