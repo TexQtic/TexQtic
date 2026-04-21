@@ -1970,8 +1970,12 @@ const App: React.FC = () => {
   const tenantIsInSharedAdminCore = appState === 'TEAM_MGMT'
     || appState === 'INVITE_MEMBER'
     || appState === 'SETTINGS';
+  const tenantCanAccessWorkspaceProfileSettings = tenantIsInSharedAdminCore
+    && !tenantHasWhiteLabelCapability;
   const tenantCanAccessWhiteLabelSettingsOverlay = tenantHasWhiteLabelCapability
     && tenantIsInSharedAdminCore;
+  const tenantCanAccessSharedSettingsSurface = tenantCanAccessWhiteLabelSettingsOverlay
+    || tenantCanAccessWorkspaceProfileSettings;
   const currentOnboardingStatusContinuity = useMemo(() => {
     return getOnboardingStatusContinuity(currentTenant?.status);
   }, [currentTenant?.status]);
@@ -4621,11 +4625,11 @@ const App: React.FC = () => {
                   {showB2CHomeAuthenticatedAffordances && (
                     <CartToggleButton setShowCart={setShowCart} />
                   )}
-                  {tenantCanAccessWhiteLabelSettingsOverlay && (
+                  {tenantCanAccessSharedSettingsSurface && (
                     <button
                       onClick={() => setAppState('SETTINGS')}
                       className="bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hover:text-indigo-600 transition"
-                      title="White Label Settings"
+                      title={tenantCanAccessWhiteLabelSettingsOverlay ? 'White Label Settings' : 'Workspace Profile'}
                     >
                       ⚙️
                     </button>
