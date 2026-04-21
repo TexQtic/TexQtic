@@ -2177,7 +2177,7 @@ const App: React.FC = () => {
   const openSupplierRequestAccess = () => {
     globalThis.window?.location.assign(SUPPLIER_REQUEST_ACCESS_URL);
   };
-  const openOnboardingContinuation = () => {
+  const openIssuedAccessContinuation = () => {
     setAppState('ONBOARDING_CONTINUATION');
   };
   const publicEntryLaunchGuidance = (() => {
@@ -4714,22 +4714,23 @@ const App: React.FC = () => {
                         Returning users
                       </div>
                       <h2 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
-                        Already have access or onboarding continuity?
+                        Already have issued access or an active workspace?
                       </h2>
                       <p className="mt-3 text-sm leading-6 text-slate-600">
-                        The homepage stays public-safe and routing-led. Active workspace access, staff control,
-                        and onboarding continuity continue from their own dedicated destinations.
+                        The homepage stays public-safe and routing-led. Use your issued activation or access
+                        path only if TexQtic already sent it to you. Active tenant users and staff operators
+                        continue from their own dedicated sign-in destinations.
                       </p>
                     </div>
 
                     <div className="mt-5 space-y-3">
                       <button
                         type="button"
-                        onClick={openOnboardingContinuation}
+                        onClick={openIssuedAccessContinuation}
                         className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
                       >
-                        <span>Continue onboarding</span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Open</span>
+                        <span>Use issued access link</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Issued only</span>
                       </button>
                       <button
                         type="button"
@@ -4750,8 +4751,8 @@ const App: React.FC = () => {
                     </div>
 
                     <p className="mt-5 text-sm leading-6 text-slate-500">
-                      New suppliers and business applicants begin through Request Access on texqtic.com, not
-                      through tenant sign-in from this homepage.
+                      New suppliers and business applicants begin through Request Access on texqtic.com.
+                      Issued access is only for users who already received a TexQtic activation or access link.
                     </p>
                   </aside>
                 </div>
@@ -5027,15 +5028,16 @@ const App: React.FC = () => {
           <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
             <div className="w-full max-w-3xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm md:p-10">
               <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8196]">
-                Continue onboarding
+                Issued access continuation
               </div>
               <h1 className="public-entry-editorial-heading mt-4 text-4xl leading-tight text-[#0a2036] md:text-5xl">
-                Resume the issued onboarding path
+                Continue with your issued access path
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-                TexQtic onboarding continuity is issued through CRM approval, provisioning handoff, and
-                activation communications. Use the activation or access link that was sent to you to continue.
-                If your workspace is already active, use Tenant Access instead.
+                This path is only for users who already received a TexQtic activation link, invite, or issued
+                access message. If you have not yet been sent one, this page is not a generic continuation
+                step. Active tenant users should use Tenant Access, and staff or control operators should use
+                Staff Control.
               </p>
 
               <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -5044,17 +5046,17 @@ const App: React.FC = () => {
                     Issued continuity only
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
-                    This application does not expose a generic public continuation form for onboarding. Continue
-                    with the issued activation or access link from your TexQtic onboarding communication.
+                    Use this lane only if TexQtic already sent you an activation or access path. The homepage
+                    does not expose a generic public onboarding resume form or a public status checker.
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
                   <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
-                    Need the right lane?
+                    Pre-issuance cases stay outside this lane
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
-                    Use Tenant Access only after workspace access has been issued. New supplier or business
-                    applicants should begin with Request Access on texqtic.com.
+                    If your request is still in CRM review, approval, provisioning, or issuance preparation,
+                    continue through the CRM or provisioning communication path rather than this public page.
                   </p>
                 </div>
               </div>
@@ -5066,6 +5068,13 @@ const App: React.FC = () => {
                   className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                 >
                   Tenant Access
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openSecondaryAuthenticatedEntry('CONTROL_PLANE')}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-rose-300 hover:text-rose-700"
+                >
+                  Staff Control
                 </button>
                 <button
                   type="button"
