@@ -78,6 +78,35 @@ describe('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — workspace surface', ()
     expect(html).toContain('Retry');
   });
 
+  it('renders discovery-safe taxonomy as neutral metadata when present', () => {
+    const html = renderHtml([
+      makeDiscoveryEntry({
+        discoverySafeTaxonomy: {
+          primarySegment: 'Weaving',
+          secondarySegments: ['Fabric Processing', 'Dyeing'],
+          rolePositions: ['manufacturer', 'supplier'],
+        },
+      }),
+    ]);
+
+    expect(html).toContain('Discovery taxonomy');
+    expect(html).toContain('Primary segment:');
+    expect(html).toContain('Weaving');
+    expect(html).toContain('Secondary segments:');
+    expect(html).toContain('Fabric Processing, Dyeing');
+    expect(html).toContain('Role positions:');
+    expect(html).toContain('manufacturer, supplier');
+  });
+
+  it('omits the taxonomy section when discovery-safe taxonomy is absent', () => {
+    const html = renderHtml([makeDiscoveryEntry()]);
+
+    expect(html).not.toContain('Discovery taxonomy');
+    expect(html).not.toContain('Primary segment:');
+    expect(html).not.toContain('Secondary segments:');
+    expect(html).not.toContain('Role positions:');
+  });
+
   it('does not render forbidden detail or transactional actions', () => {
     const html = renderHtml([
       makeDiscoveryEntry({
@@ -93,8 +122,22 @@ describe('AGGREGATOR-DISCOVERY-WORKSPACE-TRUTHFULNESS — workspace surface', ()
     expect(html).not.toContain('Create RFQ');
     expect(html).not.toContain('Start Negotiation');
     expect(html).not.toContain('Settlement');
-    expect(html).not.toContain('Weaving');
-    expect(html).not.toContain('Fabric Processing');
-    expect(html).not.toContain('manufacturer');
+  });
+
+  it('keeps existing trust and certification cues visible alongside taxonomy metadata', () => {
+    const html = renderHtml([
+      makeDiscoveryEntry({
+        discoverySafeTaxonomy: {
+          primarySegment: 'Weaving',
+          secondarySegments: ['Fabric Processing'],
+          rolePositions: ['manufacturer'],
+        },
+      }),
+    ]);
+
+    expect(html).toContain('Traceability evidence');
+    expect(html).toContain('2 certifications');
+    expect(html).toContain('ISO9001');
+    expect(html).toContain('OEKO-TEX');
   });
 });

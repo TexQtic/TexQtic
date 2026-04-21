@@ -38,8 +38,39 @@ function buildTrustSignals(entry: AggregatorDiscoveryEntry): string[] {
   return trustSignals;
 }
 
+function buildDiscoveryTaxonomyLines(entry: AggregatorDiscoveryEntry): Array<{ label: string; value: string }> {
+  const taxonomy = entry.discoverySafeTaxonomy;
+
+  if (!taxonomy) {
+    return [];
+  }
+
+  const lines: Array<{ label: string; value: string }> = [];
+
+  if (taxonomy.primarySegment) {
+    lines.push({ label: 'Primary segment', value: taxonomy.primarySegment });
+  }
+
+  if (taxonomy.secondarySegments.length > 0) {
+    lines.push({
+      label: 'Secondary segments',
+      value: taxonomy.secondarySegments.join(', '),
+    });
+  }
+
+  if (taxonomy.rolePositions.length > 0) {
+    lines.push({
+      label: 'Role positions',
+      value: taxonomy.rolePositions.join(', '),
+    });
+  }
+
+  return lines;
+}
+
 function renderEntryCard(entry: AggregatorDiscoveryEntry) {
   const trustSignals = buildTrustSignals(entry);
+  const discoveryTaxonomyLines = buildDiscoveryTaxonomyLines(entry);
 
   return (
     <article key={entry.orgId} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -59,6 +90,22 @@ function renderEntryCard(entry: AggregatorDiscoveryEntry) {
           {entry.slug}
         </div>
       </div>
+
+      {discoveryTaxonomyLines.length > 0 && (
+        <div className="mt-5 space-y-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Discovery taxonomy
+          </div>
+          <dl className="space-y-1.5 text-sm text-slate-600">
+            {discoveryTaxonomyLines.map(line => (
+              <div key={`${entry.orgId}:${line.label}`} className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+                <dt className="font-medium text-slate-500">{line.label}:</dt>
+                <dd className="min-w-0 break-words text-slate-700">{line.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
 
       <div className="mt-5 flex flex-wrap gap-2">
         {trustSignals.length > 0 ? (
