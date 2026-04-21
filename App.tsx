@@ -101,7 +101,11 @@ import { BuyerRfqDetailSurface, SupplierRfqDetailSurface } from './components/Te
 import { BuyerRfqListSurface, SupplierRfqInboxSurface } from './components/Tenant/BuyerRfqListSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
-import { getCurrentUser } from './services/authService';
+import {
+  getCurrentUser,
+  resolvePublicEntryDescriptor,
+  type PublicEntryResolutionDescriptor,
+} from './services/authService';
 import { clearAuth, getCurrentAuthRealm, setImpersonationToken, setStoredAuthRealm, setToken, APIError } from './services/apiClient';
 import {
   createControlPlaneSessionRuntimeDescriptor,
@@ -1512,6 +1516,66 @@ export const __B2B_TRADE_FROM_RFQ_TESTING__ = {
   resolveBuyerRfqTradeFromRfqError,
 };
 
+type AppState =
+  | 'PUBLIC_ENTRY'
+  | 'AUTH'
+  | 'FORGOT_PASSWORD'
+  | 'VERIFY_EMAIL'
+  | 'TOKEN_HANDLER'
+  | 'ONBOARDING'
+  | 'EXPERIENCE'
+  | 'TEAM_MGMT'
+  | 'INVITE_MEMBER'
+  | 'SETTINGS'
+  | 'CONTROL_PLANE'
+  | 'WL_ADMIN'
+  | 'ORDER_CONFIRMED';
+
+type NeutralEntryPathSelection = 'B2B' | 'B2C' | null;
+
+const hasStoredAuthenticatedSession = () => {
+  if (globalThis.window === undefined) {
+    return false;
+  }
+
+  return Boolean(
+    globalThis.localStorage.getItem('texqtic_tenant_token')
+    || globalThis.localStorage.getItem('texqtic_admin_token')
+  );
+};
+
+const resolveInitialAppState = (): AppState => {
+  if (globalThis.window !== undefined) {
+    const params = new URLSearchParams(globalThis.window.location.search);
+    const token = params.get('token');
+    const action = params.get('action');
+
+    if (token && action === 'invite') {
+      return 'ONBOARDING';
+    }
+
+    if (token) {
+      return 'TOKEN_HANDLER';
+    }
+  }
+
+  return hasStoredAuthenticatedSession() ? 'AUTH' : 'PUBLIC_ENTRY';
+};
+
+const resolveInitialAuthRealm = (): 'TENANT' | 'CONTROL_PLANE' => {
+  return hasStoredAuthenticatedSession()
+    ? getCurrentAuthRealm('TENANT') ?? 'TENANT'
+    : 'TENANT';
+};
+
+const isNeutralPublicEntryDescriptor = (
+  descriptor: PublicEntryResolutionDescriptor | null,
+): descriptor is PublicEntryResolutionDescriptor => {
+  return descriptor?.resolutionDisposition === 'NEUTRAL_NO_TENANT'
+    && descriptor.resolvedRealmClass === 'NEUTRAL_PUBLIC_ENTRY'
+    && descriptor.allowedTargetSurfaceClass === 'NEUTRAL_PUBLIC_ENTRY_SURFACE';
+};
+
 const clearPersistedImpersonationSession = () => {
   setImpersonationToken(null);
   persistImpersonationSession(null);
@@ -1538,28 +1602,15 @@ const App: React.FC = () => {
   }, []);
 
   // Production-grade State Machine
-  const [appState, setAppState] = useState<
-    | 'AUTH'
-    | 'FORGOT_PASSWORD'
-    | 'VERIFY_EMAIL'
-    | 'TOKEN_HANDLER'
-    | 'ONBOARDING'
-    | 'EXPERIENCE'
-    | 'TEAM_MGMT'
-    | 'INVITE_MEMBER'
-    | 'SETTINGS'
-    | 'CONTROL_PLANE'
-    | 'WL_ADMIN'
-    // TECS-FBW-014: post-checkout confirmation state
-    | 'ORDER_CONFIRMED'
-  >('AUTH');
-  const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>(
-    () => getCurrentAuthRealm('TENANT') ?? 'TENANT'
-  );
+  const [appState, setAppState] = useState<AppState>(() => resolveInitialAppState());
+  const [authRealm, setAuthRealm] = useState<'TENANT' | 'CONTROL_PLANE'>(() => resolveInitialAuthRealm());
   const effectiveRealm = useMemo(
-    () => (appState === 'AUTH' ? authRealm : getCurrentAuthRealm() ?? 'TENANT'),
+    () => ((appState === 'AUTH' || appState === 'PUBLIC_ENTRY') ? authRealm : getCurrentAuthRealm() ?? 'TENANT'),
     [appState, authRealm]
   );
+  const [publicEntryDescriptor, setPublicEntryDescriptor] = useState<PublicEntryResolutionDescriptor | null>(null);
+  const [publicEntryBootstrapPending, setPublicEntryBootstrapPending] = useState(appState === 'PUBLIC_ENTRY');
+  const [neutralEntryPathSelection, setNeutralEntryPathSelection] = useState<NeutralEntryPathSelection>(null);
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
@@ -2090,8 +2141,39 @@ const App: React.FC = () => {
   const shouldShowTenantUtilityAffordances = (
     showB2CHomeAuthenticatedAffordances || !isNonWhiteLabelB2CTenant
   ) && !isVerificationBlockedTenantWorkspace;
+  const publicEntryHostLabel = useMemo(() => {
+    return publicEntryDescriptor?.normalizedHost
+      ?? globalThis.window?.location.host
+      ?? 'app.texqtic.com';
+  }, [publicEntryDescriptor]);
+  const primaryEntrySurfaceState: AppState = isNeutralPublicEntryDescriptor(publicEntryDescriptor)
+    ? 'PUBLIC_ENTRY'
+    : 'AUTH';
+  const publicEntryLaunchGuidance = (() => {
+    if (neutralEntryPathSelection === 'B2B') {
+      return {
+        title: 'B2B public discovery entry',
+        detail:
+          'Launch remains bounded at public-safe supplier and capability entry. Pricing, negotiation, RFQ workflow, and trade continuity stay outside this neutral host surface.',
+      };
+    }
+
+    if (neutralEntryPathSelection === 'B2C') {
+      return {
+        title: 'B2C public browse entry',
+        detail:
+          'Launch remains bounded at storefront browse-entry context. Cart persistence, checkout, account continuity, and post-purchase workflow stay outside this neutral host surface.',
+      };
+    }
+
+    return null;
+  })();
 
   const documentTitle = useMemo(() => {
+    if (appState === 'PUBLIC_ENTRY') {
+      return 'TexQtic Platform Entry';
+    }
+
     if (appState === 'AUTH') {
       return authRealm === 'CONTROL_PLANE' ? 'TexQtic Admin Sign In' : 'TexQtic Sign In';
     }
@@ -2177,6 +2259,70 @@ const App: React.FC = () => {
     document.title = documentTitle;
   }, [documentTitle]);
 
+  useEffect(() => {
+    if (appState !== 'PUBLIC_ENTRY') {
+      setPublicEntryBootstrapPending(false);
+      return;
+    }
+
+    if (hasStoredAuthenticatedSession()) {
+      setPublicEntryBootstrapPending(false);
+      setAppState('AUTH');
+      return;
+    }
+
+    const params = new URLSearchParams(globalThis.window.location.search);
+    if (params.get('token')) {
+      setPublicEntryBootstrapPending(false);
+      return;
+    }
+
+    if (isNeutralPublicEntryDescriptor(publicEntryDescriptor)) {
+      setPublicEntryBootstrapPending(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const bootstrapPublicEntrySurface = async () => {
+      setPublicEntryBootstrapPending(true);
+
+      try {
+        const descriptor = await resolvePublicEntryDescriptor({});
+
+        if (cancelled) {
+          return;
+        }
+
+        setPublicEntryDescriptor(descriptor);
+        setPublicEntryBootstrapPending(false);
+
+        if (isNeutralPublicEntryDescriptor(descriptor)) {
+          setStoredAuthRealm('TENANT');
+          setAuthRealm('TENANT');
+          return;
+        }
+
+        setAppState('AUTH');
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error('Failed to resolve public entry descriptor:', error);
+        setPublicEntryDescriptor(null);
+        setPublicEntryBootstrapPending(false);
+        setAppState('AUTH');
+      }
+    };
+
+    void bootstrapPublicEntrySurface();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appState, publicEntryDescriptor]);
+
   const tenantViewScopeKey = useMemo(() => {
     if (appState === 'AUTH' || effectiveRealm !== 'TENANT' || !currentTenantId) {
       return null;
@@ -2216,7 +2362,7 @@ const App: React.FC = () => {
 
   // Check URL for token-based actions on mount (password reset, email verification, invite)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.window.location.search);
     const token = params.get('token');
     const action = params.get('action');
     if (token && action === 'invite') {
@@ -4293,6 +4439,200 @@ const App: React.FC = () => {
 
   const renderCurrentState = () => {
     switch (appState) {
+      case 'PUBLIC_ENTRY': {
+        return (
+          <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.10),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] font-sans text-slate-900">
+            <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-8 px-6 py-8 lg:flex-row lg:items-start lg:px-10 lg:py-10">
+              <section className="flex-1 rounded-[32px] border border-slate-200 bg-white/90 p-8 shadow-xl shadow-slate-200/70 backdrop-blur">
+                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
+                  <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1">
+                    Neutral platform host
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
+                    {publicEntryHostLabel}
+                  </span>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+                    Public-safe entry only
+                  </span>
+                </div>
+
+                <div className="mt-8 max-w-3xl space-y-5">
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-400">
+                    TexQtic platform entry
+                  </p>
+                  <h1 className="max-w-2xl text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
+                    Governed market-access entry for neutral public launch.
+                  </h1>
+                  <p className="max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
+                    This neutral host frames TexQtic before any tenant-branded or authenticated surface takes over.
+                    It presents the lawful B2B, B2C, tenant, and staff entry paths without collapsing the first page
+                    into a login-only shell.
+                  </p>
+                </div>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-2">
+                  <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                      Public-safe B2B
+                    </div>
+                    <h2 className="mt-3 text-xl font-bold text-slate-900">B2B Discovery Entry</h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Launch toward lawful supplier and capability discovery without exposing anonymous pricing,
+                      negotiation, or RFQ workflow depth on the neutral host.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setNeutralEntryPathSelection('B2B')}
+                      className="mt-5 inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                    >
+                      Open B2B path
+                    </button>
+                  </article>
+
+                  <article className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                      Public-safe B2C
+                    </div>
+                    <h2 className="mt-3 text-xl font-bold text-slate-900">B2C Browse Entry</h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Launch toward lawful storefront browse-entry context without taking ownership of cart,
+                      checkout, or account continuity on the neutral host.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setNeutralEntryPathSelection('B2C')}
+                      className="mt-5 inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                    >
+                      Open B2C path
+                    </button>
+                  </article>
+
+                  <article className="rounded-3xl border border-indigo-200 bg-indigo-50/80 p-6 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-500">
+                      Secondary authenticated entry
+                    </div>
+                    <h2 className="mt-3 text-xl font-bold text-slate-900">Tenant Access</h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Returning tenant members, owners, and workspace users can continue through authenticated tenant entry.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTenantBootstrapBlockedMessage(null);
+                        setTenantProvisionError(null);
+                        setAuthRealm('TENANT');
+                      }}
+                      className="mt-5 inline-flex items-center rounded-full border border-indigo-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-indigo-700 transition hover:border-indigo-400"
+                    >
+                      Use tenant access
+                    </button>
+                  </article>
+
+                  <article className="rounded-3xl border border-rose-200 bg-rose-50/80 p-6 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-rose-500">
+                      Secondary authenticated entry
+                    </div>
+                    <h2 className="mt-3 text-xl font-bold text-slate-900">Staff Control</h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Staff and control-plane users can continue through bounded authenticated control entry without taking over the neutral public page.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTenantBootstrapBlockedMessage(null);
+                        setTenantProvisionError(null);
+                        setAuthRealm('CONTROL_PLANE');
+                      }}
+                      className="mt-5 inline-flex items-center rounded-full border border-rose-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-rose-700 transition hover:border-rose-400"
+                    >
+                      Use staff control
+                    </button>
+                  </article>
+                </div>
+
+                {publicEntryLaunchGuidance && (
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-950 px-6 py-5 text-white shadow-lg shadow-slate-300/30">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                      Selected launch path
+                    </div>
+                    <h2 className="mt-3 text-lg font-semibold">{publicEntryLaunchGuidance.title}</h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                      {publicEntryLaunchGuidance.detail}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">
+                    Pre-session and pre-workflow
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">
+                    No tenant admin or control-plane runtime exposure
+                  </span>
+                  {publicEntryBootstrapPending && (
+                    <span className="rounded-full bg-indigo-50 px-3 py-1 font-medium text-indigo-700">
+                      Confirming neutral entry context...
+                    </span>
+                  )}
+                </div>
+              </section>
+
+              <aside className="w-full lg:max-w-md">
+                <div className="rounded-[32px] border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/70 backdrop-blur">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                        Authenticated entry
+                      </div>
+                      <h2 className="mt-3 text-2xl font-bold text-slate-900">Secondary access controls</h2>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        Tenant Access and Staff Control stay available here as bounded authenticated launch paths.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTenantBootstrapBlockedMessage(null);
+                          setTenantProvisionError(null);
+                          setAuthRealm('TENANT');
+                        }}
+                        className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border transition-all ${authRealm === 'TENANT' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                      >
+                        Tenant Access
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTenantBootstrapBlockedMessage(null);
+                          setTenantProvisionError(null);
+                          setAuthRealm('CONTROL_PLANE');
+                        }}
+                        className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border transition-all ${authRealm === 'CONTROL_PLANE' ? 'bg-rose-600 border-rose-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                      >
+                        Staff Control
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <AuthForm realm={authRealm} onSuccess={handleAuthSuccess} />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setAppState('FORGOT_PASSWORD')}
+                    className="mt-4 text-[10px] font-bold uppercase text-slate-400 hover:text-indigo-600 tracking-widest"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        );
+      }
       case 'AUTH': {
         const tenantBootstrapAuthView = resolveTenantBootstrapAuthView({
           authRealm,
@@ -4377,7 +4717,7 @@ const App: React.FC = () => {
       case 'FORGOT_PASSWORD':
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-            <ForgotPassword onBack={() => setAppState('AUTH')} />
+            <ForgotPassword onBack={() => setAppState(primaryEntrySurfaceState)} />
           </div>
         );
       case 'VERIFY_EMAIL':
@@ -4389,7 +4729,7 @@ const App: React.FC = () => {
       case 'TOKEN_HANDLER':
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-            <TokenHandler onComplete={() => setAppState('AUTH')} />
+            <TokenHandler onComplete={() => setAppState(primaryEntrySurfaceState)} />
           </div>
         );
       case 'ONBOARDING':
