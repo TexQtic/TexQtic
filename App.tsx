@@ -3814,6 +3814,11 @@ const App: React.FC = () => {
     }
 
     const onboardingStatusContinuity = currentOnboardingStatusContinuity;
+    const workspaceIdentityLabel = tenantBaseCategory ?? currentTenant.base_family ?? currentTenant.type ?? null;
+    const workspaceStatusLabel = currentTenant.status.replaceAll('_', ' ');
+    const workspaceContinuityLabel = onboardingStatusContinuity?.title ?? 'Workspace continuity';
+    const workspaceContinuityDetail = onboardingStatusContinuity?.detail
+      ?? 'This settings surface is limited to read-only workspace profile continuity and status visibility.';
 
     if (tenantContentFamily === 'b2b_workspace' && onboardingStatusContinuity) {
       return (
@@ -3913,7 +3918,60 @@ const App: React.FC = () => {
         />
       );
     }
-    if (appState === 'SETTINGS') return <TeamManagement onInvite={() => setAppState('INVITE_MEMBER')} />;
+    if (appState === 'SETTINGS') {
+      return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+          <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+              <div className="space-y-4 max-w-3xl">
+                <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600">
+                  Workspace Profile
+                </div>
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-bold text-slate-900">{currentTenant.name}</h1>
+                  <p className="text-base leading-7 text-slate-600">
+                    Read-only workspace identity and status continuity for this tenant.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 xl:max-w-sm">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Current status</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">{workspaceStatusLabel}</div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {workspaceContinuityDetail}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Organization</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">{currentTenant.name}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Tenant-owned workspace identity remains visible here without opening other admin domains.
+                </p>
+              </div>
+              {workspaceIdentityLabel && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Base family</div>
+                  <div className="mt-2 text-lg font-semibold text-slate-900">{workspaceIdentityLabel}</div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Canonical family continuity is shown without opening overlay-owned controls.
+                  </p>
+                </div>
+              )}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Workspace posture</div>
+                <div className="mt-2 text-lg font-semibold text-slate-900">{workspaceContinuityLabel}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  This settings surface stays read-only and limited to common-core profile continuity.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      );
+    }
     switch (tenantLocalRouteSelection?.routeKey) {
       case 'orders':
         return <EXPOrdersPanel onBack={() => navigateTenantDefaultManifestRoute()} />;
