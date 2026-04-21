@@ -1,10 +1,10 @@
 # TEXQTIC — Public Visibility and Projection Model Decision v1
 
 Decision ID: TEXQTIC-PUBLIC-VISIBILITY-AND-PROJECTION-MODEL-DECISION-v1
-Status: PROPOSED FOR AUTHORITY LOCK
+Status: DECIDED
 Scope: Governance / product-truth / visibility and projection model
 Date: 2026-04-21
-Authorized by: Pending authority lock
+Authorized by: Paresh
 Decision class: Planning-only visibility/projection decision
 
 ## 1. Visibility Principle
