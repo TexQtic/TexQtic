@@ -5,7 +5,7 @@
 **Status:** CLOSED  
 **Date:** 2026-03-17  
 **Authored by:** TexQtic Governance Design Session  
-**Doctrine Version:** v1.12 (opening-layer canon alignment; original layer model preserved)  
+**Doctrine Version:** v1.13 (public market-access alignment; original layer model preserved)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Live Authority Alignment:** preserved downstream governance design descendant; live opening-layer routing is governed by the opening-layer canon rather than by this file alone.  
 
@@ -147,6 +147,20 @@ The preserved downstream architectural governance statement for TexQtic is:
 - B2B contains a canonical internal textile-industry taxonomy with one primary segment, multiple secondary segments, and a separate role-positioning axis (`manufacturer`, `trader`, `service_provider`); `service_provider` is not a separate top-level B2B class and enterprise remains subordinate depth within B2B
 - Aggregator may consume only the discovery-safe subset of the B2B taxonomy and does not inherit full B2B administrative or execution ownership
 - schema shape, taxonomy codes and aliases, ranking/filter/search logic, onboarding-form capture design, CRM field implementation, workflow mappings, package redesign specifics, and implementation sequencing remain outside this governance statement
+
+### 3.1B Public Market-Access Governance Statement
+
+The preserved downstream public market-access governance statement for TexQtic is:
+
+- TexQtic is a governed market-access infrastructure for trusted textile supply chains; marketplace behavior remains subordinate to governed workflow, trust, and execution ownership
+- subordinate market-access pillars are `B2B` governed exchange, `B2C` tenant-branded consumer commerce, and Aggregator discovery intelligence, comparison, qualification support, and qualified handoff
+- public `B2B` truth is target architecture only: public-safe discovery and inquiry or RFQ-intent initiation may exist publicly, but RFQ workflow, pricing, negotiation, messaging, orders, and governed trade execution remain authenticated; this must not be overread as a claim that anonymous B2B marketplace browse is already live
+- public `B2C` truth is bounded public browse plus cart intent with authenticated checkout and authenticated deeper commerce continuity
+- Aggregator does not own transaction, pricing negotiation, fulfillment, or a separate full back office
+- public visibility is two-tiered: tenant eligibility for any public presence, then listing or product-level publication posture
+- all public rendering must consume public-safe projected views of tenant identity, trust signals, listing or product identity, capability or category metadata, and publication posture rather than raw internal operational records
+- one shared public entry and shell requirement owns public tenant resolution, brand and context framing, truthful public-safe navigation, and coherent transition into the correct authenticated surface without authorizing a generic anonymous marketplace shell
+- expansion into broader public marketplace behavior is lawful only when trust maturity, data quality, and governance readiness justify it
 
 ### 3.2 Control-Plane Files (Layer 0)
 

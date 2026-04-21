@@ -2,8 +2,8 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Doctrine Version:** v1.12  
-**Last Updated:** 2026-04-10 (governance-family reconciliation execution)  
+**Doctrine Version:** v1.13  
+**Last Updated:** 2026-04-21 (public market-access invariant alignment)  
 **Reset Ratification:** `governance/decisions/GOV-DEC-GOVERNANCE-OS-RESET-WRITEBACK-001.md`  
 **Max Size:** 150 lines (structural gate)
 
@@ -124,6 +124,14 @@ Governance OS must distinguish stable truth, transitional truth, and volatile tr
 
 ### D-023 — Invalidation Triggers Force Rediscovery
 A `D-020` artifact is invalid for `D-021` if planning or family authority changed materially, readiness or runtime proof breaks an assumption, adjacency now intersects the slice, the remainder changed materially, the artifact is stale or incomplete, Layer 0 contradicts it, the live opening-layer sequencing authority or the relevant preserved downstream family/design authority supersedes it, or blocker/design-gate change materially resizes the slice. Any trigger forces rediscovery at the smallest lawful broader level.
+
+### D-024 — Public Market-Access Surfaces Are Governed
+
+TexQtic is a governed market-access infrastructure, not an open listing marketplace.
+Public surfaces may expose only public-safe discovery, qualified entry, and structured intent handoff through public-safe projections rather than raw internal operational records.
+Authenticated surfaces own commerce, workflow, trade execution, governance actions, and tenant-admin continuity.
+white-label remains an overlay and capability, not a peer marketplace pillar; Aggregator remains a cross-family discovery, intelligence, and handoff capability, not a transaction owner or separate full admin office.
+Expansion of public surface area is lawful only when trust maturity, data quality, and governance readiness justify it.
 
 ---
 
