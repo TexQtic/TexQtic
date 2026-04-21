@@ -1,10 +1,10 @@
 # TEXQTIC — Public vs Authenticated Surface Boundary Decision v1
 
 Decision ID: TEXQTIC-PUBLIC-VS-AUTHENTICATED-SURFACE-BOUNDARY-DECISION-v1
-Status: PROPOSED FOR AUTHORITY LOCK
+Status: DECIDED
 Scope: Governance / product-truth / boundary classification
 Date: 2026-04-21
-Authorized by: Pending authority lock
+Authorized by: Paresh
 Decision class: Planning-only boundary decision
 
 ## 1. Boundary Principle
