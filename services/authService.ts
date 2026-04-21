@@ -4,7 +4,7 @@
  * Handles login, logout, and user session management
  */
 
-import { post, get, setToken, clearAuth, getAuthRealm, getToken } from './apiClient';
+import { APIError, post, get, setToken, clearAuth, getAuthRealm, getToken } from './apiClient';
 import type { AuthRealm } from './apiClient';
 
 // Flip to true locally to inspect login payloads (never commit as true)
@@ -158,6 +158,72 @@ export interface ResolvedTenant {
   name: string;
 }
 
+export interface PublicEntryResolutionDescriptor {
+  publicEntryKind: 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
+  normalizedHost: string | null;
+  resolutionSourceType:
+    | 'HOST_DOMAIN'
+    | 'SLUG_PATH'
+    | 'EMAIL_MEMBERSHIP_DISCOVERY'
+    | 'DIRECT_PUBLIC_IDENTIFIER'
+    | 'NEUTRAL_ENTRY';
+  resolutionDisposition:
+    | 'RESOLVED'
+    | 'CANDIDATE_SELECTION_REQUIRED'
+    | 'NEUTRAL_NO_TENANT'
+    | 'UNRESOLVED_REJECTED';
+  resolvedRealmClass:
+    | 'NEUTRAL_PUBLIC_ENTRY'
+    | 'B2B_PUBLIC_DISCOVERY_ENTRY'
+    | 'B2C_PUBLIC_BROWSE_ENTRY'
+    | 'TENANT_AUTHENTICATED_ENTRY_ONLY'
+    | 'AGGREGATOR_AUTHENTICATED_ENTRY_ONLY';
+  resolvedTenantContext: ResolvedTenant | null;
+  brandSurfaceFramingContext: {
+    tenantSlug: string;
+    tenantName: string;
+  } | null;
+  allowedTargetSurfaceClass:
+    | 'NEUTRAL_PUBLIC_ENTRY_SURFACE'
+    | 'TENANT_BRANDED_PUBLIC_SURFACE'
+    | 'AUTHENTICATED_TENANT_ENTRY_SURFACE'
+    | 'QUALIFIED_AUTHENTICATED_WORKSPACE_ENTRY_SURFACE';
+  requiredTransitionClass:
+    | 'NONE_STAY_IN_PUBLIC_ENTRY'
+    | 'ENTER_TENANT_SPECIFIC_PUBLIC_SURFACE'
+    | 'LAUNCH_AUTHENTICATED_TENANT_ENTRY'
+    | 'LAUNCH_QUALIFIED_AUTHENTICATED_WORKSPACE';
+  authenticationRequired: boolean;
+  postAuthEligibilityCheckRequired: boolean;
+  downstreamHandoffTargetClass:
+    | 'NONE'
+    | 'B2B_AUTHENTICATED_CONTINUITY'
+    | 'B2C_AUTHENTICATED_CONTINUITY'
+    | 'AGGREGATOR_AUTHENTICATED_WORKSPACE'
+    | 'OWNER_READY_ACTIVATION_CHECK';
+  candidateTenantContexts?: ResolvedTenant[];
+}
+
+export async function resolvePublicEntryDescriptor(input: {
+  slug?: string;
+  email?: string;
+}): Promise<PublicEntryResolutionDescriptor> {
+  const params = new URLSearchParams();
+
+  if (input.slug) {
+    params.set('slug', input.slug);
+  }
+
+  if (input.email) {
+    params.set('email', input.email);
+  }
+
+  const query = params.toString();
+  const endpoint = query ? `/api/public/entry/resolve?${query}` : '/api/public/entry/resolve';
+
+  return get<PublicEntryResolutionDescriptor>(endpoint);
+}
+
 /**
  * Resolve a tenant slug to canonical identity required for tenant login.
  * TECS-FBW-AUTH-001 (2026-03-13)
@@ -166,7 +232,17 @@ export interface ResolvedTenant {
  * Throws on unknown slug or validation failure (caller surfaces inline error).
  */
 export async function resolveTenantBySlug(slug: string): Promise<ResolvedTenant> {
-  return get<ResolvedTenant>(`/api/public/tenants/resolve?slug=${encodeURIComponent(slug)}`);
+  const descriptor = await resolvePublicEntryDescriptor({ slug });
+
+  if (descriptor.resolutionDisposition !== 'RESOLVED' || !descriptor.resolvedTenantContext) {
+    throw new APIError(
+      404,
+      `No active tenant found for slug '${slug}'. Check the slug and try again.`,
+      'TENANT_NOT_FOUND'
+    );
+  }
+
+  return descriptor.resolvedTenantContext;
 }
 
 /**
@@ -178,10 +254,13 @@ export async function resolveTenantBySlug(slug: string): Promise<ResolvedTenant>
  * Returns the same ResolvedTenant shape as resolveTenantBySlug for field consistency.
  */
 export async function resolveTenantsByEmail(email: string): Promise<ResolvedTenant[]> {
-  const result = await get<{ tenants: ResolvedTenant[] }>(
-    `/api/public/tenants/by-email?email=${encodeURIComponent(email)}`
-  );
-  return result.tenants;
+  const descriptor = await resolvePublicEntryDescriptor({ email });
+
+  if (descriptor.resolutionDisposition === 'RESOLVED' && descriptor.resolvedTenantContext) {
+    return [descriptor.resolvedTenantContext];
+  }
+
+  return descriptor.candidateTenantContexts ?? [];
 }
 
 // ─── Session management ───────────────────────────────────────────────────────

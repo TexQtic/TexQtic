@@ -106,7 +106,7 @@ async function handleResolveDomain(request: FastifyRequest, reply: FastifyReply)
 
 // ─── Resolution logic (§D6.4) ─────────────────────────────────────────────────
 
-interface ResolvedTenant {
+export interface ResolvedTenant {
   tenantId: string;
   tenantSlug: string;
 }
@@ -122,7 +122,7 @@ interface ResolvedTenant {
  * This is safe because the role is NOLOGIN and only reachable
  * via `SET LOCAL ROLE` by the postgres user.
  */
-async function resolveHostToTenant(host: string): Promise<ResolvedTenant | null> {
+export async function resolveHostToTenant(host: string): Promise<ResolvedTenant | null> {
   return prisma.$transaction(async tx => {
     // Assume texqtic_service role for this transaction (BYPASSRLS).
     await tx.$executeRaw`SET LOCAL ROLE texqtic_service`;
