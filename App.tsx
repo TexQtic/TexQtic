@@ -1522,6 +1522,7 @@ type AppState =
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
   | 'TOKEN_HANDLER'
+  | 'ONBOARDING_CONTINUATION'
   | 'ONBOARDING'
   | 'EXPERIENCE'
   | 'TEAM_MGMT'
@@ -1532,6 +1533,8 @@ type AppState =
   | 'ORDER_CONFIRMED';
 
 type NeutralEntryPathSelection = 'B2B' | 'B2C' | 'SUPPLIER' | null;
+
+const SUPPLIER_REQUEST_ACCESS_URL = 'https://texqtic.com/request-access';
 
 const hasStoredAuthenticatedSession = () => {
   if (globalThis.window === undefined) {
@@ -2169,7 +2172,13 @@ const App: React.FC = () => {
     setTenantBootstrapBlockedMessage(null);
     setTenantProvisionError(null);
     setAuthRealm(realm);
-    scrollToPublicEntrySection('public-entry-auth');
+    setAppState('AUTH');
+  };
+  const openSupplierRequestAccess = () => {
+    globalThis.window?.location.assign(SUPPLIER_REQUEST_ACCESS_URL);
+  };
+  const openOnboardingContinuation = () => {
+    setAppState('ONBOARDING_CONTINUATION');
   };
   const publicEntryLaunchGuidance = (() => {
     if (neutralEntryPathSelection === 'B2B') {
@@ -2192,7 +2201,7 @@ const App: React.FC = () => {
       return {
         title: 'Verified supplier onboarding path',
         detail:
-          'Begin with supplier visibility intent. Verification review, structured listings, and deeper commercial continuity continue after the right authenticated entry begins.',
+          'Begin with Request Access so CRM can qualify fit, maintain onboarding continuity, and trigger platform provisioning only after approval and access issuance.',
       };
     }
 
@@ -4561,7 +4570,7 @@ const App: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                        onClick={openSupplierRequestAccess}
                         className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                       >
                         List your business
@@ -4610,7 +4619,7 @@ const App: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                      onClick={openSupplierRequestAccess}
                       className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white"
                     >
                       List your business
@@ -4668,7 +4677,7 @@ const App: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                        onClick={openSupplierRequestAccess}
                         className="inline-flex items-center justify-center rounded-full border border-[#7fd5de]/40 bg-transparent px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#a6e9f0] transition hover:border-[#a6e9f0] hover:bg-[#0a334d]"
                       >
                         List Your Business
@@ -4699,75 +4708,51 @@ const App: React.FC = () => {
                     )}
                   </section>
 
-                  <aside
-                    id="public-entry-auth"
-                    className="rounded-[32px] border border-[#d7e4e8] bg-white p-6 shadow-[0_24px_70px_rgba(7,26,47,0.10)] md:p-7"
-                  >
+                  <aside className="rounded-[32px] border border-[#d7e4e8] bg-white p-6 shadow-[0_24px_70px_rgba(7,26,47,0.10)] md:p-7">
                     <div className="rounded-[28px] border border-[#dce8eb] bg-[#f5fafb] p-5">
                       <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8196]">
-                        Authenticated entry
+                        Returning users
                       </div>
                       <h2 className="public-entry-editorial-heading mt-3 text-2xl leading-tight text-[#0a2036]">
-                        Tenant Access and Staff Control stay secondary
+                        Already have access or onboarding continuity?
                       </h2>
                       <p className="mt-3 text-sm leading-6 text-slate-600">
-                        Use authenticated entry only when you are continuing into a workspace, control function,
-                        or supplier onboarding path.
+                        The homepage stays public-safe and routing-led. Active workspace access, staff control,
+                        and onboarding continuity continue from their own dedicated destinations.
                       </p>
-
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-2xl border border-indigo-100 bg-white px-4 py-4">
-                          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-500">
-                            Tenant Access
-                          </div>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Returning tenant members, buyers, and suppliers continue here.
-                          </p>
-                        </div>
-                        <div className="rounded-2xl border border-rose-100 bg-white px-4 py-4">
-                          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-rose-500">
-                            Staff Control
-                          </div>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Staff and control-plane users continue through the bounded control entry path.
-                          </p>
-                        </div>
-                      </div>
                     </div>
 
-                    <div className="mt-6 flex flex-wrap gap-3">
+                    <div className="mt-5 space-y-3">
+                      <button
+                        type="button"
+                        onClick={openOnboardingContinuation}
+                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                      >
+                        <span>Continue onboarding</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Open</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
-                        className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] transition-all ${authRealm === 'TENANT' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200 hover:text-indigo-700'}`}
+                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
                       >
-                        Tenant Access
+                        <span>Tenant Access</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sign in</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => openSecondaryAuthenticatedEntry('CONTROL_PLANE')}
-                        className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] transition-all ${authRealm === 'CONTROL_PLANE' ? 'border-rose-600 bg-rose-600 text-white' : 'border-slate-200 bg-white text-slate-500 hover:border-rose-200 hover:text-rose-700'}`}
+                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-rose-300 hover:text-rose-700"
                       >
-                        Staff Control
+                        <span>Staff Control</span>
+                        <span className="text-xs uppercase tracking-[0.2em] text-slate-400">Sign in</span>
                       </button>
                     </div>
 
                     <p className="mt-5 text-sm leading-6 text-slate-500">
-                      Returning users can sign in here. Listing continuity and supplier onboarding begin after
-                      the right authenticated entry is established.
+                      New suppliers and business applicants begin through Request Access on texqtic.com, not
+                      through tenant sign-in from this homepage.
                     </p>
-
-                    <div className="mt-6">
-                      <AuthForm realm={authRealm} onSuccess={handleAuthSuccess} />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setAppState('FORGOT_PASSWORD')}
-                      className="mt-4 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400 transition hover:text-indigo-600"
-                    >
-                      Forgot Password?
-                    </button>
                   </aside>
                 </div>
               </div>
@@ -4841,7 +4826,7 @@ const App: React.FC = () => {
                     </p>
                     <button
                       type="button"
-                      onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')}
+                      onClick={openSupplierRequestAccess}
                       className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                     >
                       Start supplier onboarding
@@ -4947,7 +4932,7 @@ const App: React.FC = () => {
                       type="button"
                       onClick={() => {
                         selectNeutralPublicEntryPath('SUPPLIER');
-                        openSecondaryAuthenticatedEntry('TENANT');
+                        openSupplierRequestAccess();
                       }}
                       className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
                     >
@@ -5007,8 +4992,8 @@ const App: React.FC = () => {
                     <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Suppliers</h3>
                     <div className="mt-4 space-y-3 text-sm text-slate-300">
                       <button type="button" onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')} className="block transition hover:text-white">For Suppliers</button>
-                      <button type="button" onClick={() => selectNeutralPublicEntryPath('SUPPLIER', 'public-entry-suppliers')} className="block transition hover:text-white">List your business</button>
-                      <button type="button" onClick={() => { selectNeutralPublicEntryPath('SUPPLIER'); openSecondaryAuthenticatedEntry('TENANT'); }} className="block transition hover:text-white">Supplier onboarding</button>
+                      <button type="button" onClick={openSupplierRequestAccess} className="block transition hover:text-white">List your business</button>
+                      <button type="button" onClick={openSupplierRequestAccess} className="block transition hover:text-white">Supplier onboarding</button>
                       <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-trust')} className="block transition hover:text-white">Verification process</button>
                     </div>
                   </div>
@@ -5037,6 +5022,69 @@ const App: React.FC = () => {
           </div>
         );
       }
+      case 'ONBOARDING_CONTINUATION':
+        return (
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+            <div className="w-full max-w-3xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm md:p-10">
+              <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#2f8196]">
+                Continue onboarding
+              </div>
+              <h1 className="public-entry-editorial-heading mt-4 text-4xl leading-tight text-[#0a2036] md:text-5xl">
+                Resume the issued onboarding path
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                TexQtic onboarding continuity is issued through CRM approval, provisioning handoff, and
+                activation communications. Use the activation or access link that was sent to you to continue.
+                If your workspace is already active, use Tenant Access instead.
+              </p>
+
+              <div className="mt-8 grid gap-4 md:grid-cols-2">
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
+                    Issued continuity only
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    This application does not expose a generic public continuation form for onboarding. Continue
+                    with the issued activation or access link from your TexQtic onboarding communication.
+                  </p>
+                </div>
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
+                    Need the right lane?
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    Use Tenant Access only after workspace access has been issued. New supplier or business
+                    applicants should begin with Request Access on texqtic.com.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => openSecondaryAuthenticatedEntry('TENANT')}
+                  className="inline-flex items-center justify-center rounded-full bg-[#071a2f] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
+                >
+                  Tenant Access
+                </button>
+                <button
+                  type="button"
+                  onClick={openSupplierRequestAccess}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-[#2f8094] hover:text-[#0a2036]"
+                >
+                  Request Access
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAppState(primaryEntrySurfaceState)}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-700 transition hover:border-slate-400 hover:text-[#0a2036]"
+                >
+                  Return to platform entry
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       case 'AUTH': {
         const tenantBootstrapAuthView = resolveTenantBootstrapAuthView({
           authRealm,
