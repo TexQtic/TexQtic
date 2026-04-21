@@ -1,10 +1,10 @@
 # TEXQTIC — Public Marketplace Architecture and Governed Market-Access Model v1
 
 Decision ID: TEXQTIC-PUBLIC-MARKETPLACE-ARCHITECTURE-DECISION-v1
-Status: PROPOSED FOR AUTHORITY LOCK
+Status: DECIDED
 Scope: Governance / product-truth / public market-access architecture
 Date: 2026-04-21
-Authorized by: Pending authority lock
+Authorized by: Paresh
 Decision class: Planning-only architecture decision
 
 ## 1. Decision Summary
