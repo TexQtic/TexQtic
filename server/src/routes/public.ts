@@ -30,6 +30,7 @@ import { prisma } from '../db/prisma.js';
 import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import { resolveHostToTenant } from './internal/resolveDomain.js';
 import { listPublicB2BSuppliers } from '../services/publicB2BProjection.service.js';
+import { listPublicB2CProducts } from '../services/publicB2CProjection.service.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -616,6 +617,32 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
 
     const { segment, geo, page, limit } = parseResult.data;
     const result = await listPublicB2BSuppliers({ segment, geo, page, limit }, prisma);
+    return sendSuccess(reply, result);
+  });
+
+  // ── GET /api/public/b2c/products ──────────────────────────────────────────────
+  //
+  // B2C public storefront browse endpoint.
+  // No auth required. Applies five projection safety gates in PublicB2CProjectionService.
+  // Empty result = 200 { items: [], total: 0, page: 1, limit: 20 } — NOT 404.
+  //
+  // Design authority: governance/decisions/TEXQTIC-B2C-PUBLIC-BROWSE-CART-CHECKOUT-BOUNDARY-DECISION-v1.md §3
+  // Slice: PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE
+
+  const b2cProductsQuerySchema = z.object({
+    geo: z.string().min(1).max(100).optional(),
+    page: z.coerce.number().int().min(1).max(10000).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+  });
+
+  fastify.get('/b2c/products', async (request, reply) => {
+    const parseResult = b2cProductsQuerySchema.safeParse(request.query);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { geo, page, limit } = parseResult.data;
+    const result = await listPublicB2CProducts({ geo, page, limit }, prisma);
     return sendSuccess(reply, result);
   });
 };
