@@ -58,6 +58,7 @@ import { DisputeCases, type DisputeEscalationBridgeTarget } from './components/C
 import { TradeOversight } from './components/ControlPlane/TradeOversight';
 import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
+import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { getPlatformInsights } from './services/aiService';
 import {
   getAggregatorDiscoveryEntries,
@@ -1518,6 +1519,7 @@ export const __B2B_TRADE_FROM_RFQ_TESTING__ = {
 
 type AppState =
   | 'PUBLIC_ENTRY'
+  | 'PUBLIC_B2B_DISCOVERY'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
@@ -2246,6 +2248,10 @@ const App: React.FC = () => {
   const documentTitle = useMemo(() => {
     if (appState === 'PUBLIC_ENTRY') {
       return 'TexQtic Platform Entry';
+    }
+
+    if (appState === 'PUBLIC_B2B_DISCOVERY') {
+      return 'TexQtic — B2B Supplier Discovery';
     }
 
     if (appState === 'AUTH') {
@@ -4544,7 +4550,7 @@ const App: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')}
+                        onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                         className="rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-600 transition hover:bg-[#eff6f8] hover:text-[#0b2238]"
                       >
                         Source for Business
@@ -4593,7 +4599,7 @@ const App: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')}
+                      onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                       className="rounded-full border border-[#dbe6ea] bg-[#f8fbfc] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-600"
                     >
                       Source for Business
@@ -4668,7 +4674,7 @@ const App: React.FC = () => {
                     <div className="mt-8 flex flex-wrap gap-3">
                       <button
                         type="button"
-                        onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')}
+                        onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                         className="inline-flex items-center justify-center rounded-full bg-[#7fd5de] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#08233a] transition hover:bg-[#98e2e9]"
                       >
                         Source for Business
@@ -4794,7 +4800,7 @@ const App: React.FC = () => {
                     </p>
                     <button
                       type="button"
-                      onClick={() => selectNeutralPublicEntryPath('B2B')}
+                      onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')}
                       className="mt-6 inline-flex items-center justify-center rounded-full bg-[#071a2f] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition hover:bg-[#0d2743]"
                     >
                       Start B2B sourcing
@@ -4988,7 +4994,7 @@ const App: React.FC = () => {
                     <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">Discover</h3>
                     <div className="mt-4 space-y-3 text-sm text-slate-300">
                       <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-discovery')} className="block transition hover:text-white">Discover</button>
-                      <button type="button" onClick={() => selectNeutralPublicEntryPath('B2B', 'public-entry-routing')} className="block transition hover:text-white">Source for Business</button>
+                      <button type="button" onClick={() => setAppState('PUBLIC_B2B_DISCOVERY')} className="block transition hover:text-white">Source for Business</button>
                       <button type="button" onClick={() => selectNeutralPublicEntryPath('B2C', 'public-entry-discovery')} className="block transition hover:text-white">Browse Products</button>
                       <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-discovery')} className="block transition hover:text-white">Categories</button>
                     </div>
@@ -5098,6 +5104,13 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
+        );
+      case 'PUBLIC_B2B_DISCOVERY':
+        return (
+          <B2BDiscoveryPage
+            onBack={() => setAppState('PUBLIC_ENTRY')}
+            onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
+          />
         );
       case 'AUTH': {
         const tenantBootstrapAuthView = resolveTenantBootstrapAuthView({
