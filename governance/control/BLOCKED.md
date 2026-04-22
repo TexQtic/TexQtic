@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2C projection precondition implementation slice opening — WL Co non-blocking confirmed)
+**Last Updated:** 2026-04-22 (B2C precondition and data posture governance reconciliation)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -35,8 +35,18 @@
 - The reused-existing-user bucket remains `BOUNDED-DEFERRED-REMAINDER`, but it is not reopened,
   re-sequenced, or promoted into a reset blocker by this pass.
 
-## Section 4 — Non-Blocking Hold Confirmation for Active Delivery Unit
+## Section 4 — Non-Blocking Hold Status at Current Posture
 
-| Active Unit | Hold | Conflict Status | Basis |
-| --- | --- | --- | --- |
-| `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **NON-BLOCKING** | WL Co non-blocking confirmed for this exact candidate. Confirmation basis: `governance/decisions/TEXQTIC-WL-CO-B2C-PRECONDITION-COMPATIBILITY-CONFIRMATION-v1.md` (2026-04-22). All six WL Co risk domains (brand-surface, domain/routing, identity/tenancy, admin overlay, canon expansion, unsafe B2C normalization) test as NOT APPLICABLE for the backend-only candidate scope. The WL Co hold itself remains `REVIEW-UNKNOWN` and is not resolved or cleared by this confirmation. Non-blocking classification is scope-bounded to this slice only. Slices 2 and 3 require fresh WL Co reassessment at their respective openings. |
+No product-delivery unit is currently open. D-016 posture: `ZERO_OPEN_DECISION_CONTROL`.
+
+The prior non-blocking confirmation for `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`
+(basis: `governance/decisions/TEXQTIC-WL-CO-B2C-PRECONDITION-COMPATIBILITY-CONFIRMATION-v1.md`) was
+scope-bounded to that slice only. That slice is now `VERIFIED_COMPLETE`. The non-blocking
+classification does not carry forward to the next opening.
+
+At the next opening, the WL Co hold must be freshly reassessed. In particular:
+
+| Upcoming Slice | WL Co Reassessment Required | Basis |
+| --- | --- | --- |
+| `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (assessment-only) | Required before opening | WL Co confirmation §9.2 direction; assessment-only scope is low-risk but fresh check is mandatory |
+| `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE` (slice 3) | **STRONGLY REQUIRED** before opening | WL Co confirmation §9.2 — brand-surface, domain/routing domains apply; materially higher WL intersection risk |

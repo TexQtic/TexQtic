@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2C projection precondition implementation slice opening — human decision)
+**Last Updated:** 2026-04-22 (B2C precondition and data posture governance reconciliation)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -58,17 +58,26 @@
   All three bounded deliverables confirmed: `PUBLIC_B2B_DISCOVERY` AppState in `App.tsx`; B2B
   discovery page component (`components/Public/B2BDiscovery.tsx`); homepage B2B CTAs upgraded from
   temporary scroll behavior to `setAppState('PUBLIC_B2B_DISCOVERY')` state transition.
-- **One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`.**
-  Opening basis: explicit human decision (2026-04-22). D-021: `CONFIRMED_SUCCESSOR_CANDIDATE`.
-  WL Co: `WL_CO_NON_BLOCKING_CONFIRMED_FOR_B2C_PRECONDITION_SLICE`.
-  Scope: create `server/src/services/publicB2CProjection.service.ts`, extend `server/src/routes/public.ts`
-  B2C endpoint, create `server/tests/publicB2CProjection.test.ts`.
-  Frontend/AppState/page work, data posture assignment, and B2C page implementation are OUT-OF-SCOPE.
+- `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `7baf50a`, 2026-04-22).
+  Three deliverables confirmed: `server/src/services/publicB2CProjection.service.ts` (5-gate B2C projection
+  service); `GET /api/public/b2c/products` registered in `server/src/routes/public.ts`; 10/10 unit tests passing.
+- `B2C_PUBLIC_DATA_POSTURE_ASSIGNMENT_SLICE` closed `VERIFIED_COMPLETE` (commit `6dbc5e9`, 2026-04-22).
+  `qa-b2c` tenant (`isWhiteLabel:false`) assigned `publicEligibilityPosture=PUBLICATION_ELIGIBLE`,
+  org `publication_posture=B2C_PUBLIC`, all three catalog items `publicationPosture=B2C_PUBLIC`.
+  `GET /api/public/b2c/products` confirmed returning one truthful non-placeholder B2C result (HTTP 200).
+  Image URLs preserved (zero drift). No WL-parented tenants touched.
+- D-016 posture: **ZERO_OPEN_DECISION_CONTROL** — zero active product-delivery units. Next opening is a human decision.
+  Next likely candidate (NOT open): `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` — fresh B2C readiness
+  reassessment required per D-020 §4 before the human may consider `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`.
+  Slice 3 (`PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`) also requires fresh WL Co reassessment per WL Co
+  confirmation §9.2 (materially higher WL intersection risk; brand-surface and domain/routing domains apply).
+  No frontend/AppState/B2C page work has been opened.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
   D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.
-- All prior units (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` and
-  `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`) are closed. Their design authorities remain
+- All prior units (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
+  `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`, `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
+  and `B2C_PUBLIC_DATA_POSTURE_ASSIGNMENT_SLICE`) are closed. Their design authorities remain
   locked historical evidence only.
 - Planning-package recommendations outside the product-truth authority stack remain guidance and
   decision input only, not live authority.
