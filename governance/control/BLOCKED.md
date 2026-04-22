@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (WL Co non-blocking confirmation for active delivery unit)
+**Last Updated:** 2026-04-22 (WL Co non-blocking confirmation updated for PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -39,4 +39,4 @@
 
 | Active Unit | Hold | Conflict Status | Basis |
 | --- | --- | --- | --- |
-| `PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **NON-BLOCKING** | The WL Co hold governs whether WL Co work itself can advance without unsafe normalization into B2C, domain/routing/brand-surface, identity/tenancy, or tenant-back-office work. The active unit is B2B projection precondition plumbing only: additive schema fields on Tenant/organizations/catalog_items, a purpose-built B2B public projection service, and a public B2B endpoint. It does not advance WL Co work, does not touch WL brand surfaces, WL domain/routing, or WL-specific tenancy overlay. The `publicEligibilityPosture` field on `Tenant` is an additive B2B-public gate orthogonal to the WL tenancy overlay concern. Hold remains `REVIEW-UNKNOWN` for WL Co work itself and is not resolved or dispositioned by this confirmation. |
+| `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **NON-BLOCKING** | The WL Co hold governs whether WL Co work itself can advance without unsafe normalization into B2C, domain/routing/brand-surface, identity/tenancy, or tenant-back-office work. The active unit is B2B public discovery frontend implementation: adding `PUBLIC_B2B_DISCOVERY` AppState to `App.tsx`, building the B2B public discovery page component, and wiring the homepage B2B CTA. It does not advance WL Co work, does not touch WL brand surfaces, WL domain/routing, or WL-specific tenancy overlay. The B2B public discovery page is an org-type-B2B-only governed public surface orthogonal to the WL tenancy overlay concern. Hold remains `REVIEW-UNKNOWN` for WL Co work itself and is not resolved or dispositioned by this confirmation. |

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2B projection precondition implementation slice opening)
+**Last Updated:** 2026-04-22 (B2B discovery implementation slice opening — human decision)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -54,9 +54,17 @@
 ## Operating Notes
 
 - Governing posture remains `HOLD-FOR-BOUNDARY-TIGHTENING`.
-- One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`.
-- Design authority for the active unit: `governance/decisions/TEXQTIC-B2B-PUBLIC-PROJECTION-PRECONDITION-DESIGN-v1.md`.
-- This unit is precondition/plumbing only: schema posture migration, projection service, public B2B endpoint, unit tests, readiness reassessment. It does NOT open the B2B page implementation or any B2C work.
+- One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`.
+- Opening basis: explicit human decision by Paresh (2026-04-22) after final readiness reassessment
+  concluded `READY_FOR_HUMAN_OPENING_DECISION` (`TEXQTIC-B2B-PUBLIC-DISCOVERY-FINAL-READINESS-REASSESSMENT-v1.md`).
+- Primary design authority for the active unit: `governance/decisions/TEXQTIC-PUBLIC-DOWNSTREAM-PAGE-ARCHITECTURE-AND-SCOPE-DECISION-v1.md`.
+- Object model authority: `governance/decisions/TEXQTIC-B2B-PUBLIC-DISCOVERY-AND-INQUIRY-MODEL-DECISION-v1.md`.
+- Scope: add `PUBLIC_B2B_DISCOVERY` AppState to `App.tsx`; build the B2B public discovery page
+  component; wire the homepage B2B CTA from temporary scroll behavior to AppState transition.
+  Does NOT include B2C work, broader marketplace implementation, or any schema/data changes.
+- The previous active unit (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`) is closed;
+  its design authority (`TEXQTIC-B2B-PUBLIC-PROJECTION-PRECONDITION-DESIGN-v1.md`) remains locked
+  historical evidence only.
 - Planning-package recommendations outside the product-truth authority stack remain guidance and
   decision input only, not live authority.
 - Preserved aligned anchors, including the closed onboarding-family handoff chain, remain outside
