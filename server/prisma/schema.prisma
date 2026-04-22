@@ -19,6 +19,7 @@ model Tenant {
   createdAt                DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
   isWhiteLabel             Boolean                  @default(false) @map("is_white_label")
+  publicEligibilityPosture TenantPublicEligibilityPosture @default(NO_PUBLIC_PRESENCE) @map("public_eligibility_posture")
   aiBudget                 AiBudget?
   aiUsageMeters            AiUsageMeter[]
   auditLogs                AuditLog[]
@@ -342,8 +343,9 @@ model CatalogItem {
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
   moq         Int         @default(1)
-  imageUrl    String?     @map("image_url")
-  cartItems   CartItem[]
+  imageUrl           String?  @map("image_url")
+  publicationPosture String   @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
+  cartItems          CartItem[]
   tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
   rfqs        Rfq[]
@@ -1007,6 +1009,7 @@ model organizations {
   created_at            DateTime              @default(now()) @db.Timestamptz(6)
   updated_at            DateTime              @default(now()) @db.Timestamptz(6)
   is_white_label        Boolean               @default(false)
+  publication_posture   String                @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
   certifications        Certification[]
   certification_lifecycle_logs CertificationLifecycleLog[]
   documentEmbeddings    DocumentEmbedding[]
@@ -1244,6 +1247,14 @@ enum TenantPlan {
   ENTERPRISE
 
   @@map("tenant_plan")
+}
+
+enum TenantPublicEligibilityPosture {
+  NO_PUBLIC_PRESENCE
+  LIMITED_PUBLIC_PRESENCE
+  PUBLICATION_ELIGIBLE
+
+  @@map("tenant_public_eligibility_posture")
 }
 
 enum MembershipRole {

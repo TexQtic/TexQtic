@@ -29,6 +29,7 @@ import { sendSuccess, sendError, sendValidationError } from '../utils/response.j
 import { prisma } from '../db/prisma.js';
 import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import { resolveHostToTenant } from './internal/resolveDomain.js';
+import { listPublicB2BSuppliers } from '../services/publicB2BProjection.service.js';
 
 type PublicEntryKind = 'PLATFORM' | 'TENANT_SUBDOMAIN' | 'TENANT_CUSTOM_DOMAIN';
 type ResolutionSourceType =
@@ -589,6 +590,33 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     }
 
     return sendSuccess(reply, { tenants });
+  });
+
+  // ── GET /api/public/b2b/suppliers ─────────────────────────────────────────────
+  //
+  // B2B public supplier discovery endpoint.
+  // No auth required. Applies five projection safety gates in PublicB2BProjectionService.
+  // Empty result = 200 { items: [], total: 0, page: 1, limit: 20 } — NOT 404.
+  //
+  // Design authority: governance/decisions/TEXQTIC-B2B-PUBLIC-PROJECTION-PRECONDITION-DESIGN-v1.md §D
+  // Slice: PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE
+
+  const b2bSuppliersQuerySchema = z.object({
+    segment: z.string().min(1).max(100).optional(),
+    geo: z.string().min(1).max(100).optional(),
+    page: z.coerce.number().int().min(1).max(10000).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+  });
+
+  fastify.get('/b2b/suppliers', async (request, reply) => {
+    const parseResult = b2bSuppliersQuerySchema.safeParse(request.query);
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { segment, geo, page, limit } = parseResult.data;
+    const result = await listPublicB2BSuppliers({ segment, geo, page, limit }, prisma);
+    return sendSuccess(reply, result);
   });
 };
 
