@@ -137,13 +137,13 @@ export function B2CBrowsePage({ onBack, onSignIn }: B2CBrowsePageProps) {
         {!loading && !error && (
           <div className="mt-14 rounded-[32px] border border-[#d9e5ea] bg-white px-8 py-10 text-center shadow-[0_18px_50px_rgba(7,26,47,0.06)]">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#2f8094]">
-              Ready to shop?
+              Ready to continue?
             </p>
             <h2 className="mt-3 text-xl font-semibold text-[#0a2036]">
-              Sign in to continue to checkout
+              Sign in to continue
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-500">
-              Cart persistence, checkout, and order continuity require an authenticated session.
+              Account continuity and full product features require an authenticated session.
             </p>
             <button
               type="button"
