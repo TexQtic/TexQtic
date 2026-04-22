@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-22 (B2B discovery implementation slice opening — human decision)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-22 (close of PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE — VERIFIED_COMPLETE; D-015/D-016 reconciliation)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,12 +11,15 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: ACTIVE_DELIVERY
-active_delivery_unit: PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE
-active_delivery_unit_design_authority: governance/decisions/TEXQTIC-PUBLIC-DOWNSTREAM-PAGE-ARCHITECTURE-AND-SCOPE-DECISION-v1.md
-active_delivery_unit_object_model_authority: governance/decisions/TEXQTIC-B2B-PUBLIC-DISCOVERY-AND-INQUIRY-MODEL-DECISION-v1.md
-active_delivery_unit_opening_basis: governance/decisions/TEXQTIC-B2B-PUBLIC-DISCOVERY-FINAL-READINESS-REASSESSMENT-v1.md
-active_delivery_unit_opening_type: EXPLICIT_HUMAN_DECISION
+product_delivery_priority: ZERO_OPEN_DECISION_CONTROL
+active_delivery_unit: NONE
+closed_delivery_unit: PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE
+closed_delivery_unit_status: VERIFIED_COMPLETE
+closed_delivery_unit_commit: 04dc375
+d015_reconciliation: COMPLETE
+d016_posture: ZERO_OPEN_DECISION_CONTROL_ACTIVE
+d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
+d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
 live_taxonomy_authority: governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md
 live_governance_authority: governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md
@@ -30,21 +33,24 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  HOLD-FOR-BOUNDARY-TIGHTENING remains in effect. One bounded product-delivery unit is now open.
-  Active unit: PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE.
-  Opened by explicit human decision (Paresh, 2026-04-22) after final readiness reassessment concluded
-  READY_FOR_HUMAN_OPENING_DECISION. This is not an autonomous governance opening.
-  Do not shape the next slice from Layer 0; use the design authority and object model authority as
-  implementation truth; use family artifacts only for lawful boundary/open/blocked scope.
-  Scope: add PUBLIC_B2B_DISCOVERY AppState to App.tsx; build the B2B public discovery page component;
-  wire homepage B2B CTA from temporary scroll behavior to AppState transition.
-  This unit does NOT include: schema changes, data changes, B2C work, broader marketplace depth,
-  authenticated workflow surfaces, or any work outside the three bounded deliverables above.
-  After this unit closes, return to explicit next-opening decision control per D-015/D-016 before any further opening.
+  PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE is VERIFIED_COMPLETE (commit 04dc375, 2026-04-22).
+  All three bounded deliverables confirmed: PUBLIC_B2B_DISCOVERY AppState in App.tsx;
+  B2BDiscovery.tsx page component; all homepage B2B CTAs upgraded from scroll to
+  setAppState('PUBLIC_B2B_DISCOVERY') transition.
+  No active product-delivery unit remains. D-016 ZERO_OPEN_DECISION_CONTROL is now in effect.
+  D-015 post-close authority reconciliation is complete.
+  D-013 carry-forward: SUCCESSOR_CHAIN_PRESERVED. D-020 artifact created at
+  governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md.
+  The next opening is a HUMAN DECISION. Governance OS must not infer or autonomously open any
+  successor. When the human is ready, use D-021 narrow revalidation from the D-020 artifact.
+  B2C lane is NOT READY — requires precondition slice first (see D-020 artifact and
+  TEXQTIC-B2C-PUBLIC-BROWSE-READINESS-ASSESSMENT-v1.md for detail).
+  HOLD-FOR-BOUNDARY-TIGHTENING remains in effect for all non-delivery governance posture.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
-  This file is the sole current Layer 0 guardrail pointer after the 2026-04-14 live-authority spine reconciliation and is not the primary selector/shaper inside a chosen family.
-  Reused-existing-user remains BOUNDED_DEFERRED_REMAINDER; White Label Co remains the sole same-hold residual under fixed post-verdict posture EXACT_EXCEPTION_STILL_REMAINS.
-  White Label Co REVIEW-UNKNOWN hold confirmed NON-BLOCKING for the current active delivery unit (see BLOCKED.md Section 4).
-  The active unit is B2B public discovery frontend implementation. It does not advance WL Co work and has no WL brand-surface, domain/routing, or tenancy-overlay intersection.
+  This file is the sole current Layer 0 guardrail pointer.
+  Reused-existing-user remains BOUNDED_DEFERRED_REMAINDER; White Label Co remains the sole same-hold
+  residual under fixed post-verdict posture EXACT_EXCEPTION_STILL_REMAINS.
+  WL Co REVIEW-UNKNOWN hold persists and is not resolved by the B2B unit closure.
+  No non-blocking confirmation for an active delivery unit is in effect (no active unit is open).
 ```

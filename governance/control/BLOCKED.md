@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (WL Co non-blocking confirmation updated for PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE)
+**Last Updated:** 2026-04-22 (close of PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE — VERIFIED_COMPLETE; D-016 decision control; Section 4 updated)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -39,4 +39,4 @@
 
 | Active Unit | Hold | Conflict Status | Basis |
 | --- | --- | --- | --- |
-| `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **NON-BLOCKING** | The WL Co hold governs whether WL Co work itself can advance without unsafe normalization into B2C, domain/routing/brand-surface, identity/tenancy, or tenant-back-office work. The active unit is B2B public discovery frontend implementation: adding `PUBLIC_B2B_DISCOVERY` AppState to `App.tsx`, building the B2B public discovery page component, and wiring the homepage B2B CTA. It does not advance WL Co work, does not touch WL brand surfaces, WL domain/routing, or WL-specific tenancy overlay. The B2B public discovery page is an org-type-B2B-only governed public surface orthogonal to the WL tenancy overlay concern. Hold remains `REVIEW-UNKNOWN` for WL Co work itself and is not resolved or dispositioned by this confirmation. |
+| `NONE` (no active unit) | White Label Co `REVIEW-UNKNOWN` | **N/A — no active unit** | `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22). D-016 decision control is now in effect. No active delivery unit is open. The WL Co hold `REVIEW-UNKNOWN` persists and is not resolved by the B2B unit closure. When the next unit is opened by human decision, a new non-blocking confirmation must be assessed for that specific unit. The WL Co hold remains non-blocking for B2B-orthogonal work and must be freshly assessed for any B2C or WL-intersecting work. |

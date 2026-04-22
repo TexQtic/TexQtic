@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2B discovery implementation slice opening — human decision)
+**Last Updated:** 2026-04-22 (close of PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE — VERIFIED_COMPLETE; D-015/D-016 reconciliation)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,18 +53,20 @@
 
 ## Operating Notes
 
-- Governing posture remains `HOLD-FOR-BOUNDARY-TIGHTENING`.
-- One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`.
-- Opening basis: explicit human decision by Paresh (2026-04-22) after final readiness reassessment
-  concluded `READY_FOR_HUMAN_OPENING_DECISION` (`TEXQTIC-B2B-PUBLIC-DISCOVERY-FINAL-READINESS-REASSESSMENT-v1.md`).
-- Primary design authority for the active unit: `governance/decisions/TEXQTIC-PUBLIC-DOWNSTREAM-PAGE-ARCHITECTURE-AND-SCOPE-DECISION-v1.md`.
-- Object model authority: `governance/decisions/TEXQTIC-B2B-PUBLIC-DISCOVERY-AND-INQUIRY-MODEL-DECISION-v1.md`.
-- Scope: add `PUBLIC_B2B_DISCOVERY` AppState to `App.tsx`; build the B2B public discovery page
-  component; wire the homepage B2B CTA from temporary scroll behavior to AppState transition.
-  Does NOT include B2C work, broader marketplace implementation, or any schema/data changes.
-- The previous active unit (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`) is closed;
-  its design authority (`TEXQTIC-B2B-PUBLIC-PROJECTION-PRECONDITION-DESIGN-v1.md`) remains locked
-  historical evidence only.
+- Governing posture: `HOLD-FOR-BOUNDARY-TIGHTENING` remains in effect.
+- `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
+  All three bounded deliverables confirmed: `PUBLIC_B2B_DISCOVERY` AppState in `App.tsx`; B2B
+  discovery page component (`components/Public/B2BDiscovery.tsx`); homepage B2B CTAs upgraded from
+  temporary scroll behavior to `setAppState('PUBLIC_B2B_DISCOVERY')` state transition.
+- **No active product-delivery unit is open. D-016 decision control is in effect.**
+  The next opening is a human decision. No unit may be opened without explicit human authorization.
+  Governance OS must not infer a successor from the closed unit.
+- D-015 post-close authority reconciliation: complete (2026-04-22).
+- D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
+  D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.
+- All prior units (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` and
+  `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`) are closed. Their design authorities remain
+  locked historical evidence only.
 - Planning-package recommendations outside the product-truth authority stack remain guidance and
   decision input only, not live authority.
 - Preserved aligned anchors, including the closed onboarding-family handoff chain, remain outside
