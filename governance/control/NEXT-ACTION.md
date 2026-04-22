@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-17 (repo-truth-first family-scoped delivery loop codification)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-22 (B2B projection precondition implementation slice opening)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,7 +11,9 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: NONE_OPEN
+product_delivery_priority: ACTIVE_DELIVERY
+active_delivery_unit: PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE
+active_delivery_unit_design_authority: governance/decisions/TEXQTIC-B2B-PUBLIC-PROJECTION-PRECONDITION-DESIGN-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
 live_taxonomy_authority: governance/control/TEXQTIC-OPENING-LAYER-TAXONOMY-TRUTH-BASELINE-2026-04-09.md
 live_governance_authority: governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md
@@ -25,14 +27,19 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  Preserve HOLD-FOR-BOUNDARY-TIGHTENING, the zero-open product-delivery posture, and the current blocker/hold register.
-  Treat NEXT-ACTION.md as the live Layer 0 guardrail pointer while the preserved opening-layer sequencing surface and preserved `-v1` / `-v2` stacks remain reconciliation input only.
-  If no family is yet manually chosen or otherwise lawfully fixed, preserve the current launch-readiness acceleration and blocked-open-family guardrail posture recorded by the live correction chain without using Layer 0 as the primary slice-shaping engine.
-  Once one family is manually chosen or otherwise lawfully fixed, do not shape the next slice from Layer 0; use one strict family-local packet with repo code/tests/runtime/contracts as implementation truth and family artifacts only for lawful boundary/open/blocked scope.
-  If that packet cannot prove one exact unconsumed slice, stop with one blocker/discriminator rather than synthesizing a replacement slice from Layer 0 or descriptive markdown.
-  After any packet-driven verified or closed unit, run the mandatory post-unit maintenance review before any further shaping or sequencing.
+  HOLD-FOR-BOUNDARY-TIGHTENING remains in effect. One bounded product-delivery unit is now open.
+  Active unit: PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE.
+  Family chosen and lawfully fixed by user direction (2026-04-22). Do not shape the next slice from Layer 0;
+  use the family-local design artifact as implementation truth and family artifacts only for lawful boundary/open/blocked scope.
+  Scope: schema posture migration (TenantPublicEligibilityPosture enum + public_eligibility_posture on tenants,
+  publication_posture on organizations, publication_posture on catalog_items), PublicB2BProjectionService,
+  GET /api/public/b2b/suppliers endpoint, unit tests, fresh readiness reassessment.
+  This unit does NOT include: PUBLIC_B2B_DISCOVERY AppState, frontend page component, any UI implementation, B2C work.
+  After this unit closes, return to explicit next-opening decision control per D-015/D-016 before any further opening.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer after the 2026-04-14 live-authority spine reconciliation and is not the primary selector/shaper inside a chosen family.
   Reused-existing-user remains BOUNDED_DEFERRED_REMAINDER; White Label Co remains the sole same-hold residual under fixed post-verdict posture EXACT_EXCEPTION_STILL_REMAINS.
+  White Label Co REVIEW-UNKNOWN hold confirmed NON-BLOCKING for the current active delivery unit (see BLOCKED.md Section 4).
+  The active unit is B2B projection precondition plumbing only. It does not advance WL Co work and has no WL surface intersection.
 ```

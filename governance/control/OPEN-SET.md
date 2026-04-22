@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-13 (TEXQTIC-TECS-OS-GOVERNANCE-AMENDMENT-SYNC-WORK-ITEM-001-2026-04-13)
+**Last Updated:** 2026-04-22 (B2B projection precondition implementation slice opening)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -54,7 +54,9 @@
 ## Operating Notes
 
 - Governing posture remains `HOLD-FOR-BOUNDARY-TIGHTENING`.
-- No product-facing `ACTIVE_DELIVERY` unit is currently open.
+- One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`.
+- Design authority for the active unit: `governance/decisions/TEXQTIC-B2B-PUBLIC-PROJECTION-PRECONDITION-DESIGN-v1.md`.
+- This unit is precondition/plumbing only: schema posture migration, projection service, public B2B endpoint, unit tests, readiness reassessment. It does NOT open the B2B page implementation or any B2C work.
 - Planning-package recommendations outside the product-truth authority stack remain guidance and
   decision input only, not live authority.
 - Preserved aligned anchors, including the closed onboarding-family handoff chain, remain outside
