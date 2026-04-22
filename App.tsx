@@ -5004,7 +5004,7 @@ const App: React.FC = () => {
                     <div className="mt-4 space-y-3 text-sm text-slate-300">
                       <a href="https://texqtic.com/company" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">About TexQtic</a>
                       <button type="button" onClick={() => scrollToPublicEntrySection('public-entry-trust')} className="block transition hover:text-white">Trust standards</button>
-                      <a href="https://texqtic.com/company" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">Contact</a>
+                      <a href="mailto:hello@texqtic.com" className="block transition hover:text-white">Contact</a>
                       <a href="https://texqtic.com/resources" target="_blank" rel="noopener noreferrer" className="block transition hover:text-white">Help</a>
                     </div>
                   </div>
@@ -5818,7 +5818,9 @@ const App: React.FC = () => {
       {appState !== 'AUTH' &&
         appState !== 'FORGOT_PASSWORD' &&
         appState !== 'VERIFY_EMAIL' &&
-        appState !== 'ONBOARDING' && (
+        appState !== 'ONBOARDING' &&
+        appState !== 'PUBLIC_ENTRY' &&
+        appState !== 'ONBOARDING_CONTINUATION' && (
           <div className="fixed bottom-6 right-6 z-[999] flex flex-col items-end gap-3">
             <div className="glass shadow-2xl rounded-2xl border border-slate-200 p-2 flex gap-2">
               {canAccessControlPlane && !impersonation.isAdmin && (
