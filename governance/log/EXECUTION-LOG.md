@@ -36,6 +36,35 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### STALE-TOKEN-FALLBACK-REMEDIATION-001 — 2026-04-22
+Type: IMPLEMENTATION + VERIFICATION / DEFECT FIX
+Status: CLOSED
+Commit: f108f0e
+Title: Restore neutral public entry after stale stored-token rejection
+Summary: Implemented and production-verified a bounded fix for the condition where stale or
+  invalid stored tenant or admin tokens left the app bootstrap in AUTH state after clearAuth(),
+  trapping users in auth shells rather than returning to the neutral public entry surface. Fix
+  adds setAppState('PUBLIC_ENTRY') to both the CONTROL_PLANE invalid-token path (guarded by
+  hadStoredAdminToken) and the TENANT restore_failed path (via targetState option) in App.tsx.
+  Production-verified for four safely testable matrix cells — clean anonymous, realm-only
+  residue, invalid tenant token, invalid admin token — all confirmed PASS; valid tenant restore
+  and provisioning-pending remain code-path-inferred only and are not overstated as
+  production-verified in this pass (real credentials required to test safely in production).
+Layer Impact: Layer 3 — EXECUTION-LOG.md appended (this entry); Layer 0 — no change required
+  (posture already HOLD-FOR-BOUNDARY-TIGHTENING, no open governed delivery carried for this
+  defect line)
+Notes: Production verification scope is accurately bounded: four matrix cells are runtime-confirmed
+  PASS on https://app.texqtic.com/ with Vercel deployment last-modified 2026-04-22 correlating
+  with the f108f0e push. Valid-tenant-restore and provisioning-pending are code-path-guaranteed
+  not to regress (provisioning_pending path calls failClosedTenantBootstrap without targetState,
+  defaulting to AUTH as before; handleAuthSuccess inner closure is unchanged) but were not
+  directly exercised in production in this pass. No formal TECS product-delivery unit was opened
+  for this fix. No new governance unit, architectural decision, or product-delivery opening is
+  implied by this closure. LAYER 0 CONSISTENCY: VERIFIED.
+Refs: App.tsx · services/apiClient.ts · governance/log/EXECUTION-LOG.md
+
+---
+
 ### GOV-CLOSE-TENANT-CONTEXT-STATE-RESET-INVESTIGATION-AND-FIX-TRACK — 2026-03-31
 
 Type: GOVERNANCE / CLOSE
