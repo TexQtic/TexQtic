@@ -2685,6 +2685,7 @@ const App: React.FC = () => {
     })();
 
     if (!identity) {
+      const hadStoredAdminToken = Boolean(localStorage.getItem('texqtic_admin_token'));
       clearAuth();
       clearPersistedImpersonationSession();
       setImpersonation(EMPTY_IMPERSONATION_STATE);
@@ -2694,6 +2695,9 @@ const App: React.FC = () => {
       setSelectedTenant(null);
       setAdminView('TENANTS');
       setAuthRealm('CONTROL_PLANE');
+      if (hadStoredAdminToken) {
+        setAppState('PUBLIC_ENTRY');
+      }
       return;
     }
 
@@ -2820,7 +2824,7 @@ const App: React.FC = () => {
       const failClosedTenantBootstrap = (
         reason: string,
         details: RehydrationTracePayload = {},
-        options?: { blockedMessage?: string | null }
+        options?: { blockedMessage?: string | null; targetState?: AppState }
       ) => {
         appendRehydrationTrace('tenantRestore:fail_closed', {
           reason,
@@ -2833,7 +2837,7 @@ const App: React.FC = () => {
         setStoredAuthRealm('TENANT');
         setAuthRealm('TENANT');
         setTenantBootstrapBlockedMessage(options?.blockedMessage ?? null);
-        setAppState('AUTH');
+        setAppState(options?.targetState ?? 'AUTH');
       };
 
       try {
@@ -2902,6 +2906,7 @@ const App: React.FC = () => {
             err instanceof APIError && err.status === 401
               ? null
               : 'Tenant workspace identity could not be confirmed. Please sign in again.',
+          targetState: 'PUBLIC_ENTRY',
         });
       }
     };
