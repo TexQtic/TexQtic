@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2C precondition and data posture governance reconciliation)
+**Last Updated:** 2026-04-22 (B2C browse implementation slice opening — human decision)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -54,6 +54,19 @@
 ## Operating Notes
 
 - Governing posture: `HOLD-FOR-BOUNDARY-TIGHTENING` remains in effect.
+- One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`.
+- Opening basis: explicit human decision by Paresh (2026-04-22) after two mandatory pre-opening gates:
+  (1) final readiness reassessment concluded `READY_FOR_HUMAN_OPENING_DECISION`
+  (`TEXQTIC-B2C-PUBLIC-BROWSE-FINAL-READINESS-REASSESSMENT-v1.md`, commit `3ad5417`);
+  (2) WL Co slice-3 compatibility reassessment concluded `WL_CO_NON_BLOCKING_CONFIRMED_FOR_B2C_SLICE3`
+  (`TEXQTIC-WL-CO-B2C-SLICE3-COMPATIBILITY-REASSESSMENT-v1.md`, commit `1f01a84`).
+- Primary design authority for the active unit: `governance/decisions/TEXQTIC-PUBLIC-DOWNSTREAM-PAGE-ARCHITECTURE-AND-SCOPE-DECISION-v1.md`.
+- Scope: add `PUBLIC_B2C_BROWSE` AppState to `App.tsx`; build `components/Public/B2CBrowsePage.tsx`;
+  add render case; upgrade B2C CTAs from scroll to `setAppState('PUBLIC_B2C_BROWSE')` state transition.
+  Use the already-live `GET /api/public/b2c/products` endpoint. Does NOT include schema changes, data
+  changes, WL Co seam advancement, backend route changes, or work outside the four bounded deliverables.
+- Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
+  `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
   All three bounded deliverables confirmed: `PUBLIC_B2B_DISCOVERY` AppState in `App.tsx`; B2B
   discovery page component (`components/Public/B2BDiscovery.tsx`); homepage B2B CTAs upgraded from
@@ -66,16 +79,11 @@
   org `publication_posture=B2C_PUBLIC`, all three catalog items `publicationPosture=B2C_PUBLIC`.
   `GET /api/public/b2c/products` confirmed returning one truthful non-placeholder B2C result (HTTP 200).
   Image URLs preserved (zero drift). No WL-parented tenants touched.
-- D-016 posture: **ZERO_OPEN_DECISION_CONTROL** — zero active product-delivery units. Next opening is a human decision.
-  Next likely candidate (NOT open): `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` — fresh B2C readiness
-  reassessment required per D-020 §4 before the human may consider `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`.
-  Slice 3 (`PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`) also requires fresh WL Co reassessment per WL Co
-  confirmation §9.2 (materially higher WL intersection risk; brand-surface and domain/routing domains apply).
-  No frontend/AppState/B2C page work has been opened.
+- D-016 posture: **INACTIVE** — one active product-delivery unit open by explicit human decision.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
   D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.
-- All prior units (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
+- All prior product-delivery units (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
   `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`, `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
   and `B2C_PUBLIC_DATA_POSTURE_ASSIGNMENT_SLICE`) are closed. Their design authorities remain
   locked historical evidence only.
