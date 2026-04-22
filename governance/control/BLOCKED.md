@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (close of PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE — VERIFIED_COMPLETE; D-016 decision control; Section 4 updated)
+**Last Updated:** 2026-04-22 (B2C projection precondition implementation slice opening — WL Co non-blocking confirmed)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -39,4 +39,4 @@
 
 | Active Unit | Hold | Conflict Status | Basis |
 | --- | --- | --- | --- |
-| `NONE` (no active unit) | White Label Co `REVIEW-UNKNOWN` | **N/A — no active unit** | `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22). D-016 decision control is now in effect. No active delivery unit is open. The WL Co hold `REVIEW-UNKNOWN` persists and is not resolved by the B2B unit closure. When the next unit is opened by human decision, a new non-blocking confirmation must be assessed for that specific unit. The WL Co hold remains non-blocking for B2B-orthogonal work and must be freshly assessed for any B2C or WL-intersecting work. |
+| `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **NON-BLOCKING** | WL Co non-blocking confirmed for this exact candidate. Confirmation basis: `governance/decisions/TEXQTIC-WL-CO-B2C-PRECONDITION-COMPATIBILITY-CONFIRMATION-v1.md` (2026-04-22). All six WL Co risk domains (brand-surface, domain/routing, identity/tenancy, admin overlay, canon expansion, unsafe B2C normalization) test as NOT APPLICABLE for the backend-only candidate scope. The WL Co hold itself remains `REVIEW-UNKNOWN` and is not resolved or cleared by this confirmation. Non-blocking classification is scope-bounded to this slice only. Slices 2 and 3 require fresh WL Co reassessment at their respective openings. |

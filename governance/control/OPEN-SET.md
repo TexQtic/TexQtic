@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (close of PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE — VERIFIED_COMPLETE; D-015/D-016 reconciliation)
+**Last Updated:** 2026-04-22 (B2C projection precondition implementation slice opening — human decision)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -58,9 +58,12 @@
   All three bounded deliverables confirmed: `PUBLIC_B2B_DISCOVERY` AppState in `App.tsx`; B2B
   discovery page component (`components/Public/B2BDiscovery.tsx`); homepage B2B CTAs upgraded from
   temporary scroll behavior to `setAppState('PUBLIC_B2B_DISCOVERY')` state transition.
-- **No active product-delivery unit is open. D-016 decision control is in effect.**
-  The next opening is a human decision. No unit may be opened without explicit human authorization.
-  Governance OS must not infer a successor from the closed unit.
+- **One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`.**
+  Opening basis: explicit human decision (2026-04-22). D-021: `CONFIRMED_SUCCESSOR_CANDIDATE`.
+  WL Co: `WL_CO_NON_BLOCKING_CONFIRMED_FOR_B2C_PRECONDITION_SLICE`.
+  Scope: create `server/src/services/publicB2CProjection.service.ts`, extend `server/src/routes/public.ts`
+  B2C endpoint, create `server/tests/publicB2CProjection.test.ts`.
+  Frontend/AppState/page work, data posture assignment, and B2C page implementation are OUT-OF-SCOPE.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
   D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.
