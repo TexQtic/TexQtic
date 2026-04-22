@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2C browse implementation slice opening — human decision)
+**Last Updated:** 2026-04-22 (B2C browse governance close — VERIFIED_COMPLETE)
 
 > Read this file after `NEXT-ACTION.md`. It records only current blockers, holds, and governance
 > exceptions relevant to live Layer 0 posture. It does not originate ordinary product delivery
@@ -35,16 +35,15 @@
 - The reused-existing-user bucket remains `BOUNDED-DEFERRED-REMAINDER`, but it is not reopened,
   re-sequenced, or promoted into a reset blocker by this pass.
 
-## Section 4 — Non-Blocking Hold Confirmation for Active Delivery Unit
+## Section 4 — Non-Blocking Hold Confirmation — Historical Record (unit closed)
 
-| Active Unit | Hold | Conflict Status | Basis |
+The following non-blocking confirmation was produced for `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`
+and was slice-bounded only. It does NOT carry forward to any future slice.
+
+| Closed Unit | Hold | Closure Status | Basis |
 | --- | --- | --- | --- |
-| `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **NON-BLOCKING** | All six WL Co risk domains (brand-surface, domain/routing, identity/tenancy, admin overlay, canon expansion, unsafe B2C normalization) test as NOT APPLICABLE for slice-3 scope. Confirmed by formal fresh reassessment `TEXQTIC-WL-CO-B2C-SLICE3-COMPATIBILITY-REASSESSMENT-v1.md` (commit `1f01a84`). `B2CBrowsePage.tsx` is a platform-owned public browse surface; WL routing is under `WL_ADMIN` (App.tsx line 5294); B2C public browse is explicitly outside WL scope per §6.2 of WHITE-LABEL-OVERLAY-NORMALIZATION. Hold remains `REVIEW-UNKNOWN` for WL Co work itself and is not resolved or dispositioned by this confirmation. Non-blocking classification is scope-bounded to this slice only. |
+| `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE` | White Label Co `REVIEW-UNKNOWN` | **CLOSED — VERIFIED_COMPLETE** | Non-blocking confirmation was scope-bounded to this slice only. All six WL Co risk domains (brand-surface, domain/routing, identity/tenancy, admin overlay, canon expansion, unsafe B2C normalization) tested as NOT APPLICABLE. Confirmed by `TEXQTIC-WL-CO-B2C-SLICE3-COMPATIBILITY-REASSESSMENT-v1.md` (commit `1f01a84`). Hold remains `REVIEW-UNKNOWN` for WL Co work itself; not resolved by this confirmation. |
 
-Non-blocking classification validity conditions: the eight strict boundary conditions in
-`TEXQTIC-WL-CO-B2C-SLICE3-COMPATIBILITY-REASSESSMENT-v1.md` §7 must all remain satisfied during
-implementation. If any is violated, a fresh reassessment is required before continuing.
-
-Later slices in the B2C / WL family may still require fresh WL Co reassessment if they materially
-intersect WL brand-surface, domain/routing, identity/tenancy, admin overlay, or canon-expansion
-domains. Non-blocking status for the current slice does not carry forward.
+Carry-forward truth: WL Co hold remains `REVIEW-UNKNOWN` (unresolved generally). Any future slice
+intersecting WL brand-surface, domain/routing, identity/tenancy, admin overlay, or canon-expansion
+domains requires a fresh WL Co reassessment before that slice may proceed.

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-22 (B2C browse implementation slice opening — human decision)
+**Last Updated:** 2026-04-22 (B2C browse governance close — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -54,17 +54,9 @@
 ## Operating Notes
 
 - Governing posture: `HOLD-FOR-BOUNDARY-TIGHTENING` remains in effect.
-- One product-facing `ACTIVE_DELIVERY` unit is now open: `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`.
-- Opening basis: explicit human decision by Paresh (2026-04-22) after two mandatory pre-opening gates:
-  (1) final readiness reassessment concluded `READY_FOR_HUMAN_OPENING_DECISION`
-  (`TEXQTIC-B2C-PUBLIC-BROWSE-FINAL-READINESS-REASSESSMENT-v1.md`, commit `3ad5417`);
-  (2) WL Co slice-3 compatibility reassessment concluded `WL_CO_NON_BLOCKING_CONFIRMED_FOR_B2C_SLICE3`
-  (`TEXQTIC-WL-CO-B2C-SLICE3-COMPATIBILITY-REASSESSMENT-v1.md`, commit `1f01a84`).
-- Primary design authority for the active unit: `governance/decisions/TEXQTIC-PUBLIC-DOWNSTREAM-PAGE-ARCHITECTURE-AND-SCOPE-DECISION-v1.md`.
-- Scope: add `PUBLIC_B2C_BROWSE` AppState to `App.tsx`; build `components/Public/B2CBrowsePage.tsx`;
-  add render case; upgrade B2C CTAs from scroll to `setAppState('PUBLIC_B2C_BROWSE')` state transition.
-  Use the already-live `GET /api/public/b2c/products` endpoint. Does NOT include schema changes, data
-  changes, WL Co seam advancement, backend route changes, or work outside the four bounded deliverables.
+- No active product-delivery unit. Layer 0 has returned to `ZERO_OPEN_DECISION_CONTROL` per D-016.
+  The next opening is a human decision; no unit may be inferred from the closed unit, family
+  proximity, or stale carry-forward wording.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
@@ -79,14 +71,21 @@
   org `publication_posture=B2C_PUBLIC`, all three catalog items `publicationPosture=B2C_PUBLIC`.
   `GET /api/public/b2c/products` confirmed returning one truthful non-placeholder B2C result (HTTP 200).
   Image URLs preserved (zero drift). No WL-parented tenants touched.
-- D-016 posture: **INACTIVE** — one active product-delivery unit open by explicit human decision.
+- `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commits `34a6f84` + `d78fa79`, 2026-04-22).
+  All four bounded deliverables confirmed: `PUBLIC_B2C_BROWSE` AppState in `App.tsx`; B2C browse page
+  component (`components/Public/B2CBrowsePage.tsx`); `case 'PUBLIC_B2C_BROWSE'` render case in App.tsx;
+  all B2C CTAs upgraded from `selectNeutralPublicEntryPath('B2C')` scroll to
+  `setAppState('PUBLIC_B2C_BROWSE')` state transition. Closure basis: production verification
+  `VERIFIED_PRODUCTION_PASS` at `https://app.texqtic.com/`. In-scope production wording fix applied
+  in `d78fa79`. Runtime, schema, and data unchanged throughout.
+- D-016 posture: **ACTIVE** — zero active product-delivery units; decision control required per D-016.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
   D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.
 - All prior product-delivery units (`PUBLIC_B2B_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
   `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE`, `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE`,
-  and `B2C_PUBLIC_DATA_POSTURE_ASSIGNMENT_SLICE`) are closed. Their design authorities remain
-  locked historical evidence only.
+  `B2C_PUBLIC_DATA_POSTURE_ASSIGNMENT_SLICE`, and `PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE`) are closed.
+  Their design authorities remain locked historical evidence only.
 - Planning-package recommendations outside the product-truth authority stack remain guidance and
   decision input only, not live authority.
 - Preserved aligned anchors, including the closed onboarding-family handoff chain, remain outside
