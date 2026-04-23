@@ -24,7 +24,6 @@ interface AuthFormProps {
 
 export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
   const isAdminRealm = realm === 'CONTROL_PLANE';
-  const accentColor = isAdminRealm ? 'rose-600' : 'indigo-600';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -118,13 +117,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
   const selectedTenant = tenantOptions?.find(t => t.tenantId === selectedTenantId) ?? null;
 
   return (
-    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className={`h-2 bg-${accentColor}`}></div>
+    <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_18px_50px_rgba(7,26,47,0.06)] border border-[#d9e5ea] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className={`h-2 ${isAdminRealm ? 'bg-rose-600' : 'bg-[#071a2f]'}`}></div>
       <div className="p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="text-3xl font-black tracking-tighter">
-            {isAdminRealm ? '🛡️ TexQtic Admin' : '🚀 TexQtic'}
-          </div>
+          <img src="/brand/texqtic-logo.png" alt="TexQtic" className="h-8 w-auto mx-auto" loading="eager" />
           <p className="text-slate-500 text-sm">
             Sign in to your {isAdminRealm ? 'admin' : 'account'}
           </p>
@@ -147,7 +144,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
             <input
               id="email"
               type="email"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              className="w-full px-4 py-3 bg-[#f5fafb] border border-[#d9e5ea] rounded-xl focus:ring-2 focus:ring-[#2f8094] outline-none transition"
               placeholder="name@company.com"
               value={email}
               onChange={e => {
@@ -185,7 +182,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
               id="password"
               type="password"
               title="password"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition"
+              className="w-full px-4 py-3 bg-[#f5fafb] border border-[#d9e5ea] rounded-xl focus:ring-2 focus:ring-[#2f8094] outline-none transition"
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -235,7 +232,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ realm, onSuccess }) => {
             type="button"
             onClick={doLogin}
             disabled={loading}
-            className={`w-full py-4 bg-${accentColor} text-white rounded-xl font-bold shadow-lg shadow-indigo-900/10 hover:opacity-90 transition active:scale-95 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full py-4 ${isAdminRealm ? 'bg-rose-600' : 'bg-[#071a2f]'} text-white rounded-full font-bold shadow-lg shadow-[rgba(7,26,47,0.10)] hover:opacity-90 transition active:scale-95 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading ? 'AUTHENTICATING...' : 'Secure Login'}
           </button>

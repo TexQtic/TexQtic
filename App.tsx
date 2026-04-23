@@ -5162,9 +5162,10 @@ const App: React.FC = () => {
 
         if (tenantBootstrapAuthView === 'TENANT_RESOLVING') {
           return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
-              <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white px-8 py-12 text-center shadow-sm">
-                <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+            <div className="min-h-screen bg-[#f3f8fb] flex flex-col items-center justify-center p-6 font-sans">
+              <img src="/brand/texqtic-logo.png" alt="TexQtic" className="mb-8 h-10 w-auto" loading="eager" />
+              <div className="w-full max-w-md rounded-3xl border border-[#d9e5ea] bg-white px-8 py-12 text-center shadow-sm">
+                <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#2f8094]" />
                 <h1 className="text-lg font-semibold text-slate-900">Confirming workspace access</h1>
                 <p className="mt-3 text-sm text-slate-500">
                   TexQtic is confirming your tenant session before opening a workspace shell.
@@ -5178,7 +5179,8 @@ const App: React.FC = () => {
           const blockedMessage = tenantProvisionError ?? tenantBootstrapBlockedMessage;
 
           return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+            <div className="min-h-screen bg-[#f3f8fb] flex flex-col items-center justify-center p-6 font-sans">
+              <img src="/brand/texqtic-logo.png" alt="TexQtic" className="mb-8 h-10 w-auto" loading="eager" />
               <div className="w-full max-w-md rounded-3xl border border-amber-300 bg-white px-8 py-12 text-center shadow-sm space-y-4">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-2xl text-amber-700">
                   !
@@ -5190,7 +5192,7 @@ const App: React.FC = () => {
                     setTenantBootstrapBlockedMessage(null);
                     setTenantProvisionError(null);
                   }}
-                  className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-slate-800 transition"
+                  className="w-full py-3 bg-[#071a2f] text-white rounded-full font-semibold text-sm hover:bg-[#0d2743] transition"
                 >
                   Return to Sign In
                 </button>
@@ -5200,7 +5202,7 @@ const App: React.FC = () => {
         }
 
         return (
-          <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+          <div className="min-h-screen bg-[#f3f8fb] flex flex-col items-center justify-center p-6 font-sans">
             <div className="absolute top-6 flex gap-4">
               <button
                 onClick={() => {
@@ -5208,7 +5210,7 @@ const App: React.FC = () => {
                   setTenantProvisionError(null);
                   setAuthRealm('TENANT');
                 }}
-                className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border transition-all ${authRealm === 'TENANT' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border transition-all ${authRealm === 'TENANT' ? 'bg-[#071a2f] border-[#071a2f] text-white' : 'bg-white border-slate-200 text-slate-500'}`}
               >
                 Tenant Access
               </button>
@@ -5223,10 +5225,11 @@ const App: React.FC = () => {
                 Staff Control Plane
               </button>
             </div>
+            <img src="/brand/texqtic-logo.png" alt="TexQtic" className="mb-8 h-10 w-auto" loading="eager" />
             <AuthForm realm={authRealm} onSuccess={handleAuthSuccess} />
             <button
               onClick={() => setAppState('FORGOT_PASSWORD')}
-              className="mt-4 text-[10px] font-bold uppercase text-slate-400 hover:text-indigo-600 tracking-widest"
+              className="mt-4 text-[10px] font-bold uppercase text-slate-400 hover:text-[#2f8094] tracking-widest"
             >
               Forgot Password?
             </button>
