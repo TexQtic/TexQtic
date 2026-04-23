@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-06-15 (TECS-B2B-BUYER-CATALOG-BROWSE-001 — in delivery)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-BROWSE-001 — verification complete)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -13,7 +13,7 @@ mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
 product_delivery_priority: ACTIVE_DELIVERY
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001
-active_delivery_unit_status: IN_DELIVERY
+active_delivery_unit_status: VERIFIED_WITH_NON-BLOCKING_NOTES
 active_delivery_unit_authorized_by: governance/decisions/PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md
 last_closed_unit: PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE
 last_closed_unit_status: VERIFIED_COMPLETE
@@ -39,12 +39,14 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-BROWSE-001 is the active delivery unit.
-  Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md (committed 4774a5f).
-  Investigation doc committed ea60f7c. Backend route committed in prior session.
-  OpenAPI contract, runtime manifest, service, App.tsx surface, and artifact now implemented.
-  Pending: static gate verification (typecheck + lint) and commit.
-  After commit: unit transitions to PENDING_VERIFICATION.
+  TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES.
+  Implementation commits: 99d1b1d (7-file implementation) + 61cb3db (TS2322 production hotfix).
+  Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
+  All static gates passed. All 24 verification checkpoints passed by code inspection.
+  Runtime API checks pending production verification (server not running locally).
+  Non-blocking notes: NB-001 (null/undefined bridge), NB-002 (stale note corrected here),
+    NB-003 (buyerCatalog capability pre-existing on storefront modes), NB-004 (price:0 adapter).
+  Unit closure: Layer 0 returns to ZERO_OPEN posture. Next delivery requires new product decision.
   WL Co hold remains REVIEW-UNKNOWN. D-020 successor chain valid pending D-021 revalidation.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.

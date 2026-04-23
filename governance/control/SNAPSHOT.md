@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-15 (SUBSCRIPTION-SLICE-3C-CLOSEOUT-2026-04-15)
+**Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,8 +10,8 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-15
-snapshot_unit: SUBSCRIPTION-SLICE-3C-CLOSEOUT-2026-04-15
+snapshot_date: 2026-05-08
+snapshot_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -49,14 +49,20 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
-  Subscription slice 3C — backend runtime plan canonicalization and typing tightening closed from implementation commit 35bc83f9bae5b4941fe964a8a84d9b6d198202f5 with verification verdict VERIFIED_CLEAN.
-  Implementation scope remained bounded to server/src/lib/database-context.ts and server/src/routes/tenant.ts only.
-  server/src/lib/database-context.ts now canonicalizes text-backed organizations.plan through canonicalizeTenantPlan(plan: string): TenantPlan and tightens OrganizationIdentity.plan from string to TenantPlan.
-  server/src/routes/tenant.ts tightens TenantSessionIdentity.plan from string to TenantPlan and routes the immediate tenant runtime consumer through the same canonicalization path.
-  Storage truth remained preserved: organizations.plan remains text-backed in persistence and canonicalization occurs at the runtime/helper seam rather than by pretending persistence is already a native enum.
-  No provisioning, auth expansion, contracts, OpenAPI, frontend service, or UI files were modified, and no broader entitlement meaning, AI-budget behavior, or operator plan-assignment behavior was reopened.
-  Validation and verification passed: pnpm -C server exec eslint src/routes/tenant.ts src/lib/database-context.ts, pnpm -C server exec tsc --noEmit, git diff --check, verdict VERIFIED_CLEAN.
-  No broader subscription opening is implied; Layer 0 returns to zero-open posture.
+  TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 — authenticated B2B buyer catalog browse.
+  Verification verdict: VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
+  Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
+  Implementation commits: 99d1b1d (7-file implementation) + 61cb3db (TS2322 production hotfix).
+  All static gates passed (server typecheck: 6 pre-existing errors only; frontend tsc: 0 errors;
+  lint: 0 errors, 164 pre-existing warnings). Runtime API checks pending production verification.
+  Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
+  Backend: GET /api/tenant/catalog/supplier/:supplierOrgId/items with dual eligibility gate,
+    texqtic_rfq_read cross-tenant read, cursor pagination, no price in response.
+  Frontend: buyer_catalog route case in App.tsx, BuyerCatalog state/handler, RFQ continuity preserved.
+  Runtime descriptor: buyer_catalog route in b2b_workspace catalog_browse group, buyerCatalog=true capability.
+  Schema unchanged. No new dependencies. No out-of-scope files modified.
+  Phase 2 items (supplier selection UX, per-item posture filtering, catalog search) explicitly deferred.
+  Layer 0 returns to zero-open posture.
 ```
 
 ## Current Posture
