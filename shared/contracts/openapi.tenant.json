@@ -1090,6 +1090,94 @@
         }
       }
     },
+    "/api/tenant/catalog/supplier/{supplierOrgId}/items": {
+      "get": {
+        "summary": "Browse supplier catalog items (authenticated buyer)",
+        "description": "Phase 1 authenticated B2B buyer catalog browse. Returns active catalog items for an eligible supplier org. Gate 1: org publication_posture IN ('B2B_PUBLIC','BOTH') AND publicEligibilityPosture='PUBLICATION_ELIGIBLE'. Gate 2: item active=true. Response intentionally excludes price. Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001 (TECS-B2B-BUYER-CATALOG-BROWSE-001).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "supplierOrgId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Supplier organization UUID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Results per page (cursor-based pagination)"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Pagination cursor (catalog item ID from previous page)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier catalog items retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "name": { "type": "string" },
+                          "sku": { "type": ["string", "null"] },
+                          "description": { "type": ["string", "null"] },
+                          "moq": { "type": "integer", "minimum": 1 },
+                          "imageUrl": { "type": ["string", "null"] }
+                        },
+                        "required": ["id", "name", "moq"]
+                      }
+                    },
+                    "count": { "type": "integer" },
+                    "nextCursor": { "type": ["string", "null"] }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Supplier catalog not found (org absent or not publication-eligible; gate detail not exposed)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (invalid supplierOrgId format or invalid query params)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/aggregator/discovery": {
       "get": {
         "summary": "List bounded Aggregator discovery entries",

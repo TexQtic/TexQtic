@@ -23,6 +23,7 @@ import {
 import {
   canonicalizeTenantPlan,
   withDbContext,
+  withOrgAdminContext,
   type DatabaseContext,
   getOrganizationIdentity,
   OrganizationNotFoundError,
@@ -1486,6 +1487,118 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       return sendSuccess(reply, { id, deleted: true });
+    }
+  );
+
+  /**
+   * GET /api/tenant/catalog/supplier/:supplierOrgId/items
+   * Browse a supplier's public-eligible catalog items (authenticated B2B buyer, Phase 1)
+   *
+   * TECS-B2B-BUYER-CATALOG-BROWSE-001 — Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001
+   *
+   * Gate 1 — Org eligibility (consistent 404 for any non-eligible case; no gate detail exposed):
+   *   organizations.publication_posture IN ('B2B_PUBLIC', 'BOTH')
+   *   tenant.publicEligibilityPosture = 'PUBLICATION_ELIGIBLE'
+   * Gate 2 — Item visibility (Phase 1): active = true, tenantId = supplierOrgId
+   *
+   * Cross-tenant read uses prisma.$transaction with SET LOCAL ROLE texqtic_rfq_read.
+   * Org eligibility check uses withOrgAdminContext (admin realm required for organizations RLS).
+   *
+   * Response fields (Phase 1): id, name, sku, description, moq, imageUrl — NO price.
+   */
+  fastify.get(
+    '/tenant/catalog/supplier/:supplierOrgId/items',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
+
+      const { supplierOrgId } = request.params as { supplierOrgId: string };
+
+      const paramsSchema = z.object({
+        supplierOrgId: z.string().uuid(),
+      });
+      const querySchema = z.object({
+        limit: z.coerce.number().int().min(1).max(100).default(20),
+        cursor: z.string().uuid().optional(),
+      });
+
+      const paramsResult = paramsSchema.safeParse({ supplierOrgId });
+      if (!paramsResult.success) {
+        return sendValidationError(reply, paramsResult.error.errors);
+      }
+
+      const queryResult = querySchema.safeParse(request.query);
+      if (!queryResult.success) {
+        return sendValidationError(reply, queryResult.error.errors);
+      }
+
+      const { limit, cursor } = queryResult.data;
+
+      // Gate 1: Org eligibility (admin context required — organizations RLS requires admin realm).
+      // Checks both organizations.publication_posture and tenant.publicEligibilityPosture.
+      // Returns false (→ 404) if the supplier org is absent or fails either eligibility condition.
+      const isEligible = await withOrgAdminContext(prisma, async tx => {
+        const [org, tenant] = await Promise.all([
+          tx.organizations.findUnique({
+            where: { id: supplierOrgId },
+            select: { id: true, publication_posture: true },
+          }),
+          tx.tenant.findUnique({
+            where: { id: supplierOrgId },
+            select: { id: true, publicEligibilityPosture: true },
+          }),
+        ]);
+
+        if (!org || !tenant) {
+          return false;
+        }
+
+        const postureEligible =
+          org.publication_posture === 'B2B_PUBLIC' || org.publication_posture === 'BOTH';
+        const tenantEligible = (tenant.publicEligibilityPosture as string) === 'PUBLICATION_ELIGIBLE';
+        return postureEligible && tenantEligible;
+      });
+
+      if (!isEligible) {
+        return sendNotFound(reply, 'Supplier catalog not found');
+      }
+
+      // Gate 2: Read catalog items cross-tenant (texqtic_rfq_read role — proven cross-tenant read pattern).
+      const items = await prisma.$transaction(async tx => {
+        await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+        return tx.catalogItem.findMany({
+          where: {
+            tenantId: supplierOrgId,
+            active: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            description: true,
+            moq: true,
+            imageUrl: true,
+          },
+          orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+          take: limit + 1,
+          ...(cursor && {
+            cursor: { id: cursor },
+            skip: 1,
+          }),
+        });
+      });
+
+      const hasMore = items.length > limit;
+      const resultItems = hasMore ? items.slice(0, limit) : items;
+      const nextCursor = hasMore ? (resultItems[resultItems.length - 1]?.id ?? null) : null;
+
+      return sendSuccess(reply, {
+        items: resultItems,
+        count: resultItems.length,
+        nextCursor,
+      });
     }
   );
 

@@ -148,7 +148,8 @@ export type RuntimeLocalRouteKey =
   | 'maker_checker'
   | 'logs'
   | 'rbac'
-  | 'events';
+  | 'events'
+  | 'buyer_catalog';
 
 export interface RuntimeLocalRouteStateBinding {
   expView?: string;
@@ -509,6 +510,7 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     routeGroups: [
       defineRuntimeRouteGroup('catalog_browse', [
         defineRuntimeRoute('catalog', 'Catalog', 'HOME', { expView: 'HOME' }, { defaultForGroup: true }),
+        defineRuntimeRoute('buyer_catalog', 'Browse Supplier Catalog', 'HOME', { expView: 'HOME' }, {}),
       ]),
       WORKSPACE_ORDERS_ROUTE_GROUP,
       RFQ_ROUTE_GROUP,
@@ -784,6 +786,7 @@ const resolveCapabilities = (
       capabilities.surface.workspace = true;
       capabilities.feature.rfq = true;
       capabilities.feature.sellerCatalog = true;
+      capabilities.feature.buyerCatalog = true;
       break;
     case 'B2C_STOREFRONT':
       capabilities.surface.storefront = true;

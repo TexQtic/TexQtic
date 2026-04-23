@@ -293,3 +293,55 @@ export async function submitSupplierRfqResponse(
 ): Promise<SubmitSupplierRfqResponseResult> {
   return tenantPost<SubmitSupplierRfqResponseResult>(`/api/tenant/rfqs/inbox/${rfqId}/respond`, payload);
 }
+
+// ==================== BUYER CATALOG BROWSE (TECS-B2B-BUYER-CATALOG-BROWSE-001) ====================
+
+/**
+ * A single catalog item as visible to an authenticated B2B buyer.
+ * Phase 1: id, name, sku, description, moq, imageUrl only — NO price.
+ */
+export interface BuyerCatalogItem {
+  id: string;
+  name: string;
+  sku: string | null;
+  description: string | null;
+  moq: number;
+  imageUrl: string | null;
+}
+
+export interface BuyerCatalogResponse {
+  items: BuyerCatalogItem[];
+  count: number;
+  nextCursor: string | null;
+}
+
+export interface BuyerCatalogQueryParams {
+  limit?: number;
+  cursor?: string;
+}
+
+/**
+ * Fetch active catalog items for a given supplier org (authenticated B2B buyer browse).
+ * The supplier org must be publication-eligible (Gate 1 enforced server-side).
+ * Price is intentionally absent from Phase 1 response.
+ */
+export async function getBuyerCatalogItems(
+  supplierOrgId: string,
+  params: BuyerCatalogQueryParams = {}
+): Promise<BuyerCatalogResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params.limit) {
+    queryParams.append('limit', params.limit.toString());
+  }
+
+  if (params.cursor) {
+    queryParams.append('cursor', params.cursor);
+  }
+
+  const queryString = queryParams.toString();
+  const queryPrefix = queryString ? '?' : '';
+  const endpoint = `/api/tenant/catalog/supplier/${encodeURIComponent(supplierOrgId)}/items${queryPrefix}${queryString}`;
+
+  return tenantGet<BuyerCatalogResponse>(endpoint);
+}

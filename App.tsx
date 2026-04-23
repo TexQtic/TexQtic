@@ -95,6 +95,8 @@ import {
   SupplierRfqResponse,
   SubmitSupplierRfqResponseRequest,
   SubmitSupplierRfqResponseResult,
+  getBuyerCatalogItems,
+  type BuyerCatalogItem,
 } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
@@ -1835,6 +1837,12 @@ const App: React.FC = () => {
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [catalogNextCursor, setCatalogNextCursor] = useState<string | null>(null);
+  // Buyer catalog browse state (TECS-B2B-BUYER-CATALOG-BROWSE-001)
+  const [buyerCatalogSupplierOrgId, setBuyerCatalogSupplierOrgId] = useState('');
+  const [buyerCatalogItems, setBuyerCatalogItems] = useState<BuyerCatalogItem[]>([]);
+  const [buyerCatalogLoading, setBuyerCatalogLoading] = useState(false);
+  const [buyerCatalogError, setBuyerCatalogError] = useState<string | null>(null);
+  const [buyerCatalogNextCursor, setBuyerCatalogNextCursor] = useState<string | null>(null);
   const [aggregatorDiscoveryEntries, setAggregatorDiscoveryEntries] = useState<AggregatorDiscoveryEntry[]>([]);
   const [aggregatorDiscoveryLoading, setAggregatorDiscoveryLoading] = useState(false);
   const [aggregatorDiscoveryError, setAggregatorDiscoveryError] = useState<string | null>(null);
@@ -2647,6 +2655,30 @@ const App: React.FC = () => {
       setCatalogError('Failed to load more products. Please try again.');
     } finally {
       setB2cLoadingMore(false);
+    }
+  };
+
+  // TECS-B2B-BUYER-CATALOG-BROWSE-001: Fetch supplier catalog items for authenticated buyer.
+  const handleFetchBuyerCatalog = async (supplierOrgId: string) => {
+    const trimmedId = supplierOrgId.trim();
+    if (!trimmedId) {
+      return;
+    }
+
+    setBuyerCatalogItems([]);
+    setBuyerCatalogNextCursor(null);
+    setBuyerCatalogError(null);
+    setBuyerCatalogLoading(true);
+
+    try {
+      const response = await getBuyerCatalogItems(trimmedId);
+      setBuyerCatalogItems(response.items);
+      setBuyerCatalogNextCursor(response.nextCursor);
+    } catch (error) {
+      console.error('[buyer_catalog] fetch failed:', error);
+      setBuyerCatalogError('Supplier catalog not found or not available.');
+    } finally {
+      setBuyerCatalogLoading(false);
     }
   };
 
@@ -3787,6 +3819,13 @@ const App: React.FC = () => {
                   View My RFQs
                 </button>
                 <button
+                  type="button"
+                  onClick={() => navigateTenantManifestRoute('buyer_catalog')}
+                  className="bg-white text-slate-700 px-4 py-2 rounded-lg font-medium border border-slate-200 shadow-sm hover:bg-slate-50 transition text-sm"
+                >
+                  Browse Suppliers
+                </button>
+                <button
                   onClick={() => setShowAddItemForm(v => !v)}
                   className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-indigo-700 transition text-sm"
                 >
@@ -4342,6 +4381,165 @@ const App: React.FC = () => {
       case 'home':
       case 'cart':
         return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
+      case 'buyer_catalog':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Browse Supplier Catalog</h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Enter a supplier org ID to browse their available catalog items and request quotes.
+              </p>
+            </div>
+
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId);
+              }}
+              className="flex gap-3 items-end"
+            >
+              <div className="flex-1 space-y-1">
+                <label
+                  htmlFor="buyer-catalog-supplier-id"
+                  className="text-[10px] font-bold uppercase text-slate-400 tracking-widest"
+                >
+                  Supplier Org ID (UUID)
+                </label>
+                <input
+                  id="buyer-catalog-supplier-id"
+                  type="text"
+                  value={buyerCatalogSupplierOrgId}
+                  onChange={e => setBuyerCatalogSupplierOrgId(e.target.value)}
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={buyerCatalogLoading || !buyerCatalogSupplierOrgId.trim()}
+                className="px-5 py-2 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {buyerCatalogLoading ? 'Loading...' : 'Browse'}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateTenantDefaultManifestRoute()}
+                className="px-5 py-2 text-slate-500 font-medium text-sm hover:text-slate-800 transition"
+              >
+                Back
+              </button>
+            </form>
+
+            {buyerCatalogError && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">
+                {buyerCatalogError}
+              </div>
+            )}
+
+            {buyerCatalogLoading && (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto" />
+                <p className="mt-4 text-slate-500">Loading catalog...</p>
+              </div>
+            )}
+
+            {!buyerCatalogLoading && !buyerCatalogError && buyerCatalogItems.length === 0 && buyerCatalogSupplierOrgId && (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                No items found. The supplier may have no active catalog items.
+              </div>
+            )}
+
+            {!buyerCatalogLoading && buyerCatalogItems.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                  {buyerCatalogItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm"
+                    >
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          className="w-full h-40 object-cover"
+                          alt={item.name}
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-40 bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-400"
+                          aria-label={`${item.name} image unavailable`}
+                          role="img"
+                        >
+                          Image unavailable
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        <h3 className="font-bold text-slate-900">{item.name}</h3>
+                        {item.sku && (
+                          <p className="text-xs text-slate-400 font-mono">SKU: {item.sku}</p>
+                        )}
+                        {item.description && (
+                          <p className="text-xs text-slate-500 line-clamp-2">{item.description}</p>
+                        )}
+                        <div className="text-xs text-slate-400">MOQ: {item.moq}</div>
+                        <div className="mt-3 border-t border-slate-100 pt-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const asProduct: CatalogItem = {
+                                id: item.id,
+                                tenantId: buyerCatalogSupplierOrgId.trim(),
+                                name: item.name,
+                                sku: item.sku ?? '',
+                                description: item.description,
+                                price: 0,
+                                active: true,
+                                createdAt: '',
+                                updatedAt: '',
+                                imageUrl: item.imageUrl,
+                                moq: item.moq,
+                              };
+                              handleOpenRfqDialog(asProduct);
+                            }}
+                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                          >
+                            Request Quote
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {buyerCatalogNextCursor && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      type="button"
+                      disabled={buyerCatalogLoading}
+                      onClick={async () => {
+                        if (!buyerCatalogNextCursor || buyerCatalogLoading) return;
+                        setBuyerCatalogLoading(true);
+                        try {
+                          const more = await getBuyerCatalogItems(buyerCatalogSupplierOrgId.trim(), {
+                            cursor: buyerCatalogNextCursor,
+                          });
+                          setBuyerCatalogItems(prev => [...prev, ...more.items]);
+                          setBuyerCatalogNextCursor(more.nextCursor);
+                        } catch {
+                          setBuyerCatalogError('Failed to load more items.');
+                        } finally {
+                          setBuyerCatalogLoading(false);
+                        }
+                      }}
+                      className="px-6 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition disabled:opacity-50"
+                    >
+                      {buyerCatalogLoading ? 'Loading...' : 'Load More'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
       default:
         return (
           <div className="min-h-screen flex items-center justify-center bg-slate-50">
