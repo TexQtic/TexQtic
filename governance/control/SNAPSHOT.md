@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-IMPLEMENTATION)
+**Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-VERIFICATION)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-05-08
-snapshot_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-IMPLEMENTATION
+snapshot_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-VERIFICATION
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -44,20 +44,21 @@ preserved_aligned_anchor_posture:
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
-current_product_active_delivery_status: IMPLEMENTED_PENDING_VERIFICATION
+current_product_active_delivery_status: VERIFIED_WITH_NON-BLOCKING_NOTES
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
-  TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 — authenticated B2B buyer catalog browse.
+  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 — authenticated B2B buyer supplier picker.
   Verification verdict: VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
-  Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
-  Implementation commits: 99d1b1d (7-file implementation) + 61cb3db (TS2322 production hotfix).
+  Verification artifact: docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-VERIFICATION-v1.md.
+  Implementation commit: 5daf8ac (8 files, 427+/70-).
   All static gates passed (server typecheck: 6 pre-existing errors only; frontend tsc: 0 errors;
-  lint: 0 errors, 164 pre-existing warnings). Runtime API checks pending production verification.
-  Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
-  Backend: GET /api/tenant/catalog/supplier/:supplierOrgId/items with dual eligibility gate,
-    texqtic_rfq_read cross-tenant read, cursor pagination, no price in response.
+  lint: 0 errors, 164 pre-existing warnings). Runtime API validation pending production.
+  Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md §11.
+  Backend: GET /api/tenant/b2b/eligible-suppliers — auth+Gate A+Gate B, response: {id,slug,legalName,primarySegment}.
+  Frontend: buyer_catalog two-phase (Phase A supplier picker grid / Phase B item grid).
+  Gate E upheld: public endpoint unchanged; no UUID in public projection.
 current_open_unit: |
   TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 — B2B buyer catalog supplier discovery UX.
   Status: IMPLEMENTED_PENDING_VERIFICATION (2026-05-08).

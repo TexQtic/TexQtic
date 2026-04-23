@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — implementation complete, pending verification)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — VERIFIED_WITH_NON-BLOCKING_NOTES)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -13,7 +13,7 @@ mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
 product_delivery_priority: ACTIVE_DELIVERY
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
-active_delivery_unit_status: IMPLEMENTED_PENDING_VERIFICATION
+active_delivery_unit_status: VERIFIED_WITH_NON-BLOCKING_NOTES
 active_delivery_unit_authorized_by: governance/decisions/PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md
 last_closed_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001
 last_closed_unit_status: VERIFIED_WITH_NON-BLOCKING_NOTES
@@ -39,15 +39,15 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is IMPLEMENTED_PENDING_VERIFICATION (2026-05-08).
-  Depends on: TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 (VERIFIED_WITH_NON-BLOCKING_NOTES).
-  Files changed: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
-    shared/contracts/openapi.tenant.json, docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-v1.md.
-  Backend: GET /api/tenant/b2b/eligible-suppliers — authenticated, eligibility-gated, no price.
-  Frontend: buyer_catalog case made two-phase; manual UUID entry removed; supplier picker added.
-  Static gates: server typecheck 6 pre-existing errors only; frontend tsc 0 errors;
-    lint 0 errors, 164 pre-existing warnings.
-  Pending: verification pass; then combined buyer-side B2B governance closure.
+  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
+  Implementation commit: 5daf8ac (8 files). Verification commit: pending (this pass).
+  Verification artifact: docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-VERIFICATION-v1.md.
+  All static gates passed (server typecheck: 6 pre-existing errors only; frontend tsc: 0 errors;
+    lint: 0 errors, 164 pre-existing warnings). Runtime API validation pending production.
+  Backend: GET /api/tenant/b2b/eligible-suppliers — auth, Gates A+B, bounded response.
+  Frontend: buyer_catalog two-phase (supplier picker → item grid). Phase 1 routes preserved.
+  Non-blocking: NB-001 runtime pending, NB-002 stale supplier list on back-nav, NB-003 Phase 1 carry-forward.
+  Next: combined buyer-side B2B governance closure (Phase 1 + Phase 2 jointly). Requires explicit user instruction.
   WL Co hold remains REVIEW-UNKNOWN. D-020 successor chain valid pending D-021 revalidation.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
