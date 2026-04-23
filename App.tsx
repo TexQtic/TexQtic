@@ -4490,12 +4490,12 @@ const App: React.FC = () => {
                                 tenantId: buyerCatalogSupplierOrgId.trim(),
                                 name: item.name,
                                 sku: item.sku ?? '',
-                                description: item.description,
+                                description: item.description ?? undefined,
                                 price: 0,
                                 active: true,
                                 createdAt: '',
                                 updatedAt: '',
-                                imageUrl: item.imageUrl,
+                                imageUrl: item.imageUrl ?? undefined,
                                 moq: item.moq,
                               };
                               handleOpenRfqDialog(asProduct);
