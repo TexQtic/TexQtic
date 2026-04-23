@@ -2033,7 +2033,7 @@ async function main() {
       await seedCanonicalQaBaseline(tx, passwordHash);
     },
     {
-      timeout: 30000,
+      timeout: 120000,
     },
   );
 
