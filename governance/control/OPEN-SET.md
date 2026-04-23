@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — VERIFIED_WITH_NON-BLOCKING_NOTES)
+**Last Updated:** 2026-04-23 (TECS-B2B-BUYER-CATALOG-RUNTIME-VALIDATION — RUNTIME_VALIDATION_FAILED)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -57,11 +57,12 @@
 - TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
   Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
   All static gates passed. Runtime API checks pending production verification.
-- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
-  Implementation commit: 5daf8ac (8 files). Verification artifact: docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-VERIFICATION-v1.md.
-  All static gates passed. Runtime API validation pending production verification.
-  Non-blocking: runtime pending (NB-001), stale supplier list on back-nav (NB-002), Phase 1 carry-forward (NB-003).
-  Next: combined buyer-side B2B governance closure (Phase 1 + Phase 2 jointly). Requires explicit user instruction.
+- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is RUNTIME_VALIDATION_FAILED (2026-04-23).
+  Validation artifact: docs/TECS-B2B-BUYER-CATALOG-RUNTIME-VALIDATION-v1.md.
+  Root cause: buyer_catalog route shares { expView: 'HOME' } binding with catalog; always shadowed
+  by catalog in resolveRuntimeLocalRouteSelection (runtime/sessionRuntimeDescriptor.ts b2b_workspace).
+  Required: targeted fix to buyer_catalog state binding + follow-up production runtime validation.
+  Combined buyer-side B2B governance closure remains deferred. Requires explicit user instruction.
 - Layer 0 posture: `ACTIVE_DELIVERY` (Phase 2 unit open, pending verification).
   The next opening is a human decision; no unit may be inferred from the closed unit, family
   proximity, or stale carry-forward wording.
