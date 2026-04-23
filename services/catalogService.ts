@@ -20,6 +20,11 @@ export interface CatalogItem {
   updatedAt: string;
   // Optional display properties
   imageUrl?: string;
+  /**
+   * @deprecated Phantom client-side field. No DB column exists for category on catalog_items.
+   * Retained for backward compatibility with WL surfaces that derive grouping from this field.
+   * Do not rely on this field in new code — it is always undefined at runtime.
+   */
   category?: string;
   moq?: number;
 }

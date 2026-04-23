@@ -1851,11 +1851,11 @@ const App: React.FC = () => {
 
   // RU-003: inline add-item form toggle (B2B/B2C catalog)
   const [showAddItemForm, setShowAddItemForm] = useState(false);
-  const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '' });
+  const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
   const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
-  const [editItemFormData, setEditItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '' });
+  const [editItemFormData, setEditItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
   const [editItemLoading, setEditItemLoading] = useState(false);
   const [editItemError, setEditItemError] = useState<string | null>(null);
   const [deleteItemLoadingId, setDeleteItemLoadingId] = useState<string | null>(null);
@@ -3155,14 +3155,17 @@ const App: React.FC = () => {
           throw new Error('Image URL must be a valid URL.');
         }
       }
+      const moqCreateVal = addItemFormData.moq.trim() ? parseInt(addItemFormData.moq.trim(), 10) : undefined;
       const result = await createCatalogItem({
         name: addItemFormData.name.trim(),
         sku: addItemFormData.sku.trim() || undefined,
         imageUrl: imageUrl || undefined,
+        description: addItemFormData.description.trim() || undefined,
+        moq: moqCreateVal,
         price: priceVal,
       });
       setProducts(prev => [result.item, ...prev]);
-      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '' });
+      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
       setShowAddItemForm(false);
     } catch (err: any) {
       setAddItemError(err?.message || 'Failed to create item.');
@@ -3173,7 +3176,7 @@ const App: React.FC = () => {
 
   const resetEditItemState = () => {
     setEditingCatalogItemId(null);
-    setEditItemFormData({ name: '', price: '', sku: '', imageUrl: '' });
+    setEditItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
     setEditItemError(null);
   };
 
@@ -3192,6 +3195,8 @@ const App: React.FC = () => {
       price: product.price.toString(),
       sku: product.sku || '',
       imageUrl: product.imageUrl || '',
+      description: product.description || '',
+      moq: product.moq?.toString() ?? '',
     });
     setEditItemError(null);
   };
@@ -3231,11 +3236,14 @@ const App: React.FC = () => {
         }
       }
 
+      const moqEditVal = editItemFormData.moq.trim() ? parseInt(editItemFormData.moq.trim(), 10) : undefined;
       const result = await updateCatalogItem(editingCatalogItemId, {
         name: editItemFormData.name.trim(),
         price: priceVal,
         ...(editItemFormData.sku.trim() ? { sku: editItemFormData.sku.trim() } : {}),
         imageUrl: trimmedImageUrl || null,
+        description: editItemFormData.description.trim() || null,
+        ...(moqEditVal !== undefined ? { moq: moqEditVal } : {}),
       });
 
       setProducts(prev => prev.map(product => (
@@ -3705,7 +3713,6 @@ const App: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {products.map(p => (
                   <div key={p.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-1">
-                    <div className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{p.category || 'General'}</div>
                     <div className="font-semibold text-slate-800">{p.name}</div>
                     {p.sku && <div className="text-xs text-slate-400">SKU: {p.sku}</div>}
                     <div className="flex items-center justify-between pt-1">
@@ -3758,7 +3765,7 @@ const App: React.FC = () => {
             <div className="flex justify-between items-end">
               <div>
                 <h1 className="text-2xl font-bold">Wholesale Catalog</h1>
-                <p className="text-slate-500">Tiered pricing and MOQ enforcement active.</p>
+                <p className="text-slate-500">Manage your wholesale product catalog.</p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -3844,6 +3851,32 @@ const App: React.FC = () => {
                     placeholder="https://example.com/product-image.jpg"
                   />
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1 md:col-span-2">
+                    <label htmlFor="b2b-add-description" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Description</label>
+                    <textarea
+                      id="b2b-add-description"
+                      value={addItemFormData.description}
+                      onChange={e => setAddItemFormData(d => ({ ...d, description: e.target.value }))}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                      placeholder="Optional product description"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-moq" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Min Order Qty</label>
+                    <input
+                      id="b2b-add-moq"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={addItemFormData.moq}
+                      onChange={e => setAddItemFormData(d => ({ ...d, moq: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="1"
+                    />
+                  </div>
+                </div>
                 <div className="flex gap-3">
                   <button
                     type="submit"
@@ -3903,10 +3936,8 @@ const App: React.FC = () => {
                       </div>
                     )}
                     <div className="p-4 space-y-2">
-                      <div className="text-xs text-slate-400 font-bold uppercase">
-                        {p.category || 'General'}
-                      </div>
                       <h3 className="font-bold">{p.name}</h3>
+                      {p.description && <p className="text-xs text-slate-500 line-clamp-2">{p.description}</p>}
                       <div className="flex justify-between items-center mt-4">
                         <div className="text-emerald-600 font-bold">${p.price}/unit</div>
                         <div className="text-xs text-slate-400">MOQ: {p.moq || 1}</div>
@@ -5651,6 +5682,33 @@ const App: React.FC = () => {
                     onChange={e => setEditItemFormData(data => ({ ...data, imageUrl: e.target.value }))}
                     className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                     placeholder="https://example.com/product-image.jpg"
+                  />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <label htmlFor="edit-item-description" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Description
+                  </label>
+                  <textarea
+                    id="edit-item-description"
+                    value={editItemFormData.description}
+                    onChange={e => setEditItemFormData(data => ({ ...data, description: e.target.value }))}
+                    rows={3}
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                    placeholder="Optional product description"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-moq" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Min Order Qty
+                  </label>
+                  <input
+                    id="edit-item-moq"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={editItemFormData.moq}
+                    onChange={e => setEditItemFormData(data => ({ ...data, moq: e.target.value }))}
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
                 </div>
               </div>

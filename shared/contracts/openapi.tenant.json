@@ -982,6 +982,114 @@
         }
       }
     },
+    "/api/tenant/catalog/items/{id}": {
+      "patch": {
+        "summary": "Update a catalog item",
+        "description": "Partially update an existing catalog item owned by the authenticated tenant. All body fields are optional; an empty body is rejected with 422. publicationPosture is not patchable via this route.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Catalog item UUID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "sku": { "type": ["string", "null"] },
+                  "imageUrl": { "type": ["string", "null"], "format": "uri" },
+                  "description": { "type": ["string", "null"] },
+                  "price": { "type": "number", "minimum": 0 },
+                  "moq": { "type": "integer", "minimum": 1 },
+                  "active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Catalog item updated" },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Catalog item not found or not owned by tenant",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., empty body, invalid field values)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a catalog item",
+        "description": "Permanently delete a catalog item owned by the authenticated tenant. Hard delete — no soft-delete or archive path.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Catalog item UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalog item deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "deleted": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Catalog item not found or not owned by tenant",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/aggregator/discovery": {
       "get": {
         "summary": "List bounded Aggregator discovery entries",
