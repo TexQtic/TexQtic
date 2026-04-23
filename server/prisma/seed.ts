@@ -23,7 +23,7 @@ type QaTenantTaxonomySpec = {
 };
 
 type QaTenantSpec = {
-  key: 'QA_B2B' | 'QA_B2C' | 'QA_WL' | 'QA_AGG' | 'QA_PEND';
+  key: 'QA_B2B' | 'QA_B2C' | 'QA_WL' | 'QA_AGG' | 'QA_PEND' | 'QA_BUYER';
   displayName: string;
   slug: string;
   ownerEmail: string;
@@ -218,6 +218,24 @@ const QA_PEND_SPEC: QaTenantSpec = {
     primarySegmentKey: null,
     secondarySegmentKeys: [],
     rolePositionKeys: [],
+  },
+};
+
+const QA_BUYER_SPEC: QaTenantSpec = {
+  key: 'QA_BUYER',
+  displayName: 'QA Buyer',
+  slug: 'qa-buyer',
+  ownerEmail: 'qa.buyer@texqtic.com',
+  tenantType: 'B2B',
+  tenantStatus: 'ACTIVE',
+  organizationStatus: 'ACTIVE',
+  plan: 'PROFESSIONAL',
+  isWhiteLabel: false,
+  jurisdiction: 'IN',
+  taxonomy: {
+    primarySegmentKey: 'Weaving',
+    secondarySegmentKeys: [],
+    rolePositionKeys: ['trader'],
   },
 };
 
@@ -1279,6 +1297,7 @@ async function seedCanonicalQaBaseline(tx: Tx, passwordHash: string) {
   const qaWl = await ensureOwnerSeed(tx, QA_WL_SPEC, passwordHash);
   const qaAgg = await ensureOwnerSeed(tx, QA_AGG_SPEC, passwordHash);
   const qaPend = await ensureOwnerSeed(tx, QA_PEND_SPEC, passwordHash);
+  const qaBuyer = await ensureOwnerSeed(tx, QA_BUYER_SPEC, passwordHash);
 
   const qaWlMemberUser = await ensureUserIdentity(tx, 'qa.wl.member@texqtic.com', passwordHash);
   await ensureMembership(tx, qaWl.tenantId, qaWlMemberUser.id, 'MEMBER');
@@ -1393,6 +1412,20 @@ async function seedCanonicalQaBaseline(tx: Tx, passwordHash: string) {
     },
   });
 
+  await ensureAuditLog(tx, {
+    realm: 'TENANT',
+    tenantId: qaBuyer.tenantId,
+    actorId: qaBuyer.ownerUserId,
+    actorType: 'USER',
+    action: 'qa.seed.buyer_ready',
+    entity: 'tenant',
+    entityId: qaBuyer.tenantId,
+    metadataJson: {
+      slug: qaBuyer.slug,
+      supplierTarget: QA_B2B_SPEC.slug,
+    },
+  });
+
   return {
     superAdmin,
     qaB2b,
@@ -1405,6 +1438,7 @@ async function seedCanonicalQaBaseline(tx: Tx, passwordHash: string) {
     },
     qaAgg,
     qaPend,
+    qaBuyer,
   };
 }
 
@@ -1750,8 +1784,45 @@ function validateQaPendIdentity(
   };
 }
 
+function validateQaBuyerIdentity(
+  state: TenantValidationState,
+  proof: {
+    primarySegmentKey: string | null;
+    secondarySegmentKeys: string[];
+    rolePositionKeys: string[];
+  },
+) {
+  const hasIdentity =
+    state.tenant?.name === 'QA Buyer' &&
+    state.organization?.legal_name === 'QA Buyer' &&
+    state.organization?.org_type === 'B2B' &&
+    state.organization?.status === 'ACTIVE' &&
+    state.organization?.is_white_label === false &&
+    state.membership?.role === 'OWNER' &&
+    state.passwordApplied &&
+    state.directLoginEligible;
+
+  const hasRuntime =
+    state.descriptor?.operatingMode === 'B2B_WORKSPACE' &&
+    state.descriptor.runtimeOverlays.length === 0;
+
+  const hasTaxonomy =
+    proof.primarySegmentKey === QA_BUYER_SPEC.taxonomy.primarySegmentKey &&
+    proof.secondarySegmentKeys.length === 0 &&
+    JSON.stringify(proof.rolePositionKeys) ===
+      JSON.stringify(
+        [...QA_BUYER_SPEC.taxonomy.rolePositionKeys].sort((left, right) => left.localeCompare(right)),
+      );
+
+  return {
+    ...baseTenantValidation(state),
+    taxonomy: proof,
+    pass: Boolean(hasIdentity && hasRuntime && hasTaxonomy),
+  };
+}
+
 async function validateQaBaseline() {
-  const [qaCtrl, qaB2b, qaB2c, qaWlOwner, qaWlMember, qaAgg, qaPend] = await Promise.all([
+  const [qaCtrl, qaB2b, qaB2c, qaWlOwner, qaWlMember, qaAgg, qaPend, qaBuyer] = await Promise.all([
     prisma.adminUser.findUnique({
       where: { email: QA_CTRL_EMAIL },
       select: {
@@ -1766,6 +1837,7 @@ async function validateQaBaseline() {
     loadTenantValidationState('qa-wl', 'qa.wl.member@texqtic.com'),
     loadTenantValidationState('qa-agg', 'qa.agg@texqtic.com'),
     loadTenantValidationState('qa-pend', 'qa.pending@texqtic.com'),
+    loadTenantValidationState('qa-buyer', 'qa.buyer@texqtic.com'),
   ]);
 
   const [qaCtrlPasswordApplied, legacyAcmeTenant, legacyAcmeUser] = await Promise.all([
@@ -1917,6 +1989,11 @@ async function validateQaBaseline() {
       secondarySegmentKeys: normalizeDefinedStrings(qaPend.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
       rolePositionKeys: normalizeDefinedStrings(qaPend.organization?.role_positions?.map(position => position.role_position_key) ?? []),
     }),
+    qaBuyer: validateQaBuyerIdentity(qaBuyer, {
+      primarySegmentKey: qaBuyer.organization?.primary_segment_key ?? null,
+      secondarySegmentKeys: normalizeDefinedStrings(qaBuyer.organization?.secondary_segments?.map(segment => segment.segment_key) ?? []),
+      rolePositionKeys: normalizeDefinedStrings(qaBuyer.organization?.role_positions?.map(position => position.role_position_key) ?? []),
+    }),
     legacyChecks: {
       acmeSlugRetired: !legacyAcmeTenant,
       acmeOwnerEmailRetired: !legacyAcmeUser,
@@ -1933,6 +2010,7 @@ async function validateQaBaseline() {
     validation.qaWLMemberTaxonomy.pass &&
     validation.qaAgg.pass &&
     validation.qaPend.pass &&
+    validation.qaBuyer.pass &&
     validation.legacyChecks.acmeSlugRetired &&
     validation.legacyChecks.acmeOwnerEmailRetired &&
     validation.legacyChecks.whiteLabelCoNotCanonicalSlug;
