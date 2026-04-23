@@ -9,6 +9,7 @@ const {
   tenantAuthMiddlewareMock,
   databaseContextMiddlewareMock,
   provisionTenantMock,
+  queryProvisioningStatusMock,
   writeAuditLogMock,
   createAdminAuditMock,
   withDbContextMock,
@@ -26,6 +27,7 @@ const {
   tenantAuthMiddlewareMock: vi.fn(async (_req: unknown) => undefined),
   databaseContextMiddlewareMock: vi.fn(async (_req: unknown) => undefined),
   provisionTenantMock: vi.fn(),
+  queryProvisioningStatusMock: vi.fn(),
   writeAuditLogMock: vi.fn().mockResolvedValue(undefined),
   createAdminAuditMock: vi.fn().mockReturnValue({}),
   withDbContextMock: vi.fn(),
@@ -78,6 +80,7 @@ vi.mock('../config/index.js', () => ({
 
 vi.mock('../services/tenantProvision.service.js', () => ({
   provisionTenant: provisionTenantMock,
+  queryProvisioningStatus: queryProvisioningStatusMock,
 }));
 
 vi.mock('../db/prisma.js', () => ({ prisma: prismaMock }));
@@ -1215,5 +1218,218 @@ describe('tenant membership listing read projection validation', () => {
       message: 'Insufficient permissions',
     });
     expect(body).not.toHaveProperty('data');
+  });
+});
+
+describe('GET /api/control/tenants/provision/status — CRM polling endpoint', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    app = Fastify({ logger: false });
+    await app.register(tenantProvisionRoutes, { prefix: '/api/control' });
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('returns PROVISIONED when invite exists but not yet accepted', async () => {
+    queryProvisioningStatusMock.mockResolvedValue({
+      orgId: 'tenant-uuid-0000-0000-0000-000000000001',
+      orchestrationReference: 'ocase_12345',
+      slug: 'acme-textiles',
+      provisioningStatus: 'PROVISIONED',
+      organizationStatus: 'VERIFICATION_APPROVED',
+      firstOwnerAccessPreparation: {
+        inviteId: 'invite-uuid-0000-0000-0000-000000000001',
+        invitePurpose: 'FIRST_OWNER_PREPARATION',
+        email: 'owner@acme.test',
+        expiresAt: '2026-05-01T00:00:00.000Z',
+        acceptedAt: null,
+      },
+      firstOwner: { userId: null, membershipId: null, role: null },
+      activation: { isActivated: false, activatedAt: null, activationSignal: null },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/control/tenants/provision/status?orchestrationReference=ocase_12345',
+      headers: { authorization: `Bearer ${serviceBearerToken}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.provisioningStatus).toBe('PROVISIONED');
+    expect(body.data.activation.isActivated).toBe(false);
+    expect(body.data.activation.activatedAt).toBeNull();
+    expect(body.data.activation.activationSignal).toBeNull();
+    expect(body.data.firstOwnerAccessPreparation).not.toBeNull();
+    expect(body.data.firstOwnerAccessPreparation.acceptedAt).toBeNull();
+  });
+
+  it('returns ACTIVATED when invite accepted, OWNER membership exists, and org is post-activation', async () => {
+    queryProvisioningStatusMock.mockResolvedValue({
+      orgId: 'tenant-uuid-0000-0000-0000-000000000001',
+      orchestrationReference: 'ocase_12345',
+      slug: 'acme-textiles',
+      provisioningStatus: 'ACTIVATED',
+      organizationStatus: 'PENDING_VERIFICATION',
+      firstOwnerAccessPreparation: {
+        inviteId: 'invite-uuid-0000-0000-0000-000000000001',
+        invitePurpose: 'FIRST_OWNER_PREPARATION',
+        email: 'owner@acme.test',
+        expiresAt: '2026-05-01T00:00:00.000Z',
+        acceptedAt: '2026-04-15T10:00:00.000Z',
+      },
+      firstOwner: {
+        userId: 'user-uuid-0000-0000-0000-000000000001',
+        membershipId: 'membership-uuid-0000-0000-0000-000000000001',
+        role: 'OWNER',
+      },
+      activation: {
+        isActivated: true,
+        activatedAt: '2026-04-15T10:00:00.000Z',
+        activationSignal: 'INVITE_ACCEPTED_OWNER_MEMBERSHIP_PENDING_VERIFICATION',
+      },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/control/tenants/provision/status?orchestrationReference=ocase_12345',
+      headers: { authorization: `Bearer ${serviceBearerToken}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.provisioningStatus).toBe('ACTIVATED');
+    expect(body.data.activation.isActivated).toBe(true);
+    expect(body.data.activation.activatedAt).toBe('2026-04-15T10:00:00.000Z');
+    expect(body.data.activation.activationSignal).toBe(
+      'INVITE_ACCEPTED_OWNER_MEMBERSHIP_PENDING_VERIFICATION'
+    );
+    expect(body.data.firstOwner.userId).toBe('user-uuid-0000-0000-0000-000000000001');
+  });
+
+  it('returns 404 when no tenant matches the identifiers', async () => {
+    queryProvisioningStatusMock.mockResolvedValue(null);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/control/tenants/provision/status?orgId=00000000-0000-0000-0000-000000000099',
+      headers: { authorization: `Bearer ${serviceBearerToken}` },
+    });
+
+    expect(response.statusCode).toBe(404);
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('returns 400 when neither orgId nor orchestrationReference is provided', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/control/tenants/provision/status',
+      headers: { authorization: `Bearer ${serviceBearerToken}` },
+    });
+
+    expect(response.statusCode).toBe(400);
+    const body = response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('MISSING_PARAMETERS');
+  });
+
+  it('rejects unauthenticated request with 401 or 403', async () => {
+    // Override auth mock to simulate unauthenticated context (no isAdmin, no service token)
+    adminAuthMiddlewareMock.mockImplementationOnce(async (_req: unknown) => undefined);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/control/tenants/provision/status?orgId=tenant-uuid-0000-0000-0000-000000000001',
+    });
+
+    expect([401, 403]).toContain(response.statusCode);
+  });
+});
+
+describe('POST /api/control/tenants/provision — tightened 409 conflict codes', () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    app = Fastify({ logger: false });
+    await app.register(tenantProvisionRoutes, { prefix: '/api/control' });
+    await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('returns CONFLICT_ORCHESTRATION_REFERENCE_DUPLICATE when orchestration ref is duplicated', async () => {
+    const err = Object.assign(new Error('Unique constraint failed on the fields: (`external_orchestration_ref`)'), {
+      code: 'P2002',
+      meta: { target: ['tenants_external_orchestration_ref_key'] },
+    });
+    provisionTenantMock.mockRejectedValueOnce(err);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      headers: { authorization: `Bearer ${serviceBearerToken}` },
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_dup',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'FREE',
+        organization: {
+          legalName: 'Dup Corp',
+          jurisdiction: 'US-NY',
+        },
+        firstOwner: { email: 'dup@corp.test' },
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    const body = response.json();
+    expect(body.error.code).toBe('CONFLICT_ORCHESTRATION_REFERENCE_DUPLICATE');
+  });
+
+  it('returns CONFLICT_TENANT_NAME_OR_SLUG_DUPLICATE for name/slug constraint', async () => {
+    const err = Object.assign(new Error('Unique constraint failed on the fields: (`slug`)'), {
+      code: 'P2002',
+      meta: { target: ['tenants_slug_key'] },
+    });
+    provisionTenantMock.mockRejectedValueOnce(err);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/control/tenants/provision',
+      headers: { authorization: `Bearer ${serviceBearerToken}` },
+      payload: {
+        provisioningMode: 'APPROVED_ONBOARDING',
+        orchestrationReference: 'ocase_slug_test',
+        base_family: 'B2B',
+        aggregator_capability: false,
+        white_label_capability: false,
+        commercial_plan: 'FREE',
+        organization: {
+          legalName: 'Acme Textiles LLC',
+          jurisdiction: 'US-DE',
+        },
+        firstOwner: { email: 'owner2@acme.test' },
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    const body = response.json();
+    expect(body.error.code).toBe('CONFLICT_TENANT_NAME_OR_SLUG_DUPLICATE');
   });
 });

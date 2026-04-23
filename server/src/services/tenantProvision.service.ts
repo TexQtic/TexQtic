@@ -22,6 +22,8 @@ import type {
   NormalizedTenantProvisionRequest,
   TenantProvisionResult,
   ProvisionContext,
+  ProvisioningStatusQueryParams,
+  ProvisioningStatusResponse,
 } from '../types/tenantProvision.types.js';
 import { resolveProvisioningStorageBridge } from '../types/tenantProvision.types.js';
 
@@ -36,6 +38,18 @@ const BCRYPT_ROUNDS = 12;
 
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const PROVISION_TRANSACTION_TIMEOUT_MS = 20_000;
+
+/**
+ * Organization statuses that indicate a completed first-owner activation.
+ * Post-activation: user has accepted invite → org transitions from VERIFICATION_APPROVED
+ * to PENDING_VERIFICATION (awaiting admin review).
+ */
+const POST_ACTIVATION_ORG_STATUSES = new Set([
+  'PENDING_VERIFICATION',
+  'ACTIVE',
+  'SUSPENDED',
+  'CLOSED',
+]);
 
 /**
  * Generate a URL-safe slug from an org name.
@@ -446,4 +460,105 @@ export async function provisionTenant(
   }, {
     timeout: PROVISION_TRANSACTION_TIMEOUT_MS,
   });
+}
+
+/**
+ * queryProvisioningStatus — CRM-safe read-only provisioning status query
+ *
+ * Derives the activation-complete milestone from existing platform records.
+ * No schema changes required — pure derived status from:
+ *   - tenants (id, slug, externalOrchestrationRef)
+ *   - organizations (status)
+ *   - invites (FIRST_OWNER_PREPARATION, acceptedAt)
+ *   - memberships (OWNER)
+ *
+ * Activation signal (INVITE_ACCEPTED_OWNER_MEMBERSHIP_PENDING_VERIFICATION):
+ *   invite.acceptedAt IS NOT NULL
+ *   + OWNER membership exists
+ *   + org.status in { PENDING_VERIFICATION, ACTIVE, SUSPENDED, CLOSED }
+ *
+ * @param params - Query by orgId or orchestrationReference (at least one required)
+ * @returns Derived status response, or null if tenant not found
+ */
+export async function queryProvisioningStatus(
+  params: ProvisioningStatusQueryParams
+): Promise<ProvisioningStatusResponse | null> {
+  const { orgId, orchestrationReference } = params;
+
+  const tenant = await prisma.tenant.findFirst({
+    where: orgId
+      ? { id: orgId }
+      : { externalOrchestrationRef: orchestrationReference },
+    select: {
+      id: true,
+      slug: true,
+      externalOrchestrationRef: true,
+      organizations: {
+        select: { status: true },
+      },
+      invites: {
+        where: { invitePurpose: 'FIRST_OWNER_PREPARATION' },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: {
+          id: true,
+          email: true,
+          invitePurpose: true,
+          expiresAt: true,
+          acceptedAt: true,
+        },
+      },
+      memberships: {
+        where: { role: 'OWNER' },
+        take: 1,
+        select: {
+          id: true,
+          userId: true,
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!tenant) {
+    return null;
+  }
+
+  const orgStatus = tenant.organizations?.status ?? 'UNKNOWN';
+  const invite = tenant.invites[0] ?? null;
+  const ownerMembership = tenant.memberships[0] ?? null;
+
+  const isInviteAccepted = invite !== null && invite.acceptedAt !== null;
+  const hasOwnerMembership = ownerMembership !== null;
+  const isPostActivationStatus = POST_ACTIVATION_ORG_STATUSES.has(orgStatus);
+  const isActivated = isInviteAccepted && hasOwnerMembership && isPostActivationStatus;
+
+  return {
+    orgId: tenant.id,
+    orchestrationReference: tenant.externalOrchestrationRef ?? null,
+    slug: tenant.slug,
+    provisioningStatus: isActivated ? 'ACTIVATED' : 'PROVISIONED',
+    organizationStatus: orgStatus,
+    firstOwnerAccessPreparation: invite
+      ? {
+          inviteId: invite.id,
+          invitePurpose: invite.invitePurpose,
+          email: invite.email,
+          expiresAt: invite.expiresAt.toISOString(),
+          acceptedAt: invite.acceptedAt?.toISOString() ?? null,
+        }
+      : null,
+    firstOwner: {
+      userId: ownerMembership?.userId ?? null,
+      membershipId: ownerMembership?.id ?? null,
+      role: ownerMembership?.role ?? null,
+    },
+    activation: {
+      isActivated,
+      activatedAt: isInviteAccepted && invite?.acceptedAt ? invite.acceptedAt.toISOString() : null,
+      activationSignal: isActivated
+        ? 'INVITE_ACCEPTED_OWNER_MEMBERSHIP_PENDING_VERIFICATION'
+        : null,
+    },
+  };
 }

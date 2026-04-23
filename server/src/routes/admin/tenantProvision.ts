@@ -21,7 +21,7 @@ import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { adminAuthMiddleware, requireAdminRole } from '../../middleware/auth.js';
 import { config } from '../../config/index.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
-import { provisionTenant } from '../../services/tenantProvision.service.js';
+import { provisionTenant, queryProvisioningStatus } from '../../services/tenantProvision.service.js';
 import { normalizeTenantProvisionRequest } from '../../types/tenantProvision.types.js';
 import { prisma } from '../../db/prisma.js';
 import { writeAuditLog, createAdminAudit } from '../../lib/auditLog.js';
@@ -159,6 +159,33 @@ function extractBearerToken(authorizationHeader: string | string[] | undefined):
 function tokenMatchesConfiguredHash(token: string, expectedHash: string): boolean {
   const actualHash = createHash('sha256').update(token).digest('hex');
   return timingSafeEqual(Buffer.from(actualHash, 'utf8'), Buffer.from(expectedHash, 'utf8'));
+}
+
+/**
+ * Resolves the specific 409 conflict code from a Prisma P2002 error.
+ * Uses meta.target to distinguish orchestration reference duplicates
+ * from name/slug duplicates — enabling CRM-safe idempotent retry decisions.
+ */
+function resolveP2002ConflictCode(err: Error): { code: string; message: string } {
+  const meta = (err as { meta?: { target?: string | string[] } }).meta;
+  const target = meta?.target;
+  const targetStr = Array.isArray(target)
+    ? target.join(',')
+    : typeof target === 'string'
+    ? target
+    : '';
+
+  if (targetStr.toLowerCase().includes('orchestration')) {
+    return {
+      code: 'CONFLICT_ORCHESTRATION_REFERENCE_DUPLICATE',
+      message: 'A tenant with this orchestration reference has already been provisioned',
+    };
+  }
+
+  return {
+    code: 'CONFLICT_TENANT_NAME_OR_SLUG_DUPLICATE',
+    message: 'An organization with this name or slug already exists',
+  };
 }
 
 /**
@@ -323,22 +350,103 @@ const tenantProvisionRoutes: FastifyPluginAsync = async fastify => {
         return sendError(reply, 'PROVISION_ABORT', 'Admin context assertion failed', 500);
       }
 
-      // Unique constraint: slug or user+tenant membership already exists
+      // Unique constraint: orchestration reference, slug, or name already exists
       if (
         err.message.includes('Unique constraint') ||
         ('code' in err && (err as { code: string }).code === 'P2002')
       ) {
-        return sendError(
-          reply,
-          'CONFLICT',
-          'An organization with this name, orchestration reference, or existing membership already exists',
-          409
-        );
+        const { code, message } = resolveP2002ConflictCode(err);
+        return sendError(reply, code, message, 409);
       }
 
       // Re-throw all other errors for Fastify's global error handler
       throw error;
     }
+  });
+
+  /**
+   * GET /tenants/provision/status
+   *
+   * CRM-safe provisioning status polling endpoint.
+   * Derives the activation-complete milestone from existing platform records —
+   * no schema changes; pure read-only derived status.
+   *
+   * Authentication: service bearer token (APPROVED_ONBOARDING_SERVICE_TOKEN_HASH)
+   *                 OR admin JWT + SUPER_ADMIN role.
+   *
+   * Query params (at least one required):
+   *   orgId                  — Tenant UUID
+   *   orchestrationReference — External orchestration reference
+   *
+   * Response (200):
+   *   { success: true, data: ProvisioningStatusResponse }
+   *
+   * Errors:
+   *   400 — missing required query parameters
+   *   403 — unauthenticated or unauthorized
+   *   404 — tenant not found for given identifiers
+   */
+  fastify.get('/tenants/provision/status', {
+    preHandler: (request, reply, done) => {
+      const bearerToken = extractBearerToken(request.headers.authorization);
+      const approvedOnboardingServiceTokenHash = config.APPROVED_ONBOARDING_SERVICE_TOKEN_HASH;
+      const hasServiceToken = Boolean(
+        bearerToken &&
+        approvedOnboardingServiceTokenHash &&
+        hasConfiguredApprovedOnboardingServiceToken() &&
+        tokenMatchesConfiguredHash(bearerToken, approvedOnboardingServiceTokenHash)
+      );
+
+      if (hasServiceToken) {
+        request.serviceCallerId = 'crm-approved-onboarding';
+        request.serviceCallerType = 'APPROVED_ONBOARDING';
+        done();
+        return;
+      }
+
+      void Promise.resolve(adminAuthMiddleware(request, reply))
+        .then(() => {
+          if (reply.sent) {
+            return;
+          }
+
+          return requireSuperAdmin(request, reply);
+        })
+        .then(() => done())
+        .catch(done);
+    },
+  }, async (request, reply) => {
+    const isServiceCaller = request.serviceCallerType === 'APPROVED_ONBOARDING';
+
+    if (!isServiceCaller && (!request.isAdmin || !request.adminId)) {
+      return sendError(
+        reply,
+        'FORBIDDEN',
+        'Admin context required for provisioning status queries',
+        403
+      );
+    }
+
+    const query = request.query as Record<string, string | undefined>;
+    const orgId = query['orgId'];
+    const orchestrationReference = query['orchestrationReference'];
+
+    if (!orgId && !orchestrationReference) {
+      return sendError(
+        reply,
+        'MISSING_PARAMETERS',
+        'At least one of orgId or orchestrationReference is required',
+        400
+      );
+    }
+
+    const result = await queryProvisioningStatus({ orgId, orchestrationReference });
+
+    if (!result) {
+      return sendError(reply, 'NOT_FOUND', 'Tenant not found for the given identifiers', 404);
+    }
+
+    return sendSuccess(reply, result, 200);
   });
 };
 

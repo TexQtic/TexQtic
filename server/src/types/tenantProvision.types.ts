@@ -527,3 +527,57 @@ export interface ProvisionContext {
   /** Admin actor ID (from JWT adminId claim) */
   adminActorId: string;
 }
+
+// ─── CRM Provisioning Status Types ───────────────────────────────────────────
+
+/**
+ * Canonical provisioning lifecycle status for CRM-safe polling.
+ *
+ * PROVISIONED — tenant + org + invite exist; first-owner invite not yet accepted.
+ * ACTIVATED   — invite accepted + OWNER membership exists + org status is post-activation.
+ */
+export type CrmProvisioningStatus = 'PROVISIONED' | 'ACTIVATED';
+
+/**
+ * Parameters for querying provisioning status.
+ * At least one of orgId or orchestrationReference must be provided.
+ */
+export interface ProvisioningStatusQueryParams {
+  orgId?: string;
+  orchestrationReference?: string;
+}
+
+/**
+ * Response contract for GET /api/control/tenants/provision/status.
+ *
+ * provisioningStatus derivation (derived — no schema change):
+ *   PROVISIONED: tenant + org + invite exist; invite.acceptedAt IS NULL
+ *   ACTIVATED:   invite.acceptedAt IS NOT NULL
+ *                + OWNER membership exists
+ *                + org.status in POST_ACTIVATION_ORG_STATUSES
+ *                  { PENDING_VERIFICATION, ACTIVE, SUSPENDED, CLOSED }
+ */
+export interface ProvisioningStatusResponse {
+  orgId: string;
+  orchestrationReference: string | null;
+  slug: string;
+  provisioningStatus: CrmProvisioningStatus;
+  organizationStatus: string;
+  firstOwnerAccessPreparation: {
+    inviteId: string;
+    invitePurpose: string;
+    email: string;
+    expiresAt: string;
+    acceptedAt: string | null;
+  } | null;
+  firstOwner: {
+    userId: string | null;
+    membershipId: string | null;
+    role: string | null;
+  };
+  activation: {
+    isActivated: boolean;
+    activatedAt: string | null;
+    activationSignal: 'INVITE_ACCEPTED_OWNER_MEMBERSHIP_PENDING_VERIFICATION' | null;
+  };
+}
