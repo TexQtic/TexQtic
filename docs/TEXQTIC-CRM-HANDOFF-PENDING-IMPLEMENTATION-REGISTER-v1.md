@@ -229,6 +229,7 @@ A tenant-scoped invite resend endpoint exists:
 `POST /api/tenant/memberships/invites/:id/resend` (`server/src/routes/tenant.ts` line 609).
 
 This endpoint:
+
 - Requires a tenant JWT with `OWNER` or `ADMIN` role.
 - Regenerates the invite token and resets `expiresAt` to 7 days from now.
 - Is designed for team-member invite resend by an authenticated tenant owner or admin.
