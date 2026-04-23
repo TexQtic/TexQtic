@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-BROWSE-001 — VERIFIED_WITH_NON-BLOCKING_NOTES)
+**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — IMPLEMENTED_PENDING_VERIFICATION)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -57,7 +57,10 @@
 - TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
   Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
   All static gates passed. Runtime API checks pending production verification.
-- Layer 0 returns to `ZERO_OPEN_DECISION_CONTROL`. No active product-delivery unit.
+- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is IMPLEMENTED_PENDING_VERIFICATION (2026-05-08).
+  Implementation artifact: docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-v1.md.
+  All static gates passed. Verification pass pending before combined B2B governance closure.
+- Layer 0 posture: `ACTIVE_DELIVERY` (Phase 2 unit open, pending verification).
   The next opening is a human decision; no unit may be inferred from the closed unit, family
   proximity, or stale carry-forward wording.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and

@@ -1090,6 +1090,51 @@
         }
       }
     },
+    "/api/tenant/b2b/eligible-suppliers": {
+      "get": {
+        "summary": "List B2B-eligible suppliers for authenticated buyer supplier picker",
+        "description": "Phase 2 authenticated B2B buyer supplier picker. Returns suppliers that pass both eligibility gates: org publication_posture IN ('B2B_PUBLIC','BOTH') AND publicEligibilityPosture='PUBLICATION_ELIGIBLE'. Exposes org id (UUID) since caller is authenticated. No price, item details, or negotiation state in response. Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001).",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Eligible suppliers retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "slug": { "type": "string" },
+                          "legalName": { "type": "string" },
+                          "primarySegment": { "type": ["string", "null"] }
+                        },
+                        "required": ["id", "slug", "legalName"]
+                      }
+                    },
+                    "total": { "type": "integer" }
+                  },
+                  "required": ["items", "total"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/catalog/supplier/{supplierOrgId}/items": {
       "get": {
         "summary": "Browse supplier catalog items (authenticated buyer)",

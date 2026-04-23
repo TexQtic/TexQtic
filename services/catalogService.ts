@@ -345,3 +345,29 @@ export async function getBuyerCatalogItems(
 
   return tenantGet<BuyerCatalogResponse>(endpoint);
 }
+
+// ==================== BUYER SUPPLIER PICKER (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001) ====================
+
+/**
+ * A single eligible supplier entry as returned to an authenticated B2B buyer.
+ * Phase 2: id (UUID), slug, legalName, primarySegment only — NO price, NO item details.
+ */
+export interface SupplierPickerEntry {
+  id: string;
+  slug: string;
+  legalName: string;
+  primarySegment: string | null;
+}
+
+export interface EligibleSuppliersResponse {
+  items: SupplierPickerEntry[];
+  total: number;
+}
+
+/**
+ * Fetch eligible B2B suppliers for the authenticated buyer supplier picker.
+ * Returns only suppliers that pass both eligibility gates server-side.
+ */
+export async function getEligibleSuppliers(): Promise<EligibleSuppliersResponse> {
+  return tenantGet<EligibleSuppliersResponse>('/api/tenant/b2b/eligible-suppliers');
+}

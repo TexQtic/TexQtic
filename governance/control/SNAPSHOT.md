@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION)
+**Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-IMPLEMENTATION)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-05-08
-snapshot_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION
+snapshot_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-IMPLEMENTATION
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -42,9 +42,9 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: NONE_OPEN
-current_product_active_delivery_status: ZERO_OPEN_POST_CLOSE
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
+current_product_active_delivery_status: IMPLEMENTED_PENDING_VERIFICATION
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
@@ -58,6 +58,13 @@ latest_verified_product_close: |
   Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
   Backend: GET /api/tenant/catalog/supplier/:supplierOrgId/items with dual eligibility gate,
     texqtic_rfq_read cross-tenant read, cursor pagination, no price in response.
+current_open_unit: |
+  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 — B2B buyer catalog supplier discovery UX.
+  Status: IMPLEMENTED_PENDING_VERIFICATION (2026-05-08).
+  Implementation artifact: docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-v1.md.
+  Files changed: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
+    shared/contracts/openapi.tenant.json, docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-v1.md.
+  All static gates passed. Verification pass pending. Commit pending verification.
   Frontend: buyer_catalog route case in App.tsx, BuyerCatalog state/handler, RFQ continuity preserved.
   Runtime descriptor: buyer_catalog route in b2b_workspace catalog_browse group, buyerCatalog=true capability.
   Schema unchanged. No new dependencies. No out-of-scope files modified.

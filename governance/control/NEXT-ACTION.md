@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-BROWSE-001 — verification complete)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — implementation complete, pending verification)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -12,18 +12,18 @@
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
 product_delivery_priority: ACTIVE_DELIVERY
-active_delivery_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001
-active_delivery_unit_status: VERIFIED_WITH_NON-BLOCKING_NOTES
+active_delivery_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
+active_delivery_unit_status: IMPLEMENTED_PENDING_VERIFICATION
 active_delivery_unit_authorized_by: governance/decisions/PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md
-last_closed_unit: PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE
-last_closed_unit_status: VERIFIED_COMPLETE
-last_closed_unit_commits: 34a6f84 + d78fa79
-last_closed_unit_closure_basis: VERIFIED_PRODUCTION_PASS (https://app.texqtic.com/)
-prior_closed_unit: B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE
+last_closed_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001
+last_closed_unit_status: VERIFIED_WITH_NON-BLOCKING_NOTES
+last_closed_unit_commits: 99d1b1d + 61cb3db + 9922f9e
+last_closed_unit_closure_basis: VERIFIED_WITH_NON-BLOCKING_NOTES — docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md
+prior_closed_unit: PUBLIC_B2C_BROWSE_IMPLEMENTATION_SLICE
 prior_closed_unit_status: VERIFIED_COMPLETE
-prior_closed_unit_commit: 1f01a84
+prior_closed_unit_commits: 34a6f84 + d78fa79
 d015_reconciliation: COMPLETE
-d016_posture: ACTIVE_DELIVERY — TECS-B2B-BUYER-CATALOG-BROWSE-001 authorized via PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001
+d016_posture: ACTIVE_DELIVERY — TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 authorized via PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -39,18 +39,20 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES.
-  Implementation commits: 99d1b1d (7-file implementation) + 61cb3db (TS2322 production hotfix).
-  Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
-  All static gates passed. All 24 verification checkpoints passed by code inspection.
-  Runtime API checks pending production verification (server not running locally).
-  Non-blocking notes: NB-001 (null/undefined bridge), NB-002 (stale note corrected here),
-    NB-003 (buyerCatalog capability pre-existing on storefront modes), NB-004 (price:0 adapter).
-  Unit closure: Layer 0 returns to ZERO_OPEN posture. Next delivery requires new product decision.
+  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is IMPLEMENTED_PENDING_VERIFICATION (2026-05-08).
+  Depends on: TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 (VERIFIED_WITH_NON-BLOCKING_NOTES).
+  Files changed: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
+    shared/contracts/openapi.tenant.json, docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-v1.md.
+  Backend: GET /api/tenant/b2b/eligible-suppliers — authenticated, eligibility-gated, no price.
+  Frontend: buyer_catalog case made two-phase; manual UUID entry removed; supplier picker added.
+  Static gates: server typecheck 6 pre-existing errors only; frontend tsc 0 errors;
+    lint 0 errors, 164 pre-existing warnings.
+  Pending: verification pass; then combined buyer-side B2B governance closure.
   WL Co hold remains REVIEW-UNKNOWN. D-020 successor chain valid pending D-021 revalidation.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.
-  No price field anywhere in TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 scope.
-  Per-item publicationPosture filtering is a Phase 2 follow-on, not in this unit.
+  No price field anywhere in Phase 1 or Phase 2 scope.
+  Per-item publicationPosture filtering deferred to Phase 3+.
+  Phase 3+ deferred: search, item detail, price disclosure, buyer-supplier allowlist (Phase 6).
 ```

@@ -1603,6 +1603,78 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   );
 
   /**
+   * GET /api/tenant/b2b/eligible-suppliers
+   * List B2B-eligible suppliers for authenticated buyer supplier picker (Phase 2)
+   *
+   * TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001
+   *
+   * Applies the same two eligibility gates as GET /api/tenant/catalog/supplier/:id/items:
+   *   Gate A: organizations.publication_posture IN ('B2B_PUBLIC', 'BOTH')
+   *           AND org_type = 'B2B' AND status IN ('ACTIVE', 'VERIFICATION_APPROVED')
+   *   Gate B: tenant.publicEligibilityPosture = 'PUBLICATION_ELIGIBLE'
+   *
+   * Unlike the public projection, exposes org id (UUID) because caller is authenticated.
+   * Response contains no price, no item details, no negotiation state.
+   */
+  fastify.get(
+    '/tenant/b2b/eligible-suppliers',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
+
+      type SupplierPickerOrgRow = {
+        id: string;
+        slug: string;
+        legal_name: string;
+        primary_segment_key: string | null;
+      };
+
+      const eligibleOrgs: SupplierPickerOrgRow[] = await withOrgAdminContext(prisma, async tx => {
+        const orgs: SupplierPickerOrgRow[] = await tx.organizations.findMany({
+          where: {
+            org_type: 'B2B',
+            status: { in: ['ACTIVE', 'VERIFICATION_APPROVED'] },
+            publication_posture: { in: ['B2B_PUBLIC', 'BOTH'] },
+          },
+          select: {
+            id: true,
+            slug: true,
+            legal_name: true,
+            primary_segment_key: true,
+          },
+          orderBy: [{ updated_at: 'desc' }, { created_at: 'desc' }],
+        });
+
+        if (orgs.length === 0) return [];
+
+        const orgIds: string[] = orgs.map((o: SupplierPickerOrgRow) => o.id);
+        const eligibleTenants: { id: string }[] = await tx.tenant.findMany({
+          where: {
+            id: { in: orgIds },
+            publicEligibilityPosture: 'PUBLICATION_ELIGIBLE',
+          },
+          select: { id: true },
+        });
+
+        const eligibleIds = new Set(eligibleTenants.map((t: { id: string }) => t.id));
+        return orgs.filter((o: SupplierPickerOrgRow) => eligibleIds.has(o.id));
+      });
+
+      return sendSuccess(reply, {
+        items: eligibleOrgs.map((o: SupplierPickerOrgRow) => ({
+          id: o.id,
+          slug: o.slug,
+          legalName: o.legal_name,
+          primarySegment: o.primary_segment_key,
+        })),
+        total: eligibleOrgs.length,
+      });
+    }
+  );
+
+  /**
    * POST /api/tenant/cart
    * Create or return active cart for authenticated tenant user (idempotent)
    * Gate D.2: RLS-enforced, manual tenant filters removed
