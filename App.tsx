@@ -857,6 +857,7 @@ type WLAdminView = (typeof WL_ADMIN_VIEWS)[number];
 
 const EXPERIENCE_VIEWS = [
   'HOME',
+  'BUYER_CATALOG',
   'ORDERS',
   'DPP',
   'ESCROW',

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-23 (TECS-B2B-BUYER-CATALOG-RUNTIME-VALIDATION — RUNTIME_VALIDATION_FAILED)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-23 (TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001 — IMPLEMENTED_PENDING_RUNTIME_REVALIDATION)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -13,7 +13,7 @@ mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
 product_delivery_priority: ACTIVE_DELIVERY
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
-active_delivery_unit_status: RUNTIME_VALIDATION_FAILED
+active_delivery_unit_status: IMPLEMENTED_PENDING_RUNTIME_REVALIDATION
 active_delivery_unit_authorized_by: governance/decisions/PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md
 last_closed_unit: TECS-B2B-BUYER-CATALOG-BROWSE-001
 last_closed_unit_status: VERIFIED_WITH_NON-BLOCKING_NOTES
@@ -39,16 +39,18 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is RUNTIME_VALIDATION_FAILED (2026-04-23).
-  Runtime validation artifact: docs/TECS-B2B-BUYER-CATALOG-RUNTIME-VALIDATION-v1.md.
-  Root cause: buyer_catalog route has identical state binding to catalog ({ expView: 'HOME' }).
-  resolveRuntimeLocalRouteSelection always returns 'catalog' first; 'buyer_catalog' case never rendered.
-  Location: runtime/sessionRuntimeDescriptor.ts — b2b_workspace catalog_browse route group.
-  Required fix: give buyer_catalog a unique state binding discriminant (e.g. expView: 'BUYER_CATALOG').
-  After fix: new production runtime validation pass required.
-  NB-001 (runtime pending) from Phase 1 and Phase 2 verification artifacts cannot be lifted until
-  a follow-up validation produces a RUNTIME_VALIDATED or RUNTIME_VALIDATED_WITH_NON-BLOCKING_NOTES verdict.
-  Combined buyer-side B2B governance closure remains deferred — requires explicit user instruction.
+  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 runtime binding fix is
+  IMPLEMENTED_PENDING_RUNTIME_REVALIDATION (2026-04-23).
+  Implementation artifact: docs/TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001-v1.md.
+  Root cause fixed: buyer_catalog route binding changed from { expView: 'HOME' } to
+  { expView: 'BUYER_CATALOG' }; 'BUYER_CATALOG' added to EXPERIENCE_VIEWS in App.tsx.
+  Files changed: runtime/sessionRuntimeDescriptor.ts · App.tsx.
+  Required next step: deploy fix to production, run production runtime validation pass,
+  produce follow-up validation artifact with RUNTIME_VALIDATED or RUNTIME_VALIDATED_WITH_NON-BLOCKING_NOTES verdict.
+  NB-001 (runtime pending), NB-002, NB-003 from prior verification artifacts remain unlifted
+  until follow-up validation is complete and results are PASS.
+  Combined buyer-side B2B governance closure deferred — requires explicit user instruction
+  after successful follow-up production runtime validation.
   WL Co hold remains REVIEW-UNKNOWN. D-020 successor chain valid pending D-021 revalidation.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.

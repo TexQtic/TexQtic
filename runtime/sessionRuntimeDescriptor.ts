@@ -510,7 +510,7 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     routeGroups: [
       defineRuntimeRouteGroup('catalog_browse', [
         defineRuntimeRoute('catalog', 'Catalog', 'HOME', { expView: 'HOME' }, { defaultForGroup: true }),
-        defineRuntimeRoute('buyer_catalog', 'Browse Supplier Catalog', 'HOME', { expView: 'HOME' }, {}),
+        defineRuntimeRoute('buyer_catalog', 'Browse Supplier Catalog', 'HOME', { expView: 'BUYER_CATALOG' }, {}),
       ]),
       WORKSPACE_ORDERS_ROUTE_GROUP,
       RFQ_ROUTE_GROUP,
