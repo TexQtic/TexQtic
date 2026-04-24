@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — IMPLEMENTATION_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -69,11 +69,13 @@
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
   buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
-- TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
+- TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 is VERIFIED_COMPLETE (2026-04-24).
+  Status: VERIFIED_COMPLETE. Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Unit scope: Textile attribute schema (9 new nullable columns on catalog_items) + supplier data entry
     extension + buyer filter bar + AI-readable attribute contract + G-028 vectorText extension.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001-DESIGN-v1.md.
-  Design commit: fa1dcc9. Implementation commit: 1d63513.
+  Design commit: fa1dcc9. Implementation commit: 1d63513. Truth-sync commit: 77457a6.
+  Hotfix commit: ec91ad2 — fix certification filter column mapping (image_url AS "imageUrl").
   Attribute fields: product_category, fabric_type, gsm, material, composition, color, width_cm,
     construction, certifications (JSONB). All nullable. No new tables.
   SQL migration applied (ALTER TABLE + 6 CREATE INDEX, no errors). Prisma db pull PASS. Prisma generate PASS.
@@ -81,7 +83,19 @@
   Changed files (9): migration.sql, schema.prisma, catalogService.ts, tenant.ts, App.tsx,
     openapi.tenant.json, b2b-supplier-catalog-attributes.test.tsx,
     b2b-buyer-catalog-filters.test.tsx, b2b-buyer-catalog-ai-contract.test.tsx.
-  Runtime verification: PENDING (production deploy required).
+  Production verification:
+    - Supplier add/edit textile attributes: verified.
+    - Buyer filter bar: verified.
+    - productCategory, material, GSM filters: HTTP 200, active badge, correct empty state.
+    - Certification filter (GOTS): initial HTTP 500 found; hotfix ec91ad2 applied;
+      post-hotfix verification confirmed HTTP 200 with clean empty state.
+    - Keyword + filter composition (AND-compose): verified.
+    - RFQ dialog regression: verified (opens correctly).
+  Blockers: none.
+  Non-blocking notes:
+    - Some QA B2B fixture items have null textile attributes, so some visual chip/filter result
+      cases are fixture-limited; not a code defect.
+    - Clear Filters requires Apply Filters to reload; existing behavior, not a blocker.
   Adjacent deferred unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001.
     Reason: Yarn is a core textile supply-chain material requiring stage-specific attribute modeling.
   Non-goals preserved: AI matching, embeddings, vector search, RFQ AI, PDP, price disclosure,

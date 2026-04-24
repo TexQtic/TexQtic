@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — IMPLEMENTATION_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -42,36 +42,19 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
-current_product_active_delivery_status: IMPLEMENTATION_COMPLETE
-current_product_active_delivery_design_commit: fa1dcc9
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: NONE
+current_product_active_delivery_status: ZERO_OPEN
+current_product_active_delivery_design_commit: N/A
 current_product_active_delivery_followup_sha: N/A
-current_product_active_delivery_implementation_commit: 1d63513
-current_product_active_delivery_validation: |
-  prisma db pull: PASS
-  prisma generate: PASS (Prisma Client v6.1.0)
-  tsc --noEmit: PASS (0 errors)
-  108/108 tests PASS — 6 focused suites:
-    b2b-supplier-catalog-attributes (8), b2b-buyer-catalog-filters (22),
-    b2b-buyer-catalog-ai-contract (10), b2b-buyer-catalog-listing (32),
-    b2b-buyer-catalog-search (19), b2b-buyer-catalog-supplier-selection (17)
-  staged allowlist: exact 9 files, no extras
+current_product_active_delivery_implementation_commit: N/A
+current_product_active_delivery_validation: N/A
 current_product_active_delivery_note: |
-  IMPLEMENTATION_COMPLETE (2026-04-24). All 10 slices delivered.
-  9 nullable textile attribute columns on catalog_items: product_category, fabric_type,
-    gsm, material, composition, color, width_cm, construction, certifications (JSONB).
-  SQL migration applied. Prisma synced. Service types. Supplier add/edit. Buyer filter bar.
-  AI vector text helpers. OpenAPI contract updated. 3 new test files.
-  Runtime verification: PENDING.
-  Adjacent deferred unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001.
-    Reason: Yarn is a core textile supply-chain material requiring stage-specific attribute modeling.
-  AI-readable contracts implemented as data/vector-text foundation only.
-  No AI matching, RFQ AI, document intelligence, price disclosure, PDP, relationship access,
-  or yarn implementation opened.
+  ZERO_OPEN (2026-04-24). Last closed unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
+  Awaiting Paresh next-unit selection.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: IMPLEMENTATION_COMPLETE — TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 implementation commit 1d63513 (2026-04-24); runtime verification PENDING; prior verified close: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 M-SEARCH-1–M-SEARCH-9 PASS
+runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES (2026-04-24); hotfix ec91ad2 confirmed live; all 6 production markers PASS
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -80,15 +63,19 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
-  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — VERIFIED_COMPLETE (2026-04-25).
-  Design commits: a1b41d5 (original) + aa0b9a6 (amendment). Implementation commit: 4aaa8a3.
-  Validation: frontend tsc --noEmit PASS; search tests 19/19 PASS; catalog listing regression
-    31/31 PASS; supplier-selection regression 18/18 PASS; full suite pre-existing failures only.
+  TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE (2026-04-24).
+  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
+  Design commit: fa1dcc9. Implementation commit: 1d63513. Truth-sync commit: 77457a6.
+  Hotfix commit: ec91ad2 — fix certification filter column mapping (image_url AS "imageUrl").
+  Validation: TypeScript tsc --noEmit PASS. 108/108 tests PASS (6 focused suites).
   Production: https://app.texqtic.com, actor qa.buyer@texqtic.com.
-    M-SEARCH-1 through M-SEARCH-9 PASS; M-SEARCH-10 N/A (14-item catalog, no nextCursor).
-  No schema changes. No textile filters. No price. No PDP. No RFQ expansion.
-  Changed files: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
-    tests/b2b-buyer-catalog-search.test.tsx (created).
+    M-ATTR-3, M-ATTR-4, M-ATTR-5, M-ATTR-6 (hotfix), M-ATTR-7, M-ATTR-24: all PASS.
+  Non-blocking notes:
+    Some QA B2B fixture items have null textile attributes (fixture-limited, not a code defect).
+    Clear Filters requires Apply Filters to reload; existing behavior, not a blocker.
+  AI-readable contracts implemented as structured data/vector-text foundation only.
+  No AI matching, RFQ AI, document intelligence, price disclosure, PDP, relationship access,
+  or yarn implementation opened.
 prior_latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-LISTING-001 — VERIFIED_COMPLETE (2026-04-24).
   Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth syncs: a2c907f.
@@ -97,7 +84,7 @@ prior_latest_verified_product_close: |
   Non-blocking: M9 (image fallback), M11–M14 (Load More + error paths) not executable in
     production with current 14-item seed catalog; all covered by 32/32 passing unit tests.
   Blockers: none.
-current_open_unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+current_open_unit: NONE
 current_open_unit_note: |
   IMPLEMENTATION_COMPLETE (2026-04-24). Implementation commit: 1d63513.
   Runtime verification PENDING. Production deploy required before final close.
