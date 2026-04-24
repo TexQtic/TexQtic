@@ -187,6 +187,9 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
   const itemClassName = tone === 'dark'
     ? 'text-slate-100 hover:bg-white/10'
     : 'text-slate-700 hover:bg-slate-100';
+  const activeItemClassName = tone === 'dark'
+    ? 'text-white bg-white/15'
+    : 'text-indigo-600 bg-indigo-50';
   const sectionClassName = tone === 'dark'
     ? 'px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500'
     : 'px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400';
@@ -233,7 +236,7 @@ const MobileShellMenu: React.FC<MobileShellMenuProps> = ({
                   }
                   item.onSelect?.();
                 }}
-                className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${itemClassName}`}
+                className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${item.active ? activeItemClassName : itemClassName}`}
               >
                 {item.label}
               </button>
@@ -315,20 +318,21 @@ export const B2BShell: React.FC<B2BShellProps> = ({
   shellStatusLabel = null,
 }) => {
   const isVerificationBlocked = shellMode === 'verification-blocked';
+  const activeRouteKey = navigation.surface?.activeRouteKey ?? null;
   const mobileMenuItems: MobileShellMenuItem[] = isVerificationBlocked
     ? []
     : [
-        { key: 'catalog', label: 'Catalog', onSelect: () => navigation.onNavigateRoute('catalog') },
-        ...(hasShellRoute(navigation.surface, 'buyer_catalog') ? [{ key: 'buyer_catalog', label: 'Browse Suppliers', onSelect: () => navigation.onNavigateRoute('buyer_catalog') }] : []),
-        ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
-        ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
-        ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
-        ...(hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
-        ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
-        ...(hasShellRoute(navigation.surface, 'certifications') ? [{ key: 'certifications', label: 'Certifications', onSelect: () => navigation.onNavigateRoute('certifications') }] : []),
-        ...(hasShellRoute(navigation.surface, 'traceability') ? [{ key: 'traceability', label: 'Traceability', onSelect: () => navigation.onNavigateRoute('traceability') }] : []),
-        ...(hasShellRoute(navigation.surface, 'audit_logs') ? [{ key: 'audit_logs', label: 'Audit Log', onSelect: () => navigation.onNavigateRoute('audit_logs') }] : []),
-        ...(hasShellRoute(navigation.surface, 'trades') ? [{ key: 'trades', label: 'Trades', onSelect: () => navigation.onNavigateRoute('trades') }] : []),
+        { key: 'catalog', label: 'Catalog', active: activeRouteKey === 'catalog', onSelect: () => navigation.onNavigateRoute('catalog') },
+        ...(hasShellRoute(navigation.surface, 'buyer_catalog') ? [{ key: 'buyer_catalog', label: 'Browse Suppliers', active: activeRouteKey === 'buyer_catalog', onSelect: () => navigation.onNavigateRoute('buyer_catalog') }] : []),
+        ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', active: activeRouteKey === 'orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
+        ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', active: activeRouteKey === 'dpp', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
+        ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', active: activeRouteKey === 'escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
+        ...(hasShellRoute(navigation.surface, 'escalations') ? [{ key: 'escalations', label: 'Escalations', active: activeRouteKey === 'escalations', onSelect: () => navigation.onNavigateRoute('escalations') }] : []),
+        ...(hasShellRoute(navigation.surface, 'settlement') ? [{ key: 'settlement', label: 'Settlement', active: activeRouteKey === 'settlement', onSelect: () => navigation.onNavigateRoute('settlement') }] : []),
+        ...(hasShellRoute(navigation.surface, 'certifications') ? [{ key: 'certifications', label: 'Certifications', active: activeRouteKey === 'certifications', onSelect: () => navigation.onNavigateRoute('certifications') }] : []),
+        ...(hasShellRoute(navigation.surface, 'traceability') ? [{ key: 'traceability', label: 'Traceability', active: activeRouteKey === 'traceability', onSelect: () => navigation.onNavigateRoute('traceability') }] : []),
+        ...(hasShellRoute(navigation.surface, 'audit_logs') ? [{ key: 'audit_logs', label: 'Audit Log', active: activeRouteKey === 'audit_logs', onSelect: () => navigation.onNavigateRoute('audit_logs') }] : []),
+        ...(hasShellRoute(navigation.surface, 'trades') ? [{ key: 'trades', label: 'Trades', active: activeRouteKey === 'trades', onSelect: () => navigation.onNavigateRoute('trades') }] : []),
         { key: 'team', label: 'Team Access', onSelect: navigation.onNavigateTeam },
       ];
 
@@ -360,18 +364,18 @@ export const B2BShell: React.FC<B2BShellProps> = ({
         ) : (
           <nav className="flex-1 space-y-4">
             <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
-            <button onClick={() => navigation.onNavigateRoute('catalog')} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
-            {hasShellRoute(navigation.surface, 'buyer_catalog') && <button onClick={() => navigation.onNavigateRoute('buyer_catalog')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🏪 Browse Suppliers</button>}
-            {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
-            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔍 DPP Passport</button>}
-            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔒 Escrow</button>}
-            {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🚨 Escalations</button>}
-            {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">💸 Settlement</button>}
-            {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Certifications</button>}
-            {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔗 Traceability</button>}
-            {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📋 Audit Log</button>}
-            {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🤝 Trades</button>}
-            <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">👥 Team Access</button>
+            <button onClick={() => navigation.onNavigateRoute('catalog')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'catalog' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>📦 Catalog</button>
+            {hasShellRoute(navigation.surface, 'buyer_catalog') && <button onClick={() => navigation.onNavigateRoute('buyer_catalog')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'buyer_catalog' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🏪 Browse Suppliers</button>}
+            {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'orders' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🛍️ Orders</button>}
+            {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'dpp' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🔍 DPP Passport</button>}
+            {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'escrow' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🔒 Escrow</button>}
+            {hasShellRoute(navigation.surface, 'escalations') && <button onClick={() => navigation.onNavigateRoute('escalations')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'escalations' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🚨 Escalations</button>}
+            {hasShellRoute(navigation.surface, 'settlement') && <button onClick={() => navigation.onNavigateRoute('settlement')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'settlement' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>💸 Settlement</button>}
+            {hasShellRoute(navigation.surface, 'certifications') && <button onClick={() => navigation.onNavigateRoute('certifications')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'certifications' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>📋 Certifications</button>}
+            {hasShellRoute(navigation.surface, 'traceability') && <button onClick={() => navigation.onNavigateRoute('traceability')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'traceability' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🔗 Traceability</button>}
+            {hasShellRoute(navigation.surface, 'audit_logs') && <button onClick={() => navigation.onNavigateRoute('audit_logs')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'audit_logs' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>📋 Audit Log</button>}
+            {hasShellRoute(navigation.surface, 'trades') && <button onClick={() => navigation.onNavigateRoute('trades')} className={`w-full flex items-center gap-3 p-2 rounded text-left transition ${activeRouteKey === 'trades' ? 'text-blue-300 bg-slate-700/60 font-medium' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'}`}>🤝 Trades</button>}
+            <button onClick={navigation.onNavigateTeam} className="w-full flex items-center gap-3 p-2 rounded text-left transition text-slate-300 hover:text-white hover:bg-slate-700/50">👥 Team Access</button>
           </nav>
         )}
         <div className="mt-auto pt-6 border-t border-slate-700 text-[10px] text-slate-500 font-mono">
@@ -393,8 +397,8 @@ export const B2BShell: React.FC<B2BShellProps> = ({
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <div className="text-xs font-bold text-slate-900">Alex Rivera</div>
-              <div className="text-[10px] text-slate-500 uppercase">Administrator</div>
+              <div className="text-xs font-bold text-slate-900">{tenant.name}</div>
+              <div className="text-[10px] text-slate-500 uppercase">{shellLabel}</div>
             </div>
             <div className="w-9 h-9 rounded-xl bg-slate-200 border border-slate-300"></div>
           </div>
