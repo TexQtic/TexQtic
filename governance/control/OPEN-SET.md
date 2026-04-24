@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — VERIFIED_COMPLETE)
+**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -81,10 +81,15 @@
   NB-001 closed: header identity replaced — {tenant.name} / {shellLabel} confirmed in production.
   Production evidence: header shows 'QA Buyer / B2B WORKSPACE'; Catalog sidebar item shows blue active pill.
   Verification artifact: docs/TECS-B2B-BUYER-NAV-POLISH-001-v1.md.
-- Layer 0 posture: `ZERO_OPEN` — TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 is VERIFIED_COMPLETE.
-  No active product-delivery unit. D-016 decision control required before any new unit opens.
-  The next opening is a human decision; no unit may be inferred from the closed unit, family
-  proximity, or stale carry-forward wording.
+- TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is DESIGN_COMPLETE (2026-05-08).
+  Design artifact: docs/TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001-DESIGN-v1.md.
+  Repo truth inspection complete. Four implementation slices identified: card visual clarity,
+  Phase B selected-state polish + Retry, empty/loading/error standardization, test coverage.
+  File allowlist for implementation: App.tsx (modify), tests/b2b-buyer-catalog-supplier-selection.test.tsx (create).
+  No backend, service layer, shell/nav, or schema changes in scope.
+  Authorization: continuation of buyer catalog cluster per PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
+- Layer 0 posture: `DESIGN_COMPLETE` — TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 design artifact committed.
+  Unit is active (design phase). Implementation requires explicit authorization per D-016.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).

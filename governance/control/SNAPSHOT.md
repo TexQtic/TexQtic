@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — VERIFIED_COMPLETE)
+**Updated:** 2026-05-08 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — DESIGN_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,8 +10,8 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-24
-snapshot_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
+snapshot_date: 2026-05-08
+snapshot_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -42,13 +42,13 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: NONE
-current_product_active_delivery_status: ZERO_OPEN
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
+current_product_active_delivery_status: DESIGN_COMPLETE
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-proposed_next_unit: NONE_OPEN
-proposed_next_unit_status: AWAITING_NEXT_HUMAN_AUTHORIZATION
+proposed_next_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
+proposed_next_unit_status: IMPLEMENTATION_PENDING_AUTHORIZATION
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -76,12 +76,13 @@ latest_verified_product_close: |
   Note: current catalog access is intentionally launch-accelerated and too open long-term.
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Prior verified close: TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (sub-unit, 2026-04-24).
-current_open_unit: NONE
+current_open_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
 current_open_unit_note: |
-  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 is VERIFIED_COMPLETE (2026-04-24).
-  Zero active product-delivery units. Next unit requires explicit human authorization per D-016.
-  Phase 3+ candidates (supplier UX polish, search, item detail, price disclosure,
-  buyer-supplier allowlist) are candidates only — unopened, each requires new product decision.
+  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is DESIGN_COMPLETE (2026-05-08).
+  Design artifact committed. Four implementation slices identified.
+  Implementation requires explicit human authorization per D-016 before work begins.
+  Phase 3+ deferred items (search, item detail, price disclosure, buyer-supplier allowlist)
+  remain unopened — each requires separate product decision.
   Future design concern: current catalog access is intentionally launch-accelerated and too open
   long-term. Relationship-scoped buyer catalog visibility is a future product/design cycle item.
 ```
