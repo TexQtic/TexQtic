@@ -1542,6 +1542,32 @@ export const __B2B_BUYER_CATALOG_TESTING__ = {
   resolveSupplierCatalogPhase,
 };
 
+// TECS-B2B-BUYER-CATALOG-LISTING-001: Pure descriptors for focused listing tests.
+export function formatMoqLabel(moq: number): string {
+  return `Min. Order: ${moq}`;
+}
+
+export function resolveImageFallbackAriaLabel(itemName: string): string {
+  return `${itemName} \u2014 image not available`;
+}
+
+export const PHASE_B_EMPTY_STATE_LINES: [string, string] = [
+  'This supplier has no active catalog items at this time.',
+  'Contact the supplier directly if you expect items to be available.',
+];
+
+// Pure guard: true only when a load-more is safe to start.
+export function canStartLoadMore(loadingMore: boolean, nextCursor: string | null): boolean {
+  return !loadingMore && nextCursor !== null;
+}
+
+export const __B2B_BUYER_CATALOG_LISTING_TESTING__ = {
+  formatMoqLabel,
+  resolveImageFallbackAriaLabel,
+  PHASE_B_EMPTY_STATE_LINES,
+  canStartLoadMore,
+};
+
 type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
@@ -1865,6 +1891,8 @@ const App: React.FC = () => {
   const [buyerCatalogLoading, setBuyerCatalogLoading] = useState(false);
   const [buyerCatalogError, setBuyerCatalogError] = useState<string | null>(null);
   const [buyerCatalogNextCursor, setBuyerCatalogNextCursor] = useState<string | null>(null);
+  const [buyerCatalogLoadingMore, setBuyerCatalogLoadingMore] = useState(false);
+  const [buyerCatalogLoadMoreError, setBuyerCatalogLoadMoreError] = useState<string | null>(null);
   // Supplier picker state (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001)
   const [supplierPickerItems, setSupplierPickerItems] = useState<SupplierPickerEntry[]>([]);
   const [supplierPickerLoading, setSupplierPickerLoading] = useState(false);
@@ -2709,6 +2737,7 @@ const App: React.FC = () => {
     setBuyerCatalogItems([]);
     setBuyerCatalogNextCursor(null);
     setBuyerCatalogError(null);
+    setBuyerCatalogLoadMoreError(null);
     setBuyerCatalogLoading(true);
 
     try {
@@ -2723,12 +2752,32 @@ const App: React.FC = () => {
     }
   };
 
+  // TECS-B2B-BUYER-CATALOG-LISTING-001: Named load-more handler with isolated state.
+  const handleLoadMoreBuyerCatalog = async () => {
+    if (!buyerCatalogNextCursor || buyerCatalogLoadingMore) return;
+    setBuyerCatalogLoadingMore(true);
+    setBuyerCatalogLoadMoreError(null);
+    try {
+      const more = await getBuyerCatalogItems(buyerCatalogSupplierOrgId, {
+        cursor: buyerCatalogNextCursor,
+      });
+      setBuyerCatalogItems(prev => [...prev, ...more.items]);
+      setBuyerCatalogNextCursor(more.nextCursor);
+    } catch {
+      setBuyerCatalogLoadMoreError('Failed to load more items. Please try again.');
+    } finally {
+      setBuyerCatalogLoadingMore(false);
+    }
+  };
+
   // TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001: Load eligible supplier list for picker.
   const handleLoadSupplierPicker = async () => {
     setBuyerCatalogSupplierOrgId('');
     setBuyerCatalogItems([]);
     setBuyerCatalogNextCursor(null);
     setBuyerCatalogError(null);
+    setBuyerCatalogLoadingMore(false);
+    setBuyerCatalogLoadMoreError(null);
     setSupplierPickerItems([]);
     setSupplierPickerError(null);
     setSupplierPickerLoading(true);
@@ -4547,11 +4596,6 @@ const App: React.FC = () => {
                 <h1 className="text-2xl font-bold text-slate-900">
                   {resolveSupplierDisplayName(supplierPickerItems, buyerCatalogSupplierOrgId)}
                 </h1>
-                {supplierPickerItems.find(s => s.id === buyerCatalogSupplierOrgId)?.legalName && (
-                  <p className="text-slate-400 text-xs mt-0.5">
-                    Viewing: {supplierPickerItems.find(s => s.id === buyerCatalogSupplierOrgId)?.legalName}
-                  </p>
-                )}
                 <p className="text-slate-500 text-sm mt-1">
                   Browse active catalog items and request quotes.
                 </p>
@@ -4563,6 +4607,8 @@ const App: React.FC = () => {
                   setBuyerCatalogItems([]);
                   setBuyerCatalogNextCursor(null);
                   setBuyerCatalogError(null);
+                  setBuyerCatalogLoadingMore(false);
+                  setBuyerCatalogLoadMoreError(null);
                 }}
                 className="flex-shrink-0 px-4 py-2 text-slate-500 font-medium text-sm hover:text-slate-800 border border-slate-200 rounded-lg transition"
               >
@@ -4592,7 +4638,8 @@ const App: React.FC = () => {
 
             {!buyerCatalogLoading && !buyerCatalogError && buyerCatalogItems.length === 0 && buyerCatalogSupplierOrgId && (
               <div className="text-center py-12 text-slate-500 text-sm">
-                No items found. The supplier may have no active catalog items.
+                <p>This supplier has no active catalog items at this time.</p>
+                <p className="mt-1">Contact the supplier directly if you expect items to be available.</p>
               </div>
             )}
 
@@ -4609,25 +4656,26 @@ const App: React.FC = () => {
                           src={item.imageUrl}
                           className="w-full h-40 object-cover"
                           alt={item.name}
+                          loading="lazy"
                         />
                       ) : (
                         <div
                           className="w-full h-40 bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-400"
-                          aria-label={`${item.name} image unavailable`}
+                          aria-label={`${item.name} \u2014 image not available`}
                           role="img"
                         >
-                          Image unavailable
+                          No image
                         </div>
                       )}
-                      <div className="p-4 space-y-2">
-                        <h3 className="font-bold text-slate-900">{item.name}</h3>
+                      <div className="p-4 space-y-1.5">
+                        <h3 className="font-semibold text-slate-900">{item.name}</h3>
                         {item.sku && (
                           <p className="text-xs text-slate-400 font-mono">SKU: {item.sku}</p>
                         )}
                         {item.description && (
                           <p className="text-xs text-slate-500 line-clamp-2">{item.description}</p>
                         )}
-                        <div className="text-xs text-slate-400">MOQ: {item.moq}</div>
+                        <div className="text-xs text-slate-500">Min. Order: {item.moq}</div>
                         <div className="mt-3 border-t border-slate-100 pt-3">
                           <button
                             type="button"
@@ -4658,28 +4706,26 @@ const App: React.FC = () => {
                 </div>
 
                 {buyerCatalogNextCursor && (
-                  <div className="flex justify-center pt-2">
+                  <div className="flex flex-col items-center gap-2 pt-2">
+                    {buyerCatalogLoadMoreError && (
+                      <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                        {buyerCatalogLoadMoreError}
+                        <button
+                          type="button"
+                          onClick={() => void handleLoadMoreBuyerCatalog()}
+                          className="ml-3 text-sm text-red-600 underline"
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    )}
                     <button
                       type="button"
-                      disabled={buyerCatalogLoading}
-                      onClick={async () => {
-                        if (!buyerCatalogNextCursor || buyerCatalogLoading) return;
-                        setBuyerCatalogLoading(true);
-                        try {
-                          const more = await getBuyerCatalogItems(buyerCatalogSupplierOrgId, {
-                            cursor: buyerCatalogNextCursor,
-                          });
-                          setBuyerCatalogItems(prev => [...prev, ...more.items]);
-                          setBuyerCatalogNextCursor(more.nextCursor);
-                        } catch {
-                          setBuyerCatalogError('Failed to load more items.');
-                        } finally {
-                          setBuyerCatalogLoading(false);
-                        }
-                      }}
+                      disabled={buyerCatalogLoadingMore}
+                      onClick={() => void handleLoadMoreBuyerCatalog()}
                       className="px-6 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition disabled:opacity-50"
                     >
-                      {buyerCatalogLoading ? 'Loading...' : 'Load More'}
+                      {buyerCatalogLoadingMore ? 'Loading...' : 'Load More'}
                     </button>
                   </div>
                 )}
