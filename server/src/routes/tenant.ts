@@ -512,6 +512,160 @@ const certificationsCreateSchema = z.array(certificationEntrySchema).optional();
 /** Zod schema for the certifications JSONB array (update path — nullable to clear). */
 const certificationsUpdateSchema = z.array(certificationEntrySchema).nullable().optional();
 
+// Catalog stage taxonomy (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+const CATALOG_STAGE_VALUES = [
+  'YARN', 'FIBER', 'FABRIC_WOVEN', 'FABRIC_KNIT', 'FABRIC_PROCESSED',
+  'GARMENT', 'ACCESSORY_TRIM', 'CHEMICAL_AUXILIARY', 'MACHINE', 'MACHINE_SPARE',
+  'PACKAGING', 'SERVICE', 'SOFTWARE_SAAS', 'OTHER',
+] as const;
+
+const SERVICE_TYPE_VALUES = [
+  'FASHION_DESIGN', 'FABRIC_DESIGN_DOBBY', 'FABRIC_DESIGN_JACQUARD', 'FABRIC_DESIGN_PRINT',
+  'TECHNICAL_CONSULTING', 'BUSINESS_CONSULTING', 'TESTING_LAB', 'LOGISTICS_PROVIDER',
+  'CERTIFICATION_PROVIDER', 'MANUFACTURING_SERVICE', 'TEXTILE_SOFTWARE_SAAS', 'OTHER_SERVICE',
+] as const;
+
+// Stage-specific stageAttributes Zod schemas.
+// Use .passthrough() so extra JSONB keys beyond defined fields are preserved.
+const stageAttributesSchemas: Partial<Record<typeof CATALOG_STAGE_VALUES[number], z.ZodTypeAny>> = {
+  YARN: z.object({
+    yarnType: z.enum(['SPUN', 'FILAMENT', 'TEXTURED', 'CORE_SPUN', 'FANCY', 'OTHER']).optional(),
+    yarnCount: z.string().max(50).optional(),
+    countSystem: z.enum(['NE', 'NM', 'TEX', 'DENIER']).optional(),
+    ply: z.number().int().min(1).max(12).optional(),
+    twist: z.number().optional(),
+    twistDirection: z.enum(['S', 'Z']).optional(),
+    fiber: z.string().max(100).optional(),
+    composition: z.string().max(500).optional(),
+    denier: z.number().optional(),
+    filamentType: z.string().max(100).optional(),
+    spinningType: z.enum(['RING', 'OPEN_END', 'AIR_JET', 'COMPACT', 'VORTEX', 'OTHER']).optional(),
+    coneWeight: z.number().optional(),
+    endUse: z.enum(['WEAVING', 'KNITTING', 'EMBROIDERY', 'SEWING_THREAD', 'OTHER']).optional(),
+    certifications: z.array(z.string().max(100)).optional(),
+  }).passthrough(),
+  FIBER: z.object({
+    fiberType: z.string().max(50).optional(),
+    fiberGrade: z.string().max(50).optional(),
+    stapleLength: z.number().optional(),
+    micronaire: z.number().optional(),
+    strength: z.number().optional(),
+    origin: z.string().max(100).optional(),
+    organicStatus: z.enum(['ORGANIC', 'CONVENTIONAL', 'TRANSITIONAL']).optional(),
+    moistureContent: z.number().optional(),
+    trashContent: z.number().optional(),
+    certifications: z.array(z.string().max(100)).optional(),
+  }).passthrough(),
+  FABRIC_WOVEN: z.object({
+    weaveType: z.string().max(50).optional(),
+    finish: z.string().max(100).optional(),
+    endUse: z.enum(['APPAREL', 'HOME_TEXTILE', 'INDUSTRIAL', 'TECHNICAL']).optional(),
+  }).passthrough(),
+  FABRIC_KNIT: z.object({
+    knitType: z.string().max(50).optional(),
+    gauge: z.number().optional(),
+    loopLength: z.number().optional(),
+    stretch: z.enum(['TWO_WAY', 'FOUR_WAY', 'NONE']).optional(),
+    finish: z.string().max(100).optional(),
+    endUse: z.enum(['APPAREL', 'HOME_TEXTILE', 'INDUSTRIAL', 'TECHNICAL']).optional(),
+  }).passthrough(),
+  FABRIC_PROCESSED: z.object({
+    processType: z.string().max(100).optional(),
+    dyeingMethod: z.string().max(100).optional(),
+    printingMethod: z.string().max(100).optional(),
+    baseConstruction: z.string().max(100).optional(),
+    finish: z.string().max(100).optional(),
+  }).passthrough(),
+  GARMENT: z.object({
+    garmentType: z.string().max(100).optional(),
+    sizeRange: z.string().max(100).optional(),
+    fit: z.string().max(50).optional(),
+    gender: z.string().max(50).optional(),
+    ageGroup: z.string().max(50).optional(),
+    fabricComposition: z.string().max(500).optional(),
+    trims: z.string().max(500).optional(),
+    stitchingType: z.string().max(100).optional(),
+    washCare: z.string().max(200).optional(),
+    monthlyCapacity: z.number().int().optional(),
+    complianceCertifications: z.array(z.string().max(100)).optional(),
+  }).passthrough(),
+  ACCESSORY_TRIM: z.object({
+    trimType: z.string().max(100).optional(),
+    material: z.string().max(100).optional(),
+    size: z.string().max(50).optional(),
+    color: z.string().max(100).optional(),
+    finish: z.string().max(100).optional(),
+    usage: z.string().max(200).optional(),
+    certifications: z.array(z.string().max(100)).optional(),
+  }).passthrough(),
+  CHEMICAL_AUXILIARY: z.object({
+    chemicalType: z.string().max(100).optional(),
+    applicationStage: z.string().max(100).optional(),
+    form: z.string().max(50).optional(),
+    concentration: z.string().max(50).optional(),
+    compatibility: z.string().max(200).optional(),
+    hazardClass: z.string().max(50).optional(),
+    packSize: z.string().max(100).optional(),
+    compliance: z.string().max(200).optional(),
+    sdsAvailable: z.boolean().optional(),
+  }).passthrough(),
+  MACHINE: z.object({
+    machineType: z.string().max(100).optional(),
+    brand: z.string().max(100).optional(),
+    model: z.string().max(100).optional(),
+    year: z.number().int().min(1900).max(2100).optional(),
+    capacity: z.string().max(100).optional(),
+    automationLevel: z.string().max(50).optional(),
+    powerRequirement: z.string().max(100).optional(),
+    condition: z.string().max(50).optional(),
+    warranty: z.string().max(100).optional(),
+    serviceSupport: z.boolean().optional(),
+  }).passthrough(),
+  MACHINE_SPARE: z.object({
+    spareType: z.string().max(100).optional(),
+    compatibleMachine: z.string().max(100).optional(),
+    partNumber: z.string().max(100).optional(),
+    material: z.string().max(100).optional(),
+    dimension: z.string().max(100).optional(),
+    brand: z.string().max(100).optional(),
+    condition: z.string().max(50).optional(),
+    stockAvailability: z.string().max(50).optional(),
+    leadTimeDays: z.number().int().optional(),
+  }).passthrough(),
+  PACKAGING: z.object({
+    packagingType: z.string().max(100).optional(),
+    material: z.string().max(100).optional(),
+    size: z.string().max(100).optional(),
+    gsmOrThickness: z.string().max(50).optional(),
+    printCompatibility: z.string().max(100).optional(),
+    foodGrade: z.boolean().optional(),
+    recyclable: z.boolean().optional(),
+    compliance: z.string().max(200).optional(),
+  }).passthrough(),
+  SERVICE: z.object({
+    serviceType: z.enum(SERVICE_TYPE_VALUES).optional(),
+    specialization: z.string().max(200).optional(),
+    industryFocus: z.array(z.string().max(100)).optional(),
+    softwareTools: z.string().max(200).optional(),
+    locationCoverage: z.string().max(200).optional(),
+    turnaroundTimeDays: z.number().int().optional(),
+    portfolioAvailable: z.boolean().optional(),
+    certifications: z.array(z.string().max(100)).optional(),
+    pricingModel: z.enum(['PER_PROJECT', 'HOURLY', 'RETAINER', 'SUBSCRIPTION']).optional(),
+  }).passthrough(),
+  SOFTWARE_SAAS: z.object({
+    softwareCategory: z.string().max(100).optional(),
+    deploymentModel: z.string().max(100).optional(),
+    modules: z.array(z.string().max(100)).optional(),
+    integrations: z.string().max(500).optional(),
+    userSeats: z.string().max(100).optional(),
+    supportLevel: z.string().max(100).optional(),
+    securityCertifications: z.array(z.string().max(100)).optional(),
+    trialAvailable: z.boolean().optional(),
+  }).passthrough(),
+  OTHER: z.record(z.unknown()),
+};
+
 // =============================================================================
 // Pure helpers: vector text and attribute completeness
 // =============================================================================
@@ -529,48 +683,209 @@ interface CatalogItemForVectorText {
   gsm?: unknown;
   widthCm?: unknown;
   certifications?: Array<{ standard: string }> | null;
+  // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+  catalogStage?: string | null;
+  stageAttributes?: Record<string, unknown> | null;
 }
 
 /**
  * Build a rich plain-text document for vector ingestion from a catalog item.
- * Includes all non-null textile attributes so AI retrieval can match on fabric
- * properties, material composition, and certification standards.
+ * Stage-aware dispatch: uses catalogStage to select the relevant field set.
  * DOES NOT include price or publicationPosture (intentional).
  */
 export function buildCatalogItemVectorText(item: CatalogItemForVectorText): string {
+  const attrs = (item.stageAttributes ?? {}) as Record<string, unknown>;
+
+  function strOf(key: string): string | null {
+    const v = attrs[key];
+    return typeof v === 'string' && v.length > 0 ? v : null;
+  }
+  function numOf(key: string): number | null {
+    const v = attrs[key];
+    return v != null && !isNaN(Number(v)) ? Number(v) : null;
+  }
+  function arrOf(key: string): string[] {
+    const v = attrs[key];
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  }
+
+  const certStr =
+    item.certifications && item.certifications.length > 0
+      ? `Certifications: ${item.certifications.map(c => c.standard).join(', ')}`
+      : null;
+
   const parts: string[] = [item.name];
   if (item.sku) parts.push(`SKU: ${item.sku}`);
   if (item.description) parts.push(item.description);
-  if (item.productCategory) parts.push(`Category: ${item.productCategory}`);
-  if (item.fabricType) parts.push(`Fabric type: ${item.fabricType}`);
-  if (item.material) parts.push(`Material: ${item.material}`);
-  if (item.composition) parts.push(`Composition: ${item.composition}`);
-  if (item.construction) parts.push(`Construction: ${item.construction}`);
-  if (item.color) parts.push(`Color: ${item.color}`);
-  if (item.gsm != null) parts.push(`GSM: ${Number(item.gsm)}`);
-  if (item.widthCm != null) parts.push(`Width: ${Number(item.widthCm)}cm`);
-  if (item.certifications && item.certifications.length > 0) {
-    parts.push(`Certifications: ${item.certifications.map(c => c.standard).join(', ')}`);
+
+  switch (item.catalogStage) {
+    case 'YARN': {
+      if (strOf('yarnType')) parts.push(`Yarn type: ${strOf('yarnType')}`);
+      if (strOf('yarnCount')) parts.push(`Yarn count: ${strOf('yarnCount')}`);
+      if (strOf('countSystem')) parts.push(`Count system: ${strOf('countSystem')}`);
+      if (strOf('fiber')) parts.push(`Fiber: ${strOf('fiber')}`);
+      if (item.composition) parts.push(`Composition: ${item.composition}`);
+      if (strOf('spinningType')) parts.push(`Spinning type: ${strOf('spinningType')}`);
+      if (certStr) parts.push(certStr);
+      break;
+    }
+    case 'FIBER': {
+      if (strOf('fiberType')) parts.push(`Fiber type: ${strOf('fiberType')}`);
+      if (strOf('fiberGrade')) parts.push(`Grade: ${strOf('fiberGrade')}`);
+      if (strOf('origin')) parts.push(`Origin: ${strOf('origin')}`);
+      if (strOf('organicStatus')) parts.push(`Organic status: ${strOf('organicStatus')}`);
+      if (certStr) parts.push(certStr);
+      break;
+    }
+    case 'FABRIC_KNIT': {
+      if (strOf('knitType')) parts.push(`Knit type: ${strOf('knitType')}`);
+      const gauge = numOf('gauge');
+      if (gauge != null) parts.push(`Gauge: ${gauge}`);
+      if (strOf('stretch')) parts.push(`Stretch: ${strOf('stretch')}`);
+      if (item.material) parts.push(`Material: ${item.material}`);
+      if (item.composition) parts.push(`Composition: ${item.composition}`);
+      if (certStr) parts.push(certStr);
+      break;
+    }
+    case 'GARMENT': {
+      if (strOf('garmentType')) parts.push(`Garment type: ${strOf('garmentType')}`);
+      if (strOf('gender')) parts.push(`Gender: ${strOf('gender')}`);
+      if (strOf('fabricComposition')) parts.push(`Fabric composition: ${strOf('fabricComposition')}`);
+      if (strOf('stitchingType')) parts.push(`Stitching: ${strOf('stitchingType')}`);
+      const cap = numOf('monthlyCapacity');
+      if (cap != null) parts.push(`Monthly capacity: ${cap}`);
+      if (certStr) parts.push(certStr);
+      break;
+    }
+    case 'MACHINE': {
+      if (strOf('machineType')) parts.push(`Machine type: ${strOf('machineType')}`);
+      if (strOf('brand')) parts.push(`Brand: ${strOf('brand')}`);
+      if (strOf('model')) parts.push(`Model: ${strOf('model')}`);
+      const year = numOf('year');
+      if (year != null) parts.push(`Year: ${year}`);
+      if (strOf('condition')) parts.push(`Condition: ${strOf('condition')}`);
+      const svc = attrs['serviceSupport'];
+      if (svc != null) parts.push(`Service support: ${svc}`);
+      break;
+    }
+    case 'SERVICE': {
+      if (strOf('serviceType')) parts.push(`Service type: ${strOf('serviceType')}`);
+      if (strOf('specialization')) parts.push(`Specialization: ${strOf('specialization')}`);
+      const industries = arrOf('industryFocus');
+      if (industries.length > 0) parts.push(`Industry focus: ${industries.join(', ')}`);
+      if (strOf('locationCoverage')) parts.push(`Location coverage: ${strOf('locationCoverage')}`);
+      if (certStr) parts.push(certStr);
+      break;
+    }
+    case 'SOFTWARE_SAAS': {
+      if (strOf('softwareCategory')) parts.push(`Software category: ${strOf('softwareCategory')}`);
+      if (strOf('deploymentModel')) parts.push(`Deployment: ${strOf('deploymentModel')}`);
+      const mods = arrOf('modules');
+      if (mods.length > 0) parts.push(`Modules: ${mods.join(', ')}`);
+      const secCerts = arrOf('securityCertifications');
+      if (secCerts.length > 0) parts.push(`Security certifications: ${secCerts.join(', ')}`);
+      break;
+    }
+    default: {
+      // FABRIC_WOVEN, FABRIC_PROCESSED, ACCESSORY_TRIM, CHEMICAL_AUXILIARY,
+      // MACHINE_SPARE, PACKAGING, OTHER, or null — use existing fabric field path.
+      if (item.productCategory) parts.push(`Category: ${item.productCategory}`);
+      if (item.fabricType) parts.push(`Fabric type: ${item.fabricType}`);
+      if (item.material) parts.push(`Material: ${item.material}`);
+      if (item.composition) parts.push(`Composition: ${item.composition}`);
+      if (item.construction) parts.push(`Construction: ${item.construction}`);
+      if (item.color) parts.push(`Color: ${item.color}`);
+      if (item.gsm != null) parts.push(`GSM: ${Number(item.gsm)}`);
+      if (item.widthCm != null) parts.push(`Width: ${Number(item.widthCm)}cm`);
+      if (certStr) parts.push(certStr);
+      break;
+    }
   }
+
   return parts.join('\n');
 }
 
 /**
- * Compute what fraction of the 9 textile attribute fields are non-null/non-empty.
+ * Compute what fraction of the relevant attribute fields are non-null/non-empty.
+ * Stage-aware: uses catalogStage to determine the expected field set.
  * Returns a value in [0, 1]. Intended for AI context metadata only — not stored.
  */
 export function catalogItemAttributeCompleteness(item: Partial<CatalogItemForVectorText>): number {
-  const fields = [
-    'productCategory', 'fabricType', 'gsm', 'material', 'composition',
-    'color', 'widthCm', 'construction', 'certifications',
-  ] as const;
-  const filled = fields.filter(f => {
-    const v = (item as Record<string, unknown>)[f];
+  const attrs = (item.stageAttributes ?? {}) as Record<string, unknown>;
+
+  function hasAttr(key: string): boolean {
+    const v = attrs[key];
     if (v == null || v === '') return false;
     if (Array.isArray(v) && v.length === 0) return false;
     return true;
-  }).length;
-  return filled / 9;
+  }
+  function hasField(key: keyof CatalogItemForVectorText): boolean {
+    const v = item[key];
+    if (v == null || v === '') return false;
+    if (Array.isArray(v) && (v as unknown[]).length === 0) return false;
+    return true;
+  }
+
+  switch (item.catalogStage) {
+    case 'YARN': {
+      // 11 fields
+      const count = [
+        hasField('name'), hasAttr('yarnType'), hasAttr('yarnCount'), hasAttr('countSystem'),
+        hasAttr('ply'), hasAttr('fiber'), hasField('composition'), hasAttr('spinningType'),
+        hasAttr('coneWeight'), hasAttr('endUse'), hasField('certifications'),
+      ].filter(Boolean).length;
+      return count / 11;
+    }
+    case 'FABRIC_KNIT': {
+      // 9 fields
+      const count = [
+        hasField('name'), hasAttr('knitType'), hasAttr('gauge'), hasAttr('loopLength'),
+        hasAttr('stretch'), hasField('material'), hasField('composition'), hasAttr('finish'),
+        hasField('certifications'),
+      ].filter(Boolean).length;
+      return count / 9;
+    }
+    case 'GARMENT': {
+      // 10 fields
+      const count = [
+        hasField('name'), hasAttr('garmentType'), hasAttr('gender'), hasAttr('ageGroup'),
+        hasAttr('fabricComposition'), hasAttr('trims'), hasAttr('stitchingType'),
+        hasAttr('washCare'), hasAttr('monthlyCapacity'), hasAttr('complianceCertifications'),
+      ].filter(Boolean).length;
+      return count / 10;
+    }
+    case 'MACHINE': {
+      // 8 fields
+      const count = [
+        hasField('name'), hasAttr('machineType'), hasAttr('brand'), hasAttr('model'),
+        hasAttr('year'), hasAttr('condition'), hasAttr('capacity'), hasAttr('serviceSupport'),
+      ].filter(Boolean).length;
+      return count / 8;
+    }
+    case 'SERVICE': {
+      // 7 fields
+      const count = [
+        hasField('name'), hasAttr('serviceType'), hasAttr('specialization'),
+        hasAttr('industryFocus'), hasAttr('locationCoverage'), hasAttr('turnaroundTimeDays'),
+        hasField('certifications'),
+      ].filter(Boolean).length;
+      return count / 7;
+    }
+    default: {
+      // FABRIC_WOVEN, null, or any other stage: 9 textile fields (legacy/unchanged)
+      const fields = [
+        'productCategory', 'fabricType', 'gsm', 'material', 'composition',
+        'color', 'widthCm', 'construction', 'certifications',
+      ] as const;
+      const filled = fields.filter(f => {
+        const v = (item as Record<string, unknown>)[f];
+        if (v == null || v === '') return false;
+        if (Array.isArray(v) && v.length === 0) return false;
+        return true;
+      }).length;
+      return filled / 9;
+    }
+  }
 }
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
@@ -1353,6 +1668,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         widthCm: z.number().min(1).max(999.99).optional(),
         construction: z.enum(CONSTRUCTION_VALUES).optional(),
         certifications: certificationsCreateSchema,
+        // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        catalogStage: z.enum(CATALOG_STAGE_VALUES).optional(),
+        stageAttributes: z.record(z.unknown()).optional(),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -1364,7 +1682,23 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         name, sku, imageUrl, description, price, moq,
         productCategory, fabricType, gsm, material, composition,
         color, widthCm, construction, certifications,
+        catalogStage, stageAttributes,
       } = parseResult.data;
+
+      // Validate stage-specific stageAttributes if present.
+      let validatedStageAttributes: Record<string, unknown> | null = null;
+      if (catalogStage && stageAttributes) {
+        const stageSchema = stageAttributesSchemas[catalogStage];
+        if (stageSchema) {
+          const attrResult = stageSchema.safeParse(stageAttributes);
+          if (!attrResult.success) {
+            return sendValidationError(reply, attrResult.error.errors);
+          }
+          validatedStageAttributes = attrResult.data as Record<string, unknown>;
+        } else {
+          validatedStageAttributes = stageAttributes;
+        }
+      }
 
       const item = await withDbContext(prisma, dbContext, async tx => {
         const created = await tx.catalogItem.create({
@@ -1387,6 +1721,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             widthCm: widthCm ?? null,
             construction: construction ?? null,
             certifications: certifications ? (certifications as unknown as Prisma.InputJsonValue) : null,
+            // Stage attributes
+            catalogStage: catalogStage ?? null,
+            stageAttributes: validatedStageAttributes !== null ? (validatedStageAttributes as unknown as Prisma.InputJsonValue) : null,
           },
         });
 
@@ -1485,6 +1822,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         widthCm: z.number().min(1).max(999.99).nullable().optional(),
         construction: z.enum(CONSTRUCTION_VALUES).nullable().optional(),
         certifications: certificationsUpdateSchema,
+        // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        catalogStage: z.enum(CATALOG_STAGE_VALUES).nullable().optional(),
+        stageAttributes: z.record(z.unknown()).nullable().optional(),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -1530,6 +1870,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             ...(data.construction !== undefined ? { construction: data.construction } : {}),
             ...(data.certifications !== undefined
               ? { certifications: data.certifications !== null ? (data.certifications as unknown as Prisma.InputJsonValue) : null }
+              : {}),
+            // Stage attributes
+            ...(data.catalogStage !== undefined ? { catalogStage: data.catalogStage } : {}),
+            ...(data.stageAttributes !== undefined
+              ? { stageAttributes: data.stageAttributes !== null ? (data.stageAttributes as unknown as Prisma.InputJsonValue) : null }
               : {}),
           },
         });
@@ -1706,6 +2051,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         widthMax: z.coerce.number().min(1).max(999.99).optional(),
         moqMax: z.coerce.number().int().min(1).optional(),
         certification: z.string().max(50).optional(),
+        // Stage filter (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        catalogStage: z.enum(CATALOG_STAGE_VALUES).optional(),
       });
 
       const paramsResult = paramsSchema.safeParse({ supplierOrgId });
@@ -1722,6 +2069,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         limit, cursor, q,
         productCategory, fabricType, material, construction, color,
         gsmMin, gsmMax, widthMin, widthMax, moqMax, certification,
+        catalogStage,
       } = queryResult.data;
 
       // Gate 1: Org eligibility (admin context required — organizations RLS requires admin realm).
@@ -1796,6 +2144,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       if (moqMax !== undefined) {
         filterClauses.push({ moq: { lte: moqMax } });
       }
+      if (catalogStage) {
+        filterClauses.push({ catalogStage: { equals: catalogStage } });
+      }
 
       const baseWhere: Prisma.catalogItemWhereInput = { AND: filterClauses };
 
@@ -1812,6 +2163,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         gsm: unknown; material: string | null; composition: string | null;
         color: string | null; width_cm: unknown; construction: string | null;
         certifications: unknown;
+        catalog_stage: string | null; stage_attributes: unknown;
       };
 
       let rawItems: RawCatalogRow[];
@@ -1840,7 +2192,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           return tx.$queryRaw<RawCatalogRow[]>`
             SELECT id, name, sku, description, moq, image_url AS "imageUrl",
                    product_category, fabric_type, gsm, material, composition,
-                   color, width_cm, construction, certifications
+                   color, width_cm, construction, certifications,
+                   catalog_stage, stage_attributes
             FROM catalog_items
             WHERE id = ANY(${candidateIds}::uuid[])
               AND certifications IS NOT NULL
@@ -1867,6 +2220,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               productCategory: true, fabricType: true, gsm: true, material: true,
               composition: true, color: true, widthCm: true, construction: true,
               certifications: true,
+              catalogStage: true, stageAttributes: true,
             },
             orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
             take: limit + 1,
@@ -1883,6 +2237,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             ...item,
             gsm: item.gsm != null ? Number(item.gsm) : null,
             widthCm: item.widthCm != null ? Number(item.widthCm) : null,
+            stageAttributes: item.stageAttributes as Record<string, unknown> | null,
           })),
           count: resultItems.length,
           nextCursor,
@@ -1911,6 +2266,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           widthCm: r.width_cm != null ? Number(r.width_cm) : null,
           construction: r.construction,
           certifications: r.certifications as Array<{ standard: string }> | null,
+          catalogStage: r.catalog_stage,
+          stageAttributes: r.stage_attributes as Record<string, unknown> | null,
         })),
         count: resultRaw.length,
         nextCursor,

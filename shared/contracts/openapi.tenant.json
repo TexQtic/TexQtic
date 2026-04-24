@@ -1010,6 +1010,14 @@
                         "validUntil": { "type": "string" }
                       }
                     }
+                  },
+                  "catalogStage": {
+                    "type": "string",
+                    "description": "Textile supply-chain stage (controlled vocabulary: YARN, FIBER, FABRIC_WOVEN, FABRIC_KNIT, FABRIC_PROCESSED, GARMENT, ACCESSORY_TRIM, CHEMICAL_AUXILIARY, MACHINE, MACHINE_SPARE, PACKAGING, SERVICE, SOFTWARE_SAAS, OTHER)"
+                  },
+                  "stageAttributes": {
+                    "type": "object",
+                    "description": "Stage-specific structured attributes stored as JSONB. Keys and schema depend on catalogStage value."
                   }
                 }
               }
@@ -1098,6 +1106,19 @@
                             "validUntil": { "type": "string" }
                           }
                         }
+                      },
+                      { "type": "null" }
+                    ]
+                  },
+                  "catalogStage": {
+                    "type": ["string", "null"],
+                    "description": "Textile supply-chain stage. Set null to clear."
+                  },
+                  "stageAttributes": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "description": "Stage-specific structured attributes."
                       },
                       { "type": "null" }
                     ]
@@ -1336,6 +1357,12 @@
             "in": "query",
             "schema": { "type": "string", "maxLength": 50 },
             "description": "Filter by certification standard (JSONB @> containment)"
+          },
+          {
+            "name": "catalogStage",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 50 },
+            "description": "Filter by catalog stage (controlled vocabulary: YARN, FIBER, FABRIC_WOVEN, FABRIC_KNIT, FABRIC_PROCESSED, GARMENT, ACCESSORY_TRIM, CHEMICAL_AUXILIARY, MACHINE, MACHINE_SPARE, PACKAGING, SERVICE, SOFTWARE_SAAS, OTHER)"
           }
         ],
         "responses": {
@@ -1379,6 +1406,19 @@
                                     "validUntil": { "type": "string" }
                                   }
                                 }
+                              },
+                              { "type": "null" }
+                            ]
+                          },
+                          "catalogStage": {
+                            "type": ["string", "null"],
+                            "description": "Textile supply-chain stage"
+                          },
+                          "stageAttributes": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "description": "Stage-specific structured attributes."
                               },
                               { "type": "null" }
                             ]

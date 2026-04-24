@@ -354,6 +354,8 @@ model CatalogItem {
   widthCm            Decimal?    @map("width_cm") @db.Decimal(6, 2)
   construction       String?     @db.VarChar(50)
   certifications     Json?
+  catalogStage       String?     @map("catalog_stage") @db.VarChar(50)
+  stageAttributes    Json?       @map("stage_attributes")
   cartItems          CartItem[]
   tenant             Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orderItems         OrderItem[]

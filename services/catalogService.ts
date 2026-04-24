@@ -102,6 +102,9 @@ export interface CreateCatalogItemRequest {
   widthCm?: number;
   construction?: string;
   certifications?: CertificationEntry[];
+  // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+  catalogStage?: CatalogStage;
+  stageAttributes?: Record<string, unknown>;
 }
 
 export interface CreateCatalogItemResponse {
@@ -126,6 +129,9 @@ export interface UpdateCatalogItemRequest {
   widthCm?: number | null;
   construction?: string | null;
   certifications?: CertificationEntry[] | null;
+  // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+  catalogStage?: CatalogStage | null;
+  stageAttributes?: Record<string, unknown> | null;
 }
 
 export interface UpdateCatalogItemResponse {
@@ -350,6 +356,21 @@ export const CERT_STANDARD_VALUES = [
 ] as const;
 export type CertStandard = typeof CERT_STANDARD_VALUES[number];
 
+// Catalog stage taxonomy (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+export const CATALOG_STAGE_VALUES = [
+  'YARN', 'FIBER', 'FABRIC_WOVEN', 'FABRIC_KNIT', 'FABRIC_PROCESSED',
+  'GARMENT', 'ACCESSORY_TRIM', 'CHEMICAL_AUXILIARY', 'MACHINE', 'MACHINE_SPARE',
+  'PACKAGING', 'SERVICE', 'SOFTWARE_SAAS', 'OTHER',
+] as const;
+export type CatalogStage = typeof CATALOG_STAGE_VALUES[number];
+
+export const SERVICE_TYPE_VALUES = [
+  'FASHION_DESIGN', 'FABRIC_DESIGN_DOBBY', 'FABRIC_DESIGN_JACQUARD', 'FABRIC_DESIGN_PRINT',
+  'TECHNICAL_CONSULTING', 'BUSINESS_CONSULTING', 'TESTING_LAB', 'LOGISTICS_PROVIDER',
+  'CERTIFICATION_PROVIDER', 'MANUFACTURING_SERVICE', 'TEXTILE_SOFTWARE_SAAS', 'OTHER_SERVICE',
+] as const;
+export type ServiceType = typeof SERVICE_TYPE_VALUES[number];
+
 /** A certification entry stored in the JSONB certifications column. */
 export interface CertificationEntry {
   standard: string;
@@ -380,6 +401,9 @@ export interface BuyerCatalogItem {
   widthCm: number | null;
   construction: string | null;
   certifications: CertificationEntry[] | null;
+  // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+  catalogStage: string | null;
+  stageAttributes: Record<string, unknown> | null;
 }
 
 export interface BuyerCatalogResponse {
@@ -404,6 +428,8 @@ export interface BuyerCatalogQueryParams {
   widthMax?: number;
   moqMax?: number;
   certification?: string;
+  // Stage filter (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+  catalogStage?: CatalogStage;
 }
 
 /**
@@ -467,6 +493,9 @@ export async function getBuyerCatalogItems(
   }
   if (params.certification) {
     queryParams.append('certification', params.certification);
+  }
+  if (params.catalogStage) {
+    queryParams.append('catalogStage', params.catalogStage);
   }
 
   const queryString = queryParams.toString();
