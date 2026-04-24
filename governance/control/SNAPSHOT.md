@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-08 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — DESIGN_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,7 +10,7 @@
 ---
 
 ```yaml
-snapshot_date: 2026-05-08
+snapshot_date: 2026-04-24
 snapshot_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
@@ -44,11 +44,16 @@ preserved_aligned_anchor_posture:
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
-current_product_active_delivery_status: DESIGN_COMPLETE
+current_product_active_delivery_status: IMPLEMENTATION_COMPLETE
+current_product_active_delivery_design_commit: 0c47d7e
+current_product_active_delivery_implementation_commit: 3e9086a
+current_product_active_delivery_validation: |
+  frontend tsc --noEmit: PASS
+  focused tests (17/17): PASS
+  full suite: 471 PASS / 7 FAIL (pre-existing server-integration failures, unrelated)
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-proposed_next_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
-proposed_next_unit_status: IMPLEMENTATION_PENDING_AUTHORIZATION
+runtime_verification_status: PENDING — M1-M9 manual steps and neighbor-path smoke required before final VERIFIED_COMPLETE closure
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -78,11 +83,13 @@ latest_verified_product_close: |
   Prior verified close: TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (sub-unit, 2026-04-24).
 current_open_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
 current_open_unit_note: |
-  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is DESIGN_COMPLETE (2026-05-08).
-  Design artifact committed. Four implementation slices identified.
-  Implementation requires explicit human authorization per D-016 before work begins.
-  Phase 3+ deferred items (search, item detail, price disclosure, buyer-supplier allowlist)
-  remain unopened — each requires separate product decision.
+  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
+  Design commit: 0c47d7e. Implementation commit: 3e9086a.
+  All four slices delivered and validated. Runtime/production verification (M1-M9 per design
+  artifact §H) required before final VERIFIED_COMPLETE closure.
+  Phase 3+ deferred items (search, item detail, price disclosure, publicationPosture filtering,
+  buyer-supplier allowlist) remain unopened — each requires separate product decision.
+  No catalog listing/search/PDP/pricing/RFQ/relationship-access work opened.
   Future design concern: current catalog access is intentionally launch-accelerated and too open
   long-term. Relationship-scoped buyer catalog visibility is a future product/design cycle item.
 ```

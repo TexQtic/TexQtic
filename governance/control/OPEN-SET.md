@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -81,15 +81,18 @@
   NB-001 closed: header identity replaced — {tenant.name} / {shellLabel} confirmed in production.
   Production evidence: header shows 'QA Buyer / B2B WORKSPACE'; Catalog sidebar item shows blue active pill.
   Verification artifact: docs/TECS-B2B-BUYER-NAV-POLISH-001-v1.md.
-- TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is DESIGN_COMPLETE (2026-05-08).
+- TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
+  Design commit: 0c47d7e. Implementation commit: 3e9086a.
   Design artifact: docs/TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001-DESIGN-v1.md.
-  Repo truth inspection complete. Four implementation slices identified: card visual clarity,
-  Phase B selected-state polish + Retry, empty/loading/error standardization, test coverage.
-  File allowlist for implementation: App.tsx (modify), tests/b2b-buyer-catalog-supplier-selection.test.tsx (create).
-  No backend, service layer, shell/nav, or schema changes in scope.
-  Authorization: continuation of buyer catalog cluster per PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
-- Layer 0 posture: `DESIGN_COMPLETE` — TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 design artifact committed.
-  Unit is active (design phase). Implementation requires explicit authorization per D-016.
+  All four implementation slices delivered: card visual clarity (slug removed, primarySegment chip,
+  full-card clickable with keyboard support), Phase B selected-state polish + Retry, empty/loading/error
+  standardization, buyer catalog test coverage (new test file, 17/17 passing).
+  Validation: frontend tsc --noEmit PASS; focused tests 17/17 PASS; full suite 471 PASS /
+  7 known pre-existing server-integration failures (unrelated to this unit).
+  Runtime status: pending production/manual verification before final close.
+  Changed files: App.tsx (modified), tests/b2b-buyer-catalog-supplier-selection.test.tsx (created).
+- Layer 0 posture: `IMPLEMENTATION_COMPLETE` — TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 implementation committed.
+  Unit pending runtime/production verification before final VERIFIED_COMPLETE closure.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
