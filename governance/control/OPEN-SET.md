@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — IMPLEMENTATION_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -69,8 +69,8 @@
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
   buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
-- TECS-B2B-BUYER-CATALOG-LISTING-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
-  Design commit: c5cdcb5. SHA follow-up: 9c4f4f6. Implementation commit: f6ff2a8.
+- TECS-B2B-BUYER-CATALOG-LISTING-001 is VERIFIED_COMPLETE (2026-04-24).
+  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth sync: a2c907f.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md.
   Slices delivered: state isolation (buyerCatalogLoadingMore + buyerCatalogLoadMoreError);
   supplier header cleanup + card polish (remove 'Viewing' badge, MOQ → 'Min. Order: N',
@@ -78,7 +78,11 @@
   two-sentence empty state; focused listing tests (32/32 PASS, new test file).
   Validation: frontend TS PASS; focused listing tests 32/32 PASS;
   supplier-selection regression 17/17 PASS; full suite pre-existing failures only.
-  Runtime verification: PENDING (M1–M12 manual steps per design artifact).
+  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
+  Production: https://app.texqtic.com, actor qa.buyer@texqtic.com, 9/9 executable checks PASS.
+  Non-executable in production (covered by unit tests): M9 image fallback (all seed images valid),
+    M11/M12/M13 Load More (14-item catalog, no nextCursor), M14 initial load failure.
+  Blockers: none.
   Changed files: App.tsx (modified), tests/b2b-buyer-catalog-listing.test.tsx (created).
   No search/filter/sort/PDP/pricing/RFQ/backend/API/schema/auth changes.
 - TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 is DESIGN_COMPLETE (2026-05-08).
@@ -103,8 +107,8 @@
   7 known pre-existing server-integration failures (unrelated to this unit).
   Runtime status: pending production/manual verification before final close.
   Changed files: App.tsx (modified), tests/b2b-buyer-catalog-supplier-selection.test.tsx (created).
-- Layer 0 posture: `IMPLEMENTATION_COMPLETE` — TECS-B2B-BUYER-CATALOG-LISTING-001 implementation committed (f6ff2a8).
-  Unit pending runtime/production verification (M1–M12) before final VERIFIED_COMPLETE closure.
+- Layer 0 posture: `ZERO_OPEN` — TECS-B2B-BUYER-CATALOG-LISTING-001 VERIFIED_COMPLETE (2026-04-24).
+  No active delivery unit. Awaiting Paresh next unit selection.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).

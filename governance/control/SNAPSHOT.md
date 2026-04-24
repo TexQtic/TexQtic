@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — IMPLEMENTATION_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — VERIFIED_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -42,21 +42,16 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
-current_product_active_delivery_status: IMPLEMENTATION_COMPLETE
-current_product_active_delivery_design_commit: c5cdcb5
-current_product_active_delivery_followup_sha: 9c4f4f6
-current_product_active_delivery_implementation_commit: f6ff2a8
-current_product_active_delivery_validation: |
-  TypeScript: PASS (zero errors)
-  focused listing tests: 32/32 PASS (tests/b2b-buyer-catalog-listing.test.tsx)
-  supplier-selection regression: 17/17 PASS
-  full suite: pre-existing failures only (rfq-detail-route timeout, admin-rbac 401,
-    g026-middleware-import, membership-authz SMTP — all unrelated to this unit)
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: NONE
+current_product_active_delivery_status: ZERO_OPEN
+current_product_active_delivery_design_commit: N/A
+current_product_active_delivery_followup_sha: N/A
+current_product_active_delivery_implementation_commit: N/A
+current_product_active_delivery_validation: N/A
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: PENDING — TECS-B2B-BUYER-CATALOG-LISTING-001 M1–M12 manual verification steps outstanding; TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1–M9 also outstanding
+runtime_verification_status: VERIFIED_WITH_NON_BLOCKING_NOTES — TECS-B2B-BUYER-CATALOG-LISTING-001 production verification PASS 9/9 executable checks (2026-04-24); fixture-limited non-executables (M9/M11–M14) covered by unit tests; TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1–M9 outstanding
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -65,10 +60,13 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
-  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE (2026-04-24).
-  Design commit: 0c47d7e. Implementation commit: 3e9086a. Truth sync: 81a9a5f.
-  Validation: frontend TS PASS; 17/17 PASS; full suite 471 PASS / 7 pre-existing fails.
-  Runtime verification (M1-M9) outstanding.
+  TECS-B2B-BUYER-CATALOG-LISTING-001 — VERIFIED_COMPLETE (2026-04-24).
+  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth syncs: a2c907f + (this commit).
+  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
+  Production: https://app.texqtic.com, actor qa.buyer@texqtic.com, 9/9 executable checks PASS.
+  Non-blocking: M9 (image fallback), M11–M14 (Load More + error paths) not executable in
+    production with current 14-item seed catalog; all covered by 32/32 passing unit tests.
+  Blockers: none.
 prior_latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — B2B buyer-side catalog supplier-select unit.
   Verdict: VERIFIED_COMPLETE (2026-04-24).
@@ -89,16 +87,16 @@ prior_latest_verified_product_close: |
   Note: current catalog access is intentionally launch-accelerated and too open long-term.
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Prior verified close: TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (sub-unit, 2026-04-24).
-current_open_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
+current_open_unit: NONE
 current_open_unit_note: |
-  TECS-B2B-BUYER-CATALOG-LISTING-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
-  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth sync: (this commit).
-  All four slices delivered and validated. Runtime/production verification (M1–M12) required
-  before final VERIFIED_COMPLETE closure.
-  Verification focus: Phase B grid render, no 'Viewing:' badge, Min. Order card label,
-    No image fallback, Load More grid-preserving append, load-more inline error isolation,
-    RFQ dialog still opens, ← All Suppliers resets to Phase A.
-  No search/filter/sort/PDP/pricing/RFQ/backend/API/schema/auth work opened.
+  No active delivery unit. TECS-B2B-BUYER-CATALOG-LISTING-001 closed VERIFIED_COMPLETE (2026-04-24).
+  Awaiting Paresh next unit selection.
+  Suggested candidates (each requires explicit authorization):
+    TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001
+    TECS-B2B-BUYER-CATALOG-PDP-001
+    TECS-B2B-BUYER-PRICE-DISCLOSURE-001
+    TECS-B2B-BUYER-RFQ-INTEGRATION-001
+  No search/filter/sort/PDP/pricing/RFQ/backend/API/schema/auth/relationship-access work opened.
   Phase 3+ deferred: search, item detail, price disclosure, publicationPosture filtering,
     buyer-supplier allowlist — each requires separate product decision.
 ```
