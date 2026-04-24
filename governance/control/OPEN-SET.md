@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-NAV-POLISH-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -57,19 +57,24 @@
 - TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
   Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
   All static gates passed. Runtime API checks pending production verification.
-- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 route binding fix is IMPLEMENTED_PENDING_RUNTIME_REVALIDATION (2026-04-23).
-  Implementation artifact: docs/TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001-v1.md.
-  Fix: buyer_catalog stateBinding changed to { expView: 'BUYER_CATALOG' }; 'BUYER_CATALOG' added to EXPERIENCE_VIEWS.
-  Files: runtime/sessionRuntimeDescriptor.ts · App.tsx.
-  Required next step: deploy to production, run follow-up production runtime validation pass.
-  NB-001, NB-002, NB-003 from prior verification artifacts remain unlifted until validation PASS.
-  Combined buyer-side B2B governance closure remains deferred. Requires explicit user instruction.
+- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is AWAITING_GOVERNANCE_CLOSURE (2026-04-24).
+  All implementation sub-units are VERIFIED_COMPLETE. Route binding fix applied (commit `1e499ad`).
+  All boundary violations resolved: BV-001 FIXED, BV-002/BV-003/BV-005 FIXED, BV-004 BY-DESIGN.
+  NB-001 (header identity) resolved in commit `0ea9c67`. NB-002, NB-003 remain non-blocking by-design.
+  Parent unit governance closure requires explicit user instruction.
 - TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 is DESIGN_COMPLETE (2026-05-08).
   Design artifact: docs/TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001-v1.md.
-  5 boundary violations identified: BV-001 FIXED, BV-002/BV-003/BV-005 OPEN, BV-004 BY-DESIGN.
-  Proposed next unit: TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 (awaiting authorization).
-  Files in scope: runtime/sessionRuntimeDescriptor.ts · layouts/Shells.tsx · App.tsx.
-- Layer 0 posture: `ACTIVE_DELIVERY` (Phase 2 unit open, pending verification).
+  5 boundary violations identified: BV-001 FIXED, BV-002/BV-003/BV-005 FIXED, BV-004 BY-DESIGN.
+  TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 is VERIFIED_COMPLETE (commits fba9f2e + ec78e65).
+  Verification artifact: docs/TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001-DEEP-VERIFICATION-v1.md.
+- TECS-B2B-BUYER-NAV-POLISH-001 is VERIFIED_COMPLETE (2026-04-24).
+  Implementation commit: `0ea9c67` — layouts/Shells.tsx only (+ docs record).
+  IC-001 closed: desktop B2B sidebar active-state CSS added.
+  IC-003 closed: B2B mobile menu active-state support added (MobileShellMenu backward-compatible fix).
+  NB-001 closed: header identity replaced — {tenant.name} / {shellLabel} confirmed in production.
+  Production evidence: header shows 'QA Buyer / B2B WORKSPACE'; Catalog sidebar item shows blue active pill.
+  Verification artifact: docs/TECS-B2B-BUYER-NAV-POLISH-001-v1.md.
+- Layer 0 posture: `ACTIVE_DELIVERY` (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 awaiting governance closure).
   The next opening is a human decision; no unit may be inferred from the closed unit, family
   proximity, or stale carry-forward wording.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
