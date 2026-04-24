@@ -92,6 +92,16 @@ export interface CreateCatalogItemRequest {
   description?: string;
   price: number;
   moq?: number;
+  // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+  productCategory?: string;
+  fabricType?: string;
+  gsm?: number;
+  material?: string;
+  composition?: string;
+  color?: string;
+  widthCm?: number;
+  construction?: string;
+  certifications?: CertificationEntry[];
 }
 
 export interface CreateCatalogItemResponse {
@@ -106,6 +116,16 @@ export interface UpdateCatalogItemRequest {
   price?: number;
   moq?: number;
   active?: boolean;
+  // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+  productCategory?: string | null;
+  fabricType?: string | null;
+  gsm?: number | null;
+  material?: string | null;
+  composition?: string | null;
+  color?: string | null;
+  widthCm?: number | null;
+  construction?: string | null;
+  certifications?: CertificationEntry[] | null;
 }
 
 export interface UpdateCatalogItemResponse {
@@ -296,9 +316,52 @@ export async function submitSupplierRfqResponse(
 
 // ==================== BUYER CATALOG BROWSE (TECS-B2B-BUYER-CATALOG-BROWSE-001) ====================
 
+// ---- Textile attribute controlled-vocabulary constants ----
+
+export const PRODUCT_CATEGORY_VALUES = [
+  'APPAREL_FABRIC', 'HOME_TEXTILE', 'TECHNICAL_FABRIC', 'INDUSTRIAL_FABRIC',
+  'LINING', 'INTERLINING', 'TRIMMING', 'ACCESSORY', 'OTHER',
+] as const;
+export type ProductCategory = typeof PRODUCT_CATEGORY_VALUES[number];
+
+export const FABRIC_TYPE_VALUES = [
+  'WOVEN', 'KNIT', 'NON_WOVEN', 'LACE', 'EMBROIDERED',
+  'TECHNICAL_COMPOSITE', 'FLEECE', 'OTHER',
+] as const;
+export type FabricType = typeof FABRIC_TYPE_VALUES[number];
+
+export const MATERIAL_VALUES = [
+  'COTTON', 'POLYESTER', 'SILK', 'WOOL', 'LINEN', 'VISCOSE', 'MODAL',
+  'TENCEL_LYOCELL', 'NYLON', 'ACRYLIC', 'HEMP', 'BAMBOO',
+  'RECYCLED_POLYESTER', 'RECYCLED_COTTON', 'BLENDED', 'OTHER',
+] as const;
+export type Material = typeof MATERIAL_VALUES[number];
+
+export const CONSTRUCTION_VALUES = [
+  'PLAIN_WEAVE', 'TWILL', 'SATIN', 'DOBBY', 'JACQUARD', 'TERRY', 'VELVET',
+  'JERSEY', 'RIB', 'INTERLOCK', 'FLEECE_KNIT', 'MESH', 'OTHER',
+] as const;
+export type Construction = typeof CONSTRUCTION_VALUES[number];
+
+export const CERT_STANDARD_VALUES = [
+  'OEKO_TEX_STANDARD_100', 'OEKO_TEX_LEATHER_STANDARD', 'GOTS', 'BCI', 'FAIR_TRADE',
+  'BLUESIGN', 'HIGG_INDEX', 'RECYCLED_CLAIM_STANDARD', 'GLOBAL_RECYCLE_STANDARD',
+  'ISO_9001', 'SEDEX_SMETA', 'OTHER',
+] as const;
+export type CertStandard = typeof CERT_STANDARD_VALUES[number];
+
+/** A certification entry stored in the JSONB certifications column. */
+export interface CertificationEntry {
+  standard: string;
+  certNumber?: string;
+  issuedBy?: string;
+  validUntil?: string;
+}
+
 /**
  * A single catalog item as visible to an authenticated B2B buyer.
- * Phase 1: id, name, sku, description, moq, imageUrl only — NO price.
+ * Phase 1 + textile attrs: id, name, sku, description, moq, imageUrl +
+ * 9 textile attributes (all nullable) — NO price, NO publicationPosture.
  */
 export interface BuyerCatalogItem {
   id: string;
@@ -307,6 +370,16 @@ export interface BuyerCatalogItem {
   description: string | null;
   moq: number;
   imageUrl: string | null;
+  // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+  productCategory: string | null;
+  fabricType: string | null;
+  gsm: number | null;
+  material: string | null;
+  composition: string | null;
+  color: string | null;
+  widthCm: number | null;
+  construction: string | null;
+  certifications: CertificationEntry[] | null;
 }
 
 export interface BuyerCatalogResponse {
@@ -319,12 +392,25 @@ export interface BuyerCatalogQueryParams {
   limit?: number;
   cursor?: string;
   q?: string;
+  // Textile attribute filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+  productCategory?: string;
+  fabricType?: string;
+  material?: string | string[];
+  construction?: string;
+  color?: string;
+  gsmMin?: number;
+  gsmMax?: number;
+  widthMin?: number;
+  widthMax?: number;
+  moqMax?: number;
+  certification?: string;
 }
 
 /**
  * Fetch active catalog items for a given supplier org (authenticated B2B buyer browse).
  * The supplier org must be publication-eligible (Gate 1 enforced server-side).
  * Price is intentionally absent from Phase 1 response.
+ * Supports textile attribute filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001).
  */
 export async function getBuyerCatalogItems(
   supplierOrgId: string,
@@ -342,6 +428,45 @@ export async function getBuyerCatalogItems(
 
   if (params.q && params.q.trim().length > 0) {
     queryParams.append('q', params.q.trim());
+  }
+
+  // Textile attribute filters
+  if (params.productCategory) {
+    queryParams.append('productCategory', params.productCategory);
+  }
+  if (params.fabricType) {
+    queryParams.append('fabricType', params.fabricType);
+  }
+  if (params.material) {
+    if (Array.isArray(params.material)) {
+      params.material.forEach(m => queryParams.append('material', m));
+    } else {
+      queryParams.append('material', params.material);
+    }
+  }
+  if (params.construction) {
+    queryParams.append('construction', params.construction);
+  }
+  if (params.color) {
+    queryParams.append('color', params.color);
+  }
+  if (params.gsmMin !== undefined) {
+    queryParams.append('gsmMin', params.gsmMin.toString());
+  }
+  if (params.gsmMax !== undefined) {
+    queryParams.append('gsmMax', params.gsmMax.toString());
+  }
+  if (params.widthMin !== undefined) {
+    queryParams.append('widthMin', params.widthMin.toString());
+  }
+  if (params.widthMax !== undefined) {
+    queryParams.append('widthMax', params.widthMax.toString());
+  }
+  if (params.moqMax !== undefined) {
+    queryParams.append('moqMax', params.moqMax.toString());
+  }
+  if (params.certification) {
+    queryParams.append('certification', params.certification);
   }
 
   const queryString = queryParams.toString();

@@ -466,6 +466,113 @@ async function resolveBuyerRfqTradeContinuity(
   });
 }
 
+// =============================================================================
+// TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+// Textile attribute controlled-vocabulary constants (shared by create/update/filter routes)
+// =============================================================================
+
+const PRODUCT_CATEGORY_VALUES = [
+  'APPAREL_FABRIC', 'HOME_TEXTILE', 'TECHNICAL_FABRIC', 'INDUSTRIAL_FABRIC',
+  'LINING', 'INTERLINING', 'TRIMMING', 'ACCESSORY', 'OTHER',
+] as const;
+
+const FABRIC_TYPE_VALUES = [
+  'WOVEN', 'KNIT', 'NON_WOVEN', 'LACE', 'EMBROIDERED',
+  'TECHNICAL_COMPOSITE', 'FLEECE', 'OTHER',
+] as const;
+
+const MATERIAL_VALUES = [
+  'COTTON', 'POLYESTER', 'SILK', 'WOOL', 'LINEN', 'VISCOSE', 'MODAL',
+  'TENCEL_LYOCELL', 'NYLON', 'ACRYLIC', 'HEMP', 'BAMBOO',
+  'RECYCLED_POLYESTER', 'RECYCLED_COTTON', 'BLENDED', 'OTHER',
+] as const;
+
+const CONSTRUCTION_VALUES = [
+  'PLAIN_WEAVE', 'TWILL', 'SATIN', 'DOBBY', 'JACQUARD', 'TERRY', 'VELVET',
+  'JERSEY', 'RIB', 'INTERLOCK', 'FLEECE_KNIT', 'MESH', 'OTHER',
+] as const;
+
+const CERT_STANDARD_VALUES = [
+  'OEKO_TEX_STANDARD_100', 'OEKO_TEX_LEATHER_STANDARD', 'GOTS', 'BCI', 'FAIR_TRADE',
+  'BLUESIGN', 'HIGG_INDEX', 'RECYCLED_CLAIM_STANDARD', 'GLOBAL_RECYCLE_STANDARD',
+  'ISO_9001', 'SEDEX_SMETA', 'OTHER',
+] as const;
+
+/** Zod schema for a single certification entry stored in the certifications JSONB column. */
+const certificationEntrySchema = z.object({
+  standard: z.enum(CERT_STANDARD_VALUES),
+  certNumber: z.string().max(100).optional(),
+  issuedBy: z.string().max(200).optional(),
+  validUntil: z.string().max(50).optional(),
+});
+
+/** Zod schema for the certifications JSONB array (create path — no null). */
+const certificationsCreateSchema = z.array(certificationEntrySchema).optional();
+
+/** Zod schema for the certifications JSONB array (update path — nullable to clear). */
+const certificationsUpdateSchema = z.array(certificationEntrySchema).nullable().optional();
+
+// =============================================================================
+// Pure helpers: vector text and attribute completeness
+// =============================================================================
+
+interface CatalogItemForVectorText {
+  name: string;
+  sku?: string | null;
+  description?: string | null;
+  productCategory?: string | null;
+  fabricType?: string | null;
+  material?: string | null;
+  composition?: string | null;
+  construction?: string | null;
+  color?: string | null;
+  gsm?: unknown;
+  widthCm?: unknown;
+  certifications?: Array<{ standard: string }> | null;
+}
+
+/**
+ * Build a rich plain-text document for vector ingestion from a catalog item.
+ * Includes all non-null textile attributes so AI retrieval can match on fabric
+ * properties, material composition, and certification standards.
+ * DOES NOT include price or publicationPosture (intentional).
+ */
+export function buildCatalogItemVectorText(item: CatalogItemForVectorText): string {
+  const parts: string[] = [item.name];
+  if (item.sku) parts.push(`SKU: ${item.sku}`);
+  if (item.description) parts.push(item.description);
+  if (item.productCategory) parts.push(`Category: ${item.productCategory}`);
+  if (item.fabricType) parts.push(`Fabric type: ${item.fabricType}`);
+  if (item.material) parts.push(`Material: ${item.material}`);
+  if (item.composition) parts.push(`Composition: ${item.composition}`);
+  if (item.construction) parts.push(`Construction: ${item.construction}`);
+  if (item.color) parts.push(`Color: ${item.color}`);
+  if (item.gsm != null) parts.push(`GSM: ${Number(item.gsm)}`);
+  if (item.widthCm != null) parts.push(`Width: ${Number(item.widthCm)}cm`);
+  if (item.certifications && item.certifications.length > 0) {
+    parts.push(`Certifications: ${item.certifications.map(c => c.standard).join(', ')}`);
+  }
+  return parts.join('\n');
+}
+
+/**
+ * Compute what fraction of the 9 textile attribute fields are non-null/non-empty.
+ * Returns a value in [0, 1]. Intended for AI context metadata only — not stored.
+ */
+export function catalogItemAttributeCompleteness(item: Partial<CatalogItemForVectorText>): number {
+  const fields = [
+    'productCategory', 'fabricType', 'gsm', 'material', 'composition',
+    'color', 'widthCm', 'construction', 'certifications',
+  ] as const;
+  const filled = fields.filter(f => {
+    const v = (item as Record<string, unknown>)[f];
+    if (v == null || v === '') return false;
+    if (Array.isArray(v) && v.length === 0) return false;
+    return true;
+  }).length;
+  return filled / 9;
+}
+
 const tenantRoutes: FastifyPluginAsync = async fastify => {
   /**
    * GET /api/me
@@ -1236,6 +1343,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         description: z.string().optional(),
         price: z.number().positive(),
         moq: z.number().int().min(1).default(1),
+        // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        productCategory: z.enum(PRODUCT_CATEGORY_VALUES).optional(),
+        fabricType: z.enum(FABRIC_TYPE_VALUES).optional(),
+        gsm: z.number().min(10).max(2000).optional(),
+        material: z.enum(MATERIAL_VALUES).optional(),
+        composition: z.string().max(500).optional(),
+        color: z.string().max(100).optional(),
+        widthCm: z.number().min(1).max(999.99).optional(),
+        construction: z.enum(CONSTRUCTION_VALUES).optional(),
+        certifications: certificationsCreateSchema,
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -1243,7 +1360,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, parseResult.error.errors);
       }
 
-      const { name, sku, imageUrl, description, price, moq } = parseResult.data;
+      const {
+        name, sku, imageUrl, description, price, moq,
+        productCategory, fabricType, gsm, material, composition,
+        color, widthCm, construction, certifications,
+      } = parseResult.data;
 
       const item = await withDbContext(prisma, dbContext, async tx => {
         const created = await tx.catalogItem.create({
@@ -1256,6 +1377,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             price,
             moq,
             active: true,
+            // Textile attributes
+            productCategory: productCategory ?? null,
+            fabricType: fabricType ?? null,
+            gsm: gsm ?? null,
+            material: material ?? null,
+            composition: composition ?? null,
+            color: color ?? null,
+            widthCm: widthCm ?? null,
+            construction: construction ?? null,
+            certifications: certifications ? (certifications as unknown as Prisma.InputJsonValue) : null,
           },
         });
 
@@ -1267,7 +1398,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           action: 'catalog.item.created',
           entity: 'catalog_item',
           entityId: created.id,
-          metadataJson: { name, sku: sku ?? null, imageUrl: imageUrl ?? null, price, moq },
+          metadataJson: {
+            name, sku: sku ?? null, imageUrl: imageUrl ?? null, price, moq,
+            productCategory: productCategory ?? null,
+            fabricType: fabricType ?? null,
+            gsm: gsm ?? null,
+            material: material ?? null,
+            construction: construction ?? null,
+          },
         });
 
         return created;
@@ -1276,13 +1414,20 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       // G-028 B1: Enqueue async vector indexing after successful DB commit.
       // Must run after withDbContext resolves so the transaction is committed.
       // Failure is best-effort: a full queue does not fail the HTTP response.
-      const vectorText = description ? `${name}\n\n${description}` : name;
+      const vectorText = buildCatalogItemVectorText(item);
       const enqueueResult = enqueueSourceIngestion(
         dbContext.orgId,
         'CATALOG_ITEM',
         item.id,
         vectorText,
-        { name },
+        {
+          name: item.name,
+          productCategory: (item as Record<string, unknown>).productCategory as string | undefined ?? undefined,
+          fabricType: (item as Record<string, unknown>).fabricType as string | undefined ?? undefined,
+          material: (item as Record<string, unknown>).material as string | undefined ?? undefined,
+          gsm: (item as Record<string, unknown>).gsm != null ? Number((item as Record<string, unknown>).gsm) : undefined,
+          hasCertifications: Array.isArray((item as Record<string, unknown>).certifications) && ((item as Record<string, unknown>).certifications as unknown[]).length > 0,
+        },
       );
       if (!enqueueResult.accepted) {
         console.warn('[G028-B1][catalog_item_enqueue_rejected]', {
@@ -1330,6 +1475,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         price: z.number().positive().optional(),
         moq: z.number().int().min(1).optional(),
         active: z.boolean().optional(),
+        // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        productCategory: z.enum(PRODUCT_CATEGORY_VALUES).nullable().optional(),
+        fabricType: z.enum(FABRIC_TYPE_VALUES).nullable().optional(),
+        gsm: z.number().min(10).max(2000).nullable().optional(),
+        material: z.enum(MATERIAL_VALUES).nullable().optional(),
+        composition: z.string().max(500).nullable().optional(),
+        color: z.string().max(100).nullable().optional(),
+        widthCm: z.number().min(1).max(999.99).nullable().optional(),
+        construction: z.enum(CONSTRUCTION_VALUES).nullable().optional(),
+        certifications: certificationsUpdateSchema,
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -1364,6 +1519,18 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             ...(data.price !== undefined ? { price: data.price } : {}),
             ...(data.moq !== undefined ? { moq: data.moq } : {}),
             ...(data.active !== undefined ? { active: data.active } : {}),
+            // Textile attributes
+            ...(data.productCategory !== undefined ? { productCategory: data.productCategory } : {}),
+            ...(data.fabricType !== undefined ? { fabricType: data.fabricType } : {}),
+            ...(data.gsm !== undefined ? { gsm: data.gsm } : {}),
+            ...(data.material !== undefined ? { material: data.material } : {}),
+            ...(data.composition !== undefined ? { composition: data.composition } : {}),
+            ...(data.color !== undefined ? { color: data.color } : {}),
+            ...(data.widthCm !== undefined ? { widthCm: data.widthCm } : {}),
+            ...(data.construction !== undefined ? { construction: data.construction } : {}),
+            ...(data.certifications !== undefined
+              ? { certifications: data.certifications !== null ? (data.certifications as unknown as Prisma.InputJsonValue) : null }
+              : {}),
           },
         });
 
@@ -1375,7 +1542,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           action: 'catalog.item.updated',
           entity: 'catalog_item',
           entityId: result.id,
-          metadataJson: { ...data },
+          metadataJson: { ...data, certifications: undefined },
         });
 
         return result;
@@ -1388,7 +1555,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       // G-028 B2: Enqueue async vector reindex after successful DB commit.
       // Must run after withDbContext resolves so the transaction is committed.
       // Failure is best-effort: a full queue does not fail the HTTP response.
-      const vectorText = updated.description ? `${updated.name}\n\n${updated.description}` : updated.name;
+      const vectorText = buildCatalogItemVectorText(updated);
       const enqueueResult = enqueueSourceIngestion(
         dbContext.orgId,
         'CATALOG_ITEM',
@@ -1495,6 +1662,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Browse a supplier's public-eligible catalog items (authenticated B2B buyer, Phase 1)
    *
    * TECS-B2B-BUYER-CATALOG-BROWSE-001 — Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001
+   * TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — textile attr filters added
    *
    * Gate 1 — Org eligibility (consistent 404 for any non-eligible case; no gate detail exposed):
    *   organizations.publication_posture IN ('B2B_PUBLIC', 'BOTH')
@@ -1504,7 +1672,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Cross-tenant read uses prisma.$transaction with SET LOCAL ROLE texqtic_rfq_read.
    * Org eligibility check uses withOrgAdminContext (admin realm required for organizations RLS).
    *
-   * Response fields (Phase 1): id, name, sku, description, moq, imageUrl — NO price.
+   * Response fields: id, name, sku, description, moq, imageUrl + 9 textile attrs — NO price, NO publicationPosture.
    */
   fastify.get(
     '/tenant/catalog/supplier/:supplierOrgId/items',
@@ -1523,6 +1691,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         limit: z.coerce.number().int().min(1).max(100).default(20),
         cursor: z.string().uuid().optional(),
         q: z.string().max(100).optional(),
+        // Textile attribute filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        productCategory: z.string().max(50).optional(),
+        fabricType: z.string().max(50).optional(),
+        material: z.union([
+          z.array(z.string().max(50)),
+          z.string().max(50).transform(v => [v]),
+        ]).optional(),
+        construction: z.string().max(50).optional(),
+        color: z.string().max(100).optional(),
+        gsmMin: z.coerce.number().min(10).max(2000).optional(),
+        gsmMax: z.coerce.number().min(10).max(2000).optional(),
+        widthMin: z.coerce.number().min(1).max(999.99).optional(),
+        widthMax: z.coerce.number().min(1).max(999.99).optional(),
+        moqMax: z.coerce.number().int().min(1).optional(),
+        certification: z.string().max(50).optional(),
       });
 
       const paramsResult = paramsSchema.safeParse({ supplierOrgId });
@@ -1535,7 +1718,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, queryResult.error.errors);
       }
 
-      const { limit, cursor, q } = queryResult.data;
+      const {
+        limit, cursor, q,
+        productCategory, fabricType, material, construction, color,
+        gsmMin, gsmMax, widthMin, widthMax, moqMax, certification,
+      } = queryResult.data;
 
       // Gate 1: Org eligibility (admin context required — organizations RLS requires admin realm).
       // Checks both organizations.publication_posture and tenant.publicEligibilityPosture.
@@ -1566,44 +1753,166 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendNotFound(reply, 'Supplier catalog not found');
       }
 
-      // Gate 2: Read catalog items cross-tenant (texqtic_rfq_read role — proven cross-tenant read pattern).
-      const items = await prisma.$transaction(async tx => {
-        await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
-        return tx.catalogItem.findMany({
-          where: {
-            tenantId: supplierOrgId,
-            active: true,
-            ...(q && q.trim().length > 0 && {
-              OR: [
-                { name: { contains: q.trim(), mode: 'insensitive' } },
-                { sku: { contains: q.trim(), mode: 'insensitive' } },
-              ],
-            }),
-          },
-          select: {
-            id: true,
-            name: true,
-            sku: true,
-            description: true,
-            moq: true,
-            imageUrl: true,
-          },
-          orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-          take: limit + 1,
-          ...(cursor && {
-            cursor: { id: cursor },
-            skip: 1,
-          }),
-        });
-      });
+      // Build non-certification AND-composed filters
+      const filterClauses: Prisma.catalogItemWhereInput[] = [
+        { tenantId: supplierOrgId, active: true },
+      ];
 
-      const hasMore = items.length > limit;
-      const resultItems = hasMore ? items.slice(0, limit) : items;
-      const nextCursor = hasMore ? (resultItems[resultItems.length - 1]?.id ?? null) : null;
+      if (q && q.trim().length > 0) {
+        filterClauses.push({
+          OR: [
+            { name: { contains: q.trim(), mode: 'insensitive' } },
+            { sku: { contains: q.trim(), mode: 'insensitive' } },
+          ],
+        });
+      }
+      if (productCategory) {
+        filterClauses.push({ productCategory: { equals: productCategory, mode: 'insensitive' } });
+      }
+      if (fabricType) {
+        filterClauses.push({ fabricType: { equals: fabricType, mode: 'insensitive' } });
+      }
+      if (material && material.length > 0) {
+        filterClauses.push({ material: { in: material, mode: 'insensitive' } });
+      }
+      if (construction) {
+        filterClauses.push({ construction: { equals: construction, mode: 'insensitive' } });
+      }
+      if (color) {
+        filterClauses.push({ color: { contains: color, mode: 'insensitive' } });
+      }
+      if (gsmMin !== undefined) {
+        filterClauses.push({ gsm: { gte: gsmMin } });
+      }
+      if (gsmMax !== undefined) {
+        filterClauses.push({ gsm: { lte: gsmMax } });
+      }
+      if (widthMin !== undefined) {
+        filterClauses.push({ widthCm: { gte: widthMin } });
+      }
+      if (widthMax !== undefined) {
+        filterClauses.push({ widthCm: { lte: widthMax } });
+      }
+      if (moqMax !== undefined) {
+        filterClauses.push({ moq: { lte: moqMax } });
+      }
+
+      const baseWhere: Prisma.catalogItemWhereInput = { AND: filterClauses };
+
+      // Gate 2: Read catalog items cross-tenant (texqtic_rfq_read role — proven cross-tenant read pattern).
+      // Certification filter uses two-pass approach:
+      //   Pass 1: findMany with all non-cert filters to obtain candidate IDs
+      //   Pass 2: $queryRaw with safe parameterized JSONB @> containment to apply cert filter
+      // This avoids unsafe string interpolation for JSONB user input.
+
+      type RawCatalogRow = {
+        id: string; name: string; sku: string | null;
+        description: string | null; moq: number; imageUrl: string | null;
+        product_category: string | null; fabric_type: string | null;
+        gsm: unknown; material: string | null; composition: string | null;
+        color: string | null; width_cm: unknown; construction: string | null;
+        certifications: unknown;
+      };
+
+      let rawItems: RawCatalogRow[];
+
+      if (certification) {
+        // Two-pass: get IDs from Prisma (includes cursor/limit handling), then cert filter via raw SQL.
+        const candidateIds = await prisma.$transaction(async tx => {
+          await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+          const rows = await tx.catalogItem.findMany({
+            where: baseWhere,
+            select: { id: true },
+            orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+            take: 1000, // broad fetch — cert filter applied below
+          });
+          return rows.map(r => r.id);
+        });
+
+        if (candidateIds.length === 0) {
+          return sendSuccess(reply, { items: [], count: 0, nextCursor: null });
+        }
+
+        // Safe parameterized JSONB containment — no string interpolation of user input.
+        const certFilter = JSON.stringify([{ standard: certification }]);
+        rawItems = await prisma.$transaction(async tx => {
+          await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+          return tx.$queryRaw<RawCatalogRow[]>`
+            SELECT id, name, sku, description, moq, "imageUrl" AS "imageUrl",
+                   product_category, fabric_type, gsm, material, composition,
+                   color, width_cm, construction, certifications
+            FROM catalog_items
+            WHERE id = ANY(${candidateIds}::uuid[])
+              AND certifications IS NOT NULL
+              AND certifications @> ${certFilter}::jsonb
+            ORDER BY updated_at DESC, id DESC
+          `;
+        });
+
+        // Apply cursor-based pagination manually to raw results
+        let startIdx = 0;
+        if (cursor) {
+          const cursorIdx = rawItems.findIndex(r => r.id === cursor);
+          if (cursorIdx !== -1) startIdx = cursorIdx + 1;
+        }
+        rawItems = rawItems.slice(startIdx, startIdx + limit + 1);
+      } else {
+        // No cert filter — standard Prisma findMany with cursor pagination.
+        const items = await prisma.$transaction(async tx => {
+          await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+          return tx.catalogItem.findMany({
+            where: baseWhere,
+            select: {
+              id: true, name: true, sku: true, description: true, moq: true, imageUrl: true,
+              productCategory: true, fabricType: true, gsm: true, material: true,
+              composition: true, color: true, widthCm: true, construction: true,
+              certifications: true,
+            },
+            orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+            take: limit + 1,
+            ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+          });
+        });
+
+        const hasMore = items.length > limit;
+        const resultItems = hasMore ? items.slice(0, limit) : items;
+        const nextCursor = hasMore ? (resultItems[resultItems.length - 1]?.id ?? null) : null;
+
+        return sendSuccess(reply, {
+          items: resultItems.map(item => ({
+            ...item,
+            gsm: item.gsm != null ? Number(item.gsm) : null,
+            widthCm: item.widthCm != null ? Number(item.widthCm) : null,
+          })),
+          count: resultItems.length,
+          nextCursor,
+        });
+      }
+
+      // Arrive here only in the cert two-pass path
+      const hasMore = rawItems.length > limit;
+      const resultRaw = hasMore ? rawItems.slice(0, limit) : rawItems;
+      const nextCursor = hasMore ? (resultRaw[resultRaw.length - 1]?.id ?? null) : null;
 
       return sendSuccess(reply, {
-        items: resultItems,
-        count: resultItems.length,
+        items: resultRaw.map(r => ({
+          id: r.id,
+          name: r.name,
+          sku: r.sku,
+          description: r.description,
+          moq: Number(r.moq),
+          imageUrl: r.imageUrl,
+          productCategory: r.product_category,
+          fabricType: r.fabric_type,
+          gsm: r.gsm != null ? Number(r.gsm) : null,
+          material: r.material,
+          composition: r.composition,
+          color: r.color,
+          widthCm: r.width_cm != null ? Number(r.width_cm) : null,
+          construction: r.construction,
+          certifications: r.certifications as Array<{ standard: string }> | null,
+        })),
+        count: resultRaw.length,
         nextCursor,
       });
     }

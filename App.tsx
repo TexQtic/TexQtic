@@ -1925,6 +1925,19 @@ const App: React.FC = () => {
   // TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001: Keyword search state.
   const [buyerCatalogSearch, setBuyerCatalogSearch] = useState('');
   const buyerCatalogSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001: Textile filter state.
+  const [filterProductCategory, setFilterProductCategory] = useState('');
+  const [filterFabricType, setFilterFabricType] = useState('');
+  const [filterMaterial, setFilterMaterial] = useState<string[]>([]);
+  const [filterConstruction, setFilterConstruction] = useState('');
+  const [filterColor, setFilterColor] = useState('');
+  const [filterGsmMin, setFilterGsmMin] = useState('');
+  const [filterGsmMax, setFilterGsmMax] = useState('');
+  const [filterWidthMin, setFilterWidthMin] = useState('');
+  const [filterWidthMax, setFilterWidthMax] = useState('');
+  const [filterMoqMax, setFilterMoqMax] = useState('');
+  const [filterCertification, setFilterCertification] = useState('');
+  const [showBuyerFilters, setShowBuyerFilters] = useState(false);
   // Supplier picker state (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001)
   const [supplierPickerItems, setSupplierPickerItems] = useState<SupplierPickerEntry[]>([]);
   const [supplierPickerLoading, setSupplierPickerLoading] = useState(false);
@@ -1945,11 +1958,21 @@ const App: React.FC = () => {
 
   // RU-003: inline add-item form toggle (B2B/B2C catalog)
   const [showAddItemForm, setShowAddItemForm] = useState(false);
-  const [addItemFormData, setAddItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
+  const [addItemFormData, setAddItemFormData] = useState({
+    name: '', price: '', sku: '', imageUrl: '', description: '', moq: '',
+    // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+    productCategory: '', fabricType: '', gsm: '', material: '',
+    composition: '', color: '', widthCm: '', construction: '', certifications: '',
+  });
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
   const [editingCatalogItemId, setEditingCatalogItemId] = useState<string | null>(null);
-  const [editItemFormData, setEditItemFormData] = useState({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
+  const [editItemFormData, setEditItemFormData] = useState({
+    name: '', price: '', sku: '', imageUrl: '', description: '', moq: '',
+    // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+    productCategory: '', fabricType: '', gsm: '', material: '',
+    composition: '', color: '', widthCm: '', construction: '', certifications: '',
+  });
   const [editItemLoading, setEditItemLoading] = useState(false);
   const [editItemError, setEditItemError] = useState<string | null>(null);
   const [deleteItemLoadingId, setDeleteItemLoadingId] = useState<string | null>(null);
@@ -2775,6 +2798,18 @@ const App: React.FC = () => {
     try {
       const response = await getBuyerCatalogItems(trimmedId, {
         ...(q && q.trim().length > 0 ? { q: q.trim() } : {}),
+        // Textile filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        ...(filterProductCategory ? { productCategory: filterProductCategory } : {}),
+        ...(filterFabricType ? { fabricType: filterFabricType } : {}),
+        ...(filterMaterial.length > 0 ? { material: filterMaterial } : {}),
+        ...(filterConstruction ? { construction: filterConstruction } : {}),
+        ...(filterColor.trim() ? { color: filterColor.trim() } : {}),
+        ...(filterGsmMin.trim() ? { gsmMin: parseFloat(filterGsmMin) } : {}),
+        ...(filterGsmMax.trim() ? { gsmMax: parseFloat(filterGsmMax) } : {}),
+        ...(filterWidthMin.trim() ? { widthMin: parseFloat(filterWidthMin) } : {}),
+        ...(filterWidthMax.trim() ? { widthMax: parseFloat(filterWidthMax) } : {}),
+        ...(filterMoqMax.trim() ? { moqMax: parseInt(filterMoqMax, 10) } : {}),
+        ...(filterCertification ? { certification: filterCertification } : {}),
       });
       setBuyerCatalogItems(response.items);
       setBuyerCatalogNextCursor(response.nextCursor);
@@ -2795,6 +2830,18 @@ const App: React.FC = () => {
       const more = await getBuyerCatalogItems(buyerCatalogSupplierOrgId, {
         cursor: buyerCatalogNextCursor,
         ...(buyerCatalogSearch.trim().length > 0 ? { q: buyerCatalogSearch.trim() } : {}),
+        // Textile filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        ...(filterProductCategory ? { productCategory: filterProductCategory } : {}),
+        ...(filterFabricType ? { fabricType: filterFabricType } : {}),
+        ...(filterMaterial.length > 0 ? { material: filterMaterial } : {}),
+        ...(filterConstruction ? { construction: filterConstruction } : {}),
+        ...(filterColor.trim() ? { color: filterColor.trim() } : {}),
+        ...(filterGsmMin.trim() ? { gsmMin: parseFloat(filterGsmMin) } : {}),
+        ...(filterGsmMax.trim() ? { gsmMax: parseFloat(filterGsmMax) } : {}),
+        ...(filterWidthMin.trim() ? { widthMin: parseFloat(filterWidthMin) } : {}),
+        ...(filterWidthMax.trim() ? { widthMax: parseFloat(filterWidthMax) } : {}),
+        ...(filterMoqMax.trim() ? { moqMax: parseInt(filterMoqMax, 10) } : {}),
+        ...(filterCertification ? { certification: filterCertification } : {}),
       });
       setBuyerCatalogItems(prev => [...prev, ...more.items]);
       setBuyerCatalogNextCursor(more.nextCursor);
@@ -2814,6 +2861,19 @@ const App: React.FC = () => {
     setBuyerCatalogLoadingMore(false);
     setBuyerCatalogLoadMoreError(null);
     setBuyerCatalogSearch('');
+    // Reset textile filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+    setFilterProductCategory('');
+    setFilterFabricType('');
+    setFilterMaterial([]);
+    setFilterConstruction('');
+    setFilterColor('');
+    setFilterGsmMin('');
+    setFilterGsmMax('');
+    setFilterWidthMin('');
+    setFilterWidthMax('');
+    setFilterMoqMax('');
+    setFilterCertification('');
+    setShowBuyerFilters(false);
     setSupplierPickerItems([]);
     setSupplierPickerError(null);
     setSupplierPickerLoading(true);
@@ -3341,9 +3401,18 @@ const App: React.FC = () => {
         description: addItemFormData.description.trim() || undefined,
         moq: moqCreateVal,
         price: priceVal,
+        // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        productCategory: addItemFormData.productCategory.trim() || undefined,
+        fabricType: addItemFormData.fabricType.trim() || undefined,
+        gsm: addItemFormData.gsm.trim() ? parseFloat(addItemFormData.gsm.trim()) : undefined,
+        material: addItemFormData.material.trim() || undefined,
+        composition: addItemFormData.composition.trim() || undefined,
+        color: addItemFormData.color.trim() || undefined,
+        widthCm: addItemFormData.widthCm.trim() ? parseFloat(addItemFormData.widthCm.trim()) : undefined,
+        construction: addItemFormData.construction.trim() || undefined,
       });
       setProducts(prev => [result.item, ...prev]);
-      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
+      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '', productCategory: '', fabricType: '', gsm: '', material: '', composition: '', color: '', widthCm: '', construction: '', certifications: '' });
       setShowAddItemForm(false);
     } catch (err: any) {
       setAddItemError(err?.message || 'Failed to create item.');
@@ -3354,7 +3423,11 @@ const App: React.FC = () => {
 
   const resetEditItemState = () => {
     setEditingCatalogItemId(null);
-    setEditItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '' });
+    setEditItemFormData({
+      name: '', price: '', sku: '', imageUrl: '', description: '', moq: '',
+      productCategory: '', fabricType: '', gsm: '', material: '',
+      composition: '', color: '', widthCm: '', construction: '', certifications: '',
+    });
     setEditItemError(null);
   };
 
@@ -3375,6 +3448,16 @@ const App: React.FC = () => {
       imageUrl: product.imageUrl || '',
       description: product.description || '',
       moq: product.moq?.toString() ?? '',
+      // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+      productCategory: ((product as unknown) as Record<string, unknown>).productCategory as string || '',
+      fabricType: ((product as unknown) as Record<string, unknown>).fabricType as string || '',
+      gsm: ((product as unknown) as Record<string, unknown>).gsm != null ? String(((product as unknown) as Record<string, unknown>).gsm) : '',
+      material: ((product as unknown) as Record<string, unknown>).material as string || '',
+      composition: ((product as unknown) as Record<string, unknown>).composition as string || '',
+      color: ((product as unknown) as Record<string, unknown>).color as string || '',
+      widthCm: ((product as unknown) as Record<string, unknown>).widthCm != null ? String(((product as unknown) as Record<string, unknown>).widthCm) : '',
+      construction: ((product as unknown) as Record<string, unknown>).construction as string || '',
+      certifications: ((product as unknown) as Record<string, unknown>).certifications ? JSON.stringify(((product as unknown) as Record<string, unknown>).certifications) : '',
     });
     setEditItemError(null);
   };
@@ -3422,6 +3505,15 @@ const App: React.FC = () => {
         imageUrl: trimmedImageUrl || null,
         description: editItemFormData.description.trim() || null,
         ...(moqEditVal !== undefined ? { moq: moqEditVal } : {}),
+        // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+        productCategory: editItemFormData.productCategory.trim() || null,
+        fabricType: editItemFormData.fabricType.trim() || null,
+        gsm: editItemFormData.gsm.trim() ? parseFloat(editItemFormData.gsm.trim()) : null,
+        material: editItemFormData.material.trim() || null,
+        composition: editItemFormData.composition.trim() || null,
+        color: editItemFormData.color.trim() || null,
+        widthCm: editItemFormData.widthCm.trim() ? parseFloat(editItemFormData.widthCm.trim()) : null,
+        construction: editItemFormData.construction.trim() || null,
       });
 
       setProducts(prev => prev.map(product => (
@@ -4062,6 +4154,53 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
+                {/* Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001) */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-product-category" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Category</label>
+                    <select id="b2b-add-product-category" value={addItemFormData.productCategory} onChange={e => setAddItemFormData(d => ({ ...d, productCategory: e.target.value }))} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                      <option value="">—</option>
+                      {['APPAREL_FABRIC','HOME_TEXTILE','TECHNICAL_FABRIC','INDUSTRIAL_FABRIC','LINING','INTERLINING','TRIMMING','ACCESSORY','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-fabric-type" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Fabric Type</label>
+                    <select id="b2b-add-fabric-type" value={addItemFormData.fabricType} onChange={e => setAddItemFormData(d => ({ ...d, fabricType: e.target.value }))} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                      <option value="">—</option>
+                      {['WOVEN','KNIT','NON_WOVEN','LACE','EMBROIDERED','TECHNICAL_COMPOSITE','FLEECE','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-material" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Material</label>
+                    <select id="b2b-add-material" value={addItemFormData.material} onChange={e => setAddItemFormData(d => ({ ...d, material: e.target.value }))} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                      <option value="">—</option>
+                      {['COTTON','POLYESTER','SILK','WOOL','LINEN','VISCOSE','MODAL','TENCEL_LYOCELL','NYLON','ACRYLIC','HEMP','BAMBOO','RECYCLED_POLYESTER','RECYCLED_COTTON','BLENDED','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-construction" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Construction</label>
+                    <select id="b2b-add-construction" value={addItemFormData.construction} onChange={e => setAddItemFormData(d => ({ ...d, construction: e.target.value }))} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                      <option value="">—</option>
+                      {['PLAIN_WEAVE','TWILL','SATIN','DOBBY','JACQUARD','TERRY','VELVET','JERSEY','RIB','INTERLOCK','FLEECE_KNIT','MESH','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-color" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Color</label>
+                    <input id="b2b-add-color" type="text" value={addItemFormData.color} onChange={e => setAddItemFormData(d => ({ ...d, color: e.target.value }))} placeholder="e.g. Navy Blue" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-gsm" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">GSM</label>
+                    <input id="b2b-add-gsm" type="number" min={10} max={2000} step={0.1} value={addItemFormData.gsm} onChange={e => setAddItemFormData(d => ({ ...d, gsm: e.target.value }))} placeholder="e.g. 180" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-width-cm" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Width (cm)</label>
+                    <input id="b2b-add-width-cm" type="number" min={1} max={999.99} step={0.01} value={addItemFormData.widthCm} onChange={e => setAddItemFormData(d => ({ ...d, widthCm: e.target.value }))} placeholder="e.g. 150" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-composition" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Composition</label>
+                    <input id="b2b-add-composition" type="text" value={addItemFormData.composition} onChange={e => setAddItemFormData(d => ({ ...d, composition: e.target.value }))} placeholder="e.g. 60% Cotton 40% Polyester" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                </div>
                 <div className="flex gap-3">
                   <button
                     type="submit"
@@ -4649,6 +4788,19 @@ const App: React.FC = () => {
                   setBuyerCatalogError(null);
                   setBuyerCatalogLoadingMore(false);
                   setBuyerCatalogLoadMoreError(null);
+                  // Reset textile filters (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
+                  setFilterProductCategory('');
+                  setFilterFabricType('');
+                  setFilterMaterial([]);
+                  setFilterConstruction('');
+                  setFilterColor('');
+                  setFilterGsmMin('');
+                  setFilterGsmMax('');
+                  setFilterWidthMin('');
+                  setFilterWidthMax('');
+                  setFilterMoqMax('');
+                  setFilterCertification('');
+                  setShowBuyerFilters(false);
                 }}
                 className="flex-shrink-0 px-4 py-2 text-slate-500 font-medium text-sm hover:text-slate-800 border border-slate-200 rounded-lg transition"
               >
@@ -4698,6 +4850,110 @@ const App: React.FC = () => {
                   }
                 }}
               />
+            </div>
+
+            {/* TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001: Textile filter panel */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowBuyerFilters(f => !f)}
+                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+              >
+                {showBuyerFilters ? '▲ Hide Filters' : '▼ Filters'}
+                {(filterProductCategory || filterFabricType || filterMaterial.length > 0 || filterConstruction || filterColor || filterGsmMin || filterGsmMax || filterWidthMin || filterWidthMax || filterMoqMax || filterCertification) && (
+                  <span className="ml-1 bg-indigo-100 text-indigo-700 text-xs px-1.5 py-0.5 rounded-full">active</span>
+                )}
+              </button>
+              {showBuyerFilters && (
+                <div className="mt-3 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Category</label>
+                    <select value={filterProductCategory} onChange={e => setFilterProductCategory(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 bg-white">
+                      <option value="">Any</option>
+                      {['APPAREL_FABRIC','HOME_TEXTILE','TECHNICAL_FABRIC','INDUSTRIAL_FABRIC','LINING','INTERLINING','TRIMMING','ACCESSORY','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Fabric Type</label>
+                    <select value={filterFabricType} onChange={e => setFilterFabricType(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 bg-white">
+                      <option value="">Any</option>
+                      {['WOVEN','KNIT','NON_WOVEN','LACE','EMBROIDERED','TECHNICAL_COMPOSITE','FLEECE','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Material</label>
+                    <select
+                      multiple
+                      value={filterMaterial}
+                      onChange={e => setFilterMaterial(Array.from(e.target.selectedOptions, o => o.value))}
+                      className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 bg-white h-20"
+                    >
+                      {['COTTON','POLYESTER','SILK','WOOL','LINEN','VISCOSE','MODAL','TENCEL_LYOCELL','NYLON','ACRYLIC','HEMP','BAMBOO','RECYCLED_POLYESTER','RECYCLED_COTTON','BLENDED','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Construction</label>
+                    <select value={filterConstruction} onChange={e => setFilterConstruction(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 bg-white">
+                      <option value="">Any</option>
+                      {['PLAIN_WEAVE','TWILL','SATIN','DOBBY','JACQUARD','TERRY','VELVET','JERSEY','RIB','INTERLOCK','FLEECE_KNIT','MESH','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Color</label>
+                    <input type="text" value={filterColor} onChange={e => setFilterColor(e.target.value)} placeholder="e.g. Navy Blue" className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">GSM (min–max)</label>
+                    <div className="flex gap-1">
+                      <input type="number" value={filterGsmMin} onChange={e => setFilterGsmMin(e.target.value)} placeholder="10" min={10} max={2000} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700" />
+                      <input type="number" value={filterGsmMax} onChange={e => setFilterGsmMax(e.target.value)} placeholder="2000" min={10} max={2000} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Width cm (min–max)</label>
+                    <div className="flex gap-1">
+                      <input type="number" value={filterWidthMin} onChange={e => setFilterWidthMin(e.target.value)} placeholder="1" min={1} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700" />
+                      <input type="number" value={filterWidthMax} onChange={e => setFilterWidthMax(e.target.value)} placeholder="999" min={1} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Max MOQ</label>
+                    <input type="number" value={filterMoqMax} onChange={e => setFilterMoqMax(e.target.value)} placeholder="Any" min={1} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Certification</label>
+                    <select value={filterCertification} onChange={e => setFilterCertification(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 bg-white">
+                      <option value="">Any</option>
+                      {['OEKO_TEX_STANDARD_100','OEKO_TEX_LEATHER_STANDARD','GOTS','BCI','FAIR_TRADE','BLUESIGN','HIGG_INDEX','RECYCLED_CLAIM_STANDARD','GLOBAL_RECYCLE_STANDARD','ISO_9001','SEDEX_SMETA','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-full flex gap-2 justify-end mt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilterProductCategory(''); setFilterFabricType(''); setFilterMaterial([]);
+                        setFilterConstruction(''); setFilterColor(''); setFilterGsmMin(''); setFilterGsmMax('');
+                        setFilterWidthMin(''); setFilterWidthMax(''); setFilterMoqMax(''); setFilterCertification('');
+                        setBuyerCatalogNextCursor(null);
+                        void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, buyerCatalogSearch.trim() || undefined);
+                      }}
+                      className="px-3 py-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-100"
+                    >
+                      Clear Filters
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBuyerCatalogNextCursor(null);
+                        void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, buyerCatalogSearch.trim() || undefined);
+                      }}
+                      className="px-3 py-1.5 text-xs text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {buyerCatalogError && (
@@ -4768,6 +5024,20 @@ const App: React.FC = () => {
                           <p className="text-xs text-slate-500 line-clamp-2">{item.description}</p>
                         )}
                         <div className="text-xs text-slate-500">Min. Order: {item.moq}</div>
+                        {/* Textile attrs (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001) */}
+                        {(item.fabricType || item.material || item.gsm || item.widthCm || item.construction || item.color || (item.certifications && item.certifications.length > 0)) && (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {item.fabricType && <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{item.fabricType.replace(/_/g, ' ')}</span>}
+                            {item.material && <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{item.material.replace(/_/g, ' ')}</span>}
+                            {item.construction && <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{item.construction.replace(/_/g, ' ')}</span>}
+                            {item.color && <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{item.color}</span>}
+                            {item.gsm != null && <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">{item.gsm} GSM</span>}
+                            {item.widthCm != null && <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">{item.widthCm} cm</span>}
+                            {item.certifications && item.certifications.map(c => (
+                              <span key={c.standard} className="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded">{c.standard.replace(/_/g, ' ')}</span>
+                            ))}
+                          </div>
+                        )}
                         <div className="mt-3 border-t border-slate-100 pt-3">
                           <button
                             type="button"
@@ -6196,6 +6466,54 @@ const App: React.FC = () => {
                     onChange={e => setEditItemFormData(data => ({ ...data, moq: e.target.value }))}
                     className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001) */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-product-category" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Category</label>
+                  <select id="edit-item-product-category" value={editItemFormData.productCategory} onChange={e => setEditItemFormData(d => ({ ...d, productCategory: e.target.value }))} className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm bg-white">
+                    <option value="">—</option>
+                    {['APPAREL_FABRIC','HOME_TEXTILE','TECHNICAL_FABRIC','INDUSTRIAL_FABRIC','LINING','INTERLINING','TRIMMING','ACCESSORY','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-fabric-type" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fabric Type</label>
+                  <select id="edit-item-fabric-type" value={editItemFormData.fabricType} onChange={e => setEditItemFormData(d => ({ ...d, fabricType: e.target.value }))} className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm bg-white">
+                    <option value="">—</option>
+                    {['WOVEN','KNIT','NON_WOVEN','LACE','EMBROIDERED','TECHNICAL_COMPOSITE','FLEECE','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-material" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Material</label>
+                  <select id="edit-item-material" value={editItemFormData.material} onChange={e => setEditItemFormData(d => ({ ...d, material: e.target.value }))} className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm bg-white">
+                    <option value="">—</option>
+                    {['COTTON','POLYESTER','SILK','WOOL','LINEN','VISCOSE','MODAL','TENCEL_LYOCELL','NYLON','ACRYLIC','HEMP','BAMBOO','RECYCLED_POLYESTER','RECYCLED_COTTON','BLENDED','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-construction" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Construction</label>
+                  <select id="edit-item-construction" value={editItemFormData.construction} onChange={e => setEditItemFormData(d => ({ ...d, construction: e.target.value }))} className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm bg-white">
+                    <option value="">—</option>
+                    {['PLAIN_WEAVE','TWILL','SATIN','DOBBY','JACQUARD','TERRY','VELVET','JERSEY','RIB','INTERLOCK','FLEECE_KNIT','MESH','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-color" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Color</label>
+                  <input id="edit-item-color" type="text" value={editItemFormData.color} onChange={e => setEditItemFormData(d => ({ ...d, color: e.target.value }))} placeholder="e.g. Navy Blue" className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-gsm" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">GSM</label>
+                  <input id="edit-item-gsm" type="number" min={10} max={2000} step={0.1} value={editItemFormData.gsm} onChange={e => setEditItemFormData(d => ({ ...d, gsm: e.target.value }))} placeholder="e.g. 180" className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-width-cm" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Width (cm)</label>
+                  <input id="edit-item-width-cm" type="number" min={1} max={999.99} step={0.01} value={editItemFormData.widthCm} onChange={e => setEditItemFormData(d => ({ ...d, widthCm: e.target.value }))} placeholder="e.g. 150" className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="edit-item-composition" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Composition</label>
+                  <input id="edit-item-composition" type="text" value={editItemFormData.composition} onChange={e => setEditItemFormData(d => ({ ...d, composition: e.target.value }))} placeholder="e.g. 60% Cotton 40% Polyester" className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
                 </div>
               </div>
 

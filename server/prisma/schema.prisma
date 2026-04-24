@@ -9,16 +9,16 @@ datasource db {
 }
 
 model Tenant {
-  id                       String                   @id @default(uuid()) @db.Uuid
-  slug                     String                   @unique @db.VarChar(100)
-  name                     String                   @db.VarChar(255)
-  externalOrchestrationRef String?                  @unique(map: "tenants_external_orchestration_ref_key") @map("external_orchestration_ref") @db.VarChar(255)
-  type                     TenantType               @default(B2B)
-  status                   TenantStatus             @default(ACTIVE)
-  plan                     TenantPlan               @default(FREE)
-  createdAt                DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
-  isWhiteLabel             Boolean                  @default(false) @map("is_white_label")
+  id                       String                         @id @default(uuid()) @db.Uuid
+  slug                     String                         @unique @db.VarChar(100)
+  name                     String                         @db.VarChar(255)
+  type                     TenantType                     @default(B2B)
+  status                   TenantStatus                   @default(ACTIVE)
+  plan                     TenantPlan                     @default(FREE)
+  createdAt                DateTime                       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime                       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isWhiteLabel             Boolean                        @default(false) @map("is_white_label")
+  externalOrchestrationRef String?                        @unique @map("external_orchestration_ref") @db.VarChar(255)
   publicEligibilityPosture TenantPublicEligibilityPosture @default(NO_PUBLIC_PRESENCE) @map("public_eligibility_posture")
   aiBudget                 AiBudget?
   aiUsageMeters            AiUsageMeter[]
@@ -33,9 +33,9 @@ model Tenant {
   orders                   Order[]
   organizations            organizations?
   reasoningLogs            ReasoningLog[]
-  rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_supplier_org")
-  rfqsAsBuyer              Rfq[]                    @relation("rfq_buyer_org")
-  rfqsAsSupplier           Rfq[]                    @relation("rfq_supplier_org")
+  rfqSupplierResponses     RfqSupplierResponse[]          @relation("rfq_response_supplier_org")
+  rfqsAsBuyer              Rfq[]                          @relation("rfq_buyer_org")
+  rfqsAsSupplier           Rfq[]                          @relation("rfq_supplier_org")
   branding                 TenantBranding?
   domains                  TenantDomain[]
   featureOverrides         TenantFeatureOverride[]
@@ -106,17 +106,17 @@ model Membership {
 }
 
 model Invite {
-  id         String         @id @default(uuid()) @db.Uuid
-  tenantId   String         @map("tenant_id") @db.Uuid
-  email      String         @db.VarChar(255)
-  externalOrchestrationRef String?         @map("external_orchestration_ref") @db.VarChar(255)
-  invitePurpose            String          @default("TEAM_MEMBER") @map("invite_purpose") @db.VarChar(50)
-  role       MembershipRole @default(MEMBER)
-  tokenHash  String         @map("token_hash") @db.VarChar(255)
-  expiresAt  DateTime       @map("expires_at") @db.Timestamptz(6)
-  acceptedAt DateTime?      @map("accepted_at") @db.Timestamptz(6)
-  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id                       String         @id @default(uuid()) @db.Uuid
+  tenantId                 String         @map("tenant_id") @db.Uuid
+  email                    String         @db.VarChar(255)
+  role                     MembershipRole @default(MEMBER)
+  tokenHash                String         @map("token_hash") @db.VarChar(255)
+  expiresAt                DateTime       @map("expires_at") @db.Timestamptz(6)
+  acceptedAt               DateTime?      @map("accepted_at") @db.Timestamptz(6)
+  createdAt                DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  externalOrchestrationRef String?        @map("external_orchestration_ref") @db.VarChar(255)
+  invitePurpose            String         @default("TEAM_MEMBER") @map("invite_purpose") @db.VarChar(50)
+  tenant                   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([email])
@@ -333,22 +333,31 @@ model ImpersonationSession {
 }
 
 model CatalogItem {
-  id          String      @id @default(uuid()) @db.Uuid
-  tenantId    String      @map("tenant_id") @db.Uuid
-  name        String      @db.VarChar(255)
-  sku         String?     @db.VarChar(100)
-  description String?
-  price       Decimal?    @db.Decimal(10, 2)
-  active      Boolean     @default(true)
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
-  moq         Int         @default(1)
-  imageUrl           String?  @map("image_url")
-  publicationPosture String   @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
+  id                 String      @id @default(uuid()) @db.Uuid
+  tenantId           String      @map("tenant_id") @db.Uuid
+  name               String      @db.VarChar(255)
+  sku                String?     @db.VarChar(100)
+  description        String?
+  price              Decimal?    @db.Decimal(10, 2)
+  active             Boolean     @default(true)
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  moq                Int         @default(1)
+  imageUrl           String?     @map("image_url")
+  publicationPosture String      @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
+  productCategory    String?     @map("product_category") @db.VarChar(50)
+  fabricType         String?     @map("fabric_type") @db.VarChar(50)
+  gsm                Decimal?    @db.Decimal(6, 1)
+  material           String?     @db.VarChar(50)
+  composition        String?     @db.VarChar(500)
+  color              String?     @db.VarChar(100)
+  widthCm            Decimal?    @map("width_cm") @db.Decimal(6, 2)
+  construction       String?     @db.VarChar(50)
+  certifications     Json?
   cartItems          CartItem[]
-  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  orderItems  OrderItem[]
-  rfqs        Rfq[]
+  tenant             Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderItems         OrderItem[]
+  rfqs               Rfq[]
 
   @@index([tenantId, active])
   @@index([tenantId, updatedAt])
@@ -583,11 +592,11 @@ model Rfq {
   createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
   supplierResponse RfqSupplierResponse? @relation("rfq_supplier_response")
-  sourceTrade      Trade?               @relation("trade_source_rfq")
   catalogItem      CatalogItem          @relation(fields: [catalogItemId], references: [id], onUpdate: NoAction)
   createdByUser    User?                @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onUpdate: NoAction)
   buyerOrg         Tenant               @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
   supplierOrg      Tenant               @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
+  sourceTrade      Trade?               @relation("trade_source_rfq")
 
   @@index([orgId])
   @@index([supplierOrgId])
@@ -818,8 +827,6 @@ model Trade {
   tenantId          String           @map("tenant_id") @db.Uuid
   buyerOrgId        String           @map("buyer_org_id") @db.Uuid
   sellerOrgId       String           @map("seller_org_id") @db.Uuid
-  /// TECS-EXC-003: Optional source RFQ link for bounded RFQ-derived trade conversion.
-  sourceRfqId       String?          @unique(map: "trades_source_rfq_id_key") @map("source_rfq_id") @db.Uuid
   /// G-020: Current lifecycle state. Reuses lifecycle_states registry.
   lifecycleStateId  String           @map("lifecycle_state_id") @db.Uuid
   /// Human-readable external reference. Unique per tenant.
@@ -837,13 +844,15 @@ model Trade {
   /// Maintained by DB trigger trg_trades_set_updated_at on BEFORE UPDATE.
   updatedAt         DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
   escrow_id         String?          @db.Uuid
+  /// TECS-EXC-003: Optional source RFQ link for bounded RFQ-derived trade conversion.
+  sourceRfqId       String?          @unique @map("source_rfq_id") @db.Uuid
   events            TradeEvent[]
   buyerOrg          organizations    @relation("TradeBuyer", fields: [buyerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_buyer_org_id")
   sellerOrg         organizations    @relation("TradeSeller", fields: [sellerOrgId], references: [id], onUpdate: NoAction, map: "fk_trades_seller_org_id")
-  sourceRfq         Rfq?             @relation("trade_source_rfq", fields: [sourceRfqId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_source_rfq_id_fk")
   escrow_accounts   escrow_accounts? @relation(fields: [escrow_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_escrow_id_fk")
   lifecycleState    LifecycleState   @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
   reasoningLog      ReasoningLog?    @relation(fields: [reasoningLogId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  sourceRfq         Rfq?             @relation("trade_source_rfq", fields: [sourceRfqId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "trades_source_rfq_id_fk")
   tenant            Tenant           @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
 
   @@unique([tenantId, tradeReference], map: "trades_tenant_ref_unique")
@@ -879,25 +888,25 @@ model TradeEvent {
 /// RLS: RESTRICTIVE guard (incl. admin pass-through) + PERMISSIVE tenant/admin policies.
 /// No DELETE — use lifecycle transitions to REVOKED/EXPIRED instead.
 model Certification {
-  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// RLS boundary: scopes row to one organization. FK to organizations(id).
-  orgId               String                @map("org_id") @db.Uuid
+  orgId                        String                      @map("org_id") @db.Uuid
   /// Open-coded cert category text (GOTS, OEKO_TEX, ISO_9001, ...). Not an enum.
-  certificationType   String                @map("certification_type")
+  certificationType            String                      @map("certification_type")
   /// G-020: Current lifecycle state (entity_type='CERTIFICATION').
-  lifecycleStateId    String                @map("lifecycle_state_id") @db.Uuid
+  lifecycleStateId             String                      @map("lifecycle_state_id") @db.Uuid
   /// Nullable: not set at SUBMITTED/UNDER_REVIEW; set on APPROVED.
-  issuedAt            DateTime?             @map("issued_at") @db.Timestamptz(6)
+  issuedAt                     DateTime?                   @map("issued_at") @db.Timestamptz(6)
   /// Nullable: some certifications do not expire.
-  expiresAt           DateTime?             @map("expires_at") @db.Timestamptz(6)
-  createdByUserId     String?               @map("created_by_user_id") @db.Uuid
-  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt                    DateTime?                   @map("expires_at") @db.Timestamptz(6)
+  createdByUserId              String?                     @map("created_by_user_id") @db.Uuid
+  createdAt                    DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_certifications_set_updated_at on BEFORE UPDATE.
-  updatedAt           DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt                    DateTime                    @default(now()) @map("updated_at") @db.Timestamptz(6)
   certification_lifecycle_logs CertificationLifecycleLog[]
-  lifecycleState      LifecycleState        @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
-  org                 organizations         @relation(fields: [orgId], references: [id], onUpdate: NoAction)
-  node_certifications node_certifications[]
+  lifecycleState               LifecycleState              @relation(fields: [lifecycleStateId], references: [id], onUpdate: NoAction)
+  org                          organizations               @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  node_certifications          node_certifications[]
 
   @@index([orgId])
   @@index([lifecycleStateId])
@@ -907,25 +916,25 @@ model Certification {
 
 /// Immutable, append-only audit log of certification lifecycle transitions.
 model CertificationLifecycleLog {
-  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId            String        @map("org_id") @db.Uuid
-  certificationId  String        @map("certification_id") @db.Uuid
-  fromStateKey     String        @map("from_state_key")
-  toStateKey       String        @map("to_state_key")
-  actorUserId      String?       @map("actor_user_id") @db.Uuid
-  actorAdminId     String?       @map("actor_admin_id") @db.Uuid
-  actorType        String        @map("actor_type")
-  actorRole        String        @map("actor_role")
-  escalationLevel  Int?          @map("escalation_level")
-  makerUserId      String?       @map("maker_user_id") @db.Uuid
-  checkerUserId    String?       @map("checker_user_id") @db.Uuid
-  aiTriggered      Boolean       @default(false) @map("ai_triggered")
-  impersonationId  String?       @map("impersonation_id") @db.Uuid
-  reason           String
-  requestId        String?       @map("request_id")
-  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  certification    Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "certification_lifecycle_logs_certification_id_fk")
-  organizations    organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "certification_lifecycle_logs_org_id_fk")
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId           String        @map("org_id") @db.Uuid
+  certificationId String        @map("certification_id") @db.Uuid
+  fromStateKey    String        @map("from_state_key")
+  toStateKey      String        @map("to_state_key")
+  actorUserId     String?       @map("actor_user_id") @db.Uuid
+  actorAdminId    String?       @map("actor_admin_id") @db.Uuid
+  actorType       String        @map("actor_type")
+  actorRole       String        @map("actor_role")
+  escalationLevel Int?          @map("escalation_level")
+  makerUserId     String?       @map("maker_user_id") @db.Uuid
+  checkerUserId   String?       @map("checker_user_id") @db.Uuid
+  aiTriggered     Boolean       @default(false) @map("ai_triggered")
+  impersonationId String?       @map("impersonation_id") @db.Uuid
+  reason          String
+  requestId       String?       @map("request_id")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "certification_lifecycle_logs_certification_id_fk")
+  organizations   organizations @relation(fields: [orgId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "certification_lifecycle_logs_org_id_fk")
 
   @@index([certificationId], map: "idx_certification_lifecycle_logs_certification_id")
   @@index([orgId, certificationId], map: "idx_certification_lifecycle_logs_org_certification")
@@ -989,43 +998,43 @@ model TraceabilityEdge {
 }
 
 model organizations {
-  id                    String                @id @db.Uuid
-  slug                  String                @unique @db.VarChar(100)
-  legal_name            String                @db.VarChar(500)
-  external_orchestration_ref String?          @unique(map: "organizations_external_orchestration_ref_key") @db.VarChar(255)
-  jurisdiction          String                @default("UNKNOWN") @db.VarChar(100)
-  registration_no       String?               @db.VarChar(200)
-  org_type              String                @default("B2B") @db.VarChar(50)
-  primary_segment_key   String?               @db.VarChar(100)
-  risk_score            Int                   @default(0) @db.SmallInt
+  id                           String                         @id @db.Uuid
+  slug                         String                         @unique @db.VarChar(100)
+  legal_name                   String                         @db.VarChar(500)
+  jurisdiction                 String                         @default("UNKNOWN") @db.VarChar(100)
+  registration_no              String?                        @db.VarChar(200)
+  org_type                     String                         @default("B2B") @db.VarChar(50)
+  risk_score                   Int                            @default(0) @db.SmallInt
   /// Canonical organization lifecycle + onboarding state.
   /// Enforced by SQL check constraint and migration history, not a native Prisma enum.
   /// Legal values: ACTIVE | SUSPENDED | CLOSED | PENDING_VERIFICATION |
   /// VERIFICATION_APPROVED | VERIFICATION_REJECTED | VERIFICATION_NEEDS_MORE_INFO
-  status                String                @default("ACTIVE") @db.VarChar(30)
-  plan                  String                @default("FREE") @db.VarChar(30)
-  effective_at          DateTime              @default(now()) @db.Timestamptz(6)
-  superseded_at         DateTime?             @db.Timestamptz(6)
-  created_at            DateTime              @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime              @default(now()) @db.Timestamptz(6)
-  is_white_label        Boolean               @default(false)
-  publication_posture   String                @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
-  certifications        Certification[]
+  status                       String                         @default("ACTIVE") @db.VarChar(30)
+  plan                         String                         @default("FREE") @db.VarChar(30)
+  effective_at                 DateTime                       @default(now()) @db.Timestamptz(6)
+  superseded_at                DateTime?                      @db.Timestamptz(6)
+  created_at                   DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime                       @default(now()) @db.Timestamptz(6)
+  is_white_label               Boolean                        @default(false)
+  external_orchestration_ref   String?                        @unique @db.VarChar(255)
+  primary_segment_key          String?                        @db.VarChar(100)
+  publication_posture          String                         @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
   certification_lifecycle_logs CertificationLifecycleLog[]
-  documentEmbeddings    DocumentEmbedding[]
-  escalation_events     EscalationEvent[]
-  escrow_lifecycle_logs EscrowLifecycleLog[]
-  node_certifications   node_certifications[]
-  tenants               Tenant                @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  pending_approvals     PendingApproval[]
-  role_positions        OrganizationRolePosition[]
-  sanctions             Sanction[]
-  secondary_segments    OrganizationSecondarySegment[]
-  traceabilityEdges     TraceabilityEdge[]
-  traceabilityNodes     TraceabilityNode[]
-  trade_lifecycle_logs  TradeLifecycleLog[]
-  tradesBuyer           Trade[]               @relation("TradeBuyer")
-  tradesSeller          Trade[]               @relation("TradeSeller")
+  certifications               Certification[]
+  documentEmbeddings           DocumentEmbedding[]
+  escalation_events            EscalationEvent[]
+  escrow_lifecycle_logs        EscrowLifecycleLog[]
+  node_certifications          node_certifications[]
+  role_positions               OrganizationRolePosition[]
+  secondary_segments           OrganizationSecondarySegment[]
+  tenants                      Tenant                         @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pending_approvals            PendingApproval[]
+  sanctions                    Sanction[]
+  traceabilityEdges            TraceabilityEdge[]
+  traceabilityNodes            TraceabilityNode[]
+  trade_lifecycle_logs         TradeLifecycleLog[]
+  tradesBuyer                  Trade[]                        @relation("TradeBuyer")
+  tradesSeller                 Trade[]                        @relation("TradeSeller")
 
   @@index([effective_at(sort: Desc)], map: "idx_organizations_effective_at")
   @@index([jurisdiction], map: "idx_organizations_jurisdiction")

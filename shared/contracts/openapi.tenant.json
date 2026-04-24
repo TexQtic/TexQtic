@@ -936,7 +936,7 @@
       },
       "post": {
         "summary": "Create a catalog item",
-        "description": "Create a new item in the tenant catalog. Tenant scope is derived from JWT claims (D-017-A).",
+        "description": "Create a new item in the tenant catalog. Tenant scope is derived from JWT claims (D-017-A). Supports optional textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001).",
         "security": [{ "tenantJwt": [] }],
         "requestBody": {
           "required": true,
@@ -955,7 +955,62 @@
                   },
                   "description": { "type": "string" },
                   "price": { "type": "number", "minimum": 0 },
-                  "moq": { "type": "integer", "minimum": 1 }
+                  "moq": { "type": "integer", "minimum": 1 },
+                  "productCategory": {
+                    "type": "string",
+                    "description": "Textile product category (controlled vocabulary)"
+                  },
+                  "fabricType": {
+                    "type": "string",
+                    "description": "Textile fabric type (controlled vocabulary)"
+                  },
+                  "gsm": {
+                    "type": "number",
+                    "minimum": 10,
+                    "maximum": 2000,
+                    "description": "Grams per square metre"
+                  },
+                  "material": {
+                    "type": "string",
+                    "description": "Primary material (controlled vocabulary)"
+                  },
+                  "composition": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Fibre composition (free text, e.g. '80% Cotton 20% Polyester')"
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "Colour/shade (free text to support trade names)"
+                  },
+                  "widthCm": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 999.99,
+                    "description": "Fabric width in centimetres"
+                  },
+                  "construction": {
+                    "type": "string",
+                    "description": "Weave/knit construction (controlled vocabulary)"
+                  },
+                  "certifications": {
+                    "type": "array",
+                    "description": "Sustainability and compliance certifications held for this item",
+                    "items": {
+                      "type": "object",
+                      "required": ["standard"],
+                      "properties": {
+                        "standard": {
+                          "type": "string",
+                          "description": "Certification standard code"
+                        },
+                        "certNumber": { "type": "string" },
+                        "issuedBy": { "type": "string" },
+                        "validUntil": { "type": "string" }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -985,7 +1040,7 @@
     "/api/tenant/catalog/items/{id}": {
       "patch": {
         "summary": "Update a catalog item",
-        "description": "Partially update an existing catalog item owned by the authenticated tenant. All body fields are optional; an empty body is rejected with 422. publicationPosture is not patchable via this route.",
+        "description": "Partially update an existing catalog item owned by the authenticated tenant. All body fields are optional; an empty body is rejected with 422. publicationPosture is not patchable via this route. Supports updating textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001).",
         "security": [{ "tenantJwt": [] }],
         "parameters": [
           {
@@ -1009,7 +1064,44 @@
                   "description": { "type": ["string", "null"] },
                   "price": { "type": "number", "minimum": 0 },
                   "moq": { "type": "integer", "minimum": 1 },
-                  "active": { "type": "boolean" }
+                  "active": { "type": "boolean" },
+                  "productCategory": { "type": ["string", "null"] },
+                  "fabricType": { "type": ["string", "null"] },
+                  "gsm": {
+                    "type": ["number", "null"],
+                    "minimum": 10,
+                    "maximum": 2000
+                  },
+                  "material": { "type": ["string", "null"] },
+                  "composition": {
+                    "type": ["string", "null"],
+                    "maxLength": 500
+                  },
+                  "color": { "type": ["string", "null"], "maxLength": 100 },
+                  "widthCm": {
+                    "type": ["number", "null"],
+                    "minimum": 1,
+                    "maximum": 999.99
+                  },
+                  "construction": { "type": ["string", "null"] },
+                  "certifications": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": ["standard"],
+                          "properties": {
+                            "standard": { "type": "string" },
+                            "certNumber": { "type": "string" },
+                            "issuedBy": { "type": "string" },
+                            "validUntil": { "type": "string" }
+                          }
+                        }
+                      },
+                      { "type": "null" }
+                    ]
+                  }
                 }
               }
             }
@@ -1138,7 +1230,7 @@
     "/api/tenant/catalog/supplier/{supplierOrgId}/items": {
       "get": {
         "summary": "Browse supplier catalog items (authenticated buyer)",
-        "description": "Phase 1 authenticated B2B buyer catalog browse. Returns active catalog items for an eligible supplier org. Gate 1: org publication_posture IN ('B2B_PUBLIC','BOTH') AND publicEligibilityPosture='PUBLICATION_ELIGIBLE'. Gate 2: item active=true. Response intentionally excludes price. Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001 (TECS-B2B-BUYER-CATALOG-BROWSE-001).",
+        "description": "Phase 1 authenticated B2B buyer catalog browse with textile attribute filters. Returns active catalog items for an eligible supplier org. Gate 1: org publication_posture IN ('B2B_PUBLIC','BOTH') AND publicEligibilityPosture='PUBLICATION_ELIGIBLE'. Gate 2: item active=true. Response intentionally excludes price and publicationPosture. Authorized by PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001 (TECS-B2B-BUYER-CATALOG-BROWSE-001, TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001).",
         "security": [{ "tenantJwt": [] }],
         "parameters": [
           {
@@ -1164,6 +1256,86 @@
             "in": "query",
             "schema": { "type": "string", "format": "uuid" },
             "description": "Pagination cursor (catalog item ID from previous page)"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 100 },
+            "description": "Keyword search (name or SKU)"
+          },
+          {
+            "name": "productCategory",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 50 },
+            "description": "Filter by product category (controlled vocabulary)"
+          },
+          {
+            "name": "fabricType",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 50 },
+            "description": "Filter by fabric type (controlled vocabulary)"
+          },
+          {
+            "name": "material",
+            "in": "query",
+            "schema": {
+              "oneOf": [
+                { "type": "string", "maxLength": 50 },
+                {
+                  "type": "array",
+                  "items": { "type": "string", "maxLength": 50 }
+                }
+              ]
+            },
+            "description": "Filter by material — single value or comma-separated list"
+          },
+          {
+            "name": "construction",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 50 },
+            "description": "Filter by construction (controlled vocabulary)"
+          },
+          {
+            "name": "color",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 100 },
+            "description": "Filter by color (case-insensitive contains)"
+          },
+          {
+            "name": "gsmMin",
+            "in": "query",
+            "schema": { "type": "number", "minimum": 10, "maximum": 2000 },
+            "description": "Minimum GSM (inclusive)"
+          },
+          {
+            "name": "gsmMax",
+            "in": "query",
+            "schema": { "type": "number", "minimum": 10, "maximum": 2000 },
+            "description": "Maximum GSM (inclusive)"
+          },
+          {
+            "name": "widthMin",
+            "in": "query",
+            "schema": { "type": "number", "minimum": 1, "maximum": 999.99 },
+            "description": "Minimum fabric width in cm (inclusive)"
+          },
+          {
+            "name": "widthMax",
+            "in": "query",
+            "schema": { "type": "number", "minimum": 1, "maximum": 999.99 },
+            "description": "Maximum fabric width in cm (inclusive)"
+          },
+          {
+            "name": "moqMax",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1 },
+            "description": "Maximum MOQ (inclusive)"
+          },
+          {
+            "name": "certification",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 50 },
+            "description": "Filter by certification standard (JSONB @> containment)"
           }
         ],
         "responses": {
@@ -1184,7 +1356,33 @@
                           "sku": { "type": ["string", "null"] },
                           "description": { "type": ["string", "null"] },
                           "moq": { "type": "integer", "minimum": 1 },
-                          "imageUrl": { "type": ["string", "null"] }
+                          "imageUrl": { "type": ["string", "null"] },
+                          "productCategory": { "type": ["string", "null"] },
+                          "fabricType": { "type": ["string", "null"] },
+                          "gsm": { "type": ["number", "null"] },
+                          "material": { "type": ["string", "null"] },
+                          "composition": { "type": ["string", "null"] },
+                          "color": { "type": ["string", "null"] },
+                          "widthCm": { "type": ["number", "null"] },
+                          "construction": { "type": ["string", "null"] },
+                          "certifications": {
+                            "oneOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": ["standard"],
+                                  "properties": {
+                                    "standard": { "type": "string" },
+                                    "certNumber": { "type": "string" },
+                                    "issuedBy": { "type": "string" },
+                                    "validUntil": { "type": "string" }
+                                  }
+                                }
+                              },
+                              { "type": "null" }
+                            ]
+                          }
                         },
                         "required": ["id", "name", "moq"]
                       }
