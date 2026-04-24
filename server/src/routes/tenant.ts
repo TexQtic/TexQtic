@@ -1838,7 +1838,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         rawItems = await prisma.$transaction(async tx => {
           await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
           return tx.$queryRaw<RawCatalogRow[]>`
-            SELECT id, name, sku, description, moq, "imageUrl" AS "imageUrl",
+            SELECT id, name, sku, description, moq, image_url AS "imageUrl",
                    product_category, fabric_type, gsm, material, composition,
                    color, width_cm, construction, certifications
             FROM catalog_items
