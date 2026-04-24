@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-23 (TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001 — IMPLEMENTED_PENDING_RUNTIME_REVALIDATION)
+**Last Updated:** 2026-05-08 (TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -64,6 +64,11 @@
   Required next step: deploy to production, run follow-up production runtime validation pass.
   NB-001, NB-002, NB-003 from prior verification artifacts remain unlifted until validation PASS.
   Combined buyer-side B2B governance closure remains deferred. Requires explicit user instruction.
+- TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 is DESIGN_COMPLETE (2026-05-08).
+  Design artifact: docs/TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001-v1.md.
+  5 boundary violations identified: BV-001 FIXED, BV-002/BV-003/BV-005 OPEN, BV-004 BY-DESIGN.
+  Proposed next unit: TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 (awaiting authorization).
+  Files in scope: runtime/sessionRuntimeDescriptor.ts · layouts/Shells.tsx · App.tsx.
 - Layer 0 posture: `ACTIVE_DELIVERY` (Phase 2 unit open, pending verification).
   The next opening is a human decision; no unit may be inferred from the closed unit, family
   proximity, or stale carry-forward wording.

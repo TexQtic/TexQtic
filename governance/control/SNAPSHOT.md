@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-23 (TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001 — IMPLEMENTED_PENDING_RUNTIME_REVALIDATION)
+**Updated:** 2026-05-08 (TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 — DESIGN_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,8 +10,8 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-23
-snapshot_unit: TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001
+snapshot_date: 2026-05-08
+snapshot_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -45,6 +45,10 @@ preserved_aligned_anchor_posture:
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
 current_product_active_delivery_status: IMPLEMENTED_PENDING_RUNTIME_REVALIDATION
+boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
+boundary_design_status: DESIGN_COMPLETE
+proposed_next_unit: TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001
+proposed_next_unit_status: AWAITING_AUTHORIZATION
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/

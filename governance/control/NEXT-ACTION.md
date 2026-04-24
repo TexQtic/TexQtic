@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-23 (TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001 — IMPLEMENTED_PENDING_RUNTIME_REVALIDATION)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 — DESIGN_COMPLETE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -39,18 +39,18 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 runtime binding fix is
-  IMPLEMENTED_PENDING_RUNTIME_REVALIDATION (2026-04-23).
-  Implementation artifact: docs/TECS-B2B-BUYER-CATALOG-ROUTE-BINDING-FIX-001-v1.md.
-  Root cause fixed: buyer_catalog route binding changed from { expView: 'HOME' } to
-  { expView: 'BUYER_CATALOG' }; 'BUYER_CATALOG' added to EXPERIENCE_VIEWS in App.tsx.
-  Files changed: runtime/sessionRuntimeDescriptor.ts · App.tsx.
-  Required next step: deploy fix to production, run production runtime validation pass,
-  produce follow-up validation artifact with RUNTIME_VALIDATED or RUNTIME_VALIDATED_WITH_NON-BLOCKING_NOTES verdict.
-  NB-001 (runtime pending), NB-002, NB-003 from prior verification artifacts remain unlifted
-  until follow-up validation is complete and results are PASS.
-  Combined buyer-side B2B governance closure deferred — requires explicit user instruction
-  after successful follow-up production runtime validation.
+  TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 is DESIGN_COMPLETE (2026-05-08).
+  Design artifact: docs/TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001-v1.md.
+  Investigation confirmed 5 boundary violations: BV-001 (FIXED commit 1e499ad), BV-002 (OPEN),
+  BV-003 (OPEN), BV-004 (BY-DESIGN), BV-005 (OPEN).
+  BV-001 fix (buyer_catalog route binding { expView: 'BUYER_CATALOG' }) is
+  IMPLEMENTED_PENDING_RUNTIME_REVALIDATION. Production revalidation still required.
+  Proposed next unit: TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 — add buyer_catalog to
+  B2B_SHELL_ROUTE_KEYS; fix selectionKey collision; add useEffect load trigger.
+  Files in scope for next unit: runtime/sessionRuntimeDescriptor.ts · layouts/Shells.tsx · App.tsx.
+  Authorization required before TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 may proceed.
+  NB-001 (runtime pending), NB-002, NB-003 from prior verification artifacts remain unlifted.
+  Combined buyer-side B2B governance closure deferred.
   WL Co hold remains REVIEW-UNKNOWN. D-020 successor chain valid pending D-021 revalidation.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
