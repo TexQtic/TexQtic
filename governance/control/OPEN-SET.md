@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -69,6 +69,13 @@
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
   buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
+- TECS-B2B-BUYER-CATALOG-LISTING-001 is DESIGN_COMPLETE (2026-04-24).
+  Design artifact: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md.
+  Key design decisions: separate buyerCatalogLoadingMore + buyerCatalogLoadMoreError states
+  (decouple initial load from pagination); remove redundant 'Viewing' badge; MOQ label
+  "Min. Order: N"; two-sentence empty state; image fallback label update; named
+  handleLoadMoreBuyerCatalog handler. Filters/sort: Phase 3+ only (no API support).
+  Implementation allowlist: App.tsx + tests/b2b-buyer-catalog-listing.test.tsx.
 - TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 is DESIGN_COMPLETE (2026-05-08).
   Design artifact: docs/TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001-v1.md.
   5 boundary violations identified: BV-001 FIXED, BV-002/BV-003/BV-005 FIXED, BV-004 BY-DESIGN.

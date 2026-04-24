@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-24 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — DESIGN_COMPLETE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,28 +11,27 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: IMPLEMENTATION_COMPLETE_AWAITING_RUNTIME_VERIFICATION
-active_delivery_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
-active_delivery_unit_status: IMPLEMENTATION_COMPLETE
+product_delivery_priority: DESIGN_COMPLETE_AWAITING_IMPLEMENTATION
+active_delivery_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
+active_delivery_unit_status: DESIGN_COMPLETE
 active_delivery_unit_note: >-
-  Implementation committed: 3e9086a. Design committed: 0c47d7e.
-  All four slices delivered. Validation: frontend TS PASS; 17/17 focused tests PASS;
-  full suite 471 PASS / 7 known pre-existing unrelated server-integration failures.
-  Unit requires production/manual verification per design artifact §H before final close.
-last_closed_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
-last_closed_unit_status: VERIFIED_COMPLETE
-last_closed_unit_commits: 1e499ad + fba9f2e + ec78e65 + 0ea9c67 + 65b37ef
+  Design committed: (this commit). Design artifact: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md.
+  Key decisions: buyerCatalogLoadingMore + buyerCatalogLoadMoreError state isolation;
+  remove redundant 'Viewing' badge; MOQ label rename; two-sentence empty state;
+  named handleLoadMoreBuyerCatalog. Allowlist: App.tsx + new test file.
+  Implementation phase is the next required action.
+last_closed_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
+last_closed_unit_status: IMPLEMENTATION_COMPLETE
+last_closed_unit_commits: 0c47d7e + 3e9086a + 81a9a5f
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE — parent closed after all implementation sub-units complete.
-  Sub-unit chain: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 (DESIGN_COMPLETE, f04d9cf)
-  + TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 (VERIFIED_COMPLETE, fba9f2e + ec78e65)
-  + TECS-B2B-BUYER-NAV-POLISH-001 (VERIFIED_COMPLETE, 0ea9c67 + 65b37ef).
-  Authorization: governance/decisions/PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
-prior_closed_unit: TECS-B2B-BUYER-NAV-POLISH-001
+  IMPLEMENTATION_COMPLETE — all 4 slices delivered; runtime/production verification pending.
+  Design commit: 0c47d7e. Implementation commit: 3e9086a. Truth sync: 81a9a5f.
+  Validation: frontend TS PASS; 17/17 focused tests PASS; full suite 471 PASS / 7 pre-existing fails.
+prior_closed_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
 prior_closed_unit_status: VERIFIED_COMPLETE
-prior_closed_unit_commits: ec78e65 + 0ea9c67 + 65b37ef
+prior_closed_unit_commits: 1e499ad + fba9f2e + ec78e65 + 0ea9c67 + 65b37ef
 d015_reconciliation: COMPLETE
-d016_posture: IMPLEMENTATION_COMPLETE — TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 implementation committed; runtime/production verification pending before final close
+d016_posture: DESIGN_COMPLETE — TECS-B2B-BUYER-CATALOG-LISTING-001 design committed; implementation phase is next
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -48,29 +47,27 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 implementation complete (2026-04-24).
-  Implementation commit: 3e9086a. Design commit: 0c47d7e.
-  Delivered:
-    Slice 1: Supplier card visual clarity — slug removed, primarySegment chip, full card clickable
-      with keyboard support (role=button, tabIndex, onKeyDown Enter/Space)
-    Slice 2: Phase B selected-state polish — 'Viewing: {legalName}' badge; Phase B Retry button
-      on error (calls handleFetchBuyerCatalog with current supplierOrgId)
-    Slice 3: Empty/error state standardization — Phase A empty state two-sentence copy;
-      Phase A error Retry button style aligned with Phase B
-    Slice 4: Test coverage — tests/b2b-buyer-catalog-supplier-selection.test.tsx created;
-      17 tests: service contracts (T1/T6), phase guard (T2/T7/T10), display name resolution
-      (T12/T13), route registration (T5-adjacent); all 17 PASS
-    Pure helpers: resolveSupplierDisplayName, resolveSupplierCatalogPhase exported via
-      __B2B_BUYER_CATALOG_TESTING__
-  Validation summary:
-    frontend tsc --noEmit: PASS (zero errors)
-    focused test file: 17/17 PASS
-    full suite: 471 PASS / 7 FAIL (pre-existing server/integration failures, unrelated)
-  Required next action: production/manual verification per design artifact §H verification plan.
-    M1–M9 manual steps and neighbor-path smoke required before final VERIFIED_COMPLETE closure.
-  WL Co hold remains REVIEW-UNKNOWN. D-020 successor chain valid pending D-021 revalidation.
-  Phase 3+ items remain deferred: no catalog search, item detail, price disclosure,
-    publicationPosture filtering, or buyer-supplier allowlist work opened.
+  TECS-B2B-BUYER-CATALOG-LISTING-001 design complete (2026-04-24).
+  Design artifact: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md.
+  Repo-truth inspections: Phase B listing block (App.tsx), catalogService (services/catalogService.ts),
+    server route (server/src/routes/tenant.ts), Prisma schema (server/prisma/schema.prisma),
+    existing tests (tests/b2b-buyer-catalog-supplier-selection.test.tsx), governance control files.
+  Key design decisions:
+    - State isolation: introduce buyerCatalogLoadingMore + buyerCatalogLoadMoreError to decouple
+      initial load from pagination (current shared buyerCatalogLoading causes grid flash on Load More)
+    - Load-more error isolation: separate state prevents polluting top-level error banner on
+      pagination failure; inline 'Try again' link below grid
+    - Remove redundant 'Viewing: {legalName}' badge (h1 already shows supplier name via
+      resolveSupplierDisplayName)
+    - MOQ label: 'Min. Order: N' (was 'MOQ: N') for buyer clarity
+    - Two-sentence empty state: 'This supplier has no active catalog items at this time. / Contact
+      the supplier directly if you expect items to be available.'
+    - Named handleLoadMoreBuyerCatalog handler replaces inline lambda
+    - image: loading=lazy, fallback label 'No image', aria-label updated
+    - Filters/sort: none available in API; all candidates Phase 3+ only
+  Implementation allowlist: App.tsx (Slices 1-3) + tests/b2b-buyer-catalog-listing.test.tsx (Slice 4).
+  Required next action: implementation phase (4 slices, separate prompt).
+  WL Co hold remains REVIEW-UNKNOWN. Phase 3+ items remain deferred.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.

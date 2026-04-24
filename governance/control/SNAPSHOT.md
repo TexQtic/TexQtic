@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — DESIGN_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-24
-snapshot_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
+snapshot_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -43,17 +43,16 @@ preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
-current_product_active_delivery_status: IMPLEMENTATION_COMPLETE
-current_product_active_delivery_design_commit: 0c47d7e
-current_product_active_delivery_implementation_commit: 3e9086a
+current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
+current_product_active_delivery_status: DESIGN_COMPLETE
+current_product_active_delivery_design_commit: (this commit)
+current_product_active_delivery_implementation_commit: pending
 current_product_active_delivery_validation: |
-  frontend tsc --noEmit: PASS
-  focused tests (17/17): PASS
-  full suite: 471 PASS / 7 FAIL (pre-existing server-integration failures, unrelated)
+  design artifact complete: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md
+  implementation not yet started
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: PENDING — M1-M9 manual steps and neighbor-path smoke required before final VERIFIED_COMPLETE closure
+runtime_verification_status: PENDING — TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1-M9 manual steps outstanding; TECS-B2B-BUYER-CATALOG-LISTING-001 implementation not yet started
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -62,6 +61,11 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
+  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 — IMPLEMENTATION_COMPLETE (2026-04-24).
+  Design commit: 0c47d7e. Implementation commit: 3e9086a. Truth sync: 81a9a5f.
+  Validation: frontend TS PASS; 17/17 PASS; full suite 471 PASS / 7 pre-existing fails.
+  Runtime verification (M1-M9) outstanding.
+prior_latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — B2B buyer-side catalog supplier-select unit.
   Verdict: VERIFIED_COMPLETE (2026-04-24).
   Closure rationale: parent buyer-side catalog supplier-select unit closed after all bounded
