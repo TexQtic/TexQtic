@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — DESIGN_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -42,16 +42,21 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: NONE
-current_product_active_delivery_status: ZERO_OPEN
-current_product_active_delivery_design_commit: N/A
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001
+current_product_active_delivery_status: DESIGN_COMPLETE
+current_product_active_delivery_design_commit: see governance commit for design artifact
 current_product_active_delivery_followup_sha: N/A
 current_product_active_delivery_implementation_commit: N/A
 current_product_active_delivery_validation: N/A
 current_product_active_delivery_note: |
-  ZERO_OPEN (2026-04-24). Last closed unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
-  Awaiting Paresh next-unit selection.
+  DESIGN_COMPLETE (2026-04-24). Design artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md.
+  Implementation not authorized. Awaiting Paresh implementation authorization.
+  Stage taxonomy: 14 values (YARN, FIBER, FABRIC_WOVEN, FABRIC_KNIT, FABRIC_PROCESSED,
+  GARMENT, ACCESSORY_TRIM, CHEMICAL_AUXILIARY, MACHINE, MACHINE_SPARE, PACKAGING,
+  SERVICE, SOFTWARE_SAAS, OTHER).
+  Schema: catalog_stage VARCHAR(50) + stage_attributes JSONB on catalog_items (NOT applied).
+  Architecture: Option C Hybrid. Full backward compat with existing 9 fabric columns.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
 runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES (2026-04-24); hotfix ec91ad2 confirmed live; all 6 production markers PASS

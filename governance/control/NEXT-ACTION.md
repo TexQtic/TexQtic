@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-24 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — DESIGN_COMPLETE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,8 +11,10 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: ZERO_OPEN_AWAITING_PARESH_NEXT_UNIT_SELECTION
-active_delivery_unit: NONE
+product_delivery_priority: DESIGN_COMPLETE_AWAITING_PARESH_IMPLEMENTATION_AUTHORIZATION
+active_delivery_unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001
+active_delivery_unit_status: DESIGN_COMPLETE
+active_delivery_unit_design_artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md
 last_closed_unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES
@@ -34,10 +36,10 @@ prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_commits: a1b41d5 + aa0b9a6 + 4aaa8a3 + 47be9b8
 adjacent_deferred_candidate: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001
 adjacent_deferred_candidate_reason: >-
-  Yarn is a core textile supply-chain material requiring stage-specific attribute modeling.
-  Do NOT open without explicit Paresh authorization.
+  Now active delivery unit — design complete.
+  Implementation requires explicit Paresh authorization before any slice begins.
 d015_reconciliation: COMPLETE
-d016_posture: ZERO_OPEN — TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 VERIFIED_COMPLETE (ec91ad2); next unit not yet opened; awaiting Paresh selection
+d016_posture: DESIGN_COMPLETE — TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 DESIGN_COMPLETE; implementation not authorized; awaiting Paresh implementation authorization
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md

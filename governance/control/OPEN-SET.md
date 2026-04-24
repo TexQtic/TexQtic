@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -158,6 +158,23 @@
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
+- TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 is DESIGN_COMPLETE (2026-04-24).
+  Status: DESIGN_COMPLETE. No implementation authorized.
+  Design artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md.
+  Design: 14-stage catalog taxonomy (YARN, FIBER, FABRIC_WOVEN, FABRIC_KNIT, FABRIC_PROCESSED,
+    GARMENT, ACCESSORY_TRIM, CHEMICAL_AUXILIARY, MACHINE, MACHINE_SPARE, PACKAGING,
+    SERVICE, SOFTWARE_SAAS, OTHER) + stage_attributes JSONB + catalog_stage VARCHAR(50).
+  Architecture: Option C Hybrid — catalog_stage + stage_attributes JSONB on catalog_items;
+    existing 9 fabric columns preserved unchanged; full backward compatibility.
+  Stage-specific attribute matrix: 14 stages defined with filterable/AI-readable fields each.
+  AI contract: buildCatalogItemVectorText + catalogItemAttributeCompleteness stage-aware extensions.
+  Service subtype: catalogStage=SERVICE + serviceType field (Option A).
+  Schema SQL (design only — NOT applied): catalog_stage VARCHAR(50) + stage_attributes JSONB +
+    idx_catalog_items_stage + idx_catalog_items_stage_attrs (GIN).
+  Proposed implementation slices: 15 slices, 10 files (6 modified, 4 new test files).
+  Implementation requires explicit Paresh authorization before any implementation slice begins.
+  Non-goals: No AI matching, no price disclosure, no PDP, no RFQ expansion, no cross-supplier
+    search, no bulk import, no service marketplace workflow, no Phase 4+ ServiceCapability model.
   All three bounded deliverables confirmed: `PUBLIC_B2B_DISCOVERY` AppState in `App.tsx`; B2B
   discovery page component (`components/Public/B2BDiscovery.tsx`); homepage B2B CTAs upgraded from
   temporary scroll behavior to `setAppState('PUBLIC_B2B_DISCOVERY')` state transition.
