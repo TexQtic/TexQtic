@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE_AMENDED)
+**Last Updated:** 2026-04-25 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -69,20 +69,21 @@
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
   buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
-- TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is DESIGN_COMPLETE_AMENDED (2026-04-24).
-  Current cycle: **Keyword Search MVP only** (name + sku, server-side).
+- TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is VERIFIED_COMPLETE (2026-04-25).
+  Unit scope: Keyword Search MVP — server-side keyword search (name + sku, case-insensitive OR).
+  Design commits: a1b41d5 (original) + aa0b9a6 (amendment). Implementation commit: 4aaa8a3.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
-  Amendment: clarified unit boundary — keyword search MVP only; no textile filters in this unit;
-  added mandatory next-cycle carry-forward section (Section M of design artifact).
-  Slices planned: Slice 1 backend route q param; Slice 2 service q param; Slice 3+4 frontend
-  search state + input + debounce + Load More passthrough; Slice 5 new test file.
-  Allowlist: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
-  tests/b2b-buyer-catalog-search.test.tsx (new).
+  Slices delivered: Slice 1 backend q param + Prisma OR filter; Slice 2 service q param;
+    Slice 3+4 frontend state + search input + debounce (350ms) + Load More passthrough;
+    Slice 5 new test file (19/19 PASS).
+  Validation: frontend tsc --noEmit PASS; search tests 19/19 PASS; catalog listing regression
+    31/31 PASS; supplier-selection regression 18/18 PASS; full suite pre-existing failures only.
+  Production: https://app.texqtic.com, actor qa.buyer@texqtic.com.
+    M-SEARCH-1 through M-SEARCH-9 PASS; M-SEARCH-10 N/A (14-item catalog, no nextCursor).
   No schema changes. No textile filters. No price. No PDP. No RFQ expansion.
-  Mandatory next-cycle candidate after this unit closes:
+  Mandatory next-cycle carry-forward (NOT to be opened without Paresh explicit authorization):
     TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
-    (full textile attr schema + migration + supplier data-entry + buyer filter UI — requires separate authorization).
-  Awaiting implementation authorization from Paresh.
+    (full textile attr schema + migration + supplier data-entry + buyer filter UI).
 - TECS-B2B-BUYER-CATALOG-LISTING-001 is VERIFIED_COMPLETE (2026-04-24).
   Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth sync: a2c907f.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md.

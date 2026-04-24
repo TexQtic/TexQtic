@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE_AMENDED)
+**Updated:** 2026-04-25 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — VERIFIED_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -42,19 +42,20 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001
-current_product_active_delivery_status: DESIGN_COMPLETE_AMENDED
-current_product_active_delivery_design_commit: a1b41d5 (original) + (this amendment commit)
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: NONE
+current_product_active_delivery_status: NONE
+current_product_active_delivery_design_commit: N/A — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is closed; no active unit
 current_product_active_delivery_followup_sha: N/A
 current_product_active_delivery_implementation_commit: N/A
-current_product_active_delivery_validation: N/A — design only; no code changes in this cycle
+current_product_active_delivery_validation: N/A — no active unit
 current_product_active_delivery_note: |
-  Keyword Search MVP only. No textile filters. No schema changes.
-  Mandatory next-cycle: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
+  No active delivery unit. TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 VERIFIED_COMPLETE (2026-04-25).
+  Mandatory next-cycle carry-forward: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
+  NOT to be opened without Paresh explicit authorization.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: VERIFIED_WITH_NON_BLOCKING_NOTES — TECS-B2B-BUYER-CATALOG-LISTING-001 production verification PASS 9/9 executable checks (2026-04-24); fixture-limited non-executables (M9/M11–M14) covered by unit tests; TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1–M9 outstanding
+runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 production verification PASS M-SEARCH-1–M-SEARCH-9 (2026-04-25); M-SEARCH-10 N/A (14-item catalog, no nextCursor); TECS-B2B-BUYER-CATALOG-LISTING-001 VERIFIED_WITH_NON_BLOCKING_NOTES (prior)
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -63,43 +64,28 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
+  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — VERIFIED_COMPLETE (2026-04-25).
+  Design commits: a1b41d5 (original) + aa0b9a6 (amendment). Implementation commit: 4aaa8a3.
+  Validation: frontend tsc --noEmit PASS; search tests 19/19 PASS; catalog listing regression
+    31/31 PASS; supplier-selection regression 18/18 PASS; full suite pre-existing failures only.
+  Production: https://app.texqtic.com, actor qa.buyer@texqtic.com.
+    M-SEARCH-1 through M-SEARCH-9 PASS; M-SEARCH-10 N/A (14-item catalog, no nextCursor).
+  No schema changes. No textile filters. No price. No PDP. No RFQ expansion.
+  Changed files: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
+    tests/b2b-buyer-catalog-search.test.tsx (created).
+prior_latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-LISTING-001 — VERIFIED_COMPLETE (2026-04-24).
-  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth syncs: a2c907f + (this commit).
+  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth syncs: a2c907f.
   Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Production: https://app.texqtic.com, actor qa.buyer@texqtic.com, 9/9 executable checks PASS.
   Non-blocking: M9 (image fallback), M11–M14 (Load More + error paths) not executable in
     production with current 14-item seed catalog; all covered by 32/32 passing unit tests.
   Blockers: none.
-prior_latest_verified_product_close: |
-  TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — B2B buyer-side catalog supplier-select unit.
-  Verdict: VERIFIED_COMPLETE (2026-04-24).
-  Closure rationale: parent buyer-side catalog supplier-select unit closed after all bounded
-  implementation and verification sub-units completed — buyer-safe supplier selection,
-  buyer nav boundary isolation, active-state/header polish, production verification,
-  and neighbor-path compatibility checks.
-  Sub-unit chain:
-    TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001: DESIGN_COMPLETE (f04d9cf)
-    TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001: VERIFIED_COMPLETE (fba9f2e + ec78e65)
-      BV-002/BV-003/BV-005 runtime-confirmed; BV-001 FIXED (1e499ad); BV-004 BY-DESIGN.
-      Deep verification: docs/TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001-DEEP-VERIFICATION-v1.md.
-    TECS-B2B-BUYER-NAV-POLISH-001: VERIFIED_COMPLETE (0ea9c67 + 65b37ef)
-      IC-001/IC-003/NB-001 all CLOSED. Production evidence: 'QA Buyer / B2B WORKSPACE',
-      Catalog sidebar active pill confirmed live at https://app.texqtic.com/.
-      Verification: docs/TECS-B2B-BUYER-NAV-POLISH-001-v1.md.
-  Authorization: governance/decisions/PRODUCT-DEC-BUYER-CATALOG-DISCOVERY-001.md.
-  Note: current catalog access is intentionally launch-accelerated and too open long-term.
-  Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
-  Prior verified close: TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (sub-unit, 2026-04-24).
-current_open_unit: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001
+current_open_unit: NONE
 current_open_unit_note: |
-  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is DESIGN_COMPLETE_AMENDED (2026-04-24).
-  Current cycle: Keyword Search MVP only (name + sku, server-side). No textile filters.
-  Design artifact: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
-  Scope declaration and Section M (mandatory next-cycle carry-forward) added in amendment.
-  5 slices planned. Allowlist: server/src/routes/tenant.ts, services/catalogService.ts,
-    App.tsx, tests/b2b-buyer-catalog-search.test.tsx (new). No schema changes.
-  Mandatory next-cycle after close: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
-  Awaiting Paresh implementation authorization.
+  No active open unit. TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 VERIFIED_COMPLETE (2026-04-25).
+  Mandatory next-cycle carry-forward: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
+  NOT to be opened without Paresh explicit authorization.
 ```
 
 ## Current Posture
