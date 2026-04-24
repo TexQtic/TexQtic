@@ -45,7 +45,7 @@ preserved_aligned_anchor_posture:
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
 current_product_active_delivery_status: DESIGN_COMPLETE
-current_product_active_delivery_design_commit: (this commit)
+current_product_active_delivery_design_commit: c5cdcb5
 current_product_active_delivery_implementation_commit: pending
 current_product_active_delivery_validation: |
   design artifact complete: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md
