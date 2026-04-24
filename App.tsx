@@ -1523,6 +1523,25 @@ export const __B2B_TRADE_FROM_RFQ_TESTING__ = {
   resolveBuyerRfqTradeFromRfqError,
 };
 
+// TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001: Pure helper — resolves display name from
+// the in-memory supplierPickerItems list. Falls back to 'Supplier Catalog' when not found.
+export function resolveSupplierDisplayName(
+  items: Array<{ id: string; legalName: string }>,
+  supplierOrgId: string,
+): string {
+  return items.find(s => s.id === supplierOrgId)?.legalName ?? 'Supplier Catalog';
+}
+
+// Pure helper — resolves which phase of the buyer catalog surface should render.
+export function resolveSupplierCatalogPhase(supplierOrgId: string): 'PHASE_A' | 'PHASE_B' {
+  return supplierOrgId ? 'PHASE_B' : 'PHASE_A';
+}
+
+export const __B2B_BUYER_CATALOG_TESTING__ = {
+  resolveSupplierDisplayName,
+  resolveSupplierCatalogPhase,
+};
+
 type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
@@ -4448,7 +4467,7 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void handleLoadSupplierPicker()}
-                    className="ml-3 underline"
+                    className="ml-3 text-sm text-red-600 underline"
                   >
                     Retry
                   </button>
@@ -4457,7 +4476,8 @@ const App: React.FC = () => {
 
               {!supplierPickerLoading && !supplierPickerError && supplierPickerItems.length === 0 && (
                 <div className="text-center py-12 text-slate-500 text-sm">
-                  No eligible suppliers found at this time.
+                  <p>No eligible suppliers found at this time.</p>
+                  <p className="mt-1">Contact your administrator if you expect to have supplier relationships available.</p>
                 </div>
               )}
 
@@ -4466,21 +4486,33 @@ const App: React.FC = () => {
                   {supplierPickerItems.map(supplier => (
                     <div
                       key={supplier.id}
-                      className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition"
+                      role="button"
+                      tabIndex={0}
+                      className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition cursor-pointer"
+                      onClick={() => {
+                        setBuyerCatalogSupplierOrgId(supplier.id);
+                        void handleFetchBuyerCatalog(supplier.id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          setBuyerCatalogSupplierOrgId(supplier.id);
+                          void handleFetchBuyerCatalog(supplier.id);
+                        }
+                      }}
                     >
                       <div className="space-y-2">
                         <h3 className="font-bold text-slate-900 text-base">{supplier.legalName}</h3>
                         {supplier.primarySegment && (
-                          <p className="text-xs text-slate-400 uppercase tracking-widest">
+                          <span className="inline-block rounded-full bg-slate-100 text-slate-500 text-xs px-2 py-0.5">
                             {supplier.primarySegment.replace(/_/g, ' ')}
-                          </p>
+                          </span>
                         )}
-                        <p className="text-xs font-mono text-slate-300">{supplier.slug}</p>
                       </div>
                       <div className="mt-5 border-t border-slate-100 pt-4">
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setBuyerCatalogSupplierOrgId(supplier.id);
                             void handleFetchBuyerCatalog(supplier.id);
                           }}
@@ -4513,8 +4545,13 @@ const App: React.FC = () => {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-slate-900">
-                  {supplierPickerItems.find(s => s.id === buyerCatalogSupplierOrgId)?.legalName ?? 'Supplier Catalog'}
+                  {resolveSupplierDisplayName(supplierPickerItems, buyerCatalogSupplierOrgId)}
                 </h1>
+                {supplierPickerItems.find(s => s.id === buyerCatalogSupplierOrgId)?.legalName && (
+                  <p className="text-slate-400 text-xs mt-0.5">
+                    Viewing: {supplierPickerItems.find(s => s.id === buyerCatalogSupplierOrgId)?.legalName}
+                  </p>
+                )}
                 <p className="text-slate-500 text-sm mt-1">
                   Browse active catalog items and request quotes.
                 </p>
@@ -4536,6 +4573,13 @@ const App: React.FC = () => {
             {buyerCatalogError && (
               <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">
                 {buyerCatalogError}
+                <button
+                  type="button"
+                  onClick={() => void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId)}
+                  className="ml-3 text-sm text-red-600 underline"
+                >
+                  Retry
+                </button>
               </div>
             )}
 
