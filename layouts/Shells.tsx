@@ -319,6 +319,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
     ? []
     : [
         { key: 'catalog', label: 'Catalog', onSelect: () => navigation.onNavigateRoute('catalog') },
+        ...(hasShellRoute(navigation.surface, 'buyer_catalog') ? [{ key: 'buyer_catalog', label: 'Browse Suppliers', onSelect: () => navigation.onNavigateRoute('buyer_catalog') }] : []),
         ...(hasShellRoute(navigation.surface, 'orders') ? [{ key: 'orders', label: 'Orders', onSelect: () => navigation.onNavigateRoute('orders') }] : []),
         ...(hasShellRoute(navigation.surface, 'dpp') ? [{ key: 'dpp', label: 'DPP Passport', onSelect: () => navigation.onNavigateRoute('dpp') }] : []),
         ...(hasShellRoute(navigation.surface, 'escrow') ? [{ key: 'escrow', label: 'Escrow', onSelect: () => navigation.onNavigateRoute('escrow') }] : []),
@@ -360,6 +361,7 @@ export const B2BShell: React.FC<B2BShellProps> = ({
           <nav className="flex-1 space-y-4">
             <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Dashboard</div>
             <button onClick={() => navigation.onNavigateRoute('catalog')} className="w-full flex items-center gap-3 text-white hover:bg-slate-700/50 p-2 rounded text-left transition">📦 Catalog</button>
+            {hasShellRoute(navigation.surface, 'buyer_catalog') && <button onClick={() => navigation.onNavigateRoute('buyer_catalog')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🏪 Browse Suppliers</button>}
             {hasShellRoute(navigation.surface, 'orders') && <button onClick={() => navigation.onNavigateRoute('orders')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🛍️ Orders</button>}
             {hasShellRoute(navigation.surface, 'dpp') && <button onClick={() => navigation.onNavigateRoute('dpp')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔍 DPP Passport</button>}
             {hasShellRoute(navigation.surface, 'escrow') && <button onClick={() => navigation.onNavigateRoute('escrow')} className="w-full flex items-center gap-3 hover:text-white hover:bg-slate-700/50 p-2 rounded text-left transition">🔒 Escrow</button>}

@@ -2136,6 +2136,9 @@ const App: React.FC = () => {
     && tenantLocalRouteSelection?.routeKey === 'catalog'
     && tenantBaseCategory === 'B2B'
     && !tenantHasWhiteLabelCapability;
+  const isBuyerCatalogEntrySurface = appState === 'EXPERIENCE'
+    && tenantLocalRouteSelection?.routeKey === 'buyer_catalog'
+    && tenantBaseCategory === 'B2B';
   const isWlAdminProductsSurface = appState === 'WL_ADMIN'
     && wlAdminLocalRouteSelection?.routeKey === 'products'
     && tenantContentFamily === 'wl_admin';
@@ -2629,6 +2632,18 @@ const App: React.FC = () => {
       }
     };
   }, [shouldLoadAppCatalog, isB2CBrowseEntrySurface, isB2BCatalogEntrySurface, b2cSearchQuery, currentTenant?.id]);
+
+  // BV-005 (TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001): Trigger supplier picker load on shell-nav entry to buyer_catalog.
+  // Guard: no-op if items already loaded, fetch in-flight, or fetch errored (user must Retry explicitly).
+  useEffect(() => {
+    if (!isBuyerCatalogEntrySurface) {
+      return;
+    }
+    if (supplierPickerItems.length > 0 || supplierPickerLoading || supplierPickerError) {
+      return;
+    }
+    void handleLoadSupplierPicker();
+  }, [isBuyerCatalogEntrySurface, supplierPickerItems.length, supplierPickerLoading, supplierPickerError]);
 
   const handleB2CShopNow = () => {
     b2cCatalogSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -391,6 +391,7 @@ const AGGREGATOR_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
 
 const B2B_SHELL_ROUTE_KEYS: RuntimeLocalRouteKey[] = [
   'catalog',
+  'buyer_catalog',
   'orders',
   'dpp',
   'escrow',
@@ -510,7 +511,7 @@ const RUNTIME_MANIFEST_ENTRIES: Record<RouteManifestKey, RuntimeManifestEntry> =
     routeGroups: [
       defineRuntimeRouteGroup('catalog_browse', [
         defineRuntimeRoute('catalog', 'Catalog', 'HOME', { expView: 'HOME' }, { defaultForGroup: true }),
-        defineRuntimeRoute('buyer_catalog', 'Browse Supplier Catalog', 'HOME', { expView: 'BUYER_CATALOG' }, {}),
+        defineRuntimeRoute('buyer_catalog', 'Browse Supplier Catalog', 'BUYER_CATALOG', { expView: 'BUYER_CATALOG' }, {}),
       ]),
       WORKSPACE_ORDERS_ROUTE_GROUP,
       RFQ_ROUTE_GROUP,
