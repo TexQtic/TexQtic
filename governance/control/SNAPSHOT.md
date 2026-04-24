@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-25 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — VERIFIED_COMPLETE)
+**Updated:** 2026-04-25 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — DESIGN_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -42,20 +42,23 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: NONE
-current_product_active_delivery_status: NONE
-current_product_active_delivery_design_commit: N/A — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is closed; no active unit
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+current_product_active_delivery_status: DESIGN_COMPLETE
+current_product_active_delivery_design_commit: pending — this governance commit
 current_product_active_delivery_followup_sha: N/A
-current_product_active_delivery_implementation_commit: N/A
-current_product_active_delivery_validation: N/A — no active unit
+current_product_active_delivery_implementation_commit: N/A — not yet authorized
+current_product_active_delivery_validation: N/A — design-only cycle; no implementation yet
 current_product_active_delivery_note: |
-  No active delivery unit. TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 VERIFIED_COMPLETE (2026-04-25).
-  Mandatory next-cycle carry-forward: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
-  NOT to be opened without Paresh explicit authorization.
+  DESIGN_COMPLETE (2026-04-25). Design artifact authored.
+  9 new nullable textile attribute columns designed for catalog_items.
+  9 implementation slices defined. Controlled vocabularies defined.
+  AI contract (CatalogItemAIAttributes) designed. G-028 vectorText extension designed.
+  Implementation requires explicit Paresh authorization per slice.
+  Design artifact: docs/TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001-DESIGN-v1.md
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 production verification PASS M-SEARCH-1–M-SEARCH-9 (2026-04-25); M-SEARCH-10 N/A (14-item catalog, no nextCursor); TECS-B2B-BUYER-CATALOG-LISTING-001 VERIFIED_WITH_NON_BLOCKING_NOTES (prior)
+runtime_verification_status: DESIGN_COMPLETE — TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 design authored (2026-04-25); prior verified close: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 M-SEARCH-1–M-SEARCH-9 PASS
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
