@@ -99,6 +99,9 @@ import {
   type BuyerCatalogItem,
   getEligibleSuppliers,
   type SupplierPickerEntry,
+  CATALOG_STAGE_VALUES,
+  SERVICE_TYPE_VALUES,
+  type CatalogStage,
 } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
@@ -1937,6 +1940,8 @@ const App: React.FC = () => {
   const [filterWidthMax, setFilterWidthMax] = useState('');
   const [filterMoqMax, setFilterMoqMax] = useState('');
   const [filterCertification, setFilterCertification] = useState('');
+  // TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001: Catalog stage filter
+  const [filterCatalogStage, setFilterCatalogStage] = useState('');
   const [showBuyerFilters, setShowBuyerFilters] = useState(false);
   // Supplier picker state (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001)
   const [supplierPickerItems, setSupplierPickerItems] = useState<SupplierPickerEntry[]>([]);
@@ -1963,6 +1968,9 @@ const App: React.FC = () => {
     // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
     productCategory: '', fabricType: '', gsm: '', material: '',
     composition: '', color: '', widthCm: '', construction: '', certifications: '',
+    // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+    catalogStage: '',
+    stageAttributes: {} as Record<string, string>,
   });
   const [addItemLoading, setAddItemLoading] = useState(false);
   const [addItemError, setAddItemError] = useState<string | null>(null);
@@ -1972,6 +1980,9 @@ const App: React.FC = () => {
     // Textile attributes (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001)
     productCategory: '', fabricType: '', gsm: '', material: '',
     composition: '', color: '', widthCm: '', construction: '', certifications: '',
+    // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+    catalogStage: '',
+    stageAttributes: {} as Record<string, string>,
   });
   const [editItemLoading, setEditItemLoading] = useState(false);
   const [editItemError, setEditItemError] = useState<string | null>(null);
@@ -2810,6 +2821,8 @@ const App: React.FC = () => {
         ...(filterWidthMax.trim() ? { widthMax: parseFloat(filterWidthMax) } : {}),
         ...(filterMoqMax.trim() ? { moqMax: parseInt(filterMoqMax, 10) } : {}),
         ...(filterCertification ? { certification: filterCertification } : {}),
+        // Stage filter (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        ...(filterCatalogStage ? { catalogStage: filterCatalogStage as CatalogStage } : {}),
       });
       setBuyerCatalogItems(response.items);
       setBuyerCatalogNextCursor(response.nextCursor);
@@ -2842,6 +2855,8 @@ const App: React.FC = () => {
         ...(filterWidthMax.trim() ? { widthMax: parseFloat(filterWidthMax) } : {}),
         ...(filterMoqMax.trim() ? { moqMax: parseInt(filterMoqMax, 10) } : {}),
         ...(filterCertification ? { certification: filterCertification } : {}),
+        // Stage filter (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        ...(filterCatalogStage ? { catalogStage: filterCatalogStage as CatalogStage } : {}),
       });
       setBuyerCatalogItems(prev => [...prev, ...more.items]);
       setBuyerCatalogNextCursor(more.nextCursor);
@@ -2873,6 +2888,7 @@ const App: React.FC = () => {
     setFilterWidthMax('');
     setFilterMoqMax('');
     setFilterCertification('');
+    setFilterCatalogStage('');
     setShowBuyerFilters(false);
     setSupplierPickerItems([]);
     setSupplierPickerError(null);
@@ -3410,9 +3426,12 @@ const App: React.FC = () => {
         color: addItemFormData.color.trim() || undefined,
         widthCm: addItemFormData.widthCm.trim() ? parseFloat(addItemFormData.widthCm.trim()) : undefined,
         construction: addItemFormData.construction.trim() || undefined,
+        // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        ...(addItemFormData.catalogStage ? { catalogStage: addItemFormData.catalogStage as CatalogStage } : {}),
+        ...(Object.keys(addItemFormData.stageAttributes).length > 0 ? { stageAttributes: addItemFormData.stageAttributes as Record<string, unknown> } : {}),
       });
       setProducts(prev => [result.item, ...prev]);
-      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '', productCategory: '', fabricType: '', gsm: '', material: '', composition: '', color: '', widthCm: '', construction: '', certifications: '' });
+      setAddItemFormData({ name: '', price: '', sku: '', imageUrl: '', description: '', moq: '', productCategory: '', fabricType: '', gsm: '', material: '', composition: '', color: '', widthCm: '', construction: '', certifications: '', catalogStage: '', stageAttributes: {} });
       setShowAddItemForm(false);
     } catch (err: any) {
       setAddItemError(err?.message || 'Failed to create item.');
@@ -3427,6 +3446,7 @@ const App: React.FC = () => {
       name: '', price: '', sku: '', imageUrl: '', description: '', moq: '',
       productCategory: '', fabricType: '', gsm: '', material: '',
       composition: '', color: '', widthCm: '', construction: '', certifications: '',
+      catalogStage: '', stageAttributes: {},
     });
     setEditItemError(null);
   };
@@ -3458,6 +3478,9 @@ const App: React.FC = () => {
       widthCm: ((product as unknown) as Record<string, unknown>).widthCm != null ? String(((product as unknown) as Record<string, unknown>).widthCm) : '',
       construction: ((product as unknown) as Record<string, unknown>).construction as string || '',
       certifications: ((product as unknown) as Record<string, unknown>).certifications ? JSON.stringify(((product as unknown) as Record<string, unknown>).certifications) : '',
+      // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+      catalogStage: ((product as unknown) as Record<string, unknown>).catalogStage as string || '',
+      stageAttributes: (((product as unknown) as Record<string, unknown>).stageAttributes as Record<string, string>) ?? {},
     });
     setEditItemError(null);
   };
@@ -3514,6 +3537,9 @@ const App: React.FC = () => {
         color: editItemFormData.color.trim() || null,
         widthCm: editItemFormData.widthCm.trim() ? parseFloat(editItemFormData.widthCm.trim()) : null,
         construction: editItemFormData.construction.trim() || null,
+        // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
+        catalogStage: editItemFormData.catalogStage as CatalogStage || null,
+        stageAttributes: Object.keys(editItemFormData.stageAttributes).length > 0 ? editItemFormData.stageAttributes as Record<string, unknown> : null,
       });
 
       setProducts(prev => prev.map(product => (
@@ -4201,6 +4227,76 @@ const App: React.FC = () => {
                     <input id="b2b-add-composition" type="text" value={addItemFormData.composition} onChange={e => setAddItemFormData(d => ({ ...d, composition: e.target.value }))} placeholder="e.g. 60% Cotton 40% Polyester" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
                   </div>
                 </div>
+                {/* Stage selector (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001) */}
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-1">
+                    <label htmlFor="b2b-add-catalog-stage" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Product Stage</label>
+                    <select id="b2b-add-catalog-stage" value={addItemFormData.catalogStage} onChange={e => setAddItemFormData(d => ({ ...d, catalogStage: e.target.value, stageAttributes: {} }))} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                      <option value="">— Select Stage —</option>
+                      {CATALOG_STAGE_VALUES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Dynamic stage fields */}
+                {addItemFormData.catalogStage === 'YARN' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Yarn Type</label><input type="text" value={addItemFormData.stageAttributes['yarnType'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, yarnType: e.target.value } }))} placeholder="e.g. Spun" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Yarn Count</label><input type="text" value={addItemFormData.stageAttributes['yarnCount'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, yarnCount: e.target.value } }))} placeholder="e.g. 40s" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Count System</label><input type="text" value={addItemFormData.stageAttributes['countSystem'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, countSystem: e.target.value } }))} placeholder="Ne / Nm / Tex" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Fiber</label><input type="text" value={addItemFormData.stageAttributes['fiber'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, fiber: e.target.value } }))} placeholder="e.g. Cotton" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Ply</label><input type="text" value={addItemFormData.stageAttributes['ply'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, ply: e.target.value } }))} placeholder="e.g. 2" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Spinning Type</label><input type="text" value={addItemFormData.stageAttributes['spinningType'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, spinningType: e.target.value } }))} placeholder="e.g. Ring" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Denier</label><input type="text" value={addItemFormData.stageAttributes['denier'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, denier: e.target.value } }))} placeholder="e.g. 75" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">End Use</label><input type="text" value={addItemFormData.stageAttributes['endUse'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, endUse: e.target.value } }))} placeholder="e.g. Weaving" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                  </div>
+                )}
+                {addItemFormData.catalogStage === 'FABRIC_KNIT' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Knit Type</label><input type="text" value={addItemFormData.stageAttributes['knitType'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, knitType: e.target.value } }))} placeholder="e.g. Jersey" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Gauge</label><input type="text" value={addItemFormData.stageAttributes['gauge'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, gauge: e.target.value } }))} placeholder="e.g. 28" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Stretch %</label><input type="text" value={addItemFormData.stageAttributes['stretch'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, stretch: e.target.value } }))} placeholder="e.g. 40" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Finish</label><input type="text" value={addItemFormData.stageAttributes['finish'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, finish: e.target.value } }))} placeholder="e.g. Brushed" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">End Use</label><input type="text" value={addItemFormData.stageAttributes['endUse'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, endUse: e.target.value } }))} placeholder="e.g. Sportswear" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                  </div>
+                )}
+                {addItemFormData.catalogStage === 'GARMENT' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Garment Type</label><input type="text" value={addItemFormData.stageAttributes['garmentType'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, garmentType: e.target.value } }))} placeholder="e.g. T-Shirt" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Size Range</label><input type="text" value={addItemFormData.stageAttributes['sizeRange'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, sizeRange: e.target.value } }))} placeholder="e.g. XS-3XL" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Fit</label><input type="text" value={addItemFormData.stageAttributes['fit'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, fit: e.target.value } }))} placeholder="e.g. Regular" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Gender</label><input type="text" value={addItemFormData.stageAttributes['gender'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, gender: e.target.value } }))} placeholder="e.g. Unisex" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Fabric Composition</label><input type="text" value={addItemFormData.stageAttributes['fabricComposition'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, fabricComposition: e.target.value } }))} placeholder="e.g. 100% Cotton" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Monthly Capacity</label><input type="text" value={addItemFormData.stageAttributes['monthlyCapacity'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, monthlyCapacity: e.target.value } }))} placeholder="e.g. 50000" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                  </div>
+                )}
+                {addItemFormData.catalogStage === 'MACHINE' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Machine Type</label><input type="text" value={addItemFormData.stageAttributes['machineType'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, machineType: e.target.value } }))} placeholder="e.g. Rapier Loom" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Brand</label><input type="text" value={addItemFormData.stageAttributes['brand'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, brand: e.target.value } }))} placeholder="e.g. Picanol" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Model</label><input type="text" value={addItemFormData.stageAttributes['model'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, model: e.target.value } }))} placeholder="e.g. GTX-L" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Year</label><input type="text" value={addItemFormData.stageAttributes['year'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, year: e.target.value } }))} placeholder="e.g. 2019" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Condition</label><input type="text" value={addItemFormData.stageAttributes['condition'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, condition: e.target.value } }))} placeholder="New / Refurbished" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Service Support</label><input type="text" value={addItemFormData.stageAttributes['serviceSupport'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, serviceSupport: e.target.value } }))} placeholder="e.g. On-site" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                  </div>
+                )}
+                {addItemFormData.catalogStage === 'SERVICE' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Service Type</label><select value={addItemFormData.stageAttributes['serviceType'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, serviceType: e.target.value } }))} className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white"><option value="">—</option>{SERVICE_TYPE_VALUES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}</select></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Specialization</label><input type="text" value={addItemFormData.stageAttributes['specialization'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, specialization: e.target.value } }))} placeholder="e.g. Denim testing" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Location Coverage</label><input type="text" value={addItemFormData.stageAttributes['locationCoverage'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, locationCoverage: e.target.value } }))} placeholder="e.g. Pan-India" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Turnaround (days)</label><input type="text" value={addItemFormData.stageAttributes['turnaroundTimeDays'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, turnaroundTimeDays: e.target.value } }))} placeholder="e.g. 7" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Portfolio Available</label><input type="text" value={addItemFormData.stageAttributes['portfolioAvailable'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, portfolioAvailable: e.target.value } }))} placeholder="Yes / No" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                  </div>
+                )}
+                {addItemFormData.catalogStage === 'SOFTWARE_SAAS' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Software Category</label><input type="text" value={addItemFormData.stageAttributes['softwareCategory'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, softwareCategory: e.target.value } }))} placeholder="e.g. ERP" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Deployment Model</label><input type="text" value={addItemFormData.stageAttributes['deploymentModel'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, deploymentModel: e.target.value } }))} placeholder="Cloud / On-Prem" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Modules</label><input type="text" value={addItemFormData.stageAttributes['modules'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, modules: e.target.value } }))} placeholder="e.g. Costing, Planning" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Support Level</label><input type="text" value={addItemFormData.stageAttributes['supportLevel'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, supportLevel: e.target.value } }))} placeholder="e.g. 24/7" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Trial Available</label><input type="text" value={addItemFormData.stageAttributes['trialAvailable'] ?? ''} onChange={e => setAddItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, trialAvailable: e.target.value } }))} placeholder="Yes / No" className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm" /></div>
+                  </div>
+                )}
                 <div className="flex gap-3">
                   <button
                     type="submit"
@@ -4800,6 +4896,7 @@ const App: React.FC = () => {
                   setFilterWidthMax('');
                   setFilterMoqMax('');
                   setFilterCertification('');
+                  setFilterCatalogStage('');
                   setShowBuyerFilters(false);
                 }}
                 className="flex-shrink-0 px-4 py-2 text-slate-500 font-medium text-sm hover:text-slate-800 border border-slate-200 rounded-lg transition"
@@ -4860,7 +4957,7 @@ const App: React.FC = () => {
                 className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
               >
                 {showBuyerFilters ? '▲ Hide Filters' : '▼ Filters'}
-                {(filterProductCategory || filterFabricType || filterMaterial.length > 0 || filterConstruction || filterColor || filterGsmMin || filterGsmMax || filterWidthMin || filterWidthMax || filterMoqMax || filterCertification) && (
+                {(filterProductCategory || filterFabricType || filterMaterial.length > 0 || filterConstruction || filterColor || filterGsmMin || filterGsmMax || filterWidthMin || filterWidthMax || filterMoqMax || filterCertification || filterCatalogStage) && (
                   <span className="ml-1 bg-indigo-100 text-indigo-700 text-xs px-1.5 py-0.5 rounded-full">active</span>
                 )}
               </button>
@@ -4927,6 +5024,14 @@ const App: React.FC = () => {
                       {['OEKO_TEX_STANDARD_100','OEKO_TEX_LEATHER_STANDARD','GOTS','BCI','FAIR_TRADE','BLUESIGN','HIGG_INDEX','RECYCLED_CLAIM_STANDARD','GLOBAL_RECYCLE_STANDARD','ISO_9001','SEDEX_SMETA','OTHER'].map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
                     </select>
                   </div>
+                  {/* Stage filter (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001) */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Product Stage</label>
+                    <select id="buyer-catalog-stage-filter" value={filterCatalogStage} onChange={e => setFilterCatalogStage(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1.5 text-xs text-slate-700 bg-white">
+                      <option value="">Any</option>
+                      {CATALOG_STAGE_VALUES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                    </select>
+                  </div>
                   <div className="col-span-full flex gap-2 justify-end mt-1">
                     <button
                       type="button"
@@ -4934,6 +5039,7 @@ const App: React.FC = () => {
                         setFilterProductCategory(''); setFilterFabricType(''); setFilterMaterial([]);
                         setFilterConstruction(''); setFilterColor(''); setFilterGsmMin(''); setFilterGsmMax('');
                         setFilterWidthMin(''); setFilterWidthMax(''); setFilterMoqMax(''); setFilterCertification('');
+                        setFilterCatalogStage('');
                         setBuyerCatalogNextCursor(null);
                         void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, buyerCatalogSearch.trim() || undefined);
                       }}
@@ -5036,6 +5142,10 @@ const App: React.FC = () => {
                             {item.certifications && item.certifications.map(c => (
                               <span key={c.standard} className="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded">{c.standard.replace(/_/g, ' ')}</span>
                             ))}
+                            {/* Catalog stage chip (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001) */}
+                            {item.catalogStage && (
+                              <span className="text-xs bg-violet-50 text-violet-700 px-1.5 py-0.5 rounded font-medium">{item.catalogStage.replace(/_/g, ' ')}</span>
+                            )}
                           </div>
                         )}
                         <div className="mt-3 border-t border-slate-100 pt-3">
@@ -6516,6 +6626,75 @@ const App: React.FC = () => {
                   <input id="edit-item-composition" type="text" value={editItemFormData.composition} onChange={e => setEditItemFormData(d => ({ ...d, composition: e.target.value }))} placeholder="e.g. 60% Cotton 40% Polyester" className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
                 </div>
               </div>
+
+              {/* Stage selector (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001) */}
+              <div>
+                <label htmlFor="edit-item-catalog-stage" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Product Stage</label>
+                <select id="edit-item-catalog-stage" value={editItemFormData.catalogStage} onChange={e => setEditItemFormData(d => ({ ...d, catalogStage: e.target.value, stageAttributes: {} }))} className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm bg-white">
+                  <option value="">— Select Stage —</option>
+                  {CATALOG_STAGE_VALUES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+              {/* Dynamic stage fields */}
+              {editItemFormData.catalogStage === 'YARN' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Yarn Type</label><input type="text" value={editItemFormData.stageAttributes['yarnType'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, yarnType: e.target.value } }))} placeholder="e.g. Spun" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Yarn Count</label><input type="text" value={editItemFormData.stageAttributes['yarnCount'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, yarnCount: e.target.value } }))} placeholder="e.g. 40s" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Count System</label><input type="text" value={editItemFormData.stageAttributes['countSystem'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, countSystem: e.target.value } }))} placeholder="Ne / Nm / Tex" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fiber</label><input type="text" value={editItemFormData.stageAttributes['fiber'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, fiber: e.target.value } }))} placeholder="e.g. Cotton" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Ply</label><input type="text" value={editItemFormData.stageAttributes['ply'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, ply: e.target.value } }))} placeholder="e.g. 2" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Spinning Type</label><input type="text" value={editItemFormData.stageAttributes['spinningType'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, spinningType: e.target.value } }))} placeholder="e.g. Ring" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Denier</label><input type="text" value={editItemFormData.stageAttributes['denier'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, denier: e.target.value } }))} placeholder="e.g. 75" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">End Use</label><input type="text" value={editItemFormData.stageAttributes['endUse'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, endUse: e.target.value } }))} placeholder="e.g. Weaving" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                </div>
+              )}
+              {editItemFormData.catalogStage === 'FABRIC_KNIT' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Knit Type</label><input type="text" value={editItemFormData.stageAttributes['knitType'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, knitType: e.target.value } }))} placeholder="e.g. Jersey" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Gauge</label><input type="text" value={editItemFormData.stageAttributes['gauge'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, gauge: e.target.value } }))} placeholder="e.g. 28" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Stretch %</label><input type="text" value={editItemFormData.stageAttributes['stretch'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, stretch: e.target.value } }))} placeholder="e.g. 40" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Finish</label><input type="text" value={editItemFormData.stageAttributes['finish'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, finish: e.target.value } }))} placeholder="e.g. Brushed" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">End Use</label><input type="text" value={editItemFormData.stageAttributes['endUse'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, endUse: e.target.value } }))} placeholder="e.g. Sportswear" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                </div>
+              )}
+              {editItemFormData.catalogStage === 'GARMENT' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Garment Type</label><input type="text" value={editItemFormData.stageAttributes['garmentType'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, garmentType: e.target.value } }))} placeholder="e.g. T-Shirt" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Size Range</label><input type="text" value={editItemFormData.stageAttributes['sizeRange'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, sizeRange: e.target.value } }))} placeholder="e.g. XS-3XL" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fit</label><input type="text" value={editItemFormData.stageAttributes['fit'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, fit: e.target.value } }))} placeholder="e.g. Regular" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Gender</label><input type="text" value={editItemFormData.stageAttributes['gender'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, gender: e.target.value } }))} placeholder="e.g. Unisex" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Fabric Composition</label><input type="text" value={editItemFormData.stageAttributes['fabricComposition'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, fabricComposition: e.target.value } }))} placeholder="e.g. 100% Cotton" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Monthly Capacity</label><input type="text" value={editItemFormData.stageAttributes['monthlyCapacity'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, monthlyCapacity: e.target.value } }))} placeholder="e.g. 50000" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                </div>
+              )}
+              {editItemFormData.catalogStage === 'MACHINE' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Machine Type</label><input type="text" value={editItemFormData.stageAttributes['machineType'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, machineType: e.target.value } }))} placeholder="e.g. Rapier Loom" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Brand</label><input type="text" value={editItemFormData.stageAttributes['brand'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, brand: e.target.value } }))} placeholder="e.g. Picanol" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Model</label><input type="text" value={editItemFormData.stageAttributes['model'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, model: e.target.value } }))} placeholder="e.g. GTX-L" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Year</label><input type="text" value={editItemFormData.stageAttributes['year'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, year: e.target.value } }))} placeholder="e.g. 2019" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Condition</label><input type="text" value={editItemFormData.stageAttributes['condition'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, condition: e.target.value } }))} placeholder="New / Refurbished" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Service Support</label><input type="text" value={editItemFormData.stageAttributes['serviceSupport'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, serviceSupport: e.target.value } }))} placeholder="e.g. On-site" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                </div>
+              )}
+              {editItemFormData.catalogStage === 'SERVICE' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Service Type</label><select value={editItemFormData.stageAttributes['serviceType'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, serviceType: e.target.value } }))} className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm bg-white"><option value="">—</option>{SERVICE_TYPE_VALUES.map(v => <option key={v} value={v}>{v.replace(/_/g, ' ')}</option>)}</select></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Specialization</label><input type="text" value={editItemFormData.stageAttributes['specialization'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, specialization: e.target.value } }))} placeholder="e.g. Denim testing" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Location Coverage</label><input type="text" value={editItemFormData.stageAttributes['locationCoverage'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, locationCoverage: e.target.value } }))} placeholder="e.g. Pan-India" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Turnaround (days)</label><input type="text" value={editItemFormData.stageAttributes['turnaroundTimeDays'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, turnaroundTimeDays: e.target.value } }))} placeholder="e.g. 7" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Portfolio Available</label><input type="text" value={editItemFormData.stageAttributes['portfolioAvailable'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, portfolioAvailable: e.target.value } }))} placeholder="Yes / No" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                </div>
+              )}
+              {editItemFormData.catalogStage === 'SOFTWARE_SAAS' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Software Category</label><input type="text" value={editItemFormData.stageAttributes['softwareCategory'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, softwareCategory: e.target.value } }))} placeholder="e.g. ERP" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Deployment Model</label><input type="text" value={editItemFormData.stageAttributes['deploymentModel'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, deploymentModel: e.target.value } }))} placeholder="Cloud / On-Prem" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Modules</label><input type="text" value={editItemFormData.stageAttributes['modules'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, modules: e.target.value } }))} placeholder="e.g. Costing, Planning" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Support Level</label><input type="text" value={editItemFormData.stageAttributes['supportLevel'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, supportLevel: e.target.value } }))} placeholder="e.g. 24/7" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                  <div className="space-y-1"><label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Trial Available</label><input type="text" value={editItemFormData.stageAttributes['trialAvailable'] ?? ''} onChange={e => setEditItemFormData(d => ({ ...d, stageAttributes: { ...d.stageAttributes, trialAvailable: e.target.value } }))} placeholder="Yes / No" className="mt-2 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" /></div>
+                </div>
+              )}
 
               {editItemError && (
                 <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm text-rose-700">
