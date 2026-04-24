@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-25 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — IMPLEMENTATION_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -69,19 +69,23 @@
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
   buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
-- TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 is DESIGN_COMPLETE (2026-04-25).
+- TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
   Unit scope: Textile attribute schema (9 new nullable columns on catalog_items) + supplier data entry
-    extension + buyer filter bar + AI-readable attribute contract + G-028 vectorText extension design.
+    extension + buyer filter bar + AI-readable attribute contract + G-028 vectorText extension.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001-DESIGN-v1.md.
+  Design commit: fa1dcc9. Implementation commit: 1d63513.
   Attribute fields: product_category, fabric_type, gsm, material, composition, color, width_cm,
     construction, certifications (JSONB). All nullable. No new tables.
-  moq range filter included (existing column). No backfill required.
-  SQL migration designed. Prisma model designed. Controlled vocabularies defined.
-  AI contract (CatalogItemAIAttributes) designed. G-028 vectorText extension designed.
-  Buyer filter params designed. 9 implementation slices defined.
-  Non-goals: AI implementation, embeddings, vector search, RFQ AI, PDP, price disclosure,
+  SQL migration applied (ALTER TABLE + 6 CREATE INDEX, no errors). Prisma db pull PASS. Prisma generate PASS.
+  Validation: TypeScript tsc --noEmit PASS. 108/108 tests PASS (6 focused suites).
+  Changed files (9): migration.sql, schema.prisma, catalogService.ts, tenant.ts, App.tsx,
+    openapi.tenant.json, b2b-supplier-catalog-attributes.test.tsx,
+    b2b-buyer-catalog-filters.test.tsx, b2b-buyer-catalog-ai-contract.test.tsx.
+  Runtime verification: PENDING (production deploy required).
+  Adjacent deferred unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001.
+    Reason: Yarn is a core textile supply-chain material requiring stage-specific attribute modeling.
+  Non-goals preserved: AI matching, embeddings, vector search, RFQ AI, PDP, price disclosure,
     relationship-scoped access, cross-supplier search, bulk attribute assignment.
-  NO code changes in this design cycle.
 - TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is VERIFIED_COMPLETE (2026-04-25).
   Unit scope: Keyword Search MVP — server-side keyword search (name + sku, case-insensitive OR).
   Design commits: a1b41d5 (original) + aa0b9a6 (amendment). Implementation commit: 4aaa8a3.
