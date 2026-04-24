@@ -1522,6 +1522,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const querySchema = z.object({
         limit: z.coerce.number().int().min(1).max(100).default(20),
         cursor: z.string().uuid().optional(),
+        q: z.string().max(100).optional(),
       });
 
       const paramsResult = paramsSchema.safeParse({ supplierOrgId });
@@ -1534,7 +1535,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendValidationError(reply, queryResult.error.errors);
       }
 
-      const { limit, cursor } = queryResult.data;
+      const { limit, cursor, q } = queryResult.data;
 
       // Gate 1: Org eligibility (admin context required — organizations RLS requires admin realm).
       // Checks both organizations.publication_posture and tenant.publicEligibilityPosture.
@@ -1572,6 +1573,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           where: {
             tenantId: supplierOrgId,
             active: true,
+            ...(q && q.trim().length > 0 && {
+              OR: [
+                { name: { contains: q.trim(), mode: 'insensitive' } },
+                { sku: { contains: q.trim(), mode: 'insensitive' } },
+              ],
+            }),
           },
           select: {
             id: true,

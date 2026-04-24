@@ -1556,6 +1556,29 @@ export const PHASE_B_EMPTY_STATE_LINES: [string, string] = [
   'Contact the supplier directly if you expect items to be available.',
 ];
 
+// TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001: Search-empty state descriptor.
+// Distinct copy from empty-catalog state (no results for given query).
+export const PHASE_B_SEARCH_EMPTY_STATE_LINE =
+  'No items match your search. Try a different name or SKU.';
+
+// Pure predicate: true when search is active and returned zero items (search-empty).
+export function resolveSearchEmptyState(
+  search: string,
+  itemCount: number,
+  loading: boolean,
+): boolean {
+  return !loading && search.trim().length > 0 && itemCount === 0;
+}
+
+// Pure predicate: true when no search is active and supplier has zero items (catalog-empty).
+export function resolveEmptyCatalogState(
+  search: string,
+  itemCount: number,
+  loading: boolean,
+): boolean {
+  return !loading && search.trim().length === 0 && itemCount === 0;
+}
+
 // Pure guard: true only when a load-more is safe to start.
 export function canStartLoadMore(loadingMore: boolean, nextCursor: string | null): boolean {
   return !loadingMore && nextCursor !== null;
@@ -1566,6 +1589,12 @@ export const __B2B_BUYER_CATALOG_LISTING_TESTING__ = {
   resolveImageFallbackAriaLabel,
   PHASE_B_EMPTY_STATE_LINES,
   canStartLoadMore,
+};
+
+export const __B2B_BUYER_CATALOG_SEARCH_TESTING__ = {
+  PHASE_B_SEARCH_EMPTY_STATE_LINE,
+  resolveSearchEmptyState,
+  resolveEmptyCatalogState,
 };
 
 type AppState =
@@ -1893,6 +1922,9 @@ const App: React.FC = () => {
   const [buyerCatalogNextCursor, setBuyerCatalogNextCursor] = useState<string | null>(null);
   const [buyerCatalogLoadingMore, setBuyerCatalogLoadingMore] = useState(false);
   const [buyerCatalogLoadMoreError, setBuyerCatalogLoadMoreError] = useState<string | null>(null);
+  // TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001: Keyword search state.
+  const [buyerCatalogSearch, setBuyerCatalogSearch] = useState('');
+  const buyerCatalogSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Supplier picker state (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001)
   const [supplierPickerItems, setSupplierPickerItems] = useState<SupplierPickerEntry[]>([]);
   const [supplierPickerLoading, setSupplierPickerLoading] = useState(false);
@@ -2728,7 +2760,7 @@ const App: React.FC = () => {
   };
 
   // TECS-B2B-BUYER-CATALOG-BROWSE-001: Fetch supplier catalog items for authenticated buyer.
-  const handleFetchBuyerCatalog = async (supplierOrgId: string) => {
+  const handleFetchBuyerCatalog = async (supplierOrgId: string, q?: string) => {
     const trimmedId = supplierOrgId.trim();
     if (!trimmedId) {
       return;
@@ -2741,7 +2773,9 @@ const App: React.FC = () => {
     setBuyerCatalogLoading(true);
 
     try {
-      const response = await getBuyerCatalogItems(trimmedId);
+      const response = await getBuyerCatalogItems(trimmedId, {
+        ...(q && q.trim().length > 0 ? { q: q.trim() } : {}),
+      });
       setBuyerCatalogItems(response.items);
       setBuyerCatalogNextCursor(response.nextCursor);
     } catch (error) {
@@ -2760,6 +2794,7 @@ const App: React.FC = () => {
     try {
       const more = await getBuyerCatalogItems(buyerCatalogSupplierOrgId, {
         cursor: buyerCatalogNextCursor,
+        ...(buyerCatalogSearch.trim().length > 0 ? { q: buyerCatalogSearch.trim() } : {}),
       });
       setBuyerCatalogItems(prev => [...prev, ...more.items]);
       setBuyerCatalogNextCursor(more.nextCursor);
@@ -2778,6 +2813,7 @@ const App: React.FC = () => {
     setBuyerCatalogError(null);
     setBuyerCatalogLoadingMore(false);
     setBuyerCatalogLoadMoreError(null);
+    setBuyerCatalogSearch('');
     setSupplierPickerItems([]);
     setSupplierPickerError(null);
     setSupplierPickerLoading(true);
@@ -4539,11 +4575,13 @@ const App: React.FC = () => {
                       tabIndex={0}
                       className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition cursor-pointer"
                       onClick={() => {
+                        setBuyerCatalogSearch('');
                         setBuyerCatalogSupplierOrgId(supplier.id);
                         void handleFetchBuyerCatalog(supplier.id);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
+                          setBuyerCatalogSearch('');
                           setBuyerCatalogSupplierOrgId(supplier.id);
                           void handleFetchBuyerCatalog(supplier.id);
                         }
@@ -4562,6 +4600,7 @@ const App: React.FC = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setBuyerCatalogSearch('');
                             setBuyerCatalogSupplierOrgId(supplier.id);
                             void handleFetchBuyerCatalog(supplier.id);
                           }}
@@ -4603,6 +4642,7 @@ const App: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                  setBuyerCatalogSearch('');
                   setBuyerCatalogSupplierOrgId('');
                   setBuyerCatalogItems([]);
                   setBuyerCatalogNextCursor(null);
@@ -4616,12 +4656,56 @@ const App: React.FC = () => {
               </button>
             </div>
 
+            {/* TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001: Keyword search input */}
+            <div className="relative">
+              <span
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                aria-hidden="true"
+              >
+                🔍
+              </span>
+              <input
+                type="text"
+                value={buyerCatalogSearch}
+                aria-label="Search catalog items"
+                placeholder="Search by name or SKU..."
+                className="w-full border border-slate-200 rounded-lg px-4 py-2 pl-9 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setBuyerCatalogSearch(val);
+                  if (buyerCatalogSearchDebounceRef.current) {
+                    clearTimeout(buyerCatalogSearchDebounceRef.current);
+                  }
+                  buyerCatalogSearchDebounceRef.current = setTimeout(() => {
+                    setBuyerCatalogNextCursor(null);
+                    void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, val.trim() || undefined);
+                  }, 350);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (buyerCatalogSearchDebounceRef.current) {
+                      clearTimeout(buyerCatalogSearchDebounceRef.current);
+                    }
+                    setBuyerCatalogNextCursor(null);
+                    void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, buyerCatalogSearch.trim() || undefined);
+                  } else if (e.key === 'Escape') {
+                    if (buyerCatalogSearchDebounceRef.current) {
+                      clearTimeout(buyerCatalogSearchDebounceRef.current);
+                    }
+                    setBuyerCatalogSearch('');
+                    setBuyerCatalogNextCursor(null);
+                    void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, undefined);
+                  }
+                }}
+              />
+            </div>
+
             {buyerCatalogError && (
               <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">
                 {buyerCatalogError}
                 <button
                   type="button"
-                  onClick={() => void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId)}
+                  onClick={() => void handleFetchBuyerCatalog(buyerCatalogSupplierOrgId, buyerCatalogSearch.trim() || undefined)}
                   className="ml-3 text-sm text-red-600 underline"
                 >
                   Retry
@@ -4636,10 +4720,18 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {!buyerCatalogLoading && !buyerCatalogError && buyerCatalogItems.length === 0 && buyerCatalogSupplierOrgId && (
+            {/* Search-empty state: active search query returned zero items */}
+            {!buyerCatalogLoading && !buyerCatalogError && buyerCatalogSupplierOrgId && buyerCatalogItems.length === 0 && buyerCatalogSearch.trim().length > 0 && (
               <div className="text-center py-12 text-slate-500 text-sm">
-                <p>This supplier has no active catalog items at this time.</p>
-                <p className="mt-1">Contact the supplier directly if you expect items to be available.</p>
+                <p>{PHASE_B_SEARCH_EMPTY_STATE_LINE}</p>
+              </div>
+            )}
+
+            {/* Catalog-empty state: no search active and supplier has no items */}
+            {!buyerCatalogLoading && !buyerCatalogError && buyerCatalogItems.length === 0 && buyerCatalogSupplierOrgId && buyerCatalogSearch.trim().length === 0 && (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                <p>{PHASE_B_EMPTY_STATE_LINES[0]}</p>
+                <p className="mt-1">{PHASE_B_EMPTY_STATE_LINES[1]}</p>
               </div>
             )}
 

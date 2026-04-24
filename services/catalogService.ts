@@ -318,6 +318,7 @@ export interface BuyerCatalogResponse {
 export interface BuyerCatalogQueryParams {
   limit?: number;
   cursor?: string;
+  q?: string;
 }
 
 /**
@@ -337,6 +338,10 @@ export async function getBuyerCatalogItems(
 
   if (params.cursor) {
     queryParams.append('cursor', params.cursor);
+  }
+
+  if (params.q && params.q.trim().length > 0) {
+    queryParams.append('q', params.q.trim());
   }
 
   const queryString = queryParams.toString();
