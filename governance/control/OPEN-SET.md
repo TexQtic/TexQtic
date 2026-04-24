@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE_AMENDED)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -69,14 +69,19 @@
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
   buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
-- TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is DESIGN_COMPLETE (2026-04-24).
+- TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is DESIGN_COMPLETE_AMENDED (2026-04-24).
+  Current cycle: **Keyword Search MVP only** (name + sku, server-side).
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
-  Scope: keyword search (name + sku, server-side) only — no textile attribute filters (not in schema).
+  Amendment: clarified unit boundary — keyword search MVP only; no textile filters in this unit;
+  added mandatory next-cycle carry-forward section (Section M of design artifact).
   Slices planned: Slice 1 backend route q param; Slice 2 service q param; Slice 3+4 frontend
   search state + input + debounce + Load More passthrough; Slice 5 new test file.
   Allowlist: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
   tests/b2b-buyer-catalog-search.test.tsx (new).
   No schema changes. No textile filters. No price. No PDP. No RFQ expansion.
+  Mandatory next-cycle candidate after this unit closes:
+    TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+    (full textile attr schema + migration + supplier data-entry + buyer filter UI — requires separate authorization).
   Awaiting implementation authorization from Paresh.
 - TECS-B2B-BUYER-CATALOG-LISTING-001 is VERIFIED_COMPLETE (2026-04-24).
   Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth sync: a2c907f.
@@ -116,8 +121,8 @@
   7 known pre-existing server-integration failures (unrelated to this unit).
   Runtime status: pending production/manual verification before final close.
   Changed files: App.tsx (modified), tests/b2b-buyer-catalog-supplier-selection.test.tsx (created).
-- Layer 0 posture: `DESIGN_COMPLETE` — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 design committed (2026-04-24).
-  Awaiting Paresh implementation authorization.
+- Layer 0 posture: `DESIGN_COMPLETE_AMENDED` — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 Keyword Search MVP design
+  amended (2026-04-24). Awaiting Paresh implementation authorization.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).

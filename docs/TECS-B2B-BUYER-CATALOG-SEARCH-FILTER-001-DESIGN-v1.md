@@ -3,10 +3,38 @@
 
 **Unit:** `TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001`
 **Phase:** Design / Planning (Design-only cycle — no code changes in this artifact)
-**Status:** DESIGN_COMPLETE
+**Status:** DESIGN_COMPLETE_AMENDED
 **Date:** 2026-04-24
+**Amended:** 2026-04-24 — Clarified current cycle as **Keyword Search MVP only**; corrected next-cycle unit name to `TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001`; added mandatory next-cycle carry-forward Section M.
 **Author:** GitHub Copilot (governed, Safe-Write Mode)
 **Precursor unit:** TECS-B2B-BUYER-CATALOG-LISTING-001 (VERIFIED_COMPLETE, closure commit `ad0407f`)
+
+---
+
+## SCOPE DECLARATION — Keyword Search MVP Only
+
+> This section is the authoritative scope boundary for the current implementation cycle.
+> It is mandatory reading before any implementation work begins.
+
+### Current cycle delivers: **Keyword Search MVP**
+
+| Included in this unit | Excluded from this unit |
+|---|---|
+| `q` param on buyer supplier catalog API | Textile attribute filters of any kind |
+| Server-side search by `name` + `sku` | `category` (phantom field — no DB column) |
+| Case-insensitive OR match | `fabricType`, `gsm`, `material`, `composition` |
+| Supplier-scoped (single selected supplier) | `color`, `width`, `construction`, `certification` |
+| Frontend search input in Phase B | MOQ range filter |
+| 350 ms debounce + cursor reset | Sort controls |
+| Load More passing active `q` | Price display or price-range filter |
+| Search-empty state (distinct copy) | Per-item `publicationPosture` filtering |
+| 5 implementation slices + new test file | Any schema migration |
+| | Cross-supplier search |
+| | PDP, RFQ expansion |
+| | Any auth / session changes |
+
+**All textile attribute filters are explicitly deferred to the mandatory next-cycle unit.**
+See Section M for the carry-forward unit: `TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001`.
 
 ---
 
@@ -322,11 +350,21 @@ filter surface meaningful.
 
 ### C.3 Textile attribute future unit
 
-A future unit (tentatively `TECS-B2B-BUYER-CATALOG-TEXTILE-FILTER-001`) must:
-1. Produce a schema design artifact for textile attributes (column names, types, optional/required).
-2. Obtain explicit authorization from Paresh before touching `schema.prisma` or migrations.
-3. Deliver data entry surfaces for suppliers.
-4. Then deliver buyer-side filters.
+The mandatory next-cycle unit is: **`TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001`**
+
+This unit must NOT be opened until `TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001` is VERIFIED_COMPLETE.
+It requires explicit authorization from Paresh before any design or implementation begins.
+
+That unit must:
+1. Produce a product/schema design artifact for textile attributes (column naming, types, optional/required, indexing strategy).
+2. Obtain explicit authorization before touching `schema.prisma` or migrations.
+3. Deliver SQL migration via the standard `psql → prisma db pull → prisma generate` sequence.
+4. Deliver supplier-side data-entry / update surface (filters are useless if no data is populated).
+5. Deliver buyer API filter params for all new attributes.
+6. Deliver buyer UI filter controls.
+7. Deliver tests and production verification.
+
+See Section M for the full mandatory carry-forward specification.
 
 This is NOT in scope for `TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001`.
 
@@ -714,8 +752,86 @@ READ (reference only, no edit):
 
 ```
 ad0407f  [TECS-CLOSE] buyer catalog listing layer verified complete   ← last verified close
-(this)   [DESIGN] buyer catalog search and filter plan                ← design commit
+a1b41d5  [DESIGN] buyer catalog search and filter plan                ← original design commit
+(this)   [DESIGN-AMEND] clarify buyer catalog keyword search MVP scope ← amendment commit
 ```
+
+---
+
+## M. Mandatory Next-Cycle Carry-Forward
+
+> This section is authoritative. It records the mandatory next-cycle unit that MUST be opened after
+> `TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001` is VERIFIED_COMPLETE. It must not be opened early.
+
+### M.1 Unit candidate
+
+```
+TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+```
+
+This unit covers the full commercial textile catalog attribute and filter layer. It is the
+mandatory successor to the Keyword Search MVP.
+
+### M.2 Why this unit is mandatory
+
+TexQtic is a B2B textile platform. Buyers need to filter by textile-specific attributes to
+make procurement decisions. The current `CatalogItem` schema has no textile attributes at all.
+This is a structural gap that blocks meaningful buyer-side filtering permanently until addressed.
+
+The Keyword Search MVP (this unit) provides the minimum viable discovery tool. The textile
+attributes + filters unit provides the full commercial filter surface.
+
+### M.3 Fields this unit must address
+
+| Field | Current schema status | Reason required |
+|---|---|---|
+| `category` / product category | Phantom (deprecated) — no DB column | Primary grouping for buyer browse |
+| Fabric type | Not in schema | Core textile spec |
+| GSM (grams per sq metre) | Not in schema | Weight spec for buyers |
+| Material | Not in schema | Fibre content |
+| Composition | Not in schema | Blended fibre breakdown |
+| Color | Not in schema | Visual product attribute |
+| Width | Not in schema | Loom/fabric width |
+| Construction | Not in schema | Weave / knit type |
+| Certification | Not in schema | Standards (OEKO-TEX, BCI, etc.) |
+| MOQ range (min / max) | Schema: `moq` Int exists | Procurement planning filter |
+| Sort controls | Schema fields exist | Name, updatedAt user-selectable sort |
+
+Price disclosure (`price` exists in schema, intentionally absent from buyer response in
+Phase 1/2) must only be added if separately authorized by Paresh — it is NOT automatically
+included in this future unit.
+
+### M.4 Required steps for this future cycle
+
+1. **Product/schema design artifact** — naming convention (snake_case, DB-namrules.md compliance),
+   types, optional/required/nullable, indexing strategy, backwards-compat for null legacy items.
+2. **Governance review** — `shared/contracts/db-naming-rules.md`, `shared/contracts/schema-budget.md`,
+   `shared/contracts/rls-policy.md` must all be reviewed before touching `schema.prisma`.
+3. **SQL migration** — via the standard sequence:
+   `psql -f migration.sql` (DATABASE_URL) → verify no ERROR/ROLLBACK →
+   `pnpm -C server exec prisma db pull` → `pnpm -C server exec prisma generate` → restart server.
+4. **Supplier-side data-entry surface** — attribute fields must be fillable by suppliers before
+   buyer filters have any useful data to operate on.
+5. **Buyer API filter params** — extend buyer catalog route querySchema with typed filter params
+   for each new attribute.
+6. **Buyer UI filter controls** — filter panel / chip controls in Phase B. Must not add a
+   skeleton/placeholder filter bar before attributes exist in the backend.
+7. **Tests** — unit + integration tests for new filter params and filter UI.
+8. **Production verification** — full verification plan with production evidence before close.
+
+### M.5 Hard preconditions before opening
+
+- `TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001` must be VERIFIED_COMPLETE.
+- Explicit authorization from Paresh required before any design work begins.
+- No implementation may start without a separate design artifact approved for that unit.
+- No schema changes may be made without an explicit `prisma migrate deploy` authorization.
+
+### M.6 What is NOT in this future unit
+
+- Cross-supplier catalog search (requires separate product/API design).
+- Public marketplace-style browsing (requires relationship-scoped access design).
+- Buyer-supplier allowlist / relationship gating (requires separate design cycle).
+- RFQ expansion beyond currently authorized scope.
 
 ---
 

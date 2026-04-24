@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE_AMENDED)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -44,11 +44,14 @@ preserved_aligned_anchor_posture:
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001
-current_product_active_delivery_status: DESIGN_COMPLETE
-current_product_active_delivery_design_commit: (this commit)
+current_product_active_delivery_status: DESIGN_COMPLETE_AMENDED
+current_product_active_delivery_design_commit: a1b41d5 (original) + (this amendment commit)
 current_product_active_delivery_followup_sha: N/A
 current_product_active_delivery_implementation_commit: N/A
 current_product_active_delivery_validation: N/A — design only; no code changes in this cycle
+current_product_active_delivery_note: |
+  Keyword Search MVP only. No textile filters. No schema changes.
+  Mandatory next-cycle: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
 runtime_verification_status: VERIFIED_WITH_NON_BLOCKING_NOTES — TECS-B2B-BUYER-CATALOG-LISTING-001 production verification PASS 9/9 executable checks (2026-04-24); fixture-limited non-executables (M9/M11–M14) covered by unit tests; TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1–M9 outstanding
@@ -89,12 +92,13 @@ prior_latest_verified_product_close: |
   Prior verified close: TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (sub-unit, 2026-04-24).
 current_open_unit: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001
 current_open_unit_note: |
-  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is DESIGN_COMPLETE (2026-04-24).
+  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 is DESIGN_COMPLETE_AMENDED (2026-04-24).
+  Current cycle: Keyword Search MVP only (name + sku, server-side). No textile filters.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
-  Scope: server-side keyword search (name + sku). No textile attribute filters (not in schema).
-  No schema changes. No price. No PDP. No RFQ expansion.
+  Scope declaration and Section M (mandatory next-cycle carry-forward) added in amendment.
   5 slices planned. Allowlist: server/src/routes/tenant.ts, services/catalogService.ts,
-    App.tsx, tests/b2b-buyer-catalog-search.test.tsx (new).
+    App.tsx, tests/b2b-buyer-catalog-search.test.tsx (new). No schema changes.
+  Mandatory next-cycle after close: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
   Awaiting Paresh implementation authorization.
 ```
 

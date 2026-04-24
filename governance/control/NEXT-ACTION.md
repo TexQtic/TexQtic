@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 — DESIGN_COMPLETE_AMENDED)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,17 +11,20 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: DESIGN_COMPLETE_AWAITING_IMPLEMENTATION_AUTHORIZATION
+product_delivery_priority: DESIGN_COMPLETE_AMENDED_AWAITING_IMPLEMENTATION_AUTHORIZATION
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001
-active_delivery_unit_status: DESIGN_COMPLETE
+active_delivery_unit_status: DESIGN_COMPLETE_AMENDED
 active_delivery_unit_note: >-
-  Design artifact committed: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
-  Scope: keyword search (name + sku, server-side). No textile filters (not in schema).
+  Current cycle: Keyword Search MVP only (name + sku, server-side). No textile filters.
+  Design artifact: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
+  Amendment: boundary clarified; Section M (mandatory next-cycle carry-forward) added.
   5 slices planned: backend q param, service q param, frontend state+input+debounce,
   Load More q passthrough, new test file.
   Allowlist: server/src/routes/tenant.ts, services/catalogService.ts, App.tsx,
   tests/b2b-buyer-catalog-search.test.tsx (new). No schema changes.
-  Required next action: Paresh authorization to begin implementation.
+  Mandatory next-cycle candidate: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+    (textile attrs schema + migration + supplier data-entry + buyer filter UI).
+  Required next action: Paresh authorization to begin implementation of Keyword Search MVP.
 last_closed_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_commits: c5cdcb5 + 9c4f4f6 + f6ff2a8 + a2c907f
@@ -35,7 +38,7 @@ prior_closed_unit: TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_commits: 1e499ad + fba9f2e + ec78e65 + 0ea9c67 + 65b37ef
 d015_reconciliation: COMPLETE
-d016_posture: DESIGN_COMPLETE — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 design committed; awaiting Paresh implementation authorization
+d016_posture: DESIGN_COMPLETE_AMENDED — TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 Keyword Search MVP only; textile attrs/filters in mandatory next-cycle unit (TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001); awaiting implementation authorization
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -51,13 +54,14 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 design complete (2026-04-24).
+  TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001 design amended (2026-04-24) — Keyword Search MVP only.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-SEARCH-FILTER-001-DESIGN-v1.md.
-  Scope: server-side keyword search (name + sku) only.
-  Repo-truth findings: no textile attrs in schema; category is phantom; MOQ range deferred.
+  Current cycle scope: server-side keyword search (name + sku) only.
+  Excluded from current cycle: all textile attrs, category, MOQ range, sort, price, schema migration.
+  Mandatory next-cycle after close: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001.
   5 implementation slices planned. Allowlist known. No schema changes required.
   TECS-B2B-BUYER-CATALOG-LISTING-001 remains last VERIFIED_COMPLETE unit.
-  Required next action: Paresh authorization to begin implementation of search unit.
+  Required next action: Paresh authorization to begin implementation of Keyword Search MVP.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.
