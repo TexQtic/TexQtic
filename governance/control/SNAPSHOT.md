@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — DESIGN_COMPLETE)
+**Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-LISTING-001 — IMPLEMENTATION_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -44,15 +44,19 @@ preserved_aligned_anchor_posture:
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
-current_product_active_delivery_status: DESIGN_COMPLETE
+current_product_active_delivery_status: IMPLEMENTATION_COMPLETE
 current_product_active_delivery_design_commit: c5cdcb5
-current_product_active_delivery_implementation_commit: pending
+current_product_active_delivery_followup_sha: 9c4f4f6
+current_product_active_delivery_implementation_commit: f6ff2a8
 current_product_active_delivery_validation: |
-  design artifact complete: docs/TECS-B2B-BUYER-CATALOG-LISTING-001-DESIGN-v1.md
-  implementation not yet started
+  TypeScript: PASS (zero errors)
+  focused listing tests: 32/32 PASS (tests/b2b-buyer-catalog-listing.test.tsx)
+  supplier-selection regression: 17/17 PASS
+  full suite: pre-existing failures only (rfq-detail-route timeout, admin-rbac 401,
+    g026-middleware-import, membership-authz SMTP — all unrelated to this unit)
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: PENDING — TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1-M9 manual steps outstanding; TECS-B2B-BUYER-CATALOG-LISTING-001 implementation not yet started
+runtime_verification_status: PENDING — TECS-B2B-BUYER-CATALOG-LISTING-001 M1–M12 manual verification steps outstanding; TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 M1–M9 also outstanding
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -85,17 +89,18 @@ prior_latest_verified_product_close: |
   Note: current catalog access is intentionally launch-accelerated and too open long-term.
   Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
   Prior verified close: TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (sub-unit, 2026-04-24).
-current_open_unit: TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001
+current_open_unit: TECS-B2B-BUYER-CATALOG-LISTING-001
 current_open_unit_note: |
-  TECS-B2B-BUYER-SUPPLIER-SELECTION-UX-REFINE-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
-  Design commit: 0c47d7e. Implementation commit: 3e9086a.
-  All four slices delivered and validated. Runtime/production verification (M1-M9 per design
-  artifact §H) required before final VERIFIED_COMPLETE closure.
-  Phase 3+ deferred items (search, item detail, price disclosure, publicationPosture filtering,
-  buyer-supplier allowlist) remain unopened — each requires separate product decision.
-  No catalog listing/search/PDP/pricing/RFQ/relationship-access work opened.
-  Future design concern: current catalog access is intentionally launch-accelerated and too open
-  long-term. Relationship-scoped buyer catalog visibility is a future product/design cycle item.
+  TECS-B2B-BUYER-CATALOG-LISTING-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
+  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth sync: (this commit).
+  All four slices delivered and validated. Runtime/production verification (M1–M12) required
+  before final VERIFIED_COMPLETE closure.
+  Verification focus: Phase B grid render, no 'Viewing:' badge, Min. Order card label,
+    No image fallback, Load More grid-preserving append, load-more inline error isolation,
+    RFQ dialog still opens, ← All Suppliers resets to Phase A.
+  No search/filter/sort/PDP/pricing/RFQ/backend/API/schema/auth work opened.
+  Phase 3+ deferred: search, item detail, price disclosure, publicationPosture filtering,
+    buyer-supplier allowlist — each requires separate product decision.
 ```
 
 ## Current Posture
