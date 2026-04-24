@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-NAV-POLISH-001 — VERIFIED_COMPLETE)
+**Last Updated:** 2026-04-24 (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -57,11 +57,18 @@
 - TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
   Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
   All static gates passed. Runtime API checks pending production verification.
-- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 Phase 2 is AWAITING_GOVERNANCE_CLOSURE (2026-04-24).
-  All implementation sub-units are VERIFIED_COMPLETE. Route binding fix applied (commit `1e499ad`).
-  All boundary violations resolved: BV-001 FIXED, BV-002/BV-003/BV-005 FIXED, BV-004 BY-DESIGN.
-  NB-001 (header identity) resolved in commit `0ea9c67`. NB-002, NB-003 remain non-blocking by-design.
-  Parent unit governance closure requires explicit user instruction.
+- TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 is VERIFIED_COMPLETE (2026-04-24).
+  Parent buyer-side catalog supplier-select unit closed after all bounded implementation and
+  verification sub-units completed: buyer-safe supplier selection, buyer nav boundary isolation,
+  active-state/header polish, production verification, and neighbor-path compatibility checks.
+  Route binding fix: commit `1e499ad`. Boundary violations: BV-001 FIXED, BV-002/BV-003/BV-005 FIXED, BV-004 BY-DESIGN.
+  Sub-unit chain: TECS-B2B-BUYER-NAV-BOUNDARY-FIX-001 VERIFIED_COMPLETE (fba9f2e + ec78e65);
+  TECS-B2B-BUYER-NAV-POLISH-001 VERIFIED_COMPLETE (0ea9c67 + 65b37ef).
+  Docs: docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-v1.md, docs/TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001-VERIFICATION-v1.md.
+  Note: current catalog access is intentionally launch-accelerated and too open long-term.
+  Future relationship-scoped buyer catalog visibility requires a separate design/product cycle.
+  Phase 3+ items (supplier selection UX polish, search, item detail, price disclosure,
+  buyer-supplier allowlist) remain candidates only — each requires explicit human authorization.
 - TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001 is DESIGN_COMPLETE (2026-05-08).
   Design artifact: docs/TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001-v1.md.
   5 boundary violations identified: BV-001 FIXED, BV-002/BV-003/BV-005 FIXED, BV-004 BY-DESIGN.
@@ -74,7 +81,8 @@
   NB-001 closed: header identity replaced — {tenant.name} / {shellLabel} confirmed in production.
   Production evidence: header shows 'QA Buyer / B2B WORKSPACE'; Catalog sidebar item shows blue active pill.
   Verification artifact: docs/TECS-B2B-BUYER-NAV-POLISH-001-v1.md.
-- Layer 0 posture: `ACTIVE_DELIVERY` (TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 awaiting governance closure).
+- Layer 0 posture: `ZERO_OPEN` — TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 is VERIFIED_COMPLETE.
+  No active product-delivery unit. D-016 decision control required before any new unit opens.
   The next opening is a human decision; no unit may be inferred from the closed unit, family
   proximity, or stale carry-forward wording.
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
