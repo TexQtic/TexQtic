@@ -74,6 +74,7 @@ type RfqCatalogItemTarget = {
   price: number;
   active: boolean;
   supplierOrgId: string;
+  catalogStage: string | null;
 };
 
 type TenantSessionIdentity = {
@@ -227,6 +228,16 @@ type BuyerRfqListRow = {
     sku: string | null;
     price?: number;
   };
+  requirementTitle: string | null;
+  quantityUnit: string | null;
+  urgency: string | null;
+  sampleRequired: boolean | null;
+  targetDeliveryDate: Date | null;
+  deliveryLocation: string | null;
+  deliveryCountry: string | null;
+  stageRequirementAttributes: Record<string, unknown> | null;
+  fieldSourceMeta: Record<string, unknown> | null;
+  requirementConfirmedAt: Date | null;
 };
 
 type BuyerRfqDetailRow = BuyerRfqListRow & {
@@ -251,6 +262,12 @@ type SupplierRfqListRow = {
     name: string;
     sku: string | null;
   };
+  requirementTitle: string | null;
+  quantityUnit: string | null;
+  urgency: string | null;
+  sampleRequired: boolean | null;
+  deliveryCountry: string | null;
+  stageRequirementAttributes: Record<string, unknown> | null;
 };
 
 type SupplierRfqDetailRow = SupplierRfqListRow & {
@@ -302,6 +319,16 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
     supplier_org_id: rfq.supplierOrgId,
     created_at: rfq.createdAt,
     updated_at: rfq.updatedAt,
+    requirement_title: rfq.requirementTitle,
+    quantity_unit: rfq.quantityUnit,
+    urgency: rfq.urgency,
+    sample_required: rfq.sampleRequired,
+    target_delivery_date: rfq.targetDeliveryDate,
+    delivery_location: rfq.deliveryLocation,
+    delivery_country: rfq.deliveryCountry,
+    stage_requirement_attributes: rfq.stageRequirementAttributes,
+    field_source_meta: rfq.fieldSourceMeta,
+    requirement_confirmed_at: rfq.requirementConfirmedAt,
   };
 }
 
@@ -342,6 +369,12 @@ function mapSupplierRfqListItem(rfq: SupplierRfqListRow) {
     quantity: rfq.quantity,
     created_at: rfq.createdAt,
     updated_at: rfq.updatedAt,
+    requirement_title: rfq.requirementTitle,
+    quantity_unit: rfq.quantityUnit,
+    urgency: rfq.urgency,
+    sample_required: rfq.sampleRequired,
+    delivery_country: rfq.deliveryCountry,
+    stage_requirement_attributes: rfq.stageRequirementAttributes,
   };
 }
 
@@ -381,6 +414,7 @@ async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCa
         price: true,
         active: true,
         tenantId: true,
+        catalogStage: true,
       },
     });
 
@@ -395,6 +429,7 @@ async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCa
       price: Number(catalogItem.price),
       active: catalogItem.active,
       supplierOrgId: catalogItem.tenantId,
+      catalogStage: catalogItem.catalogStage ?? null,
     };
   });
 }
@@ -886,6 +921,45 @@ export function catalogItemAttributeCompleteness(item: Partial<CatalogItemForVec
       return filled / 9;
     }
   }
+}
+
+/**
+ * Assemble a plain-text summary of structured RFQ requirements for AI context.
+ *
+ * AI BOUNDARY — EXCLUSION LIST (enforced by function signature):
+ *   EXCLUDED: deliveryLocation (PII risk)
+ *   EXCLUDED: targetDeliveryDate (scheduling sensitivity)
+ *   EXCLUDED: requirementConfirmedAt (internal audit field)
+ *   EXCLUDED: price / item_unit_price (financial data — AI must not price-match)
+ *   EXCLUDED: publicationPosture, escrow, grossAmount (financial governance)
+ */
+export function assembleStructuredRfqRequirementSummaryText(rfq: {
+  buyerMessage?: string | null;
+  requirementTitle?: string | null;
+  quantityUnit?: string | null;
+  urgency?: string | null;
+  sampleRequired?: boolean | null;
+  deliveryCountry?: string | null;
+  stageRequirementAttributes?: Record<string, unknown> | null;
+}): string {
+  const parts: string[] = [];
+
+  if (rfq.requirementTitle) parts.push(`Requirement: ${rfq.requirementTitle}`);
+  if (rfq.quantityUnit) parts.push(`Quantity unit: ${rfq.quantityUnit}`);
+  if (rfq.urgency) parts.push(`Urgency: ${rfq.urgency}`);
+  if (rfq.sampleRequired != null) parts.push(`Sample required: ${rfq.sampleRequired ? 'yes' : 'no'}`);
+  if (rfq.deliveryCountry) parts.push(`Delivery country: ${rfq.deliveryCountry}`);
+
+  if (rfq.stageRequirementAttributes && typeof rfq.stageRequirementAttributes === 'object') {
+    const attrEntries = Object.entries(rfq.stageRequirementAttributes)
+      .filter(([, v]) => v != null && v !== '')
+      .map(([k, v]) => `${k}: ${String(v)}`);
+    if (attrEntries.length > 0) parts.push(`Stage requirements: ${attrEntries.join(', ')}`);
+  }
+
+  if (rfq.buyerMessage) parts.push(`Buyer message: ${rfq.buyerMessage}`);
+
+  return parts.join('\n');
 }
 
 const tenantRoutes: FastifyPluginAsync = async fastify => {
@@ -2727,6 +2801,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           supplierOrgId: true,
           createdAt: true,
           updatedAt: true,
+          requirementTitle: true,
+          quantityUnit: true,
+          urgency: true,
+          sampleRequired: true,
+          targetDeliveryDate: true,
+          deliveryLocation: true,
+          deliveryCountry: true,
+          stageRequirementAttributes: true,
+          fieldSourceMeta: true,
+          requirementConfirmedAt: true,
           catalogItem: {
             select: {
               name: true,
@@ -2741,7 +2825,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
     });
 
-    return sendSuccess(reply, { rfqs: rfqs.map(mapBuyerRfqListItem), count: rfqs.length });
+    return sendSuccess(reply, {
+      rfqs: rfqs.map(r => mapBuyerRfqListItem({
+        ...r,
+        stageRequirementAttributes: r.stageRequirementAttributes as Record<string, unknown> | null,
+        fieldSourceMeta: r.fieldSourceMeta as Record<string, unknown> | null,
+      })),
+      count: rfqs.length,
+    });
   });
 
   /**
@@ -2785,6 +2876,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           quantity: true,
           createdAt: true,
           updatedAt: true,
+          requirementTitle: true,
+          quantityUnit: true,
+          urgency: true,
+          sampleRequired: true,
+          deliveryCountry: true,
+          stageRequirementAttributes: true,
           catalogItem: {
             select: {
               name: true,
@@ -2799,7 +2896,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
     });
 
-    return sendSuccess(reply, { rfqs: rfqs.map(mapSupplierRfqListItem), count: rfqs.length });
+    return sendSuccess(reply, {
+      rfqs: rfqs.map(r => mapSupplierRfqListItem({
+        ...r,
+        stageRequirementAttributes: r.stageRequirementAttributes as Record<string, unknown> | null,
+      })),
+      count: rfqs.length,
+    });
   });
 
   /**
@@ -2827,12 +2930,18 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         select: {
           id: true,
           status: true,
-          orgId: true,
           catalogItemId: true,
           quantity: true,
           buyerMessage: true,
           createdAt: true,
           updatedAt: true,
+          orgId: true,
+          requirementTitle: true,
+          quantityUnit: true,
+          urgency: true,
+          sampleRequired: true,
+          deliveryCountry: true,
+          stageRequirementAttributes: true,
           catalogItem: {
             select: {
               name: true,
@@ -2858,6 +2967,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     return sendSuccess(reply, {
       rfq: mapSupplierRfqDetail({
         ...rfq,
+        stageRequirementAttributes: rfq.stageRequirementAttributes as Record<string, unknown> | null,
         buyerCounterpartySummary,
       }),
     });
@@ -3052,6 +3162,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           createdByUserId: true,
           createdAt: true,
           updatedAt: true,
+          requirementTitle: true,
+          quantityUnit: true,
+          urgency: true,
+          sampleRequired: true,
+          targetDeliveryDate: true,
+          deliveryLocation: true,
+          deliveryCountry: true,
+          stageRequirementAttributes: true,
+          fieldSourceMeta: true,
+          requirementConfirmedAt: true,
         },
       });
     });
@@ -3080,6 +3200,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     return sendSuccess(reply, {
       rfq: mapBuyerRfqDetail({
         ...rfq,
+        stageRequirementAttributes: rfq.stageRequirementAttributes as Record<string, unknown> | null,
+        fieldSourceMeta: rfq.fieldSourceMeta as Record<string, unknown> | null,
         catalogItem: {
           name: catalogItem.name,
           sku: catalogItem.sku,
@@ -3104,14 +3226,38 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       catalogItemId: z.string().uuid(),
       quantity: z.number().int().min(1).optional().default(1),
       buyerMessage: z.string().trim().min(1).max(1000).optional(),
-    }).strict();
+      requirementTitle: z.string().trim().max(200).optional(),
+      quantityUnit: z.string().trim().max(50).optional(),
+      urgency: z.enum(['STANDARD', 'URGENT', 'FLEXIBLE']).optional(),
+      sampleRequired: z.boolean().optional(),
+      targetDeliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      deliveryLocation: z.string().trim().max(200).optional(),
+      deliveryCountry: z.string().length(3).optional(),
+      stageRequirementAttributes: z.record(z.unknown()).optional(),
+      requirementConfirmedAt: z.string().datetime().optional(),
+      fieldSourceMeta: z.record(z.unknown()).optional(),
+    });
 
     const parseResult = bodySchema.safeParse(request.body);
     if (!parseResult.success) {
       return sendValidationError(reply, parseResult.error.errors);
     }
 
-    const { catalogItemId, quantity, buyerMessage } = parseResult.data;
+    const {
+      catalogItemId,
+      quantity,
+      buyerMessage,
+      requirementTitle,
+      quantityUnit,
+      urgency,
+      sampleRequired,
+      targetDeliveryDate,
+      deliveryLocation,
+      deliveryCountry,
+      stageRequirementAttributes,
+      requirementConfirmedAt,
+      fieldSourceMeta,
+    } = parseResult.data;
 
     const catalogItemTarget = await resolveRfqCatalogItemTarget(catalogItemId);
 
@@ -3121,6 +3267,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
     if (!catalogItemTarget.active) {
       return sendError(reply, 'BAD_REQUEST', 'Catalog item is not active', 400);
+    }
+
+    if (stageRequirementAttributes && catalogItemTarget.catalogStage) {
+      const stageSchema = stageAttributesSchemas[catalogItemTarget.catalogStage as typeof CATALOG_STAGE_VALUES[number]];
+      if (stageSchema) {
+        const stageParseResult = stageSchema.safeParse(stageRequirementAttributes);
+        if (!stageParseResult.success) {
+          return sendValidationError(reply, stageParseResult.error.errors);
+        }
+      }
     }
 
     const dbContext = request.dbContext;
@@ -3138,6 +3294,18 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           buyerMessage: buyerMessage ?? null,
           status: 'OPEN',
           createdByUserId: userId ?? null,
+          requirementTitle: requirementTitle ?? null,
+          quantityUnit: quantityUnit ?? null,
+          urgency: urgency ?? null,
+          sampleRequired: sampleRequired ?? null,
+          targetDeliveryDate: targetDeliveryDate ? new Date(targetDeliveryDate) : null,
+          deliveryLocation: deliveryLocation ?? null,
+          deliveryCountry: deliveryCountry ?? null,
+          stageRequirementAttributes: stageRequirementAttributes ?? null,
+          requirementConfirmedAt: (requirementTitle ?? quantityUnit ?? urgency ?? sampleRequired ?? targetDeliveryDate ?? deliveryLocation ?? deliveryCountry ?? stageRequirementAttributes) !== undefined
+            ? (requirementConfirmedAt ? new Date(requirementConfirmedAt) : new Date())
+            : null,
+          fieldSourceMeta: fieldSourceMeta ?? null,
         },
         select: {
           id: true,
@@ -3150,6 +3318,16 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           createdByUserId: true,
           createdAt: true,
           updatedAt: true,
+          requirementTitle: true,
+          quantityUnit: true,
+          urgency: true,
+          sampleRequired: true,
+          targetDeliveryDate: true,
+          deliveryLocation: true,
+          deliveryCountry: true,
+          stageRequirementAttributes: true,
+          fieldSourceMeta: true,
+          requirementConfirmedAt: true,
         },
       });
 
@@ -3188,11 +3366,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return {
         rfq: mapBuyerRfqDetail({
           ...rfq,
+          stageRequirementAttributes: rfq.stageRequirementAttributes as Record<string, unknown> | null,
+          fieldSourceMeta: rfq.fieldSourceMeta as Record<string, unknown> | null,
           catalogItem: {
             name: catalogItemTarget.name,
             sku: catalogItemTarget.sku,
           },
           supplierResponse: null,
+          tradeContinuity: null,
+          supplierCounterpartySummary: null,
         }),
       };
     });

@@ -583,22 +583,32 @@ model TradeLifecycleLog {
 /// Buyer ownership is enforced by org_id; supplier visibility is mediated by supplier_org_id.
 /// Operational source of truth for RFQ initiation, separate from Trade.
 model Rfq {
-  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId            String               @map("org_id") @db.Uuid
-  supplierOrgId    String               @map("supplier_org_id") @db.Uuid
-  catalogItemId    String               @map("catalog_item_id") @db.Uuid
-  quantity         Int
-  buyerMessage     String?              @map("buyer_message")
-  status           RfqStatus            @default(OPEN)
-  createdByUserId  String?              @map("created_by_user_id") @db.Uuid
-  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
-  supplierResponse RfqSupplierResponse? @relation("rfq_supplier_response")
-  catalogItem      CatalogItem          @relation(fields: [catalogItemId], references: [id], onUpdate: NoAction)
-  createdByUser    User?                @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onUpdate: NoAction)
-  buyerOrg         Tenant               @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
-  supplierOrg      Tenant               @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
-  sourceTrade      Trade?               @relation("trade_source_rfq")
+  id                           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId                        String               @map("org_id") @db.Uuid
+  supplierOrgId                String               @map("supplier_org_id") @db.Uuid
+  catalogItemId                String               @map("catalog_item_id") @db.Uuid
+  quantity                     Int
+  buyerMessage                 String?              @map("buyer_message")
+  status                       RfqStatus            @default(OPEN)
+  createdByUserId              String?              @map("created_by_user_id") @db.Uuid
+  createdAt                    DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                    DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
+  requirementTitle             String?              @map("requirement_title") @db.VarChar(200)
+  quantityUnit                 String?              @map("quantity_unit") @db.VarChar(50)
+  targetDeliveryDate           DateTime?            @map("target_delivery_date") @db.Date
+  deliveryLocation             String?              @map("delivery_location") @db.VarChar(200)
+  deliveryCountry              String?              @map("delivery_country") @db.VarChar(3)
+  urgency                      String?              @db.VarChar(30)
+  sampleRequired               Boolean?             @map("sample_required")
+  stageRequirementAttributes   Json?                @map("stage_requirement_attributes")
+  requirementConfirmedAt       DateTime?            @map("requirement_confirmed_at") @db.Timestamptz(6)
+  fieldSourceMeta              Json?                @map("field_source_meta")
+  supplierResponse             RfqSupplierResponse? @relation("rfq_supplier_response")
+  catalogItem                  CatalogItem          @relation(fields: [catalogItemId], references: [id], onUpdate: NoAction)
+  createdByUser                User?                @relation("rfq_created_by_user", fields: [createdByUserId], references: [id], onUpdate: NoAction)
+  buyerOrg                     Tenant               @relation("rfq_buyer_org", fields: [orgId], references: [id], onUpdate: NoAction)
+  supplierOrg                  Tenant               @relation("rfq_supplier_org", fields: [supplierOrgId], references: [id], onUpdate: NoAction)
+  sourceTrade                  Trade?               @relation("trade_source_rfq")
 
   @@index([orgId])
   @@index([supplierOrgId])

@@ -147,6 +147,16 @@ export interface CreateRfqRequest {
   catalogItemId: string;
   quantity?: number;
   buyerMessage?: string;
+  requirementTitle?: string;
+  quantityUnit?: string;
+  urgency?: 'STANDARD' | 'URGENT' | 'FLEXIBLE';
+  sampleRequired?: boolean;
+  targetDeliveryDate?: string;
+  deliveryLocation?: string;
+  deliveryCountry?: string;
+  stageRequirementAttributes?: Record<string, unknown>;
+  requirementConfirmedAt?: string;
+  fieldSourceMeta?: Record<string, unknown>;
 }
 
 export interface CreateRfqResponse {
@@ -166,6 +176,16 @@ export interface BuyerRfqListItem {
   supplier_org_id: string;
   created_at: string;
   updated_at: string;
+  requirement_title?: string | null;
+  quantity_unit?: string | null;
+  urgency?: string | null;
+  sample_required?: boolean | null;
+  target_delivery_date?: string | null;
+  delivery_location?: string | null;
+  delivery_country?: string | null;
+  stage_requirement_attributes?: Record<string, unknown> | null;
+  field_source_meta?: Record<string, unknown> | null;
+  requirement_confirmed_at?: string | null;
 }
 
 export interface BuyerRfqListResponse {
@@ -202,6 +222,16 @@ export interface BuyerRfqDetail {
   created_by_user_id: string;
   supplier_response: BuyerRfqSupplierResponse | null;
   trade_continuity: BuyerRfqTradeContinuity | null;
+  requirement_title?: string | null;
+  quantity_unit?: string | null;
+  urgency?: string | null;
+  sample_required?: boolean | null;
+  target_delivery_date?: string | null;
+  delivery_location?: string | null;
+  delivery_country?: string | null;
+  stage_requirement_attributes?: Record<string, unknown> | null;
+  field_source_meta?: Record<string, unknown> | null;
+  requirement_confirmed_at?: string | null;
 }
 
 export interface BuyerRfqDetailResponse {
@@ -217,6 +247,12 @@ export interface SupplierRfqListItem {
   quantity: number;
   created_at: string;
   updated_at: string;
+  requirement_title?: string | null;
+  quantity_unit?: string | null;
+  urgency?: string | null;
+  sample_required?: boolean | null;
+  delivery_country?: string | null;
+  stage_requirement_attributes?: Record<string, unknown> | null;
 }
 
 export interface SupplierRfqListResponse {
@@ -234,6 +270,12 @@ export interface SupplierRfqDetail {
   created_at: string;
   updated_at: string;
   buyer_message: string | null;
+  requirement_title?: string | null;
+  quantity_unit?: string | null;
+  urgency?: string | null;
+  sample_required?: boolean | null;
+  delivery_country?: string | null;
+  stage_requirement_attributes?: Record<string, unknown> | null;
 }
 
 export interface SupplierRfqDetailResponse {

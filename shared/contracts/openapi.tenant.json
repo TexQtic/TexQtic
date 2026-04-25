@@ -337,6 +337,35 @@
               { "$ref": "#/components/schemas/BuyerRfqSupplierResponse" },
               { "type": "null" }
             ]
+          },
+          "requirement_title": { "type": ["string", "null"] },
+          "quantity_unit": { "type": ["string", "null"] },
+          "urgency": {
+            "type": ["string", "null"],
+            "enum": ["STANDARD", "URGENT", "FLEXIBLE", null]
+          },
+          "sample_required": { "type": ["boolean", "null"] },
+          "target_delivery_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "delivery_location": { "type": ["string", "null"] },
+          "delivery_country": {
+            "type": ["string", "null"],
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "stage_requirement_attributes": {
+            "type": ["object", "null"],
+            "additionalProperties": true
+          },
+          "field_source_meta": {
+            "type": ["object", "null"],
+            "additionalProperties": true
+          },
+          "requirement_confirmed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
           }
         }
       },
@@ -364,7 +393,36 @@
           "quantity": { "type": "integer", "minimum": 1 },
           "supplier_org_id": { "type": "string", "format": "uuid" },
           "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" }
+          "updated_at": { "type": "string", "format": "date-time" },
+          "requirement_title": { "type": ["string", "null"] },
+          "quantity_unit": { "type": ["string", "null"] },
+          "urgency": {
+            "type": ["string", "null"],
+            "enum": ["STANDARD", "URGENT", "FLEXIBLE", null]
+          },
+          "sample_required": { "type": ["boolean", "null"] },
+          "target_delivery_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "delivery_location": { "type": ["string", "null"] },
+          "delivery_country": {
+            "type": ["string", "null"],
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "stage_requirement_attributes": {
+            "type": ["object", "null"],
+            "additionalProperties": true
+          },
+          "field_source_meta": {
+            "type": ["object", "null"],
+            "additionalProperties": true
+          },
+          "requirement_confirmed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
         }
       },
       "CreateBuyerRfqRequest": {
@@ -377,7 +435,30 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1000
-          }
+          },
+          "requirementTitle": { "type": "string", "maxLength": 200 },
+          "quantityUnit": { "type": "string", "maxLength": 50 },
+          "urgency": {
+            "type": "string",
+            "enum": ["STANDARD", "URGENT", "FLEXIBLE"]
+          },
+          "sampleRequired": { "type": "boolean" },
+          "targetDeliveryDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "deliveryLocation": { "type": "string", "maxLength": 200 },
+          "deliveryCountry": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "stageRequirementAttributes": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "requirementConfirmedAt": { "type": "string", "format": "date-time" },
+          "fieldSourceMeta": { "type": "object", "additionalProperties": true }
         }
       },
       "CreateBuyerRfqResponse": {

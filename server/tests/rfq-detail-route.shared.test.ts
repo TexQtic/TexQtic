@@ -220,6 +220,20 @@ describeIfDb('supplier RFQ detail buyer summary bounded verifier', () => {
     assert.equal(supplierDetailBody.data.rfq.id, fixture.rfqId);
     assert.equal(supplierDetailBody.data.rfq.status, 'OPEN');
     assert.equal(supplierDetailBody.data.rfq.buyer_message, 'Supplier detail bounded verifier request.');
+
+    // Backward-compat: legacy RFQ has no structured requirement fields — all null.
+    assert.equal(supplierDetailBody.data.rfq.requirement_title, null);
+    assert.equal(supplierDetailBody.data.rfq.quantity_unit, null);
+    assert.equal(supplierDetailBody.data.rfq.urgency, null);
+    assert.equal(supplierDetailBody.data.rfq.sample_required, null);
+    assert.equal(supplierDetailBody.data.rfq.delivery_country, null);
+    assert.equal(supplierDetailBody.data.rfq.stage_requirement_attributes, null);
+
+    // PII boundary: delivery_location must NOT appear in supplier view.
+    assert.ok(
+      !Object.prototype.hasOwnProperty.call(supplierDetailBody.data.rfq, 'delivery_location'),
+      'delivery_location must be absent from supplier RFQ detail response',
+    );
     assert.equal(
       supplierDetailBody.data.rfq.buyer_counterparty_summary.orgId,
       fixture.buyerOrgId,
