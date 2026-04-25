@@ -362,6 +362,45 @@ export async function submitSupplierRfqResponse(
   return tenantPost<SubmitSupplierRfqResponseResult>(`/api/tenant/rfqs/inbox/${rfqId}/respond`, payload);
 }
 
+// ==================== AI RFQ ASSIST (TECS-AI-RFQ-ASSISTANT-MVP-001) ====================
+
+/**
+ * AI-suggested field values for an existing RFQ.
+ * Price and supplier-matching fields are intentionally absent.
+ */
+export interface RfqAssistSuggestions {
+  requirementTitle: string | null;
+  quantityUnit: string | null;
+  urgency: 'STANDARD' | 'URGENT' | 'FLEXIBLE' | null;
+  sampleRequired: boolean | null;
+  deliveryCountry: string | null;
+  stageRequirementAttributes: Record<string, unknown> | null;
+  reasoning: string;
+}
+
+/**
+ * Response from POST /api/tenant/rfqs/:id/ai-assist.
+ * humanConfirmationRequired is always true — the buyer must review every suggestion.
+ */
+export interface RfqAssistResponse {
+  suggestions: RfqAssistSuggestions | null;
+  humanConfirmationRequired: true;
+  reasoningLogId: string | null;
+  auditLogId: string;
+  hadInferenceError: boolean;
+  fieldSourceMeta: { method: 'ai-rfq-assist'; rfqId: string };
+  suggestionsParseError?: boolean;
+}
+
+/**
+ * Request AI-assisted field suggestions for an existing OPEN or RESPONDED RFQ.
+ * The RFQ must already exist in the database — no draft creation is performed.
+ * humanConfirmationRequired is always true in the response.
+ */
+export async function requestRfqAssist(rfqId: string): Promise<RfqAssistResponse> {
+  return tenantPost<RfqAssistResponse>(`/api/tenant/rfqs/${rfqId}/ai-assist`, {});
+}
+
 // ==================== BUYER CATALOG BROWSE (TECS-B2B-BUYER-CATALOG-BROWSE-001) ====================
 
 // ---- Textile attribute controlled-vocabulary constants ----

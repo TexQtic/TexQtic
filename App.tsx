@@ -102,6 +102,9 @@ import {
   CATALOG_STAGE_VALUES,
   SERVICE_TYPE_VALUES,
   type CatalogStage,
+  requestRfqAssist,
+  type RfqAssistSuggestions,
+  type RfqAssistResponse,
 } from './services/catalogService';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
@@ -162,6 +165,13 @@ type BuyerRfqDialogState = {
   stageRequirementAttributes: Record<string, string>;
   catalogStage: string | null;
   confirmationStep: boolean;
+  // AI Assist state (TECS-AI-RFQ-ASSISTANT-MVP-001)
+  aiAssistLoading: boolean;
+  aiAssistError: string | null;
+  aiAssistSuggestions: RfqAssistSuggestions | null;
+  aiAssistParseError: boolean;
+  aiSuggestionDecisions: Record<string, 'accepted' | 'rejected'>;
+  aiFieldSourceMeta: Record<string, 'AI_SUGGESTED'>;
 };
 
 type BuyerRfqDetailViewState = {
@@ -222,6 +232,13 @@ const createInitialBuyerRfqDialogState = (): BuyerRfqDialogState => ({
   stageRequirementAttributes: {},
   catalogStage: null,
   confirmationStep: false,
+  // AI Assist state (TECS-AI-RFQ-ASSISTANT-MVP-001)
+  aiAssistLoading: false,
+  aiAssistError: null,
+  aiAssistSuggestions: null,
+  aiAssistParseError: false,
+  aiSuggestionDecisions: {},
+  aiFieldSourceMeta: {},
 });
 
 const createInitialBuyerRfqDetailViewState = (): BuyerRfqDetailViewState => ({
@@ -523,6 +540,86 @@ export const resolveRfqConfirmationSummary = (
 
   return lines;
 };
+
+// ==================== AI RFQ ASSIST PURE HELPERS (TECS-AI-RFQ-ASSISTANT-MVP-001) ====================
+
+/**
+ * The ordered list of AI suggestion fields displayed to the buyer.
+ * Price and supplier-matching fields are intentionally excluded.
+ */
+export const AI_ASSIST_DISPLAY_FIELDS: ReadonlyArray<{
+  field: keyof RfqAssistSuggestions;
+  label: string;
+}> = [
+  { field: 'requirementTitle', label: 'Requirement Title' },
+  { field: 'quantityUnit', label: 'Quantity Unit' },
+  { field: 'urgency', label: 'Urgency' },
+  { field: 'sampleRequired', label: 'Sample Required' },
+  { field: 'deliveryCountry', label: 'Delivery Country' },
+  { field: 'stageRequirementAttributes', label: 'Stage Requirements' },
+] as const;
+
+/**
+ * Resolve which AI suggestion fields have a non-null value to display.
+ * No price, no supplier-matching fields.
+ */
+export function resolveAiAssistDisplayItems(
+  suggestions: RfqAssistSuggestions | null,
+): Array<{ field: string; label: string; value: unknown }> {
+  if (!suggestions) return [];
+  return AI_ASSIST_DISPLAY_FIELDS
+    .filter(({ field }) => suggestions[field] !== null)
+    .map(({ field, label }) => ({ field, label, value: suggestions[field] }));
+}
+
+/**
+ * Accept an AI-suggested field. Marks the field as accepted and records its
+ * AI_SUGGESTED provenance in fieldSourceMeta.
+ */
+export function resolveApplyAiSuggestion(
+  dialog: Pick<BuyerRfqDialogState, 'aiSuggestionDecisions' | 'aiFieldSourceMeta'>,
+  field: string,
+): Pick<BuyerRfqDialogState, 'aiSuggestionDecisions' | 'aiFieldSourceMeta'> {
+  return {
+    aiSuggestionDecisions: { ...dialog.aiSuggestionDecisions, [field]: 'accepted' as const },
+    aiFieldSourceMeta: { ...dialog.aiFieldSourceMeta, [field]: 'AI_SUGGESTED' as const },
+  };
+}
+
+/**
+ * Reject an AI-suggested field. Records the rejection decision; does not alter
+ * any form field values or fieldSourceMeta.
+ */
+export function resolveRejectAiSuggestion(
+  dialog: Pick<BuyerRfqDialogState, 'aiSuggestionDecisions'>,
+  field: string,
+): Pick<BuyerRfqDialogState, 'aiSuggestionDecisions'> {
+  return {
+    aiSuggestionDecisions: { ...dialog.aiSuggestionDecisions, [field]: 'rejected' as const },
+  };
+}
+
+/**
+ * Returns the AI assist slice of the initial dialog state (used for reset on close / product change).
+ */
+export function resolveAiAssistStateOnClose(): Pick<
+  BuyerRfqDialogState,
+  | 'aiAssistLoading'
+  | 'aiAssistError'
+  | 'aiAssistSuggestions'
+  | 'aiAssistParseError'
+  | 'aiSuggestionDecisions'
+  | 'aiFieldSourceMeta'
+> {
+  return {
+    aiAssistLoading: false,
+    aiAssistError: null,
+    aiAssistSuggestions: null,
+    aiAssistParseError: false,
+    aiSuggestionDecisions: {},
+    aiFieldSourceMeta: {},
+  };
+}
 
 const resolveBuyerRfqDetailOpenAction = ({
   rfqId,
@@ -1673,6 +1770,14 @@ export const __B2B_RFQ_INITIATION_TESTING__ = {
 export const __B2B_RFQ_STRUCTURED_DIALOG_TESTING__ = {
   resolveStructuredRfqStageSectionFields,
   resolveRfqConfirmationSummary,
+};
+
+export const __B2B_AI_RFQ_ASSIST_TESTING__ = {
+  resolveAiAssistDisplayItems,
+  resolveApplyAiSuggestion,
+  resolveRejectAiSuggestion,
+  resolveAiAssistStateOnClose,
+  AI_ASSIST_DISPLAY_FIELDS,
 };
 
 export const __B2B_RFQ_DETAIL_TESTING__ = {
@@ -3872,6 +3977,32 @@ const App: React.FC = () => {
         ...dialog,
         loading: false,
         error: resolveBuyerRfqSubmitError(error),
+      }));
+    }
+  };
+
+  const handleRequestAiAssist = async (rfqId: string) => {
+    setRfqDialog(d => ({
+      ...d,
+      aiAssistLoading: true,
+      aiAssistError: null,
+      aiAssistSuggestions: null,
+      aiAssistParseError: false,
+      aiSuggestionDecisions: {},
+      aiFieldSourceMeta: {},
+    }));
+    try {
+      const result = await requestRfqAssist(rfqId);
+      if (result.suggestionsParseError) {
+        setRfqDialog(d => ({ ...d, aiAssistLoading: false, aiAssistParseError: true }));
+      } else {
+        setRfqDialog(d => ({ ...d, aiAssistLoading: false, aiAssistSuggestions: result.suggestions }));
+      }
+    } catch {
+      setRfqDialog(d => ({
+        ...d,
+        aiAssistLoading: false,
+        aiAssistError: 'AI suggestions are unavailable right now. You can still submit the RFQ manually.',
       }));
     }
   };
@@ -6667,6 +6798,104 @@ const App: React.FC = () => {
       <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
         RFQ ID: {rfqDialog.success?.rfqId}
       </div>
+
+      {/* AI Assist panel — available because rfqId exists and RFQ is OPEN */}
+      <div className="border border-indigo-100 rounded-xl bg-indigo-50/50 px-4 py-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-indigo-900">AI Field Suggestions</p>
+            <p className="text-xs text-indigo-600 mt-0.5">
+              AI-generated — you must review and confirm each suggestion before applying.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={rfqDialog.aiAssistLoading}
+            onClick={() => {
+              const rfqId = rfqDialog.success?.rfqId;
+              if (rfqId) void handleRequestAiAssist(rfqId);
+            }}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {rfqDialog.aiAssistLoading ? 'Getting suggestions…' : 'Get AI Suggestions'}
+          </button>
+        </div>
+
+        {rfqDialog.aiAssistError && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+            {rfqDialog.aiAssistError}
+          </div>
+        )}
+
+        {rfqDialog.aiAssistParseError && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+            AI suggestions are unavailable right now. You can still submit the RFQ manually.
+          </div>
+        )}
+
+        {rfqDialog.aiAssistSuggestions && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-indigo-800 uppercase tracking-widest">
+              AI-generated suggestions
+            </p>
+            {resolveAiAssistDisplayItems(rfqDialog.aiAssistSuggestions).map(item => (
+              <div
+                key={item.field}
+                className="flex items-center justify-between gap-3 bg-white border border-indigo-100 rounded-lg px-3 py-2"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-slate-700">{item.label}</p>
+                  <p className="text-xs text-slate-500 truncate">
+                    {typeof item.value === 'boolean'
+                      ? item.value ? 'Yes' : 'No'
+                      : typeof item.value === 'object'
+                      ? JSON.stringify(item.value)
+                      : String(item.value)}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  {rfqDialog.aiSuggestionDecisions[item.field] === 'accepted' ? (
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                      Accepted
+                    </span>
+                  ) : rfqDialog.aiSuggestionDecisions[item.field] === 'rejected' ? (
+                    <span className="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200 rounded px-2 py-1">
+                      Rejected
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setRfqDialog(d => ({ ...d, ...resolveApplyAiSuggestion(d, item.field) }))
+                        }
+                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 transition"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setRfqDialog(d => ({ ...d, ...resolveRejectAiSuggestion(d, item.field) }))
+                        }
+                        className="text-xs font-semibold text-slate-500 hover:text-slate-700 transition"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+            {resolveAiAssistDisplayItems(rfqDialog.aiAssistSuggestions).length === 0 && (
+              <p className="text-xs text-slate-500 italic">
+                No suggestions available for the current RFQ fields.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="flex justify-end gap-3">
         <button
           type="button"
@@ -7182,6 +7411,11 @@ const App: React.FC = () => {
                     )}
 
                     <div className="flex gap-3 justify-end pt-2">
+                      <div className="flex-1 flex items-center">
+                        <span className="text-xs text-slate-400 italic">
+                          AI suggestions available after submitting your RFQ
+                        </span>
+                      </div>
                       <button
                         type="button"
                         onClick={handleCloseRfqDialog}
