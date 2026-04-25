@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-24 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — IMPLEMENTATION_COMPLETE)
+**Updated:** 2026-04-25 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,8 +10,8 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-24
-snapshot_unit: TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001
+snapshot_date: 2026-04-25
+snapshot_unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -42,32 +42,20 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001
-current_product_active_delivery_status: IMPLEMENTATION_COMPLETE
-current_product_active_delivery_design_commit: 96763db
-current_product_active_delivery_backend_commit: ad3568d
-current_product_active_delivery_frontend_commit: 3fe5a8a
-current_product_active_delivery_validation: |
-  TypeScript tsc --noEmit PASS (both slices).
-  9 test files / 135 tests PASS.
-  Backend/foundation tests PASS. Frontend/UI tests PASS.
-runtime_verification_status: PENDING
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: NONE
+current_product_active_delivery_status: ZERO_OPEN
+runtime_verification_status: VERIFIED_COMPLETE
 current_product_active_delivery_note: |
-  IMPLEMENTATION_COMPLETE (2026-04-24). Runtime verification PENDING.
-  Design artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md.
-  Design commit: 96763db. Backend commit: ad3568d. Frontend commit: 3fe5a8a.
-  Stage taxonomy: 14 values (YARN, FIBER, FABRIC_WOVEN, FABRIC_KNIT, FABRIC_PROCESSED,
-  GARMENT, ACCESSORY_TRIM, CHEMICAL_AUXILIARY, MACHINE, MACHINE_SPARE, PACKAGING,
-  SERVICE, SOFTWARE_SAAS, OTHER).
-  Schema applied: catalog_stage VARCHAR(50) + stage_attributes JSONB + 2 indexes.
-  Architecture: Option C Hybrid. Full backward compat with existing 9 fabric columns.
-  AI-readable stage contract implemented as structured data/vector-text foundation only.
+  VERIFIED_COMPLETE (2026-04-25). Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
+  Design commit: 96763db. Backend commit: ad3568d. Frontend commit: 3fe5a8a. Truth-sync: 4fd9806.
+  Stage taxonomy implemented: 14 values. Stage attributes operational. Buyer stage filtering operational.
+  AI-ready structured contracts implemented as structured data/vector-text foundation only.
   No AI matching, RFQ AI, document intelligence, price disclosure, PDP, relationship access,
   or cross-supplier search opened.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES (2026-04-24); hotfix ec91ad2 confirmed live; all 6 production markers PASS
+runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES (2026-04-25); 30/32 M-STAGE PASS; 2/32 LIMITED (multi-tenant chip constraint)
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -76,33 +64,22 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_verified_product_close: |
+  TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE (2026-04-25).
+  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
+  Commits: 96763db (design) + ad3568d (backend) + 3fe5a8a (frontend) + 4fd9806 (truth-sync).
+  30/32 M-STAGE checks PASS. 2/32 LIMITED (multi-tenant chip constraint, code-confirmed).
+  Stage taxonomy implemented. Stage attributes operational. Buyer stage filtering operational.
+  AI-ready structured contracts implemented.
+prior_latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE (2026-04-24).
   Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
-  Design commit: fa1dcc9. Implementation commit: 1d63513. Truth-sync commit: 77457a6.
-  Hotfix commit: ec91ad2 — fix certification filter column mapping (image_url AS "imageUrl").
-  Validation: TypeScript tsc --noEmit PASS. 108/108 tests PASS (6 focused suites).
-  Production: https://app.texqtic.com, actor qa.buyer@texqtic.com.
-    M-ATTR-3, M-ATTR-4, M-ATTR-5, M-ATTR-6 (hotfix), M-ATTR-7, M-ATTR-24: all PASS.
-  Non-blocking notes:
-    Some QA B2B fixture items have null textile attributes (fixture-limited, not a code defect).
-    Clear Filters requires Apply Filters to reload; existing behavior, not a blocker.
-  AI-readable contracts implemented as structured data/vector-text foundation only.
-  No AI matching, RFQ AI, document intelligence, price disclosure, PDP, relationship access,
-  or yarn implementation opened.
-prior_latest_verified_product_close: |
-  TECS-B2B-BUYER-CATALOG-LISTING-001 — VERIFIED_COMPLETE (2026-04-24).
-  Design commits: c5cdcb5 + 9c4f4f6. Implementation commit: f6ff2a8. Truth syncs: a2c907f.
-  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
-  Production: https://app.texqtic.com, actor qa.buyer@texqtic.com, 9/9 executable checks PASS.
-  Non-blocking: M9 (image fallback), M11–M14 (Load More + error paths) not executable in
-    production with current 14-item seed catalog; all covered by 32/32 passing unit tests.
-  Blockers: none.
+  Commits: fa1dcc9 (design) + 1d63513 (impl) + 77457a6 (truth-sync) + ec91ad2 (hotfix).
 current_open_unit: NONE
 current_open_unit_note: |
-  IMPLEMENTATION_COMPLETE (2026-04-24). Implementation commit: 1d63513.
-  Runtime verification PENDING. Production deploy required before final close.
-  Next unit not yet opened. Adjacent deferred unit recorded:
-    TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 (yarn stage-specific attribute model).
+  ZERO_OPEN (2026-04-25). Last closed unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001.
+  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
+  Commits: 96763db + ad3568d + 3fe5a8a + 4fd9806.
+  Next unit not yet opened. Awaiting Paresh next unit selection.
 ```
 
 ## Current Posture

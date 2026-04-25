@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-24 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — IMPLEMENTATION_COMPLETE)
+**Last Updated:** 2026-04-25 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -158,10 +158,11 @@
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
-- TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 is IMPLEMENTATION_COMPLETE (2026-04-24).
-  Status: IMPLEMENTATION_COMPLETE. Runtime verification PENDING.
+- TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 is VERIFIED_COMPLETE (2026-04-25).
+  Status: VERIFIED_COMPLETE. Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Design artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md.
   Design commit: 96763db. Backend/Foundation commit: ad3568d. Frontend/UI commit: 3fe5a8a.
+  Truth-sync commit: 4fd9806.
   Architecture: Option C Hybrid — catalog_stage VARCHAR(50) + stage_attributes JSONB on
     catalog_items; existing 9 fabric columns preserved unchanged; full backward compatibility.
   Stage taxonomy: 14 values (YARN, FIBER, FABRIC_WOVEN, FABRIC_KNIT, FABRIC_PROCESSED,
@@ -183,7 +184,15 @@
     - TypeScript tsc --noEmit PASS (both slices).
     - 9 test files / 135 tests PASS.
     - Backend/foundation tests PASS. Frontend/UI tests PASS.
-  Runtime verification: PENDING — production deploy required before final close.
+  Production verification: https://app.texqtic.com, actor qa.buyer@texqtic.com.
+    30/32 M-STAGE checks PASS. 2/32 LIMITED (multi-tenant chip constraint, code-confirmed).
+    Stage selector works. Stage-specific fields render. Items created. Stage filter works.
+    Stage filter composes with keyword. Legacy items unaffected. No price/AI exposure.
+    RFQ unaffected.
+  Non-blocking notes:
+    FABRIC_WOVEN: no dynamic fields — BY DESIGN (existing 9 textile fields cover stage).
+    Chip rendering limited verification (multi-tenant constraint); code implementation confirmed.
+    UI/schema mismatch: enum stageAttributes fields allow free text; backend enforces strict enums.
   Non-goals preserved: No AI matching, no price disclosure, no PDP, no RFQ expansion,
     no cross-supplier search, no bulk import, no service marketplace workflow,
     no Phase 4+ ServiceCapability model.
