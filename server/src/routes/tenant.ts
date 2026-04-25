@@ -3283,7 +3283,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
         // 3. Load catalog item for vector text assembly
         const catalogItem = await tx.catalogItem.findFirst({
-          where: { id: rfq.catalogItemId, orgId: rfq.supplierOrgId },
+          where: { id: rfq.catalogItemId, tenantId: rfq.supplierOrgId },
           select: {
             id: true,
             name: true,
