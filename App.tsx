@@ -151,6 +151,17 @@ type BuyerRfqDialogState = {
     rfqId: string;
     quantity: number;
   } | null;
+  // Structured RFQ fields (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001)
+  requirementTitle: string;
+  quantityUnit: string;
+  urgency: '' | 'STANDARD' | 'URGENT' | 'FLEXIBLE';
+  sampleRequired: boolean | null;
+  targetDeliveryDate: string;
+  deliveryLocation: string;
+  deliveryCountry: string;
+  stageRequirementAttributes: Record<string, string>;
+  catalogStage: string | null;
+  confirmationStep: boolean;
 };
 
 type BuyerRfqDetailViewState = {
@@ -201,6 +212,16 @@ const createInitialBuyerRfqDialogState = (): BuyerRfqDialogState => ({
   loading: false,
   error: null,
   success: null,
+  requirementTitle: '',
+  quantityUnit: '',
+  urgency: '',
+  sampleRequired: null,
+  targetDeliveryDate: '',
+  deliveryLocation: '',
+  deliveryCountry: '',
+  stageRequirementAttributes: {},
+  catalogStage: null,
+  confirmationStep: false,
 });
 
 const createInitialBuyerRfqDetailViewState = (): BuyerRfqDetailViewState => ({
@@ -302,6 +323,18 @@ const resolveBuyerRfqSubmitPayload = (dialog: BuyerRfqDialogState) => {
   }
 
   const buyerMessage = dialog.buyerMessage.trim();
+  const requirementTitle = dialog.requirementTitle.trim();
+  const quantityUnit = dialog.quantityUnit.trim();
+  const urgency = dialog.urgency || undefined;
+  const sampleRequired = dialog.sampleRequired !== null ? dialog.sampleRequired : undefined;
+  const targetDeliveryDate = dialog.targetDeliveryDate.trim() || undefined;
+  const deliveryLocation = dialog.deliveryLocation.trim() || undefined;
+  const deliveryCountry = dialog.deliveryCountry.trim() || undefined;
+  const stageAttrEntries = Object.entries(dialog.stageRequirementAttributes).filter(
+    ([, v]) => v.trim() !== '',
+  );
+  const stageRequirementAttributes =
+    stageAttrEntries.length > 0 ? Object.fromEntries(stageAttrEntries) : undefined;
 
   return {
     error: null,
@@ -309,6 +342,14 @@ const resolveBuyerRfqSubmitPayload = (dialog: BuyerRfqDialogState) => {
       catalogItemId: dialog.product.id,
       quantity,
       ...(buyerMessage ? { buyerMessage } : {}),
+      ...(requirementTitle ? { requirementTitle } : {}),
+      ...(quantityUnit ? { quantityUnit } : {}),
+      ...(urgency ? { urgency } : {}),
+      ...(sampleRequired !== undefined ? { sampleRequired } : {}),
+      ...(targetDeliveryDate ? { targetDeliveryDate } : {}),
+      ...(deliveryLocation ? { deliveryLocation } : {}),
+      ...(deliveryCountry ? { deliveryCountry } : {}),
+      ...(stageRequirementAttributes ? { stageRequirementAttributes } : {}),
     } satisfies CreateRfqRequest,
   };
 };
@@ -332,6 +373,155 @@ const resolveBuyerRfqSubmitError = (error: unknown) => {
   return error instanceof APIError
     ? error.message
     : 'Failed to submit your request for quote. Please try again.';
+};
+
+// TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001: Stage field descriptors for the progressive RFQ dialog.
+export interface RfqStageFieldDef {
+  key: string;
+  label: string;
+  placeholder?: string;
+}
+
+const STAGE_FIELD_DESCRIPTORS: Record<string, RfqStageFieldDef[]> = {
+  YARN: [
+    { key: 'yarnCount', label: 'Yarn Count', placeholder: 'e.g. 40/1' },
+    { key: 'countSystem', label: 'Count System', placeholder: 'e.g. NE, NM' },
+    { key: 'fiberComposition', label: 'Fiber Composition', placeholder: 'e.g. 100% Cotton' },
+    { key: 'ply', label: 'Ply', placeholder: 'e.g. 1, 2' },
+    { key: 'spinningType', label: 'Spinning Type', placeholder: 'e.g. Ring Spun, OE' },
+    { key: 'endUse', label: 'End Use', placeholder: 'e.g. Woven, Knit, Socks' },
+  ],
+  FIBER: [
+    { key: 'fiberType', label: 'Fiber Type', placeholder: 'e.g. Staple, Filament' },
+    { key: 'composition', label: 'Composition', placeholder: 'e.g. 100% Cotton' },
+    { key: 'micronaire', label: 'Micronaire', placeholder: 'e.g. 4.0–5.0' },
+  ],
+  FABRIC_WOVEN: [
+    { key: 'weaveType', label: 'Weave Type', placeholder: 'e.g. Plain, Twill, Satin' },
+    { key: 'gsmMin', label: 'GSM Min', placeholder: 'e.g. 100' },
+    { key: 'gsmMax', label: 'GSM Max', placeholder: 'e.g. 200' },
+    { key: 'widthCmRequired', label: 'Width (cm)', placeholder: 'e.g. 150' },
+    { key: 'composition', label: 'Composition', placeholder: 'e.g. 60% Cotton, 40% Polyester' },
+    { key: 'requiredCertifications', label: 'Required Certifications', placeholder: 'e.g. GOTS, OEKO-TEX' },
+  ],
+  FABRIC_KNIT: [
+    { key: 'knitType', label: 'Knit Type', placeholder: 'e.g. Single Jersey, Interlock' },
+    { key: 'gsmMin', label: 'GSM Min', placeholder: 'e.g. 150' },
+    { key: 'gsmMax', label: 'GSM Max', placeholder: 'e.g. 250' },
+    { key: 'stretch', label: 'Stretch %', placeholder: 'e.g. 50' },
+    { key: 'composition', label: 'Composition', placeholder: 'e.g. 95% Cotton, 5% Elastane' },
+  ],
+  FABRIC_PROCESSED: [
+    { key: 'processType', label: 'Process Type', placeholder: 'e.g. Dyeing, Printing, Finishing' },
+    { key: 'baseComposition', label: 'Base Composition', placeholder: 'e.g. 100% Cotton' },
+  ],
+  GARMENT: [
+    { key: 'garmentType', label: 'Garment Type', placeholder: 'e.g. T-Shirt, Shirt, Dress' },
+    { key: 'sizeRange', label: 'Size Range', placeholder: 'e.g. S-XL, 28-36' },
+    { key: 'fit', label: 'Fit', placeholder: 'e.g. Regular, Slim, Oversized' },
+    { key: 'gender', label: 'Gender', placeholder: 'e.g. Unisex, Men, Women' },
+    { key: 'fabricComposition', label: 'Fabric Composition', placeholder: 'e.g. 100% Cotton' },
+    { key: 'monthlyRequiredCapacity', label: 'Monthly Capacity', placeholder: 'e.g. 5000 pcs/month' },
+  ],
+  ACCESSORY_TRIM: [
+    { key: 'accessoryType', label: 'Accessory Type', placeholder: 'e.g. Button, Zipper, Label' },
+    { key: 'materialPreference', label: 'Material Preference', placeholder: 'e.g. Metal, Plastic, Fabric' },
+    { key: 'sizeSpec', label: 'Size / Spec', placeholder: 'e.g. 12mm, YKK #5' },
+    { key: 'colorSpec', label: 'Color Spec', placeholder: 'e.g. Pantone 19-1664 TCX' },
+  ],
+  CHEMICAL_AUXILIARY: [
+    { key: 'chemicalType', label: 'Chemical Type', placeholder: 'e.g. Dye, Finishing Agent' },
+    { key: 'application', label: 'Application', placeholder: 'e.g. Dyeing, Finishing, Printing' },
+    { key: 'requiredCertifications', label: 'Required Certifications', placeholder: 'e.g. GOTS, REACH' },
+    { key: 'packagingUnit', label: 'Packaging Unit', placeholder: 'e.g. 25kg drums' },
+  ],
+  MACHINE: [
+    { key: 'machineType', label: 'Machine Type', placeholder: 'e.g. Circular Knitting, Weaving' },
+    { key: 'brandPreference', label: 'Brand Preference', placeholder: 'e.g. Toyota, Stäubli' },
+    { key: 'conditionAccepted', label: 'Condition Accepted', placeholder: 'e.g. New, Used' },
+    { key: 'warrantyRequired', label: 'Warranty Required', placeholder: 'e.g. 1 year' },
+  ],
+  MACHINE_SPARE: [
+    { key: 'compatibleMachine', label: 'Compatible Machine', placeholder: 'e.g. Toyota RX-3' },
+    { key: 'partNumber', label: 'Part Number', placeholder: 'e.g. TYT-12345' },
+    { key: 'preferredBrand', label: 'Preferred Brand', placeholder: 'e.g. OEM, Generic' },
+    { key: 'leadTimeAccepted', label: 'Lead Time Accepted', placeholder: 'e.g. 30 days' },
+  ],
+  PACKAGING: [
+    { key: 'packagingType', label: 'Packaging Type', placeholder: 'e.g. Polybag, Carton, Hanger' },
+    { key: 'dimensionsCm', label: 'Dimensions (cm)', placeholder: 'e.g. 60x40x30' },
+    { key: 'printingRequired', label: 'Printing Required', placeholder: 'e.g. Yes - Brand logo' },
+    { key: 'materialSpec', label: 'Material Spec', placeholder: 'e.g. Recycled PE, Corrugated B-flute' },
+  ],
+  SERVICE: [
+    { key: 'serviceType', label: 'Service Type', placeholder: 'e.g. Testing Lab, Consulting' },
+    { key: 'specialization', label: 'Specialization', placeholder: 'e.g. Fabric Testing, Auditing' },
+    { key: 'locationCoverageRequired', label: 'Location Coverage', placeholder: 'e.g. Bangladesh, Turkey' },
+    { key: 'turnaroundDays', label: 'Turnaround (days)', placeholder: 'e.g. 14' },
+    { key: 'portfolioRequired', label: 'Portfolio Required', placeholder: 'e.g. Yes, No' },
+  ],
+  SOFTWARE_SAAS: [
+    { key: 'softwareCategory', label: 'Software Category', placeholder: 'e.g. PLM, ERP, CAD' },
+    { key: 'deploymentModelRequired', label: 'Deployment Model', placeholder: 'e.g. Cloud, On-premise' },
+    { key: 'integrationRequirements', label: 'Integration Requirements', placeholder: 'e.g. SAP, Shopify' },
+    { key: 'trialRequired', label: 'Trial Required', placeholder: 'e.g. Yes, No' },
+  ],
+  OTHER: [],
+};
+
+export const resolveStructuredRfqStageSectionFields = (
+  catalogStage: string | null | undefined,
+): RfqStageFieldDef[] => {
+  if (!catalogStage) return [];
+  return STAGE_FIELD_DESCRIPTORS[catalogStage] ?? [];
+};
+
+export const resolveRfqConfirmationSummary = (
+  dialog: BuyerRfqDialogState,
+): Array<{ label: string; value: string }> => {
+  const lines: Array<{ label: string; value: string }> = [];
+
+  const q = Number(dialog.quantity);
+  const qDisplay = `${Number.isNaN(q) ? dialog.quantity : q}${dialog.quantityUnit.trim() ? ` ${dialog.quantityUnit.trim()}` : ''}`;
+  lines.push({ label: 'Quantity', value: qDisplay });
+
+  if (dialog.requirementTitle.trim()) {
+    lines.push({ label: 'Requirement Title', value: dialog.requirementTitle.trim() });
+  }
+
+  if (dialog.urgency) {
+    lines.push({ label: 'Urgency', value: dialog.urgency });
+  }
+
+  if (dialog.sampleRequired !== null) {
+    lines.push({ label: 'Sample Required', value: dialog.sampleRequired ? 'Yes' : 'No' });
+  }
+
+  if (dialog.targetDeliveryDate.trim()) {
+    lines.push({ label: 'Target Delivery Date', value: dialog.targetDeliveryDate.trim() });
+  }
+
+  if (dialog.deliveryCountry.trim()) {
+    lines.push({ label: 'Delivery Country', value: dialog.deliveryCountry.trim() });
+  }
+
+  if (dialog.deliveryLocation.trim()) {
+    lines.push({ label: 'Delivery Location', value: dialog.deliveryLocation.trim() });
+  }
+
+  const stageFields = resolveStructuredRfqStageSectionFields(dialog.catalogStage);
+  for (const field of stageFields) {
+    const val = (dialog.stageRequirementAttributes[field.key] ?? '').trim();
+    if (val) {
+      lines.push({ label: field.label, value: val });
+    }
+  }
+
+  if (dialog.buyerMessage.trim()) {
+    lines.push({ label: 'Additional Notes', value: dialog.buyerMessage.trim() });
+  }
+
+  return lines;
 };
 
 const resolveBuyerRfqDetailOpenAction = ({
@@ -1478,6 +1668,11 @@ export const __B2B_RFQ_INITIATION_TESTING__ = {
   resolveBuyerRfqSubmitPayload,
   resolveBuyerRfqSubmitSuccess,
   resolveBuyerRfqSubmitError,
+};
+
+export const __B2B_RFQ_STRUCTURED_DIALOG_TESTING__ = {
+  resolveStructuredRfqStageSectionFields,
+  resolveRfqConfirmationSummary,
 };
 
 export const __B2B_RFQ_DETAIL_TESTING__ = {
@@ -3617,7 +3812,7 @@ const App: React.FC = () => {
     );
   };
 
-  const handleOpenRfqDialog = (product: CatalogItem) => {
+  const handleOpenRfqDialog = (product: CatalogItem, catalogStage?: string | null) => {
     const openOutcome = resolveBuyerRfqOpenAction({
       product,
       isVerificationBlockedTenantWorkspace,
@@ -3629,7 +3824,7 @@ const App: React.FC = () => {
       return;
     }
 
-    setRfqDialog(openOutcome.dialog);
+    setRfqDialog({ ...openOutcome.dialog, catalogStage: catalogStage ?? null });
   };
 
   const handleCloseRfqDialog = () => {
@@ -3642,6 +3837,18 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!rfqDialog.product) return;
 
+    // Step 1: Validate and advance to confirmation step if not already there.
+    if (!rfqDialog.confirmationStep) {
+      const submitResolution = resolveBuyerRfqSubmitPayload(rfqDialog);
+      if (!submitResolution.payload) {
+        setRfqDialog(dialog => ({ ...dialog, error: submitResolution.error }));
+        return;
+      }
+      setRfqDialog(dialog => ({ ...dialog, confirmationStep: true, error: null }));
+      return;
+    }
+
+    // Step 2: Confirmation step — resolve payload again and call the API.
     const submitResolution = resolveBuyerRfqSubmitPayload(rfqDialog);
     if (!submitResolution.payload) {
       setRfqDialog(dialog => ({ ...dialog, error: submitResolution.error }));
@@ -5165,7 +5372,7 @@ const App: React.FC = () => {
                                 imageUrl: item.imageUrl ?? undefined,
                                 moq: item.moq,
                               };
-                              handleOpenRfqDialog(asProduct);
+                              handleOpenRfqDialog(asProduct, item.catalogStage);
                             }}
                             className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
                           >
@@ -6725,8 +6932,8 @@ const App: React.FC = () => {
       )}
       {rfqDialog.open && rfqDialog.product && !isVerificationBlockedTenantWorkspace && (
         <div className="fixed inset-0 bg-slate-950/45 z-[190] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 space-y-6">
-            <div>
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full max-h-[90vh] flex flex-col">
+            <div className="p-8 pb-4 flex-shrink-0">
               <h2 className="text-xl font-bold text-slate-900">Request Quote</h2>
               <p className="text-sm text-slate-500 mt-2">
                 Submit a non-binding request for quote for <strong>{rfqDialog.product.name}</strong>.
@@ -6734,69 +6941,263 @@ const App: React.FC = () => {
               </p>
             </div>
 
-            {rfqDialog.success ? rfqSuccessContent : (
-              <form className="space-y-5" onSubmit={handleSubmitRfq}>
-                <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-4 items-start">
-                  <div>
-                    <label htmlFor="rfq-quantity" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      Quantity
-                    </label>
-                    <input
-                      id="rfq-quantity"
-                      type="number"
-                      min={1}
-                      step={1}
-                      inputMode="numeric"
-                      value={rfqDialog.quantity}
-                      onChange={e => setRfqDialog(dialog => ({ ...dialog, quantity: e.target.value, error: null }))}
-                      className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                    <p className="mt-2 text-[11px] text-slate-500">
-                      Minimum 1 unit. Default is 1 unless you set a higher amount.
-                    </p>
-                  </div>
-                  <div>
-                    <label htmlFor="rfq-message" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      Buyer Message (optional)
-                    </label>
-                    <textarea
-                      id="rfq-message"
-                      rows={4}
-                      maxLength={1000}
-                      value={rfqDialog.buyerMessage}
-                      onChange={e => setRfqDialog(dialog => ({ ...dialog, buyerMessage: e.target.value, error: null }))}
-                      placeholder="Add context such as target delivery timing, fabric preferences, or packaging needs."
-                      className="mt-2 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                    <p className="mt-2 text-[11px] text-slate-500">
-                      Keep it specific. This message supports RFQ initiation only and is not a purchase commitment.
-                    </p>
-                  </div>
-                </div>
+            {rfqDialog.success ? (
+              <div className="px-8 pb-8">{rfqSuccessContent}</div>
+            ) : (
+              <form className="overflow-y-auto flex-1 px-8 pb-8 space-y-5" onSubmit={handleSubmitRfq}>
+                {rfqDialog.confirmationStep ? (
+                  <>
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-3">Review your RFQ</h3>
+                      <ul className="space-y-2">
+                        {resolveRfqConfirmationSummary(rfqDialog).map(line => (
+                          <li key={line.label} className="flex gap-2 text-sm">
+                            <span className="font-medium text-slate-700 min-w-[140px]">{line.label}:</span>
+                            <span className="text-slate-600">{line.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {resolveRfqConfirmationSummary(rfqDialog).length === 0 && (
+                        <p className="text-sm text-slate-500">Only a quantity of {rfqDialog.quantity} will be submitted.</p>
+                      )}
+                    </div>
 
-                {rfqDialog.error && (
-                  <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm text-rose-700">
-                    {rfqDialog.error}
-                  </div>
+                    {rfqDialog.error && (
+                      <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm text-rose-700">
+                        {rfqDialog.error}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setRfqDialog(d => ({ ...d, confirmationStep: false, error: null }))}
+                        disabled={rfqDialog.loading}
+                        className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition disabled:opacity-50"
+                      >
+                        ← Back
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={rfqDialog.loading}
+                        className="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {rfqDialog.loading ? 'Submitting...' : 'Confirm and Submit RFQ'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Section 1: Core */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-[1fr_120px] gap-3">
+                        <div>
+                          <label htmlFor="rfq-quantity" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                            Quantity <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            id="rfq-quantity"
+                            type="number"
+                            min={1}
+                            step={1}
+                            inputMode="numeric"
+                            value={rfqDialog.quantity}
+                            onChange={e => setRfqDialog(dialog => ({ ...dialog, quantity: e.target.value, error: null }))}
+                            className="mt-1.5 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="rfq-quantity-unit" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                            Unit
+                          </label>
+                          <input
+                            id="rfq-quantity-unit"
+                            type="text"
+                            maxLength={30}
+                            value={rfqDialog.quantityUnit}
+                            onChange={e => setRfqDialog(dialog => ({ ...dialog, quantityUnit: e.target.value }))}
+                            placeholder="e.g. meters"
+                            className="mt-1.5 w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label htmlFor="rfq-requirement-title" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                          Requirement Title (optional)
+                        </label>
+                        <input
+                          id="rfq-requirement-title"
+                          type="text"
+                          maxLength={200}
+                          value={rfqDialog.requirementTitle}
+                          onChange={e => setRfqDialog(dialog => ({ ...dialog, requirementTitle: e.target.value }))}
+                          placeholder="e.g. 40s Ring Spun Cotton Yarn for Summer 2026"
+                          className="mt-1.5 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Section 2: Stage-aware requirement fields */}
+                    {resolveStructuredRfqStageSectionFields(rfqDialog.catalogStage).length > 0 && (
+                      <div className="space-y-3 pt-1">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                          {rfqDialog.catalogStage?.replace(/_/g, ' ')} Requirements (optional)
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {resolveStructuredRfqStageSectionFields(rfqDialog.catalogStage).map(field => (
+                            <div key={field.key}>
+                              <label htmlFor={`rfq-stage-${field.key}`} className="text-[11px] font-semibold text-slate-500">
+                                {field.label}
+                              </label>
+                              <input
+                                id={`rfq-stage-${field.key}`}
+                                type="text"
+                                maxLength={200}
+                                value={rfqDialog.stageRequirementAttributes[field.key] ?? ''}
+                                onChange={e =>
+                                  setRfqDialog(dialog => ({
+                                    ...dialog,
+                                    stageRequirementAttributes: {
+                                      ...dialog.stageRequirementAttributes,
+                                      [field.key]: e.target.value,
+                                    },
+                                  }))
+                                }
+                                placeholder={field.placeholder}
+                                className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 3: Logistics + Notes */}
+                    <div className="space-y-3 pt-1">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        Logistics &amp; Notes (optional)
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label htmlFor="rfq-urgency" className="text-[11px] font-semibold text-slate-500">
+                            Urgency
+                          </label>
+                          <select
+                            id="rfq-urgency"
+                            value={rfqDialog.urgency}
+                            onChange={e =>
+                              setRfqDialog(dialog => ({
+                                ...dialog,
+                                urgency: e.target.value as BuyerRfqDialogState['urgency'],
+                              }))
+                            }
+                            className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          >
+                            <option value="">Select (optional)</option>
+                            <option value="STANDARD">Standard</option>
+                            <option value="URGENT">Urgent</option>
+                            <option value="FLEXIBLE">Flexible</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label htmlFor="rfq-target-date" className="text-[11px] font-semibold text-slate-500">
+                            Target Delivery Date
+                          </label>
+                          <input
+                            id="rfq-target-date"
+                            type="date"
+                            value={rfqDialog.targetDeliveryDate}
+                            onChange={e => setRfqDialog(dialog => ({ ...dialog, targetDeliveryDate: e.target.value }))}
+                            className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="rfq-delivery-country" className="text-[11px] font-semibold text-slate-500">
+                            Delivery Country (3-letter)
+                          </label>
+                          <input
+                            id="rfq-delivery-country"
+                            type="text"
+                            maxLength={3}
+                            value={rfqDialog.deliveryCountry}
+                            onChange={e =>
+                              setRfqDialog(dialog => ({ ...dialog, deliveryCountry: e.target.value.toUpperCase() }))
+                            }
+                            placeholder="e.g. BGD"
+                            className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="rfq-delivery-location" className="text-[11px] font-semibold text-slate-500">
+                            Delivery Location
+                          </label>
+                          <input
+                            id="rfq-delivery-location"
+                            type="text"
+                            maxLength={200}
+                            value={rfqDialog.deliveryLocation}
+                            onChange={e => setRfqDialog(dialog => ({ ...dialog, deliveryLocation: e.target.value }))}
+                            placeholder="e.g. Dhaka, Bangladesh"
+                            className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          id="rfq-sample-required"
+                          type="checkbox"
+                          checked={rfqDialog.sampleRequired === true}
+                          onChange={e =>
+                            setRfqDialog(dialog => ({
+                              ...dialog,
+                              sampleRequired: e.target.checked ? true : null,
+                            }))
+                          }
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <label htmlFor="rfq-sample-required" className="text-sm text-slate-600">
+                          Sample required before bulk order
+                        </label>
+                      </div>
+                      <div>
+                        <label htmlFor="rfq-message" className="text-[11px] font-semibold text-slate-500">
+                          Additional notes / special requirements
+                        </label>
+                        <textarea
+                          id="rfq-message"
+                          rows={3}
+                          maxLength={1000}
+                          value={rfqDialog.buyerMessage}
+                          onChange={e => setRfqDialog(dialog => ({ ...dialog, buyerMessage: e.target.value, error: null }))}
+                          placeholder="Any additional context for this request."
+                          className="mt-1 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {rfqDialog.error && (
+                      <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm text-rose-700">
+                        {rfqDialog.error}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={handleCloseRfqDialog}
+                        className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition"
+                      >
+                        Review RFQ →
+                      </button>
+                    </div>
+                  </>
                 )}
-
-                <div className="flex gap-3 justify-end">
-                  <button
-                    type="button"
-                    onClick={handleCloseRfqDialog}
-                    disabled={rfqDialog.loading}
-                    className="px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-900 transition disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={rfqDialog.loading}
-                    className="px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {rfqDialog.loading ? 'Submitting...' : 'Submit RFQ'}
-                  </button>
-                </div>
               </form>
             )}
           </div>
