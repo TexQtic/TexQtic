@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-26 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-25 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -224,6 +224,29 @@
   Non-goals preserved: No AI matching, no price disclosure, no PDP, no RFQ expansion,
     no cross-supplier search, no bulk import, no service marketplace workflow,
     no Phase 4+ ServiceCapability model.
+- TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 is VERIFIED_COMPLETE (2026-04-25).
+  Status: VERIFIED_COMPLETE. Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
+  Scope: Structured RFQ requirement foundation — 10 new nullable columns on rfqs table (requirement_title,
+    quantity_unit, urgency, sample_required, target_delivery_date, delivery_location, delivery_country,
+    delivery_instructions, internal_notes, requirement_confirmed_at). Architecture: Option C Hybrid.
+  Design commit: a290caf. Backend commit: dbc3a6b. Frontend commit: 97192c8.
+  Hotfix 001 commit: 5ad043b — fix RFQ list read-path logging/null guards.
+  Hotfix 002 commit: c8ec0a4 — skip orphaned RFQs in read paths (catalogItem WHERE guard).
+  Additional commit: ca3d241 — pre-existing TypeScript fixes in tenant.ts and tenantProvision.types.ts.
+  Commit chain (repo truth): a290caf → dbc3a6b → 97192c8 → 5ad043b → ca3d241 → c8ec0a4.
+  Production verification (2026-04-25):
+    GET /api/tenant/rfqs → HTTP 200. Prior 500 (PrismaClientUnknownRequestError on orphaned FK) resolved.
+    Buyer RFQ list page loads cleanly. Structured RFQ dialog opens.
+    Review step gates final submit. Confirm and Submit creates RFQ (HTTP 201, RFQ ID returned).
+    New RFQ appears in buyer list immediately after creation.
+    No price shown in dialog, review summary, or list. No AI drafting UI.
+    No supplier matching UI. No checkout / order / escrow action.
+    Buyer catalog search/filter still works.
+  Orphaned-row note: Production had orphaned RFQ rows from prior data state; c8ec0a4 skips them
+    safely via catalogItem: { name: { not: '' } } WHERE guard. DB admin may audit out-of-band.
+  Boundary preserved: No price disclosure. No AI RFQ assistant. No supplier matching.
+    No order/checkout/escrow. No publicationPosture. humanConfirmationRequired preserved.
+  Validation: TypeScript tsc --noEmit PASS. 27/27 vitest tests PASS (3 focused test files).
 - `PUBLIC_B2C_PROJECTION_PRECONDITION_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `7baf50a`, 2026-04-22).
   Three deliverables confirmed: `server/src/services/publicB2CProjection.service.ts` (5-gate B2C projection
   service); `GET /api/public/b2c/products` registered in `server/src/routes/public.ts`; 10/10 unit tests passing.

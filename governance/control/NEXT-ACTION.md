@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-26 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — DESIGN_COMPLETE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-25 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -14,27 +14,26 @@ governance_exception_active: false
 product_delivery_priority: ZERO_OPEN_AWAITING_PARESH_NEXT_UNIT_SELECTION
 active_delivery_unit: NONE
 last_closed_unit: TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001
-last_closed_unit_status: DESIGN_COMPLETE
-last_closed_unit_runtime_verdict: DESIGN_ONLY — no runtime changes
-last_closed_unit_commits: (design only — no implementation commit)
+last_closed_unit_status: VERIFIED_COMPLETE
+last_closed_unit_runtime_verdict: RUNTIME_VERIFIED_COMPLETE
+last_closed_unit_commits: >-
+  Design: a290caf. Backend: dbc3a6b. Frontend: 97192c8.
+  Hotfix 001: 5ad043b. TS fixes: ca3d241. Hotfix 002: c8ec0a4.
 last_closed_unit_closure_basis: >-
-  DESIGN_COMPLETE (2026-04-26).
-  Artifact: docs/TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001-DESIGN-v1.md.
-  Structured RFQ requirement foundation — 16 sections (A–P).
-  Architecture: Option C Hybrid (9 typed columns + stage_requirement_attributes JSONB).
-  buyer_message and quantity RETAINED unchanged. All new columns nullable, fully backward-compatible.
-  7 implementation slices defined (DB migration, backend validation, mappers, OpenAPI,
-  frontend service types, buyer dialog UX, tests). None authorized; each requires Paresh sign-off.
-  AI boundary: StructuredRFQRequirementContext extends RFQDraftingContext without weakening;
-  price/publicationPosture/delivery_location/target_delivery_date excluded from AI paths.
-  humanConfirmationRequired: true preserved (requirement_confirmed_at timestamp gate).
-  No implementation changes. No schema changes. No API additions. No frontend changes.
+  VERIFIED_COMPLETE (2026-04-25).
+  Design artifact: docs/TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001-DESIGN-v1.md.
+  Structured RFQ requirement foundation — 10 new nullable columns on rfqs table.
+  Architecture: Option C Hybrid. buyer_message and quantity RETAINED unchanged.
+  Production verification PASS: GET /api/tenant/rfqs HTTP 200. Prior 500 resolved by c8ec0a4.
+  Buyer RFQ list loads. Dialog opens. Review step gates submit. Create RFQ confirmed.
+  New RFQ in list. No price. No AI drafting. No supplier matching. No checkout/escrow.
+  Catalog search/filter intact. 27/27 vitest tests PASS. tsc --noEmit PASS.
 prior_closed_unit: TECS-AI-FOUNDATION-DATA-CONTRACTS-001
 prior_closed_unit_status: IMPLEMENTATION_COMPLETE
 prior_closed_unit_commits: e94bc13 (design) + f671995 (implementation — 163 tests PASS)
-adjacent_deferred_candidate: none — design unit DESIGN_COMPLETE; next implementation unit not opened; awaiting Paresh next unit selection
+adjacent_deferred_candidate: none — unit VERIFIED_COMPLETE; next unit not opened; awaiting Paresh next unit selection
 d015_reconciliation: COMPLETE
-d016_posture: DESIGN_COMPLETE — TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 DESIGN_COMPLETE; TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE; next implementation unit NOT opened; awaiting Paresh next unit selection
+d016_posture: VERIFIED_COMPLETE — TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 VERIFIED_COMPLETE; TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE; next unit NOT opened; awaiting Paresh next unit selection
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -50,16 +49,13 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 DESIGN_COMPLETE (2026-04-26).
+  TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 VERIFIED_COMPLETE (2026-04-25, commit c8ec0a4).
   TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE (2026-04-26, commit f671995).
-  Artifact: docs/TECS-AI-FOUNDATION-DATA-CONTRACTS-001-DESIGN-v1.md.
-  Constitutional AI data contracts and decision boundaries — 17 sections (A–Q).
-  G-028 vector infrastructure verified complete. Embedding 768-dim LOCKED.
-  AI-forbidden data (price, escrow, PII) constitutionally excluded.
-  D-020-C aiTriggered pattern confirmed on all lifecycle tables.
-  8 future AI implementation units defined in Section Q — none authorized.
-  No implementation. No schema changes. No API additions. No frontend changes.
-  Next implementation unit NOT opened. Awaiting Paresh next unit selection.
+  Production verification RUNTIME_VERIFIED_COMPLETE. Prior 500 on GET /api/tenant/rfqs resolved.
+  Full commit chain: a290caf (design) + dbc3a6b (backend) + 97192c8 (frontend)
+    + 5ad043b (hotfix 001) + ca3d241 (TS fixes) + c8ec0a4 (hotfix 002).
+  No AI RFQ assistant implemented. No supplier matching. No price disclosure.
+  No order/checkout/escrow. Next unit NOT opened. Awaiting Paresh next unit selection.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.

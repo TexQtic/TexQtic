@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-26 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — DESIGN_COMPLETE)
+**Updated:** 2026-04-25 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,7 +10,7 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-26
+snapshot_date: 2026-04-25
 snapshot_unit: TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
@@ -45,18 +45,24 @@ preserved_aligned_anchor_posture:
 current_product_active_delivery_count: 0
 current_product_active_delivery_unit: NONE
 current_product_active_delivery_status: ZERO_OPEN
-runtime_verification_status: DESIGN_COMPLETE — design only; no runtime verification applicable
+runtime_verification_status: VERIFIED_COMPLETE — RUNTIME_VERIFIED_COMPLETE (2026-04-25)
 current_product_active_delivery_note: |
-  DESIGN_COMPLETE (2026-04-26).
-  Artifact: docs/TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001-DESIGN-v1.md.
-  Structured RFQ requirement foundation. Architecture: Option C Hybrid (9 typed columns + JSONB).
-  7 implementation slices defined. None authorized. Awaiting Paresh selection.
+  VERIFIED_COMPLETE (2026-04-25). Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
+  Commit chain: a290caf (design) + dbc3a6b (backend) + 97192c8 (frontend)
+    + 5ad043b (hotfix 001) + ca3d241 (TS fixes) + c8ec0a4 (hotfix 002).
+  Structured RFQ requirement foundation complete.
+  AI RFQ assistant not implemented.
+  Supplier matching not implemented.
+  Price disclosure not implemented.
+  Order/checkout/escrow not implemented.
+  Production had orphaned RFQ rows from prior data state; c8ec0a4 now skips orphaned RFQs
+    in read paths. DB admin may audit orphaned rows out-of-band, but no user-facing blocker remains.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
 ai_design_unit: TECS-AI-FOUNDATION-DATA-CONTRACTS-001
 ai_design_status: IMPLEMENTATION_COMPLETE (2026-04-26, commit f671995)
 rfq_design_unit: TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001
-rfq_design_status: DESIGN_COMPLETE (2026-04-26)
+rfq_design_status: VERIFIED_COMPLETE (2026-04-25)
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -65,26 +71,29 @@ layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
 latest_design_complete: |
-  TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — DESIGN_COMPLETE (2026-04-26).
-  Artifact: docs/TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001-DESIGN-v1.md.
-  Structured RFQ requirement layer — sections A–P. No implementation. No schema changes.
-  Architecture: Option C Hybrid. 7 slices defined. buyer_message/quantity unchanged.
-  AI boundary: StructuredRFQRequirementContext established; price/delivery_location/date excluded.
+  TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE (2026-04-25).
+  Runtime verdict: RUNTIME_VERIFIED_COMPLETE. Full production verification PASS.
+  Commit chain: a290caf (design) + dbc3a6b (backend) + 97192c8 (frontend)
+    + 5ad043b (hotfix 001) + ca3d241 (TS fixes) + c8ec0a4 (hotfix 002).
+  Structured RFQ requirement foundation complete. All boundary constraints preserved.
 prior_design_complete: |
   TECS-AI-FOUNDATION-DATA-CONTRACTS-001 — IMPLEMENTATION_COMPLETE (2026-04-26, commit f671995).
   163/163 tests PASS. Constitutional AI data contracts and guardrails fully implemented.
 latest_verified_product_close: |
+  TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE (2026-04-25).
+  Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
+  Commits: a290caf (design) + dbc3a6b (backend) + 97192c8 (frontend)
+    + 5ad043b (hotfix 001) + ca3d241 (TS fixes) + c8ec0a4 (hotfix 002).
+  Structured RFQ requirement foundation complete. AI RFQ assistant not implemented.
+  Supplier matching not implemented. Price disclosure not implemented.
+  Order/checkout/escrow not implemented.
+prior_latest_verified_product_close: |
   TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE (2026-04-25).
   Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Commits: 96763db (design) + ad3568d (backend) + 3fe5a8a (frontend) + 4fd9806 (truth-sync).
-  30/32 M-STAGE checks PASS. 2/32 LIMITED (multi-tenant chip constraint, code-confirmed).
-prior_latest_verified_product_close: |
-  TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE (2026-04-24).
-  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
-  Commits: fa1dcc9 (design) + 1d63513 (impl) + 77457a6 (truth-sync) + ec91ad2 (hotfix).
 current_open_unit: NONE
 current_open_unit_note: |
-  ZERO_OPEN (2026-04-26). Last unit: TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 DESIGN_COMPLETE.
+  ZERO_OPEN (2026-04-25). Last unit: TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 VERIFIED_COMPLETE.
   TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE (f671995).
   No implementation unit is open. Awaiting Paresh next unit selection.
 ```
