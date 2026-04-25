@@ -319,16 +319,16 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
     supplier_org_id: rfq.supplierOrgId,
     created_at: rfq.createdAt,
     updated_at: rfq.updatedAt,
-    requirement_title: rfq.requirementTitle,
-    quantity_unit: rfq.quantityUnit,
-    urgency: rfq.urgency,
-    sample_required: rfq.sampleRequired,
-    target_delivery_date: rfq.targetDeliveryDate,
-    delivery_location: rfq.deliveryLocation,
-    delivery_country: rfq.deliveryCountry,
-    stage_requirement_attributes: rfq.stageRequirementAttributes,
-    field_source_meta: rfq.fieldSourceMeta,
-    requirement_confirmed_at: rfq.requirementConfirmedAt,
+    requirement_title: rfq.requirementTitle ?? null,
+    quantity_unit: rfq.quantityUnit ?? null,
+    urgency: rfq.urgency ?? null,
+    sample_required: rfq.sampleRequired ?? null,
+    target_delivery_date: rfq.targetDeliveryDate ?? null,
+    delivery_location: rfq.deliveryLocation ?? null,
+    delivery_country: rfq.deliveryCountry ?? null,
+    stage_requirement_attributes: rfq.stageRequirementAttributes ?? null,
+    field_source_meta: rfq.fieldSourceMeta ?? null,
+    requirement_confirmed_at: rfq.requirementConfirmedAt ?? null,
   };
 }
 
@@ -2777,62 +2777,67 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     const searchTerm = q?.trim();
     const idSearchResult = searchTerm ? z.string().uuid().safeParse(searchTerm) : null;
 
-    const rfqs = await withDbContext(prisma, dbContext, async tx => {
-      return tx.rfq.findMany({
-        where: {
-          orgId: dbContext.orgId,
-          ...(status ? { status } : {}),
-          ...(searchTerm
-            ? {
-                OR: [
-                  ...(idSearchResult?.success ? [{ id: searchTerm }] : []),
-                  { catalogItem: { name: { contains: searchTerm, mode: 'insensitive' } } },
-                  { catalogItem: { sku: { contains: searchTerm, mode: 'insensitive' } } },
-                ],
-              }
-            : {}),
-        },
-        select: {
-          id: true,
-          status: true,
-          orgId: true,
-          catalogItemId: true,
-          quantity: true,
-          supplierOrgId: true,
-          createdAt: true,
-          updatedAt: true,
-          requirementTitle: true,
-          quantityUnit: true,
-          urgency: true,
-          sampleRequired: true,
-          targetDeliveryDate: true,
-          deliveryLocation: true,
-          deliveryCountry: true,
-          stageRequirementAttributes: true,
-          fieldSourceMeta: true,
-          requirementConfirmedAt: true,
-          catalogItem: {
-            select: {
-              name: true,
-              sku: true,
+    try {
+      const rfqs = await withDbContext(prisma, dbContext, async tx => {
+        return tx.rfq.findMany({
+          where: {
+            orgId: dbContext.orgId,
+            ...(status ? { status } : {}),
+            ...(searchTerm
+              ? {
+                  OR: [
+                    ...(idSearchResult?.success ? [{ id: searchTerm }] : []),
+                    { catalogItem: { name: { contains: searchTerm, mode: 'insensitive' } } },
+                    { catalogItem: { sku: { contains: searchTerm, mode: 'insensitive' } } },
+                  ],
+                }
+              : {}),
+          },
+          select: {
+            id: true,
+            status: true,
+            orgId: true,
+            catalogItemId: true,
+            quantity: true,
+            supplierOrgId: true,
+            createdAt: true,
+            updatedAt: true,
+            requirementTitle: true,
+            quantityUnit: true,
+            urgency: true,
+            sampleRequired: true,
+            targetDeliveryDate: true,
+            deliveryLocation: true,
+            deliveryCountry: true,
+            stageRequirementAttributes: true,
+            fieldSourceMeta: true,
+            requirementConfirmedAt: true,
+            catalogItem: {
+              select: {
+                name: true,
+                sku: true,
+              },
             },
           },
-        },
-        orderBy: sort === 'created_at_desc'
-          ? [{ createdAt: 'desc' }, { id: 'desc' }]
-          : [{ updatedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
-        take: 50,
+          orderBy: sort === 'created_at_desc'
+            ? [{ createdAt: 'desc' }, { id: 'desc' }]
+            : [{ updatedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+          take: 50,
+        });
       });
-    });
 
-    return sendSuccess(reply, {
-      rfqs: rfqs.map(r => mapBuyerRfqListItem({
-        ...r,
-        stageRequirementAttributes: r.stageRequirementAttributes as Record<string, unknown> | null,
-        fieldSourceMeta: r.fieldSourceMeta as Record<string, unknown> | null,
-      })),
-      count: rfqs.length,
-    });
+      return sendSuccess(reply, {
+        rfqs: rfqs.map(r => mapBuyerRfqListItem({
+          ...r,
+          stageRequirementAttributes: r.stageRequirementAttributes as Record<string, unknown> | null,
+          fieldSourceMeta: r.fieldSourceMeta as Record<string, unknown> | null,
+        })),
+        count: rfqs.length,
+      });
+    } catch (e) {
+      console.error('[rfq][list][error]', e);
+      return sendError(reply, 'INTERNAL_SERVER_ERROR', 'Failed to load RFQ list', 500);
+    }
   });
 
   /**
