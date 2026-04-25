@@ -188,8 +188,8 @@ async function resolveTenantSessionIdentity(input: {
       type: org.org_type,
       tenant_category: org.org_type,
       primary_segment_key: org.primary_segment_key,
-      secondary_segment_keys: org.secondary_segments.map(entry => entry.segment_key),
-      role_position_keys: org.role_positions.map(entry => entry.role_position_key),
+      secondary_segment_keys: org.secondary_segments.map((entry: { segment_key: string }) => entry.segment_key),
+      role_position_keys: org.role_positions.map((entry: { role_position_key: string }) => entry.role_position_key),
       is_white_label: org.is_white_label,
       status: org.status,
       plan,
@@ -1961,7 +1961,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           action: 'catalog.item.updated',
           entity: 'catalog_item',
           entityId: result.id,
-          metadataJson: { ...data, certifications: undefined },
+          metadataJson: { ...data, certifications: undefined } as unknown as Prisma.JsonValue,
         });
 
         return result;
@@ -2176,7 +2176,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Build non-certification AND-composed filters
-      const filterClauses: Prisma.catalogItemWhereInput[] = [
+      const filterClauses: Prisma.CatalogItemWhereInput[] = [
         { tenantId: supplierOrgId, active: true },
       ];
 
@@ -2222,7 +2222,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         filterClauses.push({ catalogStage: { equals: catalogStage } });
       }
 
-      const baseWhere: Prisma.catalogItemWhereInput = { AND: filterClauses };
+      const baseWhere: Prisma.CatalogItemWhereInput = { AND: filterClauses };
 
       // Gate 2: Read catalog items cross-tenant (texqtic_rfq_read role — proven cross-tenant read pattern).
       // Certification filter uses two-pass approach:
@@ -2827,7 +2827,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
 
       return sendSuccess(reply, {
-        rfqs: rfqs.map(r => mapBuyerRfqListItem({
+        rfqs: rfqs.map((r: BuyerRfqListRow) => mapBuyerRfqListItem({
           ...r,
           stageRequirementAttributes: r.stageRequirementAttributes as Record<string, unknown> | null,
           fieldSourceMeta: r.fieldSourceMeta as Record<string, unknown> | null,
@@ -2902,7 +2902,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     });
 
     return sendSuccess(reply, {
-      rfqs: rfqs.map(r => mapSupplierRfqListItem({
+      rfqs: rfqs.map((r: SupplierRfqListRow) => mapSupplierRfqListItem({
         ...r,
         stageRequirementAttributes: r.stageRequirementAttributes as Record<string, unknown> | null,
       })),

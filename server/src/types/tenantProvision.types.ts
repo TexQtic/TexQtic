@@ -239,10 +239,10 @@ function resolveCanonicalProvisioningIdentityInput(
   return {
     success: true,
     data: {
-      base_family,
+      base_family: base_family!,
       aggregator_capability,
       white_label_capability,
-      commercial_plan,
+      commercial_plan: commercial_plan!,
     },
   };
 }
@@ -440,6 +440,10 @@ export function normalizeTenantProvisionRequest(
   ];
 
   if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  if (!canonicalTaxonomyResult.success) {
     return { success: false, errors };
   }
 
