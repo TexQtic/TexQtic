@@ -41,6 +41,10 @@ import {
   type CounterpartyDiscoveryEntry,
   type CounterpartyProfileAggregation,
 } from '../services/counterpartyProfileAggregation.service.js';
+import { buildRfqAssistantContext } from '../services/ai/rfqAssistContextBuilder.js';
+import { runRfqAssistInference } from '../services/ai/rfqAssistService.js';
+import { BudgetExceededError, getMonthKey } from '../lib/aiBudget.js';
+import { AiRateLimitExceededError } from '../services/ai/inferenceService.js';
 
 type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FATAL';
 
@@ -3220,6 +3224,184 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         tradeContinuity,
       }),
     });
+  });
+
+  /**
+   * POST /api/tenant/rfqs/:id/ai-assist
+   * AI-assisted RFQ field suggestion (read-only — does NOT mutate the rfqs table).
+   * Implements TECS-AI-RFQ-ASSISTANT-MVP-001.
+   *
+   * Returns suggested values for incomplete RFQ fields based on the catalog item
+   * and RFQ state. Buyer must confirm suggestions before applying via existing PATCH route.
+   */
+  fastify.post('/tenant/rfqs/:id/ai-assist', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = request.dbContext as DatabaseContext;
+
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.issues);
+    }
+    const rfqId = paramsResult.data.id;
+
+    // Optional idempotency key from HTTP header
+    const idempotencyKey = (request.headers['x-idempotency-key'] as string | undefined)?.trim() || undefined;
+
+    const requestId = randomUUID();
+    const monthKey = getMonthKey();
+
+    try {
+      const result = await withDbContext(prisma, dbContext, async (tx) => {
+        // 1. Load RFQ — must include buyerMessage for context assembly
+        const rfq = await tx.rFQ.findFirst({
+          where: { id: rfqId },
+          select: {
+            id: true,
+            orgId: true,
+            supplierOrgId: true,
+            catalogItemId: true,
+            status: true,
+            requirementTitle: true,
+            quantityUnit: true,
+            urgency: true,
+            sampleRequired: true,
+            deliveryCountry: true,
+            stageRequirementAttributes: true,
+            buyerMessage: true,
+          },
+        });
+
+        if (!rfq || rfq.orgId !== dbContext.orgId) {
+          return { notFound: true as const };
+        }
+
+        // 2. Only allow AI assist on open or responded RFQs
+        if (rfq.status !== 'OPEN' && rfq.status !== 'RESPONDED') {
+          return { invalidStatus: true as const, status: rfq.status };
+        }
+
+        // 3. Load catalog item for vector text assembly
+        const catalogItem = await tx.catalogItem.findFirst({
+          where: { id: rfq.catalogItemId, orgId: rfq.supplierOrgId },
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            active: true,
+            catalogStage: true,
+            stageAttributes: true,
+            moq: true,
+            material: true,
+            composition: true,
+            fabricType: true,
+            gsm: true,
+            color: true,
+            widthCm: true,
+            construction: true,
+            description: true,
+            productCategory: true,
+            certifications: { select: { type: true, expiresAt: true } },
+          },
+        });
+
+        if (!catalogItem) {
+          return { catalogNotFound: true as const };
+        }
+
+        // 4. Assemble pre-computed text strings (helpers in this file — circular-safe by design)
+        const structuredRequirementText = assembleStructuredRfqRequirementSummaryText({
+          buyerMessage: rfq.buyerMessage ?? undefined,
+          requirementTitle: rfq.requirementTitle ?? undefined,
+          quantityUnit: rfq.quantityUnit ?? undefined,
+          urgency: rfq.urgency ?? undefined,
+          sampleRequired: rfq.sampleRequired ?? undefined,
+          deliveryCountry: rfq.deliveryCountry ?? undefined,
+          stageRequirementAttributes: rfq.stageRequirementAttributes as Record<string, unknown> | null ?? undefined,
+        });
+
+        const catalogItemForText = {
+          id: catalogItem.id,
+          name: catalogItem.name,
+          sku: catalogItem.sku,
+          active: catalogItem.active,
+          catalogStage: catalogItem.catalogStage,
+          stageAttributes: catalogItem.stageAttributes as Record<string, unknown> | null,
+          moq: catalogItem.moq,
+          material: catalogItem.material,
+          composition: catalogItem.composition,
+          fabricType: catalogItem.fabricType,
+          gsm: catalogItem.gsm,
+          color: catalogItem.color,
+          widthCm: catalogItem.widthCm,
+          construction: catalogItem.construction,
+          description: catalogItem.description,
+          productCategory: catalogItem.productCategory,
+          certifications: catalogItem.certifications,
+        };
+        const catalogItemText = buildCatalogItemVectorText(catalogItemForText);
+        const catalogCompletenessScore = catalogItemAttributeCompleteness(catalogItemForText);
+
+        // 5. Build RFQAssistantContext (PII redaction + forbidden field assertion done inside)
+        const context = buildRfqAssistantContext({
+          buyerOrgId: dbContext.orgId,
+          rfqId: rfq.id,
+          rfqStatus: rfq.status,
+          structuredRequirementText,
+          catalogItemId: catalogItem.id,
+          catalogItemStage: catalogItem.catalogStage,
+          catalogItemText,
+          catalogCompletenessScore,
+          supplierOrgId: rfq.supplierOrgId,
+          retrievedChunks: [],
+        });
+
+        return { context };
+      });
+
+      if ('notFound' in result) {
+        return sendNotFound(reply, 'RFQ not found');
+      }
+      if ('catalogNotFound' in result) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+      if ('invalidStatus' in result) {
+        return sendError(reply, 422, 'AI assist is only available for OPEN or RESPONDED RFQs');
+      }
+
+      // 6. Run AI inference (outside the DB tx — inferenceService manages its own tx)
+      const serviceResult = await runRfqAssistInference({
+        context: result.context,
+        monthKey,
+        requestId,
+        idempotencyKey,
+        userId: userId ?? null,
+        prisma,
+        dbContext,
+      });
+
+      if (!serviceResult.ok) {
+        return sendError(reply, 422, 'AI response could not be parsed as structured suggestions', {
+          suggestionsParseError: true,
+          humanConfirmationRequired: true,
+          auditLogId: serviceResult.auditLogId,
+        });
+      }
+
+      return reply.status(200).send({
+        suggestions: serviceResult.suggestions,
+        humanConfirmationRequired: true,
+        reasoningLogId: serviceResult.reasoningLogId,
+        auditLogId: serviceResult.auditLogId,
+        hadInferenceError: serviceResult.hadInferenceError,
+        fieldSourceMeta: { method: 'ai-rfq-assist', rfqId },
+      });
+    } catch (err) {
+      if (err instanceof BudgetExceededError || err instanceof AiRateLimitExceededError) {
+        return sendError(reply, 429, 'AI inference rate limit or budget exceeded');
+      }
+      throw err;
+    }
   });
 
   /**

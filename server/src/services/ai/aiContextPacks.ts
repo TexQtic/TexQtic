@@ -271,3 +271,57 @@ export interface TrustScoreContext {
   // individual user PII: EXCLUDED
   // trust score computed by AI is a SUGGESTION — human must confirm before risk_score update
 }
+
+// ─── F.8 RFQAssistantContext ──────────────────────────────────────────────────
+
+/**
+ * Context pack for AI-assisted RFQ requirement suggestion.
+ *
+ * Used by: TECS-AI-RFQ-ASSISTANT-MVP-001 (AUTHORIZED — DESIGN_COMPLETE 2026-04-25)
+ *
+ * EXCLUDED:
+ *   price / item_unit_price — constitutionally forbidden; AI must not price-match
+ *   publicationPosture — constitutionally forbidden from all AI paths
+ *   deliveryLocation — PII risk
+ *   targetDeliveryDate — scheduling sensitivity; not needed for field suggestions
+ *   requirementConfirmedAt — internal audit field; AI has no authority over it
+ *   escrow* / grossAmount — financial; AI has zero authority
+ *   User.email / User.name — PII; must never enter a prompt
+ *
+ * REQUIRED: humanConfirmationRequired = true — buyer must confirm all suggestions
+ * before any RFQ mutation is applied. AI does NOT write to the rfqs table.
+ */
+export interface RFQAssistantContext {
+  /** JWT-derived buyer orgId — never client-supplied */
+  buyerOrgId: string;
+  /** UUID of the RFQ being assisted */
+  rfqId: string;
+  /** Current RFQ status — read-only context; AI has no authority to change status */
+  rfqStatus: string;
+  /** assembleStructuredRfqRequirementSummaryText() output — price and PII excluded */
+  structuredRequirementText: string;
+  /** UUID of the catalog item targeted by this RFQ */
+  catalogItemId: string;
+  /** Catalog item stage (e.g. FABRIC_WOVEN, GARMENT) — for stage-aware prompting */
+  catalogItemStage: string | null;
+  /** buildCatalogItemVectorText() output — price and publicationPosture excluded */
+  catalogItemText: string;
+  /** catalogItemAttributeCompleteness() score [0,1] — transient; never stored */
+  catalogCompletenessScore: number;
+  /** Supplier orgId (from RFQ target) — for context only; no cross-tenant access */
+  supplierOrgId: string;
+  /** Relevant catalog/cert vectors — max MAX_CONTEXT_CHUNKS (3); no chunk content */
+  retrievedChunks: SimilarityResultRef[];
+  /** Human must confirm before any RFQ mutation — literal true enforces this at the type level */
+  humanConfirmationRequired: true;
+  // price: EXCLUDED — constitutionally forbidden
+  // item_unit_price: EXCLUDED — constitutionally forbidden
+  // publicationPosture: EXCLUDED — constitutionally forbidden
+  // deliveryLocation: EXCLUDED — PII risk
+  // targetDeliveryDate: EXCLUDED — scheduling sensitivity
+  // requirementConfirmedAt: EXCLUDED — internal audit field
+  // escrow*: EXCLUDED — constitutionally forbidden
+  // grossAmount: EXCLUDED — constitutionally forbidden
+  // User.email: EXCLUDED — PII
+  // User.name: EXCLUDED — PII
+}

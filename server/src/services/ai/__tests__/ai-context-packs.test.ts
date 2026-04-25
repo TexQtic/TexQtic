@@ -29,6 +29,7 @@ import type {
   DocumentExtractionContext,
   MarketIntelligenceContext,
   TrustScoreContext,
+  RFQAssistantContext,
 } from '../aiContextPacks.js';
 import { containsForbiddenAiField } from '../aiForbiddenData.js';
 
@@ -343,5 +344,81 @@ describe('TrustScoreContext', () => {
     };
 
     expect(['CLEAR', 'ACTIVE', 'DECAYED']).toContain(ctx.sanctionStatus);
+  });
+});
+
+// ─── RFQAssistantContext ───────────────────────────────────────────────────────
+
+describe('RFQAssistantContext', () => {
+  it('humanConfirmationRequired is always true', () => {
+    const ctx: RFQAssistantContext = {
+      buyerOrgId: 'org-buyer-001',
+      rfqId: 'rfq-uuid-001',
+      rfqStatus: 'OPEN',
+      structuredRequirementText: 'Woven cotton fabric, 120 GSM',
+      catalogItemId: 'item-uuid-001',
+      catalogItemStage: 'FABRIC_WOVEN',
+      catalogItemText: 'Cotton woven fabric 120 GSM',
+      catalogCompletenessScore: 0.75,
+      supplierOrgId: 'org-supplier-001',
+      retrievedChunks: [],
+      humanConfirmationRequired: true,
+    };
+
+    expect(ctx.humanConfirmationRequired).toBe(true);
+  });
+
+  it('does not contain price as a key', () => {
+    const ctx: RFQAssistantContext = {
+      buyerOrgId: 'org-buyer-001',
+      rfqId: 'rfq-uuid-002',
+      rfqStatus: 'OPEN',
+      structuredRequirementText: 'Knit fabric',
+      catalogItemId: 'item-uuid-002',
+      catalogItemStage: null,
+      catalogItemText: 'Knit fabric details',
+      catalogCompletenessScore: 0.5,
+      supplierOrgId: 'org-supplier-002',
+      retrievedChunks: [],
+      humanConfirmationRequired: true,
+    };
+
+    expect(Object.keys(ctx)).not.toContain('price');
+  });
+
+  it('does not contain deliveryLocation as a key', () => {
+    const ctx: RFQAssistantContext = {
+      buyerOrgId: 'org-buyer-001',
+      rfqId: 'rfq-uuid-003',
+      rfqStatus: 'RESPONDED',
+      structuredRequirementText: 'Requirement text',
+      catalogItemId: 'item-uuid-003',
+      catalogItemStage: 'YARN',
+      catalogItemText: 'Yarn product',
+      catalogCompletenessScore: 0.6,
+      supplierOrgId: 'org-supplier-003',
+      retrievedChunks: [],
+      humanConfirmationRequired: true,
+    };
+
+    expect(Object.keys(ctx)).not.toContain('deliveryLocation');
+  });
+
+  it('does not contain forbidden fields (containsForbiddenAiField check)', () => {
+    const ctx: RFQAssistantContext = {
+      buyerOrgId: 'org-buyer-001',
+      rfqId: 'rfq-uuid-004',
+      rfqStatus: 'OPEN',
+      structuredRequirementText: 'Requirement',
+      catalogItemId: 'item-uuid-004',
+      catalogItemStage: null,
+      catalogItemText: 'Catalog text',
+      catalogCompletenessScore: 0.8,
+      supplierOrgId: 'org-supplier-004',
+      retrievedChunks: [],
+      humanConfirmationRequired: true,
+    };
+
+    expect(containsForbiddenAiField(ctx)).toBe(false);
   });
 });

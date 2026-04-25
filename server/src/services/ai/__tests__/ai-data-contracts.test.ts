@@ -232,4 +232,8 @@ describe('AI_CONTEXT_PACK_TYPES', () => {
   it('includes WorkflowAssistantContext', () => {
     expect(AI_CONTEXT_PACK_TYPES).toContain('WorkflowAssistantContext');
   });
+
+  it('includes RFQAssistantContext', () => {
+    expect(AI_CONTEXT_PACK_TYPES).toContain('RFQAssistantContext');
+  });
 });

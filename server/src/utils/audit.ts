@@ -561,6 +561,45 @@ export function buildAiNegotiationReasoningAudit(
   };
 }
 
+export type AiRfqAssistReasoningAuditParams = {
+  tenantId: string;
+  userId: string | null;
+  model: string;
+  tokensUsed: number;
+  costEstimateUSD: number;
+  monthKey: string;
+  requestId?: string;
+  rfqId?: string;
+  catalogItemId?: string;
+  reasoningLogId: string;
+};
+
+export function buildAiRfqAssistReasoningAudit(
+  params: AiRfqAssistReasoningAuditParams,
+): AiReasoningAuditData {
+  return {
+    realm:     'TENANT',
+    tenantId:  params.tenantId,
+    actorType: params.userId ? 'USER' : 'SYSTEM',
+    actorId:   params.userId,
+    action:    'AI_RFQ_ASSIST',
+    entity:    'ai',
+    entityId:  null,
+    metadataJson: {
+      model:           params.model,
+      tokensUsed:      params.tokensUsed,
+      costEstimateUSD: params.costEstimateUSD,
+      monthKey:        params.monthKey,
+      requestId:       params.requestId,
+      rfqId:           params.rfqId,
+      catalogItemId:   params.catalogItemId,
+      reasoningLogId:  params.reasoningLogId,
+      timestamp:       new Date().toISOString(),
+    },
+    reasoningLogId: params.reasoningLogId,
+  };
+}
+
 // ─── G-019 Settlement Audit Factories ────────────────────────────────────────
 //
 // These factories produce AuditEntry objects for SettlementService events.

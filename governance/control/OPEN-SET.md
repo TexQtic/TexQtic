@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-25 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE)
+**Last Updated:** 2026-04-25 (TECS-AI-RFQ-ASSISTANT-MVP-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -282,6 +282,26 @@
     - AI_SUGGESTED FieldSource reserved; not used until TECS-AI-RFQ-ASSISTANT-MVP-001 authorized.
     - 7 implementation slices defined; none authorized; each requires Paresh sign-off.
   No implementation changes. No schema changes. No API additions. No frontend changes.
+- TECS-AI-RFQ-ASSISTANT-MVP-001 is DESIGN_COMPLETE.
+  Design artifact: docs/TECS-AI-RFQ-ASSISTANT-MVP-001-DESIGN-v1.md.
+  Scope: AI RFQ Assistant MVP — design only; no implementation authorized.
+  Sections: A (purpose/scope), B (architecture placement), C (RFQAssistantContext type),
+    D (AI-boundary function — assembleStructuredRfqRequirementSummaryText confirmed existing),
+    E (new AiTaskType: 'rfq-assist'), F (RfqAssistSuggestions output type + Zod schema),
+    G (prompt design), H (route spec — POST /api/tenant/rfqs/:id/ai-assist),
+    I (fieldSourceMeta integration), J (PII guard integration), K (RAG context integration),
+    L (audit trail — ReasoningLog + AuditLog), M (forbidden field enforcement),
+    N (implementation sequence — 8 steps), O (constraints summary).
+  Key decisions:
+    - New context type: RFQAssistantContext (distinct from existing RFQDraftingContext).
+    - New task type: 'rfq-assist' added to AiTaskType union.
+    - assembleStructuredRfqRequirementSummaryText() already exists in tenant.ts — reused verbatim.
+    - item_unit_price and deliveryLocation/targetDeliveryDate/requirementConfirmedAt structurally excluded.
+    - AI does NOT write to rfqs table — suggestions only; buyer accepts via existing PATCH route.
+    - humanConfirmationRequired: true is structural (non-negotiable).
+    - RAG retrieval: CATALOG_ITEM source type, topK=5, minSimilarity=0.30.
+    - No new Prisma migrations. No schema changes.
+  Implementation not authorized; each implementation slice requires explicit Paresh sign-off.
 - D-016 posture: **ACTIVE** — zero active product-delivery units; decision control required per D-016.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.

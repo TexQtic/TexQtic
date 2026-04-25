@@ -1766,6 +1766,168 @@
         }
       }
     },
+    "/api/tenant/rfqs/{id}/ai-assist": {
+      "post": {
+        "summary": "AI-assisted RFQ field suggestions",
+        "description": "Returns AI-generated suggestions for incomplete RFQ fields. Read-only: does NOT mutate the rfqs table. Buyer must confirm suggestions before applying via existing PATCH route. humanConfirmationRequired is always true.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "RFQ ID"
+          },
+          {
+            "name": "x-idempotency-key",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional 24-hour idempotency key to deduplicate requests"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI suggestions returned (humanConfirmationRequired always true)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "suggestions",
+                    "humanConfirmationRequired",
+                    "auditLogId",
+                    "hadInferenceError",
+                    "fieldSourceMeta"
+                  ],
+                  "properties": {
+                    "suggestions": {
+                      "description": "Suggested RFQ field values; null if AI could not suggest",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": ["reasoning"],
+                          "properties": {
+                            "requirementTitle": {
+                              "type": "string",
+                              "maxLength": 200,
+                              "nullable": true
+                            },
+                            "quantityUnit": {
+                              "type": "string",
+                              "maxLength": 50,
+                              "nullable": true
+                            },
+                            "urgency": {
+                              "type": "string",
+                              "enum": ["STANDARD", "URGENT", "FLEXIBLE"],
+                              "nullable": true
+                            },
+                            "sampleRequired": {
+                              "type": "boolean",
+                              "nullable": true
+                            },
+                            "deliveryCountry": {
+                              "type": "string",
+                              "minLength": 3,
+                              "maxLength": 3,
+                              "nullable": true
+                            },
+                            "stageRequirementAttributes": {
+                              "type": "object",
+                              "nullable": true
+                            },
+                            "reasoning": { "type": "string", "maxLength": 1000 }
+                          }
+                        },
+                        { "type": "null" }
+                      ]
+                    },
+                    "humanConfirmationRequired": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "reasoningLogId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "auditLogId": { "type": "string", "format": "uuid" },
+                    "hadInferenceError": { "type": "boolean" },
+                    "fieldSourceMeta": {
+                      "type": "object",
+                      "required": ["method", "rfqId"],
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "enum": ["ai-rfq-assist"]
+                        },
+                        "rfqId": { "type": "string", "format": "uuid" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "RFQ or catalog item not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "AI response could not be parsed as structured suggestions, or RFQ status not eligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "suggestionsParseError": { "type": "boolean" },
+                    "humanConfirmationRequired": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "auditLogId": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "AI budget or rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/cart": {
       "post": {
         "summary": "Create or get active cart",

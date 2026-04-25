@@ -38,6 +38,7 @@ import {
 import {
   buildAiInsightsReasoningAudit,
   buildAiNegotiationReasoningAudit,
+  buildAiRfqAssistReasoningAudit,
 } from '../../utils/audit.js';
 import { runRagRetrieval } from './ragContextBuilder.js';
 import {
@@ -180,7 +181,7 @@ async function generateContent(
 // ---------------------------------------------------------------------------
 
 /** Supported task types for runAiInference */
-export type AiTaskType = 'insights' | 'negotiation-advice';
+export type AiTaskType = 'insights' | 'negotiation-advice' | 'rfq-assist';
 
 /**
  * Input for runAiInference.
@@ -202,6 +203,9 @@ export type AiTaskType = 'insights' | 'negotiation-advice';
  *
  * Task-specific (negotiation-advice):
  *   productName, targetPrice, quantity
+ *
+ * Task-specific (rfq-assist):
+ *   rfqId, catalogItemId, catalogItemStage
  */
 export interface AiInferenceInput {
   orgId: string;
@@ -225,6 +229,11 @@ export interface AiInferenceInput {
   productName?: string;
   targetPrice?: number;
   quantity?: number;
+
+  // rfq-assist-specific
+  rfqId?: string;
+  catalogItemId?: string;
+  catalogItemStage?: string | null;
 }
 
 /**
@@ -510,7 +519,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           inferenceLatencyMs,
           hadInferenceError,
         };
-      } else {
+      } else if (taskType === 'negotiation-advice') {
         // -----------------------------------------------------------------
         // NEGOTIATION-ADVICE orchestration path (PW5-AI-NEGOTIATION-RAG)
         // -----------------------------------------------------------------
@@ -622,6 +631,104 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           inferenceLatencyMs,
           hadInferenceError,
           riskFlags,
+        };
+      } else {
+        // -----------------------------------------------------------------
+        // RFQ-ASSIST orchestration path (TECS-AI-RFQ-ASSISTANT-MVP-001)
+        // -----------------------------------------------------------------
+
+        // 4. RAG retrieval + prompt augmentation
+        const metricsHandle = startTimer();
+        markRetrievalStart(metricsHandle);
+        const ragResult = await runRagRetrieval(tx, orgId, prompt);
+        recordRetrievalLatency(
+          metricsHandle,
+          ragResult.meta?.chunksInjected ?? 0,
+          ragResult.meta?.topScore ?? null,
+        );
+
+        const finalPromptRfq = ragResult.contextBlock
+          ? `${ragResult.contextBlock}\n\n${prompt}`
+          : prompt;
+
+        // PW5-AI-PII-GUARD: pre-send PII inspection / redaction
+        const piiPreSendRfq = redactPii(finalPromptRfq);
+        const promptForModelRfq = piiPreSendRfq.hasMatches ? piiPreSendRfq.redacted : finalPromptRfq;
+        if (piiPreSendRfq.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_redacted',
+            { orgId, taskType, model, fieldCount: piiPreSendRfq.matchCount },
+            { orgId }
+          );
+        }
+
+        // 5. Generate content (extended timeout for structured JSON output)
+        markInferenceStart(metricsHandle);
+        const aiCallStartRfq = Date.now();
+        const aiResultRfq = await generateContent(promptForModelRfq, systemInstruction, 10000);
+        const inferenceLatencyMs = Date.now() - aiCallStartRfq;
+        recordInferenceLatency(metricsHandle);
+        recordTotalLatency(metricsHandle);
+
+        const { text: rawTextRfq, tokensUsed, hadInferenceError: rawHadInferenceErrorRfq } = aiResultRfq;
+
+        // PW5-AI-PII-GUARD: post-receive PII inspection
+        const piiPostReceiveRfq = scanForPii(rawTextRfq);
+        let text = rawTextRfq;
+        let hadInferenceError = rawHadInferenceErrorRfq;
+        if (piiPostReceiveRfq.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_leak_detected',
+            { orgId, taskType, model, leakType: piiPostReceiveRfq.categories.join(',') },
+            { orgId }
+          );
+          text = '{"requirementTitle":null,"quantityUnit":null,"urgency":null,"sampleRequired":null,"deliveryCountry":null,"stageRequirementAttributes":null,"reasoning":"AI response blocked: output contained sensitive content."}';
+          hadInferenceError = true;
+        }
+
+        // 6. Calculate actual cost
+        const actualCost = estimateCostUSD(tokensUsed, model);
+
+        // 7. Update usage meter
+        await upsertUsage(tx, orgId, monthKey, tokensUsed, actualCost);
+
+        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
+        const reasoningHash = createHash('sha256')
+          .update(promptForModelRfq + text)
+          .digest('hex');
+        const reasoningLog = await tx.reasoningLog.create({
+          data: {
+            tenantId: orgId,
+            requestId: reasoningRequestId,
+            reasoningHash,
+            model,
+            promptSummary: promptForModelRfq.slice(0, 500),
+            responseSummary: text,
+            tokensUsed,
+          },
+        });
+        const auditData = buildAiRfqAssistReasoningAudit({
+          tenantId: orgId,
+          userId: userId ?? null,
+          model,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+          requestId: reasoningRequestId,
+          rfqId: input.rfqId,
+          catalogItemId: input.catalogItemId,
+          reasoningLogId: reasoningLog.id,
+        });
+        const auditLog = await tx.auditLog.create({ data: auditData });
+
+        return {
+          text,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+          auditLogId: auditLog.id,
+          inferenceLatencyMs,
+          hadInferenceError,
         };
       }
     });

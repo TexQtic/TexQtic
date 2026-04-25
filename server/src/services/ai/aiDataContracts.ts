@@ -180,6 +180,7 @@ export const AI_CONTEXT_PACK_TYPES = [
   'WorkflowAssistantContext',
   'MarketIntelligenceContext',
   'TrustScoreContext',
+  'RFQAssistantContext',
 ] as const;
 
 export type AiContextPackType = (typeof AI_CONTEXT_PACK_TYPES)[number];
