@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-25 (TECS-AI-FOUNDATION-DATA-CONTRACTS-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-26 (TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -158,9 +158,13 @@
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
-- TECS-AI-FOUNDATION-DATA-CONTRACTS-001 is DESIGN_COMPLETE (2026-04-25).
+- TECS-AI-FOUNDATION-DATA-CONTRACTS-001 is IMPLEMENTATION_COMPLETE (2026-04-26).
   Design artifact: docs/TECS-AI-FOUNDATION-DATA-CONTRACTS-001-DESIGN-v1.md.
-  Scope: Constitutional AI data contracts and decision boundaries — design only, no implementation.
+  Implementation commit: f671995.
+  Scope: Constitutional AI data contracts and guardrails — design + full test implementation.
+  Test files (4): ai-data-contracts.test.ts, ai-context-packs.test.ts,
+    ai-explainability-contracts.test.ts, ai-forbidden-data.test.ts.
+  Tests: 163/163 PASS. TypeScript PASS.
   Sections: A (AI data access matrix), B (forbidden data), C (action boundary), D (explainability
     contract), E (storage contract), F (read models / context packs), G (supplier-buyer matching
     foundation), H (RFQ intelligence foundation), I (profile completeness foundation),
@@ -181,7 +185,7 @@
     - Budget enforcement, rate limit (60/min/tenant), idempotency (24h) confirmed.
     - OP_G028_VECTOR_ENABLED feature flag gates all RAG retrieval.
   Future units identified (Q.1–Q.8): each requires explicit Paresh authorization before opening.
-  No implementation changes. No schema changes. No API additions. No frontend changes.
+  No schema changes. No API additions. No frontend changes.
 - TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 is VERIFIED_COMPLETE (2026-04-25).
   Status: VERIFIED_COMPLETE. Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Design artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md.
@@ -235,6 +239,26 @@
   `setAppState('PUBLIC_B2C_BROWSE')` state transition. Closure basis: production verification
   `VERIFIED_PRODUCTION_PASS` at `https://app.texqtic.com/`. In-scope production wording fix applied
   in `d78fa79`. Runtime, schema, and data unchanged throughout.
+- TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 is DESIGN_COMPLETE (2026-04-26).
+  Design artifact: docs/TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001-DESIGN-v1.md.
+  Scope: Structured RFQ requirement layer — design only, no implementation authorized.
+  Sections: A (current baseline — 2 fields), B (field evaluation matrix), C (stage-aware JSONB
+    requirement attributes — 14 stages), D (schema architecture options — Option C Hybrid RECOMMENDED),
+    E (AI-readable requirement context contract — StructuredRFQRequirementContext), F (buyer UX
+    progressive disclosure), G (supplier UX / response impact), H (API design — backward-compat),
+    I (migration / compat), J (audit / field source governance), K (testing plan), L (production
+    verification plan), M (non-goals — 12 explicit exclusions), N (7 implementation slices),
+    O (governance compliance), P (risks).
+  Architecture recommendation: Option C Hybrid — 9 typed columns + stage_requirement_attributes JSONB;
+    mirrors TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 precedent.
+  Key decisions:
+    - buyer_message and quantity RETAINED unchanged at DB and API level.
+    - All new columns nullable; full backward compatibility.
+    - price, publicationPosture, delivery_location, target_delivery_date excluded from AI paths.
+    - humanConfirmationRequired: true preserved (requirement_confirmed_at timestamp).
+    - AI_SUGGESTED FieldSource reserved; not used until TECS-AI-RFQ-ASSISTANT-MVP-001 authorized.
+    - 7 implementation slices defined; none authorized; each requires Paresh sign-off.
+  No implementation changes. No schema changes. No API additions. No frontend changes.
 - D-016 posture: **ACTIVE** — zero active product-delivery units; decision control required per D-016.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
