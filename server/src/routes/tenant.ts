@@ -2782,6 +2782,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return tx.rfq.findMany({
           where: {
             orgId: dbContext.orgId,
+            catalogItem: { name: { not: '' } }, // guard: skip orphaned RFQs whose catalog_items row was deleted
             ...(status ? { status } : {}),
             ...(searchTerm
               ? {
@@ -2863,6 +2864,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return tx.rfq.findMany({
         where: {
           supplierOrgId: dbContext.orgId,
+          catalogItem: { name: { not: '' } }, // guard: skip orphaned RFQs whose catalog_items row was deleted
           ...(status ? { status } : {}),
           ...(searchTerm
             ? {
@@ -2931,6 +2933,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         where: {
           id: paramsResult.data.id,
           supplierOrgId: dbContext.orgId,
+          catalogItem: { name: { not: '' } }, // guard: orphaned RFQ → null → existing 404 path
         },
         select: {
           id: true,
