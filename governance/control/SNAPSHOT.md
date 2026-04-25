@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-25 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE)
+**Updated:** 2026-04-25 (TECS-AI-FOUNDATION-DATA-CONTRACTS-001 — DESIGN_COMPLETE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-25
-snapshot_unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001
+snapshot_unit: TECS-AI-FOUNDATION-DATA-CONTRACTS-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -45,17 +45,16 @@ preserved_aligned_anchor_posture:
 current_product_active_delivery_count: 0
 current_product_active_delivery_unit: NONE
 current_product_active_delivery_status: ZERO_OPEN
-runtime_verification_status: VERIFIED_COMPLETE
+runtime_verification_status: DESIGN_COMPLETE — design only; no runtime verification applicable
 current_product_active_delivery_note: |
-  VERIFIED_COMPLETE (2026-04-25). Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
-  Design commit: 96763db. Backend commit: ad3568d. Frontend commit: 3fe5a8a. Truth-sync: 4fd9806.
-  Stage taxonomy implemented: 14 values. Stage attributes operational. Buyer stage filtering operational.
-  AI-ready structured contracts implemented as structured data/vector-text foundation only.
-  No AI matching, RFQ AI, document intelligence, price disclosure, PDP, relationship access,
-  or cross-supplier search opened.
+  DESIGN_COMPLETE (2026-04-25).
+  Artifact: docs/TECS-AI-FOUNDATION-DATA-CONTRACTS-001-DESIGN-v1.md.
+  Constitutional AI data contracts and decision boundaries. No implementation.
+  8 future AI implementation units defined in Section Q. None authorized. Awaiting Paresh selection.
 boundary_design_unit: TECS-B2B-BUYER-MARKETPLACE-BOUNDARY-DESIGN-001
 boundary_design_status: DESIGN_COMPLETE
-runtime_verification_status: VERIFIED_COMPLETE — TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES (2026-04-25); 30/32 M-STAGE PASS; 2/32 LIMITED (multi-tenant chip constraint)
+ai_design_unit: TECS-AI-FOUNDATION-DATA-CONTRACTS-001
+ai_design_status: DESIGN_COMPLETE (2026-04-25)
 phase_3_plus_candidates: |
   1. Supplier selection UX polish (per-item publicationPosture filtering) — requires owner authorization
   2. Catalog search / item detail / price disclosure — Phase 3+, requires owner authorization
@@ -63,23 +62,24 @@ phase_3_plus_candidates: |
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
+latest_design_complete: |
+  TECS-AI-FOUNDATION-DATA-CONTRACTS-001 — DESIGN_COMPLETE (2026-04-25).
+  Artifact: docs/TECS-AI-FOUNDATION-DATA-CONTRACTS-001-DESIGN-v1.md.
+  Constitutional AI layer — sections A–Q. No implementation. No schema changes.
+  Key confirmed from repo truth: G-028 vector infra complete, 768-dim LOCKED, price/PII excluded.
 latest_verified_product_close: |
   TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE (2026-04-25).
   Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Commits: 96763db (design) + ad3568d (backend) + 3fe5a8a (frontend) + 4fd9806 (truth-sync).
   30/32 M-STAGE checks PASS. 2/32 LIMITED (multi-tenant chip constraint, code-confirmed).
-  Stage taxonomy implemented. Stage attributes operational. Buyer stage filtering operational.
-  AI-ready structured contracts implemented.
 prior_latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 — VERIFIED_COMPLETE (2026-04-24).
   Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Commits: fa1dcc9 (design) + 1d63513 (impl) + 77457a6 (truth-sync) + ec91ad2 (hotfix).
 current_open_unit: NONE
 current_open_unit_note: |
-  ZERO_OPEN (2026-04-25). Last closed unit: TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001.
-  Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
-  Commits: 96763db + ad3568d + 3fe5a8a + 4fd9806.
-  Next unit not yet opened. Awaiting Paresh next unit selection.
+  ZERO_OPEN (2026-04-25). Last unit: TECS-AI-FOUNDATION-DATA-CONTRACTS-001 DESIGN_COMPLETE.
+  No implementation unit is open. Awaiting Paresh next unit selection.
 ```
 
 ## Current Posture

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-25 (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 — VERIFIED_COMPLETE)
+**Last Updated:** 2026-04-25 (TECS-AI-FOUNDATION-DATA-CONTRACTS-001 — DESIGN_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -158,6 +158,30 @@
 - Prior governance slices `B2C_PUBLIC_FINAL_READINESS_REASSESSMENT_SLICE` (commit `3ad5417`) and
   `B2C_WL_CO_SLICE3_COMPATIBILITY_REASSESSMENT_SLICE` (commit `1f01a84`) are closed as pre-opening gates.
 - `PUBLIC_B2B_DISCOVERY_IMPLEMENTATION_SLICE` closed `VERIFIED_COMPLETE` (commit `04dc375`, 2026-04-22).
+- TECS-AI-FOUNDATION-DATA-CONTRACTS-001 is DESIGN_COMPLETE (2026-04-25).
+  Design artifact: docs/TECS-AI-FOUNDATION-DATA-CONTRACTS-001-DESIGN-v1.md.
+  Scope: Constitutional AI data contracts and decision boundaries — design only, no implementation.
+  Sections: A (AI data access matrix), B (forbidden data), C (action boundary), D (explainability
+    contract), E (storage contract), F (read models / context packs), G (supplier-buyer matching
+    foundation), H (RFQ intelligence foundation), I (profile completeness foundation),
+    J (document intelligence foundation), K (trade workflow assistant foundation),
+    L (market intelligence foundation — operator-only), M (trust score foundation),
+    N (tenant / RLS / security contract), O (audit / observability contract),
+    P (AI provider / model abstraction), Q (future implementation roadmap — 8 units).
+  Key findings from repo truth inspection:
+    - G-028 A1–A7 vector infrastructure: VERIFIED COMPLETE (DocumentEmbedding, querySimilar,
+      ingestSourceText, ragContextBuilder, vectorWorker, AI event schemas, budget metering).
+    - Embedding model text-embedding-004, dim 768 LOCKED (ADR-028 §5.1).
+    - Inference model gemini-1.5-flash confirmed. GEMINI_API_KEY required.
+    - price + publicationPosture explicitly excluded from all AI paths (constitutional).
+    - D-020-C aiTriggered pattern established on TradeLifecycleLog, EscrowLifecycleLog,
+      CertificationLifecycleLog, PendingApproval.
+    - catalogItemAttributeCompleteness() live, stage-aware, [0,1], transient (not stored).
+    - PII guard (piiGuard.ts): pre-send redaction + post-receive scan confirmed.
+    - Budget enforcement, rate limit (60/min/tenant), idempotency (24h) confirmed.
+    - OP_G028_VECTOR_ENABLED feature flag gates all RAG retrieval.
+  Future units identified (Q.1–Q.8): each requires explicit Paresh authorization before opening.
+  No implementation changes. No schema changes. No API additions. No frontend changes.
 - TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001 is VERIFIED_COMPLETE (2026-04-25).
   Status: VERIFIED_COMPLETE. Runtime verdict: RUNTIME_VERIFIED_WITH_NON_BLOCKING_NOTES.
   Design artifact: docs/TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001-DESIGN-v1.md.
