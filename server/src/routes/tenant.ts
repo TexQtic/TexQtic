@@ -3254,7 +3254,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     try {
       const result = await withDbContext(prisma, dbContext, async (tx) => {
         // 1. Load RFQ — must include buyerMessage for context assembly
-        const rfq = await tx.rFQ.findFirst({
+        const rfq = await tx.rfq.findFirst({
           where: { id: rfqId },
           select: {
             id: true,
