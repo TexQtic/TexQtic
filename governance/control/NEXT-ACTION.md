@@ -16,7 +16,7 @@ active_delivery_unit: NONE
 last_closed_unit: TECS-AI-FOUNDATION-DATA-CONTRACTS-001
 last_closed_unit_status: DESIGN_COMPLETE
 last_closed_unit_runtime_verdict: DESIGN_ONLY — no runtime changes
-last_closed_unit_commits: TBD (design commit pending)
+last_closed_unit_commits: e94bc13 (design)
 last_closed_unit_closure_basis: >-
   DESIGN_COMPLETE (2026-04-25).
   Artifact: docs/TECS-AI-FOUNDATION-DATA-CONTRACTS-001-DESIGN-v1.md.
