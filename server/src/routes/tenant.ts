@@ -3366,7 +3366,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendNotFound(reply, 'Catalog item not found');
       }
       if ('invalidStatus' in result) {
-        return sendError(reply, 422, 'AI assist is only available for OPEN or RESPONDED RFQs');
+        return sendError(reply, 'INVALID_STATUS', 'AI assist is only available for OPEN or RESPONDED RFQs', 422);
       }
 
       // 6. Run AI inference (outside the DB tx — inferenceService manages its own tx)
@@ -3381,7 +3381,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
 
       if (!serviceResult.ok) {
-        return sendError(reply, 422, 'AI response could not be parsed as structured suggestions', {
+        return sendError(reply, 'PARSE_ERROR', 'AI response could not be parsed as structured suggestions', 422, {
           suggestionsParseError: true,
           humanConfirmationRequired: true,
           auditLogId: serviceResult.auditLogId,
@@ -3398,7 +3398,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
     } catch (err) {
       if (err instanceof BudgetExceededError || err instanceof AiRateLimitExceededError) {
-        return sendError(reply, 429, 'AI inference rate limit or budget exceeded');
+        return sendError(reply, 'RATE_LIMIT_EXCEEDED', 'AI inference rate limit or budget exceeded', 429);
       }
       throw err;
     }
