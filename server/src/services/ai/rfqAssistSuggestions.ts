@@ -82,23 +82,126 @@ export type RfqAssistSuggestionsParseResult =
   | RfqAssistSuggestionsParseError;
 
 /**
+ * Internal helper: returns true if `text` contains at least one balanced top-level
+ * {...} object. Used to detect a second JSON object following the first.
+ */
+function containsBalancedObject(text: string): boolean {
+  const start = text.indexOf('{');
+  if (start === -1) return false;
+  let depth = 0;
+  let inString = false;
+  let escapeNext = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escapeNext) { escapeNext = false; continue; }
+    if (ch === '\\' && inString) { escapeNext = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (!inString) {
+      if (ch === '{') depth++;
+      else if (ch === '}') { depth--; if (depth === 0) return true; }
+    }
+  }
+  return false;
+}
+
+/**
+ * Normalizes raw AI model output to a clean JSON string candidate.
+ *
+ * Handles common model formatting patterns in order of preference:
+ *   1. Markdown code fence anywhere in the string (```json ... ``` or ``` ... ```)
+ *      — fence need not start the string; leading prose is tolerated.
+ *   2. Array fast-path: if the trimmed input starts with `[`, return it unchanged
+ *      so the caller can parse and detect Array.isArray.
+ *   3. Balanced brace extraction: walks the string to find the first complete
+ *      top-level {...} object, correctly skipping braces inside string values.
+ *      If a second balanced object follows, returns the full string unchanged
+ *      (forces JSON.parse to reject multi-object input).
+ *
+ * Does NOT use eval. Does NOT interpret the extracted content.
+ * Returns a normalized candidate string — caller is responsible for JSON.parse.
+ * If no object is extractable, returns the trimmed original so JSON.parse fails naturally.
+ *
+ * @param raw  Raw text output from the AI model
+ * @returns    Normalized string candidate (may or may not be valid JSON)
+ */
+export function normalizeModelJsonOutput(raw: string): string {
+  const trimmed = raw.trim();
+
+  // Strategy 1: Extract content from a code fence anywhere in the string.
+  // Matches ```json ... ``` or ``` ... ``` (non-greedy, not anchored to start).
+  const fenceMatch = /```(?:json)?\s*([\s\S]+?)\s*```/i.exec(trimmed);
+  if (fenceMatch?.[1]) {
+    const inner = fenceMatch[1].trim();
+    // Only adopt fence content when it looks like a JSON object (not an array or bare prose)
+    if (inner.startsWith('{')) {
+      return inner;
+    }
+  }
+
+  // Array fast-path: return as-is so the caller's Array.isArray check fires.
+  if (trimmed.startsWith('[')) {
+    return trimmed;
+  }
+
+  // Strategy 2: Extract the first balanced top-level {...} from anywhere in the string.
+  // This handles: pure JSON, JSON with trailing prose, JSON with leading prose.
+  // If a second balanced object follows the first, the full string is returned unchanged
+  // so that JSON.parse rejects the multi-object input.
+  const firstBrace = trimmed.indexOf('{');
+  if (firstBrace !== -1) {
+    let depth = 0;
+    let inString = false;
+    let escapeNext = false;
+    let endIndex = -1;
+
+    for (let i = firstBrace; i < trimmed.length; i++) {
+      const ch = trimmed[i];
+      if (escapeNext) { escapeNext = false; continue; }
+      if (ch === '\\' && inString) { escapeNext = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+      if (!inString) {
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0) { endIndex = i; break; }
+        }
+      }
+    }
+
+    if (endIndex !== -1) {
+      const remaining = trimmed.slice(endIndex + 1);
+      // If a second balanced JSON object follows, reject the whole string
+      if (containsBalancedObject(remaining)) {
+        return trimmed;
+      }
+      return trimmed.slice(firstBrace, endIndex + 1);
+    }
+  }
+
+  // No extractable object found — return trimmed string and let JSON.parse fail
+  return trimmed;
+}
+
+/**
  * Parse raw model output string into structured RfqAssistSuggestions.
  *
- * Attempt to extract a JSON object from the raw text (model may wrap in
- * markdown code fences). Returns a discriminated union — never throws.
+ * Normalizes the raw text (strips fences, extracts embedded JSON objects from prose)
+ * then validates the parsed object against the Zod schema.
+ * Returns a discriminated union — never throws.
  *
  * @param raw  Raw text output from the AI model
  * @returns    { ok: true, suggestions } on success, { ok: false, parseError: true } on failure
  */
 export function parseRfqAssistSuggestions(raw: string): RfqAssistSuggestionsParseResult {
   try {
-    // Strip markdown code fences if present (e.g. ```json ... ```)
-    const jsonCandidate = raw
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```\s*$/i, '')
-      .trim();
-
+    const jsonCandidate = normalizeModelJsonOutput(raw);
     const parsed: unknown = JSON.parse(jsonCandidate);
+
+    // Reject arrays — the model must return a JSON object, not an array
+    if (Array.isArray(parsed)) {
+      return { ok: false, parseError: true };
+    }
+
     const result = rfqAssistSuggestionsSchema.safeParse(parsed);
 
     if (!result.success) {
