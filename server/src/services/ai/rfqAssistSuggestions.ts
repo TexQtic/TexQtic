@@ -62,7 +62,9 @@ export const rfqAssistSuggestionsSchema = z.object({
   sampleRequired: z.boolean().nullable().optional(),
   deliveryCountry: z.string().length(3).nullable().optional(),
   stageRequirementAttributes: z.record(z.unknown()).nullable().optional(),
-  reasoning: z.string().max(1000).default(''),
+  // No max constraint — reasoning is an audit-only field; rejecting the entire
+  // parse because the model generates verbose reasoning is incorrect behaviour.
+  reasoning: z.string().default(''),
 });
 
 // ─── Parser ───────────────────────────────────────────────────────────────────
