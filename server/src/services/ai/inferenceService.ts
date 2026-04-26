@@ -234,6 +234,14 @@ export interface AiInferenceInput {
   rfqId?: string;
   catalogItemId?: string;
   catalogItemStage?: string | null;
+  /**
+   * Pre-computed RAG context block for rfq-assist task type.
+   * When provided, runRagRetrieval is NOT called inside the budget/audit transaction —
+   * this prevents 25P02 tx abort from pgvector raw SQL failures poisoning
+   * the budget/usage/audit writes (HOTFIX-RAG-TX-001).
+   * undefined = not provided; null = RAG attempted but yielded no context.
+   */
+  precomputedRagContextBlock?: string | null;
 }
 
 /**
@@ -637,18 +645,16 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
         // RFQ-ASSIST orchestration path (TECS-AI-RFQ-ASSISTANT-MVP-001)
         // -----------------------------------------------------------------
 
-        // 4. RAG retrieval + prompt augmentation
+        // 4. RAG context injection — use pre-computed block from rfqAssistService.ts
+        //    (run outside this transaction to prevent 25P02 tx abort from pgvector
+        //    raw SQL failures poisoning budget/usage/audit writes — HOTFIX-RAG-TX-001)
         const metricsHandle = startTimer();
         markRetrievalStart(metricsHandle);
-        const ragResult = await runRagRetrieval(tx, orgId, prompt);
-        recordRetrievalLatency(
-          metricsHandle,
-          ragResult.meta?.chunksInjected ?? 0,
-          ragResult.meta?.topScore ?? null,
-        );
+        const precomputedContextBlock = input.precomputedRagContextBlock ?? null;
+        recordRetrievalLatency(metricsHandle, 0, null);
 
-        const finalPromptRfq = ragResult.contextBlock
-          ? `${ragResult.contextBlock}\n\n${prompt}`
+        const finalPromptRfq = precomputedContextBlock
+          ? `${precomputedContextBlock}\n\n${prompt}`
           : prompt;
 
         // PW5-AI-PII-GUARD: pre-send PII inspection / redaction

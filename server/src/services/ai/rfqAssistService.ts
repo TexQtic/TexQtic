@@ -19,11 +19,12 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
-import type { DatabaseContext } from '../../lib/database-context.js';
+import { withDbContext, type DatabaseContext } from '../../lib/database-context.js';
 import {
   runAiInference,
   type AiInferenceResult,
 } from './inferenceService.js';
+import { runRagRetrieval, type RagTx } from './ragContextBuilder.js';
 import type { RFQAssistantContext } from './aiContextPacks.js';
 import {
   parseRfqAssistSuggestions,
@@ -137,6 +138,22 @@ export async function runRfqAssistInference(
 
   const { prompt, systemInstruction } = buildRfqAssistPrompt(context);
 
+  // Pre-compute RAG context in an isolated transaction BEFORE the inference transaction.
+  // runRagRetrieval() may execute raw pgvector SQL via $queryRaw. If that SQL fails,
+  // Postgres aborts the transaction (25P02 error). By isolating RAG here, a failure
+  // cannot poison the budget/usage/audit writes inside runAiInference (HOTFIX-RAG-TX-001).
+  let ragContextBlock: string | null = null;
+  try {
+    const ragResult = await withDbContext(prisma, dbContext, async tx =>
+      runRagRetrieval(tx as RagTx, context.buyerOrgId, prompt)
+    );
+    ragContextBlock = ragResult.contextBlock;
+  } catch (ragErr) {
+    // Best-effort: RAG failure must never block inference
+    console.warn('[rfq-assist][rag_precompute_skipped]', String(ragErr));
+    ragContextBlock = null;
+  }
+
   let inferenceResult: AiInferenceResult;
   inferenceResult = await runAiInference({
     orgId: context.buyerOrgId,
@@ -154,6 +171,7 @@ export async function runRfqAssistInference(
     rfqId: context.rfqId,
     catalogItemId: context.catalogItemId,
     catalogItemStage: context.catalogItemStage,
+    precomputedRagContextBlock: ragContextBlock,
   });
 
   const parseResult = parseRfqAssistSuggestions(inferenceResult.text);
