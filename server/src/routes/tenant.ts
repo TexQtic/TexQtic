@@ -3301,7 +3301,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             construction: true,
             description: true,
             productCategory: true,
-            certifications: { select: { type: true, expiresAt: true } },
+            certifications: true,
           },
         });
 
