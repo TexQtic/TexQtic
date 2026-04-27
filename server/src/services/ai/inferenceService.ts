@@ -411,6 +411,42 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
 
   const reasoningRequestId = buildReasoningRequestId(requestId, normalizedIdempotencyKey);
 
+  // Pre-compute AI call for rfq-assist OUTSIDE the transaction (HOTFIX-MODEL-TX-001)
+  // Prevents P2028 tx timeout: gemini-2.5-flash latency can exceed the 5 s Prisma
+  // interactive transaction default, causing the entire orchestration to abort.
+  // Pattern mirrors HOTFIX-RAG-TX-001 (RAG retrieval was moved out for the same reason).
+  // Budget check + DB writes remain inside the transaction; only the AI call moves out.
+  let rfqAiPrecomputed: {
+    promptForModel: string;
+    result: { text: string; tokensUsed: number; hadInferenceError: boolean };
+    inferenceLatencyMs: number;
+  } | null = null;
+
+  if (taskType === 'rfq-assist') {
+    const precomputedContextBlock = input.precomputedRagContextBlock ?? null;
+    const finalPromptRfq = precomputedContextBlock
+      ? `${precomputedContextBlock}\n\n${prompt}`
+      : prompt;
+
+    const piiPreSendRfq = redactPii(finalPromptRfq);
+    const promptForModelRfq = piiPreSendRfq.hasMatches ? piiPreSendRfq.redacted : finalPromptRfq;
+    if (piiPreSendRfq.hasMatches) {
+      void emitAiEventBestEffort(
+        'ai.inference.pii_redacted',
+        { orgId, taskType, model, fieldCount: piiPreSendRfq.matchCount },
+        { orgId }
+      );
+    }
+
+    const aiCallStart = Date.now();
+    const aiResult = await generateContent(promptForModelRfq, systemInstruction, 10000);
+    rfqAiPrecomputed = {
+      promptForModel: promptForModelRfq,
+      result: aiResult,
+      inferenceLatencyMs: Date.now() - aiCallStart,
+    };
+  }
+
   let txResult: AiInferenceResult;
 
   try {
@@ -645,36 +681,11 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
         // RFQ-ASSIST orchestration path (TECS-AI-RFQ-ASSISTANT-MVP-001)
         // -----------------------------------------------------------------
 
-        // 4. RAG context injection — use pre-computed block from rfqAssistService.ts
-        //    (run outside this transaction to prevent 25P02 tx abort from pgvector
-        //    raw SQL failures poisoning budget/usage/audit writes — HOTFIX-RAG-TX-001)
-        const metricsHandle = startTimer();
-        markRetrievalStart(metricsHandle);
-        const precomputedContextBlock = input.precomputedRagContextBlock ?? null;
-        recordRetrievalLatency(metricsHandle, 0, null);
-
-        const finalPromptRfq = precomputedContextBlock
-          ? `${precomputedContextBlock}\n\n${prompt}`
-          : prompt;
-
-        // PW5-AI-PII-GUARD: pre-send PII inspection / redaction
-        const piiPreSendRfq = redactPii(finalPromptRfq);
-        const promptForModelRfq = piiPreSendRfq.hasMatches ? piiPreSendRfq.redacted : finalPromptRfq;
-        if (piiPreSendRfq.hasMatches) {
-          void emitAiEventBestEffort(
-            'ai.inference.pii_redacted',
-            { orgId, taskType, model, fieldCount: piiPreSendRfq.matchCount },
-            { orgId }
-          );
-        }
-
-        // 5. Generate content (extended timeout for structured JSON output)
-        markInferenceStart(metricsHandle);
-        const aiCallStartRfq = Date.now();
-        const aiResultRfq = await generateContent(promptForModelRfq, systemInstruction, 10000);
-        const inferenceLatencyMs = Date.now() - aiCallStartRfq;
-        recordInferenceLatency(metricsHandle);
-        recordTotalLatency(metricsHandle);
+        // 4-5. AI inference pre-computed outside transaction (HOTFIX-MODEL-TX-001)
+        //      Prevents P2028 tx timeout: gemini-2.5-flash latency > 5 s Prisma default.
+        //      Prompt assembly + PII pre-send scan + AI call executed before withDbContext().
+        //      Only DB writes (usage meter, reasoning log, audit log) run inside the tx.
+        const { promptForModel: promptForModelRfq, result: aiResultRfq, inferenceLatencyMs } = rfqAiPrecomputed!;
 
         const { text: rawTextRfq, tokensUsed, hadInferenceError: rawHadInferenceErrorRfq } = aiResultRfq;
 
