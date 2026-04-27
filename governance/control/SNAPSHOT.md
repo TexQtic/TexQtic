@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE; 237/237 tests PASS; K-5 c9cbf8c)
+**Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — DESIGN_ACTIVE; design artifact created)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,9 +11,15 @@
 
 ```yaml
 snapshot_date: 2026-04-27
-snapshot_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+snapshot_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
+current_open_design_unit: TECS-B2B-BUYER-CATALOG-PDP-001
+current_open_design_unit_status: DESIGN_ACTIVE
+current_open_design_unit_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
+current_open_design_unit_note: >-
+  Design-only. No implementation authorized. Slices P-1 through P-5 each require explicit
+  Paresh sign-off. Browsing → RFQ decision surface. Price/relationship/DPP deferred.
 latest_verified_product_close_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-27
@@ -51,15 +57,18 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: none
-current_product_active_delivery_status: none
-current_product_active_delivery_slice: none
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-PDP-001
+current_product_active_delivery_status: DESIGN_ACTIVE
+current_product_active_delivery_slice: none — design-only; no implementation slice authorized
 runtime_verification_status: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  No active delivery unit. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27).
-  237/237 tests PASS. K-1 de5cf10, K-2 cef8afb, K-3 23fb727, K-4 c96d153, K-5 c9cbf8c.
-  Awaiting Paresh explicit authorization for next unit selection.
+  TECS-B2B-BUYER-CATALOG-PDP-001 DESIGN_ACTIVE (2026-04-27).
+  Design plan artifact created: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md.
+  Mode: DESIGN_ONLY. No implementation authorized.
+  Objective: B2B Buyer Catalog Product Detail Page — browsing → RFQ intent conversion.
+  Slices P-1 through P-5 unauthorized. Awaiting Paresh slice authorization.
+  Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
 latest_verified_product_close: |
   TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
   Verification: 237/237 tests PASS.
@@ -90,12 +99,14 @@ prior_latest_verified_product_close: |
   Structured RFQ requirement foundation complete. AI RFQ assistant not implemented.
   Supplier matching not implemented. Price disclosure not implemented.
   Order/checkout/escrow not implemented.
-current_open_unit: none
+current_open_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 current_open_unit_note: |
-  No active delivery unit. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27).
-  237/237 PASS. K-1 de5cf10, K-2 cef8afb, K-3 23fb727, K-4 c96d153, K-5 c9cbf8c.
-  Awaiting Paresh explicit authorization for next unit selection.
-  Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27, 30/30 runtime PASS).
+  TECS-B2B-BUYER-CATALOG-PDP-001 DESIGN_ACTIVE (2026-04-27).
+  Design plan artifact created: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md.
+  Mode: DESIGN_ONLY. No implementation authorized.
+  Objective: Buyer-facing catalog item detail page design for browsing → RFQ intent conversion.
+  Implementation slices P-1 through P-5 each require explicit Paresh authorization.
+  Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27, 237/237 PASS).
 ai_document_intelligence_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 ai_document_intelligence_status: VERIFIED_COMPLETE (2026-04-27)
 ai_document_intelligence_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
@@ -123,10 +134,12 @@ ai_assist_boundary_preservation: |
 phase_3_plus_candidates: |
   1. TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27); closed
   2. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27); closed
-  3. TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — candidate only, requires Paresh authorization
-  4. Supplier selection UX polish (per-item publicationPosture filtering) — requires authorization
-  5. Catalog search / item detail / price disclosure — Phase 3+, requires authorization
-  6. Buyer-supplier allowlist / relationship-scoped visibility — future product cycle
+  3. TECS-B2B-BUYER-CATALOG-PDP-001 — DESIGN_ACTIVE (2026-04-27); design artifact open
+  4. TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — candidate only, requires Paresh authorization
+  5. Supplier selection UX polish (per-item publicationPosture filtering) — requires authorization
+  6. Catalog item detail implementation — Phase 3+, requires Paresh slice authorization
+  7. Price disclosure / buyer-supplier allowlist — Phase 6, requires authorization
+  8. Relationship-scoped visibility — future product cycle
 layer_0_next_action_pointer: governance/control/NEXT-ACTION.md
 white_label_co_posture: REVIEW_UNKNOWN_hold_preserved
 layer_0_identity_root: governance/control/
