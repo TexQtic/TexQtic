@@ -611,3 +611,64 @@ export interface EligibleSuppliersResponse {
 export async function getEligibleSuppliers(): Promise<EligibleSuppliersResponse> {
   return tenantGet<EligibleSuppliersResponse>('/api/tenant/b2b/eligible-suppliers');
 }
+
+// ==================== AI SUPPLIER PROFILE COMPLETENESS (TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001) ====================
+
+export interface SupplierProfileCompletenessCategoryScores {
+  profileIdentity: number;
+  businessCapability: number;
+  catalogCoverage: number;
+  catalogAttributeQuality: number;
+  stageTaxonomy: number;
+  certificationsDocuments: number;
+  rfqResponsiveness: number;
+  serviceCapabilityClarity: number;
+  aiReadiness: number;
+  buyerDiscoverability: number;
+}
+
+export interface SupplierProfileCompletenessMissingField {
+  category: string;
+  field: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  note?: string;
+}
+
+export interface SupplierProfileCompletenessImprovementAction {
+  action: string;
+  category: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface SupplierProfileCompletenessTrustWarning {
+  warning: string;
+  severity: 'CRITICAL' | 'WARNING' | 'INFO';
+  affectedCategory?: string;
+}
+
+export interface SupplierProfileCompletenessReport {
+  overallCompleteness: number;
+  categoryScores: SupplierProfileCompletenessCategoryScores;
+  missingFields: SupplierProfileCompletenessMissingField[];
+  improvementActions: SupplierProfileCompletenessImprovementAction[];
+  trustSignalWarnings: SupplierProfileCompletenessTrustWarning[];
+  reasoningSummary: string;
+  humanReviewRequired: true;
+}
+
+export interface SupplierProfileCompletenessResponse {
+  report: SupplierProfileCompletenessReport;
+  humanReviewRequired: true;
+  reasoningLogId: string;
+  auditLogId: string;
+  hadInferenceError: boolean;
+}
+
+/**
+ * Request an AI-driven completeness analysis for the authenticated supplier's profile.
+ * humanReviewRequired is always true — hardcoded in both the service and UI component.
+ * Score is supplier-internal only and must never appear in buyer-facing surfaces.
+ */
+export async function analyseSupplierProfileCompleteness(): Promise<SupplierProfileCompletenessResponse> {
+  return tenantPost<SupplierProfileCompletenessResponse>('/api/tenant/supplier-profile/ai-completeness', {});
+}

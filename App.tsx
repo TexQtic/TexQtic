@@ -105,7 +105,10 @@ import {
   requestRfqAssist,
   type RfqAssistSuggestions,
   type RfqAssistResponse,
+  analyseSupplierProfileCompleteness,
+  type SupplierProfileCompletenessResponse,
 } from './services/catalogService';
+import { SupplierProfileCompletenessCard } from './components/Tenant/SupplierProfileCompletenessCard';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { Cart } from './components/Cart/Cart';
 import { AggregatorDiscoveryWorkspace } from './components/Tenant/AggregatorDiscoveryWorkspace';
@@ -4437,6 +4440,9 @@ const App: React.FC = () => {
             </div>
 
             <B2BTenantTaxonomyPanel tenant={currentTenant} />
+
+            {/* TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001: Supplier-internal only */}
+            <SupplierProfileCompletenessCard />
 
             {showAddItemForm && (
               <form onSubmit={handleCreateItem} className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
