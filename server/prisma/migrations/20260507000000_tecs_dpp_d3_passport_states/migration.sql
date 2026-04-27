@@ -1,4 +1,3 @@
-BEGIN;
 -- ─────────────────────────────────────────────────────────────────────────────
 -- TECS-DPP-PASSPORT-IDENTITY-001 D-3 — dpp_passport_states table
 --
@@ -140,4 +139,3 @@ IF NOT EXISTS (
 ) THEN RAISE EXCEPTION 'D3 VERIFIER FAIL: dpp_passport_states_select policy not found';
 END IF;
 END $d3_verifier$;
-COMMIT;

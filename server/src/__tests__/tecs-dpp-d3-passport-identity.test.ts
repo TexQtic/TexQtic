@@ -53,9 +53,12 @@ describe('D-3 — Static: migration file structure', () => {
     expect(fs.existsSync(MIGRATION_PATH)).toBe(true);
   });
 
-  it('D3-S02 — wrapped in BEGIN/COMMIT transaction', () => {
-    expect(sql).toMatch(/^\s*BEGIN\s*;/im);
-    expect(sql).toMatch(/COMMIT\s*;/im);
+  it('D3-S02 — no standalone BEGIN/COMMIT (Prisma manages transaction)', () => {
+    // Prisma migrate wraps each migration in its own transaction.
+    // A standalone BEGIN; / COMMIT; in the SQL prematurely commits Prisma's
+    // outer transaction, causing P3009 failed-migration records.
+    expect(sql).not.toMatch(/^\s*BEGIN\s*;/im);
+    expect(sql).not.toMatch(/(?<!\$\w*)\bCOMMIT\s*;/m);
   });
 
   it('D3-S03 — preflight DO block present', () => {

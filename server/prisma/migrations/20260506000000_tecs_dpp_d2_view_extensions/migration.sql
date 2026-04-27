@@ -16,8 +16,6 @@
 -- Scope      : DDL + grants only. No new tables. No RLS policy changes.
 --              dpp_snapshot_products_v1 is NOT modified (no D-2 fields required).
 -- ============================================================================
-BEGIN;
--- ============================================================================
 -- S0: PREFLIGHT — assert D-2 source columns exist
 -- ============================================================================
 DO $d2_preflight$
@@ -76,9 +74,9 @@ CREATE OR REPLACE VIEW public.dpp_snapshot_lineage_v1 WITH (security_invoker = t
     parent_node_id,
     depth,
     edge_type,
-    transformation_id,
     org_id,
     created_at,
+    transformation_id,
     visited_path
   ) AS (
     -- Anchor: the root node itself — no inbound edge, so transformation_id is NULL
@@ -87,9 +85,9 @@ CREATE OR REPLACE VIEW public.dpp_snapshot_lineage_v1 WITH (security_invoker = t
       NULL::UUID AS parent_node_id,
       0 AS depth,
       NULL::TEXT AS edge_type,
-      NULL::TEXT AS transformation_id,
       n.org_id,
       n.created_at,
+      NULL::TEXT AS transformation_id,
       ARRAY [n.id] AS visited_path
     FROM public.traceability_nodes n
     UNION ALL
@@ -99,9 +97,9 @@ CREATE OR REPLACE VIEW public.dpp_snapshot_lineage_v1 WITH (security_invoker = t
       e.from_node_id AS parent_node_id,
       l.depth + 1 AS depth,
       e.edge_type,
-      e.transformation_id,
       l.org_id,
       e.created_at,
+      e.transformation_id,
       l.visited_path || e.to_node_id
     FROM lineage l
       JOIN public.traceability_edges e ON e.from_node_id = l.node_id
@@ -116,9 +114,9 @@ SELECT root_node_id,
   parent_node_id,
   depth,
   edge_type,
-  transformation_id,
   org_id,
-  created_at
+  created_at,
+  transformation_id
 FROM lineage
 ORDER BY root_node_id,
   depth ASC,
@@ -135,10 +133,10 @@ SELECT n.id AS node_id,
   c.id AS certification_id,
   c.certification_type,
   c.lifecycle_state_id,
-  ls.state_key AS lifecycle_state_name,
-  c.issued_at,
   c.expires_at AS expiry_date,
-  n.org_id
+  n.org_id,
+  ls.state_key AS lifecycle_state_name,
+  c.issued_at
 FROM public.traceability_nodes n
   LEFT JOIN public.node_certifications nc ON nc.node_id = n.id
   AND nc.org_id = n.org_id
@@ -208,4 +206,3 @@ v_cert_col_issued,
 v_cert_col_lsname;
 END;
 $d2_verifier$;
-COMMIT;
