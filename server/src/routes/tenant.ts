@@ -5089,8 +5089,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const lineageDepth =
         lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
 
-      // aiExtractedClaimsCount = 0 in D-3 (D-4 will populate from dpp_evidence_claims)
-      const aiExtractedClaimsCount = 0;
+      // D-4: live count of AI evidence claims for this node scoped to tenant
+      const aiExtractedClaimsCount = await withDbContext(prisma, dbContext, async tx => {
+        const rows = await tx.$queryRaw<Array<{ cnt: bigint }>>`
+          SELECT COUNT(*)::bigint AS cnt
+          FROM dpp_evidence_claims
+          WHERE node_id = ${nodeId}::uuid
+        `;
+        return Number(rows[0]?.cnt ?? 0);
+      });
 
       // ── 5. Compute passport maturity ──────────────────────────────────────
       const passportMaturity = computeDppMaturity({
@@ -5168,6 +5175,281 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
     },
   );
+
+  // ─── TECS-DPP-AI-EVIDENCE-LINKAGE-001 D-4: DPP Evidence Claims ────────────────
+  // GET  /api/tenant/dpp/:nodeId/evidence-claims
+  // POST /api/tenant/dpp/:nodeId/evidence-claims
+  {
+    /**
+     * Allowed claim types for D-4 (extracted from doc intelligence K-3/K-5 flow).
+     * Forbidden types: pricing, risk_score, ranking, escrow, payment, credit.
+     */
+    const ALLOWED_CLAIM_TYPES = [
+      'MATERIAL_COMPOSITION',
+      'STANDARD_NAME',
+      'CERTIFICATE_NUMBER',
+      'ISSUER_NAME',
+      'ISSUE_DATE',
+      'EXPIRY_DATE',
+      'TEST_RESULT',
+      'PRODUCT_NAME',
+      'COUNTRY_OR_LAB_LOCATION',
+    ] as const;
+    type DppEvidenceClaimType = (typeof ALLOWED_CLAIM_TYPES)[number];
+
+    interface DppEvidenceClaimRow {
+      id: string;
+      org_id: string;
+      node_id: string;
+      extraction_id: string;
+      claim_type: string;
+      claim_value: unknown;
+      approved_by: string;
+      approved_at: Date;
+      created_at: Date;
+    }
+
+    const nodeIdParamSchema = z.object({ nodeId: z.string().uuid('nodeId must be a valid UUID') });
+
+    const postEvidenceClaimBodySchema = z.object({
+      extractionId: z.string().uuid('extractionId must be a valid UUID'),
+      claimType: z.enum(ALLOWED_CLAIM_TYPES, {
+        errorMap: () => ({ message: `claimType must be one of: ${ALLOWED_CLAIM_TYPES.join(', ')}` }),
+      }),
+      claimValue: z.record(z.unknown()).refine(v => typeof v === 'object' && v !== null, {
+        message: 'claimValue must be a non-null object',
+      }),
+    });
+
+    /**
+     * GET /api/tenant/dpp/:nodeId/evidence-claims
+     *
+     * Returns all approved AI evidence claims for a DPP node scoped to the
+     * authenticated tenant. RLS enforces org_id isolation.
+     *
+     * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+     * Audit: writes tenant.dpp.evidence_claims.read on every successful read
+     */
+    fastify.get(
+      '/tenant/dpp/:nodeId/evidence-claims',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const paramsResult = nodeIdParamSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        let claims: DppEvidenceClaimRow[];
+        try {
+          claims = await withDbContext(prisma, dbContext, async tx => {
+            return tx.$queryRaw<DppEvidenceClaimRow[]>`
+              SELECT id, org_id, node_id, extraction_id, claim_type, claim_value,
+                     approved_by, approved_at, created_at
+              FROM dpp_evidence_claims
+              WHERE node_id = ${nodeId}::uuid
+              ORDER BY created_at ASC
+            `;
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D4] evidence-claims GET failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to retrieve evidence claims', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: request.userId ?? null,
+          action: 'tenant.dpp.evidence_claims.read',
+          entity: 'traceability_node',
+          entityId: nodeId,
+          metadataJson: { nodeId, count: claims.length },
+        });
+
+        return sendSuccess(reply, {
+          nodeId,
+          claims: claims.map(row => ({
+            id: row.id,
+            orgId: row.org_id,
+            nodeId: row.node_id,
+            extractionId: row.extraction_id,
+            claimType: row.claim_type as DppEvidenceClaimType,
+            claimValue: row.claim_value,
+            approvedBy: row.approved_by,
+            approvedAt: row.approved_at,
+            createdAt: row.created_at,
+            humanReviewRequired: true as const,
+          })),
+          count: claims.length,
+        });
+      },
+    );
+
+    /**
+     * POST /api/tenant/dpp/:nodeId/evidence-claims
+     *
+     * Creates a new DPP evidence claim linking a human-reviewed AI extraction
+     * field to a DPP passport node.
+     *
+     * Business rules:
+     *   - extraction must belong to same org_id as authenticated tenant
+     *   - extraction status must be 'reviewed' (K-5 approved)
+     *   - nodeId must belong to same org_id
+     *   - claimType must be in the approved allowlist
+     *   - duplicate (org_id, node_id, extraction_id, claimType) is rejected
+     *   - does NOT auto-promote passportMaturity or change passportStatus
+     *   - humanReviewRequired: true structural constant in all responses
+     *
+     * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+     * Audit: writes tenant.dpp.evidence_claims.created
+     */
+    fastify.post(
+      '/tenant/dpp/:nodeId/evidence-claims',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const paramsResult = nodeIdParamSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+        const { nodeId } = paramsResult.data;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        const bodyResult = postEvidenceClaimBodySchema.safeParse(request.body ?? {});
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+        const { extractionId, claimType, claimValue } = bodyResult.data;
+
+        // D-017-A: orgId always from dbContext — never from body
+        const orgId = dbContext.orgId;
+        const userId = request.userId;
+        if (!userId) {
+          return sendError(reply, 'UNAUTHORIZED', 'User context missing', 401);
+        }
+
+        const approvedAt = new Date();
+
+        // ── 1. Verify extraction belongs to same org_id and is 'reviewed' ──
+        let extraction: { id: string; orgId: string; status: string } | null;
+        try {
+          extraction = await withDbContext(prisma, dbContext, async tx => {
+            return (tx as typeof prisma).documentExtractionDraft.findFirst({
+              where: { id: extractionId, orgId },
+              select: { id: true, orgId: true, status: true },
+            });
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D4] extraction lookup failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to verify extraction draft', 500);
+        }
+
+        if (!extraction) {
+          return sendError(reply, 'NOT_FOUND', 'Extraction draft not found or access denied', 404);
+        }
+        if (extraction.status !== 'reviewed') {
+          return sendError(
+            reply,
+            'VALIDATION_ERROR',
+            'Extraction must be in reviewed status before linking as evidence',
+            422,
+          );
+        }
+
+        // ── 2. Verify node belongs to same org_id (via DPP view; RLS enforces) ──
+        let nodeOrgRows: Array<{ org_id: string }>;
+        try {
+          nodeOrgRows = await withDbContext(prisma, dbContext, async tx => {
+            return tx.$queryRaw<Array<{ org_id: string }>>`
+              SELECT org_id FROM dpp_snapshot_products_v1
+              WHERE node_id = ${nodeId}::uuid
+              LIMIT 1
+            `;
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D4] node org_id lookup failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to verify node ownership', 500);
+        }
+
+        if (nodeOrgRows.length === 0) {
+          return sendError(reply, 'NOT_FOUND', 'DPP node not found or access denied', 404);
+        }
+        if (nodeOrgRows[0].org_id !== orgId) {
+          return sendError(reply, 'FORBIDDEN', 'Node does not belong to your organisation', 403);
+        }
+
+        // ── 3. Insert evidence claim ──────────────────────────────────────────
+        let created: DppEvidenceClaimRow;
+        try {
+          created = await withDbContext(prisma, dbContext, async tx => {
+            const rows = await tx.$queryRaw<DppEvidenceClaimRow[]>`
+              INSERT INTO dpp_evidence_claims
+                (org_id, node_id, extraction_id, claim_type, claim_value, approved_by, approved_at)
+              VALUES
+                (${orgId}::uuid, ${nodeId}::uuid, ${extractionId}::uuid,
+                 ${claimType}, ${claimValue}::jsonb, ${userId}::uuid, ${approvedAt})
+              RETURNING id, org_id, node_id, extraction_id, claim_type, claim_value,
+                        approved_by, approved_at, created_at
+            `;
+            return rows[0];
+          });
+        } catch (err: unknown) {
+          // PostgreSQL unique constraint violation: 23505
+          if (
+            typeof err === 'object' &&
+            err !== null &&
+            'code' in err &&
+            (err as { code: string }).code === '23505'
+          ) {
+            return sendError(
+              reply,
+              'CONFLICT',
+              'An evidence claim with this extraction and claim type already exists for this node',
+              409,
+            );
+          }
+          fastify.log.error({ err }, '[D4] evidence claim insert failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Failed to create evidence claim', 500);
+        }
+
+        await writeAuditLog(prisma, {
+          tenantId: request.tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: userId,
+          action: 'tenant.dpp.evidence_claims.created',
+          entity: 'dpp_evidence_claim',
+          entityId: created.id,
+          metadataJson: {
+            nodeId,
+            extractionId,
+            claimType,
+            approvedBy: userId,
+          },
+        });
+
+        return sendSuccess(
+          reply,
+          {
+            id: created.id,
+            orgId: created.org_id,
+            nodeId: created.node_id,
+            extractionId: created.extraction_id,
+            claimType: created.claim_type as DppEvidenceClaimType,
+            claimValue: created.claim_value,
+            approvedBy: created.approved_by,
+            approvedAt: created.approved_at,
+            createdAt: created.created_at,
+            humanReviewRequired: true as const,
+          },
+          201,
+        );
+      },
+    );
+  }
 
   // ─── G-022: Tenant escalation routes ────────────────────────────────────────
   // GET  /api/tenant/escalations

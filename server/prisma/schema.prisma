@@ -26,6 +26,7 @@ model Tenant {
   carts                    Cart[]
   catalogItems             CatalogItem[]
   documentExtractionDrafts DocumentExtractionDraft[]
+  dppEvidenceClaims        DppEvidenceClaim[]
   impersonationSessions    ImpersonationSession[]
   invites                  Invite[]
   marketplaceCartSummaries MarketplaceCartSummary[]
@@ -86,6 +87,7 @@ model User {
   refreshTokens            RefreshToken[]
   rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_created_by_user")
   rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
+  approvedEvidenceClaims   DppEvidenceClaim[]
 
   @@map("users")
 }
@@ -1264,13 +1266,38 @@ model DocumentExtractionDraft {
   reviewedByUserId    String?   @map("reviewed_by_user_id") @db.Uuid
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  tenant              Tenant    @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  tenant              Tenant             @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  dppEvidenceClaims   DppEvidenceClaim[]
 
   @@index([orgId], map: "idx_document_extraction_drafts_org_id")
   @@index([documentId], map: "idx_document_extraction_drafts_document_id")
   @@index([status], map: "idx_document_extraction_drafts_status")
   @@index([createdAt], map: "idx_document_extraction_drafts_created_at")
   @@map("document_extraction_drafts")
+}
+
+/// DPP AI Evidence Claim — links a human-reviewed extraction draft to a DPP passport node.
+/// Only claims from status='reviewed' extractions should be linked (enforced at service layer).
+/// humanReviewRequired is always true — structural constant.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model DppEvidenceClaim {
+  id           String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId        String                  @map("org_id") @db.Uuid
+  nodeId       String                  @map("node_id") @db.Uuid
+  extractionId String                  @map("extraction_id") @db.Uuid
+  claimType    String                  @map("claim_type")
+  claimValue   Json                    @map("claim_value")
+  approvedBy   String                  @map("approved_by") @db.Uuid
+  approvedAt   DateTime                @map("approved_at") @db.Timestamptz(6)
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  tenant       Tenant                  @relation(fields: [orgId], references: [id], onUpdate: NoAction)
+  extraction   DocumentExtractionDraft @relation(fields: [extractionId], references: [id], onDelete: Cascade)
+  approver     User                    @relation(fields: [approvedBy], references: [id])
+
+  @@unique([orgId, nodeId, extractionId, claimType], map: "dpp_evidence_claims_unique")
+  @@index([orgId, nodeId], map: "idx_dpp_evidence_claims_org_node")
+  @@index([extractionId], map: "idx_dpp_evidence_claims_extraction")
+  @@map("dpp_evidence_claims")
 }
 
 enum TenantType {

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-07 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; active slice D-3 Passport Identity / Status Model)
+**Last Updated:** 2026-05-08 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; D-3 COMPLETE 87bdcfe; D-4 COMPLETE — active slice D-4 AI Evidence Linkage DONE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -406,8 +406,10 @@
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
   No blockers.
-- TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-1.
-  Status: IMPLEMENTATION_ACTIVE — D-1 open (node_certifications Join Table DDL). Design commit: 8ba6e94.
+- TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-4 COMPLETE, pending commit.
+  Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (pending commit).
+  D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.
+  D-4 key decisions: claim_type CHECK (9 allowed types); humanReviewRequired structural constant; org_id from dbContext (D-017-A); approved_by FK ON DELETE SET NULL (audit trail preserved); no public/buyer endpoints.
   Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
   Prerequisite audit: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId, 3 DPP snapshot views, App.tsx routing,
     Shells.tsx wiring, DPP-SNAPSHOT-VIEWS-DISCOVERY.md, DPP-SNAPSHOT-VIEWS-DESIGN.md — all read and confirmed.

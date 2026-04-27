@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-07 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; active slice D-3 Passport Identity / Status Model)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-08 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; D-3 COMPLETE 87bdcfe; D-4 COMPLETE pending commit)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,18 +11,17 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: IMPLEMENTATION_ACTIVE — TECS-DPP-PASSPORT-FOUNDATION-001 D-2 DPP View Extensions (2026-04-28)
+product_delivery_priority: IMPLEMENTATION_ACTIVE — TECS-DPP-PASSPORT-FOUNDATION-001 D-4 AI Evidence Linkage COMPLETE (2026-05-08)
 active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 active_delivery_unit_status: IMPLEMENTATION_ACTIVE
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-2.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE. D-4 COMPLETE (pending commit).
   D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
-  D-2 authorized: extend DPP snapshot views with transformationId, lifecycleStateName, issuedAt.
-  Migration 20260506000000_tecs_dpp_d2_view_extensions applied.
-  tenant.ts DppLineageRow + DppCertRow interfaces updated; SELECT queries extended; response mapping updated.
-  Active scope D-2: view extensions + TypeScript row interface update only.
-  No DPP UI (DPPPassport.tsx), passport status, maturity computation, public QR/JSON-LD, PDP, or AI changes authorized.
-  Implementation slices D-3 through D-6: UNAUTHORIZED until Paresh opens each.
+  D-2 COMPLETE: commit 8a14242 (DPP view extensions: transformationId, lifecycleStateName, issuedAt).
+  D-3 COMPLETE: commit 87bdcfe (dpp_passport_states table + RLS, passport identity/status route, maturity computation, DPPPassport.tsx UI).
+  D-4 COMPLETE: dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes,
+    live aiExtractedClaimsCount in passport, humanReviewRequired structural constant, 88/88 tests PASS.
+  D-5 and D-6: UNAUTHORIZED until Paresh explicitly opens each slice.
 last_closed_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: 239 catalog tests PASS; TypeScript clean

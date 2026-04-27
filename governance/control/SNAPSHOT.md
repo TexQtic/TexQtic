@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-07 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; active slice D-3 Passport Identity / Status Model)
+**Updated:** 2026-05-08 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; D-3 COMPLETE 87bdcfe; D-4 COMPLETE pending commit)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,7 +10,7 @@
 ---
 
 ```yaml
-snapshot_date: 2026-05-07
+snapshot_date: 2026-05-08
 snapshot_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
@@ -18,14 +18,13 @@ current_open_design_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 current_open_design_unit_status: IMPLEMENTATION_ACTIVE
 current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md
 current_open_design_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-05-07). Active slice: D-3.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-05-08). D-4 COMPLETE (pending commit).
   D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
   D-2 COMPLETE: commit 8a14242 (DPP snapshot view extensions — transformationId, lifecycleStateName, issuedAt).
-  D-3: Passport Identity / Status Model — dpp_passport_states DDL + RLS (Option B separate table),
-  computeDppMaturity (TRADE_READY if approvedCertCount>=1 and lineageDepth>=1; LOCAL_TRUST otherwise),
-  GET /api/tenant/dpp/:nodeId/passport route, DPPPassport.tsx additive passport section.
-  passportStatus defaults to DRAFT if no dpp_passport_states row. aiExtractedClaimsCount=0 in D-3.
-  D-4 through D-6 slices UNAUTHORIZED until Paresh opens each.
+  D-3 COMPLETE: commit 87bdcfe (dpp_passport_states DDL + RLS, computeDppMaturity, GET /api/tenant/dpp/:nodeId/passport, DPPPassport.tsx additive section).
+  D-4 COMPLETE (pending commit): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes,
+    live aiExtractedClaimsCount in passport, humanReviewRequired structural constant, 88/88 tests PASS.
+  D-5 and D-6: UNAUTHORIZED until Paresh opens each.
 latest_verified_product_close_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-27
