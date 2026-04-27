@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — DESIGN_ACTIVE; design artifact created)
+**Last Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; active slice D-1 node_certifications Join Table DDL)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -406,8 +406,8 @@
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
   No blockers.
-- TECS-DPP-PASSPORT-FOUNDATION-001 is DESIGN_ACTIVE (2026-04-28).
-  Status: DESIGN_ACTIVE — design artifact only; no implementation authorized.
+- TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-1.
+  Status: IMPLEMENTATION_ACTIVE — D-1 open (node_certifications Join Table DDL). Design commit: 8ba6e94.
   Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
   Prerequisite audit: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId, 3 DPP snapshot views, App.tsx routing,
     Shells.tsx wiring, DPP-SNAPSHOT-VIEWS-DISCOVERY.md, DPP-SNAPSHOT-VIEWS-DESIGN.md — all read and confirmed.
@@ -415,13 +415,15 @@
     It is NOT an operating passport workflow. Design unit designs the path from narrow lookup to full passport.
   Existing DPP artifacts (DPPPassport.tsx, route, views) are PRESERVED unchanged.
   Design decisions anchored:
-    D1: node_certifications join table (M:N; resolves G-025-B cert-to-node FK absence) — requires Paresh approval.
+    D1: node_certifications join table (M:N; resolves G-025-B cert-to-node FK absence) — AUTHORIZED (2026-04-28).
     D2: v1 field surface (batch_id, node_type, meta, geo_hash, manufacturer fields, lineage, certifications).
     Maturity model: L1 LOCAL_TRUST → L2 TRADE_READY → L3 COMPLIANCE → L4 GLOBAL_DPP.
     Passport status: DRAFT → INTERNAL → TRADE_READY → PUBLISHED (human review gate at each transition).
     Publication boundary: AI alone never triggers DPP publication; humanReviewRequired is structural constant.
     No public QR route, no JSON-LD, no buyer-facing DPP, no PDP linkage in this unit.
-  Implementation slices: D-1 through D-6 — all UNAUTHORIZED until Paresh explicitly opens each.
+  Active slice D-1: node_certifications DDL (migration 20260316000000_g025_node_certifications) + RLS.
+    Scope: DDL only. No DPP view/UI/API/passport workflow changes authorized.
+  Implementation slices D-2 through D-6: UNAUTHORIZED until Paresh explicitly opens each.
   Predecessor: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). PDP boundary preserved.
   Adjacent: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). Evidence linkage design only.
   No blockers.

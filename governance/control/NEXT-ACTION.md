@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — DESIGN_ACTIVE; design artifact created; no implementation authorized)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 node_certifications Join Table DDL authorized)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,20 +11,18 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: DESIGN_ACTIVE — TECS-DPP-PASSPORT-FOUNDATION-001 design artifact created (2026-04-28); no implementation authorized
+product_delivery_priority: IMPLEMENTATION_ACTIVE — TECS-DPP-PASSPORT-FOUNDATION-001 D-1 node_certifications Join Table DDL (2026-04-28)
 active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
-active_delivery_unit_status: DESIGN_ACTIVE
+active_delivery_unit_status: IMPLEMENTATION_ACTIVE
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
-  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
-  Mode: DESIGN ONLY. No implementation authorized.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-1.
+  Design commit: 8ba6e94. Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
+  D-1 authorized: node_certifications join table DDL + RLS (migration 20260316000000_g025_node_certifications).
   Repo-truth audit performed: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId,
   3 DPP snapshot views, App.tsx routing, Shells.tsx wiring — all confirmed real and runtime-backed.
   Existing DPP artifacts PRESERVED unchanged.
-  Implementation slices D-1 through D-6 are ALL UNAUTHORIZED.
-  Each slice requires explicit Paresh authorization before any implementation begins.
-  Node_certifications DDL (D-1) requires Paresh approval of design anchor (DPP-SNAPSHOT-VIEWS-DESIGN.md).
-  Awaiting Paresh explicit authorization for any implementation slice.
+  Active scope D-1: DDL + RLS only. No DPP view/UI/API/passport workflow changes authorized.
+  Implementation slices D-2 through D-6: UNAUTHORIZED until Paresh opens each.
 last_closed_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: 239 catalog tests PASS; TypeScript clean
@@ -74,12 +72,14 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
-  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md — created.
-  Mode: DESIGN ONLY. No implementation authorized until Paresh opens an implementation slice.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-1.
+  Implement D-1 only — node_certifications join table DDL and RLS. No DPP view/UI/API/passport workflow changes authorized.
+  Migration: 20260316000000_g025_node_certifications (exists; applied March 2026 as part of G-025 sequence).
+  Prisma schema synchronized: node_certifications model present (db pull + generate already run).
+  Verification test created: server/src/__tests__/g025-d1-node-certifications.integration.test.ts.
   Prior closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). Governance closed.
   Verification (P-5): 239 catalog tests PASS; TypeScript tsc --noEmit CLEAN.
-  No active implementation unit. Awaiting Paresh authorization for D-1 or any implementation slice.
+  Implementation slices D-2 through D-6 UNAUTHORIZED until Paresh opens each.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.

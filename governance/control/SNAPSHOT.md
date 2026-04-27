@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — DESIGN_ACTIVE; design artifact created; no implementation authorized)
+**Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; active slice D-1 node_certifications Join Table DDL)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -15,19 +15,17 @@ snapshot_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 current_open_design_unit: TECS-DPP-PASSPORT-FOUNDATION-001
-current_open_design_unit_status: DESIGN_ACTIVE
+current_open_design_unit_status: IMPLEMENTATION_ACTIVE
 current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md
 current_open_design_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
-  Mode: DESIGN ONLY. No implementation authorized.
-  Objective: Audit existing DPP Passport (fully implemented; runtime-backed; supplier-internal
-  manual node-ID lookup tool) and design foundation for passport identity, snapshot/read model,
-  status lifecycle, maturity model (L1–L4), evidence linkage, and future public/export surfaces.
-  Repo-truth audit complete: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId, 3 SQL views,
-  App.tsx routing, Shells.tsx wiring — all confirmed. Existing artifacts PRESERVED unchanged.
-  Design decisions: D1 node_certifications join table; D2 v1 field surface; L1–L4 maturity ladder;
-  DRAFT→INTERNAL→TRADE_READY→PUBLISHED status lifecycle; humanReviewRequired structural constant.
-  Implementation slices D-1 through D-6: ALL UNAUTHORIZED until Paresh opens each.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-1.
+  Mode: IMPLEMENTATION — D-1 only. Scope: node_certifications join table DDL only.
+  Design commit: 8ba6e94. D-1 authorized by Paresh (2026-04-28).
+  Migration 20260316000000_g025_node_certifications exists; applied March 2026 (G-025 sequence).
+  Prisma schema synchronized: node_certifications model present.
+  Existing DPP artifacts (DPPPassport.tsx, route, views) PRESERVED unchanged.
+  No DPP view/UI/API/passport workflow changes in D-1 scope.
+  D-2 through D-6 slices UNAUTHORIZED until Paresh opens each.
   Preceding closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27) 239/239 PASS.
 latest_verified_product_close_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
@@ -77,14 +75,17 @@ preserved_aligned_anchor_posture:
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
-current_product_active_delivery_status: DESIGN_ACTIVE
-current_product_active_delivery_slice: none — design only; no implementation slices open
+current_product_active_delivery_status: IMPLEMENTATION_ACTIVE
+current_product_active_delivery_slice: D-1 — node_certifications Join Table DDL
 runtime_verification_status: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27) 239/239 PASS; Design d0bcf27; P-4 54fecbc; prior: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28). Design only. No implementation slices open.
-  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
-  Repo truth audit complete. Existing DPP artifacts PRESERVED unchanged.
-  D-1 through D-6 slices UNAUTHORIZED. Awaiting Paresh authorization for any implementation.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-1.
+  Current open unit: TECS-DPP-PASSPORT-FOUNDATION-001. Active slice: D-1. Mode: IMPLEMENTATION.
+  Scope: node_certifications join table DDL only.
+  Design commit: 8ba6e94. D-1 authorized by Paresh (2026-04-28).
+  Migration: 20260316000000_g025_node_certifications (exists; applied March 2026 as G-025 sequence).
+  Schema synchronized. Verification test: server/src/__tests__/g025-d1-node-certifications.integration.test.ts.
+  Implementation slices D-2 through D-6 UNAUTHORIZED. Awaiting Paresh authorization for each.
   Prior closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27).
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
   P-1 COMPLETE (d8fec78): GET /api/tenant/catalog/items/:itemId backend route. BuyerCatalogPdpView contract.
