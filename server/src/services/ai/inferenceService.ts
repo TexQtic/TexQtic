@@ -181,7 +181,7 @@ async function generateContent(
 // ---------------------------------------------------------------------------
 
 /** Supported task types for runAiInference */
-export type AiTaskType = 'insights' | 'negotiation-advice' | 'rfq-assist';
+export type AiTaskType = 'insights' | 'negotiation-advice' | 'rfq-assist' | 'supplier-profile-completeness';
 
 /**
  * Input for runAiInference.
@@ -317,7 +317,7 @@ async function findIdempotentReplay(
         auditLogs: {
           where: {
             action: {
-              in: ['AI_INSIGHTS', 'AI_NEGOTIATION_ADVICE'],
+              in: ['AI_INSIGHTS', 'AI_NEGOTIATION_ADVICE', 'AI_RFQ_ASSIST', 'AI_SUPPLIER_PROFILE_COMPLETENESS'],
             },
           },
           orderBy: {
@@ -422,6 +422,15 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
     inferenceLatencyMs: number;
   } | null = null;
 
+  // supplier-profile-completeness: AI call pre-computed outside tx (HOTFIX-MODEL-TX-001).
+  // Same pattern as rfq-assist: generateContent() runs here (outside withDbContext),
+  // budget check + audit/reasoning writes remain inside withDbContext.
+  let supplierProfileAiPrecomputed: {
+    promptForModel: string;
+    result: { text: string; tokensUsed: number; hadInferenceError: boolean };
+    inferenceLatencyMs: number;
+  } | null = null;
+
   if (taskType === 'rfq-assist') {
     const precomputedContextBlock = input.precomputedRagContextBlock ?? null;
     const finalPromptRfq = precomputedContextBlock
@@ -442,6 +451,27 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
     const aiResult = await generateContent(promptForModelRfq, systemInstruction, 10000);
     rfqAiPrecomputed = {
       promptForModel: promptForModelRfq,
+      result: aiResult,
+      inferenceLatencyMs: Date.now() - aiCallStart,
+    };
+  }
+
+  if (taskType === 'supplier-profile-completeness') {
+    // Apply PII redaction to prompt before sending to model (design §J.3)
+    const piiPreSendSpc = redactPii(prompt);
+    const promptForModelSpc = piiPreSendSpc.hasMatches ? piiPreSendSpc.redacted : prompt;
+    if (piiPreSendSpc.hasMatches) {
+      void emitAiEventBestEffort(
+        'ai.inference.pii_redacted',
+        { orgId, taskType, model, fieldCount: piiPreSendSpc.matchCount },
+        { orgId }
+      );
+    }
+
+    const aiCallStart = Date.now();
+    const aiResult = await generateContent(promptForModelSpc, systemInstruction, 12000);
+    supplierProfileAiPrecomputed = {
+      promptForModel: promptForModelSpc,
       result: aiResult,
       inferenceLatencyMs: Date.now() - aiCallStart,
     };
@@ -676,7 +706,7 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           hadInferenceError,
           riskFlags,
         };
-      } else {
+      } else if (taskType === 'rfq-assist') {
         // -----------------------------------------------------------------
         // RFQ-ASSIST orchestration path (TECS-AI-RFQ-ASSISTANT-MVP-001)
         // -----------------------------------------------------------------
@@ -737,6 +767,95 @@ export async function runAiInference(input: AiInferenceInput): Promise<AiInferen
           reasoningLogId: reasoningLog.id,
         });
         const auditLog = await tx.auditLog.create({ data: auditData });
+
+        return {
+          text,
+          tokensUsed,
+          costEstimateUSD: actualCost,
+          monthKey,
+          auditLogId: auditLog.id,
+          inferenceLatencyMs,
+          hadInferenceError,
+        };
+      } else {
+        // -----------------------------------------------------------------
+        // SUPPLIER-PROFILE-COMPLETENESS orchestration path
+        // (TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001)
+        // -----------------------------------------------------------------
+
+        // 4-5. AI inference pre-computed outside transaction (HOTFIX-MODEL-TX-001).
+        //      The service pre-computes the AI call and passes it via
+        //      input.precomputedSupplierProfileAiResult before calling runAiInference().
+        if (!supplierProfileAiPrecomputed) {
+          throw new Error('[supplier-profile-completeness] precomputedSupplierProfileAiResult is required');
+        }
+        const {
+          promptForModel: promptForModelSpc,
+          result: aiResultSpc,
+          inferenceLatencyMs,
+        } = supplierProfileAiPrecomputed;
+
+        const { text: rawTextSpc, tokensUsed, hadInferenceError: rawHadSpc } = aiResultSpc;
+
+        // PW5-AI-PII-GUARD: post-receive PII inspection
+        const piiPostSpc = scanForPii(rawTextSpc);
+        let text = rawTextSpc;
+        let hadInferenceError = rawHadSpc;
+        if (piiPostSpc.hasMatches) {
+          void emitAiEventBestEffort(
+            'ai.inference.pii_leak_detected',
+            { orgId, taskType, model, leakType: piiPostSpc.categories.join(',') },
+            { orgId }
+          );
+          text = '{"reasoningSummary":"AI response blocked: output contained sensitive content.","improvementActions":[],"trustSignalWarnings":[]}';
+          hadInferenceError = true;
+        }
+
+        // 6. Calculate actual cost
+        const actualCost = estimateCostUSD(tokensUsed, model);
+
+        // 7. Update usage meter
+        await upsertUsage(tx, orgId, monthKey, tokensUsed, actualCost);
+
+        // 8. Create reasoning_log (G-023) + linked audit log (same tx, atomic)
+        const reasoningHash = createHash('sha256')
+          .update(promptForModelSpc + text)
+          .digest('hex');
+        const reasoningLog = await tx.reasoningLog.create({
+          data: {
+            tenantId: orgId,
+            requestId: reasoningRequestId,
+            reasoningHash,
+            model,
+            promptSummary: promptForModelSpc.slice(0, 500),
+            responseSummary: text.slice(0, 500),
+            tokensUsed,
+          },
+        });
+        // Inline audit data for AI_SUPPLIER_PROFILE_COMPLETENESS
+        // (audit.ts builder not required — type allows any string action value)
+        const auditLog = await tx.auditLog.create({
+          data: {
+            realm: 'TENANT',
+            tenantId: orgId,
+            actorType: userId ? 'USER' : 'SYSTEM',
+            actorId: userId,
+            action: 'AI_SUPPLIER_PROFILE_COMPLETENESS',
+            entity: 'ai',
+            entityId: null,
+            metadataJson: {
+              model,
+              tokensUsed,
+              costEstimateUSD: actualCost,
+              monthKey,
+              requestId: reasoningRequestId,
+              orgId,
+              reasoningLogId: reasoningLog.id,
+              timestamp: new Date().toISOString(),
+            },
+            reasoningLogId: reasoningLog.id,
+          },
+        });
 
         return {
           text,

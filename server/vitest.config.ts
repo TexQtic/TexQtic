@@ -27,6 +27,7 @@ export default defineConfig({
     include: [
       'src/__tests__/**/*.{test,spec}.?(c|m)[jt]s?(x)',
       'src/services/ai/__tests__/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+      'src/routes/**/*.{test,spec}.?(c|m)[jt]s?(x)',
       'src/tests/aggregator-discovery-read.integration.test.ts',
       'tests/rfq-detail-route.shared.test.ts',
       '../tests/**/*.{test,spec}.?(c|m)[jt]s?(x)',

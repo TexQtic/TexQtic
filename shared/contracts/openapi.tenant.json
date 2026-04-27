@@ -1928,6 +1928,233 @@
         }
       }
     },
+    "/api/tenant/supplier-profile/ai-completeness": {
+      "post": {
+        "operationId": "analyseSupplierProfileCompleteness",
+        "summary": "AI-backed supplier profile completeness analysis",
+        "description": "Builds context, runs deterministic rubric, then calls AI for enriched completeness report. Read-only: does NOT mutate any table. AI output is transient. humanReviewRequired is always true.",
+        "security": [{ "tenantJwt": [] }],
+        "parameters": [
+          {
+            "name": "x-idempotency-key",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Optional 24-hour idempotency key to deduplicate requests"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Completeness analysis generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "report",
+                    "humanReviewRequired",
+                    "reasoningLogId",
+                    "auditLogId",
+                    "hadInferenceError"
+                  ],
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "required": [
+                        "overallCompleteness",
+                        "categoryScores",
+                        "missingFields",
+                        "improvementActions",
+                        "trustSignalWarnings",
+                        "reasoningSummary",
+                        "humanReviewRequired"
+                      ],
+                      "properties": {
+                        "overallCompleteness": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "categoryScores": {
+                          "type": "object",
+                          "required": [
+                            "basicIdentity",
+                            "contactCoverage",
+                            "catalogPresence",
+                            "mediaAssets",
+                            "certifications",
+                            "locationPresence",
+                            "taxCompliance",
+                            "teamPresence",
+                            "capacitySignals",
+                            "engagementReadiness"
+                          ],
+                          "properties": {
+                            "basicIdentity": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "contactCoverage": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "catalogPresence": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "mediaAssets": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "certifications": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "locationPresence": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "taxCompliance": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "teamPresence": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "capacitySignals": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "engagementReadiness": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            }
+                          }
+                        },
+                        "missingFields": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["category", "field", "priority"],
+                            "properties": {
+                              "category": { "type": "string" },
+                              "field": { "type": "string" },
+                              "priority": {
+                                "type": "string",
+                                "enum": ["HIGH", "MEDIUM", "LOW"]
+                              },
+                              "note": { "type": "string" }
+                            }
+                          }
+                        },
+                        "improvementActions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["action", "category", "priority"],
+                            "properties": {
+                              "action": { "type": "string" },
+                              "category": { "type": "string" },
+                              "priority": {
+                                "type": "string",
+                                "enum": ["HIGH", "MEDIUM", "LOW"]
+                              }
+                            }
+                          }
+                        },
+                        "trustSignalWarnings": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["warning", "severity"],
+                            "properties": {
+                              "warning": { "type": "string" },
+                              "severity": {
+                                "type": "string",
+                                "enum": ["HIGH", "MEDIUM", "LOW"]
+                              },
+                              "affectedCategory": { "type": "string" }
+                            }
+                          }
+                        },
+                        "reasoningSummary": { "type": "string" },
+                        "humanReviewRequired": {
+                          "type": "boolean",
+                          "enum": [true]
+                        }
+                      }
+                    },
+                    "humanReviewRequired": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "reasoningLogId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "auditLogId": { "type": "string", "format": "uuid" },
+                    "hadInferenceError": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "AI response could not be parsed as completeness report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "reportParseError",
+                    "humanReviewRequired",
+                    "auditLogId"
+                  ],
+                  "properties": {
+                    "error": { "type": "string", "enum": ["PARSE_ERROR"] },
+                    "reportParseError": { "type": "boolean", "enum": [true] },
+                    "humanReviewRequired": {
+                      "type": "boolean",
+                      "enum": [true]
+                    },
+                    "auditLogId": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "AI budget or rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/cart": {
       "post": {
         "summary": "Create or get active cart",

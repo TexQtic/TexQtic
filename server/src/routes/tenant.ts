@@ -43,6 +43,7 @@ import {
 } from '../services/counterpartyProfileAggregation.service.js';
 import { buildRfqAssistantContext } from '../services/ai/rfqAssistContextBuilder.js';
 import { runRfqAssistInference } from '../services/ai/rfqAssistService.js';
+import { runSupplierProfileCompletenessInference } from '../services/ai/supplierProfileCompletenessService.js';
 import { BudgetExceededError, getMonthKey } from '../lib/aiBudget.js';
 import { AiRateLimitExceededError } from '../services/ai/inferenceService.js';
 
@@ -3403,6 +3404,68 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       throw err;
     }
   });
+
+  /**
+   * POST /api/tenant/supplier-profile/ai-completeness
+   * AI-backed supplier profile completeness analysis (read-only — does NOT mutate any table).
+   * Implements TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 (Slice 3).
+   *
+   * - orgId is derived from dbContext (JWT) — never accepted from the request body.
+   * - Returns a transient SupplierProfileCompletenessReport; report is NOT persisted.
+   * - humanReviewRequired: true is always echoed; cannot be overridden.
+   * - AI call is pre-computed outside the Prisma tx (HOTFIX-MODEL-TX-001).
+   * - On AI parse failure → 422 with reportParseError: true.
+   * - On budget exceeded → 429.
+   */
+  fastify.post(
+    '/tenant/supplier-profile/ai-completeness',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const { userId } = request;
+      const dbContext = request.dbContext as DatabaseContext;
+      const requestId = randomUUID();
+      const monthKey = getMonthKey();
+
+      try {
+        const serviceResult = await runSupplierProfileCompletenessInference({
+          orgId: dbContext.orgId,
+          monthKey,
+          requestId,
+          idempotencyKey: (request.headers['x-idempotency-key'] as string | undefined) ?? undefined,
+          userId: userId ?? null,
+          prisma,
+          dbContext,
+        });
+
+        if (!serviceResult.ok) {
+          return sendError(
+            reply,
+            'PARSE_ERROR',
+            'AI response could not be parsed as a completeness report',
+            422,
+            {
+              reportParseError: true,
+              humanReviewRequired: true,
+              auditLogId: serviceResult.auditLogId,
+            }
+          );
+        }
+
+        return reply.status(200).send({
+          report: serviceResult.report,
+          humanReviewRequired: true,
+          reasoningLogId: serviceResult.reasoningLogId,
+          auditLogId: serviceResult.auditLogId,
+          hadInferenceError: serviceResult.hadInferenceError,
+        });
+      } catch (err) {
+        if (err instanceof BudgetExceededError || err instanceof AiRateLimitExceededError) {
+          return sendError(reply, 'RATE_LIMIT_EXCEEDED', 'AI inference rate limit or budget exceeded', 429);
+        }
+        throw err;
+      }
+    }
+  );
 
   /**
    * POST /api/tenant/rfqs
