@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; active slice D-1 node_certifications Join Table DDL)
+**Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; active slice D-2 DPP View Extensions)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -18,15 +18,14 @@ current_open_design_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 current_open_design_unit_status: IMPLEMENTATION_ACTIVE
 current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md
 current_open_design_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-1.
-  Mode: IMPLEMENTATION — D-1 only. Scope: node_certifications join table DDL only.
-  Design commit: 8ba6e94. D-1 authorized by Paresh (2026-04-28).
-  Migration 20260316000000_g025_node_certifications exists; applied March 2026 (G-025 sequence).
-  Prisma schema synchronized: node_certifications model present.
-  Existing DPP artifacts (DPPPassport.tsx, route, views) PRESERVED unchanged.
-  No DPP view/UI/API/passport workflow changes in D-1 scope.
-  D-2 through D-6 slices UNAUTHORIZED until Paresh opens each.
-  Preceding closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27) 239/239 PASS.
+  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-2.
+  D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
+  D-2: DPP snapshot view extensions — migration 20260506000000_tecs_dpp_d2_view_extensions.
+  dpp_snapshot_lineage_v1 extended: +transformation_id from traceability_edges.
+  dpp_snapshot_certifications_v1 extended: +lifecycle_state_name (lifecycle_states.state_key), +issued_at.
+  tenant.ts DppLineageRow + DppCertRow interfaces updated; SELECT queries extended; response mapping updated.
+  No DPP UI (DPPPassport.tsx), passport status, maturity computation, public QR/JSON-LD, PDP, or AI changes.
+  D-3 through D-6 slices UNAUTHORIZED until Paresh opens each.
 latest_verified_product_close_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-27

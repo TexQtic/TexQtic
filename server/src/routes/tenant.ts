@@ -4803,6 +4803,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     parent_node_id: string | null;
     depth: number;
     edge_type: string | null;
+    transformation_id: string | null;
     org_id: string;
     created_at: Date;
   }
@@ -4812,6 +4813,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     certification_id: string | null;
     certification_type: string | null;
     lifecycle_state_id: string | null;
+    lifecycle_state_name: string | null;
+    issued_at: Date | null;
     expiry_date: Date | null;
     org_id: string;
   }
@@ -4862,7 +4865,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           const lineage = await tx.$queryRaw<DppLineageRow[]>`
             SELECT
               root_node_id, node_id, parent_node_id,
-              depth, edge_type, org_id, created_at
+              depth, edge_type, transformation_id, org_id, created_at
             FROM dpp_snapshot_lineage_v1
             WHERE root_node_id = ${nodeId}::uuid
           `;
@@ -4870,7 +4873,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           const certs = await tx.$queryRaw<DppCertRow[]>`
             SELECT
               node_id, certification_id, certification_type,
-              lifecycle_state_id, expiry_date, org_id
+              lifecycle_state_id, lifecycle_state_name, issued_at, expiry_date, org_id
             FROM dpp_snapshot_certifications_v1
             WHERE node_id = ${nodeId}::uuid
                OR (node_id IS NULL AND org_id = (
@@ -4924,6 +4927,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           parentNodeId: row.parent_node_id,
           depth: row.depth,
           edgeType: row.edge_type,
+          transformationId: row.transformation_id,
           createdAt: row.created_at,
         })),
         certifications: certRows.map(row => ({
@@ -4931,6 +4935,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           certificationId: row.certification_id,
           certificationType: row.certification_type,
           lifecycleStateId: row.lifecycle_state_id,
+          lifecycleStateName: row.lifecycle_state_name,
+          issuedAt: row.issued_at,
           expiryDate: row.expiry_date,
           orgId: row.org_id,
         })),
