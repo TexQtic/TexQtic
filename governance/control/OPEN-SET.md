@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — DESIGN_ACTIVE)
+**Last Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-1 IMPLEMENTATION_ACTIVE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -346,15 +346,15 @@
   No regression: catalog, taxonomy, navigation all intact post-panel insertion.
   No console errors. No blockers. No schema changes. No migrations. No cross-tenant exposure.
   Tests: 87/87 PASS (52 state tests T-SPCS-S01–S09 + 35 UI tests T-SPCS-UI01–UI14).
-- TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is DESIGN_ACTIVE (2026-04-27).
-  Status: DESIGN_ACTIVE. Design artifact only; no implementation authorized.
-  Design artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md.
-  Scope: AI-assisted extraction for certification documents, textile lab test reports,
-    compliance declarations, inspection reports — supplier-internal, draft extraction only.
-  Human review: mandatory before any extracted data is acted upon.
-  No OCR pipeline. No schema changes. No migrations. No API additions.
-  Implementation NOT authorized; each slice requires explicit Paresh sign-off.
-- D-016 posture: **ACTIVE** — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 DESIGN_ACTIVE (2026-04-27); no implementation unit open; design-only authorization; decision control required per D-016.
+- TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is IMPLEMENTATION_ACTIVE (K-1) (2026-04-27).
+  Status: IMPLEMENTATION_ACTIVE.
+  Active slice: K-1 Document Intake and Type Classification.
+  Scope: DocumentType enum, classifyDocumentType utility, POST /api/tenant/documents/:documentId/classify route.
+  No extraction, no schema changes, no lifecycle mutations, no buyer-facing output.
+  Human review boundary preserved: humanReviewRequired: true is a structural constant in all outputs.
+  Governance label present in all classify responses.
+  Tests: 37 service tests (K-C01–K-C10) + 9 route tests (K-R01–K-R08) — all pass.
+- D-016 posture: **ACTIVE** — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-1 IMPLEMENTATION_ACTIVE (2026-04-27); decision control required per D-016.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
   D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.

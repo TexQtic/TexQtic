@@ -13,6 +13,7 @@ import tenantEscrowRoutes from './tenant/escrow.g018.js';
 import tenantSettlementRoutes from './tenant/settlement.js';
 import tenantCertificationRoutes from './tenant/certifications.g019.js';
 import tenantTraceabilityRoutes from './tenant/traceability.g016.js';
+import tenantDocumentRoutes from './tenant/documents.js';
 import {
   sendSuccess,
   sendError,
@@ -4777,6 +4778,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
   // POST  /api/tenant/traceability/edges
   // GET   /api/tenant/traceability/edges
   await fastify.register(tenantTraceabilityRoutes, { prefix: '/tenant/traceability' });
+
+  // ─── TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-1: Document Classification ───────
+  // POST /api/tenant/documents/:documentId/classify
+  await fastify.register(tenantDocumentRoutes, { prefix: '/tenant/documents' });
 
   // ─── G-026 TECS 6D: Domain CRUD (OPS-WLADMIN-DOMAINS-001) ────────────────
   // GET    /api/tenant/domains        — list custom domains for current tenant
