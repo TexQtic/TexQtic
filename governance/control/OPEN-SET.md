@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-28 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-4 RFQ entry trigger handoff delivered)
+**Last Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE after runtime verification)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -368,45 +368,44 @@
     No schema changes. No migrations. No public output.
   Tests: K-1 46 PASS + K-2 service PASS + K-3 route PASS + K-4 80 PASS + K-5 17 PASS = 237/237 PASS.
   No blockers.
-- TECS-B2B-BUYER-CATALOG-PDP-001 is IMPLEMENTATION_ACTIVE (2026-04-27).
-  Status: IMPLEMENTATION_ACTIVE. Active slice: P-3 — PDP Specs / Media / Compliance Rendering.
+- TECS-B2B-BUYER-CATALOG-PDP-001 is VERIFIED_COMPLETE (2026-04-27).
+  Status: VERIFIED_COMPLETE. Closure basis: runtime verification (P-5).
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
   Scope: B2B Buyer Catalog Product Detail Page — buyer-facing item detail view converting
     catalog browsing into RFQ intent. Renders item identity, media gallery, textile specifications,
     compliance/certification summary (APPROVED human-reviewed only), supplier summary,
     availability/MOQ/lead time, price placeholder, and RFQ entry trigger.
-  Position in chain: TECS-B2B-BUYER-CATALOG-BROWSE/SEARCH/FILTER → PDP → RFQ integration.
-  Predecessor units:
-    TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27)
-    TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 VERIFIED_COMPLETE (2026-04-24)
-    TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 VERIFIED_COMPLETE (2026-04-24)
-  P-1 COMPLETE (commit d8fec78): GET /api/tenant/catalog/items/:itemId route added to tenant.ts.
-    BuyerCatalogPdpView contract defined in server/src/types/index.ts.
-    getBuyerCatalogPdpItem() service function added to services/catalogService.ts.
-    Tests: tests/b2b-buyer-catalog-pdp.test.ts (13 focused tests, T1–T13), 25/25 PASS.
-    No schema changes. No frontend changes. No price. No AI draft fields.
-  P-2 COMPLETE (commit d8d6141): CatalogPdpSurface.tsx created in components/Tenant/.
-    App.tsx wired: PHASE_C state + handleOpenCatalogPdp + handleCloseCatalogPdp handlers.
-    resolveBuyerCatalogPhase() pure helper exported via __B2B_BUYER_CATALOG_PDP_TESTING__.
-    PDP phase guard added to buyer_catalog case — PHASE_C renders CatalogPdpSurface.
-    View Details button added to Phase B item cards.
-    Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (9 describe blocks, T1–T9), 43/43 PASS.
-    No schema changes. No price disclosure. No AI draft fields. No DPP. No RFQ prefill.
-  P-3 IMPLEMENTATION_ACTIVE: CatalogPdpSurface.tsx enhanced.
-    Multi-image media gallery with thumbnail strip; displayOrder-sorted rendering.
-    CATALOG_PDP_MEDIA_EMPTY_COPY, CATALOG_PDP_AVAILABILITY_FALLBACK, CATALOG_PDP_COMPLIANCE_EMPTY_COPY.
-    New pure helpers: resolveMediaAltText, resolveMoqDisplay, resolveLeadTimeDisplay,
-      resolveCapacityDisplay, resolveMediaTypeBadge (all exported for test coverage).
-    PdpSupplierSummary: renders MOQ + lead time + capacity from availabilitySummary.
-    PdpComplianceSummary: corrected empty state text ("No certification records available for this item.").
-    PdpAvailabilitySummary: uses resolve helpers ("Available on request" fallback).
-    Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS. Catalog regression 226/226 PASS.
-    No schema changes. No price. No AI draft. No DPP. No RFQ prefill.
-  P-4 and P-5: UNAUTHORIZED — each requires explicit Paresh sign-off.
+  Commit chain:
+    Design d0bcf27 — BuyerCatalogPdpView contract, route design, UI IA, safety boundaries.
+    P-1 d8fec78 — GET /api/tenant/catalog/items/:itemId route. BuyerCatalogPdpView contract.
+      getBuyerCatalogPdpItem() service. Tests: T1–T13, 25/25 PASS.
+    P-2 d8d6141 — CatalogPdpSurface.tsx. App.tsx PHASE_C wired. Tests: T1–T9, 43/43 PASS.
+    P-3 f871bcb — Multi-image media gallery, specs, compliance rendering, availability.
+      Tests: T1–T20, 95/95 PASS.
+    P-4 54fecbc — RfqTriggerPayload, validateRfqTriggerPayload, PHASE_C bridge, 5-field handoff.
+      Tests: T1–T26, 108/108 PASS.
+  Verification (P-5):
+    239/239 catalog tests PASS (8 test files).
+    TypeScript tsc --noEmit CLEAN (exit 0).
+    Backend PDP route verified: GET /api/tenant/catalog/items/:itemId at tenant.ts line 2105.
+    All 12 data-testid attributes confirmed. All 4 render states confirmed.
+  Safety boundaries verified:
+    price_placeholder_only: verified — pricePlaceholder.label/subLabel/note only; no supplier price
+    no_dpp: verified — DPP not imported or used in CatalogPdpSurface
+    no_relationship_access: verified — no buyer-supplier allowlist gate in PDP
+    no_ai_supplier_matching: verified — no AI matching logic in PDP surface
+    no_ai_drafts_or_confidence: verified — route excludes extraction tables; APPROVED certs only
+    no_payment_or_escrow: verified — no payment/checkout/escrow elements
+    no_public_seo_pdp: verified — route behind tenantAuthMiddleware; no unauthenticated PDP
+    no_cert_lifecycle_mutation: verified — PDP route is GET only
+    rfq_auto_submit_absent: verified — dialog opens in form-input mode; no auto-submit
+  Non-blocking note: media URL signing follows existing catalog posture (image_url passed as signedUrl);
+    future TECS-B2B-BUYER-MEDIA-SIGNING-001 candidate.
   Future scope deferred: price disclosure (TECS-B2B-BUYER-PRICE-DISCLOSURE-001),
     RFQ prefill (TECS-B2B-BUYER-RFQ-INTEGRATION-001), relationship access
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
+  No blockers.
 - D-016 posture: **CLOSED** — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27); 237/237 PASS; decision control satisfied.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.

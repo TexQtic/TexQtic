@@ -86,3 +86,51 @@ Governance files updated:
   docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md
   governance/control/GOVERNANCE-CHANGELOG.md (this file — created)
 ```
+
+---
+
+## 2026-04-27 — CLOSED: TECS-B2B-BUYER-CATALOG-PDP-001
+
+```
+Unit:          TECS-B2B-BUYER-CATALOG-PDP-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-27
+Verification:  239 catalog tests PASS (8 test files); TypeScript tsc --noEmit CLEAN
+
+Commits:
+  d0bcf27  Design — TECS-B2B-BUYER-CATALOG-PDP-001 design artifact
+  d8fec78  P-1 — GET /api/tenant/catalog/items/:itemId backend route + BuyerCatalogPdpView contract
+  d8d6141  P-2 — CatalogPdpSurface.tsx + App.tsx PHASE_C wired (page shell + hero + layout)
+  f871bcb  P-3 — Media gallery, specs/compliance/availability rendering, pure helpers
+  54fecbc  P-4 — RfqTriggerPayload + validateRfqTriggerPayload + App.tsx PHASE_C bridge + 108 tests
+
+Safety Boundary Checks:
+  ✅ Price placeholder only — no supplier price in response or UI; pricePlaceholder.label/subLabel/note only
+  ✅ No DPP/passport UI — DPPPassport.tsx not imported in CatalogPdpSurface.tsx
+  ✅ No relationship access logic — no buyer-supplier allowlist gate in PDP
+  ✅ No AI supplier matching — no TECS-AGG-AI-SUPPLIER-MATCHING references in PDP files
+  ✅ No AI drafts or confidence scores — route excludes extraction tables; APPROVED certs only
+  ✅ No payment or escrow — no payment, checkout, escrow, payout elements in PDP surface
+  ✅ No public SEO PDP — route behind tenantAuthMiddleware; no unauthenticated PDP route registered
+  ✅ No certification lifecycle mutation — PDP route is GET only
+  ✅ No RFQ auto-submit — dialog requires buyer input + confirmation step before submit
+  ✅ Backend PDP contract verified — GET /api/tenant/catalog/items/:itemId, 404-not-403, org_id from session
+  ✅ Frontend PDP surface verified — all 12 data-testid attributes present; all 4 render states
+  ✅ Specs/media/compliance rendering verified — null filter, media sorted by displayOrder, APPROVED-only certs
+  ✅ RFQ trigger handoff verified — 5-field payload (itemId, supplierId, itemTitle, category, stage)
+  ✅ supplierId → tenantId bridge: intentional CatalogItem compatibility adapter (semantically correct)
+  ✅ Tenant isolation (org_id) verified — org_id from dbContext; cross-tenant read via texqtic_rfq_read role
+
+Non-blocking note:
+  Media URL signing follows existing catalog posture (signedUrl: item.image_url mirrors pre-existing
+  WL storefront pattern); future TECS-B2B-BUYER-MEDIA-SIGNING-001 candidate.
+
+Blockers: None
+
+Governance files updated:
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```

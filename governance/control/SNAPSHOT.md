@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-28 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-4 RFQ entry trigger handoff delivered)
+**Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE after runtime verification; governance closed)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,14 +10,15 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-28
+snapshot_date: 2026-04-27
 snapshot_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 current_open_design_unit: TECS-B2B-BUYER-CATALOG-PDP-001
-current_open_design_unit_status: IMPLEMENTATION_ACTIVE
+current_open_design_unit_status: VERIFIED_COMPLETE
 current_open_design_unit_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
 current_open_design_unit_note: >-
+  All slices VERIFIED_COMPLETE (2026-04-27).
   P-1 COMPLETE (commit d8fec78). Backend PDP read contract delivered.
   GET /api/tenant/catalog/items/:itemId route. BuyerCatalogPdpView contract.
   getBuyerCatalogPdpItem() service. 25 tests (T1–T13). No schema. No frontend. No price.
@@ -25,19 +26,28 @@ current_open_design_unit_note: >-
   Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T9), 43/43 PASS.
   P-3 COMPLETE (commit f871bcb). Multi-image gallery, new pure helpers, compliance/availability rework.
   Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS.
-  P-4 DELIVERED: RfqTriggerPayload type + validateRfqTriggerPayload + 5-field onRequestQuote.
+  P-4 COMPLETE (commit 54fecbc). RfqTriggerPayload type + validateRfqTriggerPayload + 5-field handoff.
   App.tsx PHASE_C bridge updated — stage passed as catalogStage. 108/108 PASS.
-  P-5: UNAUTHORIZED — requires explicit Paresh sign-off.
-  Browsing → RFQ decision surface. Price/relationship/DPP deferred.
-latest_verified_product_close_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+  P-5 VERIFIED: 239/239 catalog tests PASS (8 files); TypeScript tsc --noEmit CLEAN.
+  Browsing → RFQ decision surface fully operational. Price/relationship/DPP deferred.
+latest_verified_product_close_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-27
-latest_verified_product_close_verification: 237/237 tests PASS
-latest_verified_product_close_safety_boundaries: intact
+latest_verified_product_close_verification: 239 catalog tests PASS; TypeScript clean
+latest_verified_product_close_safety_boundaries: |
+  price_placeholder_only: verified
+  no_dpp: verified
+  no_relationship_access: verified
+  no_ai_supplier_matching: verified
+  no_ai_drafts_or_confidence: verified
+  no_payment_or_escrow: verified
+  no_public_seo_pdp: verified
+  no_cert_lifecycle_mutation: verified
+  rfq_auto_submit_absent: verified
 latest_verified_product_close_tenant_isolation: verified
 latest_verified_product_close_human_review_required: structural constant verified
 latest_verified_product_close_commits: >-
-  K-1 de5cf10, K-2 cef8afb, K-3 23fb727, K-4 c96d153, K-5 c9cbf8c
+  Design d0bcf27, P-1 d8fec78, P-2 d8d6141, P-3 f871bcb, P-4 54fecbc
 control_plane_read_order:
   - governance/control/OPEN-SET.md
   - governance/control/NEXT-ACTION.md
@@ -66,25 +76,38 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-PDP-001
-current_product_active_delivery_status: IMPLEMENTATION_ACTIVE
-current_product_active_delivery_slice: P-3 — PDP Specs / Media / Compliance Rendering
-runtime_verification_status: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: none
+current_product_active_delivery_status: none
+current_product_active_delivery_slice: none
+runtime_verification_status: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27) 239/239 PASS; Design d0bcf27; P-4 54fecbc; prior: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27). P-3 delivered.
+  TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). All slices delivered and verified.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
   P-1 COMPLETE (d8fec78): GET /api/tenant/catalog/items/:itemId backend route. BuyerCatalogPdpView contract.
   P-2 COMPLETE (d8d6141): CatalogPdpSurface.tsx (components/Tenant/). App.tsx PHASE_C.
-  P-3 IMPLEMENTATION_ACTIVE: multi-image media gallery, CATALOG_PDP_MEDIA_EMPTY_COPY,
+  P-3 COMPLETE (f871bcb): multi-image media gallery, CATALOG_PDP_MEDIA_EMPTY_COPY,
   CATALOG_PDP_AVAILABILITY_FALLBACK, CATALOG_PDP_COMPLIANCE_EMPTY_COPY,
   resolveMediaAltText, resolveMoqDisplay, resolveLeadTimeDisplay, resolveCapacityDisplay,
   resolveMediaTypeBadge, PdpSupplierSummary with availability data.
-  Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS. Catalog regression 226/226 PASS.
-  No schema. No price. No AI draft. No DPP. No RFQ prefill.
-  P-4 and P-5 UNAUTHORIZED. Awaiting Paresh slice authorization.
-  Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
+  P-4 COMPLETE (54fecbc): RfqTriggerPayload + validateRfqTriggerPayload + PHASE_C bridge. 108/108 PASS.
+  P-5 VERIFIED: 239/239 catalog tests PASS (8 files); TypeScript tsc --noEmit CLEAN.
+  Safety boundaries verified (9 boundaries). No blockers.
+  No active delivery unit. Awaiting Paresh authorization for next unit.
 latest_verified_product_close: |
+  TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE (2026-04-27).
+  Verification: 239/239 catalog tests PASS (8 test files); TypeScript tsc --noEmit CLEAN.
+  Commit chain: Design d0bcf27 + P-1 d8fec78 + P-2 d8d6141 + P-3 f871bcb + P-4 54fecbc.
+  Scope: B2B Buyer Catalog PDP — item detail view converting catalog browsing into RFQ intent.
+  Renders: item identity, media gallery (displayOrder-sorted), textile specifications (null-filtered),
+    compliance summary (APPROVED certs only), supplier summary, availability/MOQ/lead time,
+    price placeholder, RFQ entry trigger (5-field payload).
+  Safety boundaries: price_placeholder_only, no_dpp, no_relationship_access,
+    no_ai_supplier_matching, no_ai_drafts_or_confidence, no_payment_or_escrow,
+    no_public_seo_pdp, no_cert_lifecycle_mutation, rfq_auto_submit_absent — all verified.
+  Tenant isolation (org_id): verified. Cross-tenant read via texqtic_rfq_read role.
+  No blockers.
+prior_latest_verified_product_close: |
   TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
   Verification: 237/237 tests PASS.
   Commit chain: K-1 de5cf10 + K-2 cef8afb + K-3 23fb727 + K-4 c96d153 + K-5 c9cbf8c.
@@ -94,30 +117,13 @@ latest_verified_product_close: |
     present; no Certification lifecycle mutation; no DPP/buyer-facing; no price/payment/risk;
     tenant isolation (org_id) verified; D-017-A (z.never()) enforced; no schema changes.
   No blockers.
-prior_latest_verified_product_close: |
-  TECS-AI-RFQ-ASSISTANT-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
-  Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
-  Commit chain: 7582c06 (backend MVP) + f342e5f (frontend MVP)
-    + 1866f13 + 6c4cb5f + 4352e21 + a542966 (bugfixes 1-4)
-    + a3c1f5b + cf8a17e (parser hotfixes)
-    + 12ea7a2 (RAG TX isolation)
-    + 042ecd2 (gemini-2.5-flash model update)
-    + a3f5597 (AI call outside Prisma tx — P2028 fix).
-  AI RFQ Assistant MVP production verified. Buyer can request AI suggestions after RFQ submission.
-  AI returns structured suggestions safely. Human confirmation required before any apply.
-  No price, supplier matching, auto-submit, order, checkout, or escrow behavior introduced.
-prior_latest_verified_product_close: |
-  TECS-B2B-RFQ-STRUCTURED-REQUIREMENT-001 — VERIFIED_COMPLETE (2026-04-25).
-  Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
-  Commits: a290caf (design) + dbc3a6b (backend) + 97192c8 (frontend)
-    + 5ad043b (hotfix 001) + ca3d241 (TS fixes) + c8ec0a4 (hotfix 002).
-  Structured RFQ requirement foundation complete. AI RFQ assistant not implemented.
-  Supplier matching not implemented. Price disclosure not implemented.
-  Order/checkout/escrow not implemented.
 current_open_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 current_open_unit_note: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 DESIGN_ACTIVE (2026-04-27).
-  Design plan artifact created: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md.
+  TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27).
+  All slices (P-1 through P-4) delivered; P-5 runtime verification complete.
+  Commit chain: Design d0bcf27; P-1 d8fec78; P-2 d8d6141; P-3 f871bcb; P-4 54fecbc.
+  Verification: 239/239 catalog tests PASS; TypeScript tsc --noEmit CLEAN.
+  Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27, 237/237 PASS).
   Mode: DESIGN_ONLY. No implementation authorized.
   Objective: Buyer-facing catalog item detail page design for browsing → RFQ intent conversion.
   Implementation slices P-1 through P-5 each require explicit Paresh authorization.
@@ -149,7 +155,7 @@ ai_assist_boundary_preservation: |
 phase_3_plus_candidates: |
   1. TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27); closed
   2. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27); closed
-  3. TECS-B2B-BUYER-CATALOG-PDP-001 — DESIGN_ACTIVE (2026-04-27); design artifact open
+  3. TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE (2026-04-27); closed
   4. TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — candidate only, requires Paresh authorization
   5. Supplier selection UX polish (per-item publicationPosture filtering) — requires authorization
   6. Catalog item detail implementation — Phase 3+, requires Paresh slice authorization

@@ -800,6 +800,7 @@ These conditions are non-waivable.
 | TECS-AI-RFQ-ASSISTANT-MVP-001 | AI-assisted RFQ field suggestions (supplier-internal, suggestion-only, humanConfirmationRequired) | VERIFIED_COMPLETE | 2026-04-27 | 7582c06 + f342e5f + 1866f13 + 6c4cb5f + 4352e21 + a542966 + a3c1f5b + cf8a17e + 12ea7a2 + 042ecd2 + a3f5597 |
 | TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 | AI-assisted supplier profile completeness analysis (supplier-internal, 10-category rubric, read-only, suggestion-only) | ✅ VERIFIED_COMPLETE — VERIFIED IN PRODUCTION | 2026-04-27 | 8cd066c + 648d683 + 9d33820 + 15ea69d |
 | TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 | AI document extraction MVP — type classification, field extraction, frontend review panel, review approve/reject workflow (supplier-internal, no schema changes, no lifecycle mutation, humanReviewRequired structural constant) | ✅ VERIFIED_COMPLETE — 237/237 tests PASS | 2026-04-27 | de5cf10 + cef8afb + 23fb727 + c96d153 + c9cbf8c |
+| TECS-B2B-BUYER-CATALOG-PDP-001 | B2B Buyer Catalog PDP — buyer-facing item detail page: PDP route, page shell, media/specs/compliance rendering, RFQ handoff (no price, no DPP, no AI drafts) | ✅ VERIFIED_COMPLETE — 239 catalog tests PASS | 2026-04-27 | d0bcf27 (design) + d8fec78 (P-1) + d8d6141 (P-2) + f871bcb (P-3) + 54fecbc (P-4) |
 
 ### 11.2 TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — Closure Evidence
 
@@ -841,3 +842,28 @@ These conditions are non-waivable.
 - **No Certification, Trade, or Escrow lifecycle actions introduced.**
 - **No console errors. No blockers.**
 - **Governance close commit:** `GOV-CLOSE: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 marked VERIFIED_COMPLETE after 237/237 verification pass`.
+
+### 11.4 TECS-B2B-BUYER-CATALOG-PDP-001 — Closure Evidence
+
+- **Verification:** 239/239 catalog tests PASS (8 test files); TypeScript `tsc --noEmit` CLEAN (exit 0).
+- **Commit chain:** Design `d0bcf27` · P-1 `d8fec78` · P-2 `d8d6141` · P-3 `f871bcb` · P-4 `54fecbc`.
+- **Scope delivered:**
+  - P-1: `GET /api/tenant/catalog/items/:itemId` backend route in `server/src/routes/tenant.ts`. `BuyerCatalogPdpView` contract in `server/src/types/index.ts`. `getBuyerCatalogPdpItem()` service in `services/catalogService.ts`.
+  - P-2: `CatalogPdpSurface.tsx` created in `components/Tenant/`. App.tsx PHASE_C state + handlers + `resolveBuyerCatalogPhase` helper. View Details button added to Phase B item cards.
+  - P-3: Multi-image media gallery (displayOrder-sorted, thumbnail strip). New pure helpers: `resolveMediaAltText`, `resolveMoqDisplay`, `resolveLeadTimeDisplay`, `resolveCapacityDisplay`, `resolveMediaTypeBadge`, `formatLeadTimeDays`, `resolveCertStatusTone`, `formatCategoryBadge`. Constants: `CATALOG_PDP_MEDIA_EMPTY_COPY`, `CATALOG_PDP_AVAILABILITY_FALLBACK`, `CATALOG_PDP_COMPLIANCE_EMPTY_COPY`, `CATALOG_PDP_COMPLIANCE_NOTICE`.
+  - P-4: `RfqTriggerPayload` type + `validateRfqTriggerPayload` exported. `CatalogPdpSurfaceProps.onRequestQuote` updated to full 5-field payload. App.tsx PHASE_C bridge: `RfqTriggerPayload → CatalogItem → handleOpenRfqDialog`. 108/108 tests.
+- **Safety boundaries verified:**
+  - Price placeholder only: `pricePlaceholder.label/subLabel/note` only; no supplier price field in route response or UI.
+  - No DPP: `DPPPassport.tsx` not imported in `CatalogPdpSurface.tsx`.
+  - No relationship access: no buyer-supplier allowlist gate in MVP.
+  - No AI drafts/confidence: route queries `catalog_items` (active+published) and `certification` (APPROVED only); no extraction table accessed.
+  - No payment/escrow: confirmed absent.
+  - No public SEO PDP: `tenantAuthMiddleware` gates route; no unauthenticated path.
+  - No cert lifecycle mutation: `GET` route only.
+  - No RFQ auto-submit: dialog opens in form-input mode; 2-step confirmation required.
+  - Tenant isolation: `org_id` from `request.dbContext.orgId`; cross-tenant read via `texqtic_rfq_read` role.
+- **`supplierId → tenantId` bridge:** Intentional CatalogItem compatibility adapter. `CatalogItem.tenantId` = supplier's org ID; `RfqTriggerPayload.supplierId` = supplier's org ID. Semantically equivalent. Not a bug.
+- **Non-blocking note:** Media URL signing follows existing catalog posture (`signedUrl: item.image_url` mirrors pre-existing WL storefront pattern). Future candidate: `TECS-B2B-BUYER-MEDIA-SIGNING-001`.
+- **No schema changes. No migrations. No frontend non-PDP files changed beyond App.tsx.**
+- **No console errors. No blockers.**
+- **Governance close commit:** `GOV-CLOSE: TECS-B2B-BUYER-CATALOG-PDP-001 marked VERIFIED_COMPLETE after runtime verification`.
