@@ -4945,6 +4945,230 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     },
   );
 
+  // ─── TECS-DPP-PASSPORT-IDENTITY-001 D-3: Passport Foundation API ─────────────
+  // GET /api/tenant/dpp/:nodeId/passport
+  // Additive — does NOT replace GET /api/tenant/dpp/:nodeId.
+  // Storage decision: Option B (separate dpp_passport_states table, not a column on traceability_nodes).
+  // Reason: preserves traceability core semantics; supports audit/history; keeps passport workflow separate.
+
+  // --- D-3 Passport types ---
+  type DppMaturityLevel = 'LOCAL_TRUST' | 'TRADE_READY' | 'COMPLIANCE' | 'GLOBAL_DPP';
+  type DppPassportStatus = 'DRAFT' | 'INTERNAL' | 'TRADE_READY' | 'PUBLISHED';
+
+  interface DppPassportStateRow {
+    id: string;
+    org_id: string;
+    node_id: string;
+    status: string;
+    created_at: Date;
+    updated_at: Date;
+    reviewed_at: Date | null;
+    reviewed_by_user_id: string | null;
+  }
+
+  /**
+   * computeDppMaturity — pure function, no side effects.
+   *
+   * D-3 conservative rules:
+   *   TRADE_READY  — at least one APPROVED certification + lineage depth >= 1
+   *   LOCAL_TRUST  — node exists (fallback for all other cases)
+   *   COMPLIANCE   — reserved; not reachable in D-3 (requires explicit future criteria)
+   *   GLOBAL_DPP   — reserved; not reachable in D-3 (requires D-6 public gate + PUBLISHED status)
+   */
+  function computeDppMaturity(input: {
+    approvedCertCount: number;
+    lineageDepth: number;
+    passportStatus: DppPassportStatus;
+  }): DppMaturityLevel {
+    if (input.approvedCertCount >= 1 && input.lineageDepth >= 1) {
+      return 'TRADE_READY';
+    }
+    return 'LOCAL_TRUST';
+  }
+
+  /**
+   * GET /api/tenant/dpp/:nodeId/passport
+   *
+   * Returns DppPassportFoundationView for the given traceability node.
+   * Additive to GET /api/tenant/dpp/:nodeId — does NOT replace it.
+   *
+   * Queries same 3 SECURITY INVOKER DPP views + dpp_passport_states table.
+   * passportStatus defaults to 'DRAFT' if no dpp_passport_states row exists for the node.
+   * passportMaturity computed by computeDppMaturity (pure function).
+   * passportEvidenceSummary.aiExtractedClaimsCount = 0 in D-3 (D-4 populates from dpp_evidence_claims).
+   *
+   * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+   * Audit: writes tenant.dpp.passport.read on every successful read
+   * RLS:   dpp_passport_states has ENABLE + FORCE RLS with restrictive org_id guard
+   */
+  fastify.get(
+    '/tenant/dpp/:nodeId/passport',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const paramsSchema = z.object({ nodeId: z.string().uuid('nodeId must be a valid UUID') });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+      const { nodeId } = paramsResult.data;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // ── 1. Query all 3 DPP views + passport state in one tenant-scoped transaction ──
+      const [productRows, lineageRows, certRows, passportStateRows] = await withDbContext(
+        prisma,
+        dbContext,
+        async tx => {
+          const products = await tx.$queryRaw<DppProductRow[]>`
+            SELECT
+              node_id, org_id, batch_id, node_type, meta,
+              geo_hash, visibility, created_at, updated_at,
+              manufacturer_name, manufacturer_jurisdiction, manufacturer_registration_no
+            FROM dpp_snapshot_products_v1
+            WHERE node_id = ${nodeId}::uuid
+          `;
+
+          const lineage = await tx.$queryRaw<DppLineageRow[]>`
+            SELECT
+              root_node_id, node_id, parent_node_id,
+              depth, edge_type, transformation_id, org_id, created_at
+            FROM dpp_snapshot_lineage_v1
+            WHERE root_node_id = ${nodeId}::uuid
+          `;
+
+          const certs = await tx.$queryRaw<DppCertRow[]>`
+            SELECT
+              node_id, certification_id, certification_type,
+              lifecycle_state_id, lifecycle_state_name, issued_at, expiry_date, org_id
+            FROM dpp_snapshot_certifications_v1
+            WHERE node_id = ${nodeId}::uuid
+               OR (node_id IS NULL AND org_id = (
+                 SELECT org_id FROM dpp_snapshot_products_v1 WHERE node_id = ${nodeId}::uuid LIMIT 1
+               ))
+          `;
+
+          // Passport state — empty array if no row (application layer defaults to DRAFT)
+          const passportStates = await tx.$queryRaw<DppPassportStateRow[]>`
+            SELECT id, org_id, node_id, status, created_at, updated_at, reviewed_at, reviewed_by_user_id
+            FROM dpp_passport_states
+            WHERE node_id = ${nodeId}::uuid
+            LIMIT 1
+          `;
+
+          return [products, lineage, certs, passportStates] as [
+            DppProductRow[],
+            DppLineageRow[],
+            DppCertRow[],
+            DppPassportStateRow[],
+          ];
+        },
+      );
+
+      // ── 2. 404 if no product row — RLS may hide the node from this tenant ──
+      if (productRows.length === 0) {
+        return sendNotFound(reply, 'DPP passport not found or access denied');
+      }
+
+      const product = productRows[0];
+
+      // ── 3. Compute passport status (DRAFT if no state row exists) ──
+      const rawStatus = passportStateRows[0]?.status ?? 'DRAFT';
+      const passportStatus: DppPassportStatus = (
+        ['DRAFT', 'INTERNAL', 'TRADE_READY', 'PUBLISHED'] as const
+      ).includes(rawStatus as DppPassportStatus)
+        ? (rawStatus as DppPassportStatus)
+        : 'DRAFT';
+
+      // ── 4. Compute evidence summary ───────────────────────────────────────
+      const approvedCertCount = certRows.filter(
+        c => c.lifecycle_state_name === 'APPROVED',
+      ).length;
+
+      const lineageDepth =
+        lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
+
+      // aiExtractedClaimsCount = 0 in D-3 (D-4 will populate from dpp_evidence_claims)
+      const aiExtractedClaimsCount = 0;
+
+      // ── 5. Compute passport maturity ──────────────────────────────────────
+      const passportMaturity = computeDppMaturity({
+        approvedCertCount,
+        lineageDepth,
+        passportStatus,
+      });
+
+      // ── 6. Write passport read-audit entry ───────────────────────────────
+      await writeAuditLog(prisma, {
+        tenantId: request.tenantId ?? null,
+        realm: 'TENANT',
+        actorType: 'USER',
+        actorId: request.userId ?? null,
+        action: 'tenant.dpp.passport.read',
+        entity: 'traceability_node',
+        entityId: nodeId,
+        metadataJson: {
+          nodeId,
+          passportStatus,
+          passportMaturity,
+          approvedCertCount,
+          lineageDepth,
+        },
+      });
+
+      // ── 7. Shape DppPassportFoundationView response ───────────────────────
+      return sendSuccess(reply, {
+        passport: {
+          nodeId,
+          orgId: product.org_id,
+          batchId: product.batch_id,
+          nodeType: product.node_type,
+          meta: product.meta,
+          geoHash: product.geo_hash,
+          visibility: product.visibility,
+          createdAt: product.created_at,
+          updatedAt: product.updated_at,
+          manufacturerName: product.manufacturer_name,
+          manufacturerJurisdiction: product.manufacturer_jurisdiction,
+          manufacturerRegistrationNo: product.manufacturer_registration_no,
+
+          lineage: lineageRows.map(row => ({
+            rootNodeId: row.root_node_id,
+            nodeId: row.node_id,
+            parentNodeId: row.parent_node_id,
+            depth: row.depth,
+            edgeType: row.edge_type,
+            transformationId: row.transformation_id,
+            createdAt: row.created_at,
+          })),
+
+          certifications: certRows.map(row => ({
+            nodeId: row.node_id,
+            certificationId: row.certification_id,
+            certificationType: row.certification_type,
+            lifecycleStateId: row.lifecycle_state_id,
+            lifecycleStateName: row.lifecycle_state_name,
+            expiryDate: row.expiry_date,
+            issuedAt: row.issued_at,
+            orgId: row.org_id,
+          })),
+
+          passportMaturity,
+          passportStatus,
+
+          passportEvidenceSummary: {
+            aiExtractedClaimsCount,
+            approvedCertCount,
+            lineageDepth,
+          },
+
+          meta_passport: {},
+        },
+      });
+    },
+  );
+
   // ─── G-022: Tenant escalation routes ────────────────────────────────────────
   // GET  /api/tenant/escalations
   // POST /api/tenant/escalations

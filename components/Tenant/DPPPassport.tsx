@@ -62,6 +62,36 @@ interface DppSnapshot {
   meta: Record<string, unknown>;
 }
 
+// ─── D-3: Passport Foundation types ──────────────────────────────────────────
+
+type DppMaturityLevel = 'LOCAL_TRUST' | 'TRADE_READY' | 'COMPLIANCE' | 'GLOBAL_DPP';
+type DppPassportStatus = 'DRAFT' | 'INTERNAL' | 'TRADE_READY' | 'PUBLISHED';
+
+interface DppPassportView {
+  nodeId: string;
+  passportStatus: DppPassportStatus;
+  passportMaturity: DppMaturityLevel;
+  passportEvidenceSummary: {
+    aiExtractedClaimsCount: number;
+    approvedCertCount: number;
+    lineageDepth: number;
+  };
+}
+
+const PASSPORT_STATUS_CLASSES: Record<DppPassportStatus, string> = {
+  DRAFT: 'bg-slate-100 text-slate-600 border-slate-200',
+  INTERNAL: 'bg-blue-50 text-blue-700 border-blue-200',
+  TRADE_READY: 'bg-green-50 text-green-700 border-green-200',
+  PUBLISHED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
+
+const PASSPORT_MATURITY_CLASSES: Record<DppMaturityLevel, string> = {
+  LOCAL_TRUST: 'bg-slate-100 text-slate-600 border-slate-200',
+  TRADE_READY: 'bg-green-50 text-green-700 border-green-200',
+  COMPLIANCE: 'bg-blue-50 text-blue-700 border-blue-200',
+  GLOBAL_DPP: 'bg-purple-50 text-purple-700 border-purple-200',
+};
+
 // ─── UUID validation ──────────────────────────────────────────────────────────
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -87,6 +117,8 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<DppSnapshot | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  // D-3: Passport Foundation state (non-blocking fetch; null = unavailable or not yet loaded)
+  const [passportData, setPassportData] = useState<DppPassportView | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const handleLoad = useCallback(async () => {
@@ -95,6 +127,7 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
     setValidationError(null);
     setFetchError(null);
     setSnapshot(null);
+    setPassportData(null);
 
     if (!trimmed) {
       setValidationError('Node ID is required.');
@@ -109,6 +142,10 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
     try {
       const data = await tenantGet<DppSnapshot>(`/api/tenant/dpp/${encodeURIComponent(trimmed)}`);
       setSnapshot(data);
+      // D-3: Non-blocking passport fetch — failure does not affect existing snapshot display
+      tenantGet<{ passport: DppPassportView }>(`/api/tenant/dpp/${encodeURIComponent(trimmed)}/passport`)
+        .then(result => { setPassportData(result.passport); })
+        .catch(() => { setPassportData(null); });
     } catch (err) {
       if (err instanceof APIError && err.status === 404) {
         setFetchError("Not found, or you don\u2019t have access (RLS).");
@@ -361,6 +398,51 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
               </div>
             )}
           </section>
+
+          {/* ── Passport Foundation section (D-3 additive) ── */}
+          {passportData && (
+            <section className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+              <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Passport Foundation</h2>
+
+              {/* Status + Maturity badges */}
+              <div className="flex flex-wrap gap-3">
+                <span
+                  data-testid="dpp-passport-status-badge"
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${PASSPORT_STATUS_CLASSES[passportData.passportStatus]}`}
+                >
+                  {passportData.passportStatus.replace('_', ' ')}
+                </span>
+                <span
+                  data-testid="dpp-maturity-indicator"
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${PASSPORT_MATURITY_CLASSES[passportData.passportMaturity]}`}
+                >
+                  {passportData.passportMaturity.replace('_', ' ')}
+                </span>
+              </div>
+
+              {/* Evidence summary */}
+              <div data-testid="dpp-evidence-summary" className="grid grid-cols-3 gap-4 pt-2 border-t border-slate-100">
+                <div>
+                  <dt className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Approved Certs</dt>
+                  <dd data-testid="dpp-approved-cert-count" className="text-slate-800 font-bold text-2xl mt-1">
+                    {passportData.passportEvidenceSummary.approvedCertCount}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Lineage Depth</dt>
+                  <dd data-testid="dpp-lineage-depth" className="text-slate-800 font-bold text-2xl mt-1">
+                    {passportData.passportEvidenceSummary.lineageDepth}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">AI Claims</dt>
+                  <dd data-testid="dpp-ai-claims-count" className="text-slate-400 font-bold text-2xl mt-1">
+                    {passportData.passportEvidenceSummary.aiExtractedClaimsCount}
+                  </dd>
+                </div>
+              </div>
+            </section>
+          )}
         </>
       )}
     </div>
