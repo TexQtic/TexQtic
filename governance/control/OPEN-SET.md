@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-2 frontend PDP page shell and layout implemented)
+**Last Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-3 PDP specs/media/compliance rendering implemented)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -369,7 +369,7 @@
   Tests: K-1 46 PASS + K-2 service PASS + K-3 route PASS + K-4 80 PASS + K-5 17 PASS = 237/237 PASS.
   No blockers.
 - TECS-B2B-BUYER-CATALOG-PDP-001 is IMPLEMENTATION_ACTIVE (2026-04-27).
-  Status: IMPLEMENTATION_ACTIVE. Active slice: P-2 — Buyer PDP Page Shell and Layout.
+  Status: IMPLEMENTATION_ACTIVE. Active slice: P-3 — PDP Specs / Media / Compliance Rendering.
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
   Scope: B2B Buyer Catalog Product Detail Page — buyer-facing item detail view converting
     catalog browsing into RFQ intent. Renders item identity, media gallery, textile specifications,
@@ -385,14 +385,24 @@
     getBuyerCatalogPdpItem() service function added to services/catalogService.ts.
     Tests: tests/b2b-buyer-catalog-pdp.test.ts (13 focused tests, T1–T13), 25/25 PASS.
     No schema changes. No frontend changes. No price. No AI draft fields.
-  P-2 IMPLEMENTATION_ACTIVE: CatalogPdpSurface.tsx created in components/Tenant/.
+  P-2 COMPLETE (commit d8d6141): CatalogPdpSurface.tsx created in components/Tenant/.
     App.tsx wired: PHASE_C state + handleOpenCatalogPdp + handleCloseCatalogPdp handlers.
     resolveBuyerCatalogPhase() pure helper exported via __B2B_BUYER_CATALOG_PDP_TESTING__.
     PDP phase guard added to buyer_catalog case — PHASE_C renders CatalogPdpSurface.
     View Details button added to Phase B item cards.
-    Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (9 describe blocks, T1–T9).
+    Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (9 describe blocks, T1–T9), 43/43 PASS.
     No schema changes. No price disclosure. No AI draft fields. No DPP. No RFQ prefill.
-  P-3 through P-5: UNAUTHORIZED — each requires explicit Paresh sign-off.
+  P-3 IMPLEMENTATION_ACTIVE: CatalogPdpSurface.tsx enhanced.
+    Multi-image media gallery with thumbnail strip; displayOrder-sorted rendering.
+    CATALOG_PDP_MEDIA_EMPTY_COPY, CATALOG_PDP_AVAILABILITY_FALLBACK, CATALOG_PDP_COMPLIANCE_EMPTY_COPY.
+    New pure helpers: resolveMediaAltText, resolveMoqDisplay, resolveLeadTimeDisplay,
+      resolveCapacityDisplay, resolveMediaTypeBadge (all exported for test coverage).
+    PdpSupplierSummary: renders MOQ + lead time + capacity from availabilitySummary.
+    PdpComplianceSummary: corrected empty state text ("No certification records available for this item.").
+    PdpAvailabilitySummary: uses resolve helpers ("Available on request" fallback).
+    Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS. Catalog regression 226/226 PASS.
+    No schema changes. No price. No AI draft. No DPP. No RFQ prefill.
+  P-4 and P-5: UNAUTHORIZED — each requires explicit Paresh sign-off.
   Future scope deferred: price disclosure (TECS-B2B-BUYER-PRICE-DISCLOSURE-001),
     RFQ prefill (TECS-B2B-BUYER-RFQ-INTEGRATION-001), relationship access
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),

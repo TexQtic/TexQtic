@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-2 frontend PDP page shell and layout implemented)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-3 PDP specs/media/compliance rendering implemented)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -14,7 +14,7 @@ governance_exception_active: false
 product_delivery_priority: TECS-B2B-BUYER-CATALOG-PDP-001
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 active_delivery_unit_status: IMPLEMENTATION_ACTIVE
-active_delivery_unit_active_slice: P-2 — Buyer PDP Page Shell and Layout
+active_delivery_unit_active_slice: P-3 — PDP Specs / Media / Compliance Rendering
 active_delivery_unit_design_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
 active_delivery_unit_design_commit: d0bcf27
 active_delivery_unit_note: >-
@@ -23,10 +23,13 @@ active_delivery_unit_note: >-
   BuyerCatalogPdpView contract (server/src/types/index.ts).
   getBuyerCatalogPdpItem() service (services/catalogService.ts).
   Tests: tests/b2b-buyer-catalog-pdp.test.ts (T1–T13), 25/25 PASS.
-  P-2 IMPLEMENTATION_ACTIVE: CatalogPdpSurface.tsx (components/Tenant/).
+  P-2 COMPLETE (commit d8d6141): CatalogPdpSurface.tsx (components/Tenant/).
   App.tsx: PHASE_C state + handlers + resolveBuyerCatalogPhase helper.
   View Details button added to Phase B item cards.
-  Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T9).
+  Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T9), 43/43 PASS.
+  P-3 IMPLEMENTATION_ACTIVE: multi-image media gallery, availability fallback constants,
+  compliance empty state, supplier summary MOQ/lead time/capacity, new pure helpers.
+  Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS.
   No schema changes. No price. No AI draft fields. No DPP.
   P-3 through P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
 last_closed_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
@@ -72,14 +75,16 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27). P-2 delivered.
-  CatalogPdpSurface.tsx (components/Tenant/) — full PDP shell with all Section J test IDs.
-  App.tsx: buyerCatalogSelectedItemId state, handleOpenCatalogPdp, handleCloseCatalogPdp.
-  resolveBuyerCatalogPhase() exported via __B2B_BUYER_CATALOG_PDP_TESTING__.
-  View Details button added to Phase B item cards.
-  Tests: b2b-buyer-catalog-pdp-page.test.ts T1–T9.
+  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27). P-3 delivered.
+  CatalogPdpSurface.tsx: multi-image media gallery, resolveMediaAltText, resolveMoqDisplay,
+  resolveLeadTimeDisplay, resolveCapacityDisplay, resolveMediaTypeBadge helpers exported.
+  CATALOG_PDP_MEDIA_EMPTY_COPY, CATALOG_PDP_AVAILABILITY_FALLBACK, CATALOG_PDP_COMPLIANCE_EMPTY_COPY added.
+  PdpSupplierSummary: MOQ + lead time + capacity from availabilitySummary.
+  PdpComplianceSummary: empty state exact text corrected.
+  PdpAvailabilitySummary: uses new resolve helpers ("Available on request" fallback).
+  Tests: b2b-buyer-catalog-pdp-page.test.ts T1–T20, 95/95 PASS. Catalog regression 226/226 PASS.
   No schema changes. No price. No AI draft. No DPP. No RFQ prefill.
-  P-3 through P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
+  P-4 and P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
   Prior: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.

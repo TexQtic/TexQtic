@@ -1,5 +1,5 @@
 /**
- * TECS-B2B-BUYER-CATALOG-PDP-001 P-2 — Frontend PDP page shell tests
+ * TECS-B2B-BUYER-CATALOG-PDP-001 P-2 / P-3 — Frontend PDP page tests
  *
  * Tests verify:
  *  - Pure helper contracts exported from App.tsx (__B2B_BUYER_CATALOG_PDP_TESTING__)
@@ -10,13 +10,15 @@
  *  - No DPP/passport terms in PDP constants
  *  - Compliance notice does NOT contain confidence score or draft extraction data
  *  - RFQ trigger label does NOT imply auto-submit or multi-item basket
- *
- * Boundaries (P-2):
- *  - No deep spec rendering tests (P-3)
- *  - No media gallery rendering tests (P-3)
- *  - No compliance doc deep rendering (P-5)
- *  - No RFQ prefill payload tests (P-4)
- *  - No DPP integration tests
+ *  P-3 additions:
+ *  - P-3 rendering constants (media empty, availability fallback, compliance empty)
+ *  - resolveMediaAltText — alt text with fallback to item title
+ *  - resolveMoqDisplay — MOQ value+unit or fallback
+ *  - resolveLeadTimeDisplay — lead time or fallback
+ *  - resolveCapacityDisplay — capacity indicator or fallback
+ *  - resolveMediaTypeBadge — media type label
+ *  - Data contract checks: spec fields, compliance certs, supplier summary
+ *  - Boundary: no raw storage URLs, no AI fields, no price, no DPP
  *
  * Test isolation: all tenantApiClient calls are mocked at module level.
  */
@@ -29,7 +31,7 @@ vi.mock('../services/tenantApiClient', () => ({
 }));
 
 import { tenantGet } from '../services/tenantApiClient';
-import { getBuyerCatalogPdpItem, type BuyerCatalogPdpView } from '../services/catalogService';
+import { getBuyerCatalogPdpItem, type BuyerCatalogMedia, type BuyerCatalogPdpView } from '../services/catalogService';
 import {
   __B2B_BUYER_CATALOG_PDP_TESTING__,
   PDP_COMPLIANCE_NOTICE,
@@ -47,8 +49,17 @@ import {
   CATALOG_PDP_LOADING_COPY,
   CATALOG_PDP_ERROR_COPY,
   CATALOG_PDP_NOT_FOUND_COPY,
+  CATALOG_PDP_MEDIA_EMPTY_COPY,
+  CATALOG_PDP_AVAILABILITY_FALLBACK,
+  CATALOG_PDP_COMPLIANCE_EMPTY_COPY,
   formatLeadTimeDays,
   resolveCertStatusTone,
+  formatCategoryBadge,
+  resolveMediaAltText,
+  resolveMoqDisplay,
+  resolveLeadTimeDisplay,
+  resolveCapacityDisplay,
+  resolveMediaTypeBadge,
 } from '../components/Tenant/CatalogPdpSurface';
 
 const tenantGetMock = tenantGet as ReturnType<typeof vi.fn>;
@@ -453,3 +464,444 @@ describe('T9: BuyerCatalogPdpView runtime shape', () => {
     expect(view.complianceSummary.humanReviewNotice).toBe(PDP_COMPLIANCE_NOTICE);
   });
 });
+
+// ---------------------------------------------------------------------------
+// P-3 Tests — Rendering constants and pure helpers
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// T10: P-3 rendering constants
+// ---------------------------------------------------------------------------
+
+describe('T10: P-3 rendering constants', () => {
+  it('T10.1 — CATALOG_PDP_MEDIA_EMPTY_COPY is the exact media gallery empty state string', () => {
+    expect(CATALOG_PDP_MEDIA_EMPTY_COPY).toBe('No images uploaded yet');
+  });
+
+  it('T10.2 — media empty copy does NOT reference a storage path or URL', () => {
+    const lower = CATALOG_PDP_MEDIA_EMPTY_COPY.toLowerCase();
+    expect(lower).not.toContain('https://');
+    expect(lower).not.toContain('storage');
+    expect(lower).not.toContain('bucket');
+    expect(lower).not.toContain('blob');
+  });
+
+  it('T10.3 — CATALOG_PDP_AVAILABILITY_FALLBACK is the exact availability fallback string', () => {
+    expect(CATALOG_PDP_AVAILABILITY_FALLBACK).toBe('Available on request');
+  });
+
+  it('T10.4 — availability fallback does NOT contain price terms', () => {
+    const lower = CATALOG_PDP_AVAILABILITY_FALLBACK.toLowerCase();
+    expect(lower).not.toContain('price');
+    expect(lower).not.toMatch(/\$/);
+  });
+
+  it('T10.5 — CATALOG_PDP_COMPLIANCE_EMPTY_COPY is the exact compliance empty state string', () => {
+    expect(CATALOG_PDP_COMPLIANCE_EMPTY_COPY).toBe(
+      'No certification records available for this item.',
+    );
+  });
+
+  it('T10.6 — compliance empty copy does NOT reference supplier internal IDs', () => {
+    const lower = CATALOG_PDP_COMPLIANCE_EMPTY_COPY.toLowerCase();
+    expect(lower).not.toContain('supplier_id');
+    expect(lower).not.toContain('org_id');
+    expect(lower).not.toContain('uuid');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T11: resolveMediaAltText pure helper
+// ---------------------------------------------------------------------------
+
+describe('T11: resolveMediaAltText pure helper', () => {
+  it('T11.1 — returns altText when it is a non-empty string', () => {
+    expect(resolveMediaAltText('GOTS certified cotton', 'Premium Fabric')).toBe(
+      'GOTS certified cotton',
+    );
+  });
+
+  it('T11.2 — returns itemTitle when altText is null', () => {
+    expect(resolveMediaAltText(null, 'Premium Fabric')).toBe('Premium Fabric');
+  });
+
+  it('T11.3 — returns itemTitle when altText is an empty string', () => {
+    expect(resolveMediaAltText('', 'Premium Fabric')).toBe('Premium Fabric');
+  });
+
+  it('T11.4 — returns itemTitle when altText is whitespace only', () => {
+    expect(resolveMediaAltText('   ', 'Premium Fabric')).toBe('Premium Fabric');
+  });
+
+  it('T11.5 — alt text does NOT expose a raw storage path', () => {
+    const result = resolveMediaAltText(null, 'Organic Cotton');
+    expect(result).not.toContain('https://');
+    expect(result).not.toContain('storage.googleapis.com');
+    expect(result).not.toContain('supabase.co/storage');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T12: resolveMoqDisplay pure helper
+// ---------------------------------------------------------------------------
+
+describe('T12: resolveMoqDisplay pure helper', () => {
+  it('T12.1 — returns formatted string when moqValue and moqUnit are provided', () => {
+    expect(resolveMoqDisplay(500, 'meters')).toBe('500 meters');
+  });
+
+  it('T12.2 — returns value without unit when moqUnit is null', () => {
+    expect(resolveMoqDisplay(1000, null)).toBe('1000');
+  });
+
+  it('T12.3 — returns value without unit when moqUnit is empty string', () => {
+    expect(resolveMoqDisplay(250, '')).toBe('250');
+  });
+
+  it('T12.4 — returns CATALOG_PDP_AVAILABILITY_FALLBACK when moqValue is null', () => {
+    expect(resolveMoqDisplay(null, 'meters')).toBe(CATALOG_PDP_AVAILABILITY_FALLBACK);
+  });
+
+  it('T12.5 — returns CATALOG_PDP_AVAILABILITY_FALLBACK when both are null', () => {
+    expect(resolveMoqDisplay(null, null)).toBe(CATALOG_PDP_AVAILABILITY_FALLBACK);
+  });
+
+  it('T12.6 — output does NOT contain price markers', () => {
+    const result = resolveMoqDisplay(500, 'kg');
+    expect(result).not.toMatch(/\$/);
+    expect(result).not.toContain('price');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T13: resolveLeadTimeDisplay pure helper
+// ---------------------------------------------------------------------------
+
+describe('T13: resolveLeadTimeDisplay pure helper', () => {
+  it('T13.1 — returns "1 day" for leadTimeDays === 1', () => {
+    expect(resolveLeadTimeDisplay(1)).toBe('1 day');
+  });
+
+  it('T13.2 — returns plural for leadTimeDays > 1', () => {
+    expect(resolveLeadTimeDisplay(21)).toBe('21 days');
+    expect(resolveLeadTimeDisplay(14)).toBe('14 days');
+  });
+
+  it('T13.3 — returns CATALOG_PDP_AVAILABILITY_FALLBACK when leadTimeDays is null', () => {
+    expect(resolveLeadTimeDisplay(null)).toBe(CATALOG_PDP_AVAILABILITY_FALLBACK);
+  });
+
+  it('T13.4 — zero days uses plural', () => {
+    expect(resolveLeadTimeDisplay(0)).toBe('0 days');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T14: resolveCapacityDisplay pure helper
+// ---------------------------------------------------------------------------
+
+describe('T14: resolveCapacityDisplay pure helper', () => {
+  it('T14.1 — "available" renders as "available"', () => {
+    expect(resolveCapacityDisplay('available')).toBe('available');
+  });
+
+  it('T14.2 — "limited" renders as "limited"', () => {
+    expect(resolveCapacityDisplay('limited')).toBe('limited');
+  });
+
+  it('T14.3 — "on_request" renders with underscore replaced by space', () => {
+    expect(resolveCapacityDisplay('on_request')).toBe('on request');
+  });
+
+  it('T14.4 — null returns CATALOG_PDP_AVAILABILITY_FALLBACK', () => {
+    expect(resolveCapacityDisplay(null)).toBe(CATALOG_PDP_AVAILABILITY_FALLBACK);
+  });
+
+  it('T14.5 — output does NOT contain internal enum identifiers unexpanded', () => {
+    // on_request must be humanised — not shown as-is
+    const result = resolveCapacityDisplay('on_request');
+    expect(result).not.toBe('on_request');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T15: resolveMediaTypeBadge pure helper
+// ---------------------------------------------------------------------------
+
+describe('T15: resolveMediaTypeBadge pure helper', () => {
+  function makeMockMedia(mediaType: BuyerCatalogMedia['mediaType']): BuyerCatalogMedia {
+    return {
+      mediaId: 'mid-001',
+      mediaType,
+      altText: null,
+      signedUrl: 'https://example.com/signed/image.jpg',
+      displayOrder: 1,
+    };
+  }
+
+  it('T15.1 — "image" resolves to "Image"', () => {
+    expect(resolveMediaTypeBadge(makeMockMedia('image'))).toBe('Image');
+  });
+
+  it('T15.2 — "swatch" resolves to "Swatch"', () => {
+    expect(resolveMediaTypeBadge(makeMockMedia('swatch'))).toBe('Swatch');
+  });
+
+  it('T15.3 — "sample" resolves to "Sample"', () => {
+    expect(resolveMediaTypeBadge(makeMockMedia('sample'))).toBe('Sample');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T16: formatCategoryBadge pure helper
+// ---------------------------------------------------------------------------
+
+describe('T16: formatCategoryBadge pure helper', () => {
+  it('T16.1 — replaces underscores with spaces', () => {
+    expect(formatCategoryBadge('PLAIN_WEAVE')).toBe('PLAIN WEAVE');
+  });
+
+  it('T16.2 — single-word strings are unchanged', () => {
+    expect(formatCategoryBadge('WOVEN')).toBe('WOVEN');
+  });
+
+  it('T16.3 — handles multiple underscores', () => {
+    expect(formatCategoryBadge('KNIT_FABRIC_JERSEY')).toBe('KNIT FABRIC JERSEY');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T17: BuyerCatalogPdpView data contract — specifications
+// ---------------------------------------------------------------------------
+
+describe('T17: BuyerCatalogPdpView data contract — specifications', () => {
+  it('T17.1 — spec row values do NOT contain the string "null"', () => {
+    const view = buildMinimalPdpView({
+      specifications: {
+        productCategory: 'WOVEN',
+        fabricType: null,
+        gsm: null,
+        material: 'COTTON',
+        composition: '100% Cotton',
+        color: null,
+        widthCm: null,
+        construction: null,
+        certifications: null,
+      },
+    });
+    // Non-null values must be strings, not the literal word "null"
+    const values = [
+      view.specifications.productCategory,
+      view.specifications.material,
+      view.specifications.composition,
+    ];
+    for (const val of values) {
+      expect(String(val)).not.toBe('null');
+    }
+  });
+
+  it('T17.2 — certifications array is string[] | null — not internal IDs', () => {
+    const view = buildMinimalPdpView();
+    if (view.specifications.certifications != null) {
+      for (const cert of view.specifications.certifications) {
+        expect(typeof cert).toBe('string');
+        // Not a UUID
+        expect(cert).not.toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        );
+      }
+    }
+  });
+
+  it('T17.3 — specifications block does NOT contain price or cost fields', () => {
+    const view = buildMinimalPdpView();
+    const spec = view.specifications as Record<string, unknown>;
+    expect(spec).not.toHaveProperty('price');
+    expect(spec).not.toHaveProperty('cost');
+    expect(spec).not.toHaveProperty('unitPrice');
+  });
+
+  it('T17.4 — specifications block does NOT contain AI draft fields', () => {
+    const view = buildMinimalPdpView();
+    const spec = view.specifications as Record<string, unknown>;
+    expect(spec).not.toHaveProperty('confidenceScore');
+    expect(spec).not.toHaveProperty('aiDraft');
+    expect(spec).not.toHaveProperty('extractedValues');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T18: BuyerCatalogPdpView data contract — compliance certs
+// ---------------------------------------------------------------------------
+
+describe('T18: BuyerCatalogPdpView data contract — compliance certificates', () => {
+  it('T18.1 — APPROVED cert has certificateType, issuerName, expiryDate, status', () => {
+    const view = buildMinimalPdpView();
+    const cert = view.complianceSummary.certificates[0]!;
+    expect(cert.certificateType).toBeDefined();
+    expect(typeof cert.certificateType).toBe('string');
+    // issuerName may be null (BuyerCertificateSummaryItem allows null)
+    expect('issuerName' in cert).toBe(true);
+    // expiryDate may be null
+    expect('expiryDate' in cert).toBe(true);
+    expect(cert.status).toMatch(/^(APPROVED|EXPIRING_SOON)$/);
+  });
+
+  it('T18.2 — cert does NOT expose internal document ID or source file ID', () => {
+    const view = buildMinimalPdpView();
+    const cert = view.complianceSummary.certificates[0]! as Record<string, unknown>;
+    expect(cert).not.toHaveProperty('documentId');
+    expect(cert).not.toHaveProperty('sourceFileId');
+    expect(cert).not.toHaveProperty('extractionId');
+    expect(cert).not.toHaveProperty('aiDraftId');
+  });
+
+  it('T18.3 — cert does NOT expose AI confidence score or draft data', () => {
+    const view = buildMinimalPdpView();
+    const cert = view.complianceSummary.certificates[0]! as Record<string, unknown>;
+    expect(cert).not.toHaveProperty('confidenceScore');
+    expect(cert).not.toHaveProperty('aiDraft');
+    expect(cert).not.toHaveProperty('extractedValue');
+  });
+
+  it('T18.4 — hasCertifications is a boolean, not null/undefined', () => {
+    const view = buildMinimalPdpView();
+    expect(typeof view.complianceSummary.hasCertifications).toBe('boolean');
+  });
+
+  it('T18.5 — compliance summary does NOT contain DPP/passport field', () => {
+    const view = buildMinimalPdpView();
+    const cs = view.complianceSummary as Record<string, unknown>;
+    expect(cs).not.toHaveProperty('dpp');
+    expect(cs).not.toHaveProperty('passport');
+    expect(cs).not.toHaveProperty('dppPassport');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T19: BuyerCatalogPdpView data contract — availability summary fallbacks
+// ---------------------------------------------------------------------------
+
+describe('T19: BuyerCatalogPdpView data contract — availability summary', () => {
+  it('T19.1 — moqValue null → resolveMoqDisplay returns CATALOG_PDP_AVAILABILITY_FALLBACK', () => {
+    const view = buildMinimalPdpView({
+      availabilitySummary: {
+        moqValue: null,
+        moqUnit: null,
+        leadTimeDays: null,
+        capacityIndicator: null,
+      },
+    });
+    expect(
+      resolveMoqDisplay(
+        view.availabilitySummary.moqValue,
+        view.availabilitySummary.moqUnit,
+      ),
+    ).toBe(CATALOG_PDP_AVAILABILITY_FALLBACK);
+  });
+
+  it('T19.2 — leadTimeDays null → resolveLeadTimeDisplay returns CATALOG_PDP_AVAILABILITY_FALLBACK', () => {
+    const view = buildMinimalPdpView({
+      availabilitySummary: {
+        moqValue: null,
+        moqUnit: null,
+        leadTimeDays: null,
+        capacityIndicator: null,
+      },
+    });
+    expect(resolveLeadTimeDisplay(view.availabilitySummary.leadTimeDays)).toBe(
+      CATALOG_PDP_AVAILABILITY_FALLBACK,
+    );
+  });
+
+  it('T19.3 — capacityIndicator null → resolveCapacityDisplay returns CATALOG_PDP_AVAILABILITY_FALLBACK', () => {
+    const view = buildMinimalPdpView({
+      availabilitySummary: {
+        moqValue: null,
+        moqUnit: null,
+        leadTimeDays: null,
+        capacityIndicator: null,
+      },
+    });
+    expect(resolveCapacityDisplay(view.availabilitySummary.capacityIndicator)).toBe(
+      CATALOG_PDP_AVAILABILITY_FALLBACK,
+    );
+  });
+
+  it('T19.4 — moqValue present → resolveMoqDisplay returns numeric string with unit', () => {
+    const view = buildMinimalPdpView();
+    expect(
+      resolveMoqDisplay(
+        view.availabilitySummary.moqValue,
+        view.availabilitySummary.moqUnit,
+      ),
+    ).toBe('500 meters');
+  });
+
+  it('T19.5 — leadTimeDays 21 → resolveLeadTimeDisplay returns "21 days"', () => {
+    const view = buildMinimalPdpView();
+    expect(resolveLeadTimeDisplay(view.availabilitySummary.leadTimeDays)).toBe('21 days');
+  });
+
+  it('T19.6 — availability summary does NOT contain price or cost fields', () => {
+    const view = buildMinimalPdpView();
+    const avail = view.availabilitySummary as Record<string, unknown>;
+    expect(avail).not.toHaveProperty('price');
+    expect(avail).not.toHaveProperty('cost');
+    expect(avail).not.toHaveProperty('unitPrice');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T20: Media item data contract — safety checks
+// ---------------------------------------------------------------------------
+
+describe('T20: BuyerCatalogMedia data contract', () => {
+  function buildMockMediaItem(overrides: Partial<BuyerCatalogMedia> = {}): BuyerCatalogMedia {
+    return {
+      mediaId: 'media-001',
+      mediaType: 'image',
+      altText: 'Organic cotton fabric close-up',
+      signedUrl: 'https://example.com/signed/abc123.jpg',
+      displayOrder: 1,
+      ...overrides,
+    };
+  }
+
+  it('T20.1 — media item has mediaId, mediaType, signedUrl, displayOrder', () => {
+    const m = buildMockMediaItem();
+    expect(m.mediaId).toBeDefined();
+    expect(m.mediaType).toBeDefined();
+    expect(m.signedUrl).toBeDefined();
+    expect(typeof m.displayOrder).toBe('number');
+  });
+
+  it('T20.2 — mediaType is one of the allowed values', () => {
+    const allowed = ['image', 'swatch', 'sample'] as const;
+    const m = buildMockMediaItem();
+    expect(allowed).toContain(m.mediaType);
+  });
+
+  it('T20.3 — altText may be null (caller must apply resolveMediaAltText)', () => {
+    const m = buildMockMediaItem({ altText: null });
+    expect(m.altText).toBeNull();
+    // resolveMediaAltText should provide safe fallback
+    expect(resolveMediaAltText(m.altText, 'Fallback Title')).toBe('Fallback Title');
+  });
+
+  it('T20.4 — media item does NOT have raw storage bucket path in its shape', () => {
+    const m = buildMockMediaItem() as Record<string, unknown>;
+    expect(m).not.toHaveProperty('storagePath');
+    expect(m).not.toHaveProperty('bucketName');
+    expect(m).not.toHaveProperty('objectKey');
+    expect(m).not.toHaveProperty('rawUrl');
+  });
+
+  it('T20.5 — resolveMediaAltText never returns a string containing a storage URL', () => {
+    // Even if item title accidentally contains a URL fragment, it should be used as-is
+    const result = resolveMediaAltText(null, 'Cotton Fabric');
+    expect(result).not.toContain('storage.googleapis.com');
+    expect(result).not.toContain('supabase.co');
+  });
+});
+

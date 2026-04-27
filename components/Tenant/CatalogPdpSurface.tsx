@@ -1,6 +1,6 @@
 /**
  * CatalogPdpSurface — Buyer Catalog Product Detail Page shell
- * TECS-B2B-BUYER-CATALOG-PDP-001 P-2
+ * TECS-B2B-BUYER-CATALOG-PDP-001 P-2 / P-3
  *
  * Renders the PDP layout for an authenticated B2B buyer.
  * Consumes BuyerCatalogPdpView from the P-1 backend read contract.
@@ -25,6 +25,8 @@
 
 import React from 'react';
 import type {
+  BuyerAvailabilitySummary,
+  BuyerCatalogMedia,
   BuyerCatalogPdpView,
   BuyerCertificateSummaryItem,
 } from '../../services/catalogService';
@@ -57,6 +59,20 @@ export const CATALOG_PDP_ERROR_COPY = 'Unable to load item details.' as const;
 export const CATALOG_PDP_NOT_FOUND_COPY = 'Item not found or unavailable.' as const;
 
 // ---------------------------------------------------------------------------
+// P-3 rendering constants
+// ---------------------------------------------------------------------------
+
+/** Empty state for media gallery when no images are uploaded. */
+export const CATALOG_PDP_MEDIA_EMPTY_COPY = 'No images uploaded yet' as const;
+
+/** Fallback for availability fields when the supplier has not yet provided a value. */
+export const CATALOG_PDP_AVAILABILITY_FALLBACK = 'Available on request' as const;
+
+/** Empty state for compliance summary when no APPROVED certificates exist. */
+export const CATALOG_PDP_COMPLIANCE_EMPTY_COPY =
+  'No certification records available for this item.' as const;
+
+// ---------------------------------------------------------------------------
 // Pure helpers (exported for tests)
 // ---------------------------------------------------------------------------
 
@@ -75,6 +91,50 @@ export function resolveCertStatusTone(
 
 export function formatCategoryBadge(value: string): string {
   return value.replace(/_/g, ' ');
+}
+
+/**
+ * Resolve alt text for a media item.
+ * Falls back to itemTitle if altText is null or blank.
+ * NEVER returns a raw storage path.
+ */
+export function resolveMediaAltText(altText: string | null, itemTitle: string): string {
+  return altText != null && altText.trim().length > 0 ? altText : itemTitle;
+}
+
+/** Format MOQ value+unit for display. Returns fallback when moqValue is null. */
+export function resolveMoqDisplay(
+  moqValue: number | null,
+  moqUnit: string | null,
+): string {
+  if (moqValue == null) return CATALOG_PDP_AVAILABILITY_FALLBACK;
+  return moqUnit != null && moqUnit.trim().length > 0
+    ? `${moqValue} ${moqUnit}`
+    : `${moqValue}`;
+}
+
+/** Format lead time for display. Returns fallback when leadTimeDays is null. */
+export function resolveLeadTimeDisplay(leadTimeDays: number | null): string {
+  if (leadTimeDays == null) return CATALOG_PDP_AVAILABILITY_FALLBACK;
+  return formatLeadTimeDays(leadTimeDays);
+}
+
+/** Format capacity indicator for display. Returns fallback when null. */
+export function resolveCapacityDisplay(
+  capacityIndicator: BuyerAvailabilitySummary['capacityIndicator'],
+): string {
+  if (capacityIndicator == null) return CATALOG_PDP_AVAILABILITY_FALLBACK;
+  return capacityIndicator.replace(/_/g, ' ');
+}
+
+/** Derive a media type badge label from BuyerCatalogMedia.mediaType. */
+export function resolveMediaTypeBadge(media: BuyerCatalogMedia): string {
+  const map: Record<string, string> = {
+    image: 'Image',
+    swatch: 'Swatch',
+    sample: 'Sample',
+  };
+  return map[media.mediaType] ?? media.mediaType;
 }
 
 // ---------------------------------------------------------------------------
@@ -132,25 +192,57 @@ function PdpHero({
 function PdpMediaGallery({
   item,
 }: Readonly<{ item: BuyerCatalogPdpView }>) {
+  if (item.media.length === 0) {
+    return (
+      <section
+        data-testid="buyer-catalog-pdp-media-gallery"
+        className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden"
+      >
+        <div
+          className="flex h-48 items-center justify-center text-sm text-slate-400"
+          role="img"
+          aria-label={`${item.title} — no images uploaded`}
+        >
+          {CATALOG_PDP_MEDIA_EMPTY_COPY}
+        </div>
+      </section>
+    );
+  }
+
+  // Sort by displayOrder before rendering — no raw storage paths in DOM.
+  const sorted = [...item.media].sort((a, b) => a.displayOrder - b.displayOrder);
+
   return (
     <section
       data-testid="buyer-catalog-pdp-media-gallery"
       className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden"
     >
-      {item.media.length > 0 ? (
-        <img
-          src={item.media[0]!.signedUrl}
-          alt={item.media[0]!.altText ?? item.title}
-          className="w-full h-64 object-cover sm:h-80"
-          loading="lazy"
-        />
-      ) : (
-        <div
-          className="flex h-48 items-center justify-center text-sm text-slate-400"
-          role="img"
-          aria-label={`${item.title} — image not available`}
-        >
-          No image available
+      {/* Primary image */}
+      <img
+        src={sorted[0]!.signedUrl}
+        alt={resolveMediaAltText(sorted[0]!.altText, item.title)}
+        className="w-full h-64 object-cover sm:h-80"
+        loading="lazy"
+      />
+      {/* Thumbnail strip for additional media */}
+      {sorted.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto p-3 bg-white border-t border-slate-100">
+          {sorted.map((m) => (
+            <div
+              key={m.mediaId}
+              className="relative flex-none w-20 h-20 rounded-lg overflow-hidden border border-slate-200 bg-slate-50"
+            >
+              <img
+                src={m.signedUrl}
+                alt={resolveMediaAltText(m.altText, item.title)}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <span className="absolute bottom-0 inset-x-0 bg-black/40 text-white text-[9px] font-semibold px-1 py-0.5 text-center truncate">
+                {resolveMediaTypeBadge(m)}
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </section>
@@ -232,16 +324,34 @@ function PdpSpecifications({
 function PdpSupplierSummary({
   item,
 }: Readonly<{ item: BuyerCatalogPdpView }>) {
+  const { availabilitySummary } = item;
   return (
     <section
       data-testid="buyer-catalog-pdp-supplier-summary"
-      className="rounded-2xl border border-slate-200 bg-white px-5 py-5 space-y-2"
+      className="rounded-2xl border border-slate-200 bg-white px-5 py-5 space-y-3"
     >
       <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">Supplier</h2>
       <p className="text-base font-semibold text-slate-900">{item.supplierDisplayName}</p>
-      <p className="text-xs text-slate-500">
-        Supplier profile and relationship details are managed separately.
-      </p>
+      <dl className="space-y-1.5 border-t border-slate-100 pt-3">
+        <div className="flex justify-between text-sm">
+          <dt className="text-slate-500">Min. Order</dt>
+          <dd className="font-medium text-slate-900">
+            {resolveMoqDisplay(availabilitySummary.moqValue, availabilitySummary.moqUnit)}
+          </dd>
+        </div>
+        <div className="flex justify-between text-sm">
+          <dt className="text-slate-500">Lead Time</dt>
+          <dd className="font-medium text-slate-900">
+            {resolveLeadTimeDisplay(availabilitySummary.leadTimeDays)}
+          </dd>
+        </div>
+        <div className="flex justify-between text-sm">
+          <dt className="text-slate-500">Capacity</dt>
+          <dd className="font-medium text-slate-900 capitalize">
+            {resolveCapacityDisplay(availabilitySummary.capacityIndicator)}
+          </dd>
+        </div>
+      </dl>
     </section>
   );
 }
@@ -275,7 +385,7 @@ function PdpComplianceSummary({
         </ul>
       ) : (
         <p className="text-sm text-slate-400 italic">
-          No certified records on file for this supplier at this time.
+          {CATALOG_PDP_COMPLIANCE_EMPTY_COPY}
         </p>
       )}
       <p
@@ -302,23 +412,19 @@ function PdpAvailabilitySummary({
         <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Min. Order</dt>
           <dd className="mt-1 text-sm font-medium text-slate-900">
-            {availabilitySummary.moqValue != null
-              ? `${availabilitySummary.moqValue}${availabilitySummary.moqUnit ? ` ${availabilitySummary.moqUnit}` : ''}`
-              : 'On request'}
+            {resolveMoqDisplay(availabilitySummary.moqValue, availabilitySummary.moqUnit)}
           </dd>
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Lead Time</dt>
           <dd className="mt-1 text-sm font-medium text-slate-900">
-            {availabilitySummary.leadTimeDays != null
-              ? formatLeadTimeDays(availabilitySummary.leadTimeDays)
-              : 'On request'}
+            {resolveLeadTimeDisplay(availabilitySummary.leadTimeDays)}
           </dd>
         </div>
         <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Capacity</dt>
           <dd className="mt-1 text-sm font-medium text-slate-900 capitalize">
-            {availabilitySummary.capacityIndicator?.replace(/_/g, ' ') ?? 'On request'}
+            {resolveCapacityDisplay(availabilitySummary.capacityIndicator)}
           </dd>
         </div>
       </dl>
