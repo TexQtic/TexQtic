@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — DESIGN_ACTIVE; design artifact created)
+**Last Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-1 backend PDP read contract and route implemented)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -368,9 +368,9 @@
     No schema changes. No migrations. No public output.
   Tests: K-1 46 PASS + K-2 service PASS + K-3 route PASS + K-4 80 PASS + K-5 17 PASS = 237/237 PASS.
   No blockers.
-- TECS-B2B-BUYER-CATALOG-PDP-001 is DESIGN_ACTIVE (2026-04-27).
-  Status: DESIGN_ACTIVE. Mode: DESIGN_ONLY. No implementation authorized.
-  Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md.
+- TECS-B2B-BUYER-CATALOG-PDP-001 is IMPLEMENTATION_ACTIVE (2026-04-27).
+  Status: IMPLEMENTATION_ACTIVE. Active slice: P-1 — Backend PDP Read Contract and Route.
+  Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
   Scope: B2B Buyer Catalog Product Detail Page — buyer-facing item detail view converting
     catalog browsing into RFQ intent. Renders item identity, media gallery, textile specifications,
     compliance/certification summary (APPROVED human-reviewed only), supplier summary,
@@ -380,12 +380,16 @@
     TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27)
     TECS-B2B-BUYER-CATALOG-TEXTILE-ATTRIBUTES-FILTERS-001 VERIFIED_COMPLETE (2026-04-24)
     TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001 VERIFIED_COMPLETE (2026-04-24)
-  Implementation slices (P-1 through P-5): ALL UNAUTHORIZED.
+  P-1 IMPLEMENTATION_ACTIVE: GET /api/tenant/catalog/items/:itemId route added to tenant.ts.
+    BuyerCatalogPdpView contract defined in server/src/types/index.ts.
+    getBuyerCatalogPdpItem() service function added to services/catalogService.ts.
+    Tests: tests/b2b-buyer-catalog-pdp.test.ts (13 focused tests, T1–T13).
+    No schema changes. No frontend changes. No price. No AI draft fields.
+  P-2 through P-5: UNAUTHORIZED — each requires explicit Paresh sign-off.
   Future scope deferred: price disclosure (TECS-B2B-BUYER-PRICE-DISCLOSURE-001),
     RFQ prefill (TECS-B2B-BUYER-RFQ-INTEGRATION-001), relationship access
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
-  No implementation changes. No schema changes. No API additions. No frontend changes.
 - D-016 posture: **CLOSED** — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27); 237/237 PASS; decision control satisfied.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.

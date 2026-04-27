@@ -612,7 +612,101 @@ export async function getEligibleSuppliers(): Promise<EligibleSuppliersResponse>
   return tenantGet<EligibleSuppliersResponse>('/api/tenant/b2b/eligible-suppliers');
 }
 
-// ==================== AI SUPPLIER PROFILE COMPLETENESS (TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001) ====================
+// ==================== BUYER CATALOG PDP (TECS-B2B-BUYER-CATALOG-PDP-001) ====================
+
+/** Single media entry on a buyer-facing catalog PDP. */
+export interface BuyerCatalogMedia {
+  mediaId: string;
+  mediaType: 'image' | 'swatch' | 'sample';
+  altText: string | null;
+  signedUrl: string;
+  displayOrder: number;
+}
+
+/** Textile specifications on a buyer-facing catalog PDP — NO price, NO publicationPosture. */
+export interface BuyerCatalogSpecification {
+  productCategory: string | null;
+  fabricType: string | null;
+  gsm: number | null;
+  material: string | null;
+  composition: string | null;
+  color: string | null;
+  widthCm: number | null;
+  construction: string | null;
+  /** Buyer-safe label list from catalog_items.certifications JSONB (Array<{standard:string}>). */
+  certifications: string[] | null;
+}
+
+/** Single APPROVED certificate summary on a buyer-facing catalog PDP. */
+export interface BuyerCertificateSummaryItem {
+  certificateType: string;
+  issuerName: string | null;
+  expiryDate: string | null;
+  status: 'APPROVED' | 'EXPIRING_SOON';
+}
+
+/** Compliance summary — supplier-attested, subject to human review. */
+export interface BuyerComplianceSummary {
+  hasCertifications: boolean;
+  certificates: BuyerCertificateSummaryItem[];
+  humanReviewNotice: string;
+}
+
+/** Availability/MOQ summary — no price. */
+export interface BuyerAvailabilitySummary {
+  moqValue: number | null;
+  moqUnit: string | null;
+  leadTimeDays: number | null;
+  capacityIndicator: 'available' | 'limited' | 'on_request' | null;
+}
+
+/** Safe handoff descriptor for opening an RFQ from the PDP. */
+export interface BuyerRfqEntryDescriptor {
+  triggerLabel: string;
+  itemId: string;
+  supplierId: string;
+  itemTitle: string;
+  category: string | null;
+  stage: string | null;
+}
+
+/** Price placeholder — no actual price is ever disclosed in Phase 1. */
+export interface BuyerPricePlaceholder {
+  label: 'Price available on request';
+  subLabel: 'RFQ required for pricing' | null;
+  note: string | null;
+}
+
+/**
+ * Full buyer-facing catalog product detail page view.
+ * NEVER contains price, publicationPosture, AI draft fields, or admin-internal data.
+ */
+export interface BuyerCatalogPdpView {
+  itemId: string;
+  supplierId: string;
+  supplierDisplayName: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  stage: string | null;
+  media: BuyerCatalogMedia[];
+  specifications: BuyerCatalogSpecification;
+  complianceSummary: BuyerComplianceSummary;
+  availabilitySummary: BuyerAvailabilitySummary;
+  rfqEntry: BuyerRfqEntryDescriptor;
+  pricePlaceholder: BuyerPricePlaceholder;
+}
+
+/**
+ * Fetch a single catalog item for the authenticated B2B buyer (PDP read).
+ * Server enforces eligibility and buyer-safe data contract — no price, no draft data.
+ * TECS-B2B-BUYER-CATALOG-PDP-001 P-1.
+ */
+export async function getBuyerCatalogPdpItem(itemId: string): Promise<BuyerCatalogPdpView> {
+  return tenantGet<BuyerCatalogPdpView>(
+    `/api/tenant/catalog/items/${encodeURIComponent(itemId)}`
+  );
+}
 
 export interface SupplierProfileCompletenessCategoryScores {
   profileIdentity: number;

@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — DESIGN_ACTIVE; design artifact created)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-1 backend PDP read contract and route implemented)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -13,15 +13,18 @@ mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
 product_delivery_priority: TECS-B2B-BUYER-CATALOG-PDP-001
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-PDP-001
-active_delivery_unit_status: DESIGN_ACTIVE
-active_delivery_unit_active_slice: none — design-only; no implementation slice authorized
+active_delivery_unit_status: IMPLEMENTATION_ACTIVE
+active_delivery_unit_active_slice: P-1 — Backend PDP Read Contract and Route
 active_delivery_unit_design_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
+active_delivery_unit_design_commit: d0bcf27
 active_delivery_unit_note: >-
-  TECS-B2B-BUYER-CATALOG-PDP-001 DESIGN_ACTIVE (2026-04-27).
-  Design plan artifact only. No implementation authorized.
-  Current action: Design plan artifact for B2B Buyer Catalog PDP. No implementation authorized.
-  Implementation slices P-1 through P-5 each require explicit Paresh authorization before opening.
-  Do NOT open any implementation slice without explicit sign-off.
+  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27).
+  P-1 delivered: GET /api/tenant/catalog/items/:itemId backend route.
+  BuyerCatalogPdpView contract (server/src/types/index.ts).
+  getBuyerCatalogPdpItem() service (services/catalogService.ts).
+  Tests: tests/b2b-buyer-catalog-pdp.test.ts (T1–T13).
+  No schema changes. No frontend. No price. No AI draft fields.
+  P-2 through P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
 last_closed_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: 237/237 tests PASS
@@ -65,19 +68,20 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 DESIGN_ACTIVE (2026-04-27). Design plan artifact created.
-  docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md.
-  No implementation authorized. Slices P-1 through P-5 each require explicit Paresh sign-off.
+  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27). P-1 delivered.
+  GET /api/tenant/catalog/items/:itemId backend route. BuyerCatalogPdpView contract.
+  getBuyerCatalogPdpItem() service. Tests: b2b-buyer-catalog-pdp.test.ts T1–T13.
+  No schema changes. No frontend. No price. No AI draft fields.
+  P-2 through P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
   Prior: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
-  K-1 de5cf10. K-2 cef8afb. K-3 23fb727. K-4 c96d153. K-5 c9cbf8c.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.
   No price field anywhere in Phase 1 or Phase 2 scope.
   Per-item publicationPosture filtering deferred to Phase 3+.
   Phase 3+ deferred: price disclosure, buyer-supplier allowlist (Phase 6).
-  TECS-B2B-BUYER-CATALOG-PDP-001 is DESIGN_ACTIVE (2026-04-27). Design-only. No implementation authorized.
-  Implementation slices P-1 through P-5 each require explicit Paresh authorization before opening.
+  TECS-B2B-BUYER-CATALOG-PDP-001 is IMPLEMENTATION_ACTIVE (2026-04-27). P-1 delivered.
+  P-2 through P-5 each require explicit Paresh authorization before opening.
   Predecessor: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27).
   Verification: 237/237 tests PASS. Commit chain: K-1 de5cf10 + K-2 cef8afb + K-3 23fb727 + K-4 c96d153 + K-5 c9cbf8c.
   TECS-AI-FOUNDATION-DATA-CONTRACTS-001 is IMPLEMENTATION_COMPLETE.

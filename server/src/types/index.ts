@@ -72,3 +72,78 @@ export type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
 
 // Admin roles
 export type AdminRole = 'SUPER_ADMIN' | 'SUPPORT' | 'ANALYST';
+
+// ==================== BUYER CATALOG PDP TYPES (TECS-B2B-BUYER-CATALOG-PDP-001 P-1) ====================
+
+export interface CatalogMedia {
+  mediaId: string;
+  mediaType: 'image' | 'swatch' | 'sample';
+  altText: string | null;
+  /** signedUrl: imageUrl as-is in P-1 MVP; signing infrastructure deferred to media-table phase */
+  signedUrl: string;
+  displayOrder: number;
+}
+
+export interface CatalogSpecification {
+  productCategory: string | null;
+  fabricType: string | null;
+  gsm: number | null;
+  material: string | null;
+  composition: string | null;
+  color: string | null;
+  widthCm: number | null;
+  construction: string | null;
+  /** buyer-safe label list from catalog_items.certifications JSONB (Array<{standard:string}>) */
+  certifications: string[] | null;
+}
+
+export interface CertificateSummaryItem {
+  certificateType: string;
+  issuerName: string | null;
+  expiryDate: string | null;  // ISO 8601 or null
+  status: 'APPROVED' | 'EXPIRING_SOON';
+}
+
+export interface ComplianceSummary {
+  hasCertifications: boolean;
+  certificates: CertificateSummaryItem[];
+  humanReviewNotice: string;
+}
+
+export interface AvailabilitySummary {
+  moqValue: number | null;
+  moqUnit: string | null;
+  leadTimeDays: number | null;
+  capacityIndicator: 'available' | 'limited' | 'on_request' | null;
+}
+
+export interface RfqEntryDescriptor {
+  triggerLabel: string;
+  itemId: string;
+  supplierId: string;
+  itemTitle: string;
+  category: string | null;
+  stage: string | null;
+}
+
+export interface PricePlaceholder {
+  label: 'Price available on request';
+  subLabel: 'RFQ required for pricing' | null;
+  note: string | null;
+}
+
+export interface BuyerCatalogPdpView {
+  itemId: string;
+  supplierId: string;
+  supplierDisplayName: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  stage: string | null;
+  media: CatalogMedia[];
+  specifications: CatalogSpecification;
+  complianceSummary: ComplianceSummary;
+  availabilitySummary: AvailabilitySummary;
+  rfqEntry: RfqEntryDescriptor;
+  pricePlaceholder: PricePlaceholder;
+}

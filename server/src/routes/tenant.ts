@@ -1,6 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Prisma } from '@prisma/client';
-import type { TenantPlan } from '../types/index.js';
+import type {
+  TenantPlan,
+  BuyerCatalogPdpView,
+  CatalogMedia,
+  CertificateSummaryItem,
+} from '../types/index.js';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -2079,6 +2084,200 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       return sendSuccess(reply, { id, deleted: true });
+    }
+  );
+
+  /**
+   * GET /api/tenant/catalog/items/:itemId
+   * Buyer catalog PDP — single item detail view (TECS-B2B-BUYER-CATALOG-PDP-001 P-1)
+   *
+   * Authenticated B2B buyer reads a single catalog item detail.
+   * Gate 1: item must be active AND publication_posture IN ('B2B_PUBLIC', 'BOTH').
+   * Gate 2: supplier org eligibility (organizations.publication_posture + tenant.publicEligibilityPosture).
+   * Cross-tenant read via SET LOCAL ROLE texqtic_rfq_read.
+   * Supplier org data and APPROVED certifications via withOrgAdminContext (admin realm RLS).
+   *
+   * Returns BuyerCatalogPdpView. 404 for all missing/out-of-scope cases (never 403).
+   * orgId ALWAYS from request.dbContext — NEVER from query/body.
+   * NEVER exposes: price, publicationPosture, AI draft fields, admin fields, raw extraction data.
+   */
+  fastify.get(
+    '/tenant/catalog/items/:itemId',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
+
+      const paramsSchema = z.object({ itemId: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      const { itemId } = paramsResult.data;
+      // orgId is ALWAYS from dbContext (populated by databaseContextMiddleware from JWT).
+      // It is intentionally unused in the item query itself — the buyer's org does not filter
+      // cross-tenant catalog reads; eligibility is governed by the supplier's org posture.
+      void request.dbContext.orgId;
+
+      // Step 1: Cross-tenant item read (texqtic_rfq_read role — bypasses RLS for buyer browse)
+      type RawPdpItemRow = {
+        id: string; tenant_id: string; name: string; sku: string | null;
+        description: string | null; moq: number; image_url: string | null;
+        product_category: string | null; fabric_type: string | null; gsm: unknown;
+        material: string | null; composition: string | null; color: string | null;
+        width_cm: unknown; construction: string | null; certifications: unknown;
+        catalog_stage: string | null;
+      };
+
+      const itemRows = await prisma.$transaction(async tx => {
+        await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+        return tx.$queryRaw<RawPdpItemRow[]>`
+          SELECT id, tenant_id, name, sku, description, moq, image_url,
+                 product_category, fabric_type, gsm, material, composition,
+                 color, width_cm, construction, certifications, catalog_stage
+          FROM catalog_items
+          WHERE id = ${itemId}::uuid
+            AND active = true
+            AND publication_posture IN ('B2B_PUBLIC', 'BOTH')
+        `;
+      });
+
+      if (itemRows.length === 0) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      const item = itemRows[0]!;
+      const supplierTenantId = item.tenant_id;
+
+      // Step 2: Supplier org eligibility + display name (admin context — organizations RLS)
+      type SupplierOrgData = { legalName: string } | null;
+      const supplierData: SupplierOrgData = await withOrgAdminContext(prisma, async tx => {
+        const [org, tenant] = await Promise.all([
+          tx.organizations.findUnique({
+            where: { id: supplierTenantId },
+            select: { legal_name: true, publication_posture: true },
+          }),
+          tx.tenant.findUnique({
+            where: { id: supplierTenantId },
+            select: { publicEligibilityPosture: true },
+          }),
+        ]);
+
+        if (!org || !tenant) return null;
+
+        const postureEligible =
+          org.publication_posture === 'B2B_PUBLIC' || org.publication_posture === 'BOTH';
+        const tenantEligible =
+          (tenant.publicEligibilityPosture as string) === 'PUBLICATION_ELIGIBLE';
+
+        if (!postureEligible || !tenantEligible) return null;
+        return { legalName: org.legal_name };
+      });
+
+      if (!supplierData) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      // Step 3: APPROVED certifications for supplier org (admin context — certifications RLS is org-scoped)
+      type ApprovedCertRow = {
+        certificationType: string;
+        issuedAt: Date | null;
+        expiresAt: Date | null;
+      };
+      const approvedCerts = await withOrgAdminContext(prisma, async tx => {
+        return tx.certification.findMany({
+          where: {
+            orgId: supplierTenantId,
+            lifecycleState: { entityType: 'CERTIFICATION', stateKey: 'APPROVED' },
+          },
+          select: {
+            certificationType: true,
+            issuedAt: true,
+            expiresAt: true,
+          },
+        }) as Promise<ApprovedCertRow[]>;
+      });
+
+      // Step 4: Build BuyerCatalogPdpView — no price, no AI draft fields, no internal admin fields
+      const EXPIRING_SOON_MS = 30 * 24 * 60 * 60 * 1000; // 30 calendar days
+      const now = new Date();
+
+      const certificates: CertificateSummaryItem[] = approvedCerts.map(c => ({
+        certificateType: c.certificationType,
+        issuerName: null,
+        expiryDate: c.expiresAt != null ? c.expiresAt.toISOString() : null,
+        status:
+          c.expiresAt != null && c.expiresAt.getTime() - now.getTime() < EXPIRING_SOON_MS
+            ? 'EXPIRING_SOON' as const
+            : 'APPROVED' as const,
+      }));
+
+      const rawCertStandards = Array.isArray(item.certifications)
+        ? (item.certifications as Array<{ standard: string }>)
+            .filter(c => typeof c?.standard === 'string')
+            .map(c => c.standard)
+        : null;
+
+      const media: CatalogMedia[] = item.image_url != null
+        ? [{
+            mediaId: `${item.id}_primary`,
+            mediaType: 'image' as const,
+            altText: null,
+            signedUrl: item.image_url,
+            displayOrder: 1,
+          }]
+        : [];
+
+      const view: BuyerCatalogPdpView = {
+        itemId: item.id,
+        supplierId: supplierTenantId,
+        supplierDisplayName: supplierData.legalName,
+        title: item.name,
+        description: item.description,
+        category: item.product_category,
+        stage: item.catalog_stage,
+        media,
+        specifications: {
+          productCategory: item.product_category,
+          fabricType: item.fabric_type,
+          gsm: item.gsm != null ? Number(item.gsm) : null,
+          material: item.material,
+          composition: item.composition,
+          color: item.color,
+          widthCm: item.width_cm != null ? Number(item.width_cm) : null,
+          construction: item.construction,
+          certifications: rawCertStandards,
+        },
+        complianceSummary: {
+          hasCertifications: certificates.length > 0,
+          certificates,
+          humanReviewNotice:
+            'Compliance data shown is supplier-attested and subject to human review',
+        },
+        availabilitySummary: {
+          moqValue: typeof item.moq === 'number' ? item.moq : Number(item.moq),
+          moqUnit: null,
+          leadTimeDays: null,
+          capacityIndicator: null,
+        },
+        rfqEntry: {
+          triggerLabel: 'Request Quote',
+          itemId: item.id,
+          supplierId: supplierTenantId,
+          itemTitle: item.name,
+          category: item.product_category,
+          stage: item.catalog_stage,
+        },
+        pricePlaceholder: {
+          label: 'Price available on request',
+          subLabel: 'RFQ required for pricing',
+          note: 'Pricing is confirmed through the quote process',
+        },
+      };
+
+      return sendSuccess(reply, view);
     }
   );
 

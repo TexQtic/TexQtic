@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — DESIGN_ACTIVE; design artifact created)
+**Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-1 backend PDP read contract and route implemented)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -15,11 +15,14 @@ snapshot_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 current_open_design_unit: TECS-B2B-BUYER-CATALOG-PDP-001
-current_open_design_unit_status: DESIGN_ACTIVE
+current_open_design_unit_status: IMPLEMENTATION_ACTIVE
 current_open_design_unit_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
 current_open_design_unit_note: >-
-  Design-only. No implementation authorized. Slices P-1 through P-5 each require explicit
-  Paresh sign-off. Browsing → RFQ decision surface. Price/relationship/DPP deferred.
+  P-1 IMPLEMENTATION_ACTIVE. Backend PDP read contract delivered.
+  GET /api/tenant/catalog/items/:itemId route. BuyerCatalogPdpView contract.
+  getBuyerCatalogPdpItem() service. 13 tests (T1–T13). No schema. No frontend. No price.
+  P-2 through P-5: UNAUTHORIZED — each requires explicit Paresh sign-off.
+  Browsing → RFQ decision surface. Price/relationship/DPP deferred.
 latest_verified_product_close_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-27
@@ -59,15 +62,16 @@ preserved_aligned_anchor_posture:
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-B2B-BUYER-CATALOG-PDP-001
-current_product_active_delivery_status: DESIGN_ACTIVE
-current_product_active_delivery_slice: none — design-only; no implementation slice authorized
+current_product_active_delivery_status: IMPLEMENTATION_ACTIVE
+current_product_active_delivery_slice: P-1 — Backend PDP Read Contract and Route
 runtime_verification_status: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 DESIGN_ACTIVE (2026-04-27).
-  Design plan artifact created: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md.
-  Mode: DESIGN_ONLY. No implementation authorized.
-  Objective: B2B Buyer Catalog Product Detail Page — browsing → RFQ intent conversion.
-  Slices P-1 through P-5 unauthorized. Awaiting Paresh slice authorization.
+  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27). P-1 delivered.
+  Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
+  P-1: GET /api/tenant/catalog/items/:itemId backend route. BuyerCatalogPdpView contract.
+  getBuyerCatalogPdpItem() service function. Tests: b2b-buyer-catalog-pdp.test.ts (T1–T13).
+  No schema changes. No frontend changes. No price. No AI draft fields.
+  P-2 through P-5 UNAUTHORIZED. Awaiting Paresh slice authorization.
   Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
 latest_verified_product_close: |
   TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
