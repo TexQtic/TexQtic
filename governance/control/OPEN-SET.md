@@ -406,10 +406,12 @@
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
   No blockers.
-- TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-4 COMPLETE, pending commit.
-  Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (pending commit).
+- TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-5.
+  Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 ACTIVE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.
   D-4 key decisions: claim_type CHECK (9 allowed types); humanReviewRequired structural constant; org_id from dbContext (D-017-A); approved_by FK ON DELETE SET NULL (audit trail preserved); no public/buyer endpoints.
+  D-4 FK review finding (required by D-5): approved_by NOT NULL + ON DELETE SET NULL creates latent inconsistency — user deletion fails (FK violation) rather than nullifying approver. Safe for D-5. Needs future migration: drop NOT NULL on approved_by OR change FK to ON DELETE RESTRICT.
+  D-5 scope (TECS-DPP-EXPORT-SHARE-001): GET /tenant/dpp/:nodeId/passport/export — authenticated tenant-internal export only. No public route, no QR, no JSON-LD, no passportStatus mutation, no PDP linkage. publicationStatus: INTERNAL_EXPORT_ONLY structural constant. humanReviewRequired: true structural constant. Composes DppPassportFoundationView + approved evidence claims. Audit: tenant.dpp.passport.exported. 64/64 tests PASS.
   Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
   Prerequisite audit: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId, 3 DPP snapshot views, App.tsx routing,
     Shells.tsx wiring, DPP-SNAPSHOT-VIEWS-DISCOVERY.md, DPP-SNAPSHOT-VIEWS-DESIGN.md — all read and confirmed.

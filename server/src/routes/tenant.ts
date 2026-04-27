@@ -5451,6 +5451,248 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     );
   }
 
+  // ─── TECS-DPP-EXPORT-SHARE-001 D-5: DPP Passport Server-Side Export ──────────
+  // GET /api/tenant/dpp/:nodeId/passport/export
+  // Authenticated tenant-internal export only.
+  // No public route, no QR, no JSON-LD, no passportStatus mutation.
+  // Composes DppPassportFoundationView + approved evidence claims into a controlled JSON snapshot.
+  // Audit: tenant.dpp.passport.exported
+  //
+  // D-4 FK review note (D-5 required inspection):
+  //   approved_by is declared NOT NULL with FK ON DELETE SET NULL on the users table.
+  //   The NOT NULL constraint makes SET NULL unreachable — when a referenced user is deleted,
+  //   PostgreSQL attempts SET NULL on approved_by but the NOT NULL constraint blocks it,
+  //   causing the DELETE to fail rather than nullifying the approver reference.
+  //   Finding: LATENT INCONSISTENCY — safe for D-5 (export not affected), but needs future migration.
+  //   Recommended fix (unauthorized in D-5): drop NOT NULL on approved_by OR change FK to ON DELETE RESTRICT.
+  //   No change authorized in D-5.
+
+  // --- D-5 types ---
+  interface D5EvidenceClaimRow {
+    id: string;
+    org_id: string;
+    node_id: string;
+    extraction_id: string;
+    claim_type: string;
+    claim_value: unknown;
+    approved_by: string;
+    approved_at: Date;
+    created_at: Date;
+  }
+
+  /**
+   * GET /api/tenant/dpp/:nodeId/passport/export
+   *
+   * Returns a server-composed JSON export of the DPP Passport Foundation view
+   * for the given traceability node. Includes passport identity, lineage,
+   * certifications, maturity, and approved AI evidence claims.
+   *
+   * Boundaries (structural constants):
+   *   - Authenticated tenant-only — no public access
+   *   - publicationStatus is always INTERNAL_EXPORT_ONLY (not a publication event)
+   *   - humanReviewRequired: true (structural constant from TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001)
+   *   - Does NOT mutate passportStatus, maturity, or evidence claims
+   *   - No QR, no JSON-LD, no EU DPP compliance certification
+   *   - Evidence claims: id/orgId/nodeId/extractionId/claimType/claimValue/approvedBy/approvedAt only
+   *   - Excluded: AI confidence scores, unreviewed drafts, raw file paths, admin notes
+   *
+   * Auth:  tenantAuthMiddleware + databaseContextMiddleware
+   * Audit: writes tenant.dpp.passport.exported on every successful export
+   */
+  fastify.get(
+    '/tenant/dpp/:nodeId/passport/export',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const paramsSchema = z.object({ nodeId: z.string().uuid('nodeId must be a valid UUID') });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+      const { nodeId } = paramsResult.data;
+
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // ── 1. Query all DPP views + passport state + evidence claims in one tenant-scoped tx ──
+      const [productRows, lineageRows, certRows, passportStateRows, evidenceClaimRows] =
+        await withDbContext(prisma, dbContext, async tx => {
+          const products = await tx.$queryRaw<DppProductRow[]>`
+            SELECT
+              node_id, org_id, batch_id, node_type, meta,
+              geo_hash, visibility, created_at, updated_at,
+              manufacturer_name, manufacturer_jurisdiction, manufacturer_registration_no
+            FROM dpp_snapshot_products_v1
+            WHERE node_id = ${nodeId}::uuid
+          `;
+
+          const lineage = await tx.$queryRaw<DppLineageRow[]>`
+            SELECT
+              root_node_id, node_id, parent_node_id,
+              depth, edge_type, transformation_id, org_id, created_at
+            FROM dpp_snapshot_lineage_v1
+            WHERE root_node_id = ${nodeId}::uuid
+          `;
+
+          const certs = await tx.$queryRaw<DppCertRow[]>`
+            SELECT
+              node_id, certification_id, certification_type,
+              lifecycle_state_id, lifecycle_state_name, issued_at, expiry_date, org_id
+            FROM dpp_snapshot_certifications_v1
+            WHERE node_id = ${nodeId}::uuid
+               OR (node_id IS NULL AND org_id = (
+                 SELECT org_id FROM dpp_snapshot_products_v1 WHERE node_id = ${nodeId}::uuid LIMIT 1
+               ))
+          `;
+
+          const passportStates = await tx.$queryRaw<DppPassportStateRow[]>`
+            SELECT id, org_id, node_id, status, created_at, updated_at, reviewed_at, reviewed_by_user_id
+            FROM dpp_passport_states
+            WHERE node_id = ${nodeId}::uuid
+            LIMIT 1
+          `;
+
+          // D-5: evidence claims — all rows approved by design (approved_by NOT NULL in DDL).
+          // Excluded by table structure: AI confidence scores, unreviewed extraction drafts,
+          // raw document file paths, source storage paths, admin notes.
+          const evidenceClaims = await tx.$queryRaw<D5EvidenceClaimRow[]>`
+            SELECT id, org_id, node_id, extraction_id, claim_type, claim_value,
+                   approved_by, approved_at, created_at
+            FROM dpp_evidence_claims
+            WHERE node_id = ${nodeId}::uuid
+            ORDER BY created_at ASC
+          `;
+
+          return [products, lineage, certs, passportStates, evidenceClaims] as [
+            DppProductRow[],
+            DppLineageRow[],
+            DppCertRow[],
+            DppPassportStateRow[],
+            D5EvidenceClaimRow[],
+          ];
+        });
+
+      // ── 2. 404 if no product row — RLS may hide the node from this tenant ──
+      if (productRows.length === 0) {
+        return sendNotFound(reply, 'DPP passport not found or access denied');
+      }
+
+      const product = productRows[0];
+
+      // ── 3. Compute passport status (DRAFT if no state row exists) ──
+      const rawStatus = passportStateRows[0]?.status ?? 'DRAFT';
+      const passportStatus: DppPassportStatus = (
+        ['DRAFT', 'INTERNAL', 'TRADE_READY', 'PUBLISHED'] as const
+      ).includes(rawStatus as DppPassportStatus)
+        ? (rawStatus as DppPassportStatus)
+        : 'DRAFT';
+
+      // ── 4. Compute evidence summary ──────────────────────────────────────────
+      const approvedCertCount = certRows.filter(
+        c => c.lifecycle_state_name === 'APPROVED',
+      ).length;
+      const lineageDepth =
+        lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
+      const aiExtractedClaimsCount = evidenceClaimRows.length;
+
+      // ── 5. Compute passport maturity ──────────────────────────────────────────
+      const passportMaturity = computeDppMaturity({
+        approvedCertCount,
+        lineageDepth,
+        passportStatus,
+      });
+
+      // ── 6. Write export audit entry ───────────────────────────────────────────
+      const exportedAt = new Date();
+      const exportedBy = request.userId ?? null;
+
+      await writeAuditLog(prisma, {
+        tenantId: request.tenantId ?? null,
+        realm: 'TENANT',
+        actorType: 'USER',
+        actorId: exportedBy,
+        action: 'tenant.dpp.passport.exported',
+        entity: 'traceability_node',
+        entityId: nodeId,
+        metadataJson: {
+          nodeId,
+          exportVersion: 'dpp-passport-foundation-v1',
+          evidenceClaimCount: aiExtractedClaimsCount,
+          passportStatus,
+          passportMaturity,
+          humanReviewRequired: true,
+        },
+      });
+
+      // ── 7. Shape export payload ───────────────────────────────────────────────
+      return sendSuccess(reply, {
+        exportVersion: 'dpp-passport-foundation-v1' as const,
+        exportedAt: exportedAt.toISOString(),
+        exportedBy,
+        nodeId,
+        passport: {
+          nodeId,
+          orgId: product.org_id,
+          batchId: product.batch_id,
+          nodeType: product.node_type,
+          meta: product.meta,
+          geoHash: product.geo_hash,
+          visibility: product.visibility,
+          createdAt: product.created_at,
+          updatedAt: product.updated_at,
+          manufacturerName: product.manufacturer_name,
+          manufacturerJurisdiction: product.manufacturer_jurisdiction,
+          manufacturerRegistrationNo: product.manufacturer_registration_no,
+
+          lineage: lineageRows.map(row => ({
+            rootNodeId: row.root_node_id,
+            nodeId: row.node_id,
+            parentNodeId: row.parent_node_id,
+            depth: row.depth,
+            edgeType: row.edge_type,
+            transformationId: row.transformation_id,
+            createdAt: row.created_at,
+          })),
+
+          certifications: certRows.map(row => ({
+            nodeId: row.node_id,
+            certificationId: row.certification_id,
+            certificationType: row.certification_type,
+            lifecycleStateId: row.lifecycle_state_id,
+            lifecycleStateName: row.lifecycle_state_name,
+            expiryDate: row.expiry_date,
+            issuedAt: row.issued_at,
+            orgId: row.org_id,
+          })),
+
+          passportMaturity,
+          passportStatus,
+
+          passportEvidenceSummary: {
+            aiExtractedClaimsCount,
+            approvedCertCount,
+            lineageDepth,
+          },
+
+          meta_passport: {},
+        },
+        evidenceClaims: evidenceClaimRows.map(row => ({
+          id: row.id,
+          orgId: row.org_id,
+          nodeId: row.node_id,
+          extractionId: row.extraction_id,
+          claimType: row.claim_type,
+          claimValue: row.claim_value,
+          approvedBy: row.approved_by,
+          approvedAt: row.approved_at,
+          createdAt: row.created_at,
+        })),
+        humanReviewRequired: true as const,
+        publicationStatus: 'INTERNAL_EXPORT_ONLY' as const,
+      });
+    },
+  );
+
   // ─── G-022: Tenant escalation routes ────────────────────────────────────────
   // GET  /api/tenant/escalations
   // POST /api/tenant/escalations
