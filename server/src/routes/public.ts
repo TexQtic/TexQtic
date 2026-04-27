@@ -876,13 +876,6 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     return handlePublicDppRead(paramsResult.data.publicPassportId, request, reply, false);
   });
 
-  // GET /api/public/dpp/:publicPassportId.json
-  // find-my-way captures :publicPassportId as the part before the .json suffix.
-  fastify.get('/dpp/:publicPassportId\\.json', async (request, reply) => {
-    const paramsResult = dppPublicParamSchema.safeParse(request.params);
-    if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
-    return handlePublicDppRead(paramsResult.data.publicPassportId, request, reply, true);
-  });
 };
 
 export default publicRoutes;
