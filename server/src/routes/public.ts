@@ -23,10 +23,13 @@
  *   SELECT grants on public.memberships and public.users for the lookup role.
  *   Deployed via pnpm -C server migrate:deploy:prod (OPS-ENV-001).
  */
-import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { sendSuccess, sendError, sendValidationError } from '../utils/response.js';
 import { prisma } from '../db/prisma.js';
+import { withDbContext } from '../lib/database-context.js';
+import { writeAuditLog } from '../lib/auditLog.js';
 import { normalizeHost, parsePlatformHost } from '../lib/hostNormalize.js';
 import { resolveHostToTenant } from './internal/resolveDomain.js';
 import { listPublicB2BSuppliers } from '../services/publicB2BProjection.service.js';
@@ -644,6 +647,241 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     const { geo, page, limit } = parseResult.data;
     const result = await listPublicB2CProducts({ geo, page, limit }, prisma);
     return sendSuccess(reply, result);
+  });
+
+  // ─── TECS-DPP-PUBLIC-QR-001 D-6: Public Published DPP Access ────────────────
+  // GET /api/public/dpp/:publicPassportId       — JSON view of a PUBLISHED DPP
+  // GET /api/public/dpp/:publicPassportId.json  — same payload, explicit Content-Type
+  //
+  // Access model:
+  //   Phase 1: texqtic_public_lookup role — lookup dpp_passport_states by public_token
+  //            where status = 'PUBLISHED'. Returns org_id + node_id.
+  //            Safe 404 for any non-PUBLISHED or missing token.
+  //   Phase 2: withDbContext({ orgId }) — query DPP snapshot views scoped to the
+  //            passport owner's tenant. SECURITY INVOKER views; app.org_id enforces RLS.
+  //
+  // Public identifier: public_token UUID (Option B). No nodeId or orgId in response.
+  // QR: payload URL descriptor only. No image generation (no qrcode package in repo).
+  // Rate limiting: not available (no @fastify/rate-limit in repo). Non-blocking.
+  // aiExtractedClaimsCount: 0 — dpp_evidence_claims RLS uses incorrect GUC key
+  //   (current_setting('app.current_org_id') vs app.org_id set by withDbContext).
+  //   Skipping evidence claims query for public view pending D-3/D-4 RLS migration fix.
+  // No JSON-LD. No passportStatus mutation. No auth required.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // --- D-6 local types ---
+  interface D6PassportStateRow {
+    id: string;
+    org_id: string;
+    node_id: string;
+    status: string;
+    public_token: string | null;
+  }
+  type D6MaturityLevel = 'LOCAL_TRUST' | 'TRADE_READY' | 'COMPLIANCE' | 'GLOBAL_DPP';
+  interface D6ProductRow {
+    node_id: string;
+    org_id: string;
+    batch_id: string | null;
+    node_type: string | null;
+    manufacturer_name: string | null;
+    manufacturer_jurisdiction: string | null;
+  }
+  interface D6LineageRow {
+    root_node_id: string;
+    node_id: string;
+    depth: number;
+  }
+  interface D6CertRow {
+    certification_type: string | null;
+    lifecycle_state_name: string | null;
+    issued_at: Date | null;
+    expiry_date: Date | null;
+  }
+
+  // Pure maturity computation — mirrors computeDppMaturity in tenant.ts (D-3 rules).
+  function computeDppMaturityPublic(input: {
+    approvedCertCount: number;
+    lineageDepth: number;
+  }): D6MaturityLevel {
+    if (input.approvedCertCount >= 1 && input.lineageDepth >= 1) {
+      return 'TRADE_READY';
+    }
+    return 'LOCAL_TRUST';
+  }
+
+  const dppPublicParamSchema = z.object({
+    publicPassportId: z.string().uuid('publicPassportId must be a valid UUID'),
+  });
+
+  const APP_PUBLIC_URL = (process.env['APP_PUBLIC_URL'] ?? 'https://app.texqtic.com') as string;
+
+  // Shared handler for both routes.
+  async function handlePublicDppRead(
+    publicPassportId: string,
+    _request: FastifyRequest,
+    reply: FastifyReply,
+    jsonRoute: boolean,
+  ): Promise<unknown> {
+    // ── Phase 1: public_token lookup as texqtic_public_lookup ──────────────────
+    let stateRows: D6PassportStateRow[];
+    try {
+      stateRows = await prisma.$transaction(async tx => {
+        await tx.$executeRaw`SET LOCAL ROLE texqtic_public_lookup`;
+        return tx.$queryRaw<D6PassportStateRow[]>`
+          SELECT id, org_id, node_id, status, public_token
+          FROM dpp_passport_states
+          WHERE public_token = ${publicPassportId}::uuid
+            AND status = 'PUBLISHED'
+          LIMIT 1
+        `;
+      });
+    } catch (err) {
+      fastify.log.error({ err }, '[D6] Phase 1 passport state lookup failed');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to resolve DPP passport', 500);
+    }
+
+    if (stateRows.length === 0) {
+      // Safe 404 — do not distinguish "not found" from "not PUBLISHED"
+      return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
+    }
+
+    const stateRow = stateRows[0];
+    const orgId = stateRow.org_id;
+    const nodeId = stateRow.node_id;
+
+    // ── Phase 2: tenant-scoped DPP snapshot queries ─────────────────────────────
+    let productRows: D6ProductRow[];
+    let lineageRows: D6LineageRow[];
+    let certRows: D6CertRow[];
+
+    try {
+      [productRows, lineageRows, certRows] = await withDbContext(
+        prisma,
+        {
+          orgId,
+          actorId: 'SYSTEM_PUBLIC_DPP', // sentinel — unauthenticated public read
+          realm: 'tenant',
+          requestId: randomUUID(),
+        },
+        async tx => {
+          const products = await tx.$queryRaw<D6ProductRow[]>`
+            SELECT node_id, org_id, batch_id, node_type,
+                   manufacturer_name, manufacturer_jurisdiction
+            FROM dpp_snapshot_products_v1
+            WHERE node_id = ${nodeId}::uuid
+          `;
+
+          const lineage = await tx.$queryRaw<D6LineageRow[]>`
+            SELECT root_node_id, node_id, depth
+            FROM dpp_snapshot_lineage_v1
+            WHERE root_node_id = ${nodeId}::uuid
+          `;
+
+          const certs = await tx.$queryRaw<D6CertRow[]>`
+            SELECT certification_type, lifecycle_state_name, issued_at, expiry_date
+            FROM dpp_snapshot_certifications_v1
+            WHERE node_id = ${nodeId}::uuid
+               OR (node_id IS NULL AND org_id = (
+                 SELECT org_id FROM dpp_snapshot_products_v1
+                 WHERE node_id = ${nodeId}::uuid LIMIT 1
+               ))
+          `;
+
+          // Best-effort audit — writeAuditLog catches errors non-fatally
+          await writeAuditLog(tx, {
+            tenantId: orgId,
+            realm: 'TENANT',
+            actorType: 'SYSTEM',
+            actorId: null,
+            action: 'public.dpp.read',
+            entity: 'traceability_node',
+            entityId: nodeId,
+            metadataJson: {
+              publicPassportId,
+              passportStatus: 'PUBLISHED',
+              routeType: jsonRoute ? 'json' : 'html',
+            },
+          });
+
+          return [products, lineage, certs] as [D6ProductRow[], D6LineageRow[], D6CertRow[]];
+        },
+      );
+    } catch (err) {
+      fastify.log.error({ err }, '[D6] Phase 2 DPP snapshot query failed');
+      return sendError(reply, 'INTERNAL_ERROR', 'Failed to load DPP passport data', 500);
+    }
+
+    if (productRows.length === 0) {
+      // Product row missing — RLS or data issue; safe 404
+      return sendError(reply, 'DPP_NOT_FOUND', 'DPP passport not found', 404);
+    }
+
+    const product = productRows[0];
+
+    // ── Compute passport maturity ──────────────────────────────────────────────
+    const approvedCertCount = certRows.filter(c => c.lifecycle_state_name === 'APPROVED').length;
+    const lineageDepth = lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
+    const passportMaturity = computeDppMaturityPublic({ approvedCertCount, lineageDepth });
+
+    // ── Shape restricted DppPublicPassportView ─────────────────────────────────
+    // EXCLUDED: orgId, nodeId (raw), meta, geoHash, visibility,
+    //           manufacturerRegistrationNo, certificationId, lifecycleStateId,
+    //           extractionId, claim_value, approved_by, approved_at,
+    //           AI confidence scores, storage URLs, admin notes.
+    const payload = {
+      publicPassportId,
+      passportStatus: 'PUBLISHED' as const,
+      passportMaturity,
+      product: {
+        nodeType: product.node_type,
+        batchId: product.batch_id,
+        manufacturerName: product.manufacturer_name,
+        manufacturerJurisdiction: product.manufacturer_jurisdiction,
+      },
+      lineageSummary: {
+        lineageDepth,
+        nodeCount: lineageRows.length,
+      },
+      certifications: certRows.map(row => ({
+        certificationType: row.certification_type,
+        lifecycleStateName: row.lifecycle_state_name,
+        expiryDate: row.expiry_date ? row.expiry_date.toISOString() : null,
+        issuedAt: row.issued_at ? row.issued_at.toISOString() : null,
+      })),
+      evidenceSummary: {
+        approvedCertCount,
+        // aiExtractedClaimsCount fixed at 0 — dpp_evidence_claims RLS uses incorrect
+        // GUC key (current_setting('app.current_org_id') vs app.org_id). Skipping
+        // evidence claims query pending D-3/D-4 RLS migration fix.
+        aiExtractedClaimsCount: 0,
+      },
+      qr: {
+        payloadUrl: `${APP_PUBLIC_URL}/dpp/${publicPassportId}`,
+        format: 'url' as const,
+      },
+      exportedAt: new Date().toISOString(),
+    };
+
+    if (jsonRoute) {
+      void reply.header('Content-Type', 'application/json');
+    }
+
+    return sendSuccess(reply, payload);
+  }
+
+  // GET /api/public/dpp/:publicPassportId
+  fastify.get('/dpp/:publicPassportId', async (request, reply) => {
+    const paramsResult = dppPublicParamSchema.safeParse(request.params);
+    if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+    return handlePublicDppRead(paramsResult.data.publicPassportId, request, reply, false);
+  });
+
+  // GET /api/public/dpp/:publicPassportId.json
+  // find-my-way captures :publicPassportId as the part before the .json suffix.
+  fastify.get('/dpp/:publicPassportId\\.json', async (request, reply) => {
+    const paramsResult = dppPublicParamSchema.safeParse(request.params);
+    if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+    return handlePublicDppRead(paramsResult.data.publicPassportId, request, reply, true);
   });
 };
 
