@@ -34,7 +34,7 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const RFQ_ASSIST_PREFLIGHT_TOKENS = 2000 as const;
-export const RFQ_ASSIST_MODEL = 'gemini-1.5-flash' as const;
+export const RFQ_ASSIST_MODEL = 'gemini-2.5-flash' as const;
 export const RFQ_ASSIST_TIMEOUT_MS = 10_000 as const;
 
 // ─── Input / Output types ─────────────────────────────────────────────────────

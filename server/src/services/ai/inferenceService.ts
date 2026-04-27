@@ -142,7 +142,7 @@ async function generateContent(
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction: systemInstruction,
     });
 
@@ -188,7 +188,7 @@ export type AiTaskType = 'insights' | 'negotiation-advice' | 'rfq-assist';
  *
  * orgId          — contextTenantId (dbContext.orgId)
  * taskType       — determines orchestration path (RAG, audit builder, risk flags)
- * model          — Gemini model name (e.g. 'gemini-1.5-flash')
+ * model          — Gemini model name (e.g. 'gemini-2.5-flash')
  * prompt         — assembled user/task prompt (without RAG context block)
  * systemInstruction — system-role instruction for the model
  * preflightTokens   — conservative token estimate used for budget preflight

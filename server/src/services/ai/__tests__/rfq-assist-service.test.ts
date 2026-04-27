@@ -56,8 +56,8 @@ vi.mock('../../../config/index.js', () => ({
 }));
 
 describe('rfqAssistService constants', () => {
-  it('uses gemini-1.5-flash as the default model', () => {
-    expect(RFQ_ASSIST_MODEL).toBe('gemini-1.5-flash');
+  it('uses gemini-2.5-flash as the default model', () => {
+    expect(RFQ_ASSIST_MODEL).toBe('gemini-2.5-flash');
   });
 
   it('sets a reasonable preflight token estimate', () => {

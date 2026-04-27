@@ -162,7 +162,7 @@ async function cpGenerateContent(
 
   try {
     const model = cpGenAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction:
         'You are a strategic AI advisor for the TexQtic platform control plane. ' +
         'Provide concise, factual platform-level insights for platform administrators. ' +
@@ -244,7 +244,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       {
         adminActorId: adminId,
         taskType: 'control-plane-insights',
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         fieldCount: piiResult.matchCount,
         requestId,
       },
@@ -322,7 +322,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
         'ai',
         {
           requestId,
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           tokensUsed: 0,
           inferenceLatencyMs: 0,
           hadInferenceError: false,
@@ -347,7 +347,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
         {
           adminActorId: adminId,
           taskType: 'control-plane-insights',
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           latencyMs: 0,
           requestId,
           ...(targetOrgMeta?.id !== undefined ? { targetOrgId: targetOrgMeta.id } : {}),
@@ -404,7 +404,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       {
         adminActorId: adminId,
         taskType: 'control-plane-insights',
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         leakType: outputScan.categories.join(','),
         requestId,
       },
@@ -434,7 +434,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
           requestFingerprint,
           requestBucketStart,
           reasoningHash,
-          model: 'gemini-1.5-flash',
+          model: 'gemini-2.5-flash',
           promptSummary: safePrompt.slice(0, 200),
           responseSummary: generation.text.slice(0, 500),
           tokensUsed: generation.tokensUsed,
@@ -498,7 +498,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
     'ai',
     {
       requestId,
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       tokensUsed: generation.tokensUsed,
       inferenceLatencyMs,
       hadInferenceError: generation.hadInferenceError,
@@ -525,7 +525,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       {
         adminActorId: adminId,
         taskType: 'control-plane-insights',
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         latencyMs: inferenceLatencyMs,
         requestId,
         ...(targetOrgMeta?.id !== undefined ? { targetOrgId: targetOrgMeta.id } : {}),
@@ -539,7 +539,7 @@ export async function runControlPlaneInsight(input: CpInsightInput): Promise<CpI
       {
         adminActorId: adminId,
         taskType: 'control-plane-insights',
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         errorCode: 'CP_AI_INFERENCE_ERROR',
         errorMessage: generation.text,
         requestId,
