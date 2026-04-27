@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-1 IMPLEMENTATION_ACTIVE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-2 IMPLEMENTATION_ACTIVE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -14,12 +14,14 @@ governance_exception_active: false
 product_delivery_priority: IMPLEMENTATION_ACTIVE
 active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 active_delivery_unit_status: IMPLEMENTATION_ACTIVE
-active_delivery_unit_active_slice: K-1
+active_delivery_unit_active_slice: K-2
 active_delivery_unit_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
 active_delivery_unit_note: >-
-  K-1 IMPLEMENTATION_ACTIVE (2026-04-27). Slice: Document Intake and Type Classification.
-  Scope: DocumentType enum, classifyDocumentType utility, POST /api/tenant/documents/:documentId/classify route.
-  No extraction, no schema changes, no lifecycle mutations, no buyer-facing output.
+  K-1 COMPLETE at de5cf10 (2026-04-27). K-2 IMPLEMENTATION_ACTIVE (2026-04-27).
+  Slice: Field Extraction AI Prompt and Output Schema.
+  Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
+  parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
+  No persistence, no review route, no lifecycle mutations, no buyer-facing output, no schema changes.
 last_closed_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS)
@@ -47,10 +49,10 @@ prior_closed_unit_commits: >-
   AI TX hotfix: a3f5597. Governance close: 8cda265.
 adjacent_deferred_candidate: none — design complete; implementation NOT opened; awaiting Paresh next unit selection
 d015_reconciliation: COMPLETE
-d016_posture: IMPLEMENTATION_ACTIVE — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-1 IMPLEMENTATION_ACTIVE (2026-04-27);
-  TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27);
-  TECS-AI-RFQ-ASSISTANT-MVP-001 VERIFIED_COMPLETE (2026-04-27); K-1 slice open;
-  K-2+ slices require explicit Paresh sign-off; decision control required per D-016
+d016_posture: IMPLEMENTATION_ACTIVE — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-2 IMPLEMENTATION_ACTIVE (2026-04-27);
+  K-1 COMPLETE at de5cf10; TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27);
+  TECS-AI-RFQ-ASSISTANT-MVP-001 VERIFIED_COMPLETE (2026-04-27); K-2 slice open;
+  K-3+ slices require explicit Paresh sign-off; decision control required per D-016
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -66,11 +68,12 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 IMPLEMENTATION_ACTIVE (K-1) (2026-04-27).
-  Active slice: K-1 Document Intake and Type Classification.
-  Scope: DocumentType enum, classifyDocumentType utility,
-  POST /api/tenant/documents/:documentId/classify route.
-  No extraction, no schema changes, no lifecycle mutations, no buyer-facing output.
+  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 IMPLEMENTATION_ACTIVE (K-2) (2026-04-27).
+  K-1 COMPLETE at de5cf10 (Document Intake and Type Classification).
+  Active slice: K-2 Field Extraction AI Prompt and Output Schema.
+  Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
+  parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
+  No persistence, no review route, no lifecycle mutations, no schema changes.
   Prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27, commits 8cd066c+9d33820-15ea69d).
   Prior: TECS-AI-RFQ-ASSISTANT-MVP-001 VERIFIED_COMPLETE (2026-04-27, commit a3f5597 + 8cda265).
 notes: |
@@ -79,8 +82,8 @@ notes: |
   No price field anywhere in Phase 1 or Phase 2 scope.
   Per-item publicationPosture filtering deferred to Phase 3+.
   Phase 3+ deferred: item detail, price disclosure, buyer-supplier allowlist (Phase 6).
-  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is IMPLEMENTATION_ACTIVE (K-1) (2026-04-27).
-  Active slice: K-1. K-2+ slices require explicit Paresh sign-off before opening.
+  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is IMPLEMENTATION_ACTIVE (K-2) (2026-04-27).
+  K-1 COMPLETE at de5cf10. Active slice: K-2. K-3+ slices require explicit Paresh sign-off before opening.
   Predecessor: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27).
   Production runtime verified: 30/30 checks PASS. Commit: 15ea69d (frontend panel).
   Full implementation complete: 4 slices, commits 8cd066c + 648d683 + 9d33820 + 15ea69d.
