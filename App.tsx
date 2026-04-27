@@ -107,6 +107,9 @@ import {
   type RfqAssistResponse,
   analyseSupplierProfileCompleteness,
   type SupplierProfileCompletenessResponse,
+  // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: PDP service call
+  getBuyerCatalogPdpItem,
+  type BuyerCatalogPdpView,
 } from './services/catalogService';
 import { SupplierProfileCompletenessCard } from './components/Tenant/SupplierProfileCompletenessCard';
 import { CartProvider, useCart } from './contexts/CartContext';
@@ -114,6 +117,8 @@ import { Cart } from './components/Cart/Cart';
 import { AggregatorDiscoveryWorkspace } from './components/Tenant/AggregatorDiscoveryWorkspace';
 import { BuyerRfqDetailSurface, SupplierRfqDetailSurface } from './components/Tenant/BuyerRfqDetailSurface';
 import { BuyerRfqListSurface, SupplierRfqInboxSurface } from './components/Tenant/BuyerRfqListSurface';
+// TECS-B2B-BUYER-CATALOG-PDP-001 P-2: Buyer PDP surface shell
+import { CatalogPdpSurface } from './components/Tenant/CatalogPdpSurface';
 import { getTenants, getTenantById, startImpersonationSession, stopImpersonationSession, Tenant } from './services/controlPlaneService';
 import { activateTenant } from './services/tenantService';
 import {
@@ -1903,6 +1908,40 @@ export const __B2B_BUYER_CATALOG_SEARCH_TESTING__ = {
   resolveEmptyCatalogState,
 };
 
+// TECS-B2B-BUYER-CATALOG-PDP-001 P-2: Pure PDP constants exported for tests.
+export const PDP_COMPLIANCE_NOTICE =
+  'AI-generated extraction \u00b7 Human review required before acting on any extracted data';
+export const PDP_PRICE_PLACEHOLDER_LABEL = 'Price available on request' as const;
+export const PDP_RFQ_TRIGGER_LABEL = 'Request Quote' as const;
+export const PDP_LOADING_COPY = 'Loading item details\u2026' as const;
+export const PDP_ERROR_COPY = 'Unable to load item details.' as const;
+export const PDP_NOT_FOUND_COPY = 'Item not found or unavailable.' as const;
+
+/**
+ * Resolve which buyer_catalog phase is active.
+ * PHASE_A: no supplier selected yet.
+ * PHASE_B: supplier selected, no item selected.
+ * PHASE_C: item selected (PDP view).
+ */
+export function resolveBuyerCatalogPhase(
+  supplierOrgId: string,
+  selectedItemId: string,
+): 'PHASE_A' | 'PHASE_B' | 'PHASE_C' {
+  if (selectedItemId.trim().length > 0) return 'PHASE_C';
+  if (supplierOrgId.trim().length > 0) return 'PHASE_B';
+  return 'PHASE_A';
+}
+
+export const __B2B_BUYER_CATALOG_PDP_TESTING__ = {
+  PDP_COMPLIANCE_NOTICE,
+  PDP_PRICE_PLACEHOLDER_LABEL,
+  PDP_RFQ_TRIGGER_LABEL,
+  PDP_LOADING_COPY,
+  PDP_ERROR_COPY,
+  PDP_NOT_FOUND_COPY,
+  resolveBuyerCatalogPhase,
+};
+
 type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
@@ -2250,6 +2289,11 @@ const App: React.FC = () => {
   const [supplierPickerItems, setSupplierPickerItems] = useState<SupplierPickerEntry[]>([]);
   const [supplierPickerLoading, setSupplierPickerLoading] = useState(false);
   const [supplierPickerError, setSupplierPickerError] = useState<string | null>(null);
+  // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: PDP item view state
+  const [buyerCatalogSelectedItemId, setBuyerCatalogSelectedItemId] = useState('');
+  const [buyerCatalogPdpItem, setBuyerCatalogPdpItem] = useState<BuyerCatalogPdpView | null>(null);
+  const [buyerCatalogPdpLoading, setBuyerCatalogPdpLoading] = useState(false);
+  const [buyerCatalogPdpError, setBuyerCatalogPdpError] = useState<string | null>(null);
   const [aggregatorDiscoveryEntries, setAggregatorDiscoveryEntries] = useState<AggregatorDiscoveryEntry[]>([]);
   const [aggregatorDiscoveryLoading, setAggregatorDiscoveryLoading] = useState(false);
   const [aggregatorDiscoveryError, setAggregatorDiscoveryError] = useState<string | null>(null);
@@ -3168,6 +3212,31 @@ const App: React.FC = () => {
     } finally {
       setBuyerCatalogLoadingMore(false);
     }
+  };
+
+  // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: Open PDP for a catalog item.
+  const handleOpenCatalogPdp = async (itemId: string) => {
+    setBuyerCatalogSelectedItemId(itemId);
+    setBuyerCatalogPdpItem(null);
+    setBuyerCatalogPdpError(null);
+    setBuyerCatalogPdpLoading(true);
+    try {
+      const view = await getBuyerCatalogPdpItem(itemId);
+      setBuyerCatalogPdpItem(view);
+    } catch (err) {
+      const isNotFound = err instanceof Error && err.message.includes('404');
+      setBuyerCatalogPdpError(isNotFound ? 'NOT_FOUND' : 'FETCH_ERROR');
+    } finally {
+      setBuyerCatalogPdpLoading(false);
+    }
+  };
+
+  // TECS-B2B-BUYER-CATALOG-PDP-001 P-2: Close PDP — return to Phase B listing.
+  const handleCloseCatalogPdp = () => {
+    setBuyerCatalogSelectedItemId('');
+    setBuyerCatalogPdpItem(null);
+    setBuyerCatalogPdpError(null);
+    setBuyerCatalogPdpLoading(false);
   };
 
   // TECS-B2B-BUYER-CATALOG-SUPPLIER-SELECT-001: Load eligible supplier list for picker.
@@ -5107,6 +5176,32 @@ const App: React.FC = () => {
       case 'cart':
         return renderDescriptorAlignedTenantContentFamily(tenantContentFamily);
       case 'buyer_catalog':
+        // PHASE_C: PDP item view (item selected)
+        if (buyerCatalogSelectedItemId) {
+          return (
+            <CatalogPdpSurface
+              item={buyerCatalogPdpItem}
+              loading={buyerCatalogPdpLoading}
+              error={buyerCatalogPdpError}
+              onBack={handleCloseCatalogPdp}
+              onRequestQuote={({ itemId, supplierId, itemTitle }) => {
+                const asProduct: CatalogItem = {
+                  id: itemId,
+                  tenantId: supplierId,
+                  name: itemTitle,
+                  sku: '',
+                  price: 0,
+                  active: true,
+                  createdAt: '',
+                  updatedAt: '',
+                  moq: buyerCatalogPdpItem?.availabilitySummary.moqValue ?? undefined,
+                };
+                // P-2: open standard RFQ dialog — no prefill of deep spec fields.
+                handleOpenRfqDialog(asProduct, undefined);
+              }}
+            />
+          );
+        }
         // Phase A: Supplier picker (no supplier selected yet)
         if (!buyerCatalogSupplierOrgId) {
           return (
@@ -5492,7 +5587,14 @@ const App: React.FC = () => {
                             )}
                           </div>
                         )}
-                        <div className="mt-3 border-t border-slate-100 pt-3">
+                        <div className="mt-3 border-t border-slate-100 pt-3 space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleOpenCatalogPdp(item.id)}
+                            className="w-full px-4 py-2 bg-white border border-indigo-300 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-50 transition"
+                          >
+                            View Details
+                          </button>
                           <button
                             type="button"
                             onClick={() => {
