@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-27 (TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE)
+**Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — DESIGN_ACTIVE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-04-27
-snapshot_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
+snapshot_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
 control_plane_read_order:
@@ -42,17 +42,19 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: NONE
-current_product_active_delivery_status: ZERO_OPEN
-runtime_verification_status: VERIFIED_COMPLETE — TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+current_product_active_delivery_status: DESIGN_ACTIVE
+runtime_verification_status: DESIGN_ACTIVE — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 design authorized (2026-04-27); prior runtime: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  ZERO_OPEN (2026-04-27). Last unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE.
-  Production runtime verification: 30/30 checks PASS.
+  DESIGN_ACTIVE (2026-04-27). Active unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001.
+  Design-only authorization. No implementation slices authorized.
+  Design artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md.
+  Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (30/30 runtime checks PASS).
   Commits: 8cd066c + 648d683 + 9d33820 + 15ea69d. No schema changes. No migrations.
   Prior runtime verified: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (a3f5597).
   Prior: TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE (f671995).
-  No implementation unit is open. Awaiting Paresh next unit selection.
+  Implementation slices not open. Each requires Paresh sign-off.
 latest_verified_product_close: |
   TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27).
   Runtime verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS).
@@ -82,12 +84,20 @@ prior_latest_verified_product_close: |
   Structured RFQ requirement foundation complete. AI RFQ assistant not implemented.
   Supplier matching not implemented. Price disclosure not implemented.
   Order/checkout/escrow not implemented.
-current_open_unit: NONE
+current_open_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 current_open_unit_note: |
-  ZERO_OPEN (2026-04-27). Last closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE.
+  DESIGN_ACTIVE (2026-04-27). Unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001.
+  Design artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md.
+  Scope: AI-assisted document intelligence for certification documents, textile lab test reports,
+  compliance declarations, inspection reports. Supplier-internal, human-review-mandatory.
+  Design-only authorization. No implementation slices authorized. Each slice requires Paresh sign-off.
+  Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE.
   Production runtime verified: 30/30 checks PASS. Commits: 8cd066c + 648d683 + 9d33820 + 15ea69d.
   Prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27, commit a3f5597).
-  Awaiting Paresh next unit selection.
+ai_document_intelligence_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+ai_document_intelligence_status: DESIGN_ACTIVE (2026-04-27)
+ai_document_intelligence_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
+ai_document_intelligence_runtime_verdict: PENDING (design only; no implementation)
 ai_supplier_profile_completeness_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
 ai_supplier_profile_completeness_status: VERIFIED_COMPLETE (2026-04-27)
 ai_supplier_profile_completeness_runtime_verdict: RUNTIME_VERIFIED_COMPLETE (30/30 PASS)
@@ -109,7 +119,7 @@ ai_assist_boundary_preservation: |
   Accepted/rejected decisions are local UI state; no persistent PATCH accept-flow.
 phase_3_plus_candidates: |
   1. TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27); closed
-  2. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — candidate only, requires Paresh authorization
+  2. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — DESIGN_ACTIVE (2026-04-27)
   3. TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — candidate only, requires Paresh authorization
   4. Supplier selection UX polish (per-item publicationPosture filtering) — requires authorization
   5. Catalog search / item detail / price disclosure — Phase 3+, requires authorization
