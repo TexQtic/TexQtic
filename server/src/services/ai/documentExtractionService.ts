@@ -35,6 +35,7 @@
  * @module documentExtractionService
  */
 
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { assertNoForbiddenAiFields } from './aiForbiddenData.js';
 import {
   type DocumentType,
@@ -589,3 +590,68 @@ export function parseDocumentExtractionOutput(
 // ─── Re-export governance label for K-2 consumer convenience ─────────────────
 
 export { DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL };
+
+// ─── K-3: Gemini AI call for document extraction ─────────────────────────────
+
+/**
+ * Result from a Gemini extraction call.
+ */
+export interface GeminiExtractionResult {
+  rawText: string;
+  tokensUsed: number;
+  hadInferenceError: boolean;
+}
+
+/**
+ * callGeminiForDocumentExtraction — wraps Gemini model invocation for K-3 extract route.
+ *
+ * HOTFIX-MODEL-TX-001: This function MUST be called OUTSIDE any Prisma transaction.
+ * The AI call can take up to 30 s; running inside a tx would trigger P2028 timeout.
+ *
+ * Returns { rawText, tokensUsed, hadInferenceError }.
+ * On provider failure hadInferenceError is true and rawText contains an error message.
+ * Does NOT throw on inference error — caller is responsible for error handling.
+ *
+ * @param apiKey     — GEMINI_API_KEY from config
+ * @param prompt     — assembled extraction prompt (from buildDocumentExtractionPrompt)
+ * @param timeoutMs  — AI call timeout (default 30 000 ms — extraction is longer than insights)
+ */
+export async function callGeminiForDocumentExtraction(
+  apiKey: string,
+  prompt: string,
+  timeoutMs: number = 30_000,
+): Promise<GeminiExtractionResult> {
+  let genAI: GoogleGenerativeAI;
+  try {
+    genAI = new GoogleGenerativeAI(apiKey);
+  } catch {
+    return {
+      rawText: 'AI service initialization failed.',
+      tokensUsed: 0,
+      hadInferenceError: true,
+    };
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const aiPromise = model.generateContent(prompt);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('AI extraction request timeout')), timeoutMs),
+    );
+
+    const result = await Promise.race([aiPromise, timeoutPromise]);
+    const text = result.response.text();
+    // Rough estimate: 1 token ≈ 4 chars (same heuristic as inferenceService.ts)
+    const estimatedTokens = Math.ceil((prompt.length + text.length) / 4);
+
+    return { rawText: text, tokensUsed: estimatedTokens, hadInferenceError: false };
+  } catch (error) {
+    console.error('[DocumentExtraction] Gemini call failed:', error);
+    return {
+      rawText: 'AI extraction encountered an error. Please try again later.',
+      tokensUsed: 0,
+      hadInferenceError: true,
+    };
+  }
+}

@@ -1,32 +1,25 @@
 /**
- * tenant/documents.ts — Document Intelligence K-1: Classify Route
+ * tenant/documents.ts — Document Intelligence K-1 / K-3
  *
  * Fastify plugin — registered at /api/tenant/documents
  *
  * Routes:
- *   POST /api/tenant/documents/:documentId/classify — classify a document by type
+ *   POST /api/tenant/documents/:documentId/classify  — K-1: classify document by type
+ *   POST /api/tenant/documents/:documentId/extract   — K-3: AI-backed field extraction + draft persistence
  *
- * Implements TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001, Slice K-1.
+ * Implements TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001, Slices K-1 and K-3.
  *
  * Constitutional compliance:
  *   D-017-A  orgId ALWAYS derived from JWT/dbContext — NEVER from request body
- *   K-1 scope: classification only; no extraction, no schema change, no lifecycle mutation,
- *              no buyer-facing output, no AI provider call
- *
- * Design:
- *   - :documentId is UUID-validated as a future-reference identifier.
- *     No DB document lookup occurs in K-1 (no documents table exists).
- *   - Classification is driven by the optional body payload only.
- *   - humanReviewRequired: true is a structural constant in all responses.
- *   - Audit emitted via writeAuditLog inside withDbContext (best-effort, non-fatal).
- *   - No AI provider call — pure keyword/metadata heuristic classification.
- *
- * K-2 will add: AI-backed field extraction from document text.
- * K-3 will add: document storage, draft persistence.
+ *   HOTFIX-MODEL-TX-001: AI call OUTSIDE Prisma tx; DB writes (draft, audit, reasoning, usage) INSIDE tx
+ *   humanReviewRequired: true is a structural constant in all responses — cannot be overridden
+ *   K-3 scope: extraction + draft persistence + audit trail only; no review/approve/reject (K-5)
+ *              no lifecycle mutation, no certifications write, no buyer-facing output
  */
 
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { tenantAuthMiddleware } from '../../middleware/auth.js';
 import { databaseContextMiddleware } from '../../middleware/database-context.middleware.js';
 import { sendSuccess, sendError, sendValidationError } from '../../utils/response.js';
@@ -38,6 +31,22 @@ import {
   DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL,
   type DocumentType,
 } from '../../services/ai/documentClassificationService.js';
+import {
+  buildDocumentExtractionPrompt,
+  parseDocumentExtractionOutput,
+  callGeminiForDocumentExtraction,
+  ExtractionParseError,
+} from '../../services/ai/documentExtractionService.js';
+import { config } from '../../config/index.js';
+import {
+  loadTenantBudget,
+  getUsage,
+  enforceBudgetOrThrow,
+  upsertUsage,
+  estimateCostUSD,
+  getMonthKey,
+  BudgetExceededError,
+} from '../../lib/aiBudget.js';
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -66,6 +75,25 @@ const classifyBodySchema = z.object({
    * Treated as an untrusted signal, not authoritative classification.
    */
   typeHint: z.string().max(200).trim().optional(),
+  // D-017-A: orgId MUST NOT be in the body
+  orgId: z.never({ message: 'orgId must not be set in request body' }).optional(),
+});
+
+const extractBodySchema = z.object({
+  /**
+   * Full document text content to extract fields from (required).
+   * Maximum 50 000 characters — covers typical compliance certificate PDF text.
+   */
+  documentText: z.string().min(1).max(50_000).trim(),
+  /**
+   * Optional document title — used in prompt context if provided.
+   */
+  documentTitle: z.string().max(500).trim().optional(),
+  /**
+   * Optional caller-supplied documentType (e.g. from a prior K-1 classify call).
+   * If absent, classification is auto-derived from documentText snippet.
+   */
+  documentType: z.string().max(100).trim().optional(),
   // D-017-A: orgId MUST NOT be in the body
   orgId: z.never({ message: 'orgId must not be set in request body' }).optional(),
 });
@@ -149,6 +177,196 @@ const tenantDocumentRoutes: FastifyPluginAsync = async (fastify) => {
         humanReviewRequired: true as const,
         governanceLabel: DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL,
         notes: classificationResult.notes,
+      });
+    },
+  );
+
+  /**
+   * POST /:documentId/extract
+   *
+   * Trigger AI extraction of fields from document text and persist draft.
+   *
+   * K-3 scope:
+   *   - documentText required in body (no documents table yet — K-3 MVP)
+   *   - AI call OUTSIDE Prisma tx (HOTFIX-MODEL-TX-001)
+   *   - DB writes inside single tx: draft, auditLog, reasoningLog, aiUsageMeter
+   *   - humanReviewRequired: true structural constant — immutable
+   *   - status always 'draft' on creation
+   *   - No review/approve/reject (K-5 responsibility)
+   *   - No certifications mutation (G.4.1 — extraction does NOT change lifecycle)
+   */
+  fastify.post(
+    '/:documentId/extract',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Validate documentId path parameter
+      const paramResult = documentIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { documentId } = paramResult.data;
+
+      // Validate request body
+      const bodyResult = extractBodySchema.safeParse(request.body ?? {});
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+      const { documentText, documentTitle, documentType: bodyDocumentType } = bodyResult.data;
+
+      // D-017-A: orgId always from dbContext — never from body
+      const orgId = dbContext.orgId;
+      const requestId = dbContext.requestId;
+
+      // Resolve document type: use caller-supplied if valid, else auto-classify from snippet
+      let resolvedDocumentType: string;
+      if (bodyDocumentType) {
+        resolvedDocumentType = bodyDocumentType;
+      } else {
+        const classified = classifyDocumentType({
+          textSnippet: documentText.slice(0, 2000),
+          documentTitle: documentTitle ?? null,
+          mimeType: null,
+          typeHint: null,
+        });
+        resolvedDocumentType = classified.documentType;
+      }
+
+      // Build extraction prompt (pure — no IO)
+      const prompt = buildDocumentExtractionPrompt({
+        documentType: resolvedDocumentType as DocumentType,
+        documentText,
+        documentId,
+      });
+
+      // ── HOTFIX-MODEL-TX-001: AI call OUTSIDE Prisma transaction ──────────────
+      if (!config.GEMINI_API_KEY) {
+        return sendError(reply, 'SERVICE_UNAVAILABLE', 'AI service not configured', 503);
+      }
+
+      const aiResult = await callGeminiForDocumentExtraction(config.GEMINI_API_KEY, prompt);
+
+      if (aiResult.hadInferenceError) {
+        return sendError(reply, 'SERVICE_UNAVAILABLE', 'AI extraction service unavailable. Please try again.', 503);
+      }
+
+      // Parse and validate AI output
+      const extractedAt = new Date().toISOString();
+      let draft;
+      try {
+        draft = parseDocumentExtractionOutput(aiResult.rawText, {
+          documentId,
+          orgId,
+          documentType: resolvedDocumentType as DocumentType,
+          extractedAt,
+        });
+      } catch (err) {
+        if (err instanceof ExtractionParseError) {
+          return sendError(reply, 'UNPROCESSABLE_ENTITY', `AI output could not be parsed: ${err.message}`, 422);
+        }
+        throw err;
+      }
+
+      // ── DB writes inside a single Prisma transaction ─────────────────────────
+      const tokensUsed = aiResult.tokensUsed;
+      const costUSD = estimateCostUSD(tokensUsed, 'gemini-2.5-flash');
+      const monthKey = getMonthKey();
+      const reasoningHash = createHash('sha256')
+        .update(`${requestId}:${documentId}:${extractedAt}`)
+        .digest('hex');
+
+      let savedDraft;
+      try {
+        savedDraft = await withDbContext(prisma, dbContext, async (tx) => {
+          // Budget enforcement — pre-flight inside tx so it's consistent
+          const budgetPolicy = await loadTenantBudget(tx, orgId);
+          const currentUsage = await getUsage(tx, orgId, monthKey);
+          enforceBudgetOrThrow(budgetPolicy, currentUsage, tokensUsed, costUSD);
+
+          // 1. Persist extraction draft
+          const created = await tx.documentExtractionDraft.create({
+            data: {
+              orgId,
+              documentId,
+              documentType: draft.documentType,
+              extractedFields: draft.extractedFields as object[],
+              overallConfidence: draft.overallConfidence,
+              humanReviewRequired: true,
+              status: 'draft',
+              extractionNotes: draft.extractionNotes,
+              extractedAt: new Date(draft.extractedAt),
+            },
+          });
+
+          // 2. Upsert AI usage meter
+          await upsertUsage(tx, orgId, monthKey, tokensUsed, costUSD);
+
+          // 3. Write reasoning log (AI trace)
+          const reasoningLog = await tx.reasoningLog.create({
+            data: {
+              tenantId: orgId,
+              requestId,
+              reasoningHash,
+              model: 'gemini-2.5-flash',
+              promptSummary: prompt.slice(0, 200),
+              responseSummary: aiResult.rawText.slice(0, 500),
+              tokensUsed,
+            },
+          });
+
+          // 4. Write audit log (non-fatal inside tx — writeAuditLog swallows errors)
+          const fieldCount = draft.extractedFields.length;
+          const flaggedFieldCount = draft.extractedFields.filter((f) => f.flagged_for_review).length;
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: orgId,
+            actorType: 'USER',
+            actorId: request.userId ?? null,
+            action: 'AI_DOCUMENT_INTELLIGENCE_EXTRACTION',
+            entity: 'document',
+            entityId: documentId,
+            metadataJson: {
+              documentType: draft.documentType,
+              overallConfidence: draft.overallConfidence,
+              humanReviewRequired: true,
+              fieldCount,
+              flaggedFieldCount,
+            },
+            reasoningLogId: reasoningLog.id,
+          });
+
+          return created;
+        });
+      } catch (err) {
+        if (err instanceof BudgetExceededError) {
+          return sendError(reply, 'BUDGET_EXCEEDED', err.message, 429);
+        }
+        throw err;
+      }
+
+      // Build response — humanReviewRequired and governanceLabel are structural constants
+      return sendSuccess(reply, {
+        draft: {
+          id: savedDraft.id,
+          documentId: savedDraft.documentId,
+          orgId: savedDraft.orgId,
+          documentType: savedDraft.documentType,
+          extractedFields: draft.extractedFields,
+          overallConfidence: Number(savedDraft.overallConfidence),
+          humanReviewRequired: true as const,
+          status: savedDraft.status,
+          extractionNotes: savedDraft.extractionNotes,
+          extractedAt: savedDraft.extractedAt.toISOString(),
+          reviewedAt: null,
+          reviewedByUserId: null,
+        },
+        humanReviewRequired: true as const,
+        governanceLabel: DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL,
       });
     },
   );
