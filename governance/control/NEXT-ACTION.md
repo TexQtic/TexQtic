@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE after runtime verification; governance closed)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — DESIGN_ACTIVE; design artifact created; no implementation authorized)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,12 +11,20 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: none — no active delivery unit; awaiting next explicit Paresh authorization
-active_delivery_unit: none
-active_delivery_unit_status: none
+product_delivery_priority: DESIGN_ACTIVE — TECS-DPP-PASSPORT-FOUNDATION-001 design artifact created (2026-04-28); no implementation authorized
+active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
+active_delivery_unit_status: DESIGN_ACTIVE
 active_delivery_unit_note: >-
-  No active delivery unit. TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27).
-  Awaiting explicit Paresh authorization before opening next unit.
+  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
+  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
+  Mode: DESIGN ONLY. No implementation authorized.
+  Repo-truth audit performed: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId,
+  3 DPP snapshot views, App.tsx routing, Shells.tsx wiring — all confirmed real and runtime-backed.
+  Existing DPP artifacts PRESERVED unchanged.
+  Implementation slices D-1 through D-6 are ALL UNAUTHORIZED.
+  Each slice requires explicit Paresh authorization before any implementation begins.
+  Node_certifications DDL (D-1) requires Paresh approval of design anchor (DPP-SNAPSHOT-VIEWS-DESIGN.md).
+  Awaiting Paresh explicit authorization for any implementation slice.
 last_closed_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: 239 catalog tests PASS; TypeScript clean
@@ -66,15 +74,20 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). Governance closed.
+  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
+  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md — created.
+  Mode: DESIGN ONLY. No implementation authorized until Paresh opens an implementation slice.
+  Prior closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). Governance closed.
   Verification (P-5): 239 catalog tests PASS; TypeScript tsc --noEmit CLEAN.
-  No active delivery unit. Awaiting Paresh authorization for next unit.
+  No active implementation unit. Awaiting Paresh authorization for D-1 or any implementation slice.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.
   No price field anywhere in Phase 1 or Phase 2 scope.
   Per-item publicationPosture filtering deferred to Phase 3+.
   Phase 3+ deferred: price disclosure, buyer-supplier allowlist (Phase 6).
+  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28). Design artifact created.
+  All implementation slices (D-1 through D-6) UNAUTHORIZED until Paresh opens each.
   TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27).
   All 4 slices delivered and verified: P-1 d8fec78, P-2 d8d6141, P-3 f871bcb, P-4 54fecbc.
   Verification: 239/239 catalog tests PASS. TypeScript clean.

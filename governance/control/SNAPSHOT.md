@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE after runtime verification; governance closed)
+**Updated:** 2026-04-28 (TECS-DPP-PASSPORT-FOUNDATION-001 — DESIGN_ACTIVE; design artifact created; no implementation authorized)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,26 +10,25 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-27
-snapshot_unit: TECS-B2B-BUYER-CATALOG-PDP-001
+snapshot_date: 2026-04-28
+snapshot_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
-current_open_design_unit: TECS-B2B-BUYER-CATALOG-PDP-001
-current_open_design_unit_status: VERIFIED_COMPLETE
-current_open_design_unit_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
+current_open_design_unit: TECS-DPP-PASSPORT-FOUNDATION-001
+current_open_design_unit_status: DESIGN_ACTIVE
+current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md
 current_open_design_unit_note: >-
-  All slices VERIFIED_COMPLETE (2026-04-27).
-  P-1 COMPLETE (commit d8fec78). Backend PDP read contract delivered.
-  GET /api/tenant/catalog/items/:itemId route. BuyerCatalogPdpView contract.
-  getBuyerCatalogPdpItem() service. 25 tests (T1–T13). No schema. No frontend. No price.
-  P-2 COMPLETE (commit d8d6141). CatalogPdpSurface.tsx + App.tsx PHASE_C wired.
-  Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T9), 43/43 PASS.
-  P-3 COMPLETE (commit f871bcb). Multi-image gallery, new pure helpers, compliance/availability rework.
-  Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS.
-  P-4 COMPLETE (commit 54fecbc). RfqTriggerPayload type + validateRfqTriggerPayload + 5-field handoff.
-  App.tsx PHASE_C bridge updated — stage passed as catalogStage. 108/108 PASS.
-  P-5 VERIFIED: 239/239 catalog tests PASS (8 files); TypeScript tsc --noEmit CLEAN.
-  Browsing → RFQ decision surface fully operational. Price/relationship/DPP deferred.
+  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
+  Mode: DESIGN ONLY. No implementation authorized.
+  Objective: Audit existing DPP Passport (fully implemented; runtime-backed; supplier-internal
+  manual node-ID lookup tool) and design foundation for passport identity, snapshot/read model,
+  status lifecycle, maturity model (L1–L4), evidence linkage, and future public/export surfaces.
+  Repo-truth audit complete: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId, 3 SQL views,
+  App.tsx routing, Shells.tsx wiring — all confirmed. Existing artifacts PRESERVED unchanged.
+  Design decisions: D1 node_certifications join table; D2 v1 field surface; L1–L4 maturity ladder;
+  DRAFT→INTERNAL→TRADE_READY→PUBLISHED status lifecycle; humanReviewRequired structural constant.
+  Implementation slices D-1 through D-6: ALL UNAUTHORIZED until Paresh opens each.
+  Preceding closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27) 239/239 PASS.
 latest_verified_product_close_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-27
@@ -76,13 +75,17 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 0
-current_product_active_delivery_unit: none
-current_product_active_delivery_status: none
-current_product_active_delivery_slice: none
+current_product_active_delivery_count: 1
+current_product_active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
+current_product_active_delivery_status: DESIGN_ACTIVE
+current_product_active_delivery_slice: none — design only; no implementation slices open
 runtime_verification_status: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27) 239/239 PASS; Design d0bcf27; P-4 54fecbc; prior: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). All slices delivered and verified.
+  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28). Design only. No implementation slices open.
+  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
+  Repo truth audit complete. Existing DPP artifacts PRESERVED unchanged.
+  D-1 through D-6 slices UNAUTHORIZED. Awaiting Paresh authorization for any implementation.
+  Prior closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27).
   Design artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md (design commit d0bcf27).
   P-1 COMPLETE (d8fec78): GET /api/tenant/catalog/items/:itemId backend route. BuyerCatalogPdpView contract.
   P-2 COMPLETE (d8d6141): CatalogPdpSurface.tsx (components/Tenant/). App.tsx PHASE_C.
@@ -93,7 +96,6 @@ current_product_active_delivery_note: |
   P-4 COMPLETE (54fecbc): RfqTriggerPayload + validateRfqTriggerPayload + PHASE_C bridge. 108/108 PASS.
   P-5 VERIFIED: 239/239 catalog tests PASS (8 files); TypeScript tsc --noEmit CLEAN.
   Safety boundaries verified (9 boundaries). No blockers.
-  No active delivery unit. Awaiting Paresh authorization for next unit.
 latest_verified_product_close: |
   TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE (2026-04-27).
   Verification: 239/239 catalog tests PASS (8 test files); TypeScript tsc --noEmit CLEAN.
@@ -117,16 +119,17 @@ prior_latest_verified_product_close: |
     present; no Certification lifecycle mutation; no DPP/buyer-facing; no price/payment/risk;
     tenant isolation (org_id) verified; D-017-A (z.never()) enforced; no schema changes.
   No blockers.
-current_open_unit: TECS-B2B-BUYER-CATALOG-PDP-001
+current_open_unit: TECS-DPP-PASSPORT-FOUNDATION-001
 current_open_unit_note: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27).
-  All slices (P-1 through P-4) delivered; P-5 runtime verification complete.
-  Commit chain: Design d0bcf27; P-1 d8fec78; P-2 d8d6141; P-3 f871bcb; P-4 54fecbc.
-  Verification: 239/239 catalog tests PASS; TypeScript tsc --noEmit CLEAN.
-  Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27, 237/237 PASS).
-  Mode: DESIGN_ONLY. No implementation authorized.
-  Objective: Buyer-facing catalog item detail page design for browsing → RFQ intent conversion.
-  Implementation slices P-1 through P-5 each require explicit Paresh authorization.
+  TECS-DPP-PASSPORT-FOUNDATION-001 DESIGN_ACTIVE (2026-04-28).
+  Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
+  Mode: DESIGN ONLY. No implementation authorized.
+  Objective: Audit existing DPP Passport and design passport identity foundation,
+  maturity model (L1–L4), evidence linkage, visibility classification, and future slices.
+  Repo truth: DPP is fully implemented (DPPPassport.tsx + GET /api/tenant/dpp/:nodeId + 3 views).
+  Current DPP is a manual node-ID lookup tool; this design unit plans its evolution.
+  Existing artifacts PRESERVED unchanged. Implementation slices D-1–D-6 all UNAUTHORIZED.
+  Prior closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27, 239/239 PASS).
   Prior closed: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27, 237/237 PASS).
 ai_document_intelligence_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 ai_document_intelligence_status: VERIFIED_COMPLETE (2026-04-27)
