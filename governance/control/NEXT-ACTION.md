@@ -27,7 +27,7 @@ active_delivery_unit_note: >-
   D-6 ACTIVE (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId + .json — unauthenticated PUBLISHED passport access via public_token UUID.
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
-    QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: pending.
+    QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
 last_closed_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: 239 catalog tests PASS; TypeScript clean
