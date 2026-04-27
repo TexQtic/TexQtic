@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-25 (TECS-AI-RFQ-ASSISTANT-MVP-001 — DESIGN_COMPLETE)
+**Last Updated:** 2026-04-27 (TECS-AI-RFQ-ASSISTANT-MVP-001 — VERIFIED_COMPLETE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -282,26 +282,52 @@
     - AI_SUGGESTED FieldSource reserved; not used until TECS-AI-RFQ-ASSISTANT-MVP-001 authorized.
     - 7 implementation slices defined; none authorized; each requires Paresh sign-off.
   No implementation changes. No schema changes. No API additions. No frontend changes.
-- TECS-AI-RFQ-ASSISTANT-MVP-001 is DESIGN_COMPLETE.
+- TECS-AI-RFQ-ASSISTANT-MVP-001 is VERIFIED_COMPLETE (2026-04-27).
+  Status: VERIFIED_COMPLETE. Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
   Design artifact: docs/TECS-AI-RFQ-ASSISTANT-MVP-001-DESIGN-v1.md.
-  Scope: AI RFQ Assistant MVP — design only; no implementation authorized.
-  Sections: A (purpose/scope), B (architecture placement), C (RFQAssistantContext type),
-    D (AI-boundary function — assembleStructuredRfqRequirementSummaryText confirmed existing),
-    E (new AiTaskType: 'rfq-assist'), F (RfqAssistSuggestions output type + Zod schema),
-    G (prompt design), H (route spec — POST /api/tenant/rfqs/:id/ai-assist),
-    I (fieldSourceMeta integration), J (PII guard integration), K (RAG context integration),
-    L (audit trail — ReasoningLog + AuditLog), M (forbidden field enforcement),
-    N (implementation sequence — 8 steps), O (constraints summary).
-  Key decisions:
-    - New context type: RFQAssistantContext (distinct from existing RFQDraftingContext).
-    - New task type: 'rfq-assist' added to AiTaskType union.
-    - assembleStructuredRfqRequirementSummaryText() already exists in tenant.ts — reused verbatim.
-    - item_unit_price and deliveryLocation/targetDeliveryDate/requirementConfirmedAt structurally excluded.
-    - AI does NOT write to rfqs table — suggestions only; buyer accepts via existing PATCH route.
-    - humanConfirmationRequired: true is structural (non-negotiable).
-    - RAG retrieval: CATALOG_ITEM source type, topK=5, minSimilarity=0.30.
-    - No new Prisma migrations. No schema changes.
-  Implementation not authorized; each implementation slice requires explicit Paresh sign-off.
+  Scope: AI RFQ Assistant MVP — buyer requests AI suggestions after RFQ submission;
+    AI returns structured field suggestions; human confirmation required before any apply.
+  Commit chain (repo truth):
+    Design:            governance-only, no separate code commit
+                       (artifact: docs/TECS-AI-RFQ-ASSISTANT-MVP-001-DESIGN-v1.md)
+    Backend MVP:       7582c06 — AI RFQ assist backend MVP (routes, service, context builder, audit, OpenAPI, tests)
+    Frontend MVP:      f342e5f — AI RFQ assist UI (success panel, state helpers, tests)
+    Bugfix 1:          1866f13 — fix tx.rFQ typo in ai-assist route (TypeError findFirst)
+    Bugfix 2:          6c4cb5f — fix catalogItem.findFirst orgId→tenantId in ai-assist route
+    Bugfix 3:          4352e21 — fix AI RFQ assist certifications JSON select 500
+    Bugfix 4:          a542966 — fix ai-assist sendError argument order
+    Parser hotfix 1:   a3c1f5b — tolerate fenced JSON in RFQ assist parser
+    Parser hotfix 2:   cf8a17e — fix reasoning schema max-length rejection in RFQ assist parser
+    RAG TX hotfix:     12ea7a2 — isolate RAG retrieval from AI transaction
+    Model hotfix:      042ecd2 — update Gemini model to gemini-2.5-flash (gemini-1.5-flash deprecated on v1beta)
+    AI TX hotfix:      a3f5597 — move rfq-assist AI call outside Prisma tx to fix P2028 timeout
+  Production verification (2026-04-27):
+    POST /api/tenant/rfqs/:id/ai-assist → HTTP 200.
+    suggestions.requirementTitle: returned. suggestions.quantityUnit: returned.
+    suggestions.urgency: returned. suggestions.sampleRequired: returned.
+    suggestions.reasoning: returned. auditLogId: returned (UUID).
+    humanConfirmationRequired: true. hadInferenceError: false.
+    No price in AI response. No PII leakage observed. No supplier matching/ranking.
+    No checkout/order/escrow behavior. Frontend fallback: safe. Manual RFQ flow: healthy.
+  Key architecture fixes applied:
+    - RAG retrieval isolated from AI transaction (HOTFIX-RAG-TX-001, commit 12ea7a2).
+    - External AI call moved outside Prisma transaction (HOTFIX-MODEL-TX-001, commit a3f5597);
+      gemini-2.5-flash latency exceeds 5 s Prisma interactive tx default; DB writes only inside tx.
+    - Gemini model updated to gemini-2.5-flash (gemini-1.5-flash deprecated on v1beta API, commit 042ecd2).
+    - Parser/error fallback path safe (a3c1f5b + cf8a17e).
+  Boundaries preserved:
+    - AI suggestions are suggestion-only. No auto-submit. No auto-apply.
+    - Accepted/rejected suggestion decisions are local UI state; no persistent PATCH accept-flow.
+    - No supplier matching. No price disclosure. No order/checkout/escrow behavior.
+    - humanConfirmationRequired: true is structural.
+  Non-blocking notes:
+    1. AI Assist suggestions available after RFQ submission, not before.
+    2. Accepted/rejected decisions are local UI state only; no persistent PATCH accept-flow exists.
+    3. Future unit may add pre-submit AI assist or draft-RFQ support.
+    4. Future unit may persist accepted AI suggestion fieldSourceMeta via PATCH/confirm endpoint.
+  Next candidates (candidates only — NOT authorized; each requires Paresh next unit selection):
+    TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001, TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001,
+    TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001.
 - D-016 posture: **ACTIVE** — zero active product-delivery units; decision control required per D-016.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
