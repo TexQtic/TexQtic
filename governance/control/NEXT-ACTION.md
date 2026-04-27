@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-05 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-2 COMPLETE at cef8afb; K-3 IMPLEMENTATION_ACTIVE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-05 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-3 COMPLETE at 23fb727; K-4 IMPLEMENTATION_ACTIVE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -14,10 +14,10 @@ governance_exception_active: false
 product_delivery_priority: IMPLEMENTATION_ACTIVE
 active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 active_delivery_unit_status: IMPLEMENTATION_ACTIVE
-active_delivery_unit_active_slice: K-3
+active_delivery_unit_active_slice: K-4
 active_delivery_unit_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
 active_delivery_unit_note: >-
-  K-1 COMPLETE at de5cf10 (2026-04-27). K-2 COMPLETE at cef8afb (2026-04-27). K-3 IMPLEMENTATION_ACTIVE (2026-05-05).
+  K-1 COMPLETE at de5cf10 (2026-04-27). K-2 COMPLETE at cef8afb (2026-04-27). K-3 COMPLETE at 23fb727 (2026-05-05). K-4 IMPLEMENTATION_ACTIVE (2026-05-05).
   Slice: Field Extraction AI Prompt and Output Schema.
   Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
   parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
@@ -49,7 +49,7 @@ prior_closed_unit_commits: >-
   AI TX hotfix: a3f5597. Governance close: 8cda265.
 adjacent_deferred_candidate: none — design complete; implementation NOT opened; awaiting Paresh next unit selection
 d015_reconciliation: COMPLETE
-d016_posture: IMPLEMENTATION_ACTIVE — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-3 IMPLEMENTATION_ACTIVE (2026-05-05); K-2 COMPLETE at cef8afb;
+d016_posture: IMPLEMENTATION_ACTIVE — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-4 IMPLEMENTATION_ACTIVE (2026-05-05); K-3 COMPLETE at 23fb727; K-2 COMPLETE at cef8afb;
   K-1 COMPLETE at de5cf10; TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27);
   TECS-AI-RFQ-ASSISTANT-MVP-001 VERIFIED_COMPLETE (2026-04-27); K-2 slice open;
   K-3+ slices require explicit Paresh sign-off; decision control required per D-016
@@ -68,9 +68,9 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 IMPLEMENTATION_ACTIVE (K-3) (2026-05-05). K-2 COMPLETE at cef8afb.
+  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 IMPLEMENTATION_ACTIVE (K-4) (2026-05-05). K-3 COMPLETE at 23fb727. K-2 COMPLETE at cef8afb.
   K-1 COMPLETE at de5cf10 (Document Intake and Type Classification).
-  Active slice: K-3 Backend Route + Draft Storage + Audit Trail.
+  Active slice: K-4 Frontend Review Panel.
   Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
   parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
   No persistence, no review route, no lifecycle mutations, no schema changes.
@@ -82,8 +82,8 @@ notes: |
   No price field anywhere in Phase 1 or Phase 2 scope.
   Per-item publicationPosture filtering deferred to Phase 3+.
   Phase 3+ deferred: item detail, price disclosure, buyer-supplier allowlist (Phase 6).
-  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is IMPLEMENTATION_ACTIVE (K-3) (2026-05-05).
-  K-1 COMPLETE at de5cf10. K-2 COMPLETE at cef8afb. Active slice: K-3. K-4+ slices require explicit Paresh sign-off before opening.
+  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is IMPLEMENTATION_ACTIVE (K-4) (2026-05-05).
+  K-1 COMPLETE at de5cf10. K-2 COMPLETE at cef8afb. K-3 COMPLETE at 23fb727. Active slice: K-4. K-5+ slices require explicit Paresh sign-off before opening.
   Predecessor: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27).
   Production runtime verified: 30/30 checks PASS. Commit: 15ea69d (frontend panel).
   Full implementation complete: 4 slices, commits 8cd066c + 648d683 + 9d33820 + 15ea69d.

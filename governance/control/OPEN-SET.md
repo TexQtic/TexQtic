@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-05 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-2 COMPLETE at cef8afb; K-3 IMPLEMENTATION_ACTIVE)
+**Last Updated:** 2026-05-05 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-3 COMPLETE at 23fb727; K-4 IMPLEMENTATION_ACTIVE)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
