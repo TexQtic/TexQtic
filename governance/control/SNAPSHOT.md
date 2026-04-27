@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-05 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-3 COMPLETE at 23fb727; K-4 IMPLEMENTATION_ACTIVE)
+**Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-4 COMPLETE at c96d153; K-5 IMPLEMENTATION_ACTIVE)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -45,20 +45,19 @@ preserved_aligned_anchor_posture:
 current_product_active_delivery_count: 1
 current_product_active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 current_product_active_delivery_status: IMPLEMENTATION_ACTIVE
-current_product_active_delivery_slice: K-4
-runtime_verification_status: IMPLEMENTATION_ACTIVE (K-4) — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-4 in progress (2026-05-05); K-3 COMPLETE at 23fb727 (80/80 PASS); K-2 COMPLETE at cef8afb; K-1 COMPLETE at de5cf10; prior runtime: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
+current_product_active_delivery_slice: K-5
+runtime_verification_status: IMPLEMENTATION_ACTIVE (K-5) — K-4 COMPLETE at c96d153 (80/80 PASS); K-3 COMPLETE at 23fb727; K-2 COMPLETE at cef8afb; K-1 COMPLETE at de5cf10; prior runtime: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  IMPLEMENTATION_ACTIVE (K-4) (2026-05-05). Active unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001. K-3 COMPLETE at 23fb727. K-2 COMPLETE at cef8afb.
+  IMPLEMENTATION_ACTIVE (K-5) (2026-04-27). Active unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001. K-4 COMPLETE at c96d153. K-3 COMPLETE at 23fb727. K-2 COMPLETE at cef8afb.
   K-1 COMPLETE at de5cf10 (Document Intake and Type Classification).
-  Active slice: K-4 Frontend Review Panel.
-  Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
-  parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
-  No persistence, no review route, no lifecycle mutations, no schema changes.
+  Active slice: K-5 Review Submission + Approval Workflow.
+  Scope: POST /api/tenant/documents/:documentId/extraction/review, approve/reject transitions,
+  reviewer metadata, field overrides (reviewer_edited), audit event document.extraction.reviewed.
+  No Certification lifecycle mutation, no DPP, no buyer-facing output, no schema changes.
   Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (30/30 runtime checks PASS).
   Commits: 8cd066c + 648d683 + 9d33820 + 15ea69d. No schema changes. No migrations.
   Prior runtime verified: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (a3f5597).
   Prior: TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE (f671995).
-  K-5+ slices require explicit Paresh sign-off before opening.
 latest_verified_product_close: |
   TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27).
   Runtime verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS).

@@ -1,20 +1,25 @@
 /**
- * tenant/documents.ts — Document Intelligence K-1 / K-3
+ * tenant/documents.ts — Document Intelligence K-1 / K-3 / K-5
  *
  * Fastify plugin — registered at /api/tenant/documents
  *
  * Routes:
- *   POST /api/tenant/documents/:documentId/classify  — K-1: classify document by type
- *   POST /api/tenant/documents/:documentId/extract   — K-3: AI-backed field extraction + draft persistence
+ *   POST /api/tenant/documents/:documentId/classify            — K-1: classify document by type
+ *   POST /api/tenant/documents/:documentId/extract             — K-3: AI-backed field extraction + draft persistence
+ *   POST /api/tenant/documents/:documentId/extraction/review   — K-5: human review submission (approve/reject)
  *
- * Implements TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001, Slices K-1 and K-3.
+ * Implements TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001, Slices K-1, K-3, and K-5.
  *
  * Constitutional compliance:
  *   D-017-A  orgId ALWAYS derived from JWT/dbContext — NEVER from request body
  *   HOTFIX-MODEL-TX-001: AI call OUTSIDE Prisma tx; DB writes (draft, audit, reasoning, usage) INSIDE tx
  *   humanReviewRequired: true is a structural constant in all responses — cannot be overridden
- *   K-3 scope: extraction + draft persistence + audit trail only; no review/approve/reject (K-5)
- *              no lifecycle mutation, no certifications write, no buyer-facing output
+ *   K-5 scope: review submission + status transition only
+ *              - approve: apply field overrides, mark reviewer_edited, status → 'reviewed'
+ *              - reject: status → 'rejected', no field promotion
+ *              - NO Certification lifecycle mutation (G.4.1)
+ *              - NO DPP / public / buyer-facing output
+ *              - NO price / payment / escrow / risk / ranking logic
  */
 
 import type { FastifyPluginAsync } from 'fastify';
@@ -94,6 +99,17 @@ const extractBodySchema = z.object({
    * If absent, classification is auto-derived from documentText snippet.
    */
   documentType: z.string().max(100).trim().optional(),
+  // D-017-A: orgId MUST NOT be in the body
+  orgId: z.never({ message: 'orgId must not be set in request body' }).optional(),
+});
+
+// K-5: Review submission body
+// action: approve | reject
+// fieldOverrides: optional per-field value overrides (approve only; ignored on reject)
+// D-017-A: orgId MUST NOT be in the body
+const reviewBodySchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  fieldOverrides: z.record(z.string(), z.union([z.string(), z.null()])).optional(),
   // D-017-A: orgId MUST NOT be in the body
   orgId: z.never({ message: 'orgId must not be set in request body' }).optional(),
 });
@@ -364,6 +380,157 @@ const tenantDocumentRoutes: FastifyPluginAsync = async (fastify) => {
           extractedAt: savedDraft.extractedAt.toISOString(),
           reviewedAt: null,
           reviewedByUserId: null,
+        },
+        humanReviewRequired: true as const,
+        governanceLabel: DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL,
+      });
+    },
+  );
+  /**
+   * POST /:documentId/extraction/review
+   *
+   * K-5: Human review submission — approve or reject an extraction draft.
+   *
+   * K-5 scope:
+   *   - Locate latest 'draft' status record for documentId scoped to org_id
+   *   - approve: apply reviewer field overrides (reviewer_edited: true per field), status → 'reviewed'
+   *   - reject:  status → 'rejected', no field promotion
+   *   - Set reviewedAt + reviewedByUserId in both cases
+   *   - Emit audit event: 'document.extraction.reviewed'
+   *   - humanReviewRequired: true structural constant — immutable
+   *   - NO Certification lifecycle mutation
+   *   - NO DPP / public / buyer-facing output
+   *   - NO price / payment / escrow / risk / ranking logic
+   */
+  fastify.post(
+    '/:documentId/extraction/review',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      // Validate documentId path parameter
+      const paramResult = documentIdParamSchema.safeParse(request.params);
+      if (!paramResult.success) {
+        return sendValidationError(reply, paramResult.error.errors);
+      }
+      const { documentId } = paramResult.data;
+
+      // Validate request body
+      const bodyResult = reviewBodySchema.safeParse(request.body ?? {});
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+      const { action, fieldOverrides } = bodyResult.data;
+
+      // D-017-A: orgId always from dbContext — never from body
+      const orgId = dbContext.orgId;
+      const reviewedByUserId = request.userId ?? null;
+      const reviewedAt = new Date();
+
+      // Locate the latest draft record for this document scoped to org
+      let existingDraft;
+      try {
+        existingDraft = await withDbContext(prisma, dbContext, async (tx) => {
+          return (tx as typeof prisma).documentExtractionDraft.findFirst({
+            where: { documentId, orgId, status: 'draft' },
+            orderBy: { createdAt: 'desc' },
+          });
+        });
+      } catch (err) {
+        fastify.log.error({ err }, '[DocumentReview] Draft lookup failed');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to locate extraction draft', 500);
+      }
+
+      if (!existingDraft) {
+        // No draft-status record found — either doesn't exist, wrong tenant, or already reviewed/rejected
+        return sendError(reply, 'NOT_FOUND', 'No reviewable extraction draft found for this document', 404);
+      }
+
+      // Compute updated extracted fields (approve only — reject does not promote fields)
+      const currentFields = existingDraft.extractedFields as Array<Record<string, unknown>>;
+      let updatedFields: Array<Record<string, unknown>>;
+
+      if (action === 'approve' && fieldOverrides && Object.keys(fieldOverrides).length > 0) {
+        updatedFields = currentFields.map((field) => {
+          const fieldName = field.field_name as string;
+          if (Object.prototype.hasOwnProperty.call(fieldOverrides, fieldName)) {
+            const overrideValue = fieldOverrides[fieldName];
+            return {
+              ...field,
+              raw_value: overrideValue,
+              normalized_value: overrideValue,
+              reviewer_edited: true,
+            };
+          }
+          return field;
+        });
+      } else {
+        updatedFields = currentFields;
+      }
+
+      const fieldOverrideCount =
+        action === 'approve' && fieldOverrides ? Object.keys(fieldOverrides).length : 0;
+      const nextStatus = action === 'approve' ? 'reviewed' : 'rejected';
+      const previousStatus = 'draft';
+
+      // Persist the status transition and reviewer metadata inside a single tx
+      let updatedDraft;
+      try {
+        updatedDraft = await withDbContext(prisma, dbContext, async (tx) => {
+          const saved = await (tx as typeof prisma).documentExtractionDraft.update({
+            where: { id: existingDraft.id },
+            data: {
+              status: nextStatus,
+              reviewedAt,
+              reviewedByUserId,
+              ...(action === 'approve' ? { extractedFields: updatedFields as object[] } : {}),
+              updatedAt: new Date(),
+            },
+          });
+
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: orgId,
+            actorType: 'USER',
+            actorId: reviewedByUserId,
+            action: 'document.extraction.reviewed',
+            entity: 'document',
+            entityId: documentId,
+            metadataJson: {
+              reviewAction: action,
+              fieldOverrideCount,
+              humanReviewRequired: true,
+              previousStatus,
+              nextStatus,
+            },
+          });
+
+          return saved;
+        });
+      } catch (err) {
+        fastify.log.error({ err }, '[DocumentReview] Review persistence failed');
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to persist extraction review', 500);
+      }
+
+      // Build response — humanReviewRequired and governanceLabel are structural constants
+      return sendSuccess(reply, {
+        draft: {
+          id: updatedDraft.id,
+          documentId: updatedDraft.documentId,
+          orgId: updatedDraft.orgId,
+          documentType: updatedDraft.documentType,
+          extractedFields: updatedFields,
+          overallConfidence: Number(updatedDraft.overallConfidence),
+          humanReviewRequired: true as const,
+          status: updatedDraft.status,
+          extractionNotes: updatedDraft.extractionNotes,
+          extractedAt: updatedDraft.extractedAt.toISOString(),
+          reviewedAt: updatedDraft.reviewedAt ? updatedDraft.reviewedAt.toISOString() : null,
+          reviewedByUserId: updatedDraft.reviewedByUserId,
         },
         humanReviewRequired: true as const,
         governanceLabel: DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL,

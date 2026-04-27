@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-05 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-3 COMPLETE at 23fb727; K-4 IMPLEMENTATION_ACTIVE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-4 COMPLETE at c96d153; K-5 IMPLEMENTATION_ACTIVE)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -14,14 +14,14 @@ governance_exception_active: false
 product_delivery_priority: IMPLEMENTATION_ACTIVE
 active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 active_delivery_unit_status: IMPLEMENTATION_ACTIVE
-active_delivery_unit_active_slice: K-4
+active_delivery_unit_active_slice: K-5
 active_delivery_unit_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
 active_delivery_unit_note: >-
-  K-1 COMPLETE at de5cf10 (2026-04-27). K-2 COMPLETE at cef8afb (2026-04-27). K-3 COMPLETE at 23fb727 (2026-05-05). K-4 IMPLEMENTATION_ACTIVE (2026-05-05).
-  Slice: Field Extraction AI Prompt and Output Schema.
-  Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
-  parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
-  No persistence, no review route, no lifecycle mutations, no buyer-facing output, no schema changes.
+  K-1 COMPLETE at de5cf10 (2026-04-27). K-2 COMPLETE at cef8afb (2026-04-27). K-3 COMPLETE at 23fb727 (2026-04-27). K-4 COMPLETE at c96d153 (2026-04-27). K-5 IMPLEMENTATION_ACTIVE (2026-04-27).
+  Slice: Review Submission + Approval Workflow.
+  Scope: POST /api/tenant/documents/:documentId/extraction/review, approve/reject transitions,
+  reviewer audit, field overrides with reviewer_edited, no Certification lifecycle mutation,
+  no DPP/buyer-facing output, no price/payment/risk/ranking logic.
 last_closed_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS)
