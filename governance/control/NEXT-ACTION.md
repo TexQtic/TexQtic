@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-3 PDP specs/media/compliance rendering implemented)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-28 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-4 RFQ entry trigger handoff delivered)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -14,7 +14,7 @@ governance_exception_active: false
 product_delivery_priority: TECS-B2B-BUYER-CATALOG-PDP-001
 active_delivery_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 active_delivery_unit_status: IMPLEMENTATION_ACTIVE
-active_delivery_unit_active_slice: P-3 — PDP Specs / Media / Compliance Rendering
+active_delivery_unit_active_slice: P-4 — RFQ Entry Trigger Handoff
 active_delivery_unit_design_artifact: docs/TECS-B2B-BUYER-CATALOG-PDP-001-DESIGN-v1.md
 active_delivery_unit_design_commit: d0bcf27
 active_delivery_unit_note: >-
@@ -27,11 +27,15 @@ active_delivery_unit_note: >-
   App.tsx: PHASE_C state + handlers + resolveBuyerCatalogPhase helper.
   View Details button added to Phase B item cards.
   Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T9), 43/43 PASS.
-  P-3 IMPLEMENTATION_ACTIVE: multi-image media gallery, availability fallback constants,
+  P-3 COMPLETE (commit f871bcb): multi-image media gallery, availability fallback constants,
   compliance empty state, supplier summary MOQ/lead time/capacity, new pure helpers.
   Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS.
-  No schema changes. No price. No AI draft fields. No DPP.
-  P-3 through P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
+  P-4 IMPLEMENTATION_ACTIVE: RfqTriggerPayload type + validateRfqTriggerPayload exported.
+  CatalogPdpSurfaceProps.onRequestQuote updated to full 5-field payload (category + stage).
+  App.tsx PHASE_C bridge: RfqTriggerPayload → minimal CatalogItem → handleOpenRfqDialog.
+  Tests: tests/b2b-buyer-catalog-pdp-page.test.ts (T1–T26), 108/108 PASS.
+  No schema changes. No price. No AI draft fields. No DPP. No auto-submit.
+  P-5 remains UNAUTHORIZED — requires explicit Paresh sign-off.
 last_closed_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: 237/237 tests PASS
@@ -75,17 +79,16 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-27). P-3 delivered.
-  CatalogPdpSurface.tsx: multi-image media gallery, resolveMediaAltText, resolveMoqDisplay,
-  resolveLeadTimeDisplay, resolveCapacityDisplay, resolveMediaTypeBadge helpers exported.
-  CATALOG_PDP_MEDIA_EMPTY_COPY, CATALOG_PDP_AVAILABILITY_FALLBACK, CATALOG_PDP_COMPLIANCE_EMPTY_COPY added.
-  PdpSupplierSummary: MOQ + lead time + capacity from availabilitySummary.
-  PdpComplianceSummary: empty state exact text corrected.
-  PdpAvailabilitySummary: uses new resolve helpers ("Available on request" fallback).
-  Tests: b2b-buyer-catalog-pdp-page.test.ts T1–T20, 95/95 PASS. Catalog regression 226/226 PASS.
-  No schema changes. No price. No AI draft. No DPP. No RFQ prefill.
-  P-4 and P-5 remain UNAUTHORIZED — each requires explicit Paresh sign-off.
-  Prior: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
+  TECS-B2B-BUYER-CATALOG-PDP-001 IMPLEMENTATION_ACTIVE (2026-04-28). P-4 delivered.
+  CatalogPdpSurface.tsx: RfqTriggerPayload type exported. validateRfqTriggerPayload helper.
+  __CATALOG_PDP_RFQ_TESTING__ test export. onRequestQuote updated to 5-field payload.
+  PdpRfqEntry: passes category + stage from rfqEntry to onRequestQuote.
+  App.tsx PHASE_C bridge: RfqTriggerPayload → minimal CatalogItem → handleOpenRfqDialog.
+  stage field now passed as catalogStage (was hardcoded undefined in P-2).
+  Tests: b2b-buyer-catalog-pdp-page.test.ts T1–T26, 108/108 PASS.
+  No schema changes. No price. No AI draft. No DPP. No auto-submit. No prefill.
+  P-5 remains UNAUTHORIZED — requires explicit Paresh sign-off.
+  Prior: P-3 COMPLETE (commit f871bcb). 95/95 PASS.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.

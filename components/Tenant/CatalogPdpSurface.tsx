@@ -138,6 +138,33 @@ export function resolveMediaTypeBadge(media: BuyerCatalogMedia): string {
 }
 
 // ---------------------------------------------------------------------------
+// P-4: RFQ trigger payload type and validator
+// ---------------------------------------------------------------------------
+
+export type RfqTriggerPayload = {
+  readonly itemId: string;
+  readonly supplierId: string;
+  readonly itemTitle: string;
+  readonly category: string | null;
+  readonly stage: string | null;
+};
+
+export function validateRfqTriggerPayload(
+  payload: RfqTriggerPayload,
+): { valid: boolean; error: string | null } {
+  if (!payload.itemId || payload.itemId.trim().length === 0) {
+    return { valid: false, error: 'RFQ trigger requires a valid itemId.' };
+  }
+  if (!payload.supplierId || payload.supplierId.trim().length === 0) {
+    return { valid: false, error: 'RFQ trigger requires a valid supplierId.' };
+  }
+  if (!payload.itemTitle || payload.itemTitle.trim().length === 0) {
+    return { valid: false, error: 'RFQ trigger requires a valid itemTitle.' };
+  }
+  return { valid: true, error: null };
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -149,10 +176,10 @@ export type CatalogPdpSurfaceProps = Readonly<{
   onBack: () => void;
   /**
    * Called when buyer presses "Request Quote".
-   * P-2: passes safe handoff descriptor fields only — no prefill, no auto-submit.
-   * Full RFQ prefill is deferred to TECS-B2B-BUYER-RFQ-INTEGRATION-001 (P-4).
+   * P-4: passes full RfqTriggerPayload (5 safe fields) — no prefill, no auto-submit.
+   * Auto-submit and multi-item basket remain forbidden.
    */
-  onRequestQuote: (payload: { itemId: string; supplierId: string; itemTitle: string }) => void;
+  onRequestQuote: (payload: RfqTriggerPayload) => void;
 }>;
 
 // ---------------------------------------------------------------------------
@@ -449,7 +476,7 @@ function PdpRfqEntry({
   onRequestQuote,
 }: Readonly<{
   item: BuyerCatalogPdpView;
-  onRequestQuote: (payload: { itemId: string; supplierId: string; itemTitle: string }) => void;
+  onRequestQuote: (payload: RfqTriggerPayload) => void;
 }>) {
   return (
     <section
@@ -469,6 +496,8 @@ function PdpRfqEntry({
             itemId: item.rfqEntry.itemId,
             supplierId: item.rfqEntry.supplierId,
             itemTitle: item.rfqEntry.itemTitle,
+            category: item.rfqEntry.category,
+            stage: item.rfqEntry.stage,
           })
         }
         className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition"
@@ -566,3 +595,11 @@ export function CatalogPdpSurface({
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// P-4 test helpers export
+// ---------------------------------------------------------------------------
+
+export const __CATALOG_PDP_RFQ_TESTING__ = {
+  validateRfqTriggerPayload,
+};

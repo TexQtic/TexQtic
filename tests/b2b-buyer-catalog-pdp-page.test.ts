@@ -60,6 +60,9 @@ import {
   resolveLeadTimeDisplay,
   resolveCapacityDisplay,
   resolveMediaTypeBadge,
+  type RfqTriggerPayload,
+  validateRfqTriggerPayload,
+  __CATALOG_PDP_RFQ_TESTING__,
 } from '../components/Tenant/CatalogPdpSurface';
 
 const tenantGetMock = tenantGet as ReturnType<typeof vi.fn>;
@@ -902,6 +905,137 @@ describe('T20: BuyerCatalogMedia data contract', () => {
     const result = resolveMediaAltText(null, 'Cotton Fabric');
     expect(result).not.toContain('storage.googleapis.com');
     expect(result).not.toContain('supabase.co');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T21: RFQ trigger — exported type, constants, and testing object
+// ---------------------------------------------------------------------------
+
+describe('T21: RfqTriggerPayload type and RFQ trigger constants', () => {
+  it('T21.1 — CATALOG_PDP_RFQ_TRIGGER_LABEL is "Request Quote"', () => {
+    expect(CATALOG_PDP_RFQ_TRIGGER_LABEL).toBe('Request Quote');
+  });
+
+  it('T21.2 — validateRfqTriggerPayload is exported and callable', () => {
+    expect(typeof validateRfqTriggerPayload).toBe('function');
+  });
+
+  it('T21.3 — __CATALOG_PDP_RFQ_TESTING__ exports validateRfqTriggerPayload', () => {
+    expect(typeof __CATALOG_PDP_RFQ_TESTING__.validateRfqTriggerPayload).toBe('function');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T22: validateRfqTriggerPayload — valid payload paths
+// ---------------------------------------------------------------------------
+
+describe('T22: validateRfqTriggerPayload — valid payload', () => {
+  it('T22.1 — returns valid for all required fields present with non-null optionals', () => {
+    const payload: RfqTriggerPayload = {
+      itemId: 'item-1',
+      supplierId: 'supplier-1',
+      itemTitle: 'Cotton Fabric',
+      category: 'FABRIC_WOVEN',
+      stage: 'FABRIC_WOVEN',
+    };
+    expect(validateRfqTriggerPayload(payload)).toEqual({ valid: true, error: null });
+  });
+
+  it('T22.2 — returns valid when category and stage are null', () => {
+    const payload: RfqTriggerPayload = {
+      itemId: 'item-1',
+      supplierId: 'supplier-1',
+      itemTitle: 'Cotton Fabric',
+      category: null,
+      stage: null,
+    };
+    expect(validateRfqTriggerPayload(payload)).toEqual({ valid: true, error: null });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T23: validateRfqTriggerPayload — missing itemId
+// ---------------------------------------------------------------------------
+
+describe('T23: validateRfqTriggerPayload — missing itemId', () => {
+  it('T23.1 — returns invalid when itemId is empty string', () => {
+    const result = validateRfqTriggerPayload({ itemId: '', supplierId: 's1', itemTitle: 'Title', category: null, stage: null });
+    expect(result.valid).toBe(false);
+    expect(result.error).not.toBeNull();
+  });
+
+  it('T23.2 — returns invalid when itemId is whitespace only', () => {
+    const result = validateRfqTriggerPayload({ itemId: '   ', supplierId: 's1', itemTitle: 'Title', category: null, stage: null });
+    expect(result.valid).toBe(false);
+    expect(result.error).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T24: validateRfqTriggerPayload — missing supplierId
+// ---------------------------------------------------------------------------
+
+describe('T24: validateRfqTriggerPayload — missing supplierId', () => {
+  it('T24.1 — returns invalid when supplierId is empty string', () => {
+    const result = validateRfqTriggerPayload({ itemId: 'i1', supplierId: '', itemTitle: 'Title', category: null, stage: null });
+    expect(result.valid).toBe(false);
+    expect(result.error).not.toBeNull();
+  });
+
+  it('T24.2 — returns invalid when supplierId is whitespace only', () => {
+    const result = validateRfqTriggerPayload({ itemId: 'i1', supplierId: '  ', itemTitle: 'Title', category: null, stage: null });
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T25: validateRfqTriggerPayload — missing itemTitle
+// ---------------------------------------------------------------------------
+
+describe('T25: validateRfqTriggerPayload — missing itemTitle', () => {
+  it('T25.1 — returns invalid when itemTitle is empty string', () => {
+    const result = validateRfqTriggerPayload({ itemId: 'i1', supplierId: 's1', itemTitle: '', category: null, stage: null });
+    expect(result.valid).toBe(false);
+    expect(result.error).not.toBeNull();
+  });
+
+  it('T25.2 — returns invalid when itemTitle is whitespace only', () => {
+    const result = validateRfqTriggerPayload({ itemId: 'i1', supplierId: 's1', itemTitle: '   ', category: null, stage: null });
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T26: RfqTriggerPayload shape — safe fields only, no forbidden fields
+// ---------------------------------------------------------------------------
+
+describe('T26: RfqTriggerPayload shape — no forbidden fields', () => {
+  it('T26.1 — payload has exactly the 5 required fields', () => {
+    const payload: RfqTriggerPayload = {
+      itemId: 'i1',
+      supplierId: 's1',
+      itemTitle: 'Title',
+      category: null,
+      stage: null,
+    };
+    const keys = Object.keys(payload);
+    expect(keys).toHaveLength(5);
+    expect(keys).toContain('itemId');
+    expect(keys).toContain('supplierId');
+    expect(keys).toContain('itemTitle');
+    expect(keys).toContain('category');
+    expect(keys).toContain('stage');
+  });
+
+  it('T26.2 — payload does not have price, amount, payment, or DPP fields', () => {
+    const payload: RfqTriggerPayload = { itemId: 'i1', supplierId: 's1', itemTitle: 'T', category: null, stage: null };
+    expect(payload).not.toHaveProperty('price');
+    expect(payload).not.toHaveProperty('amount');
+    expect(payload).not.toHaveProperty('quantity');
+    expect(payload).not.toHaveProperty('submit');
+    expect(payload).not.toHaveProperty('dpp');
+    expect(payload).not.toHaveProperty('aiDraft');
   });
 });
 

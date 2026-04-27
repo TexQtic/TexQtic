@@ -5184,11 +5184,12 @@ const App: React.FC = () => {
               loading={buyerCatalogPdpLoading}
               error={buyerCatalogPdpError}
               onBack={handleCloseCatalogPdp}
-              onRequestQuote={({ itemId, supplierId, itemTitle }) => {
+              onRequestQuote={(payload) => {
+                // P-4: bridge RfqTriggerPayload → minimal CatalogItem for existing RFQ dialog.
                 const asProduct: CatalogItem = {
-                  id: itemId,
-                  tenantId: supplierId,
-                  name: itemTitle,
+                  id: payload.itemId,
+                  tenantId: payload.supplierId,
+                  name: payload.itemTitle,
                   sku: '',
                   price: 0,
                   active: true,
@@ -5196,8 +5197,7 @@ const App: React.FC = () => {
                   updatedAt: '',
                   moq: buyerCatalogPdpItem?.availabilitySummary.moqValue ?? undefined,
                 };
-                // P-2: open standard RFQ dialog — no prefill of deep spec fields.
-                handleOpenRfqDialog(asProduct, undefined);
+                handleOpenRfqDialog(asProduct, payload.stage ?? undefined);
               }}
             />
           );

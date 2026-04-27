@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-27 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-3 PDP specs/media/compliance rendering implemented)
+**Updated:** 2026-04-28 (TECS-B2B-BUYER-CATALOG-PDP-001 — IMPLEMENTATION_ACTIVE; P-4 RFQ entry trigger handoff delivered)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -10,7 +10,7 @@
 ---
 
 ```yaml
-snapshot_date: 2026-04-27
+snapshot_date: 2026-04-28
 snapshot_unit: TECS-B2B-BUYER-CATALOG-PDP-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
@@ -23,9 +23,11 @@ current_open_design_unit_note: >-
   getBuyerCatalogPdpItem() service. 25 tests (T1–T13). No schema. No frontend. No price.
   P-2 COMPLETE (commit d8d6141). CatalogPdpSurface.tsx + App.tsx PHASE_C wired.
   Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T9), 43/43 PASS.
-  P-3 IMPLEMENTATION_ACTIVE. Multi-image gallery, new pure helpers, compliance/availability rework.
+  P-3 COMPLETE (commit f871bcb). Multi-image gallery, new pure helpers, compliance/availability rework.
   Tests: b2b-buyer-catalog-pdp-page.test.ts (T1–T20), 95/95 PASS.
-  P-4 and P-5: UNAUTHORIZED — each requires explicit Paresh sign-off.
+  P-4 DELIVERED: RfqTriggerPayload type + validateRfqTriggerPayload + 5-field onRequestQuote.
+  App.tsx PHASE_C bridge updated — stage passed as catalogStage. 108/108 PASS.
+  P-5: UNAUTHORIZED — requires explicit Paresh sign-off.
   Browsing → RFQ decision surface. Price/relationship/DPP deferred.
 latest_verified_product_close_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
