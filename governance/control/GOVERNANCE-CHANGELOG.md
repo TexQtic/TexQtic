@@ -5,6 +5,50 @@
 
 ---
 
+## 2026-04-27 — CLOSED: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+
+```
+Unit:          TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-27
+Verification:  237/237 tests PASS
+
+Commits:
+  de5cf10  K-1 — Document intake and type classification route + 46 tests
+  cef8afb  K-2 — Extraction service (prompt builder, parser, confidence helpers) + service tests
+  23fb727  K-3 — Backend extraction route POST /api/tenant/documents/:documentId/extraction/trigger + tests
+  c96d153  K-4 — Frontend DocumentIntelligenceCard review panel + 80 tests
+  c9cbf8c  K-5 — Review submission route POST /api/tenant/documents/:documentId/extraction/review + 17 tests
+
+Safety Boundary Checks:
+  ✅ humanReviewRequired: true — structural constant verified in all responses (K-3, K-5)
+  ✅ DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL present in all classify and extraction responses
+  ✅ No Certification lifecycle mutation in any extraction or review route
+  ✅ No DPP / buyer-facing output in any route
+  ✅ No price / payment / risk / ranking logic in any route
+  ✅ No forbidden display terms (price, publicationPosture, trustScore, riskLevel, etc.)
+  ✅ Tenant isolation (org_id scoping) verified — cross-tenant access yields 404
+  ✅ D-017-A enforcement — orgId in request body blocked via z.never() in K-5 review schema
+  ✅ Already-reviewed drafts yield 404 (status: draft gate at findFirst)
+  ✅ No schema changes. No migrations. No Prisma migrate dev/push.
+  ✅ No public / buyer-facing output
+  ✅ No lifecycle state mutation (no Certification, Trade, Escrow actions)
+  ✅ supplier-internal surface enforced (data-surface="supplier-internal")
+  ✅ No auto-apply. No auto-approve. Human reviewer must explicitly call review endpoint.
+  ✅ auditLog action: document.extraction.reviewed — not a Certification lifecycle action
+
+Blockers: None
+
+Governance files updated:
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  docs/governance/MASTER-IMPLEMENTATION-PLAN-2026-03.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-27 — CLOSED: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
 
 ```

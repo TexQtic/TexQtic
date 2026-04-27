@@ -799,6 +799,7 @@ These conditions are non-waivable.
 | TECS-AI-FOUNDATION-DATA-CONTRACTS-001 | AI data contracts, boundaries, context pack definitions, forbidden-field registry | IMPLEMENTATION_COMPLETE | 2026-04-26 | f671995 |
 | TECS-AI-RFQ-ASSISTANT-MVP-001 | AI-assisted RFQ field suggestions (supplier-internal, suggestion-only, humanConfirmationRequired) | VERIFIED_COMPLETE | 2026-04-27 | 7582c06 + f342e5f + 1866f13 + 6c4cb5f + 4352e21 + a542966 + a3c1f5b + cf8a17e + 12ea7a2 + 042ecd2 + a3f5597 |
 | TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 | AI-assisted supplier profile completeness analysis (supplier-internal, 10-category rubric, read-only, suggestion-only) | ✅ VERIFIED_COMPLETE — VERIFIED IN PRODUCTION | 2026-04-27 | 8cd066c + 648d683 + 9d33820 + 15ea69d |
+| TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 | AI document extraction MVP — type classification, field extraction, frontend review panel, review approve/reject workflow (supplier-internal, no schema changes, no lifecycle mutation, humanReviewRequired structural constant) | ✅ VERIFIED_COMPLETE — 237/237 tests PASS | 2026-04-27 | de5cf10 + cef8afb + 23fb727 + c96d153 + c9cbf8c |
 
 ### 11.2 TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — Closure Evidence
 
@@ -814,3 +815,29 @@ These conditions are non-waivable.
 - **No schema changes. No migrations. No cross-tenant exposure. No console errors.**
 - **Tests:** 87/87 PASS (52 state tests + 35 UI tests).
 - **Governance close commit:** GOV-CLOSE message references commit `15ea69d`.
+
+### 11.3 TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — Closure Evidence
+
+- **Verification:** 237/237 tests PASS across all 5 slices (K-1 through K-5).
+- **Commit chain:** K-1 `de5cf10` + K-2 `cef8afb` + K-3 `23fb727` + K-4 `c96d153` + K-5 `c9cbf8c`.
+- **Scope delivered:**
+  - K-1: `DocumentType` enum, `classifyDocumentType` utility, `POST /api/tenant/documents/:documentId/classify` route.
+  - K-2: Extraction service — `buildDocumentExtractionPrompt`, `parseDocumentExtractionOutput`, `computeOverallConfidence`, normalization helpers.
+  - K-3: Backend extraction trigger `POST /api/tenant/documents/:documentId/extraction/trigger`.
+  - K-4: Frontend `DocumentIntelligenceCard` review panel (`data-surface="supplier-internal"`).
+  - K-5: Review submission `POST /api/tenant/documents/:documentId/extraction/review` — approve/reject transitions, reviewer metadata, `reviewer_edited` field overrides, audit event `document.extraction.reviewed`.
+- **Safety boundaries verified:**
+  - `humanReviewRequired: true` — structural constant (typed as literal `true`), verified in all route responses.
+  - `DOCUMENT_INTELLIGENCE_GOVERNANCE_LABEL` present in all classify and extraction responses.
+  - No Certification lifecycle mutation in any route.
+  - No DPP / buyer-facing output.
+  - No price / payment / risk / ranking logic.
+  - Tenant isolation (org_id scoping) verified — cross-tenant access yields 404.
+  - D-017-A: `orgId` in request body blocked via `z.never()` in K-5 review schema.
+  - Already-reviewed drafts yield 404 (status: `draft` gate at `findFirst`).
+  - `data-surface="supplier-internal"` enforced on frontend panel.
+  - Audit action `document.extraction.reviewed` is not a Certification lifecycle action.
+- **No schema changes. No migrations. No `prisma migrate dev/push`. No public output.**
+- **No Certification, Trade, or Escrow lifecycle actions introduced.**
+- **No console errors. No blockers.**
+- **Governance close commit:** `GOV-CLOSE: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 marked VERIFIED_COMPLETE after 237/237 verification pass`.

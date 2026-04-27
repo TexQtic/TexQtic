@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-4 COMPLETE at c96d153; K-5 IMPLEMENTATION_ACTIVE)
+**Last Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE; 237/237 tests PASS; K-5 c9cbf8c)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -346,15 +346,29 @@
   No regression: catalog, taxonomy, navigation all intact post-panel insertion.
   No console errors. No blockers. No schema changes. No migrations. No cross-tenant exposure.
   Tests: 87/87 PASS (52 state tests T-SPCS-S01–S09 + 35 UI tests T-SPCS-UI01–UI14).
-- TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is IMPLEMENTATION_ACTIVE (K-1) (2026-04-27).
-  Status: IMPLEMENTATION_ACTIVE.
-  Active slice: K-1 Document Intake and Type Classification.
-  Scope: DocumentType enum, classifyDocumentType utility, POST /api/tenant/documents/:documentId/classify route.
-  No extraction, no schema changes, no lifecycle mutations, no buyer-facing output.
-  Human review boundary preserved: humanReviewRequired: true is a structural constant in all outputs.
-  Governance label present in all classify responses.
-  Tests: 37 service tests (K-C01–K-C10) + 9 route tests (K-R01–K-R08) — all pass.
-- D-016 posture: **ACTIVE** — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-1 IMPLEMENTATION_ACTIVE (2026-04-27); decision control required per D-016.
+- TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 is VERIFIED_COMPLETE (2026-04-27).
+  Status: VERIFIED_COMPLETE. Verification date: 2026-04-27. Runtime verdict: 237/237 tests PASS.
+  Scope: Document intake, type classification, AI extraction (structured fields + confidence), frontend
+    review panel (supplier-internal), review submission + approve/reject workflow.
+  Commit chain:
+    K-1 de5cf10 — Document intake and type classification route + 46 tests
+    K-2 cef8afb — Extraction service (prompt builder, output parser, confidence helpers) + service tests
+    K-3 23fb727 — Backend extraction route POST /api/tenant/documents/:documentId/extraction/trigger + tests
+    K-4 c96d153 — Frontend DocumentIntelligenceCard review panel + 80 tests
+    K-5 c9cbf8c — Review submission route POST /api/tenant/documents/:documentId/extraction/review + 17 tests
+  Governance close commit: GOV-CLOSE TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE.
+  Safety boundaries verified:
+    humanReviewRequired: true — structural constant, verified in all outputs
+    Governance label present in all classify and extraction responses
+    No Certification lifecycle mutation in any route
+    No DPP / buyer-facing output
+    No price / payment / risk / ranking logic
+    Tenant isolation (org_id scoping): verified in cross-tenant tests
+    D-017-A (orgId never in request body): enforced via z.never() in K-5 review schema
+    No schema changes. No migrations. No public output.
+  Tests: K-1 46 PASS + K-2 service PASS + K-3 route PASS + K-4 80 PASS + K-5 17 PASS = 237/237 PASS.
+  No blockers.
+- D-016 posture: **CLOSED** — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27); 237/237 PASS; decision control satisfied.
 - D-015 post-close authority reconciliation: complete (2026-04-22).
 - D-013 carry-forward result: `SUCCESSOR_CHAIN_PRESERVED`.
   D-020 artifact: `governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md`.

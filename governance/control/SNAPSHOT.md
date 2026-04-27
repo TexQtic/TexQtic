@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-4 COMPLETE at c96d153; K-5 IMPLEMENTATION_ACTIVE)
+**Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE; 237/237 tests PASS; K-5 c9cbf8c)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -14,6 +14,15 @@ snapshot_date: 2026-04-27
 snapshot_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
+latest_verified_product_close_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+latest_verified_product_close_status: VERIFIED_COMPLETE
+latest_verified_product_close_date: 2026-04-27
+latest_verified_product_close_verification: 237/237 tests PASS
+latest_verified_product_close_safety_boundaries: intact
+latest_verified_product_close_tenant_isolation: verified
+latest_verified_product_close_human_review_required: structural constant verified
+latest_verified_product_close_commits: >-
+  K-1 de5cf10, K-2 cef8afb, K-3 23fb727, K-4 c96d153, K-5 c9cbf8c
 control_plane_read_order:
   - governance/control/OPEN-SET.md
   - governance/control/NEXT-ACTION.md
@@ -42,31 +51,25 @@ historical_reconciliation_inputs:
 preserved_aligned_anchor_posture:
   onboarding_family_closed_chains: preserved_aligned_anchor_only
   reused_existing_user_bucket: BOUNDED_DEFERRED_REMAINDER
-current_product_active_delivery_count: 1
-current_product_active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
-current_product_active_delivery_status: IMPLEMENTATION_ACTIVE
-current_product_active_delivery_slice: K-5
-runtime_verification_status: IMPLEMENTATION_ACTIVE (K-5) — K-4 COMPLETE at c96d153 (80/80 PASS); K-3 COMPLETE at 23fb727; K-2 COMPLETE at cef8afb; K-1 COMPLETE at de5cf10; prior runtime: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
+current_product_active_delivery_count: 0
+current_product_active_delivery_unit: none
+current_product_active_delivery_status: none
+current_product_active_delivery_slice: none
+runtime_verification_status: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27) 237/237 PASS; K-5 c9cbf8c; prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 RUNTIME_VERIFIED_COMPLETE (30/30 PASS, 2026-04-27); prior: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27)
 current_product_active_delivery_note: |
-  IMPLEMENTATION_ACTIVE (K-5) (2026-04-27). Active unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001. K-4 COMPLETE at c96d153. K-3 COMPLETE at 23fb727. K-2 COMPLETE at cef8afb.
-  K-1 COMPLETE at de5cf10 (Document Intake and Type Classification).
-  Active slice: K-5 Review Submission + Approval Workflow.
-  Scope: POST /api/tenant/documents/:documentId/extraction/review, approve/reject transitions,
-  reviewer metadata, field overrides (reviewer_edited), audit event document.extraction.reviewed.
-  No Certification lifecycle mutation, no DPP, no buyer-facing output, no schema changes.
-  Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (30/30 runtime checks PASS).
-  Commits: 8cd066c + 648d683 + 9d33820 + 15ea69d. No schema changes. No migrations.
-  Prior runtime verified: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (a3f5597).
-  Prior: TECS-AI-FOUNDATION-DATA-CONTRACTS-001 IMPLEMENTATION_COMPLETE (f671995).
+  No active delivery unit. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27).
+  237/237 tests PASS. K-1 de5cf10, K-2 cef8afb, K-3 23fb727, K-4 c96d153, K-5 c9cbf8c.
+  Awaiting Paresh explicit authorization for next unit selection.
 latest_verified_product_close: |
-  TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27).
-  Runtime verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS).
-  Commit chain: 8cd066c (Slice 1 context builder) + 648d683 (Slice 2 rubric)
-    + 9d33820 (Slice 3 backend AI route + audit) + 15ea69d (Slice 4 frontend panel + tests).
-  AI Supplier Profile Completeness production verified. Supplier sees AI-generated completeness
-  score (10 categories), missing fields, improvement actions, and trust warnings.
-  Human review label hardcoded. No buyer-facing score. No auto-apply. No schema changes.
-  Surface: supplier-internal only. Safety boundaries intact. 87/87 tests PASS.
+  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
+  Verification: 237/237 tests PASS.
+  Commit chain: K-1 de5cf10 + K-2 cef8afb + K-3 23fb727 + K-4 c96d153 + K-5 c9cbf8c.
+  Scope: Document intake, type classification, AI field extraction, frontend review panel
+    (supplier-internal), review submission + approve/reject workflow.
+  Safety boundaries intact: humanReviewRequired structural constant verified; governance label
+    present; no Certification lifecycle mutation; no DPP/buyer-facing; no price/payment/risk;
+    tenant isolation (org_id) verified; D-017-A (z.never()) enforced; no schema changes.
+  No blockers.
 prior_latest_verified_product_close: |
   TECS-AI-RFQ-ASSISTANT-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
   Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
@@ -87,20 +90,17 @@ prior_latest_verified_product_close: |
   Structured RFQ requirement foundation complete. AI RFQ assistant not implemented.
   Supplier matching not implemented. Price disclosure not implemented.
   Order/checkout/escrow not implemented.
-current_open_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+current_open_unit: none
 current_open_unit_note: |
-  IMPLEMENTATION_ACTIVE (K-1) (2026-04-27). Unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001.
-  Active slice: K-1 Document Intake and Type Classification.
-  Scope: DocumentType enum, classifyDocumentType utility,
-  POST /api/tenant/documents/:documentId/classify route.
-  No extraction, no schema changes, no lifecycle mutations, no buyer-facing output.
-  Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE.
-  Production runtime verified: 30/30 checks PASS. Commits: 8cd066c + 648d683 + 9d33820 + 15ea69d.
-  Prior runtime: TECS-AI-RFQ-ASSISTANT-MVP-001 RUNTIME_VERIFIED_COMPLETE (2026-04-27, commit a3f5597).
+  No active delivery unit. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27).
+  237/237 PASS. K-1 de5cf10, K-2 cef8afb, K-3 23fb727, K-4 c96d153, K-5 c9cbf8c.
+  Awaiting Paresh explicit authorization for next unit selection.
+  Prior closed: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27, 30/30 runtime PASS).
 ai_document_intelligence_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
-ai_document_intelligence_status: IMPLEMENTATION_ACTIVE (K-1) (2026-04-27)
+ai_document_intelligence_status: VERIFIED_COMPLETE (2026-04-27)
 ai_document_intelligence_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
-ai_document_intelligence_runtime_verdict: PENDING (K-1 in progress)
+ai_document_intelligence_runtime_verdict: 237/237 tests PASS
+ai_document_intelligence_commits: K-1 de5cf10 + K-2 cef8afb + K-3 23fb727 + K-4 c96d153 + K-5 c9cbf8c
 ai_supplier_profile_completeness_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
 ai_supplier_profile_completeness_status: VERIFIED_COMPLETE (2026-04-27)
 ai_supplier_profile_completeness_runtime_verdict: RUNTIME_VERIFIED_COMPLETE (30/30 PASS)
@@ -122,7 +122,7 @@ ai_assist_boundary_preservation: |
   Accepted/rejected decisions are local UI state; no persistent PATCH accept-flow.
 phase_3_plus_candidates: |
   1. TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 — VERIFIED_COMPLETE (2026-04-27); closed
-  2. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — IMPLEMENTATION_ACTIVE (K-1) (2026-04-27)
+  2. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27); closed
   3. TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — candidate only, requires Paresh authorization
   4. Supplier selection UX polish (per-item publicationPosture filtering) — requires authorization
   5. Catalog search / item detail / price disclosure — Phase 3+, requires authorization

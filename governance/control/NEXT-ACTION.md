@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — K-4 COMPLETE at c96d153; K-5 IMPLEMENTATION_ACTIVE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-27 (TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE; 237/237 tests PASS; K-5 c9cbf8c)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,48 +11,43 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: IMPLEMENTATION_ACTIVE
-active_delivery_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
-active_delivery_unit_status: IMPLEMENTATION_ACTIVE
-active_delivery_unit_active_slice: K-5
-active_delivery_unit_design_artifact: docs/TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001-DESIGN-v1.md
+product_delivery_priority: AWAITING_NEXT_UNIT_SELECTION
+active_delivery_unit: none
+active_delivery_unit_status: none
+active_delivery_unit_active_slice: none
+active_delivery_unit_design_artifact: none
 active_delivery_unit_note: >-
-  K-1 COMPLETE at de5cf10 (2026-04-27). K-2 COMPLETE at cef8afb (2026-04-27). K-3 COMPLETE at 23fb727 (2026-04-27). K-4 COMPLETE at c96d153 (2026-04-27). K-5 IMPLEMENTATION_ACTIVE (2026-04-27).
-  Slice: Review Submission + Approval Workflow.
-  Scope: POST /api/tenant/documents/:documentId/extraction/review, approve/reject transitions,
-  reviewer audit, field overrides with reviewer_edited, no Certification lifecycle mutation,
-  no DPP/buyer-facing output, no price/payment/risk/ranking logic.
-last_closed_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
+  No active delivery unit. TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27).
+  Awaiting Paresh explicit authorization for next unit selection.
+  Do NOT open K-6 or any follow-on unit without explicit sign-off.
+last_closed_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 last_closed_unit_status: VERIFIED_COMPLETE
-last_closed_unit_runtime_verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS)
+last_closed_unit_runtime_verdict: 237/237 tests PASS
 last_closed_unit_commits: >-
-  Slice 1 context builder: 8cd066c. Slice 2 rubric: 648d683.
-  Slice 3 backend AI route + audit: 9d33820. Slice 4 frontend panel + tests: 15ea69d.
+  K-1 de5cf10 (Document intake + type classification).
+  K-2 cef8afb (Extraction service — prompt builder, parser, confidence helpers).
+  K-3 23fb727 (Backend extraction route + tests).
+  K-4 c96d153 (Frontend DocumentIntelligenceCard panel + 80 tests).
+  K-5 c9cbf8c (Review submission + approve/reject workflow + 17 tests).
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (2026-04-27).
-  Production runtime verification: 30/30 checks PASS.
-  API: POST /api/tenant/supplier-profile/ai-completeness → HTTP 200 in production.
-  UI lifecycle: idle → loading → report confirmed. Overall score, 10 categories, missing fields,
-  improvement actions, trust warnings, reasoning summary — all rendered correctly.
-  Safety boundaries: humanReviewRequired label present; 6 forbidden fields absent;
-  surface="supplier-internal" enforced; no buyer-facing score; no auto-apply.
-  No regression: catalog, taxonomy, navigation intact.
-  No schema changes. No migrations. No cross-tenant exposure. No console errors.
-  Tests: 87/87 PASS (52 state + 35 UI tests).
-  Commit chain: 8cd066c + 648d683 + 9d33820 + 15ea69d.
-prior_closed_unit: TECS-AI-RFQ-ASSISTANT-MVP-001
+  Verification: 237/237 tests PASS (K-1 46 + K-2 service + K-3 route + K-4 80 + K-5 17).
+  Safety boundaries intact: humanReviewRequired structural constant verified; governance label
+  present in all responses; no Certification lifecycle mutation; no DPP/buyer-facing output;
+  no price/payment/risk/ranking logic; tenant isolation (org_id) verified; D-017-A enforced
+  via z.never(); no schema changes; no migrations; no public output.
+  No blockers.
+prior_closed_unit: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001
 prior_closed_unit_status: VERIFIED_COMPLETE
-prior_closed_unit_runtime_verdict: RUNTIME_VERIFIED_COMPLETE
+prior_closed_unit_runtime_verdict: RUNTIME_VERIFIED_COMPLETE (30/30 checks PASS)
 prior_closed_unit_commits: >-
-  Backend MVP: 7582c06. Frontend MVP: f342e5f. Bugfixes: 1866f13, 6c4cb5f, 4352e21, a542966.
-  Parser hotfixes: a3c1f5b, cf8a17e. RAG TX hotfix: 12ea7a2. Model hotfix: 042ecd2.
-  AI TX hotfix: a3f5597. Governance close: 8cda265.
-adjacent_deferred_candidate: none — design complete; implementation NOT opened; awaiting Paresh next unit selection
+  Slice 1 context builder: 8cd066c. Slice 2 rubric: 648d683.
+  Slice 3 backend AI route + audit: 9d33820. Slice 4 frontend panel + tests: 15ea69d.
+adjacent_deferred_candidate: none — awaiting Paresh next unit selection; no unit authorized
 d015_reconciliation: COMPLETE
-d016_posture: IMPLEMENTATION_ACTIVE — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 K-4 IMPLEMENTATION_ACTIVE (2026-05-05); K-3 COMPLETE at 23fb727; K-2 COMPLETE at cef8afb;
-  K-1 COMPLETE at de5cf10; TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27);
-  TECS-AI-RFQ-ASSISTANT-MVP-001 VERIFIED_COMPLETE (2026-04-27); K-2 slice open;
-  K-3+ slices require explicit Paresh sign-off; decision control required per D-016
+d016_posture: CLOSED — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27);
+  237/237 PASS; K-1 de5cf10; K-2 cef8afb; K-3 23fb727; K-4 c96d153; K-5 c9cbf8c;
+  decision control satisfied
 d013_carry_forward: SUCCESSOR_CHAIN_PRESERVED
 d020_artifact: governance/decisions/TEXQTIC-PUBLIC-MARKET-ACCESS-FAMILY-SUCCESSOR-CHAIN-D020-v1.md
 live_opening_layer_baseline: governance/analysis/TEXQTIC-REPO-TRUTH-BASELINE-AND-GOVERNANCE-RESET-OPTIONS-2026-04-09.md
@@ -68,14 +63,11 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 IMPLEMENTATION_ACTIVE (K-4) (2026-05-05). K-3 COMPLETE at 23fb727. K-2 COMPLETE at cef8afb.
-  K-1 COMPLETE at de5cf10 (Document Intake and Type Classification).
-  Active slice: K-4 Frontend Review Panel.
-  Scope: ExtractedField schema, DocumentExtractionDraft type, buildDocumentExtractionPrompt,
-  parseDocumentExtractionOutput, computeOverallConfidence, normalization helpers.
-  No persistence, no review route, no lifecycle mutations, no schema changes.
-  Prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27, commits 8cd066c+9d33820-15ea69d).
+  TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27). 237/237 PASS.
+  K-1 de5cf10. K-2 cef8afb. K-3 23fb727. K-4 c96d153. K-5 c9cbf8c.
+  Prior: TECS-AI-SUPPLIER-PROFILE-COMPLETENESS-001 VERIFIED_COMPLETE (2026-04-27, 30/30 runtime PASS).
   Prior: TECS-AI-RFQ-ASSISTANT-MVP-001 VERIFIED_COMPLETE (2026-04-27, commit a3f5597 + 8cda265).
+  No active delivery unit. Awaiting Paresh next unit selection.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.
