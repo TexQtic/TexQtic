@@ -564,3 +564,85 @@ export function createRelationshipAccessEvaluator(
   return (input: RelationshipAccessInput) =>
     evaluateBuyerSupplierRelationshipAccess(input, config);
 }
+
+export function resolveCatalogVisibilityPolicyForTrustedSource(
+  catalogVisibilityPolicy: unknown,
+  config?: RelationshipAccessConfig,
+): CatalogVisibilityPolicy | 'INVALID' {
+  const finalConfig = {
+    ...DEFAULT_CONFIG,
+    ...config,
+  };
+
+  return normalizeCatalogVisibilityPolicy(
+    catalogVisibilityPolicy,
+    finalConfig.defaultCatalogVisibilityPolicy,
+  );
+}
+
+export function evaluateBuyerCatalogVisibility(
+  input: {
+    buyerOrgId: string | null;
+    supplierOrgId: string | null;
+    relationshipState?: RelationshipState | null;
+    relationshipExpiresAt?: string | Date | null;
+    catalogVisibilityPolicy?: unknown;
+    now?: string | Date;
+  },
+  config?: RelationshipAccessConfig,
+) {
+  const resolvedCatalogVisibilityPolicy =
+    resolveCatalogVisibilityPolicyForTrustedSource(
+      input.catalogVisibilityPolicy,
+      config,
+    );
+
+  const decision = evaluateBuyerSupplierRelationshipAccess(
+    {
+      buyerOrgId: input.buyerOrgId,
+      supplierOrgId: input.supplierOrgId,
+      relationshipState: input.relationshipState ?? 'NONE',
+      relationshipExpiresAt: input.relationshipExpiresAt ?? null,
+      catalogVisibilityPolicy:
+        resolvedCatalogVisibilityPolicy === 'INVALID'
+          ? undefined
+          : resolvedCatalogVisibilityPolicy,
+      now: input.now,
+    },
+    config,
+  );
+
+  return {
+    catalogVisibilityPolicy: resolvedCatalogVisibilityPolicy,
+    decision,
+  };
+}
+
+export function filterBuyerVisibleCatalogItems<Item>(
+  items: readonly Item[],
+  input: {
+    buyerOrgId: string | null;
+    relationshipState?: RelationshipState | null;
+    relationshipExpiresAt?: string | Date | null;
+    now?: string | Date;
+    getSupplierOrgId: (item: Item) => string | null;
+    getCatalogVisibilityPolicy?: (item: Item) => unknown;
+  },
+  config?: RelationshipAccessConfig,
+): Item[] {
+  return items.filter(item => {
+    const { decision } = evaluateBuyerCatalogVisibility(
+      {
+        buyerOrgId: input.buyerOrgId,
+        supplierOrgId: input.getSupplierOrgId(item),
+        relationshipState: input.relationshipState,
+        relationshipExpiresAt: input.relationshipExpiresAt,
+        catalogVisibilityPolicy: input.getCatalogVisibilityPolicy?.(item),
+        now: input.now,
+      },
+      config,
+    );
+
+    return decision.canAccessCatalog;
+  });
+}

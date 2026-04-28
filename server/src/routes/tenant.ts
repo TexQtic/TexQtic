@@ -46,6 +46,11 @@ import {
 } from '../services/pricing/pdpPriceDisclosure.service.js';
 import { buildCatalogRfqPrefillContext } from '../services/pricing/rfqPrefillContext.service.js';
 import {
+  evaluateBuyerCatalogVisibility,
+  filterBuyerVisibleCatalogItems,
+} from '../services/relationshipAccess.service.js';
+import { getRelationshipOrNone } from '../services/relationshipAccessStorage.service.js';
+import {
   notifySupplierRfqSubmittedGroups,
   type SupplierRfqSubmittedNotificationGroup,
 } from '../services/rfq/supplierNotificationBoundary.service.js';
@@ -73,6 +78,18 @@ interface InviteEmailDeliveryOutcome {
 
 function failedInviteEmailDeliveryOutcome(): InviteEmailDeliveryOutcome {
   return { status: 'FAILED_NON_FATAL' };
+}
+
+function getTrustedCatalogVisibilityPolicyForRoute(
+  item: Record<string, unknown>,
+): unknown {
+  return (
+    item.catalogVisibilityPolicy ??
+    item.catalog_visibility_policy ??
+    item.visibilityTier ??
+    item.visibility_tier ??
+    undefined
+  );
 }
 /**
  * Wraps a Prisma TransactionClient as PrismaClient for services that require
@@ -2440,6 +2457,22 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendNotFound(reply, 'Catalog item not found');
       }
 
+      const relationship = await getRelationshipOrNone(
+        supplierTenantId,
+        request.dbContext.orgId,
+      );
+      const visibilityDecision = evaluateBuyerCatalogVisibility({
+        buyerOrgId: request.dbContext.orgId,
+        supplierOrgId: supplierTenantId,
+        relationshipState: relationship.state,
+        relationshipExpiresAt: relationship.expiresAt,
+        catalogVisibilityPolicy: getTrustedCatalogVisibilityPolicyForRoute(item),
+      });
+
+      if (!visibilityDecision.decision.canAccessCatalog) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
       // Step 3: APPROVED certifications for supplier org (admin context — certifications RLS is org-scoped)
       type ApprovedCertRow = {
         certificationType: string;
@@ -2856,6 +2889,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendNotFound(reply, 'Supplier catalog not found');
       }
 
+      const relationship = await getRelationshipOrNone(
+        supplierOrgId,
+        request.dbContext.orgId,
+      );
+
       // Build non-certification AND-composed filters
       const filterClauses: Prisma.CatalogItemWhereInput[] = [
         { tenantId: supplierOrgId, active: true },
@@ -2983,15 +3021,39 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           });
         });
 
-        const hasMore = items.length > limit;
-        const resultItems = hasMore ? items.slice(0, limit) : items;
+        const visibleItems = filterBuyerVisibleCatalogItems(items, {
+          buyerOrgId: request.dbContext.orgId,
+          relationshipState: relationship.state,
+          relationshipExpiresAt: relationship.expiresAt,
+          getSupplierOrgId: () => supplierOrgId,
+          getCatalogVisibilityPolicy: item =>
+            getTrustedCatalogVisibilityPolicyForRoute(
+              item as unknown as Record<string, unknown>,
+            ),
+        });
+
+        const hasMore = visibleItems.length > limit;
+        const resultItems = hasMore ? visibleItems.slice(0, limit) : visibleItems;
         const nextCursor = hasMore ? (resultItems[resultItems.length - 1]?.id ?? null) : null;
 
         return sendSuccess(reply, {
           items: resultItems.map(item => ({
-            ...item,
+            id: item.id,
+            name: item.name,
+            sku: item.sku,
+            description: item.description,
+            moq: item.moq,
+            imageUrl: item.imageUrl,
+            productCategory: item.productCategory,
+            fabricType: item.fabricType,
             gsm: item.gsm != null ? Number(item.gsm) : null,
+            material: item.material,
+            composition: item.composition,
+            color: item.color,
             widthCm: item.widthCm != null ? Number(item.widthCm) : null,
+            construction: item.construction,
+            certifications: item.certifications as Array<{ standard: string }> | null,
+            catalogStage: item.catalogStage,
             stageAttributes: item.stageAttributes as Record<string, unknown> | null,
           })),
           count: resultItems.length,
@@ -3000,8 +3062,19 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // Arrive here only in the cert two-pass path
-      const hasMore = rawItems.length > limit;
-      const resultRaw = hasMore ? rawItems.slice(0, limit) : rawItems;
+      const visibleRawItems = filterBuyerVisibleCatalogItems(rawItems, {
+        buyerOrgId: request.dbContext.orgId,
+        relationshipState: relationship.state,
+        relationshipExpiresAt: relationship.expiresAt,
+        getSupplierOrgId: () => supplierOrgId,
+        getCatalogVisibilityPolicy: item =>
+          getTrustedCatalogVisibilityPolicyForRoute(
+            item as unknown as Record<string, unknown>,
+          ),
+      });
+
+      const hasMore = visibleRawItems.length > limit;
+      const resultRaw = hasMore ? visibleRawItems.slice(0, limit) : visibleRawItems;
       const nextCursor = hasMore ? (resultRaw[resultRaw.length - 1]?.id ?? null) : null;
 
       return sendSuccess(reply, {
