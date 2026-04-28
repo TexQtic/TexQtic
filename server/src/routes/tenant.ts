@@ -5,6 +5,7 @@ import type {
   BuyerCatalogPdpView,
   CatalogMedia,
   CertificateSummaryItem,
+  CatalogRfqPrefillResult,
 } from '../types/index.js';
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
@@ -39,9 +40,11 @@ import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
 import {
   attachPriceDisclosureToPdpView,
+  buildPdpDisclosureMetadata,
   type BuyerCatalogPdpViewBase,
   resolveSupplierDisclosurePolicyForPdp,
 } from '../services/pricing/pdpPriceDisclosure.service.js';
+import { buildCatalogRfqPrefillContext } from '../services/pricing/rfqPrefillContext.service.js';
 import { sendInviteMemberEmail, type EmailDispatchOutcome } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
@@ -2157,7 +2160,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return sendNotFound(reply, 'Catalog item not found');
       }
 
-      const item = itemRows[0]!;
+      const item = itemRows[0];
       const supplierTenantId = item.tenant_id;
 
       // Step 2: Supplier org eligibility + display name (admin context — organizations RLS)
@@ -2320,6 +2323,201 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
 
       return sendSuccess(reply, view);
+    }
+  );
+
+  /**
+   * POST /api/tenant/catalog/items/:itemId/rfq-prefill
+   *
+   * Non-mutating single-item PDP → RFQ prefill handoff endpoint.
+   * Returns CatalogRfqPrefillResult (Slice A builder output) for the item in the
+   * authenticated buyer's session context. No RFQ records are created; no supplier
+   * notifications are sent; no mutations occur.
+   *
+   * TECS-B2B-BUYER-RFQ-INTEGRATION-001 — Slice B
+   *
+   * All sensitive context (buyerOrgId, supplierOrgId, price disclosure, eligibility) is
+   * server-derived from the authenticated session + DB lookups. Client-supplied
+   * supplierOrgId / buyerOrgId / priceDisclosure / price* fields are intentionally excluded
+   * from the body schema and silently ignored.
+   *
+   * Allowed buyer-provided body inputs: selectedQuantity, buyerNotes (draft-only).
+   */
+  fastify.post(
+    '/tenant/catalog/items/:itemId/rfq-prefill',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
+
+      const paramsSchema = z.object({ itemId: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      // Body: ONLY buyer draft inputs.
+      // Sensitive fields (supplierOrgId, buyerOrgId, priceDisclosure, price*) are
+      // excluded from the schema — they are derived server-side from trusted sources only.
+      const bodySchema = z.object({
+        selectedQuantity: z.number().int().min(1).max(999999).optional().nullable(),
+        buyerNotes: z.string().max(2000).optional().nullable(),
+      });
+      const bodyResult = bodySchema.safeParse(request.body ?? {});
+      if (!bodyResult.success) {
+        return sendValidationError(reply, bodyResult.error.errors);
+      }
+
+      const { itemId } = paramsResult.data;
+      const { selectedQuantity, buyerNotes } = bodyResult.data;
+
+      // buyerOrgId is ALWAYS from dbContext (JWT-derived). Never from client input.
+      const buyerOrgId = request.dbContext.orgId;
+
+      // Step 1: Cross-tenant item read via texqtic_rfq_read role (same pattern as PDP endpoint).
+      type RfqPrefillItemRow = {
+        id: string;
+        tenant_id: string;
+        name: string;
+        active: boolean;
+        publication_posture: string;
+        price_disclosure_policy_mode: string | null;
+        product_category: string | null;
+        material: string | null;
+        description: string | null;
+        moq: unknown;
+        certifications: unknown;
+      };
+
+      let itemRows: RfqPrefillItemRow[];
+      try {
+        itemRows = await prisma.$transaction(async tx => {
+          await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+          return tx.$queryRaw<RfqPrefillItemRow[]>`
+            SELECT id, tenant_id, name, active, publication_posture,
+                   price_disclosure_policy_mode,
+                   product_category, material, description, moq,
+                   certifications
+            FROM catalog_items
+            WHERE id = ${itemId}::uuid
+              AND active = true
+              AND publication_posture IN ('B2B_PUBLIC', 'BOTH')
+          `;
+        });
+      } catch {
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to resolve catalog item', 500);
+      }
+
+      if (itemRows.length === 0) {
+        return sendSuccess(reply, { ok: false, reason: 'ITEM_NOT_AVAILABLE' } satisfies CatalogRfqPrefillResult);
+      }
+
+      const item = itemRows[0];
+      const supplierTenantId = item.tenant_id;
+
+      // Step 2: Supplier org eligibility (admin context — same as PDP endpoint).
+      type SupplierEligibilityData = {
+        isPublished: boolean;
+        isActive: boolean;
+        priceDisclosurePolicyMode: string | null;
+        publicationPosture: string;
+      } | null;
+
+      let supplierData: SupplierEligibilityData;
+      try {
+        supplierData = await withOrgAdminContext(prisma, async tx => {
+          const [org, tenant] = await Promise.all([
+            tx.organizations.findUnique({
+              where: { id: supplierTenantId },
+              select: {
+                publication_posture: true,
+                price_disclosure_policy_mode: true,
+              },
+            }),
+            tx.tenant.findUnique({
+              where: { id: supplierTenantId },
+              select: { publicEligibilityPosture: true },
+            }),
+          ]);
+
+          if (!org) return null;
+
+          const isPublished =
+            org.publication_posture === 'B2B_PUBLIC' || org.publication_posture === 'BOTH';
+          const isActive =
+            (tenant?.publicEligibilityPosture as string | null) === 'PUBLICATION_ELIGIBLE';
+
+          return {
+            isPublished,
+            isActive,
+            priceDisclosurePolicyMode: org.price_disclosure_policy_mode,
+            publicationPosture: org.publication_posture,
+          };
+        });
+      } catch {
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to resolve supplier context', 500);
+      }
+
+      // Step 3: Compliance refs — safe buyer-visible subset extracted from item certifications.
+      const rawCertStandards = Array.isArray(item.certifications)
+        ? (item.certifications as Array<{ standard: string }>)
+            .filter(c => typeof c?.standard === 'string')
+            .map(c => c.standard)
+        : [];
+
+      // Step 4: Compute price disclosure using the existing PDP disclosure stack.
+      const supplierPolicy = resolveSupplierDisclosurePolicyForPdp({
+        buyerOrgId,
+        supplierOrgId: supplierTenantId,
+        productPolicyMode: item.price_disclosure_policy_mode,
+        supplierPolicyMode: supplierData?.priceDisclosurePolicyMode ?? null,
+        productPublicationPosture: item.publication_posture,
+        supplierPublicationPosture: supplierData?.publicationPosture ?? null,
+      });
+
+      const priceDisclosure = buildPdpDisclosureMetadata({
+        buyer: {
+          isAuthenticated: true,
+          // Eligibility-gated features are future slices; safe default posture here.
+          isEligible: false,
+          buyerOrgId,
+          supplierOrgId: supplierTenantId,
+        },
+        supplierPolicy,
+      });
+
+      // Step 5: Invoke Slice A builder — all sensitive context is server-derived above.
+      const result = buildCatalogRfqPrefillContext({
+        buyerOrgId,
+        authenticatedBuyerOrgId: buyerOrgId,
+        isAuthenticated: true,
+        item: {
+          itemId: item.id,
+          productName: item.name,
+          supplierOrgId: supplierTenantId,
+          supplierIsPublished: supplierData?.isPublished ?? false,
+          supplierIsActive: supplierData?.isActive ?? false,
+          isPublished: item.publication_posture === 'B2B_PUBLIC' || item.publication_posture === 'BOTH',
+          isActive: item.active,
+          category: item.product_category,
+          material: item.material,
+          specSummary: item.description,
+          moq: item.moq != null ? Number(item.moq) : null,
+          leadTimeDays: null,
+          complianceRefs: rawCertStandards,
+          // DPP ref: omitted in Slice B — DPP boundary handled in a future dedicated slice.
+          publishedDppRef: null,
+          isPublishedDppRefSafe: false,
+        },
+        priceDisclosure,
+        draftInput: {
+          selectedQuantity: selectedQuantity ?? null,
+          buyerNotes: buyerNotes ?? null,
+        },
+      });
+
+      return sendSuccess(reply, result);
     }
   );
 
