@@ -64,6 +64,9 @@ export const GUARD_VERSION = 'mvp-guard-v1' as const;
  * - DPP unpublished         unpublishedEvidence
  * - AI draft                aiExtractionDraft, draftExtraction, aiDraftData
  * - Audit / secrets         auditMetadata, privateNotes, secrets, tokens, auth
+ * - Semantic / embedding    vector, embedding, embeddingId, vectorScore, semanticScore,
+ *   (Slice F)               cosineSimilarity, distance, modelConfidence, similarityScore,
+ *                           rawModelOutput, sourceText, prompt
  */
 const FORBIDDEN_GUARD_FIELDS_SET: ReadonlySet<string> = new Set<string>([
   // Price / financial
@@ -117,6 +120,19 @@ const FORBIDDEN_GUARD_FIELDS_SET: ReadonlySet<string> = new Set<string>([
   'secrets',
   'tokens',
   'auth',
+  // Semantic / embedding (Slice F) — raw vector data and inference artefacts forbidden
+  'vector',
+  'embedding',
+  'embeddingId',
+  'vectorScore',
+  'semanticScore',
+  'cosineSimilarity',
+  'distance',
+  'modelConfidence',
+  'similarityScore',
+  'rawModelOutput',
+  'sourceText',
+  'prompt',
 ]);
 
 /**
@@ -213,6 +229,20 @@ const FIELD_VIOLATION_MAP: Readonly<Record<string, SupplierMatchRuntimeGuardViol
   secrets:                       'UNKNOWN_UNSAFE_OUTPUT',
   tokens:                        'UNKNOWN_UNSAFE_OUTPUT',
   auth:                          'UNKNOWN_UNSAFE_OUTPUT',
+  // Semantic / embedding (Slice F) — raw embedding artefacts → INTERNAL_SCORE_LEAK
+  vector:                        'INTERNAL_SCORE_LEAK',
+  embedding:                     'INTERNAL_SCORE_LEAK',
+  embeddingId:                   'INTERNAL_SCORE_LEAK',
+  vectorScore:                   'INTERNAL_SCORE_LEAK',
+  semanticScore:                 'INTERNAL_SCORE_LEAK',
+  cosineSimilarity:              'INTERNAL_SCORE_LEAK',
+  distance:                      'INTERNAL_SCORE_LEAK',
+  modelConfidence:               'INTERNAL_SCORE_LEAK',
+  similarityScore:               'INTERNAL_SCORE_LEAK',
+  // Raw inference artefacts → UNKNOWN_UNSAFE_OUTPUT
+  rawModelOutput:                'UNKNOWN_UNSAFE_OUTPUT',
+  sourceText:                    'UNKNOWN_UNSAFE_OUTPUT',
+  prompt:                        'UNKNOWN_UNSAFE_OUTPUT',
 };
 
 // ─── Exported Accessors ───────────────────────────────────────────────────────

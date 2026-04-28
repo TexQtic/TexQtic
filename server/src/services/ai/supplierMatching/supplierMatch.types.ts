@@ -783,13 +783,153 @@ export interface SupplierMatchRfqIntentResult {
   guardViolationsBlocked: number;
 }
 
-// ─── Future-Facing Stubs (Slice F) ───────────────────────────────────────────
+// ─── Slice F — Semantic Signal Types ─────────────────────────────────────────
 
 /**
- * Placeholder for Slice F (Optional embedding-layer guard and vector safety checks).
- * Stub only — no implementation authorized until Slice F is explicitly authorized.
+ * Allowed source types for semantic signal derivation.
+ * Only published, buyer-visible embedding sources may produce signals.
  *
- * When authorized, Slice F will extend the guard with embedding-layer checks
- * using the existing 768-dim, orgId-scoped DocumentEmbedding infrastructure.
+ * FORBIDDEN sources (cause candidate rejection):
+ *   DRAFT_DPP, AI_EXTRACTION_DRAFT, HIDDEN_PRICE, RELATIONSHIP_GRAPH,
+ *   ALLOWLIST_GRAPH, PRIVATE_NOTES, INTERNAL_SCORE, UNPUBLISHED_EVIDENCE.
  */
-// (No additional types for Slice F at this time.)
+export type SupplierMatchSemanticSourceType =
+  | 'CATALOG_ITEM'
+  | 'CERTIFICATION'
+  | 'DPP_SNAPSHOT'
+  | 'SUPPLIER_PROFILE';
+
+/**
+ * Categorical similarity bucket derived from a raw cosine similarity float.
+ * INTERNAL ONLY — never serialised into buyer-facing API responses.
+ *
+ * HIGH   cosine >= 0.80
+ * MEDIUM cosine >= 0.55
+ * LOW    cosine >= SEMANTIC_MIN_SIMILARITY (0.30)
+ * (Below SEMANTIC_MIN_SIMILARITY → candidate rejected; no bucket emitted.)
+ */
+export type SupplierMatchSemanticSimilarityBucket = 'HIGH' | 'MEDIUM' | 'LOW';
+
+/**
+ * One pre-computed embedding candidate from an orgId-scoped vectorStore query.
+ * The caller (e.g. querySimilar) provides this after a RLS-enforced similarity query.
+ *
+ * Constitutional constraints:
+ *  - orgId MUST equal the session buyerOrgId (cross-tenant candidates are rejected).
+ *  - similarity MUST be a finite number in [0, 1].
+ *  - dimension MUST be 768 if provided (EMBEDDING_DIM, ADR-028 §5.1).
+ *  - embeddingModel MUST be 'text-embedding-004' if provided.
+ *  - sourceType MUST be one of SupplierMatchSemanticSourceType.
+ *  - sourceTextSnippet MUST NOT contain forbidden fragments (price, risk, relationship
+ *    graph, allowlist, privateNote, escrow, draft, unpublished, publicationPosture).
+ *  - Raw vector embedding is NEVER present here — only the similarity float.
+ */
+export interface SupplierMatchEmbeddingCandidate {
+  /** Supplier org ID the embedding source belongs to. */
+  supplierOrgId: string;
+  /** Org that owns this embedding record — must equal session buyerOrgId. */
+  orgId: string;
+  /** Allowed embedding source type. */
+  sourceType: SupplierMatchSemanticSourceType;
+  /** Source record UUID for audit correlation. */
+  sourceId: string;
+  /**
+   * Cosine similarity score in [0, 1] from the vectorStore query.
+   * INTERNAL ONLY — never serialised into buyer-facing output.
+   */
+  similarity: number;
+  /** Embedding dimension. If provided, must equal 768. */
+  dimension?: number;
+  /** Embedding model identifier. If provided, must be 'text-embedding-004'. */
+  embeddingModel?: string;
+  /**
+   * Optional short plain-text snippet from the embedding source for audit purposes.
+   * Must NOT contain any forbidden field fragment (price, risk_score, etc.).
+   * Maximum 500 characters. NEVER surfaced to buyers.
+   */
+  sourceTextSnippet?: string;
+}
+
+/**
+ * One semantic signal derived from a validated embedding candidate.
+ * Internal to the matching pipeline — NEVER serialised into buyer-facing output.
+ *
+ * Forbidden: raw vector, embedding ID, cosine score, model confidence.
+ * Allowed: categorical similarity bucket, source type, source ID.
+ */
+export interface SupplierMatchSemanticSignal {
+  /** Supplier org ID this semantic signal pertains to. */
+  supplierOrgId: string;
+  /** Categorical similarity bucket (internal only). */
+  similarityBucket: SupplierMatchSemanticSimilarityBucket;
+  /** Source type the signal was derived from. */
+  sourceType: SupplierMatchSemanticSourceType;
+  /** Source record UUID (opaque — for audit correlation only). */
+  sourceId: string;
+  /** Internal match category for pipeline integration. */
+  matchCategory: 'SEMANTIC_FIT';
+}
+
+/**
+ * Input to buildSupplierSemanticSignals.
+ *
+ * Pre-computed embedding candidates are provided by the caller after an
+ * orgId-scoped, RLS-enforced vectorStore query. This service does NOT call
+ * any model/provider — it validates and converts pre-computed similarity
+ * values to internal categorical signals only.
+ */
+export interface SupplierMatchSemanticSignalInput {
+  /** JWT-derived buyer org ID. MUST NOT originate from request body. */
+  buyerOrgId: string;
+  /**
+   * Pre-computed embedding candidates from an orgId-scoped vectorStore query.
+   * An empty array returns a safe empty result with no signals.
+   */
+  embeddingCandidates: SupplierMatchEmbeddingCandidate[];
+  /** Optional request ID for audit log correlation. */
+  requestId?: string;
+}
+
+/**
+ * Result of buildSupplierSemanticSignals.
+ *
+ * NEVER contains: raw vector, cosine score, embedding ID, model confidence.
+ * modelCallMade is always false — this service makes no AI model calls.
+ * humanConfirmationRequired is always true — constitutional requirement.
+ */
+export interface SupplierMatchSemanticSignalResult {
+  /** Safe semantic signals derived from valid embedding candidates. */
+  signals: SupplierMatchSemanticSignal[];
+  /** Count of embedding candidates rejected by semantic validation. */
+  rejectedCandidateCount: number;
+  /** Always false — this service makes no AI model calls. */
+  modelCallMade: false;
+  /** Always true — constitutional requirement for all AI signal paths. */
+  humanConfirmationRequired: true;
+}
+
+/**
+ * Internal guard result for a single embedding candidate.
+ * NEVER surfaced to buyers or in API responses.
+ */
+export interface SupplierMatchSemanticGuardResult {
+  /** True if the candidate passed all semantic guardrails. */
+  passed: boolean;
+  /** Rejection reason when passed is false. */
+  rejectionReason?: SupplierMatchSemanticRejectionReason;
+}
+
+/**
+ * Rejection reason codes for semantic candidate validation.
+ * INTERNAL ONLY — used in guard results and test assertions.
+ */
+export type SupplierMatchSemanticRejectionReason =
+  | 'EMPTY_BUYER_ORG_ID'
+  | 'MISSING_SUPPLIER_ORG_ID'
+  | 'CROSS_TENANT_CANDIDATE'
+  | 'INVALID_DIMENSION'
+  | 'INVALID_MODEL'
+  | 'FORBIDDEN_SOURCE_TYPE'
+  | 'FORBIDDEN_SOURCE_TEXT'
+  | 'BELOW_MIN_SIMILARITY'
+  | 'INVALID_SIMILARITY_VALUE';
