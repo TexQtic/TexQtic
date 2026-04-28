@@ -156,6 +156,44 @@ export interface PriceDisclosureMetadata {
   rfq_required: boolean;
 }
 
+export type RfqPrefillFailureReason =
+  | 'AUTH_REQUIRED'
+  | 'BUYER_ORG_REQUIRED'
+  | 'ITEM_NOT_AVAILABLE'
+  | 'SUPPLIER_NOT_AVAILABLE'
+  | 'TENANT_SCOPE_DENIED'
+  | 'ELIGIBILITY_REQUIRED'
+  | 'RFQ_PREFILL_NOT_AVAILABLE';
+
+export interface CatalogRfqPrefillContext {
+  itemId: string;
+  productName: string;
+  supplierOrgId: string;
+  buyerOrgId: string;
+  category?: string | null;
+  material?: string | null;
+  specSummary?: string | null;
+  moq?: number | null;
+  leadTimeDays?: number | null;
+  selectedQuantity?: number | null;
+  buyerNotes?: string | null;
+  complianceRefs?: string[];
+  publishedDppRef?: string | null;
+  priceVisible: boolean;
+  priceVisibilityState: PriceDisclosureMetadata['price_visibility_state'];
+  rfqEntryReason?: 'RFQ_ONLY' | 'PRICE_ON_REQUEST' | 'VISIBLE_PRICE_NEGOTIATION' | null;
+}
+
+export type CatalogRfqPrefillResult =
+  | {
+    ok: true;
+    data: CatalogRfqPrefillContext;
+  }
+  | {
+    ok: false;
+    reason: RfqPrefillFailureReason;
+  };
+
 export interface BuyerCatalogPdpView {
   itemId: string;
   supplierId: string;
