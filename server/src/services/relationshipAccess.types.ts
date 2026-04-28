@@ -265,3 +265,76 @@ export interface RelationshipAccessConfig {
    */
   defaultRfqAcceptanceMode?: RfqAcceptanceMode;
 }
+
+// ─── Slice B: Persistent Relationship Storage ────────────────────────────────
+
+/**
+ * Persisted relationship states. NONE is represented by absence of a row.
+ */
+export type PersistedRelationshipState = Exclude<RelationshipState, 'NONE'>;
+
+/**
+ * Internal storage/service error codes for relationship state management.
+ */
+export type RelationshipStorageErrorCode =
+  | 'BUYER_ORG_REQUIRED'
+  | 'SUPPLIER_ORG_REQUIRED'
+  | 'INVALID_RELATIONSHIP_STATE'
+  | 'INVALID_RELATIONSHIP_TRANSITION'
+  | 'RELATIONSHIP_BLOCKED'
+  | 'RELATIONSHIP_NOT_FOUND'
+  | 'STORAGE_ERROR';
+
+/**
+ * Public-safe relationship snapshot for backend callers.
+ * Internal reason and metadata stay in storage only.
+ */
+export interface RelationshipStateSnapshot {
+  id: string | null;
+  supplierOrgId: string;
+  buyerOrgId: string;
+  state: RelationshipState;
+  requestedAt: Date | null;
+  approvedAt: Date | null;
+  decidedAt: Date | null;
+  suspendedAt: Date | null;
+  revokedAt: Date | null;
+  expiresAt: Date | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
+/**
+ * Transition input for persistent relationship state operations.
+ */
+export interface RelationshipStateTransitionInput {
+  supplierOrgId: string;
+  buyerOrgId: string;
+  nextState: PersistedRelationshipState;
+  internalReason?: string | null;
+  metadata?: Record<string, unknown> | null;
+  expiresAt?: Date | string | null;
+}
+
+/**
+ * Options for relationship state transitions.
+ */
+export interface RelationshipStateTransitionOptions {
+  allowReapply?: boolean;
+  now?: Date;
+}
+
+/**
+ * Success/failure result contract for relationship state mutation operations.
+ */
+export type RelationshipStateMutationResult =
+  | {
+      ok: true;
+      previousState: RelationshipState;
+      relationship: RelationshipStateSnapshot;
+    }
+  | {
+      ok: false;
+      error: RelationshipStorageErrorCode;
+      currentState: RelationshipState;
+    };
