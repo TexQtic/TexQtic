@@ -318,7 +318,7 @@ export interface SupplierMatchPolicyFilterResult {
   fallback: boolean;
 }
 
-// ─── Future-Facing Stubs (Slices C+) ─────────────────────────────────────────
+// ─── Slice C — Ranker Types ───────────────────────────────────────────────────
 
 /**
  * Human-readable explanation for a match result.
@@ -332,58 +332,228 @@ export interface SupplierMatchExplanation {
 }
 
 /**
- * A single supplier candidate returned by the matching engine.
- * Slice C — ranking layer. Stub only; no implementation authorized yet.
+ * Internal confidence bucket for ranked candidates.
+ * Ordinal grouping only — no numeric confidence is exposed to buyers.
+ * Used internally by the ranker; NEVER buyer-visible.
  *
- * No numeric score or confidence value is exposed — rank is ordinal only (design §7).
+ * HIGH:   totalScore >= 20
+ * MEDIUM: totalScore >= 10
+ * LOW:    totalScore <  10
+ */
+export type SupplierMatchConfidenceBucket = 'HIGH' | 'MEDIUM' | 'LOW';
+
+/**
+ * Internal deterministic score breakdown for a single ranked candidate.
+ * INTERNAL ONLY — MUST NOT be serialized into any API response or buyer-facing type.
+ *
+ * All values are deterministic integer scores derived from safe signal weights.
+ * No model confidence, no embeddings, no AI provider values.
+ *
+ * Fields intentionally absent: price, riskScore, confidence, rank.
+ */
+export interface SupplierMatchScoreBreakdown {
+  /** Sum of RFQ_INTENT signal weights. */
+  rfqIntentScore: number;
+  /** Sum of MATERIAL + COMPOSITION + FABRIC_TYPE + GSM signal weights. */
+  materialScore: number;
+  /** Sum of CATALOG_STAGE + PRODUCT_CATEGORY + SUPPLIER_CAPABILITY signal weights. */
+  categoryScore: number;
+  /** Sum of CERTIFICATION + DPP_PUBLISHED signal weights. */
+  certificationScore: number;
+  /** Sum of MOQ signal weights. */
+  moqScore: number;
+  /** Sum of GEOGRAPHY signal weights. */
+  geographyScore: number;
+  /** Sum of RELATIONSHIP_APPROVED signal weights (small boost; never overrides gates). */
+  relationshipBoost: number;
+  /** Total deterministic score (sum of all sub-scores). INTERNAL ONLY. */
+  totalScore: number;
+  /** Count of distinct match categories present in this candidate. */
+  signalCategoryCount: number;
+}
+
+/**
+ * An internally ranked candidate, produced by the scoring pass of the ranker.
+ * INTERNAL ONLY — the buyer-facing type is SupplierMatchCandidate (below).
+ *
+ * Contains internal score breakdown and confidence bucket. These MUST NEVER
+ * be exposed to buyers — the projection to SupplierMatchCandidate strips them.
+ */
+export interface SupplierMatchRankedCandidate {
+  /** Originating policy-filtered draft candidate. */
+  draft: SupplierMatchCandidateDraft;
+  /** Internal score breakdown — NEVER buyer-facing. */
+  scoreBreakdown: SupplierMatchScoreBreakdown;
+  /** Distinct match categories derived from safe signals (sorted for determinism). */
+  matchCategories: SupplierMatchCategory[];
+  /** Internal confidence bucket — NEVER buyer-facing. */
+  confidenceBucket: SupplierMatchConfidenceBucket;
+}
+
+/**
+ * Input to the SupplierMatchRanker.
+ *
+ * Candidates MUST already have passed the Slice B policy filter.
+ * The ranker provides defense-in-depth cross-tenant checks but is NOT
+ * the primary policy gate.
+ */
+export interface SupplierMatchRankerInput {
+  /** JWT-derived buyer org ID. Never from request body. */
+  buyerOrgId: string;
+  /** Optional stable request reference for audit correlation. */
+  requestId?: string;
+  /** Policy-filtered candidates from Slice B. Must be safe candidates only. */
+  candidates: SupplierMatchCandidateDraft[];
+  /**
+   * Maximum candidates to return.
+   * Default: 5. Hard cap: 20.
+   * Values <= 0 are clamped to DEFAULT_MAX_CANDIDATES (5).
+   * Values > 20 are clamped to 20.
+   */
+  maxCandidates?: number;
+  /** Count of candidates blocked by policy filter upstream (for audit envelope). */
+  policyViolationsBlocked?: number;
+  /** Caller-supplied request timestamp (ISO string or Date). Defaults to now. */
+  requestedAt?: Date | string;
+}
+
+/**
+ * Audit envelope for a ranker invocation.
+ * Records safe signal summary and operational metadata only.
+ *
+ * MUST NOT include:
+ * - Raw buyer query text or private RFQ notes
+ * - Supplier score or rank
+ * - Hidden price or blocked-reason details
+ * - Relationship graph or allowlist entries
+ * - Unpublished DPP / AI draft data
+ * - Payment, credit, or escrow data
+ *
+ * modelCallMade is always the literal `false` — Slice C is deterministic only.
+ */
+export interface SupplierMatchAuditEnvelope {
+  /** JWT-derived buyer org ID (scoped). */
+  buyerOrgId: string;
+  /** Stable request reference for correlation. */
+  requestId?: string;
+  /** UTC ISO timestamp of the ranking invocation. */
+  requestedAt: string;
+  /** Count of candidates returned in the buyer-facing result. */
+  candidateCount: number;
+  /** Count of candidates blocked upstream by the policy filter. */
+  policyViolationsBlocked: number;
+  /**
+   * Count of signals considered per signal type (safe labels only).
+   * Partial Record — only present signal types are included.
+   */
+  signalTypeCounts: Partial<Record<SupplierMatchSignalType, number>>;
+  /** Total signals considered across all ranked candidates. */
+  totalSignalsConsidered: number;
+  /** Always false in Slice C — no model calls. */
+  modelCallMade: false;
+  /** True when result is empty (no safe candidates after ranking). */
+  fallbackUsed: boolean;
+  /** Internal ranker algorithm version label for debugging. */
+  rankerVersion: string;
+}
+
+/**
+ * A single buyer-facing ranked supplier candidate.
+ * Produced by projecting SupplierMatchRankedCandidate, stripping all internal
+ * score/rank/confidence fields.
+ *
+ * MUST NOT include (design §7):
+ * - numeric score, rank, or confidence value
+ * - relationshipState
+ * - allowlist graph or hidden price
+ * - internal score breakdown or confidenceBucket
+ * - audit metadata or policy internals
+ *
+ * Array position in SupplierMatchResult.candidates implies ordinal order.
  */
 export interface SupplierMatchCandidate {
   /** Supplier org ID (opaque; scoped to matching context). */
   supplierOrgId: string;
-  /** Ordinal rank (1-based). NOT a numeric score — design §7 constraint. */
-  rank: number;
-  /** Highest-confidence match category for display. */
-  primaryCategory: SupplierMatchCategory;
-  /** Human-readable explanation (Slice D+). Optional stub. */
+  /** Optional supplier display label, safe for buyer surface if present. */
+  supplierDisplayName?: string;
+  /**
+   * High-level match category labels derived from safe signal types.
+   * Suitable for UI grouping and Slice D explanation surface.
+   */
+  matchCategories: SupplierMatchCategory[];
+  /**
+   * Explanation stub (Slice D). Populated by SupplierMatchExplanationBuilder.
+   * Optional — Slice C does not populate this field.
+   */
   explanation?: SupplierMatchExplanation;
-  // No score, no confidence value, no AI numeric output — design §7 requirement.
+  /**
+   * CTA hint for the buyer UI.
+   * 'REQUEST_QUOTE'  — relationship is APPROVED; quote CTA is appropriate.
+   * 'REQUEST_ACCESS' — no or pending relationship; access request CTA.
+   * 'VIEW_PROFILE'   — no relationship context; view profile CTA.
+   *
+   * MUST NOT be derived from hidden/blocked relationship state.
+   */
+  relationshipCta?: 'REQUEST_ACCESS' | 'REQUEST_QUOTE' | 'VIEW_PROFILE';
+  // ─── CONSTITUTIONALLY EXCLUDED FIELDS ────────────────────────────────────
+  // score           — design §7: no numeric AI score exposed
+  // rank            — design §7: ordinal position implicit in array order
+  // confidence      — design §7: no numeric confidence exposed
+  // confidenceBucket — INTERNAL ONLY
+  // relationshipState — INTERNAL ONLY
+  // price, amount   — constitutionally forbidden from all AI paths
+  // scoreBreakdown  — INTERNAL ONLY
+  // blockedReason   — INTERNAL ONLY
 }
 
 /**
- * Final matching result returned by the matching engine.
- * Slice C+. Stub only; no implementation authorized yet.
+ * Final matching result produced by the ranker for the buyer surface.
+ * Candidates are ordered by deterministic score (descending); array position
+ * implies ordinal rank — no numeric rank field is present.
+ *
+ * modelCallMade is always the literal `false` — Slice C is deterministic only.
+ * humanConfirmationRequired is always the literal `true` — design §7 constraint.
  */
 export interface SupplierMatchResult {
   /** JWT-derived buyer org ID (echoed for audit). */
   buyerOrgId: string;
-  /** Ranked candidates (ordinal only). */
+  /** Stable request reference for correlation. */
+  requestId?: string;
+  /**
+   * Ordered supplier candidates. Position 0 is the highest-ranked candidate.
+   * Array length <= maxCandidates (capped at 20).
+   * Empty array when fallback = true.
+   */
   candidates: SupplierMatchCandidate[];
-  /** Total candidates considered before policy filter. */
-  candidatesConsidered: number;
-  /** Candidates excluded by policy filter (e.g., BLOCKED supplier). */
-  candidatesExcludedByPolicy: number;
-  /** Signal count used in matching. */
-  signalCount: number;
-  /** Always true — human confirmation is required before actioning results. */
+  /**
+   * True when no safe candidates remain or input was empty.
+   * Downstream must handle this as a structured empty result, not an error.
+   */
+  fallback: boolean;
+  /** Always false — Slice C is deterministic, no model calls. */
+  modelCallMade: false;
+  /** Audit envelope for internal monitoring. MUST NOT be exposed to buyers. */
+  auditEnvelope: SupplierMatchAuditEnvelope;
+  /** Always true — human review required before actioning results (design §7). */
   humanConfirmationRequired: true;
 }
 
 /**
- * Audit envelope for a supplier matching invocation.
- * Slice G — audit layer. Stub only; no implementation authorized yet.
+ * Full ranker output combining buyer-facing result with internal ranked candidates.
+ * rankedCandidates is INTERNAL ONLY — for test use and audit pipelines.
+ * It MUST NOT be serialized into any API response.
  */
-export interface SupplierMatchAuditEnvelope {
-  /** Unique invocation ID (caller-generated). */
-  requestId: string;
-  /** JWT-derived buyer org ID. */
-  buyerOrgId: string;
-  /** UTC ISO timestamp. */
-  timestamp: string;
-  /** Signal count submitted. */
-  signalCount: number;
-  /** Whether the result was served from the policy-gated pool. */
-  policyFiltered: boolean;
+export interface SupplierMatchRankerResult {
+  /** Buyer-facing result. Safe for surface presentation after guard checks. */
+  result: SupplierMatchResult;
+  /**
+   * Internal ranked candidates with score breakdowns.
+   * INTERNAL ONLY — MUST NOT be exposed to buyers.
+   */
+  rankedCandidates: SupplierMatchRankedCandidate[];
 }
+
+// ─── Future-Facing Stubs (Slice D, F) ────────────────────────────────────────
 
 /**
  * Runtime guard result for post-ranking policy enforcement.
