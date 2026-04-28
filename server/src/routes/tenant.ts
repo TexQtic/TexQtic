@@ -129,7 +129,23 @@ type MultiItemGroupedLine = {
   spec_notes: string | null;
   buyer_notes: string | null;
   price_visibility_state: RfqPrefillContextData['priceVisibilityState'];
-  rfq_entry_reason: RfqPrefillContextData['rfqEntryReason'] | null;
+  rfq_entry_reason: Exclude<RfqPrefillContextData['rfqEntryReason'], undefined>;
+};
+
+type MultiItemSupplierGroup = {
+  supplier_org_id: string;
+  line_items: MultiItemGroupedLine[];
+};
+
+type MultiItemSubmitDraftRow = {
+  id: string;
+  orgId: string;
+  supplierOrgId: string;
+  catalogItemId: string;
+  quantity: number;
+  buyerMessage: string | null;
+  status: 'INITIATED' | 'OPEN';
+  stageRequirementAttributes: Prisma.JsonValue;
 };
 
 type TenantSessionIdentity = {
@@ -662,7 +678,7 @@ async function resolveBuyerRfqSupplierResponse(rfqId: string): Promise<BuyerRfqR
   });
 }
 
-function groupMultiItemLinesBySupplier(lines: Array<{ supplier_org_id: string } & MultiItemGroupedLine>) {
+function groupMultiItemLinesBySupplier(lines: Array<{ supplier_org_id: string } & MultiItemGroupedLine>): MultiItemSupplierGroup[] {
   const grouped = new Map<string, MultiItemGroupedLine[]>();
   for (const line of lines) {
     const existing = grouped.get(line.supplier_org_id);
@@ -688,7 +704,7 @@ function groupMultiItemLinesBySupplier(lines: Array<{ supplier_org_id: string } 
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([supplierOrgId, supplierLines]) => ({
       supplier_org_id: supplierOrgId,
-      line_items: supplierLines.toSorted((a, b) => a.catalog_item_id.localeCompare(b.catalog_item_id)),
+      line_items: [...supplierLines].sort((a, b) => a.catalog_item_id.localeCompare(b.catalog_item_id)),
     }));
 }
 
@@ -4508,7 +4524,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
     }
 
-    const drafts = await withDbContext(prisma, dbContext, async tx => {
+    const drafts: MultiItemSubmitDraftRow[] = await withDbContext(prisma, dbContext, async tx => {
       return tx.rfq.findMany({
         where: {
           id: { in: draftIds },
@@ -4531,8 +4547,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendNotFound(reply, 'One or more RFQ drafts were not found for this buyer');
     }
 
-    const draftById = new Map(drafts.map(d => [d.id, d]));
-    const orderedDrafts = draftIds.map(id => draftById.get(id)).filter((d): d is NonNullable<typeof d> => Boolean(d));
+    const draftById = new Map<string, MultiItemSubmitDraftRow>(drafts.map((d: MultiItemSubmitDraftRow) => [d.id, d]));
+    const orderedDrafts = draftIds
+      .map((id: string) => draftById.get(id))
+      .filter((d: MultiItemSubmitDraftRow | undefined): d is MultiItemSubmitDraftRow => d !== undefined);
 
     const invalidStatusDraft = orderedDrafts.find(d => d.status !== 'INITIATED' && d.status !== 'OPEN');
     if (invalidStatusDraft) {
@@ -4601,7 +4619,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           continue;
         }
 
-        const updated = draft.status === 'OPEN'
+        const updated: MultiItemSubmitDraftRow = draft.status === 'OPEN'
           ? draft
           : await tx.rfq.update({
               where: { id: draft.id },

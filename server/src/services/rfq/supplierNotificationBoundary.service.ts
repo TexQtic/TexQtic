@@ -6,8 +6,16 @@ export type SupplierRfqSubmittedNotificationLineItem = {
   item_id: string;
   product_name: string;
   quantity: number;
-  price_visibility_state: 'RFQ_ONLY' | 'PRICE_ON_REQUEST' | 'LOGIN_REQUIRED' | 'ELIGIBILITY_REQUIRED' | 'HIDDEN';
-  rfq_entry_reason: 'RFQ_ONLY' | 'PRICE_ON_REQUEST' | null;
+  price_visibility_state:
+    | 'PUBLIC_VISIBLE'
+    | 'AUTH_VISIBLE'
+    | 'ELIGIBLE_VISIBLE'
+    | 'RFQ_ONLY'
+    | 'PRICE_ON_REQUEST'
+    | 'LOGIN_REQUIRED'
+    | 'ELIGIBILITY_REQUIRED'
+    | 'HIDDEN';
+  rfq_entry_reason: 'RFQ_ONLY' | 'PRICE_ON_REQUEST' | 'VISIBLE_PRICE_NEGOTIATION' | null;
 };
 
 export type SupplierRfqSubmittedNotificationGroup = {
