@@ -81,6 +81,15 @@ function assertForbiddenPriceKeysAbsent(serialized: string) {
   expect(serialized).not.toMatch(/"costPrice"\s*:/i);
   expect(serialized).not.toMatch(/"supplierPrice"\s*:/i);
   expect(serialized).not.toMatch(/"negotiatedPrice"\s*:/i);
+  expect(serialized).not.toMatch(/"internalMargin"\s*:/i);
+  expect(serialized).not.toMatch(/"margin"\s*:/i);
+  expect(serialized).not.toMatch(/"commercialTerms"\s*:/i);
+  expect(serialized).not.toMatch(/"policyId"\s*:/i);
+  expect(serialized).not.toMatch(/"policyAudit"\s*:/i);
+  expect(serialized).not.toMatch(/"approvedBy"\s*:/i);
+  expect(serialized).not.toMatch(/"buyerScore"\s*:/i);
+  expect(serialized).not.toMatch(/"supplierScore"\s*:/i);
+  expect(serialized).not.toMatch(/"ranking"\s*:/i);
 }
 
 describe('resolveSupplierDisclosurePolicyForPdp', () => {
@@ -225,6 +234,27 @@ describe('resolveSupplierDisclosurePolicyForPdp', () => {
 
     expect(result).toBeNull();
   });
+
+  it('returns null when supplier org context is missing', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: null,
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('ignores unknown client-provided policy-like input fields', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: null,
+      clientPolicyMode: 'ALWAYS_VISIBLE',
+    } as unknown as Parameters<typeof resolveSupplierDisclosurePolicyForPdp>[0]);
+
+    expect(result).toBeNull();
+  });
 });
 
 describe('attachPriceDisclosureToPdpView', () => {
@@ -294,6 +324,35 @@ describe('attachPriceDisclosureToPdpView', () => {
     assertForbiddenPriceKeysAbsent(serialized);
   });
 
+  it('suppressed state does not leak hidden fixture values or policy/score internals', () => {
+    const contaminated = {
+      ...makeBaseView(),
+      price: 'HIDDEN_PRICE_999',
+      amount: 'HIDDEN_PRICE_999',
+    } as unknown as BuyerCatalogPdpViewBase;
+
+    const result = attachPriceDisclosureToPdpView(contaminated, {
+      buyer: {
+        isAuthenticated: true,
+        isEligible: false,
+      },
+      supplierPolicy: null,
+    });
+
+    expect(result.priceDisclosure.price_value_visible).toBe(false);
+    expect(result.priceDisclosure.price_display_policy).toBe('SUPPRESS_VALUE');
+
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain('HIDDEN_PRICE_999');
+    expect(serialized).not.toContain('policyId');
+    expect(serialized).not.toContain('policyAudit');
+    expect(serialized).not.toContain('approvedBy');
+    expect(serialized).not.toContain('buyerScore');
+    expect(serialized).not.toContain('supplierScore');
+    expect(serialized).not.toContain('ranking');
+    assertForbiddenPriceKeysAbsent(serialized);
+  });
+
   it('reuses Slice A resolver via shaping path (no ad hoc duplicated decision logic)', () => {
     const spy = vi.spyOn(resolverModule, 'resolvePriceDisclosureState');
 
@@ -329,6 +388,33 @@ describe('attachPriceDisclosureToPdpView', () => {
       price_value_visible: false,
       cta_type: 'CHECK_ELIGIBILITY',
     });
+    expect(result.priceDisclosure.price_value_visible).toBe(false);
+  });
+
+  it('maps RFQ_ONLY policy to suppressed RFQ metadata and keeps RFQ entry unchanged', () => {
+    const base = makeBaseView();
+    const result = attachPriceDisclosureToPdpView(base, {
+      buyer: {
+        isAuthenticated: true,
+        isEligible: false,
+      },
+      supplierPolicy: {
+        mode: 'RFQ_ONLY',
+        source: 'SUPPLIER_DEFAULT',
+      },
+    });
+
+    expect(result.priceDisclosure).toMatchObject({
+      price_visibility_state: 'RFQ_ONLY',
+      price_display_policy: 'SUPPRESS_VALUE',
+      price_value_visible: false,
+      cta_type: 'REQUEST_QUOTE',
+      rfq_required: true,
+    });
+    expect(result.rfqEntry).toEqual(base.rfqEntry);
+
+    const serialized = JSON.stringify(result);
+    assertForbiddenPriceKeysAbsent(serialized);
   });
 
   it('does not change existing denial posture for cross-context access and stays suppressed', () => {
@@ -356,6 +442,25 @@ describe('attachPriceDisclosureToPdpView', () => {
     });
 
     expect(result).toHaveProperty('priceDisclosure');
+  });
+
+  it('visible metadata states do not invent amount fields', () => {
+    const result = attachPriceDisclosureToPdpView(makeBaseView(), {
+      buyer: {
+        isAuthenticated: true,
+        isEligible: false,
+      },
+      supplierPolicy: {
+        mode: 'AUTH_ONLY',
+        source: 'SUPPLIER_DEFAULT',
+      },
+    });
+
+    expect(result.priceDisclosure.price_value_visible).toBe(true);
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain('unitPrice');
+    expect(serialized).not.toContain('basePrice');
+    expect(serialized).not.toContain('priceValue');
   });
 
   it('does not serialize supplier policy internals in buyer response payload', () => {

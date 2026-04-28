@@ -122,6 +122,27 @@ describe('resolvePriceDisclosureState', () => {
     });
   });
 
+  it('returns LOGIN_REQUIRED for ELIGIBLE_ONLY when unauthenticated', () => {
+    const input: BuyerPriceDisclosureInput = {
+      ...baseInput(),
+      buyer: {
+        isAuthenticated: false,
+        isEligible: true,
+      },
+      supplierPolicy: { mode: 'ELIGIBLE_ONLY' },
+    };
+
+    const result = resolvePriceDisclosureState(input);
+
+    expect(result).toMatchObject({
+      price_visibility_state: 'LOGIN_REQUIRED',
+      price_display_policy: 'SUPPRESS_VALUE',
+      price_value_visible: false,
+      cta_type: 'LOGIN_TO_VIEW',
+    });
+    expectNoPriceLikeFields(result);
+  });
+
   it('returns ELIGIBILITY_REQUIRED for ELIGIBLE_ONLY when authenticated but ineligible', () => {
     const input: BuyerPriceDisclosureInput = {
       ...baseInput(),
@@ -204,6 +225,44 @@ describe('resolvePriceDisclosureState', () => {
       rfq_required: false,
     });
     expect(typeof result.eligibility_reason).toBe('string');
+    expectNoPriceLikeFields(result);
+  });
+
+  it('defaults safely when buyer context shape is incomplete', () => {
+    const input = {
+      supplierPolicy: { mode: 'AUTH_ONLY' },
+      buyer: {},
+    } as unknown as BuyerPriceDisclosureInput;
+
+    const result = resolvePriceDisclosureState(input);
+
+    expect(result).toMatchObject({
+      price_visibility_state: 'LOGIN_REQUIRED',
+      price_display_policy: 'SUPPRESS_VALUE',
+      price_value_visible: false,
+      cta_type: 'LOGIN_TO_VIEW',
+    });
+    expectNoPriceLikeFields(result);
+  });
+
+  it('treats unknown eligibility value as ineligible and keeps suppression', () => {
+    const input = {
+      ...baseInput(),
+      buyer: {
+        isAuthenticated: true,
+        isEligible: 'UNKNOWN',
+      },
+      supplierPolicy: { mode: 'ELIGIBLE_ONLY' },
+    } as unknown as BuyerPriceDisclosureInput;
+
+    const result = resolvePriceDisclosureState(input);
+
+    expect(result).toMatchObject({
+      price_visibility_state: 'ELIGIBILITY_REQUIRED',
+      price_display_policy: 'SUPPRESS_VALUE',
+      price_value_visible: false,
+      cta_type: 'CHECK_ELIGIBILITY',
+    });
     expectNoPriceLikeFields(result);
   });
 
