@@ -30,6 +30,7 @@ import type {
   BuyerCatalogPdpView,
   BuyerCertificateSummaryItem,
   BuyerPriceDisclosure,
+  RecommendedSuppliersResponse,
 } from '../../services/catalogService';
 
 // ---------------------------------------------------------------------------
@@ -72,6 +73,14 @@ export const CATALOG_PDP_AVAILABILITY_FALLBACK = 'Available on request' as const
 /** Empty state for compliance summary when no APPROVED certificates exist. */
 export const CATALOG_PDP_COMPLIANCE_EMPTY_COPY =
   'No certification records available for this item.' as const;
+
+// Recommendation surface constants (Slice G — TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001)
+export const CATALOG_PDP_RECOMMENDED_HEADING = 'Recommended suppliers' as const;
+export const CATALOG_PDP_RECOMMENDED_EMPTY_COPY =
+  'No recommended suppliers available at this time.' as const;
+export const CATALOG_PDP_RECOMMENDED_LOADING_COPY = 'Finding matching suppliers\u2026' as const;
+export const CATALOG_PDP_RECOMMENDED_DISCLAIMER =
+  'Suggestions are based on catalog data only. Human review is required before actioning any result.' as const;
 
 // ---------------------------------------------------------------------------
 // Pure helpers (exported for tests)
@@ -259,8 +268,12 @@ export type CatalogPdpSurfaceProps = Readonly<{
    * P-4: passes full RfqTriggerPayload (5 safe fields) â€” no prefill, no auto-submit.
    * Auto-submit and multi-item basket remain forbidden.
    */
-  onRequestQuote: (payload: RfqTriggerPayload) => void;
-}>;
+  onRequestQuote: (payload: RfqTriggerPayload) => void;  /** AI-pipeline recommended suppliers. Optional — never required. */
+  recommendedSuppliers?: RecommendedSuppliersResponse | null;
+  /** True while recommendations are loading. */
+  recommendedSuppliersLoading?: boolean;
+  /** Non-null = suppressed silently — AI errors are never surfaced to buyers. */
+  recommendedSuppliersError?: string | null;}>;
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -615,8 +628,123 @@ function PdpRfqEntry({
   );
 }
 
+// ---------------------------------------------------------------------------// RecommendedSuppliersPanel — Slice G (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001)
 // ---------------------------------------------------------------------------
-// CatalogPdpSurface â€” main export
+
+/**
+ * Renders AI-matched supplier recommendations on the buyer PDP surface.
+ *
+ * Safety boundaries:
+ * - Error state → returns null (no AI error exposed to buyers)
+ * - Fallback / empty → renders empty copy
+ * - Loading → renders loading copy
+ * - Items present → renders up to 5 safe supplier cards
+ * - NO score, rank, confidence, price, or relationship state in any output
+ */
+function RecommendedSuppliersPanel({
+  data,
+  loading,
+  error,
+}: Readonly<{
+  data: RecommendedSuppliersResponse | null | undefined;
+  loading: boolean | undefined;
+  error: string | null | undefined;
+}>) {
+  // Loading state
+  if (loading === true) {
+    return (
+      <section
+        data-testid="buyer-catalog-recommended-suppliers-panel"
+        className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3"
+      >
+        <h2 className="text-base font-semibold text-slate-800">
+          {CATALOG_PDP_RECOMMENDED_HEADING}
+        </h2>
+        <p className="text-sm text-slate-500">{CATALOG_PDP_RECOMMENDED_LOADING_COPY}</p>
+      </section>
+    );
+  }
+
+  // Error: suppress silently — never surface AI errors to buyers
+  if (error != null) {
+    return null;
+  }
+
+  // Empty / fallback: show placeholder
+  if (data == null || data.fallback || data.items.length === 0) {
+    return (
+      <section
+        data-testid="buyer-catalog-recommended-suppliers-panel"
+        className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-3"
+      >
+        <h2 className="text-base font-semibold text-slate-800">
+          {CATALOG_PDP_RECOMMENDED_HEADING}
+        </h2>
+        <p className="text-sm text-slate-500">{CATALOG_PDP_RECOMMENDED_EMPTY_COPY}</p>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      data-testid="buyer-catalog-recommended-suppliers-panel"
+      className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4"
+    >
+      <h2 className="text-base font-semibold text-slate-800">
+        {CATALOG_PDP_RECOMMENDED_HEADING}
+      </h2>
+      <ul className="space-y-3">
+        {data.items.map((supplier, idx) => (
+          <li
+            key={idx}
+            data-testid="buyer-catalog-recommended-supplier-card"
+            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 flex flex-col gap-2"
+          >
+            <p
+              data-testid="buyer-catalog-recommended-supplier-name"
+              className="text-sm font-medium text-slate-800"
+            >
+              {supplier.supplierDisplayName}
+            </p>
+            {supplier.matchLabels.length > 0 && (
+              <ul
+                data-testid="buyer-catalog-recommended-supplier-labels"
+                className="flex flex-wrap gap-1.5"
+              >
+                {supplier.matchLabels.map((label, i) => (
+                  <li
+                    key={i}
+                    className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-600"
+                  >
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <span
+              data-testid="buyer-catalog-recommended-supplier-cta"
+              className="text-xs font-medium text-indigo-600"
+            >
+              {supplier.cta === 'REQUEST_QUOTE'
+                ? 'Request quote'
+                : supplier.cta === 'REQUEST_ACCESS'
+                  ? 'Request access'
+                  : 'View catalog'}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p
+        data-testid="buyer-catalog-recommended-suppliers-disclaimer"
+        className="text-xs text-slate-400 leading-relaxed"
+      >
+        {CATALOG_PDP_RECOMMENDED_DISCLAIMER}
+      </p>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------// CatalogPdpSurface â€” main export
 // ---------------------------------------------------------------------------
 
 export function CatalogPdpSurface({
@@ -625,6 +753,9 @@ export function CatalogPdpSurface({
   error,
   onBack,
   onRequestQuote,
+  recommendedSuppliers,
+  recommendedSuppliersLoading,
+  recommendedSuppliersError,
 }: CatalogPdpSurfaceProps) {
   // Back button â€” always visible so user can escape any state.
   const BackButton = (
@@ -699,6 +830,12 @@ export function CatalogPdpSurface({
           <PdpSupplierSummary item={item} />
         </div>
       </div>
+
+      <RecommendedSuppliersPanel
+        data={recommendedSuppliers}
+        loading={recommendedSuppliersLoading}
+        error={recommendedSuppliersError}
+      />
     </div>
   );
 }

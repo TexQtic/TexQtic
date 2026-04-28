@@ -72,6 +72,12 @@ import { runRfqAssistInference } from '../services/ai/rfqAssistService.js';
 import { runSupplierProfileCompletenessInference } from '../services/ai/supplierProfileCompletenessService.js';
 import { BudgetExceededError, getMonthKey } from '../lib/aiBudget.js';
 import { AiRateLimitExceededError } from '../services/ai/inferenceService.js';
+import { buildSupplierMatchSignals } from '../services/ai/supplierMatching/supplierMatchSignalBuilder.service.js';
+import { applySupplierMatchPolicyFilter } from '../services/ai/supplierMatching/supplierMatchPolicyFilter.service.js';
+import { rankSupplierCandidates } from '../services/ai/supplierMatching/supplierMatchRanker.service.js';
+import { buildSupplierMatchExplanation } from '../services/ai/supplierMatching/supplierMatchExplanationBuilder.service.js';
+import { guardSupplierMatchOutput } from '../services/ai/supplierMatching/supplierMatchRuntimeGuard.service.js';
+import type { SupplierMatchCandidateDraft, SupplierMatchCandidate } from '../services/ai/supplierMatching/supplierMatch.types.js';
 
 type InviteEmailDeliveryStatus = EmailDispatchOutcome['status'] | 'FAILED_NON_FATAL';
 
@@ -2795,6 +2801,296 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       return sendSuccess(reply, result);
     }
+  );
+
+  /**
+   * GET /api/tenant/catalog/items/:itemId/recommendations
+   * Returns AI-pipeline matched supplier recommendations for a catalog item.
+   *
+   * TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 Slice G — Recommendation Surface
+   *
+   * Auth: tenantAuthMiddleware + databaseContextMiddleware (buyerOrgId from JWT only)
+   *
+   * Pipeline: Signal Build → Policy Filter → Rank → Explanation → Runtime Guard
+   *
+   * Response is buyer-safe:
+   * - NO score, rank, confidence, relationshipState, price, or internal metadata
+   * - supplierDisplayName derived from organizations.legal_name (admin context)
+   * - matchLabels derived from explanation builder label map only
+   * - CTA values: REQUEST_QUOTE | REQUEST_ACCESS | VIEW_PROFILE
+   * - fallback: true when no safe candidates remain
+   */
+  fastify.get(
+    '/tenant/catalog/items/:itemId/recommendations',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      if (!request.dbContext) {
+        return sendUnauthorized(reply, 'Missing database context');
+      }
+
+      const paramsSchema = z.object({ itemId: z.string().uuid() });
+      const paramsResult = paramsSchema.safeParse(request.params);
+      if (!paramsResult.success) {
+        return sendNotFound(reply, 'Catalog item not found');
+      }
+
+      const { itemId } = paramsResult.data;
+      const buyerOrgId = request.dbContext.orgId;
+
+      // ── Step 1: Read item context (cross-tenant read, same as PDP) ──────────
+      type ItemContextRow = {
+        tenant_id: string;
+        product_category: string | null;
+        catalog_stage: string | null;
+        material: string | null;
+        fabric_type: string | null;
+        composition: string | null;
+        gsm: unknown;
+        certifications: unknown;
+      };
+
+      let itemRows: ItemContextRow[];
+      try {
+        itemRows = await prisma.$transaction(async tx => {
+          await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+          return tx.$queryRaw<ItemContextRow[]>`
+            SELECT tenant_id, product_category, catalog_stage, material,
+                   fabric_type, composition, gsm, certifications
+            FROM catalog_items
+            WHERE id = ${itemId}::uuid
+              AND active = true
+              AND publication_posture IN ('B2B_PUBLIC', 'BOTH')
+            LIMIT 1
+          `;
+        });
+      } catch {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      if (itemRows.length === 0) {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      const sourceItem = itemRows[0]!;
+      const sourceSupplierTenantId = sourceItem.tenant_id;
+      const category = sourceItem.product_category;
+
+      // No category context → no meaningful matching
+      if (category == null || category.trim().length === 0) {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      // ── Step 2: Find candidate supplier orgs (cross-tenant read) ─────────────
+      const MAX_RECOMMENDATION_CANDIDATES = 5;
+
+      type CandidateItemRow = {
+        tenant_id: string;
+        item_id: string;
+        product_category: string | null;
+        catalog_stage: string | null;
+        material: string | null;
+        fabric_type: string | null;
+        composition: string | null;
+        gsm: unknown;
+        certifications: unknown;
+      };
+
+      let candidateRows: CandidateItemRow[];
+      try {
+        candidateRows = await prisma.$transaction(async tx => {
+          await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+          return tx.$queryRaw<CandidateItemRow[]>`
+            SELECT DISTINCT ON (ci.tenant_id)
+              ci.tenant_id, ci.id AS item_id,
+              ci.product_category, ci.catalog_stage, ci.material,
+              ci.fabric_type, ci.composition, ci.gsm, ci.certifications
+            FROM catalog_items ci
+            WHERE ci.product_category = ${category}::text
+              AND ci.active = true
+              AND ci.publication_posture IN ('B2B_PUBLIC', 'BOTH')
+              AND ci.tenant_id != ${sourceSupplierTenantId}::uuid
+              AND ci.tenant_id != ${buyerOrgId}::uuid
+            LIMIT ${MAX_RECOMMENDATION_CANDIDATES}
+          `;
+        });
+      } catch {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      if (candidateRows.length === 0) {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      const candidateTenantIds = candidateRows.map(r => r.tenant_id);
+
+      // ── Step 3: Get org display names (admin context) ─────────────────────────
+      let orgDisplayNames: Record<string, string>;
+      try {
+        orgDisplayNames = await withOrgAdminContext(prisma, async tx => {
+          const orgs = await tx.organizations.findMany({
+            where: { id: { in: candidateTenantIds } },
+            select: { id: true, legal_name: true },
+          });
+          const nameMap: Record<string, string> = {};
+          for (const org of orgs) {
+            nameMap[org.id] = org.legal_name;
+          }
+          return nameMap;
+        });
+      } catch {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      // ── Step 4: Get relationship states for all candidates ────────────────────
+      const relationshipStateMap: Record<string, string> = {};
+      await Promise.all(
+        candidateTenantIds.map(async supplierTenantId => {
+          try {
+            const rel = await getRelationshipOrNone(supplierTenantId, buyerOrgId);
+            relationshipStateMap[supplierTenantId] = rel.state;
+          } catch {
+            relationshipStateMap[supplierTenantId] = 'NONE';
+          }
+        }),
+      );
+
+      // ── Step 5: Build SupplierMatchCandidateDraft[] (Slice A signals) ─────────
+      const candidateDrafts: SupplierMatchCandidateDraft[] = candidateRows
+        .filter(row => row.tenant_id in orgDisplayNames)
+        .map(row => {
+          const rawCerts = Array.isArray(row.certifications)
+            ? (row.certifications as Array<{ standard: string }>)
+                .filter(c => typeof c?.standard === 'string')
+                .map(c => c.standard)
+            : undefined;
+
+          const signals = buildSupplierMatchSignals({
+            buyerOrgId,
+            catalogItems: [
+              {
+                itemId: row.item_id,
+                supplierOrgId: row.tenant_id,
+                catalogStage: row.catalog_stage ?? undefined,
+                productCategory: row.product_category ?? undefined,
+                material: row.material ?? undefined,
+                fabricType: row.fabric_type ?? undefined,
+                composition: row.composition ?? undefined,
+                gsm: row.gsm != null ? Number(row.gsm) : undefined,
+                certifications: rawCerts,
+              },
+            ],
+            relationshipContexts: [
+              {
+                supplierOrgId: row.tenant_id,
+                state: (relationshipStateMap[row.tenant_id] as
+                  | 'NONE'
+                  | 'REQUESTED'
+                  | 'APPROVED'
+                  | 'REJECTED'
+                  | 'BLOCKED'
+                  | 'SUSPENDED'
+                  | 'EXPIRED'
+                  | 'REVOKED'
+                  | undefined) ?? 'NONE',
+              },
+            ],
+          });
+
+          const relState =
+            (relationshipStateMap[row.tenant_id] as
+              | 'NONE'
+              | 'REQUESTED'
+              | 'APPROVED'
+              | 'REJECTED'
+              | 'BLOCKED'
+              | 'SUSPENDED'
+              | 'EXPIRED'
+              | 'REVOKED') ?? 'NONE';
+
+          return {
+            supplierOrgId: row.tenant_id,
+            signals,
+            visibility: {
+              catalogVisibility: 'PUBLIC' as const,
+              rfqAcceptanceMode: 'OPEN_TO_ALL' as const,
+            },
+            relationshipState: relState,
+            sourceOrgId: buyerOrgId,
+          };
+        });
+
+      if (candidateDrafts.length === 0) {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      // ── Step 6: Policy filter (Slice B) ───────────────────────────────────────
+      const filterResult = applySupplierMatchPolicyFilter({
+        buyerOrgId,
+        candidates: candidateDrafts,
+      });
+
+      if (filterResult.fallback || filterResult.safeCandidates.length === 0) {
+        return sendSuccess(reply, { items: [], fallback: true });
+      }
+
+      // ── Step 7: Rank candidates (Slice C) ─────────────────────────────────────
+      const rankerResult = rankSupplierCandidates({
+        buyerOrgId,
+        candidates: filterResult.safeCandidates,
+        maxCandidates: MAX_RECOMMENDATION_CANDIDATES,
+      });
+
+      // ── Step 8: Build explanations (Slice D) + attach to candidates ───────────
+      const candidatesWithExplanation: SupplierMatchCandidate[] =
+        rankerResult.result.candidates.map(candidate => {
+          const { explanation } = buildSupplierMatchExplanation({
+            buyerOrgId,
+            matchCategories: candidate.matchCategories,
+          });
+          return {
+            ...candidate,
+            supplierDisplayName: orgDisplayNames[candidate.supplierOrgId],
+            explanation,
+          };
+        });
+
+      // ── Step 9: Runtime guard (Slice D/F) ─────────────────────────────────────
+      const guardResult = guardSupplierMatchOutput({
+        buyerOrgId,
+        candidates: candidatesWithExplanation,
+      });
+
+      // ── Step 10: Project to safe buyer-facing shape ───────────────────────────
+      type SafeRecommendedSupplierCta = 'REQUEST_QUOTE' | 'REQUEST_ACCESS' | 'VIEW_PROFILE';
+      type SafeRecommendedSupplierItem = {
+        supplierDisplayName: string;
+        matchLabels: string[];
+        cta: SafeRecommendedSupplierCta;
+      };
+
+      const items: SafeRecommendedSupplierItem[] = guardResult.sanitizedCandidates
+        .filter(c => c.supplierDisplayName != null && c.supplierDisplayName.length > 0)
+        .map(c => {
+          const labels: string[] = [];
+          if (c.explanation?.primaryLabel) labels.push(c.explanation.primaryLabel);
+          if (c.explanation?.supportingLabels) labels.push(...c.explanation.supportingLabels);
+
+          let cta: SafeRecommendedSupplierCta = 'VIEW_PROFILE';
+          if (c.relationshipCta === 'REQUEST_QUOTE') cta = 'REQUEST_QUOTE';
+          else if (c.relationshipCta === 'REQUEST_ACCESS') cta = 'REQUEST_ACCESS';
+
+          return {
+            supplierDisplayName: c.supplierDisplayName!,
+            matchLabels: labels,
+            cta,
+          };
+        });
+
+      return sendSuccess(reply, {
+        items,
+        fallback: items.length === 0,
+      });
+    },
   );
 
   /**

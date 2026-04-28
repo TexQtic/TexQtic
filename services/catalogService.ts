@@ -792,3 +792,38 @@ export interface SupplierProfileCompletenessResponse {
 export async function analyseSupplierProfileCompleteness(): Promise<SupplierProfileCompletenessResponse> {
   return tenantPost<SupplierProfileCompletenessResponse>('/api/tenant/supplier-profile/ai-completeness', {});
 }
+
+// ─── TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 Slice G ───────────────────────────
+
+/** Safe CTA hint for a buyer-facing recommended supplier card. */
+export type SafeRecommendedSupplierCta = 'REQUEST_QUOTE' | 'REQUEST_ACCESS' | 'VIEW_PROFILE';
+
+/**
+ * A single buyer-safe recommended supplier item.
+ * NO score, rank, confidence, price, or relationship state.
+ */
+export type SafeRecommendedSupplier = Readonly<{
+  supplierDisplayName: string;
+  matchLabels: string[];
+  cta: SafeRecommendedSupplierCta;
+}>;
+
+/**
+ * Buyer-safe response for the recommendations endpoint.
+ * fallback: true when no safe candidates remain after pipeline gates.
+ */
+export type RecommendedSuppliersResponse = Readonly<{
+  items: SafeRecommendedSupplier[];
+  fallback: boolean;
+}>;
+
+/**
+ * Fetch AI-matched supplier recommendations for a catalog item (buyer PDP surface).
+ * TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 Slice G.
+ * Response is buyer-safe — no score, rank, confidence, price, or relationship state.
+ */
+export async function getRecommendedSuppliers(itemId: string): Promise<RecommendedSuppliersResponse> {
+  return tenantGet<RecommendedSuppliersResponse>(
+    `/api/tenant/catalog/items/${encodeURIComponent(itemId)}/recommendations`,
+  );
+}
