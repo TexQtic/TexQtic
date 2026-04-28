@@ -110,6 +110,24 @@ type CatalogRfqDraftResolution =
       reason: RfqPrefillFailureReason;
     };
 
+type MultiItemDraftLineInput = {
+  catalogItemId: string;
+  selectedQuantity?: number | null;
+  specNotes?: string | null;
+};
+
+type MultiItemGroupedLine = {
+  draft_id: string;
+  catalog_item_id: string;
+  item_id: string;
+  product_name: string;
+  quantity: number;
+  spec_notes: string | null;
+  buyer_notes: string | null;
+  price_visibility_state: RfqPrefillContextData['priceVisibilityState'];
+  rfq_entry_reason: RfqPrefillContextData['rfqEntryReason'] | null;
+};
+
 type TenantSessionIdentity = {
   id: string;
   slug: string;
@@ -638,6 +656,36 @@ async function resolveBuyerRfqSupplierResponse(rfqId: string): Promise<BuyerRfqR
       },
     });
   });
+}
+
+function groupMultiItemLinesBySupplier(lines: Array<{ supplier_org_id: string } & MultiItemGroupedLine>) {
+  const grouped = new Map<string, MultiItemGroupedLine[]>();
+  for (const line of lines) {
+    const existing = grouped.get(line.supplier_org_id);
+    const nextLine: MultiItemGroupedLine = {
+      draft_id: line.draft_id,
+      catalog_item_id: line.catalog_item_id,
+      item_id: line.item_id,
+      product_name: line.product_name,
+      quantity: line.quantity,
+      spec_notes: line.spec_notes,
+      buyer_notes: line.buyer_notes,
+      price_visibility_state: line.price_visibility_state,
+      rfq_entry_reason: line.rfq_entry_reason,
+    };
+    if (existing) {
+      existing.push(nextLine);
+    } else {
+      grouped.set(line.supplier_org_id, [nextLine]);
+    }
+  }
+
+  return Array.from(grouped.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([supplierOrgId, supplierLines]) => ({
+      supplier_org_id: supplierOrgId,
+      line_items: supplierLines.toSorted((a, b) => a.catalog_item_id.localeCompare(b.catalog_item_id)),
+    }));
 }
 
 async function resolveBuyerRfqTradeContinuity(
@@ -4223,6 +4271,418 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     });
 
     return sendSuccess(reply, result, 201);
+  });
+
+  /**
+   * POST /api/tenant/rfqs/drafts/multi-item
+   * Explicit buyer action to create a multi-item RFQ draft bundle.
+   * Uses all-or-nothing persistence: if any line item is blocked, no drafts are created.
+   */
+  fastify.post('/tenant/rfqs/drafts/multi-item', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const lineSchema = z.object({
+      catalogItemId: z.string().uuid(),
+      selectedQuantity: z.number().int().min(1).max(999999).optional().nullable(),
+      specNotes: z.string().trim().max(2000).optional().nullable(),
+    }).strict();
+
+    const bodySchema = z.object({
+      lineItems: z.array(lineSchema).min(1).max(20),
+      buyerNotes: z.string().trim().max(2000).optional().nullable(),
+      globalNotes: z.string().trim().max(2000).optional().nullable(),
+      idempotencyKey: z.string().trim().min(1).max(120).optional(),
+    }).strict();
+
+    const parseResult = bodySchema.safeParse(request.body ?? {});
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { lineItems, buyerNotes, globalNotes, idempotencyKey } = parseResult.data;
+    const duplicateIds = lineItems
+      .map(line => line.catalogItemId)
+      .filter((id, idx, all) => all.indexOf(id) !== idx);
+
+    if (duplicateIds.length > 0) {
+      return sendError(reply, 'VALIDATION_ERROR', 'Duplicate catalogItemId entries are not allowed', 400, {
+        duplicate_item_ids: Array.from(new Set(duplicateIds)),
+      });
+    }
+
+    const resolvedLines: Array<{
+      input: MultiItemDraftLineInput;
+      prefill: Extract<CatalogRfqDraftResolution, { ok: true }>;
+    }> = [];
+
+    const blockedLines: Array<{
+      catalog_item_id: string;
+      reason: string;
+    }> = [];
+
+    for (const line of lineItems) {
+      const resolved = await resolveCatalogRfqDraftContext({
+        buyerOrgId: dbContext.orgId,
+        catalogItemId: line.catalogItemId,
+        selectedQuantity: line.selectedQuantity ?? null,
+        buyerNotes: line.specNotes ?? buyerNotes ?? globalNotes ?? null,
+      });
+
+      if (!resolved.ok) {
+        blockedLines.push({ catalog_item_id: line.catalogItemId, reason: resolved.reason });
+        continue;
+      }
+
+      if (resolved.context.priceVisibilityState === 'LOGIN_REQUIRED') {
+        blockedLines.push({ catalog_item_id: line.catalogItemId, reason: 'AUTH_REQUIRED' });
+        continue;
+      }
+      if (resolved.context.priceVisibilityState === 'ELIGIBILITY_REQUIRED') {
+        blockedLines.push({ catalog_item_id: line.catalogItemId, reason: 'ELIGIBILITY_REQUIRED' });
+        continue;
+      }
+      if (resolved.context.priceVisibilityState === 'HIDDEN') {
+        blockedLines.push({ catalog_item_id: line.catalogItemId, reason: 'RFQ_PREFILL_NOT_AVAILABLE' });
+        continue;
+      }
+
+      resolvedLines.push({
+        input: line,
+        prefill: resolved,
+      });
+    }
+
+    if (blockedLines.length > 0) {
+      return sendError(reply, 'MULTI_ITEM_BLOCKED', 'One or more line items are not eligible for RFQ draft creation', 409, {
+        mode: 'ALL_OR_NOTHING',
+        blocked_items: blockedLines,
+      });
+    }
+
+    const draftBundleId = randomUUID();
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      const createdRows: Array<{ supplier_org_id: string } & MultiItemGroupedLine> = [];
+
+      for (const line of resolvedLines) {
+        const quantity =
+          line.prefill.context.selectedQuantity
+          ?? line.input.selectedQuantity
+          ?? line.prefill.context.moq
+          ?? 1;
+
+        const specNotes = line.input.specNotes ?? null;
+        const buyerLineNotes = buyerNotes ?? globalNotes ?? line.prefill.context.buyerNotes ?? null;
+
+        const rfq = await tx.rfq.create({
+          data: {
+            orgId: dbContext.orgId,
+            supplierOrgId: line.prefill.supplierOrgId,
+            catalogItemId: line.input.catalogItemId,
+            quantity,
+            buyerMessage: buyerLineNotes,
+            status: 'INITIATED',
+            createdByUserId: userId ?? null,
+            stageRequirementAttributes: specNotes
+              ? { specNotes }
+              : null,
+            fieldSourceMeta: {
+              source: 'multi_item_draft',
+              mode: 'multi_item',
+              draft_bundle_id: draftBundleId,
+              line_item_count: lineItems.length,
+              idempotency_key: idempotencyKey ?? null,
+            },
+          },
+          select: {
+            id: true,
+            orgId: true,
+            supplierOrgId: true,
+            catalogItemId: true,
+            quantity: true,
+            status: true,
+            createdAt: true,
+          },
+        });
+
+        await writeAuditLog(tx, {
+          realm: 'TENANT',
+          tenantId: dbContext.orgId,
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'rfq.RFQ_DRAFT_CREATED',
+          entity: 'rfq',
+          entityId: rfq.id,
+          afterJson: {
+            id: rfq.id,
+            orgId: rfq.orgId,
+            supplierOrgId: rfq.supplierOrgId,
+            catalogItemId: rfq.catalogItemId,
+            quantity: rfq.quantity,
+            status: rfq.status,
+            draftBundleId,
+            supplierVisible: false,
+            notified: false,
+            quoteGenerated: false,
+            createdAt: rfq.createdAt.toISOString(),
+          },
+          metadataJson: {
+            rfqId: rfq.id,
+            stage: 'DRAFT',
+            source: 'multi_item_catalog',
+            draftBundleId,
+            supplierVisible: false,
+            notified: false,
+            quoteGenerated: false,
+          },
+        });
+
+        createdRows.push({
+          supplier_org_id: line.prefill.supplierOrgId,
+          draft_id: rfq.id,
+          catalog_item_id: line.input.catalogItemId,
+          item_id: line.prefill.context.itemId,
+          product_name: line.prefill.context.productName,
+          quantity,
+          spec_notes: specNotes,
+          buyer_notes: buyerLineNotes,
+          price_visibility_state: line.prefill.context.priceVisibilityState,
+          rfq_entry_reason: line.prefill.context.rfqEntryReason ?? null,
+        });
+      }
+
+      return {
+        draft_group_id: draftBundleId,
+        buyer_org_id: dbContext.orgId,
+        status: 'INITIATED' as const,
+        line_item_count: createdRows.length,
+        supplier_group_count: new Set(createdRows.map(row => row.supplier_org_id)).size,
+        buyer_notes: buyerNotes ?? null,
+        global_notes: globalNotes ?? null,
+        supplier_groups: groupMultiItemLinesBySupplier(createdRows),
+        submit_boundary: {
+          supplier_visible: false,
+          notified: false,
+          quote_generated: false,
+        },
+      };
+    });
+
+    return sendSuccess(reply, result, 201);
+  });
+
+  /**
+   * POST /api/tenant/rfqs/drafts/multi-item/submit
+   * Explicit buyer submit transition for a multi-item draft bundle.
+   * Draft IDs must belong to the authenticated buyer org and are split by supplier deterministically.
+   */
+  fastify.post('/tenant/rfqs/drafts/multi-item/submit', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const bodySchema = z.object({
+      draftIds: z.array(z.string().uuid()).min(1).max(50),
+      idempotencyKey: z.string().trim().min(1).max(120).optional(),
+    }).strict();
+
+    const parseResult = bodySchema.safeParse(request.body ?? {});
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { draftIds, idempotencyKey } = parseResult.data;
+    const duplicateIds = draftIds.filter((id, idx, all) => all.indexOf(id) !== idx);
+    if (duplicateIds.length > 0) {
+      return sendError(reply, 'VALIDATION_ERROR', 'Duplicate draft IDs are not allowed', 400, {
+        duplicate_draft_ids: Array.from(new Set(duplicateIds)),
+      });
+    }
+
+    const drafts = await withDbContext(prisma, dbContext, async tx => {
+      return tx.rfq.findMany({
+        where: {
+          id: { in: draftIds },
+          orgId: dbContext.orgId,
+        },
+        select: {
+          id: true,
+          orgId: true,
+          supplierOrgId: true,
+          catalogItemId: true,
+          quantity: true,
+          buyerMessage: true,
+          status: true,
+          stageRequirementAttributes: true,
+        },
+      });
+    });
+
+    if (drafts.length !== draftIds.length) {
+      return sendNotFound(reply, 'One or more RFQ drafts were not found for this buyer');
+    }
+
+    const draftById = new Map(drafts.map(d => [d.id, d]));
+    const orderedDrafts = draftIds.map(id => draftById.get(id)).filter((d): d is NonNullable<typeof d> => Boolean(d));
+
+    const invalidStatusDraft = orderedDrafts.find(d => d.status !== 'INITIATED' && d.status !== 'OPEN');
+    if (invalidStatusDraft) {
+      return sendError(reply, 'INVALID_STATUS', 'Only INITIATED or OPEN drafts can be submitted', 409, {
+        draft_id: invalidStatusDraft.id,
+        status: invalidStatusDraft.status,
+      });
+    }
+
+    const blockedLines: Array<{ draft_id: string; reason: string }> = [];
+    const resolvedPerDraft = new Map<string, Extract<CatalogRfqDraftResolution, { ok: true }>>();
+
+    for (const draft of orderedDrafts) {
+      const draftAttrs = draft.stageRequirementAttributes as Record<string, unknown> | null;
+      const specNotesRaw = draftAttrs?.specNotes;
+      const resolved = await resolveCatalogRfqDraftContext({
+        buyerOrgId: dbContext.orgId,
+        catalogItemId: draft.catalogItemId,
+        selectedQuantity: draft.quantity,
+        buyerNotes: typeof specNotesRaw === 'string' ? specNotesRaw : draft.buyerMessage,
+      });
+
+      if (!resolved.ok) {
+        blockedLines.push({ draft_id: draft.id, reason: resolved.reason });
+        continue;
+      }
+
+      if (resolved.supplierOrgId !== draft.supplierOrgId) {
+        blockedLines.push({ draft_id: draft.id, reason: 'SUPPLIER_NOT_AVAILABLE' });
+        continue;
+      }
+
+      if (resolved.context.priceVisibilityState === 'ELIGIBILITY_REQUIRED') {
+        blockedLines.push({ draft_id: draft.id, reason: 'ELIGIBILITY_REQUIRED' });
+        continue;
+      }
+      if (resolved.context.priceVisibilityState === 'LOGIN_REQUIRED') {
+        blockedLines.push({ draft_id: draft.id, reason: 'AUTH_REQUIRED' });
+        continue;
+      }
+      if (resolved.context.priceVisibilityState === 'HIDDEN') {
+        blockedLines.push({ draft_id: draft.id, reason: 'RFQ_PREFILL_NOT_AVAILABLE' });
+        continue;
+      }
+
+      resolvedPerDraft.set(draft.id, resolved);
+    }
+
+    if (blockedLines.length > 0) {
+      return sendError(reply, 'MULTI_ITEM_SUBMIT_BLOCKED', 'One or more draft line items are not eligible for submit', 409, {
+        mode: 'ALL_OR_NOTHING',
+        blocked_drafts: blockedLines,
+      });
+    }
+
+    const allAlreadyOpen = orderedDrafts.every(d => d.status === 'OPEN');
+    const submitBundleId = randomUUID();
+
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      const submittedRows: Array<{ supplier_org_id: string } & MultiItemGroupedLine> = [];
+
+      for (const draft of orderedDrafts) {
+        const resolved = resolvedPerDraft.get(draft.id);
+        if (!resolved) {
+          continue;
+        }
+
+        const updated = draft.status === 'OPEN'
+          ? draft
+          : await tx.rfq.update({
+              where: { id: draft.id },
+              data: {
+                status: 'OPEN',
+                createdByUserId: userId ?? null,
+                fieldSourceMeta: {
+                  source: 'multi_item_submit',
+                  mode: 'multi_item',
+                  submit_bundle_id: submitBundleId,
+                  idempotency_key: idempotencyKey ?? null,
+                },
+              },
+              select: {
+                id: true,
+                orgId: true,
+                supplierOrgId: true,
+                catalogItemId: true,
+                quantity: true,
+                buyerMessage: true,
+                status: true,
+                stageRequirementAttributes: true,
+              },
+            });
+
+        if (draft.status !== 'OPEN') {
+          await writeAuditLog(tx, {
+            realm: 'TENANT',
+            tenantId: dbContext.orgId,
+            actorType: 'USER',
+            actorId: userId ?? null,
+            action: 'rfq.RFQ_SUBMITTED',
+            entity: 'rfq',
+            entityId: updated.id,
+            afterJson: {
+              id: updated.id,
+              status: updated.status,
+              supplierOrgId: updated.supplierOrgId,
+              quantity: updated.quantity,
+              submitBundleId,
+              supplierVisible: true,
+              notified: false,
+              quoteGenerated: false,
+            },
+            metadataJson: {
+              rfqId: updated.id,
+              stage: 'SUBMITTED',
+              submitBundleId,
+              notified: false,
+              quoteGenerated: false,
+            },
+          });
+        }
+
+        const attrs = updated.stageRequirementAttributes as Record<string, unknown> | null;
+        submittedRows.push({
+          supplier_org_id: updated.supplierOrgId,
+          draft_id: updated.id,
+          catalog_item_id: updated.catalogItemId,
+          item_id: resolved.context.itemId,
+          product_name: resolved.context.productName,
+          quantity: updated.quantity,
+          spec_notes: typeof attrs?.specNotes === 'string' ? attrs.specNotes : null,
+          buyer_notes: updated.buyerMessage ?? null,
+          price_visibility_state: resolved.context.priceVisibilityState,
+          rfq_entry_reason: resolved.context.rfqEntryReason ?? null,
+        });
+      }
+
+      return {
+        submit_group_id: submitBundleId,
+        buyer_org_id: dbContext.orgId,
+        status: 'OPEN' as const,
+        idempotent: allAlreadyOpen,
+        draft_count: submittedRows.length,
+        supplier_group_count: new Set(submittedRows.map(row => row.supplier_org_id)).size,
+        supplier_groups: groupMultiItemLinesBySupplier(submittedRows),
+        submit_boundary: {
+          supplier_visible: true,
+          notified: false,
+          quote_generated: false,
+        },
+      };
+    });
+
+    return sendSuccess(reply, result);
   });
 
   /**
