@@ -401,8 +401,19 @@
     rfq_auto_submit_absent: verified — dialog opens in form-input mode; no auto-submit
   Non-blocking note: media URL signing follows existing catalog posture (image_url passed as signedUrl);
     future TECS-B2B-BUYER-MEDIA-SIGNING-001 candidate.
-  Future scope deferred: price disclosure (TECS-B2B-BUYER-PRICE-DISCLOSURE-001),
-    RFQ prefill (TECS-B2B-BUYER-RFQ-INTEGRATION-001), relationship access
+  TECS-B2B-BUYER-PRICE-DISCLOSURE-001 is VERIFIED_COMPLETE (2026-04-28).
+  Scope: Buyer PDP price disclosure stack closed through Slices A-F.
+  Commits: 26a3ed3 (resolver), 4eea5da (PDP response shaping), 15d9710 (frontend rendering),
+    35578ae (policy-source adapter), b4d1d48 (persistent policy storage),
+    23c5068 (eligibility + tenant isolation test hardening).
+  Slice F verification:
+    - Resolver/disclosure tests: 39/39 PASS.
+    - Buyer PDP/frontend compatibility tests: 144/144 PASS.
+    - Anti-leakage assertions verified for suppressed states (no price-like keys/policy internals).
+    - D2 migration SQL verified as additive-only (2 ADD COLUMN statements, no DPP/FK/RLS drift).
+  Known limitation preserved: Prisma migrate dev historical shadow-replay blocker remains out of scope;
+    D2 migration may remain pending by environment until separately applied via authorized deployment path.
+  Future scope deferred: RFQ prefill (TECS-B2B-BUYER-RFQ-INTEGRATION-001), relationship access
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
   No blockers.

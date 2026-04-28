@@ -31,10 +31,10 @@ current_open_design_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-B2B-BUYER-CATALOG-PDP-001
+latest_verified_product_close_unit: TECS-B2B-BUYER-PRICE-DISCLOSURE-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-04-27
-latest_verified_product_close_verification: 239 catalog tests PASS; TypeScript clean
+latest_verified_product_close_date: 2026-04-28
+latest_verified_product_close_verification: Slice F verification PASS (resolver/disclosure 39/39; frontend compatibility 144/144)
 latest_verified_product_close_safety_boundaries: |
   price_placeholder_only: verified
   no_dpp: verified
@@ -48,7 +48,8 @@ latest_verified_product_close_safety_boundaries: |
 latest_verified_product_close_tenant_isolation: verified
 latest_verified_product_close_human_review_required: structural constant verified
 latest_verified_product_close_commits: >-
-  Design d0bcf27, P-1 d8fec78, P-2 d8d6141, P-3 f871bcb, P-4 54fecbc
+  Design 8e84887, Slice A 26a3ed3, Slice B 4eea5da, Slice C 15d9710,
+  Slice D 35578ae, Slice D2 b4d1d48, Slice E 23c5068
 control_plane_read_order:
   - governance/control/OPEN-SET.md
   - governance/control/NEXT-ACTION.md
@@ -102,18 +103,19 @@ current_product_active_delivery_note: |
   P-5 VERIFIED: 239/239 catalog tests PASS (8 files); TypeScript tsc --noEmit CLEAN.
   Safety boundaries verified (9 boundaries). No blockers.
 latest_verified_product_close: |
-  TECS-B2B-BUYER-CATALOG-PDP-001 — VERIFIED_COMPLETE (2026-04-27).
-  Verification: 239/239 catalog tests PASS (8 test files); TypeScript tsc --noEmit CLEAN.
-  Commit chain: Design d0bcf27 + P-1 d8fec78 + P-2 d8d6141 + P-3 f871bcb + P-4 54fecbc.
-  Scope: B2B Buyer Catalog PDP — item detail view converting catalog browsing into RFQ intent.
-  Renders: item identity, media gallery (displayOrder-sorted), textile specifications (null-filtered),
-    compliance summary (APPROVED certs only), supplier summary, availability/MOQ/lead time,
-    price placeholder, RFQ entry trigger (5-field payload).
-  Safety boundaries: price_placeholder_only, no_dpp, no_relationship_access,
-    no_ai_supplier_matching, no_ai_drafts_or_confidence, no_payment_or_escrow,
-    no_public_seo_pdp, no_cert_lifecycle_mutation, rfq_auto_submit_absent — all verified.
-  Tenant isolation (org_id): verified. Cross-tenant read via texqtic_rfq_read role.
-  No blockers.
+  TECS-B2B-BUYER-PRICE-DISCLOSURE-001 — VERIFIED_COMPLETE (2026-04-28).
+  Verification (Slice F): resolver/disclosure tests 39/39 PASS; buyer PDP/frontend compatibility tests 144/144 PASS.
+  Commit chain: Design 8e84887 + Slice A 26a3ed3 + Slice B 4eea5da + Slice C 15d9710 +
+    Slice D 35578ae + Slice D2 b4d1d48 + Slice E 23c5068.
+  Scope: controlled buyer PDP price disclosure metadata across resolver, API shaping, policy source,
+    persistent policy storage, and eligibility/tenant isolation hardening tests.
+  Anti-leakage: suppressed states verified with no price-like keys and no policy internals in serialized payloads.
+  D2 migration verification: server/prisma/migrations/20260428103000_price_disclosure_policy_storage_d2/migration.sql
+    contains additive-only policy columns (catalog_items + organizations).
+  Known limitations preserved: migration pending by environment until authorized apply path; historical
+    Prisma migrate-dev shadow replay blocker remains out of scope for this unit.
+  Next recommended authorization (not opened): TECS-B2B-BUYER-RFQ-INTEGRATION-001 — DESIGN PLAN ARTIFACT.
+  No blockers for closure.
 prior_latest_verified_product_close: |
   TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
   Verification: 237/237 tests PASS.
