@@ -163,7 +163,8 @@ export type RfqPrefillFailureReason =
   | 'SUPPLIER_NOT_AVAILABLE'
   | 'TENANT_SCOPE_DENIED'
   | 'ELIGIBILITY_REQUIRED'
-  | 'RFQ_PREFILL_NOT_AVAILABLE';
+  | 'RFQ_PREFILL_NOT_AVAILABLE'
+  | 'RELATIONSHIP_GATE_DENIED';
 
 export interface CatalogRfqPrefillContext {
   itemId: string;

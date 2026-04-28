@@ -678,3 +678,42 @@ export function evaluateBuyerRelationshipPriceEligibility(input: {
 
   return { isEligible: decision.canViewRelationshipOnlyPrices };
 }
+
+/**
+ * Evaluate whether the buyer's relationship state grants eligibility to submit
+ * an RFQ to this supplier.
+ *
+ * OPEN_TO_ALL (default): all authenticated buyers may submit RFQs.
+ *   Only BLOCKED and SUSPENDED states deny in open mode (hard-stop states).
+ * APPROVED_BUYERS_ONLY: only APPROVED relationship state permits RFQ submission.
+ *   All other states (NONE, REQUESTED, REJECTED, EXPIRED, REVOKED, BLOCKED, SUSPENDED)
+ *   are denied (fail-safe default).
+ *
+ * Defaults to OPEN_TO_ALL if rfqAcceptanceMode is not provided (launch-safe,
+ * preserves existing behavior until supplier policy is persisted).
+ *
+ * Input trust model:
+ *   - relationshipState MUST be server-resolved from storage; clients cannot supply it.
+ *   - buyerOrgId MUST come from the authenticated session context.
+ *   - supplierOrgId MUST come from trusted catalog/item server-side context.
+ *   - rfqAcceptanceMode MUST come from trusted supplier policy storage, not client input.
+ */
+export function evaluateBuyerRelationshipRfqEligibility(input: {
+  buyerOrgId: string | null;
+  supplierOrgId: string | null;
+  relationshipState?: unknown;
+  relationshipExpiresAt?: Date | string | null;
+  rfqAcceptanceMode?: unknown;
+  now?: string | Date;
+}): { canSubmit: boolean; clientSafeReason: ClientSafeReason } {
+  const decision = evaluateBuyerSupplierRelationshipAccess({
+    buyerOrgId: input.buyerOrgId,
+    supplierOrgId: input.supplierOrgId,
+    relationshipState: (input.relationshipState ?? 'NONE') as RelationshipState,
+    relationshipExpiresAt: input.relationshipExpiresAt ?? null,
+    rfqAcceptanceMode: input.rfqAcceptanceMode as RfqAcceptanceMode | undefined,
+    now: input.now,
+  });
+
+  return { canSubmit: decision.canSubmitRfq, clientSafeReason: decision.clientSafeReason };
+}

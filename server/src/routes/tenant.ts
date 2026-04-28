@@ -49,6 +49,7 @@ import { buildCatalogRfqPrefillContext } from '../services/pricing/rfqPrefillCon
 import {
   evaluateBuyerCatalogVisibility,
   evaluateBuyerRelationshipPriceEligibility,
+  evaluateBuyerRelationshipRfqEligibility,
   filterBuyerVisibleCatalogItems,
 } from '../services/relationshipAccess.service.js';
 import { getRelationshipOrNone } from '../services/relationshipAccessStorage.service.js';
@@ -4675,6 +4676,20 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         continue;
       }
 
+      // Slice F: Relationship gate — deny if buyer's relationship does not satisfy
+      // the supplier's rfqAcceptanceMode policy (defaults to OPEN_TO_ALL).
+      const rfqGateRel = await getRelationshipOrNone(draft.supplierOrgId, dbContext.orgId);
+      const rfqGate = evaluateBuyerRelationshipRfqEligibility({
+        buyerOrgId: dbContext.orgId,
+        supplierOrgId: draft.supplierOrgId,
+        relationshipState: rfqGateRel.state,
+        relationshipExpiresAt: rfqGateRel.expiresAt,
+      });
+      if (!rfqGate.canSubmit) {
+        blockedLines.push({ draft_id: draft.id, reason: 'RELATIONSHIP_GATE_DENIED' });
+        continue;
+      }
+
       resolvedPerDraft.set(draft.id, resolved);
     }
 
@@ -4917,6 +4932,19 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
     if (prefill.context.priceVisibilityState === 'HIDDEN') {
       return sendSuccess(reply, { ok: false, reason: 'RFQ_PREFILL_NOT_AVAILABLE' } satisfies CatalogRfqPrefillResult);
+    }
+
+    // Slice F: Relationship gate — deny RFQ submit if buyer's relationship does not
+    // satisfy the supplier's rfqAcceptanceMode policy (defaults to OPEN_TO_ALL).
+    const rfqGateRelationship = await getRelationshipOrNone(draft.supplierOrgId, dbContext.orgId);
+    const rfqGate = evaluateBuyerRelationshipRfqEligibility({
+      buyerOrgId: dbContext.orgId,
+      supplierOrgId: draft.supplierOrgId,
+      relationshipState: rfqGateRelationship.state,
+      relationshipExpiresAt: rfqGateRelationship.expiresAt,
+    });
+    if (!rfqGate.canSubmit) {
+      return sendSuccess(reply, { ok: false, reason: 'RELATIONSHIP_GATE_DENIED' } satisfies CatalogRfqPrefillResult);
     }
 
     const result = await withDbContext(prisma, dbContext, async tx => {
