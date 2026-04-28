@@ -5,6 +5,64 @@
 
 ---
 
+## 2026-04-28 — CLOSED: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001
+
+```
+Unit:          TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-28
+Verification:  204/204 relationship tests PASS (8 files); 25/25 catalog/PDP regression;
+               93/93 RFQ regression; TypeScript tsc --noEmit CLEAN; ESLint CLEAN.
+
+Commits:
+  f62619a  Design — TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 design artifact
+  4dd1901  Slice A — access decision evaluator (pure deterministic service)
+  29ca225  Slice B — persistent relationship state storage + migration (20260510000000_buyer_supplier_relationship_storage)
+  50220e6  Slice C — supplier allowlist and approval service
+  a2f4a1a  Slice D — catalog/PDP visibility gate integration
+  78d43f1  Slice E — price disclosure RELATIONSHIP_ONLY integration
+  9af0f29  Slice F — RFQ submit relationship gate integration
+  493051b  Slice G — tenant isolation test hardening (45 isolation tests)
+  Slice H  Governance closure commit (this update)
+
+Verification Evidence:
+  ✅ 204/204 relationship service + route tests PASS (8 files)
+  ✅ 25/25 catalog/PDP regression PASS (tests/b2b-buyer-catalog-pdp.test.ts)
+  ✅ 93/93 RFQ regression PASS (3 files: rfqPrefillHandoff, rfqDraftSubmitPersistence, rfqMultiItemGrouping)
+  ✅ TypeScript tsc --noEmit CLEAN (exit 0)
+  ✅ ESLint CLEAN (exit 0, no new errors)
+  ✅ Deployed API health: https://app.texqtic.com/api/health → HTTP 200
+  ✅ Catalog (unauthenticated): 401 (auth gate preserved)
+  ✅ Allowlist/relationship-graph endpoints: 404 (not exposed — correct)
+  ✅ Anti-leakage: internalReason NOT in any route response; catalog denial = opaque 404;
+       RFQ denial = RELATIONSHIP_GATE_DENIED (client-safe); price suppression = boolean only
+  ✅ Tenant isolation: 45 isolation tests (cross-supplier, cross-buyer, null orgId, BLOCKED/REJECTED
+       indistinguishable, client-forge resistance) — all PASS
+  ✅ Schema indexes confirmed: unique compound (supplierOrgId, buyerOrgId) + individual (buyerOrgId, supplierOrgId, state)
+  ✅ Migration 20260510000000_buyer_supplier_relationship_storage confirmed applied
+  ✅ No net-new public endpoints; relationship services integrated into existing routes only
+
+Known Limitations Preserved:
+  - Durable DB audit table not implemented; Slice C audit is hook-based only
+  - Supplier dashboard / buyer access-request UI not implemented (future unit)
+  - No public allowlist/relationship APIs exposed (by design)
+  - AI supplier matching remains future (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — not opened)
+  - Local runtime probes blocked (localhost:3001 unreachable); fallback: deployed API + test evidence
+  - N+1 relationship lookup in RFQ gate for-loop: bounded by B2B batch sizes; acceptable for current scale
+
+Recommended Next Authorization (not opened):
+  TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — DESIGN PLAN ARTIFACT
+  (requires explicit Paresh authorization; do not auto-open)
+
+Governance files updated:
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-28 — CLOSED: TECS-B2B-BUYER-RFQ-INTEGRATION-001
 
 ```

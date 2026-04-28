@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; D-3 COMPLETE 87bdcfe; D-4 COMPLETE e9a8b3a; D-5 COMPLETE b7fa9bb; D-6 ACTIVE)
+**Updated:** 2026-04-28 (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — VERIFIED_COMPLETE; Slices A–H; 204/204 tests PASS; governance closure commit TBD)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -31,27 +31,29 @@ current_open_design_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-B2B-BUYER-RFQ-INTEGRATION-001
+latest_verified_product_close_unit: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-04-28 (Slice G closure)
-latest_verified_product_close_verification: Slice G verification PASS (targeted RFQ suites 108/108; runtime API probe partially blocked)
+latest_verified_product_close_date: 2026-04-28 (Slice H governance closure)
+latest_verified_product_close_verification: >-
+  Slices A–H PASS — 204/204 relationship tests (8 files); 25/25 catalog/PDP regression;
+  93/93 RFQ regression; TypeScript clean (exit 0); ESLint clean (exit 0).
+  Deployed API health 200; catalog (unauth) 401; allowlist endpoints 404.
+  Anti-leakage verified; tenant isolation verified; performance index confirmed.
 latest_verified_product_close_safety_boundaries: |
-  explicit_action_only_prefill_draft_submit: verified
-  no_rfq_creation_from_pdp_render: verified (test evidence)
-  no_hidden_price_or_policy_leakage: verified
-  submit_only_supplier_notification_boundary: verified
-  no_external_notification_delivery: preserved
-  no_relationship_access: verified
-  no_ai_supplier_matching: verified
-  no_payment_or_escrow: verified
-  no_dpp_behavior_change: verified
-  multi_item_supplier_group_isolation: verified
-latest_verified_product_close_tenant_isolation: verified
-latest_verified_product_close_human_review_required: not applicable to RFQ closure scope
+  internalReason_not_in_route_responses: verified
+  catalog_denial_opaque_not_found: verified (sendNotFound)
+  rfq_denial_client_safe_reason: verified (RELATIONSHIP_GATE_DENIED)
+  price_suppression_boolean_only: verified (isEligible boolean, no raw state)
+  allowlist_graph_not_exposed: verified (404 on all graph endpoints)
+  tenant_isolation_org_id_scoping: verified (45 isolation tests PASS)
+  cross_tenant_access_denied: verified
+  client_forge_resistance: verified (11 forge-resistance tests PASS)
+latest_verified_product_close_tenant_isolation: verified (45-test isolation harness: cross-supplier, cross-buyer, BLOCKED/REJECTED indistinguishable, client-forge resistance)
+latest_verified_product_close_human_review_required: not applicable to relationship-access evaluator scope (no human approval mutations in this unit)
 latest_verified_product_close_commits: >-
-  Design 1332797, Slice A f444443, Slice B 5715da4, Slice C b1d78a3,
-  Slice D bb6947d, Slice E 852fc55, Slice F 72234c6,
-  Slice G governance closure (this update)
+  Design f62619a, Slice A 4dd1901, Slice B 29ca225, Slice C 50220e6,
+  Slice D a2f4a1a, Slice E 78d43f1, Slice F 9af0f29, Slice G 493051b,
+  Slice H governance closure (this update)
 control_plane_read_order:
   - governance/control/OPEN-SET.md
   - governance/control/NEXT-ACTION.md

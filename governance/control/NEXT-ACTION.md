@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; D-3 COMPLETE 87bdcfe; D-4 COMPLETE e9a8b3a; D-5 COMPLETE b7fa9bb; D-6 ACTIVE)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-28 (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — VERIFIED_COMPLETE; Slices A–H; 204/204 tests PASS; governance closure commit TBD)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -28,41 +28,41 @@ active_delivery_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-last_closed_unit: TECS-B2B-BUYER-RFQ-INTEGRATION-001
+last_closed_unit: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001
 last_closed_unit_status: VERIFIED_COMPLETE
-last_closed_unit_runtime_verdict: Slice G verification PASS — targeted RFQ suites 108/108; runtime API probe partially blocked (localhost:3001 unavailable)
+last_closed_unit_runtime_verdict: >-
+  Slices A–H PASS — 204/204 relationship service/route tests; 25/25 catalog/PDP regression;
+  93/93 RFQ regression; TypeScript clean; ESLint clean; deployed API health 200;
+  anti-leakage and tenant isolation verified.
 last_closed_unit_commits: >-
-  Design 1332797 — TECS-B2B-BUYER-RFQ-INTEGRATION-001 design artifact.
-  Slice A f444443 — RFQ prefill contract/context builder.
-  Slice B 5715da4 — PDP single-item prefill handoff.
-  Slice C b1d78a3 — RFQ draft/submit persistence alignment.
-  Slice D bb6947d — multi-item RFQ grouping and supplier mapping.
-  Slice E 852fc55 — buyer/supplier tenant isolation tests.
-  Slice F 72234c6 — supplier notification boundary.
-  Slice G — governance closure commit (this closure update).
+  Design f62619a — TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 design artifact.
+  Slice A 4dd1901 — access decision evaluator (pure deterministic service).
+  Slice B 29ca225 — persistent relationship state storage + migration.
+  Slice C 50220e6 — supplier allowlist and approval service.
+  Slice D a2f4a1a — catalog/PDP visibility gate integration.
+  Slice E 78d43f1 — price disclosure RELATIONSHIP_ONLY integration.
+  Slice F 9af0f29 — RFQ submit relationship gate integration.
+  Slice G 493051b — tenant isolation test hardening (45 isolation tests).
+  Slice H — governance closure commit (this update).
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (Slice G closure).
-  Verification: targeted RFQ suites PASS (108/108 tests) across Slice A prefill builder,
-  Slice B prefill handoff, Slice C draft/submit, Slice D multi-item grouping,
-  Slice E tenant isolation, Slice F notification boundary.
-  Targeted lint PASS on RFQ route/boundary/test files.
-  Anti-leakage and tenant isolation evidence preserved through route-level assertions.
-  Supplier notification boundary verified submit-only and internal adapter scoped.
-  Runtime/API limitation: localhost health/API probe blocked (server unreachable in session).
-  Prisma/migration range check: no RFQ schema or migration changes in Slice A-F commit window.
-  Known risk preserved: legacy OPEN route remains follow-up governance risk;
-  historical Prisma shadow-replay blocker remains out of RFQ scope.
+  VERIFIED_COMPLETE (Slice H governance closure).
+  Verification: 204/204 relationship tests PASS (8 files: relationshipAccess,
+  relationshipAllowlist, relationshipAccessStorage service tests + route tests).
+  Catalog/PDP regression: 25/25 PASS. RFQ regression: 93/93 PASS.
+  TypeScript tsc --noEmit: exit 0 (CLEAN). ESLint: exit 0 (CLEAN).
+  Deployed API health: HTTP 200. Catalog (unauth): 401. Allowlist endpoints: 404 (not exposed).
+  Anti-leakage: internalReason absent from all route responses; opaque denials confirmed.
+  Performance: unique compound index confirmed; N+1 bounded by B2B batch size.
+  Known limitations: audit hook-based only; no supplier UI; local runtime blocked.
   No blockers for closure under current governance evidence.
-prior_closed_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
+prior_closed_unit: TECS-B2B-BUYER-RFQ-INTEGRATION-001
 prior_closed_unit_status: VERIFIED_COMPLETE
-prior_closed_unit_runtime_verdict: 237/237 tests PASS
+prior_closed_unit_runtime_verdict: Slice G verification PASS — targeted RFQ suites 108/108; runtime API probe partially blocked (localhost:3001 unavailable)
 prior_closed_unit_commits: >-
-  K-1 de5cf10 (Document intake + type classification).
-  K-2 cef8afb (Extraction service — prompt builder, parser, confidence helpers).
-  K-3 23fb727 (Backend extraction route + tests).
-  K-4 c96d153 (Frontend DocumentIntelligenceCard panel + 80 tests).
-  K-5 c9cbf8c (Review submission + approve/reject workflow + 17 tests).
-adjacent_deferred_candidate: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open)
+  Design 1332797, Slice A f444443, Slice B 5715da4, Slice C b1d78a3,
+  Slice D bb6947d, Slice E 852fc55, Slice F 72234c6,
+  Slice G governance closure 46d1f30.
+adjacent_deferred_candidate: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open)
 d015_reconciliation: COMPLETE
 d016_posture: CLOSED — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27);
   237/237 PASS; K-1 de5cf10; K-2 cef8afb; K-3 23fb727; K-4 c96d153; K-5 c9cbf8c;

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 — IMPLEMENTATION_ACTIVE; D-1 COMPLETE e524b0a; D-2 COMPLETE 8a14242; D-3 COMPLETE 87bdcfe; D-4 COMPLETE e9a8b3a; D-5 COMPLETE b7fa9bb; D-6 ACTIVE — TECS-DPP-PUBLIC-QR-001 public published passport access)
+**Last Updated:** 2026-04-28 (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — VERIFIED_COMPLETE; Slices A–H complete; 204/204 relationship tests PASS; governance closure commit TBD)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -54,6 +54,24 @@
 ## Operating Notes
 
 - Governing posture: `HOLD-FOR-BOUNDARY-TIGHTENING` remains in effect.
+- TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 is VERIFIED_COMPLETE (2026-04-28).
+  Design commit: f62619a.
+  Implementation chain: Slice A 4dd1901, Slice B 29ca225, Slice C 50220e6,
+    Slice D a2f4a1a, Slice E 78d43f1, Slice F 9af0f29, Slice G 493051b.
+  Verification evidence:
+    204/204 relationship tests PASS (8 test files: 4 service, 4 route);
+    25/25 catalog/PDP regression PASS; 93/93 RFQ regression PASS;
+    TypeScript tsc --noEmit CLEAN; ESLint CLEAN.
+    Deployed API health: HTTP 200. Catalog (unauth): 401. Allowlist endpoints: 404 (not exposed).
+    Anti-leakage: internalReason NOT in any route response; denials are opaque (404/GATE_DENIED).
+    Performance: unique compound index (supplierOrgId, buyerOrgId) confirmed; N+1 in RFQ gate bounded by B2B batch sizes.
+  Known limitations preserved:
+    Durable DB audit table not implemented; Slice C audit is hook-based only.
+    Supplier dashboard / buyer access-request UI not implemented.
+    No public allowlist/relationship APIs exposed.
+    AI supplier matching remains future.
+    Local runtime probes blocked (localhost:3001 unreachable); fallback: deployed API + test evidence.
+  Next recommended authorization (not opened): TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open).
 - TECS-B2B-BUYER-RFQ-INTEGRATION-001 is VERIFIED_COMPLETE (Slice G closure).
   Design commit: 1332797.
   Implementation chain: Slice A f444443, Slice B 5715da4, Slice C b1d78a3,
@@ -64,7 +82,7 @@
   Closure limitations preserved: supplier notification is internal boundary/log adapter only;
     legacy OPEN route remains follow-up governance risk; local runtime API probe was partially blocked
     in-session (localhost:3001 unreachable); historical Prisma shadow replay blocker remains out of scope.
-  Next recommended authorization (not opened): TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — DESIGN PLAN ARTIFACT.
+  Subsequently opened and VERIFIED_COMPLETE (2026-04-28). See TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 entry above.
 - TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
   Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
   All static gates passed. Runtime API checks pending production verification.
