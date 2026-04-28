@@ -40,6 +40,7 @@ import { computeTotals, TotalsInputError } from '../services/pricing/totals.serv
 import {
   attachPriceDisclosureToPdpView,
   type BuyerCatalogPdpViewBase,
+  resolveSupplierDisclosurePolicyForPdp,
 } from '../services/pricing/pdpPriceDisclosure.service.js';
 import { sendInviteMemberEmail, type EmailDispatchOutcome } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
@@ -2129,6 +2130,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       type RawPdpItemRow = {
         id: string; tenant_id: string; name: string; sku: string | null;
         description: string | null; moq: number; image_url: string | null;
+        publication_posture: string;
         product_category: string | null; fabric_type: string | null; gsm: unknown;
         material: string | null; composition: string | null; color: string | null;
         width_cm: unknown; construction: string | null; certifications: unknown;
@@ -2138,7 +2140,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const itemRows = await prisma.$transaction(async tx => {
         await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
         return tx.$queryRaw<RawPdpItemRow[]>`
-          SELECT id, tenant_id, name, sku, description, moq, image_url,
+           SELECT id, tenant_id, name, sku, description, moq, image_url,
+             publication_posture,
                  product_category, fabric_type, gsm, material, composition,
                  color, width_cm, construction, certifications, catalog_stage
           FROM catalog_items
@@ -2156,7 +2159,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const supplierTenantId = item.tenant_id;
 
       // Step 2: Supplier org eligibility + display name (admin context — organizations RLS)
-      type SupplierOrgData = { legalName: string } | null;
+      type SupplierOrgData = {
+        legalName: string;
+        publicationPosture: string;
+      } | null;
       const supplierData: SupplierOrgData = await withOrgAdminContext(prisma, async tx => {
         const [org, tenant] = await Promise.all([
           tx.organizations.findUnique({
@@ -2177,7 +2183,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           (tenant.publicEligibilityPosture as string) === 'PUBLICATION_ELIGIBLE';
 
         if (!postureEligible || !tenantEligible) return null;
-        return { legalName: org.legal_name };
+        return {
+          legalName: org.legal_name,
+          publicationPosture: org.publication_posture,
+        };
       });
 
       if (!supplierData) {
@@ -2281,6 +2290,14 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       };
 
+      const supplierPolicy = resolveSupplierDisclosurePolicyForPdp({
+        buyerOrgId: request.dbContext.orgId,
+        supplierOrgId: supplierTenantId,
+        // Existing publication posture is not explicit price-policy authority.
+        productPublicationPosture: item.publication_posture,
+        supplierPublicationPosture: supplierData.publicationPosture,
+      });
+
       const view: BuyerCatalogPdpView = attachPriceDisclosureToPdpView(baseView, {
         buyer: {
           isAuthenticated: true,
@@ -2289,8 +2306,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           buyerOrgId: request.dbContext.orgId,
           supplierOrgId: supplierTenantId,
         },
-        // No persistent supplier policy source in Slice B; resolver safe-defaults to suppression.
-        supplierPolicy: null,
+        supplierPolicy,
       });
 
       return sendSuccess(reply, view);

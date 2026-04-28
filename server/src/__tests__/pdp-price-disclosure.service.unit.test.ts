@@ -4,6 +4,7 @@ import type { BuyerCatalogPdpView } from '../types/index.js';
 import * as resolverModule from '../services/pricing/priceDisclosureResolver.service.js';
 import {
   attachPriceDisclosureToPdpView,
+  resolveSupplierDisclosurePolicyForPdp,
   type BuyerCatalogPdpViewBase,
 } from '../services/pricing/pdpPriceDisclosure.service.js';
 
@@ -81,6 +82,85 @@ function assertForbiddenPriceKeysAbsent(serialized: string) {
   expect(serialized).not.toMatch(/"supplierPrice"\s*:/i);
   expect(serialized).not.toMatch(/"negotiatedPrice"\s*:/i);
 }
+
+describe('resolveSupplierDisclosurePolicyForPdp', () => {
+  it('returns null safe default when no source signals are available', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('prefers product-level policy mode over supplier-level mode', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      productPolicyMode: 'RFQ_ONLY',
+      supplierPolicyMode: 'HIDDEN_ALL',
+    });
+
+    expect(result).toEqual({
+      mode: 'RFQ_ONLY',
+      source: 'PRODUCT_OVERRIDE',
+    });
+  });
+
+  it('uses supplier-level policy mode when product-level mode is missing', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'HIDDEN_ALL',
+    });
+
+    expect(result).toEqual({
+      mode: 'HIDDEN_ALL',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('returns null when policy mode is unknown or ambiguous', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'NOT_A_POLICY',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('treats publication posture as ambiguous and does not map it to price policy', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      productPublicationPosture: 'B2B_PUBLIC',
+      supplierPublicationPosture: 'BOTH',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when tenant context is cross-org', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-001',
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when tenant context is missing', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: null,
+      supplierOrgId: 'supplier-org-001',
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toBeNull();
+  });
+});
 
 describe('attachPriceDisclosureToPdpView', () => {
   it('includes priceDisclosure metadata with safe default when no supplier policy exists', () => {
