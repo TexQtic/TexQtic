@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
 import { z } from 'zod';
 
@@ -25,15 +25,15 @@ type DraftRecord = {
 
 type TxLike = {
   rfq: {
-    create: ReturnType<typeof vi.fn>;
-    findFirst: ReturnType<typeof vi.fn>;
-    update: ReturnType<typeof vi.fn>;
+    create: Mock<(args: { data: Record<string, unknown> }) => Promise<DraftRecord>>;
+    findFirst: Mock<(args: { where: { id: string; orgId: string } }) => Promise<DraftRecord | null>>;
+    update: Mock<(args: { where: { id: string }; data: { status: DraftStatus } }) => Promise<DraftRecord>>;
   };
   rfqSupplierResponse: {
-    create: ReturnType<typeof vi.fn>;
+    create: Mock;
   };
   trade: {
-    create: ReturnType<typeof vi.fn>;
+    create: Mock;
   };
 };
 
@@ -270,7 +270,7 @@ async function buildTestApp(authenticated = true, orgId = TEST_ORG_ID): Promise<
         },
       });
 
-      await writeAuditLog(tx, {
+      await writeAuditLog(tx as never, {
         action: 'rfq.RFQ_DRAFT_CREATED',
         entityId: saved.id,
       } as never);
@@ -350,7 +350,7 @@ async function buildTestApp(authenticated = true, orgId = TEST_ORG_ID): Promise<
 
     const result = await withDbContext({} as never, req.dbContext as never, async (tx: TxLike) => {
       const saved = await tx.rfq.update({ where: { id: draft.id }, data: { status: 'OPEN' } });
-      await writeAuditLog(tx, { action: 'rfq.RFQ_SUBMITTED', entityId: saved.id } as never);
+      await writeAuditLog(tx as never, { action: 'rfq.RFQ_SUBMITTED', entityId: saved.id } as never);
 
       return {
         rfq: {

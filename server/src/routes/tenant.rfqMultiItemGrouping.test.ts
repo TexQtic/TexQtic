@@ -53,6 +53,12 @@ type TestReqExtras = {
   supplierContext?: { orgId: string };
 };
 
+type GroupedLineItem = {
+  draft_id: string;
+  catalog_item_id: string;
+  [key: string]: unknown;
+};
+
 const notifySupplier = vi.fn();
 const createTradeFromRfq = vi.fn();
 
@@ -67,8 +73,8 @@ function localSendSuccess(reply: FastifyReply, data: unknown, status = 200) {
   return reply.status(status).send({ success: true, data });
 }
 
-function groupBySupplier(lines: Array<{ supplier_org_id: string; line: Record<string, unknown> }>) {
-  const map = new Map<string, Array<Record<string, unknown>>>();
+function groupBySupplier(lines: Array<{ supplier_org_id: string; line: GroupedLineItem }>) {
+  const map = new Map<string, GroupedLineItem[]>();
   for (const row of lines) {
     const existing = map.get(row.supplier_org_id);
     if (existing) {
@@ -82,11 +88,7 @@ function groupBySupplier(lines: Array<{ supplier_org_id: string; line: Record<st
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([supplier_org_id, line_items]) => ({
       supplier_org_id,
-      line_items: line_items.toSorted((a, b) => {
-        const aId = typeof a.catalog_item_id === 'string' ? a.catalog_item_id : '';
-        const bId = typeof b.catalog_item_id === 'string' ? b.catalog_item_id : '';
-        return aId.localeCompare(bId);
-      }),
+      line_items: [...line_items].sort((a: GroupedLineItem, b: GroupedLineItem) => a.catalog_item_id.localeCompare(b.catalog_item_id)),
     }));
 }
 
@@ -242,7 +244,7 @@ async function buildTestApp(options?: {
       });
     }
 
-    const groupedLines: Array<{ supplier_org_id: string; line: Record<string, unknown> }> = [];
+    const groupedLines: Array<{ supplier_org_id: string; line: GroupedLineItem }> = [];
     for (const row of valid) {
       const id = makeId();
       drafts.set(id, {
@@ -322,8 +324,8 @@ async function buildTestApp(options?: {
     }
 
     const blocked: Array<{ draft_id: string; reason: string }> = [];
-    const lines: Array<{ supplier_org_id: string; line: Record<string, unknown> }> = [];
-    const transitionedLines: Array<{ supplier_org_id: string; line: Record<string, unknown> }> = [];
+    const lines: Array<{ supplier_org_id: string; line: GroupedLineItem }> = [];
+    const transitionedLines: Array<{ supplier_org_id: string; line: GroupedLineItem }> = [];
     for (const draft of selected) {
       const resolved = await resolveDraftContext({ buyerOrgId: req.dbContext.orgId, catalogItemId: draft.catalogItemId });
       if (!resolved.ok) {
@@ -390,11 +392,12 @@ async function buildTestApp(options?: {
       });
     }
 
+    const dbContext = req.dbContext;
     const notificationGroups = groupBySupplier(transitionedLines).map(group => ({
       trigger: 'EXPLICIT_SUBMIT_ONLY',
       supplier_org_id: group.supplier_org_id,
-      buyer_org_id: req.dbContext.orgId,
-      rfq_ids: group.line_items.map(item => item.draft_id),
+      buyer_org_id: dbContext.orgId,
+      rfq_ids: group.line_items.map((item: GroupedLineItem) => item.draft_id),
       line_items: group.line_items,
     }));
 
@@ -404,7 +407,7 @@ async function buildTestApp(options?: {
 
     return localSendSuccess(reply, {
       status: 'OPEN',
-      buyer_org_id: req.dbContext.orgId,
+      buyer_org_id: dbContext.orgId,
       supplier_group_count: new Set(lines.map(r => r.supplier_org_id)).size,
       draft_count: lines.length,
       supplier_groups: groupBySupplier(lines),
@@ -869,9 +872,11 @@ describe('Slice D multi-item grouping and supplier mapping', () => {
     await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds } });
     expect(built.notifySupplier).toHaveBeenCalledTimes(2);
 
-    const supplierIds = built.notifySupplier.mock.calls.map(call => call[0]?.supplier_org_id);
-    const sortedSupplierIds = supplierIds.toSorted((a, b) => String(a).localeCompare(String(b)));
-    const expectedSupplierIds = [SUPPLIER_1, SUPPLIER_2].toSorted((a, b) => a.localeCompare(b));
+    const supplierIds = built.notifySupplier.mock.calls
+      .map(call => call[0]?.supplier_org_id)
+      .filter((id): id is string => typeof id === 'string');
+    const sortedSupplierIds = [...supplierIds].sort((a, b) => a.localeCompare(b));
+    const expectedSupplierIds = [SUPPLIER_1, SUPPLIER_2].slice().sort((a, b) => a.localeCompare(b));
     expect(sortedSupplierIds).toEqual(expectedSupplierIds);
   });
 

@@ -73,12 +73,7 @@ import {
   parseDocumentExtractionOutput,
   ExtractionParseError,
   EXTRACTED_FIELD_NAMES,
-  EXTRACTION_FORBIDDEN_KEYS,
-  SYSTEM_ONLY_FIELD_NAMES,
-  CONFIDENCE_THRESHOLD_HIGH,
-  CONFIDENCE_THRESHOLD_MEDIUM,
   type ExtractedField,
-  type DocumentExtractionDraft,
 } from '../documentExtractionService.js';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────

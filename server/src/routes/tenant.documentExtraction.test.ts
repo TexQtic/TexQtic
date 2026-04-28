@@ -205,6 +205,7 @@ const DEFAULT_PARSED_DRAFT = {
       raw_value: 'TX-2026-001',
       normalized_value: 'TX-2026-001',
       confidence: 0.95,
+      source_region: null,
       flagged_for_review: false,
     },
   ],
@@ -213,6 +214,8 @@ const DEFAULT_PARSED_DRAFT = {
   status: 'draft' as const,
   extractionNotes: null,
   extractedAt: '2026-05-05T00:00:00.000Z',
+  reviewedAt: null,
+  reviewedByUserId: null,
 };
 
 // ── Helper types ──────────────────────────────────────────────────────────────
@@ -300,7 +303,6 @@ async function buildTestApp(authenticated = true): Promise<FastifyInstance> {
       return localSendValidationError(reply, [{ path: ['documentText'], message: 'Must be at most 50000 characters' }]);
     }
 
-    const documentTitle = typeof body.documentTitle === 'string' ? body.documentTitle : undefined;
     const bodyDocumentType = typeof body.documentType === 'string' ? body.documentType : undefined;
 
     // D-017-A: orgId always from dbContext
@@ -664,8 +666,13 @@ describe('POST /tenant/documents/:documentId/extract', () => {
 
   it('K-R10: returns 429 when budget enforcement throws BudgetExceededError', async () => {
     // Make withDbContext throw BudgetExceededError
-    mockWithDbContext.mockImplementation(async (_p, _ctx, cb) => {
-      const budgetErr = new BudgetExceededError('Monthly AI budget exceeded for this tenant');
+    mockWithDbContext.mockImplementation(async () => {
+      const budgetErr = new BudgetExceededError(
+        TEST_ORG_ID,
+        { tokens: 50_000, cost: 100 },
+        { tokens: 50_100, cost: 100.2 },
+        '2026-06-01T00:00:00.000Z',
+      );
       throw budgetErr;
     });
 

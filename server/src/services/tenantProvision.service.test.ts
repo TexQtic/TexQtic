@@ -233,6 +233,9 @@ describe('tenantProvision.service', () => {
         aggregator_capability: true,
         white_label_capability: true,
         commercial_plan: 'ENTERPRISE',
+        primary_segment_key: null,
+        secondary_segment_keys: [],
+        role_position_keys: [],
       },
       {
         requestId: 'req-2',

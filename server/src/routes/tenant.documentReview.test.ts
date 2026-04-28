@@ -514,6 +514,7 @@ describe('POST /tenant/documents/:documentId/extraction/review', () => {
     );
     expect(expiryField).toBeDefined();
     expect(expiryField.reviewer_edited).toBeUndefined();
+    expect(capturedUpdateData).not.toBeNull();
   });
 
   // ── K-RV06: reject does not apply field overrides ────────────────────────────
@@ -639,20 +640,19 @@ describe('POST /tenant/documents/:documentId/extraction/review', () => {
       ([, opts]) => (opts as { action: string }).action === 'document.extraction.reviewed',
     );
     expect(reviewAuditCall).toBeDefined();
-    const auditOpts = reviewAuditCall![1] as {
-      metadataJson: {
-        reviewAction: string;
-        fieldOverrideCount: number;
-        humanReviewRequired: boolean;
-        previousStatus: string;
-        nextStatus: string;
-      };
-    };
-    expect(auditOpts.metadataJson.reviewAction).toBe('approve');
-    expect(auditOpts.metadataJson.fieldOverrideCount).toBe(1);
-    expect(auditOpts.metadataJson.humanReviewRequired).toBe(true);
-    expect(auditOpts.metadataJson.previousStatus).toBe('draft');
-    expect(auditOpts.metadataJson.nextStatus).toBe('reviewed');
+    if (!reviewAuditCall) {
+      throw new Error('Expected document.extraction.reviewed audit call');
+    }
+    const metadataJson = (reviewAuditCall[1] as { metadataJson?: unknown }).metadataJson;
+    if (!metadataJson || typeof metadataJson !== 'object' || Array.isArray(metadataJson)) {
+      throw new Error('Expected metadataJson object on audit call');
+    }
+    const metadata = metadataJson as Record<string, unknown>;
+    expect(metadata.reviewAction).toBe('approve');
+    expect(metadata.fieldOverrideCount).toBe(1);
+    expect(metadata.humanReviewRequired).toBe(true);
+    expect(metadata.previousStatus).toBe('draft');
+    expect(metadata.nextStatus).toBe('reviewed');
   });
 
   // ── K-RV12: humanReviewRequired: true preserved ──────────────────────────────
