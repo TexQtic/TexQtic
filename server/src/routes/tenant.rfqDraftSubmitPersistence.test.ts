@@ -94,6 +94,7 @@ const mockResolvePolicy = vi.mocked(resolveSupplierDisclosurePolicyForPdp);
 const mockBuildDisclosure = vi.mocked(buildPdpDisclosureMetadata);
 const mockBuildPrefill = vi.mocked(buildCatalogRfqPrefillContext);
 const mockWriteAuditLog = vi.mocked(writeAuditLog);
+const notifySupplierBoundary = vi.fn();
 
 type TestReqExtras = {
   userId?: string;
@@ -360,8 +361,26 @@ async function buildTestApp(authenticated = true, orgId = TEST_ORG_ID): Promise<
           price_visibility_state: prefill.context.priceVisibilityState,
         },
         idempotent: false,
-        submit_boundary: { supplier_visible: true, notified: false, quote_generated: false },
+        submit_boundary: { supplier_visible: true, notified: true, quote_generated: false },
       };
+    });
+
+    notifySupplierBoundary({
+      trigger: 'EXPLICIT_SUBMIT_ONLY',
+      supplier_org_id: result.rfq.supplier_org_id,
+      buyer_org_id: buyerOrgId,
+      rfq_ids: [result.rfq.id],
+      line_items: [
+        {
+          rfq_id: result.rfq.id,
+          catalog_item_id: result.rfq.catalog_item_id,
+          item_id: prefill.context.itemId,
+          product_name: prefill.context.productName,
+          quantity: draft.quantity,
+          price_visibility_state: prefill.context.priceVisibilityState,
+          rfq_entry_reason: prefill.context.rfqEntryReason ?? null,
+        },
+      ],
     });
 
     return localSendSuccess(reply, result);
@@ -621,6 +640,7 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
     expect(res.statusCode).toBe(200);
     expect(body.data.rfq.status).toBe('OPEN');
     expect(tx.rfq.update).toHaveBeenCalledTimes(1);
+    expect(notifySupplierBoundary).toHaveBeenCalledTimes(1);
   });
 
   it('C-R12: buyer cannot submit another org draft', async () => {
@@ -643,6 +663,7 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
     expect(body.data.ok).toBe(false);
     expect(body.data.reason).toBe('ELIGIBILITY_REQUIRED');
     expect(tx.rfq.update).not.toHaveBeenCalled();
+    expect(notifySupplierBoundary).not.toHaveBeenCalled();
   });
 
   it('C-R14: HIDDEN fails safe on submit', async () => {
@@ -656,6 +677,7 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
     expect(body.data.ok).toBe(false);
     expect(body.data.reason).toBe('RFQ_PREFILL_NOT_AVAILABLE');
     expect(tx.rfq.update).not.toHaveBeenCalled();
+    expect(notifySupplierBoundary).not.toHaveBeenCalled();
   });
 
   it('C-R15: submit transition is idempotent for already OPEN draft', async () => {
@@ -680,6 +702,7 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
 
     expect(body.data.idempotent).toBe(true);
     expect(tx.rfq.update).not.toHaveBeenCalled();
+    expect(notifySupplierBoundary).not.toHaveBeenCalled();
   });
 
   it('C-R16: submit does not generate quote/trade', async () => {
@@ -691,12 +714,13 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
     expect(tx.trade.create).not.toHaveBeenCalled();
   });
 
-  it('C-R17: submit does not notify supplier', async () => {
+  it('C-R17: submit notifies supplier only after explicit submit', async () => {
     setupPrefillSuccess('RFQ_ONLY');
     const tx = setupDbTx();
     app = await buildTestApp();
 
     await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    expect(notifySupplierBoundary).toHaveBeenCalledTimes(1);
     expect(tx.rfqSupplierResponse.create).not.toHaveBeenCalled();
   });
 
@@ -746,6 +770,83 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
     await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
 
     expect(mockWriteAuditLog).toHaveBeenCalled();
+  });
+
+  it('F-R01: draft creation does not trigger supplier notification boundary', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx();
+    app = await buildTestApp();
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/from-catalog-item', payload: { catalogItemId: TEST_ITEM_ID } });
+    expect(notifySupplierBoundary).not.toHaveBeenCalled();
+  });
+
+  it('F-R02: failed submit does not trigger supplier notification boundary', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx({ draft: null });
+    app = await buildTestApp();
+
+    await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    expect(notifySupplierBoundary).not.toHaveBeenCalled();
+  });
+
+  it('F-R03: submit payload includes EXPLICIT_SUBMIT_ONLY trigger marker', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx();
+    app = await buildTestApp();
+
+    await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    expect(notifySupplierBoundary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        trigger: 'EXPLICIT_SUBMIT_ONLY',
+        supplier_org_id: TEST_SUPPLIER_ID,
+      }),
+    );
+  });
+
+  it('F-R04: submit notification payload excludes forbidden price and policy internals', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx();
+    app = await buildTestApp();
+
+    await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    const payload = notifySupplierBoundary.mock.calls[0]?.[0];
+    const serialized = JSON.stringify(payload);
+
+    for (const forbidden of [
+      'price_disclosure_policy_mode',
+      'supplierPolicy',
+      'policyAudit',
+      'commercialTerms',
+      'risk_score',
+      'ranking',
+      'unpublishedEvidence',
+      'aiExtractionDraft',
+    ]) {
+      expect(serialized).not.toContain(forbidden);
+    }
+  });
+
+  it('F-R05: duplicate submit does not duplicate notification boundary call', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    const tx = setupDbTx();
+    app = await buildTestApp();
+
+    await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    tx.rfq.findFirst.mockResolvedValueOnce({
+      id: TEST_DRAFT_ID,
+      orgId: TEST_ORG_ID,
+      supplierOrgId: TEST_SUPPLIER_ID,
+      catalogItemId: TEST_ITEM_ID,
+      quantity: 250,
+      buyerMessage: 'Need bulk pricing',
+      status: 'OPEN',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+
+    expect(notifySupplierBoundary).toHaveBeenCalledTimes(1);
   });
 
   it('E-R01: submit requires trusted buyer dbContext', async () => {

@@ -45,6 +45,10 @@ import {
   resolveSupplierDisclosurePolicyForPdp,
 } from '../services/pricing/pdpPriceDisclosure.service.js';
 import { buildCatalogRfqPrefillContext } from '../services/pricing/rfqPrefillContext.service.js';
+import {
+  notifySupplierRfqSubmittedGroups,
+  type SupplierRfqSubmittedNotificationGroup,
+} from '../services/rfq/supplierNotificationBoundary.service.js';
 import { sendInviteMemberEmail, type EmailDispatchOutcome } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
@@ -4589,6 +4593,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
     const result = await withDbContext(prisma, dbContext, async tx => {
       const submittedRows: Array<{ supplier_org_id: string } & MultiItemGroupedLine> = [];
+      const transitionedRows: Array<{ supplier_org_id: string } & MultiItemGroupedLine> = [];
 
       for (const draft of orderedDrafts) {
         const resolved = resolvedPerDraft.get(draft.id);
@@ -4664,6 +4669,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           price_visibility_state: resolved.context.priceVisibilityState,
           rfq_entry_reason: resolved.context.rfqEntryReason ?? null,
         });
+
+        if (draft.status !== 'OPEN') {
+          transitionedRows.push({
+            supplier_org_id: updated.supplierOrgId,
+            draft_id: updated.id,
+            catalog_item_id: updated.catalogItemId,
+            item_id: resolved.context.itemId,
+            product_name: resolved.context.productName,
+            quantity: updated.quantity,
+            spec_notes: typeof attrs?.specNotes === 'string' ? attrs.specNotes : null,
+            buyer_notes: updated.buyerMessage ?? null,
+            price_visibility_state: resolved.context.priceVisibilityState,
+            rfq_entry_reason: resolved.context.rfqEntryReason ?? null,
+          });
+        }
       }
 
       return {
@@ -4679,10 +4699,43 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           notified: false,
           quote_generated: false,
         },
+        notification_lines: transitionedRows,
       };
     });
 
-    return sendSuccess(reply, result);
+    const notificationGroups: SupplierRfqSubmittedNotificationGroup[] = groupMultiItemLinesBySupplier(result.notification_lines).map(group => ({
+      supplier_org_id: group.supplier_org_id,
+      buyer_org_id: dbContext.orgId,
+      submitted_at: new Date().toISOString(),
+      submit_group_id: result.submit_group_id,
+      trigger: 'EXPLICIT_SUBMIT_ONLY',
+      line_items: group.line_items.map(line => ({
+        rfq_id: line.draft_id,
+        catalog_item_id: line.catalog_item_id,
+        item_id: line.item_id,
+        product_name: line.product_name,
+        quantity: line.quantity,
+        price_visibility_state: line.price_visibility_state,
+        rfq_entry_reason: line.rfq_entry_reason,
+      })),
+    }));
+
+    const notificationResult = await notifySupplierRfqSubmittedGroups({
+      groups: notificationGroups,
+      logger: fastify.log,
+    });
+
+    const response = {
+      ...result,
+      submit_boundary: {
+        ...result.submit_boundary,
+        notified: notificationResult.dispatched_count > 0,
+      },
+    };
+
+    delete (response as { notification_lines?: unknown }).notification_lines;
+
+    return sendSuccess(reply, response);
   });
 
   /**
@@ -4832,6 +4885,31 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       };
     });
+
+    const notificationResult = await notifySupplierRfqSubmittedGroups({
+      groups: [
+        {
+          supplier_org_id: result.rfq.supplier_org_id,
+          buyer_org_id: dbContext.orgId,
+          submitted_at: new Date().toISOString(),
+          trigger: 'EXPLICIT_SUBMIT_ONLY',
+          line_items: [
+            {
+              rfq_id: result.rfq.id,
+              catalog_item_id: result.rfq.catalog_item_id,
+              item_id: prefill.context.itemId,
+              product_name: prefill.context.productName,
+              quantity: result.rfq.quantity,
+              price_visibility_state: prefill.context.priceVisibilityState,
+              rfq_entry_reason: prefill.context.rfqEntryReason ?? null,
+            },
+          ],
+        },
+      ],
+      logger: fastify.log,
+    });
+
+    result.submit_boundary.notified = notificationResult.dispatched_count > 0;
 
     return sendSuccess(reply, result);
   });

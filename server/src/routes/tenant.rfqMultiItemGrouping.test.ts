@@ -323,6 +323,7 @@ async function buildTestApp(options?: {
 
     const blocked: Array<{ draft_id: string; reason: string }> = [];
     const lines: Array<{ supplier_org_id: string; line: Record<string, unknown> }> = [];
+    const transitionedLines: Array<{ supplier_org_id: string; line: Record<string, unknown> }> = [];
     for (const draft of selected) {
       const resolved = await resolveDraftContext({ buyerOrgId: req.dbContext.orgId, catalogItemId: draft.catalogItemId });
       if (!resolved.ok) {
@@ -351,6 +352,19 @@ async function buildTestApp(options?: {
       if (draft.status === 'INITIATED') {
         draft.status = 'OPEN';
         drafts.set(draft.id, draft);
+
+        transitionedLines.push({
+          supplier_org_id: draft.supplierOrgId,
+          line: {
+            draft_id: draft.id,
+            catalog_item_id: draft.catalogItemId,
+            item_id: resolved.context.itemId,
+            product_name: resolved.context.productName,
+            quantity: draft.quantity,
+            price_visibility_state: resolved.context.priceVisibilityState,
+            rfq_entry_reason: resolved.context.rfqEntryReason,
+          },
+        });
       }
 
       lines.push({
@@ -376,13 +390,25 @@ async function buildTestApp(options?: {
       });
     }
 
+    const notificationGroups = groupBySupplier(transitionedLines).map(group => ({
+      trigger: 'EXPLICIT_SUBMIT_ONLY',
+      supplier_org_id: group.supplier_org_id,
+      buyer_org_id: req.dbContext.orgId,
+      rfq_ids: group.line_items.map(item => item.draft_id),
+      line_items: group.line_items,
+    }));
+
+    for (const group of notificationGroups) {
+      notifySupplier(group);
+    }
+
     return localSendSuccess(reply, {
       status: 'OPEN',
       buyer_org_id: req.dbContext.orgId,
       supplier_group_count: new Set(lines.map(r => r.supplier_org_id)).size,
       draft_count: lines.length,
       supplier_groups: groupBySupplier(lines),
-      submit_boundary: { supplier_visible: true, notified: false, quote_generated: false },
+      submit_boundary: { supplier_visible: true, notified: notificationGroups.length > 0, quote_generated: false },
     });
   });
 
@@ -607,14 +633,14 @@ describe('Slice D multi-item grouping and supplier mapping', () => {
     expect(postSubmit?.status).toBe('OPEN');
   });
 
-  it('D-R21: submit does not notify suppliers', async () => {
+  it('D-R21: submit notifies suppliers only after explicit submit', async () => {
     const built = await buildTestApp({ catalog: BASE_CATALOG });
     app = built.app;
     const createRes = await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item', payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }] } });
     const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
 
     await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [createBody.data.supplier_groups[0].line_items[0].draft_id] } });
-    expect(built.notifySupplier).not.toHaveBeenCalled();
+    expect(built.notifySupplier).toHaveBeenCalledTimes(1);
   });
 
   it('D-R22: submit does not generate quote/trade/order', async () => {
@@ -806,5 +832,96 @@ describe('Slice D multi-item grouping and supplier mapping', () => {
         expect(draftToSupplier.get(line.draft_id)).toBe(group.supplier_org_id);
       }
     }
+  });
+
+  it('F-R01: single-supplier multi-item submit emits one supplier-scoped notification group', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }, { catalogItemId: ITEM_SUP1_B }] },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
+    const draftIds = createBody.data.supplier_groups.flatMap(group => group.line_items.map(line => line.draft_id));
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds } });
+    expect(built.notifySupplier).toHaveBeenCalledTimes(1);
+    expect(built.notifySupplier).toHaveBeenCalledWith(expect.objectContaining({
+      trigger: 'EXPLICIT_SUBMIT_ONLY',
+      supplier_org_id: SUPPLIER_1,
+    }));
+  });
+
+  it('F-R02: cross-supplier submit emits separate supplier-scoped notifications', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }, { catalogItemId: ITEM_SUP2_A }] },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
+    const draftIds = createBody.data.supplier_groups.flatMap(group => group.line_items.map(line => line.draft_id));
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds } });
+    expect(built.notifySupplier).toHaveBeenCalledTimes(2);
+
+    const supplierIds = built.notifySupplier.mock.calls.map(call => call[0]?.supplier_org_id);
+    const sortedSupplierIds = supplierIds.toSorted((a, b) => String(a).localeCompare(String(b)));
+    const expectedSupplierIds = [SUPPLIER_1, SUPPLIER_2].toSorted((a, b) => a.localeCompare(b));
+    expect(sortedSupplierIds).toEqual(expectedSupplierIds);
+  });
+
+  it('F-R03: supplier notification payload stays supplier-scoped and excludes other supplier items', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }, { catalogItemId: ITEM_SUP2_A }] },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
+    const draftIds = createBody.data.supplier_groups.flatMap(group => group.line_items.map(line => line.draft_id));
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds } });
+
+    const payloadSup1 = built.notifySupplier.mock.calls.find(call => call[0]?.supplier_org_id === SUPPLIER_1)?.[0];
+    const payloadSup2 = built.notifySupplier.mock.calls.find(call => call[0]?.supplier_org_id === SUPPLIER_2)?.[0];
+
+    expect(JSON.stringify(payloadSup1)).toContain(ITEM_SUP1_A);
+    expect(JSON.stringify(payloadSup1)).not.toContain(ITEM_SUP2_A);
+    expect(JSON.stringify(payloadSup2)).toContain(ITEM_SUP2_A);
+    expect(JSON.stringify(payloadSup2)).not.toContain(ITEM_SUP1_A);
+  });
+
+  it('F-R04: idempotent duplicate submit does not duplicate notification', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }] },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
+    const draftId = createBody.data.supplier_groups[0].line_items[0].draft_id;
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [draftId] } });
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [draftId] } });
+
+    expect(built.notifySupplier).toHaveBeenCalledTimes(1);
+  });
+
+  it('F-R05: blocked submit paths do not emit notification', async () => {
+    const seeded: DraftRow[] = [{ id: '00000000-0000-4000-8000-000000000041', orgId: BUYER_ORG_ID, supplierOrgId: SUPPLIER_1, catalogItemId: ITEM_ELIGIBILITY_REQUIRED, quantity: 1, buyerMessage: null, specNotes: null, status: 'INITIATED' }];
+    const built = await buildTestApp({ catalog: BASE_CATALOG, seededDrafts: seeded });
+    app = built.app;
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [seeded[0].id] } });
+    expect(built.notifySupplier).not.toHaveBeenCalled();
   });
 });
