@@ -96,6 +96,20 @@ type RfqCatalogItemTarget = {
   catalogStage: string | null;
 };
 
+type RfqPrefillFailureReason = Extract<CatalogRfqPrefillResult, { ok: false }>['reason'];
+type RfqPrefillContextData = Extract<CatalogRfqPrefillResult, { ok: true }>['data'];
+
+type CatalogRfqDraftResolution =
+  | {
+      ok: true;
+      context: RfqPrefillContextData;
+      supplierOrgId: string;
+    }
+  | {
+      ok: false;
+      reason: RfqPrefillFailureReason;
+    };
+
 type TenantSessionIdentity = {
   id: string;
   slug: string;
@@ -451,6 +465,160 @@ async function resolveRfqCatalogItemTarget(catalogItemId: string): Promise<RfqCa
       catalogStage: catalogItem.catalogStage ?? null,
     };
   });
+}
+
+async function resolveCatalogRfqDraftContext(input: {
+  buyerOrgId: string;
+  catalogItemId: string;
+  selectedQuantity?: number | null;
+  buyerNotes?: string | null;
+}): Promise<CatalogRfqDraftResolution> {
+  type RfqPrefillItemRow = {
+    id: string;
+    tenant_id: string;
+    name: string;
+    active: boolean;
+    publication_posture: string;
+    price_disclosure_policy_mode: string | null;
+    product_category: string | null;
+    material: string | null;
+    description: string | null;
+    moq: unknown;
+    certifications: unknown;
+  };
+
+  let itemRows: RfqPrefillItemRow[];
+  try {
+    itemRows = await prisma.$transaction(async tx => {
+      await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
+      return tx.$queryRaw<RfqPrefillItemRow[]>`
+        SELECT id, tenant_id, name, active, publication_posture,
+               price_disclosure_policy_mode,
+               product_category, material, description, moq,
+               certifications
+        FROM catalog_items
+        WHERE id = ${input.catalogItemId}::uuid
+          AND active = true
+          AND publication_posture IN ('B2B_PUBLIC', 'BOTH')
+      `;
+    });
+  } catch {
+    return { ok: false, reason: 'RFQ_PREFILL_NOT_AVAILABLE' };
+  }
+
+  if (itemRows.length === 0) {
+    return { ok: false, reason: 'ITEM_NOT_AVAILABLE' };
+  }
+
+  const item = itemRows[0];
+  const supplierTenantId = item.tenant_id;
+
+  type SupplierEligibilityData = {
+    isPublished: boolean;
+    isActive: boolean;
+    priceDisclosurePolicyMode: string | null;
+    publicationPosture: string;
+  } | null;
+
+  let supplierData: SupplierEligibilityData;
+  try {
+    supplierData = await withOrgAdminContext(prisma, async tx => {
+      const [org, tenant] = await Promise.all([
+        tx.organizations.findUnique({
+          where: { id: supplierTenantId },
+          select: {
+            publication_posture: true,
+            price_disclosure_policy_mode: true,
+          },
+        }),
+        tx.tenant.findUnique({
+          where: { id: supplierTenantId },
+          select: { publicEligibilityPosture: true },
+        }),
+      ]);
+
+      if (!org) {
+        return null;
+      }
+
+      const isPublished =
+        org.publication_posture === 'B2B_PUBLIC' || org.publication_posture === 'BOTH';
+      const isActive =
+        (tenant?.publicEligibilityPosture as string | null) === 'PUBLICATION_ELIGIBLE';
+
+      return {
+        isPublished,
+        isActive,
+        priceDisclosurePolicyMode: org.price_disclosure_policy_mode,
+        publicationPosture: org.publication_posture,
+      };
+    });
+  } catch {
+    return { ok: false, reason: 'SUPPLIER_NOT_AVAILABLE' };
+  }
+
+  const rawCertStandards = Array.isArray(item.certifications)
+    ? (item.certifications as Array<{ standard: string }>)
+        .filter(c => typeof c?.standard === 'string')
+        .map(c => c.standard)
+    : [];
+
+  const supplierPolicy = resolveSupplierDisclosurePolicyForPdp({
+    buyerOrgId: input.buyerOrgId,
+    supplierOrgId: supplierTenantId,
+    productPolicyMode: item.price_disclosure_policy_mode,
+    supplierPolicyMode: supplierData?.priceDisclosurePolicyMode ?? null,
+    productPublicationPosture: item.publication_posture,
+    supplierPublicationPosture: supplierData?.publicationPosture ?? null,
+  });
+
+  const priceDisclosure = buildPdpDisclosureMetadata({
+    buyer: {
+      isAuthenticated: true,
+      isEligible: false,
+      buyerOrgId: input.buyerOrgId,
+      supplierOrgId: supplierTenantId,
+    },
+    supplierPolicy,
+  });
+
+  const result = buildCatalogRfqPrefillContext({
+    buyerOrgId: input.buyerOrgId,
+    authenticatedBuyerOrgId: input.buyerOrgId,
+    isAuthenticated: true,
+    item: {
+      itemId: item.id,
+      productName: item.name,
+      supplierOrgId: supplierTenantId,
+      supplierIsPublished: supplierData?.isPublished ?? false,
+      supplierIsActive: supplierData?.isActive ?? false,
+      isPublished: item.publication_posture === 'B2B_PUBLIC' || item.publication_posture === 'BOTH',
+      isActive: item.active,
+      category: item.product_category,
+      material: item.material,
+      specSummary: item.description,
+      moq: item.moq != null ? Number(item.moq) : null,
+      leadTimeDays: null,
+      complianceRefs: rawCertStandards,
+      publishedDppRef: null,
+      isPublishedDppRefSafe: false,
+    },
+    priceDisclosure,
+    draftInput: {
+      selectedQuantity: input.selectedQuantity ?? null,
+      buyerNotes: input.buyerNotes ?? null,
+    },
+  });
+
+  if (!result.ok) {
+    return { ok: false, reason: result.reason };
+  }
+
+  return {
+    ok: true,
+    context: result.data,
+    supplierOrgId: supplierTenantId,
+  };
 }
 
 async function resolveBuyerRfqSupplierResponse(rfqId: string): Promise<BuyerRfqResponseRow | null> {
@@ -3219,6 +3387,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     }
 
     const { q, sort, status } = queryResult.data;
+    if (status === 'INITIATED') {
+      return sendSuccess(reply, { rfqs: [], count: 0 });
+    }
     const searchTerm = q?.trim();
     const idSearchResult = searchTerm ? z.string().uuid().safeParse(searchTerm) : null;
 
@@ -3310,7 +3481,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         where: {
           supplierOrgId: dbContext.orgId,
           catalogItem: { name: { not: '' } }, // guard: skip orphaned RFQs whose catalog_items row was deleted
-          ...(status ? { status } : {}),
+          ...(status ? { status } : { status: { in: ['OPEN', 'RESPONDED', 'CLOSED'] as const } }),
           ...(searchTerm
             ? {
                 OR: [
@@ -3378,6 +3549,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         where: {
           id: paramsResult.data.id,
           supplierOrgId: dbContext.orgId,
+          status: { in: ['OPEN', 'RESPONDED', 'CLOSED'] },
           catalogItem: { name: { not: '' } }, // guard: orphaned RFQ → null → existing 404 path
         },
         select: {
@@ -3480,6 +3652,10 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           return { error: 'RFQ_CLOSED' as const };
         }
 
+        if (rfq.status === 'INITIATED') {
+          return { error: 'RFQ_NOT_SUBMITTED' as const };
+        }
+
         if (rfq.status === 'RESPONDED') {
           return { error: 'RFQ_ALREADY_RESPONDED' as const };
         }
@@ -3555,6 +3731,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         }
         if (result.error === 'RFQ_CLOSED') {
           return sendError(reply, 'RFQ_CLOSED', 'RFQ is closed', 409);
+        }
+        if (result.error === 'RFQ_NOT_SUBMITTED') {
+          return sendError(reply, 'RFQ_NOT_SUBMITTED', 'RFQ is still a buyer draft and cannot be responded to', 409);
         }
         if (result.error === 'RFQ_ALREADY_RESPONDED') {
           return sendError(reply, 'RFQ_ALREADY_RESPONDED', 'RFQ already has a supplier response', 409);
@@ -3906,6 +4085,296 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
     }
   );
+
+  /**
+   * POST /api/tenant/rfqs/drafts/from-catalog-item
+   * Create a buyer-owned single-item RFQ draft (status INITIATED) from a catalog item.
+   * Draft creation is explicit action only and remains non-supplier-visible until submit.
+   */
+  fastify.post('/tenant/rfqs/drafts/from-catalog-item', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const bodySchema = z.object({
+      catalogItemId: z.string().uuid(),
+      selectedQuantity: z.number().int().min(1).max(999999).optional().nullable(),
+      buyerNotes: z.string().trim().max(2000).optional().nullable(),
+      specNotes: z.string().trim().max(2000).optional().nullable(),
+    }).strict();
+
+    const parseResult = bodySchema.safeParse(request.body ?? {});
+    if (!parseResult.success) {
+      return sendValidationError(reply, parseResult.error.errors);
+    }
+
+    const { catalogItemId, selectedQuantity, buyerNotes, specNotes } = parseResult.data;
+
+    const prefill = await resolveCatalogRfqDraftContext({
+      buyerOrgId: dbContext.orgId,
+      catalogItemId,
+      selectedQuantity: selectedQuantity ?? null,
+      buyerNotes: buyerNotes ?? null,
+    });
+
+    if (!prefill.ok) {
+      return sendSuccess(reply, { ok: false, reason: prefill.reason } satisfies CatalogRfqPrefillResult);
+    }
+
+    if (prefill.context.priceVisibilityState === 'LOGIN_REQUIRED') {
+      return sendSuccess(reply, { ok: false, reason: 'AUTH_REQUIRED' } satisfies CatalogRfqPrefillResult);
+    }
+    if (prefill.context.priceVisibilityState === 'ELIGIBILITY_REQUIRED') {
+      return sendSuccess(reply, { ok: false, reason: 'ELIGIBILITY_REQUIRED' } satisfies CatalogRfqPrefillResult);
+    }
+    if (prefill.context.priceVisibilityState === 'HIDDEN') {
+      return sendSuccess(reply, { ok: false, reason: 'RFQ_PREFILL_NOT_AVAILABLE' } satisfies CatalogRfqPrefillResult);
+    }
+
+    const quantity = prefill.context.selectedQuantity ?? selectedQuantity ?? prefill.context.moq ?? 1;
+
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      const rfq = await tx.rfq.create({
+        data: {
+          orgId: dbContext.orgId,
+          supplierOrgId: prefill.supplierOrgId,
+          catalogItemId,
+          quantity,
+          buyerMessage: buyerNotes ?? null,
+          status: 'INITIATED',
+          createdByUserId: userId ?? null,
+          stageRequirementAttributes: specNotes ? { specNotes } : null,
+          fieldSourceMeta: {
+            source: 'catalog_item_draft',
+            mode: 'single_item',
+            prefillFlow: 'slice_c',
+          },
+        },
+        select: {
+          id: true,
+          orgId: true,
+          supplierOrgId: true,
+          catalogItemId: true,
+          quantity: true,
+          status: true,
+          buyerMessage: true,
+          stageRequirementAttributes: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: dbContext.orgId,
+        actorType: 'USER',
+        actorId: userId ?? null,
+        action: 'rfq.RFQ_DRAFT_CREATED',
+        entity: 'rfq',
+        entityId: rfq.id,
+        afterJson: {
+          id: rfq.id,
+          orgId: rfq.orgId,
+          supplierOrgId: rfq.supplierOrgId,
+          catalogItemId: rfq.catalogItemId,
+          status: rfq.status,
+          quantity: rfq.quantity,
+          nonBinding: true,
+          supplierVisible: false,
+          createdAt: rfq.createdAt.toISOString(),
+        },
+        metadataJson: {
+          rfqId: rfq.id,
+          stage: 'DRAFT',
+          source: 'catalog_item',
+          supplierVisible: false,
+          notified: false,
+          quoteGenerated: false,
+        },
+      });
+
+      return {
+        draft: {
+          id: rfq.id,
+          buyer_org_id: rfq.orgId,
+          supplier_org_id: rfq.supplierOrgId,
+          catalog_item_id: rfq.catalogItemId,
+          status: rfq.status,
+          quantity: rfq.quantity,
+          buyer_notes: rfq.buyerMessage,
+          item_summary: {
+            item_id: prefill.context.itemId,
+            product_name: prefill.context.productName,
+            category: prefill.context.category ?? null,
+            material: prefill.context.material ?? null,
+            spec_summary: prefill.context.specSummary ?? null,
+            moq: prefill.context.moq ?? null,
+            compliance_refs: prefill.context.complianceRefs ?? [],
+            published_dpp_ref: prefill.context.publishedDppRef ?? null,
+            price_visibility_state: prefill.context.priceVisibilityState,
+            rfq_entry_reason: prefill.context.rfqEntryReason ?? null,
+          },
+          created_at: rfq.createdAt,
+          updated_at: rfq.updatedAt,
+        },
+      };
+    });
+
+    return sendSuccess(reply, result, 201);
+  });
+
+  /**
+   * POST /api/tenant/rfqs/drafts/:id/submit
+   * Explicit buyer transition from draft (INITIATED) to submitted RFQ (OPEN).
+   */
+  fastify.post('/tenant/rfqs/drafts/:id/submit', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
+    const { userId } = request;
+    const dbContext = request.dbContext;
+    if (!dbContext) {
+      return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+    }
+
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const paramsResult = paramsSchema.safeParse(request.params);
+    if (!paramsResult.success) {
+      return sendValidationError(reply, paramsResult.error.errors);
+    }
+
+    const draftId = paramsResult.data.id;
+
+    const draft = await withDbContext(prisma, dbContext, async tx => {
+      return tx.rfq.findFirst({
+        where: {
+          id: draftId,
+          orgId: dbContext.orgId,
+        },
+        select: {
+          id: true,
+          orgId: true,
+          supplierOrgId: true,
+          catalogItemId: true,
+          quantity: true,
+          buyerMessage: true,
+          status: true,
+        },
+      });
+    });
+
+    if (!draft) {
+      return sendNotFound(reply, 'RFQ draft not found');
+    }
+
+    if (draft.status === 'OPEN') {
+      return sendSuccess(reply, {
+        rfq: {
+          id: draft.id,
+          status: draft.status,
+          buyer_org_id: draft.orgId,
+          supplier_org_id: draft.supplierOrgId,
+          catalog_item_id: draft.catalogItemId,
+        },
+        idempotent: true,
+        submit_boundary: {
+          supplier_visible: true,
+          notified: false,
+          quote_generated: false,
+        },
+      });
+    }
+
+    if (draft.status !== 'INITIATED') {
+      return sendError(reply, 'INVALID_STATUS', 'Only draft RFQs can be submitted', 409);
+    }
+
+    const prefill = await resolveCatalogRfqDraftContext({
+      buyerOrgId: dbContext.orgId,
+      catalogItemId: draft.catalogItemId,
+      selectedQuantity: draft.quantity,
+      buyerNotes: draft.buyerMessage,
+    });
+
+    if (!prefill.ok) {
+      return sendSuccess(reply, { ok: false, reason: prefill.reason } satisfies CatalogRfqPrefillResult);
+    }
+
+    if (prefill.context.priceVisibilityState === 'ELIGIBILITY_REQUIRED') {
+      return sendSuccess(reply, { ok: false, reason: 'ELIGIBILITY_REQUIRED' } satisfies CatalogRfqPrefillResult);
+    }
+    if (prefill.context.priceVisibilityState === 'LOGIN_REQUIRED') {
+      return sendSuccess(reply, { ok: false, reason: 'AUTH_REQUIRED' } satisfies CatalogRfqPrefillResult);
+    }
+    if (prefill.context.priceVisibilityState === 'HIDDEN') {
+      return sendSuccess(reply, { ok: false, reason: 'RFQ_PREFILL_NOT_AVAILABLE' } satisfies CatalogRfqPrefillResult);
+    }
+
+    const result = await withDbContext(prisma, dbContext, async tx => {
+      const rfq = await tx.rfq.update({
+        where: { id: draft.id },
+        data: {
+          status: 'OPEN',
+          createdByUserId: draft.status === 'INITIATED' ? (userId ?? null) : undefined,
+        },
+        select: {
+          id: true,
+          orgId: true,
+          supplierOrgId: true,
+          catalogItemId: true,
+          quantity: true,
+          status: true,
+          updatedAt: true,
+        },
+      });
+
+      await writeAuditLog(tx, {
+        realm: 'TENANT',
+        tenantId: dbContext.orgId,
+        actorType: 'USER',
+        actorId: userId ?? null,
+        action: 'rfq.RFQ_SUBMITTED',
+        entity: 'rfq',
+        entityId: rfq.id,
+        afterJson: {
+          id: rfq.id,
+          status: rfq.status,
+          supplierOrgId: rfq.supplierOrgId,
+          quantity: rfq.quantity,
+          supplierVisible: true,
+          notified: false,
+          quoteGenerated: false,
+          updatedAt: rfq.updatedAt.toISOString(),
+        },
+        metadataJson: {
+          rfqId: rfq.id,
+          stage: 'SUBMITTED',
+          notified: false,
+          quoteGenerated: false,
+        },
+      });
+
+      return {
+        rfq: {
+          id: rfq.id,
+          status: rfq.status,
+          buyer_org_id: rfq.orgId,
+          supplier_org_id: rfq.supplierOrgId,
+          catalog_item_id: rfq.catalogItemId,
+          quantity: rfq.quantity,
+          price_visibility_state: prefill.context.priceVisibilityState,
+          rfq_entry_reason: prefill.context.rfqEntryReason ?? null,
+        },
+        idempotent: false,
+        submit_boundary: {
+          supplier_visible: true,
+          notified: false,
+          quote_generated: false,
+        },
+      };
+    });
+
+    return sendSuccess(reply, result);
+  });
 
   /**
    * POST /api/tenant/rfqs
