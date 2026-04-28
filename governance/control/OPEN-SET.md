@@ -446,6 +446,16 @@
     (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001), DPP Passport (TECS-DPP-PASSPORT-FOUNDATION-001),
     AI supplier matching (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001).
   No blockers.
+  Runtime verification (2026-04-28, TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28):
+    Catalog browse (buyer view, 14 items): no prices in listings — correct suppression.
+    PDP (QA-B2B-FAB-001 Organic Cotton Poplin): loaded; price disclosure rendered:
+      "Price available on request" + "RFQ required for pricing". Zero console errors.
+    Anti-leakage DOM scan: [$X, internalReason, relationshipGraph, allowlistEntries,
+      risk_score, buyerScore, supplierScore, publicationPosture, confidence_score, aiExtracted]
+      — ALL ABSENT (found: []).
+    PDP 404 for QA-B2B-FAB-014: opaque sendNotFound consistent with relationship-gate — correct.
+    Supplier management view: prices visible ($34/unit etc.) — plane separation correct.
+    Status confirmed: VERIFIED_COMPLETE (tests + runtime).
 - TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-6.
   Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 ACTIVE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.

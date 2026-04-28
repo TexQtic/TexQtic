@@ -54,6 +54,12 @@ latest_verified_product_close_commits: >-
   Design f62619a, Slice A 4dd1901, Slice B 29ca225, Slice C 50220e6,
   Slice D a2f4a1a, Slice E 78d43f1, Slice F 9af0f29, Slice G 493051b,
   Slice H governance closure (this update)
+remediation_note: >-
+  TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28 COMPLETE (2026-04-28).
+  TECS-B2B-BUYER-PRICE-DISCLOSURE-001: missing GOVERNANCE-CHANGELOG.md entry added;
+  Production Vercel runtime verified (catalog browse, PDP price placeholder, anti-leakage DOM scan).
+  Hotfix 59f2dcd smoke verified: health 200, DPP public route 404 (correct), .json 400 (no crash).
+  All April 27-28 units now carry complete verification evidence.
 control_plane_read_order:
   - governance/control/OPEN-SET.md
   - governance/control/NEXT-ACTION.md

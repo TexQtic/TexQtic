@@ -117,6 +117,78 @@ Governance files updated:
 
 ---
 
+## 2026-04-28 — CLOSED: TECS-B2B-BUYER-PRICE-DISCLOSURE-001
+
+```
+Unit:          TECS-B2B-BUYER-PRICE-DISCLOSURE-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-28
+Note:          Governance changelog entry was missing from original closure commit (a58d0e8).
+               Retroactively added 2026-04-28 as part of TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28.
+Verification:  144/144 buyer PDP/price-disclosure tests PASS; TypeScript clean;
+               Production Vercel runtime verified (2026-04-28).
+
+Commits:
+  26a3ed3  Slice A — price disclosure resolver (priceDisclosureResolver.service.ts)
+  4eea5da  Slice B/C — PDP response shaping + policy-source adapter (pdpPriceDisclosure.service.ts)
+  15d9710  Slice D — frontend rendering (CatalogPdpSurface.tsx + catalogService.ts)
+  35578ae  Slice C (refined) — policy-source adapter
+  b4d1d48  Slice E — persistent policy storage
+  23c5068  Slice F — eligibility + tenant isolation test hardening
+  a58d0e8  Governance closure commit (original; GOVERNANCE-CHANGELOG.md entry was missing — corrected here)
+
+Verification Evidence:
+  ✅ 144/144 buyer PDP + price disclosure tests PASS (Vitest, 7 test files)
+  ✅ TypeScript tsc --noEmit CLEAN (exit 0)
+  ✅ Production Vercel runtime verification (2026-04-28, TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28):
+       - Catalog browse (buyer view): 14 items, no prices in listings — correct suppression
+       - PDP load (QA-B2B-FAB-001 Organic Cotton Poplin): loaded, zero console errors
+       - Price disclosure rendered: "Price available on request" + "RFQ required for pricing"
+       - Anti-leakage DOM scan: [$X, internalReason, relationshipGraph, allowlistEntries,
+           risk_score, buyerScore, supplierScore, publicationPosture, confidence_score,
+           aiExtracted] — ALL ABSENT (found: [])
+       - PDP 404 for QA-B2B-FAB-014 (Upholstery Chenille Weave): opaque 404 consistent
+           with relationship-gate behavior (sendNotFound for unapproved buyer) — correct, not a code defect
+       - Supplier management view: prices visible ($34/unit etc.) — plane separation correct
+  ✅ D2 migration SQL verified as additive-only (2 ADD COLUMN statements, no DPP/FK/RLS drift)
+
+Known Limitations Preserved:
+  - GOVERNANCE-CHANGELOG.md entry was missing from original closure; corrected in this remediation
+  - Prisma migrate dev historical shadow-replay blocker remains out of scope
+  - D2 migration may remain pending by environment until separately applied via authorized deployment path
+  - PDP access for some QA fixture items gated by relationship status (by design, relationship-gate opaque 404)
+
+Governance files updated:
+  governance/control/OPEN-SET.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
+## 2026-04-28 — HOTFIX VERIFIED: hotfix/59f2dcd (DPP JSON route removal)
+
+```
+Hotfix:        59f2dcd — removed broken DPP JSON route (/api/public/dpp/:publicPassportId\.json)
+               from server/src/routes/public.ts to prevent find-my-way SyntaxError at Fastify startup.
+Verified:      2026-04-28, TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28.
+
+Smoke Evidence:
+  ✅ GET https://app.texqtic.com/api/health → HTTP 200 {"status":"ok"} — server is NOT crashed
+  ✅ GET /api/public/dpp/00000000-0000-0000-0000-000000000000 → HTTP 404
+       (item not found — regular DPP public route still operational)
+  ✅ GET /api/public/dpp/00000000-0000-0000-0000-000000000000.json → HTTP 400
+       (not HTTP 500 — no Fastify crash; removed path handled cleanly by find-my-way)
+
+Verdict: Hotfix achieved goal — broken regex route removed without crashing server;
+  regular DPP public route is unaffected; Fastify starts clean.
+
+Governance files updated:
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-27 — CLOSED: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 
 ```
