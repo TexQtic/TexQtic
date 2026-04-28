@@ -681,6 +681,108 @@ export interface SupplierMatchRuntimeGuardResult {
   violations: SupplierMatchRuntimeGuardViolation[];
 }
 
+// ─── Slice E — RFQ Intent Matching Types ─────────────────────────────────────
+
+/**
+ * Safe RFQ context fields extracted server-side from a buyer-owned RFQ record.
+ * All fields are optional to allow partial RFQ data without requiring a complete RFQ.
+ *
+ * Constitutional constraints:
+ * - NEVER includes price, targetPrice, supplierQuoteTerms, or any monetary field.
+ * - NEVER includes internalRfqScore or AI-generated scoring data.
+ * - buyerOrgId is NOT a field here — it is provided at the service input level
+ *   and injected when calling the signal builder.
+ * - buyerMessage must be sanitized (no PII, no negotiation terms) before passing.
+ */
+export interface SupplierMatchRfqContext {
+  /** Stable RFQ record identifier for audit correlation. */
+  rfqId?: string;
+  /** Product category (e.g., "Woven Fabric", "Yarn"). */
+  productCategory?: string;
+  /** Primary material requirement (e.g., "Organic Cotton"). */
+  material?: string;
+  /** Fabric type filter (e.g., "Jersey", "Twill"). */
+  fabricType?: string;
+  /** Composition requirement (e.g., "100% Cotton"). */
+  composition?: string;
+  /** Target catalog stage (e.g., "ACTIVE", "SAMPLE"). */
+  catalogStage?: string;
+  /** Requested order quantity (numeric, non-negative). */
+  requestedQuantity?: number;
+  /** MOQ requirement for this RFQ (numeric, non-negative). */
+  moqRequirement?: number;
+  /** Buyer's preferred delivery region / geography. */
+  deliveryRegion?: string;
+  /**
+   * Buyer intent message for RFQ_INTENT signal.
+   * Must be sanitized (no PII, no negotiation terms) before passing.
+   * Length is further capped at SIGNAL_VALUE_MAX_LENGTH by the signal builder.
+   */
+  buyerMessage?: string;
+  // price: EXCLUDED — constitutionally forbidden from all AI paths
+  // targetPrice: EXCLUDED — constitutionally forbidden
+  // supplierQuoteTerms: EXCLUDED — constitutionally forbidden
+  // internalRfqScore: EXCLUDED — AI scoring data forbidden from input paths
+}
+
+/**
+ * Input to the SupplierMatchRfqIntentService.
+ *
+ * ALL fields must be assembled server-side from validated, trusted sources.
+ * No field may originate from the raw HTTP request body without explicit
+ * server-side validation and field selection.
+ */
+export interface SupplierMatchRfqIntentInput {
+  /** JWT-derived buyer org ID — required. Never from request body. */
+  buyerOrgId: string;
+  /** Safe RFQ context fields from a buyer-owned, server-validated RFQ record. */
+  rfqContext: SupplierMatchRfqContext;
+  /**
+   * Trusted server-side candidate drafts to match against.
+   * May be empty — empty input yields a structured fallback result, not an error.
+   */
+  candidateDrafts: SupplierMatchCandidateDraft[];
+  /**
+   * Optional server-side policy context for bulk enforcement.
+   * forbiddenSupplierOrgIds — suppliers that must be hard-excluded.
+   */
+  policyContext?: {
+    /** Hard-excluded suppliers (BLOCKED/SUSPENDED/REJECTED set). */
+    forbiddenSupplierOrgIds?: ReadonlySet<string>;
+  };
+  /**
+   * Maximum candidates to return. Passed through to the ranker.
+   * Default: 5. Hard cap: 20.
+   */
+  maxCandidates?: number;
+  /** Stable request reference for audit correlation and test determinism. */
+  requestId?: string;
+  /** Caller-supplied timestamp for deterministic audit envelope. Defaults to now. */
+  requestedAt?: Date | string;
+}
+
+/**
+ * Result of the SupplierMatchRfqIntentService.
+ *
+ * matchResult — buyer-safe matching result (candidates, audit envelope, guard-cleared).
+ * rfqId — echo of rfqContext.rfqId for caller correlation (safe; opaque identifier only).
+ * policyViolationsBlocked — count of candidates excluded by the policy filter (Slice B).
+ * guardViolationsBlocked — count of candidates excluded by the runtime guard (Slice D).
+ *
+ * MUST NOT include: raw policy violation details, score breakdowns, relationship graph,
+ * price, or any internal forbidden field.
+ */
+export interface SupplierMatchRfqIntentResult {
+  /** Final buyer-safe matching result cleared by the Slice D runtime guard. */
+  matchResult: SupplierMatchResult;
+  /** Echo of rfqContext.rfqId for caller correlation. Safe: opaque identifier. */
+  rfqId?: string;
+  /** Count of candidates blocked by the Slice B policy filter. */
+  policyViolationsBlocked: number;
+  /** Count of candidates blocked by the Slice D runtime guard. */
+  guardViolationsBlocked: number;
+}
+
 // ─── Future-Facing Stubs (Slice F) ───────────────────────────────────────────
 
 /**
