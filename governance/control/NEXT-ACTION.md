@@ -28,27 +28,30 @@ active_delivery_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-last_closed_unit: TECS-B2B-BUYER-PRICE-DISCLOSURE-001
+last_closed_unit: TECS-B2B-BUYER-RFQ-INTEGRATION-001
 last_closed_unit_status: VERIFIED_COMPLETE
-last_closed_unit_runtime_verdict: Slice F verification PASS — resolver/disclosure 39/39, frontend compatibility 144/144
+last_closed_unit_runtime_verdict: Slice G verification PASS — targeted RFQ suites 108/108; runtime API probe partially blocked (localhost:3001 unavailable)
 last_closed_unit_commits: >-
-  Design 8e84887 — TECS-B2B-BUYER-PRICE-DISCLOSURE-001 design artifact.
-  Slice A 26a3ed3 — deterministic disclosure resolver.
-  Slice B 4eea5da — PDP response disclosure shaping.
-  Slice C 15d9710 — buyer PDP disclosure rendering compatibility.
-  Slice D 35578ae — supplier/product policy-source adapter.
-  Slice D2 b4d1d48 — persistent policy storage + additive-only migration.
-  Slice E 23c5068 — eligibility + tenant isolation + anti-leakage test hardening.
+  Design 1332797 — TECS-B2B-BUYER-RFQ-INTEGRATION-001 design artifact.
+  Slice A f444443 — RFQ prefill contract/context builder.
+  Slice B 5715da4 — PDP single-item prefill handoff.
+  Slice C b1d78a3 — RFQ draft/submit persistence alignment.
+  Slice D bb6947d — multi-item RFQ grouping and supplier mapping.
+  Slice E 852fc55 — buyer/supplier tenant isolation tests.
+  Slice F 72234c6 — supplier notification boundary.
+  Slice G — governance closure commit (this closure update).
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (2026-04-28).
-  Verification (Slice F): resolver/disclosure tests 39/39 PASS; buyer PDP/frontend compatibility tests 144/144 PASS.
-  D2 migration verified at server/prisma/migrations/20260428103000_price_disclosure_policy_storage_d2/migration.sql.
-  Migration SQL confirmed additive-only (price_disclosure_policy_mode on catalog_items and organizations only).
-  Anti-leakage verified: suppressed disclosure serializes no price-like keys or policy internals.
-  Tenant-safety verified: missing/mismatched org context suppresses policy resolution.
-  Runtime/UI check limitation: QA Browse Suppliers surface returned loading/500 during Slice F runtime probe,
-  so production PDP API probes were not fully executable from this session.
-  Known risk preserved: historical Prisma shadow-replay blocker remains for migrate dev; no manual SQL/db push used.
+  VERIFIED_COMPLETE (Slice G closure).
+  Verification: targeted RFQ suites PASS (108/108 tests) across Slice A prefill builder,
+  Slice B prefill handoff, Slice C draft/submit, Slice D multi-item grouping,
+  Slice E tenant isolation, Slice F notification boundary.
+  Targeted lint PASS on RFQ route/boundary/test files.
+  Anti-leakage and tenant isolation evidence preserved through route-level assertions.
+  Supplier notification boundary verified submit-only and internal adapter scoped.
+  Runtime/API limitation: localhost health/API probe blocked (server unreachable in session).
+  Prisma/migration range check: no RFQ schema or migration changes in Slice A-F commit window.
+  Known risk preserved: legacy OPEN route remains follow-up governance risk;
+  historical Prisma shadow-replay blocker remains out of RFQ scope.
   No blockers for closure under current governance evidence.
 prior_closed_unit: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 prior_closed_unit_status: VERIFIED_COMPLETE
@@ -59,7 +62,7 @@ prior_closed_unit_commits: >-
   K-3 23fb727 (Backend extraction route + tests).
   K-4 c96d153 (Frontend DocumentIntelligenceCard panel + 80 tests).
   K-5 c9cbf8c (Review submission + approve/reject workflow + 17 tests).
-adjacent_deferred_candidate: TECS-B2B-BUYER-RFQ-INTEGRATION-001 — requires explicit Paresh authorization (do not auto-open)
+adjacent_deferred_candidate: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open)
 d015_reconciliation: COMPLETE
 d016_posture: CLOSED — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27);
   237/237 PASS; K-1 de5cf10; K-2 cef8afb; K-3 23fb727; K-4 c96d153; K-5 c9cbf8c;

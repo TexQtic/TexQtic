@@ -5,6 +5,60 @@
 
 ---
 
+## 2026-04-28 — CLOSED: TECS-B2B-BUYER-RFQ-INTEGRATION-001
+
+```
+Unit:          TECS-B2B-BUYER-RFQ-INTEGRATION-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-28
+Verification:  Targeted RFQ suites PASS (108/108 tests)
+
+Commits:
+  1332797  Design — TECS-B2B-BUYER-RFQ-INTEGRATION-001 design artifact
+  f444443  Slice A — RFQ prefill contract/context builder
+  5715da4  Slice B — PDP single-item prefill handoff
+  b1d78a3  Slice C — RFQ draft/submit persistence alignment
+  bb6947d  Slice D — Multi-item RFQ grouping and supplier mapping
+  852fc55  Slice E — Buyer/supplier tenant isolation tests
+  72234c6  Slice F — Supplier notification boundary (submit-only internal adapter)
+  Slice G  Governance closure commit (this update)
+
+Verification Evidence:
+  ✅ git log commit chain confirms expected A-F sequence present
+  ✅ git diff --name-only HEAD~6..HEAD limited to RFQ route/service/test/type files
+  ✅ git diff --check clean (no whitespace/conflict artifacts)
+  ✅ Targeted RFQ tests PASS:
+       - src/__tests__/rfq-prefill-context.service.unit.test.ts
+       - src/routes/tenant.rfqPrefillHandoff.test.ts
+       - src/routes/tenant.rfqDraftSubmitPersistence.test.ts
+       - src/routes/tenant.rfqMultiItemGrouping.test.ts
+  ✅ Targeted lint PASS for RFQ route/boundary/test files
+  ✅ Tenant isolation assertions preserved across prefill, draft, submit, and supplier inbox boundaries
+  ✅ Anti-leakage assertions preserved for prefill/draft/submit/grouped and notification-boundary payloads
+  ✅ Submit-only supplier notification boundary verified:
+       - no notification on prefill/draft create/blocked submit
+       - no duplicate notification on idempotent duplicate submit
+       - supplier-group scoped payloads for multi-item submit
+  ✅ Prisma/migration range check: NO_PRISMA_SCHEMA_OR_MIGRATION_CHANGES_IN_RANGE
+
+Known Limitations Preserved:
+  - Supplier notification is internal boundary/logging adapter only (no external provider delivery in this unit)
+  - Legacy OPEN route remains follow-up governance risk; not broadened in Slice F
+  - Runtime/API probe limitation in this session: localhost:3001 unreachable
+  - Historical Prisma shadow replay blocker remains out of scope (no migrate dev/db push/manual SQL)
+
+Recommended Next Authorization (not opened):
+  TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — DESIGN PLAN ARTIFACT
+
+Governance files updated:
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-27 — CLOSED: TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001
 
 ```

@@ -54,6 +54,17 @@
 ## Operating Notes
 
 - Governing posture: `HOLD-FOR-BOUNDARY-TIGHTENING` remains in effect.
+- TECS-B2B-BUYER-RFQ-INTEGRATION-001 is VERIFIED_COMPLETE (Slice G closure).
+  Design commit: 1332797.
+  Implementation chain: Slice A f444443, Slice B 5715da4, Slice C b1d78a3,
+    Slice D bb6947d, Slice E 852fc55, Slice F 72234c6.
+  Verification evidence: targeted RFQ suites 108/108 PASS (prefill builder, prefill handoff,
+    draft/submit persistence, multi-item grouping, tenant isolation, notification boundary);
+    targeted lint PASS for RFQ route/boundary/test files.
+  Closure limitations preserved: supplier notification is internal boundary/log adapter only;
+    legacy OPEN route remains follow-up governance risk; local runtime API probe was partially blocked
+    in-session (localhost:3001 unreachable); historical Prisma shadow replay blocker remains out of scope.
+  Next recommended authorization (not opened): TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — DESIGN PLAN ARTIFACT.
 - TECS-B2B-BUYER-CATALOG-BROWSE-001 Phase 1 is VERIFIED_WITH_NON-BLOCKING_NOTES (2026-05-08).
   Verification artifact: docs/TECS-B2B-BUYER-CATALOG-BROWSE-001-VERIFICATION-v1.md.
   All static gates passed. Runtime API checks pending production verification.

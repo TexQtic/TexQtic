@@ -31,25 +31,27 @@ current_open_design_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-B2B-BUYER-PRICE-DISCLOSURE-001
+latest_verified_product_close_unit: TECS-B2B-BUYER-RFQ-INTEGRATION-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-04-28
-latest_verified_product_close_verification: Slice F verification PASS (resolver/disclosure 39/39; frontend compatibility 144/144)
+latest_verified_product_close_date: 2026-04-28 (Slice G closure)
+latest_verified_product_close_verification: Slice G verification PASS (targeted RFQ suites 108/108; runtime API probe partially blocked)
 latest_verified_product_close_safety_boundaries: |
-  price_placeholder_only: verified
-  no_dpp: verified
+  explicit_action_only_prefill_draft_submit: verified
+  no_rfq_creation_from_pdp_render: verified (test evidence)
+  no_hidden_price_or_policy_leakage: verified
+  submit_only_supplier_notification_boundary: verified
+  no_external_notification_delivery: preserved
   no_relationship_access: verified
   no_ai_supplier_matching: verified
-  no_ai_drafts_or_confidence: verified
   no_payment_or_escrow: verified
-  no_public_seo_pdp: verified
-  no_cert_lifecycle_mutation: verified
-  rfq_auto_submit_absent: verified
+  no_dpp_behavior_change: verified
+  multi_item_supplier_group_isolation: verified
 latest_verified_product_close_tenant_isolation: verified
-latest_verified_product_close_human_review_required: structural constant verified
+latest_verified_product_close_human_review_required: not applicable to RFQ closure scope
 latest_verified_product_close_commits: >-
-  Design 8e84887, Slice A 26a3ed3, Slice B 4eea5da, Slice C 15d9710,
-  Slice D 35578ae, Slice D2 b4d1d48, Slice E 23c5068
+  Design 1332797, Slice A f444443, Slice B 5715da4, Slice C b1d78a3,
+  Slice D bb6947d, Slice E 852fc55, Slice F 72234c6,
+  Slice G governance closure (this update)
 control_plane_read_order:
   - governance/control/OPEN-SET.md
   - governance/control/NEXT-ACTION.md
@@ -103,18 +105,20 @@ current_product_active_delivery_note: |
   P-5 VERIFIED: 239/239 catalog tests PASS (8 files); TypeScript tsc --noEmit CLEAN.
   Safety boundaries verified (9 boundaries). No blockers.
 latest_verified_product_close: |
-  TECS-B2B-BUYER-PRICE-DISCLOSURE-001 — VERIFIED_COMPLETE (2026-04-28).
-  Verification (Slice F): resolver/disclosure tests 39/39 PASS; buyer PDP/frontend compatibility tests 144/144 PASS.
-  Commit chain: Design 8e84887 + Slice A 26a3ed3 + Slice B 4eea5da + Slice C 15d9710 +
-    Slice D 35578ae + Slice D2 b4d1d48 + Slice E 23c5068.
-  Scope: controlled buyer PDP price disclosure metadata across resolver, API shaping, policy source,
-    persistent policy storage, and eligibility/tenant isolation hardening tests.
-  Anti-leakage: suppressed states verified with no price-like keys and no policy internals in serialized payloads.
-  D2 migration verification: server/prisma/migrations/20260428103000_price_disclosure_policy_storage_d2/migration.sql
-    contains additive-only policy columns (catalog_items + organizations).
-  Known limitations preserved: migration pending by environment until authorized apply path; historical
-    Prisma migrate-dev shadow replay blocker remains out of scope for this unit.
-  Next recommended authorization (not opened): TECS-B2B-BUYER-RFQ-INTEGRATION-001 — DESIGN PLAN ARTIFACT.
+  TECS-B2B-BUYER-RFQ-INTEGRATION-001 — VERIFIED_COMPLETE (Slice G closure).
+  Verification: targeted RFQ tests PASS (108/108) for Slice A prefill context builder,
+    Slice B prefill handoff, Slice C draft/submit persistence, Slice D multi-item grouping,
+    Slice E tenant isolation, and Slice F supplier notification boundary.
+  Lint: targeted RFQ route/boundary/test lint PASS (only repo-level .eslintignore deprecation warning).
+  Tenant isolation and anti-leakage checks: verified across prefill, draft, submit, multi-item groups,
+    supplier visibility, and notification boundary payload assertions.
+  Supplier notification: submit-only internal boundary adapter verified; no notification on prefill,
+    draft create, blocked submit, or idempotent duplicate submit.
+  Runtime/API limitation: local health/API probe blocked (localhost:3001 unreachable in this session).
+  Prisma/migration verification: no schema or migration changes in RFQ Slice A-F commit range.
+  Known residual risks preserved: legacy OPEN route remains follow-up governance risk;
+    full repo typecheck may still include unrelated pre-existing files; historical Prisma shadow replay blocker remains out-of-scope.
+  Next recommended authorization (not opened): TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — DESIGN PLAN ARTIFACT.
   No blockers for closure.
 prior_latest_verified_product_close: |
   TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 — VERIFIED_COMPLETE (2026-04-27).
