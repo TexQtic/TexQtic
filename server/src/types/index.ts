@@ -132,6 +132,30 @@ export interface PricePlaceholder {
   note: string | null;
 }
 
+export interface PriceDisclosureMetadata {
+  price_visibility_state:
+    | 'PUBLIC_VISIBLE'
+    | 'AUTH_VISIBLE'
+    | 'ELIGIBLE_VISIBLE'
+    | 'HIDDEN'
+    | 'RFQ_ONLY'
+    | 'PRICE_ON_REQUEST'
+    | 'LOGIN_REQUIRED'
+    | 'ELIGIBILITY_REQUIRED';
+  price_display_policy: 'SHOW_VALUE' | 'SUPPRESS_VALUE';
+  price_value_visible: boolean;
+  price_label:
+    | 'Price available on request'
+    | 'Contact supplier'
+    | 'Login to view price'
+    | 'Eligibility required'
+    | 'Request quote';
+  cta_type: 'VIEW_PRICE' | 'REQUEST_QUOTE' | 'CONTACT_SUPPLIER' | 'LOGIN_TO_VIEW' | 'CHECK_ELIGIBILITY';
+  eligibility_reason: string | null;
+  supplier_policy_source: 'SUPPLIER_DEFAULT' | 'PRODUCT_OVERRIDE' | 'SYSTEM_SAFE_DEFAULT';
+  rfq_required: boolean;
+}
+
 export interface BuyerCatalogPdpView {
   itemId: string;
   supplierId: string;
@@ -146,4 +170,5 @@ export interface BuyerCatalogPdpView {
   availabilitySummary: AvailabilitySummary;
   rfqEntry: RfqEntryDescriptor;
   pricePlaceholder: PricePlaceholder;
+  priceDisclosure: PriceDisclosureMetadata;
 }

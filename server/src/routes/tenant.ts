@@ -37,6 +37,10 @@ import {
 import { prisma } from '../db/prisma.js';
 import { writeAuditLog } from '../lib/auditLog.js';
 import { computeTotals, TotalsInputError } from '../services/pricing/totals.service.js';
+import {
+  attachPriceDisclosureToPdpView,
+  type BuyerCatalogPdpViewBase,
+} from '../services/pricing/pdpPriceDisclosure.service.js';
 import { sendInviteMemberEmail, type EmailDispatchOutcome } from '../services/email/email.service.js';
 import bcrypt from 'bcryptjs';
 import { emitCacheInvalidate } from '../lib/cacheInvalidateEmitter.js';
@@ -2230,7 +2234,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           }]
         : [];
 
-      const view: BuyerCatalogPdpView = {
+      const baseView: BuyerCatalogPdpViewBase = {
         itemId: item.id,
         supplierId: supplierTenantId,
         supplierDisplayName: supplierData.legalName,
@@ -2276,6 +2280,18 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           note: 'Pricing is confirmed through the quote process',
         },
       };
+
+      const view: BuyerCatalogPdpView = attachPriceDisclosureToPdpView(baseView, {
+        buyer: {
+          isAuthenticated: true,
+          // Eligibility and relationship controls are future slices; keep default safe posture.
+          isEligible: false,
+          buyerOrgId: request.dbContext.orgId,
+          supplierOrgId: supplierTenantId,
+        },
+        // No persistent supplier policy source in Slice B; resolver safe-defaults to suppression.
+        supplierPolicy: null,
+      });
 
       return sendSuccess(reply, view);
     }
