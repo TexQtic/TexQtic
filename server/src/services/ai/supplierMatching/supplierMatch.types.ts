@@ -16,7 +16,12 @@
  * @module supplierMatch.types
  */
 
-import type { RelationshipState } from '../../relationshipAccess.types.js';
+import type {
+  RelationshipState,
+  CatalogVisibilityPolicy,
+  RelationshipPricePolicy,
+  RfqAcceptanceMode,
+} from '../../relationshipAccess.types.js';
 
 // ─── Signal Type ──────────────────────────────────────────────────────────────
 
@@ -159,6 +164,158 @@ export interface SupplierMatchPolicyContext {
   forbiddenSupplierOrgIds: ReadonlySet<string>;
   /** CatalogStage values currently in scope for this matching context. */
   activeCatalogStages: ReadonlySet<string>;
+}
+
+// ─── Slice B — Policy Filter Types ───────────────────────────────────────────
+
+/**
+ * Visibility and policy context for a single supplier candidate.
+ * Assembled server-side from trusted Prisma query results.
+ * NEVER sourced from the HTTP request body.
+ *
+ * catalogVisibility — canonical CatalogVisibilityPolicy (design §8).
+ * pricePolicy       — price disclosure policy; affects price signal eligibility,
+ *                     NOT catalog access eligibility.
+ * rfqAcceptanceMode — RFQ gate policy (design §10).
+ * dppPublished      — server-validated DPP publication state. `true` only if
+ *                     the DPP record is in published state.
+ */
+export interface SupplierMatchVisibilityContext {
+  catalogVisibility: CatalogVisibilityPolicy;
+  pricePolicy?: RelationshipPricePolicy;
+  rfqAcceptanceMode?: RfqAcceptanceMode;
+  /**
+   * True only if the supplier has a DPP record confirmed in published state.
+   * DPP_PUBLISHED signals are suppressed when this is not true.
+   */
+  dppPublished?: boolean;
+}
+
+/**
+ * A single supplier candidate submitted to the policy filter.
+ * Internal type — NOT buyer-facing until it passes policy filtering AND
+ * the ranking layer (Slice C) produces a SupplierMatchCandidate.
+ *
+ * supplierOrgId — required primary identifier (never === buyerOrgId).
+ * signals       — safe signals from Slice A builder; all must have isSafe: true.
+ * visibility    — trusted server-side visibility/policy context.
+ * relationshipState — server-resolved relationship state (never from request body).
+ * sourceOrgId   — optional tenancy scope. If provided, MUST equal buyerOrgId.
+ */
+export interface SupplierMatchCandidateDraft {
+  supplierOrgId: string;
+  candidateId?: string;
+  signals: SupplierMatchSignal[];
+  visibility: SupplierMatchVisibilityContext;
+  /** Server-resolved relationship state. Optional when no relationship exists. */
+  relationshipState?: RelationshipState;
+  /**
+   * Tenancy scope marker. If provided, must exactly equal buyerOrgId.
+   * Mismatch → CROSS_TENANT_SCOPE block.
+   */
+  sourceOrgId?: string;
+}
+
+/**
+ * Internal blocked-reason union for policy filter violations.
+ * MUST NOT be exposed to buyers or included in public API responses.
+ *
+ * Values are:
+ * - CROSS_TENANT_SCOPE          sourceOrgId mismatch or supplier === buyer
+ * - SUPPLIER_FORBIDDEN          in forbiddenSupplierOrgIds (BLOCKED/SUSPENDED/REJECTED set)
+ * - RELATIONSHIP_BLOCKED        candidate.relationshipState === 'BLOCKED'
+ * - RELATIONSHIP_SUSPENDED      candidate.relationshipState === 'SUSPENDED'
+ * - RELATIONSHIP_REJECTED       candidate.relationshipState === 'REJECTED'
+ * - RELATIONSHIP_REQUIRED       catalogVisibility === 'APPROVED_BUYER_ONLY' without APPROVED
+ * - HIDDEN_CATALOG              catalogVisibility === 'HIDDEN' or 'REGION_CHANNEL_SENSITIVE'
+ * - HIDDEN_PRICE                (reserved for future use; raw price in output path)
+ * - DPP_UNPUBLISHED             DPP_PUBLISHED signal when dppPublished !== true
+ * - RFQ_NOT_ALLOWED             rfqAcceptanceMode = 'APPROVED_BUYERS_ONLY' without APPROVED
+ * - UNSAFE_SIGNAL               signal.isSafe !== true (not emitted by Slice A builder)
+ * - MISSING_SUPPLIER_CONTEXT    no supplierOrgId on candidate
+ * - MISSING_BUYER_CONTEXT       no buyerOrgId on filter input
+ */
+export type SupplierMatchBlockedReason =
+  | 'CROSS_TENANT_SCOPE'
+  | 'SUPPLIER_FORBIDDEN'
+  | 'RELATIONSHIP_BLOCKED'
+  | 'RELATIONSHIP_SUSPENDED'
+  | 'RELATIONSHIP_REJECTED'
+  | 'RELATIONSHIP_REQUIRED'
+  | 'HIDDEN_CATALOG'
+  | 'HIDDEN_PRICE'
+  | 'DPP_UNPUBLISHED'
+  | 'RFQ_NOT_ALLOWED'
+  | 'UNSAFE_SIGNAL'
+  | 'MISSING_SUPPLIER_CONTEXT'
+  | 'MISSING_BUYER_CONTEXT';
+
+/** Internal policy gate decision. */
+export type SupplierMatchPolicyDecision = 'ALLOW' | 'BLOCK';
+
+/**
+ * Internal policy violation record for a blocked candidate.
+ * Stored in SupplierMatchPolicyFilterResult.blocked for internal audit / testing.
+ * MUST NOT be exposed to buyers in any API response.
+ */
+export interface SupplierMatchPolicyViolation {
+  /** Supplier org ID of the blocked candidate. */
+  supplierOrgId: string;
+  /** Optional stable candidate reference (for internal audit). */
+  candidateId?: string;
+  /** Internal block reason — NEVER buyer-facing. */
+  blockedReason: SupplierMatchBlockedReason;
+}
+
+/**
+ * Input to the SupplierMatchPolicyFilter.
+ *
+ * All fields must be assembled server-side from trusted sources.
+ * No field may be sourced from the raw HTTP request body without explicit
+ * server-side validation and field selection.
+ */
+export interface SupplierMatchPolicyFilterInput {
+  /** JWT-derived buyer org ID. Never from request body. */
+  buyerOrgId: string;
+  /** Raw candidate pool before policy filtering. */
+  candidates: SupplierMatchCandidateDraft[];
+  /**
+   * Optional server-side policy context for bulk enforcement.
+   * forbiddenSupplierOrgIds — suppliers that must be hard-excluded (BLOCKED/SUSPENDED/REJECTED).
+   * isRfqContextual — true when the matching request originated from an RFQ flow.
+   */
+  policyContext?: {
+    forbiddenSupplierOrgIds?: ReadonlySet<string>;
+    isRfqContextual?: boolean;
+  };
+}
+
+/**
+ * Output of the SupplierMatchPolicyFilter.
+ *
+ * safeCandidates — candidates that passed all policy gates (internal type; NOT buyer-facing yet).
+ * blocked        — internal violation records for blocked candidates.
+ * policyViolationsBlocked — count of blocked candidates.
+ * fallback       — true when no safe candidates remain or input was empty.
+ *
+ * IMPORTANT: safeCandidates is an INTERNAL type. It MUST NOT be serialized
+ * directly into an API response. The ranking layer (Slice C) and guard layer
+ * (Slice D/F) must produce the buyer-facing SupplierMatchCandidate type.
+ */
+export interface SupplierMatchPolicyFilterResult {
+  /** JWT-derived buyer org ID (echoed for traceability). */
+  buyerOrgId: string;
+  /** Candidates that passed all policy gates. INTERNAL — not buyer-facing. */
+  safeCandidates: SupplierMatchCandidateDraft[];
+  /** Internal violation log. MUST NOT be exposed to buyers. */
+  blocked: SupplierMatchPolicyViolation[];
+  /** Count of candidates blocked by policy gates. */
+  policyViolationsBlocked: number;
+  /**
+   * True when no safe candidates remain or input pool was empty.
+   * Downstream must handle this as a structured empty result, not an error.
+   */
+  fallback: boolean;
 }
 
 // ─── Future-Facing Stubs (Slices C+) ─────────────────────────────────────────
