@@ -338,3 +338,65 @@ export type RelationshipStateMutationResult =
       error: RelationshipStorageErrorCode;
       currentState: RelationshipState;
     };
+
+// ─── Slice C: Supplier Allowlist and Approval Service ───────────────────────
+
+/**
+ * Internal actor type for relationship allowlist decisions and audit hooks.
+ */
+export type RelationshipAuditActorType = 'BUYER' | 'SUPPLIER' | 'SYSTEM' | 'ADMIN';
+
+/**
+ * Internal audit event contract for relationship state changes.
+ * Persistence is optional and handled by service-level audit hooks.
+ */
+export interface RelationshipAllowlistAuditEvent {
+  supplierOrgId: string;
+  buyerOrgId: string;
+  previousState: RelationshipState;
+  newState: RelationshipState;
+  actorType: RelationshipAuditActorType;
+  actorUserId: string | null;
+  internalReason: string | null;
+  occurredAt: Date;
+}
+
+/**
+ * Public-safe relationship status shape for non-route service callers.
+ */
+export interface RelationshipAllowlistPublicStatus {
+  supplierOrgId: string;
+  buyerOrgId: string;
+  state: RelationshipState;
+  requestedAt: Date | null;
+  approvedAt: Date | null;
+  expiresAt: Date | null;
+  canRequestAccess: boolean;
+  clientSafeReason: ClientSafeReason;
+  safeMessageKey: string;
+}
+
+/**
+ * Extended service error codes for supplier allowlist operations.
+ */
+export type RelationshipAllowlistErrorCode =
+  | RelationshipStorageErrorCode
+  | 'OPERATION_NOT_ALLOWED';
+
+/**
+ * Result contract for supplier allowlist operations.
+ */
+export type RelationshipAllowlistOperationResult =
+  | {
+      ok: true;
+      wasNoop: boolean;
+      previousState: RelationshipState;
+      relationship: RelationshipStateSnapshot;
+      publicStatus: RelationshipAllowlistPublicStatus;
+    }
+  | {
+      ok: false;
+      error: RelationshipAllowlistErrorCode;
+      currentState: RelationshipState;
+      publicStatus: RelationshipAllowlistPublicStatus;
+    };

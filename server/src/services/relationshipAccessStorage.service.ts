@@ -131,7 +131,7 @@ export function isRelationshipTransitionAllowed(
 
   switch (currentState) {
     case 'NONE':
-      return nextState === 'REQUESTED';
+      return nextState === 'REQUESTED' || nextState === 'BLOCKED';
     case 'REQUESTED':
       return (
         nextState === 'APPROVED' ||
@@ -142,13 +142,21 @@ export function isRelationshipTransitionAllowed(
       return (
         nextState === 'REVOKED' ||
         nextState === 'SUSPENDED' ||
-        nextState === 'EXPIRED'
+        nextState === 'EXPIRED' ||
+        nextState === 'BLOCKED'
       );
     case 'SUSPENDED':
-      return nextState === 'APPROVED';
+      return (
+        nextState === 'APPROVED' ||
+        nextState === 'REVOKED' ||
+        nextState === 'BLOCKED'
+      );
     case 'REJECTED':
     case 'REVOKED':
     case 'EXPIRED':
+      if (nextState === 'BLOCKED') {
+        return true;
+      }
       return options.allowReapply === true && nextState === 'REQUESTED';
     case 'BLOCKED':
       return false;
