@@ -899,4 +899,81 @@ describe('POST /tenant/catalog/items/:itemId/rfq-prefill', () => {
       }),
     );
   });
+
+  it('E-R01: cross-tenant denial path does not leak product or supplier internals', async () => {
+    setupItemNotFound();
+    app = await buildTestApp(true);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tenant/catalog/items/${TEST_ITEM_ID}/rfq-prefill`,
+      headers: { 'content-type': 'application/json' },
+      payload: {},
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).not.toContain('Cotton Twill Fabric');
+    expect(res.body).not.toContain(TEST_SUPPLIER_ID);
+
+    for (const forbidden of [
+      'price_disclosure_policy_mode',
+      'supplierPolicy',
+      'policyId',
+      'policyAudit',
+      'commercialTerms',
+      'supplierEmail',
+      'supplierPhone',
+      'publicationPosture',
+      'unpublishedEvidence',
+      'aiExtractionDraft',
+      'ranking',
+      'risk_score',
+    ]) {
+      expect(res.body).not.toContain(forbidden);
+    }
+  });
+
+  it('E-R02: client buyerOrgId override is ignored and session org remains authoritative', async () => {
+    setupHappyPath();
+    app = await buildTestApp(true);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tenant/catalog/items/${TEST_ITEM_ID}/rfq-prefill`,
+      headers: { 'content-type': 'application/json' },
+      payload: {
+        buyerOrgId: 'eeeeeeee-0000-4000-8000-eeeeeeeeeeee',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body) as { data: { ok: boolean; data: { buyerOrgId: string } } };
+    expect(body.data.ok).toBe(true);
+    expect(body.data.data.buyerOrgId).toBe(TEST_ORG_ID);
+  });
+
+  it('E-R03: repeated prefill calls remain read-only and do not auto-create RFQs', async () => {
+    setupHappyPath();
+    setupHappyPath();
+    app = await buildTestApp(true);
+
+    const first = await app.inject({
+      method: 'POST',
+      url: `/tenant/catalog/items/${TEST_ITEM_ID}/rfq-prefill`,
+      headers: { 'content-type': 'application/json' },
+      payload: {},
+    });
+    const second = await app.inject({
+      method: 'POST',
+      url: `/tenant/catalog/items/${TEST_ITEM_ID}/rfq-prefill`,
+      headers: { 'content-type': 'application/json' },
+      payload: {},
+    });
+
+    expect(first.statusCode).toBe(200);
+    expect(second.statusCode).toBe(200);
+    expect(mockPrismaTransaction).toHaveBeenCalledTimes(2);
+    expect(first.body).not.toContain('draft_id');
+    expect(second.body).not.toContain('draft_id');
+  });
 });

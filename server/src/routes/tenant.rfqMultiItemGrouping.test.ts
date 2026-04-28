@@ -307,7 +307,7 @@ async function buildTestApp(options?: {
     const selected: DraftRow[] = [];
     for (const draftId of parsed.data.draftIds) {
       const row = drafts.get(draftId);
-      if (!row || row.orgId !== req.dbContext.orgId) {
+      if (row?.orgId !== req.dbContext.orgId) {
         return localSendError(reply, 'NOT_FOUND', 'One or more RFQ drafts were not found for this buyer', 404);
       }
       selected.push(row);
@@ -684,5 +684,127 @@ describe('Slice D multi-item grouping and supplier mapping', () => {
     const ids = body.data.supplier_groups.flatMap(group => group.line_items.map(l => l.draft_id));
     expect(ids.length).toBe(2);
     expect(ids.every(id => UUID_RX.test(id))).toBe(true);
+  });
+
+  it('E-R01: multi-item submit denies cross-buyer draft ownership and does not leak details', async () => {
+    const seeded: DraftRow[] = [{
+      id: '00000000-0000-4000-8000-000000000031',
+      orgId: OTHER_BUYER_ORG_ID,
+      supplierOrgId: SUPPLIER_1,
+      catalogItemId: ITEM_SUP1_A,
+      quantity: 1,
+      buyerMessage: 'other buyer draft',
+      specNotes: 'secret spec',
+      status: 'INITIATED',
+    }];
+    const built = await buildTestApp({ catalog: BASE_CATALOG, buyerOrgId: BUYER_ORG_ID, seededDrafts: seeded });
+    app = built.app;
+
+    const res = await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [seeded[0].id] } });
+    expect(res.statusCode).toBe(404);
+    expect(res.body).not.toContain('other buyer draft');
+    expect(res.body).not.toContain('secret spec');
+    expect(res.body).not.toContain('supplier_org_id');
+  });
+
+  it('E-R02: supplier inbox payload excludes buyer draft-only metadata', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: {
+        lineItems: [{ catalogItemId: ITEM_SUP1_A, specNotes: 'private yarn twist' }],
+        buyerNotes: 'confidential buyer note',
+      },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
+    const draftId = createBody.data.supplier_groups[0].line_items[0].draft_id;
+
+    await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [draftId] } });
+    const inboxRes = await app.inject({ method: 'GET', url: '/tenant/rfqs/inbox' });
+    expect(inboxRes.statusCode).toBe(200);
+
+    for (const forbidden of ['buyer_notes', 'spec_notes', 'buyer_org_id', 'policyAudit', 'supplierEmail']) {
+      expect(inboxRes.body).not.toContain(forbidden);
+    }
+  });
+
+  it('E-R03: client-supplied supplier grouping payload is rejected', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: {
+        lineItems: [{ catalogItemId: ITEM_SUP1_A }],
+        supplier_groups: [{ supplier_org_id: SUPPLIER_2, line_items: [] }],
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('E-R04: cross-tenant blocked multi-item response does not leak product or supplier internals', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG.filter(item => item.id !== ITEM_SUP2_A) });
+    app = built.app;
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP2_A }] },
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.body).not.toContain('Poly C');
+    expect(res.body).not.toContain(SUPPLIER_2);
+    for (const forbidden of [
+      'supplierPolicy',
+      'price_disclosure_policy_mode',
+      'commercialTerms',
+      'internalSupplierContact',
+      'supplierPhone',
+      'publicationPosture',
+      'unpublishedEvidence',
+      'aiExtractionDraft',
+    ]) {
+      expect(res.body).not.toContain(forbidden);
+    }
+  });
+
+  it('E-R05: submit response never returns mixed-supplier line payload within a supplier group', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }, { catalogItemId: ITEM_SUP2_A }] },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ supplier_org_id: string; line_items: Array<{ draft_id: string }> }> } };
+    const draftIds = createBody.data.supplier_groups.flatMap(group => group.line_items.map(line => line.draft_id));
+
+    const submitRes = await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds } });
+    const submitBody = JSON.parse(submitRes.body) as {
+      data: {
+        supplier_groups: Array<{
+          supplier_org_id: string;
+          line_items: Array<{ draft_id: string }>;
+        }>;
+      };
+    };
+
+    const draftToSupplier = new Map<string, string>();
+    for (const row of Array.from(built.drafts.values())) {
+      draftToSupplier.set(row.id, row.supplierOrgId);
+    }
+
+    for (const group of submitBody.data.supplier_groups) {
+      expect(group.line_items.length).toBeGreaterThan(0);
+      for (const line of group.line_items) {
+        expect(draftToSupplier.get(line.draft_id)).toBe(group.supplier_org_id);
+      }
+    }
   });
 });

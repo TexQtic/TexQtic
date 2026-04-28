@@ -747,4 +747,71 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
 
     expect(mockWriteAuditLog).toHaveBeenCalled();
   });
+
+  it('E-R01: submit requires trusted buyer dbContext', async () => {
+    app = await buildTestApp(false);
+
+    const res = await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('E-R02: cross-tenant submit denial does not leak sensitive draft or policy fields', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx({ draft: null });
+    app = await buildTestApp(true, OTHER_ORG_ID);
+
+    const res = await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    expect(res.statusCode).toBe(404);
+
+    for (const forbidden of [
+      'catalog_item_id',
+      'supplier_org_id',
+      'buyer_notes',
+      'product_name',
+      'price_disclosure_policy_mode',
+      'supplierPolicy',
+      'policyAudit',
+      'risk_score',
+      'ranking',
+      'aiExtractionDraft',
+    ]) {
+      expect(res.body).not.toContain(forbidden);
+    }
+  });
+
+  it('E-R03: draft create rejects client ownership override fields', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    const tx = setupDbTx();
+    app = await buildTestApp();
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/from-catalog-item',
+      payload: {
+        catalogItemId: TEST_ITEM_ID,
+        buyerOrgId: OTHER_ORG_ID,
+        orgId: OTHER_ORG_ID,
+        supplierOrgId: OTHER_ORG_ID,
+        createdByUserId: '99999999-9999-4999-8999-999999999999',
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(tx.rfq.create).not.toHaveBeenCalled();
+  });
+
+  it('E-R04: cross-tenant unavailable item denial on create does not leak supplier identity', async () => {
+    mockPrismaTransaction.mockResolvedValueOnce([]);
+    const tx = setupDbTx();
+    app = await buildTestApp();
+
+    const res = await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/from-catalog-item', payload: { catalogItemId: TEST_ITEM_ID } });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).not.toContain(TEST_SUPPLIER_ID);
+
+    for (const forbidden of ['supplierEmail', 'supplierPhone', 'policyId', 'commercialTerms', 'publicationPosture']) {
+      expect(res.body).not.toContain(forbidden);
+    }
+    expect(tx.rfq.create).not.toHaveBeenCalled();
+  });
 });
