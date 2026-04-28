@@ -348,6 +348,7 @@ model CatalogItem {
   moq                Int         @default(1)
   imageUrl           String?     @map("image_url")
   publicationPosture String      @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
+  priceDisclosurePolicyMode String? @map("price_disclosure_policy_mode") @db.VarChar(30)
   productCategory    String?     @map("product_category") @db.VarChar(50)
   fabricType         String?     @map("fabric_type") @db.VarChar(50)
   gsm                Decimal?    @db.Decimal(6, 1)
@@ -1034,6 +1035,7 @@ model organizations {
   external_orchestration_ref   String?                        @unique @db.VarChar(255)
   primary_segment_key          String?                        @db.VarChar(100)
   publication_posture          String                         @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
+  price_disclosure_policy_mode String?                        @db.VarChar(30)
   certification_lifecycle_logs CertificationLifecycleLog[]
   certifications               Certification[]
   documentEmbeddings           DocumentEmbedding[]

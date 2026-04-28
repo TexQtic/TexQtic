@@ -120,6 +120,71 @@ describe('resolveSupplierDisclosurePolicyForPdp', () => {
     });
   });
 
+  it('maps supplier-level ALWAYS_VISIBLE to SUPPLIER_DEFAULT policy', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'ALWAYS_VISIBLE',
+    });
+
+    expect(result).toEqual({
+      mode: 'ALWAYS_VISIBLE',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('maps supplier-level AUTH_ONLY to SUPPLIER_DEFAULT policy', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toEqual({
+      mode: 'AUTH_ONLY',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('maps supplier-level ELIGIBLE_ONLY to SUPPLIER_DEFAULT policy', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'ELIGIBLE_ONLY',
+    });
+
+    expect(result).toEqual({
+      mode: 'ELIGIBLE_ONLY',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('maps supplier-level RFQ_ONLY to SUPPLIER_DEFAULT policy', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'RFQ_ONLY',
+    });
+
+    expect(result).toEqual({
+      mode: 'RFQ_ONLY',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('maps supplier-level RELATIONSHIP_ONLY to SUPPLIER_DEFAULT policy', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'org-001',
+      supplierOrgId: 'org-001',
+      supplierPolicyMode: 'RELATIONSHIP_ONLY',
+    });
+
+    expect(result).toEqual({
+      mode: 'RELATIONSHIP_ONLY',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
   it('returns null when policy mode is unknown or ambiguous', () => {
     const result = resolveSupplierDisclosurePolicyForPdp({
       buyerOrgId: 'org-001',
@@ -291,5 +356,24 @@ describe('attachPriceDisclosureToPdpView', () => {
     });
 
     expect(result).toHaveProperty('priceDisclosure');
+  });
+
+  it('does not serialize supplier policy internals in buyer response payload', () => {
+    const result = attachPriceDisclosureToPdpView(makeBaseView(), {
+      buyer: {
+        isAuthenticated: true,
+        isEligible: false,
+      },
+      supplierPolicy: {
+        mode: 'AUTH_ONLY',
+        source: 'SUPPLIER_DEFAULT',
+      },
+    });
+
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain('policyId');
+    expect(serialized).not.toContain('createdBy');
+    expect(serialized).not.toContain('updatedBy');
+    expect(serialized).not.toContain('auditTrail');
   });
 });

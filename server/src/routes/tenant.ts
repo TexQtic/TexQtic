@@ -2131,6 +2131,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         id: string; tenant_id: string; name: string; sku: string | null;
         description: string | null; moq: number; image_url: string | null;
         publication_posture: string;
+        price_disclosure_policy_mode: string | null;
         product_category: string | null; fabric_type: string | null; gsm: unknown;
         material: string | null; composition: string | null; color: string | null;
         width_cm: unknown; construction: string | null; certifications: unknown;
@@ -2140,8 +2141,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const itemRows = await prisma.$transaction(async tx => {
         await tx.$executeRaw`SET LOCAL ROLE texqtic_rfq_read`;
         return tx.$queryRaw<RawPdpItemRow[]>`
-           SELECT id, tenant_id, name, sku, description, moq, image_url,
-             publication_posture,
+             SELECT id, tenant_id, name, sku, description, moq, image_url,
+               publication_posture,
+               price_disclosure_policy_mode,
                  product_category, fabric_type, gsm, material, composition,
                  color, width_cm, construction, certifications, catalog_stage
           FROM catalog_items
@@ -2162,12 +2164,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       type SupplierOrgData = {
         legalName: string;
         publicationPosture: string;
+        priceDisclosurePolicyMode: string | null;
       } | null;
       const supplierData: SupplierOrgData = await withOrgAdminContext(prisma, async tx => {
         const [org, tenant] = await Promise.all([
           tx.organizations.findUnique({
             where: { id: supplierTenantId },
-            select: { legal_name: true, publication_posture: true },
+            select: {
+              legal_name: true,
+              publication_posture: true,
+              price_disclosure_policy_mode: true,
+            },
           }),
           tx.tenant.findUnique({
             where: { id: supplierTenantId },
@@ -2186,6 +2193,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         return {
           legalName: org.legal_name,
           publicationPosture: org.publication_posture,
+          priceDisclosurePolicyMode: org.price_disclosure_policy_mode,
         };
       });
 
@@ -2293,6 +2301,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const supplierPolicy = resolveSupplierDisclosurePolicyForPdp({
         buyerOrgId: request.dbContext.orgId,
         supplierOrgId: supplierTenantId,
+        productPolicyMode: item.price_disclosure_policy_mode,
+        supplierPolicyMode: supplierData.priceDisclosurePolicyMode,
         // Existing publication posture is not explicit price-policy authority.
         productPublicationPosture: item.publication_posture,
         supplierPublicationPosture: supplierData.publicationPosture,
