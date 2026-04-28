@@ -23,7 +23,7 @@ export interface CatalogItem {
   /**
    * @deprecated Phantom client-side field. No DB column exists for category on catalog_items.
    * Retained for backward compatibility with WL surfaces that derive grouping from this field.
-   * Do not rely on this field in new code — it is always undefined at runtime.
+   * Do not rely on this field in new code â€” it is always undefined at runtime.
    */
   category?: string;
   moq?: number;
@@ -380,7 +380,7 @@ export interface RfqAssistSuggestions {
 
 /**
  * Response from POST /api/tenant/rfqs/:id/ai-assist.
- * humanConfirmationRequired is always true — the buyer must review every suggestion.
+ * humanConfirmationRequired is always true â€” the buyer must review every suggestion.
  */
 export interface RfqAssistResponse {
   suggestions: RfqAssistSuggestions | null;
@@ -394,7 +394,7 @@ export interface RfqAssistResponse {
 
 /**
  * Request AI-assisted field suggestions for an existing OPEN or RESPONDED RFQ.
- * The RFQ must already exist in the database — no draft creation is performed.
+ * The RFQ must already exist in the database â€” no draft creation is performed.
  * humanConfirmationRequired is always true in the response.
  */
 export async function requestRfqAssist(rfqId: string): Promise<RfqAssistResponse> {
@@ -463,7 +463,7 @@ export interface CertificationEntry {
 /**
  * A single catalog item as visible to an authenticated B2B buyer.
  * Phase 1 + textile attrs: id, name, sku, description, moq, imageUrl +
- * 9 textile attributes (all nullable) — NO price, NO publicationPosture.
+ * 9 textile attributes (all nullable) â€” NO price, NO publicationPosture.
  */
 export interface BuyerCatalogItem {
   id: string;
@@ -590,7 +590,7 @@ export async function getBuyerCatalogItems(
 
 /**
  * A single eligible supplier entry as returned to an authenticated B2B buyer.
- * Phase 2: id (UUID), slug, legalName, primarySegment only — NO price, NO item details.
+ * Phase 2: id (UUID), slug, legalName, primarySegment only â€” NO price, NO item details.
  */
 export interface SupplierPickerEntry {
   id: string;
@@ -623,7 +623,7 @@ export interface BuyerCatalogMedia {
   displayOrder: number;
 }
 
-/** Textile specifications on a buyer-facing catalog PDP — NO price, NO publicationPosture. */
+/** Textile specifications on a buyer-facing catalog PDP â€” NO price, NO publicationPosture. */
 export interface BuyerCatalogSpecification {
   productCategory: string | null;
   fabricType: string | null;
@@ -645,14 +645,14 @@ export interface BuyerCertificateSummaryItem {
   status: 'APPROVED' | 'EXPIRING_SOON';
 }
 
-/** Compliance summary — supplier-attested, subject to human review. */
+/** Compliance summary â€” supplier-attested, subject to human review. */
 export interface BuyerComplianceSummary {
   hasCertifications: boolean;
   certificates: BuyerCertificateSummaryItem[];
   humanReviewNotice: string;
 }
 
-/** Availability/MOQ summary — no price. */
+/** Availability/MOQ summary â€” no price. */
 export interface BuyerAvailabilitySummary {
   moqValue: number | null;
   moqUnit: string | null;
@@ -670,11 +670,36 @@ export interface BuyerRfqEntryDescriptor {
   stage: string | null;
 }
 
-/** Price placeholder — no actual price is ever disclosed in Phase 1. */
+/** Price placeholder â€” no actual price is ever disclosed in Phase 1. */
 export interface BuyerPricePlaceholder {
   label: 'Price available on request';
   subLabel: 'RFQ required for pricing' | null;
   note: string | null;
+}
+
+/** Server-provided safe price disclosure metadata (Slice B). */
+export interface BuyerPriceDisclosure {
+  price_visibility_state:
+    | 'PUBLIC_VISIBLE'
+    | 'AUTH_VISIBLE'
+    | 'ELIGIBLE_VISIBLE'
+    | 'HIDDEN'
+    | 'RFQ_ONLY'
+    | 'PRICE_ON_REQUEST'
+    | 'LOGIN_REQUIRED'
+    | 'ELIGIBILITY_REQUIRED';
+  price_display_policy: 'SHOW_VALUE' | 'SUPPRESS_VALUE';
+  price_value_visible: boolean;
+  price_label:
+    | 'Price available on request'
+    | 'Contact supplier'
+    | 'Login to view price'
+    | 'Eligibility required'
+    | 'Request quote';
+  cta_type: 'VIEW_PRICE' | 'REQUEST_QUOTE' | 'CONTACT_SUPPLIER' | 'LOGIN_TO_VIEW' | 'CHECK_ELIGIBILITY';
+  eligibility_reason: string | null;
+  supplier_policy_source: 'SUPPLIER_DEFAULT' | 'PRODUCT_OVERRIDE' | 'SYSTEM_SAFE_DEFAULT';
+  rfq_required: boolean;
 }
 
 /**
@@ -695,11 +720,12 @@ export interface BuyerCatalogPdpView {
   availabilitySummary: BuyerAvailabilitySummary;
   rfqEntry: BuyerRfqEntryDescriptor;
   pricePlaceholder: BuyerPricePlaceholder;
+  priceDisclosure: BuyerPriceDisclosure;
 }
 
 /**
  * Fetch a single catalog item for the authenticated B2B buyer (PDP read).
- * Server enforces eligibility and buyer-safe data contract — no price, no draft data.
+ * Server enforces eligibility and buyer-safe data contract â€” no price, no draft data.
  * TECS-B2B-BUYER-CATALOG-PDP-001 P-1.
  */
 export async function getBuyerCatalogPdpItem(itemId: string): Promise<BuyerCatalogPdpView> {
@@ -760,7 +786,7 @@ export interface SupplierProfileCompletenessResponse {
 
 /**
  * Request an AI-driven completeness analysis for the authenticated supplier's profile.
- * humanReviewRequired is always true — hardcoded in both the service and UI component.
+ * humanReviewRequired is always true â€” hardcoded in both the service and UI component.
  * Score is supplier-internal only and must never appear in buyer-facing surfaces.
  */
 export async function analyseSupplierProfileCompleteness(): Promise<SupplierProfileCompletenessResponse> {

@@ -1,6 +1,6 @@
 /**
  * TECS-B2B-BUYER-CATALOG-PDP-001 P-1
- * Backend PDP read contract — buyer-safe service tests
+ * Backend PDP read contract â€” buyer-safe service tests
  *
  * Test strategy:
  * - T1: getBuyerCatalogPdpItem calls the correct endpoint with itemId
@@ -93,15 +93,25 @@ function makePdpView(overrides: Partial<BuyerCatalogPdpView> = {}): BuyerCatalog
       subLabel: 'RFQ required for pricing',
       note: 'Pricing is confirmed through the quote process',
     },
+    priceDisclosure: {
+      price_visibility_state: 'PRICE_ON_REQUEST',
+      price_display_policy: 'SUPPRESS_VALUE',
+      price_value_visible: false,
+      price_label: 'Price available on request',
+      cta_type: 'REQUEST_QUOTE',
+      eligibility_reason: null,
+      supplier_policy_source: 'SYSTEM_SAFE_DEFAULT',
+      rfq_required: true,
+    },
     ...overrides,
   };
 }
 
 // ---------------------------------------------------------------------------
-// T1 — getBuyerCatalogPdpItem calls correct endpoint with itemId
+// T1 â€” getBuyerCatalogPdpItem calls correct endpoint with itemId
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T1: calls correct endpoint', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T1: calls correct endpoint', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('calls /api/tenant/catalog/items/:itemId with the correct item ID', async () => {
@@ -125,10 +135,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T1: calls correct endpoint', () => 
 });
 
 // ---------------------------------------------------------------------------
-// T2 — response contains all required BuyerCatalogPdpView fields
+// T2 â€” response contains all required BuyerCatalogPdpView fields
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T2: response shape', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T2: response shape', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('returns all required top-level fields', async () => {
@@ -153,10 +163,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T2: response shape', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T3 — response contains NO price field
+// T3 â€” response contains NO price field
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T3: no price field', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T3: no price field', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('does not expose any price field on the top-level view', async () => {
@@ -168,7 +178,8 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T3: no price field', () => {
     expect(result).not.toHaveProperty('price');
     expect(result).not.toHaveProperty('unitPrice');
     expect(result).not.toHaveProperty('pricePerMeter');
-    expect(result).not.toHaveProperty('priceDisclosure');
+    expect(result).toHaveProperty('priceDisclosure');
+    expect(result.priceDisclosure.price_value_visible).toBe(false);
   });
 
   it('does not expose price field in specifications', async () => {
@@ -191,10 +202,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T3: no price field', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T4 — response contains NO publicationPosture field
+// T4 â€” response contains NO publicationPosture field
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T4: no publicationPosture', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T4: no publicationPosture', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('does not expose publicationPosture on the view', async () => {
@@ -208,10 +219,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T4: no publicationPosture', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T5 — response contains NO AI draft / extraction fields
+// T5 â€” response contains NO AI draft / extraction fields
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T5: no AI draft fields', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T5: no AI draft fields', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('does not expose AI extraction fields', async () => {
@@ -246,10 +257,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T5: no AI draft fields', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T6 — media signedUrl is the only URL field; no raw storage URLs exposed
+// T6 â€” media signedUrl is the only URL field; no raw storage URLs exposed
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T6: media structure', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T6: media structure', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('media is an array (possibly empty)', async () => {
@@ -294,10 +305,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T6: media structure', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T7 — pricePlaceholder is structurally present with correct shape
+// T7 â€” pricePlaceholder is structurally present with correct shape
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T7: pricePlaceholder shape', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T7: pricePlaceholder shape', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('pricePlaceholder has label, subLabel, note', async () => {
@@ -315,10 +326,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T7: pricePlaceholder shape', () => 
 });
 
 // ---------------------------------------------------------------------------
-// T8 — complianceSummary.humanReviewNotice is always present
+// T8 â€” complianceSummary.humanReviewNotice is always present
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T8: humanReviewNotice structural constant', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T8: humanReviewNotice structural constant', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('humanReviewNotice is a non-empty string', async () => {
@@ -361,10 +372,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T8: humanReviewNotice structural co
 });
 
 // ---------------------------------------------------------------------------
-// T9 — rfqEntry contains only safe handoff fields
+// T9 â€” rfqEntry contains only safe handoff fields
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T9: rfqEntry safe fields', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T9: rfqEntry safe fields', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('rfqEntry has itemId, supplierId, itemTitle, triggerLabel, category, stage', async () => {
@@ -397,10 +408,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T9: rfqEntry safe fields', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T10 — missing item (404) propagates rejection
+// T10 â€” missing item (404) propagates rejection
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T10: missing item 404', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T10: missing item 404', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('rejects when server returns a 404-style error', async () => {
@@ -411,10 +422,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T10: missing item 404', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T11 — out-of-scope item (not B2B_PUBLIC) propagates rejection
+// T11 â€” out-of-scope item (not B2B_PUBLIC) propagates rejection
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T11: out-of-scope item 404', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T11: out-of-scope item 404', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('rejects when server returns 404 for non-publication-eligible item', async () => {
@@ -427,10 +438,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T11: out-of-scope item 404', () => 
 });
 
 // ---------------------------------------------------------------------------
-// T12 — media array is always present (possibly empty)
+// T12 â€” media array is always present (possibly empty)
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T12: media array contract', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T12: media array contract', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('media is an empty array when item has no imageUrl', async () => {
@@ -462,10 +473,10 @@ describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T12: media array contract', () => {
 });
 
 // ---------------------------------------------------------------------------
-// T13 — specifications has all 9 textile fields + certifications label list
+// T13 â€” specifications has all 9 textile fields + certifications label list
 // ---------------------------------------------------------------------------
 
-describe('TECS-B2B-BUYER-CATALOG-PDP-001 — T13: specifications structure', () => {
+describe('TECS-B2B-BUYER-CATALOG-PDP-001 â€” T13: specifications structure', () => {
   beforeEach(() => { tenantGetMock.mockReset(); });
 
   it('specifications has all 9 textile fields', async () => {

@@ -1,5 +1,5 @@
 /**
- * CatalogPdpSurface — Buyer Catalog Product Detail Page shell
+ * CatalogPdpSurface â€” Buyer Catalog Product Detail Page shell
  * TECS-B2B-BUYER-CATALOG-PDP-001 P-2 / P-3
  *
  * Renders the PDP layout for an authenticated B2B buyer.
@@ -12,7 +12,7 @@
  * - No DPP Passport integration
  * - No relationship access gates
  * - No unauthenticated access
- * - Compliance notice is a structural constant — no AI draft data rendered
+ * - Compliance notice is a structural constant â€” no AI draft data rendered
  *
  * Test IDs per Section J of design artifact:
  *   buyer-catalog-pdp-page, buyer-catalog-pdp-hero, buyer-catalog-pdp-media-gallery,
@@ -29,6 +29,7 @@ import type {
   BuyerCatalogMedia,
   BuyerCatalogPdpView,
   BuyerCertificateSummaryItem,
+  BuyerPriceDisclosure,
 } from '../../services/catalogService';
 
 // ---------------------------------------------------------------------------
@@ -37,22 +38,22 @@ import type {
 
 /**
  * Canonical compliance notice label.
- * Structural constant — must not display AI draft data or confidence scores.
+ * Structural constant â€” must not display AI draft data or confidence scores.
  */
 export const CATALOG_PDP_COMPLIANCE_NOTICE =
-  'AI-generated extraction · Human review required before acting on any extracted data';
+  'AI-generated extraction \u00B7 Human review required before acting on any extracted data';
 
-/** Copy for the price placeholder section — no actual price ever disclosed. */
+/** Copy for the price placeholder section â€” no actual price amount ever disclosed. */
 export const CATALOG_PDP_PRICE_PLACEHOLDER_LABEL = 'Price available on request' as const;
 export const CATALOG_PDP_PRICE_PLACEHOLDER_SUBLABEL = 'RFQ required for pricing' as const;
 
-/** RFQ entry trigger label — no auto-submit, no multi-item basket. */
+/** RFQ entry trigger label â€” no auto-submit, no multi-item basket. */
 export const CATALOG_PDP_RFQ_TRIGGER_LABEL = 'Request Quote' as const;
 
 /** Safe loading copy. */
-export const CATALOG_PDP_LOADING_COPY = 'Loading item details…' as const;
+export const CATALOG_PDP_LOADING_COPY = 'Loading item details\u2026' as const;
 
-/** Safe error copy — no stack traces, no tenant IDs. */
+/** Safe error copy â€” no stack traces, no tenant IDs. */
 export const CATALOG_PDP_ERROR_COPY = 'Unable to load item details.' as const;
 
 /** Safe not-found copy. */
@@ -137,6 +138,85 @@ export function resolveMediaTypeBadge(media: BuyerCatalogMedia): string {
   return map[media.mediaType] ?? media.mediaType;
 }
 
+type PdpPriceDisclosureRenderModel = {
+  label: string;
+  subLabel: string;
+  ctaLabel: string;
+  ctaType: BuyerPriceDisclosure['cta_type'];
+  eligibilityReason: string | null;
+};
+
+const DISCLOSURE_FALLBACK: PdpPriceDisclosureRenderModel = {
+  label: CATALOG_PDP_PRICE_PLACEHOLDER_LABEL,
+  subLabel: CATALOG_PDP_PRICE_PLACEHOLDER_SUBLABEL,
+  ctaLabel: 'Request quote',
+  ctaType: 'REQUEST_QUOTE',
+  eligibilityReason: null,
+};
+
+function isValidDisclosure(disclosure: unknown): disclosure is BuyerPriceDisclosure {
+  if (typeof disclosure !== 'object' || disclosure == null) {
+    return false;
+  }
+
+  const d = disclosure as Partial<BuyerPriceDisclosure>;
+  const validPolicy = d.price_display_policy === 'SHOW_VALUE' || d.price_display_policy === 'SUPPRESS_VALUE';
+  const validCta =
+    d.cta_type === 'VIEW_PRICE'
+    || d.cta_type === 'REQUEST_QUOTE'
+    || d.cta_type === 'CONTACT_SUPPLIER'
+    || d.cta_type === 'LOGIN_TO_VIEW'
+    || d.cta_type === 'CHECK_ELIGIBILITY';
+
+  return typeof d.price_label === 'string'
+    && typeof d.price_value_visible === 'boolean'
+    && validPolicy
+    && validCta;
+}
+
+export function resolvePdpPriceDisclosureModel(
+  disclosure: BuyerPriceDisclosure | null | undefined | unknown,
+): PdpPriceDisclosureRenderModel {
+  if (!isValidDisclosure(disclosure)) {
+    return DISCLOSURE_FALLBACK;
+  }
+
+  const ctaLabelMap: Record<BuyerPriceDisclosure['cta_type'], string> = {
+    VIEW_PRICE: 'View price state',
+    REQUEST_QUOTE: 'Request quote',
+    CONTACT_SUPPLIER: 'Contact supplier',
+    LOGIN_TO_VIEW: 'Login to view',
+    CHECK_ELIGIBILITY: 'Check eligibility',
+  };
+
+  const ctaSubLabelMap: Record<BuyerPriceDisclosure['cta_type'], string> = {
+    VIEW_PRICE: 'Price visibility state is active',
+    REQUEST_QUOTE: CATALOG_PDP_PRICE_PLACEHOLDER_SUBLABEL,
+    CONTACT_SUPPLIER: 'Contact supplier for pricing details',
+    LOGIN_TO_VIEW: 'Sign in is required before price visibility can be shown',
+    CHECK_ELIGIBILITY: 'Buyer eligibility is required before price visibility can be shown',
+  };
+
+  if (disclosure.price_display_policy === 'SUPPRESS_VALUE' || !disclosure.price_value_visible) {
+    return {
+      label: disclosure.price_label || CATALOG_PDP_PRICE_PLACEHOLDER_LABEL,
+      subLabel: ctaSubLabelMap[disclosure.cta_type] || CATALOG_PDP_PRICE_PLACEHOLDER_SUBLABEL,
+      ctaLabel: ctaLabelMap[disclosure.cta_type] || 'Request quote',
+      ctaType: disclosure.cta_type,
+      eligibilityReason: disclosure.eligibility_reason,
+    };
+  }
+
+  // Visible-state readiness in Slice C: do not invent or render amount values.
+  return {
+    label: disclosure.price_label || CATALOG_PDP_PRICE_PLACEHOLDER_LABEL,
+    subLabel: ctaSubLabelMap[disclosure.cta_type],
+    ctaLabel: ctaLabelMap[disclosure.cta_type],
+    ctaType: disclosure.cta_type,
+    eligibilityReason: disclosure.eligibility_reason,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // P-4: RFQ trigger payload type and validator
 // ---------------------------------------------------------------------------
@@ -176,7 +256,7 @@ export type CatalogPdpSurfaceProps = Readonly<{
   onBack: () => void;
   /**
    * Called when buyer presses "Request Quote".
-   * P-4: passes full RfqTriggerPayload (5 safe fields) — no prefill, no auto-submit.
+   * P-4: passes full RfqTriggerPayload (5 safe fields) â€” no prefill, no auto-submit.
    * Auto-submit and multi-item basket remain forbidden.
    */
   onRequestQuote: (payload: RfqTriggerPayload) => void;
@@ -228,7 +308,7 @@ function PdpMediaGallery({
         <div
           className="flex h-48 items-center justify-center text-sm text-slate-400"
           role="img"
-          aria-label={`${item.title} — no images uploaded`}
+          aria-label={`${item.title} â€” no images uploaded`}
         >
           {CATALOG_PDP_MEDIA_EMPTY_COPY}
         </div>
@@ -236,7 +316,7 @@ function PdpMediaGallery({
     );
   }
 
-  // Sort by displayOrder before rendering — no raw storage paths in DOM.
+  // Sort by displayOrder before rendering â€” no raw storage paths in DOM.
   const sorted = [...item.media].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
@@ -399,7 +479,6 @@ function PdpComplianceSummary({
         <ul className="space-y-2">
           {complianceSummary.certificates.map((cert, idx) => (
             <li
-              /* eslint-disable-next-line react/no-array-index-key */
               key={`${cert.certificateType}-${idx}`}
               className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold mr-2 ${resolveCertStatusTone(cert.status)}`}
             >
@@ -459,14 +538,42 @@ function PdpAvailabilitySummary({
   );
 }
 
-function PdpPricePlaceholder() {
+function PdpPriceDisclosurePanel({
+  item,
+}: Readonly<{ item: BuyerCatalogPdpView }>) {
+  const disclosureModel = resolvePdpPriceDisclosureModel(item.priceDisclosure);
+
   return (
     <section
       data-testid="buyer-catalog-pdp-price-placeholder"
       className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 space-y-1"
     >
-      <p className="text-base font-semibold text-slate-700">{CATALOG_PDP_PRICE_PLACEHOLDER_LABEL}</p>
-      <p className="text-sm text-slate-500">{CATALOG_PDP_PRICE_PLACEHOLDER_SUBLABEL}</p>
+      <p
+        data-testid="buyer-catalog-pdp-price-disclosure-label"
+        className="text-base font-semibold text-slate-700"
+      >
+        {disclosureModel.label}
+      </p>
+      <p
+        data-testid="buyer-catalog-pdp-price-disclosure-sublabel"
+        className="text-sm text-slate-500"
+      >
+        {disclosureModel.subLabel}
+      </p>
+      <span
+        data-testid="buyer-catalog-pdp-price-disclosure-cta"
+        className="inline-flex mt-2 items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+      >
+        {disclosureModel.ctaLabel}
+      </span>
+      {disclosureModel.eligibilityReason != null && disclosureModel.eligibilityReason.length > 0 && (
+        <p
+          data-testid="buyer-catalog-pdp-price-disclosure-reason"
+          className="text-[11px] text-slate-500"
+        >
+          {disclosureModel.eligibilityReason}
+        </p>
+      )}
     </section>
   );
 }
@@ -509,7 +616,7 @@ function PdpRfqEntry({
 }
 
 // ---------------------------------------------------------------------------
-// CatalogPdpSurface — main export
+// CatalogPdpSurface â€” main export
 // ---------------------------------------------------------------------------
 
 export function CatalogPdpSurface({
@@ -519,7 +626,7 @@ export function CatalogPdpSurface({
   onBack,
   onRequestQuote,
 }: CatalogPdpSurfaceProps) {
-  // Back button — always visible so user can escape any state.
+  // Back button â€” always visible so user can escape any state.
   const BackButton = (
     <button
       type="button"
@@ -527,7 +634,7 @@ export function CatalogPdpSurface({
       onClick={onBack}
       className="text-slate-400 text-sm hover:text-slate-700 transition"
     >
-      ← Back to catalog
+      â† Back to catalog
     </button>
   );
 
@@ -564,7 +671,7 @@ export function CatalogPdpSurface({
     );
   }
 
-  // Defensive check — item should be non-null here; caught above otherwise.
+  // Defensive check â€” item should be non-null here; caught above otherwise.
   if (item == null) {
     return null;
   }
@@ -587,7 +694,7 @@ export function CatalogPdpSurface({
           <PdpAvailabilitySummary item={item} />
         </div>
         <div className="space-y-4">
-          <PdpPricePlaceholder />
+          <PdpPriceDisclosurePanel item={item} />
           <PdpRfqEntry item={item} onRequestQuote={onRequestQuote} />
           <PdpSupplierSummary item={item} />
         </div>
