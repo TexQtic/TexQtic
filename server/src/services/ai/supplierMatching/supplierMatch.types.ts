@@ -553,19 +553,141 @@ export interface SupplierMatchRankerResult {
   rankedCandidates: SupplierMatchRankedCandidate[];
 }
 
-// ─── Future-Facing Stubs (Slice D, F) ────────────────────────────────────────
+// ─── Slice D — Explanation Builder & Runtime Guard Types ─────────────────────
 
 /**
- * Runtime guard result for post-ranking policy enforcement.
- * Slice F — runtime guard. Stub only; no implementation authorized yet.
+ * Safe human-readable label for a supplier match explanation.
+ * Deterministically derived from match categories only.
+ *
+ * Constitutional constraints:
+ * - NEVER contains relationship state (APPROVED, BLOCKED, REJECTED, SUSPENDED).
+ * - NEVER contains numeric score, rank, or confidence value.
+ * - NEVER contains raw policy, price, or allowlist data.
+ * - All values are allowlist-derived from CATEGORY_LABEL_MAP in the explanation builder.
+ */
+export type SupplierMatchExplanationLabel =
+  | 'Matches requested material'
+  | 'Matches catalog category'
+  | 'Published certification match'
+  | 'Matches RFQ requirement'
+  | 'Geography fit'
+  | 'MOQ compatible'
+  | 'Connected supplier'
+  | 'Published DPP match'
+  | 'Potential supplier match'; // safe generic fallback
+
+/**
+ * Input to the SupplierMatchExplanationBuilder.
+ * Must contain only already-safe, policy-filtered, ranked data.
+ * No raw request body fields may be passed here.
+ */
+export interface SupplierMatchExplanationBuilderInput {
+  /** JWT-derived buyer org ID — never from request body. */
+  buyerOrgId: string;
+  /**
+   * Distinct match categories derived from safe signals (from SupplierMatchRankedCandidate).
+   * Empty array → falls back to generic safe explanation.
+   */
+  matchCategories: SupplierMatchCategory[];
+}
+
+/**
+ * Output of the SupplierMatchExplanationBuilder.
+ * The explanation contains only label-map-derived text; no raw model output.
+ */
+export interface SupplierMatchExplanationBuilderResult {
+  /** Buyer-safe explanation with primary and supporting labels. */
+  explanation: SupplierMatchExplanation;
+}
+
+/**
+ * Discriminator for runtime guard violation reasons.
+ * Used by SupplierMatchRuntimeGuard to classify detected violations.
+ * INTERNAL ONLY — must not be exposed to buyers.
+ */
+export type SupplierMatchRuntimeGuardViolationReason =
+  | 'FORBIDDEN_FIELD_PRESENT'    // Generic forbidden JSON key
+  | 'FORBIDDEN_TEXT_PRESENT'     // Generic forbidden text fragment
+  | 'RELATIONSHIP_STATE_LEAK'    // relationshipState, blockedReason, publicationPosture, etc.
+  | 'ALLOWLIST_GRAPH_LEAK'       // allowlistGraph, relationshipGraph
+  | 'HIDDEN_PRICE_LEAK'          // price, amount, margin, commercialTerms, payment, etc.
+  | 'INTERNAL_SCORE_LEAK'        // score, rank, confidence, riskScore, etc.
+  | 'UNPUBLISHED_DPP_LEAK'       // unpublishedEvidence
+  | 'AI_DRAFT_LEAK'              // aiExtractionDraft, draftExtraction, aiDraftData
+  | 'CROSS_TENANT_LEAK'          // cross-tenant candidate detected
+  | 'UNSAFE_EXPLANATION'         // forbidden text in explanation label
+  | 'UNKNOWN_UNSAFE_OUTPUT';     // catch-all for unclassified unsafe output
+
+/**
+ * A single violation recorded by the SupplierMatchRuntimeGuard.
+ *
+ * CRITICAL: raw hidden field values are NEVER included in violation records.
+ * fieldName records the key that triggered the violation — NOT its value.
+ * labelIndex records the supportingLabels position if applicable.
+ */
+export interface SupplierMatchRuntimeGuardViolation {
+  /** Supplier org ID of the blocked candidate (opaque; safe for internal audit). */
+  supplierOrgId: string;
+  /** Classification of the violation type. */
+  violationReason: SupplierMatchRuntimeGuardViolationReason;
+  /**
+   * Name of the offending JSON key (NOT its value).
+   * Raw field values are constitutionally forbidden from violation records.
+   */
+  fieldName?: string;
+  /**
+   * Position in explanation.supportingLabels (0-based) if the violation was in a
+   * supporting label. -1 indicates a primaryLabel violation.
+   */
+  labelIndex?: number;
+}
+
+/**
+ * Input to the SupplierMatchRuntimeGuard.
+ * Candidates should be buyer-facing SupplierMatchCandidate instances
+ * produced by the ranking layer (Slice C).
+ */
+export interface SupplierMatchRuntimeGuardInput {
+  /** JWT-derived buyer org ID — never from request body. */
+  buyerOrgId: string;
+  /** Buyer-facing ranked candidates to validate and sanitize. */
+  candidates: SupplierMatchCandidate[];
+  /** Optional stable request reference for audit correlation. */
+  requestId?: string;
+}
+
+/**
+ * Output of the SupplierMatchRuntimeGuard.
+ *
+ * passed — true when ALL candidates pass and there are no violations (including empty input).
+ * sanitizedCandidates — candidates that survived the guard, in original order.
+ * blockedCandidateCount — count of candidates blocked by the guard.
+ * violations — internal records (MUST NOT be serialized into any API response).
+ *
+ * MUST NOT expose raw hidden field values in violations — fieldName only (not value).
  */
 export interface SupplierMatchRuntimeGuardResult {
-  /** Whether all candidates passed the guard. */
+  /** True when all candidates passed and violations list is empty. */
   passed: boolean;
-  /** Number of candidates blocked by the guard. */
-  blockedCandidateCount: number;
-  /** Internal block reasons — NOT buyer-facing. */
-  blockReasons: string[];
-  /** Sanitized candidates after guard pass (ordinal only). */
+  /** Surviving buyer-safe candidates in original input order. */
   sanitizedCandidates: SupplierMatchCandidate[];
+  /** Count of candidates blocked by the guard. */
+  blockedCandidateCount: number;
+  /**
+   * Internal violation records.
+   * MUST NOT be serialized into any API response or buyer-facing output.
+   * Raw hidden field values are NEVER included here.
+   */
+  violations: SupplierMatchRuntimeGuardViolation[];
 }
+
+// ─── Future-Facing Stubs (Slice F) ───────────────────────────────────────────
+
+/**
+ * Placeholder for Slice F (Optional embedding-layer guard and vector safety checks).
+ * Stub only — no implementation authorized until Slice F is explicitly authorized.
+ *
+ * When authorized, Slice F will extend the guard with embedding-layer checks
+ * using the existing 768-dim, orgId-scoped DocumentEmbedding infrastructure.
+ */
+// (No additional types for Slice F at this time.)
