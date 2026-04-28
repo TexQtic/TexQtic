@@ -43,10 +43,12 @@ import {
   buildPdpDisclosureMetadata,
   type BuyerCatalogPdpViewBase,
   resolveSupplierDisclosurePolicyForPdp,
+  resolveSupplierDisclosurePolicyForB2bPdp,
 } from '../services/pricing/pdpPriceDisclosure.service.js';
 import { buildCatalogRfqPrefillContext } from '../services/pricing/rfqPrefillContext.service.js';
 import {
   evaluateBuyerCatalogVisibility,
+  evaluateBuyerRelationshipPriceEligibility,
   filterBuyerVisibleCatalogItems,
 } from '../services/relationshipAccess.service.js';
 import { getRelationshipOrNone } from '../services/relationshipAccessStorage.service.js';
@@ -2570,7 +2572,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         },
       };
 
-      const supplierPolicy = resolveSupplierDisclosurePolicyForPdp({
+      const supplierPolicy = resolveSupplierDisclosurePolicyForB2bPdp({
         buyerOrgId: request.dbContext.orgId,
         supplierOrgId: supplierTenantId,
         productPolicyMode: item.price_disclosure_policy_mode,
@@ -2583,8 +2585,12 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const view: BuyerCatalogPdpView = attachPriceDisclosureToPdpView(baseView, {
         buyer: {
           isAuthenticated: true,
-          // Eligibility and relationship controls are future slices; keep default safe posture.
-          isEligible: false,
+          isEligible: evaluateBuyerRelationshipPriceEligibility({
+            buyerOrgId: request.dbContext.orgId,
+            supplierOrgId: supplierTenantId,
+            relationshipState: relationship.state,
+            relationshipExpiresAt: relationship.expiresAt,
+          }).isEligible,
           buyerOrgId: request.dbContext.orgId,
           supplierOrgId: supplierTenantId,
         },

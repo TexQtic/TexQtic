@@ -646,3 +646,35 @@ export function filterBuyerVisibleCatalogItems<Item>(
     return decision.canAccessCatalog;
   });
 }
+
+/**
+ * Evaluate whether the buyer's relationship state grants eligibility for
+ * RELATIONSHIP_ONLY price disclosure.
+ *
+ * Only APPROVED relationship state (with no active expiry) grants price eligibility.
+ * All other states (NONE, REQUESTED, REJECTED, BLOCKED, SUSPENDED, EXPIRED, REVOKED,
+ * INVALID/unknown) suppress price access (fail-safe default).
+ *
+ * Input trust model:
+ *   - relationshipState MUST be server-resolved from storage; clients cannot supply it.
+ *   - buyerOrgId MUST come from the authenticated session context.
+ *   - supplierOrgId MUST come from trusted catalog/item server-side context.
+ */
+export function evaluateBuyerRelationshipPriceEligibility(input: {
+  buyerOrgId: string | null;
+  supplierOrgId: string | null;
+  relationshipState?: unknown;
+  relationshipExpiresAt?: Date | string | null;
+  now?: string | Date;
+}): { isEligible: boolean } {
+  const decision = evaluateBuyerSupplierRelationshipAccess({
+    buyerOrgId: input.buyerOrgId,
+    supplierOrgId: input.supplierOrgId,
+    relationshipState: (input.relationshipState ?? 'NONE') as RelationshipState,
+    relationshipExpiresAt: input.relationshipExpiresAt ?? null,
+    pricePolicy: 'RELATIONSHIP_ONLY',
+    now: input.now,
+  });
+
+  return { isEligible: decision.canViewRelationshipOnlyPrices };
+}

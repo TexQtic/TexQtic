@@ -5,6 +5,7 @@ import * as resolverModule from '../services/pricing/priceDisclosureResolver.ser
 import {
   attachPriceDisclosureToPdpView,
   resolveSupplierDisclosurePolicyForPdp,
+  resolveSupplierDisclosurePolicyForB2bPdp,
   type BuyerCatalogPdpViewBase,
 } from '../services/pricing/pdpPriceDisclosure.service.js';
 
@@ -368,11 +369,11 @@ describe('attachPriceDisclosureToPdpView', () => {
     spy.mockRestore();
   });
 
-  it('keeps safe suppression for relationship-only policy without relationship lookup', () => {
+  it('suppresses price for RELATIONSHIP_ONLY when buyer is not eligible (no approved relationship)', () => {
     const result = attachPriceDisclosureToPdpView(makeBaseView(), {
       buyer: {
         isAuthenticated: true,
-        isEligible: true,
+        isEligible: false,
         buyerOrgId: 'buyer-org-001',
         supplierOrgId: 'supplier-org-001',
       },
@@ -389,6 +390,27 @@ describe('attachPriceDisclosureToPdpView', () => {
       cta_type: 'CHECK_ELIGIBILITY',
     });
     expect(result.priceDisclosure.price_value_visible).toBe(false);
+  });
+
+  it('reveals price for RELATIONSHIP_ONLY when buyer has approved relationship (isEligible: true)', () => {
+    const result = attachPriceDisclosureToPdpView(makeBaseView(), {
+      buyer: {
+        isAuthenticated: true,
+        isEligible: true,
+        buyerOrgId: 'buyer-org-001',
+        supplierOrgId: 'supplier-org-001',
+      },
+      supplierPolicy: {
+        mode: 'RELATIONSHIP_ONLY',
+        source: 'SUPPLIER_DEFAULT',
+      },
+    });
+
+    expect(result.priceDisclosure).toMatchObject({
+      price_visibility_state: 'ELIGIBLE_VISIBLE',
+      price_display_policy: 'SHOW_VALUE',
+      price_value_visible: true,
+    });
   });
 
   it('maps RFQ_ONLY policy to suppressed RFQ metadata and keeps RFQ entry unchanged', () => {
@@ -480,5 +502,96 @@ describe('attachPriceDisclosureToPdpView', () => {
     expect(serialized).not.toContain('createdBy');
     expect(serialized).not.toContain('updatedBy');
     expect(serialized).not.toContain('auditTrail');
+  });
+});
+
+describe('resolveSupplierDisclosurePolicyForB2bPdp', () => {
+  it('returns null when supplierOrgId is missing', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: null,
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('allows cross-org resolution (buyer org ≠ supplier org) unlike the RFQ-path guard', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-002',
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toEqual({
+      mode: 'AUTH_ONLY',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('returns null when no policy signals are provided', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-002',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('prefers product-level override over supplier default in cross-org context', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-002',
+      productPolicyMode: 'RELATIONSHIP_ONLY',
+      supplierPolicyMode: 'HIDDEN_ALL',
+    });
+
+    expect(result).toEqual({
+      mode: 'RELATIONSHIP_ONLY',
+      source: 'PRODUCT_OVERRIDE',
+    });
+  });
+
+  it('falls back to supplier default when product policy is absent', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-002',
+      supplierPolicyMode: 'RELATIONSHIP_ONLY',
+    });
+
+    expect(result).toEqual({
+      mode: 'RELATIONSHIP_ONLY',
+      source: 'SUPPLIER_DEFAULT',
+    });
+  });
+
+  it('returns null for unknown policy mode', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-002',
+      supplierPolicyMode: 'NOT_A_POLICY',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('returns null when supplierOrgId is whitespace-only', () => {
+    const result = resolveSupplierDisclosurePolicyForB2bPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: '   ',
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('resolveSupplierDisclosurePolicyForPdp (original) still rejects cross-org requests', () => {
+    const result = resolveSupplierDisclosurePolicyForPdp({
+      buyerOrgId: 'buyer-org-001',
+      supplierOrgId: 'supplier-org-002',
+      supplierPolicyMode: 'AUTH_ONLY',
+    });
+
+    expect(result).toBeNull();
   });
 });

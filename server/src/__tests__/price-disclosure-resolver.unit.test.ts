@@ -204,7 +204,7 @@ describe('resolvePriceDisclosureState', () => {
     expectNoPriceLikeFields(result);
   });
 
-  it('returns safe suppressed state for RELATIONSHIP_ONLY (future boundary)', () => {
+  it('returns ELIGIBLE_VISIBLE for RELATIONSHIP_ONLY when authenticated with approved eligibility', () => {
     const input: BuyerPriceDisclosureInput = {
       ...baseInput(),
       buyer: {
@@ -217,14 +217,57 @@ describe('resolvePriceDisclosureState', () => {
     const result = resolvePriceDisclosureState(input);
 
     expect(result).toMatchObject({
+      price_visibility_state: 'ELIGIBLE_VISIBLE',
+      price_display_policy: 'SHOW_VALUE',
+      price_value_visible: true,
+      rfq_required: false,
+    });
+    expectNoPriceLikeFields(result);
+  });
+
+  it('returns suppressed ELIGIBILITY_REQUIRED for RELATIONSHIP_ONLY when authenticated without eligibility', () => {
+    const input: BuyerPriceDisclosureInput = {
+      ...baseInput(),
+      buyer: {
+        isAuthenticated: true,
+        isEligible: false,
+      },
+      supplierPolicy: { mode: 'RELATIONSHIP_ONLY' },
+    };
+
+    const result = resolvePriceDisclosureState(input);
+
+    expect(result).toMatchObject({
       price_visibility_state: 'ELIGIBILITY_REQUIRED',
       price_display_policy: 'SUPPRESS_VALUE',
       price_value_visible: false,
-      price_label: 'Eligibility required',
+      price_label: 'Price available on request',
       cta_type: 'CHECK_ELIGIBILITY',
       rfq_required: false,
     });
     expect(typeof result.eligibility_reason).toBe('string');
+    expectNoPriceLikeFields(result);
+  });
+
+  it('returns LOGIN_REQUIRED for RELATIONSHIP_ONLY when unauthenticated', () => {
+    const input: BuyerPriceDisclosureInput = {
+      ...baseInput(),
+      buyer: {
+        isAuthenticated: false,
+        isEligible: false,
+      },
+      supplierPolicy: { mode: 'RELATIONSHIP_ONLY' },
+    };
+
+    const result = resolvePriceDisclosureState(input);
+
+    expect(result).toMatchObject({
+      price_visibility_state: 'LOGIN_REQUIRED',
+      price_display_policy: 'SUPPRESS_VALUE',
+      price_value_visible: false,
+      cta_type: 'LOGIN_TO_VIEW',
+      rfq_required: false,
+    });
     expectNoPriceLikeFields(result);
   });
 

@@ -98,6 +98,7 @@ vi.mock('../services/pricing/pdpPriceDisclosure.service.js', () => ({
     price_visibility_state: 'PRICE_ON_REQUEST',
   }),
   resolveSupplierDisclosurePolicyForPdp: () => ({ mode: 'SAFE_DEFAULT' }),
+  resolveSupplierDisclosurePolicyForB2bPdp: () => null,
 }));
 
 vi.mock('../routes/tenant/escalation.g022.js', () => ({ default: async () => undefined }));

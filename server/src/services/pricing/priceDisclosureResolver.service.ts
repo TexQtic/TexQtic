@@ -234,15 +234,31 @@ export function resolvePriceDisclosureState(
       };
 
     case 'RELATIONSHIP_ONLY':
+      if (!input.buyer.isAuthenticated) {
+        return {
+          price_visibility_state: 'LOGIN_REQUIRED',
+          price_display_policy: 'SUPPRESS_VALUE',
+          price_value_visible: false,
+          price_label: 'Login to view price',
+          cta_type: 'LOGIN_TO_VIEW',
+          eligibility_reason: null,
+          supplier_policy_source: policySource,
+          rfq_required: false,
+        };
+      }
+
+      if (input.buyer.isEligible === true) {
+        return buildVisibleState('ELIGIBLE_VISIBLE', policySource);
+      }
+
       return {
         price_visibility_state: 'ELIGIBILITY_REQUIRED',
         price_display_policy: 'SUPPRESS_VALUE',
         price_value_visible: false,
-        price_label: 'Eligibility required',
+        price_label: 'Price available on request',
         cta_type: 'CHECK_ELIGIBILITY',
         eligibility_reason:
-          input.eligibilityReason ??
-          'Relationship-gated pricing is not available in this slice',
+          input.eligibilityReason ?? 'Relationship approval required for pricing',
         supplier_policy_source: policySource,
         rfq_required: false,
       };
