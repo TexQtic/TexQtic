@@ -69,6 +69,7 @@ export type AiReadableDataClass = (typeof AI_READABLE_DATA_CLASSES)[number];
 export const AI_FORBIDDEN_DATA_CLASSES = [
   'CatalogItem.price',            // Price disclosure is Phase 3+; AI must never infer or reveal pricing
   'CatalogItem.publicationPosture', // Controls B2C/B2B visibility; AI must not use as filter or signal
+  'CatalogItem.catalogVisibilityPolicyMode', // Access-control policy; must never be exposed to AI as a filter or signal
   'escrow_accounts.*',            // Financial instrument; AI has zero authority over escrow state
   'escrow_transactions.*',        // Financial transaction record; AI must not process or summarize
   'organizations.risk_score',     // Control-plane only; tenant AI hard boundary
@@ -89,6 +90,8 @@ export type AiForbiddenDataClass = (typeof AI_FORBIDDEN_DATA_CLASSES)[number];
 export const AI_FORBIDDEN_FIELD_NAMES = [
   'price',
   'publicationPosture',
+  'catalogVisibilityPolicyMode',
+  'catalog_visibility_policy_mode',
   'escrow',
   'escrowAccount',
   'escrowAccounts',
