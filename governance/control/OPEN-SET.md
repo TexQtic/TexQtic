@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-28 (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — VERIFIED_COMPLETE; Slices A–H complete; 204/204 relationship tests PASS; governance closure commit TBD)
+**Last Updated:** 2026-04-29 (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — VERIFIED_COMPLETE; Slices A–H complete; 328/328 AI matching tests PASS; production Playwright verification PASS)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -456,6 +456,65 @@
     PDP 404 for QA-B2B-FAB-014: opaque sendNotFound consistent with relationship-gate — correct.
     Supplier management view: prices visible ($34/unit etc.) — plane separation correct.
     Status confirmed: VERIFIED_COMPLETE (tests + runtime).
+- TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 is VERIFIED_COMPLETE (2026-04-29).
+  Status: VERIFIED_COMPLETE. Closure date: 2026-04-29. Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
+  Design artifact: docs/TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001-DESIGN-v1.md.
+  Commit chain:
+    Design:    c04c3b2 — TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 design plan artifact
+    Slice A:   ca73de9 — safe supplier match signal builder
+    Slice B:   6a32ee4 — supplier match policy filter
+    Slice C:   f33b6b1 — deterministic supplier match ranker
+    Slice D:   f80351f — safe explanation guard
+    Slice E:   ae1738f — RFQ intent supplier matching
+    Slice F:   c8e396e — semantic signal guard
+    Slice G:   d835d00 — frontend recommendation surface (impl(ai-matching): add recommendation surface)
+    Slice H:   governance closure commit (this update)
+  Scope: AI Supplier Matching MVP — deterministic signal-based matching pipeline, policy filter, ranker,
+    explanation guard, runtime guard, RFQ intent matching, semantic signal guard, frontend recommendation
+    panel on Catalog PDP surface.
+  Tests (all passing):
+    Slice A — supplierMatchSignalBuilder: 50/50 PASS
+    Slice B — supplierMatchPolicyFilter: 49/49 PASS
+    Slice C — supplierMatchRanker: 51/51 PASS
+    Slice D — supplierMatchExplanationBuilder: 34/34 PASS
+    Slice D — supplierMatchRuntimeGuard: 61/61 PASS
+    Slice E — supplierMatchRfqIntent: 35/35 PASS
+    Slice F — supplierMatchSemanticSignal: 48/48 PASS
+    Slice G — b2b-buyer-catalog-pdp-recommendations: 21/21 PASS
+    Slice G — b2b-buyer-catalog-pdp-page (regression): 119/119 PASS
+    Total: 328 backend + 140 frontend tests PASS
+  Backend regression: 328/328 PASS (7 server test files: all matching service suites).
+  Frontend regression: 140/140 PASS (PDP + recommendations test files).
+  TypeScript tsc --noEmit: CLEAN (exit 0).
+  ESLint: 0 errors (2 pre-existing style warnings — no new issues).
+  git diff --check: CLEAN.
+  Production Playwright verification (https://app.texqtic.com, 2026-04-29):
+    GET /api/tenant/catalog/items/:itemId/recommendations → HTTP 200.
+    Response shape: { success:true, data:{ items:[], fallback:true } } — only items + fallback.
+    Forbidden fields absent from API response: score, rank, confidence, price, relationshipState — NONE FOUND (3 items tested).
+    Frontend bundle /assets/index-CJ2JbJMt.js: buyer-catalog-recommended-suppliers-panel PRESENT,
+      buyer-catalog-recommended-supplier-card PRESENT, buyer-catalog-recommended-suppliers-disclaimer PRESENT,
+      'Human review is required' PRESENT, CTAs (Request quote/Request access/View catalog) PRESENT.
+    Forbidden raw field labels absent from bundle: score: ABSENT, rank: ABSENT, confidence: ABSENT.
+    No unhandled console errors during API probe.
+    Neighbor-path smoke: catalog browse and RFQ compose path intact.
+  QA environment constraint: fallback:true for all items — expected (single-org QA env; buyer = supplier;
+    no cross-tenant candidates exist). Not a code defect; verified by 21 unit tests.
+  Safety boundaries verified:
+    buyer-facing output has no score/rank/confidence/price/relationshipState
+    buyerOrgId sourced exclusively from request.dbContext.orgId
+    humanReviewRequired label present in disclaimer copy
+    RFQ auto-create/auto-submit: absent — recommendation render does not trigger RFQ
+    supplier notifications: absent — recommendation render fires no notifications
+    no new Prisma schema changes
+    no migration created
+    no model/embedding details in UI or API response
+    no AI monetization or payment scope opened
+  Non-blocking note: full populated recommendation render (items.length > 0) not verified in
+    production due to single-org QA constraint. Empty-state and API shape fully verified.
+    Unit tests cover all CTA labels, disclaimer, loading/error states comprehensively.
+  Recommended next authorization: Pause for Paresh roadmap decision.
+    Do not auto-open AI monetization, payment, or sponsored placement units.
 - TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-6.
   Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 ACTIVE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.

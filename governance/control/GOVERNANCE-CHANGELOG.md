@@ -5,6 +5,100 @@
 
 ---
 
+## 2026-04-29 — CLOSED: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
+
+```
+Unit:          TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-29
+Verification:  328/328 AI matching backend tests PASS (7 suites); 140/140 frontend tests PASS;
+               TypeScript tsc --noEmit CLEAN; ESLint 0 errors; git diff --check CLEAN;
+               production Playwright HTTP 200 confirmed; anti-leakage verified (bundle + API).
+
+Commits:
+  c04c3b2  Design — TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 design plan artifact
+  ca73de9  Slice A — safe supplier match signal builder (50 tests)
+  6a32ee4  Slice B — supplier match policy filter (49 tests)
+  f33b6b1  Slice C — deterministic supplier match ranker (51 tests)
+  f80351f  Slice D — safe explanation guard (34 + 61 = 95 tests)
+  ae1738f  Slice E — RFQ intent supplier matching (35 tests)
+  c8e396e  Slice F — semantic signal guard (48 tests)
+  d835d00  Slice G — frontend recommendation surface (21 new + 140 frontend + 83 server PASS)
+  Slice H  Governance closure commit (this update)
+
+Verification Evidence:
+  ✅ 328/328 AI matching backend tests PASS (7 server test files):
+       - src/services/ai/__tests__/supplierMatchSignalBuilder.test.ts — 50 PASS
+       - src/services/ai/__tests__/supplierMatchPolicyFilter.test.ts — 49 PASS
+       - src/services/ai/__tests__/supplierMatchRanker.test.ts — 51 PASS
+       - src/services/ai/__tests__/supplierMatchExplanationBuilder.test.ts — 34 PASS
+       - src/services/ai/__tests__/supplierMatchRuntimeGuard.test.ts — 61 PASS
+       - src/__tests__/supplierMatchRfqIntent.test.ts — 35 PASS
+       - src/__tests__/supplierMatchSemanticSignal.test.ts — 48 PASS
+  ✅ 140/140 frontend tests PASS:
+       - tests/b2b-buyer-catalog-pdp-recommendations.test.ts — 21 PASS
+       - tests/b2b-buyer-catalog-pdp-page.test.ts — 119 PASS
+  ✅ TypeScript tsc --noEmit CLEAN (exit 0)
+  ✅ ESLint: 0 errors (2 pre-existing non-null-assertion style warnings — no new issues)
+  ✅ git diff --check: CLEAN (exit 0)
+  ✅ Production Playwright — https://app.texqtic.com (2026-04-29):
+       GET /api/tenant/catalog/items/:itemId/recommendations → HTTP 200
+       Response shape: { success:true, data:{ items:[], fallback:true } } — only items + fallback
+       Forbidden fields absent from API (3 items probed): score, rank, confidence, price,
+         relationshipState — NONE FOUND
+       Frontend bundle /assets/index-CJ2JbJMt.js — all markers present:
+         buyer-catalog-recommended-suppliers-panel ✅
+         buyer-catalog-recommended-supplier-card ✅
+         buyer-catalog-recommended-suppliers-disclaimer ✅
+         'Human review is required' ✅
+         CTA labels (Request quote / Request access / View catalog) ✅
+       Forbidden field labels absent from bundle: "score:" ABSENT; "rank:" ABSENT; "confidence:" ABSENT
+  ✅ No unhandled console errors during recommendation API probe
+  ✅ Neighbor-path smoke: catalog browse and RFQ compose path intact
+
+Safety Boundaries Verified:
+  ✅ score/rank/confidence/price/relationshipState: absent from all buyer-facing output
+  ✅ buyerOrgId sourced exclusively from request.dbContext.orgId (structural — D-017-A)
+  ✅ humanReviewRequired disclaimer: 'Human review is required before actioning any result' in bundle
+  ✅ RFQ auto-create: absent — recommendation render does not trigger RFQ creation
+  ✅ Supplier notifications: absent — recommendation render fires no notifications
+  ✅ No new Prisma schema changes (0 schema.prisma edits in Slice G commit)
+  ✅ No migrations created
+  ✅ No model/embedding/vector/prompt details in API response or UI
+  ✅ No AI monetization or payment scope opened
+
+Changed Files (Slice G — d835d00):
+  server/src/routes/tenant.ts                              (route added)
+  services/catalogService.ts                               (types + service function added)
+  components/Tenant/CatalogPdpSurface.tsx                  (RecommendedSuppliersPanel added)
+  tests/b2b-buyer-catalog-pdp-recommendations.test.ts      (created — 21 tests)
+
+Known Limitations Preserved:
+  - Full populated recommendation render (items.length > 0) not verified in production:
+    QA environment is single-org (buyer = supplier); no cross-tenant candidates exist.
+    Fallback:true is correct and expected behavior; verified by 21 unit tests.
+  - No AI model UI exposure (model name, embedding, prompt, vector details not surfaced)
+  - No frontend score/confidence exposure
+  - No AI monetization/payment/sponsored-placement scope opened
+  - 15 pre-existing server test failures (DPP tests, integration tests) pre-date this unit;
+    not caused by Slice G; tracked separately
+
+Recommended Next Authorization:
+  Pause for Paresh roadmap decision.
+  Do not auto-open AI monetization, payment, or sponsored placement units.
+  Candidate next units (require explicit Paresh authorization):
+    TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (currently ACTIVE — unrelated work stream)
+    Any future TECS-AGG-AI-SUPPLIER-MATCHING-MVP-002 (recommendation UX improvements)
+
+Governance Files Updated:
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-28 — CLOSED: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001
 
 ```

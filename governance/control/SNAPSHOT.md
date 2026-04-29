@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-28 (TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 — VERIFIED_COMPLETE; Slices A–H; 204/204 tests PASS; governance closure commit TBD)
+**Updated:** 2026-04-29 (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — VERIFIED_COMPLETE; Slices A–H; 328 AI matching + 140 frontend tests PASS; production Playwright PASS)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -31,28 +31,29 @@ current_open_design_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001
+latest_verified_product_close_unit: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-04-28 (Slice H governance closure)
+latest_verified_product_close_date: 2026-04-29 (Slice H governance closure)
 latest_verified_product_close_verification: >-
-  Slices A–H PASS — 204/204 relationship tests (8 files); 25/25 catalog/PDP regression;
-  93/93 RFQ regression; TypeScript clean (exit 0); ESLint clean (exit 0).
-  Deployed API health 200; catalog (unauth) 401; allowlist endpoints 404.
-  Anti-leakage verified; tenant isolation verified; performance index confirmed.
+  Slices A–H PASS — 328/328 AI matching backend tests (7 suites); 140/140 frontend tests;
+  TypeScript tsc --noEmit CLEAN; ESLint 0 errors; git diff --check CLEAN;
+  production Playwright HTTP 200 confirmed; API shape verified; anti-leakage verified.
 latest_verified_product_close_safety_boundaries: |
-  internalReason_not_in_route_responses: verified
-  catalog_denial_opaque_not_found: verified (sendNotFound)
-  rfq_denial_client_safe_reason: verified (RELATIONSHIP_GATE_DENIED)
-  price_suppression_boolean_only: verified (isEligible boolean, no raw state)
-  allowlist_graph_not_exposed: verified (404 on all graph endpoints)
-  tenant_isolation_org_id_scoping: verified (45 isolation tests PASS)
-  cross_tenant_access_denied: verified
-  client_forge_resistance: verified (11 forge-resistance tests PASS)
-latest_verified_product_close_tenant_isolation: verified (45-test isolation harness: cross-supplier, cross-buyer, BLOCKED/REJECTED indistinguishable, client-forge resistance)
-latest_verified_product_close_human_review_required: not applicable to relationship-access evaluator scope (no human approval mutations in this unit)
+  score_rank_confidence_absent_from_output: verified (bundle + API response scan)
+  price_absent_from_recommendation_output: verified
+  relationshipState_not_in_recommendation_response: verified
+  buyerOrgId_from_dbContext_only: verified (structural; orgId never from request body)
+  humanReviewRequired_disclaimer_present: verified (in bundle)
+  rfq_auto_create_absent: verified (recommendation render fires no RFQ)
+  supplier_notification_absent: verified (recommendation render fires no notifications)
+  no_new_schema_or_migration: verified (0 Prisma schema changes)
+  no_model_embedding_details_in_output: verified (no model name, vector, or prompt in response)
+  no_ai_monetization_scope_opened: verified
+latest_verified_product_close_tenant_isolation: verified (orgId-scoped cross-tenant candidate query; SET LOCAL ROLE texqtic_rfq_read for cross-tenant reads)
+latest_verified_product_close_human_review_required: verified (disclaimer copy 'Human review is required before actioning any result' in bundle)
 latest_verified_product_close_commits: >-
-  Design f62619a, Slice A 4dd1901, Slice B 29ca225, Slice C 50220e6,
-  Slice D a2f4a1a, Slice E 78d43f1, Slice F 9af0f29, Slice G 493051b,
+  Design c04c3b2, Slice A ca73de9, Slice B 6a32ee4, Slice C f33b6b1,
+  Slice D f80351f, Slice E ae1738f, Slice F c8e396e, Slice G d835d00,
   Slice H governance closure (this update)
 remediation_note: >-
   TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28 COMPLETE (2026-04-28).
