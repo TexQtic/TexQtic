@@ -52,6 +52,10 @@ import {
   evaluateBuyerRelationshipRfqEligibility,
   filterBuyerVisibleCatalogItems,
 } from '../services/relationshipAccess.service.js';
+import {
+  CATALOG_VISIBILITY_POLICY_MODES,
+  resolveCatalogVisibilityPolicy,
+} from '../services/catalogVisibilityPolicyResolver.js';
 import { getRelationshipOrNone } from '../services/relationshipAccessStorage.service.js';
 import {
   notifySupplierRfqSubmittedGroups,
@@ -89,16 +93,30 @@ function failedInviteEmailDeliveryOutcome(): InviteEmailDeliveryOutcome {
   return { status: 'FAILED_NON_FATAL' };
 }
 
-function getTrustedCatalogVisibilityPolicyForRoute(
+/**
+ * Resolve the effective catalog visibility policy for a route-layer item, merging the
+ * Slice B `catalogVisibilityPolicyMode` DB field with the legacy `publicationPosture`
+ * fallback via the Slice A resolver.
+ *
+ * `RELATIONSHIP_GATED` maps to `APPROVED_BUYER_ONLY` for the current route evaluation
+ * layer (Slice C semantics — Slice D will introduce native RELATIONSHIP_GATED gating).
+ *
+ * Accepts both camelCase (Prisma) and snake_case (raw SQL) field names.
+ */
+function resolveItemCatalogVisibilityForRoute(
   item: Record<string, unknown>,
-): unknown {
-  return (
-    item.catalogVisibilityPolicy ??
-    item.catalog_visibility_policy ??
-    item.visibilityTier ??
-    item.visibility_tier ??
-    undefined
-  );
+): string {
+  const { policy } = resolveCatalogVisibilityPolicy({
+    catalogVisibilityPolicyMode:
+      item.catalogVisibilityPolicyMode ?? item.catalog_visibility_policy_mode,
+    publicationPosture: item.publicationPosture ?? item.publication_posture,
+  });
+  // RELATIONSHIP_GATED initial semantics: treat as APPROVED_BUYER_ONLY.
+  // The relationship evaluator does not yet recognise RELATIONSHIP_GATED natively.
+  if (policy === 'RELATIONSHIP_GATED') {
+    return 'APPROVED_BUYER_ONLY';
+  }
+  return policy;
 }
 /**
  * Wraps a Prisma TransactionClient as PrismaClient for services that require
@@ -2022,6 +2040,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
         catalogStage: z.enum(CATALOG_STAGE_VALUES).optional(),
         stageAttributes: z.record(z.unknown()).optional(),
+        // Catalog visibility policy (TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001)
+        catalogVisibilityPolicyMode: z.enum(CATALOG_VISIBILITY_POLICY_MODES).nullable().optional(),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -2033,7 +2053,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         name, sku, imageUrl, description, price, moq,
         productCategory, fabricType, gsm, material, composition,
         color, widthCm, construction, certifications,
-        catalogStage, stageAttributes,
+        catalogStage, stageAttributes, catalogVisibilityPolicyMode,
       } = parseResult.data;
 
       // Validate stage-specific stageAttributes if present.
@@ -2075,6 +2095,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             // Stage attributes
             catalogStage: catalogStage ?? null,
             stageAttributes: validatedStageAttributes !== null ? (validatedStageAttributes as unknown as Prisma.InputJsonValue) : null,
+            // Catalog visibility policy
+            catalogVisibilityPolicyMode: catalogVisibilityPolicyMode ?? null,
           },
         });
 
@@ -2176,6 +2198,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         // Stage attributes (TECS-B2B-CATALOG-MATERIAL-STAGE-ATTRIBUTES-001)
         catalogStage: z.enum(CATALOG_STAGE_VALUES).nullable().optional(),
         stageAttributes: z.record(z.unknown()).nullable().optional(),
+        // Catalog visibility policy (TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001)
+        catalogVisibilityPolicyMode: z.enum(CATALOG_VISIBILITY_POLICY_MODES).nullable().optional(),
       });
 
       const parseResult = bodySchema.safeParse(request.body);
@@ -2188,6 +2212,28 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       const data = parseResult.data;
+
+      // Validate: HIDDEN visibility policy contradicts B2B_PUBLIC or BOTH publication posture.
+      if (data.catalogVisibilityPolicyMode === 'HIDDEN') {
+        const existingPosture = await withDbContext(prisma, dbContext, async tx => {
+          return tx.catalogItem.findFirst({
+            where: { id, tenantId: dbContext.orgId },
+            select: { publicationPosture: true },
+          });
+        });
+        if (
+          existingPosture &&
+          (existingPosture.publicationPosture === 'B2B_PUBLIC' ||
+            existingPosture.publicationPosture === 'BOTH')
+        ) {
+          return sendError(
+            reply,
+            'VALIDATION_ERROR',
+            'HIDDEN policy cannot be combined with B2B_PUBLIC or BOTH publication posture',
+            422,
+          );
+        }
+      }
 
       const updated = await withDbContext(prisma, dbContext, async tx => {
         // Org-scoped lookup: confirms item belongs to this tenant before update.
@@ -2227,6 +2273,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             ...(data.stageAttributes !== undefined
               ? { stageAttributes: data.stageAttributes !== null ? (data.stageAttributes as unknown as Prisma.InputJsonValue) : null }
               : {}),
+            // Catalog visibility policy
+            ...(data.catalogVisibilityPolicyMode !== undefined ? { catalogVisibilityPolicyMode: data.catalogVisibilityPolicyMode } : {}),
           },
         });
 
@@ -2393,6 +2441,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         description: string | null; moq: number; image_url: string | null;
         publication_posture: string;
         price_disclosure_policy_mode: string | null;
+        catalog_visibility_policy_mode: string | null;
         product_category: string | null; fabric_type: string | null; gsm: unknown;
         material: string | null; composition: string | null; color: string | null;
         width_cm: unknown; construction: string | null; certifications: unknown;
@@ -2405,6 +2454,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
              SELECT id, tenant_id, name, sku, description, moq, image_url,
                publication_posture,
                price_disclosure_policy_mode,
+               catalog_visibility_policy_mode,
                  product_category, fabric_type, gsm, material, composition,
                  color, width_cm, construction, certifications, catalog_stage
           FROM catalog_items
@@ -2471,7 +2521,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         supplierOrgId: supplierTenantId,
         relationshipState: relationship.state,
         relationshipExpiresAt: relationship.expiresAt,
-        catalogVisibilityPolicy: getTrustedCatalogVisibilityPolicyForRoute(item),
+        catalogVisibilityPolicy: resolveItemCatalogVisibilityForRoute(item as unknown as Record<string, unknown>),
       });
 
       if (!visibilityDecision.decision.canAccessCatalog) {
@@ -3255,6 +3305,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         gsm: unknown; material: string | null; composition: string | null;
         color: string | null; width_cm: unknown; construction: string | null;
         certifications: unknown;
+        publication_posture: string | null; catalog_visibility_policy_mode: string | null;
         catalog_stage: string | null; stage_attributes: unknown;
       };
 
@@ -3285,6 +3336,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             SELECT id, name, sku, description, moq, image_url AS "imageUrl",
                    product_category, fabric_type, gsm, material, composition,
                    color, width_cm, construction, certifications,
+                   publication_posture, catalog_visibility_policy_mode,
                    catalog_stage, stage_attributes
             FROM catalog_items
             WHERE id = ANY(${candidateIds}::uuid[])
@@ -3312,6 +3364,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
               productCategory: true, fabricType: true, gsm: true, material: true,
               composition: true, color: true, widthCm: true, construction: true,
               certifications: true,
+              publicationPosture: true, catalogVisibilityPolicyMode: true,
               catalogStage: true, stageAttributes: true,
             },
             orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
@@ -3326,7 +3379,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           relationshipExpiresAt: relationship.expiresAt,
           getSupplierOrgId: () => supplierOrgId,
           getCatalogVisibilityPolicy: item =>
-            getTrustedCatalogVisibilityPolicyForRoute(
+            resolveItemCatalogVisibilityForRoute(
               item as unknown as Record<string, unknown>,
             ),
         });
@@ -3367,7 +3420,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         relationshipExpiresAt: relationship.expiresAt,
         getSupplierOrgId: () => supplierOrgId,
         getCatalogVisibilityPolicy: item =>
-          getTrustedCatalogVisibilityPolicyForRoute(
+          resolveItemCatalogVisibilityForRoute(
             item as unknown as Record<string, unknown>,
           ),
       });
