@@ -3197,7 +3197,7 @@ const App: React.FC = () => {
       const view = await getBuyerCatalogPdpItem(itemId);
       setBuyerCatalogPdpItem(view);
     } catch (err) {
-      const isNotFound = err instanceof Error && err.message.includes('404');
+      const isNotFound = err instanceof APIError && err.status === 404;
       setBuyerCatalogPdpError(isNotFound ? 'NOT_FOUND' : 'FETCH_ERROR');
     } finally {
       setBuyerCatalogPdpLoading(false);

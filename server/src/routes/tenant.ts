@@ -2428,7 +2428,9 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * Buyer catalog PDP — single item detail view (TECS-B2B-BUYER-CATALOG-PDP-001 P-1)
    *
    * Authenticated B2B buyer reads a single catalog item detail.
-   * Gate 1: item must be active AND publication_posture IN ('B2B_PUBLIC', 'BOTH').
+   * Gate 1: item must be active. Visibility policy (Gate 4) governs buyer access.
+   *   publication_posture is NOT used as a gate here — catalog_visibility_policy_mode is
+   *   the authoritative access-control column (Option A posture mapping superseded by Slice B).
    * Gate 2: supplier org eligibility (organizations.publication_posture + tenant.publicEligibilityPosture).
    * Cross-tenant read via SET LOCAL ROLE texqtic_rfq_read.
    * Supplier org data and APPROVED certifications via withOrgAdminContext (admin realm RLS).
@@ -2482,7 +2484,6 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           FROM catalog_items
           WHERE id = ${itemId}::uuid
             AND active = true
-            AND publication_posture IN ('B2B_PUBLIC', 'BOTH')
         `;
       });
 
