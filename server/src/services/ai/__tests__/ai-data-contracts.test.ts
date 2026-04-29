@@ -45,6 +45,11 @@ describe('AI_FORBIDDEN_DATA_CLASSES', () => {
     expect(AI_FORBIDDEN_DATA_CLASSES).toContain('CatalogItem.publicationPosture');
   });
 
+  // Slice E: A-05 — catalog visibility policy mode is forbidden from all AI paths
+  it('A-05: includes CatalogItem.catalogVisibilityPolicyMode — access-control policy; must never be exposed to AI', () => {
+    expect(AI_FORBIDDEN_DATA_CLASSES).toContain('CatalogItem.catalogVisibilityPolicyMode');
+  });
+
   it('includes escrow_accounts.* — financial instrument; zero AI read path', () => {
     expect(AI_FORBIDDEN_DATA_CLASSES).toContain('escrow_accounts.*');
   });
@@ -71,6 +76,15 @@ describe('AI_FORBIDDEN_FIELD_NAMES', () => {
 
   it('contains publicationPosture', () => {
     expect(AI_FORBIDDEN_FIELD_NAMES).toContain('publicationPosture');
+  });
+
+  // Slice E: A-03 and A-04 — both casing variants are forbidden field names
+  it('A-03: contains catalogVisibilityPolicyMode (camelCase) — access-control policy; forbidden from all AI paths', () => {
+    expect(AI_FORBIDDEN_FIELD_NAMES).toContain('catalogVisibilityPolicyMode');
+  });
+
+  it('A-04: contains catalog_visibility_policy_mode (snake_case) — access-control policy; forbidden from all AI paths', () => {
+    expect(AI_FORBIDDEN_FIELD_NAMES).toContain('catalog_visibility_policy_mode');
   });
 
   it('contains escrow (standalone field name)', () => {
@@ -139,6 +153,11 @@ describe('AI_READABLE_DATA_CLASSES', () => {
 
   it('does NOT include CatalogItem.publicationPosture — constitutionally excluded', () => {
     expect(AI_READABLE_DATA_CLASSES).not.toContain('CatalogItem.publicationPosture');
+  });
+
+  // Slice E: A-05 complement — catalogVisibilityPolicyMode must never appear as readable
+  it('A-05: does NOT include CatalogItem.catalogVisibilityPolicyMode — constitutionally excluded from AI readable classes', () => {
+    expect(AI_READABLE_DATA_CLASSES).not.toContain('CatalogItem.catalogVisibilityPolicyMode');
   });
 
   it('does NOT include escrow_accounts.* — zero AI read path', () => {

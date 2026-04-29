@@ -422,3 +422,114 @@ describe('RFQAssistantContext', () => {
     expect(containsForbiddenAiField(ctx)).toBe(false);
   });
 });
+
+// ─── Slice E (A-01): catalogVisibilityPolicyMode excluded from all context packs ──────
+
+describe('Slice E (A-01): SupplierMatchingContext — catalogVisibilityPolicyMode absent', () => {
+  it('A-01: does not include catalogVisibilityPolicyMode as a key', () => {
+    const ctx: SupplierMatchingContext = {
+      queryOrgId: 'org-buyer-001',
+      queryText: 'organic cotton fabric',
+      queryEmbedding: [],
+      topK: 5,
+      minSimilarity: 0.3,
+      sourceType: 'CATALOG_ITEM',
+      retrievedChunks: [],
+    };
+    expect(Object.keys(ctx)).not.toContain('catalogVisibilityPolicyMode');
+    expect(Object.keys(ctx)).not.toContain('catalog_visibility_policy_mode');
+  });
+
+  it('A-01: containsForbiddenAiField does not flag a valid SupplierMatchingContext', () => {
+    const ctx: SupplierMatchingContext = {
+      queryOrgId: 'org-buyer-001',
+      queryText: 'recycled polyester fabric',
+      queryEmbedding: new Array<number>(768).fill(0),
+      topK: 5,
+      minSimilarity: 0.3,
+      sourceType: 'CATALOG_ITEM',
+      retrievedChunks: [],
+    };
+    expect(containsForbiddenAiField(ctx)).toBe(false);
+  });
+
+  it('A-01: adding catalogVisibilityPolicyMode to context is detected by the forbidden guard', () => {
+    const ctxWithLeak = {
+      queryOrgId: 'org-buyer-001',
+      queryText: 'cotton fabric',
+      queryEmbedding: [],
+      topK: 5 as const,
+      minSimilarity: 0.3 as const,
+      sourceType: 'CATALOG_ITEM' as const,
+      retrievedChunks: [],
+      catalogVisibilityPolicyMode: 'APPROVED_BUYER_ONLY', // simulates accidental leakage
+    };
+    expect(containsForbiddenAiField(ctxWithLeak)).toBe(true);
+  });
+});
+
+describe('Slice E (A-01): RFQAssistantContext — catalogVisibilityPolicyMode absent', () => {
+  it('A-01: does not include catalogVisibilityPolicyMode as a key', () => {
+    const ctx: RFQAssistantContext = {
+      buyerOrgId: 'org-buyer-001',
+      rfqId: 'rfq-uuid-e01',
+      rfqStatus: 'OPEN',
+      structuredRequirementText: 'Woven cotton 120 GSM',
+      catalogItemId: 'item-uuid-e01',
+      catalogItemStage: 'FABRIC_WOVEN',
+      catalogItemText: 'Cotton woven fabric 120 GSM',
+      catalogCompletenessScore: 0.75,
+      supplierOrgId: 'org-supplier-001',
+      retrievedChunks: [],
+      humanConfirmationRequired: true,
+    };
+    expect(Object.keys(ctx)).not.toContain('catalogVisibilityPolicyMode');
+    expect(Object.keys(ctx)).not.toContain('catalog_visibility_policy_mode');
+  });
+
+  it('A-01: adding catalog_visibility_policy_mode to RFQAssistantContext is detected by the forbidden guard', () => {
+    const ctxWithLeak = {
+      buyerOrgId: 'org-buyer-001',
+      rfqId: 'rfq-uuid-e02',
+      rfqStatus: 'OPEN',
+      structuredRequirementText: 'Requirement',
+      catalogItemId: 'item-uuid-e02',
+      catalogItemStage: null,
+      catalogItemText: 'Catalog text',
+      catalogCompletenessScore: 0.5,
+      supplierOrgId: 'org-supplier-002',
+      retrievedChunks: [],
+      humanConfirmationRequired: true as const,
+      catalog_visibility_policy_mode: 'HIDDEN', // simulates accidental leakage
+    };
+    expect(containsForbiddenAiField(ctxWithLeak)).toBe(true);
+  });
+});
+
+describe('Slice E (A-01): CatalogItemSummary — catalogVisibilityPolicyMode absent', () => {
+  it('A-01: does not include catalogVisibilityPolicyMode in SupplierProfileCompletenessContext catalog items', () => {
+    const ctx: SupplierProfileCompletenessContext = {
+      orgId: 'supplier-org-001',
+      catalogItems: [
+        {
+          id: 'item-001',
+          sku: 'CTN-001',
+          name: 'Organic Cotton',
+          catalogStage: 'RAW_MATERIAL',
+          stageAttributes: { fiberContent: 'Cotton 100%' },
+          material: 'Cotton',
+          moq: 500,
+        },
+      ],
+      certifications: [],
+      completenessScores: { 'item-001': 0.82 },
+      stageBreakdown: { RAW_MATERIAL: 1 },
+    };
+
+    for (const item of ctx.catalogItems) {
+      expect(Object.keys(item)).not.toContain('catalogVisibilityPolicyMode');
+      expect(Object.keys(item)).not.toContain('catalog_visibility_policy_mode');
+      expect(containsForbiddenAiField(item)).toBe(false);
+    }
+  });
+});

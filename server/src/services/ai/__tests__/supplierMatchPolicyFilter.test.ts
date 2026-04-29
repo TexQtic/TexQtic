@@ -903,4 +903,15 @@ describe('T-35: getForbiddenPolicyFilterOutputFields returns non-empty set', () 
     expect(fields.has('signals')).toBe(false);
     expect(fields.has('catalogVisibility')).toBe(false);
   });
+
+  // Slice E: catalog access-control policy fields must never appear in policy filter output
+  it('Slice E: contains catalogVisibilityPolicyMode — raw field must never appear in policy filter output', () => {
+    const fields = getForbiddenPolicyFilterOutputFields();
+    expect(fields.has('catalogVisibilityPolicyMode')).toBe(true);
+  });
+
+  it('Slice E: contains catalog_visibility_policy_mode — snake_case variant must never appear in policy filter output', () => {
+    const fields = getForbiddenPolicyFilterOutputFields();
+    expect(fields.has('catalog_visibility_policy_mode')).toBe(true);
+  });
 });

@@ -83,6 +83,9 @@ export const FORBIDDEN_POLICY_FILTER_OUTPUT_FIELDS: ReadonlySet<string> = new Se
   'supplierPolicy',
   'supplierDisclosurePolicy',
   'publicationPosture',
+  // Catalog access-control policy (Slice E: must never appear in filter output)
+  'catalogVisibilityPolicyMode',
+  'catalog_visibility_policy_mode',
   // Risk / AI scoring (forbidden from all AI tenant paths)
   'riskScore',
   'risk_score',

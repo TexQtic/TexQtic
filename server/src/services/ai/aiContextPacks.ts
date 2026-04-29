@@ -63,6 +63,7 @@ export interface SupplierMatchingContext {
   retrievedChunks: SimilarityResultRef[];
   // price: EXCLUDED — constitutionally forbidden from all AI paths
   // publicationPosture: EXCLUDED — constitutionally forbidden from all AI paths
+  // catalogVisibilityPolicyMode: EXCLUDED — access-control policy; must never be exposed to AI as a filter or signal
   // risk_score: EXCLUDED — control-plane only; tenant AI hard boundary
 }
 
@@ -94,6 +95,7 @@ export interface RFQDraftingContext {
   /** Human must confirm before send — literal true enforces this at the type level */
   humanConfirmationRequired: true;
   // price: EXCLUDED — constitutionally forbidden
+  // catalogVisibilityPolicyMode: EXCLUDED — access-control policy; must never be exposed to AI
   // escrow*: EXCLUDED — constitutionally forbidden
 }
 
@@ -115,6 +117,7 @@ export interface CatalogItemSummary {
   moq?: number | null;
   // price: EXCLUDED — constitutionally forbidden
   // publicationPosture: EXCLUDED — constitutionally forbidden
+  // catalogVisibilityPolicyMode: EXCLUDED — access-control policy; must never be exposed to AI
 }
 
 /**
@@ -317,6 +320,7 @@ export interface RFQAssistantContext {
   // price: EXCLUDED — constitutionally forbidden
   // item_unit_price: EXCLUDED — constitutionally forbidden
   // publicationPosture: EXCLUDED — constitutionally forbidden
+  // catalogVisibilityPolicyMode: EXCLUDED — access-control policy; must never be exposed to AI
   // deliveryLocation: EXCLUDED — PII risk
   // targetDeliveryDate: EXCLUDED — scheduling sensitivity
   // requirementConfirmedAt: EXCLUDED — internal audit field

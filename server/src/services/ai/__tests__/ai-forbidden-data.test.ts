@@ -390,9 +390,139 @@ describe('buildAiResponseSummary', () => {
     ).toThrow('AI_AUDIT_FORBIDDEN_CONTENT');
   });
 
+  // Slice E: A-02 — audit response summary must reject catalogVisibilityPolicyMode mention
+  it('A-02: throws AI_AUDIT_FORBIDDEN_CONTENT when response mentions catalogVisibilityPolicyMode', () => {
+    expect(() =>
+      buildAiResponseSummary('Supplier catalogVisibilityPolicyMode is APPROVED_BUYER_ONLY'),
+    ).toThrow('AI_AUDIT_FORBIDDEN_CONTENT');
+  });
+
   it('does not throw for a clean summary', () => {
     expect(() =>
       buildAiResponseSummary('AI draft generated for RFQ — human review required before send.'),
     ).not.toThrow();
+  });
+});
+
+// ─── Slice E: A-01 — catalogVisibilityPolicyMode / catalog_visibility_policy_mode guard tests ──
+
+describe('Slice E (A-01): containsForbiddenAiField — catalogVisibilityPolicyMode', () => {
+  it('A-01: detects catalogVisibilityPolicyMode (camelCase) at the top level', () => {
+    expect(
+      containsForbiddenAiField({ sku: 'CTN-001', catalogVisibilityPolicyMode: 'APPROVED_BUYER_ONLY' }),
+    ).toBe(true);
+  });
+
+  it('A-01: detects catalog_visibility_policy_mode (snake_case) at the top level', () => {
+    expect(
+      containsForbiddenAiField({ sku: 'CTN-001', catalog_visibility_policy_mode: 'APPROVED_BUYER_ONLY' }),
+    ).toBe(true);
+  });
+});
+
+describe('Slice E (A-01): stripForbiddenAiFields — catalogVisibilityPolicyMode', () => {
+  it('A-01: removes catalogVisibilityPolicyMode but preserves safe catalog fields', () => {
+    const result = stripForbiddenAiFields({
+      sku: 'CTN-001',
+      name: 'Cotton Fabric',
+      catalogStage: 'RAW_MATERIAL',
+      catalogVisibilityPolicyMode: 'APPROVED_BUYER_ONLY',
+    });
+    expect(result).not.toHaveProperty('catalogVisibilityPolicyMode');
+    expect(result).toHaveProperty('sku', 'CTN-001');
+    expect(result).toHaveProperty('catalogStage', 'RAW_MATERIAL');
+  });
+
+  it('A-01: removes catalog_visibility_policy_mode (snake_case) but preserves safe catalog fields', () => {
+    const result = stripForbiddenAiFields({
+      sku: 'CTN-001',
+      name: 'Cotton Fabric',
+      catalog_visibility_policy_mode: 'HIDDEN',
+    });
+    expect(result).not.toHaveProperty('catalog_visibility_policy_mode');
+    expect(result).toHaveProperty('sku', 'CTN-001');
+    expect(result).toHaveProperty('name', 'Cotton Fabric');
+  });
+});
+
+describe('Slice E (A-06): policy values stripped from AI context input', () => {
+  it('A-06: APPROVED_BUYER_ONLY value is not present after stripping catalogVisibilityPolicyMode', () => {
+    const stripped = stripForbiddenAiFields({
+      sku: 'CTN-001',
+      catalogVisibilityPolicyMode: 'APPROVED_BUYER_ONLY',
+    });
+    expect(stripped).not.toHaveProperty('catalogVisibilityPolicyMode');
+    // Value cannot leak because the key is absent
+    expect(Object.values(stripped)).not.toContain('APPROVED_BUYER_ONLY');
+  });
+
+  it('A-06: HIDDEN value is not present after stripping catalogVisibilityPolicyMode', () => {
+    const stripped = stripForbiddenAiFields({
+      sku: 'CTN-001',
+      catalog_visibility_policy_mode: 'HIDDEN',
+    });
+    expect(stripped).not.toHaveProperty('catalog_visibility_policy_mode');
+    expect(Object.values(stripped)).not.toContain('HIDDEN');
+  });
+
+  it('A-06: RELATIONSHIP_GATED value is not present after stripping catalogVisibilityPolicyMode', () => {
+    const stripped = stripForbiddenAiFields({
+      name: 'Recycled Polyester',
+      catalogVisibilityPolicyMode: 'RELATIONSHIP_GATED',
+    });
+    expect(stripped).not.toHaveProperty('catalogVisibilityPolicyMode');
+    expect(Object.values(stripped)).not.toContain('RELATIONSHIP_GATED');
+  });
+});
+
+describe('Slice E (A-02): buildAiPromptSummary — catalogVisibilityPolicyMode audit guard', () => {
+  it('A-02: throws AI_AUDIT_FORBIDDEN_CONTENT when prompt mentions catalogVisibilityPolicyMode', () => {
+    expect(() =>
+      buildAiPromptSummary('context includes catalogVisibilityPolicyMode for this item'),
+    ).toThrow('AI_AUDIT_FORBIDDEN_CONTENT');
+  });
+
+  it('A-02: throws AI_AUDIT_FORBIDDEN_CONTENT when prompt mentions catalog_visibility_policy_mode', () => {
+    expect(() =>
+      buildAiPromptSummary('context includes catalog_visibility_policy_mode for this item'),
+    ).toThrow('AI_AUDIT_FORBIDDEN_CONTENT');
+  });
+});
+
+describe('Slice E (A-07): regression — existing forbidden fields remain forbidden', () => {
+  it('A-07: price is still detected as a forbidden field', () => {
+    expect(containsForbiddenAiField({ price: 12.5 })).toBe(true);
+  });
+
+  it('A-07: publicationPosture is still detected as a forbidden field', () => {
+    expect(containsForbiddenAiField({ publicationPosture: 'DRAFT' })).toBe(true);
+  });
+
+  it('A-07: escrow is still detected as a forbidden field', () => {
+    expect(containsForbiddenAiField({ escrow: { balance: 500 } })).toBe(true);
+  });
+
+  it('A-07: email is still detected as a forbidden field', () => {
+    expect(containsForbiddenAiField({ email: 'user@example.com' })).toBe(true);
+  });
+
+  it('A-07: grossAmount is still detected as a forbidden field', () => {
+    expect(containsForbiddenAiField({ grossAmount: 10000 })).toBe(true);
+  });
+
+  it('A-07: riskScore is still detected as a forbidden field', () => {
+    expect(containsForbiddenAiField({ riskScore: 0.85 })).toBe(true);
+  });
+
+  it('A-07: getForbiddenFieldNames still contains publicationPosture', () => {
+    expect(getForbiddenFieldNames().has('publicationPosture')).toBe(true);
+  });
+
+  it('A-07: getForbiddenFieldNames still contains price', () => {
+    expect(getForbiddenFieldNames().has('price')).toBe(true);
+  });
+
+  it('A-07: getForbiddenFieldNames still contains escrow', () => {
+    expect(getForbiddenFieldNames().has('escrow')).toBe(true);
   });
 });
