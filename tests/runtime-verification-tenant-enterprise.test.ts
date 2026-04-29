@@ -69,10 +69,8 @@ import {
   type MembershipsResponse,
 } from '../services/tenantService';
 import {
-  createTradeFromRfq,
   createTradeEscrow,
   listTenantTrades,
-  type CreateTradeFromRfqResponse,
   type CreateTradeEscrowResponse,
   type TenantTradesListResponse,
 } from '../services/tradeService';
@@ -183,8 +181,6 @@ const {
 const {
   createInitialBuyerRfqTradeBridgeState,
   resolveBuyerRfqTradeFromRfqCreateAction,
-  continueBuyerRfqTradeFromRfqCreatePath,
-  resolveBuyerRfqTradeFromRfqError,
 } = __B2B_TRADE_FROM_RFQ_TESTING__;
 
 function makeTradeResponse(): TenantTradesListResponse {
@@ -205,17 +201,6 @@ function makeTradeResponse(): TenantTradesListResponse {
       },
     ],
     count: 1,
-  };
-}
-
-function makeTradeFromRfqResponse(
-  overrides: Partial<CreateTradeFromRfqResponse> = {},
-): CreateTradeFromRfqResponse {
-  return {
-    tradeId: 'trade-rfq-1',
-    tradeReference: 'TRD-RFQ-RFQ1',
-    rfqId: 'rfq-1',
-    ...overrides,
   };
 }
 
@@ -346,15 +331,12 @@ function makeCreateRfqResponse() {
     rfq: {
       id: 'rfq-1',
       status: 'INITIATED' as const,
-      org_id: 'buyer-1',
       catalog_item_id: 'item-1',
       item_name: 'Combed Cotton 30s',
       item_sku: 'COT-30S',
       quantity: 24,
-      supplier_org_id: 'supplier-1',
       created_at: '2026-03-22T08:00:00.000Z',
       updated_at: '2026-03-22T08:00:00.000Z',
-      item_unit_price: 18.5,
       buyer_message: 'Need export-grade packing.',
       created_by_user_id: 'user-1',
       supplier_response: null,
@@ -367,15 +349,12 @@ function makeBuyerRfqDetail(overrides: Partial<BuyerRfqDetail> = {}): BuyerRfqDe
   return {
     id: 'rfq-1',
     status: 'RESPONDED',
-    org_id: 'buyer-1',
     catalog_item_id: 'item-1',
     item_name: 'Combed Cotton 30s',
     item_sku: 'COT-30S',
     quantity: 24,
-    supplier_org_id: 'supplier-1',
     created_at: '2026-03-22T08:00:00.000Z',
     updated_at: '2026-03-22T09:00:00.000Z',
-    item_unit_price: 18.5,
     buyer_message: 'Need export-grade packing.',
     created_by_user_id: 'user-1',
     supplier_response: null,
@@ -392,7 +371,6 @@ function makeBuyerRfqListItem(overrides: Partial<BuyerRfqListItem> = {}): BuyerR
     item_name: 'Combed Cotton 30s',
     item_sku: 'COT-30S',
     quantity: 24,
-    supplier_org_id: 'supplier-1',
     created_at: '2026-03-22T08:00:00.000Z',
     updated_at: '2026-03-22T09:00:00.000Z',
     ...overrides,
@@ -1187,145 +1165,48 @@ describe('runtime verification - tenant enterprise service contracts', () => {
   });
 
   it('keeps buyer trade-from-RFQ continuity inside the App-owned responded create seam', () => {
-    const noopAction = resolveBuyerRfqTradeFromRfqCreateAction(
+    // Non-RESPONDED status → noop (unchanged)
+    const noopForOpenAction = resolveBuyerRfqTradeFromRfqCreateAction(
       makeBuyerRfqDetail({ status: 'OPEN' }),
     );
-
-    expect(noopAction).toEqual({
+    expect(noopForOpenAction).toEqual({
       kind: 'noop',
       tradeBridge: null,
       payload: null,
     });
 
-    const invalidAmountAction = resolveBuyerRfqTradeFromRfqCreateAction(
-      makeBuyerRfqDetail({ item_unit_price: 0 }),
-    );
-
-    expect(invalidAmountAction).toEqual({
-      kind: 'invalid-gross-amount',
-      tradeBridge: {
-        ...createInitialBuyerRfqTradeBridgeState(),
-        error: 'Unable to derive a valid trade amount from the responded RFQ detail.',
-      },
+    // RESPONDED status → also noop: supplier-quoted commercial amount is required
+    // to create a trade; buyer RFQ detail no longer carries item_unit_price.
+    const noopForRespondedAction = resolveBuyerRfqTradeFromRfqCreateAction(makeBuyerRfqDetail());
+    expect(noopForRespondedAction).toEqual({
+      kind: 'noop',
+      tradeBridge: null,
       payload: null,
     });
-
-    const createAction = resolveBuyerRfqTradeFromRfqCreateAction(makeBuyerRfqDetail());
-
-    expect(createAction).toEqual({
-      kind: 'create-trade',
-      tradeBridge: {
-        ...createInitialBuyerRfqTradeBridgeState(),
-        loading: true,
-      },
-      payload: {
-        rfqId: 'rfq-1',
-        tradeReference: 'TRD-RFQ-RFQ1',
-        currency: 'USD',
-        grossAmount: 444,
-        reason: 'Bridge responded RFQ rfq-1 into existing trade continuity.',
-      },
-    });
+    expect(noopForRespondedAction.payload).toBeNull();
   });
 
-  it('invokes createTradeFromRfq and maps trade-from-RFQ success into App-owned continuity', async () => {
-    const response = makeTradeFromRfqResponse();
-    tenantPostMock.mockResolvedValue(response);
-
+  it('does not invoke createTradeFromRfq from buyer RFQ detail — supplier-quoted pricing required', async () => {
+    // Trade creation from buyer RFQ detail is disabled.
+    // item_unit_price was removed from the buyer-facing RFQ contract (P1 leakage fix).
+    // No catalog-derived gross amount may reach the trade creation API.
     const rfq = makeBuyerRfqDetail();
     const createAction = resolveBuyerRfqTradeFromRfqCreateAction(rfq);
-    expect(createAction.kind).toBe('create-trade');
-
-    if (createAction.kind !== 'create-trade') {
-      throw new Error('Expected responded RFQ to enter the create-trade continuity path.');
-    }
-
-    const currentDetailView = {
-      ...createInitialBuyerRfqDetailViewState(),
-      open: true,
-      source: 'dialog' as const,
-      rfqId: 'rfq-1',
-      data: rfq,
-    };
-
-    const result = await continueBuyerRfqTradeFromRfqCreatePath({
-      payload: createAction.payload,
-      currentDetailView,
-      createTrade: createTradeFromRfq,
-    });
-
-    expect(tenantPostMock).toHaveBeenCalledWith('/api/tenant/trades/from-rfq', createAction.payload);
-    expect(result).toEqual({
-      kind: 'created',
-      detailView: {
-        ...currentDetailView,
-        open: false,
-        data: {
-          ...rfq,
-          trade_continuity: {
-            trade_id: response.tradeId,
-            trade_reference: response.tradeReference,
-          },
-        },
-      },
-      tradeBridge: {
-        ...createInitialBuyerRfqTradeBridgeState(),
-        initialTradeId: response.tradeId,
-      },
-    });
+    expect(createAction.kind).toBe('noop');
+    expect(createAction.payload).toBeNull();
+    expect(tenantPostMock).not.toHaveBeenCalled();
   });
 
-  it('maps trade-from-RFQ create failures to API and fallback App-owned error states', async () => {
+  it('trade-from-RFQ create path is disabled from buyer RFQ detail — no error path reachable', () => {
+    // Trade creation from buyer RFQ detail is disabled (P1 leakage fix).
+    // resolveBuyerRfqTradeFromRfqCreateAction always returns kind: 'noop'.
+    // The error handling path (continueBuyerRfqTradeFromRfqCreatePath) is unreachable
+    // from this surface — no API call is made, no error state is possible from this seam.
     const createAction = resolveBuyerRfqTradeFromRfqCreateAction(makeBuyerRfqDetail());
-    expect(createAction.kind).toBe('create-trade');
-
-    if (createAction.kind !== 'create-trade') {
-      throw new Error('Expected responded RFQ to enter the create-trade continuity path.');
-    }
-
-    const currentDetailView = {
-      ...createInitialBuyerRfqDetailViewState(),
-      open: true,
-      source: 'dialog' as const,
-      rfqId: 'rfq-1',
-      data: makeBuyerRfqDetail(),
-    };
-
-    const apiErrorResult = await continueBuyerRfqTradeFromRfqCreatePath({
-      payload: createAction.payload,
-      currentDetailView,
-      createTrade: vi.fn(async () => {
-        throw new APIError(503, 'Trade bridge is unavailable.');
-      }),
-    });
-
-    expect(apiErrorResult.kind).toBe('error');
-    if (apiErrorResult.kind !== 'error') {
-      throw new Error('Expected API failure to stay inside the App-owned trade bridge error path.');
-    }
-
-    expect(resolveBuyerRfqTradeFromRfqError(apiErrorResult.error)).toEqual({
-      ...createInitialBuyerRfqTradeBridgeState(),
-      error: 'Trade bridge is unavailable.',
-    });
-
-    const fallbackErrorResult = await continueBuyerRfqTradeFromRfqCreatePath({
-      payload: createAction.payload,
-      currentDetailView,
-      createTrade: vi.fn(async () => {
-        throw new Error('boom');
-      }),
-    });
-
-    expect(fallbackErrorResult.kind).toBe('error');
-    if (fallbackErrorResult.kind !== 'error') {
-      throw new Error('Expected fallback failure to stay inside the App-owned trade bridge error path.');
-    }
-
-    expect(resolveBuyerRfqTradeFromRfqError(fallbackErrorResult.error)).toEqual({
-      ...createInitialBuyerRfqTradeBridgeState(),
-      error: 'Unable to continue this responded RFQ into the existing trade flow right now.',
-    });
+    expect(createAction.kind).toBe('noop');
+    expect(createAction.payload).toBeNull();
+    expect(createAction.tradeBridge).toBeNull();
+    expect(tenantPostMock).not.toHaveBeenCalled();
   });
 
   it('keeps supplier inbox continuity inside the App-owned open/loading seam', () => {

@@ -63,18 +63,6 @@ function DetailRow({ label, value }: Readonly<{ label: string; value: string }>)
   );
 }
 
-function formatCurrency(value: number, currency: string): string {
-  if (!Number.isFinite(value)) {
-    return `${currency} -`;
-  }
-
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
 export function BuyerRfqDetailSurface({
   rfq,
   loading,
@@ -183,7 +171,6 @@ export function BuyerRfqDetailSurface({
 
   const statusTone = getStatusTone(rfq.status);
   const canContinueToTrade = rfq.status === 'RESPONDED';
-  const tradeGrossAmount = rfq.item_unit_price * rfq.quantity;
   const linkedTrade = rfq.trade_continuity;
   let tradeContinuityButtonLabel = 'Continue to Trade';
   if (linkedTrade) {
@@ -215,9 +202,7 @@ export function BuyerRfqDetailSurface({
         <DetailRow label="Item Name" value={rfq.item_name} />
         <DetailRow label="Item SKU" value={rfq.item_sku} />
         <DetailRow label="Quantity" value={String(rfq.quantity)} />
-        <DetailRow label="Unit Price" value={formatCurrency(rfq.item_unit_price, 'USD')} />
-        <DetailRow label="Trade Gross Amount" value={formatCurrency(tradeGrossAmount, 'USD')} />
-        <DetailRow label="Supplier Organization ID" value={rfq.supplier_org_id} />
+        <DetailRow label="Pricing" value="Pricing will be provided through supplier quote response" />
         <DetailRow label="Submitted On" value={formatTimestamp(rfq.created_at)} />
         <DetailRow label="Last Updated" value={formatTimestamp(rfq.updated_at)} />
       </dl>

@@ -408,12 +408,10 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
   return {
     id: rfq.id,
     status: rfq.status,
-    org_id: rfq.orgId,
     catalog_item_id: rfq.catalogItemId,
     item_name: rfq.catalogItem.name,
     item_sku: rfq.catalogItem.sku,
     quantity: rfq.quantity,
-    supplier_org_id: rfq.supplierOrgId,
     created_at: rfq.createdAt,
     updated_at: rfq.updatedAt,
     requirement_title: rfq.requirementTitle ?? null,
@@ -432,7 +430,6 @@ function mapBuyerRfqListItem(rfq: BuyerRfqListRow) {
 function mapBuyerRfqResponse(response: BuyerRfqResponseRow) {
   return {
     id: response.id,
-    supplier_org_id: response.supplierOrgId,
     message: response.message,
     submitted_at: response.submittedAt,
     created_at: response.createdAt,
@@ -442,7 +439,6 @@ function mapBuyerRfqResponse(response: BuyerRfqResponseRow) {
 function mapBuyerRfqDetail(rfq: BuyerRfqDetailRow) {
   return {
     ...mapBuyerRfqListItem(rfq),
-    item_unit_price: Number(rfq.catalogItem.price ?? 0),
     buyer_message: rfq.buyerMessage,
     created_by_user_id: rfq.createdByUserId,
     supplier_response: rfq.supplierResponse ? mapBuyerRfqResponse(rfq.supplierResponse) : null,

@@ -168,12 +168,10 @@ export type BuyerRfqStatus = 'INITIATED' | 'OPEN' | 'RESPONDED' | 'CLOSED';
 export interface BuyerRfqListItem {
   id: string;
   status: BuyerRfqStatus;
-  org_id?: string;
   catalog_item_id: string;
   item_name: string;
   item_sku: string | null;
   quantity: number;
-  supplier_org_id: string;
   created_at: string;
   updated_at: string;
   requirement_title?: string | null;
@@ -195,7 +193,6 @@ export interface BuyerRfqListResponse {
 
 export interface BuyerRfqSupplierResponse {
   id: string;
-  supplier_org_id: string;
   message: string;
   submitted_at: string;
   created_at: string;
@@ -209,15 +206,12 @@ export interface BuyerRfqTradeContinuity {
 export interface BuyerRfqDetail {
   id: string;
   status: BuyerRfqStatus;
-  org_id?: string;
   catalog_item_id: string;
   item_name: string;
   item_sku: string;
   quantity: number;
-  supplier_org_id: string;
   created_at: string;
   updated_at: string;
-  item_unit_price: number;
   buyer_message: string | null;
   created_by_user_id: string;
   supplier_response: BuyerRfqSupplierResponse | null;

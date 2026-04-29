@@ -976,4 +976,20 @@ describe('POST /tenant/catalog/items/:itemId/rfq-prefill', () => {
     expect(first.body).not.toContain('draft_id');
     expect(second.body).not.toContain('draft_id');
   });
+
+  it('BL-H-R01: prefill response never contains buyer-leakage fields', async () => {
+    setupHappyPath();
+    app = await buildTestApp(true);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/tenant/catalog/items/${TEST_ITEM_ID}/rfq-prefill`,
+      headers: { 'content-type': 'application/json' },
+      payload: {},
+    });
+
+    for (const forbidden of ['item_unit_price', 'supplier_org_id', 'org_id', 'unitPrice', 'tradeGrossAmount']) {
+      expect(res.body).not.toContain(forbidden);
+    }
+  });
 });

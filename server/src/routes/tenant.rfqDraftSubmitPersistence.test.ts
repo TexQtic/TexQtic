@@ -915,4 +915,26 @@ describe('Slice C RFQ draft/submit persistence alignment', () => {
     }
     expect(tx.rfq.create).not.toHaveBeenCalled();
   });
+
+  it('BL-C-R01: draft create response never contains buyer-leakage fields', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx();
+    app = await buildTestApp();
+
+    const res = await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/from-catalog-item', payload: { catalogItemId: TEST_ITEM_ID } });
+    for (const forbidden of ['"item_unit_price"', '"unitPrice"', '"tradeGrossAmount"']) {
+      expect(res.body).not.toContain(forbidden);
+    }
+  });
+
+  it('BL-C-R02: submit response never contains buyer-leakage fields', async () => {
+    setupPrefillSuccess('RFQ_ONLY');
+    setupDbTx();
+    app = await buildTestApp();
+
+    const res = await app.inject({ method: 'POST', url: `/tenant/rfqs/drafts/${TEST_DRAFT_ID}/submit` });
+    for (const forbidden of ['"item_unit_price"', '"unitPrice"', '"tradeGrossAmount"']) {
+      expect(res.body).not.toContain(forbidden);
+    }
+  });
 });

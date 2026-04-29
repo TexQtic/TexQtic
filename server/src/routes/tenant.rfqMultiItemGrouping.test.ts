@@ -929,4 +929,38 @@ describe('Slice D multi-item grouping and supplier mapping', () => {
     await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [seeded[0].id] } });
     expect(built.notifySupplier).not.toHaveBeenCalled();
   });
+
+  it('BL-M-R01: buyer RFQ list response never contains buyer-leakage fields', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }] },
+    });
+
+    const listRes = await app.inject({ method: 'GET', url: '/tenant/rfqs' });
+    for (const forbidden of ['"item_unit_price"', '"unitPrice"', '"tradeGrossAmount"']) {
+      expect(listRes.body).not.toContain(forbidden);
+    }
+  });
+
+  it('BL-M-R02: multi-item submit response never contains buyer-leakage price fields', async () => {
+    const built = await buildTestApp({ catalog: BASE_CATALOG });
+    app = built.app;
+
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/tenant/rfqs/drafts/multi-item',
+      payload: { lineItems: [{ catalogItemId: ITEM_SUP1_A }] },
+    });
+    const createBody = JSON.parse(createRes.body) as { data: { supplier_groups: Array<{ line_items: Array<{ draft_id: string }> }> } };
+    const draftId = createBody.data.supplier_groups[0].line_items[0].draft_id;
+
+    const submitRes = await app.inject({ method: 'POST', url: '/tenant/rfqs/drafts/multi-item/submit', payload: { draftIds: [draftId] } });
+    for (const forbidden of ['"item_unit_price"', '"unitPrice"', '"tradeGrossAmount"']) {
+      expect(submitRes.body).not.toContain(forbidden);
+    }
+  });
 });
