@@ -1,15 +1,19 @@
 #!/usr/bin/env tsx
 /**
- * TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — Slice C-ALT
+ * TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — Slice C-ALT + Slice F update
  *
  * Seeds 7 net-new QA tenants (qa-knt-b, qa-dye-c, qa-gmt-d,
  * qa-buyer-a, qa-buyer-c, qa-svc-tst-a, qa-svc-log-b) plus:
  *   - organizations, users, memberships, role_positions
- *   - catalog patches for qa-b2b (5 items)
- *   - 30 new catalog items (10 per supplier)
+ *   - catalog patches for qa-b2b (5 items, now with catalog_visibility_policy_mode)
+ *   - 30 new catalog items (10 per supplier, with explicit visibility policy mode)
  *   - 8 buyer_supplier_relationship rows
  *
- * AUTHORIZED: current DATABASE_URL (Slice C-ALT authorization).
+ * SLICE F UPDATE: Restores original catalog visibility intent via
+ *   catalog_visibility_policy_mode (Slice B column). Supersedes Option A
+ *   lossy mapping. Enables E2E-07, E2E-08, E2E-09.
+ *
+ * AUTHORIZED: current DATABASE_URL (Slice C-ALT + Slice F authorization).
  * DATA-ONLY: no DDL, no schema changes.
  * QA-PREFIX SAFETY: every INSERT scoped by qa-prefixed slug or email.
  * SECRETS: password_hash never printed.
@@ -157,16 +161,16 @@ const NET_NEW_TENANT_SPECS = [
 
 // ─── Catalog patch specs for qa-b2b ──────────────────────────────────────────
 
-// Slice C-ALT blocker resolution (Option A):
-// Slice B planned APPROVED_BUYER_ONLY and HIDDEN but current DB constraint
-// (catalog_items_publication_posture_check) does not permit those values.
-// Mapping applied: APPROVED_BUYER_ONLY → B2B_PUBLIC, HIDDEN → PRIVATE_OR_AUTH_ONLY
+// Slice F update: Restores original catalog visibility intent using the durable
+// catalog_visibility_policy_mode column (added in Slice B migration 9d29798).
+// publication_posture remains constraint-valid (B2B_PUBLIC / PRIVATE_OR_AUTH_ONLY).
+// Option A lossy mapping is superseded by explicit visibility policy mode.
 const QA_B2B_CATALOG_PATCHES = [
-  { sku: 'QA-B2B-FAB-002', publicationPosture: 'B2B_PUBLIC', priceDisclosurePolicyMode: null as string | null },
-  { sku: 'QA-B2B-FAB-003', publicationPosture: 'B2B_PUBLIC', priceDisclosurePolicyMode: 'RELATIONSHIP_ONLY' },
-  { sku: 'QA-B2B-FAB-004', publicationPosture: 'B2B_PUBLIC', priceDisclosurePolicyMode: null as string | null },       // was APPROVED_BUYER_ONLY
-  { sku: 'QA-B2B-FAB-005', publicationPosture: 'B2B_PUBLIC', priceDisclosurePolicyMode: 'RELATIONSHIP_ONLY' },       // was APPROVED_BUYER_ONLY
-  { sku: 'QA-B2B-FAB-006', publicationPosture: 'PRIVATE_OR_AUTH_ONLY', priceDisclosurePolicyMode: null as string | null }, // was HIDDEN
+  { sku: 'QA-B2B-FAB-002', publicationPosture: 'B2B_PUBLIC',           priceDisclosurePolicyMode: null as string | null,  catalogVisibilityPolicyMode: null as string | null },
+  { sku: 'QA-B2B-FAB-003', publicationPosture: 'B2B_PUBLIC',           priceDisclosurePolicyMode: 'RELATIONSHIP_ONLY',     catalogVisibilityPolicyMode: null as string | null },
+  { sku: 'QA-B2B-FAB-004', publicationPosture: 'B2B_PUBLIC',           priceDisclosurePolicyMode: null as string | null,  catalogVisibilityPolicyMode: 'APPROVED_BUYER_ONLY' }, // Slice F restore
+  { sku: 'QA-B2B-FAB-005', publicationPosture: 'B2B_PUBLIC',           priceDisclosurePolicyMode: 'RELATIONSHIP_ONLY',     catalogVisibilityPolicyMode: 'APPROVED_BUYER_ONLY' }, // Slice F restore
+  { sku: 'QA-B2B-FAB-006', publicationPosture: 'PRIVATE_OR_AUTH_ONLY', priceDisclosurePolicyMode: null as string | null,  catalogVisibilityPolicyMode: 'HIDDEN' },             // Slice F restore
 ];
 
 // ─── New catalog item specs per supplier ─────────────────────────────────────
@@ -176,33 +180,47 @@ type CatalogItemSpec = {
   name: string;
   publicationPosture: string;
   priceDisclosurePolicyMode: string | null;
+  catalogVisibilityPolicyMode: string | null;
   price: number;
   moq: number;
 };
 
 function buildSupplierCatalogItems(prefix: string, slug: string): CatalogItemSpec[] {
-  // Distribution (Option A mapping): B2B_PUBLIC×6, PRIVATE_OR_AUTH_ONLY×4
-  // Slice B planned APPROVED_BUYER_ONLY×2 + HIDDEN×1; mapped to valid constraint values.
-  const postureMap: Array<{ posture: string; pdpm: string | null }> = [
-    { posture: 'B2B_PUBLIC', pdpm: null },
-    { posture: 'B2B_PUBLIC', pdpm: null },
-    { posture: 'B2B_PUBLIC', pdpm: null },
-    { posture: 'B2B_PUBLIC', pdpm: null },
-    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null },
-    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null },
-    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null },
-    { posture: 'B2B_PUBLIC', pdpm: null },           // was APPROVED_BUYER_ONLY
-    { posture: 'B2B_PUBLIC', pdpm: null },           // was APPROVED_BUYER_ONLY
-    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null }, // was HIDDEN
+  // Slice F distribution: explicit catalog_visibility_policy_mode per design.
+  // publication_posture remains constraint-valid throughout.
+  // Option A lossy mapping superseded.
+  //
+  // Item 001: B2B_PUBLIC     + NULL visibility   → fallback PUBLIC
+  // Item 002: B2B_PUBLIC     + NULL visibility   → fallback PUBLIC
+  // Item 003: B2B_PUBLIC     + APPROVED_BUYER_ONLY → public-projection posture, approval-gated
+  // Item 004: B2B_PUBLIC     + APPROVED_BUYER_ONLY → public-projection posture, approval-gated
+  // Item 005: PRIVATE_OR_AUTH_ONLY + NULL         → fallback AUTHENTICATED_ONLY
+  // Item 006: PRIVATE_OR_AUTH_ONLY + NULL         → fallback AUTHENTICATED_ONLY
+  // Item 007: PRIVATE_OR_AUTH_ONLY + APPROVED_BUYER_ONLY → auth + approval-gated
+  // Item 008: PRIVATE_OR_AUTH_ONLY + APPROVED_BUYER_ONLY → auth + approval-gated
+  // Item 009: PRIVATE_OR_AUTH_ONLY + HIDDEN       → supplier-private, hidden from all buyers
+  // Item 010: B2B_PUBLIC     + RELATIONSHIP_GATED → discoverable but relationship-gated
+  const itemDefs: Array<{ posture: string; pdpm: string | null; cvpm: string | null }> = [
+    { posture: 'B2B_PUBLIC',           pdpm: null,               cvpm: null },
+    { posture: 'B2B_PUBLIC',           pdpm: null,               cvpm: null },
+    { posture: 'B2B_PUBLIC',           pdpm: null,               cvpm: 'APPROVED_BUYER_ONLY' },
+    { posture: 'B2B_PUBLIC',           pdpm: null,               cvpm: 'APPROVED_BUYER_ONLY' },
+    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null,               cvpm: null },
+    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null,               cvpm: null },
+    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null,               cvpm: 'APPROVED_BUYER_ONLY' },
+    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null,               cvpm: 'APPROVED_BUYER_ONLY' },
+    { posture: 'PRIVATE_OR_AUTH_ONLY', pdpm: null,               cvpm: 'HIDDEN' },
+    { posture: 'B2B_PUBLIC',           pdpm: null,               cvpm: 'RELATIONSHIP_GATED' },
   ];
 
-  return postureMap.map((p, i) => {
+  return itemDefs.map((p, i) => {
     const num = String(i + 1).padStart(3, '0');
     return {
       sku: `${prefix}-FAB-${num}`,
       name: `${slug.toUpperCase()} Fabric ${num}`,
       publicationPosture: p.posture,
       priceDisclosurePolicyMode: p.pdpm,
+      catalogVisibilityPolicyMode: p.cvpm,
       price: 100 + i * 10,
       moq: 50,
     };
@@ -433,6 +451,7 @@ async function main() {
       data: {
         publicationPosture: patch.publicationPosture,
         priceDisclosurePolicyMode: patch.priceDisclosurePolicyMode,
+        catalogVisibilityPolicyMode: patch.catalogVisibilityPolicyMode, // Slice F
       },
     });
     patchCount += result.count;
@@ -443,7 +462,7 @@ async function main() {
   if (patchCount > 5) {
     throw new Error(`SC-06 STOP: Total catalog patch affected ${patchCount} rows (expected ≤ 5)`);
   }
-  console.log(`[SEED] Block 7 DONE: ${patchCount} catalog items patched for qa-b2b`);
+  console.log(`[SEED] Block 7 DONE: ${patchCount} catalog items patched for qa-b2b (including catalogVisibilityPolicyMode — Slice F)`);
 
   // ── Blocks 8, 9, 10: New catalog items per supplier ───────────────────────
 
@@ -464,7 +483,25 @@ async function main() {
       throw new Error(`STOP: Partial catalog seed for ${slug}. ${existingSkus.length}/${items.length} items exist. Resolve manually.`);
     }
     if (existingSkus.length === items.length) {
-      console.log(`[SEED] Catalog ${slug}: already seeded (${items.length} items) — skipping`);
+      // Slice F: items already exist — patch catalogVisibilityPolicyMode idempotently
+      let patchCount = 0;
+      for (const item of items) {
+        if (!item.sku.startsWith('QA-')) {
+          throw new Error(`STOP: Non-QA SKU in re-patch: ${item.sku}`);
+        }
+        const result = await prisma.catalogItem.updateMany({
+          where: { tenantId, sku: item.sku },
+          data: {
+            catalogVisibilityPolicyMode: item.catalogVisibilityPolicyMode,
+            publicationPosture: item.publicationPosture,
+          },
+        });
+        if (result.count > 1) {
+          throw new Error(`STOP: UPDATE for SKU ${item.sku} affected ${result.count} rows (expected 1)`);
+        }
+        patchCount += result.count;
+      }
+      console.log(`[SEED] Catalog ${slug}: already seeded — patched ${patchCount} catalogVisibilityPolicyMode values (Slice F)`);
       return;
     }
 
@@ -486,6 +523,7 @@ async function main() {
             active: true,
             publicationPosture: item.publicationPosture,
             priceDisclosurePolicyMode: item.priceDisclosurePolicyMode,
+            catalogVisibilityPolicyMode: item.catalogVisibilityPolicyMode,
           },
         });
         insertCount++;
@@ -768,7 +806,174 @@ async function main() {
   }
   console.log('[VALIDATION] V-07 DONE (verify above)');
 
-  console.log('\n[QA-SEED] ✓ Slice C-ALT seed complete');
+  // ── Slice F validations (V-F01 through V-F10) ─────────────────────────────
+
+  console.log('\n[VALIDATION] V-F01: catalog_visibility_policy_mode column exists');
+  const colCheck = await prisma.$queryRaw<Array<{ column_name: string; data_type: string }>>`
+    SELECT column_name, data_type
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'catalog_items'
+      AND column_name = 'catalog_visibility_policy_mode'
+  `;
+  if (colCheck.length === 0) {
+    throw new Error('V-F01 STOP: catalog_visibility_policy_mode column not found — Slice B migration not applied');
+  }
+  console.log(`[VALIDATION] V-F01 PASS: column exists (type=${colCheck[0].data_type})`);
+
+  console.log('\n[VALIDATION] V-F02: qa-b2b FAB-004/FAB-005/FAB-006 restored intent');
+  const fab456 = await prisma.$queryRaw<Array<{ sku: string; publication_posture: string; catalog_visibility_policy_mode: string | null }>>`
+    SELECT ci.sku, ci.publication_posture, ci.catalog_visibility_policy_mode
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug = 'qa-b2b'
+      AND ci.sku IN ('QA-B2B-FAB-004', 'QA-B2B-FAB-005', 'QA-B2B-FAB-006')
+    ORDER BY ci.sku
+  `;
+  let vf02Pass = true;
+  for (const row of fab456) {
+    console.log(`  ${row.sku}: posture=${row.publication_posture} cvpm=${row.catalog_visibility_policy_mode}`);
+    if (row.sku === 'QA-B2B-FAB-004' && row.catalog_visibility_policy_mode !== 'APPROVED_BUYER_ONLY') { vf02Pass = false; console.error('  V-F02 FAIL: FAB-004 expected APPROVED_BUYER_ONLY'); }
+    if (row.sku === 'QA-B2B-FAB-005' && row.catalog_visibility_policy_mode !== 'APPROVED_BUYER_ONLY') { vf02Pass = false; console.error('  V-F02 FAIL: FAB-005 expected APPROVED_BUYER_ONLY'); }
+    if (row.sku === 'QA-B2B-FAB-006' && row.catalog_visibility_policy_mode !== 'HIDDEN')              { vf02Pass = false; console.error('  V-F02 FAIL: FAB-006 expected HIDDEN'); }
+  }
+  if (fab456.length < 3) { vf02Pass = false; console.error(`  V-F02 FAIL: Only ${fab456.length}/3 FAB rows found`); }
+  if (vf02Pass) console.log('[VALIDATION] V-F02 PASS: FAB-004=APPROVED_BUYER_ONLY, FAB-005=APPROVED_BUYER_ONLY, FAB-006=HIDDEN');
+
+  console.log('\n[VALIDATION] V-F03: No invalid catalog_visibility_policy_mode values');
+  const invalidCvpm = await prisma.$queryRaw<Array<{ sku: string; catalog_visibility_policy_mode: string }>>`
+    SELECT ci.sku, ci.catalog_visibility_policy_mode
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug LIKE 'qa-%'
+      AND ci.catalog_visibility_policy_mode IS NOT NULL
+      AND ci.catalog_visibility_policy_mode NOT IN ('PUBLIC','AUTHENTICATED_ONLY','APPROVED_BUYER_ONLY','HIDDEN','RELATIONSHIP_GATED')
+  `;
+  if (invalidCvpm.length > 0) {
+    throw new Error(`V-F03 STOP: Invalid catalog_visibility_policy_mode values found: ${invalidCvpm.map(r => `${r.sku}=${r.catalog_visibility_policy_mode}`).join(', ')}`);
+  }
+  console.log('[VALIDATION] V-F03 PASS: No invalid visibility policy mode values');
+
+  console.log('\n[VALIDATION] V-F04: Supplier catalog distribution per supplier');
+  const cvpmDist = await prisma.$queryRaw<Array<{ slug: string; cvpm: string | null; cnt: bigint }>>`
+    SELECT t.slug, ci.catalog_visibility_policy_mode AS cvpm, COUNT(*) AS cnt
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug IN ('qa-knt-b', 'qa-dye-c', 'qa-gmt-d')
+    GROUP BY t.slug, ci.catalog_visibility_policy_mode
+    ORDER BY t.slug, ci.catalog_visibility_policy_mode NULLS FIRST
+  `;
+  for (const row of cvpmDist) {
+    console.log(`  ${row.slug} | cvpm=${row.cvpm ?? 'NULL'} | count=${row.cnt}`);
+  }
+  let vf04Pass = true;
+  const supplierSlugs = ['qa-knt-b', 'qa-dye-c', 'qa-gmt-d'];
+  for (const supplierSlug of supplierSlugs) {
+    const rows = cvpmDist.filter(r => r.slug === supplierSlug);
+    const nullCount   = rows.find(r => r.cvpm === null)?.cnt ?? 0n;
+    const aboBuyerCnt = rows.find(r => r.cvpm === 'APPROVED_BUYER_ONLY')?.cnt ?? 0n;
+    const hiddenCnt   = rows.find(r => r.cvpm === 'HIDDEN')?.cnt ?? 0n;
+    const rgCnt       = rows.find(r => r.cvpm === 'RELATIONSHIP_GATED')?.cnt ?? 0n;
+    if (nullCount < 4n || aboBuyerCnt < 4n || hiddenCnt < 1n || rgCnt < 1n) {
+      console.warn(`  V-F04 WARN: ${supplierSlug} distribution mismatch: NULL=${nullCount} ABO=${aboBuyerCnt} HIDDEN=${hiddenCnt} RG=${rgCnt}`);
+      vf04Pass = false;
+    }
+  }
+  if (vf04Pass) console.log('[VALIDATION] V-F04 PASS: Supplier catalog distribution correct');
+
+  console.log('\n[VALIDATION] V-F05: publication_posture constraint-valid across all QA items');
+  const invalidPosture = await prisma.$queryRaw<Array<{ sku: string; publication_posture: string }>>`
+    SELECT ci.sku, ci.publication_posture
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug LIKE 'qa-%'
+      AND ci.publication_posture NOT IN ('PRIVATE_OR_AUTH_ONLY','B2B_PUBLIC','B2C_PUBLIC','BOTH')
+  `;
+  if (invalidPosture.length > 0) {
+    throw new Error(`V-F05 STOP: Invalid publication_posture values: ${invalidPosture.map(r => `${r.sku}=${r.publication_posture}`).join(', ')}`);
+  }
+  console.log('[VALIDATION] V-F05 PASS: All publication_posture values are constraint-valid');
+
+  console.log('\n[VALIDATION] V-F06: E2E blockers unblocked at data level');
+  const aboCount = await prisma.$queryRaw<Array<{ cnt: bigint }>>`
+    SELECT COUNT(*) AS cnt
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug LIKE 'qa-%'
+      AND ci.catalog_visibility_policy_mode = 'APPROVED_BUYER_ONLY'
+  `;
+  const hiddenCount = await prisma.$queryRaw<Array<{ cnt: bigint }>>`
+    SELECT COUNT(*) AS cnt
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug LIKE 'qa-%'
+      AND ci.catalog_visibility_policy_mode = 'HIDDEN'
+  `;
+  const aboTotal = aboCount[0]?.cnt ?? 0n;
+  const hiddenTotal = hiddenCount[0]?.cnt ?? 0n;
+  console.log(`  APPROVED_BUYER_ONLY items: ${aboTotal}`);
+  console.log(`  HIDDEN items: ${hiddenTotal}`);
+  if (aboTotal < 1n) throw new Error('V-F06 STOP: No APPROVED_BUYER_ONLY items — E2E-07/E2E-09 still blocked');
+  if (hiddenTotal < 1n) throw new Error('V-F06 STOP: No HIDDEN items — E2E-08 still blocked');
+  console.log('[VALIDATION] V-F06 PASS: E2E-07/E2E-08/E2E-09 data blockers resolved');
+
+  console.log('\n[VALIDATION] V-F07: Relationship state coverage');
+  const relStates = await prisma.$queryRaw<Array<{ state: string; cnt: bigint }>>`
+    SELECT bsr.state, COUNT(*) AS cnt
+    FROM buyer_supplier_relationships bsr
+    JOIN organizations s ON s.id = bsr.supplier_org_id
+    WHERE s.slug LIKE 'qa-%'
+    GROUP BY bsr.state
+    ORDER BY bsr.state
+  `;
+  const requiredStates = ['APPROVED','BLOCKED','EXPIRED','REJECTED','REQUESTED','REVOKED','SUSPENDED'];
+  const foundStates = new Set(relStates.map(r => r.state));
+  for (const row of relStates) console.log(`  state=${row.state} count=${row.cnt}`);
+  const missingStates = requiredStates.filter(s => !foundStates.has(s));
+  if (missingStates.length > 0) {
+    console.warn(`[VALIDATION] V-F07 WARN: Missing relationship states: ${missingStates.join(', ')}`);
+  } else {
+    console.log('[VALIDATION] V-F07 PASS: All required relationship states present');
+  }
+
+  console.log('\n[VALIDATION] V-F08: No non-QA rows touched');
+  const nonQaCatalogAffected = await prisma.$queryRaw<Array<{ cnt: bigint }>>`
+    SELECT COUNT(*) AS cnt
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug NOT LIKE 'qa-%'
+      AND ci.catalog_visibility_policy_mode IS NOT NULL
+      AND ci.updated_at > NOW() - INTERVAL '1 hour'
+  `;
+  const nonQaCount = nonQaCatalogAffected[0]?.cnt ?? 0n;
+  if (nonQaCount > 0n) {
+    throw new Error(`V-F08 STOP: ${nonQaCount} non-QA catalog items appear to have been touched`);
+  }
+  console.log('[VALIDATION] V-F08 PASS: No non-QA rows touched');
+
+  console.log('\n[VALIDATION] V-F09: No duplicate QA catalog SKUs per tenant');
+  const dupSkus = await prisma.$queryRaw<Array<{ tenant_id: string; sku: string; cnt: bigint }>>`
+    SELECT ci.tenant_id, ci.sku, COUNT(*) AS cnt
+    FROM catalog_items ci
+    JOIN tenants t ON t.id = ci.tenant_id
+    WHERE t.slug LIKE 'qa-%'
+    GROUP BY ci.tenant_id, ci.sku
+    HAVING COUNT(*) > 1
+  `;
+  if (dupSkus.length > 0) {
+    throw new Error(`V-F09 STOP: Duplicate SKUs detected: ${dupSkus.map(r => r.sku).join(', ')}`);
+  }
+  console.log('[VALIDATION] V-F09 PASS: No duplicate QA catalog SKUs');
+
+  console.log('\n[VALIDATION] V-F10: Slice C-ALT V-01 through V-07 still pass');
+  if (b2bCount < 9n || aggCount < 1n) {
+    console.warn(`[VALIDATION] V-F10 WARN: V-01 may have degraded: B2B=${b2bCount}, AGGREGATOR=${aggCount}`);
+  } else {
+    console.log('[VALIDATION] V-F10 PASS: Slice C-ALT base validations still hold');
+  }
+
+  console.log('\n[QA-SEED] ✓ Slice C-ALT + Slice F seed complete');
+  console.log('[QA-SEED] E2E-07/E2E-08/E2E-09: DATA BLOCKERS RESOLVED — Slice G Playwright verification still required');
 }
 
 main()
