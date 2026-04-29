@@ -26,7 +26,6 @@ model Tenant {
   carts                    Cart[]
   catalogItems             CatalogItem[]
   documentExtractionDrafts DocumentExtractionDraft[]
-  dppEvidenceClaims        DppEvidenceClaim[]
   impersonationSessions    ImpersonationSession[]
   invites                  Invite[]
   marketplaceCartSummaries MarketplaceCartSummary[]
@@ -80,6 +79,7 @@ model User {
   createdAt                DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
   carts                    Cart[]
+  approvedEvidenceClaims   DppEvidenceClaim[]
   marketplaceCartSummaries MarketplaceCartSummary[]
   memberships              Membership[]
   orders                   Order[]
@@ -87,7 +87,6 @@ model User {
   refreshTokens            RefreshToken[]
   rfqSupplierResponses     RfqSupplierResponse[]    @relation("rfq_response_created_by_user")
   rfqsCreated              Rfq[]                    @relation("rfq_created_by_user")
-  approvedEvidenceClaims   DppEvidenceClaim[]
 
   @@map("users")
 }
@@ -336,34 +335,35 @@ model ImpersonationSession {
 }
 
 model CatalogItem {
-  id                 String      @id @default(uuid()) @db.Uuid
-  tenantId           String      @map("tenant_id") @db.Uuid
-  name               String      @db.VarChar(255)
-  sku                String?     @db.VarChar(100)
-  description        String?
-  price              Decimal?    @db.Decimal(10, 2)
-  active             Boolean     @default(true)
-  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
-  moq                Int         @default(1)
-  imageUrl           String?     @map("image_url")
-  publicationPosture String      @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
-  priceDisclosurePolicyMode String? @map("price_disclosure_policy_mode") @db.VarChar(30)
-  productCategory    String?     @map("product_category") @db.VarChar(50)
-  fabricType         String?     @map("fabric_type") @db.VarChar(50)
-  gsm                Decimal?    @db.Decimal(6, 1)
-  material           String?     @db.VarChar(50)
-  composition        String?     @db.VarChar(500)
-  color              String?     @db.VarChar(100)
-  widthCm            Decimal?    @map("width_cm") @db.Decimal(6, 2)
-  construction       String?     @db.VarChar(50)
-  certifications     Json?
-  catalogStage       String?     @map("catalog_stage") @db.VarChar(50)
-  stageAttributes    Json?       @map("stage_attributes")
-  cartItems          CartItem[]
-  tenant             Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  orderItems         OrderItem[]
-  rfqs               Rfq[]
+  id                             String      @id @default(uuid()) @db.Uuid
+  tenantId                       String      @map("tenant_id") @db.Uuid
+  name                           String      @db.VarChar(255)
+  sku                            String?     @db.VarChar(100)
+  description                    String?
+  price                          Decimal?    @db.Decimal(10, 2)
+  active                         Boolean     @default(true)
+  createdAt                      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  moq                            Int         @default(1)
+  imageUrl                       String?     @map("image_url")
+  publicationPosture             String      @default("PRIVATE_OR_AUTH_ONLY") @map("publication_posture") @db.VarChar(30)
+  productCategory                String?     @map("product_category") @db.VarChar(50)
+  fabricType                     String?     @map("fabric_type") @db.VarChar(50)
+  gsm                            Decimal?    @db.Decimal(6, 1)
+  material                       String?     @db.VarChar(50)
+  composition                    String?     @db.VarChar(500)
+  color                          String?     @db.VarChar(100)
+  widthCm                        Decimal?    @map("width_cm") @db.Decimal(6, 2)
+  construction                   String?     @db.VarChar(50)
+  certifications                 Json?
+  catalogStage                   String?     @map("catalog_stage") @db.VarChar(50)
+  stageAttributes                Json?       @map("stage_attributes")
+  priceDisclosurePolicyMode      String?     @map("price_disclosure_policy_mode") @db.VarChar(30)
+  catalogVisibilityPolicyMode    String?     @map("catalog_visibility_policy_mode") @db.VarChar(30)
+  cartItems                      CartItem[]
+  tenant                         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderItems                     OrderItem[]
+  rfqs                           Rfq[]
 
   @@index([tenantId, active])
   @@index([tenantId, updatedAt])
@@ -978,6 +978,8 @@ model TraceabilityNode {
   createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
   /// Maintained by DB trigger trg_traceability_nodes_set_updated_at on BEFORE UPDATE.
   updatedAt           DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  dpp_evidence_claims DppEvidenceClaim[]
+  dpp_passport_states dpp_passport_states[]
   node_certifications node_certifications[]
   edgesFrom           TraceabilityEdge[]    @relation("EdgeFrom")
   edgesTo             TraceabilityEdge[]    @relation("EdgeTo")
@@ -1054,7 +1056,6 @@ model organizations {
   plan                         String                         @default("FREE") @db.VarChar(30)
   effective_at                 DateTime                       @default(now()) @db.Timestamptz(6)
   superseded_at                DateTime?                      @db.Timestamptz(6)
-  buyerRelationships           BuyerSupplierRelationship[]    @relation("BuyerSupplierRelationshipBuyer")
   created_at                   DateTime                       @default(now()) @db.Timestamptz(6)
   updated_at                   DateTime                       @default(now()) @db.Timestamptz(6)
   is_white_label               Boolean                        @default(false)
@@ -1062,9 +1063,13 @@ model organizations {
   primary_segment_key          String?                        @db.VarChar(100)
   publication_posture          String                         @default("PRIVATE_OR_AUTH_ONLY") @db.VarChar(30)
   price_disclosure_policy_mode String?                        @db.VarChar(30)
+  buyerRelationships           BuyerSupplierRelationship[]    @relation("BuyerSupplierRelationshipBuyer")
+  supplierRelationships        BuyerSupplierRelationship[]    @relation("BuyerSupplierRelationshipSupplier")
   certification_lifecycle_logs CertificationLifecycleLog[]
   certifications               Certification[]
   documentEmbeddings           DocumentEmbedding[]
+  dppEvidenceClaims            DppEvidenceClaim[]
+  dpp_passport_states          dpp_passport_states[]
   escalation_events            EscalationEvent[]
   escrow_lifecycle_logs        EscrowLifecycleLog[]
   node_certifications          node_certifications[]
@@ -1073,7 +1078,6 @@ model organizations {
   tenants                      Tenant                         @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pending_approvals            PendingApproval[]
   sanctions                    Sanction[]
-  supplierRelationships        BuyerSupplierRelationship[]    @relation("BuyerSupplierRelationshipSupplier")
   traceabilityEdges            TraceabilityEdge[]
   traceabilityNodes            TraceabilityNode[]
   trade_lifecycle_logs         TradeLifecycleLog[]
@@ -1281,20 +1285,20 @@ model DocumentEmbedding {
 /// humanReviewRequired is ALWAYS true — structural constant enforced at DB and service layer.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model DocumentExtractionDraft {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId               String    @map("org_id") @db.Uuid
-  documentId          String    @map("document_id") @db.Uuid
-  documentType        String    @default("UNKNOWN") @map("document_type") @db.VarChar(100)
-  extractedFields     Json      @default("[]") @map("extracted_fields")
-  overallConfidence   Decimal   @default(0) @map("overall_confidence") @db.Decimal(4, 3)
-  humanReviewRequired Boolean   @default(true) @map("human_review_required")
-  status              String    @default("draft") @map("status") @db.VarChar(20)
-  extractionNotes     String?   @map("extraction_notes")
-  extractedAt         DateTime  @map("extracted_at") @db.Timestamptz(6)
-  reviewedAt          DateTime? @map("reviewed_at") @db.Timestamptz(6)
-  reviewedByUserId    String?   @map("reviewed_by_user_id") @db.Uuid
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId               String             @map("org_id") @db.Uuid
+  documentId          String             @map("document_id") @db.Uuid
+  documentType        String             @default("UNKNOWN") @map("document_type") @db.VarChar(100)
+  extractedFields     Json               @default("[]") @map("extracted_fields")
+  overallConfidence   Decimal            @default(0) @map("overall_confidence") @db.Decimal(4, 3)
+  humanReviewRequired Boolean            @default(true) @map("human_review_required")
+  status              String             @default("draft") @map("status") @db.VarChar(20)
+  extractionNotes     String?            @map("extraction_notes")
+  extractedAt         DateTime           @map("extracted_at") @db.Timestamptz(6)
+  reviewedAt          DateTime?          @map("reviewed_at") @db.Timestamptz(6)
+  reviewedByUserId    String?            @map("reviewed_by_user_id") @db.Uuid
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   tenant              Tenant             @relation(fields: [orgId], references: [id], onUpdate: NoAction)
   dppEvidenceClaims   DppEvidenceClaim[]
 
@@ -1310,23 +1314,43 @@ model DocumentExtractionDraft {
 /// humanReviewRequired is always true — structural constant.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model DppEvidenceClaim {
-  id           String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId        String                  @map("org_id") @db.Uuid
-  nodeId       String                  @map("node_id") @db.Uuid
-  extractionId String                  @map("extraction_id") @db.Uuid
-  claimType    String                  @map("claim_type")
-  claimValue   Json                    @map("claim_value")
-  approvedBy   String                  @map("approved_by") @db.Uuid
-  approvedAt   DateTime                @map("approved_at") @db.Timestamptz(6)
-  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
-  tenant       Tenant                  @relation(fields: [orgId], references: [id], onUpdate: NoAction)
-  extraction   DocumentExtractionDraft @relation(fields: [extractionId], references: [id], onDelete: Cascade)
-  approver     User                    @relation(fields: [approvedBy], references: [id])
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId              String                  @map("org_id") @db.Uuid
+  nodeId             String                  @map("node_id") @db.Uuid
+  extractionId       String                  @map("extraction_id") @db.Uuid
+  claimType          String                  @map("claim_type")
+  claimValue         Json                    @map("claim_value")
+  approvedBy         String                  @map("approved_by") @db.Uuid
+  approvedAt         DateTime                @map("approved_at") @db.Timestamptz(6)
+  createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  approver           User                    @relation(fields: [approvedBy], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "dpp_evidence_claims_approved_by_fk")
+  extraction         DocumentExtractionDraft @relation(fields: [extractionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dpp_evidence_claims_extraction_id_fk")
+  traceability_nodes TraceabilityNode        @relation(fields: [nodeId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "dpp_evidence_claims_node_id_fk")
+  tenant             organizations           @relation(fields: [orgId], references: [id], onUpdate: NoAction, map: "dpp_evidence_claims_org_id_fk")
 
   @@unique([orgId, nodeId, extractionId, claimType], map: "dpp_evidence_claims_unique")
   @@index([orgId, nodeId], map: "idx_dpp_evidence_claims_org_node")
   @@index([extractionId], map: "idx_dpp_evidence_claims_extraction")
   @@map("dpp_evidence_claims")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model dpp_passport_states {
+  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_id              String           @db.Uuid
+  node_id             String           @db.Uuid
+  status              String           @default("DRAFT")
+  created_at          DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime         @default(now()) @db.Timestamptz(6)
+  reviewed_at         DateTime?        @db.Timestamptz(6)
+  reviewed_by_user_id String?          @db.Uuid
+  public_token        String?          @unique(map: "dpp_passport_states_public_token_unique") @db.Uuid
+  traceability_nodes  TraceabilityNode @relation(fields: [node_id], references: [id], onUpdate: NoAction, map: "dpp_passport_states_node_id_fk")
+  organizations       organizations    @relation(fields: [org_id], references: [id], onUpdate: NoAction, map: "dpp_passport_states_org_id_fk")
+
+  @@unique([org_id, node_id], map: "dpp_passport_states_org_node_unique")
+  @@index([org_id, node_id], map: "idx_dpp_passport_states_org_node")
 }
 
 enum TenantType {
