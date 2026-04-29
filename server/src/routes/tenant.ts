@@ -563,6 +563,7 @@ async function resolveCatalogRfqDraftContext(input: {
     description: string | null;
     moq: unknown;
     certifications: unknown;
+    catalog_visibility_policy_mode: string | null;
   };
 
   let itemRows: RfqPrefillItemRow[];
@@ -573,7 +574,7 @@ async function resolveCatalogRfqDraftContext(input: {
         SELECT id, tenant_id, name, active, publication_posture,
                price_disclosure_policy_mode,
                product_category, material, description, moq,
-               certifications
+               certifications, catalog_visibility_policy_mode
         FROM catalog_items
         WHERE id = ${input.catalogItemId}::uuid
           AND active = true
@@ -590,6 +591,27 @@ async function resolveCatalogRfqDraftContext(input: {
 
   const item = itemRows[0];
   const supplierTenantId = item.tenant_id;
+
+  // Catalog visibility policy gate — item-level access control for RFQ access path (Slice D).
+  let rfqDraftVisibilityRel: Awaited<ReturnType<typeof getRelationshipOrNone>>;
+  try {
+    rfqDraftVisibilityRel = await getRelationshipOrNone(supplierTenantId, input.buyerOrgId);
+  } catch {
+    return { ok: false, reason: 'ITEM_NOT_AVAILABLE' };
+  }
+  const rfqDraftResolvedPolicy = resolveItemCatalogVisibilityForRoute(
+    item as unknown as Record<string, unknown>,
+  );
+  const rfqDraftVisibilityDecision = evaluateBuyerCatalogVisibility({
+    buyerOrgId: input.buyerOrgId,
+    supplierOrgId: supplierTenantId,
+    relationshipState: rfqDraftVisibilityRel.state,
+    relationshipExpiresAt: rfqDraftVisibilityRel.expiresAt,
+    catalogVisibilityPolicy: rfqDraftResolvedPolicy,
+  });
+  if (!rfqDraftVisibilityDecision.decision.canAccessCatalog) {
+    return { ok: false, reason: 'ITEM_NOT_AVAILABLE' };
+  }
 
   type SupplierEligibilityData = {
     isPublished: boolean;
@@ -2716,6 +2738,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         description: string | null;
         moq: unknown;
         certifications: unknown;
+        catalog_visibility_policy_mode: string | null;
       };
 
       let itemRows: RfqPrefillItemRow[];
@@ -2726,7 +2749,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             SELECT id, tenant_id, name, active, publication_posture,
                    price_disclosure_policy_mode,
                    product_category, material, description, moq,
-                   certifications
+                   certifications, catalog_visibility_policy_mode
             FROM catalog_items
             WHERE id = ${itemId}::uuid
               AND active = true
@@ -2743,6 +2766,27 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       const item = itemRows[0];
       const supplierTenantId = item.tenant_id;
+
+      // Step 1.5: Catalog visibility policy gate — item-level access control for RFQ prefill path (Slice D).
+      let rfqPrefillVisibilityRel: Awaited<ReturnType<typeof getRelationshipOrNone>>;
+      try {
+        rfqPrefillVisibilityRel = await getRelationshipOrNone(supplierTenantId, buyerOrgId);
+      } catch {
+        return sendError(reply, 'INTERNAL_ERROR', 'Failed to resolve access context', 500);
+      }
+      const rfqPrefillResolvedPolicy = resolveItemCatalogVisibilityForRoute(
+        item as unknown as Record<string, unknown>,
+      );
+      const rfqPrefillVisibilityDecision = evaluateBuyerCatalogVisibility({
+        buyerOrgId,
+        supplierOrgId: supplierTenantId,
+        relationshipState: rfqPrefillVisibilityRel.state,
+        relationshipExpiresAt: rfqPrefillVisibilityRel.expiresAt,
+        catalogVisibilityPolicy: rfqPrefillResolvedPolicy,
+      });
+      if (!rfqPrefillVisibilityDecision.decision.canAccessCatalog) {
+        return sendSuccess(reply, { ok: false, reason: 'ITEM_NOT_AVAILABLE' } satisfies CatalogRfqPrefillResult);
+      }
 
       // Step 2: Supplier org eligibility (admin context — same as PDP endpoint).
       type SupplierEligibilityData = {
