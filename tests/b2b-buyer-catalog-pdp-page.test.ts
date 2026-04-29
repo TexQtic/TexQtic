@@ -40,6 +40,7 @@ import {
   PDP_LOADING_COPY,
   PDP_ERROR_COPY,
   PDP_NOT_FOUND_COPY,
+  PDP_NOT_FOUND_SELF_SUPPLIER_COPY,
   resolveBuyerCatalogPhase,
 } from '../App';
 import {
@@ -49,6 +50,7 @@ import {
   CATALOG_PDP_LOADING_COPY,
   CATALOG_PDP_ERROR_COPY,
   CATALOG_PDP_NOT_FOUND_COPY,
+  CATALOG_PDP_NOT_FOUND_SELF_SUPPLIER_COPY,
   CATALOG_PDP_MEDIA_EMPTY_COPY,
   CATALOG_PDP_AVAILABILITY_FALLBACK,
   CATALOG_PDP_COMPLIANCE_EMPTY_COPY,
@@ -157,6 +159,7 @@ describe('T1: __B2B_BUYER_CATALOG_PDP_TESTING__ export shape', () => {
     expect(keys).toContain('PDP_LOADING_COPY');
     expect(keys).toContain('PDP_ERROR_COPY');
     expect(keys).toContain('PDP_NOT_FOUND_COPY');
+    expect(keys).toContain('PDP_NOT_FOUND_SELF_SUPPLIER_COPY');
     expect(keys).toContain('resolveBuyerCatalogPhase');
   });
 
@@ -269,12 +272,14 @@ describe('T5: PDP copy constants', () => {
     expect(CATALOG_PDP_ERROR_COPY).toBe(PDP_ERROR_COPY);
   });
 
-  it('T5.3 â€” PDP_NOT_FOUND_COPY is defined and non-empty', () => {
-    expect(PDP_NOT_FOUND_COPY).toBe('Item not found or unavailable.');
+  it('T5.3 — PDP_NOT_FOUND_COPY is the updated generic buyer-view denial copy', () => {
+    expect(PDP_NOT_FOUND_COPY).toBe(
+      'This item is unavailable in buyer view. Supplier-private or relationship-restricted catalogue items cannot be opened from this context.',
+    );
     expect(CATALOG_PDP_NOT_FOUND_COPY).toBe(PDP_NOT_FOUND_COPY);
   });
 
-  it('T5.4 â€” error copy does NOT leak tenant IDs or stack traces', () => {
+  it('T5.4 — error copy does NOT leak tenant IDs or stack traces', () => {
     const lower = PDP_ERROR_COPY.toLowerCase();
     expect(lower).not.toContain('stack');
     expect(lower).not.toContain('traceback');
@@ -282,10 +287,38 @@ describe('T5: PDP copy constants', () => {
     expect(lower).not.toContain('tenant');
   });
 
-  it('T5.5 â€” not-found copy does NOT leak item IDs', () => {
+  it('T5.5 — not-found copy does NOT leak item IDs', () => {
     const lower = PDP_NOT_FOUND_COPY.toLowerCase();
     expect(lower).not.toContain('id:');
     expect(lower).not.toContain('uuid');
+  });
+
+  it('T5.6 — PDP_NOT_FOUND_SELF_SUPPLIER_COPY is defined and differs from generic copy', () => {
+    expect(PDP_NOT_FOUND_SELF_SUPPLIER_COPY).toBe(
+      'This item is restricted in buyer view. Suppliers cannot request or buy their own approval-gated catalogue items from the buyer PDP.',
+    );
+    expect(CATALOG_PDP_NOT_FOUND_SELF_SUPPLIER_COPY).toBe(PDP_NOT_FOUND_SELF_SUPPLIER_COPY);
+    expect(PDP_NOT_FOUND_SELF_SUPPLIER_COPY).not.toBe(PDP_NOT_FOUND_COPY);
+  });
+
+  it('T5.7 — neither not-found copy leaks policy internals', () => {
+    const forbidden = [
+      'catalogvisibilitypolicymode',
+      'catalog_visibility_policy_mode',
+      'relationshipstate',
+      'approved_buyer_only',
+      'hidden',
+      'supplierpolicy',
+      'denialreason',
+      'publicationposture',
+      'publication_posture',
+    ];
+    const genericLower = PDP_NOT_FOUND_COPY.toLowerCase();
+    const selfLower = PDP_NOT_FOUND_SELF_SUPPLIER_COPY.toLowerCase();
+    for (const term of forbidden) {
+      expect(genericLower).not.toContain(term);
+      expect(selfLower).not.toContain(term);
+    }
   });
 });
 

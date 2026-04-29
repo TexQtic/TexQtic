@@ -1888,7 +1888,11 @@ export const PDP_PRICE_PLACEHOLDER_LABEL = 'Price available on request' as const
 export const PDP_RFQ_TRIGGER_LABEL = 'Request Quote' as const;
 export const PDP_LOADING_COPY = 'Loading item details\u2026' as const;
 export const PDP_ERROR_COPY = 'Unable to load item details.' as const;
-export const PDP_NOT_FOUND_COPY = 'Item not found or unavailable.' as const;
+export const PDP_NOT_FOUND_COPY =
+  'This item is unavailable in buyer view. Supplier-private or relationship-restricted catalogue items cannot be opened from this context.' as const;
+
+export const PDP_NOT_FOUND_SELF_SUPPLIER_COPY =
+  'This item is restricted in buyer view. Suppliers cannot request or buy their own approval-gated catalogue items from the buyer PDP.' as const;
 
 /**
  * Resolve which buyer_catalog phase is active.
@@ -1912,6 +1916,7 @@ export const __B2B_BUYER_CATALOG_PDP_TESTING__ = {
   PDP_LOADING_COPY,
   PDP_ERROR_COPY,
   PDP_NOT_FOUND_COPY,
+  PDP_NOT_FOUND_SELF_SUPPLIER_COPY,
   resolveBuyerCatalogPhase,
 };
 
@@ -5111,6 +5116,10 @@ const App: React.FC = () => {
               item={buyerCatalogPdpItem}
               loading={buyerCatalogPdpLoading}
               error={buyerCatalogPdpError}
+              isSelfSupplierContext={
+                buyerCatalogSupplierOrgId.length > 0 &&
+                buyerCatalogSupplierOrgId === currentTenantId
+              }
               onBack={handleCloseCatalogPdp}
               onRequestQuote={(payload) => {
                 // P-4: bridge RfqTriggerPayload → minimal CatalogItem for existing RFQ dialog.

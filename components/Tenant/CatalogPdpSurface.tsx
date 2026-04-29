@@ -57,8 +57,13 @@ export const CATALOG_PDP_LOADING_COPY = 'Loading item details\u2026' as const;
 /** Safe error copy â€” no stack traces, no tenant IDs. */
 export const CATALOG_PDP_ERROR_COPY = 'Unable to load item details.' as const;
 
-/** Safe not-found copy. */
-export const CATALOG_PDP_NOT_FOUND_COPY = 'Item not found or unavailable.' as const;
+/** Safe not-found copy — generic buyer-view denial. */
+export const CATALOG_PDP_NOT_FOUND_COPY =
+  'This item is unavailable in buyer view. Supplier-private or relationship-restricted catalogue items cannot be opened from this context.' as const;
+
+/** Not-found copy for dual-role tenants viewing their own supplier items from buyer PDP. */
+export const CATALOG_PDP_NOT_FOUND_SELF_SUPPLIER_COPY =
+  'This item is restricted in buyer view. Suppliers cannot request or buy their own approval-gated catalogue items from the buyer PDP.' as const;
 
 // ---------------------------------------------------------------------------
 // P-3 rendering constants
@@ -262,6 +267,12 @@ export type CatalogPdpSurfaceProps = Readonly<{
   loading: boolean;
   /** null = no error. 'NOT_FOUND' = 404. Any other string = generic error. */
   error: string | null;
+  /**
+   * True when the session tenant is the same org as the viewed supplier.
+   * Used to render a more helpful restricted-access message instead of the
+   * generic not-found copy. Must NOT expose policy internals.
+   */
+  isSelfSupplierContext?: boolean;
   onBack: () => void;
   /**
    * Called when buyer presses "Request Quote".
@@ -751,6 +762,7 @@ export function CatalogPdpSurface({
   item,
   loading,
   error,
+  isSelfSupplierContext,
   onBack,
   onRequestQuote,
   recommendedSuppliers,
@@ -781,11 +793,14 @@ export function CatalogPdpSurface({
   }
 
   if (error === 'NOT_FOUND' || (error == null && item == null)) {
+    const notFoundCopy = isSelfSupplierContext
+      ? CATALOG_PDP_NOT_FOUND_SELF_SUPPLIER_COPY
+      : CATALOG_PDP_NOT_FOUND_COPY;
     return (
       <div data-testid="buyer-catalog-pdp-page" className="space-y-4 animate-in fade-in duration-300">
         {BackButton}
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-8 text-sm text-slate-500 text-center">
-          {CATALOG_PDP_NOT_FOUND_COPY}
+          {notFoundCopy}
         </div>
       </div>
     );
