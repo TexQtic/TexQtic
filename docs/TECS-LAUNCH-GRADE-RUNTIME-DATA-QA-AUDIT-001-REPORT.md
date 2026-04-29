@@ -277,11 +277,9 @@ Result:
 
 **Assessment:** 0 errors. The 2 warnings are non-null assertion operators (`!`) at array access sites in the recommendation pipeline (lines 2874 and 3083). These are code quality notes — they do not affect correctness of the data leakage analysis and do not constitute security or privacy issues. Infrastructure deprecation noise (`.eslintignore` migration warning) is a tooling concern, not a code issue.
 
-### Playwright Runtime Verification — RUNTIME_VERIFICATION_BLOCKED
+### Playwright Runtime Verification — COMPLETED — P1 CONFIRMED ACTIVE IN PRODUCTION
 
-No authenticated QA session credentials were available during this audit. Browser-level runtime verification against `https://app.texqtic.com` was not performed. All findings in this report are based on static code analysis, API shape tracing, and type definition inspection.
-
-The P1 findings (ISSUE-001a, ISSUE-001b, ISSUE-001c, ISSUE-002) are verified through code path tracing from backend mapper (`mapBuyerRfqDetail()` in `tenant.ts`) through frontend type (`BuyerRfqDetail.item_unit_price: number` in `catalogService.ts`) to render call (`<DetailRow label="Unit Price" ... />` in `BuyerRfqDetailSurface.tsx:218`). The code path is unambiguous and does not require runtime verification for the leakage finding to be valid.
+Runtime verification was completed on 2026-04-29 using an authenticated QA session (`QA B2B`) against production `https://app.texqtic.com` with Playwright (Chromium). All P1 findings from static analysis are confirmed active in production. See "Runtime Completion Pass" section below for full evidence.
 
 ---
 
@@ -340,6 +338,74 @@ The following changes are required to reach launch-readiness on the confirmed is
 
 ---
 
+## Runtime Completion Pass — 2026-04-29
+
+**Session:** QA B2B (manufacturer/supplier role, Primary Segment: Weaving)  
+**Environment:** Production — `https://app.texqtic.com`  
+**Browser:** Chromium (Playwright-controlled)  
+**Verification Date:** 2026-04-29  
+**Git HEAD at Runtime Verification:** `ec70f0d`  
+**Auditor:** GitHub Copilot (authenticated Playwright session)  
+
+---
+
+### Phase Summary
+
+| Phase | Surface | Verdict | Notes |
+|---|---|---|---|
+| 3 | Approval-Gate (Browse Suppliers) | BLOCKED_BY_TEST_DATA | Single QA session; only one supplier visible (same org). Cross-tenant approval-gate scenarios require multi-tenant QA fixture matrix |
+| 4 | Request Quote Modal | PASS | No price disclosure in RFQ submission form. Only quantity/logistics fields rendered |
+| 5 | Buyer RFQ List | PASS | No P1/P2 fields in list cards |
+| 5 | Buyer RFQ Detail | **FAIL — P1 CONFIRMED** | Unit Price, Trade Gross Amount, Supplier Org ID all rendered in production |
+| 6 | Supplier RFQ Inbox List | PASS | No buyer-private data in inbox list |
+| 6 | Supplier RFQ Inbox Detail | PASS | No price or org_id leakage in supplier-facing detail |
+| 7 | Catalog PDP (buyer browse) | BLOCKED — 404 | Buyer PDP returns "Unable to load item details" for self-org browse |
+| 8 | AI Matching Surface | NOT_VISIBLE | PDP blocked by 404; AI recommendations panel not reachable in this session |
+| 9 | Browse Suppliers Catalog | PASS | No prices on buyer-facing catalog cards; only Min. Order shown |
+| 10 | DPP/Admin/Data Hygiene | DATA_HYGIENE_DB_ACCESS_BLOCKED | No direct DB access in this audit scope |
+
+---
+
+### P1 Runtime Evidence — CONFIRMED ACTIVE IN PRODUCTION
+
+The following fields were visually confirmed rendered in `BuyerRfqDetailSurface` in production for two separate RFQs:
+
+| RFQ ID | Item | Unit Price Rendered | Trade Gross Amount Rendered | Supplier Org ID Rendered |
+|---|---|---|---|---|
+| `cb18aafa-f261-45cc-8500-ad0f4e93a579` | RCP1-Validation-1772526705780 | $49.99 | $49.99 (= $49.99 × 1) | [REDACTED — internal UUID] |
+| `30f1f8e8-79cd-429b-9497-612bdc2d39fb` | Recycled Polyester Taffeta | $14.00 | $2,100.00 (= $14 × 150) | [REDACTED — internal UUID] |
+
+The P1 leakage is **systemic** — confirmed across multiple RFQs from different time periods and different catalog items. The issue is structural, originating from `mapBuyerRfqDetail()` in `tenant.ts` flowing through the `BuyerRfqDetail.item_unit_price` type to `BuyerRfqDetailSurface.tsx:218-220`.
+
+---
+
+### Surfaces Confirmed Clean at Runtime
+
+| Surface | Verdict | Evidence |
+|---|---|---|
+| Browse Suppliers catalog list | PASS | No prices on buyer-facing cards; only Min. Order shown; no Edit/Delete buttons |
+| Request Quote modal | PASS | No Unit Price, Trade Gross Amount, or Supplier Org ID in RFQ submission form |
+| Buyer RFQ List | PASS | No P1/P2 fields in list view; 5 RFQs listed with safe fields only |
+| Supplier RFQ Inbox list | PASS | 9 RFQs listed; fields: Catalog Item, SKU, Requested Quantity, Last Updated, Status |
+| Supplier RFQ Inbox detail | PASS | No buyer org_id, no price; shows RFQ reference, catalog item, SKU, quantity, dates, response form |
+
+---
+
+### Runtime Verdict
+
+```
+RUNTIME STATUS: P1 CONFIRMED ACTIVE IN PRODUCTION (2026-04-29)
+OVERALL STATUS: NOT_LAUNCH_READY (unchanged)
+```
+
+**Note on Approval-Gate Testing (Phase 3):** A single QA tenant session (`QA B2B`) was available. The Browse Suppliers view returned only one supplier entry (the session's own org). Cross-tenant scenarios (unapproved buyer → supplier catalog; approved buyer → price visibility gating; relationship-denied buyer) require a dedicated multi-tenant QA fixture matrix with at least two independent tenant accounts in distinct relationship states. These scenarios remain `BLOCKED_BY_TEST_DATA` and are recommended as a follow-up QA milestone before launch.
+
+**Note on AI Matching Runtime (Phase 8):** The buyer-facing PDP for Browse Suppliers returned HTTP 404 ("Unable to load item details") for the self-org browse session. Since the PDP did not load, the AI recommendations panel was not reachable. The static analysis PASS finding for AI matching (runtime guard, type contracts, recommendation endpoint) remains the current evidence base.
+
+**Note on Buyer PDP 404 (Phase 7):** The buyer-facing PDP returns 404 under the self-org browse scenario. This may be an expected constraint (supplier cannot act as buyer of own catalog items) or a separate issue. It is flagged for investigation but does not alter the P1/P2 findings.
+
+---
+
 ## Issue Summary Table
 
 | Issue ID | Severity | File | Finding |
@@ -355,4 +421,4 @@ The following changes are required to reach launch-readiness on the confirmed is
 
 ---
 
-*Report generated by automated static analysis. Runtime (Playwright) verification was not performed. All findings are code-evidence-based.*
+*Report generated by automated static analysis + authenticated Playwright runtime verification (2026-04-29). P1 confirmed active in production. All findings are code-evidence-based.*
