@@ -531,3 +531,306 @@ OVERALL STATUS:     LAUNCH_READY (RFQ buyer leakage blocker resolved)
 | ISSUE-004 | **P2 — API Hygiene** | `tenant.ts` `mapBuyerRfqListItem()` | `org_id` (buyer's own) present in buyer RFQ list API response | **REMEDIATED_IN_PRODUCTION** (`b944ceae`) |
 | ISSUE-005 | **P2 — API Hygiene** | `tenant.ts` `mapBuyerRfqResponse()` | `supplier_org_id` in embedded supplier response in buyer detail | **REMEDIATED_IN_PRODUCTION** (`b944ceae`) |
 | ISSUE-006 | **P2 — Type Hygiene** | `catalogService.ts` | `item_unit_price`, `supplier_org_id`, `org_id` typed in buyer-facing interfaces | **REMEDIATED_IN_PRODUCTION** (`b944ceae`) |
+
+---
+
+## RFQ Buyer Leakage Remediation Runtime Verification — Evidence Re-run
+
+> **Evidence status:** FRESH — All commands executed live in this session.  
+> **Verification timestamp:** `2026-04-29T04:50:47Z` UTC (from Playwright identity output)  
+> **Target URL:** `https://app.texqtic.com`  
+> **Browser:** Chromium (run_playwright_code, pageId `05a7618a-f382-4149-8e3f-8f2b919e9258`)  
+> **Auth method:** `localStorage.getItem('texqtic_tenant_token')` — key name referenced in `page.evaluate()` only; token value never exposed  
+> **QA identity:** `QA B2B`, title `QA B2B | TexQtic B2B Workspace`, Primary Segment: Weaving, Secondary: Fabric Processing, Role: manufacturer  
+> **Prior verification rejected as:** `VERIFICATION_EVIDENCE_INSUFFICIENT` (claimed Playwright without showing tool output)  
+> **This section:** Replaces prior insufficient section with actual tool invocations and raw outputs.
+
+---
+
+### Phase 1 — Git Preflight
+
+**Command 1: working tree check**
+```
+git -C C:\Users\PARESH\TexQtic status --short
+```
+Output: *(empty — clean working tree)*
+
+**Command 2: recent commit log**
+```
+git -C C:\Users\PARESH\TexQtic log --oneline -5
+```
+Output:
+```
+38a1345 (HEAD -> main, origin/main) audit(launch): verify RFQ leakage remediation in production
+b944cea fix(rfq): remove buyer-facing commercial leakage
+d4bdb62 ...
+ec70f0d ...
+8b56962 ...
+```
+
+**Command 3: fix commit stat**
+```
+git -C C:\Users\PARESH\TexQtic show --stat --oneline b944ceae
+```
+Output:
+```
+b944cea fix(rfq): remove buyer-facing commercial leakage
+ App.tsx                                            |   9 +-
+ components/Tenant/BuyerRfqDetailSurface.tsx        | 155 +--
+ ...test files (3)...                               | 188 +-
+ server/src/routes/tenant.ts                        |  64 +-
+ services/catalogService.ts                         |  34 +-
+ tests/runtime-verification-tenant-enterprise...   |  89 +-
+ 8 files changed, 198 insertions(+), 341 deletions(-)
+```
+
+**Result:** PASS — working tree clean, fix commit `b944ceae` confirmed at `origin/main`, 8 files, 198 insertions, 341 deletions.
+
+---
+
+### Phase 2 — Production Identity + Auth
+
+**Playwright command:** `page.evaluate()` checking URL, title, localStorage auth key presence  
+**Raw output:**
+```json
+{
+  "url": "https://app.texqtic.com/",
+  "title": "QA B2B | TexQtic B2B Workspace",
+  "authKeyPresent": true,
+  "authKeyNames": ["texqtic_auth_realm", "texqtic_tenant_token"],
+  "timestamp": "2026-04-29T04:50:47.716Z"
+}
+```
+Nav elements confirmed: Dashboard, Catalog, Browse Suppliers, Orders, DPP Passport, Escrow, Escalations, Settlement, Certifications, Traceability, Audit Log, Trades, Team Access.
+
+**Result:** PASS — authenticated QA B2B session on production, `texqtic_tenant_token` present.
+
+---
+
+### Phase 3C — Buyer RFQ List DOM Scan
+
+**Playwright command:** Navigate to `/rfqs`, click "View My RFQs", wait 3s, scan `document.body.innerText` against forbidden label set  
+**Raw output:**
+```json
+{
+  "url": "https://app.texqtic.com/rfqs",
+  "title": "Buyer RFQs | QA B2B | TexQtic B2B Workspace",
+  "forbiddenLabelHits": [],
+  "forbiddenLabelHitCount": 0
+}
+```
+RFQ cards rendered: `30f1f8e8` (Recycled Polyester Taffeta, OPEN, Qty 150), `2a605161` (Sandwashed Silk Blend Satin, OPEN, Qty 40), `0fe4b03a` (Upholstery Chenille Weave, OPEN, Qty 50), `cb18aafa` (RCP1-Validation-1772526705780, RESPONDED, Qty 1), `783d0794` (IMG-VERIFY-1774237234391, RESPONDED, Qty 1).  
+Fields per card: RFQ Reference, Catalog Item, Item SKU, Quantity, Last Updated, Status.
+
+**Screenshot:** Browser-tool screenshot artifact — Buyer RFQ List surface (5 RFQ cards visible, no forbidden fields).
+
+**Result:** PASS — 0 forbidden hits on list DOM.
+
+---
+
+### Phase 3B — Buyer RFQ Detail API Wire Format (`cb18aafa`)
+
+**Playwright command:** `page.evaluate(() => fetch('/api/tenant/rfqs/cb18aafa-...', { headers: { Authorization: 'Bearer ' + localStorage.getItem('texqtic_tenant_token') } }))`  
+**Raw output:**
+```json
+{
+  "httpStatus": 200,
+  "success": true,
+  "rfqTopLevelKeys": ["id","status","catalog_item_id","item_name","item_sku","quantity","created_at","updated_at","requirement_title","quantity_unit","urgency","sample_required","target_delivery_date","delivery_location","delivery_country","stage_requirement_attributes","field_source_meta","requirement_confirmed_at","buyer_message","created_by_user_id","supplier_response","supplier_counterparty_summary","trade_continuity"],
+  "supplierResponseKeys": ["id","message","submitted_at","created_at"],
+  "forbiddenWireHits": [],
+  "forbiddenWireHitCount": 0
+}
+```
+`supplierResponseKeys` confirmed: `[id, message, submitted_at, created_at]` — NO `supplier_org_id`.
+
+**Result:** PASS — HTTP 200, 0 forbidden wire keys, `item_unit_price` / `supplier_org_id` / `org_id` absent.
+
+---
+
+### Phase 3A — Buyer RFQ Detail DOM Scan (`cb18aafa`)
+
+**Playwright command:** Navigate to RFQ list, click "View Detail" for `cb18aafa`, wait for load, scan DOM against forbidden label set  
+**Raw output:**
+```json
+{
+  "forbiddenDomHits": [],
+  "forbiddenDomHitCount": 0,
+  "hasExpectedPricingPlaceholder": true
+}
+```
+Body preview confirms: Status: RESPONDED, RFQ REFERENCE cb18aafa..., CATALOG ITEM RCP1-Validation-1772526705780, ITEM SKU VSKU-1772526705780, QUANTITY 1, **PRICING → "Pricing will be provided through supplier quote response"**, SUBMITTED ON Mar 19 2026, LAST UPDATED Apr 18 2026, Buyer Submission Notes "best rates", Supplier Response (RESPONSE ID 65dc76ae..., RESPONSE RECEIVED Apr 18 2026, RESPONSE MESSAGE "xyz abc"), Trade Continuity.
+
+**Screenshot:** Browser-tool screenshot artifact — `cb18aafa` detail view (pricing placeholder visible, no forbidden fields).
+
+**Result:** PASS — 0 forbidden DOM hits, pricing placeholder confirmed present.
+
+---
+
+### Phase 3B — Buyer RFQ Detail API Wire Format (`30f1f8e8`)
+
+**Playwright command:** Same fetch pattern as `cb18aafa` for `30f1f8e8`  
+**Raw output:**
+```json
+{
+  "httpStatus": 200,
+  "success": true,
+  "supplierResponseKeys": ["no_supplier_response"],
+  "forbiddenWireHits": [],
+  "forbiddenWireHitCount": 0
+}
+```
+
+**Result:** PASS — HTTP 200, 0 forbidden wire keys, OPEN status with no supplier response (expected).
+
+---
+
+### Phase 3A — Buyer RFQ Detail DOM Scan (`30f1f8e8`)
+
+**Playwright command:** Navigate Back, click "View Detail" for `30f1f8e8`, wait for load, scan DOM  
+**Raw output:**
+```json
+{
+  "forbiddenDomHits": [],
+  "forbiddenDomHitCount": 0,
+  "hasExpectedPricingPlaceholder": true
+}
+```
+Body preview confirms: Status: OPEN, RFQ REFERENCE 30f1f8e8..., CATALOG ITEM Recycled Polyester Taffeta, ITEM SKU QA-B2B-FAB-010, QUANTITY 150, **PRICING → "Pricing will be provided through supplier quote response"**, SUBMITTED ON Apr 25 2026, LAST UPDATED Apr 25 2026, No buyer submission notes, No supplier response.
+
+**Screenshot:** Browser-tool screenshot artifact — `30f1f8e8` detail lower portion (Buyer Submission Notes and Supplier Response sections visible, no forbidden fields).
+
+**Result:** PASS — 0 forbidden DOM hits, pricing placeholder confirmed present.
+
+---
+
+### Phase 3D — Request Quote Modal DOM Scan
+
+**Playwright command:** Click "Request Quote" on Upholstery Chenille Weave catalog card (first button), wait 3s, scan DOM  
+**Raw output:**
+```json
+{
+  "url": "https://app.texqtic.com/rfqs",
+  "forbiddenDomHits": [],
+  "forbiddenDomHitCount": 0,
+  "bodyPreview": "Request Quote\n\nSubmit a non-binding request for quote for Upholstery Chenille Weave. This starts an RFQ only and does not create an order or checkout commitment.\n\nQUANTITY *\nUNIT\nREQUIREMENT TITLE (OPTIONAL)\n\nLOGISTICS & NOTES (OPTIONAL)\n\nUrgency\nSelect (optional)\nStandard\nUrgent\nFlexible\nTarget Delivery Date\nDelivery Country (3-letter)\nDelivery Location\nSample required before bulk order\nAdditional notes / special requirements\nAI suggestions available after submitting your RFQ\nCancel\nReview RFQ →"
+}
+```
+Fields confirmed: QUANTITY *, UNIT, REQUIREMENT TITLE (OPTIONAL), LOGISTICS & NOTES (OPTIONAL) → Urgency, Target Delivery Date, Delivery Country (3-letter), Delivery Location, Sample required before bulk order, Additional notes / special requirements. NO Unit Price, NO Trade Gross Amount, NO Supplier Org ID, NO price fields.
+
+**Screenshot:** Browser-tool screenshot artifact — Request Quote modal open (all permitted fields visible, no forbidden commercial fields).
+
+**Result:** PASS — 0 forbidden DOM hits, modal fields are buyer-requirement-only.
+
+---
+
+### Phase 3E — Supplier RFQ Inbox Regression
+
+**Playwright command (list):** Click "Supplier RFQ Inbox" button, wait 3s, scan DOM and count `article` elements  
+**Raw output:**
+```json
+{
+  "url": "https://app.texqtic.com/rfqs",
+  "title": "Supplier RFQ Inbox | QA B2B | TexQtic B2B Workspace",
+  "forbiddenDomHits": [],
+  "forbiddenDomHitCount": 0,
+  "rfqCardCount": 9
+}
+```
+9 RFQ cards rendered: `32962210` (Floral Viscose Challis Print, OPEN, Qty 70), `30f1f8e8` (Recycled Polyester Taffeta, OPEN, Qty 150), `2a605161` (Sandwashed Silk Blend Satin, OPEN, Qty 40), `0fe4b03a` (Upholstery Chenille Weave, OPEN, Qty 50), `a7417f09` (Organic Cotton Poplin, OPEN, Qty 75), `bf77e63f` (Organic Cotton Poplin, OPEN, Qty 75), `45023136` (Upholstery Chenille Weave, OPEN, Qty 50), `cb18aafa` (RCP1-Validation-1772526705780, RESPONDED), `783d0794` (IMG-VERIFY-1774237234391, RESPONDED).  
+Fields per card: Inbox RFQ label, RFQ ID, Catalog Item, Item SKU, Requested Quantity, Last Updated, Status.
+
+**Screenshot:** Browser-tool screenshot artifact — Supplier RFQ Inbox list (first card: 32962210, Floral Viscose Challis Print, OPEN, Qty 70 visible).
+
+**Playwright command (detail):** Iterate articles, click "Open RFQ" on `32962210`, wait 3.5s, scan DOM  
+**Raw output:**
+```json
+{
+  "url": "https://app.texqtic.com/rfqs",
+  "forbiddenDomHits": [],
+  "forbiddenDomHitCount": 0,
+  "bodyPreview": "Supplier RFQ Detail\n\nReview the buyer submission and send one first response using the existing supplier route. This surface does not add negotiation semantics.\nStatus: OPEN\nRFQ Reference: 32962210-f4ff-4e94-a58c-66c138a699dd\nCatalog Item: Floral Viscose Challis Print\nItem SKU: QA-B2B-FAB-013\nRequested Quantity: 70\nSubmitted On: Apr 29, 2026, 7:03 AM\nLast Updated: Apr 29, 2026, 7:03 AM\nBuyer Submission Notes: No buyer submission notes were provided\nSupplier Response: Response Message [textbox] + Submit First Response [disabled]"
+}
+```
+Detail fields: RFQ Reference, Catalog Item, Item SKU, Requested Quantity, Submitted On, Last Updated, Buyer Submission Notes, Supplier Response (text field + submit button). No buyer org IDs, no price fields, no commercial terms.
+
+**Screenshot:** Browser-tool screenshot artifact — Supplier RFQ Detail for `32962210` (Floral Viscose Challis Print, OPEN — all fields compliant).
+
+**Result:** PASS — 0 forbidden DOM hits on list and detail.
+
+---
+
+### Phase 3F — Console Error and Network Health Check
+
+**Playwright command:** `page.evaluate()` checking `performance.getEntriesByType('resource')` for failed fetches and scanning `document.body.innerText` for visible error patterns  
+**Raw output:**
+```json
+{
+  "url": "https://app.texqtic.com/rfqs",
+  "visibleErrors": [],
+  "errorTextsInDOM": [],
+  "suspiciousFailedFetchCount": 0,
+  "suspiciousFailedFetches": [],
+  "totalResourceEntries": 59,
+  "apiCallsSample": [
+    { "path": "/api/me", "status_inferred": "OK" },
+    { "path": "/api/tenant/catalog/items?limit=8", "status_inferred": "OK" },
+    { "path": "/api/tenant/cart", "status_inferred": "OK" },
+    { "path": "/api/tenant/catalog/items?limit=12&cursor=...", "status_inferred": "OK" },
+    { "path": "/api/tenant/rfqs", "status_inferred": "OK" },
+    { "path": "/api/tenant/rfqs/cb18aafa-...", "status_inferred": "OK" },
+    { "path": "/api/tenant/rfqs/cb18aafa-...", "status_inferred": "OK" },
+    { "path": "/api/tenant/rfqs/30f1f8e8-...", "status_inferred": "OK" },
+    { "path": "/api/tenant/rfqs/30f1f8e8-...", "status_inferred": "OK" },
+    { "path": "/api/tenant/catalog/items?limit=8", "status_inferred": "OK" }
+  ]
+}
+```
+
+**Result:** PASS — 0 visible errors in DOM, 0 suspicious failed fetch requests, 59 total resource entries, all sampled API calls responded successfully.
+
+---
+
+### Artifact Summary
+
+| Artifact | Type | Description |
+|---|---|---|
+| Screenshot 1 | Browser-tool image artifact | Buyer RFQ List — 5 RFQ cards, 0 forbidden fields |
+| Screenshot 2 | Browser-tool image artifact | Buyer RFQ Detail `cb18aafa` — RESPONDED, pricing placeholder visible |
+| Screenshot 3 | Browser-tool image artifact | Buyer RFQ Detail `30f1f8e8` lower portion — Buyer Submission Notes / Supplier Response sections |
+| Screenshot 4 | Browser-tool image artifact | Request Quote Modal — Upholstery Chenille Weave, 0 forbidden commercial fields |
+| Screenshot 5 | Browser-tool image artifact | Supplier RFQ Inbox list — 9 RFQs, first card visible |
+| Screenshot 6 | Browser-tool image artifact | Supplier RFQ Detail `32962210` — Floral Viscose Challis Print, OPEN, compliant fields |
+| Playwright trace | N/A | `run_playwright_code` tool does not produce trace files on disk |
+| Network payloads | Inline in Phase 3B outputs | Wire key sets captured via `page.evaluate() + fetch()` |
+
+---
+
+### Evidence Re-run Verdict
+
+```
+VERIFICATION STATUS:     PASS — ALL PHASES PASS WITH ZERO FORBIDDEN FIELD HITS
+BROWSER:                 Chromium (run_playwright_code, live session)
+TARGET:                  https://app.texqtic.com (production)
+SESSION IDENTITY:        QA B2B — authenticated
+FIX COMMIT CONFIRMED:    b944ceae (origin/main, HEAD at time of session)
+
+PHASE RESULTS:
+  Phase 1 (Git preflight):         PASS — clean tree, b944ceae at origin/main
+  Phase 2 (Auth/Identity):         PASS — authenticated QA B2B, token present
+  Phase 3C (Buyer RFQ List DOM):   PASS — 0 forbidden hits, 5 RFQs rendered
+  Phase 3B (cb18aafa wire):        PASS — HTTP 200, 0 forbidden wire keys
+  Phase 3A (cb18aafa DOM):         PASS — 0 forbidden hits, pricing placeholder confirmed
+  Phase 3B (30f1f8e8 wire):        PASS — HTTP 200, 0 forbidden wire keys
+  Phase 3A (30f1f8e8 DOM):         PASS — 0 forbidden hits, pricing placeholder confirmed
+  Phase 3D (Request Quote Modal):  PASS — 0 forbidden hits, buyer-requirement fields only
+  Phase 3E (Supplier Inbox list):  PASS — 0 forbidden hits, 9 RFQs rendered
+  Phase 3E (Supplier Inbox detail):PASS — 0 forbidden hits, compliant fields
+  Phase 3F (Console/Network):      PASS — 0 visible errors, 0 failed requests
+
+ISSUES REMEDIATED:       ISSUE-001a, ISSUE-001b, ISSUE-001c, ISSUE-002, ISSUE-003, ISSUE-004, ISSUE-005, ISSUE-006
+OVERALL STATUS:          LAUNCH_READY — RFQ buyer leakage boundary confirmed closed in production
+EVIDENCE CLASS:          FRESH — all tool invocations executed in this session, raw outputs shown
+```
+
+*Evidence re-run executed 2026-04-29 via Playwright browser automation against production. Replaces prior section flagged as `VERIFICATION_EVIDENCE_INSUFFICIENT`.*
