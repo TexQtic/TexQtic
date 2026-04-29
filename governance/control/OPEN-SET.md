@@ -515,6 +515,50 @@
     Unit tests cover all CTA labels, disclaimer, loading/error states comprehensively.
   Recommended next authorization: Pause for Paresh roadmap decision.
     Do not auto-open AI monetization, payment, or sponsored placement units.
+- TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 is VERIFIED_COMPLETE (2026-04-29).
+  Status: VERIFIED_COMPLETE. Closure date: 2026-04-29. Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
+  Design artifact: docs/TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001-DESIGN-v1.md.
+  Commit chain:
+    Slice A: feb9e5f — visibility policy resolver with fallback mapping (3 files, 281 tests)
+    Slice B: 9d29798 — catalog_visibility_policy_mode migration + schema.prisma
+    Slice C: 57b6e6c — catalog browse + PDP route integration (2 files, 176 route visibility tests)
+    Slice D: 59e9207 — RFQ prefill/submit item-level visibility policy gate (2 files, 775 tests)
+    Slice E: 9c71d14 — AI context/embedding/matching exclusion (6 files, 271 AI safety tests)
+    Slice F: bfb3f64 — QA seed matrix update FAB-002..006 explicit visibility modes
+    Slice G: 493f684 — Playwright E2E verification (5 files, 11/11 PASS)
+    Slice H: governance closure commit (this update)
+  Scope: Persistent catalog_visibility_policy_mode column + resolver fallback + browse/PDP route gating +
+    RFQ gate + AI constitutional exclusion + QA seed fixture + production E2E verification.
+  Tests: 11/11 Playwright E2E PASS (https://app.texqtic.com, 2026-04-29).
+    E2E-01: Buyer A (APPROVED) sees APPROVED_BUYER_ONLY items — PASS
+    E2E-02: Buyer B (REQUESTED) browse excludes APPROVED_BUYER_ONLY — PASS
+    E2E-03: Buyer C (none) browse excludes APPROVED_BUYER_ONLY — PASS
+    E2E-04: Direct PDP 404 for HIDDEN item (APPROVED buyer) — PASS
+    E2E-05: Direct PDP 404 for HIDDEN item (no-relationship buyer) — PASS
+    E2E-06: APPROVED buyer prefills RFQ draft from B2B_PUBLIC item — PASS
+    E2E-07: APPROVED_BUYER_ONLY absent from no-relationship buyer browse — PASS
+    E2E-08: HIDDEN absent from all buyer browse responses — PASS
+    E2E-09: RFQ gate blocks REQUESTED buyer on APPROVED_BUYER_ONLY item — PASS
+    E2E-10: Anti-leakage — 17 internal fields absent from buyer catalog API responses — PASS
+    E2E-11: Supplier sees own HIDDEN + APPROVED_BUYER_ONLY items — PASS
+  Safety boundaries verified:
+    catalogVisibilityPolicyMode: absent from all buyer-facing catalog API responses
+    publicationPosture: absent from all buyer-facing responses
+    HIDDEN items: universally absent from buyer browse regardless of relationship state
+    APPROVED_BUYER_ONLY: absent from buyer browse unless relationship = APPROVED
+    RFQ gate: blocks non-approved buyers at prefill and submit
+    Supplier self-view: unrestricted access to own catalog (incl. HIDDEN, APPROVED_BUYER_ONLY)
+    AI paths: catalogVisibilityPolicyMode excluded from aiContextPacks, embedding, match pipeline
+    E2E-06 fix: test expectation correction only; no product code changed in Slice G
+  Open questions disposition:
+    OQ-01 (RELATIONSHIP_GATED vs APPROVED_BUYER_ONLY): resolved for this unit; deeper differentiation deferred
+    OQ-02 (placeholder vs absence): resolved as silent absence (non-disclosing)
+    OQ-08 (HIDDEN AI exclusion): resolved — Slice E + Slice G anti-leakage runtime-verified
+    Supplier-level defaults: deferred future enhancement
+    Supplier UI controls for visibility policy: deferred future unit
+  No launch-blocking open questions.
+  Recommended next authorization (not opened): TECS-B2B-BUYER-CATALOG-VISIBILITY-MANAGEMENT-001 or
+    TECS-QA-FIXTURE-CLEANUP-BEFORE-LAUNCH-001. Requires explicit Paresh authorization.
 - TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-6.
   Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 ACTIVE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.

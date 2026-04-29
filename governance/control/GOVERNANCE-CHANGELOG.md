@@ -5,6 +5,76 @@
 
 ---
 
+## 2026-04-29 — CLOSED: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
+
+```
+Unit:          TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-29
+Verification:  11/11 production Playwright E2E tests PASS against https://app.texqtic.com
+
+Commits:
+  feb9e5f  Slice A — visibility policy resolver with fallback mapping (281 tests)
+  9d29798  Slice B — catalog_visibility_policy_mode column migration + schema.prisma
+  57b6e6c  Slice C — catalog browse + PDP route integration (176 route visibility tests)
+  59e9207  Slice D — RFQ prefill + submit item-level visibility policy gate (775 tests)
+  9c71d14  Slice E — AI context pack + embedding + match path exclusion (271 safety tests)
+  bfb3f64  Slice F — QA seed matrix update (FAB-002..006 explicit policy modes)
+  493f684  Slice G — Playwright E2E verification (11/11 PASS; setup-auth-state; evidence report)
+  (this)   Slice H — Governance closure
+
+Verification Evidence:
+  ✅ E2E-01: Buyer A (APPROVED) sees APPROVED_BUYER_ONLY items in catalog browse — PASS
+  ✅ E2E-02: Buyer B (REQUESTED) catalog browse excludes APPROVED_BUYER_ONLY items — PASS
+  ✅ E2E-03: Buyer C (no relationship) catalog browse excludes APPROVED_BUYER_ONLY items — PASS
+  ✅ E2E-04: Direct PDP 404 for HIDDEN item (FAB-006) — APPROVED buyer — PASS
+  ✅ E2E-05: Direct PDP 404 for HIDDEN item (FAB-006) — no-relationship buyer — PASS
+  ✅ E2E-06: APPROVED buyer can prefill RFQ draft from B2B_PUBLIC item (FAB-002) — PASS (HTTP 201; draft.status=INITIATED)
+  ✅ E2E-07: FAB-004 (APPROVED_BUYER_ONLY) absent from no-relationship buyer browse — PASS
+  ✅ E2E-08: FAB-006 (HIDDEN) absent from all buyer browse responses (A/B/C tested) — PASS
+  ✅ E2E-09: FAB-004 (APPROVED_BUYER_ONLY) blocks RFQ prefill for REQUESTED buyer — PASS
+  ✅ E2E-10: Buyer response does not leak catalogVisibilityPolicyMode / publicationPosture /
+       relationshipState / AI scoring fields / audit metadata — 17 fields verified absent — PASS
+  ✅ E2E-11: Supplier (qa-b2b) sees own HIDDEN and APPROVED_BUYER_ONLY items — PASS
+  ✅ Auth: .auth/*.json storage state files (headed browser manual login, gitignored)
+  ✅ Test file: tests/e2e/catalog-visibility-policy-gating.spec.ts
+  ✅ Runner: Playwright v1.59.1 (Chromium API project)
+  ✅ Evidence artifact: docs/TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001-SLICE-G-PLAYWRIGHT-EVIDENCE.md
+
+Stop-Condition Audit (Slice G — all clean):
+  ✅ Auth files present — all 4 .auth/*.json confirmed
+  ✅ No APPROVED_BUYER_ONLY item visible to unapproved buyer
+  ✅ No HIDDEN item visible to any buyer
+  ✅ No RFQ allowed for non-approved buyer on APPROVED_BUYER_ONLY item
+  ✅ No catalogVisibilityPolicyMode / publicationPosture leaks in buyer response
+  ✅ Test fix (E2E-06) was test harness correction only — no product code changed
+
+Open Questions Disposed:
+  OQ-01 RELATIONSHIP_GATED vs APPROVED_BUYER_ONLY: resolved for this unit (same behavior); deeper differentiation deferred
+  OQ-02 browse placeholder vs absence: resolved — silent absence (non-disclosing) implemented
+  OQ-08 HIDDEN AI exclusion: resolved — Slice E constitutional AI exclusion + Slice G anti-leakage confirmed
+
+Known Limitations Preserved:
+  - Supplier UI controls for per-item visibility policy management: deferred (future unit)
+  - Supplier-level default policy: deferred (future unit)
+  - Region/channel-sensitive visibility: future boundary
+  - E2E-06 fix was test harness only; no product code or route changed during Slice G
+
+Recommended Next Authorization (not opened):
+  Candidate: TECS-B2B-BUYER-CATALOG-VISIBILITY-MANAGEMENT-001 (supplier UI to set per-item policy)
+  Or: TECS-QA-FIXTURE-CLEANUP-BEFORE-LAUNCH-001 (cleanup before final launch)
+  Requires explicit Paresh authorization; do not auto-open.
+
+Governance Files Updated:
+  governance/coverage-matrix.md
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-29 — CLOSED: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
 
 ```

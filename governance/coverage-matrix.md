@@ -141,3 +141,81 @@ Divergent: 4
 Critical: 2 (G-001, G-003)
 
 Next Focus Wave: **Wave 2 — Monolith Stabilization**
+
+---
+
+# TECS PRODUCT UNIT COVERAGE REGISTER
+
+> This section records production-verified TECS implementation units closed after the Wave-2 snapshot date.
+> Each entry follows the final governance closure verdict only.
+
+## TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 — Catalog Visibility Policy Storage and Gating
+
+| Dimension | Status |
+|---|---|
+| **Unit** | TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 |
+| **Overall Status** | VERIFIED_COMPLETE |
+| **Closure Date** | 2026-04-29 |
+| **Runtime Verdict** | RUNTIME_VERIFIED_COMPLETE (production Playwright, https://app.texqtic.com) |
+
+### Coverage by Slice
+
+| Slice | Scope | Status | Commit |
+|---|---|---|---|
+| **A — Visibility Policy Resolver** | `catalogVisibilityPolicyResolver.ts` with fallback mapping; `aiDataContracts.ts` extension; 281 resolver tests PASS | COMPLETE | `feb9e5f` |
+| **B — Migration / Storage** | `catalog_visibility_policy_mode` column DDL; `schema.prisma` updated | COMPLETE | `9d29798` |
+| **C — Route Integration** | Catalog browse + PDP routes gated via resolver; 176 route visibility tests PASS | COMPLETE | `57b6e6c` |
+| **D — RFQ Gate** | Item-level visibility policy gate on RFQ prefill + submit; 775 RFQ gate tests PASS | COMPLETE | `59e9207` |
+| **E — AI Safety** | `catalogVisibilityPolicyMode` excluded from all AI context packs, embedding, and match paths; 111+19+130+11 safety tests PASS | COMPLETE | `9c71d14` |
+| **F — QA Seed** | QA seed matrix updated with explicit `catalog_visibility_policy_mode` for FAB-002..006 fixture items | COMPLETE | `bfb3f64` |
+| **G — Playwright E2E** | 11/11 production E2E scenarios PASS against `https://app.texqtic.com` | COMPLETE | `493f684` |
+| **H — Governance Closure** | Coverage matrix, OPEN-SET, NEXT-ACTION, SNAPSHOT, GOVERNANCE-CHANGELOG updated | CLOSING | this commit |
+
+### Detailed Coverage Notes
+
+- **Persistent storage**: `catalog_visibility_policy_mode` column added to `catalog_items` table via migration `9d29798`. Nullable; defaults preserved. Prisma db pull + generate confirmed.
+- **Resolver fallback**: `catalogVisibilityPolicyResolver.ts` maps NULL → open access; `APPROVED_BUYER_ONLY` → relationship-gated; `HIDDEN` → universal exclusion. Fallback chain: DB value → `publicationPosture` inference → OPEN.
+- **Catalog browse + PDP integration**: All buyer catalog browse and PDP routes enforce resolver output. APPROVED_BUYER_ONLY items excluded from browse for REQUESTED / no-relationship buyers. HIDDEN items excluded universally.
+- **RFQ prefill/submit gate**: `POST /api/tenant/rfqs/drafts/from-catalog-item` and RFQ submit enforce visibility policy. REQUESTED buyer blocked from APPROVED_BUYER_ONLY items with `ITEM_NOT_AVAILABLE` or `ELIGIBILITY_REQUIRED` reason.
+- **AI safety**: `catalog_visibility_policy_mode` excluded from `aiContextPacks`, `supplierMatchPolicyFilter`, embedding vectors, and all AI context objects. Constitutional exclusion — not configurable.
+- **QA seed**: FAB-002 = NULL (open), FAB-003 = `priceDisclosurePolicyMode=RELATIONSHIP_ONLY`, FAB-004/005 = `APPROVED_BUYER_ONLY`, FAB-006 = `HIDDEN`. Relationships: Buyer A = APPROVED, Buyer B = REQUESTED, Buyer C = NONE.
+- **Production E2E (Slice G)**:
+  - E2E-01: Buyer A (APPROVED) sees APPROVED_BUYER_ONLY items — PASS
+  - E2E-02: Buyer B (REQUESTED) browse excludes APPROVED_BUYER_ONLY — PASS
+  - E2E-03: Buyer C (none) browse excludes APPROVED_BUYER_ONLY — PASS
+  - E2E-04: Direct PDP 404 for HIDDEN item (APPROVED buyer) — PASS
+  - E2E-05: Direct PDP 404 for HIDDEN item (no-relationship buyer) — PASS
+  - E2E-06: APPROVED buyer can prefill RFQ from B2B_PUBLIC item — PASS
+  - E2E-07: APPROVED_BUYER_ONLY absent from no-relationship browse — PASS
+  - E2E-08: HIDDEN absent from all buyer browse responses — PASS
+  - E2E-09: RFQ gate blocks REQUESTED buyer on APPROVED_BUYER_ONLY item — PASS
+  - E2E-10: Buyer response does not leak `catalogVisibilityPolicyMode`, `publicationPosture`, `relationshipState`, AI scoring, or audit metadata — PASS
+  - E2E-11: Supplier sees own HIDDEN and APPROVED_BUYER_ONLY items — PASS
+- **Buyer anti-leakage**: 17 internal fields verified absent from all buyer API responses (policy mode, posture, relationship, AI scoring, audit metadata).
+- **Supplier own-catalog**: Supplier self-view unrestricted — all own items including HIDDEN returned.
+
+### Open Questions Disposition
+
+| OQ | Description | Status |
+|---|---|---|
+| OQ-01 | `RELATIONSHIP_GATED` vs `APPROVED_BUYER_ONLY` differentiation | Resolved for this unit — RELATIONSHIP_GATED behaves as APPROVED_BUYER_ONLY; deeper differentiation deferred to future unit |
+| OQ-02 | Browse placeholder vs silent absence for gated items | Resolved — silent absence / non-disclosing behavior implemented and E2E-verified |
+| OQ-08 | HIDDEN AI exclusion | Resolved — Slice E constitutional AI exclusion verified; Slice G anti-leakage runtime-confirmed |
+| — | Supplier-level visibility default configuration UI | Deferred — future enhancement unit required |
+| — | Supplier UI controls for per-item policy management | Deferred — future product unit |
+| — | Region/channel-sensitive visibility | Future boundary; not in scope for this implementation |
+
+No open questions are launch-blocking.
+
+### Commit Chain
+
+| Commit | Description |
+|---|---|
+| `feb9e5f` | feat(catalog): add visibility policy resolver with fallback mapping |
+| `9d29798` | migration(catalog): add catalog_visibility_policy_mode column |
+| `57b6e6c` | prompt-sliceC catalog: wire visibility policy resolver into catalog browse and PDP routes |
+| `59e9207` | feat(rfq): add item-level visibility policy gate to RFQ prefill and submit |
+| `9c71d14` | security(ai): exclude catalog_visibility_policy_mode from all AI paths |
+| `bfb3f64` | qa(seed): restore visibility policy intent via catalog_visibility_policy_mode |
+| `493f684` | test(e2e): add visibility policy gating E2E scenarios (Slice G) |
+| *(this commit)* | governance(catalog): close TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 (Slice H) |

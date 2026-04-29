@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-29 (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — VERIFIED_COMPLETE; Slices A–H; 328 AI matching + 140 frontend tests PASS; production Playwright PASS)
+**Updated:** 2026-04-29 (TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 — VERIFIED_COMPLETE; 11/11 Playwright E2E PASS; production https://app.texqtic.com)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -31,30 +31,31 @@ current_open_design_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
+latest_verified_product_close_unit: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
 latest_verified_product_close_date: 2026-04-29 (Slice H governance closure)
 latest_verified_product_close_verification: >-
-  Slices A–H PASS — 328/328 AI matching backend tests (7 suites); 140/140 frontend tests;
-  TypeScript tsc --noEmit CLEAN; ESLint 0 errors; git diff --check CLEAN;
-  production Playwright HTTP 200 confirmed; API shape verified; anti-leakage verified.
+  11/11 production Playwright E2E PASS against https://app.texqtic.com (2026-04-29).
+  Slices A–G all PASS: resolver, migration, route integration, RFQ gate, AI exclusion, QA seed, E2E.
+  E2E-07/E2E-08/E2E-09/E2E-10/E2E-11 all PASS.
+  Anti-leakage: 17 forbidden fields absent from buyer catalog API responses.
+  TypeScript tsc --noEmit: not re-run in Slice H (governance-only slice; no code changes).
 latest_verified_product_close_safety_boundaries: |
-  score_rank_confidence_absent_from_output: verified (bundle + API response scan)
-  price_absent_from_recommendation_output: verified
-  relationshipState_not_in_recommendation_response: verified
-  buyerOrgId_from_dbContext_only: verified (structural; orgId never from request body)
-  humanReviewRequired_disclaimer_present: verified (in bundle)
-  rfq_auto_create_absent: verified (recommendation render fires no RFQ)
-  supplier_notification_absent: verified (recommendation render fires no notifications)
-  no_new_schema_or_migration: verified (0 Prisma schema changes)
-  no_model_embedding_details_in_output: verified (no model name, vector, or prompt in response)
-  no_ai_monetization_scope_opened: verified
-latest_verified_product_close_tenant_isolation: verified (orgId-scoped cross-tenant candidate query; SET LOCAL ROLE texqtic_rfq_read for cross-tenant reads)
-latest_verified_product_close_human_review_required: verified (disclaimer copy 'Human review is required before actioning any result' in bundle)
+  catalogVisibilityPolicyMode_absent_from_buyer_responses: verified (E2E-10)
+  publicationPosture_absent_from_buyer_responses: verified (E2E-10)
+  relationshipState_absent_from_buyer_responses: verified (E2E-10)
+  AI_scoring_fields_absent: verified (score, rank, confidence, embeddingId absent; E2E-10)
+  HIDDEN_items_absent_from_all_buyer_browse: verified (E2E-08)
+  APPROVED_BUYER_ONLY_scoped_to_approved_buyers_only: verified (E2E-01/E2E-02/E2E-03/E2E-07)
+  RFQ_gate_blocks_non_approved_buyers: verified (E2E-09)
+  supplier_self_view_unrestricted: verified (E2E-11)
+  AI_path_constitutional_exclusion: verified (Slice E; no configurable bypass)
+  no_product_code_changed_in_slice_G: verified (test expectation correction only)
+latest_verified_product_close_tenant_isolation: verified (org_id scoping enforced; buyer identity from dbContext; no cross-tenant leakage)
+latest_verified_product_close_human_review_required: N/A (this unit is a data policy layer; no AI-generated output; no human-review gate required)
 latest_verified_product_close_commits: >-
-  Design c04c3b2, Slice A ca73de9, Slice B 6a32ee4, Slice C f33b6b1,
-  Slice D f80351f, Slice E ae1738f, Slice F c8e396e, Slice G d835d00,
-  Slice H governance closure (this update)
+  Slice A feb9e5f, Slice B 9d29798, Slice C 57b6e6c, Slice D 59e9207,
+  Slice E 9c71d14, Slice F bfb3f64, Slice G 493f684, Slice H governance closure (this update)
 remediation_note: >-
   TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28 COMPLETE (2026-04-28).
   TECS-B2B-BUYER-PRICE-DISCLOSURE-001: missing GOVERNANCE-CHANGELOG.md entry added;

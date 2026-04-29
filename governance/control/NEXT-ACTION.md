@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-29 (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — VERIFIED_COMPLETE; Slices A–H; 328 AI matching tests + 140 frontend PASS; production Playwright PASS)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-29 (TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 — VERIFIED_COMPLETE; Slice H governance closure; 11/11 Playwright E2E PASS; production https://app.texqtic.com)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -28,40 +28,42 @@ active_delivery_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-last_closed_unit: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
+last_closed_unit: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Slices A–H PASS — 328/328 AI matching backend tests (7 suites); 140/140 frontend tests;
-  TypeScript tsc --noEmit CLEAN; ESLint 0 errors; git diff --check CLEAN;
-  production Playwright HTTP 200 confirmed; anti-leakage verified (DOM + network payload);
-  no forbidden fields in bundle or API response; no console errors.
+  11/11 Playwright E2E PASS against https://app.texqtic.com (2026-04-29).
+  E2E-07 (APPROVED_BUYER_ONLY browse gate): PASS.
+  E2E-08 (HIDDEN universal exclusion): PASS.
+  E2E-09 (RFQ gate for REQUESTED buyer): PASS.
+  E2E-10 (anti-leakage — 17 fields absent from buyer API): PASS.
+  E2E-11 (supplier self-view): PASS.
+  No product code changed in Slice G (test expectation correction only).
 last_closed_unit_commits: >-
-  Design c04c3b2 — TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 design plan artifact.
-  Slice A ca73de9 — safe supplier match signal builder.
-  Slice B 6a32ee4 — supplier match policy filter.
-  Slice C f33b6b1 — deterministic supplier match ranker.
-  Slice D f80351f — safe explanation guard.
-  Slice E ae1738f — RFQ intent supplier matching.
-  Slice F c8e396e — semantic signal guard.
-  Slice G d835d00 — frontend recommendation surface.
+  Slice A feb9e5f — visibility policy resolver with fallback mapping.
+  Slice B 9d29798 — catalog_visibility_policy_mode migration + schema.prisma.
+  Slice C 57b6e6c — catalog browse + PDP route integration.
+  Slice D 59e9207 — RFQ prefill/submit visibility policy gate.
+  Slice E 9c71d14 — AI safety exclusion (context packs + embedding + match pipeline).
+  Slice F bfb3f64 — QA seed matrix update (FAB-002..006 explicit modes).
+  Slice G 493f684 — Playwright E2E verification (11/11 PASS).
   Slice H — governance closure commit (this update).
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (Slice H governance closure, 2026-04-29).
-  Backend: 328/328 AI matching tests PASS (7 files). Frontend: 140/140 PASS.
-  TypeScript tsc --noEmit CLEAN. ESLint 0 errors. git diff --check CLEAN.
-  Production Playwright: https://app.texqtic.com — HTTP 200 confirmed;
-  response shape { items, fallback } only; no forbidden fields in API or bundle;
-  disclaimer and safe CTA labels in bundle; no console errors.
-  QA env constraint: fallback:true (single-org; no cross-tenant candidates) — expected.
-  Safety: no score/rank/confidence/price/relationshipState in output;
-  no RFQ auto-create; no supplier notifications; no new schema changes.
-prior_closed_unit: TECS-B2B-BUYER-RFQ-INTEGRATION-001
+  11/11 Playwright E2E PASS on https://app.texqtic.com.
+  Anti-leakage verified (17 forbidden fields absent from buyer catalog API responses).
+  Supplier self-view regression verified (HIDDEN + APPROVED_BUYER_ONLY items visible to supplier).
+  No product code changed in Slice G (test harness correction only — E2E-06 assertion).
+  OQ-01/OQ-02/OQ-08 all dispositioned. No launch-blocking open questions.
+prior_closed_unit: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
 prior_closed_unit_status: VERIFIED_COMPLETE
-prior_closed_unit_runtime_verdict: Slice G verification PASS — targeted RFQ suites 108/108; runtime API probe partially blocked (localhost:3001 unavailable)
+prior_closed_unit_runtime_verdict: >-
+  Slices A–H PASS — 328/328 AI matching backend tests (7 suites); 140/140 frontend tests;
+  TypeScript tsc --noEmit CLEAN; ESLint 0 errors; production Playwright HTTP 200 confirmed;
+  anti-leakage verified (bundle + API response scan); no console errors.
 prior_closed_unit_commits: >-
-  Design 1332797, Slice A f444443, Slice B 5715da4, Slice C b1d78a3,
-  Slice D bb6947d, Slice E 852fc55, Slice F 72234c6,
-  Slice G governance closure 46d1f30.
+  Design c04c3b2, Slice A ca73de9, Slice B 6a32ee4, Slice C f33b6b1,
+  Slice D f80351f, Slice E ae1738f, Slice F c8e396e, Slice G d835d00,
+  Slice H governance closure.
 adjacent_deferred_candidate: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open)
 d015_reconciliation: COMPLETE
 d016_posture: CLOSED — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27);
