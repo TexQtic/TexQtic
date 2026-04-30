@@ -59,7 +59,7 @@ describe('EXP-C-001 — __EXP_ORDERS_PANEL_TESTING__ is exported', () => {
 
   it('contains exactly the expected keys', () => {
     const keys = Object.keys(__EXP_ORDERS_PANEL_TESTING__).sort();
-    expect(keys).toEqual(['ACTION_LABELS', 'STATUS_LABELS', 'canonicalStatus', 'getActions']);
+    expect(keys).toEqual(['ACTION_LABELS', 'DEFAULT_LIMIT', 'STATUS_LABELS', 'buildOrdersUrl', 'canonicalStatus', 'extractPagination', 'getActions']);
   });
 });
 
@@ -307,4 +307,52 @@ describe('EXP-C-016 — Anti-leakage: ACTION_LABELS contain no internal field na
       expect(allLabelValues.toLowerCase()).not.toContain(forbidden.toLowerCase());
     });
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slice D: pagination helper exports — EXP-D-001 through EXP-D-005
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('EXPOrdersPanel pagination helpers (Slice D)', () => {
+  const { buildOrdersUrl, extractPagination, DEFAULT_LIMIT } = __EXP_ORDERS_PANEL_TESTING__;
+
+  // EXP-D-001: buildOrdersUrl with null cursor omits cursor param
+  it('EXP-D-001: buildOrdersUrl(null, 20) returns URL without cursor param', () => {
+    const url = buildOrdersUrl(null, 20);
+    expect(url).toBe('/api/tenant/orders?limit=20');
+    expect(url).not.toContain('cursor=');
+  });
+
+  // EXP-D-002: buildOrdersUrl with cursor includes both params
+  it('EXP-D-002: buildOrdersUrl("cursor-id-abc", 20) includes cursor and limit params', () => {
+    const url = buildOrdersUrl('cursor-id-abc', 20);
+    expect(url).toContain('cursor=cursor-id-abc');
+    expect(url).toContain('limit=20');
+  });
+
+  // EXP-D-003: extractPagination returns correct values from response
+  it('EXP-D-003: extractPagination with hasMore=false returns {hasMore:false, nextCursor:null}', () => {
+    const result = extractPagination({
+      orders: [],
+      count: 0,
+      pagination: { hasMore: false, nextCursor: null, limit: 20 },
+    });
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
+  });
+
+  // EXP-D-004: extractPagination defaults safely when pagination field is absent
+  it('EXP-D-004: extractPagination when pagination absent returns safe defaults', () => {
+    const result = extractPagination({ orders: [], count: 0 });
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
+    expect(result.limit).toBe(DEFAULT_LIMIT);
+  });
+
+  // EXP-D-005: buildOrdersUrl(null, ...) never emits a cursor= param
+  it('EXP-D-005: buildOrdersUrl(null, limit) never contains cursor= in the URL', () => {
+    for (const limit of [1, 5, 20, 100]) {
+      expect(buildOrdersUrl(null, limit)).not.toContain('cursor=');
+    }
+  });
 });

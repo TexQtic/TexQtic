@@ -5948,7 +5948,20 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
   /**
    * GET /api/tenant/orders
-   * List orders for current tenant user (RLS-enforced)
+   * List orders for current tenant user (RLS-enforced) with cursor-based pagination (Slice D).
+   *
+   * Query params:
+   *   cursor? : string (UUID) — last order ID from previous page; omit for first page
+   *   limit?  : number (1–100, default 20) — max orders per page
+   *
+   * Response: { orders, count, pagination: { limit, nextCursor, hasMore } }
+   *   nextCursor is the ID of the last order on this page (null on final page).
+   *   Use limit+1 fetch pattern: if Prisma returns limit+1 rows, hasMore=true.
+   *
+   * Cursor security: cursor is validated as UUID and resolved within withDbContext (RLS active).
+   *   A cursor belonging to another tenant will not be found by RLS-protected query → P2025 → 400.
+   *
+   * Ordering: createdAt desc, id desc (stable tiebreaker — id in orderBy required for cursor safety).
    */
   fastify.get('/tenant/orders', { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] }, async (request, reply) => {
     const { userId, userRole } = request;
@@ -5958,30 +5971,61 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
     }
 
+    // Parse and validate cursor + limit query params
+    const querySchema = z.object({
+      cursor: z.string().uuid().optional(),
+      limit:  z.coerce.number().int().min(1).max(100).default(20),
+    });
+    const queryResult = querySchema.safeParse(request.query);
+    if (!queryResult.success) return sendValidationError(reply, queryResult.error.errors);
+    const { cursor, limit } = queryResult.data;
+
     const canReadTenantWideOrders = userRole === 'OWNER' || userRole === 'ADMIN';
 
-    const rawOrders = await withDbContext(prisma, dbContext, async tx => {
-      return tx.order.findMany({
-        where: canReadTenantWideOrders ? undefined : { userId },
-        include: {
-          items: true,
-          // GAP-ORDER-LC-001 B6a: expose canonical lifecycle state + recent log history.
-          // RLS SELECT policy on order_lifecycle_logs allows tenant to read own rows.
-          // take: 5 bounds payload; select minimises data transfer (no actor_id / request_id).
-          order_lifecycle_logs: {
-            orderBy: { created_at: 'desc' },
-            take: 5,
-            select: { from_state: true, to_state: true, realm: true, created_at: true },
+    let rawOrders: Array<Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }>;
+    try {
+      rawOrders = await withDbContext(prisma, dbContext, async tx => {
+        return tx.order.findMany({
+          where: canReadTenantWideOrders ? undefined : { userId },
+          include: {
+            items: true,
+            // GAP-ORDER-LC-001 B6a: expose canonical lifecycle state + recent log history.
+            // RLS SELECT policy on order_lifecycle_logs allows tenant to read own rows.
+            // take: 5 bounds payload; select minimises data transfer (no actor_id / request_id).
+            order_lifecycle_logs: {
+              orderBy: { created_at: 'desc' },
+              take: 5,
+              select: { from_state: true, to_state: true, realm: true, created_at: true },
+            },
           },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }) as Array<Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }>;
+          // Stable ordering: id desc is tiebreaker for createdAt ties (required for cursor safety).
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          // Fetch one extra record to detect whether more pages exist (limit+1 pattern).
+          take: limit + 1,
+          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        }) as Array<Record<string, unknown> & { order_lifecycle_logs: OLLSelectRow[] }>;
+      });
+    } catch (err: unknown) {
+      // P2025: Prisma cursor record not found — invalid, expired, or cross-tenant cursor
+      // (RLS hides other-tenant rows; the record appears missing from this tenant's result set).
+      // Return 400 without revealing whether the cursor ID exists in another tenant's data.
+      if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2025') {
+        return sendError(reply, 'INVALID_CURSOR', 'Invalid or expired pagination cursor', 400);
+      }
+      throw err;
+    }
+
+    const hasMore = rawOrders.length > limit;
+    const pageOrders = hasMore ? rawOrders.slice(0, limit) : rawOrders;
+    const nextCursor = hasMore ? (pageOrders[pageOrders.length - 1]?.id as string ?? null) : null;
+
+    const orders = pageOrders.map(serializeTenantOrder);
+
+    return sendSuccess(reply, {
+      orders,
+      count: orders.length,
+      pagination: { limit, nextCursor, hasMore },
     });
-
-    const orders = rawOrders.map(serializeTenantOrder);
-
-    return sendSuccess(reply, { orders, count: orders.length });
   });
 
   /**

@@ -59,7 +59,7 @@ describe('WL-C-001 — __WL_ORDERS_PANEL_TESTING__ is exported', () => {
 
   it('contains exactly the expected keys', () => {
     const keys = Object.keys(__WL_ORDERS_PANEL_TESTING__).sort();
-    expect(keys).toEqual(['ACTION_LABELS', 'STATUS_LABELS', 'canonicalStatus', 'getActions']);
+    expect(keys).toEqual(['ACTION_LABELS', 'DEFAULT_LIMIT', 'STATUS_LABELS', 'buildOrdersUrl', 'canonicalStatus', 'extractPagination', 'getActions']);
   });
 
   it('does not contain EXPERIENCE-shell-only navigation props (no onBack)', () => {
@@ -237,4 +237,52 @@ describe('WL-C-014 — Anti-leakage: exported labels contain no internal field n
       expect(allActionValues.toLowerCase()).not.toContain(forbidden.toLowerCase());
     });
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slice D: pagination helper exports — WL-D-001 through WL-D-005
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('WLOrdersPanel pagination helpers (Slice D)', () => {
+  const { buildOrdersUrl, extractPagination, DEFAULT_LIMIT } = __WL_ORDERS_PANEL_TESTING__;
+
+  // WL-D-001: buildOrdersUrl with null cursor omits cursor param
+  it('WL-D-001: buildOrdersUrl(null, 25) returns URL without cursor param', () => {
+    const url = buildOrdersUrl(null, 25);
+    expect(url).toBe('/api/tenant/orders?limit=25');
+    expect(url).not.toContain('cursor=');
+  });
+
+  // WL-D-002: buildOrdersUrl with cursor includes both params
+  it('WL-D-002: buildOrdersUrl("cursor-id-abc", 25) includes cursor and limit params', () => {
+    const url = buildOrdersUrl('cursor-id-abc', 25);
+    expect(url).toContain('cursor=cursor-id-abc');
+    expect(url).toContain('limit=25');
+  });
+
+  // WL-D-003: extractPagination returns correct values from response
+  it('WL-D-003: extractPagination with hasMore=false returns {hasMore:false, nextCursor:null}', () => {
+    const result = extractPagination({
+      orders: [],
+      count: 0,
+      pagination: { hasMore: false, nextCursor: null, limit: 25 },
+    });
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
+  });
+
+  // WL-D-004: extractPagination defaults safely when pagination field is absent
+  it('WL-D-004: extractPagination when pagination absent returns safe defaults', () => {
+    const result = extractPagination({ orders: [], count: 0 });
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
+    expect(result.limit).toBe(DEFAULT_LIMIT);
+  });
+
+  // WL-D-005: buildOrdersUrl(null, ...) never emits a cursor= param
+  it('WL-D-005: buildOrdersUrl(null, limit) never contains cursor= in the URL', () => {
+    for (const limit of [1, 5, 25, 100]) {
+      expect(buildOrdersUrl(null, limit)).not.toContain('cursor=');
+    }
+  });
 });

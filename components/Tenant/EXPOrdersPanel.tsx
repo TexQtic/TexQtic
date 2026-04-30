@@ -58,7 +58,28 @@ interface Order {
   lifecycleLogs: LifecycleLogEntry[];
 }
 
-type OrdersResponse = { orders: Order[]; count: number };
+interface PaginationMeta {
+  limit: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+type OrdersResponse = { orders: Order[]; count: number; pagination?: PaginationMeta };
+
+// ─── Pagination helpers (module-level, no DOM deps) ──────────────────────────
+const DEFAULT_LIMIT = 20;
+
+/** Builds the orders list URL with cursor and limit query params. */
+function buildOrdersUrl(cursor: string | null, limit: number): string {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  if (cursor) params.set('cursor', cursor);
+  return `/api/tenant/orders?${params.toString()}`;
+}
+
+/** Extracts pagination metadata from the API response (defaults safely if absent). */
+function extractPagination(resp: OrdersResponse): PaginationMeta {
+  return resp.pagination ?? { hasMore: false, nextCursor: null, limit: DEFAULT_LIMIT };
+}
 
 // Semantic status — superset of DB enum; displayed in UI
 type DerivedStatus   = 'PAYMENT_PENDING' | 'CONFIRMED' | 'PLACED' | 'FULFILLED' | 'CANCELLED';
@@ -219,6 +240,11 @@ export function EXPOrdersPanel({ onBack }: Props) {
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
+  // Slice D: cursor pagination state
+  const [prevCursors, setPrevCursors] = useState<Array<string | null>>([]);
+  const [currentCursor, setCurrentCursor] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -229,16 +255,19 @@ export function EXPOrdersPanel({ onBack }: Props) {
   // EXPERIENCE must not fetch audit-logs; canonical state comes from lifecycleState.
   // TECS-FBW-AT-006: getCurrentUser() fetched in parallel for role-gating; safe-fail (.catch)
   // ensures orders still load if /api/me is temporarily unavailable (role defaults to null → buttons hidden).
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (cursor: string | null = null) => {
     setLoading(true);
     setError(null);
     try {
       const [ordersRes, meRes] = await Promise.all([
-        tenantGet<OrdersResponse>('/api/tenant/orders'),
+        tenantGet<OrdersResponse>(buildOrdersUrl(cursor, DEFAULT_LIMIT)),
         getCurrentUser().catch(() => null),
       ]);
       setOrders(ordersRes.orders);
       setUserRole(meRes?.role ?? null);
+      const pg = extractPagination(ordersRes);
+      setNextCursor(pg.nextCursor);
+      setHasMore(pg.hasMore);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
@@ -260,7 +289,7 @@ export function EXPOrdersPanel({ onBack }: Props) {
       // Uses TECS 1 endpoint — PATCH /api/tenant/orders/:id/status
       await tenantPatch<unknown>(`/api/tenant/orders/${orderId}/status`, { status: target });
       showToast(`Order ${ACTION_LABELS[target].toLowerCase()}d successfully`);
-      await fetchData();
+      await fetchData(currentCursor);
     } catch (err) {
       showToast(
         err instanceof Error
@@ -270,6 +299,21 @@ export function EXPOrdersPanel({ onBack }: Props) {
     } finally {
       setActionLoading(prev => ({ ...prev, [orderId]: false }));
     }
+  };
+
+  const handleNext = () => {
+    if (!nextCursor) return;
+    setPrevCursors(prev => [...prev, currentCursor]);
+    setCurrentCursor(nextCursor);
+    void fetchData(nextCursor);
+  };
+
+  const handlePrev = () => {
+    if (prevCursors.length === 0) return;
+    const goBackTo = prevCursors[prevCursors.length - 1];
+    setPrevCursors(prev => prev.slice(0, -1));
+    setCurrentCursor(goBackTo);
+    void fetchData(goBackTo);
   };
 
   return (
@@ -289,7 +333,7 @@ export function EXPOrdersPanel({ onBack }: Props) {
           </p>
         </div>
         <button
-          onClick={() => void fetchData()}
+          onClick={() => void fetchData(currentCursor)}
           disabled={loading}
           className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition disabled:opacity-40"
         >
@@ -393,6 +437,31 @@ export function EXPOrdersPanel({ onBack }: Props) {
         );
       })()}
 
+      {/* Pagination — server-side cursor navigation (Slice D) */}
+      {(prevCursors.length > 0 || hasMore) && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-slate-400">
+            Page {prevCursors.length + 1}{hasMore ? '' : ' (last page)'}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={handlePrev}
+              disabled={prevCursors.length === 0 || loading}
+              className="px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition"
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!hasMore || loading}
+              className="px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation dialog */}
       {confirmDialog && (
         <ConfirmDialogModal
@@ -415,4 +484,7 @@ export const __EXP_ORDERS_PANEL_TESTING__ = {
   getActions,
   STATUS_LABELS,
   ACTION_LABELS,
+  buildOrdersUrl,
+  extractPagination,
+  DEFAULT_LIMIT,
 };

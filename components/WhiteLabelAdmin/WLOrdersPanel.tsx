@@ -56,7 +56,12 @@ interface Order {
   lifecycleLogs: LifecycleLogEntry[];
 }
 
-type OrdersResponse = { orders: Order[]; count: number };
+interface PaginationMeta {
+  limit: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+type OrdersResponse = { orders: Order[]; count: number; pagination?: PaginationMeta };
 
 // Semantic status — what we show in the UI (superset of DB enum)
 type DerivedStatus = 'PAYMENT_PENDING' | 'CONFIRMED' | 'PLACED' | 'FULFILLED' | 'CANCELLED';
@@ -202,7 +207,9 @@ function ConfirmDialogModal({
 
 // ─── Main panel ──────────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 25;
+const PAGE_LIMIT = 25;
+// Alias exposed via test seam so unit tests can assert the fallback pagination default.
+const DEFAULT_LIMIT = PAGE_LIMIT;
 
 type FilterStatus = DerivedStatus | 'ALL';
 
@@ -215,6 +222,20 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'CANCELLED',       label: 'Cancelled' },
 ];
 
+// ─── Pagination helpers (module-level, no DOM deps) ──────────────────────────
+/** Builds the orders list URL with cursor and limit query params. */
+function buildOrdersUrl(cursor: string | null, limit: number): string {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  if (cursor) params.set('cursor', cursor);
+  return `/api/tenant/orders?${params.toString()}`;
+}
+
+/** Extracts pagination metadata from the API response (defaults safely if absent). */
+function extractPagination(resp: OrdersResponse): PaginationMeta {
+  return resp.pagination ?? { hasMore: false, nextCursor: null, limit: DEFAULT_LIMIT };
+}
+
 export function WLOrdersPanel() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -226,7 +247,11 @@ export function WLOrdersPanel() {
   // ── Filter / search / pagination ─────────────────────────────────────────────
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
+  // Slice D: cursor pagination state (replaces client-side page offset)
+  const [prevCursors, setPrevCursors] = useState<Array<string | null>>([]);
+  const [currentCursor, setCurrentCursor] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -235,12 +260,15 @@ export function WLOrdersPanel() {
   };
 
   // Fetch orders — lifecycle state + logs are embedded in the response (B6a)
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (cursor: string | null = null) => {
     setLoading(true);
     setError(null);
     try {
-      const ordersRes = await tenantGet<OrdersResponse>('/api/tenant/orders');
+      const ordersRes = await tenantGet<OrdersResponse>(buildOrdersUrl(cursor, PAGE_LIMIT));
       setOrders(ordersRes.orders);
+      const pg = extractPagination(ordersRes);
+      setNextCursor(pg.nextCursor);
+      setHasMore(pg.hasMore);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
@@ -262,7 +290,7 @@ export function WLOrdersPanel() {
       await tenantPatch<unknown>(`/api/tenant/orders/${orderId}/status`, { status: target });
       showToast(`Order ${ACTION_LABELS[target].toLowerCase()}d successfully`);
       // Refetch so derived status and audit trail both reflect the new state
-      await fetchData();
+      await fetchData(currentCursor);
     } catch (err) {
       showToast(
         err instanceof Error ? err.message : `Failed to ${ACTION_LABELS[target].toLowerCase()} order`
@@ -283,11 +311,23 @@ export function WLOrdersPanel() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
-  const pagedOrders = filteredOrders.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const handleStatusFilter = (v: FilterStatus) => { setStatusFilter(v); };
+  const handleSearch = (v: string) => { setSearch(v); };
 
-  const handleStatusFilter = (v: FilterStatus) => { setStatusFilter(v); setPage(0); };
-  const handleSearch = (v: string) => { setSearch(v); setPage(0); };
+  const handleNext = () => {
+    if (!nextCursor) return;
+    setPrevCursors(prev => [...prev, currentCursor]);
+    setCurrentCursor(nextCursor);
+    void fetchData(nextCursor);
+  };
+
+  const handlePrev = () => {
+    if (prevCursors.length === 0) return;
+    const goBackTo = prevCursors[prevCursors.length - 1];
+    setPrevCursors(prev => prev.slice(0, -1));
+    setCurrentCursor(goBackTo);
+    void fetchData(goBackTo);
+  };
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -302,7 +342,7 @@ export function WLOrdersPanel() {
           </p>
         </div>
         <button
-          onClick={() => void fetchData()}
+          onClick={() => void fetchData(currentCursor)}
           disabled={loading}
           className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition disabled:opacity-40"
         >
@@ -368,7 +408,7 @@ export function WLOrdersPanel() {
       )}
 
       {/* Orders table */}
-      {pagedOrders.length > 0 && (
+      {filteredOrders.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -382,7 +422,7 @@ export function WLOrdersPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {pagedOrders.map(order => {
+              {filteredOrders.map(order => {
                 const derived = canonicalStatus(order);
                 const actions = getActions(derived);
                 const isActing = actionLoading[order.id] ?? false;
@@ -437,23 +477,23 @@ export function WLOrdersPanel() {
         </div>
       )}
 
-      {/* Pagination */}
-      {filteredOrders.length > PAGE_SIZE && (
+      {/* Pagination — server-side cursor navigation (Slice D) */}
+      {(prevCursors.length > 0 || hasMore) && (
         <div className="flex items-center justify-between pt-1">
           <span className="text-xs text-slate-400">
-            Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length}
+            Page {prevCursors.length + 1}{hasMore ? '' : ' (last page)'}
           </span>
           <div className="flex gap-2">
             <button
-              onClick={() => setPage(p => Math.max(0, p - 1))}
-              disabled={page === 0}
+              onClick={handlePrev}
+              disabled={prevCursors.length === 0 || loading}
               className="px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition"
             >
               ← Prev
             </button>
             <button
-              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
+              onClick={handleNext}
+              disabled={!hasMore || loading}
               className="px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition"
             >
               Next →
@@ -484,4 +524,7 @@ export const __WL_ORDERS_PANEL_TESTING__ = {
   getActions,
   STATUS_LABELS,
   ACTION_LABELS,
+  buildOrdersUrl,
+  extractPagination,
+  DEFAULT_LIMIT,
 };

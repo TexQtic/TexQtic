@@ -880,3 +880,211 @@ describe('Tenant isolation: cross-org order requests are withheld', () => {
     expect(_sm.transition).not.toHaveBeenCalled();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slice D: cursor-based pagination — ORD-D-001 through ORD-D-012
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('GET /orders — cursor pagination (Slice D)', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // ORD-D-001: default limit 20; when backend returns ≤ limit rows hasMore=false
+  it('ORD-D-001: default limit=20; ≤ limit rows returned → hasMore=false, nextCursor=null', async () => {
+    const app = await buildApp();
+    FAKE_TX.order.findMany.mockResolvedValue([
+      makeRawOrder({ id: 'dddd0001-0000-0000-0000-000000000001' }),
+      makeRawOrder({ id: 'dddd0001-0000-0000-0000-000000000002' }),
+    ]);
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    type PL = { orders: unknown[]; count: number; pagination: { hasMore: boolean; nextCursor: string | null; limit: number } };
+    const data = (JSON.parse(res.body) as { data: PL }).data;
+    expect(data.orders).toHaveLength(2);
+    expect(data.count).toBe(2);
+    expect(data.pagination.hasMore).toBe(false);
+    expect(data.pagination.nextCursor).toBeNull();
+    expect(data.pagination.limit).toBe(20);
+  });
+
+  // ORD-D-002: custom limit=5 is respected
+  it('ORD-D-002: limit=5 query param — response contains at most 5 orders', async () => {
+    const app = await buildApp();
+    // Server fetches limit+1=6; return 5 → final page
+    FAKE_TX.order.findMany.mockResolvedValue(
+      Array.from({ length: 5 }, (_, i) =>
+        makeRawOrder({ id: `dddd0002-0000-0000-0000-${String(i + 1).padStart(12, '0')}` }),
+      ),
+    );
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders?limit=5' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    type PL = { orders: unknown[]; pagination: { hasMore: boolean; limit: number } };
+    const data = (JSON.parse(res.body) as { data: PL }).data;
+    expect(data.orders).toHaveLength(5);
+    expect(data.pagination.limit).toBe(5);
+    expect(data.pagination.hasMore).toBe(false);
+  });
+
+  // ORD-D-003: limit+1 rows returned → hasMore=true, nextCursor set to last page-order id
+  it('ORD-D-003: limit+1 rows from Prisma → hasMore=true, nextCursor=last order id on page', async () => {
+    const app = await buildApp();
+    // limit=5 → server asks for 6; return 6 to trigger hasMore
+    const rows = [
+      ...Array.from({ length: 5 }, (_, i) =>
+        makeRawOrder({ id: `dddd0003-0000-0000-0000-${String(i + 1).padStart(12, '0')}` }),
+      ),
+      makeRawOrder({ id: 'dddd0003-0000-0000-0000-000000000099' }), // extra row
+    ];
+    FAKE_TX.order.findMany.mockResolvedValue(rows);
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders?limit=5' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    type PL = { orders: unknown[]; pagination: { hasMore: boolean; nextCursor: string | null } };
+    const data = (JSON.parse(res.body) as { data: PL }).data;
+    expect(data.orders).toHaveLength(5);
+    expect(data.pagination.hasMore).toBe(true);
+    // nextCursor must be the id of the last order on the page (index 4, not the extra row)
+    expect(data.pagination.nextCursor).toBe(rows[4].id);
+  });
+
+  // ORD-D-004: cursor param triggers Prisma cursor+skip and returns correct next page
+  it('ORD-D-004: cursor param → findMany called with cursor:{id} and skip:1; returns second page', async () => {
+    const app = await buildApp();
+    const PAGE2_FIRST_ID = 'dddd0004-0000-0000-0000-000000000010';
+    FAKE_TX.order.findMany.mockResolvedValue([
+      makeRawOrder({ id: PAGE2_FIRST_ID }),
+      makeRawOrder({ id: 'dddd0004-0000-0000-0000-000000000011' }),
+    ]);
+
+    const cursorUuid = 'cccccccc-0003-0000-0000-cccccccccccc';
+    const res = await app.inject({
+      method: 'GET',
+      url:    `/api/tenant/orders?limit=2&cursor=${cursorUuid}`,
+    });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    type PL = { orders: Array<{ id: string }>; pagination: { hasMore: boolean; nextCursor: string | null } };
+    const data = (JSON.parse(res.body) as { data: PL }).data;
+    expect(data.orders[0].id).toBe(PAGE2_FIRST_ID);
+    expect(data.pagination.hasMore).toBe(false);
+    expect(data.pagination.nextCursor).toBeNull();
+    // Assert findMany received cursor+skip args
+    const fmArgs = (FAKE_TX.order.findMany as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+    expect(fmArgs.cursor).toEqual({ id: cursorUuid });
+    expect(fmArgs.skip).toBe(1);
+  });
+
+  // ORD-D-005: final page (backend returns < limit+1 rows) → hasMore=false, nextCursor=null
+  it('ORD-D-005: final page — fewer rows than limit+1 → hasMore=false, nextCursor=null', async () => {
+    const app = await buildApp();
+    FAKE_TX.order.findMany.mockResolvedValue(
+      Array.from({ length: 3 }, (_, i) =>
+        makeRawOrder({ id: `dddd0005-0000-0000-0000-${String(i + 1).padStart(12, '0')}` }),
+      ),
+    );
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders?limit=10' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    type PL = { orders: unknown[]; pagination: { hasMore: boolean; nextCursor: string | null } };
+    const data = (JSON.parse(res.body) as { data: PL }).data;
+    expect(data.orders).toHaveLength(3);
+    expect(data.pagination.hasMore).toBe(false);
+    expect(data.pagination.nextCursor).toBeNull();
+  });
+
+  // ORD-D-006: MEMBER role — findMany where clause scoped to userId
+  it('ORD-D-006: MEMBER role — findMany where.userId is set (tenant-wide access withheld)', async () => {
+    const app = await buildApp('MEMBER', TEST_ORG_ID, TEST_USER_ID);
+    FAKE_TX.order.findMany.mockResolvedValue([makeRawOrder()]);
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    const fmArgs = (FAKE_TX.order.findMany as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+    expect((fmArgs.where as { userId?: string })?.userId).toBe(TEST_USER_ID);
+  });
+
+  // ORD-D-007: OWNER role — findMany where clause is undefined (tenant-wide)
+  it('ORD-D-007: OWNER role — findMany where is undefined (tenant-wide access granted)', async () => {
+    const app = await buildApp('OWNER');
+    FAKE_TX.order.findMany.mockResolvedValue([makeRawOrder()]);
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    const fmArgs = (FAKE_TX.order.findMany as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+    expect(fmArgs.where).toBeUndefined();
+  });
+
+  // ORD-D-008: cross-tenant cursor (Prisma P2025) → 400 INVALID_CURSOR (no data leak)
+  it('ORD-D-008: Prisma P2025 on cross-tenant cursor → 400 with code INVALID_CURSOR', async () => {
+    const app = await buildApp();
+    const p2025 = Object.assign(new Error('Record not found'), { code: 'P2025' });
+    FAKE_TX.order.findMany.mockRejectedValue(p2025);
+
+    const validUuid = 'cccccccc-0003-0000-0000-cccccccccccc';
+    const res = await app.inject({
+      method: 'GET',
+      url:    `/api/tenant/orders?cursor=${validUuid}`,
+    });
+    await app.close();
+
+    expect(res.statusCode).toBe(400);
+    const body = JSON.parse(res.body) as { error?: { code?: string } };
+    expect(body.error?.code).toBe('INVALID_CURSOR');
+  });
+
+  // ORD-D-009: limit=0 (below minimum) → 400 validation error
+  it('ORD-D-009: limit=0 (below minimum 1) → 400 validation error', async () => {
+    const app = await buildApp();
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders?limit=0' });
+    await app.close();
+    expect(res.statusCode).toBe(400);
+  });
+
+  // ORD-D-010: limit=101 (above maximum 100) → 400 validation error
+  it('ORD-D-010: limit=101 (above maximum 100) → 400 validation error', async () => {
+    const app = await buildApp();
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders?limit=101' });
+    await app.close();
+    expect(res.statusCode).toBe(400);
+  });
+
+  // ORD-D-011: cursor=not-a-uuid (invalid UUID format) → 400 validation error
+  it('ORD-D-011: cursor=not-a-uuid (non-UUID string) → 400 validation error', async () => {
+    const app = await buildApp();
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders?cursor=not-a-uuid' });
+    await app.close();
+    expect(res.statusCode).toBe(400);
+  });
+
+  // ORD-D-012: response always includes lifecycleState and lifecycleLogs
+  it('ORD-D-012: response order objects include lifecycleState and lifecycleLogs array', async () => {
+    const app = await buildApp();
+    FAKE_TX.order.findMany.mockResolvedValue([makeRawOrder()]);
+
+    const res = await app.inject({ method: 'GET', url: '/api/tenant/orders' });
+    await app.close();
+
+    expect(res.statusCode).toBe(200);
+    type OL = { lifecycleState: string | null; lifecycleLogs: unknown[] };
+    const data = (JSON.parse(res.body) as { data: { orders: OL[] } }).data;
+    const order = data.orders[0];
+    expect(order).toHaveProperty('lifecycleState');
+    expect(Array.isArray(order.lifecycleLogs)).toBe(true);
+  });
+});

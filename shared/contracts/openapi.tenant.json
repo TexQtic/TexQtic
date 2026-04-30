@@ -3675,7 +3675,45 @@
           }
         ],
         "responses": {
-          "200": { "description": "Order list returned" },
+          "200": {
+            "description": "Order list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orders": {
+                          "type": "array",
+                          "items": { "type": "object" }
+                        },
+                        "count": {
+                          "type": "integer",
+                          "description": "Number of orders in this page"
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": { "type": "integer" },
+                            "nextCursor": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "hasMore": { "type": "boolean" }
+                          },
+                          "required": ["limit", "nextCursor", "hasMore"]
+                        }
+                      },
+                      "required": ["orders", "count", "pagination"]
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
