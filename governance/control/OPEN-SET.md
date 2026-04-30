@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 D-6 — VERIFIED_COMPLETE; D-6 public seam closed; 58/58 tests PASS)
+**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-002 — DESIGN_COMPLETE; DPP Passport Network ladder design artifact created; no schema/route/UI changes; pending Paresh authorization for implementation slices)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -614,6 +614,18 @@
   Launch decision: TECS-B2B-ORDERS-LIFECYCLE-001 IS VERIFIED_COMPLETE. FULL PLATFORM LAUNCH IS NOT AUTHORIZED.
     Remaining launch blockers: Trades, DPP Passport Network (partial), Escrow/TradeTrust Pay,
     Escalations, Settlement, Certifications, Traceability, Audit Log — all unverified.
+- TECS-DPP-PASSPORT-NETWORK-002 is DESIGN_COMPLETE (2026-05-09).
+  Status: DESIGN_COMPLETE — no schema/route/migration/UI changes; design artifact only.
+  Design artifact: docs/TECS-DPP-PASSPORT-NETWORK-002-DESIGN-v1.md (18 sections + Appendix A).
+  Platform brand: TexQtic DPP Passport Network.
+  4-tier Lite-to-Global ladder: L1 LOCAL_TRUST (Bronze) → L2 TRADE_READY (Silver) → L3 COMPLIANCE (Gold) → L4 GLOBAL_DPP (Platinum).
+  Current maturity ceiling: TRADE_READY (L2) — COMPLIANCE and GLOBAL_DPP reserved (not implemented).
+  Critical disambiguation (§7.3): TRADE_READY maturity vs TRADE_READY status are different concepts.
+  10 open decision gates Q-01–Q-10 pending Paresh authorization.
+  7 future implementation slices A–G identified (none authorized; each requires explicit Paresh approval before opening).
+  D-6 anchor: route surface locked to commit 3e5303a. GET /api/public/dpp/:publicPassportId is canonical machine-readable JSON surface.
+  58/58 tests remain PASS (baseline unchanged from D-6 close).
+  Commit: see governance/control/GOVERNANCE-CHANGELOG.md (2026-05-09 entry).
 - TECS-DPP-PASSPORT-FOUNDATION-001 is VERIFIED_COMPLETE (2026-05-09) — D-6 VERIFIED_COMPLETE.
   Status: VERIFIED_COMPLETE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 VERIFIED_COMPLETE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.

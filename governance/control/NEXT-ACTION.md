@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 D-6 — VERIFIED_COMPLETE; D-6 public seam closed; 58/58 tests PASS)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-002 — DESIGN_COMPLETE; DPP Passport Network ladder design artifact created; no schema/route/UI changes; pending Paresh authorization for implementation slices)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,11 +11,19 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-FOUNDATION-001 D-6 Public Published Passport Access VERIFIED_COMPLETE (2026-05-09)
-active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
-active_delivery_unit_status: VERIFIED_COMPLETE
+product_delivery_priority: DESIGN_COMPLETE — TECS-DPP-PASSPORT-NETWORK-002 DPP Passport Network Ladder DESIGN_COMPLETE (2026-05-09); awaiting Paresh authorization for implementation slices
+active_delivery_unit: TECS-DPP-PASSPORT-NETWORK-002
+active_delivery_unit_status: DESIGN_COMPLETE
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 VERIFIED_COMPLETE. D-6 VERIFIED_COMPLETE.
+  TECS-DPP-PASSPORT-NETWORK-002 DESIGN_COMPLETE. Design artifact: docs/TECS-DPP-PASSPORT-NETWORK-002-DESIGN-v1.md.
+  Platform brand: TexQtic DPP Passport Network. 4-tier Lite-to-Global ladder defined:
+    L1 LOCAL_TRUST (Bronze), L2 TRADE_READY (Silver), L3 COMPLIANCE (Gold), L4 GLOBAL_DPP (Platinum).
+  Current maturity ceiling: TRADE_READY (L2) — COMPLIANCE and GLOBAL_DPP reserved (not implemented).
+  10 open decision gates Q-01–Q-10 pending Paresh authorization.
+  7 future implementation slices A–G identified (none authorized).
+  D-6 anchor: route surface locked to commit 3e5303a (GET /api/public/dpp/:publicPassportId only).
+  No schema/route/migration/UI changes in this unit. 58/58 tests remain PASS.
+  Prior: TECS-DPP-PASSPORT-FOUNDATION-001 VERIFIED_COMPLETE. D-6 VERIFIED_COMPLETE.
   D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
   D-2 COMPLETE: commit 8a14242 (DPP view extensions: transformationId, lifecycleStateName, issuedAt).
   D-3 COMPLETE: commit 87bdcfe (dpp_passport_states table + RLS, passport identity/status route, maturity computation, DPPPassport.tsx UI).

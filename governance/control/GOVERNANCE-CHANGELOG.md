@@ -5,6 +5,55 @@
 
 ---
 
+## 2026-05-09 — DESIGN_COMPLETE: TECS-DPP-PASSPORT-NETWORK-002 (DPP Passport Network Ladder)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-002
+Status:        DESIGN_COMPLETE
+Closure Date:  2026-05-09
+Type:          DESIGN-ONLY — no schema, route, migration, or UI changes in this unit
+
+Deliverable:   docs/TECS-DPP-PASSPORT-NETWORK-002-DESIGN-v1.md (18 sections + Appendix A)
+
+Design scope:
+  Platform brand: TexQtic DPP Passport Network
+  4-tier Lite-to-Global ladder:
+    L1 LOCAL_TRUST (Bronze)  → basic product + org data
+    L2 TRADE_READY (Silver)  → ≥1 cert + ≥1 lineage node (current maturity ceiling)
+    L3 COMPLIANCE (Gold)     → reserved; eligibility criteria defined in design
+    L4 GLOBAL_DPP (Platinum) → reserved; reachability design in design §9
+  Internal-code-to-product-label mapping (§7) — CRITICAL disambiguation of
+    TRADE_READY maturity vs TRADE_READY status (§7.3)
+  Status transition design (future implementation slice C)
+  Public passport strategy — D-6 anchored; JSON-LD gate deferred to GLOBAL_DPP
+  White-label naming strategy — Option D recommended (badge-only, no network name)
+  10 open decision gates Q-01–Q-10 (all pending Paresh authorization)
+  7 future implementation slices A–G (none authorized; each requires explicit approval)
+  11 adjacent findings kept out of scope with risk ratings
+
+D-6 anchor:
+  Design is anchored to commit 3e5303a (D-6 close). Route surface is D-6 exact:
+    GET /api/public/dpp/:publicPassportId — only public endpoint
+    GET /api/tenant/dpp/:nodeId/passport — only tenant read endpoint
+    No status-transition PATCH endpoint exists.
+
+Files changed:
+  docs/TECS-DPP-PASSPORT-NETWORK-002-DESIGN-v1.md (new file — design artifact)
+  governance/control/NEXT-ACTION.md (governance sync)
+  governance/control/OPEN-SET.md (governance sync)
+  governance/control/GOVERNANCE-CHANGELOG.md (this entry)
+
+Safety:
+  ✅ No schema/migration change
+  ✅ No new routes
+  ✅ No UI changes
+  ✅ No test changes
+  ✅ org_id isolation unchanged
+  ✅ 58/58 tests remain PASS (baseline unchanged)
+```
+
+---
+
 ## 2026-05-09 — CLOSED: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (Public Passport Seam Closure)
 
 ```
