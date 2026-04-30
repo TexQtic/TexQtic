@@ -60,6 +60,7 @@ import { AdminRBAC } from './components/ControlPlane/AdminRBAC';
 import { EventStream } from './components/ControlPlane/EventStream';
 import { B2BDiscoveryPage } from './components/Public/B2BDiscovery';
 import { B2CBrowsePage } from './components/Public/B2CBrowse';
+import { PublicPassport } from './components/Public/PublicPassport';
 import { getPlatformInsights } from './services/aiService';
 import {
   getAggregatorDiscoveryEntries,
@@ -1924,6 +1925,7 @@ type AppState =
   | 'PUBLIC_ENTRY'
   | 'PUBLIC_B2B_DISCOVERY'
   | 'PUBLIC_B2C_BROWSE'
+  | 'PUBLIC_PASSPORT'
   | 'AUTH'
   | 'FORGOT_PASSWORD'
   | 'VERIFY_EMAIL'
@@ -1955,6 +1957,15 @@ const hasStoredAuthenticatedSession = () => {
 
 const resolveInitialAppState = (): AppState => {
   if (globalThis.window !== undefined) {
+    // TECS-DPP-PASSPORT-NETWORK-007: Public passport path — /passport/:id
+    // Checked first so QR-code / direct-link visitors bypass auth state entirely.
+    const passportPathMatch = globalThis.window.location.pathname.match(
+      /^\/passport\/([^/]+)$/,
+    );
+    if (passportPathMatch) {
+      return 'PUBLIC_PASSPORT';
+    }
+
     const params = new URLSearchParams(globalThis.window.location.search);
     const token = params.get('token');
     const action = params.get('action');
@@ -2020,6 +2031,14 @@ const App: React.FC = () => {
   const [publicEntryDescriptor, setPublicEntryDescriptor] = useState<PublicEntryResolutionDescriptor | null>(null);
   const [publicEntryBootstrapPending, setPublicEntryBootstrapPending] = useState(appState === 'PUBLIC_ENTRY');
   const [neutralEntryPathSelection, setNeutralEntryPathSelection] = useState<NeutralEntryPathSelection>(null);
+  // TECS-DPP-PASSPORT-NETWORK-007: passport ID captured from /passport/:id pathname on load
+  const [publicPassportIdFromPath] = useState<string>(() => {
+    if (globalThis.window !== undefined) {
+      const m = globalThis.window.location.pathname.match(/^\/passport\/([^/]+)$/);
+      return m?.[1] ?? '';
+    }
+    return '';
+  });
   const canAccessControlPlane = getCurrentAuthRealm() === 'CONTROL_PLANE';
   // Wave 4 P1: active panel in the WL Store Admin console
   const [wlAdminView, setWlAdminView] = useState<WLAdminView>('BRANDING');
@@ -6399,6 +6418,9 @@ const App: React.FC = () => {
             onSignIn={() => openSecondaryAuthenticatedEntry('TENANT')}
           />
         );
+      // TECS-DPP-PASSPORT-NETWORK-007: Public buyer passport page
+      case 'PUBLIC_PASSPORT':
+        return <PublicPassport publicPassportId={publicPassportIdFromPath} />;
       case 'AUTH': {
         const tenantBootstrapAuthView = resolveTenantBootstrapAuthView({
           authRealm,
