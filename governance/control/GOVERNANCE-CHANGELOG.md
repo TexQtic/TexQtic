@@ -5,6 +5,70 @@
 
 ---
 
+## 2026-04-30 — CLOSED: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 (Slice H Governance Closure)
+
+```
+Unit:          TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
+Status:        VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
+Closure Date:  2026-04-30
+Verification:  55 passed / 3 skipped (BLOCKED_BY_AUTH) / 0 failed — full textile-chain
+               Playwright suite against https://app.texqtic.com (post-deployment, commit 092a8c9).
+               12/12 approval-gate Playwright tests PASS (commit 3fe00a5).
+               Data hygiene: P0=0, P1=0 (commit 4e01f77).
+               QA matrix seeded: 13 tenants, ~77 catalog items, 8 BSRs, 25 RFQs.
+               All 7 buyer-supplier relationship states verified.
+
+Commits:
+  26ac709  Slice B — staging seed execution plan
+  7ef508f  Slice C-ALT — 7 net-new QA tenants + relationships + catalog items seeded
+  bfb3f64  Slice F seed — catalog_visibility_policy_mode restored (APPROVED_BUYER_ONLY/HIDDEN)
+  4e01f77  Data hygiene audit — P0=0, P1=0; P2/P3 tracked
+  3fe00a5  Approval-gate QA — 12/12 Playwright tests PASS
+  ba76fb5  Slice F runtime QA — 8 blockers resolved; full textile-chain suite
+  092a8c9  Slice F evidence — post-deployment verification: 55 passed / 3 skipped / 0 failed
+  7239571  Cleanup design — pre-launch fixture cleanup plan (design only)
+  a32530a  Cleanup deferral — QA matrix retained for future B2B sub-family QA
+  (this)   Slice H — Governance closure / launch-readiness decision
+
+Verification Evidence:
+  ✅ 55/58 full textile-chain Playwright tests PASS (spec: tests/e2e/full-textile-chain-runtime-qa.spec.ts)
+  ✅ 3 skipped: FTJ-01/FTJ-02/FTJ-03 — BLOCKED_BY_AUTH (svc-provider/aggregator auth not seeded; not product failures)
+  ✅ 8 QA blockers resolved (3 product defects: DPP passport 404, DPP evidence-claims 404, catalog anti-leakage;
+       5 spec errors: override gate, RFQ list key, supplier inbox key, health URL)
+  ✅ 12/12 approval-gate tests PASS (APPROVED/REQUESTED/none deny; HIDDEN 404; RFQ gate; override resistance; cross-supplier isolation)
+  ✅ Anti-leakage: catalogVisibilityPolicyMode and 16 other forbidden fields absent from all buyer-facing output
+  ✅ Cross-tenant isolation: FTF-02, FTG-02, FTG-04 PASS
+  ✅ All 7 BSR states present: APPROVED, BLOCKED, EXPIRED, REJECTED, REQUESTED, REVOKED, SUSPENDED
+  ✅ Data hygiene P0=0, P1=0; P2 findings (test events, 73 users without membership) tracked
+  ✅ Non-QA data untouched (SC-05, SC-06 guards; V-F08)
+  ✅ Launch-readiness decision artifact committed (this commit)
+
+Launch Decision:
+  CURRENT IMPLEMENTED B2B QA SURFACES VERIFIED; FULL PLATFORM LAUNCH NOT YET AUTHORIZED
+  Reason: Orders / Trades / DPP Passport Network (partial) / Escrow / Escalations /
+    Settlement / Certifications / Traceability / Audit Log — all unverified.
+
+Cleanup Status:
+  TECS-QA-FIXTURE-CLEANUP-BEFORE-LAUNCH-001 — DESIGN_COMPLETE / CLEANUP_DEFERRED
+  Slice C writes: NOT_AUTHORIZED (deferred — QA matrix retained as active QA infrastructure)
+  Slice A SELECT-only: AUTHORIZED on demand
+
+Open Items Preserved:
+  OI-01: QA fixtures retained in production DB by design (see cleanup deferral)
+  OI-02: FTJ-01/FTJ-02/FTJ-03 auth gaps — service-provider/aggregator fixtures not seeded
+  OI-03: P2 — test.EVENT_A / test.EVENT_B in event_logs (scoped to QA tenants)
+  OI-04: P2 — 73 users without any membership row
+
+Governance Files Updated:
+  docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md (created)
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-29 — CLOSED: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
 
 ```

@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-29 (TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 — VERIFIED_COMPLETE; 11/11 Playwright E2E PASS; production https://app.texqtic.com)
+**Updated:** 2026-04-30 (TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — Slice H governance closure; VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES; full platform launch NOT YET AUTHORIZED)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -56,6 +56,22 @@ latest_verified_product_close_human_review_required: N/A (this unit is a data po
 latest_verified_product_close_commits: >-
   Slice A feb9e5f, Slice B 9d29798, Slice C 57b6e6c, Slice D 59e9207,
   Slice E 9c71d14, Slice F bfb3f64, Slice G 493f684, Slice H governance closure (this update)
+qa_matrix_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
+qa_matrix_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
+qa_matrix_closure_date: 2026-04-30
+qa_matrix_note: >-
+  Slice H governance closure. QA matrix seeded: 13 tenants, ~77 catalog items, 8 BSRs, 25 RFQs.
+  All 7 BSR states present. Runtime QA: 55 passed / 3 skipped (BLOCKED_BY_AUTH) / 0 failed.
+  Approval-gate QA: 12/12 PASS. Data hygiene: P0=0, P1=0.
+  QA fixtures RETAINED as active QA infrastructure for future B2B sub-family QA cycles.
+  Cleanup deferred. Slice C writes: NOT_AUTHORIZED.
+platform_launch_status: NOT_YET_AUTHORIZED
+platform_launch_note: >-
+  Current implemented B2B QA surfaces are verified. Full platform launch is NOT YET AUTHORIZED.
+  Launch blockers: Orders, Trades, DPP Passport Network (partial), Escrow/TradeTrust Pay,
+  Escalations, Settlement, Certifications, Traceability, Audit Log — all unverified.
+  Plus: QA fixture cleanup (deferred), final launch governance decision (blocked).
+  Launch gates: G-01 through G-12 defined in Slice H closure artifact.
 remediation_note: >-
   TECS-RUNTIME-VERIFICATION-DRIFT-REMEDIATION-2026-04-28 COMPLETE (2026-04-28).
   TECS-B2B-BUYER-PRICE-DISCLOSURE-001: missing GOVERNANCE-CHANGELOG.md entry added;

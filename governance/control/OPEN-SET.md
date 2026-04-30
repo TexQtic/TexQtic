@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-29 (TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — VERIFIED_COMPLETE; Slices A–H complete; 328/328 AI matching tests PASS; production Playwright verification PASS)
+**Last Updated:** 2026-04-30 (TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES; 55/58 full textile-chain Playwright PASS; 12/12 approval-gate PASS; QA cleanup deferred)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -559,6 +559,34 @@
   No launch-blocking open questions.
   Recommended next authorization (not opened): TECS-B2B-BUYER-CATALOG-VISIBILITY-MANAGEMENT-001 or
     TECS-QA-FIXTURE-CLEANUP-BEFORE-LAUNCH-001. Requires explicit Paresh authorization.
+- TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 is VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES (2026-04-30).
+  Status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES. Closure date: 2026-04-30.
+  Launch decision: CURRENT IMPLEMENTED B2B QA SURFACES VERIFIED; FULL PLATFORM LAUNCH NOT YET AUTHORIZED.
+  Commit chain:
+    26ac709 — Slice B staging seed plan
+    7ef508f — Slice C-ALT QA matrix seed (13 tenants, ~77 items, 8 BSRs, 25 RFQs)
+    bfb3f64 — Slice F seed update (catalog_visibility_policy_mode)
+    4e01f77 — Data hygiene audit (P0=0, P1=0)
+    3fe00a5 — Approval-gate QA (12/12 PASS)
+    ba76fb5 — Full textile-chain Playwright (8 blockers resolved)
+    092a8c9 — Post-deployment verification (55 passed / 3 skipped / 0 failed)
+    7239571 — Pre-launch cleanup design
+    a32530a — Cleanup deferral (QA matrix retained as active QA infrastructure)
+    (this)  — Slice H governance closure
+  Runtime QA result: 55 passed / 3 skipped (BLOCKED_BY_AUTH — not product failures) / 0 failed.
+  Spec: tests/e2e/full-textile-chain-runtime-qa.spec.ts. Target: https://app.texqtic.com.
+  Approval-gate QA: 12/12 PASS. Spec: tests/e2e/supplier-catalog-approval-gate.spec.ts.
+  QA matrix active: 13 tenants, ~77 catalog items, 8 BSRs, 25 RFQs, all 7 BSR states.
+  Cleanup status: DESIGN_COMPLETE — CLEANUP_DEFERRED. Slice C writes: NOT_AUTHORIZED.
+  Reason for deferral: QA matrix required for future B2B sub-family QA cycles
+    (Orders, Trades, DPP Passport Network, Escrow, Escalations, Settlement,
+     Certifications, Traceability, Audit Log).
+  Slice A SELECT-only inventory queries (INV-01–INV-16): AUTHORIZED on demand.
+  Open items preserved: OI-02 (svc-provider/aggregator auth gaps), OI-03 (test events in event_logs),
+    OI-04 (73 users without membership).
+  Governance closure artifact: docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md.
+  Launch blockers remaining: 9 B2B sub-families + cleanup + final governance decision.
+  Active delivery unit unchanged: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
 - TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-6.
   Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 ACTIVE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.

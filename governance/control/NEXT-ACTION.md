@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-29 (TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001 — VERIFIED_COMPLETE; Slice H governance closure; 11/11 Playwright E2E PASS; production https://app.texqtic.com)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-30 (TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES; Slice H governance closure; 55/58 full textile-chain Playwright PASS; 12/12 approval-gate PASS; cleanup deferred; full platform launch NOT YET AUTHORIZED)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -54,6 +54,18 @@ last_closed_unit_closure_basis: >-
   Supplier self-view regression verified (HIDDEN + APPROVED_BUYER_ONLY items visible to supplier).
   No product code changed in Slice G (test harness correction only — E2E-06 assertion).
   OQ-01/OQ-02/OQ-08 all dispositioned. No launch-blocking open questions.
+last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
+last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
+last_closed_governance_unit_date: 2026-04-30
+last_closed_governance_unit_note: >-
+  Slice H governance closure. Launch decision: CURRENT IMPLEMENTED B2B QA SURFACES VERIFIED;
+  FULL PLATFORM LAUNCH NOT YET AUTHORIZED. Runtime QA: 55 passed / 3 skipped / 0 failed.
+  Approval-gate QA: 12/12 PASS. Data hygiene: P0=0, P1=0.
+  QA matrix active (13 tenants, ~77 catalog items, 8 BSRs, 25 RFQs) — retained for future
+  B2B sub-family QA (Orders, Trades, DPP Passport Network, Escrow, Escalations, Settlement,
+  Certifications, Traceability, Audit Log). Cleanup deferred; Slice C NOT_AUTHORIZED.
+  Closure artifact: docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md.
+  Active delivery unit unchanged: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
 prior_closed_unit: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-
