@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-30 (TECS-B2B-ORDERS-LIFECYCLE-001 — VERIFIED_COMPLETE; Slice G governance closure; 10/10 Orders lifecycle Playwright PASS; full platform launch NOT YET AUTHORIZED)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 D-6 — VERIFIED_COMPLETE; D-6 public seam closed; 58/58 tests PASS)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,11 +11,11 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: IMPLEMENTATION_ACTIVE — TECS-DPP-PASSPORT-FOUNDATION-001 D-6 Public Published Passport Access ACTIVE (2026-05-09)
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-FOUNDATION-001 D-6 Public Published Passport Access VERIFIED_COMPLETE (2026-05-09)
 active_delivery_unit: TECS-DPP-PASSPORT-FOUNDATION-001
-active_delivery_unit_status: IMPLEMENTATION_ACTIVE
+active_delivery_unit_status: VERIFIED_COMPLETE
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE. D-6 ACTIVE.
+  TECS-DPP-PASSPORT-FOUNDATION-001 VERIFIED_COMPLETE. D-6 VERIFIED_COMPLETE.
   D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
   D-2 COMPLETE: commit 8a14242 (DPP view extensions: transformationId, lifecycleStateName, issuedAt).
   D-3 COMPLETE: commit 87bdcfe (dpp_passport_states table + RLS, passport identity/status route, maturity computation, DPPPassport.tsx UI).
@@ -24,10 +24,13 @@ active_delivery_unit_note: >-
   D-4 FK review (required by D-5): approved_by NOT NULL + ON DELETE SET NULL latent inconsistency — safe for D-5; needs future migration.
   D-5 COMPLETE (TECS-DPP-EXPORT-SHARE-001): commit b7fa9bb — GET /tenant/dpp/:nodeId/passport/export — authenticated tenant-internal export.
     publicationStatus: INTERNAL_EXPORT_ONLY. humanReviewRequired: true. Audit: tenant.dpp.passport.exported. 64/64 tests PASS.
-  D-6 ACTIVE (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId + .json — unauthenticated PUBLISHED passport access via public_token UUID.
+  D-6 VERIFIED_COMPLETE (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId — unauthenticated PUBLISHED passport access via public_token UUID.
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
-    QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
+    QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix.
+    .json suffix route intentionally absent: removed by hotfix 59f2dcd (find-my-way SyntaxError risk).
+    Base route GET /api/public/dpp/:publicPassportId is the canonical machine-readable JSON surface.
+    D6-S02 updated to assert unsafe route absent. 58/58 tests PASS. Commit: 5ba6db9 + D6-close.
 last_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-

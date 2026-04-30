@@ -650,8 +650,14 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
   });
 
   // ─── TECS-DPP-PUBLIC-QR-001 D-6: Public Published DPP Access ────────────────
-  // GET /api/public/dpp/:publicPassportId       — JSON view of a PUBLISHED DPP
-  // GET /api/public/dpp/:publicPassportId.json  — same payload, explicit Content-Type
+  // GET /api/public/dpp/:publicPassportId  — JSON view of a PUBLISHED DPP
+  //                                         (canonical machine-readable JSON surface)
+  //
+  // NOTE: GET /api/public/dpp/:publicPassportId.json was added in commit 5ba6db9 and
+  //       removed by hotfix 59f2dcd. The backslash-escaped route string caused a
+  //       find-my-way SyntaxError at Fastify init, crashing ALL routes. The .json
+  //       suffix route is intentionally not restored. This base route returns
+  //       application/json via Fastify defaults. See GOVERNANCE-CHANGELOG.md 2026-04-28.
   //
   // Access model:
   //   Phase 1: texqtic_public_lookup role — lookup dpp_passport_states by public_token

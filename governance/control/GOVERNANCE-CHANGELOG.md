@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-05-09 — CLOSED: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (Public Passport Seam Closure)
+
+```
+Unit:          TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (TECS-DPP-PASSPORT-NETWORK-D6-CLOSE-001)
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-09
+Verification:  58/58 tests PASS — server/src/__tests__/tecs-dpp-d6-public-passport.test.ts
+
+Root cause resolved:
+  D6-S02 regression introduced by hotfix 59f2dcd (2026-04-27): test expected
+  GET /dpp/:publicPassportId\.json route string in public.ts; hotfix had removed
+  that route to prevent find-my-way SyntaxError at Fastify init that crashed ALL routes.
+  Test was not updated at hotfix time.
+
+Route decision (Option B — no new route):
+  The base GET /api/public/dpp/:publicPassportId already returns application/json.
+  The .json suffix route was "same payload, explicit Content-Type" — no functional
+  difference. The unsafe backslash route is intentionally not restored.
+  Canonical machine-readable public passport endpoint: GET /api/public/dpp/:publicPassportId
+
+Files changed:
+  server/src/__tests__/tecs-dpp-d6-public-passport.test.ts
+    — Header: removed .json route from slice documentation
+    — D6-S02: updated assertion from "route declared" to "unsafe route intentionally absent"
+  server/src/routes/public.ts
+    — Comment block: corrected stale .json route reference; documented hotfix decision
+
+Safety:
+  ✅ No new Fastify route registered (no find-my-way backslash risk)
+  ✅ No schema/migration change
+  ✅ No auth or tenancy logic change
+  ✅ org_id isolation preserved
+  ✅ 58/58 D-6 tests PASS
+```
+
+---
+
 ## 2026-04-30 — CLOSED: TECS-B2B-ORDERS-LIFECYCLE-001 (Slice G Governance Closure)
 
 ```

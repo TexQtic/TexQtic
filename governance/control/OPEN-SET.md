@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-30 (TECS-B2B-ORDERS-LIFECYCLE-001 — VERIFIED_COMPLETE; 10/10 Orders lifecycle Playwright PASS; Slice G governance closure)
+**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-FOUNDATION-001 D-6 — VERIFIED_COMPLETE; D-6 public seam closed; 58/58 tests PASS)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -614,13 +614,14 @@
   Launch decision: TECS-B2B-ORDERS-LIFECYCLE-001 IS VERIFIED_COMPLETE. FULL PLATFORM LAUNCH IS NOT AUTHORIZED.
     Remaining launch blockers: Trades, DPP Passport Network (partial), Escrow/TradeTrust Pay,
     Escalations, Settlement, Certifications, Traceability, Audit Log — all unverified.
-- TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-6.
-  Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 ACTIVE.
+- TECS-DPP-PASSPORT-FOUNDATION-001 is VERIFIED_COMPLETE (2026-05-09) — D-6 VERIFIED_COMPLETE.
+  Status: VERIFIED_COMPLETE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 VERIFIED_COMPLETE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.
   D-4 key decisions: claim_type CHECK (9 allowed types); humanReviewRequired structural constant; org_id from dbContext (D-017-A); approved_by FK ON DELETE SET NULL (audit trail preserved); no public/buyer endpoints.
   D-4 FK review finding (required by D-5): approved_by NOT NULL + ON DELETE SET NULL creates latent inconsistency — user deletion fails (FK violation) rather than nullifying approver. Safe for D-5. Needs future migration: drop NOT NULL on approved_by OR change FK to ON DELETE RESTRICT.
   D-5 scope (TECS-DPP-EXPORT-SHARE-001): GET /tenant/dpp/:nodeId/passport/export — authenticated tenant-internal export only. No public route, no QR, no JSON-LD, no passportStatus mutation, no PDP linkage. publicationStatus: INTERNAL_EXPORT_ONLY structural constant. humanReviewRequired: true structural constant. Composes DppPassportFoundationView + approved evidence claims. Audit: tenant.dpp.passport.exported. 64/64 tests PASS. Commit: b7fa9bb.
-  D-6 scope (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId + .json variant — unauthenticated public access to PUBLISHED passports via public_token UUID. Migration 20260509000000_tecs_dpp_d6_public_token: public_token UUID column + UNIQUE constraint + partial index + RLS policy for texqtic_public_lookup + GRANT SELECT. Phase 1 uses texqtic_public_lookup (BYPASSRLS for PUBLISHED rows). Phase 2 uses withDbContext for tenant-scoped snapshot views. QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
+  D-6 scope (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId — unauthenticated public access to PUBLISHED passports via public_token UUID. Migration 20260509000000_tecs_dpp_d6_public_token: public_token UUID column + UNIQUE constraint + partial index + RLS policy for texqtic_public_lookup + GRANT SELECT. Phase 1 uses texqtic_public_lookup (BYPASSRLS for PUBLISHED rows). Phase 2 uses withDbContext for tenant-scoped snapshot views. QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
+  D-6 seam closure (TECS-DPP-PASSPORT-NETWORK-D6-CLOSE-001): .json suffix route intentionally absent (hotfix 59f2dcd removed it — find-my-way SyntaxError risk). Base route GET /api/public/dpp/:publicPassportId is canonical machine-readable JSON surface. D6-S02 updated to assert unsafe route absent. 58/58 tests PASS.
   Design artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md.
   Prerequisite audit: DPPPassport.tsx, GET /api/tenant/dpp/:nodeId, 3 DPP snapshot views, App.tsx routing,
     Shells.tsx wiring, DPP-SNAPSHOT-VIEWS-DISCOVERY.md, DPP-SNAPSHOT-VIEWS-DESIGN.md — all read and confirmed.

@@ -2,8 +2,13 @@
  * TECS-DPP-PUBLIC-QR-001 D-6 — Public QR Access / Published DPP
  *
  * Slice: D-6 — GET /api/public/dpp/:publicPassportId
- *              GET /api/public/dpp/:publicPassportId.json
  *              Migration: 20260509000000_tecs_dpp_d6_public_token
+ *
+ * NOTE: GET /api/public/dpp/:publicPassportId.json was introduced in D-6 commit 5ba6db9
+ *       then immediately removed by hotfix 59f2dcd. The backslash in the route string
+ *       caused a find-my-way SyntaxError at Fastify startup, crashing ALL routes.
+ *       The .json suffix route is intentionally not restored. The base route already
+ *       returns application/json. See D6-S02 and GOVERNANCE-CHANGELOG.md (2026-04-28).
  *
  * Test strategy:
  *   Group 1 (D6-S)  — Static: route presence + structure in public.ts (no DB)
@@ -54,10 +59,12 @@ describe('D6-S — Static: route presence + structure', () => {
     expect(src).toMatch(/fastify\.get\s*\(\s*['"]\/dpp\/:publicPassportId['"]/);
   });
 
-  it('D6-S02 — GET /dpp/:publicPassportId.json route declared in public.ts', () => {
-    // Source file has the string "\\.json" (two backslashes on disk) for find-my-way param suffix.
-    // readFileSync returns raw disk content, so the regex must match two literal backslashes.
-    expect(src).toMatch(/fastify\.get\s*\(\s*['"]\/dpp\/:publicPassportId\\\\.json['"]/);
+  it('D6-S02 â€" unsafe .json suffix route intentionally absent; base route is canonical JSON surface', () => {
+    // The route GET /dpp/:publicPassportId\.json was in D-6 commit 5ba6db9 then removed by
+    // hotfix 59f2dcd: backslash in find-my-way route string causes SyntaxError at Fastify init,
+    // crashing ALL routes. The base route already returns application/json (Fastify default).
+    // Canonical machine-readable public passport endpoint: GET /api/public/dpp/:publicPassportId
+    expect(src).not.toMatch(/fastify\.get\s*\(\s*['"]\/dpp\/:publicPassportId\\\\.json['"]/);
   });
 
   it('D6-S03 — publicPassportId validated as UUID', () => {
