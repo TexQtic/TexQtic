@@ -6029,16 +6029,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
    * PATCH /api/tenant/orders/:id/status
    * SM-driven order status transitions (GAP-ORDER-LC-001-BACKEND-INTEGRATION-001)
    *
-   * Transition rules (enforced by StateMachineService via allowed_transitions table):
-   *   PAYMENT_PENDING → CONFIRMED  → stored as DB PLACED
-   *   PLACED          → FULFILLED  → stored as DB PLACED (order_lifecycle_logs is semantic source of truth)
-   *   PAYMENT_PENDING → CANCELLED  → stored as DB CANCELLED
-   *   PLACED          → CANCELLED  → stored as DB CANCELLED
+   * Transition rules (SM validates via allowed_transitions; canonical from-state derived from lifecycle log):
+   *   PAYMENT_PENDING → CONFIRMED  → writes DB PLACED  (Option A: PLACED is legacy alias for CONFIRMED)
+   *   CONFIRMED       → FULFILLED  → writes DB PLACED  (Option A: PLACED is legacy alias for FULFILLED)
+   *   PAYMENT_PENDING → CANCELLED  → writes DB CANCELLED
+   *   CONFIRMED       → CANCELLED  → writes DB CANCELLED
    *   CANCELLED       → *          → REJECTED (terminal state)
    *
-   * Schema note: orders.status enum only has PAYMENT_PENDING | PLACED | CANCELLED.
-   * CONFIRMED and FULFILLED map to PLACED at the DB level; order_lifecycle_logs holds
-   * the canonical semantic state. This mapping will be removed when the enum is extended.
+   * DB schema note (ops migration 20260315000007): orders.status enum now includes
+   * PAYMENT_PENDING | PLACED | CONFIRMED | FULFILLED | CANCELLED.
+   * Option A retained: CONFIRMED and FULFILLED still write as DB PLACED for compatibility.
+   * Canonical semantic state lives in order_lifecycle_logs.to_state (read by serializeTenantOrder).
+   *
+   * Migration path to Option B (write semantic DB values directly):
+   *   Requires updating validate-rcp1-flow.ts (lines 245-247, 273, 283, 403) in a coordinated slice.
+   *   Frontend canonicalStatus() already handles both Option A and Option B db values correctly.
    *
    * Role gate: OWNER / ADMIN only (app-layer; D-5 / B1 preserved — app.roles GUC remains dormant).
    * Lifecycle log: written atomically by StateMachineService into order_lifecycle_logs.
@@ -6079,7 +6084,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         const order = await tx.order.findUnique({ where: { id: orderId } });
         if (!order) return { error: 'NOT_FOUND' as const };
 
-        const currentDbStatus = order.status; // PAYMENT_PENDING | PLACED | CANCELLED
+        const currentDbStatus = order.status; // DB value: PAYMENT_PENDING | PLACED | CANCELLED | CONFIRMED | FULFILLED (migration 20260315000007)
 
         // Derive canonical from-state from order_lifecycle_logs (semantic source of truth).
         // The DB status PLACED is ambiguous (CONFIRMED or FULFILLED), so the latest log
@@ -6122,9 +6127,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           return { error: 'SM_ERROR' as const, smStatus };
         }
 
-        // Map semantic requested status → DB OrderStatus enum value.
-        // Schema limitation: orders.status enum only has PAYMENT_PENDING | PLACED | CANCELLED.
-        // CONFIRMED and FULFILLED map to PLACED; order_lifecycle_logs holds the canonical state.
+        // Option A: CONFIRMED and FULFILLED still write as DB PLACED for backward compatibility.
+        // orders.status enum (migration 20260315000007) includes CONFIRMED and FULFILLED,
+        // but writing them directly (Option B) requires a coordinated update to
+        // validate-rcp1-flow.ts (lines 245-247, 273, 283, 403) in a dedicated slice.
+        // Canonical semantic state lives in order_lifecycle_logs.to_state — not in orders.status.
         const dbStatusUpdate: 'PLACED' | 'CANCELLED' =
           requestedStatus === 'CANCELLED' ? 'CANCELLED' : 'PLACED';
 

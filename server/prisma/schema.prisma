@@ -1429,6 +1429,9 @@ enum CartStatus {
 
 enum OrderStatus {
   PAYMENT_PENDING
+  /// @deprecated Legacy compatibility alias. Pre-migration orders and historical CONFIRMED/FULFILLED rows carry this value.
+  /// New lifecycle states use CONFIRMED or FULFILLED directly (Option B).
+  /// Removal requires a coordinated slice that also updates validate-rcp1-flow.ts (lines 245-247, 273, 283, 403).
   PLACED
   CANCELLED
   CONFIRMED
