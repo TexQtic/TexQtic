@@ -17,13 +17,13 @@
  * Target: https://app.texqtic.com
  * Mode: STATE-MUTATING — creates and transitions real orders against the QA tenant.
  *   One order is created per run (via POST /api/tenant/checkout).
- *   Requires an active cart with items for qa-buyer-a; if absent → ORD-01 is skipped
+ *   Requires an active cart with items for qa-b2b; if absent → ORD-01 is skipped
  *   and ORD-02 through ORD-05 cascade-skip via BLOCKED_BY_ORD01.
  *
  * Auth: Method A (file .auth/*.json) preferred; Method B (env vars) fallback.
  *
  * QA actors:
- *   qa-buyer-a  → OWNER in their tenant; primary actor for checkout + lifecycle transitions
+ *   qa-b2b      → OWNER in their B2B tenant; primary actor for checkout + lifecycle transitions
  *   qa-buyer-b  → OWNER in a DIFFERENT tenant; cross-tenant isolation probe (ORD-08)
  *   MEMBER actor → no .auth/qa-buyer-member.json available; ORD-06 and ORD-07 BLOCKED_BY_AUTH
  *   WL_ADMIN    → no .auth/qa-wl-admin.json available; ORD-09 BLOCKED_BY_AUTH
@@ -81,7 +81,7 @@ function loadStoredAuth(name: string): StoredAuthState | null {
   } catch { return null; }
 }
 
-const storedOwner  = loadStoredAuth('qa-buyer-a'); // OWNER in their B2B tenant
+const storedOwner  = loadStoredAuth('qa-b2b'); // qa-b2b — OWNER; primary actor for checkout + lifecycle
 const storedBuyer2 = loadStoredAuth('qa-buyer-b'); // OWNER in a different B2B tenant
 const FILE_AUTH_AVAILABLE = storedOwner !== null && storedBuyer2 !== null;
 
@@ -100,8 +100,8 @@ const AUTH_METHOD: 'file' | 'env' | 'none' =
   FILE_AUTH_AVAILABLE ? 'file' : ENV_AUTH_AVAILABLE ? 'env' : 'none';
 
 // ─── Session-scoped tokens (populated in beforeAll) ───────────────────────────
-let tokenOwner  = ''; // qa-buyer-a — primary actor (OWNER)
-let ownerOrgId  = ''; // qa-buyer-a's org UUID
+let tokenOwner  = ''; // qa-b2b — primary actor (OWNER)
+let ownerOrgId  = ''; // qa-b2b's org UUID
 let tokenBuyer2 = ''; // qa-buyer-b — cross-tenant probe actor (ORD-08)
 
 // ─── Runtime IDs (populated progressively by tests) ──────────────────────────
@@ -173,6 +173,33 @@ test.beforeAll(async ({ request }: { request: APIRequestContext }) => {
     tokenOwner  = await loginQA(request, QA_BUYER_A_EMAIL, QA_BUYER_A_PASSWORD, QA_BUYER_A_ORG_ID);
     ownerOrgId  = QA_BUYER_A_ORG_ID;
     tokenBuyer2 = await loginQA(request, QA_BUYER_B_EMAIL, QA_BUYER_B_PASSWORD, QA_BUYER_B_ORG_ID);
+  }
+  // Cart fixture: ensure qa-b2b has at least one item in cart for ORD-01 checkout.
+  if (tokenOwner) {
+    const cartCheckRes = await request.get(`${BASE_URL}/api/tenant/cart`, {
+      headers: authHeaders(tokenOwner),
+    });
+    const cartCheckBody = await cartCheckRes.json() as {
+      success: boolean;
+      data: { cart: { items: unknown[] } | null };
+    };
+    const existingCart = cartCheckBody.data?.cart;
+    const cartEmpty = !existingCart || !Array.isArray(existingCart.items) || existingCart.items.length === 0;
+    if (cartEmpty) {
+      const catalogRes = await request.get(`${BASE_URL}/api/tenant/catalog/items?limit=5`, {
+        headers: authHeaders(tokenOwner),
+      });
+      const catalogBody = await catalogRes.json() as {
+        data: { items: Array<{ id: string; moq: number; active: boolean }> };
+      };
+      const item = catalogBody.data?.items?.find((i) => i.active !== false) ?? catalogBody.data?.items?.[0];
+      if (item) {
+        await request.post(`${BASE_URL}/api/tenant/cart/items`, {
+          headers: authHeaders(tokenOwner),
+          data: { catalogItemId: item.id, quantity: item.moq ?? 1 },
+        });
+      }
+    }
   }
   // mainOrderId is NOT pre-populated — ORD-01 creates it.
   // ORD-02 through ORD-05 skip if mainOrderId remains empty.
@@ -395,7 +422,7 @@ test('ORD-05 detail: GET /api/tenant/orders/:id returns full lifecycle log chain
           realm: string;
           createdAt: string;
         }>;
-        grandTotal: number;
+        grandTotal: number | string; // Prisma Decimal serialized as string in JSON
         currency: string;
         items: unknown[];
       };
@@ -434,9 +461,8 @@ test('ORD-05 detail: GET /api/tenant/orders/:id returns full lifecycle log chain
     expect(logStates).toContain('FULFILLED');
   }
 
-  // Financial shape
-  expect(typeof order.grandTotal).toBe('number');
-  expect(order.grandTotal).toBeGreaterThan(0);
+  // Financial shape (grandTotal may be string-serialized Prisma Decimal — coerce to Number)
+  expect(Number(order.grandTotal)).toBeGreaterThan(0);
   expect(typeof order.currency).toBe('string');
   expect(order.currency.length).toBe(3); // ISO 4217 e.g. "USD"
 
@@ -469,7 +495,7 @@ test('ORD-07 member-deny: MEMBER PATCH /api/tenant/orders/:id/status → 403', a
 });
 
 // ─── ORD-08: Cross-tenant isolation — foreign order returns 404 ───────────────
-test('ORD-08 cross-tenant: qa-buyer-b cannot read qa-buyer-a order → 404', async ({
+test('ORD-08 cross-tenant: qa-buyer-b cannot read qa-b2b order → 404', async ({
   request,
 }: {
   request: APIRequestContext;
@@ -484,7 +510,7 @@ test('ORD-08 cross-tenant: qa-buyer-b cannot read qa-buyer-a order → 404', asy
     'BLOCKED_BY_ORD01: mainOrderId not set; no order to probe cross-tenant against'
   );
 
-  // qa-buyer-b sends GET for an order that belongs to qa-buyer-a's tenant.
+  // qa-buyer-b sends GET for an order that belongs to qa-b2b's tenant.
   // RLS (Supabase row-level security) scopes query to qa-buyer-b's org_id → order not found.
   const res = await request.get(
     `${BASE_URL}/api/tenant/orders/${mainOrderId}`,
