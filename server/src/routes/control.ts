@@ -2267,6 +2267,110 @@ const controlRoutes: FastifyPluginAsync = async fastify => {
     }
   });
 
+  // ─── TECS-B2B-ORDERS-LIFECYCLE-001 Slice E: Control-plane orders read ────────
+  /**
+   * GET /api/control/orders
+   * Read-only cross-tenant orders view (SUPER_ADMIN only).
+   *
+   * Query params:
+   *   orgId  : string (UUID) — REQUIRED — target tenant org
+   *   cursor?: string (UUID) — pagination cursor (last order ID from previous page)
+   *   limit? : number (1–100, default 20) — page size
+   *
+   * Auth: adminAuthMiddleware (global) + requireSuperAdminReadAccess (SUPER_ADMIN only)
+   * DB:   withAdminContext (app.is_admin=true, cross-tenant RLS bypass)
+   *
+   * Response: { orders, count, pagination: { limit, nextCursor, hasMore } }
+   * Invariants:
+   *   - Never mutates any row (GET only; no create/update/delete calls)
+   *   - orgId scopes all queries — no cross-tenant leakage
+   *   - Cursor from another org resolves to an empty page (no leaked row, no error)
+   */
+  {
+    // E1: explicit select shape for order_lifecycle_logs rows (control-plane variant)
+    type OLLAdminRow = { from_state: string | null; to_state: string; realm: string; created_at: Date };
+
+    function serializeAdminOrder(
+      rawOrder: Record<string, unknown> & { order_lifecycle_logs: OLLAdminRow[] }
+    ) {
+      const { order_lifecycle_logs, ...order } = rawOrder;
+      const total = order.total;
+      return {
+        ...order,
+        grandTotal: typeof total === 'number' ? total : total ?? null,
+        lifecycleState: order_lifecycle_logs[0]?.to_state ?? null,
+        lifecycleLogs: order_lifecycle_logs.map(l => ({
+          fromState: l.from_state,
+          toState:   l.to_state,
+          realm:     l.realm,
+          createdAt: l.created_at.toISOString(),
+        })),
+      };
+    }
+
+    fastify.get(
+      '/orders',
+      { preHandler: requireSuperAdminReadAccess },
+      async (request, reply) => {
+        const adminId = request.adminId ?? 'unknown';
+
+        const querySchema = z.object({
+          orgId:  z.string().uuid({ message: 'orgId must be a valid UUID' }),
+          cursor: z.string().uuid().optional(),
+          limit:  z.coerce.number().int().min(1).max(100).default(20),
+        });
+        const qResult = querySchema.safeParse(request.query);
+        if (!qResult.success) return sendValidationError(reply, qResult.error.errors);
+        const { orgId, cursor, limit } = qResult.data;
+
+        let rawOrders: Array<Record<string, unknown> & { order_lifecycle_logs: OLLAdminRow[] }>;
+        try {
+          rawOrders = await withAdminContext(async tx => {
+            return tx.order.findMany({
+              where: { tenantId: orgId },
+              include: {
+                items: true,
+                order_lifecycle_logs: {
+                  orderBy: { created_at: 'desc' },
+                  take: 5,
+                  select: { from_state: true, to_state: true, realm: true, created_at: true },
+                },
+              },
+              orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+              take: limit + 1,
+              ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+            }) as Array<Record<string, unknown> & { order_lifecycle_logs: OLLAdminRow[] }>;
+          });
+        } catch (err: unknown) {
+          if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2025') {
+            return sendError(reply, 'INVALID_CURSOR', 'Invalid or expired pagination cursor', 400);
+          }
+          throw err;
+        }
+
+        const hasMore    = rawOrders.length > limit;
+        const pageOrders = hasMore ? rawOrders.slice(0, limit) : rawOrders;
+        const nextCursor = hasMore ? (pageOrders[pageOrders.length - 1]?.id as string ?? null) : null;
+        const orders     = pageOrders.map(serializeAdminOrder);
+
+        await writeAuditLog(
+          prisma,
+          createAdminAudit(adminId, 'control.orders.read', 'order', {
+            orgId,
+            count: orders.length,
+            cursor: cursor ?? null,
+          }),
+        );
+
+        return sendSuccess(reply, {
+          orders,
+          count:      orders.length,
+          pagination: { limit, nextCursor, hasMore },
+        });
+      },
+    );
+  }
+
   // ─── G-022: Escalation governance routes ──────────────────────────────────
   // POST /api/control/escalations
   // POST /api/control/escalations/:id/upgrade

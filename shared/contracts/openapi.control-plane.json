@@ -3292,6 +3292,146 @@
           }
         }
       }
+    },
+    "/api/control/orders": {
+      "get": {
+        "summary": "List orders for a tenant (admin, cross-tenant, read-only)",
+        "description": "Returns paginated orders for the specified org (orgId required). SUPER_ADMIN only. Cursor-based pagination ordered by createdAt DESC, id DESC. Admin RLS bypass (is_admin=true). TECS-B2B-ORDERS-LIFECYCLE-001 Slice E.",
+        "security": [{ "adminJwt": [] }],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "query",
+            "required": true,
+            "description": "Target tenant org UUID (required — scopes all results to one tenant)",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Opaque pagination cursor. Obtain from pagination.nextCursor of a previous response.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orders returned for the specified org",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orders": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string", "format": "uuid" },
+                              "tenantId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "userId": { "type": "string", "format": "uuid" },
+                              "status": { "type": "string" },
+                              "grandTotal": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "currency": { "type": "string" },
+                              "lifecycleState": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "lifecycleLogs": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "fromState": {
+                                      "type": "string",
+                                      "nullable": true
+                                    },
+                                    "toState": { "type": "string" },
+                                    "realm": { "type": "string" },
+                                    "createdAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    }
+                                  }
+                                }
+                              },
+                              "items": {
+                                "type": "array",
+                                "items": { "type": "object" }
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        },
+                        "count": { "type": "integer" },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "nextCursor": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "hasMore": { "type": "boolean" },
+                            "limit": { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid orgId, cursor, or limit",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — SUPER_ADMIN role required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
