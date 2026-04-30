@@ -1986,6 +1986,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
       // Gate B.2: RLS-enforced query (no manual tenantId filter)
       // Tenant isolation enforced by: catalog_items tenant_id = app.current_org_id()
+      // Explicit select: policy-internal fields (catalogVisibilityPolicyMode, publicationPosture,
+      // priceDisclosurePolicyMode, tenantId) are excluded from the response.
       const items = await withDbContext(prisma, request.dbContext, async tx => {
         return await tx.catalogItem.findMany({
           where: {
@@ -1997,6 +1999,29 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
                 { sku: { contains: q, mode: 'insensitive' } },
               ],
             }),
+          },
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            description: true,
+            price: true,
+            active: true,
+            createdAt: true,
+            updatedAt: true,
+            moq: true,
+            imageUrl: true,
+            productCategory: true,
+            fabricType: true,
+            gsm: true,
+            material: true,
+            composition: true,
+            color: true,
+            widthCm: true,
+            construction: true,
+            certifications: true,
+            catalogStage: true,
+            stageAttributes: true,
           },
           orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
           take: limit + 1,
@@ -6784,10 +6809,15 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       }
 
       // ── 1. Query all 3 DPP views + passport state in one tenant-scoped transaction ──
-      const [productRows, lineageRows, certRows, passportStateRows] = await withDbContext(
-        prisma,
-        dbContext,
-        async tx => {
+      let productRows: DppProductRow[];
+      let lineageRows: DppLineageRow[];
+      let certRows: DppCertRow[];
+      let passportStateRows: DppPassportStateRow[];
+      try {
+        [productRows, lineageRows, certRows, passportStateRows] = await withDbContext(
+          prisma,
+          dbContext,
+          async tx => {
           const products = await tx.$queryRaw<DppProductRow[]>`
             SELECT
               node_id, org_id, batch_id, node_type, meta,
@@ -6831,7 +6861,11 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             DppPassportStateRow[],
           ];
         },
-      );
+        );
+      } catch (err) {
+        fastify.log.error({ err }, '[D3] passport GET failed');
+        return sendNotFound(reply, 'DPP passport not found or access denied');
+      }
 
       // ── 2. 404 if no product row — RLS may hide the node from this tenant ──
       if (productRows.length === 0) {
@@ -7011,6 +7045,24 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         }
 
         let claims: DppEvidenceClaimRow[];
+        // ── Node existence check: verify nodeId belongs to this tenant before querying claims ──
+        let nodeCheckRows: Array<{ node_id: string }>;
+        try {
+          nodeCheckRows = await withDbContext(prisma, dbContext, async tx => {
+            return tx.$queryRaw<Array<{ node_id: string }>>`
+              SELECT node_id FROM dpp_snapshot_products_v1
+              WHERE node_id = ${nodeId}::uuid
+              LIMIT 1
+            `;
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[D4] evidence-claims node-check failed');
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+        if (nodeCheckRows.length === 0) {
+          return sendNotFound(reply, 'DPP node not found or access denied');
+        }
+
         try {
           claims = await withDbContext(prisma, dbContext, async tx => {
             return tx.$queryRaw<DppEvidenceClaimRow[]>`
