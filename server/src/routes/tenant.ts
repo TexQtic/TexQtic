@@ -7028,6 +7028,265 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     },
   );
 
+  // ─── TECS-DPP-PASSPORT-NETWORK-005 Slice C: Governed Passport Status Transition ──
+  // PATCH /api/tenant/dpp/:nodeId/passport/status
+  //
+  // Legal transition matrix (per design artifact TECS-DPP-PASSPORT-NETWORK-002):
+  //   DRAFT       → INTERNAL     (ADMIN or MEMBER)
+  //   INTERNAL    → TRADE_READY  (ADMIN only; evidence gate: approvedCertCount>=1 AND lineageDepth>=1)
+  //   TRADE_READY → PUBLISHED    (ADMIN only; assigns public_token UUID if null)
+  //   PUBLISHED   → DRAFT        (ADMIN only; revokes public_token = null)
+  //   All other transitions: 422 ILLEGAL_TRANSITION
+  {
+    const LEGAL_TRANSITIONS: Partial<Record<DppPassportStatus, readonly DppPassportStatus[]>> = {
+      DRAFT:       ['INTERNAL'],
+      INTERNAL:    ['TRADE_READY'],
+      TRADE_READY: ['PUBLISHED'],
+      PUBLISHED:   ['DRAFT'],
+    };
+
+    // Transitions a MEMBER role may initiate (all others require ADMIN or OWNER)
+    const MEMBER_TRANSITIONS = new Set<string>(['DRAFT:INTERNAL']);
+
+    fastify.patch(
+      '/tenant/dpp/:nodeId/passport/status',
+      { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+      async (request, reply) => {
+        const { userId, userRole, tenantId } = request;
+
+        const dbContext = request.dbContext;
+        if (!dbContext) {
+          return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+        }
+
+        const paramsSchema = z.object({ nodeId: z.string().uuid('nodeId must be a valid UUID') });
+        const paramsResult = paramsSchema.safeParse(request.params);
+        if (!paramsResult.success) return sendValidationError(reply, paramsResult.error.errors);
+
+        const bodySchema = z.object({
+          targetStatus: z.enum(['DRAFT', 'INTERNAL', 'TRADE_READY', 'PUBLISHED']),
+          reason: z.string().trim().max(500).optional(),
+        });
+        const bodyResult = bodySchema.safeParse(request.body);
+        if (!bodyResult.success) return sendValidationError(reply, bodyResult.error.errors);
+
+        const { nodeId } = paramsResult.data;
+        const { targetStatus, reason } = bodyResult.data;
+
+        type TransitionOutcome =
+          | { error: 'NODE_NOT_FOUND' }
+          | { error: 'ILLEGAL_TRANSITION'; previousStatus: DppPassportStatus }
+          | { error: 'FORBIDDEN' }
+          | { error: 'EVIDENCE_GATE_FAILED'; approvedCertCount: number; lineageDepth: number }
+          | { noOp: true; previousStatus: DppPassportStatus; currentPublicToken: string | null }
+          | {
+              previousStatus: DppPassportStatus;
+              passportMaturity: DppMaturityLevel;
+              publicPassportId: string | null;
+              publicTokenAssigned: boolean;
+              reviewedAt: Date;
+            };
+
+        let outcome: TransitionOutcome;
+        try {
+          outcome = await withDbContext(prisma, dbContext, async tx => {
+            // 1. Verify node belongs to this tenant (RLS-scoped view)
+            const nodeCheck = await tx.$queryRaw<Array<{ node_id: string }>>`
+              SELECT node_id FROM dpp_snapshot_products_v1
+              WHERE node_id = ${nodeId}::uuid
+              LIMIT 1
+            `;
+            if (nodeCheck.length === 0) {
+              return { error: 'NODE_NOT_FOUND' as const };
+            }
+
+            // 2. Fetch current passport state (empty array = implied DRAFT)
+            const stateRows = await tx.$queryRaw<Array<{
+              status: string;
+              public_token: string | null;
+            }>>`
+              SELECT status, public_token
+              FROM dpp_passport_states
+              WHERE node_id = ${nodeId}::uuid
+              LIMIT 1
+            `;
+
+            const rawStatus = stateRows[0]?.status ?? 'DRAFT';
+            const knownStatuses = ['DRAFT', 'INTERNAL', 'TRADE_READY', 'PUBLISHED'] as const;
+            const previousStatus: DppPassportStatus = (knownStatuses as readonly string[]).includes(rawStatus)
+              ? (rawStatus as DppPassportStatus)
+              : 'DRAFT';
+
+            // 3. No-op: already at target status
+            if (previousStatus === targetStatus) {
+              return { noOp: true as const, previousStatus, currentPublicToken: stateRows[0]?.public_token ?? null };
+            }
+
+            // 4. Legal transition check
+            const allowedTargets = LEGAL_TRANSITIONS[previousStatus] ?? [];
+            if (!(allowedTargets as readonly string[]).includes(targetStatus)) {
+              return { error: 'ILLEGAL_TRANSITION' as const, previousStatus };
+            }
+
+            // 5. Role guard
+            const transitionKey = `${previousStatus}:${targetStatus}`;
+            const isAdminOrOwner = userRole === 'ADMIN' || userRole === 'OWNER';
+            if (!isAdminOrOwner && !MEMBER_TRANSITIONS.has(transitionKey)) {
+              return { error: 'FORBIDDEN' as const };
+            }
+
+            // 6. Evidence gate: INTERNAL → TRADE_READY requires cert + lineage evidence
+            if (previousStatus === 'INTERNAL' && targetStatus === 'TRADE_READY') {
+              const certRows = await tx.$queryRaw<Array<{ lifecycle_state_name: string }>>`
+                SELECT lifecycle_state_name
+                FROM dpp_snapshot_certifications_v1
+                WHERE node_id = ${nodeId}::uuid
+              `;
+              const approvedCertCount = certRows.filter(c => c.lifecycle_state_name === 'APPROVED').length;
+              const lineageRows = await tx.$queryRaw<Array<{ depth: number }>>`
+                SELECT depth FROM dpp_snapshot_lineage_v1
+                WHERE root_node_id = ${nodeId}::uuid
+              `;
+              const lineageDepth = lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
+              if (approvedCertCount < 1 || lineageDepth < 1) {
+                return { error: 'EVIDENCE_GATE_FAILED' as const, approvedCertCount, lineageDepth };
+              }
+            }
+
+            // 7. public_token management
+            const existingPublicToken = stateRows[0]?.public_token ?? null;
+            const newPublicToken: string | null =
+              targetStatus === 'PUBLISHED' ? (existingPublicToken ?? randomUUID()) :
+              targetStatus === 'DRAFT' ? null :
+              existingPublicToken;
+            const publicTokenAssigned = targetStatus === 'PUBLISHED' && existingPublicToken === null;
+
+            const now = new Date();
+            const newStateId = randomUUID();
+
+            // 8. Upsert dpp_passport_states (insert on first transition; update on subsequent)
+            await tx.$executeRaw`
+              INSERT INTO dpp_passport_states
+                (id, org_id, node_id, status, updated_at, reviewed_at, reviewed_by_user_id, public_token)
+              VALUES (
+                ${newStateId}::uuid,
+                ${dbContext.orgId}::uuid,
+                ${nodeId}::uuid,
+                ${targetStatus},
+                ${now},
+                ${now},
+                ${userId ?? null}::uuid,
+                ${newPublicToken}::uuid
+              )
+              ON CONFLICT (org_id, node_id)
+              DO UPDATE SET
+                status              = EXCLUDED.status,
+                updated_at          = EXCLUDED.updated_at,
+                reviewed_at         = EXCLUDED.reviewed_at,
+                reviewed_by_user_id = EXCLUDED.reviewed_by_user_id,
+                public_token        = EXCLUDED.public_token
+            `;
+
+            // 9. Re-compute maturity with updated status
+            const certRowsPost = await tx.$queryRaw<Array<{ lifecycle_state_name: string }>>`
+              SELECT lifecycle_state_name
+              FROM dpp_snapshot_certifications_v1
+              WHERE node_id = ${nodeId}::uuid
+            `;
+            const approvedCertCountPost = certRowsPost.filter(c => c.lifecycle_state_name === 'APPROVED').length;
+
+            const lineageRowsPost = await tx.$queryRaw<Array<{ depth: number }>>`
+              SELECT depth FROM dpp_snapshot_lineage_v1
+              WHERE root_node_id = ${nodeId}::uuid
+            `;
+            const lineageDepthPost = lineageRowsPost.length > 0
+              ? Math.max(...lineageRowsPost.map(r => r.depth))
+              : 0;
+
+            const passportMaturity = computeDppMaturity({
+              approvedCertCount: approvedCertCountPost,
+              lineageDepth: lineageDepthPost,
+              passportStatus: targetStatus,
+            });
+
+            return {
+              previousStatus,
+              passportMaturity,
+              publicPassportId: newPublicToken,
+              publicTokenAssigned,
+              reviewedAt: now,
+            };
+          });
+        } catch (err) {
+          fastify.log.error({ err }, '[SliceC] passport PATCH /status failed');
+          return sendError(reply, 'INTERNAL_ERROR', 'Passport status update failed', 500);
+        }
+
+        // Handle error outcomes
+        if ('error' in outcome) {
+          if (outcome.error === 'NODE_NOT_FOUND') {
+            return sendNotFound(reply, 'DPP node not found or access denied');
+          }
+          if (outcome.error === 'ILLEGAL_TRANSITION') {
+            return sendError(reply, 'ILLEGAL_TRANSITION', `Transition from ${outcome.previousStatus} to ${targetStatus} is not permitted`, 422);
+          }
+          if (outcome.error === 'FORBIDDEN') {
+            return sendError(reply, 'FORBIDDEN', 'Insufficient permissions for this transition', 403);
+          }
+          // outcome.error === 'EVIDENCE_GATE_FAILED'
+          return sendError(reply, 'EVIDENCE_GATE_FAILED', 'Node does not meet evidence requirements for this transition', 422);
+        }
+
+        // No-op: already at target status — return current state without writing
+        if ('noOp' in outcome) {
+          return sendSuccess(reply, {
+            passport: {
+              nodeId,
+              passportStatus: outcome.previousStatus,
+              passportMaturity: computeDppMaturity({ approvedCertCount: 0, lineageDepth: 0, passportStatus: outcome.previousStatus }),
+              publicPassportId: outcome.currentPublicToken,
+              reviewedAt: null,
+            },
+            transition: { previousStatus: outcome.previousStatus, targetStatus, changed: false },
+          });
+        }
+
+        // Write audit log after successful transaction commit
+        await writeAuditLog(prisma, {
+          tenantId: tenantId ?? null,
+          realm: 'TENANT',
+          actorType: 'USER',
+          actorId: userId ?? null,
+          action: 'tenant.dpp.passport.status_changed',
+          entity: 'traceability_node',
+          entityId: nodeId,
+          metadataJson: {
+            nodeId,
+            previousStatus: outcome.previousStatus,
+            targetStatus,
+            reason: reason ?? null,
+            publicTokenAssigned: outcome.publicTokenAssigned,
+          },
+        });
+
+        return sendSuccess(reply, {
+          passport: {
+            nodeId,
+            passportStatus: targetStatus,
+            passportMaturity: outcome.passportMaturity,
+            publicPassportId: outcome.publicPassportId,
+            reviewedAt: outcome.reviewedAt.toISOString(),
+          },
+          transition: {
+            previousStatus: outcome.previousStatus,
+            targetStatus,
+            changed: true,
+          },
+        });
+      },
+    );
+  }
+
   // ─── TECS-DPP-AI-EVIDENCE-LINKAGE-001 D-4: DPP Evidence Claims ────────────────
   // GET  /api/tenant/dpp/:nodeId/evidence-claims
   // POST /api/tenant/dpp/:nodeId/evidence-claims
