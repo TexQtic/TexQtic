@@ -2484,6 +2484,7 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           FROM catalog_items
           WHERE id = ${itemId}::uuid
             AND active = true
+            AND publication_posture != 'B2C_PUBLIC'
         `;
       });
 
@@ -3288,9 +3289,13 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
         request.dbContext.orgId,
       );
 
-      // Build non-certification AND-composed filters
+      // Build non-certification AND-composed filters.
+      // Channel-eligibility gate: B2C_PUBLIC items are intentionally excluded from B2B buyer
+      // browse surfaces. Use BOTH posture for cross-channel items. (POLICY_B — consistent with
+      // the RFQ path which already gates on B2B_PUBLIC | BOTH via SQL.)
       const filterClauses: Prisma.CatalogItemWhereInput[] = [
         { tenantId: supplierOrgId, active: true },
+        { publicationPosture: { not: 'B2C_PUBLIC' } },
       ];
 
       if (q && q.trim().length > 0) {
