@@ -25,8 +25,8 @@
  * QA actors:
  *   qa-b2b      → OWNER in their B2B tenant; primary actor for checkout + lifecycle transitions
  *   qa-buyer-b  → OWNER in a DIFFERENT tenant; cross-tenant isolation probe (ORD-08)
- *   MEMBER actor → no .auth/qa-buyer-member.json available; ORD-06 and ORD-07 BLOCKED_BY_AUTH
- *   WL_ADMIN    → no .auth/qa-wl-admin.json available; ORD-09 BLOCKED_BY_AUTH
+ *   MEMBER actor → .auth/qa-buyer-member.json (qa.wl.member@texqtic.com, MEMBER in QA WL tenant)
+ *   WL_ADMIN    → .auth/qa-wl-admin.json (qa.wl@texqtic.com, OWNER in QA WL tenant)
  *
  * Lifecycle state model (Option A — order_lifecycle_logs is canonical):
  *   orders.status DB field may read "PLACED" for CONFIRMED/FULFILLED semantic states.
@@ -81,8 +81,10 @@ function loadStoredAuth(name: string): StoredAuthState | null {
   } catch { return null; }
 }
 
-const storedOwner  = loadStoredAuth('qa-b2b'); // qa-b2b — OWNER; primary actor for checkout + lifecycle
-const storedBuyer2 = loadStoredAuth('qa-buyer-b'); // OWNER in a different B2B tenant
+const storedOwner   = loadStoredAuth('qa-b2b');          // qa-b2b — OWNER; primary actor for checkout + lifecycle
+const storedBuyer2  = loadStoredAuth('qa-buyer-b');      // OWNER in a different B2B tenant
+const storedMember  = loadStoredAuth('qa-buyer-member'); // MEMBER role in QA WL tenant (ORD-06/07)
+const storedWlAdmin = loadStoredAuth('qa-wl-admin');     // WL_ADMIN (OWNER in QA WL tenant) (ORD-09)
 const FILE_AUTH_AVAILABLE = storedOwner !== null && storedBuyer2 !== null;
 
 // ─── Method B: env-var credentials (fallback) ─────────────────────────────────
@@ -100,9 +102,11 @@ const AUTH_METHOD: 'file' | 'env' | 'none' =
   FILE_AUTH_AVAILABLE ? 'file' : ENV_AUTH_AVAILABLE ? 'env' : 'none';
 
 // ─── Session-scoped tokens (populated in beforeAll) ───────────────────────────
-let tokenOwner  = ''; // qa-b2b — primary actor (OWNER)
-let ownerOrgId  = ''; // qa-b2b's org UUID
-let tokenBuyer2 = ''; // qa-buyer-b — cross-tenant probe actor (ORD-08)
+let tokenOwner   = ''; // qa-b2b — primary actor (OWNER)
+let ownerOrgId   = ''; // qa-b2b's org UUID
+let tokenBuyer2  = ''; // qa-buyer-b — cross-tenant probe actor (ORD-08)
+let tokenMember  = ''; // qa-buyer-member — MEMBER role (ORD-06/07)
+let tokenWlAdmin = ''; // qa-wl-admin — WL_ADMIN/OWNER in QA WL tenant (ORD-09)
 
 // ─── Runtime IDs (populated progressively by tests) ──────────────────────────
 let mainOrderId        = ''; // set by ORD-01 on successful checkout
@@ -166,9 +170,11 @@ function captureResponse(body: unknown): void {
 // ─── Before all: authenticate QA actors ──────────────────────────────────────
 test.beforeAll(async ({ request }: { request: APIRequestContext }) => {
   if (AUTH_METHOD === 'file') {
-    tokenOwner  = storedOwner!.token;
-    ownerOrgId  = storedOwner!.orgId;
-    tokenBuyer2 = storedBuyer2?.token ?? '';
+    tokenOwner   = storedOwner!.token;
+    ownerOrgId   = storedOwner!.orgId;
+    tokenBuyer2  = storedBuyer2?.token  ?? '';
+    tokenMember  = storedMember?.token  ?? '';
+    tokenWlAdmin = storedWlAdmin?.token ?? '';
   } else if (AUTH_METHOD === 'env') {
     tokenOwner  = await loginQA(request, QA_BUYER_A_EMAIL, QA_BUYER_A_PASSWORD, QA_BUYER_A_ORG_ID);
     ownerOrgId  = QA_BUYER_A_ORG_ID;
@@ -471,27 +477,71 @@ test('ORD-05 detail: GET /api/tenant/orders/:id returns full lifecycle log chain
   expect(order.items.length).toBeGreaterThan(0);
 });
 
-// ─── ORD-06: MEMBER role — own-orders scope (BLOCKED_BY_AUTH) ────────────────
-test('ORD-06 member-scope: MEMBER GET /api/tenant/orders sees only own orders', async () => {
+// ─── ORD-06: MEMBER role — own-orders scope ─────────────────────────────────
+test('ORD-06 member-scope: MEMBER GET /api/tenant/orders sees only own orders', async ({
+  request,
+}: {
+  request: APIRequestContext;
+}) => {
   test.skip(
-    true,
-    'BLOCKED_BY_AUTH: no MEMBER role auth state available; ' +
-    '.auth/qa-buyer-member.json does not exist. ' +
-    'To unblock: run pnpm exec tsx tests/e2e/setup-auth-state.ts with a MEMBER-role QA user ' +
-    'and save the token to .auth/qa-buyer-member.json'
+    tokenMember.length === 0,
+    'BLOCKED_BY_AUTH: no MEMBER token available (.auth/qa-buyer-member.json missing or invalid)'
   );
+
+  // MEMBER role: GET /api/tenant/orders — canReadTenantWideOrders=false adds WHERE userId= filter.
+  // Response is 200 with an array of the MEMBER's own orders (empty list is a valid safe state).
+  const res = await request.get(`${BASE_URL}/api/tenant/orders`, {
+    headers: authHeaders(tokenMember),
+  });
+  expect(res.status()).toBe(200);
+  const body = await res.json() as {
+    success: boolean;
+    data: { orders: Array<{ userId?: string }>; count: number; pagination: unknown };
+  };
+  expect(body.success).toBe(true);
+  captureResponse(body);
+
+  // Valid structure: orders array is present
+  expect(Array.isArray(body.data?.orders)).toBe(true);
+
+  // If multiple orders returned, all must share the same userId (MEMBER's own records only)
+  const orders = body.data.orders;
+  if (orders.length > 1) {
+    const firstUserId = orders[0].userId;
+    for (const o of orders) {
+      expect(o.userId).toBe(firstUserId);
+    }
+  }
 });
 
-// ─── ORD-07: MEMBER role — PATCH denied (BLOCKED_BY_AUTH) ────────────────────
-test('ORD-07 member-deny: MEMBER PATCH /api/tenant/orders/:id/status → 403', async () => {
+// ─── ORD-07: MEMBER role — PATCH denied ─────────────────────────────────────
+test('ORD-07 member-deny: MEMBER PATCH /api/tenant/orders/:id/status → 403', async ({
+  request,
+}: {
+  request: APIRequestContext;
+}) => {
   test.skip(
-    true,
-    'BLOCKED_BY_AUTH: no MEMBER role auth state available; ' +
-    '.auth/qa-buyer-member.json does not exist. ' +
-    'The route gate at tenant.ts enforces OWNER/ADMIN only; ' +
-    'MEMBER user would receive { success: false, error: { code: "FORBIDDEN" } } with HTTP 403. ' +
-    'Unblock by provisioning a MEMBER-role QA user and capturing .auth/qa-buyer-member.json'
+    tokenMember.length === 0,
+    'BLOCKED_BY_AUTH: no MEMBER token available (.auth/qa-buyer-member.json missing or invalid)'
   );
+
+  // MEMBER role: PATCH /api/tenant/orders/:id/status → 403 FORBIDDEN.
+  // Route gate (tenant.ts) checks role before DB lookup: only OWNER/ADMIN may mutate status.
+  // A MEMBER token always receives FORBIDDEN regardless of order ownership.
+  // Use mainOrderId if captured; fall back to a sentinel UUID (role gate fires before RLS).
+  const targetId = mainOrderId.length > 0 ? mainOrderId : '00000000-0000-4000-8000-000000000001';
+  const res = await request.patch(
+    `${BASE_URL}/api/tenant/orders/${targetId}/status`,
+    {
+      headers: authHeaders(tokenMember),
+      data: { status: 'CONFIRMED' },
+    }
+  );
+  expect(res.status()).toBe(403);
+  const body = await res.json() as { success: boolean; error: { code: string } };
+  expect(body.success).toBe(false);
+  expect(body.error?.code).toBe('FORBIDDEN');
+  captureResponse(body);
 });
 
 // ─── ORD-08: Cross-tenant isolation — foreign order returns 404 ───────────────
@@ -524,15 +574,34 @@ test('ORD-08 cross-tenant: qa-buyer-b cannot read qa-b2b order → 404', async (
   captureResponse(body);
 });
 
-// ─── ORD-09: WL_ADMIN Orders view (BLOCKED_BY_AUTH) ──────────────────────────
-test('ORD-09 wl-admin: WL_ADMIN can view Orders panel for managed tenants', async () => {
+// ─── ORD-09: WL_ADMIN Orders view ───────────────────────────────────────────
+test('ORD-09 wl-admin: WL_ADMIN can view Orders panel for managed tenants', async ({
+  request,
+}: {
+  request: APIRequestContext;
+}) => {
   test.skip(
-    true,
-    'BLOCKED_BY_AUTH: no WL_ADMIN auth state available; ' +
-    '.auth/qa-wl-admin.json does not exist. ' +
-    'To unblock: provision a WL_ADMIN QA user and capture .auth/qa-wl-admin.json ' +
-    'via pnpm exec tsx tests/e2e/setup-auth-state.ts'
+    tokenWlAdmin.length === 0,
+    'BLOCKED_BY_AUTH: no WL_ADMIN token available (.auth/qa-wl-admin.json missing or invalid)'
   );
+
+  // WL_ADMIN (OWNER role in QA WL tenant): GET /api/tenant/orders → 200.
+  // canReadTenantWideOrders=true for OWNER → no userId filter; sees all tenant orders.
+  const res = await request.get(`${BASE_URL}/api/tenant/orders`, {
+    headers: authHeaders(tokenWlAdmin),
+  });
+  expect(res.status()).toBe(200);
+  const body = await res.json() as {
+    success: boolean;
+    data: { orders: unknown[]; count: number; pagination: unknown };
+  };
+  expect(body.success).toBe(true);
+  captureResponse(body);
+
+  // Valid structure: orders array, count, and pagination all present
+  expect(Array.isArray(body.data?.orders)).toBe(true);
+  expect(typeof body.data?.count).toBe('number');
+  expect(body.data?.pagination).toBeDefined();
 });
 
 // ─── ORD-10: Anti-leakage scan across all Orders API responses ────────────────
