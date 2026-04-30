@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-30 (TECS-B2B-ORDERS-LIFECYCLE-001 — VERIFIED_COMPLETE; Slice G governance closure; 10/10 Orders lifecycle Playwright PASS; full platform launch NOT YET AUTHORIZED)
+**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — VERIFIED_COMPLETE; DPP Passport Network productization packet A–G closed; 10/10 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,54 +11,43 @@
 
 ```yaml
 snapshot_date: 2026-05-09
-snapshot_unit: TECS-DPP-PASSPORT-FOUNDATION-001
+snapshot_unit: TECS-DPP-PASSPORT-NETWORK-CLOSE-001
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
-current_governance_posture: HOLD-FOR-BOUNDARY-TIGHTENING
-current_open_design_unit: TECS-DPP-PASSPORT-FOUNDATION-001
-current_open_design_unit_status: IMPLEMENTATION_ACTIVE
-current_open_design_unit_artifact: docs/TECS-DPP-PASSPORT-FOUNDATION-001-DESIGN-v1.md
+current_governance_posture: HOLD-FOR-AUTHORIZATION
+current_open_design_unit: NONE
+current_open_design_unit_status: HOLD_FOR_AUTHORIZATION
+current_open_design_unit_artifact: N/A
 current_open_design_unit_note: >-
-  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-05-09). D-6 ACTIVE.
-  D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
-  D-2 COMPLETE: commit 8a14242 (DPP snapshot view extensions — transformationId, lifecycleStateName, issuedAt).
-  D-3 COMPLETE: commit 87bdcfe (dpp_passport_states DDL + RLS, computeDppMaturity, GET /api/tenant/dpp/:nodeId/passport, DPPPassport.tsx additive section).
-  D-4 COMPLETE: commit e9a8b3a — dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes,
-    live aiExtractedClaimsCount in passport, humanReviewRequired structural constant, 88/88 tests PASS.
-  D-4 FK review (required by D-5): approved_by NOT NULL + ON DELETE SET NULL latent inconsistency — safe for D-5; needs future migration.
-  D-5 COMPLETE (TECS-DPP-EXPORT-SHARE-001): commit b7fa9bb — GET /tenant/dpp/:nodeId/passport/export — authenticated tenant-internal export.
-    publicationStatus: INTERNAL_EXPORT_ONLY. humanReviewRequired: true. Audit: tenant.dpp.passport.exported. 64/64 tests PASS.
-  D-6 ACTIVE (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId + .json — unauthenticated PUBLISHED passport access via public_token UUID.
-    Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
-    Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
-    QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-B2B-ORDERS-LIFECYCLE-001
+  TECS-DPP-PASSPORT-NETWORK-CLOSE-001 VERIFIED_COMPLETE (2026-05-09).
+  DPP Passport Network productization packet Slices A–G fully implemented and runtime-verified.
+  No active delivery unit. Next unit requires explicit Paresh authorization.
+  Next recommended candidate: TECS-DPP-PASSPORT-NETWORK-010 (Expansion Design Packet).
+  Prior: TECS-DPP-PASSPORT-FOUNDATION-001 D-1 through D-6 all COMPLETE.
+  All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674).
+latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-CLOSE-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-04-30 (Slice G governance closure)
+latest_verified_product_close_date: 2026-05-09 (CLOSE-001 governance closure)
 latest_verified_product_close_verification: >-
-  10/10 Orders lifecycle Playwright E2E PASS against https://app.texqtic.com (2026-04-30).
-  Slices A–G all PASS: repo-truth audit, design artifact, status mapping, backend integration tests,
-  frontend unit tests, cursor pagination, control-plane view, runtime QA (F + F2).
-  ORD-01/ORD-02/ORD-03/ORD-04/ORD-05/ORD-06/ORD-07/ORD-08/ORD-09/ORD-10 all PASS.
-  Backend: 39/39 integration tests PASS. Frontend: 113/113 unit test assertions PASS.
-  TypeScript tsc --noEmit: not re-run in Slice G (governance-only slice; no code changes).
+  10/10 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
+  Productization packet Slices A–G all PASS.
+  Slice A (e3d81c5): UI label maps. Slice B (85da489): Maturity ladder.
+  Slice C (f5a36f9): Status transition API. Slice D (587acdf): GLOBAL_DPP reachable.
+  Slice E (77538f2): Public buyer page. Slice F (bfb8f25): QR label. Slice G (ce6b674): AI Passport Assistant.
+  Unit tests: 22 global-maturity, 50 status-transition, 62 d6-public, 88 d4-evidence, 64 d5-export all PASS.
+  TypeScript tsc --noEmit: CLEAN (0 errors).
 latest_verified_product_close_safety_boundaries: |
-  org_id_tenant_isolation: verified (withDbContext + FORCE RLS on orders/order_items/order_lifecycle_logs)
-  member_own_scope_enforcement: verified (ORD-06; MEMBER sees only own userId-scoped orders)
-  member_patch_forbidden: verified (ORD-07; 403 FORBIDDEN; role gate fires before RLS)
-  cross_tenant_404_not_403: verified (ORD-08; no existence leak)
-  terminal_state_immutable: verified (FULFILLED/CANCELLED; no further transitions)
-  order_lifecycle_logs_immutable: verified (append-only; UPDATE/DELETE blocked by RLS)
-  checkoutUserId_from_dbContext_not_body: verified (tenant.ts line 5797)
-  no_escrow_fk_on_order: verified (domain boundary §4)
-  no_dpp_fk_on_order: verified (domain boundary §4.5)
-  no_supplier_side_order_lifecycle: verified (domain boundary §4.6)
-  no_rfq_to_order_conversion: verified (domain boundary §4.2)
-latest_verified_product_close_tenant_isolation: verified (org_id scoping enforced; buyer identity from dbContext; cross-tenant returns 404; MEMBER own-userId scoping)
-latest_verified_product_close_human_review_required: N/A (Orders lifecycle unit; no AI-generated output; no human-review gate required)
+  org_id_tenant_isolation: verified (withDbContext + FORCE RLS; no cross-tenant data leakage)
+  passport_status_gate: verified (auth required for PATCH; unauth returns 401)
+  public_endpoint_anti_leakage: verified (no org_id/nodeId/supplierOrgId in public response)
+  d6_json_suffix_route_absent: verified (find-my-way safety; DPP-E2E-03 confirms 404 not crash)
+  server_stability_after_probe: verified (DPP-E2E-04: server returns 200 after .json probe)
+  advisory_only_assistant: verified (buildPassportGuidance() deterministic; no LLM calls; no mutations)
+  full_platform_launch: NOT_AUTHORIZED
+latest_verified_product_close_tenant_isolation: verified (org_id scoping enforced; buyer identity from dbContext; public route: no tenant fields exposed)
+latest_verified_product_close_human_review_required: N/A (Passport maturity derived from evidence claims; AI Passport Assistant is advisory-only, deterministic, no external calls)
 latest_verified_product_close_commits: >-
-  Repo-truth audit 1e45545. Design 92c17e3. Slice A 79bcf5b. Slice B 4c99e9b.
-  Slice C 0d0f73c. Slice D 95f7c71. Slice E 11fdaa8. Slice F 79a2c36 + 368804d.
-  Slice F2 8bff934. Slice G governance closure (this update).
+  D-6 close 3e5303a. Design d42ec8a. Slice A e3d81c5. Slice B 85da489. Slice C f5a36f9.
+  Slice D 587acdf. Slice E 77538f2. Slice F bfb8f25. Slice G ce6b674. Close-001 governance (this update).
 qa_matrix_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 qa_matrix_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 qa_matrix_closure_date: 2026-04-30

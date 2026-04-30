@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-002 — DESIGN_COMPLETE; DPP Passport Network ladder design artifact created; no schema/route/UI changes; pending Paresh authorization for implementation slices)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — VERIFIED_COMPLETE; DPP Passport Network productization packet A–G closed; 10/10 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,53 +11,44 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: DESIGN_COMPLETE — TECS-DPP-PASSPORT-NETWORK-002 DPP Passport Network Ladder DESIGN_COMPLETE (2026-05-09); awaiting Paresh authorization for implementation slices
-active_delivery_unit: TECS-DPP-PASSPORT-NETWORK-002
-active_delivery_unit_status: DESIGN_COMPLETE
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-CLOSE-001 DPP Passport Network Productization Packet A–G VERIFIED_COMPLETE (2026-05-09); awaiting Paresh authorization for next unit
+active_delivery_unit: NONE — awaiting Paresh authorization
+active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-NETWORK-002 DESIGN_COMPLETE. Design artifact: docs/TECS-DPP-PASSPORT-NETWORK-002-DESIGN-v1.md.
-  Platform brand: TexQtic DPP Passport Network. 4-tier Lite-to-Global ladder defined:
-    L1 LOCAL_TRUST (Bronze), L2 TRADE_READY (Silver), L3 COMPLIANCE (Gold), L4 GLOBAL_DPP (Platinum).
-  Current maturity ceiling: TRADE_READY (L2) — COMPLIANCE and GLOBAL_DPP reserved (not implemented).
-  10 open decision gates Q-01–Q-10 pending Paresh authorization.
-  7 future implementation slices A–G identified (none authorized).
-  D-6 anchor: route surface locked to commit 3e5303a (GET /api/public/dpp/:publicPassportId only).
-  No schema/route/migration/UI changes in this unit. 58/58 tests remain PASS.
-  Prior: TECS-DPP-PASSPORT-FOUNDATION-001 VERIFIED_COMPLETE. D-6 VERIFIED_COMPLETE.
-  D-1 COMPLETE: commit e524b0a (node_certifications join table DDL + RLS).
-  D-2 COMPLETE: commit 8a14242 (DPP view extensions: transformationId, lifecycleStateName, issuedAt).
-  D-3 COMPLETE: commit 87bdcfe (dpp_passport_states table + RLS, passport identity/status route, maturity computation, DPPPassport.tsx UI).
-  D-4 COMPLETE: commit e9a8b3a — dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes,
-    live aiExtractedClaimsCount in passport, humanReviewRequired structural constant, 88/88 tests PASS.
-  D-4 FK review (required by D-5): approved_by NOT NULL + ON DELETE SET NULL latent inconsistency — safe for D-5; needs future migration.
-  D-5 COMPLETE (TECS-DPP-EXPORT-SHARE-001): commit b7fa9bb — GET /tenant/dpp/:nodeId/passport/export — authenticated tenant-internal export.
-    publicationStatus: INTERNAL_EXPORT_ONLY. humanReviewRequired: true. Audit: tenant.dpp.passport.exported. 64/64 tests PASS.
-  D-6 VERIFIED_COMPLETE (TECS-DPP-PUBLIC-QR-001): GET /api/public/dpp/:publicPassportId — unauthenticated PUBLISHED passport access via public_token UUID.
-    Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
-    Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
-    QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix.
-    .json suffix route intentionally absent: removed by hotfix 59f2dcd (find-my-way SyntaxError risk).
-    Base route GET /api/public/dpp/:publicPassportId is the canonical machine-readable JSON surface.
-    D6-S02 updated to assert unsafe route absent. 58/58 tests PASS. Commit: 5ba6db9 + D6-close.
-last_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
+  TECS-DPP-PASSPORT-NETWORK-CLOSE-001 VERIFIED_COMPLETE (2026-05-09).
+  DPP Passport Network productization packet (Slices A–G) fully implemented and runtime-verified.
+  Commits: design d42ec8a; Slice A e3d81c5; Slice B 85da489; Slice C f5a36f9;
+    Slice D 587acdf; Slice E 77538f2; Slice F bfb8f25; Slice G ce6b674; Close-001 governance.
+  10/10 E2E PASS against https://app.texqtic.com. tsc --noEmit CLEAN. 286/286 closure-relevant unit tests PASS.
+  Next recommended unit: TECS-DPP-PASSPORT-NETWORK-010 — Passport Network Expansion Design Packet.
+  Do NOT open next unit without explicit Paresh authorization.
+  Adjacent deferred findings (carry-forward; not to be implemented without authorization):
+    1. QR image generation — decision-gated (no qrcode dep authorized)
+    2. JSON-LD markup — design-gated to GLOBAL_DPP tier (Q-07)
+    3. aiExtractedClaimsCount=0 on public route — GUC mismatch deferred
+    4. Public route rate limiting — before-GA security requirement
+    5. White-label DPP naming — future work (Q-10)
+    6. DPP expansion packet — evidence vault, trade linkage, real AI assistant architecture
+    7. D2/D3 slice boundary supersession tests — temporal scope guards; do not modify
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-CLOSE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  10/10 Orders lifecycle Playwright tests PASS against https://app.texqtic.com (2026-04-30).
-  ORD-01: checkout → PAYMENT_PENDING visible. ORD-02: CONFIRM. ORD-03: FULFILL (terminal).
-  ORD-04: CANCEL PAYMENT_PENDING. ORD-05: lifecycle history chain. ORD-06: MEMBER own-scope.
-  ORD-07: MEMBER PATCH → 403 FORBIDDEN. ORD-08: cross-tenant 404. ORD-09: WL_ADMIN mirror.
-  ORD-10: no 5xx / no data leaks. Backend 39/39 integration tests PASS. Frontend 113/113 assertions PASS.
+  10/10 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
+  DPP-E2E-01: health 200. DPP-E2E-02: unknown UUID → 404. DPP-E2E-03: .json suffix → 404 (D-6 contract).
+  DPP-E2E-04: server intact after .json probe. DPP-E2E-05: invalid UUID → 400/404.
+  DPP-E2E-06: anti-leakage — no private fields in 404. DPP-E2E-07/08/09: unauth → 401.
+  DPP-E2E-10: auth + unknown nodeId → 400/404 (auth gate proven). tsc --noEmit CLEAN.
+  Unit tests: 286/286 closure-relevant PASS (22 global-maturity, 50 status-transition, 62 d6-public, 88 d4-evidence, 64 d5-export).
 last_closed_unit_commits: >-
-  Repo-truth audit 1e45545. Design 92c17e3. Slice A 79bcf5b. Slice B 4c99e9b.
-  Slice C 0d0f73c. Slice D 95f7c71. Slice E 11fdaa8. Slice F 79a2c36 + 368804d.
-  Slice F2 8bff934. Slice G governance closure (this update).
+  D-6 close 3e5303a. Design d42ec8a. Slice A e3d81c5. Slice B 85da489. Slice C f5a36f9.
+  Slice D 587acdf. Slice E 77538f2. Slice F bfb8f25. Slice G ce6b674. Close-001 governance (this update).
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (Slice G governance closure, 2026-04-30).
-  10/10 Playwright E2E PASS on https://app.texqtic.com.
-  Domain boundary settled: Orders = marketplace/cart checkout only; Trade = RFQ path.
-  All 12 open questions disposed. All 14 non-goals preserved.
-  MEMBER buyer cancellation deferred; PLACED alias deprecated; Option B deferred.
-  Full platform launch NOT AUTHORIZED.
+  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 governance closure, 2026-05-09).
+  10/10 Playwright E2E PASS on https://app.texqtic.com. TypeScript clean.
+  Productization packet complete: label maps, maturity ladder, status transitions, GLOBAL_DPP reachable,
+  public buyer page, QR label, AI Passport Assistant (advisory-only).
+  5 superseded slice boundary tests documented (D2-S02, D2-B03, D3-T07, D3-B02, D3-B04) — not defects.
+  Adjacent findings carry-forwarded. Full platform launch NOT AUTHORIZED.
 last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30
@@ -70,15 +61,14 @@ last_closed_governance_unit_note: >-
   Certifications, Traceability, Audit Log). Cleanup deferred; Slice C NOT_AUTHORIZED.
   Closure artifact: docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md.
   Active delivery unit unchanged: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
-prior_closed_unit: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
+prior_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-
-  Slices A–H PASS — resolver, migration, route integration, RFQ gate, AI exclusion, QA seed,
-  11/11 Playwright E2E PASS; anti-leakage 17 fields verified; supplier self-view verified.
+  10/10 Orders lifecycle Playwright tests PASS against https://app.texqtic.com (2026-04-30).
+  ORD-01 through ORD-10 all PASS. Backend 39/39 integration PASS. Frontend 113/113 PASS.
 prior_closed_unit_commits: >-
-  Slice A feb9e5f, Slice B 9d29798, Slice C 57b6e6c, Slice D 59e9207,
-  Slice E 9c71d14, Slice F bfb3f64, Slice G 493f684,
-  Slice H governance closure.
+  Repo-truth audit 1e45545. Design 92c17e3.
+  Slices A–G: 79bcf5b, 4c99e9b, 0d0f73c, 95f7c71, 11fdaa8, 79a2c36+368804d, 8bff934.
 adjacent_deferred_candidate: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open)
 d015_reconciliation: COMPLETE
 d016_posture: CLOSED — TECS-AI-DOCUMENT-INTELLIGENCE-MVP-001 VERIFIED_COMPLETE (2026-04-27);
@@ -99,14 +89,14 @@ historical_reconciliation_inputs:
   - docs/product-truth/TEXQTIC-IMPLEMENTATION-ROADMAP-v2.md
   - docs/product-truth/TEXQTIC-NEXT-DELIVERY-PLAN-v2.md
 layer_0_action: |
-  TECS-DPP-PASSPORT-FOUNDATION-001 IMPLEMENTATION_ACTIVE (2026-04-28). Active slice: D-1.
-  Implement D-1 only — node_certifications join table DDL and RLS. No DPP view/UI/API/passport workflow changes authorized.
-  Migration: 20260316000000_g025_node_certifications (exists; applied March 2026 as part of G-025 sequence).
-  Prisma schema synchronized: node_certifications model present (db pull + generate already run).
-  Verification test created: server/src/__tests__/g025-d1-node-certifications.integration.test.ts.
-  Prior closed: TECS-B2B-BUYER-CATALOG-PDP-001 VERIFIED_COMPLETE (2026-04-27). Governance closed.
-  Verification (P-5): 239 catalog tests PASS; TypeScript tsc --noEmit CLEAN.
-  Implementation slices D-2 through D-6 UNAUTHORIZED until Paresh opens each.
+  TECS-DPP-PASSPORT-NETWORK-CLOSE-001 VERIFIED_COMPLETE (2026-05-09).
+  DPP Passport Network productization packet Slices A–G fully implemented and runtime-verified.
+  10/10 E2E PASS. 286/286 closure-relevant unit tests PASS. tsc --noEmit CLEAN.
+  No active delivery unit. Next unit requires explicit Paresh authorization.
+  Next recommended unit: TECS-DPP-PASSPORT-NETWORK-010 — Passport Network Expansion Design Packet
+    (evidence vault, trade linkage, real AI assistant architecture, COMPLIANCE/GLOBAL_DPP tiers).
+  Do NOT open next unit without Paresh authorization.
+  Full platform launch NOT AUTHORIZED.
 notes: |
   Read order: OPEN-SET.md -> NEXT-ACTION.md -> BLOCKED.md -> SNAPSHOT.md.
   This file is the sole current Layer 0 guardrail pointer.

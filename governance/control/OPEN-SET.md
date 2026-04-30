@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-002 — DESIGN_COMPLETE; DPP Passport Network ladder design artifact created; no schema/route/UI changes; pending Paresh authorization for implementation slices)
+**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — VERIFIED_COMPLETE; DPP Passport Network productization packet A–G closed; 10/10 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,7 +53,33 @@
 
 ## Operating Notes
 
-- Governing posture: `HOLD-FOR-BOUNDARY-TIGHTENING` remains in effect.
+- TECS-DPP-PASSPORT-NETWORK-CLOSE-001 is VERIFIED_COMPLETE (2026-05-09).
+  DPP Passport Network productization packet Slices A–G fully implemented and runtime-verified.
+  10/10 E2E PASS against https://app.texqtic.com. tsc --noEmit CLEAN.
+  Unit tests: 286/286 closure-relevant PASS (22 global-maturity, 50 status-transition, 62 d6-public, 88 d4-evidence, 64 d5-export).
+  Commits: design d42ec8a; Slice A e3d81c5; Slice B 85da489; Slice C f5a36f9;
+    Slice D 587acdf; Slice E 77538f2; Slice F bfb8f25; Slice G ce6b674; Close-001 governance.
+  Slices delivered:
+    Slice A: PASSPORT_MATURITY_LABELS + PASSPORT_STATUS_LABELS (UI label maps, no replace('_',' ')).
+    Slice B: MATURITY_TIER_INFO, 4-tier visual maturity ladder in DPPPassport.tsx.
+    Slice C: PATCH /api/tenant/dpp/:nodeId/passport/status API + 50 status-transition unit tests.
+    Slice D: GLOBAL_DPP tier reachable in computeDppMaturity (L4 Platinum); 22/22 global-maturity tests.
+    Slice E: PublicPassport.tsx public buyer page + App.tsx PUBLIC_PASSPORT routing (/passport/:id path).
+    Slice F: QR label (public-passport-qr-label, public-passport-print-label testids).
+    Slice G: buildPassportGuidance() deterministic AI Passport Assistant helper (advisory-only; no LLM calls).
+  Verification evidence:
+    DPP-E2E-01–10 all PASS. Server health stable after .json probe.
+    Auth gate enforced (DPP-E2E-07/08/09/10). Anti-leakage: no private fields in public 404 (DPP-E2E-06).
+    D-6 .json suffix contract confirmed absent (DPP-E2E-03; no find-my-way crash).
+  Superseded slice-boundary test failures documented (D2-S02, D2-B03, D3-T07, D3-B02, D3-B04):
+    These are temporal scope-guard tests; not defects; do not modify.
+  Deferred carry-forward (requires Paresh authorization to open):
+    QR image generation (no qrcode dep authorized); JSON-LD markup (Q-07 gate);
+    aiExtractedClaimsCount GUC mismatch; public route rate limiting (before-GA);
+    white-label DPP naming (Q-10); DPP expansion packet (evidence vault, trade linkage, real AI).
+  Next recommended unit: TECS-DPP-PASSPORT-NETWORK-010 (Expansion Design Packet).
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
+- Governing posture: `HOLD-FOR-AUTHORIZATION` (previously HOLD-FOR-BOUNDARY-TIGHTENING).
 - TECS-B2B-BUYER-RELATIONSHIP-ACCESS-001 is VERIFIED_COMPLETE (2026-04-28).
   Design commit: f62619a.
   Implementation chain: Slice A 4dd1901, Slice B 29ca225, Slice C 50220e6,

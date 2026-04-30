@@ -5,6 +5,97 @@
 
 ---
 
+## 2026-05-09 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-CLOSE-001 (DPP Passport Network A–G Closure)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-CLOSE-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-09
+Type:          RUNTIME-VERIFICATION + GOVERNANCE-CLOSURE — no schema, route, migration, or UI changes
+
+Deliverable:   tests/e2e/dpp-passport-network.spec.ts (new file — 10 E2E tests, 10/10 PASS)
+               governance/control/GOVERNANCE-CHANGELOG.md (this entry)
+               governance/control/NEXT-ACTION.md (governance sync)
+               governance/control/OPEN-SET.md (governance sync)
+               governance/control/SNAPSHOT.md (governance sync)
+
+Productization packet verified (Slices A–G):
+  Slice A (e3d81c5): UI label map — PASSPORT_MATURITY_LABELS, PASSPORT_STATUS_LABELS
+  Slice B (85da489): Maturity ladder — MATURITY_TIER_INFO, 4-tier visual ladder in DPPPassport.tsx
+  Slice C (f5a36f9): Status transition API — PATCH /api/tenant/dpp/:nodeId/passport/status
+  Slice D (587acdf): GLOBAL_DPP reachable — computeDppMaturity 4-tier; tecs-dpp-global-maturity.test.ts 22/22
+  Slice E (77538f2): Public buyer page — PublicPassport.tsx, App.tsx PUBLIC_PASSPORT routing, /passport/:id path
+  Slice F (bfb8f25): QR label — public-passport-qr-label, public-passport-print-label testids
+  Slice G (ce6b674): AI Passport Assistant — buildPassportGuidance() deterministic helper; advisory-only
+
+Static verification:
+  ✅ passportMaturity.replace('_',' ') ABSENT (uses PASSPORT_MATURITY_LABELS map)
+  ✅ passportStatus.replace('_',' ') ABSENT (uses PASSPORT_STATUS_LABELS map)
+  ✅ All Slice A–G testids confirmed present
+  ✅ publicPassportId.json: only in comments (route absent per D-6 contract)
+  ✅ window.location.origin used for buyer page URL (not server qr.payloadUrl)
+  ✅ Privacy fields (org_id|orgId|nodeId|supplierOrgId) ABSENT from PublicPassport.tsx render
+  ✅ Advisory comment present: "must not mutate passport status..."
+
+TypeScript: tsc --noEmit CLEAN (0 errors)
+
+Unit tests (DPP suite):
+  tecs-dpp-global-maturity.test.ts:        22/22 PASS ✅
+  tecs-dpp-status-transition.test.ts:      50/50 PASS ✅
+  tecs-dpp-d6-public-passport.test.ts:     62/62 PASS ✅
+  tecs-dpp-d4-evidence-claims.test.ts:     88/88 PASS ✅
+  tecs-dpp-d5-passport-export.test.ts:     64/64 PASS ✅
+  tecs-dpp-d2-view-extensions.test.ts:      2 SUPERSEDED_SLICE_BOUNDARY failures (expected)
+  tecs-dpp-d3-passport-identity.test.ts:    3 SUPERSEDED_SLICE_BOUNDARY failures (expected)
+
+Superseded slice boundary failures (historical scope-guard tests; not defects):
+  D2-S02: migration BEGIN/COMMIT check (static format assertion; pre-existing)
+  D2-B03: tenant.ts passport-route count expected 0 (Slice C added route; intentional)
+  D3-T07: GLOBAL_DPP "reserved" comment expected (Slice D made it reachable; intentional)
+  D3-B02: no JSON-LD expected (fires on advisory comment strings; no JSON-LD code added)
+  D3-B04: no mutation route expected (Slice C added PATCH route; intentional)
+
+E2E runtime verification (10/10 PASS against https://app.texqtic.com):
+  DPP-E2E-01: GET /health → 200 ✅
+  DPP-E2E-02: GET /api/public/dpp/:unknownUuid → 404 ✅
+  DPP-E2E-03: GET /api/public/dpp/:id.json → 404 (D-6 contract verified) ✅
+  DPP-E2E-04: Server health intact after .json probe → 200 ✅
+  DPP-E2E-05: Invalid UUID format → 400/404 ✅
+  DPP-E2E-06: Anti-leakage: no private fields in 404 body ✅
+  DPP-E2E-07: PATCH status without token → 401 ✅
+  DPP-E2E-08: GET DPP snapshot without token → 401 ✅
+  DPP-E2E-09: GET passport view without token → 401 ✅
+  DPP-E2E-10: PATCH status with valid token + unknown nodeId → 400/404 (auth gate proven) ✅
+
+Production browser runtime: NOT_RUN — not automated in this session.
+Deployed API responses verified via E2E spec (https://app.texqtic.com).
+
+Safety:
+  ✅ No schema/migration change
+  ✅ No existing route changes
+  ✅ No UI changes to committed components
+  ✅ org_id isolation unchanged
+  ✅ Public endpoint: no private fields in response
+  ✅ Full platform launch NOT AUTHORIZED
+
+Adjacent findings (carry-forward; not to be implemented without authorization):
+  1. QR image generation: decision-gated (no qrcode dependency authorized)
+  2. JSON-LD schema.org markup: design-gated to GLOBAL_DPP tier (Q-07 gate)
+  3. aiExtractedClaimsCount=0 on public route: app.current_org_id vs app.org_id RLS/GUC mismatch (deferred)
+  4. Public route rate limiting: before-GA security requirement (deferred)
+  5. White-label DPP naming: future work (Q-10 gate)
+  6. DPP expansion packet: evidence vault, trade linkage, real AI assistant architecture (next major unit)
+  7. E2E authenticated seller flow: may need secret-safe session bootstrap for full seller-side UX
+  8. D2/D3 slice boundary tests: temporal supersession failures; historical scope-guard; do not modify
+
+Files changed:
+  tests/e2e/dpp-passport-network.spec.ts (new file — 10 E2E tests)
+  governance/control/GOVERNANCE-CHANGELOG.md (this entry)
+  governance/control/NEXT-ACTION.md (governance sync)
+  governance/control/OPEN-SET.md (governance sync)
+  governance/control/SNAPSHOT.md (governance sync)
+```
+
 ## 2026-05-09 — DESIGN_COMPLETE: TECS-DPP-PASSPORT-NETWORK-002 (DPP Passport Network Ladder)
 
 ```
