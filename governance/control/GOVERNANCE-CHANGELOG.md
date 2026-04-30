@@ -5,6 +5,80 @@
 
 ---
 
+## 2026-04-30 — CLOSED: TECS-B2B-ORDERS-LIFECYCLE-001 (Slice G Governance Closure)
+
+```
+Unit:          TECS-B2B-ORDERS-LIFECYCLE-001
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-04-30
+Verification:  10 passed / 0 skipped / 0 failed — Orders lifecycle runtime QA
+               Playwright suite against https://app.texqtic.com (commit 8bff934).
+               All ORD-01 through ORD-10 scenarios PASS.
+               Backend integration: 39/39 tests PASS (commit 4c99e9b).
+               Frontend unit tests: 113/113 assertions PASS (commit 0d0f73c).
+               Cursor pagination: backend + frontend + OpenAPI (commit 95f7c71).
+               Control-plane read-only Orders view (commit 11fdaa8).
+               TypeScript tsc --noEmit CLEAN for all slices.
+
+Commits:
+  1e45545  Repo-truth audit — ORDERS_SUBSTANTIALLY_IMPLEMENTED verdict
+  92c17e3  Design artifact — TECS-B2B-ORDERS-LIFECYCLE-001-DESIGN-v1.md
+  79bcf5b  Slice A — PLACED status mapping Option A; stale comment corrected; deprecated schema comment; canonical-status tests
+  4c99e9b  Slice B — Orders route integration tests (39 test cases, 11 security scenarios)
+  0d0f73c  Slice C — Frontend Orders panel unit tests (113 assertions, all 5 canonical states)
+  95f7c71  Slice D — Cursor-based pagination for GET /orders; OpenAPI updated; frontend UI
+  11fdaa8  Slice E — Read-only control-plane Orders view (GET /api/admin/orders)
+  79a2c36  Slice F scaffold — Playwright orders-lifecycle.spec.ts + auth setup
+  368804d  Slice F evidence (initial) — PASS_WITH_AUTH_SKIPS
+  8bff934  Slice F2 — Auth states provisioned; ORD-06/07/09 unblocked; 10/10 PASS; VERIFIED_COMPLETE evidence
+  (this)   Slice G — Governance closure
+
+Verification Evidence:
+  ✅ 10/10 Orders lifecycle Playwright tests PASS (spec: tests/e2e/orders-lifecycle.spec.ts)
+  ✅ ORD-01: checkout → PAYMENT_PENDING visible
+  ✅ ORD-02: OWNER confirms → CONFIRMED badge
+  ✅ ORD-03: OWNER fulfills → FULFILLED badge, terminal state
+  ✅ ORD-04: OWNER cancels PAYMENT_PENDING → CANCELLED badge
+  ✅ ORD-05: lifecycle history chain correct
+  ✅ ORD-06: MEMBER own-scope view (empty array valid)
+  ✅ ORD-07: MEMBER PATCH → 403 FORBIDDEN (role gate fires before RLS)
+  ✅ ORD-08: cross-tenant URL → 404 (no existence leak)
+  ✅ ORD-09: WL_ADMIN panel mirrors EXPERIENCE panel
+  ✅ ORD-10: no 5xx errors, no internal data leaks
+  ✅ 39/39 backend integration tests PASS (POST/GET/PATCH + 11 security scenarios)
+  ✅ 113/113 frontend unit test assertions PASS (5 canonical states, role gates, error/empty/loading)
+  ✅ Cursor pagination: backend + frontend + OpenAPI aligned
+  ✅ Control-plane read-only view: no mutation routes; OpenAPI updated
+  ✅ Domain boundary: Orders = marketplace/cart checkout only; Trade = RFQ path; no Escrow/DPP FK
+  ✅ All 13 completion criteria from §16 satisfied
+  ✅ All 12 open questions from §15 disposed
+
+Launch Decision:
+  TECS-B2B-ORDERS-LIFECYCLE-001 IS VERIFIED_COMPLETE.
+  Orders marketplace/cart lifecycle hardening is complete.
+  FULL PLATFORM LAUNCH IS NOT AUTHORIZED.
+  Reason: Trades / DPP Passport Network (partial) / Escrow / Escalations /
+    Settlement / Certifications / Traceability / Audit Log — all unverified.
+  Active delivery unit: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
+
+Open Items Preserved:
+  Non-goals §14: all 14 non-goals preserved (RFQ-to-Order, supplier-side, escrow, settlement,
+    DPP linkage, traceability, cleanup, etc.)
+  MEMBER buyer cancellation: deferred (Q-03 CLOSED/DEFERRED; separate authorized slice required)
+  PLACED DB alias: deprecated comment in schema.prisma; migration to Option B deferred
+  QA fixture cleanup: deferred (per TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 governance decision)
+
+Governance Files Updated:
+  docs/TECS-B2B-ORDERS-LIFECYCLE-001-DESIGN-v1.md (status: DESIGN DRAFT v1 → VERIFIED_COMPLETE; §18 closure section added)
+  governance/coverage-matrix.md (TECS-B2B-ORDERS-LIFECYCLE-001 unit row added)
+  governance/control/OPEN-SET.md
+  governance/control/NEXT-ACTION.md
+  governance/control/SNAPSHOT.md
+  governance/control/GOVERNANCE-CHANGELOG.md (this file)
+```
+
+---
+
 ## 2026-04-30 — CLOSED: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 (Slice H Governance Closure)
 
 ```

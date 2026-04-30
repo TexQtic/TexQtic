@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-04-30 (TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES; 55/58 full textile-chain Playwright PASS; 12/12 approval-gate PASS; QA cleanup deferred)
+**Last Updated:** 2026-04-30 (TECS-B2B-ORDERS-LIFECYCLE-001 — VERIFIED_COMPLETE; 10/10 Orders lifecycle Playwright PASS; Slice G governance closure)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -587,6 +587,33 @@
   Governance closure artifact: docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md.
   Launch blockers remaining: 9 B2B sub-families + cleanup + final governance decision.
   Active delivery unit unchanged: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
+- TECS-B2B-ORDERS-LIFECYCLE-001 is VERIFIED_COMPLETE (2026-04-30).
+  Status: VERIFIED_COMPLETE. Closure date: 2026-04-30. Runtime verdict: RUNTIME_VERIFIED_COMPLETE.
+  Design artifact: docs/TECS-B2B-ORDERS-LIFECYCLE-001-DESIGN-v1.md.
+  Commit chain:
+    1e45545 — Repo-truth audit (ORDERS_SUBSTANTIALLY_IMPLEMENTED verdict)
+    92c17e3 — Design artifact (§1–§17 full design plan)
+    79bcf5b — Slice A (Option A retained; stale comment corrected; PLACED deprecated)
+    4c99e9b — Slice B (39 backend integration tests; 11 security scenarios)
+    0d0f73c — Slice C (113 frontend unit test assertions; 5 canonical states; role gates)
+    95f7c71 — Slice D (cursor-based pagination; backend + frontend + OpenAPI)
+    11fdaa8 — Slice E (read-only control-plane Orders view; GET /api/admin/orders)
+    79a2c36 — Slice F scaffold (Playwright spec + auth setup)
+    368804d — Slice F evidence initial (PASS_WITH_AUTH_SKIPS)
+    8bff934 — Slice F2 (auth states provisioned; ORD-06/07/09 unblocked; 10/10 PASS; VERIFIED_COMPLETE evidence)
+    (this)  — Slice G governance closure
+  Runtime QA result: 10 passed / 0 skipped / 0 failed.
+  Spec: tests/e2e/orders-lifecycle.spec.ts. Target: https://app.texqtic.com.
+  Backend integration: 39/39 tests PASS. Frontend unit: 113/113 assertions PASS.
+  Domain boundary settled: Orders = marketplace/cart checkout only. RFQ → Trade. No Escrow/DPP FK.
+  State machine: PAYMENT_PENDING → CONFIRMED → FULFILLED (terminal); CONFIRMED → CANCELLED (terminal); PAYMENT_PENDING → CANCELLED (terminal).
+  Open questions Q-01 through Q-12: all disposed (see §18.3 of design artifact).
+  Non-goals preserved: all 14 non-goals from §14 (RFQ-to-Order, supplier-side, escrow, DPP linkage, traceability, settlement, etc.).
+  MEMBER buyer cancellation: deferred (Q-03; separate authorized slice required when product decision made).
+  PLACED DB alias: deprecated; migration to Option B deferred to future slice.
+  Launch decision: TECS-B2B-ORDERS-LIFECYCLE-001 IS VERIFIED_COMPLETE. FULL PLATFORM LAUNCH IS NOT AUTHORIZED.
+    Remaining launch blockers: Trades, DPP Passport Network (partial), Escrow/TradeTrust Pay,
+    Escalations, Settlement, Certifications, Traceability, Audit Log — all unverified.
 - TECS-DPP-PASSPORT-FOUNDATION-001 is IMPLEMENTATION_ACTIVE (2026-04-28) — Active slice: D-6.
   Status: IMPLEMENTATION_ACTIVE — D-1 COMPLETE (e524b0a), D-2 COMPLETE (8a14242), D-3 COMPLETE (87bdcfe), D-4 COMPLETE (e9a8b3a), D-5 COMPLETE (b7fa9bb), D-6 ACTIVE.
   D-4 scope (TECS-DPP-AI-EVIDENCE-LINKAGE-001): dpp_evidence_claims table (migration 20260508000000), GET/POST /tenant/dpp/:nodeId/evidence-claims routes, live aiExtractedClaimsCount in passport, 88/88 tests PASS.

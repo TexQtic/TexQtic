@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-04-30 (TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — Slice H governance closure; VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES; full platform launch NOT YET AUTHORIZED)
+**Updated:** 2026-04-30 (TECS-B2B-ORDERS-LIFECYCLE-001 — VERIFIED_COMPLETE; Slice G governance closure; 10/10 Orders lifecycle Playwright PASS; full platform launch NOT YET AUTHORIZED)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -31,31 +31,34 @@ current_open_design_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only. aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-latest_verified_product_close_unit: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
+latest_verified_product_close_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-04-29 (Slice H governance closure)
+latest_verified_product_close_date: 2026-04-30 (Slice G governance closure)
 latest_verified_product_close_verification: >-
-  11/11 production Playwright E2E PASS against https://app.texqtic.com (2026-04-29).
-  Slices A–G all PASS: resolver, migration, route integration, RFQ gate, AI exclusion, QA seed, E2E.
-  E2E-07/E2E-08/E2E-09/E2E-10/E2E-11 all PASS.
-  Anti-leakage: 17 forbidden fields absent from buyer catalog API responses.
-  TypeScript tsc --noEmit: not re-run in Slice H (governance-only slice; no code changes).
+  10/10 Orders lifecycle Playwright E2E PASS against https://app.texqtic.com (2026-04-30).
+  Slices A–G all PASS: repo-truth audit, design artifact, status mapping, backend integration tests,
+  frontend unit tests, cursor pagination, control-plane view, runtime QA (F + F2).
+  ORD-01/ORD-02/ORD-03/ORD-04/ORD-05/ORD-06/ORD-07/ORD-08/ORD-09/ORD-10 all PASS.
+  Backend: 39/39 integration tests PASS. Frontend: 113/113 unit test assertions PASS.
+  TypeScript tsc --noEmit: not re-run in Slice G (governance-only slice; no code changes).
 latest_verified_product_close_safety_boundaries: |
-  catalogVisibilityPolicyMode_absent_from_buyer_responses: verified (E2E-10)
-  publicationPosture_absent_from_buyer_responses: verified (E2E-10)
-  relationshipState_absent_from_buyer_responses: verified (E2E-10)
-  AI_scoring_fields_absent: verified (score, rank, confidence, embeddingId absent; E2E-10)
-  HIDDEN_items_absent_from_all_buyer_browse: verified (E2E-08)
-  APPROVED_BUYER_ONLY_scoped_to_approved_buyers_only: verified (E2E-01/E2E-02/E2E-03/E2E-07)
-  RFQ_gate_blocks_non_approved_buyers: verified (E2E-09)
-  supplier_self_view_unrestricted: verified (E2E-11)
-  AI_path_constitutional_exclusion: verified (Slice E; no configurable bypass)
-  no_product_code_changed_in_slice_G: verified (test expectation correction only)
-latest_verified_product_close_tenant_isolation: verified (org_id scoping enforced; buyer identity from dbContext; no cross-tenant leakage)
-latest_verified_product_close_human_review_required: N/A (this unit is a data policy layer; no AI-generated output; no human-review gate required)
+  org_id_tenant_isolation: verified (withDbContext + FORCE RLS on orders/order_items/order_lifecycle_logs)
+  member_own_scope_enforcement: verified (ORD-06; MEMBER sees only own userId-scoped orders)
+  member_patch_forbidden: verified (ORD-07; 403 FORBIDDEN; role gate fires before RLS)
+  cross_tenant_404_not_403: verified (ORD-08; no existence leak)
+  terminal_state_immutable: verified (FULFILLED/CANCELLED; no further transitions)
+  order_lifecycle_logs_immutable: verified (append-only; UPDATE/DELETE blocked by RLS)
+  checkoutUserId_from_dbContext_not_body: verified (tenant.ts line 5797)
+  no_escrow_fk_on_order: verified (domain boundary §4)
+  no_dpp_fk_on_order: verified (domain boundary §4.5)
+  no_supplier_side_order_lifecycle: verified (domain boundary §4.6)
+  no_rfq_to_order_conversion: verified (domain boundary §4.2)
+latest_verified_product_close_tenant_isolation: verified (org_id scoping enforced; buyer identity from dbContext; cross-tenant returns 404; MEMBER own-userId scoping)
+latest_verified_product_close_human_review_required: N/A (Orders lifecycle unit; no AI-generated output; no human-review gate required)
 latest_verified_product_close_commits: >-
-  Slice A feb9e5f, Slice B 9d29798, Slice C 57b6e6c, Slice D 59e9207,
-  Slice E 9c71d14, Slice F bfb3f64, Slice G 493f684, Slice H governance closure (this update)
+  Repo-truth audit 1e45545. Design 92c17e3. Slice A 79bcf5b. Slice B 4c99e9b.
+  Slice C 0d0f73c. Slice D 95f7c71. Slice E 11fdaa8. Slice F 79a2c36 + 368804d.
+  Slice F2 8bff934. Slice G governance closure (this update).
 qa_matrix_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 qa_matrix_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 qa_matrix_closure_date: 2026-04-30

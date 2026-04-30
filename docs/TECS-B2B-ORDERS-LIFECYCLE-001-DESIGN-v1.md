@@ -2,8 +2,8 @@
 
 **Unit:** TECS-B2B-ORDERS-LIFECYCLE-001  
 **Title:** Orders Lifecycle Hardening, B2B Boundary, and Runtime QA Design Plan  
-**Mode:** DESIGN ONLY — no implementation  
-**Status:** DESIGN DRAFT v1  
+**Mode:** DESIGN + FULL IMPLEMENTATION — Slices A–G COMPLETE  
+**Status:** VERIFIED_COMPLETE  
 **Date:** 2026-04-30  
 **Based on:** `docs/TECS-B2B-ORDERS-LIFECYCLE-001-REPO-TRUTH-AUDIT.md` (commit `1e45545`)  
 **Author:** Copilot agent, design-only mode  
@@ -833,5 +833,99 @@ Allowlist (create): tests/orders-canonical-status.test.ts
 
 ---
 
-*Design-only artifact. No code was modified. No migrations were applied. No secrets were accessed.*  
-*Based strictly on repo-truth audit commit `1e45545`.*
+## 18. Governance Closure — Slice G
+
+**Closure Date:** 2026-04-30  
+**Final Status:** VERIFIED_COMPLETE
+
+### 18.1 Slice Completion Chain
+
+| Slice | Scope | Commit | Status |
+|---|---|---|---|
+| Repo-Truth Audit | Initial audit — ORDERS_SUBSTANTIALLY_IMPLEMENTED verdict | `1e45545` | ✅ COMPLETE |
+| Design Artifact | This document (initial draft — §1–§17) | `92c17e3` | ✅ COMPLETE |
+| A | Option A retained; stale route comment corrected; `PLACED` deprecated in schema; canonical-status tests | `79bcf5b` | ✅ COMPLETE |
+| B | Backend Orders route integration tests (39 test cases, 11 security scenarios) | `4c99e9b` | ✅ COMPLETE |
+| C | Frontend Orders panel unit tests (113 assertions, 5 canonical states, role gates) | `0d0f73c` | ✅ COMPLETE |
+| D | Cursor-based pagination for `GET /api/tenant/orders` + OpenAPI + frontend UI | `95f7c71` | ✅ COMPLETE |
+| E | Read-only control-plane Orders view (`GET /api/admin/orders`); no mutation; OpenAPI updated | `11fdaa8` | ✅ COMPLETE |
+| F scaffold | `tests/e2e/orders-lifecycle.spec.ts` scaffold + auth setup | `79a2c36` | ✅ COMPLETE |
+| F initial | Runtime QA evidence — `PASS_WITH_AUTH_SKIPS` (ORD-06/07/09 pending auth) | `368804d` | ✅ COMPLETE |
+| F2 completed | Auth states provisioned; ORD-06/07/09 unblocked; 10/10 PASS; evidence `VERIFIED_COMPLETE` | `8bff934` | ✅ COMPLETE |
+| G | Governance closure (this commit) | (this commit) | ✅ COMPLETE |
+
+### 18.2 Runtime QA Result
+
+- **Spec:** `tests/e2e/orders-lifecycle.spec.ts`
+- **Target:** `https://app.texqtic.com`
+- **Result:** **10 passed / 0 skipped / 0 failed** (19.7s)
+- **Evidence:** `docs/TECS-B2B-ORDERS-LIFECYCLE-001-SLICE-F-RUNTIME-QA-EVIDENCE.md` — VERIFIED_COMPLETE
+
+| Test | Scenario | Result |
+|---|---|---|
+| ORD-01 | Checkout → PAYMENT_PENDING order visible in "View My Orders" | ✅ PASS |
+| ORD-02 | OWNER confirms order → CONFIRMED badge | ✅ PASS |
+| ORD-03 | OWNER fulfills order → FULFILLED badge; action buttons disappear (terminal) | ✅ PASS |
+| ORD-04 | OWNER cancels PAYMENT_PENDING → CANCELLED badge | ✅ PASS |
+| ORD-05 | Lifecycle history shows correct state chain | ✅ PASS |
+| ORD-06 | MEMBER sees only own orders; empty array is valid safe state | ✅ PASS |
+| ORD-07 | MEMBER PATCH status → 403 FORBIDDEN (role gate fires before RLS) | ✅ PASS |
+| ORD-08 | Cross-tenant URL navigation → 404 / access denied | ✅ PASS |
+| ORD-09 | WL_ADMIN panel mirrors EXPERIENCE panel for same tenant | ✅ PASS |
+| ORD-10 | No 5xx errors; no internal data leaks beyond intended order fields | ✅ PASS |
+
+### 18.3 Open Question Disposition
+
+All 12 open questions from §15 are closed:
+
+| # | Question | Disposition |
+|---|---|---|
+| Q-01 | DB status write: CONFIRMED/FULFILLED vs PLACED alias? | **CLOSED — Option A retained.** `validate-rcp1-flow.ts` consumes `PLACED`; DB alias preserved. Route comment corrected (commit `79bcf5b`). |
+| Q-02 | `PLACED` enum formally deprecated? | **CLOSED — Deprecated comment added** to `schema.prisma` in Slice A. Removal deferred to future migration (post Option-B adoption). |
+| Q-03 | MEMBER buyer cancellation of own PAYMENT_PENDING? | **CLOSED — Deferred.** OWNER/ADMIN-only mutation preserved. MEMBER cancellation requires separate authorized slice. SM already permits `TENANT_USER` actor for PAYMENT_PENDING → CANCELLED — no SM change needed. |
+| Q-04 | Orders remain marketplace/cart checkout only? | **CLOSED — YES (§4.6 settled).** No supplier-side lifecycle in this unit. |
+| Q-05 | RFQ procurement → Trade always, never Order? | **CLOSED — YES (§4 settled).** Trade is canonical B2B procurement path. |
+| Q-06 | Control-plane admin view required before launch? | **CLOSED — Implemented.** Slice E delivered read-only `GET /api/admin/orders?orgId=<tenantId>` (commit `11fdaa8`). No mutation. OpenAPI updated. |
+| Q-07 | Cursor-based pagination contract? | **CLOSED — Implemented.** `?cursor=<lastId>&limit=<N>` (Slice D, commit `95f7c71`). Default 20, max 100. |
+| Q-08 | Order totals in list vs detail only? | **CLOSED — In list.** Pagination response includes order totals. Frontend panels updated. |
+| Q-09 | Lifecycle logs visible to all roles in UI? | **CLOSED — OWNER/ADMIN** in action area; log visible to authenticated users in own-scope. Slice C tests confirm. |
+| Q-10 | DPP/certification attach to `order_items` at fulfillment? | **CLOSED — Out of scope.** DPP domain separation preserved per §4.5. Future: `TECS-DPP-PASSPORT-FOUNDATION-001` or dedicated linkage slice. |
+| Q-11 | Payment/escrow embedded in Order responses or separate? | **CLOSED — Out of scope.** No escrow FK on Order. PAYMENT_PENDING is UX label (manual confirmation model). Escrow attaches to Trade. |
+| Q-12 | Runtime QA fixtures — who seeds them? | **CLOSED — Provisioned.** QA ACME tenant + auth states (`qa-b2b`, `qa-buyer-b`, `qa-buyer-member`, `qa-wl-admin`) used. Evidence: commit `8bff934`. |
+
+### 18.4 Non-Goals Preserved
+
+All 14 non-goals from §14 confirmed preserved:
+
+- No RFQ-to-Order conversion; no supplier-side purchase order acknowledgment
+- No escrow/payment processing; no settlement/payout; no buyer-facing invoice generation
+- No shipment/fulfillment logistics; no DPP certificate issuance from order
+- No traceability graph expansion; no Order model schema rewrite
+- No QA fixture cleanup (deferred per TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001)
+- No multi-currency Orders; no order amendment
+- **Full platform launch: NOT AUTHORIZED.** TECS-B2B-ORDERS-LIFECYCLE-001 is VERIFIED_COMPLETE. Launch requires additional B2B sub-family closures (Trades, DPP Passport Network, Escrow, Escalations, Settlement, Certifications, Traceability, Audit Log).
+
+### 18.5 Completion Criteria Verification
+
+All 13 completion criteria from §16 satisfied:
+
+| Criterion | Result |
+|---|---|
+| Q-01/Q-02/Q-03 answered | ✅ CLOSED (§18.3) |
+| Stale route comment corrected (line 6039) | ✅ commit `79bcf5b` |
+| DB status mapping decision implemented and tested | ✅ Option A retained; tests pass |
+| 11 security scenarios (§8.2) covered by integration tests | ✅ commit `4c99e9b` |
+| Full POST/GET/PATCH route test coverage | ✅ commit `4c99e9b` |
+| Frontend panel unit tests pass (EXP + WL) | ✅ commit `0d0f73c` |
+| `canonicalStatus()` tested for all 5 derived states | ✅ commit `0d0f73c` |
+| Pagination API and UI implemented | ✅ commit `95f7c71` |
+| Runtime Playwright ORD-01 through ORD-10 PASS | ✅ 10/10 PASS (commit `8bff934`) |
+| `validate-rcp1-flow.ts` passes on staging | ✅ confirmed in Slice A sweep |
+| Governance coverage matrix updated | ✅ this commit |
+| No unresolved design debt from §9 gap resolution | ✅ all gaps resolved |
+| All Slices A–G committed, tests green, health check 200 | ✅ confirmed |
+
+---
+
+*Design artifact — governance closure complete. Implementation delivered across Slices A–G. No secrets were accessed.*  
+*Repo-truth audit: commit `1e45545`. Governance closure commit chain: `1e45545` → `92c17e3` → `79bcf5b` → `4c99e9b` → `0d0f73c` → `95f7c71` → `11fdaa8` → `79a2c36` → `368804d` → `8bff934`.*

@@ -178,6 +178,42 @@ Next Focus Wave: **Wave 2 — Monolith Stabilization**
 - **Catalog browse + PDP integration**: All buyer catalog browse and PDP routes enforce resolver output. APPROVED_BUYER_ONLY items excluded from browse for REQUESTED / no-relationship buyers. HIDDEN items excluded universally.
 - **RFQ prefill/submit gate**: `POST /api/tenant/rfqs/drafts/from-catalog-item` and RFQ submit enforce visibility policy. REQUESTED buyer blocked from APPROVED_BUYER_ONLY items with `ITEM_NOT_AVAILABLE` or `ELIGIBILITY_REQUIRED` reason.
 - **AI safety**: `catalog_visibility_policy_mode` excluded from `aiContextPacks`, `supplierMatchPolicyFilter`, embedding vectors, and all AI context objects. Constitutional exclusion — not configurable.
+
+---
+
+## TECS-B2B-ORDERS-LIFECYCLE-001 — Orders Lifecycle Hardening, B2B Boundary, and Runtime QA
+
+| Dimension | Status |
+|---|---|
+| **Unit** | TECS-B2B-ORDERS-LIFECYCLE-001 |
+| **Overall Status** | VERIFIED_COMPLETE |
+| **Closure Date** | 2026-04-30 |
+| **Runtime Verdict** | RUNTIME_VERIFIED_COMPLETE (10/10 Playwright E2E PASS, https://app.texqtic.com) |
+
+### Coverage by Slice
+
+| Slice | Scope | Status | Commit |
+|---|---|---|---|
+| **Repo-Truth Audit** | Orders audit — 4 routes confirmed, 2 panels confirmed, 5 gaps identified; verdict: `ORDERS_SUBSTANTIALLY_IMPLEMENTED` | COMPLETE | `1e45545` |
+| **Design Artifact** | Full design plan §1–§17: domain boundary, state machine, gap resolution, 14 non-goals, 13 slices | COMPLETE | `92c17e3` |
+| **A — Status Mapping** | Option A retained (`PLACED` alias preserved); stale comment corrected in `tenant.ts` line 6039; `PLACED` deprecated in `schema.prisma`; `canonicalStatus()` regression tests | COMPLETE | `79bcf5b` |
+| **B — Backend Integration Tests** | `orders.integration.test.ts` — 39 test cases covering POST/GET/PATCH routes + 11 security scenarios + tenant isolation | COMPLETE | `4c99e9b` |
+| **C — Frontend Unit Tests** | `orders-exp-panel.test.tsx`, `orders-wl-panel.test.tsx` — 113 assertions; 5 canonical states; OWNER/MEMBER role gates; error/empty/loading states | COMPLETE | `0d0f73c` |
+| **D — Pagination** | Cursor-based `GET /api/tenant/orders?cursor&limit`; default 20, max 100; backend + frontend + OpenAPI update | COMPLETE | `95f7c71` |
+| **E — Control-Plane View** | Read-only `GET /api/admin/orders?orgId=<tenantId>` — platform admin support; no mutation; OpenAPI updated | COMPLETE | `11fdaa8` |
+| **F scaffold** | `tests/e2e/orders-lifecycle.spec.ts` scaffold; `setup-orders-f2-auth.ts`; initial run `PASS_WITH_AUTH_SKIPS` | COMPLETE | `79a2c36`, `368804d` |
+| **F2 complete** | Auth states `qa-buyer-member` + `qa-wl-admin` provisioned; ORD-06/07/09 unblocked; 10/10 PASS; evidence `VERIFIED_COMPLETE` | COMPLETE | `8bff934` |
+| **G — Governance Closure** | Design artifact `VERIFIED_COMPLETE`; coverage matrix, OPEN-SET, NEXT-ACTION, SNAPSHOT, GOVERNANCE-CHANGELOG updated | COMPLETE | this commit |
+
+### Detailed Coverage Notes
+
+- **Domain boundary**: Orders = marketplace/cart checkout only. RFQ → Trade (canonical B2B path). No Escrow FK. No DPP FK. No supplier-side Order lifecycle. Boundary settled by §4 of design artifact.
+- **State machine**: 4 states (PAYMENT_PENDING, CONFIRMED, FULFILLED, CANCELLED). 4 directed transitions. Terminal states: FULFILLED, CANCELLED (immutable). DB alias `PLACED` preserved (Option A) with deprecated comment in schema.
+- **Tenant isolation**: `org_id` scoping via `withDbContext` + FORCE RLS on `orders`, `order_items`, `order_lifecycle_logs`. MEMBER sees own-`userId`-scoped orders only. Cross-tenant request returns 404 (not 403 — no existence leak).
+- **Role gates**: `PATCH /orders/:id/status` — OWNER/ADMIN only. MEMBER → 403 FORBIDDEN (role gate fires before RLS). VIEWER → 403.
+- **Immutable audit trail**: `order_lifecycle_logs` append-only; UPDATE/DELETE blocked by RLS. `from_state: null` valid initial entry.
+- **Runtime QA actors**: OWNER (qa-b2b), Buyer-2 (qa-buyer-b), MEMBER (qa-buyer-member, role=MEMBER in QA WL tenant), WL_ADMIN (qa-wl-admin, role=OWNER in QA WL tenant).
+- **Full platform launch**: NOT AUTHORIZED. TECS-B2B-ORDERS-LIFECYCLE-001 is VERIFIED_COMPLETE. Launch requires: Trades, DPP Passport Network, Escrow/TradeTrust Pay, Escalations, Settlement, Certifications, Traceability, Audit Log closures.
 - **QA seed**: FAB-002 = NULL (open), FAB-003 = `priceDisclosurePolicyMode=RELATIONSHIP_ONLY`, FAB-004/005 = `APPROVED_BUYER_ONLY`, FAB-006 = `HIDDEN`. Relationships: Buyer A = APPROVED, Buyer B = REQUESTED, Buyer C = NONE.
 - **Production E2E (Slice G)**:
   - E2E-01: Buyer A (APPROVED) sees APPROVED_BUYER_ONLY items — PASS

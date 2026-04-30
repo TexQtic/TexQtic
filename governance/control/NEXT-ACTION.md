@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-30 (TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001 — VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES; Slice H governance closure; 55/58 full textile-chain Playwright PASS; 12/12 approval-gate PASS; cleanup deferred; full platform launch NOT YET AUTHORIZED)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-04-30 (TECS-B2B-ORDERS-LIFECYCLE-001 — VERIFIED_COMPLETE; Slice G governance closure; 10/10 Orders lifecycle Playwright PASS; full platform launch NOT YET AUTHORIZED)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -28,32 +28,25 @@ active_delivery_unit_note: >-
     Migration 20260509000000_tecs_dpp_d6_public_token: public_token column, UNIQUE constraint, partial index, RLS policy (texqtic_public_lookup), GRANT SELECT.
     Phase 1: texqtic_public_lookup BYPASSRLS for PUBLISHED rows. Phase 2: withDbContext snapshot view queries.
     QR: URL descriptor only (no image generation). aiExtractedClaimsCount: 0 pending D-3/D-4 RLS fix. 58/58 tests PASS. Commit: 5ba6db9.
-last_closed_unit: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
+last_closed_unit: TECS-B2B-ORDERS-LIFECYCLE-001
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  11/11 Playwright E2E PASS against https://app.texqtic.com (2026-04-29).
-  E2E-07 (APPROVED_BUYER_ONLY browse gate): PASS.
-  E2E-08 (HIDDEN universal exclusion): PASS.
-  E2E-09 (RFQ gate for REQUESTED buyer): PASS.
-  E2E-10 (anti-leakage — 17 fields absent from buyer API): PASS.
-  E2E-11 (supplier self-view): PASS.
-  No product code changed in Slice G (test expectation correction only).
+  10/10 Orders lifecycle Playwright tests PASS against https://app.texqtic.com (2026-04-30).
+  ORD-01: checkout → PAYMENT_PENDING visible. ORD-02: CONFIRM. ORD-03: FULFILL (terminal).
+  ORD-04: CANCEL PAYMENT_PENDING. ORD-05: lifecycle history chain. ORD-06: MEMBER own-scope.
+  ORD-07: MEMBER PATCH → 403 FORBIDDEN. ORD-08: cross-tenant 404. ORD-09: WL_ADMIN mirror.
+  ORD-10: no 5xx / no data leaks. Backend 39/39 integration tests PASS. Frontend 113/113 assertions PASS.
 last_closed_unit_commits: >-
-  Slice A feb9e5f — visibility policy resolver with fallback mapping.
-  Slice B 9d29798 — catalog_visibility_policy_mode migration + schema.prisma.
-  Slice C 57b6e6c — catalog browse + PDP route integration.
-  Slice D 59e9207 — RFQ prefill/submit visibility policy gate.
-  Slice E 9c71d14 — AI safety exclusion (context packs + embedding + match pipeline).
-  Slice F bfb3f64 — QA seed matrix update (FAB-002..006 explicit modes).
-  Slice G 493f684 — Playwright E2E verification (11/11 PASS).
-  Slice H — governance closure commit (this update).
+  Repo-truth audit 1e45545. Design 92c17e3. Slice A 79bcf5b. Slice B 4c99e9b.
+  Slice C 0d0f73c. Slice D 95f7c71. Slice E 11fdaa8. Slice F 79a2c36 + 368804d.
+  Slice F2 8bff934. Slice G governance closure (this update).
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (Slice H governance closure, 2026-04-29).
-  11/11 Playwright E2E PASS on https://app.texqtic.com.
-  Anti-leakage verified (17 forbidden fields absent from buyer catalog API responses).
-  Supplier self-view regression verified (HIDDEN + APPROVED_BUYER_ONLY items visible to supplier).
-  No product code changed in Slice G (test harness correction only — E2E-06 assertion).
-  OQ-01/OQ-02/OQ-08 all dispositioned. No launch-blocking open questions.
+  VERIFIED_COMPLETE (Slice G governance closure, 2026-04-30).
+  10/10 Playwright E2E PASS on https://app.texqtic.com.
+  Domain boundary settled: Orders = marketplace/cart checkout only; Trade = RFQ path.
+  All 12 open questions disposed. All 14 non-goals preserved.
+  MEMBER buyer cancellation deferred; PLACED alias deprecated; Option B deferred.
+  Full platform launch NOT AUTHORIZED.
 last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30
@@ -66,15 +59,14 @@ last_closed_governance_unit_note: >-
   Certifications, Traceability, Audit Log). Cleanup deferred; Slice C NOT_AUTHORIZED.
   Closure artifact: docs/TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001-SLICE-H-LAUNCH-READINESS-DECISION.md.
   Active delivery unit unchanged: TECS-DPP-PASSPORT-FOUNDATION-001 D-6 (IMPLEMENTATION_ACTIVE).
-prior_closed_unit: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001
+prior_closed_unit: TECS-CATALOG-VISIBILITY-POLICY-STORAGE-001
 prior_closed_unit_status: VERIFIED_COMPLETE
 prior_closed_unit_runtime_verdict: >-
-  Slices A–H PASS — 328/328 AI matching backend tests (7 suites); 140/140 frontend tests;
-  TypeScript tsc --noEmit CLEAN; ESLint 0 errors; production Playwright HTTP 200 confirmed;
-  anti-leakage verified (bundle + API response scan); no console errors.
+  Slices A–H PASS — resolver, migration, route integration, RFQ gate, AI exclusion, QA seed,
+  11/11 Playwright E2E PASS; anti-leakage 17 fields verified; supplier self-view verified.
 prior_closed_unit_commits: >-
-  Design c04c3b2, Slice A ca73de9, Slice B 6a32ee4, Slice C f33b6b1,
-  Slice D f80351f, Slice E ae1738f, Slice F c8e396e, Slice G d835d00,
+  Slice A feb9e5f, Slice B 9d29798, Slice C 57b6e6c, Slice D 59e9207,
+  Slice E 9c71d14, Slice F bfb3f64, Slice G 493f684,
   Slice H governance closure.
 adjacent_deferred_candidate: TECS-AGG-AI-SUPPLIER-MATCHING-MVP-001 — DESIGN PLAN ARTIFACT (requires explicit Paresh authorization; do not auto-open)
 d015_reconciliation: COMPLETE
