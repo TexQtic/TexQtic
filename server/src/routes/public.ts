@@ -704,11 +704,27 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     expiry_date: Date | null;
   }
 
-  // Pure maturity computation — mirrors computeDppMaturity in tenant.ts (D-3 rules).
+  // Pure maturity computation — mirrors computeDppMaturity in tenant.ts (Slice D four-tier rules).
   function computeDppMaturityPublic(input: {
     approvedCertCount: number;
     lineageDepth: number;
+    passportStatus?: string;
+    hasPublicToken?: boolean;
+    activeCertsWithValidExpiry?: number;
   }): D6MaturityLevel {
+    const activeCerts = input.activeCertsWithValidExpiry ?? 0;
+    if (
+      input.passportStatus === 'PUBLISHED' &&
+      (input.hasPublicToken ?? false) &&
+      input.approvedCertCount >= 3 &&
+      input.lineageDepth >= 2 &&
+      activeCerts >= 1
+    ) {
+      return 'GLOBAL_DPP';
+    }
+    if (input.approvedCertCount >= 2 && input.lineageDepth >= 1 && activeCerts >= 1) {
+      return 'COMPLIANCE';
+    }
     if (input.approvedCertCount >= 1 && input.lineageDepth >= 1) {
       return 'TRADE_READY';
     }
@@ -827,7 +843,21 @@ const publicRoutes: FastifyPluginAsync = async fastify => {
     // ── Compute passport maturity ──────────────────────────────────────────────
     const approvedCertCount = certRows.filter(c => c.lifecycle_state_name === 'APPROVED').length;
     const lineageDepth = lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
-    const passportMaturity = computeDppMaturityPublic({ approvedCertCount, lineageDepth });
+    const todayPublic = new Date();
+    todayPublic.setHours(0, 0, 0, 0);
+    const activeCertsWithValidExpiry = certRows.filter(
+      c =>
+        c.lifecycle_state_name === 'APPROVED' &&
+        c.expiry_date !== null &&
+        c.expiry_date >= todayPublic,
+    ).length;
+    const passportMaturity = computeDppMaturityPublic({
+      approvedCertCount,
+      lineageDepth,
+      passportStatus: stateRow.status,
+      hasPublicToken: stateRow.public_token !== null,
+      activeCertsWithValidExpiry,
+    });
 
     // ── Shape restricted DppPublicPassportView ─────────────────────────────────
     // EXCLUDED: orgId, nodeId (raw), meta, geoHash, visibility,

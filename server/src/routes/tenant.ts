@@ -6807,22 +6807,42 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     updated_at: Date;
     reviewed_at: Date | null;
     reviewed_by_user_id: string | null;
+    public_token: string | null;
   }
 
   /**
    * computeDppMaturity — pure function, no side effects.
    *
-   * D-3 conservative rules:
-   *   TRADE_READY  — at least one APPROVED certification + lineage depth >= 1
-   *   LOCAL_TRUST  — node exists (fallback for all other cases)
-   *   COMPLIANCE   — reserved; not reachable in D-3 (requires explicit future criteria)
-   *   GLOBAL_DPP   — reserved; not reachable in D-3 (requires D-6 public gate + PUBLISHED status)
+   * TECS-DPP-PASSPORT-NETWORK-006 Slice D — four-tier Lite-to-Global ladder:
+   *   GLOBAL_DPP  — passportStatus === PUBLISHED + hasPublicToken + approvedCertCount >= 3
+   *                 + lineageDepth >= 2 + activeCertsWithValidExpiry >= 1
+   *   COMPLIANCE  — approvedCertCount >= 2 + lineageDepth >= 1 + activeCertsWithValidExpiry >= 1
+   *   TRADE_READY — approvedCertCount >= 1 + lineageDepth >= 1
+   *   LOCAL_TRUST — fallback (all other cases)
+   *
+   * activeCertsWithValidExpiry and hasPublicToken are optional for backward-compat
+   * with existing call sites that do not need the upper tiers.
    */
   function computeDppMaturity(input: {
     approvedCertCount: number;
     lineageDepth: number;
-    passportStatus: DppPassportStatus;
+    passportStatus?: DppPassportStatus | null;
+    hasPublicToken?: boolean;
+    activeCertsWithValidExpiry?: number;
   }): DppMaturityLevel {
+    const activeCerts = input.activeCertsWithValidExpiry ?? 0;
+    if (
+      input.passportStatus === 'PUBLISHED' &&
+      (input.hasPublicToken ?? false) &&
+      input.approvedCertCount >= 3 &&
+      input.lineageDepth >= 2 &&
+      activeCerts >= 1
+    ) {
+      return 'GLOBAL_DPP';
+    }
+    if (input.approvedCertCount >= 2 && input.lineageDepth >= 1 && activeCerts >= 1) {
+      return 'COMPLIANCE';
+    }
     if (input.approvedCertCount >= 1 && input.lineageDepth >= 1) {
       return 'TRADE_READY';
     }
@@ -6899,7 +6919,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
 
           // Passport state — empty array if no row (application layer defaults to DRAFT)
           const passportStates = await tx.$queryRaw<DppPassportStateRow[]>`
-            SELECT id, org_id, node_id, status, created_at, updated_at, reviewed_at, reviewed_by_user_id
+            SELECT id, org_id, node_id, status, created_at, updated_at, reviewed_at,
+                   reviewed_by_user_id, public_token
             FROM dpp_passport_states
             WHERE node_id = ${nodeId}::uuid
             LIMIT 1
@@ -6952,10 +6973,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       });
 
       // ── 5. Compute passport maturity ──────────────────────────────────────
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const activeCertsWithValidExpiry = certRows.filter(
+        c =>
+          c.lifecycle_state_name === 'APPROVED' &&
+          c.expiry_date !== null &&
+          c.expiry_date >= today,
+      ).length;
+      const hasPublicToken = (passportStateRows[0]?.public_token ?? null) !== null;
       const passportMaturity = computeDppMaturity({
         approvedCertCount,
         lineageDepth,
         passportStatus,
+        hasPublicToken,
+        activeCertsWithValidExpiry,
       });
 
       // ── 6. Write passport read-audit entry ───────────────────────────────
@@ -7142,12 +7174,17 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
                 FROM dpp_snapshot_certifications_v1
                 WHERE node_id = ${nodeId}::uuid
               `;
-              const approvedCertCount = certRows.filter(c => c.lifecycle_state_name === 'APPROVED').length;
+              const approvedCertCount = certRows.filter(
+                (c: { lifecycle_state_name: string }) => c.lifecycle_state_name === 'APPROVED',
+              ).length;
               const lineageRows = await tx.$queryRaw<Array<{ depth: number }>>`
                 SELECT depth FROM dpp_snapshot_lineage_v1
                 WHERE root_node_id = ${nodeId}::uuid
               `;
-              const lineageDepth = lineageRows.length > 0 ? Math.max(...lineageRows.map(r => r.depth)) : 0;
+              const lineageDepth =
+                lineageRows.length > 0
+                  ? Math.max(...lineageRows.map((r: { depth: number }) => r.depth))
+                  : 0;
               if (approvedCertCount < 1 || lineageDepth < 1) {
                 return { error: 'EVIDENCE_GATE_FAILED' as const, approvedCertCount, lineageDepth };
               }
@@ -7188,25 +7225,40 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
             `;
 
             // 9. Re-compute maturity with updated status
-            const certRowsPost = await tx.$queryRaw<Array<{ lifecycle_state_name: string }>>`
-              SELECT lifecycle_state_name
+            const certRowsPost = await tx.$queryRaw<Array<{ lifecycle_state_name: string; expiry_date: Date | null }>>`
+              SELECT lifecycle_state_name, expiry_date
               FROM dpp_snapshot_certifications_v1
               WHERE node_id = ${nodeId}::uuid
             `;
-            const approvedCertCountPost = certRowsPost.filter(c => c.lifecycle_state_name === 'APPROVED').length;
+            const approvedCertCountPost = certRowsPost.filter(
+              (c: { lifecycle_state_name: string; expiry_date: Date | null }) =>
+                c.lifecycle_state_name === 'APPROVED',
+            ).length;
 
             const lineageRowsPost = await tx.$queryRaw<Array<{ depth: number }>>`
               SELECT depth FROM dpp_snapshot_lineage_v1
               WHERE root_node_id = ${nodeId}::uuid
             `;
-            const lineageDepthPost = lineageRowsPost.length > 0
-              ? Math.max(...lineageRowsPost.map(r => r.depth))
-              : 0;
+            const lineageDepthPost =
+              lineageRowsPost.length > 0
+                ? Math.max(...lineageRowsPost.map((r: { depth: number }) => r.depth))
+                : 0;
+
+            const todayPost = new Date();
+            todayPost.setHours(0, 0, 0, 0);
+            const activeCertsWithValidExpiryPost = certRowsPost.filter(
+              (c: { lifecycle_state_name: string; expiry_date: Date | null }) =>
+                c.lifecycle_state_name === 'APPROVED' &&
+                c.expiry_date !== null &&
+                c.expiry_date >= todayPost,
+            ).length;
 
             const passportMaturity = computeDppMaturity({
               approvedCertCount: approvedCertCountPost,
               lineageDepth: lineageDepthPost,
               passportStatus: targetStatus,
+              hasPublicToken: newPublicToken !== null,
+              activeCertsWithValidExpiry: activeCertsWithValidExpiryPost,
             });
 
             return {
@@ -7675,7 +7727,8 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
           `;
 
           const passportStates = await tx.$queryRaw<DppPassportStateRow[]>`
-            SELECT id, org_id, node_id, status, created_at, updated_at, reviewed_at, reviewed_by_user_id
+            SELECT id, org_id, node_id, status, created_at, updated_at, reviewed_at,
+                   reviewed_by_user_id, public_token
             FROM dpp_passport_states
             WHERE node_id = ${nodeId}::uuid
             LIMIT 1
@@ -7725,10 +7778,21 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
       const aiExtractedClaimsCount = evidenceClaimRows.length;
 
       // ── 5. Compute passport maturity ──────────────────────────────────────────
+      const todayExport = new Date();
+      todayExport.setHours(0, 0, 0, 0);
+      const activeCertsWithValidExpiry = certRows.filter(
+        c =>
+          c.lifecycle_state_name === 'APPROVED' &&
+          c.expiry_date !== null &&
+          c.expiry_date >= todayExport,
+      ).length;
+      const hasPublicToken = (passportStateRows[0]?.public_token ?? null) !== null;
       const passportMaturity = computeDppMaturity({
         approvedCertCount,
         lineageDepth,
         passportStatus,
+        hasPublicToken,
+        activeCertsWithValidExpiry,
       });
 
       // ── 6. Write export audit entry ───────────────────────────────────────────
