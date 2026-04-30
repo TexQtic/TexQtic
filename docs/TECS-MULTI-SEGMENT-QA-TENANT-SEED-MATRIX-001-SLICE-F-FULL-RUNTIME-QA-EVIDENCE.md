@@ -220,6 +220,32 @@ M  server/src/routes/tenant.ts
 
 ### Post-Deployment Verification Run
 
-*To be updated after Vercel deployment completes and full suite is re-executed.*
+**Run date:** 2025-07-14  
+**Commit deployed:** `ba76fb5`  
+**Target:** `https://app.texqtic.com` (production Vercel)  
+**Command:** `playwright test tests/e2e/full-textile-chain-runtime-qa.spec.ts --reporter list`  
+**Log:** `runtime/ft-run-remediation.log`
 
-**Expected outcome:** 55 passed, 3 skipped (FTJ-01–03, BLOCKED_BY_AUTH), 0 failed.
+**Final result: 55 passed, 3 skipped, 0 failed — Duration: 5.1m**
+
+```
+3 skipped   (FTJ-01, FTJ-02, FTJ-03 — BLOCKED_BY_AUTH, pre-existing)
+55 passed
+0 failed
+```
+
+#### Critical Fix Verification
+
+| Test | Fix | Result |
+|------|-----|--------|
+| #46 FTI-03: DPP passport with unknown UUID | Fix A — passport try-catch + 404 | ✅ PASS (4.9s) |
+| #47 FTI-04: DPP evidence-claims with unknown UUID | Fix B — node existence pre-check + 404 | ✅ PASS (3.9s) |
+| #57 P5: Global anti-leakage scan | Fix C — catalog items explicit select clause | ✅ PASS (13.1s) |
+| #16 FTC-05: Override params do not bypass gate | Fix D — accept 400 OR 2xx+ok=false | ✅ PASS (1.4s) |
+| #30 FTF-01: GET /api/ complete.
+tenant/rfqs Buyer A | Fix E — `rfqs` key (was `items`) | ✅ PASS (4.0s) |
+| #33 FTF-04: Buyer B RFQ list | Fix F — `rfqs` key (was `items`) | ✅ PASS (4.2s) |
+| #34 FTG-01: Supplier inbox | Fix G — `rfqs` key (was `items`) | ✅ PASS (4.2s) |
+| #58 P6: Health check | Fix H — `/api/health` (was `/health`) | ✅ PASS (267ms) |
+
+All 8 blockers resolved. Task `TECS-FULL-TEXTILE-RUNTIME-QA-BLOCKER-REMEDIATION-001`
