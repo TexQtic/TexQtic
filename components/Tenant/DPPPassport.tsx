@@ -201,6 +201,106 @@ function isValidUuid(s: string): boolean {
   return UUID_RE.test(s.trim());
 }
 
+// ─── D-NETWORK-009 Slice G: Passport Assistant helper ────────────────────────
+// Assistant guidance is advisory only; it must not mutate passport status,
+// evidence, maturity, or publication state.
+
+type GuidanceSeverity = 'high' | 'medium' | 'info';
+
+interface GuidanceItem {
+  text: string;
+  severity: GuidanceSeverity;
+}
+
+interface PassportGuidance {
+  expiryWarnings: GuidanceItem[];
+  recommendations: GuidanceItem[];
+  buyerReadiness: string;
+  statusGuidance: string;
+}
+
+function buildPassportGuidance(
+  passportData: DppPassportView,
+  certifications: readonly DppCertRow[],
+): PassportGuidance {
+  const now = new Date();
+  const expiryWarnings: GuidanceItem[] = [];
+
+  // Check expiry: expired → high; within 30d → high; within 60d → medium
+  let hasExpired = false;
+  let within30 = false;
+  let within60 = false;
+  for (const cert of certifications) {
+    if (!cert.expiryDate) continue;
+    const daysLeft = Math.floor(
+      (new Date(cert.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    if (daysLeft < 0) { hasExpired = true; break; }
+    if (daysLeft <= 30) within30 = true;
+    else if (daysLeft <= 60) within60 = true;
+  }
+  if (hasExpired) {
+    expiryWarnings.push({
+      text: 'One or more certificates appear expired. Update certificate evidence before relying on this passport for buyer review.',
+      severity: 'high',
+    });
+  } else if (within30) {
+    expiryWarnings.push({
+      text: 'A certificate expires within 30 days. Renew it to keep buyer trust high.',
+      severity: 'high',
+    });
+  } else if (within60) {
+    expiryWarnings.push({
+      text: 'A certificate expires within 60 days. Plan renewal to avoid losing readiness.',
+      severity: 'medium',
+    });
+  }
+
+  const maturityRecommendations: Record<DppMaturityLevel, GuidanceItem[]> = {
+    LOCAL_TRUST: [
+      { text: 'Add a QC report or certificate to improve buyer confidence.', severity: 'info' },
+      { text: 'Link at least one supplier or production step to build supply-chain trust.', severity: 'info' },
+      { text: 'For local trade, your profile can stay simple — export details are optional.', severity: 'info' },
+    ],
+    TRADE_READY: [
+      { text: 'Upload a stronger certification bundle to move toward Gold.', severity: 'info' },
+      { text: 'Add or update certificate validity dates.', severity: 'info' },
+      { text: 'Add more traceability depth for larger buyers.', severity: 'info' },
+    ],
+    COMPLIANCE: [
+      { text: 'Your passport is certified and buyer-ready. Add public publication readiness to move toward Platinum.', severity: 'info' },
+      { text: 'Confirm certificates are current before publishing.', severity: 'info' },
+      { text: 'Add full supply-chain traceability for export readiness.', severity: 'info' },
+    ],
+    GLOBAL_DPP: [
+      { text: 'Your passport is export-ready. Keep evidence and certificates current.', severity: 'info' },
+      { text: 'Review public passport URL and QR label before sharing with buyers.', severity: 'info' },
+      { text: 'Monitor certificate expiry to avoid losing readiness.', severity: 'info' },
+    ],
+  };
+
+  const statusGuidanceMap: Record<DppPassportStatus, string> = {
+    DRAFT:       'Submit this passport for internal review when product details are ready.',
+    INTERNAL:    'Complete review and evidence checks to unlock trade access.',
+    TRADE_READY: 'This passport is approved for trade access. Publish only when it is ready for public buyer verification.',
+    PUBLISHED:   'This passport is public. Keep evidence current because buyers can verify it.',
+  };
+
+  const buyerReadinessMap: Record<DppMaturityLevel, string> = {
+    LOCAL_TRUST: 'Ready for basic local buyer discovery.',
+    TRADE_READY: 'Ready for stronger B2B trade conversations.',
+    COMPLIANCE:  'Ready for enterprise buyer review, subject to buyer-specific requirements.',
+    GLOBAL_DPP:  'Ready for public buyer verification and export-oriented review, subject to buyer and jurisdiction requirements.',
+  };
+
+  return {
+    expiryWarnings,
+    recommendations: maturityRecommendations[passportData.passportMaturity],
+    buyerReadiness:  buyerReadinessMap[passportData.passportMaturity],
+    statusGuidance:  statusGuidanceMap[passportData.passportStatus],
+  };
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -647,6 +747,72 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
               </div>
             </section>
           )}
+
+          {/* ── D-NETWORK-009 Slice G: Passport Assistant ── */}
+          {passportData && (() => {
+            const guidance = buildPassportGuidance(passportData, snapshot.certifications);
+            return (
+              <section
+                data-testid="dpp-passport-assistant"
+                className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4"
+              >
+                <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Passport Assistant</h2>
+                <p
+                  data-testid="dpp-passport-assistant-summary"
+                  className="text-sm text-slate-600"
+                >
+                  Guidance is advisory only. Review these suggestions to strengthen buyer readiness.
+                </p>
+
+                {guidance.expiryWarnings.length > 0 && (
+                  <div data-testid="dpp-passport-assistant-expiry-warning" className="space-y-2">
+                    {guidance.expiryWarnings.map((warn) => (
+                      <div
+                        key={warn.text}
+                        className={`px-4 py-3 rounded-lg text-sm border ${
+                          warn.severity === 'high'
+                            ? 'bg-red-50 border-red-200 text-red-700'
+                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                        }`}
+                      >
+                        {warn.text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div
+                  data-testid="dpp-passport-assistant-status-guidance"
+                  className="text-sm text-slate-600 border-l-2 border-slate-200 pl-3 italic"
+                >
+                  {guidance.statusGuidance}
+                </div>
+
+                <div
+                  data-testid="dpp-passport-assistant-buyer-readiness"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  {guidance.buyerReadiness}
+                </div>
+
+                <div data-testid="dpp-passport-assistant-recommendations" className="space-y-2">
+                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Improvement Suggestions</p>
+                  <ul className="space-y-2" aria-label="Improvement suggestions">
+                    {guidance.recommendations.map((rec) => (
+                      <li
+                        key={rec.text}
+                        data-testid="dpp-passport-assistant-recommendation"
+                        className="flex items-start gap-2 text-sm text-slate-600"
+                      >
+                        <span className="text-slate-400 mt-0.5 shrink-0" aria-hidden="true">→</span>
+                        {rec.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            );
+          })()}
         </>
       )}
     </div>
