@@ -153,6 +153,9 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
   }
 
   const maturity = MATURITY_LABELS[passport.passportMaturity] ?? MATURITY_LABELS.LOCAL_TRUST;
+  const buyerPageUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/passport/${encodeURIComponent(publicPassportId)}`
+    : `/passport/${encodeURIComponent(publicPassportId)}`;
 
   return (
     <div
@@ -275,7 +278,43 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
           </section>
         )}
 
-        {/* QR / Payload URL */}
+        {/* QR Verification Label — TECS-DPP-PASSPORT-NETWORK-008 Slice F */}
+        <section
+          data-testid="public-passport-qr-label"
+          className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+        >
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+            QR Verification Label
+          </h2>
+          <div
+            data-testid="public-passport-print-label"
+            className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+          >
+            <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-600">
+              Verified Supply Chain Passport
+            </p>
+            <div className={`mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${maturity.color}`}>
+              {maturity.badge}
+            </div>
+            <p className="mb-2 text-xs text-slate-500">
+              Scan or open this link to verify the public passport.
+            </p>
+            <a
+              data-testid="public-passport-qr-payload-url"
+              href={buyerPageUrl}
+              className="break-all text-sm font-mono text-[#2f8094] hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {buyerPageUrl}
+            </a>
+          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            QR image generation requires dependency authorization. The URL above is the canonical QR payload.
+          </p>
+        </section>
+
+        {/* Passport Reference (API-provided URL — preserved from Slice E) */}
         {passport.qr.payloadUrl && (
           <section className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6">
             <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
