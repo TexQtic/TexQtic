@@ -477,3 +477,11 @@ export function WLOrdersPanel() {
     </div>
   );
 }
+
+// ─── Test seam (source-descriptor pattern — no runtime effect) ───────────────
+export const __WL_ORDERS_PANEL_TESTING__ = {
+  canonicalStatus,
+  getActions,
+  STATUS_LABELS,
+  ACTION_LABELS,
+};

@@ -408,3 +408,11 @@ export function EXPOrdersPanel({ onBack }: Props) {
     </div>
   );
 }
+
+// ─── Test seam (source-descriptor pattern — no runtime effect) ───────────────
+export const __EXP_ORDERS_PANEL_TESTING__ = {
+  canonicalStatus,
+  getActions,
+  STATUS_LABELS,
+  ACTION_LABELS,
+};
