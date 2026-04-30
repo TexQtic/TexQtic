@@ -92,6 +92,54 @@ const PASSPORT_MATURITY_CLASSES: Record<DppMaturityLevel, string> = {
   GLOBAL_DPP: 'bg-purple-50 text-purple-700 border-purple-200',
 };
 
+// ─── D-NETWORK-003 Slice A: Passport Network UI label maps ───────────────────
+
+interface PassportStatusLabel {
+  badgeLabel: string;
+  helperLabel: string;
+}
+
+interface PassportMaturityLabel {
+  badgeLabel: string;
+  productLabel: string;
+  scoreTier: string;
+  sellerCta: string;
+}
+
+const PASSPORT_STATUS_LABELS: Record<DppPassportStatus, PassportStatusLabel> = {
+  DRAFT:       { badgeLabel: 'In Progress',       helperLabel: 'Complete product details and submit for review.' },
+  INTERNAL:    { badgeLabel: 'In Review',          helperLabel: 'Internal review is in progress before trade access.' },
+  TRADE_READY: { badgeLabel: 'Trade Access',       helperLabel: 'Approved for authenticated B2B trade use.' },
+  PUBLISHED:   { badgeLabel: 'Published — Public', helperLabel: 'Public passport is available through the public passport URL.' },
+};
+
+const PASSPORT_MATURITY_LABELS: Record<DppMaturityLevel, PassportMaturityLabel> = {
+  LOCAL_TRUST: {
+    badgeLabel:   'Bronze — Verified Local',
+    productLabel: 'Product Trust Profile',
+    scoreTier:    'Bronze',
+    sellerCta:    'Add a QC report or link your supplier to reach Silver.',
+  },
+  TRADE_READY: {
+    badgeLabel:   'Silver — Trade Ready',
+    productLabel: 'Trade Ready Passport',
+    scoreTier:    'Silver',
+    sellerCta:    'Upload your certification bundle to reach Gold.',
+  },
+  COMPLIANCE: {
+    badgeLabel:   'Gold — Certified',
+    productLabel: 'Certified Passport',
+    scoreTier:    'Gold',
+    sellerCta:    'Add full traceability to reach Platinum and unlock export markets.',
+  },
+  GLOBAL_DPP: {
+    badgeLabel:   'Platinum — Export Ready',
+    productLabel: 'Global DPP Passport',
+    scoreTier:    'Platinum',
+    sellerCta:    'Highest tier reached. Keep your evidence current.',
+  },
+};
+
 // ─── UUID validation ──────────────────────────────────────────────────────────
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -402,7 +450,7 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
           {/* ── Passport Foundation section (D-3 additive) ── */}
           {passportData && (
             <section className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-              <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Passport Foundation</h2>
+              <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Maturity &amp; Trust Score</h2>
 
               {/* Status + Maturity badges */}
               <div className="flex flex-wrap gap-3">
@@ -410,14 +458,24 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
                   data-testid="dpp-passport-status-badge"
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${PASSPORT_STATUS_CLASSES[passportData.passportStatus]}`}
                 >
-                  {passportData.passportStatus.replace('_', ' ')}
+                  {PASSPORT_STATUS_LABELS[passportData.passportStatus].badgeLabel}
                 </span>
                 <span
                   data-testid="dpp-maturity-indicator"
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${PASSPORT_MATURITY_CLASSES[passportData.passportMaturity]}`}
                 >
-                  {passportData.passportMaturity.replace('_', ' ')}
+                  {PASSPORT_MATURITY_LABELS[passportData.passportMaturity].badgeLabel}
                 </span>
+              </div>
+
+              {/* Product label + seller CTA */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-700">
+                  {PASSPORT_MATURITY_LABELS[passportData.passportMaturity].productLabel}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {PASSPORT_MATURITY_LABELS[passportData.passportMaturity].sellerCta}
+                </p>
               </div>
 
               {/* Evidence summary */}
