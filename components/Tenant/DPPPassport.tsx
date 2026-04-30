@@ -140,6 +140,60 @@ const PASSPORT_MATURITY_LABELS: Record<DppMaturityLevel, PassportMaturityLabel> 
   },
 };
 
+// ─── D-NETWORK-004 Slice B: Passport maturity ladder ─────────────────────────
+
+const MATURITY_ORDER: readonly DppMaturityLevel[] = [
+  'LOCAL_TRUST',
+  'TRADE_READY',
+  'COMPLIANCE',
+  'GLOBAL_DPP',
+];
+
+interface MaturityTierInfo {
+  description: string;
+  requirements: readonly string[];
+  /** Note shown to users at lower tiers — frames advanced tiers as optional growth paths. */
+  advancedContext: string | null;
+}
+
+const MATURITY_TIER_INFO: Record<DppMaturityLevel, MaturityTierInfo> = {
+  LOCAL_TRUST: {
+    description: 'Basic product and business details verified.',
+    requirements: [
+      'Product details and photos',
+      'Basic business identity',
+      'Product category and material',
+    ],
+    advancedContext: null,
+  },
+  TRADE_READY: {
+    description: 'Ready for B2B trade conversations.',
+    requirements: [
+      'At least one approved certificate or evidence item',
+      'At least one supply-chain lineage link',
+    ],
+    advancedContext: null,
+  },
+  COMPLIANCE: {
+    description: 'Certified and buyer-ready.',
+    requirements: [
+      'Approved certification evidence',
+      'Valid certificate dates and issuing body',
+      'Stronger buyer evidence bundle',
+    ],
+    advancedContext: 'Optional next growth step — for larger buyers and enterprise trade.',
+  },
+  GLOBAL_DPP: {
+    description: 'Export-ready public passport.',
+    requirements: [
+      'Published public passport',
+      'Full supply-chain traceability',
+      'Export-grade evidence bundle',
+    ],
+    advancedContext: 'Optional export path — not required for local or domestic trade.',
+  },
+};
+
 // ─── UUID validation ──────────────────────────────────────────────────────────
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -477,6 +531,98 @@ export function DPPPassport({ onBack, title = 'DPP Passport', subtitle = 'Digita
                   {PASSPORT_MATURITY_LABELS[passportData.passportMaturity].sellerCta}
                 </p>
               </div>
+
+              {/* Maturity Progression Ladder — Slice B */}
+              {(() => {
+                const currentIndex = MATURITY_ORDER.indexOf(passportData.passportMaturity);
+                return (
+                  <div data-testid="dpp-maturity-ladder" className="space-y-1.5 border-t border-slate-100 pt-3">
+                    {MATURITY_ORDER.map((tier, index) => {
+                      const state: 'completed' | 'current' | 'upcoming' =
+                        index < currentIndex ? 'completed' :
+                        index === currentIndex ? 'current' :
+                        'upcoming';
+                      const info = MATURITY_TIER_INFO[tier];
+                      const lbl  = PASSPORT_MATURITY_LABELS[tier];
+
+                      if (state === 'completed') {
+                        return (
+                          <div
+                            key={tier}
+                            data-testid={`dpp-maturity-tier-${tier}`}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100"
+                          >
+                            <span className="text-green-600 text-xs" aria-hidden="true">✓</span>
+                            <span className="text-xs font-semibold text-slate-600">{lbl.badgeLabel}</span>
+                            <span className="text-[10px] text-slate-400 ml-auto">Completed</span>
+                          </div>
+                        );
+                      }
+
+                      if (state === 'current') {
+                        return (
+                          <div
+                            key={tier}
+                            data-testid={`dpp-maturity-tier-${tier}`}
+                            data-current="true"
+                            className="px-3 py-3 rounded-lg bg-white border-2 border-green-300 shadow-sm"
+                          >
+                            <div
+                              data-testid="dpp-maturity-tier-current"
+                              className="flex items-center gap-2 mb-2"
+                            >
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                Current
+                              </span>
+                              <span className="text-xs font-bold text-slate-800">{lbl.badgeLabel}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-600 mb-2">{info.description}</p>
+                            <ul className="space-y-1 mb-2" aria-label="Requirements">
+                              {info.requirements.map((req) => (
+                                <li key={req} className="flex items-start gap-1.5 text-[11px] text-slate-500">
+                                  <span className="text-green-500 mt-0.5" aria-hidden="true">·</span>
+                                  {req}
+                                </li>
+                              ))}
+                            </ul>
+                            <p
+                              data-testid="dpp-maturity-next-step"
+                              className="text-[11px] text-slate-600 font-medium mt-2 pt-2 border-t border-slate-100"
+                            >
+                              {lbl.sellerCta}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      // upcoming
+                      const isAdvanced = tier === 'COMPLIANCE' || tier === 'GLOBAL_DPP';
+                      const isLocalUser = currentIndex <= 1;
+                      return (
+                        <div
+                          key={tier}
+                          data-testid={`dpp-maturity-tier-${tier}`}
+                          className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-dashed border-slate-200"
+                        >
+                          <span className="text-slate-300 text-xs mt-0.5" aria-hidden="true">○</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-semibold text-slate-400">{lbl.badgeLabel}</span>
+                              <span className="text-[10px] text-slate-400">—&nbsp;{lbl.productLabel}</span>
+                            </div>
+                            {isAdvanced && isLocalUser && info.advancedContext !== null && (
+                              <p className="text-[10px] text-slate-400 mt-0.5 italic">
+                                {info.advancedContext}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400 shrink-0">Upcoming</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* Evidence summary */}
               <div data-testid="dpp-evidence-summary" className="grid grid-cols-3 gap-4 pt-2 border-t border-slate-100">
