@@ -46,7 +46,7 @@ last_closed_unit_runtime_verdict: >-
   Seed: SEED_BLOCKED (QA org has no traceability nodes — correct graceful failure).
   DPP-E2E-12/13/14 scaffolded correctly; will pass once QA org has a node and seed runs.
 last_closed_unit_commits: >-
-  85631e9 — test(dpp): add published passport runtime fixture proof
+  0c43dc9 — test(dpp): add published passport runtime fixture proof
   (Prior: 7bbea1d — governance 010 commit hash; 29ee688 — docs(dpp) expansion packet;
    adb15ad — governance 010A; 5991bd5 — feat(dpp) expose public passport link).
 last_closed_unit_closure_basis: >-

@@ -41,7 +41,7 @@ Status:        VERIFIED_COMPLETE_WITH_LIMITATIONS
 Closure Date:  2026-05-09
 Type:          TEST + TOOLING — no schema, migration, route, or UI changes
 Files Changed: scripts/seed-dpp-fixture.ts (NEW), tests/e2e/dpp-passport-network.spec.ts (UPDATED)
-Commit:        85631e9 — [TEXQTIC] test(dpp): add published passport runtime fixture proof
+Commit:        0c43dc9 — [TEXQTIC] test(dpp): add published passport runtime fixture proof
 Evidence:
   tsc --noEmit: CLEAN (0 errors)
   E2E: 11/11 prior tests PASS; DPP-E2E-12/13/14 (NEW) SKIP: BLOCKED_BY_FIXTURE

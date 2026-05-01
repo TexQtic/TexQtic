@@ -39,7 +39,7 @@ Notes: <constraints or cautions applicable after closure>
 ### TECS-DPP-PASSPORT-NETWORK-010-B — 2026-05-09
 Type: IMPLEMENTATION + VERIFICATION / TEST + TOOLING
 Status: VERIFIED_COMPLETE_WITH_LIMITATIONS
-Commit: 85631e9 — test(dpp): add published passport runtime fixture proof
+Commit: 0c43dc9 — test(dpp): add published passport runtime fixture proof
 Title: Published DPP QA Fixture seed script + DPP-E2E-12/13/14 authenticated runtime proof
 Summary: Delivered scripts/seed-dpp-fixture.ts — an idempotent QA fixture seed script that promotes
   the best available traceability node to PUBLISHED via the PATCH passport/status API and writes

@@ -58,7 +58,7 @@
     (correct graceful failure — QA org has no traceability nodes yet; create one in tenant UI first).
   E2E: DPP-E2E-12/13/14 added to tests/e2e/dpp-passport-network.spec.ts; skip BLOCKED_BY_FIXTURE
     when no fixture present. 11/11 prior tests PASS. tsc --noEmit CLEAN.
-  Commit: 85631e9 — test(dpp): add published passport runtime fixture proof.
+  Commit: 0c43dc9 — test(dpp): add published passport runtime fixture proof.
   Limitations:
     1. QA org has no traceability nodes → DPP-E2E-12/13/14 skip (expected graceful behavior).
     2. DPP-E2E-13: browser dpp-public-passport-panel assertion deferred (no chromium project).
