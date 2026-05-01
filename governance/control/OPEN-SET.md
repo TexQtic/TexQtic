@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-017E — VERIFIED_COMPLETE; pre-JSON-LD public payload cleanup; 27/29 E2E pass; slice 018 HOLD_FOR_AUTHORIZATION)
+**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-018 — VERIFIED_COMPLETE; JSON-LD machine-readable structured-data public route; 29/31 E2E pass; awaiting Paresh authorization for next slice)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,19 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-018 is VERIFIED_COMPLETE (2026-05-13).
+  New route: GET /api/public/dpp/:publicPassportId/structured-data. Returns JSON-LD
+  (@context, @type: ProductPassport, @id = /passport/ buyer URL, passportStatus: PUBLISHED,
+  product, certifications, lineageSummary, evidenceSummary, generatedAt).
+  Content-Type: application/ld+json; charset=utf-8. Cache-Control: public, max-age=300.
+  Privacy denylist enforced (orgId, nodeId, public_token, pricing, extractionId etc.).
+  D6FetchResult discriminated union introduced; fetchPublicDppData refactored.
+  passportStatus: 'PUBLISHED' as const (literal, D17-P05 static-check compliant).
+  CRITICAL: .json suffix route FOREVER ABSENT (D-6 hotfix, find-my-way SyntaxError).
+  46 new SD unit tests. D6 (58/62) + D17 (31/31) suites all green. Full DPP regression PASS (12 suites).
+  E2E DPP-E2E-30 (two-tier; live API tier deferred until D-18 deployed).
+  E2E DPP-E2E-31 (safety: .json absent, base route intact). E2E: 29/31 pass (2 BLOCKED_BY_FIXTURE).
+  tsc CLEAN (frontend + server). No schema changes. Awaiting Paresh authorization for next slice.
 - TECS-DPP-PASSPORT-NETWORK-017E is VERIFIED_COMPLETE (2026-05-12).
   Pre-JSON-LD public payload cleanup + D2/D3 boundary test repair (AUDIT-001 AF-01 through AF-04).
   AF-01: qr.payloadUrl /dpp/ → /passport/ (SPA buyer page). AF-02: aiExtractedClaimsCount removed.

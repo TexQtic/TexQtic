@@ -5,6 +5,53 @@
 
 ---
 
+---
+
+## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-018 (JSON-LD Machine-Readable Public DPP)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-018
+Type:          NEW FEATURE — Public JSON-LD Structured Data Route
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-13
+Commits:       PENDING (two: feat + governance)
+
+Route:         GET /api/public/dpp/:publicPassportId/structured-data
+Payload:       JSON-LD (@context, @type: ProductPassport, @id /passport/ URL, passportStatus,
+               product, certifications, lineageSummary, evidenceSummary, generatedAt)
+Headers:       Content-Type: application/ld+json; charset=utf-8
+               Cache-Control: public, max-age=300
+Privacy:       orgId, nodeId, public_token, pricing, extractionId, confidence,
+               buyerOrgId, createdByUserId, reviewedByUserId, approvedBy, approvedAt — all absent
+Refactor:      fetchPublicDppData (D6FetchResult discriminated union); handlePublicDppRead dispatch
+               passportStatus: 'PUBLISHED' as const (literal; required for D17-P05 static check)
+
+Tests Added:
+  server/src/__tests__/tecs-dpp-structured-data.test.ts — 46 tests (SD-A through SD-F) — 46/46 PASS
+Tests Updated:
+  tecs-dpp-d6-public-passport.test.ts — D6-B10 scope narrowed; D6-P16 corrected (AF-02 absence)
+  tecs-dpp-public-security.test.ts — D17-B01/B03/B04 refactored to new fetchPublicDppData boundary
+                                      D17-P05 fixed via public.ts literal 'PUBLISHED' as const
+E2E Added:
+  DPP-E2E-30 — JSON-LD source-analysis tier (always runs) + live API tier (deferred until deployed)
+  DPP-E2E-31 — Safety: .json forever absent, base D-6 route intact
+
+Runtime:
+  tsc (frontend): 0 errors
+  tsc (server):   0 errors
+  tecs-dpp-structured-data:    46/46 PASS
+  tecs-dpp-d6-public-passport: 58/62 (4 DB-skipped)
+  tecs-dpp-public-security:    31/31 PASS
+  Full DPP regression (12 suites): all pass
+  E2E (--project=api):         29 passed, 2 skipped (BLOCKED_BY_FIXTURE), 0 failed
+
+Constraints:
+  CRITICAL: .json suffix route FOREVER ABSENT (D-6 hotfix — find-my-way SyntaxError on find-my-way
+            new Function() call; see user memory debugging.md). Must never be restored.
+  D-18 live API tier (DPP-E2E-30): deferred until deployed to app.texqtic.com.
+  passportStatus: 'PUBLISHED' as const must remain literal (D17-P05 static check dependency).
+```
+
 ## 2026-05-12 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017E (Pre-JSON-LD Public Payload Cleanup)
 
 ```

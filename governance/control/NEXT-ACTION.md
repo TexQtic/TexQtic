@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-017E — VERIFIED_COMPLETE; pre-JSON-LD public payload cleanup + boundary test repair; 27/29 E2E pass; awaiting Paresh authorization for slice 018)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-018 — VERIFIED_COMPLETE; JSON-LD machine-readable public DPP structured-data route; 29/31 E2E pass; awaiting Paresh authorization for next slice)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,27 +11,31 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017E pre-JSON-LD cleanup (2026-05-12); 27/29 E2E pass; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
-active_delivery_unit: NONE — awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-018 JSON-LD structured-data route (2026-05-13); 29/31 E2E pass; awaiting Paresh authorization for next DPP slice
+active_delivery_unit: NONE — awaiting Paresh authorization for next DPP slice
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-017E VERIFIED_COMPLETE (2026-05-12).
-  AF-01: qr.payloadUrl corrected from /dpp/:id to /passport/:id (SPA buyer page).
-  AF-02: aiExtractedClaimsCount (hardcoded 0) removed from public API and PublicPassport.tsx.
-  AF-03: 6 stale D2/D3 boundary tests updated to reflect current repo truth.
-  AF-04: Redundant "Passport Reference" section removed from PublicPassport.tsx.
-  D17-X07 updated (public-security suite) to assert /passport/ not /dpp/ path.
-  E2E type annotations updated to remove absent aiExtractedClaimsCount field.
-  Frontend tsc: CLEAN. Server tsc: CLEAN. D2+D3 suites: 108/18. Core DPP: 315/14. E2E: 27/2.
-  Do NOT open TECS-DPP-PASSPORT-NETWORK-018 without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017E
+  TECS-DPP-PASSPORT-NETWORK-018 VERIFIED_COMPLETE (2026-05-13).
+  New route: GET /api/public/dpp/:publicPassportId/structured-data.
+  Returns JSON-LD (@context, @type: ProductPassport, @id, passportStatus, product, certifications,
+  lineageSummary, evidenceSummary, generatedAt). Content-Type: application/ld+json.
+  Cache-Control: public, max-age=300. Privacy denylist enforced (orgId, nodeId, public_token, pricing etc.).
+  fetchPublicDppData helper refactored (discriminated union D6FetchResult).
+  passportStatus: 'PUBLISHED' as const (literal, not field reference — required for D17-P05 static check).
+  46 new SD tests (tecs-dpp-structured-data.test.ts). D6 + D17 suites repaired and all green.
+  E2E: DPP-E2E-30 (two-tier: source-analysis always; live API deferred until deployed).
+       DPP-E2E-31 (safety regression: .json absent, base route intact).
+  Do NOT open next slice without Paresh authorization.
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-018
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
   Frontend tsc: 0 errors. Server tsc: 0 errors.
-  D2+D3 boundary tests: 108 passed / 18 skipped (2 suites PASS).
-  Core DPP unit tests (8 suites): 315 passed / 14 skipped (8 Test Files PASS).
-  E2E (--project=api): 27 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
-last_closed_unit_commits: PENDING (two commits: fix + governance)
+  tecs-dpp-structured-data: 46/46 PASS.
+  tecs-dpp-d6-public-passport: 58/62 (4 DB-skipped).
+  tecs-dpp-public-security: 31/31 PASS.
+  Full DPP regression (12 suites): all pass.
+  E2E (--project=api): 29 passed, 2 skipped (BLOCKED_BY_FIXTURE), 0 failed.
+last_closed_unit_commits: PENDING (two commits: feat + governance)
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017D, 2026-05-01).
   QA fixture: nodeId=3f26ca48 / publicPassportId=48d83d5a confirmed PUBLISHED via seed script.

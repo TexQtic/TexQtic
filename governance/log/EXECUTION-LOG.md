@@ -36,6 +36,29 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-018 — 2026-05-13
+Type: NEW FEATURE — Public JSON-LD Structured Data Route
+Status: VERIFIED_COMPLETE
+Commit: PENDING (two: feat + governance)
+Title: JSON-LD Machine-Readable Public DPP Pilot (Slice 018)
+Summary: Added GET /api/public/dpp/:publicPassportId/structured-data returning JSON-LD with
+  @context, @type: ProductPassport, @id (/passport/ buyer URL), passportStatus: PUBLISHED as const,
+  product, certifications, lineageSummary, evidenceSummary, generatedAt. Privacy denylist enforced.
+  Content-Type: application/ld+json; Cache-Control: public, max-age=300.
+  Refactored fetchPublicDppData helper (D6FetchResult discriminated union) + handlePublicDppRead
+  result-kind dispatch. D6/D17 test regressions caused by refactor found and fixed.
+  46 new SD unit tests + D6-P16 corrected + D17-B01/B03/B04 updated + DPP-E2E-30/31 added.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG), Layer 3 (this file)
+Runtime verdict: Frontend tsc CLEAN. Server tsc CLEAN.
+  tecs-dpp-structured-data: 46/46. tecs-dpp-d6-public-passport: 58/62 (4 DB-skipped).
+  tecs-dpp-public-security: 31/31. Full DPP regression (12 suites): all pass.
+  E2E (--project=api): 29 passed, 2 skipped (BLOCKED_BY_FIXTURE), 0 failed.
+Notes: CRITICAL: .json suffix route FOREVER ABSENT (D-6 hotfix; find-my-way SyntaxError).
+  passportStatus: 'PUBLISHED' as const — must remain literal (D17-P05 static-check dependency).
+  DPP-E2E-30 live API tier deferred until D-18 deployed to app.texqtic.com.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-017E — 2026-05-12
 Type: CORRECTIVE CLEANUP + BOUNDARY TEST REPAIR
 Status: VERIFIED_COMPLETE
