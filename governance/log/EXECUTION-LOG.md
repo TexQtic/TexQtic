@@ -36,6 +36,25 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-014 — 2026-05-13
+Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: TBD (pending impl commit)
+Title: Trade Linkage Foundation — dpp_trade_links table, RLS, service, GET+POST routes, 68/68 unit tests
+Summary: Created dpp_trade_links table via migration (RLS ENABLE+FORCE, 4 policies using
+  app.current_org_id(), 4 indexes + partial unique on source_id IS NOT NULL, FK to
+  traceability_nodes/organizations; NO FK to orders/rfqs — domain boundary decision).
+  Added server/src/services/dppTradeLinks.ts with full helper set incl. validateDppTradeLinkSource.
+  Added GET /api/tenant/dpp/:nodeId/trade-links (any auth member) and
+  POST /api/tenant/dpp/:nodeId/trade-links (ADMIN/OWNER, audit: tenant.dpp.trade_link.created).
+  68/68 unit tests PASS. Regression: evidence vault 59/59, product details 50/50, node-certs 25/25 PASS.
+  tsc --noEmit CLEAN. sourceId never exposed publicly. No buyer_org_id in v1.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG), Layer 3 (this file)
+Notes: No buyer_org_id column. No FK to orders/rfqs. source_table restricted to application allowlist.
+  Public privacy enforced — dpp_trade_links never queried from public routes.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-013 — 2026-05-13
 Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
 Status: VERIFIED_COMPLETE

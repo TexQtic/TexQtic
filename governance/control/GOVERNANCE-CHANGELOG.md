@@ -5,6 +5,48 @@
 
 ---
 
+## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-014 (Trade Linkage Foundation)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-014
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-13
+Type:          IMPLEMENTATION + UNIT-TEST VERIFICATION
+
+Delivered:
+  - Migration: server/prisma/migrations/20260513200000_tecs_dpp_trade_links/migration.sql
+    CREATE TABLE dpp_trade_links; ENABLE + FORCE RLS; 4 policies (app.current_org_id());
+    4 indexes + partial unique (org_id, node_id, link_type, source_table, source_id) WHERE source_id IS NOT NULL;
+    FK to traceability_nodes (ON DELETE CASCADE), organizations. NO FK to orders/rfqs.
+  - Service: server/src/services/dppTradeLinks.ts
+    DppTradeLinkRow, DppTradeLinkDto, CreateDppTradeLinkInput, toDppTradeLinkDto,
+    listDppTradeLinksForNode, createDppTradeLink, validateDppTradeLinkSource,
+    assertTradeLinkNodeBelongsToOrg, DPP_TRADE_LINK_TYPES (9), DPP_TRADE_LINK_VISIBILITY_VALUES (3),
+    DPP_TRADE_LINK_SOURCE_TABLE_ALLOWLIST.
+  - Routes in server/src/routes/tenant.ts:
+    GET  /api/tenant/dpp/:nodeId/trade-links (any auth tenant member; audit: trade_link.listed)
+    POST /api/tenant/dpp/:nodeId/trade-links (ADMIN/OWNER only; audit: trade_link.created)
+  - Test: server/src/__tests__/tecs-dpp-trade-links.test.ts — 68/68 PASS
+
+Verification:
+  - tsc --noEmit: CLEAN
+  - 014 unit tests: 68/68 PASS
+  - Regression: evidence vault 59/59, product details 50/50, node-certs 25/25 PASS
+  - Public privacy: dpp_trade_links never queried from public routes; sourceId never exposed publicly
+  - No buyer_org_id in v1; no FK to orders/rfqs (domain boundaries enforced)
+
+Design Decisions:
+  - Generic soft-reference: source_table + source_id (no FK — orders use tenantId→tenants,
+    DPP uses org_id→organizations; different domain boundaries)
+  - Partial unique index prevents duplicate hard-referenced trade links
+  - visibility default: PRIVATE
+  - 9 link types: RFQ, ORDER, INVOICE, SHIPMENT, BUYER_ACCEPTANCE, DISPATCH_PROOF,
+    QC_REFERENCE, PAYMENT_REFERENCE, OTHER
+  - Application-layer source_table allowlist (defense-in-depth above DB regex CHECK)
+```
+
+---
+
 ## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-013 (Product Passport Data Depth)
 
 ```

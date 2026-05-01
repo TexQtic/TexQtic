@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-013 — VERIFIED_COMPLETE; product passport data depth; 50/50 unit tests PASS; tsc CLEAN; evidence vault regression 59/59 PASS)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-014 — VERIFIED_COMPLETE; trade linkage foundation; 68/68 unit tests PASS; tsc CLEAN; evidence vault 59/59, product details 50/50, node-certs 25/25 regression PASS)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,26 +11,29 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-013 Product Passport Data Depth (2026-05-13); 50/50 unit tests PASS; evidence vault regression 59/59 PASS; tsc CLEAN; awaiting Paresh authorization for next unit
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-014 Trade Linkage Foundation (2026-05-13); 68/68 unit tests PASS; evidence vault 59/59, product details 50/50, node-certs 25/25 regression PASS; tsc CLEAN; awaiting Paresh authorization for next unit
 active_delivery_unit: NONE — awaiting Paresh authorization for implementation slices
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-013 VERIFIED_COMPLETE (2026-05-13).
-  Delivered: dpp_product_details table (migration 20260513100000_tecs_dpp_product_details),
-  RLS (ENABLE+FORCE, 4 policies using app.current_org_id()), 2 indexes, unique (org_id, node_id),
-  FKs to traceability_nodes (ON DELETE CASCADE), organizations, dpp_evidence_items (ON DELETE SET NULL).
-  Service: server/src/services/dppProductDetails.ts — DppProductDetailsRow, DppProductDetailsDto,
-    toDppProductDetailsDto, getDppProductDetailsForNode, upsertDppProductDetailsForNode,
-    validateMaterialComposition, DPP_MATERIAL_MAX_ENTRIES, DPP_MATERIAL_TOTAL_MAX_PERCENT.
-  Routes: PUT /api/tenant/dpp/:nodeId/product-details (ADMIN/OWNER only, tenant.ts).
-  GET /api/tenant/dpp/:nodeId/passport extended with passportProductDetails field.
-  UI: DPPPassport.tsx — Product Passport Details section with DppProductDetailsDto interface.
-  Tests: tecs-dpp-product-details.test.ts — 50/50 PASS.
-  Regression: tecs-dpp-evidence-vault 59/59 PASS.
+  TECS-DPP-PASSPORT-NETWORK-014 VERIFIED_COMPLETE (2026-05-13).
+  Delivered: dpp_trade_links table (migration 20260513200000_tecs_dpp_trade_links),
+  RLS (ENABLE+FORCE, 4 policies using app.current_org_id()), 4 indexes + partial unique index,
+  FKs to traceability_nodes (ON DELETE CASCADE), organizations. NO FK to orders/rfqs (domain boundary).
+  Service: server/src/services/dppTradeLinks.ts — DppTradeLinkRow, DppTradeLinkDto,
+    CreateDppTradeLinkInput, toDppTradeLinkDto, listDppTradeLinksForNode, createDppTradeLink,
+    validateDppTradeLinkSource, assertTradeLinkNodeBelongsToOrg,
+    DPP_TRADE_LINK_TYPES (9 values), DPP_TRADE_LINK_VISIBILITY_VALUES (3 values),
+    DPP_TRADE_LINK_SOURCE_TABLE_ALLOWLIST.
+  Routes: GET /api/tenant/dpp/:nodeId/trade-links (any auth member).
+          POST /api/tenant/dpp/:nodeId/trade-links (ADMIN/OWNER only).
+  Audit: tenant.dpp.trade_link.listed + tenant.dpp.trade_link.created.
+  Tests: tecs-dpp-trade-links.test.ts — 68/68 PASS.
+  Regression: evidence vault 59/59, product details 50/50, node-certs 25/25 PASS.
   Typecheck: tsc --noEmit CLEAN.
-  Public privacy: passportProductDetails NOT on public routes (Slice 015 scope).
+  Public privacy: dpp_trade_links never queried from public routes. sourceId never exposed publicly.
+  No buyer_org_id in v1. No FK to orders/rfqs (different domain boundaries).
   Do NOT open any slice without explicit Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-013
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-014
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
   tsc --noEmit: CLEAN (0 errors). E2E: 14/14 PASS (dpp-passport-network.spec.ts, api project).

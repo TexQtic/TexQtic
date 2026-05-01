@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-013 — VERIFIED_COMPLETE; product passport data depth; 50/50 unit tests PASS; tsc CLEAN)
+**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-014 — VERIFIED_COMPLETE; trade linkage foundation; 68/68 unit tests PASS; tsc CLEAN)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,16 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-014 is VERIFIED_COMPLETE (2026-05-13).
+  Trade Linkage Foundation. Table: dpp_trade_links (migration 20260513200000_tecs_dpp_trade_links).
+  RLS: ENABLE + FORCE ROW LEVEL SECURITY. 4 RLS policies using app.current_org_id(). 4 indexes + partial unique.
+  FKs: traceability_nodes (ON DELETE CASCADE), organizations. NO FK to orders/rfqs (domain boundary).
+  Service: server/src/services/dppTradeLinks.ts — full helper set incl. validateDppTradeLinkSource.
+  Routes: GET /api/tenant/dpp/:nodeId/trade-links (any auth member, audit: trade_link.listed).
+          POST /api/tenant/dpp/:nodeId/trade-links (ADMIN/OWNER, audit: trade_link.created).
+  Tests: tecs-dpp-trade-links.test.ts 68/68 PASS. Regression: evidence vault 59/59, product-details 50/50, node-certs 25/25 PASS. tsc CLEAN.
+  Public privacy: dpp_trade_links never on public routes. sourceId never exposed publicly. No buyer_org_id in v1.
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-013 is VERIFIED_COMPLETE (2026-05-13).
   Product Passport Data Depth. Table: dpp_product_details (migration 20260513100000_tecs_dpp_product_details).
   RLS: ENABLE + FORCE ROW LEVEL SECURITY. 4 RLS policies using app.current_org_id(). 2 indexes. Unique (org_id, node_id).
