@@ -342,3 +342,117 @@ test('DPP-E2E-14 — 010-B: public passport API returns PUBLISHED view unauthent
     expect(text).not.toContain(field);
   }
 });
+
+// ── Group 6: 015 — Public Buyer Page v2 ───────────────────────────────────────
+//
+// Tests:
+//   DPP-E2E-15 — API response contains all v2 section fields: certifications array,
+//                lineageSummary (depth + nodeCount), product identity, evidenceSummary.
+//                VERIFIED_COMPLETE_WITH_LIMITATIONS: browser DOM render of
+//                data-testid="public-passport-product-story" etc. requires chromium
+//                Playwright project — deferred for 015. API contract fully verified.
+//   DPP-E2E-16 — Enhanced v2 privacy regression: API response does not expose
+//                sourceId, orderId, rfqId, invoiceId, buyer_org_id, document_url.
+//                These fields are new to the 015 privacy boundary check.
+
+test('DPP-E2E-15 — 015: public API response contains all v2 section fields (VERIFIED_COMPLETE_WITH_LIMITATIONS)', async ({ request }) => {
+  // NOTE: Browser DOM assertions for public-passport-product-story, public-passport-identity-summary,
+  // public-passport-traceability-timeline, public-passport-certification-cards, and
+  // public-passport-certification-empty require adding a chromium project to playwright.config.ts
+  // and an authenticated browser session — deferred for 015.
+  // This test verifies the API response contains all data fields required for v2 sections.
+  // Status: VERIFIED_COMPLETE_WITH_LIMITATIONS — browser render assertions deferred.
+  if (!FIXTURE_AVAILABLE) { test.skip(true, 'BLOCKED_BY_FIXTURE: run scripts/seed-dpp-fixture.ts first'); return; }
+
+  const res = await request.get(
+    `${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`,
+  );
+  expect(res.status()).toBe(200);
+
+  const body = (await res.json()) as {
+    success: boolean;
+    data: {
+      passportMaturity: string;
+      product: {
+        nodeType: string;
+        batchId: string | null;
+        manufacturerName: string | null;
+        manufacturerJurisdiction: string | null;
+      };
+      lineageSummary: { lineageDepth: number; nodeCount: number };
+      certifications: Array<{
+        certificationType: string;
+        lifecycleStateName: string;
+        expiryDate: string | null;
+        issuedAt: string | null;
+      }>;
+      evidenceSummary: { approvedCertCount: number; aiExtractedClaimsCount: number };
+      exportedAt: string;
+    };
+  };
+
+  expect(body.success).toBe(true);
+
+  // v2 product identity section fields
+  expect(body.data.product.nodeType).toBeTruthy();
+  expect(body.data.product).toHaveProperty('manufacturerName');
+  expect(body.data.product).toHaveProperty('manufacturerJurisdiction');
+  expect(body.data.product).toHaveProperty('batchId');
+
+  // v2 traceability timeline section fields
+  expect(typeof body.data.lineageSummary.lineageDepth).toBe('number');
+  expect(typeof body.data.lineageSummary.nodeCount).toBe('number');
+
+  // v2 certification cards section fields
+  expect(Array.isArray(body.data.certifications)).toBe(true);
+  for (const cert of body.data.certifications) {
+    expect(cert.certificationType).toBeTruthy();
+    expect(cert.lifecycleStateName).toBeTruthy();
+    // expiryDate and issuedAt may be null — just check they are present
+    expect(cert).toHaveProperty('expiryDate');
+    expect(cert).toHaveProperty('issuedAt');
+  }
+
+  // v2 evidence summary section fields
+  expect(typeof body.data.evidenceSummary.approvedCertCount).toBe('number');
+  expect(typeof body.data.evidenceSummary.aiExtractedClaimsCount).toBe('number');
+
+  // v2 product story: exportedAt needed for publication date display
+  expect(body.data.exportedAt).toBeTruthy();
+
+  // passportMaturity must be one of the four defined tiers
+  expect(['LOCAL_TRUST', 'TRADE_READY', 'COMPLIANCE', 'GLOBAL_DPP']).toContain(body.data.passportMaturity);
+});
+
+test('DPP-E2E-16 — 015: v2 privacy regression — API does not expose additional private fields', async ({ request }) => {
+  // Extended anti-leakage check for fields relevant to v2 sections (trade links, evidence items,
+  // order references, document URLs). The unauthenticated synthetic probe covers the 404 path;
+  // the fixture probe (if available) covers the 200 PUBLISHED path.
+  const res404 = await request.get(`${BASE_URL}/api/public/dpp/${SYNTHETIC_UNKNOWN_UUID}`);
+  const text404 = await res404.text();
+
+  // v2 privacy boundary: additional internal fields must not appear in any public response
+  const v2Forbidden = [
+    '"sourceId"', '"source_id"',
+    '"orderId"', '"order_id"',
+    '"rfqId"', '"rfq_id"',
+    '"invoiceId"', '"invoice_id"',
+    '"buyer_org_id"', '"buyerOrgId"',
+    '"document_url"', '"documentUrl"',
+    '"claim_value"',
+    '"approved_by"',
+  ];
+  for (const field of v2Forbidden) {
+    expect(text404).not.toContain(field);
+  }
+
+  // If fixture is available, also probe the 200 PUBLISHED path
+  if (FIXTURE_AVAILABLE) {
+    const res200 = await request.get(`${BASE_URL}/api/public/dpp/${dppFixture!.publicPassportId}`);
+    expect(res200.status()).toBe(200);
+    const text200 = await res200.text();
+    for (const field of v2Forbidden) {
+      expect(text200, `Field ${field} must not appear in PUBLISHED passport response`).not.toContain(field);
+    }
+  }
+});

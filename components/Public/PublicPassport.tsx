@@ -61,6 +61,53 @@ const MATURITY_LABELS: Record<
   },
 };
 
+function buildProductStory(passport: PassportData): string {
+  const { product, certifications } = passport;
+  const parts: string[] = [];
+  if (product.manufacturerName && product.manufacturerJurisdiction) {
+    parts.push(`Made by ${product.manufacturerName} in ${product.manufacturerJurisdiction}.`);
+  } else if (product.manufacturerName) {
+    parts.push(`Made by ${product.manufacturerName}.`);
+  } else if (product.manufacturerJurisdiction) {
+    parts.push(`Origin: ${product.manufacturerJurisdiction}.`);
+  }
+  parts.push(`Product type: ${product.nodeType}.`);
+  if (product.batchId) {
+    parts.push(`Batch reference: ${product.batchId}.`);
+  }
+  const approvedCerts = certifications.filter(c => c.lifecycleStateName === 'APPROVED');
+  if (approvedCerts.length > 0) {
+    const uniqueTypes = [...new Set(approvedCerts.map(c => c.certificationType))].slice(0, 3);
+    parts.push(
+      `Holds ${approvedCerts.length} approved certification${approvedCerts.length !== 1 ? 's' : ''} including ${uniqueTypes.join(', ')}.`
+    );
+  } else if (certifications.length > 0) {
+    parts.push(
+      `${certifications.length} certification${certifications.length !== 1 ? 's' : ''} on record.`
+    );
+  }
+  return parts.join(' ');
+}
+
+function certVisualState(lifecycleStateName: string): {
+  label: string;
+  cardClass: string;
+  dotClass: string;
+} {
+  const normalized = lifecycleStateName.toUpperCase();
+  if (normalized === 'APPROVED') {
+    return { label: 'Approved', cardClass: 'bg-green-50 border-green-200', dotClass: 'bg-green-500' };
+  }
+  if (normalized === 'EXPIRED') {
+    return { label: 'Expired', cardClass: 'bg-amber-50 border-amber-200', dotClass: 'bg-amber-400' };
+  }
+  if (normalized === 'REVOKED') {
+    return { label: 'Revoked', cardClass: 'bg-red-50 border-red-200', dotClass: 'bg-red-400' };
+  }
+  const label = lifecycleStateName.charAt(0).toUpperCase() + lifecycleStateName.slice(1).toLowerCase();
+  return { label, cardClass: 'bg-slate-50 border-slate-200', dotClass: 'bg-slate-400' };
+}
+
 interface PublicPassportProps {
   readonly publicPassportId: string;
 }
@@ -156,6 +203,7 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
   const buyerPageUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/passport/${encodeURIComponent(publicPassportId)}`
     : `/passport/${encodeURIComponent(publicPassportId)}`;
+  const productStory = buildProductStory(passport);
 
   return (
     <div
@@ -163,7 +211,7 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
       className="min-h-screen bg-[#f3f8fb] font-sans text-slate-900"
     >
       {/* Header */}
-      <header className="border-b border-[#d6e4e8] bg-white px-6 py-4">
+      <header data-testid="public-passport-header" className="border-b border-[#d6e4e8] bg-white px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <img
             src="/brand/texqtic-logo.png"
@@ -213,15 +261,112 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
           <span className="text-xs">{maturity.desc}</span>
         </div>
 
-        {/* Evidence summary */}
+        {/* [2] Product Story */}
+        <section
+          data-testid="public-passport-product-story"
+          className="mt-8 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+        >
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+            Product Story
+          </h2>
+          <p className="text-sm leading-relaxed text-slate-700">{productStory}</p>
+        </section>
+
+        {/* [3] Product Identity Summary */}
+        <section
+          data-testid="public-passport-identity-summary"
+          className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+        >
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+            Product Identity
+          </h2>
+          <dl className="divide-y divide-slate-100 text-sm">
+            <div className="flex justify-between py-2">
+              <dt className="text-slate-500">Product Type</dt>
+              <dd className="font-medium text-slate-900">{passport.product.nodeType}</dd>
+            </div>
+            {passport.product.manufacturerName && (
+              <div className="flex justify-between py-2">
+                <dt className="text-slate-500">Manufacturer</dt>
+                <dd className="font-medium text-slate-900">{passport.product.manufacturerName}</dd>
+              </div>
+            )}
+            {passport.product.manufacturerJurisdiction && (
+              <div className="flex justify-between py-2">
+                <dt className="text-slate-500">Country of Origin</dt>
+                <dd className="font-medium text-slate-900">{passport.product.manufacturerJurisdiction}</dd>
+              </div>
+            )}
+            {passport.product.batchId && (
+              <div className="flex justify-between py-2">
+                <dt className="text-slate-500">Batch Reference</dt>
+                <dd className="font-medium text-slate-900">{passport.product.batchId}</dd>
+              </div>
+            )}
+            <div className="flex justify-between py-2">
+              <dt className="text-slate-500">Published</dt>
+              <dd className="font-medium text-slate-900">
+                {new Date(passport.exportedAt).toLocaleDateString()}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        {/* [4] Supply Chain Traceability Timeline */}
+        <section
+          data-testid="public-passport-traceability-timeline"
+          className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+        >
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+            Supply Chain Traceability
+          </h2>
+          <div className="flex items-start gap-8">
+            <div className="text-center">
+              <p
+                data-testid="public-passport-lineage-depth"
+                className="text-3xl font-bold text-slate-900"
+              >
+                {passport.lineageSummary.lineageDepth}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Supply chain tiers</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-slate-900">
+                {passport.lineageSummary.nodeCount}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">Nodes traced</p>
+            </div>
+          </div>
+          {passport.lineageSummary.lineageDepth > 0 ? (
+            <div className="mt-5 flex items-center gap-2 overflow-x-auto pb-1">
+              {Array.from({ length: Math.min(passport.lineageSummary.lineageDepth, 6) }).map((_, i) => (
+                <React.Fragment key={i}>
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#2f8094] text-xs font-bold text-white">
+                    {i + 1}
+                  </div>
+                  {i < Math.min(passport.lineageSummary.lineageDepth, 6) - 1 && (
+                    <div className="h-0.5 w-6 flex-shrink-0 bg-[#d6e4e8]" />
+                  )}
+                </React.Fragment>
+              ))}
+              {passport.lineageSummary.lineageDepth > 6 && (
+                <span className="ml-1 text-xs text-slate-400">+{passport.lineageSummary.lineageDepth - 6} more</span>
+              )}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-slate-400">No supply chain traceability recorded for this passport.</p>
+          )}
+        </section>
+
+        {/* [5] Evidence Summary */}
         <section
           data-testid="public-passport-evidence-summary"
-          className="mt-8 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+          className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
         >
           <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
             Evidence Summary
           </h2>
-          <dl className="grid grid-cols-3 gap-4 text-center">
+          <dl className="grid grid-cols-2 gap-4 text-center">
             <div>
               <dt className="text-xs text-slate-500">Approved Certs</dt>
               <dd
@@ -232,53 +377,71 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">Lineage Depth</dt>
-              <dd
-                data-testid="public-passport-lineage-depth"
-                className="mt-1 text-2xl font-bold text-slate-900"
-              >
-                {passport.lineageSummary.lineageDepth}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-slate-500">AI Claims</dt>
+              <dt className="text-xs text-slate-500">AI-Verified Claims</dt>
               <dd
                 data-testid="public-passport-ai-claims-count"
-                className="mt-1 text-2xl font-bold text-slate-900"
+                className={`mt-1 text-2xl font-bold ${
+                  passport.evidenceSummary.aiExtractedClaimsCount > 0 ? 'text-slate-900' : 'text-slate-400'
+                }`}
               >
-                {passport.evidenceSummary.aiExtractedClaimsCount}
+                {passport.evidenceSummary.aiExtractedClaimsCount > 0
+                  ? passport.evidenceSummary.aiExtractedClaimsCount
+                  : '—'}
               </dd>
             </div>
           </dl>
         </section>
 
-        {/* Certifications */}
-        {passport.certifications.length > 0 && (
-          <section className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6">
-            <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              Certifications
-            </h2>
-            <ul className="divide-y divide-slate-100">
-              {passport.certifications.map((cert, idx) => (
-                <li key={idx} className="py-3 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {cert.certificationType}
-                    </p>
-                    <p className="text-xs text-slate-500">{cert.lifecycleStateName}</p>
-                  </div>
-                  {cert.expiryDate && (
-                    <p className="text-xs text-slate-400 whitespace-nowrap">
-                      Expires {new Date(cert.expiryDate).toLocaleDateString()}
-                    </p>
-                  )}
-                </li>
-              ))}
+        {/* [6] Certification Evidence Cards */}
+        <section
+          data-testid="public-passport-certification-cards"
+          className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
+        >
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+            Certifications
+          </h2>
+          {passport.certifications.length === 0 ? (
+            <div
+              data-testid="public-passport-certification-empty"
+              className="rounded-xl border border-dashed border-slate-200 p-6 text-center"
+            >
+              <p className="text-sm text-slate-400">No certifications recorded for this passport.</p>
+            </div>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {passport.certifications.map((cert, idx) => {
+                const state = certVisualState(cert.lifecycleStateName);
+                return (
+                  <li
+                    key={idx}
+                    data-testid="public-passport-certification-card"
+                    className={`rounded-xl border p-4 ${state.cardClass}`}
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className={`h-2 w-2 flex-shrink-0 rounded-full ${state.dotClass}`} />
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                        {state.label}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-800">{cert.certificationType}</p>
+                    {cert.expiryDate && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Expires {new Date(cert.expiryDate).toLocaleDateString()}
+                      </p>
+                    )}
+                    {cert.issuedAt && (
+                      <p className="mt-0.5 text-xs text-slate-400">
+                        Issued {new Date(cert.issuedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
-          </section>
-        )}
+          )}
+        </section>
 
-        {/* QR Verification Label — TECS-DPP-PASSPORT-NETWORK-008 Slice F */}
+        {/* [7] QR Verification Label — TECS-DPP-PASSPORT-NETWORK-008 Slice F */}
         <section
           data-testid="public-passport-qr-label"
           className="mt-6 rounded-2xl border border-[#d6e4e8] bg-white p-6"
@@ -338,7 +501,7 @@ export function PublicPassport({ publicPassportId }: PublicPassportProps) {
           className="mt-8 rounded-xl bg-slate-50 border border-slate-200 px-5 py-4 text-xs text-slate-500"
         >
           This public passport shows limited verified information only. Sensitive supplier,
-          buyer, pricing, and internal workflow data are not public.
+          buyer, pricing, document, and internal workflow data are not public.
         </p>
       </main>
     </div>
