@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017C — VERIFIED_COMPLETE; GET /api/tenant/dpp/passports registry endpoint; DPPPassport.tsx registry UI; 20/21 unit tests; DPP-E2E-24/25/26 pass; passportMaturity deliberate preview simplification; slice 018 CLOSED)
+**Last Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017D — VERIFIED_COMPLETE; QA passport PUBLISHED + public buyer URL verified; 27/29 E2E pass; slice 018 CLOSED)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-017D is VERIFIED_COMPLETE (2026-05-01).
+  QA Passport Publication + Public Buyer URL Verification.
+  Runtime proof of seller-to-buyer activation path: QA fixture node PUBLISHED; publicPassportId confirmed.
+  New E2E tests (Group 11): DPP-E2E-27 (activation proof), DPP-E2E-28 (tenant panel URL shape),
+    DPP-E2E-29 (public buyer page API + privacy + source analysis). 27/29 pass; 2 chromium-only skipped.
+  URL shape: /passport/:publicPassportId (NOT /api/public/dpp/... NOT .json -- D-6 intact).
+  Extended 017D privacy boundary: orgId, pricing, createdByUserId absent from public response.
+  tsc CLEAN (frontend + server). No schema changes. No new routes.
+  Implementation commit: eade7e0. Slice 018 (JSON-LD) CLOSED. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-017C is VERIFIED_COMPLETE (2026-05-01).
   Tenant Passport Registry. New endpoint: GET /api/tenant/dpp/passports (tenantAuthMiddleware;
   limit Zod-validated default 20 max 50; withDbContext; includes dpp_passport_states + dpp_product_details;

@@ -36,6 +36,24 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-017D — 2026-05-01
+Type: RUNTIME VERIFICATION + E2E TEST
+Status: VERIFIED_COMPLETE
+Commit: eade7e0 — [TEXQTIC] test(dpp): verify QA passport public buyer URL (017D)
+Scope: QA Passport Publication Proof + Public Buyer URL Activation Verification
+Runtime verdict: seed-dpp-fixture.ts idempotency PASS (QA node PUBLISHED; publicPassportId=48d83d5a confirmed).
+  pnpm tsc --noEmit: 0 errors. npx tsc --noEmit (server): 0 errors.
+  E2E (--project=api): 27 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
+  DPP-E2E-27 PASS (activation proof: PUBLISHED + publicPassportId non-null + evidence gates).
+  DPP-E2E-28 PASS (tenant panel URL shape + dpp-public-passport-panel/url/open-link/qr test IDs).
+  DPP-E2E-29 PASS (public buyer API: 200 + privacy boundary: orgId/pricing/createdByUserId absent).
+Notes: URL shape /passport/:publicPassportId (NOT /api/public/dpp/... NOT .json -- D-6 intact).
+  Extended privacy boundary 017D: orgId, pricing, createdByUserId verified absent from public response.
+  No schema changes. No new routes. No new files. Slice 018 (JSON-LD) CLOSED.
+  Full platform launch NOT AUTHORIZED.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-017C — 2026-05-01
 Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
 Status: VERIFIED_COMPLETE

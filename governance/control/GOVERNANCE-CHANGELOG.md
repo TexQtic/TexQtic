@@ -5,6 +5,52 @@
 
 ---
 
+## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017D (QA Passport Publication + Public Buyer URL Verification)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-017D
+Status:        VERIFIED_COMPLETE
+Date:          2026-05-01
+Commits:       eade7e0 -- test(dpp): verify QA passport public buyer URL (017D)
+               8e654c4 -- governance(dpp): close tenant passport registry slice (017C) [prior]
+
+Scope:
+  Runtime proof of the seller-to-buyer activation path:
+    tenant DPP node PUBLISHED --> publicPassportId generated
+    --> tenant page shows public buyer link (/passport/:publicPassportId)
+    --> GET /api/public/dpp/:publicPassportId accessible without auth
+    --> buyer views PUBLISHED passport data
+
+  QA fixture: scripts/seed-dpp-fixture.ts idempotency path confirmed PASS
+    nodeId:          3f26ca48-dd81-4ae9-92a4-5bfdf804d4b6
+    publicPassportId: 48d83d5a-05da-47f4-a4a5-b48f33f70686
+    productLabel:    qa-dpp-fixture-node-001
+    org slug prefix: qa- (safety guard PASS)
+
+  New E2E tests added (Group 11):
+    DPP-E2E-27 -- activation proof: passport PUBLISHED + publicPassportId non-null + evidence gates
+    DPP-E2E-28 -- tenant public link panel URL shape (/passport/:id NOT /api/public/dpp NOT .json)
+    DPP-E2E-29 -- public buyer page: 200 without auth + all buyer fields + 017D extended privacy
+
+Runtime verdict:
+  seed-dpp-fixture.ts:    PASS (idempotency path)
+  pnpm tsc --noEmit:      CLEAN (0 errors)
+  npx tsc --noEmit (srv): CLEAN (0 errors)
+  E2E --project=api:      27 passed / 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed) / 0 failed
+
+Design decisions preserved (carry-forward):
+  URL path: /passport/:publicPassportId  (NOT /api/public/dpp/... NOT .json -- D-6 intact)
+  orgId, nodeId, public_token, pricing, createdByUserId absent from public API response
+  passportMaturity in 017C registry remains status-derived preview (deliberate 017C simplification)
+  Slice 018 (JSON-LD) CLOSED. Full platform launch NOT AUTHORIZED.
+
+Limitations:
+  DPP-E2E-28 tenant browser proof deferred (storageState not available)
+  DPP-E2E-29 browser DOM proof covered by existing DPP-E2E-19/20 (chromium project)
+```
+
+---
+
 ## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017C (Tenant Passport Registry)
 
 ```

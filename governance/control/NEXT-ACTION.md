@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017C — VERIFIED_COMPLETE; tenant passport registry endpoint + UI; 20/21 unit tests pass; DPP-E2E-24/25/26 pass; passportMaturity deliberate preview simplification; awaiting Paresh authorization for slice 018)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017D — VERIFIED_COMPLETE; QA passport PUBLISHED + public buyer URL verified; 27/29 E2E pass; awaiting Paresh authorization for slice 018)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,35 +11,31 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017C Tenant Passport Registry (2026-05-01); GET /api/tenant/dpp/passports; 20/21 unit tests pass; DPP-E2E-24/25/26 pass; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017D QA Passport Public Buyer URL (2026-05-01); 27/29 E2E pass; awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit: NONE — awaiting Paresh authorization for TECS-DPP-PASSPORT-NETWORK-018
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-017C VERIFIED_COMPLETE (2026-05-01).
-  Delivered: GET /api/tenant/dpp/passports registry endpoint + DPPPassport.tsx registry UI
-  (dpp-passport-registry section before dpp-manual-node-lookup; handleLoadByNodeId; useEffect fetch).
-  tecs-dpp-passport-registry.test.ts: 20/21 PASS (1 DB-skipped). DPP-E2E-24/25/26 pass.
-  passportMaturity in registry is status-derived preview only (deliberate 017C simplification).
-  Authoritative maturity (computeDppMaturity) remains in GET /api/tenant/dpp/:nodeId/passport.
-  DPP-E2E-19/20 remain in chromium project — not regressed.
+  TECS-DPP-PASSPORT-NETWORK-017D VERIFIED_COMPLETE (2026-05-01).
+  Runtime proof: seed-dpp-fixture.ts idempotency PASS; QA node PUBLISHED; publicPassportId confirmed.
+  DPP-E2E-27/28/29 pass. E2E total: 27 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed).
+  URL shape: /passport/:publicPassportId (NOT /api/public/dpp/... NOT .json -- D-6 intact).
+  017C passportMaturity registry preview simplification preserved as carry-forward.
   Do NOT open TECS-DPP-PASSPORT-NETWORK-018 without Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017C
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017D
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  Frontend tsc: 0 errors. Server tsc: 0 errors. tecs-dpp-passport-registry: 20/21 PASS (1 DB-skipped).
-  E2E (--project=api): 24 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
-  DPP-E2E-24 ✅ DPP-E2E-25 ✅ DPP-E2E-26 ✅
+  Frontend tsc: 0 errors. Server tsc: 0 errors. seed-dpp-fixture.ts: PASS (idempotency).
+  E2E (--project=api): 27 passed, 2 skipped (DPP-E2E-19/20 chromium-only, NOT regressed), 0 failed.
+  DPP-E2E-27 PASS  DPP-E2E-28 PASS  DPP-E2E-29 PASS
 last_closed_unit_commits: >-
+  eade7e0 — test(dpp): verify QA passport public buyer URL (017D)
+  8e654c4 — governance(dpp): close tenant passport registry slice (017C)
   70bcac7 — feat(dpp): add tenant passport registry (017C)
-  (Prior 017B: b1f580a — feat(dpp): productize tenant passport entry)
-  (Prior 017A: 3e04a1e — chore; db42f55 — governance)
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017, 2026-05-01).
-  RLS hotfix applied: migration 20260512000000_tecs_dpp_rls_policy_hotfix fixes broken
-  current_setting('app.current_org_id') → app.current_org_id() in dpp_passport_states + dpp_evidence_claims.
-  Seed fully idempotent; .auth/dpp-qa-fixture.json written; DPP-E2E-12/13/14 14/14 PASS.
-  POST /tenant/dpp/:nodeId/certifications route committed + 25/25 unit tests pass.
-  Full platform launch NOT AUTHORIZED.
+  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017D, 2026-05-01).
+  QA fixture: nodeId=3f26ca48 / publicPassportId=48d83d5a confirmed PUBLISHED via seed script.
+  Extended privacy boundary verified: orgId, pricing, createdByUserId absent from public response.
+  D-6 intact: .json route absent. Slice 018 CLOSED. Full platform launch NOT AUTHORIZED.
 last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30
