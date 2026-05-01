@@ -36,6 +36,24 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-017 — 2026-05-01
+Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: 40add5e — feat(dpp): harden public passport route
+Title: Public Route Security Hardening — rate limit, cache headers, noindex, 31 security tests
+Summary: Hardened GET /api/public/dpp/:publicPassportId with @fastify/rate-limit@10.3.0
+  (global:false; max 100/15 min per IP; retryAfter in seconds). Added X-Robots-Tag:noindex
+  on all paths; Cache-Control:no-store on 4 error/not-found paths; Cache-Control:public,
+  max-age=300,stale-while-revalidate=60 + Vary:Accept on success path. All prior D-6 behaviour
+  preserved. 31 static tests (D17-S/H/B/P/X): 31/31 PASS. All DPP regression suites PASS.
+  0 new TypeScript errors. 0 new vulnerabilities.
+Layer Impact: Layer 0 (NEXT-ACTION, OPEN-SET, GOVERNANCE-CHANGELOG), Layer 3 (this file)
+Notes: global:false ensures only the DPP route is rate-limited; all other public routes unaffected.
+  No REVOKED/410 handling (not in schema). No JSON-LD added. No schema/migration changes.
+  3 pre-existing TypeScript errors in tenant.ts + tecs-dpp-node-certifications.test.ts unchanged.
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-014 — 2026-05-13
 Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
 Status: VERIFIED_COMPLETE

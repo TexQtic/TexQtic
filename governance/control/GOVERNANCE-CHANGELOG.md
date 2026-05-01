@@ -5,6 +5,55 @@
 
 ---
 
+## 2026-05-01 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-017 (Public Route Security Hardening)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-017
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-01
+Type:          IMPLEMENTATION + UNIT-TEST VERIFICATION
+
+Delivered:
+  - server/src/routes/public.ts — hardened GET /api/public/dpp/:publicPassportId:
+      Added: import fastifyRateLimit from '@fastify/rate-limit'
+      Rate limit: global: false; DPP route config: { rateLimit: { max: 100, timeWindow: '15 minutes' } }
+      errorResponseBuilder: { error: 'rate_limited', retryAfter: Math.ceil(context.ttl / 1000) }
+      X-Robots-Tag: noindex set on ALL paths (handler + validation error path)
+      Cache-Control: no-store on all 4 error/not-found paths (Phase 1 error, Phase 1 not-found,
+        Phase 2 error, Phase 2 empty-products)
+      Cache-Control: public, max-age=300, stale-while-revalidate=60 + Vary: Accept on success path
+      All prior D-6 behaviour preserved: UUID validation, texqtic_public_lookup role,
+        PUBLISHED filter, withDbContext, qr.payloadUrl, sendSuccess shape, EXCLUDED fields comment
+  - server/src/__tests__/tecs-dpp-public-security.test.ts — 31 new static tests:
+      D17-S (6): rate-limit import, global:false, max:100, timeWindow, error shape, retryAfter formula
+      D17-H (5): X-Robots-Tag, public cache header, Vary:Accept, no-store occurrences, validation path
+      D17-B (5): no-store before each of 4 error paths, public cache ordered after error no-stores
+      D17-P (6): payload privacy — no orgId/nodeId/public_token; includes publicPassportId/PUBLISHED
+      D17-X (9): .json route absent, UUID validation, public_lookup role, PUBLISHED filter,
+        withDbContext, sendSuccess, qr.payloadUrl, route path unchanged, rate-limit registered first
+  - server/package.json — @fastify/rate-limit@10.3.0 added to dependencies
+  - server/pnpm-lock.yaml — updated
+
+Verification:
+  - New test suite: 31/31 PASS
+  - Regression: tecs-dpp-d6-public-passport 58/62 (4 DB-skipped), tecs-dpp-trade-links 68/68,
+      tecs-dpp-product-details 50/50, tecs-dpp-evidence-vault 59/60 (1 DB-skipped),
+      tecs-dpp-node-certifications 25/27 (2 DB-skipped) — all PASS
+  - TypeScript: 0 new errors in public.ts; 3 pre-existing errors in tenant.ts +
+      tecs-dpp-node-certifications.test.ts unchanged
+  - @fastify/rate-limit@10.3.0 audit: 0 new vulnerabilities
+  - Git diff: only 4 allowlisted files changed
+  - No schema changes, no migration changes, no frontend changes
+
+Design Decisions:
+  - global: false — only DPP route rate-limited; all other public routes unaffected
+  - context.ttl is milliseconds; retryAfter = Math.ceil(context.ttl / 1000) → seconds
+  - No REVOKED/410 handling (not in DPP schema Phase 2 scope)
+  - No JSON-LD added (deferred, not in this slice)
+```
+
+---
+
 ## 2026-05-14 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-016 (QR Image Productionization)
 
 ```

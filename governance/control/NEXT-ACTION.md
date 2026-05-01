@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-14 (TECS-DPP-PASSPORT-NETWORK-016 — VERIFIED_COMPLETE; QR image productionization; react-qr-code@2.0.21; public-passport-qr-image + dpp-public-passport-qr-image; DPP-E2E-17/18 added; tsc CLEAN)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-01 (TECS-DPP-PASSPORT-NETWORK-017 — VERIFIED_COMPLETE; public passport route hardened; @fastify/rate-limit@10.3.0; X-Robots-Tag + Cache-Control headers; 31/31 unit tests; 0 new TS errors)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,33 +11,29 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-016 QR Image Productionization (2026-05-14); react-qr-code SVG rendered; DPP-E2E-17/18 added; tsc CLEAN; awaiting Paresh authorization for next unit
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-017 Public Route Security Hardening (2026-05-01); @fastify/rate-limit@10.3.0; X-Robots-Tag+Cache-Control headers; 31/31 unit tests; 0 new TS errors; awaiting Paresh authorization for next unit
 active_delivery_unit: NONE — awaiting Paresh authorization for implementation slices
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >
-  TECS-DPP-PASSPORT-NETWORK-016 VERIFIED_COMPLETE (2026-05-14).
-  Delivered: react-qr-code@^2.0.21 installed; QR image rendered in PublicPassport.tsx and DPPPassport.tsx.
-  New testIds: public-passport-qr-image (PublicPassport, size=160), dpp-public-passport-qr-image (DPPPassport, size=128).
-  QR payload: buyerPageUrl (/passport/:publicPassportId) — not API route, no .json suffix.
-  Placeholder text removed; react-qr-code audit: 0 new vulnerabilities.
-  E2E: DPP-E2E-17 (QR payload contract), DPP-E2E-18 (QR privacy/mobile smoke).
-  Browser DOM testId visibility assertions deferred (api-only playwright project).
-  tsc --noEmit: CLEAN.
-  Do NOT open TECS-DPP-PASSPORT-NETWORK-017 or any slice without explicit Paresh authorization.
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-016
+  TECS-DPP-PASSPORT-NETWORK-017 VERIFIED_COMPLETE (2026-05-01).
+  Delivered: @fastify/rate-limit@10.3.0 installed; GET /api/public/dpp/:publicPassportId hardened.
+  Rate limit: global:false; DPP route max:100 per 15 min per IP; errorResponseBuilder: rate_limited + retryAfter.
+  Headers: X-Robots-Tag:noindex (all paths); Cache-Control:no-store (4 error paths);
+    Cache-Control:public,max-age=300,stale-while-revalidate=60 + Vary:Accept (success path).
+  31 new static tests (D17-S/H/B/P/X groups): 31/31 PASS.
+  All DPP regression suites PASS. 0 new TypeScript errors. 0 new vulnerabilities.
+  Do NOT open TECS-DPP-PASSPORT-NETWORK-018 or any slice without explicit Paresh authorization.
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-017
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  tsc --noEmit: CLEAN (0 errors). E2E: 14/14 PASS (dpp-passport-network.spec.ts, api project).
-  Seed: PASS — .auth/dpp-qa-fixture.json written; node promoted DRAFT→INTERNAL→TRADE_READY→PUBLISHED.
-  RLS hotfix: 20260512000000_tecs_dpp_rls_policy_hotfix applied; verifier PASS.
-  Unit tests: tecs-dpp-node-certifications 25/25 PASS, 2 skipped.
+  Unit tests: 31/31 PASS (tecs-dpp-public-security). Regression: d6-public-passport 58/62,
+  trade-links 68/68, product-details 50/50, evidence-vault 59/60, node-certifications 25/27 — all PASS.
+  TypeScript: 0 new errors in public.ts. @fastify/rate-limit@10.3.0 audit: 0 new vulnerabilities.
 last_closed_unit_commits: >-
-  cc2134b — qa(dpp): activate published passport fixture proof
-  (Prior: 0c43dc9 — test(dpp): add published passport runtime fixture proof;
-   7bbea1d — governance 010 commit hash; 29ee688 — docs(dpp) expansion packet;
-   adb15ad — governance 010A; 5991bd5 — feat(dpp) expose public passport link).
+  40add5e — feat(dpp): harden public passport route (impl + tests + package)
+  (Prior 016: 7748200 — governance; 3058900 — QR image impl)
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-010-B, 2026-05-12).
+  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-017, 2026-05-01).
   RLS hotfix applied: migration 20260512000000_tecs_dpp_rls_policy_hotfix fixes broken
   current_setting('app.current_org_id') → app.current_org_id() in dpp_passport_states + dpp_evidence_claims.
   Seed fully idempotent; .auth/dpp-qa-fixture.json written; DPP-E2E-12/13/14 14/14 PASS.
