@@ -29,7 +29,7 @@ Files Changed:
   governance/control/SNAPSHOT.md (governance sync)
   governance/log/EXECUTION-LOG.md (execution log entry)
 
-Commit: [pending — this entry]
+Commit: cc2134b — [TEXQTIC] qa(dpp): activate published passport fixture proof
 
 Evidence:
   SQL applied: psql stdin pipe — "HOTFIX VERIFIER PASS: all dpp_passport_states and dpp_evidence_claims policies correct"

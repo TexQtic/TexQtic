@@ -45,8 +45,9 @@ last_closed_unit_runtime_verdict: >-
   RLS hotfix: 20260512000000_tecs_dpp_rls_policy_hotfix applied; verifier PASS.
   Unit tests: tecs-dpp-node-certifications 25/25 PASS, 2 skipped.
 last_closed_unit_commits: >-
-  0c43dc9 — test(dpp): add published passport runtime fixture proof
-  (Prior: 7bbea1d — governance 010 commit hash; 29ee688 — docs(dpp) expansion packet;
+  cc2134b — qa(dpp): activate published passport fixture proof
+  (Prior: 0c43dc9 — test(dpp): add published passport runtime fixture proof;
+   7bbea1d — governance 010 commit hash; 29ee688 — docs(dpp) expansion packet;
    adb15ad — governance 010A; 5991bd5 — feat(dpp) expose public passport link).
 last_closed_unit_closure_basis: >-
   VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-010-B, 2026-05-12).

@@ -61,7 +61,7 @@ Refs: scripts/seed-dpp-fixture.ts · tests/e2e/dpp-passport-network.spec.ts ·
 ### TECS-DPP-PASSPORT-NETWORK-010-B (FULL) — 2026-05-12
 Type: IMPLEMENTATION + RUNTIME-VERIFICATION — RLS hotfix + route + unit tests + seed + E2E
 Status: VERIFIED_COMPLETE
-Commit: [pending]
+Commit: cc2134b — [TEXQTIC] qa(dpp): activate published passport fixture proof
 Title: DPP-E2E-12/13/14 full runtime proof — RLS hotfix, node-certification route, seed activation
 Summary: Root cause of BLOCKED_BY_FIXTURE identified: dpp_passport_states RLS policies used
   current_setting('app.current_org_id') (non-existent GUC) instead of app.current_org_id() — error 42704
