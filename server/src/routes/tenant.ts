@@ -8639,6 +8639,91 @@ const tenantRoutes: FastifyPluginAsync = async fastify => {
     );
   }
 
+  // ─── TECS-DPP-PASSPORT-NETWORK-017C: Tenant Passport Registry ───────────────
+  // GET /api/tenant/dpp/passports
+  // Read-only registry: returns traceability nodes for the tenant with passport
+  // state summary. No schema changes — uses Prisma include on
+  // dpp_passport_states + dpp_product_details relations.
+  //
+  // passportMaturity: status-derived conservative estimate (list-view only).
+  //   Full maturity via computeDppMaturity requires per-node cert + lineage queries.
+  //   PUBLISHED → GLOBAL_DPP, TRADE_READY → TRADE_READY, else → LOCAL_TRUST.
+  //
+  // Security: tenant-scoped (orgId filter + RLS via withDbContext).
+  //   public_token returned only when status = PUBLISHED (alias: publicPassportId).
+  //   orgId NOT included in response body.
+  fastify.get(
+    '/tenant/dpp/passports',
+    { onRequest: [tenantAuthMiddleware, databaseContextMiddleware] },
+    async (request, reply) => {
+      const dbContext = request.dbContext;
+      if (!dbContext) {
+        return sendError(reply, 'UNAUTHORIZED', 'Database context missing', 401);
+      }
+
+      const querySchema = z.object({
+        limit: z.coerce.number().int().min(1).max(50).default(20),
+      });
+      const queryResult = querySchema.safeParse(request.query);
+      if (!queryResult.success) {
+        return sendValidationError(reply, queryResult.error.errors);
+      }
+      const { limit } = queryResult.data;
+
+      const nodes = await withDbContext(prisma, dbContext, async (tx: typeof prisma) => {
+        return tx.traceabilityNode.findMany({
+          where: { orgId: dbContext.orgId },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          include: {
+            dpp_passport_states: {
+              select: { status: true, public_token: true, updated_at: true },
+            },
+            dpp_product_details: {
+              select: { product_description: true },
+            },
+          },
+        });
+      });
+
+      const passports = nodes.map(node => {
+        const state = node.dpp_passport_states[0] ?? null;
+        const rawStatus = state?.status ?? 'DRAFT';
+        const passportStatus: DppPassportStatus = (
+          ['DRAFT', 'INTERNAL', 'TRADE_READY', 'PUBLISHED'] as const
+        ).includes(rawStatus as DppPassportStatus)
+          ? (rawStatus as DppPassportStatus)
+          : 'DRAFT';
+
+        // Status-derived conservative maturity for list view.
+        const passportMaturity: DppMaturityLevel =
+          passportStatus === 'PUBLISHED'
+            ? 'GLOBAL_DPP'
+            : passportStatus === 'TRADE_READY'
+              ? 'TRADE_READY'
+              : 'LOCAL_TRUST';
+
+        const publicPassportId =
+          passportStatus === 'PUBLISHED' && state?.public_token
+            ? state.public_token
+            : null;
+
+        return {
+          nodeId:           node.id,
+          batchId:          node.batchId,
+          nodeType:         node.nodeType,
+          productName:      node.dpp_product_details[0]?.product_description ?? null,
+          passportStatus,
+          passportMaturity,
+          publicPassportId,
+          updatedAt:        state?.updated_at?.toISOString() ?? node.updatedAt?.toISOString() ?? null,
+        };
+      });
+
+      return sendSuccess(reply, { passports });
+    },
+  );
+
   // ─── G-022: Tenant escalation routes ────────────────────────────────────────
   // GET  /api/tenant/escalations
   // POST /api/tenant/escalations

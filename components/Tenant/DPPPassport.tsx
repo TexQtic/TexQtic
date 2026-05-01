@@ -15,7 +15,7 @@
  *   - Lineage rendering capped at 200 rows (safety)
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 import { tenantGet } from '../../services/tenantApiClient';
 import { APIError } from '../../services/apiClient';
@@ -107,6 +107,19 @@ interface DppPassportView {
     lineageDepth: number;
   };
   passportProductDetails: DppProductDetailsDto | null;
+}
+
+// ─── D-NETWORK-017C: Passport Registry entry ─────────────────────────────────
+
+interface DppRegistryEntry {
+  nodeId: string;
+  batchId: string | null;
+  nodeType: string | null;
+  productName: string | null;
+  passportStatus: DppPassportStatus;
+  passportMaturity: DppMaturityLevel;
+  publicPassportId: string | null;
+  updatedAt: string | null;
 }
 
 const PASSPORT_STATUS_CLASSES: Record<DppPassportStatus, string> = {
@@ -355,6 +368,11 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   // D-3: Passport Foundation state (non-blocking fetch; null = unavailable or not yet loaded)
   const [passportData, setPassportData] = useState<DppPassportView | null>(null);
+  // D-NETWORK-017C: Passport Registry
+  const [registry, setRegistry] = useState<DppRegistryEntry[]>([]);
+  const [registryLoading, setRegistryLoading] = useState(false);
+  const [registryError, setRegistryError] = useState<string | null>(null);
+  const [registryLoaded, setRegistryLoaded] = useState(false);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const handleLoad = useCallback(async () => {
@@ -394,6 +412,49 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
       setLoading(false);
     }
   }, [nodeIdInput]);
+
+  // ── Registry load (by nodeId from registry card) ──────────────────────────
+  const handleLoadByNodeId = useCallback(async (nodeId: string) => {
+    setNodeIdInput(nodeId);
+    setValidationError(null);
+    setFetchError(null);
+    setSnapshot(null);
+    setPassportData(null);
+    setLoading(true);
+    try {
+      const data = await tenantGet<DppSnapshot>(`/api/tenant/dpp/${encodeURIComponent(nodeId)}`);
+      setSnapshot(data);
+      tenantGet<{ passport: DppPassportView }>(`/api/tenant/dpp/${encodeURIComponent(nodeId)}/passport`)
+        .then(result => { setPassportData(result.passport); })
+        .catch(() => { setPassportData(null); });
+    } catch (err) {
+      if (err instanceof APIError && err.status === 404) {
+        setFetchError("Not found, or you don\u2019t have access (RLS).");
+      } else if (err instanceof APIError) {
+        setFetchError(`Error ${err.status}: ${err.message}`);
+      } else {
+        setFetchError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Registry fetch (on mount, productized only) ───────────────────────────
+  useEffect(() => {
+    if (!isProductized) return;
+    setRegistryLoading(true);
+    tenantGet<{ passports: DppRegistryEntry[] }>('/api/tenant/dpp/passports')
+      .then(result => {
+        setRegistry(result.passports);
+        setRegistryLoaded(true);
+      })
+      .catch(() => {
+        setRegistryError('Unable to load passport registry.');
+        setRegistryLoaded(true);
+      })
+      .finally(() => { setRegistryLoading(false); });
+  }, [isProductized]);
 
   // ── Export ────────────────────────────────────────────────────────────────
   const handleCopyJson = useCallback(async () => {
@@ -491,6 +552,95 @@ export function DPPPassport({ onBack, title, subtitle }: Readonly<Props>) {
             Once published, your passport is available at{' '}
             <span className="font-mono">/passport/:publicPassportId</span> for buyer verification.
           </p>
+        </section>
+      )}
+
+      {/* ── Passport Registry (D-NETWORK-017C) ── */}
+      {isProductized && !snapshot && (
+        <section data-testid="dpp-passport-registry" className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+          <div>
+            <h2 data-testid="dpp-passport-registry-title" className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+              Passport Registry
+            </h2>
+            <p data-testid="dpp-passport-registry-summary" className="text-xs text-slate-500 mt-1">
+              Select a product passport to view maturity, evidence, public link, and buyer verification status.
+            </p>
+          </div>
+
+          {registryLoading && (
+            <div data-testid="dpp-passport-registry-loading" className="text-sm text-slate-400 py-2">
+              Loading passport registry…
+            </div>
+          )}
+
+          {registryError && !registryLoading && (
+            <div data-testid="dpp-passport-registry-error" className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+              Unable to load passport registry. Use the manual lookup below to load a passport by Node ID.
+            </div>
+          )}
+
+          {!registryLoading && !registryError && registryLoaded && registry.length === 0 && (
+            <div data-testid="dpp-passport-registry-empty" className="text-sm text-slate-400 py-2">
+              No product passports yet. Create or select a traceability node to begin building a passport.
+            </div>
+          )}
+
+          {!registryLoading && !registryError && registry.length > 0 && (
+            <div className="grid grid-cols-1 gap-3">
+              {registry.map(entry => {
+                const statusLbl = PASSPORT_STATUS_LABELS[entry.passportStatus];
+                const maturityLbl = PASSPORT_MATURITY_LABELS[entry.passportMaturity];
+                const displayName = entry.productName ?? entry.batchId ?? 'Untitled product passport';
+                return (
+                  <div key={entry.nodeId} data-testid="dpp-passport-registry-card" className="border border-slate-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p data-testid="dpp-passport-registry-card-title" className="font-semibold text-slate-800 text-sm truncate">
+                        {displayName}
+                      </p>
+                      {entry.nodeType && (
+                        <p className="text-xs text-slate-500 mt-0.5">{entry.nodeType}</p>
+                      )}
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span
+                          data-testid="dpp-passport-registry-card-status"
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${PASSPORT_STATUS_CLASSES[entry.passportStatus]}`}
+                        >
+                          {statusLbl.badgeLabel}
+                        </span>
+                        <span
+                          data-testid="dpp-passport-registry-card-maturity"
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${PASSPORT_MATURITY_CLASSES[entry.passportMaturity]}`}
+                        >
+                          {maturityLbl.badgeLabel}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        data-testid="dpp-passport-registry-load-button"
+                        onClick={() => { void handleLoadByNodeId(entry.nodeId); }}
+                        disabled={loading}
+                        className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition disabled:opacity-50"
+                      >
+                        Load Passport
+                      </button>
+                      {entry.passportStatus === 'PUBLISHED' && entry.publicPassportId && (
+                        <a
+                          data-testid="dpp-passport-registry-public-link"
+                          href={`/passport/${entry.publicPassportId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 border border-emerald-300 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-50 transition"
+                        >
+                          Open Public Passport
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 

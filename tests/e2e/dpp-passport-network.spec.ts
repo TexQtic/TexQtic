@@ -688,3 +688,47 @@ test('DPP-E2E-23 — 017B: source coverage — public link panel not regressed',
   // Confirm public panel only renders on PUBLISHED passports (no leakage of internal state)
   expect(dppSrc).toMatch(/passportStatus.*PUBLISHED|PUBLISHED.*passportStatus/);
 });
+// ─────────────────────────────────────────────────────────────────────────────
+// Group 10 — 017C: Tenant Passport Registry
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('DPP-E2E-24 – 017C: source coverage – passport registry section visible', async ({}, testInfo) => {
+  // Browser registry fetch requires authenticated storageState not available.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '017C passport registry live fetch requires authenticated storageState not available. Source analysis confirms registry section test IDs and title are present.',
+  });
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+  expect(dppSrc).toMatch(/data-testid="dpp-passport-registry"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-passport-registry-title"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-manual-node-lookup"/);
+  expect(dppSrc).toMatch(/Passport Registry/);
+  expect(dppSrc).toMatch(/TexQtic DPP Passport Network/);
+});
+
+test('DPP-E2E-25 – 017C: source coverage – registry loads without manual UUID first', async ({}, testInfo) => {
+  // Registry auto-loads on mount without requiring manual UUID entry.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '017C auto-load registry on mount requires authenticated storageState not available. Source analysis confirms registry empty/card states and load button are present.',
+  });
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+  expect(dppSrc).toMatch(/data-testid="dpp-passport-registry-empty"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-passport-registry-card"/);
+  expect(dppSrc).toMatch(/dpp-passport-registry-load-button/);
+  expect(dppSrc).toMatch(/dpp-manual-node-lookup/);
+  expect(dppSrc).toMatch(/Advanced/);
+});
+
+test('DPP-E2E-26 – 017C: source coverage – public link panel not regressed by registry', async ({}, testInfo) => {
+  // Confirms registry additions did not remove existing public passport panel.
+  testInfo.annotations.push({
+    type: 'limitation',
+    description: '017C public link panel regression check — source analysis confirms panel test IDs coexist with registry test IDs.',
+  });
+  const dppSrc = readFileSync(join(process.cwd(), 'components/Tenant/DPPPassport.tsx'), 'utf8');
+  expect(dppSrc).toMatch(/data-testid="dpp-public-passport-panel"/);
+  expect(dppSrc).toMatch(/data-testid="dpp-public-passport-qr-image"/);
+  expect(dppSrc).toMatch(/dpp-passport-registry-public-link/);
+  expect(dppSrc).toMatch(/PUBLISHED/);
+});
