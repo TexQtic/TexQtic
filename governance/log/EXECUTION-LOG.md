@@ -36,6 +36,28 @@ Notes: <constraints or cautions applicable after closure>
 
 ---
 
+### TECS-DPP-PASSPORT-NETWORK-012 — 2026-05-13
+Type: IMPLEMENTATION + UNIT-TEST VERIFICATION
+Status: VERIFIED_COMPLETE
+Commit: TBD (pending)
+Title: DPP Evidence Vault Foundation — dpp_evidence_items table, RLS, service, routes, unit tests
+Summary: Created dpp_evidence_items table via migration (RLS ENABLE+FORCE, 4 policies, 3 indexes).
+  Added server/src/services/dppEvidenceVault.ts with full helper set. Added GET + POST
+  /api/tenant/dpp/:nodeId/evidence-items routes to tenant.ts (role guard, audit, tenant isolation).
+  59/59 unit tests PASS. tsc CLEAN. Regression tecs-dpp-node-certifications 25/25 PASS.
+Layer Impact: Layer 0 — GOVERNANCE-CHANGELOG.md, NEXT-ACTION.md, OPEN-SET.md updated;
+  Layer 3 — EXECUTION-LOG.md appended (this entry)
+Notes: document_url is tenant-internal only and not exposed on any public route. Does NOT auto-promote
+  passport maturity. DB test (EV-DB01) intentionally skipped without live DB connection.
+  No QR, JSON-LD, or public evidence download implemented. Full platform launch NOT AUTHORIZED.
+Refs: server/prisma/migrations/20260513000000_tecs_dpp_evidence_vault/migration.sql ·
+  server/prisma/schema.prisma · server/src/services/dppEvidenceVault.ts ·
+  server/src/routes/tenant.ts · server/src/__tests__/tecs-dpp-evidence-vault.test.ts ·
+  governance/control/GOVERNANCE-CHANGELOG.md · governance/control/NEXT-ACTION.md ·
+  governance/control/OPEN-SET.md · governance/log/EXECUTION-LOG.md
+
+---
+
 ### TECS-DPP-PASSPORT-NETWORK-010-B — 2026-05-09
 Type: IMPLEMENTATION + VERIFICATION / TEST + TOOLING
 Status: VERIFIED_COMPLETE_WITH_LIMITATIONS

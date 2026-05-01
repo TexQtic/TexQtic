@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-05-13 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-012 (DPP Evidence Vault Foundation)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-012
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-13
+Type:          IMPLEMENTATION + UNIT-TEST VERIFICATION
+
+Delivered:
+  - Migration: server/prisma/migrations/20260513000000_tecs_dpp_evidence_vault/migration.sql
+    CREATE TABLE dpp_evidence_items; ENABLE + FORCE RLS; 4 policies (app.current_org_id());
+    3 indexes; FK to traceability_nodes (ON DELETE CASCADE) + organizations;
+    evidence_type/visibility/review_state CHECK constraints; expires_after_issued constraint.
+  - Schema: server/prisma/schema.prisma — dpp_evidence_items model added (via prisma db pull).
+  - Service: server/src/services/dppEvidenceVault.ts — assertNodeBelongsToOrg,
+    createDppEvidenceItem, listDppEvidenceItemsForNode, toDppEvidenceItemDto,
+    DPP_EVIDENCE_TYPES (11 values), DPP_EVIDENCE_VISIBILITY_VALUES (4), DPP_EVIDENCE_REVIEW_STATES (4),
+    isAllowedSourceTable (7-entry allowlist).
+  - Routes: GET + POST /api/tenant/dpp/:nodeId/evidence-items in server/src/routes/tenant.ts.
+    Role guard on POST (ADMIN/OWNER only). Audit: tenant.dpp.evidence_item.listed / .created.
+  - Tests: server/src/__tests__/tecs-dpp-evidence-vault.test.ts — 59/59 PASS (1 DB test skipped).
+
+Typecheck:  tsc --noEmit CLEAN
+Regression: tecs-dpp-node-certifications 25/25 PASS
+```
+
+---
+
 ## 2026-05-12 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010-B (Full E2E Runtime Proof + RLS Hotfix)
 
 ```

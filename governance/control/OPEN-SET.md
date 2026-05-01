@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-12 (TECS-DPP-PASSPORT-NETWORK-010-B — VERIFIED_COMPLETE; DPP-E2E-12/13/14 14/14 PASS; RLS hotfix applied; node-certification route committed)
+**Last Updated:** 2026-05-13 (TECS-DPP-PASSPORT-NETWORK-012 — VERIFIED_COMPLETE; evidence vault foundation; 59/59 unit tests PASS; tsc CLEAN)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,15 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-012 is VERIFIED_COMPLETE (2026-05-13).
+  DPP Evidence Vault Foundation. Table: dpp_evidence_items (migration 20260513000000_tecs_dpp_evidence_vault).
+  RLS: ENABLE + FORCE ROW LEVEL SECURITY. 4 RLS policies using app.current_org_id(). 3 indexes.
+  FK to traceability_nodes (ON DELETE CASCADE) and organizations.
+  Routes: GET + POST /api/tenant/dpp/:nodeId/evidence-items (tenant.ts).
+  Service: server/src/services/dppEvidenceVault.ts — full helper set.
+  Tests: tecs-dpp-evidence-vault.test.ts 59/59 PASS. tsc CLEAN.
+  Regression: tecs-dpp-node-certifications 25/25 PASS.
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-010-B is VERIFIED_COMPLETE (2026-05-12).
   RLS hotfix: migration 20260512000000_tecs_dpp_rls_policy_hotfix applied —
     dpp_passport_states + dpp_evidence_claims RLS policies fixed (current_setting → app.current_org_id()).
