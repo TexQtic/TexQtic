@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — VERIFIED_COMPLETE; DPP Passport Network productization packet A–G closed; 10/10 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
+**Last Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010A — VERIFIED_COMPLETE; corrective public passport link in tenant view; 11/11 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
 
 > This file is the Layer 0 entry surface for current governed posture. Read `OPEN-SET.md`, then
 > `NEXT-ACTION.md`, then `BLOCKED.md`; consult `SNAPSHOT.md` only when restore context or
@@ -53,6 +53,21 @@
 
 ## Operating Notes
 
+- TECS-DPP-PASSPORT-NETWORK-010A is VERIFIED_COMPLETE (2026-05-09).
+  Corrective unit: Slice E implemented the public buyer page at /passport/:publicPassportId but the
+  tenant DPP view gave no visible path to reach it after publishing. Fix: added publicPassportId
+  (string | null) to GET /api/tenant/dpp/:nodeId/passport response (PUBLISHED + non-null public_token
+  only). Added "Public Buyer Passport" panel to DPPPassport.tsx with open link, copy-to-clipboard,
+  and dpp-public-passport-unavailable state for unpublished passports.
+  11/11 E2E PASS against https://app.texqtic.com. tsc --noEmit CLEAN. 72/72 unit tests PASS.
+  DPP-E2E-11 (NEW): confirms public route unauthenticated and publicPassportId not leaked in public 404.
+  Commit: 5991bd5. Files: components/Tenant/DPPPassport.tsx, server/src/routes/tenant.ts,
+    tests/e2e/dpp-passport-network.spec.ts.
+  New test IDs: dpp-public-passport-panel, dpp-public-passport-url, dpp-public-passport-open-link,
+    dpp-public-passport-copy-link, dpp-public-passport-unavailable.
+  Limitation: authenticated tenant link runtime proof requires live PUBLISHED passport fixture
+    (not in QA seed data); source-level verification confirmed.
+  No active delivery unit. Full platform launch NOT AUTHORIZED.
 - TECS-DPP-PASSPORT-NETWORK-CLOSE-001 is VERIFIED_COMPLETE (2026-05-09).
   DPP Passport Network productization packet Slices A–G fully implemented and runtime-verified.
   10/10 E2E PASS against https://app.texqtic.com. tsc --noEmit CLEAN.

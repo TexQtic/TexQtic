@@ -2,7 +2,7 @@
 
 **Layer:** 0 — Control Plane  
 **Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md  
-**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — VERIFIED_COMPLETE; DPP Passport Network productization packet A–G closed; 10/10 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
+**Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010A — VERIFIED_COMPLETE; corrective public passport link in tenant view; 11/11 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
 
 > Restore-grade summary of the current Layer 0 posture. Read `OPEN-SET.md`, `NEXT-ACTION.md`, and
 > `BLOCKED.md` first; use this file only when restore context or historical ambiguity requires it.
@@ -11,7 +11,7 @@
 
 ```yaml
 snapshot_date: 2026-05-09
-snapshot_unit: TECS-DPP-PASSPORT-NETWORK-CLOSE-001
+snapshot_unit: TECS-DPP-PASSPORT-NETWORK-010A
 opening_layer_reset_verdict: RESET-EXECUTED-CLEANLY
 current_governance_posture: HOLD-FOR-AUTHORIZATION
 current_open_design_unit: NONE
@@ -24,30 +24,28 @@ current_open_design_unit_note: >-
   Next recommended candidate: TECS-DPP-PASSPORT-NETWORK-010 (Expansion Design Packet).
   Prior: TECS-DPP-PASSPORT-FOUNDATION-001 D-1 through D-6 all COMPLETE.
   All DPP Passport Network slices A–G committed (e3d81c5 through ce6b674).
-latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-CLOSE-001
+latest_verified_product_close_unit: TECS-DPP-PASSPORT-NETWORK-010A
 latest_verified_product_close_status: VERIFIED_COMPLETE
-latest_verified_product_close_date: 2026-05-09 (CLOSE-001 governance closure)
+latest_verified_product_close_date: 2026-05-09 (010A corrective closure)
 latest_verified_product_close_verification: >-
-  10/10 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
-  Productization packet Slices A–G all PASS.
-  Slice A (e3d81c5): UI label maps. Slice B (85da489): Maturity ladder.
-  Slice C (f5a36f9): Status transition API. Slice D (587acdf): GLOBAL_DPP reachable.
-  Slice E (77538f2): Public buyer page. Slice F (bfb8f25): QR label. Slice G (ce6b674): AI Passport Assistant.
-  Unit tests: 22 global-maturity, 50 status-transition, 62 d6-public, 88 d4-evidence, 64 d5-export all PASS.
+  11/11 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
+  DPP-E2E-01–10: all PASS (unchanged). DPP-E2E-11 (NEW): public route unauthenticated;
+  publicPassportId not leaked in public API 404 response.
+  Unit tests: 72/72 PASS (50 status-transition, 22 global-maturity).
   TypeScript tsc --noEmit: CLEAN (0 errors).
 latest_verified_product_close_safety_boundaries: |
-  org_id_tenant_isolation: verified (withDbContext + FORCE RLS; no cross-tenant data leakage)
-  passport_status_gate: verified (auth required for PATCH; unauth returns 401)
-  public_endpoint_anti_leakage: verified (no org_id/nodeId/supplierOrgId in public response)
-  d6_json_suffix_route_absent: verified (find-my-way safety; DPP-E2E-03 confirms 404 not crash)
-  server_stability_after_probe: verified (DPP-E2E-04: server returns 200 after .json probe)
-  advisory_only_assistant: verified (buildPassportGuidance() deterministic; no LLM calls; no mutations)
+  org_id_tenant_isolation: verified (no query scoping changes)
+  passport_status_gate: verified (auth required; unauth returns 401; DPP-E2E-07/08/09)
+  public_endpoint_anti_leakage: verified (publicPassportId absent from public 404; DPP-E2E-11)
+  d6_json_suffix_route_absent: verified (DPP-E2E-03 confirms 404 not crash)
+  server_stability_after_probe: verified (DPP-E2E-04)
+  no_schema_migration: verified (no schema.prisma or migrations changes)
   full_platform_launch: NOT_AUTHORIZED
-latest_verified_product_close_tenant_isolation: verified (org_id scoping enforced; buyer identity from dbContext; public route: no tenant fields exposed)
-latest_verified_product_close_human_review_required: N/A (Passport maturity derived from evidence claims; AI Passport Assistant is advisory-only, deterministic, no external calls)
+latest_verified_product_close_tenant_isolation: verified (org_id scoping unchanged; publicPassportId gated on PUBLISHED status + non-null public_token only)
+latest_verified_product_close_human_review_required: N/A (deterministic status gate; no LLM calls; no mutations)
 latest_verified_product_close_commits: >-
-  D-6 close 3e5303a. Design d42ec8a. Slice A e3d81c5. Slice B 85da489. Slice C f5a36f9.
-  Slice D 587acdf. Slice E 77538f2. Slice F bfb8f25. Slice G ce6b674. Close-001 governance (this update).
+  5991bd5 — feat(dpp): expose public passport link in tenant view.
+  (Prior CLOSE-001 chain: 3e5303a, d42ec8a, e3d81c5, 85da489, f5a36f9, 587acdf, 77538f2, bfb8f25, ce6b674, ff7ea6b).
 qa_matrix_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 qa_matrix_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 qa_matrix_closure_date: 2026-04-30

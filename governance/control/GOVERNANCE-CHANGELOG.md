@@ -5,6 +5,42 @@
 
 ---
 
+## 2026-05-09 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-010A (Corrective: Public Passport Link in Tenant View)
+
+```
+Unit:          TECS-DPP-PASSPORT-NETWORK-010A
+Status:        VERIFIED_COMPLETE
+Closure Date:  2026-05-09
+Type:          CORRECTIVE-IMPLEMENTATION — no schema, migration, or new dependency changes
+Files Changed: components/Tenant/DPPPassport.tsx, server/src/routes/tenant.ts, tests/e2e/dpp-passport-network.spec.ts
+Commit:        5991bd5 — [TEXQTIC] feat(dpp): expose public passport link in tenant view
+Evidence:
+  tsc --noEmit: CLEAN (0 errors)
+  Unit tests: 72/72 PASS (50 status-transition, 22 global-maturity) — no regressions
+  E2E: 11/11 DPP Passport Network E2E PASS against https://app.texqtic.com
+    DPP-E2E-11 (NEW): public passport route unauthenticated; publicPassportId not leaked in public 404
+    DPP-E2E-01–10: all PASS (unchanged behaviour confirmed)
+  Staging gate: git status --short → only 3 allowlisted files staged
+Description:
+  Slice E implemented the public buyer page at /passport/:publicPassportId but the tenant DPP
+  page provided no visible path to reach or share it after a passport is published.
+  Fix: Added publicPassportId (string | null) to the GET /api/tenant/dpp/:nodeId/passport
+  response (PUBLISHED + non-null public_token only). Added a "Public Buyer Passport" link panel
+  to DPPPassport.tsx with open link, copy-to-clipboard, and privacy note. Added
+  dpp-public-passport-unavailable state for unpublished passports.
+  New test IDs: dpp-public-passport-panel, dpp-public-passport-url,
+    dpp-public-passport-open-link, dpp-public-passport-copy-link, dpp-public-passport-unavailable
+Safety:
+  org_id_isolation: preserved (no changes to query scoping or auth middleware)
+  public_token_not_leaked_via_public_api: verified (DPP-E2E-11 confirms publicPassportId absent from public 404)
+  no_schema_migration: verified (no schema.prisma or migrations changes)
+  full_platform_launch: NOT_AUTHORIZED
+Limitations:
+  Authenticated tenant UI runtime proof (PUBLISHED passport with real publicPassportId) requires
+  a live published passport fixture; not available in QA seed data. UI panel logic verified at
+  source level. Runtime link visibility requires post-publish auth flow.
+```
+
 ## 2026-05-09 — VERIFIED_COMPLETE: TECS-DPP-PASSPORT-NETWORK-CLOSE-001 (DPP Passport Network A–G Closure)
 
 ```

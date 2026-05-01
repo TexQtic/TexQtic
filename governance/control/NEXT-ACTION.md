@@ -1,6 +1,6 @@
 # NEXT-ACTION.md — Layer 0 Governance Pointer
 
-**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 — VERIFIED_COMPLETE; DPP Passport Network productization packet A–G closed; 10/10 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
+**Authority:** governance/control/TEXQTIC-OPENING-LAYER-GOVERNANCE-AUTHORITY-AND-POINTER-LAYER-2026-04-10.md · **Updated:** 2026-05-09 (TECS-DPP-PASSPORT-NETWORK-010A — VERIFIED_COMPLETE; corrective public passport link in tenant view; 11/11 E2E PASS against https://app.texqtic.com; awaiting Paresh authorization for next unit)
 > This file is the governance-facing Layer 0 pointer and live guardrail surface for current
 > repo-level posture. Read it after `OPEN-SET.md` and before `BLOCKED.md`. It does not select a
 > product-facing opening by itself, and it does not shape the next implementation slice inside a
@@ -11,15 +11,15 @@
 ```yaml
 mode: OPENING_LAYER_CANON_POINTER
 governance_exception_active: false
-product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-CLOSE-001 DPP Passport Network Productization Packet A–G VERIFIED_COMPLETE (2026-05-09); awaiting Paresh authorization for next unit
+product_delivery_priority: VERIFIED_COMPLETE — TECS-DPP-PASSPORT-NETWORK-010A corrective public passport link in tenant view VERIFIED_COMPLETE (2026-05-09); awaiting Paresh authorization for next unit
 active_delivery_unit: NONE — awaiting Paresh authorization
 active_delivery_unit_status: HOLD_FOR_AUTHORIZATION
 active_delivery_unit_note: >-
-  TECS-DPP-PASSPORT-NETWORK-CLOSE-001 VERIFIED_COMPLETE (2026-05-09).
-  DPP Passport Network productization packet (Slices A–G) fully implemented and runtime-verified.
-  Commits: design d42ec8a; Slice A e3d81c5; Slice B 85da489; Slice C f5a36f9;
-    Slice D 587acdf; Slice E 77538f2; Slice F bfb8f25; Slice G ce6b674; Close-001 governance.
-  10/10 E2E PASS against https://app.texqtic.com. tsc --noEmit CLEAN. 286/286 closure-relevant unit tests PASS.
+  TECS-DPP-PASSPORT-NETWORK-010A VERIFIED_COMPLETE (2026-05-09).
+  Corrective unit: added publicPassportId to GET tenant passport response; added public link panel
+  (dpp-public-passport-panel) to DPPPassport.tsx; added DPP-E2E-11 anti-leakage test.
+  11/11 E2E PASS against https://app.texqtic.com. tsc --noEmit CLEAN. 72/72 unit tests PASS.
+  Commit: 5991bd5 — feat(dpp): expose public passport link in tenant view.
   Next recommended unit: TECS-DPP-PASSPORT-NETWORK-010 — Passport Network Expansion Design Packet.
   Do NOT open next unit without explicit Paresh authorization.
   Adjacent deferred findings (carry-forward; not to be implemented without authorization):
@@ -30,25 +30,23 @@ active_delivery_unit_note: >-
     5. White-label DPP naming — future work (Q-10)
     6. DPP expansion packet — evidence vault, trade linkage, real AI assistant architecture
     7. D2/D3 slice boundary supersession tests — temporal scope guards; do not modify
-last_closed_unit: TECS-DPP-PASSPORT-NETWORK-CLOSE-001
+    8. Authenticated tenant link runtime proof — requires live PUBLISHED passport fixture
+last_closed_unit: TECS-DPP-PASSPORT-NETWORK-010A
 last_closed_unit_status: VERIFIED_COMPLETE
 last_closed_unit_runtime_verdict: >-
-  10/10 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
-  DPP-E2E-01: health 200. DPP-E2E-02: unknown UUID → 404. DPP-E2E-03: .json suffix → 404 (D-6 contract).
-  DPP-E2E-04: server intact after .json probe. DPP-E2E-05: invalid UUID → 400/404.
-  DPP-E2E-06: anti-leakage — no private fields in 404. DPP-E2E-07/08/09: unauth → 401.
-  DPP-E2E-10: auth + unknown nodeId → 400/404 (auth gate proven). tsc --noEmit CLEAN.
-  Unit tests: 286/286 closure-relevant PASS (22 global-maturity, 50 status-transition, 62 d6-public, 88 d4-evidence, 64 d5-export).
+  11/11 DPP Passport Network E2E PASS against https://app.texqtic.com (2026-05-09).
+  DPP-E2E-01–10: all PASS (unchanged). DPP-E2E-11 (NEW): public route unauthenticated;
+  publicPassportId not leaked in public 404. tsc --noEmit CLEAN.
+  Unit tests: 72/72 PASS (50 status-transition, 22 global-maturity).
 last_closed_unit_commits: >-
-  D-6 close 3e5303a. Design d42ec8a. Slice A e3d81c5. Slice B 85da489. Slice C f5a36f9.
-  Slice D 587acdf. Slice E 77538f2. Slice F bfb8f25. Slice G ce6b674. Close-001 governance (this update).
+  5991bd5 — feat(dpp): expose public passport link in tenant view.
+  (Prior: CLOSE-001 governance ff7ea6b; Slices A–G d42ec8a through ce6b674).
 last_closed_unit_closure_basis: >-
-  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-CLOSE-001 governance closure, 2026-05-09).
-  10/10 Playwright E2E PASS on https://app.texqtic.com. TypeScript clean.
-  Productization packet complete: label maps, maturity ladder, status transitions, GLOBAL_DPP reachable,
-  public buyer page, QR label, AI Passport Assistant (advisory-only).
-  5 superseded slice boundary tests documented (D2-S02, D2-B03, D3-T07, D3-B02, D3-B04) — not defects.
-  Adjacent findings carry-forwarded. Full platform launch NOT AUTHORIZED.
+  VERIFIED_COMPLETE (TECS-DPP-PASSPORT-NETWORK-010A, 2026-05-09).
+  11/11 Playwright E2E PASS on https://app.texqtic.com. TypeScript clean.
+  Corrective: tenant GET passport now returns publicPassportId (PUBLISHED only);
+  DPPPassport.tsx shows public buyer passport link panel when published.
+  No schema, migration, or new dependency changes. Full platform launch NOT AUTHORIZED.
 last_closed_governance_unit: TECS-MULTI-SEGMENT-QA-TENANT-SEED-MATRIX-001
 last_closed_governance_unit_status: VERIFIED_COMPLETE_WITH_ACTIVE_QA_FIXTURES
 last_closed_governance_unit_date: 2026-04-30
